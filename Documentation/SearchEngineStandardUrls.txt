@@ -1,0 +1,43 @@
+Alejandro Tejada Capellan.txt	http://geocities.com/capellan2000/
+Altuit 1_Chipp Walters.txt	http://www.altuit.com/webs/altuit2/altPluginDownload/Downloads.htm
+Altuit 2_Chipp Walters.txt	http://www.altuit.com/webs/altuit2/RunRev/Downloads.htm
+Altuit 3_Chipp Walters.txt	http://www.altuit.com/webs/altuit2/StandaloneBuilderTutorial/PDFdocument.htm
+Bjoernkes Corner.txt	http://revolutionboard.de/bvg/subindexes/stacks-2.html
+Dan_Shafer BestOfList.txt	http://www.altuit.com/webs/dshafer/BestofList/
+Dar Scott.txt	http://www.swcp.com/dsc/revstacks.html
+BYU_Tutorials 1.txt	http://revolution.byu.edu/indexgeneric.php
+BYU_Tutorials 2.txt	http://revolution.byu.edu/transcript/LectureExamples.php
+BYU_Tutorials 3.txt	http://revolution.byu.edu/helps/shortcuts.php
+Flexible Learning_Hugh Senior.txt	http://www.flexiblelearning.com/xtalk.htm
+Fourth World_Richard Gaskin.txt	http://www.fourthworld.com/rev/index.html
+Hyperactive Software.txt	http://www.hyperactivesw.com/Resources.html
+Inspired Logic_Geoff Canyon.txt	http://www.inspiredlogic.com/downloads.html
+Jan Schenkel.txt	http://www.geocities.com/janschenkel/
+Jerry Daniels.txt	http://www.revdeveloper.com/include/wiki/rev/doku.php?id=revselect:danielsandmara:daniels_and_mara
+Klaus Major.txt	http://www.major-k.de/xtalke.html
+Mango Multimedia_T. DeVore.txt	http://mangomultimedia.com/developer/revolution/
+Mark_Schonewille_1.txt	http://runrev.info/search.html
+Mark_Schonewille_2.txt	http://economy-x-talk.com/developers.html
+Mark_Wieder_1.txt	http://www.ahsoftware.net/ArchiveSearch.html
+Mark_Wieder_2.txt	http://www.ahsoftware.net/StacKnowledge.html
+Regex Library.txt	http://www.regexlib.com/
+Rev Stuff_Frederic Rinaldi.txt	http://rinaldicollection.free.fr/frevplugins_frame.htm
+Revjournal.txt	http://www.revjournal.com/tutorials/index.html
+RevNetIndex.txt	http://www.fourthworld.net/revnet/revnetrsrcidx.txt
+RunRev LibUrl.txt	http://support.runrev.com/resources/liburl.php
+RunRev Unsupported Stacks.txt	http://support.runrev.com/resources/unsupported.php
+RunRev Scripting Conferences.txt	http://support.runrev.com/scriptingconferences/
+Sarah_Libs.txt	http://www.troz.net/Rev/libraries.php
+Sarah_Misc.txt	http://www.troz.net/Rev/misc.php
+Sarah_Plugins.txt	http://www.troz.net/Rev/plugins.php
+Sarah_Tutorials.txt	http://www.troz.net/Rev/tutorials.php
+Shao Sean.txt	http://shaosean.wehostmacs.com/
+Andre Garzia.txt	http://www.andregarzia.com/index.html
+So Smart Soft_Plugins.txt	http://www.sosmartsoftware.com/?r=revolution&l=en
+So Smart Soft_Tutorials.txt	http://www.sosmartsoftware.com/?r=revolution_didacticiels&l=en
+Sons of Thunder Software_1.txt	http://www.sonsothunder.com/devres/revolution/revolution.htm
+Sons of Thunder Software_2.txt	http://www.sonsothunder.com/index2.htm?http://www.sonsothunder.com/devres/revolution/downloads/RevZilla2.htm
+Sweat Technologies_M. Goulding.txt	http://www.sweattechnologies.com/rev/
+Tactile Media_Scott Rossi.txt	http://www.tactilemedia.com/download/
+Wilhelm Sanke_1.txt	http://www.sanke.org/MetaMedia/SamplesTools.htm
+Wilhelm Sanke_2.txt	http://www.sanke.org/MetaMedia/Samples.htm

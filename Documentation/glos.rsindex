@@ -1,0 +1,550 @@
+absolute coordinates,global coordinates,screen coordinates,absolute coordinates,absolute (screen) coordinates,global coordinates',screen coordinates',absolute coordinates',absolute (screen) coordinates',/288.xml
+absolute file path,absolute file path,absolute file paths,absolute file path's,absolute file paths',absolute path,absolute paths,absolute path's,absolute paths',full path,full paths,full path's,full paths',full pathname,full pathnames,full pathname's,full pathnames',/194.xml
+active control,active control,active controls,active control's,active controls',active (focused) control,active (focused) controls,active (focused) control's,active (focused) controls',active (focused),focused control,focused controls,focused control's,focused controls',/410.xml
+active window,activate,activated,activates,activating,inactive window,inactive windows,inactive window's,inactive windows',active window,active windows,active window's,active windows',frontmost stack,frontmost stacks,frontmost stack's,frontmost stacks',active stack,active stacks,active stack's,active stacks',/232.xml
+AIFF,.aiff,.aiffs,.aiff's,.aiffs',AIFF,aiffs,aiff's,aiffs',/335.xml
+alias,alias,aliases,alias's,aliases',aliased,aliasing,/271.xml
+alpha channel,alpha channel,alpha channels,alpha channel's,alpha channels',transparency channel,transparency channels,transparency channel's,transparency channels',/426.xml
+alphanumeric character,alphanumeric character,alphanumeric characters,alphanumeric character's,alphanumeric characters',alphanumeric,alpha-numeric,/317.xml
+Alt key,altkey,altkeys,altkey's,altkeys',alt,Alt key,Alt-key,Alt keys,Alt key's,Alt-key's,Alt keys',/448.xml
+animated GIF,GIF animation,GIF animations,GIF animation's,GIF animations',multiframe GIF,multiframe GIFs,multiframe GIF's,multiframe GIFs',animated GIF,animated GIFs,animated GIF's,animated GIFs',/15.xml
+Animation library,Animation library,Animation libraries,Animation library's,Animation libraries',/18.xml
+anomaly,bug,bugs,bug's,bugs',buggy,anomalous,anomaly,anomalies,anomaly's,anomalies',/546.xml
+antialiasing,antialiasing,antialias,antialiased,anti-aliasing,anti-alias,anti-aliased,/531.xml
+appearance,look,appearance,appearances,appearance's,appearances',/301.xml
+append,appending,appends,appended,append,/297.xml
+Apple Event,AppleEvent,AppleEvents,AppleEvent's,AppleEvents',Apple Event,Apple Events,Apple Event's,Apple Events',/457.xml
+Apple menu,Apple menu,Apple menus,Apple menu's,/294.xml
+AppleScript,AppleScript,AppleScript's,Apple Script,Apple Script's,/381.xml
+AppleTalk,AppleTalk,AppleTalk's,AppleTalk network,AppleTalk networks,AppleTalk network's,AppleTalk networks',/507.xml
+Application Browser,Application Overview,Application Overview's,Application Overview window,Application Overview window's,App Overview,App Overview's,App Overview window,App Overview window's,Application Browser,Application Browser's,Application Browser window,Application Browser window's,App Browser,App Browser's,App Browser window,App Browser window's,/469.xml
+application bundle,application bundle,application bundles,application bundle's,application bundles',bundle,bundles,bundle's,bundles',application package,application packages,application package's,application packages',/212.xml
+Application menu,Application menu,Application menu's,App menu,App menu's,/115.xml
+application,application,applications,application's,applications',/92.xml
+Aqua,Aqua,Aqua's,/48.xml
+argument,argument,arguments,argument's,arguments',/97.xml
+arm,armed,arms,arming,arm,/395.xml
+array dimension,array dimension,array's dimension,array dimension's,dimension of an array,dimension of arrays,/384.xml
+array,arrays,array,array's,arrays',/412.xml
+ASCII,ASCII value,ASCII values,ASCII value's,ASCII values',ASCII,/50.xml
+associative array,associative array,associative arrays,associative array's,associative arrays',hash,/435.xml
+attribute,attribute,attributes,attribute's,attributes',/383.xml
+AU,.au,.aus,.au's,.aus',mulaw,mu-law,µlaw,µ-law,AU,aus,au's,aus',/319.xml
+audio clip,audioclip,audioclips,audioclip's,audioclips',audio clip,audio clips,audio clip's,audio clips',/44.xml
+automatic database query,automatic database query,automatic database queries,automatic database query's,automatic database queries',automatic query,automatic queries,automatic query's,automatic queries',/90.xml
+AVI,.avi,.avis,.avi's,.avis',AVI,AVIs,AVI's,AVIs',/289.xml
+background,backgrounds,background,background's,backgrounds',/430.xml
+backScript,backScripts,backScript's,backScripts',backScript,/244.xml
+behavior,feel,behavior,/240.xml
+binary data,binary data,binary data's,binary (non-text) data,/157.xml
+binary file,binaries,binaries',binary file,binary files,binary file's,binary files',binary data,binary data's,/520.xml
+binary,binary,binary number,binary numbers,binary number's,binary numbers',/64.xml
+BinHex,hqx,.hqx,Bin Hex,BinHex,binhexed,binhexing,binhexes,/78.xml
+bit depth,bit depth,bit depths,bit depth's,bit depths',/60.xml
+bit,bits,bit's,bits',bit,/154.xml
+bitmap,bit-map,bit-maps,bit-map's,bit-maps',bitmapped,bit-mapped,bitmap,bitmaps,bitmap's,bitmaps',raster graphics,raster graphics',raster,rasters,raster's,rasters',/118.xml
+bitwise,bitwise,bit-wise,/527.xml
+black-and-white,black and white,black-and-white,monochrome,/270.xml
+BLOB,BLOB,BLOBs,BLOB's,BLOBs',/407.xml
+block comment,block comment,block comments,block comment's,block comments',block-commented,block-commenting,block-comment,block-comments,/475.xml
+blocking,blocking,block,blocking read,blocking write,blocks,blocked,/153.xml
+BMP,bmps,bmp's,bmps',.bmp,.bmps,.bmp's,.bmps',BMP,/125.xml
+boolean,boolean,booleans,boolean's,booleans',boolean value,boolean values,boolean value's,boolean values',/295.xml
+breakpoint,breakpoint,breakpoints,breakpoint's,breakpoints',/312.xml
+Browse tool,Browse tool,Browse tools,Browse tool's,Browse tools',Hand tool,Hand tools,Hand tool's,Hand tools',/537.xml
+browse,browse,browsing,browsed,browses,/53.xml
+browser,web browser,web browsers,web browser's,web browsers',browser,browsers,browser's,browsers',/451.xml
+buffer,buffers,buffered,buffering,buffer,buffer's,buffers',/290.xml
+build,build,building,builds,built,builder,builders,builder's,builders',/369.xml
+built-in command,built-in command,built-in commands,built-in command's,built-in commands',/397.xml
+built-in function,built-in function,built-in functions,built-in function's,built-in functions',/42.xml
+built-in message,built-in message,built-in messages,built-in message's,built-in messages',builtin message,builtin messages,builtin message's,builtin messages',/166.xml
+built-in property,built-in property,built-in properties,built-in property's,built-in properties',/267.xml
+button menu,button menu,button menus,button menu's,button menus',button contents menu,button contents menus,button contents menu's,button contents menus',menu button,menu buttons,menu button's,menu buttons',/513.xml
+button,button,buttons,button's,buttons',/298.xml
+byte order,byte order,byte orders,byte order's,byte orders',byte ordering,byte orderings,byte ordering's,byte orderings',/374.xml
+byte,byte,bytes,byte's,bytes',/4.xml
+cache,cache,cached,caching,caches,cache's,caches',/254.xml
+call,call,calls,called,calling,call's,calls',/186.xml
+callback,callback,callbacks,callback's,callbacks',callback message,callback messages,callback message's,callback messages',/393.xml
+caller,calling handler,calling handlers,calling handler's,calling handlers',caller,callers,caller's,callers',/434.xml
+Carbon,Carbon,Carbon's,/473.xml
+card control,card button,card buttons,card button's,card buttons',card field,card fields,card field's,card fields',card control,card controls,card control's,card controls',card object,card objects,card object's,card objects',/460.xml
+card,cards,card's,cards',card,/390.xml
+cascading menu,cascading menu,cascading menus,cascading menu's,cascading menus',hierarchical menu,hierarchical menus,hierarchical menu's,hierarchical menus',submenu,submenus,submenu's,submenus',pull-right menu,pull-right menus,pull-right menu's,pull-right menus',/171.xml
+case-insensitive,case-insensitivity,case-insensitive,case insensitive,/43.xml
+case-sensitive,case-sensitivity,case sensitive,case-sensitive,/279.xml
+cell,cell,cells,cell's,cells',table cell,table cells,table cell's,table cells',/265.xml
+CGI,CGI program,CGI programs,CGI program's,CGI programs',CGI,CGIs,CGI's,CGIs',/241.xml
+channel,channel,channels,channel's,channels',color channel,color channels,color channel's,color channels',/326.xml
+character set,character set,character sets,character set's,character sets',character-set,character-sets,character-set's,character-sets',charset,charsets,charset's,charsets',/168.xml
+character,character,characters,character's,characters',/26.xml
+checkbox,checkbox,checkboxes,checkbox's,checkboxes',check box,check boxes,check box's,check boxes',/215.xml
+checksum,checksum,checksums,checksum's,checksums',checksummed,checksumming,/494.xml
+child node,child node,child nodes,child node's,child nodes',children node,children nodes,children node's,children nodes',/69.xml
+chunk expression,chunk expressions,chunk expression's,chunk expressions',chunk expression,/135.xml
+chunk,chunk,chunks,chunk's,chunks',chunking,/470.xml
+clipboard,clipboard,clip board,clipboard's,clip board's,/367.xml
+close box,close box,close boxes,close box's,close boxes',closebox,closeboxes,closebox's,closeboxes',exit button,exit button's,exit buttons,exit buttons',/70.xml
+codec,codec,codecs,codec's,codecs',/131.xml
+collapse box,WindowShade,windowshade box,collapse box,collapse boxes,collapse box's,collapse boxes',collapse,/419.xml
+collapse,collapse,collapses,collapsing,collapsed,collapsation,/41.xml
+color palette,color palette,color palettes,color palette's,color palettes',/285.xml
+color reference,color specifier,color specifiers,color specifier's,color specifiers',color reference,color references,color reference's,color references',color descriptor,color descriptors,color descriptor's,color descriptors',/350.xml
+color table,color table,color tables,color table's,color tables',/220.xml
+column,column,columns,column's,columns',database column,database columns,database column's,database columns',/303.xml
+combo box,combo box,combo boxes,combo box's,combo boxes',combobox,comboboxes,combobox's,comboboxes',combo box menu,combo box menus,combo box menu's,combo box menus',combobox menu,combobox menus,combobox menu's,combobox menus',/249.xml
+Command key,Apple key,Apple key's,open Apple key,open Apple key's,propellor key,propellor key's,Command key,Command key's,/178.xml
+command line,command line,command lines,command line's,command line interface,command line interfaces,command line interface's,command-line,command-lines,command-line's,command-line interface,command-line interfaces,command-line interface's,CLI,CLI's,/87.xml
+command,commands,command's,commands',command,/522.xml
+comment,comment,comments,comment's,comments',commented,commenting,comment out,commented out,comments out,commenting out,comment in,commented in,comments in,commenting in,uncomment,uncomments,uncommented,uncommenting,remark,/28.xml
+Common library,Common libraries,Common library's,Common libraries',Common library,/278.xml
+compile error,compile-time error,compile-time errors,compile-time error's,compile-time errors',compilation error,compilation errors,compilation error's,compilation errors',compile error,compile errors,compile error's,compile errors',syntax error,syntax errors,syntax error's,syntax errors',/76.xml
+compile,compiling,compilation,compile,compiled,compiles,compiles,compile's,compiles',recompiling,recompilation,recompile,recompiled,recompiles,compiler,compilers,compiler's,coompilers',uncompiled,/551.xml
+compress,compression,compressing,compressed,compresses,compress,/3.xml
+concatenate,concatenation,concatenating,concatenated,concatenate,concatenates,/487.xml
+conditional,conditional statement,conditional statements,conditional statement's,conditional statements',if/then,if/then/else,if-then,if-then-else,conditional,conditionals,conditional's,conditionals',/516.xml
+console,console window,console windows,console window's,console windows',console,consoles,console's,consoles',/268.xml
+constant,constants,constant's,constants',constant,/505.xml
+constrain,constrain,constraint,constraints,constraint's,constraints',constrained,constrains,constraining,/293.xml
+container,containers,container's,containers',container,/349.xml
+contextual menu,right-click menu,right-click menus,right-click menu's,right-click menus',right click menu,right click menus,right click menu's,right click menus',contextual menu,contextual menus,contextual menu's,contextual menus',context menu,context menus,context menu's,context menus',/177.xml
+contiguous,non-contiguous,discontiguous,contiguous,contiguity,/103.xml
+control structure,control structures,control structure's,control structures',structure,structures,structure's,structures',control structure,/456.xml
+control,controls,control's,controls',control,widget,widgets,widget's,widgets',/495.xml
+controller bar,controller bar,controller bars,controller bar's,controller bars',player controller,player controllers,player controller's,player controllers',/83.xml
+creator signature,creator signature,creator signatures,creator signature's,creator signatures',creator,creators,creator's,creators',file creator,file creators,file creator's,file creators',/411.xml
+cross-platform,crossplatform,cross-platform,/84.xml
+current card,current card,current cards,current card's,current cards',/370.xml
+current folder,working directory,working directory's,working directories,working directories',current directory,current directory's,current directories,current directories',working folder,working folder's,working folders,working folders',current folder,current folder's,current folders,current folders',default folder,default folder's,default folders,default folders',/316.xml
+current stack,current stack,current stacks,current stack's,current stacks',/552.xml
+cursor,cursors,cursor's,cursors',cursor,/440.xml
+custom command,custom commands,custom command's,custom commands',user-defined command,user-defined commands,user-defined command's,user-defined commands',custom command,/543.xml
+custom function,user-defined function,custom functions,custom function's,custom functions',user-defined functions,user-defined function's,user-defined functions',custom function,/508.xml
+custom property set,custom property set,custom property sets,custom property set's,custom property sets',property set,property sets,property set's,property sets',/246.xml
+custom property,custom properties,user-defined property,user-defined properties,user-defined property's,user-defined properties',custom property,custom property's,custom properties',user property,user properties,user property's,user properties',instance variable,instance variables,instance variable's,instance variables',/197.xml
+Darwin,Darwin,Darwin's,Darwin layer,Darwin layer's,/120.xml
+data fork,datafork,dataforks,datafork's,dataforks',data fork,data forks,data fork's,data forks',/332.xml
+database driver,database driver,database drivers,database driver's,database drivers',/191.xml
+database field,database field,database fields,database field's,database fields',/161.xml
+Database library,Database libraries,Database library's,Database libraries',Database library,/38.xml
+Database Query Builder,Database Query Builder,Database Query Builder's,Database Manager,Database Manager's,/355.xml
+database,database,databases,database's,databases',SQL database,SQL databases,SQL database's,SQL databases',/174.xml
+datagram,datagram,datagrams,datagram's,datagrams',/7.xml
+debug,debugging,debug,debugs,debugged,/31.xml
+debugger,debugger,debuggers,debugger's,debuggers',script debugger,script debuggers,script debugger's,script debuggers',debug mode,debug mode's,debugging mode,debugging mode's,script debug mode,script debug mode's,script debugging mode,script debugging mode's,/162.xml
+decimal point,decimal point,decimal points,decimal point's,decimal points',/437.xml
+decimal,decimal number system,decimal number system's,decimal system,decimal system's,decimal,decimals,decimal number,decimal numbers,decimal number's,decimal numbers',/8.xml
+declare,declaration,declarations,declaration's,declarations',declaring,declared,declares,declare,declare's,declares',/113.xml
+decode,decoding,decoding's,decodings,decodings',decoded,decodes,decode,/213.xml
+decrypt,decryption,decryption's,decrypting,decrypted,decrypts,decrypt,/342.xml
+default button,default button,default buttons,default button's,default buttons',/404.xml
+default,defaults,default's,defaults',default,/36.xml
+degree,degrees,degree's,degrees',degree,/160.xml
+delimit,delimiting,delimited,delimits,delimit,/159.xml
+delimiter,delimiters,delimiter's,delimiters',delimiter,/181.xml
+dereference,dereference,dereferencing,dereferences,dereferenced,/192.xml
+desktop,desktop,desktops,desktop's,desktops',desktop background,desktop backgrounds,desktop background's,desktop backgrounds',background window,background windows,background window's,background windows',/77.xml
+development environment,development environment,development environments,development environment's,development environments',dev environment,/225.xml
+device driver,device driver,device drivers,device driver's,device drivers',driver,drivers,driver's,drivers',/217.xml
+dialog box,dialog,dialogs,dialog's,dialogs',dialog box,dialog boxes,dialog box's,dialog boxes',/311.xml
+dimmed,dimmed,dim,dimming,dims,gray out,grayed out,graying out,grays out,grayed-out,/218.xml
+disabled,disable,disabled,disabling,disables,gray out,grayed out,graying out,host,ghosted,/400.xml
+disclosure triangle,disclosure triangle,disclosure triangles,disclosure triangle's,disclosure triangles',disclosure arrow,disclosure arrows,disclosure arrow's,disclosure arrows',flip arrow,flip arrows,flip arrow's,flip arrows',flip-down arrow,flip-down arrows,flip-down arrow's,flip-down arrows',/464.xml
+Display PostScript,Display PostScript,Display PostScript's,/436.xml
+dither,dithers,dithering,dithered,dither,dither pattern,dither patterns,dither pattern's,dither patterns',/264.xml
+DLL,DLLs,DLL's,DLLs',DLL,/321.xml
+DNS,DNS,Domain Name Service,Domain Name Service's,DNS's,/227.xml
+dock,dock,dock's,docked,/388.xml
+document,documents,document's,documents',document,/482.xml
+domain name,domain names,domain name's,domain names',domain name,/506.xml
+domain,domain,domains,domain's,domains',/445.xml
+double quote,double quotes,double quotes',double quote,straight quote,straight quotes,straight quotes',quote mark,quote marks,quote mark's,quote marks',quotation mark,quotation marks,quotation mark's,quotation marks',/465.xml
+double-byte character,double-byte character,double-byte characters,double-byte character's,double-byte characters',double-byte,two-byte character,two-byte characters,two-byte character's,two-byte characters',2-byte character,2-byte characters,2-byte character's,2-byte characters',/86.xml
+double-byte font,double-byte font,double-byte fonts,double-byte font's,double-byte fonts',Unicode font,Unicode fonts,Unicode font's,Unicode fonts',/49.xml
+double-click,double click,double clicks,double clicked,double clicking,double-click,double-clicked,double-clicks,double-clicking,/203.xml
+download,downloads,downloading,downloaded,download,download's,downloads',/219.xml
+drag and drop,drag and drop,drag and dropped,dragged and dropped,drag and drops,drags and drops,drag and dropping,drag,drop,drag-and-drop,drag/drop,drag-and-dropped,dragged-and-dropped,drag-and-dropping,dragging-and-dropping,/32.xml
+drawer,drawer,drawers,drawer's,drawers',drawer window,drawer windows,drawer window's,drawer windows',/239.xml
+DSN,DSN,DSNs,DSN's,DSNs',data source name,data source names,data source name's,data source names',ODBC DSN,ODBC DSNs,ODBC DSN's,ODBC DSNs',/334.xml
+DTD,DTD,DTDs,DTD's,DTDs',Document Type Definition,Document Type Definitions,Document Type Definition's,Document Type Definitions',Document Type Declaration,Document Type Declarations,Document Type Declaration's,Document Type Declarations',/179.xml
+editable window,editable window,editable windows,editable window's,editable windows',editable stack window,editable stack windows,editable stack window's,editable stack windows',/453.xml
+element,element,elements,element's,elements',/123.xml
+Emacs,Emacs,Emacs's,/132.xml
+encode,encoded,encodes,encoding,encodings,encoding's,encodings',encode,/263.xml
+encrypt,encryption,encryptions,encryption's,encryptions',encrypts,encrypting,encrypted,encrypt,/500.xml
+end-of-line marker,end-of-line marker,end-of-line markers,end-of-line marker's,end-of-line markers',end of line marker,end of line markers,end of line marker's,end of line markers',end-of-line,end-of-line,end-of-line,end-of-line,end of line,end of line,end of line,end of line,line end,line ends,line end's,line ends',line ending,line endings,line ending's,line endings',/277.xml
+engine,engine,engines,engine's,engines',/202.xml
+environment variable,environment variables,environment variable's,environment variables',shell variable,shell variables,shell variable's,shell variables',environment variable,/461.xml
+EOF,end-of-file,end-of-file's,end of file,end of file's,EOF,EOF's,/25.xml
+eon,eon,eons,eon's,eons',aeon,aeons,aeon's,aeons',/27.xml
+EPS,EPS,EPSs,EPS's,EPSs',Encapsulated Postscript,Encapsulated Postscript's,EPS object,EPS objects,EPS object's,EPS objects',/476.xml
+error message,error message,error messages,error message's,error messages',/361.xml
+error,error,errors,error's,errors',script error,script errors,script error's,script errors',/528.xml
+Escape key,escape,esc,Escape key,Escape key's,/124.xml
+evaluate,evaluation,evaluating,evaluated,evaluates,evaluate,/104.xml
+Evaluation Edition,Evaluation Edition,Evaluation Editions,Evaluation Edition's,Evaluation Editions',trial edition,trial editions,trial edition's,trial editions',Evaluation license,Evaluation licenses,Evaluation license's,Evaluation licenses',/165.xml
+event,events,event's,events',event,/480.xml
+exception handling,exception handling,exception handler,exception handlers,exception-handle,exception-handles,exception-handling,exception-handled,/532.xml
+execute,execution,executing,executes,executed,execute,/276.xml
+execution error,runtime error,runtime errors,runtime error's,runtime errors',run-time error,run-time errors,run-time error's,run-time errors',execution error,execution errors,execution error's,execution errors',/107.xml
+exit,exits,exiting,exited,exit,exit's,/145.xml
+explicit focus,click-to-type focus,click focus,active focus,explicit focus,active-focus,explicit-focus,/548.xml
+export,exporting,exported,exports,export,/323.xml
+expression,expressions,expression's,expressions',expression,/152.xml
+extension,file extension,file extensions,file extension's,file extensions',extensions,extension's,extensions',extension,/106.xml
+external,external,externals,external's,externals',external command,external commands,external command's,external commands',external function,external functions,external function's,external functions',external package,external packages,external package's,external packages',/183.xml
+factor,factors,factor's,factors',factor,/98.xml
+fat application,fat application,fat applications,fat application's,fat applications',/478.xml
+field,fields,field's,fields',field,/248.xml
+file dialog box,standard file,standard file dialog,standard file dialogs,standard file dialog's,standard file dialogs',file selector,file selectors,file selector's,file selectors',file requestor,file requestors,file requestor's,file requestors',file dialog,file dialogs,file dialog's,file dialogs',file dialog box,file dialog boxes,file dialog box's,file dialog boxes',/206.xml
+file path,pathname,pathnames,pathname's,pathnames',file pathname,file pathnames,file pathname's,file pathnames',path,paths,path's,paths',file path,file paths,file path's,file paths',name and location,names and locations,file's path,files' path,file's pathname,files' pathname,/17.xml
+file,files,files',file,file's,/496.xml
+firewall,firewall,firewalls,firewalled,firewalling,/540.xml
+flag,flags,flag's,flags',flag,/423.xml
+focus,focusing,focussing,focused,focussed,focuses,focusses,focus,keyboard focus,keyboard focus's,/309.xml
+folder,folder,folders,folder's,folders',directory,directory's,directories,directories',/59.xml
+font,font face,font faces,font face's,font faces',fonts,font's,fonts',font,/336.xml
+format,formatted,formatting,formats,format's,formats',format,/256.xml
+frame,frames,frame's,frames',frame,/201.xml
+frontScript,frontscripts,frontscript's,frontscripts',frontScript,/195.xml
+FTP,File Transfer Protocol,FTP,File Transfer Protocol's,FTP's,/9.xml
+function call,function call,function calls,function call's,function calls',/541.xml
+function handler,function handlers,function handler's,function handlers',function handler,/365.xml
+function,functions,function,function's,functions',/37.xml
+gamma,gamma curve,gamma curves,gamma curve's,gamma curves',gamma setting,gamma settings,gamma setting's,gamma settings',gamma,gammas,gamma's,gammas',/471.xml
+Geometry library,Geometry libraries,Geometry library's,Geometry libraries',Geometry library,/372.xml
+geometry management,geometry management,geometry manager,geometry management's,geometry manager's,manage geometry,managing geometry,manages geometry,managed geometry,/243.xml
+getProp call,getProp call,getProp calls,getProp call's,getProp calls',/24.xml
+getProp handler,getProp handlers,getProp handler's,getProp handlers',getProp handler,/403.xml
+GIF,GIF file,GIF files,GIF file's,GIF files',GIF,GIFs,GIF's,GIFs',/233.xml
+global,global,globals,global's,globals',globally,global variable,global variables,global variable's,global variables',global property,global properties,global property's,global properties',/376.xml
+graphic,graphic,graphics,graphic's,graphics',graphic object,graphic objects,graphic object's,graphic objects',vector graphic,vector graphics,vector graphic's,vector graphics',/222.xml
+greedy,greedy,greediness,greedy's,/188.xml
+group,groups,group's,groups',group,grouping,grouped,/164.xml
+group-editing mode,group editing mode,group editing mode's,group-editing mode,group-editing mode's,group edit mode,group edit mode's,group-edit mode,group-edit mode's,/504.xml
+grouped control,grouped control,grouped controls,grouped control's,grouped controls',grouped button,grouped buttons,grouped button's,grouped buttons',group's button,group's buttons,group's button's,group's buttons',grouped field,grouped fields,grouped field's,grouped fields',grouped object,grouped objects,grouped object's,grouped objects',/33.xml
+grouped text,grouped text,grouped text's,text group,text groups,text group's,text groups',/380.xml
+handle,handle,handles,handled,handling,/247.xml
+handler,handlers,handler's,handlers',handler,/283.xml
+hexadecimal,hex,hexadecimal,hexadecimals,hexadecimal number,hexadecimal numbers,hexadecimal number's,hexadecimal numbers',hexadecimal number system,hexadecimal number system's,/144.xml
+highlight,hilite,hilites,hilited,hiliting,highlite,highlites,highlited,highliting,hilight,hilights,hilighted,hilighting,highlight,highlights,highlighted,highlighting,unhilite,unhilites,unhilited,unhiliting,unhighlite,unhighlites,unhighlited,unhighliting,unhilight,unhilights,unhilighted,unhilighting,unhighlight,unhighlights,unhighlighted,unhighlighting,/163.xml
+home directory,home directory,home directories,home directory's,home directories',homedir,homedirs,homedir's,homedirs',home folder,home folders,home folder's,home folders',/345.xml
+host byte order,host byte order,host byte order's,/11.xml
+host,hosts,host's,hosts',host,/74.xml
+HTML,HTML,HTML's,/391.xml
+HTTP,HTTP,HTTP's,/320.xml
+HyperCard,HyperTalk,HyperTalk's,HC,HC's,HT,HT's,HyperCard,HyperCard's,/401.xml
+hypertext,hypermedia,hypermedia's,hypertext,hypertext's,/307.xml
+iconify,iconifies,iconification,iconified,iconify,iconifying,/93.xml
+IDE,IDE,IDE's,/535.xml
+idle,idling,idle time,idle-time,idle,/379.xml
+image,images,image,image's,images',image objects,image object,image object's,image objects',/318.xml
+implicit focus,pointer focus,implicit focus,/80.xml
+import,imported,imports,importing,import,/253.xml
+inheritance,inherit,inheriting,inherits,inherited,inheritance,inheritances,inheritance's,inheritances',owner's,/459.xml
+insertion point,insertion point,insertion points,insertion point's,insertion points',/490.xml
+integer,integer,integers,integer's,integers',/491.xml
+Internet library,Internet library,Internet libraries,Internet library's,Internet libraries',/20.xml
+inverse,inverse,inverses,inverse's,inverses',inverse function,inverse functions,inverse function's,inverse functions',inverse operator,inverse operators,inverse operator's,inverse operators',/176.xml
+IP address,IP address,IP addresses,IP address's,IP addresses',network address,network addresses,network address's,network addresses',Internet address,Internet addresses,Internet address's,Internet addresses',TCP/IP address,TCP/IP addresses,TCP/IP address's,TCP/IP addresses',/221.xml
+ISO 8859,ISO character set,ISO character set's,ISO-8859,ISO-8859's,ISO-8859-1,ISO-8859-1',ISO 8859-1,ISO 8859-1',ISO-Latin,ISO-Latin',ISO Latin,ISO Latin',ISO Latin-1,ISO Latin-1's,ISO 8859,ISO 8859's,/52.xml
+item,items,item's,items',item,/139.xml
+iteration,iterate,iterates,iterating,iterated,iteration,iterations,iteration's,iterations',/196.xml
+JPEG,JPEG,JPEGs,JPEG's,JPEGs',JPG,JPGs,JPG's,JPGs',.jpeg,.jpegs,.jpeg's,.jpegs',.jpg,.jpgs,.jpg's,.jpgs',/344.xml
+key binding,key binding,key bindings,key binding's,key bindings',keybinding,keybindings,keybinding's,keybindings',key mapping,key mappings,key mapping's,key mappings',keymapping,keymappings,keymapping's,keymappings',keyboard mapping,keyboard mappings,keyboard mapping's,keyboard mappings',/544.xml
+key combination,key combination,key combinations,key combination's,key combinations',/477.xml
+key frame,key frame,key frames,key frame's,key frames',keyframe,keyframes,keyframe's,keyframes',/416.xml
+key,index,indexes,index's,indexes',indices,indices',key,keys,key's,keys',/54.xml
+keyboard equivalent,key shortcut,key shortcuts,key shortcut's,key shortcuts',keyboard shortcut,keyboard shortcuts,keyboard shortcut's,keyboard shortcuts',key equivalent,key equivalents,key equivalent's,key equivalents',keyboard equivalent,keyboard equivalents,keyboard equivalent's,keyboard equivalents',/127.xml
+keycode,keycode,keycodes,keycode's,keycodes',key code,key codes,key code's,key codes',raw keycode,raw keycodes,raw keycode's,raw keycodes',raw key code,raw key codes,raw key code's,raw key codes',/116.xml
+keyword,keyword,keywords,keyword's,keywords',/122.xml
+landscape,landscape mode,landscape mode's,landscape,/111.xml
+launch,launches,launched,launching,launch,launch's,launches',/287.xml
+layer,layers,layer's,layers',layer,/486.xml
+library,libraries,library,libraries',library's,/375.xml
+line,line,lines,line's,lines',/449.xml
+list field,list field,list fields,list field's,list fields',clickable list,clickable lists,clickable list's,clickable lists',/198.xml
+literal string,literal string,literal strings,literal string's,literal strings',string literal,string literals,string literal's,string literals',literal,literals,literal's,literals',/385.xml
+load,loaded,loading,loads,load,/138.xml
+loaded into memory,loaded into memory,loading into memory,loads into memory,load into memory,loaded it into memory,loading it into memory,loads it into memory,load it into memory,/339.xml
+local file,local file,local files,local file's,local files's,local disk,local disks,local disk's,local disks',local volume,local volumes,local volume's,local volumes',local drive,local drives,local drive's,local drives',local folder,local folders,local folder's,local folders',local directory,local directories,local directory's,local directories',local system,local systems,local system's,local systems',/356.xml
+local property,local property,local property's,local properties,local properties',/141.xml
+local variable,local variables,local variable's,local variables',local variable,local,locals,local's,locals',/10.xml
+lock,locked,locks,locking,lock,/501.xml
+logical,logical,Boolean,/511.xml
+look and feel,look and feel,/518.xml
+loop,repeat loop,repeat loops,repeat loop's,repeat loops',loops,loop's,loops',looping,loop,looped,/418.xml
+lossless compression,lossless compression,lossless compression's,lossless compression method,lossless compression methods,lossless compression method's,lossless compression methods',lossless,/79.xml
+lossy compression,lossy compression,lossy compression's,lossy compression method,lossy compression methods,lossy compression method's,lossy compression methods',lossy,/343.xml
+Mac OS,Mac,Macs,Mac's,Macs',Macintosh,Macintoshes,Macintosh's,Macintoshes',Mac OS,Mac OS's,Mac OS system,Mac OS systems,Mac OS system's,Mac OS systems',MacOS,MacOS's,MacOS system,MacOS systems,MacOS system's,MacOS systems',/468.xml
+MacBinary,MacBinary,/223.xml
+main stack,main stack,main stacks,main stack's,main stacks',mainstack,mainstacks,mainstack's,mainstacks',/258.xml
+mask,masked,masks,mask's,masks',mask,/433.xml
+master profile,master profile,master profiles,master profile's,master profiles',master property profile,master property profiles,master property profile's,master property profiles',/56.xml
+matched,unmatched,matched,matching,/499.xml
+maximize button,maximize button,maximize buttons,maximize button's,maximize buttons',maximize box,maximize boxes,maximize box's,maximize boxes',maximize control,maximize controls,maximize control's,maximize controls',/450.xml
+maximize,maximized,maximizing,maximizes,maximize,/169.xml
+menu bar,menu bar,menu bars,menu bar's,menu bars',menubar,menubars,menubar's,menubars',/485.xml
+Menu Builder,Menu Builder,Menu Builder's,Menu Manager,Menu Manager's,/534.xml
+menu item,menu item,menu items,menu item's,menu items',menuitem,menuitems,menuitem's,menuitems',/146.xml
+menu,menu,menus,menu's,menus',/392.xml
+message box,message box,message box's,msg box,msg box's,message window,message window's,msg window,msg window's,message palette,message palette's,msg palette,msg palette's,/443.xml
+message handler,message handler,message handlers,message handler's,message handlers',/305.xml
+message order,message sending order,message sending order's,message-sending order,message-sending order's,message order,message order's,/91.xml
+message path,message path,message path's,/190.xml
+message watcher,message watcher,message watchers,message watcher's,message watchers',/300.xml
+message,messages,message's,messages',message,/454.xml
+Meta key,Meta key,Meta keys,Meta key's,Meta keys',Meta-key,Meta-key's,/359.xml
+MetaCard,MetaTalk,MT,MC,MetaCard,MetaTalk's,MT's,MC's,MetaCard's,/338.xml
+metal window,metal,metal's,metallic,metal window,metal windows,metal window's,metal windows',textured window,textured windows,textured window's,textured windows',/322.xml
+millisecond,milliseconds,millisecond's,milliseconds',millisecond,/45.xml
+MIME,MIME encoding,MIME encoded,MIME-encoding,MIME-encoded,MIME,/89.xml
+minimize button,minimize box,minimize boxes,minimize box's,minimize boxes',minimize control,minimize controls,minimize control's,minimize controls',minimize button,minimize buttons,minimize button's,minimize buttons',/110.xml
+minimize,minimizing,minimizes,minimized,minimize,/85.xml
+modal dialog box,modal,modals,modal's,modals',modal dialog box,modal dialog boxes,modal dialog box's,modal dialog boxes',modal dialog,modal dialogs,modal dialog's,modal dialogs',/357.xml
+modeless dialog box,modeless,modelesses,modeless's,modelesses',modeless dialog box,modeless dialog boxes,modeless dialog box's,modeless dialog boxes',modeless dialog window,modeless dialog windows,modeless dialog window's,modeless dialog windows',modeless dialog,modeless dialogs,modeless dialog's,modeless dialogs',non-modal,non-modal's,non-modal dialog box,non-modal dialog boxes,non-modal dialog box's,non-modal dialog boxes',non-modal dialog,non-modal dialogs,non-modal dialog's,non-modal dialogs',nonmodal,nonmodal's,nonmodal dialog box,nonmodal dialog boxes,nonmodal dialog box's,nonmodal dialog boxes',nonmodal dialog,nonmodal dialogs,nonmodal dialog's,nonmodal dialogs',/193.xml
+modifier key,modifier key,modifier keys,modifier key's,modifier keys',/328.xml
+Motif,Motif,Motif's,/394.xml
+mouse button,mouse buttons,mouse button's,mouse buttons',mouse button,/413.xml
+mouse pointer,pointer,pointers,pointer's,pointers',mouse pointer,mouse pointers,mouse pointer's,mouse pointers',/296.xml
+movie,movie,movies,movie's,movies',movie file,movie files,movie file's,movie files',/112.xml
+MPEG,MPEG,mpegs,mpeg's,mpegs',mpg,mpgs,mpg's,mpgs',/377.xml
+navigation message,navigation message,navigation messages,navigation message's,navigation messages',/134.xml
+negative,negative,/156.xml
+nest,nesting,nested,nest,nests,/521.xml
+network byte order,network byte order,network byte order's,/275.xml
+NNTP,NNTP,NNTP's,/408.xml
+node,node,nodes,node's,nodes',XML node,XML nodes,XML node's,XML nodes',/352.xml
+non-blocking,non-blocking,non-block,non-blocking read,non-blocking write,non-blocks,non-blocked,/324.xml
+non-greedy,non-greedy,non-greediness,non-greedy's,nongreedy,nongreediness,nongreedy's,/23.xml
+non-negative,non-negative,nonnegative,/236.xml
+non-printable character,non-printable character,non-printable characters,non-printable character's,non-printable characters',unprintable character,unprintable characters,unprintable character's,unprintable characters',/130.xml
+null,nulls,null's,nulls',null,null characters,null character's,null characters',null character,/128.xml
+numeric,numerical,numeric,/211.xml
+object hierarchy,object hierarchy,object hierarchies,object hierarchy's,object hierarchies',/136.xml
+object reference,descriptor,descriptors,descriptor's,descriptors',object descriptor,object descriptors,object descriptor's,object descriptors',reference,references,reference's,references',object reference,object references,object reference's,object references',stack reference,stack references,stack reference's,stack references',card reference,card references,card reference's,card references',field reference,field references,field reference's,field references',button reference,button references,button reference's,button references',image reference,image references,image reference's,image references',player reference,player references,player reference's,player references',group reference,group references,group reference's,group references',background reference,background references,background reference's,background references',control reference,control references,control reference's,control references',/208.xml
+object type,object type,object types,object type's,object types',classes,class's,classes',object class,object classes,object class's,object classes',class,/117.xml
+object,objects,object,object's,objects',/438.xml
+octal,octal,octals,octal number,octal numbers,octal number's,octal numbers',octal number system,octal number system's,/58.xml
+ODBC manager,ODBC manager,ODBC managers,ODBC manager's,ODBC managers',/431.xml
+offset,offsets,offset's,offsets',offset,/180.xml
+Open Database Connectivity (ODBC),Open Database Connectivity,Open Data Base Connectivity,ODBC,Open Database Connectivity's,Open Data Base Connectivity's,ODBC's,/447.xml
+Open Scripting Architecture (OSA),open scripting architecture,open scripting architecture's,OSA,OSA's,OSA language,OSA languages,OSA language's,OSA languages',/150.xml
+operand,operands,operand's,operands',operand,/364.xml
+operation,operations,operation's,operations',operation,/234.xml
+operator,operators,operator's,operators',operator,/348.xml
+Option key,Option key,Option key's,Option-key,Option-key's,/14.xml
+Oracle Media Objects,OMO,Oracle Media Objects,/72.xml
+ordinal,ordinals,ordinal's,ordinals',ordinal,ordinal number,ordinal numbers,ordinal number's,ordinal numbers',/189.xml
+OS X,OS X,OS X's,OSX,OSX's,OS X system,OSX system,OS X systems,OSX systems,OS X system's,OSX system's,OS X systems',OSX systems',/427.xml
+owner,owner,owners,owner's,owners',owned,owning,own,owns,parent,parents,parent's,parents',/405.xml
+pad,pads,padded,padding,pad,/187.xml
+paint tool,paint tool,paint tools,paint tool's,paint tools',/94.xml
+palette,palette,palettes,palette's,palettes',palette window,palette windows,palette window's,palette windows',utility window,utility windows,utility window's,utility windows',windoid,windoid's,windoids,windoids',/259.xml
+pane,pane,panes,pane's,panes',window pane,window panes,window pane's,window panes',/428.xml
+panel,panel,panels,panel's,panels',scrolling panel,scrolling panels,scrolling panel's,scrolling panels',window panel,window panels,window panel's,window panels',/417.xml
+parameter variable,parameter variable,parameter variables,parameter variable's,parameter variables',/498.xml
+parameter,parameters,parameter's,parameters',parameter,/155.xml
+parent folder,parent folder,parent folders,parent folder's,parent folders',enclosing folder,enclosing folders,enclosing folder's,enclosing folders',parent directory,parent directories,parent directory's,parent directories',enclosing directory,enclosing directories,enclosing directory's,enclosing directories',/302.xml
+parent node,parent node,parent nodes,parent node's,parent nodes',/439.xml
+pass by reference,pass by reference,passed by reference,passing by reference,passes by reference,pass-by-reference,call by reference,called by reference,calling by reference,calls by reference,call-by-reference,/432.xml
+pass by value,pass by value,passed by value,passes by value,passing by value,pass-by-value,call by value,called by value,calls by value,calling by value,call-by-value,/286.xml
+pass,pass,passed,passing,passes,/46.xml
+password,password,passwords,password's,passwords',pass phrase,pass phrases,pass phrase's,pass phrases',passphrase,passphrases,passphrase's,passphrases',/96.xml
+PBM,PBM,PBMs,PBM's,PBMs',.pbm,.pbms,.pbm's,.pbms',/182.xml
+peripheral device,peripheral device,peripheral devices,peripheral device's,peripheral devices',peripheral,peripherals,peripheral's,peripherals',device,devices,device's,devices',/398.xml
+PGM,.pgm,.pgms,.pgm's,.pgms',PGM,PGMs,PGM's,PGMs',/255.xml
+PICT,PICTs,PICT's,PICTs',PICT,/185.xml
+pixel,pixels,pixel's,pixels',pixel,/462.xml
+pixmap,pixmaps,pixmap's,pixmaps',pixmapped,pixmap,pix-maps,pix-map's,pix-maps',pix-mapped,pix-map,/55.xml
+platform,platforms,platform's,platforms',platform,/170.xml
+Platinum,Platinum,Platinum's,Platinum appearance,Platinum appearance's,/458.xml
+player,player,players,player's,players',/282.xml
+plist,plist,plists,plist's,plists',plist file,plist files,plist file's,plist files',property list,property lists,property list's,property lists',property list file,property list files,property list file's,property list files',/39.xml
+plugin,plugin,plugins,plugin's,plugins',plug-in,plug-ins,plug-in's,plug-ins',plugin stack,plugin stacks,plugin stack's,plugin stacks',plug-in stack,plug-in stacks,plug-in stack's,plug-in stacks',/346.xml
+PNG,.png,.pngs,.png's,.pngs',PNG,PNGs,PNG's,PNGs',/479.xml
+point,point,points,point's,points',pointing,pointed,/167.xml
+Pointer tool,Pointer tool,Pointer tools,Pointer tool's,Pointer tools',Arrow tool,Arrow tools,Arrow tool's,Arrow tools',/382.xml
+poll,poll,polls,polling,polled,/442.xml
+polygon,polygons,polygon's,polygons',irregular polygon,irregular polygons,irregular polygon's,irregular polygons',polygon,/101.xml
+POP,POP,POP's,/503.xml
+popup menu,popup,popups,popup's,popups',popup menu,popup menus,popup menu's,popup menus',pop-up menu,pop-up menus,pop-up menu's,pop-up menus',/30.xml
+port,ports,port's,ports',port,port number,port numbers,port number's,port numbers',ported,porting,/362.xml
+portrait,portrait mode,portrait mode's,portrait,/330.xml
+PostScript,PostScript,PostScript's,PostScript file,PostScript files,PostScript file's,PostScript files',/519.xml
+PPM,PPM,PPMs,PPM's,PPMs',.PPM,.PPMs,.PPM's,.PPMs',/523.xml
+precedence,precedence,precedence's,operator precedence,operator precedence's,/109.xml
+precision,precision,/105.xml
+prepend,prepend,prepended,prepends,prepending,/262.xml
+pretty printing,pretty printing,pretty print,pretty printed,pretty-printing,pretty-print,pretty-printed,/62.xml
+primary key,primary key,primary keys,primary key's,primary keys',primary database key,primary database keys,primary database key's,primary database keys',/366.xml
+print job,print job,print jobs,print job's,print jobs',printjob,printjobs,printjob's,printjobs',/510.xml
+printable character,printable character,printable characters,printable character's,printable characters,printable,/226.xml
+Printing library,Printing library,Printing libraries,Printing library's,Printing libraries',/422.xml
+process,processes,process,processes',process's,/526.xml
+Profile library,Profiles library,Profiles libraries,Profiles library's,Profiles libraries',Profile library,Profile libraries,Profile library's,Profile libraries',/102.xml
+prompt,prompts,prompt's,prompts',prompt,prompted,prompting,/61.xml
+property inspector,property inspector,property inspectors,property inspector's,property inspectors',Properties palette,Properties palettes,Properties palette's,Properties palettes',Properties window,Properties windows,Properties window's,Properties windows',/452.xml
+property profile,profile,profiles,profile's,profiles',property profile,property profiles,property profile's,property profiles',/250.xml
+property,properties,property,property's,properties',/68.xml
+protocol,protocols,protocol's,protocols',protocol,/517.xml
+proxy server,proxy,proxies,proxy's,proxies',proxy server,proxy servers,proxy server's,proxy servers',/137.xml
+QuickTime VR,Quicktime VR,Quicktime VR's,QTVR,QTVR's,QT VR,QT VR's,QT-VR,QT-VR's,/140.xml
+QuickTime,QT,QTI,QuickTime,QT's,QTI's,QuickTime's,/351.xml
+quoted,quoted,/542.xml
+radian,radian,radians,radian's,radians',/481.xml
+radio button,radio button,radio buttons,radio button's,radio buttons',radio cluster,radio clusters,radio cluster's,radio clusters',radio button cluster,radio button clusters,radio button cluster's,radio button clusters',radio-button cluster,radio-button clusters,radio-button cluster's,radio-button clusters',radio group,radio groups,radio group's,radio groups',radio-button group,radio-button groups,radio-button group's,radio-button groups',radio button group,radio button groups,radio button group's,radio button groups',/524.xml
+random,randomize,randomized,random,randomly,/63.xml
+range,ranges,range's,ranges',range,/119.xml
+read-only,read only,readonly,read-only,/71.xml
+real number,real numbers,real number's,real numbers',real number,floating-point number,floating-point numbers,floating-point number's,floating-point numbers',/1.xml
+REALbasic,REALbasic,REALbasic's,/399.xml
+recent cards,recent cards list,recent-cards list,recent list,recent cards list's,recent-cards list's,recent list's,recent cards,recent card,recent card's,recent cards',recently visited card,recently-visited card,recently visited card's,recently-visited cards',recently visited cards,recently-visited cards,recently visited card's,recently-visited cards',/21.xml
+record set (database cursor),record set (database cursor),record sets (database cursors),record set's (database cursor's),record sets' (database cursors'),cursor (record set),cursors (record sets),cursor's (record set's),cursors' (record sets'),database cursor (record set),database cursors (record sets),database cursor's (record set's),database cursors' (record sets'),record set,record sets,record set's,record sets',database record set,database record sets,database record set's,database record sets',database cursor,database cursors,database cursor's,database cursors',cursor result set,cursor result sets,cursor result set's,cursor result sets',cursor results set,cursor results sets,cursor results set's,cursor results sets',result set,result sets,result set's,result sets',results set,results sets,results set's,results sets',/47.xml
+record,record,records,record's,records',database record,database records,database record's,database records',row,rows,row's,rows',database row,database rows,database row's,database rows',/95.xml
+rectangle,rectangle,rectangles,rectangle's,rectangles',/88.xml
+recursion,recursion,recurse,recurses,recursed,recursing,recursive,/378.xml
+redraw,redrawn,redrawing,redraws,redrew,redraw,/273.xml
+referenced control,referenced control,referenced controls,referenced control's,referenced controls',referenced player,referenced players,referenced player's,referenced players',referenced image,referenced images,referenced image's,referenced images',/530.xml
+registry,registries,registry,registry's,system registry,system registries,system registry's,Windows system registry,Windows system registries,Windows system registry's,Windows registry,Windows registries,Windows registry's,/34.xml
+regular expression,regex,regexes,regex's,regexes',regexp,regexps,regexp's,regexps',regular expressions,regular expression's,regular expressions',regular expression,/133.xml
+regular polygon,regular polygons,regular polygon's,regular polygons',regular polygon,/483.xml
+relative coordinates,window coordinates,relative coordinates,local coordinates,relative (window) coordinates,window coordinates',relative coordinates',local coordinates',relative (window) coordinates',/100.xml
+relative file path,relative file path,relative file paths,relative file path's,relative file paths',relative path,relative paths,relative path's,relative paths',/340.xml
+remainder,remainders,remainder's,remainders',remainder,/184.xml
+Report Builder,Report Builder,Report Builder's,/126.xml
+report layout card,report layout card,report layout cards,report layout card's,report layout cards',/420.xml
+report viewer,report viewer,report viewers,report viewer's,report viewers',report object,report objects,report object's,report objects',report viewer object,report viewer objects,report viewer object's,report viewer objects',/172.xml
+ResEdit,ResEdit,/142.xml
+reserved word,reserved word,reserved words,reserved word's,reserved words',reserved,reserved term,reserved terms,reserved term's,reserved terms',/257.xml
+reset,resets,resetting,reset,/151.xml
+resource fork,resource fork,resource forks,resource fork's,resource forks',/425.xml
+resource,resources,resource,resource's,resources',/237.xml
+resume,resuming,resumes,resumed,resume,/73.xml
+return value,returned value,returned values,returned value's,returned values',return value,return values,return value's,return values',/467.xml
+return,return,returning,returns,returned,return,/22.xml
+Revolution custom library,Revolution custom library,Revolution custom libraries,Revolution custom library's,Revolution custom libraries',custom library,custom libraries,custom library's,custom libraries',Revolution custom command,Revolution custom command's,Revolution custom commands,Revolution custom commands',Revolution custom property,Revolution custom properties,Revolution custom property's,Revolution custom properties',Revolution custom function,Revolution custom functions,Revolution custom function's,Revolution custom functions',Revolution library,Revolution library,Revolution libraries,Revolution library's,Revolution libraries',/474.xml
+root node,root node,root nodes,root node's,root nodes',/210.xml
+RTF,RTF,RTFs,RTF's,RTFs',RTF format,RTF format's,rich text format,rich text format's,RTF file,RTF files,RTF file's,RTF files',/51.xml
+run time,run time,runtime,run-time,/269.xml
+scientific notation,scientific notation,exponent notation,exponential notation,scientific notation's,exponent notation's,exponential notation's,/308.xml
+scope,scope,scopes,scope's,scopes',scoped,scoping,/65.xml
+script debug mode,script debug mode,script debug mode's,script debugging mode,script debugging mode's,script debugger mode,script debugger mode's,/371.xml
+script editor,script editor,script editors,script editor's,script editors',script window,script windows,script window's,script windows',script palette,script palettes,script palette's,script palettes',/108.xml
+script local variable,script local,script locals,script local's,script locals',script local variable,script local variables,script local variable's,script local variables',/266.xml
+script,scripts,script's,scripts',script,/40.xml
+scrollbar thumb,thumb,thumbs,thumb's,thumbs',scroll thumb,scroll thumbs,scroll thumb's,scroll thumbs',elevator,elevators,elevator's,elevators',elevator box,elevator boxes,elevator box's,elevator boxes',scrollbar thumb,scrollbar thumbs,scrollbar thumb's,scrollbar thumbs',/121.xml
+scrollbar,scrollbar,scrollbars,scrollbar's,scrollbars',scroll bar,scroll bars,scroll bar's,scroll bars',/455.xml
+select,selecting,selects,selected,select,/149.xml
+selection,selection,selections,selection's,selections',/281.xml
+server,servers,server's,servers',server,/429.xml
+setProp handler,setProp handlers,setProp handler's,setProp handlers',setProp handler,/229.xml
+setProp trigger,setProp trigger,setProp triggers,setProp trigger's,setProp triggers',/231.xml
+shared group,shared group,shared groups,shared group's,shared groups',/509.xml
+sheet,sheet,sheets,sheet's,sheets',sheet dialog,sheet dialogs,sheet dialog's,sheet dialogs',sheet dialog box,sheet dialog boxes,sheet dialog box's,sheet dialog boxes',/514.xml
+shell,shells,shell's,shells',shell out,shelled,shell,shelling,/353.xml
+shortcut,shortcut,shortcuts,shortcut's,shortcuts',short cut,short cuts,short cut's,short cuts',file shortcut,file shortcuts,file shortcut's,file shortcuts',file short cut,file short cuts,file short cut's,file short cuts',/354.xml
+sibling node,sibling node,sibling nodes,sibling node's,sibling nodes',/204.xml
+sign,signs,sign's,signs',sign,/341.xml
+single-byte character,single-byte character,single-byte characters,single-byte character's,single-byte characters',single-byte,one-byte character,one-byte characters,one-byte character's,one-byte characters',1-byte character,1-byte characters,1-byte character's,1-byte characters',/75.xml
+SMTP,SMTP,SMTP's,/347.xml
+SOAP,SOAP,SOAP's,Simple Object Access Protocol,Simple Object Access Protocol's,/216.xml
+socket,sockets,socket's,sockets',socket,/175.xml
+sort key,sort keys,sort key's,sort keys',sort key,/402.xml
+sort,sorted,sorting,sorts,sort,/99.xml
+special folder,special folder,special folders,special folder's,special folders',/235.xml
+Speech library,Speech library,Speech libraries,Speech library's,Speech libraries',/536.xml
+SQL query,SQL query,SQL queries,SQL query's,SQL queries',query,queries,query's,queries',database query,database queries,database query's,database queries',/242.xml
+SQL,SQL,SQL's,Structured Query Language,Structured Query Language's,/148.xml
+stack file,stack file,stack files,stack file's,stack files',stackfile,stackfiles,stackfile's,stackfiles',/463.xml
+stack menu,stack menu,stack menus,stack menu's,stack menus',panel menu,panel menus,panel menu's,panel menus',menu panel,menu panels,menu panel's,menu panels',/315.xml
+stack window,stack window,stack windows,stack window's,stack windows',stack's window,stack's windows,stack's window's,stack's windows',/497.xml
+stack,stacks,stacks',stack,stack's,/251.xml
+Standalone Application Settings,Distribution Builder,Distribution Builder's,Build Distribution,Standalone Application Settings,/173.xml
+standalone application,standalone,standalones,standalone's,standalones',standalone applications,standalone application's,standalone applications',standalone application,exe,exes,exe's,exes',.exe,.exes,.exe's,.exes',executable,executables,executable's,executables',/333.xml
+standard error,stderr,standard error,stderr's,standard error's,/261.xml
+standard input,stdin,standard input,stdin's,standard input's,/81.xml
+standard output,stdout,standard output,stdout's,standard output's,/466.xml
+statement,statements,statement's,statements',statement list,statement lists,statement list's,statement lists',statement,/200.xml
+streaming,streaming,stream,streams,streamed,streaming media,streaming media's,streaming video,streaming videos,streaming video's,streaming videos',streaming audio,streaming audio's,video stream,video streams,video stream's,video streams',audio stream,audio streams,audio stream's,audio streams',/12.xml
+string,strings,string's,strings',string,/529.xml
+subfolder,subdirectory,subdirectories,subdirectory's,subdirectories',subfolder,subfolders,subfolder's,subfolders',/6.xml
+subroutine,subroutines,subroutine's,subroutines',subroutine,/16.xml
+subsidiary window,subsidiary window,subsidiary windows,subsidiary window's,subsidiary windows',child window,child windows,child window's,child windows',subwindow,subwindows,subwindow's,subwindows',/82.xml
+substack,substacks,substack's,substacks',substack,/13.xml
+SuperCard,SuperTalk,ST,SC,SuperCard,SuperTalk's,ST's,SC's,SuperCard's,/5.xml
+suspend,suspended,suspends,suspending,suspend,/329.xml
+symbolic link,symbolic link,symbolic links,symbolic link's,symbolic links',symlink,syminks,symlink's,symlinks',symlinked,symlinking,soft link,soft links,soft link's,soft links',softlink,softlinks,softlink's,softlinks',softlinked,softlinking,/230.xml
+synchronize,synchronized,synchronizing,synchronizes,sync,syncing,synced,syncs,in sync,synchronize,/291.xml
+syntax,syntactical,syntaxes,syntax,syntaxes',syntax's,/29.xml
+system window,system window,system windows,system window's,system windows',systemwide window,systemwide windows,systemwide window's,systemwide windows',system palette,system palettes,system palette's,system palettes',systemwide palette,systemwide palettes,systemwide palette's,systemwide palettes',/2.xml
+tab stop,tabstop,tab stops,tabstops,tab stop's,tabstop's,tab stops',tabstops',tab stop,/205.xml
+tabbed button,tabbed button,tabbed buttons,tabbed button's,tabbed buttons',dialog tab,dialog tabs,dialog tab's,dialog tabs',tabbed window,tabbed windows,tabbed window's,tabbed windows',tabbed dialog,tabbed dialogs,tabbed dialog's,tabbed dialogs',tab button,tab buttons,tab button's,tab buttons',/358.xml
+table field,table field,table fields,table field's,table fields',/533.xml
+table,table,tables,table's,tables',database table,database tables,database table's,database tables',/472.xml
+tag,tag,tags,tag's,tags',/502.xml
+task bar,task bar,task bar's,taskbar,taskbar's,Windows task bar,Windows task bar's,/331.xml
+TCP,TCP,TCP's,TCPIP,TCPIP's,TCP/IP,TCP/IP's,/409.xml
+template,templates,template's,templates',template,/368.xml
+temporary memory,temporary memory,system memory,MultiFinder memory,temporary memory's,system memory's,MultiFinder memory's,/35.xml
+text file,text files,text file's,text files',ASCII file,ASCII files,ASCII file's,ASCII files',text file,/228.xml
+text to speech,text to speech,text to speech's,text-to-speech,text-to-speech's,synthesized speech,speech synthesis,speech,/280.xml
+tick,ticks,tick's,ticks',tick,/66.xml
+timeout,timeouts,timeout's,timeouts',timeout,time out,timed out,times out,timing out,/549.xml
+timestamp,timestamps,timestamp's,timestamps',timestamp,/325.xml
+title bar,titlebar,titlebars,titlebar's,titlebars',title bars,title bar's,title bars',title bar,/199.xml
+token,token,tokens,token's,tokens',/67.xml
+tool tip,tooltip,tooltips,tooltip's,tooltips',tool tips,tool tip,tool tip's,tool tips',/314.xml
+tool,tool,tools,tool's,tools',/207.xml
+Transcript,Transcript,Transcript's,/313.xml
+transfer mode,transfer mode,transfer modes,transfer mode's,transfer modes',/260.xml
+trap,trap,traps,trapped,trapping,/363.xml
+trigger,triggered,triggering,triggers,trigger,/292.xml
+tweening,tween,tweened,tweens,tweening,tweening's,/386.xml
+type signature,type signature,type signatures,type signature's,type signatures',file type,file types,file type's,file types',/446.xml
+UDP,user datagram protocol,user datagram protocol's,UDP's,UDP,/310.xml
+unary,unary,/415.xml
+uncompress,uncompressed,uncompresses,uncompressing,uncompress,decompressed,decompresses,decompressing,decompress,/238.xml
+undo,undoing,undoes,undid,undo,/158.xml
+Unicode,Unicode,Unicode's,/19.xml
+Unix,Unices,Unixes,Unices',Unixes',Linux,Linuxes,Linux's,Unix,Unix's,Unix system,Unix systems,Unix system's,Unix systems',/444.xml
+unlock,unlocked,unlocking,unlocks,unlock,/360.xml
+upload,uploads,upload's,uploads',uploaded,uploading,upload,/492.xml
+URL scheme,scheme,schemes,scheme's,schemes',URL scheme,URL schemes,URL scheme's,URL schemes',/327.xml
+URL,URLs,URL's,URLs',URL,/387.xml
+user interface error,user interface error,user interface errors,user interface error's,user interface errors',Revolution user interface error,Revolution user interface errors,Revolution user interface error's,Revolution user interface errors',/538.xml
+user interface,user interfaces,user interface's,user interfaces',user-interface,user interface,/306.xml
+validate,validation,validated,validates,validating,validate,/114.xml
+value,values,value's,values',value,/272.xml
+variable watcher,variable watcher,variable watchers,variable watcher's,variable watchers',variable window,/512.xml
+variable,variables,variable's,variables',variable,var,var's,var',vars,/214.xml
+vertex,vertexes,vertices,vertexes',vertices',vertex,vertex's,/143.xml
+VFW,VFW,VFW's,Video for Windows,Video for Windows',Video for Windows's,/224.xml
+video capture,video capture,video captures,capture video,captures video,capturing video,captured video,video-capture,video-captures,/337.xml
+video clip,videoclip,videoclips,videoclip's,videoclips',video clip,video clips,video clip's,video clips',/284.xml
+video grabber,video grabber,video grabbers,video grabber's,video grabbers',video-grabber,video capture window,video capture windows,video capture window's,video capture windows',video grabber window,video grabber windows,video grabber window's,video grabber windows',video-grab window,video-grab windows,video-grab window's,video-grab windows',/373.xml
+Video library,Video library,Video libraries,Video library's,Video libraries',/493.xml
+virtual property,virtual property,virtual properties,virtual property's,virtual properties',virtual custom property,virtual custom properties,virtual custom property's,virtual custom properties',/299.xml
+WAV,.wav,.wavs,.wav's,.wavs',wavs,wav's,wavs',WAV,/209.xml
+WDEF,WDEF,WDEFs,WDEF's,WDEFs',WDEF resource,WDEF resources,WDEF resource's,WDEF resources',/525.xml
+web server,web servers,webservers,web server's,webserver's,web servers',webservers',webserver,web server,/389.xml
+whitespace,white space,whitespace,white space's,whitespace's,white space character,whitespace character,white space character's,whitespace character's,/489.xml
+wildcard,wild card,wild cards,wildcards,wild card's,wildcard's,wild cards',wildcards',wildcard,wildcard expression,wildcard expressions,wildcard expression's,wildcard expressions',glob,globbing,globs,globbed,globular expansion,globular expansions,globular expansion's,globular expansions',globular expression,globular expressions,globular expression's,globular expressions',/488.xml
+Windows,Windows 95,Windows 95's,Windows 98,Windows 98's,Windows 2000,Windows 2000's,Windows,Windows's,Windows system,Windows systems,Windows system's,Windows systems',/441.xml
+word,words,word's,words',word,/57.xml
+XBM,XBMs,XBM's,XBMs',.xbm,.XBMs,.XBM's,.XBMs',XBM,/304.xml
+XCMD,XCMDs,XCMD's,XCMDs',XCMD,/539.xml
+XFCN,XFCNs,XFCN's,XFCNs',XFCN,/414.xml
+XML document,XML document,XML documents,XML document's,XML documents',XML file,XML files,XML file's,XML files',/550.xml
+XML library,XML library,XML libraries,XML library's,XML libraries',/421.xml
+XML tree,XML tree,XML trees,XML tree's,XML trees',tree,trees,tree's,trees',/129.xml
+XML,XML,XML's,Extensible Markup Language,Extensible Markup Language's,/545.xml
+XML-RPC document,XML-RPC document,XML-RPC documents,XML-RPC document's,XML-RPC documents',/484.xml
+XML-RPC library,XML-RPC library,XML-RPC libraries,XML-RPC library's,XML-RPC libraries',/547.xml
+XML-RPC,XML-RPC,Extensible Markup Language - Remote Procedure Call,Extensible Markup Language - Remote Procedure Calls,/424.xml
+XPM,XPM,XPMs,XPM's,XPMs',.XPM,.XPMs,.XPM's,.XPMs',/147.xml
+xTalk,xTalk,xTalks,xTalk's,xTalks',xTalk language,xTalk languages,xTalk language's,xTalk languages',/396.xml
+XWD,XWDs,XWD's,XWDs',.xwd,.XWDs,.XWD's,.XWDs',XWD,/274.xml
+zoom box,zoom box,zoom box's,zoom boxes,zoom boxes',zoom control,zoom control's,zoom controls,zoom controls',zoom button,zoom button's,zoom buttons,zoom buttons',/252.xml
+zoom,zooming,zoomed,zooms,zoom,zoom in,zoomed in,zooms in,zooming in,/515.xml
