@@ -234,7 +234,7 @@ component Engine.MacOSX
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux:standalone as Standalone
+		executable linux:standalone[[EditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
 		executable linux:revpdfprinter.so
 		executable prebuilt:lib/revsecurity.so
