@@ -263,11 +263,11 @@ component Runtime.MacOSX
 
 component Runtime.Android
 	into "[[ToolsFolder]]/Runtime/Android" place
-		file android:Classes[[EditionTagUpper]]
+		file android:Classes[[EditionTagUpper]] as Classes
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
-		executable android:Standalone[[EditionTagUpper]]
+		executable android:Standalone[[EditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml
 		executable android:RevDb
