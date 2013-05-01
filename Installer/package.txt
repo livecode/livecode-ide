@@ -108,10 +108,14 @@ component Uninstaller
 
 component Misc
 	into [[SupportFolder]] place
-		textfile "ide:License Agreement.txt"
-		textfile "ide:about.txt"
-		textfile "ide:IDE License.txt"
-		textfile "ide:Engine License.txt"
+		if TargetEdition is "Community" then
+			textfile "ide:License Agreement.txt"
+			textfile "ide:about.txt"
+			textfile "ide:IDE License.txt"
+			textfile "ide:Engine License.txt"
+		if TargetEdition is "Commercial" then
+			textfile "private:License Agreement.txt"
+			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
 		file "ide:Release Notes.pdf"
 		file "ide:iOS Release Notes.pdf"
@@ -177,7 +181,7 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux:engine as [[ProductName]].x86
+		executable linux:engine[[EditionTagLower]] as [[ProductName]].x86
 		executable linux:revpdfprinter.so
 		executable prebuilt:lib/revsecurity.so
 
@@ -189,7 +193,7 @@ component Mobile.Linux
 
 component Engine.Windows
 	into [[TargetFolder]] place
-		executable windows:engine.exe as [[ProductName]].exe
+		executable windows:engine[[EditionTagLower]].exe as [[ProductName]].exe
 		executable windows:revpdfprinter.dll
 		executable prebuilt:lib/revsecurity.dll
 
@@ -223,14 +227,14 @@ component Mobile.MacOSX
 		executable macosx:revandroid.bundle
 
 component Engine.MacOSX
-	executable macosx:LiveCode.app as "[[TargetFolder]]"
+	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux:standalone as Standalone
+		executable linux:standalone[[EditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
 		executable linux:revpdfprinter.so
 		executable prebuilt:lib/revsecurity.so
@@ -239,7 +243,7 @@ component Runtime.Linux
 
 component Runtime.Windows
 	into [[TargetFolder]] place
-		executable windows:standalone.exe as Standalone
+		executable windows:standalone[[EditionTagLower]].exe as Standalone
 	into [[TargetFolder]]/Support place
 		executable windows:revpdfprinter.dll
 		executable prebuilt:lib/revsecurity.dll
@@ -251,7 +255,7 @@ component Runtime.Windows
 
 component Runtime.MacOSX
 	into [[TargetFolder]] place
-		executable macosx:standalone.app as Standalone.app
+		executable macosx:Standalone[[EditionTagUpper]].app as Standalone.app
 	into [[TargetFolder]]/Support place
 		executable macosx:revpdfprinter.bundle
 
@@ -259,11 +263,11 @@ component Runtime.MacOSX
 
 component Runtime.Android
 	into "[[ToolsFolder]]/Runtime/Android" place
-		file android:Classes
+		file android:Classes[[EditionTagUpper]] as Classes
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
-		executable android:Standalone
+		executable android:Standalone[[EditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml
 		executable android:RevDb
@@ -274,7 +278,7 @@ component Runtime.Android
 
 component Runtime.iOS
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-4_3" place
-		executable ios:iphonesimulator4.3/Release/standalone-mobile.app/standalone-mobile as Standalone
+		executable ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
 		executable ios:iphonesimulator4.3/Release/revpdfprinter.dylib as RevPdfPrinter
 		executable ios:iphonesimulator4.3/Release/revzip.dylib as RevZip
 		executable ios:iphonesimulator4.3/Release/revxml.dylib as RevXml
@@ -286,7 +290,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_0" place
-		executable ios:iphonesimulator5.0/Release/standalone-mobile.app/standalone-mobile as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile.app/standalone-mobile
+		executable ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator5.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator5.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator5.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -298,7 +302,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
-		executable ios:iphonesimulator5.1/Release/standalone-mobile.app/standalone-mobile as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile.app/standalone-mobile
+		executable ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator5.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator5.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator5.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -310,7 +314,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_0" place
-		executable ios:iphonesimulator6.0/Release/standalone-mobile.app/standalone-mobile as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile.app/standalone-mobile
+		executable ios:iphonesimulator6.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator6.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator6.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator6.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -322,7 +326,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
-		executable ios:iphonesimulator6.1/Release/standalone-mobile.app/standalone-mobile as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile.app/standalone-mobile
+		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator6.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator6.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator6.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -334,13 +338,13 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_0" place
-		executable ios:iphonesimulator5.0/Release/standalone-mobile-lib.lcext as Standalone
-		executable ios:iphonesimulator5.0/Release/revpdfprinter.lcext as RevPdfPrinter
-		executable ios:iphonesimulator5.0/Release/revzip.lcext as RevZip
-		executable ios:iphonesimulator5.0/Release/revxml.lcext as RevXml
-		executable ios:iphonesimulator5.0/Release/revdb.lcext as RevDb
-		executable ios:iphonesimulator5.0/Release/dbsqlite.lcext as DbSqlite
-		executable ios:iphonesimulator5.0/Release/dbmysql.lcext as DbMysql
+		executable ios:iphoneos5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos5.0/Release/revpdfprinter.lcext as RevPdfPrinter
+		executable ios:iphoneos5.0/Release/revzip.lcext as RevZip
+		executable ios:iphoneos5.0/Release/revxml.lcext as RevXml
+		executable ios:iphoneos5.0/Release/revdb.lcext as RevDb
+		executable ios:iphoneos5.0/Release/dbsqlite.lcext as DbSqlite
+		executable ios:iphoneos5.0/Release/dbmysql.lcext as DbMysql
 		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -351,13 +355,13 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_1" place
-		executable ios:iphonesimulator5.1/Release/standalone-mobile-lib.lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib.lcext
-		executable ios:iphonesimulator5.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
-		executable ios:iphonesimulator5.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
-		executable ios:iphonesimulator5.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
-		executable ios:iphonesimulator5.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
-		executable ios:iphonesimulator5.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
-		executable ios:iphonesimulator5.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
+		executable ios:iphoneos5.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
+		executable ios:iphoneos5.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
+		executable ios:iphoneos5.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
+		executable ios:iphoneos5.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
+		executable ios:iphoneos5.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
+		executable ios:iphoneos5.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
+		executable ios:iphoneos5.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
 		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -368,13 +372,13 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-6_1" place
-		executable ios:iphonesimulator6.1/Release/standalone-mobile-lib.lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib.lcext
-		executable ios:iphonesimulator6.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
-		executable ios:iphonesimulator6.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
-		executable ios:iphonesimulator6.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
-		executable ios:iphonesimulator6.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
-		executable ios:iphonesimulator6.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
-		executable ios:iphonesimulator6.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
+		executable ios:iphoneos6.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
+		executable ios:iphoneos6.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
+		executable ios:iphoneos6.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
+		executable ios:iphoneos6.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
+		executable ios:iphoneos6.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
+		executable ios:iphoneos6.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
+		executable ios:iphoneos6.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
 		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -399,15 +403,17 @@ component Externals.Linux
 component Externals.Windows
 	into [[TargetFolder]]/Externals place
 		executable windows:revspeech.dll
-#		executable windows:revvideograbber.dll
+		executable windows:revvideograbber.dll
 		executable windows:revxml.dll
-#		executable windows:revbrowser.dll
+		if TargetEdition is "Commercial" then
+			executable windows:revbrowser.dll
 		executable windows:revzip.dll
 		executable windows:revfont.dll
 	declare external "Speech" using revspeech.dll
-#	declare external "Video Grabber" using revvideograbber.dll
+	declare external "Video Grabber" using revvideograbber.dll
 	declare external "XML" using revxml.dll
-#	declare external "Browser" using revbrowser.dll
+	if TargetEdition is "Commercial" then
+		declare external "Browser" using revbrowser.dll
 	declare external "Revolution Zip" using revzip.dll
 	declare external "Font Support" using revfont.dll
 
@@ -438,13 +444,15 @@ component Databases.Linux
 		executable linux:dbodbc.so
 		executable linux:dbpostgresql.so
 		executable linux:dbsqlite.so
-#		executable linux:dboracle.so
+		if TargetEdition is "Commercial" then
+			executable linux:dboracle.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
 	declare dbdriver "PostgreSQL" using dbpostgresql.so
 	declare dbdriver "SqLite" using dbsqlite.so
-#	declare dbdriver "Oracle" using dboracle.so
+	if TargetEdition is "Commercial" then
+		declare dbdriver "Oracle" using dboracle.so
 
 //////////
 
@@ -456,13 +464,15 @@ component Databases.Windows
 		executable windows:dbodbc.dll
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
-#		executable windows:dboracle.dll
+		if TargetEdition is "Commercial" then
+			executable windows:dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
 	declare dbdriver "PostgreSQL" using dbpostgresql.dll
 	declare dbdriver "SqLite" using dbsqlite.dll
-#	declare dbdriver "Oracle" using dboracle.dll
+	if TargetEdition is "Commercial" then
+		declare dbdriver "Oracle" using dboracle.dll
 	
 //////////
 
@@ -474,13 +484,15 @@ component Databases.MacOSX
 		executable macosx:dbodbc.bundle
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
-#		executable macosx:dboracle.bundle
+		if TargetEdition is "Commercial" then
+			executable macosx:dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
 	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
 	declare dbdriver "SqLite" using dbsqlite.bundle
-#	declare dbdriver "Oracle" using dboracle.bundle
+	if TargetEdition is "Commercial" then
+		declare dbdriver "Oracle" using dboracle.bundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -517,13 +529,14 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/visit_foum_up.png as resources/commercial/ideSkin/visit_foum_up.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_over.png as resources/commercial/ideSkin/visit_stack_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_up.png as resources/commercial/ideSkin/visit_stack_up.png
-		file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
-		file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
-		file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
-		file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
-		file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
-		file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
-		file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
+		if TargetEdition is "Community" then
+			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
+			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
+			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
+			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
+			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
 		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
 		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
 		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
