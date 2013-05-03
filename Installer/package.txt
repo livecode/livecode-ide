@@ -41,6 +41,12 @@ installer LiveCode
 		include Externals
 	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-32 do
 		set TargetPlatform to Linux
+		set TargetArchitecture to i386
+		include Runtime
+		include Externals
+	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-64 do
+		set TargetPlatform to Linux
+		set TargetArchitecture to x86_64
 		include Runtime
 		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/Universal" do
@@ -181,13 +187,13 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux:engine[[EditionTagLower]] as [[ProductName]].x86
-		executable linux:revpdfprinter.so
-		executable prebuilt:lib/revsecurity.so
+		executable linux:[[TargetArchitecture]]/release/engine[[EditionTagLower]] as [[ProductName]].x86
+		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
+		executable linux:[[TargetArchitecture]]/release/revsecurity.so
 
 component Mobile.Linux
 	into "[[ToolsFolder]]/Externals" place
-		executable linux:revandroid.so
+		executable linux:[[TargetArchitecture]]/release/revandroid.so
 
 //////////
 
@@ -234,10 +240,10 @@ component Engine.MacOSX
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux:standalone[[EditionTagLower]] as Standalone
+		executable linux:[[TargetArchitecture]]/release/standalone[[EditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
-		executable linux:revpdfprinter.so
-		executable prebuilt:lib/revsecurity.so
+		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
+		executable linux:[[TargetArchitecture]]/release/revsecurity.so
 
 //////////
 
@@ -393,8 +399,8 @@ component Runtime.iOS
 
 component Externals.Linux
 	into [[TargetFolder]]/Externals place
-		executable linux:revxml.so
-		executable linux:revzip.so
+		executable linux:[[TargetArchitecture]]/release/revxml.so
+		executable linux:[[TargetArchitecture]]/release/revzip.so
 	declare external "XML" using revxml.so
 	declare external "Revolution Zip" using revzip.so
 
@@ -438,14 +444,14 @@ component Externals.MacOSX
 
 component Databases.Linux
 	into "[[TargetFolder]]/Externals" place
-		executable linux:revdb.so
+		executable linux:[[TargetArchitecture]]/release/revdb.so
 	into "[[TargetFolder]]/Externals/Database Drivers" place
-		executable linux:dbmysql.so
-		executable linux:dbodbc.so
-		executable linux:dbpostgresql.so
-		executable linux:dbsqlite.so
+		executable linux:[[TargetArchitecture]]/release/dbmysql.so
+		executable linux:[[TargetArchitecture]]/release/dbodbc.so
+		executable linux:[[TargetArchitecture]]/release/dbpostgresql.so
+		executable linux:[[TargetArchitecture]]/release/dbsqlite.so
 		if TargetEdition is "Commercial" then
-			executable linux:dboracle.so
+			executable linux:[[TargetArchitecture]]/release/dboracle.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
