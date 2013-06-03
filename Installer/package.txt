@@ -405,15 +405,13 @@ component Externals.Windows
 		executable windows:revspeech.dll
 		executable windows:revvideograbber.dll
 		executable windows:revxml.dll
-		if TargetEdition is "Commercial" then
-			executable windows:revbrowser.dll
+		executable windows:revbrowser.dll
 		executable windows:revzip.dll
 		executable windows:revfont.dll
 	declare external "Speech" using revspeech.dll
 	declare external "Video Grabber" using revvideograbber.dll
 	declare external "XML" using revxml.dll
-	if TargetEdition is "Commercial" then
-		declare external "Browser" using revbrowser.dll
+	declare external "Browser" using revbrowser.dll
 	declare external "Revolution Zip" using revzip.dll
 	declare external "Font Support" using revfont.dll
 
