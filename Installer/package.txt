@@ -124,8 +124,6 @@ component Misc
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
 		file "ide:Release Notes.pdf"
-		file "ide:iOS Release Notes.pdf"
-		file "ide:Android Release Notes.pdf"
 
 component Plugins
 	into [[ToolsFolder]]/Plugins place
@@ -533,6 +531,7 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/visit_foum_up.png as resources/commercial/ideSkin/visit_foum_up.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_over.png as resources/commercial/ideSkin/visit_stack_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_up.png as resources/commercial/ideSkin/visit_stack_up.png
+		file ide:Toolset/resources/commercial/ideSkin/logo.png as resources/commercial/ideSkin/logo.png
 		if TargetEdition is "Community" then
 			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
 			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
@@ -541,6 +540,7 @@ component Toolset
 			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
 			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
 			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
+			file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
 		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
 		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
 		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
@@ -601,6 +601,7 @@ component Toolset
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
 		stack ide:Toolset/revstartcenter.rev
+		stack ide:Toolset/revstartcenter.livecode
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
 		stack ide:Toolset/revupdatechecker.rev
