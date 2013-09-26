@@ -342,7 +342,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_0" place
-		executable ios:iphonesimulator6.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator7.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator7.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator7.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator7.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
