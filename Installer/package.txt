@@ -370,23 +370,6 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-	into "[[ToolsFolder]]/Runtime/iOS/Device-5_1" place
-		executable ios:iphoneos5.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
-		executable ios:iphoneos5.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
-		executable ios:iphoneos5.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
-		executable ios:iphoneos5.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
-		executable ios:iphoneos5.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
-		executable ios:iphoneos5.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
-		executable ios:iphoneos5.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
-		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-6_1" place
 		executable ios:iphoneos6.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
 		executable ios:iphoneos6.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
@@ -629,7 +612,6 @@ component Toolset
 		stack ide:Toolset/revsearch.rev
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
-		stack ide:Toolset/revstartcenter.rev
 		stack ide:Toolset/revstartcenter.livecode
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
