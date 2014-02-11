@@ -233,6 +233,7 @@ component Mobile.MacOSX
 component Engine.MacOSX
 	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
+	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -262,6 +263,7 @@ component Runtime.MacOSX
 		executable macosx:Standalone[[EditionTagUpper]].app as Standalone.app
 	into [[TargetFolder]]/Support place
 		executable macosx:revpdfprinter.bundle
+		executable macosx:revsecurity.dylib
 
 //////////
 
@@ -277,12 +279,14 @@ component Runtime.Android
 		executable android:RevDb
 		executable android:DbSqlite
 		executable android:DbMysql
+		executable android:RevSecurity
 
 //////////
 
 component Runtime.iOS
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-4_3" place
 		executable ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
+		executable ios:iphonesimulator4.3/Release/revpdfprinter.dylib as RevSecurity
 		executable ios:iphonesimulator4.3/Release/revpdfprinter.dylib as RevPdfPrinter
 		executable ios:iphonesimulator4.3/Release/revzip.dylib as RevZip
 		executable ios:iphonesimulator4.3/Release/revxml.dylib as RevXml
@@ -295,6 +299,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_0" place
 		executable ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator5.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
 		executable ios:iphonesimulator5.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator5.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator5.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -307,6 +312,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
 		executable ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator5.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
 		executable ios:iphonesimulator5.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator5.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator5.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -319,6 +325,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_0" place
 		executable ios:iphonesimulator6.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator6.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
 		executable ios:iphonesimulator6.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator6.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator6.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -331,6 +338,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
 		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator6.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
 		executable ios:iphonesimulator6.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator6.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator6.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -343,6 +351,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_0" place
 		executable ios:iphonesimulator7.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator7.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
 		executable ios:iphonesimulator7.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
 		executable ios:iphonesimulator7.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
 		executable ios:iphonesimulator7.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
@@ -355,6 +364,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_0" place
 		executable ios:iphoneos5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos5.0/Release/revsecurity.lcext as RevSecurity
 		executable ios:iphoneos5.0/Release/revpdfprinter.lcext as RevPdfPrinter
 		executable ios:iphoneos5.0/Release/revzip.lcext as RevZip
 		executable ios:iphoneos5.0/Release/revxml.lcext as RevXml
@@ -372,6 +382,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-6_1" place
 		executable ios:iphoneos6.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
+		executable ios:iphoneos6.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
 		executable ios:iphoneos6.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
 		executable ios:iphoneos6.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
 		executable ios:iphoneos6.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
@@ -389,6 +400,7 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-7_0" place
 		executable ios:iphoneos7.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos7.0/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
 		executable ios:iphoneos7.0/Release/revpdfprinter.lcext as RevPdfPrinter
 		executable ios:iphoneos7.0/Release/revzip.lcext as RevZip
 		executable ios:iphoneos7.0/Release/revxml.lcext as RevXml
