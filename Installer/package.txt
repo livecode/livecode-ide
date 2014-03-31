@@ -58,11 +58,9 @@ installer LiveCode
 		include Mobile.MacOSX
 		include Runtime.iOS
 		include Runtime.Android
-		//include Externals.CEF.MacOSX
 	if TargetPlatform is Windows then
 		include Mobile.Windows
 		include Runtime.Android
-		//include Externals.CEF.Windows
 		shortcut "Desktop/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 		shortcut "Programs/RunRev/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 	if TargetPlatform is Linux then
@@ -230,7 +228,7 @@ component Engine.MacOSX
 	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
-	folder prebuilt:lib/libcef/mac/Resources as "[[TargetFolder]]/Contents/Frameworks/Chromium Embedded Framework.framework/Resources"
+	rfolder prebuilt:lib/libcef/mac/Resources as "[[TargetFolder]]/Contents/Frameworks/Chromium Embedded Framework.framework/Resources"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -473,7 +471,7 @@ component Externals.MacOSX
 //////////
 
 component Externals.CEF.Windows
-	into [[TargetFolder]]/Externals/CEF/Win32 place
+	into [[TargetFolder]]/Externals/CEF place
 		executable windows:revbrowser-cefprocess.exe
 		executable prebuilt:lib/libcef/win32/libcef.dll
 		executable prebuilt:lib/libcef/win32/d3dcompiler_43.dll
@@ -481,17 +479,17 @@ component Externals.CEF.Windows
 		executable prebuilt:lib/libcef/win32/ffmpegsumo.dll
 		executable prebuilt:lib/libcef/win32/libEGL.dll
 		executable prebuilt:lib/libcef/win32/libGLESv2.dll
-		folder prebuilt:lib/libcef/win32/locales
+		executable prebuilt:lib/libcef/win32/icudt.dll
+		rfolder prebuilt:lib/libcef/win32/locales
 		file prebuilt:lib/libcef/win32/cef.pak
 		file prebuilt:lib/libcef/win32/devtools_resources.pak
 
 component Externals.CEF.MacOSX
-	into [[TargetFolder]]/Externals/CEF/OSX place
+	into [[TargetFolder]]/Externals/CEF place
 		executable macosx:revbrowser-cefprocess.app
 		executable prebuilt:lib/libcef/mac/ffmpegsumo.so
 		executable prebuilt:lib/libcef/mac/libcef.dylib
-		folder prebuilt:lib/libcef/mac/Resources
-		
+		rfolder prebuilt:lib/libcef/mac/Resources		
 		
 ////////////////////////////////////////////////////////////////////////////////
 
