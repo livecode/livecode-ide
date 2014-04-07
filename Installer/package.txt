@@ -199,7 +199,7 @@ component Engine.Windows
 	into [[TargetFolder]] place
 		executable windows:engine[[EditionTagLower]].exe as [[ProductName]].exe
 		executable windows:revpdfprinter.dll
-		executable prebuilt:lib/win32/[[TargetArchitecture]]/revsecurity.dll
+		executable prebuilt:lib/win32/i386/revsecurity.dll
 
 component Mobile.Windows
 	into "[[ToolsFolder]]/Externals" place
