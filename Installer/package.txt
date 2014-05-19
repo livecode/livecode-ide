@@ -54,11 +54,11 @@ installer LiveCode
 		set TargetArchitectures to ppc,i386
 		include Runtime
 		include Externals
-	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/PowerPC-32" do
-		set TargetPlatform to MacOSX
-		set TargetArchitectures to ppc
-		include Runtime
-		include Externals
+//	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/PowerPC-32" do
+//		set TargetPlatform to MacOSX
+//		set TargetArchitectures to ppc
+//		include Runtime
+//		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
 		set TargetPlatform to MacOSX
 		set TargetArchitectures to i386
