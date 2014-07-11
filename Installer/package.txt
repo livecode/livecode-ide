@@ -487,6 +487,8 @@ component Externals.CEF.Windows
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
 		executable macosx:revbrowser-cefprocess.app
+		executable "macosx:revbrowser-cefprocess EH.app"
+		executable "macosx:revbrowser-cefprocess NP.app"
 		executable prebuilt:lib/libcef/mac/ffmpegsumo.so
 		executable prebuilt:lib/libcef/mac/libcef.dylib
 		rfolder prebuilt:lib/libcef/mac/Resources		
