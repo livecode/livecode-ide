@@ -7,4 +7,4 @@ Comment=IDE for creating and editing LiveCode applications.
 Icon=runrev-[[ProductTag]]
 Exec=[[TargetFolder]]/[[ProductName]].x86
 Categories=Development;IDE;
-StartupWMClass=[[ProductTag]]
+StartupWMClass=LiveCode
