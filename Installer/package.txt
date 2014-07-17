@@ -49,16 +49,6 @@ installer LiveCode
 		set TargetArchitecture to x86_64
 		include Runtime
 		include Externals
-	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/Universal" do
-		set TargetPlatform to MacOSX
-		set TargetArchitectures to ppc,i386
-		include Runtime
-		include Externals
-//	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/PowerPC-32" do
-//		set TargetPlatform to MacOSX
-//		set TargetArchitectures to ppc
-//		include Runtime
-//		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
 		set TargetPlatform to MacOSX
 		set TargetArchitectures to i386
@@ -86,6 +76,10 @@ component Runtime
 component Externals
 	include Externals.[[TargetPlatform]]
 	include Databases.[[TargetPlatform]]
+	if TargetPlatform is Windows then
+		include Externals.CEF.Windows
+	if TargetPlatform is MacOSX then
+		include Externals.CEF.MacOSX
 	emit externals to "[[TargetFolder]]/Externals/Externals.txt"
 	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
 
@@ -199,7 +193,7 @@ component Engine.Windows
 	into [[TargetFolder]] place
 		executable windows:engine[[EditionTagLower]].exe as [[ProductName]].exe
 		executable windows:revpdfprinter.dll
-		executable prebuilt:lib/win32/i386/revsecurity.dll
+		executable prebuilt:lib/revsecurity.dll
 
 component Mobile.Windows
 	into "[[ToolsFolder]]/Externals" place
@@ -234,6 +228,7 @@ component Engine.MacOSX
 	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
+	rfolder prebuilt:lib/libcef/mac/Resources as "[[TargetFolder]]/Contents/Frameworks/Chromium Embedded Framework.framework/Resources"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -473,6 +468,31 @@ component Externals.MacOSX
 	declare external "Revolution Zip" using revzip.bundle
 	declare external "Font Support" using revfont.bundle
 
+//////////
+
+component Externals.CEF.Windows
+	into [[TargetFolder]]/Externals/CEF place
+		executable windows:revbrowser-cefprocess.exe
+		executable prebuilt:lib/libcef/win32/libcef.dll
+		executable prebuilt:lib/libcef/win32/d3dcompiler_43.dll
+		executable prebuilt:lib/libcef/win32/d3dcompiler_46.dll
+		executable prebuilt:lib/libcef/win32/ffmpegsumo.dll
+		executable prebuilt:lib/libcef/win32/libEGL.dll
+		executable prebuilt:lib/libcef/win32/libGLESv2.dll
+		executable prebuilt:lib/libcef/win32/icudt.dll
+		rfolder prebuilt:lib/libcef/win32/locales
+		file prebuilt:lib/libcef/win32/cef.pak
+		file prebuilt:lib/libcef/win32/devtools_resources.pak
+
+component Externals.CEF.MacOSX
+	into [[TargetFolder]]/Externals/CEF place
+		executable macosx:revbrowser-cefprocess.app
+		executable "macosx:revbrowser-cefprocess EH.app"
+		executable "macosx:revbrowser-cefprocess NP.app"
+		executable prebuilt:lib/libcef/mac/ffmpegsumo.so
+		executable prebuilt:lib/libcef/mac/libcef.dylib
+		rfolder prebuilt:lib/libcef/mac/Resources		
+		
 ////////////////////////////////////////////////////////////////////////////////
 
 component Databases.Linux
