@@ -3,3 +3,4 @@ This stack demonstrates how to create a simple SQLite database.
 This stack shows you how to create, populate, query and update an SQLite database.
 773
 BookLibrary.livecode
+Book Library
