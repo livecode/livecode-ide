@@ -1,0 +1,6 @@
+Bouncing Balls
+This stack creates a number of bouncing balls and animates them.
+This stack demonstrates how to create a number of graphics representing bouncing balls. A behavior is used to control the movement of each ball, each ball is given a random speed and direction when it is created and the behavior takes into acccount gravity and friction when animating the balls.
+772
+Balls.livecode
+Balls

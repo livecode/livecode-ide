@@ -1,0 +1,7 @@
+Mobile Template
+This stack demonstrates how to use the mobile template.
+This stack is a customisable template stack for developing mobile apps. The stack allows you to create an interface for a mobile app with options for color, icons, pages etc.
+0
+mobileTemplate.livecode
+mobileTemplate
+
