@@ -190,7 +190,7 @@ component Resources
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/binoculars.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bird.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bookmark.png"
-file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bulb.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calculator.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calendar.png"
