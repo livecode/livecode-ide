@@ -50,8 +50,8 @@ installer LiveCode
 		include Runtime
 		include Externals
 	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/armv6-hf do
-		set the TargetPlatform to Linux
-		set the TargetArchitecture to armv6-hf
+		set TargetPlatform to Linux
+		set TargetArchitecture to armv6-hf
 		include Runtime
 		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
@@ -195,7 +195,7 @@ component Resources
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/binoculars.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bird.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bookmark.png"
-file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bulb.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calculator.png"
 		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calendar.png"
@@ -412,6 +412,9 @@ component Runtime.Linux
 component Runtime.Windows
 	into [[TargetFolder]] place
 		executable windows:standalone[[EditionTagLower]].exe as Standalone
+		file "windows:w32-manifest-template.xml"
+		file "windows:w32-manifest-template-dpiaware.xml"
+		file "windows:w32-manifest-template-trustinfo.xml"
 	into [[TargetFolder]]/Support place
 		executable windows:revpdfprinter.dll
 		executable prebuilt:lib/revsecurity.dll
@@ -674,6 +677,7 @@ component Databases.MacOSX
 component Toolset
 	into [[ToolsFolder]]/Toolset place
 		file ide:Toolset/resources/commercial/ideSkin/about-background.png as resources/commercial/ideSkin/about-background.png
+		file ide:Toolset/resources/commercial/ideSkin/about-background_legacy.png as resources/commercial/ideSkin/about-background_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/bubble.png as resources/commercial/ideSkin/bubble.png
 		file ide:Toolset/resources/commercial/ideSkin/getStartedAcademy.png as resources/commercial/ideSkin/getStartedAcademy.png
 		file ide:Toolset/resources/commercial/ideSkin/getStartedVideo.png as resources/commercial/ideSkin/getStartedVideo.png
@@ -691,10 +695,14 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_up.png as resources/commercial/ideSkin/IDEthumb4_up.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-bottom.png as resources/commercial/ideSkin/resource-center-bottom.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-title.png as resources/commercial/ideSkin/resource-center-title.png
+		file ide:Toolset/resources/commercial/ideSkin/resource-center-title_legacy.png as resources/commercial/ideSkin/resource-center-title_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-top.png as resources/commercial/ideSkin/resource-center-top.png
+		file ide:Toolset/resources/commercial/ideSkin/resource-center-top_legacy.png as resources/commercial/ideSkin/resource-center-top_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/revOnline-top.png as resources/commercial/ideSkin/revOnline-top.png
+		file ide:Toolset/resources/commercial/ideSkin/revOnline-top_legacy.png as resources/commercial/ideSkin/revOnline-top_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/road-map-up.png as resources/commercial/ideSkin/road-map-up.png
 		file ide:Toolset/resources/commercial/ideSkin/splash.png as resources/commercial/ideSkin/splash.png
+		file ide:Toolset/resources/commercial/ideSkin/splash_legacy.png as resources/commercial/ideSkin/splash_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/startCenterBackground.png as resources/commercial/ideSkin/startCenterBackground.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_blog_over.png as resources/commercial/ideSkin/visit_blog_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_blog_up.png as resources/commercial/ideSkin/visit_blog_up.png
@@ -708,17 +716,24 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
 		if TargetEdition is "Community" then
 			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
+			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background_legacy.png
 			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-top_legacy.png as resources/community/ideSkin/resource-center-top_legacy.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-title.png as resources/community/ideSkin/resource-center-title.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-title_legacy.png as resources/community/ideSkin/resource-center-title_legacy.png
 			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
+			file ide:Toolset/resources/community/ideSkin/revOnline-top_legacy.png as resources/community/ideSkin/revOnline-top_legacy.png
 			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
+			file ide:Toolset/resources/community/ideSkin/splash_legacy.png as resources/community/ideSkin/splash_legacy.png
 			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
 			file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
 			file ide:Toolset/resources/community/ideSkin/logo@extra-high.png as resources/community/ideSkin/logo@extra-high.png
 			file ide:Toolset/resources/community/ideSkin/html-donate.png as resources/community/ideSkin/html-donate.png
 			file ide:Toolset/resources/community/ideSkin/html-donate@extra-high.png as resources/community/ideSkin/html-donate@extra-high.png
-			file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png			file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
+			file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png
+			file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
 		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
 		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
 		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
