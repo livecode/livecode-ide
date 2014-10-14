@@ -639,7 +639,9 @@ component Toolset
 		stack ide:Toolset/revcursors.rev
 		stack ide:Toolset/revdatagridlibrary.rev
 		stack ide:Toolset/revdebugger.rev
-		stack ide:Toolset/revdeploylibrary.rev
+		stack ide-support:revdeploylibrary.livecodescript as revdeploylibraryscript.livecodescript
+		stack ide-support:revdeploylibraryandroid.livecodescript as revdeploylibraryscriptandroid.livecodescript
+		stack ide-support:revdeploylibraryios.livecodescript as revdeploylibraryscriptios.livecodescript
 		stack ide:Toolset/revdictionary.rev
 		stack ide:Toolset/revdocumentationlibrary.rev
 		stack ide:Toolset/reverrordisplay.rev
@@ -681,6 +683,8 @@ component Toolset
 		stack ide:Toolset/revsearch.rev
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
+		stack ide-support:revsaveasiosstandalone.livecodescript as revsaveasiosstandalone.livecodescript
+		stack ide-support:revsaveasandroidstandalone.livecodescript as revsaveasandroidstandalone.livecodescript
 		stack ide:Toolset/revstartcenter.livecode
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
