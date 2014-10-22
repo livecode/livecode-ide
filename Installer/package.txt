@@ -396,6 +396,20 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_1" place
+		executable ios:iphonesimulator8.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
+		executable ios:iphonesimulator8.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
+		executable ios:iphonesimulator8.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
+		executable ios:iphonesimulator8.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
+		executable ios:iphonesimulator8.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
+		executable ios:iphonesimulator8.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
+		executable ios:iphonesimulator8.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
+		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_0" place
 		executable ios:iphoneos5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
 		executable ios:iphoneos5.0/Release/revsecurity.lcext as RevSecurity
@@ -453,15 +467,15 @@ component Runtime.iOS
 		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_0" place
-		executable ios:iphoneos8.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
-		executable ios:iphoneos8.0/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
-		executable ios:iphoneos8.0/Release/revpdfprinter.lcext as RevPdfPrinter
-		executable ios:iphoneos8.0/Release/revzip.lcext as RevZip
-		executable ios:iphoneos8.0/Release/revxml.lcext as RevXml
-		executable ios:iphoneos8.0/Release/revdb.lcext as RevDb
-		executable ios:iphoneos8.0/Release/dbsqlite.lcext as DbSqlite
-		executable ios:iphoneos8.0/Release/dbmysql.lcext as DbMysql
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8_1" place
+		executable ios:iphoneos8.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos8.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
+		executable ios:iphoneos8.1/Release/revpdfprinter.lcext as RevPdfPrinter
+		executable ios:iphoneos8.1/Release/revzip.lcext as RevZip
+		executable ios:iphoneos8.1/Release/revxml.lcext as RevXml
+		executable ios:iphoneos8.1/Release/revdb.lcext as RevDb
+		executable ios:iphoneos8.1/Release/dbsqlite.lcext as DbSqlite
+		executable ios:iphoneos8.1/Release/dbmysql.lcext as DbMysql
 		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -639,7 +653,9 @@ component Toolset
 		stack ide:Toolset/revcursors.rev
 		stack ide:Toolset/revdatagridlibrary.rev
 		stack ide:Toolset/revdebugger.rev
-		stack ide:Toolset/revdeploylibrary.rev
+		stack ide-support:revdeploylibrary.livecodescript as revdeploylibrary.livecodescript
+		stack ide-support:revdeploylibraryandroid.livecodescript as revdeploylibraryandroid.livecodescript
+		stack ide-support:revdeploylibraryios.livecodescript as revdeploylibraryios.livecodescript
 		stack ide:Toolset/revdictionary.rev
 		stack ide:Toolset/revdocumentationlibrary.rev
 		stack ide:Toolset/reverrordisplay.rev
@@ -681,6 +697,8 @@ component Toolset
 		stack ide:Toolset/revsearch.rev
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
+		stack ide-support:revsaveasiosstandalone.livecodescript as revsaveasiosstandalone.livecodescript
+		stack ide-support:revsaveasandroidstandalone.livecodescript as revsaveasandroidstandalone.livecodescript
 		stack ide:Toolset/revstartcenter.livecode
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
