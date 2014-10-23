@@ -1,0 +1,6 @@
+Balloon Game
+This stack demonstrates how to create a game/ebook.
+This stack consists of a number of cards explaining how to create animations, use sound, use game loops, control and object on screem and detect collisions.
+774
+balloon.livecode
+balloon

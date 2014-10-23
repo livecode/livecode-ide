@@ -49,14 +49,9 @@ installer LiveCode
 		set TargetArchitecture to x86_64
 		include Runtime
 		include Externals
-	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/Universal" do
-		set TargetPlatform to MacOSX
-		set TargetArchitectures to ppc,i386
-		include Runtime
-		include Externals
-	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/PowerPC-32" do
-		set TargetPlatform to MacOSX
-		set TargetArchitectures to ppc
+	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/armv6-hf do
+		set TargetPlatform to Linux
+		set TargetArchitecture to armv6-hf
 		include Runtime
 		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
@@ -86,6 +81,10 @@ component Runtime
 component Externals
 	include Externals.[[TargetPlatform]]
 	include Databases.[[TargetPlatform]]
+	if TargetPlatform is Windows then
+		include Externals.CEF.Windows
+	if TargetPlatform is MacOSX then
+		include Externals.CEF.MacOSX
 	emit externals to "[[TargetFolder]]/Externals/Externals.txt"
 	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
 
@@ -156,10 +155,169 @@ component Resources
 		file ide:Resources/sample.mov
 	into "[[SupportFolder]]/Resources/Object Libraries" place
 		stack "ide:Resources/Object Libraries/revObjectLibrary.rev"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_1" place
+		stack	"ide:Resources/Start Center/samples/sample_1/Balls.livecode"
+		file	"ide:Resources/Start Center/samples/sample_1/icon.png"
+		file "ide:Resources/Start Center/samples/sample_1/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_1/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_2" place
+		stack	"ide:Resources/Start Center/samples/sample_2/BookLibrary.livecode"
+		file	"ide:Resources/Start Center/samples/sample_2/icon.png"
+		file "ide:Resources/Start Center/samples/sample_2/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_2/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3" place
+		stack	"ide:Resources/Start Center/samples/sample_3/mobileTemplate.livecode"
+		file	"ide:Resources/Start Center/samples/sample_3/icon.png"
+		file "ide:Resources/Start Center/samples/sample_3/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_3/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_4" place
+		stack	"ide:Resources/Start Center/samples/sample_4/balloon.livecode"
+		file	"ide:Resources/Start Center/samples/sample_4/icon.png"
+		file "ide:Resources/Start Center/samples/sample_4/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_4/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/app-icons" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon29x29.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon29x29@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon40x40.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon40x40@2x.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon60x60.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon60x60@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon76x76.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon76x76@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/iTunesArtwork.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/iTunesArtwork@2x.png"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/icons" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/add.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-low.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-medium.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-zero.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/beaker.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/binoculars.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bird.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bookmark.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bulb.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calculator.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calendar.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/camera.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/car.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/card.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cassette.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cctv.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/center.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/chip.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clipboard-blank.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clipboard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cloud.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/computer.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/conversation.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/credit-card.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-coffee.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-martini.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-mug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-wine.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/delete.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/diary.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/disk-floppy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/dislike.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/drive-hard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/dvd.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/envelope.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/expand.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/eye.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/facebook.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/factory.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/female.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/file-new.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/film.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/flag.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/flower.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/folder.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/food.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gameboy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gamepad.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gift.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/globe.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/headphones.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/heart.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/id.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/image.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/information.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/international.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/ipod.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/key.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/keyboard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/laptop.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/letter-open.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lightening.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/like.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/location.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lock-unlock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lolly.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/male.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/memory.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/mobile-phone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/mouse.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/music.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north-east.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north-west.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/old-film.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/outdoors.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/paperclip.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/pencil.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/person.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/petrol.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/pin.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/planet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/plug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/printer.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/projector.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/radio.png"		
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/refresh.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/rss.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/satalite.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/scissors.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/search.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/server.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/settings.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/settings2.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/share.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/shield.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/signal.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/signpost.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/smartphone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/snowflake.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/socket.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/sound-on.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/south-east.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/south.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/speech.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/star.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/stopwatch.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/telephone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/trophy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/tv.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/twitter.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/umbrella.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/usb.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/van.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/wallet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/waterdroplet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/west.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/zoom-in.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/zoom-out.png"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/splash-screens" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-5.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-retina.png"
 
 component Documentation
 	into [[ToolsFolder]]/Documentation place
-		file "ide:Documentation/glos.rsindex"
+		file	"ide:Documentation/glos.rsindex"
 		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
 		file "docs:glos.index"
@@ -185,7 +343,7 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux:[[TargetArchitecture]]/release/engine[[EditionTagLower]] as [[ProductName]].x86
+		executable linux:[[TargetArchitecture]]/release/engine[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
 		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
 		executable linux:[[TargetArchitecture]]/release/revsecurity.so
 
@@ -234,6 +392,11 @@ component Engine.MacOSX
 	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
+	into "[[TargetFolder]]/Contents/Frameworks/" place
+		executable macosx:revbrowser-cefprocess.app
+		executable "macosx:revbrowser-cefprocess EH.app"
+		executable "macosx:revbrowser-cefprocess NP.app"
+		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -249,6 +412,9 @@ component Runtime.Linux
 component Runtime.Windows
 	into [[TargetFolder]] place
 		executable windows:standalone[[EditionTagLower]].exe as Standalone
+		file "windows:w32-manifest-template.xml"
+		file "windows:w32-manifest-template-dpiaware.xml"
+		file "windows:w32-manifest-template-trustinfo.xml"
 	into [[TargetFolder]]/Support place
 		executable windows:revpdfprinter.dll
 		executable prebuilt:lib/revsecurity.dll
@@ -284,104 +450,48 @@ component Runtime.Android
 //////////
 
 component Runtime.iOS
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-4_3" place
-		executable ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
-		executable ios:iphonesimulator4.3/Release/revpdfprinter.dylib as RevSecurity
-		executable ios:iphonesimulator4.3/Release/revpdfprinter.dylib as RevPdfPrinter
-		executable ios:iphonesimulator4.3/Release/revzip.dylib as RevZip
-		executable ios:iphonesimulator4.3/Release/revxml.dylib as RevXml
-		executable ios:iphonesimulator4.3/Release/revdb.dylib as RevDb
-		executable ios:iphonesimulator4.3/Release/dbsqlite.dylib as DbSqlite
-		executable ios:iphonesimulator4.3/Release/dbmysql.dylib as DbMysql
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_0" place
-		executable ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator5.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator5.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator5.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator5.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator5.0/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator5.0/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator5.0/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
-		executable ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator5.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator5.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator5.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator5.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator5.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator5.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator5.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_0" place
-		executable ios:iphonesimulator6.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator6.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator6.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator6.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator6.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator6.0/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator6.0/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator6.0/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		executable ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
+		executable ios:iphonesimulator5.0/Release/revsecurity.dylib as RevSecurity
+		executable ios:iphonesimulator5.0/Release/revpdfprinter.dylib as RevPdfPrinter
+		executable ios:iphonesimulator5.0/Release/revzip.dylib as RevZip
+		executable ios:iphonesimulator5.0/Release/revxml.dylib as RevXml
+		executable ios:iphonesimulator5.0/Release/revdb.dylib as RevDb
+		executable ios:iphonesimulator5.0/Release/dbsqlite.dylib as DbSqlite
+		executable ios:iphonesimulator5.0/Release/dbmysql.dylib as DbMysql
+		file ios:iphonesimulator5.0/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator5.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator5.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator5.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator5.0/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
-		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator6.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator6.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator6.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator6.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator6.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator6.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator6.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_0" place
-		executable ios:iphonesimulator7.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator7.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator7.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator7.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator7.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator7.0/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator7.0/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator7.0/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator6.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.dylib
+		executable ios:iphonesimulator6.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.dylib
+		executable ios:iphonesimulator6.1/Release/revzip.dylib as RevZip base ios:iphonesimulator5.0/Release/revzip.dylib
+		executable ios:iphonesimulator6.1/Release/revxml.dylib as RevXml base ios:iphonesimulator5.0/Release/revxml.dylib
+		executable ios:iphonesimulator6.1/Release/revdb.dylib as RevDb base ios:iphonesimulator5.0/Release/revdb.dylib
+		executable ios:iphonesimulator6.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.dylib
+		executable ios:iphonesimulator6.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.dylib
+		file ios:iphonesimulator6.1/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator6.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
-		executable ios:iphonesimulator7.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator7.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
-		executable ios:iphonesimulator7.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator7.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
-		executable ios:iphonesimulator7.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
-		executable ios:iphonesimulator7.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
-		executable ios:iphonesimulator7.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
-		executable ios:iphonesimulator7.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		executable ios:iphonesimulator7.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator7.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.dylib
+		executable ios:iphonesimulator7.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.dylib
+		executable ios:iphonesimulator7.1/Release/revzip.dylib as RevZip base ios:iphonesimulator5.0/Release/revzip.dylib
+		executable ios:iphonesimulator7.1/Release/revxml.dylib as RevXml base ios:iphonesimulator5.0/Release/revxml.dylib
+		executable ios:iphonesimulator7.1/Release/revdb.dylib as RevDb base ios:iphonesimulator5.0/Release/revdb.dylib
+		executable ios:iphonesimulator7.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.dylib
+		executable ios:iphonesimulator7.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.dylib
+		file ios:iphonesimulator7.1/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_0" place
 		executable ios:iphonesimulator8.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator8.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
@@ -391,11 +501,11 @@ component Runtime.iOS
 		executable ios:iphonesimulator8.0/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
 		executable ios:iphonesimulator8.0/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
 		executable ios:iphonesimulator8.0/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.0/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.0/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_1" place
 		executable ios:iphonesimulator8.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator8.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
@@ -405,11 +515,11 @@ component Runtime.iOS
 		executable ios:iphonesimulator8.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
 		executable ios:iphonesimulator8.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
 		executable ios:iphonesimulator8.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
-		file ios:iphonesimulator4.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.1/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_0" place
 		executable ios:iphoneos5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
 		executable ios:iphoneos5.0/Release/revsecurity.lcext as RevSecurity
@@ -419,16 +529,16 @@ component Runtime.iOS
 		executable ios:iphoneos5.0/Release/revdb.lcext as RevDb
 		executable ios:iphoneos5.0/Release/dbsqlite.lcext as DbSqlite
 		executable ios:iphoneos5.0/Release/dbmysql.lcext as DbMysql
-		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos5.0/Release/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos5.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos5.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos5.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos5.0/Release/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos5.0/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos5.0/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos5.0/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos5.0/Release/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos5.0/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-6_1" place
 		executable ios:iphoneos6.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
 		executable ios:iphoneos6.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
@@ -438,18 +548,18 @@ component Runtime.iOS
 		executable ios:iphoneos6.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
 		executable ios:iphoneos6.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
 		executable ios:iphoneos6.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
-		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos6.1/Release/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos6.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos6.1/Release/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos6.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos6.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos6.1/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos6.1/Release/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos6.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-7_1" place
-		executable ios:iphoneos7.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos7.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
 		executable ios:iphoneos7.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
 		executable ios:iphoneos7.1/Release/revpdfprinter.lcext as RevPdfPrinter
 		executable ios:iphoneos7.1/Release/revzip.lcext as RevZip
@@ -457,16 +567,16 @@ component Runtime.iOS
 		executable ios:iphoneos7.1/Release/revdb.lcext as RevDb
 		executable ios:iphoneos7.1/Release/dbsqlite.lcext as DbSqlite
 		executable ios:iphoneos7.1/Release/dbmysql.lcext as DbMysql
-		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos7.1/Release/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos7.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos7.1/Release/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos7.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos7.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos7.1/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos7.1/Release/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_1" place
 		executable ios:iphoneos8.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
 		executable ios:iphoneos8.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
@@ -476,17 +586,16 @@ component Runtime.iOS
 		executable ios:iphoneos8.1/Release/revdb.lcext as RevDb
 		executable ios:iphoneos8.1/Release/dbsqlite.lcext as DbSqlite
 		executable ios:iphoneos8.1/Release/dbmysql.lcext as DbMysql
-		file ios:iphonesimulator4.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator4.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator4.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphonesimulator4.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphonesimulator4.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-
+		file ios:iphonesimulator8.1/Release/mobile-device-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.1/Release/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphonesimulator8.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -531,6 +640,31 @@ component Externals.MacOSX
 	declare external "Revolution Zip" using revzip.bundle
 	declare external "Font Support" using revfont.bundle
 
+//////////
+
+component Externals.CEF.Windows
+	into [[TargetFolder]]/Externals/CEF place
+		executable windows:revbrowser-cefprocess.exe
+		executable prebuilt:lib/libcef/win32/libcef.dll
+		executable prebuilt:lib/libcef/win32/d3dcompiler_43.dll
+		executable prebuilt:lib/libcef/win32/d3dcompiler_46.dll
+		executable prebuilt:lib/libcef/win32/ffmpegsumo.dll
+		executable prebuilt:lib/libcef/win32/libEGL.dll
+		executable prebuilt:lib/libcef/win32/libGLESv2.dll
+		executable prebuilt:lib/libcef/win32/pdf.dll
+		rfolder prebuilt:lib/libcef/win32/locales
+		file prebuilt:lib/libcef/win32/cef.pak
+		file prebuilt:lib/libcef/win32/cef_100_percent.pak
+		file prebuilt:lib/libcef/win32/cef_200_percent.pak
+		file prebuilt:lib/libcef/win32/icudtl.dat
+
+component Externals.CEF.MacOSX
+	into [[TargetFolder]]/Externals/CEF place
+		executable macosx:revbrowser-cefprocess.app
+		executable "macosx:revbrowser-cefprocess EH.app"
+		executable "macosx:revbrowser-cefprocess NP.app"
+		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
+		
 ////////////////////////////////////////////////////////////////////////////////
 
 component Databases.Linux
@@ -596,6 +730,7 @@ component Databases.MacOSX
 component Toolset
 	into [[ToolsFolder]]/Toolset place
 		file ide:Toolset/resources/commercial/ideSkin/about-background.png as resources/commercial/ideSkin/about-background.png
+		file ide:Toolset/resources/commercial/ideSkin/about-background_legacy.png as resources/commercial/ideSkin/about-background_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/bubble.png as resources/commercial/ideSkin/bubble.png
 		file ide:Toolset/resources/commercial/ideSkin/getStartedAcademy.png as resources/commercial/ideSkin/getStartedAcademy.png
 		file ide:Toolset/resources/commercial/ideSkin/getStartedVideo.png as resources/commercial/ideSkin/getStartedVideo.png
@@ -613,10 +748,14 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_up.png as resources/commercial/ideSkin/IDEthumb4_up.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-bottom.png as resources/commercial/ideSkin/resource-center-bottom.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-title.png as resources/commercial/ideSkin/resource-center-title.png
+		file ide:Toolset/resources/commercial/ideSkin/resource-center-title_legacy.png as resources/commercial/ideSkin/resource-center-title_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-top.png as resources/commercial/ideSkin/resource-center-top.png
+		file ide:Toolset/resources/commercial/ideSkin/resource-center-top_legacy.png as resources/commercial/ideSkin/resource-center-top_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/revOnline-top.png as resources/commercial/ideSkin/revOnline-top.png
+		file ide:Toolset/resources/commercial/ideSkin/revOnline-top_legacy.png as resources/commercial/ideSkin/revOnline-top_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/road-map-up.png as resources/commercial/ideSkin/road-map-up.png
 		file ide:Toolset/resources/commercial/ideSkin/splash.png as resources/commercial/ideSkin/splash.png
+		file ide:Toolset/resources/commercial/ideSkin/splash_legacy.png as resources/commercial/ideSkin/splash_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/startCenterBackground.png as resources/commercial/ideSkin/startCenterBackground.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_blog_over.png as resources/commercial/ideSkin/visit_blog_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_blog_up.png as resources/commercial/ideSkin/visit_blog_up.png
@@ -627,15 +766,27 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_over.png as resources/commercial/ideSkin/visit_stack_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_up.png as resources/commercial/ideSkin/visit_stack_up.png
 		file ide:Toolset/resources/commercial/ideSkin/logo.png as resources/commercial/ideSkin/logo.png
+		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
 		if TargetEdition is "Community" then
 			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
+			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background_legacy.png
 			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-top_legacy.png as resources/community/ideSkin/resource-center-top_legacy.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-title.png as resources/community/ideSkin/resource-center-title.png
+			file ide:Toolset/resources/community/ideSkin/resource-center-title_legacy.png as resources/community/ideSkin/resource-center-title_legacy.png
 			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
+			file ide:Toolset/resources/community/ideSkin/revOnline-top_legacy.png as resources/community/ideSkin/revOnline-top_legacy.png
 			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
+			file ide:Toolset/resources/community/ideSkin/splash_legacy.png as resources/community/ideSkin/splash_legacy.png
 			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
 			file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
+			file ide:Toolset/resources/community/ideSkin/logo@extra-high.png as resources/community/ideSkin/logo@extra-high.png
+			file ide:Toolset/resources/community/ideSkin/html-donate.png as resources/community/ideSkin/html-donate.png
+			file ide:Toolset/resources/community/ideSkin/html-donate@extra-high.png as resources/community/ideSkin/html-donate@extra-high.png
+			file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png
+			file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
 		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
 		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
 		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
@@ -697,8 +848,8 @@ component Toolset
 		stack ide:Toolset/revsearch.rev
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
-		stack ide-support:revsaveasiosstandalone.livecodescript as revsaveasiosstandalone.livecodescript
-		stack ide-support:revsaveasandroidstandalone.livecodescript as revsaveasandroidstandalone.livecodescript
+		stack ide-support:revsaveasiosstandalone.livecodescript
+		stack ide-support:revsaveasandroidstandalone.livecodescript
 		stack ide:Toolset/revstartcenter.livecode
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
