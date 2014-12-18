@@ -769,7 +769,7 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
 		if TargetEdition is "Community" then
 			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
-			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background_legacy.png
+			file ide:Toolset/resources/community/ideSkin/about-background_legacy.png as resources/community/ideSkin/about-background_legacy.png
 			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
 			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
