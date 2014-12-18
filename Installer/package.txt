@@ -31,6 +31,7 @@ installer LiveCode
 	include Plugins
 	include Resources
 	include Documentation
+	include Toolchain
 	codesign
 		include Engine.[[TargetPlatform]]
 		with TargetFolder as [[ToolsFolder]] do
@@ -857,3 +858,39 @@ component Toolset
 		stack ide:Toolset/revvariablewatcher.rev
 
 ////////////////////////////////////////////////////////////////////////////////
+
+component Toolchain
+	include Toolchain.[[TargetPlatform]]
+	include Toolchain.Generic
+        
+component Toolchain.MacOSX
+	into [[TargetFolder]]/Toolchain place
+		executable macosx:lc-compile
+
+component Toolchain.Windows
+	into [[TargetFolder]]/Toolchain place
+		executable windows:lc-compile.exe
+
+component Toolchain.Generic
+	into [[TargetFolder]]/Toolchain place
+		file macosx:modules/com.livecode.arithmetic.lci
+		file macosx:modules/com.livecode.array.lci
+		file macosx:modules/com.livecode.binary.lci
+		file macosx:modules/com.livecode.bitwise.lci
+		file macosx:modules/com.livecode.byte.lci
+		file macosx:modules/com.livecode.canvas.lci
+		file macosx:modules/com.livecode.char.lci
+		file macosx:modules/com.livecode.engine.lci
+		file macosx:modules/com.livecode.item.lci
+		file macosx:modules/com.livecode.line.lci
+		file macosx:modules/com.livecode.list.lci
+		file macosx:modules/com.livecode.logic.lci
+		file macosx:modules/com.livecode.math.lci
+		file macosx:modules/com.livecode.mathfoundation.lci
+		file macosx:modules/com.livecode.segmentchunk.lci
+		file macosx:modules/com.livecode.sort.lci
+		file macosx:modules/com.livecode.string.lci
+		file macosx:modules/com.livecode.type.lci
+		file macosx:modules/com.livecode.typeconvert.lci
+		file macosx:modules/com.livecode.widget.lci
+
