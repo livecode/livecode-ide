@@ -1,0 +1,41 @@
+type	card
+name	Name	string	Basic
+number	Number	number	Basic
+mark	Marked	boolean	Basic	false
+dontSearch	Find command ignores	boolean	Basic	false
+cantDelete	Can't delete	boolean	Basic	false
+showBorder	Show border	boolean	Basic	true
+opaque	Opaque	boolean	Basic	true
+threeD	3-D	boolean	Basic	true
+borderWidth	Border width	number	Basic	2
+foregroundColor	Foreground Color	color	Colors					foregroundPattern
+foregroundPattern	Foreground Pattern	pattern	Colors					foregroundColor
+backgroundColor	Background Color	color	Colors					backgroundPattern
+backgroundPattern	Background Pattern	pattern	Colors					backgroundColor
+hiliteColor	Hilited color	color	Colors					hilitePattern
+hilitePattern	Hilites pattern	pattern	Colors					hiliteColor
+borderColor	Border Color	color	Colors					borderPattern
+borderPattern	Border Pattern	pattern	Colors					borderColor	
+topColor	Top Color	color	Colors					topPattern
+topPattern	Top Pattern	pattern	Colors					topColor
+bottomColor	Bottom Color	color	Colors					bottomPattern
+bottomPattern	Bottom Pattern	pattern	Colors					bottomColor
+shadowColor	Shadow Color	color	Colors					shadowPattern
+shadowPattern	Shadow Pattern	pattern	Colors					shadowColor
+focusColor	Focus Color	color	Colors					focusPattern
+focusPattern	Focus Pattern	pattern	Colors					focusColor
+customProperties	Custom Properties	customProperties	Custom	
+textFont	Font	enum	Text		execute:get the fontNames
+textSize	Text Size	number	Text
+textStyle	Text Style	set	Text		bold,italic,underline,box,threeDBox,link,strikeout
+textAlign	Text Align	enum	Text	empty	left,center,right
+margins	Margins	string	Text	8			true			
+lockLoc	Lock size and position	boolean	Position	false			true	
+width	Width	number	Position				true
+height	Height	number	Position				true
+location	location	point	Position				true
+left	Left	number	Position				true
+top	Top	number	Position				true
+right	Tight	number	Position				true
+bottom	Bottom	number	Position				true
+layer 	Layer	number	Position				true

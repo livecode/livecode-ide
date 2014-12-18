@@ -1,0 +1,52 @@
+type	button
+name	Name	string	Basic	Tab Menu
+label	Label	string	Basic
+tooltip	Tooltip	string	Basic
+visible	Visible	boolean	Basic	true
+disabled	Disabled	boolean	Basic	false
+showName	Show Name	boolean	Basic	false		
+text	Tabs	text	Basic	Tab 1\nTab 2\nTab 2
+layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
+behavior	Behavior	string	Basic		long id	
+foregroundColor	Text Color	color	Colors					foregroundPattern
+foregroundPattern	Text Pattern	pattern	Colors					foregroundColor
+backgroundColor	Fill Color	color	Colors					backgroundPattern
+backgroundPattern	Fill Pattern	pattern	Colors					backgroundColor
+hiliteColor	Hilited text color	color	Colors					hilitePattern
+hilitePattern	Hilites text pattern	pattern	Colors					hiliteColor
+borderColor	Border Color	color	Colors					borderPattern
+borderPattern	Border Pattern	pattern	Colors					borderColor
+topColor	Top 3D Bevel Color	color	Colors					topPattern
+topPattern	Top 3D Bevel Pattern	pattern	Colors					topColor
+bottomColor	Bottom 3D Bevel Color	color	Colors					bottomPattern
+bottomPattern	Bottom 3D Bevel Pattern	pattern	Colors					bottomColor
+shadowColor	Shadow Color	color	Colors					shadowPattern
+shadowPattern	Shadow Pattern	pattern	Colors					shadowColor
+focusColor	Focus Color	color	Colors					focusPattern
+focusPattern	Focus Pattern	pattern	Colors					focusColor
+customProperties	Custom Properties	customProperties	Custom
+blendLevel	Blend Level	number	Colors	0	0,100
+ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
+textFont	Font	enum	Text		execute:get the fontNames
+textSize	Text Size	number	Text
+textStyle	Text Style	set	Text		bold,italic,underline,box,threeDBox,link,strikeout
+textAlign	Text Align	enum	Text		left,center,right
+margins	Margins	string	Text	8
+lockLoc	Lock size and position	boolean	Position	false	
+width	Width	number	Position	234				left,right
+height	Height	number	Position	144				top,bottom
+location	location	point	Position	no_default	left,top,right,bottom
+left	Left	number	Position					location,right
+top	Top	number	Position					location,bottom
+right	Right	number	Position					location,left
+bottom	Bottom	number	Position					location,top
+layer 	Layer	number	Position	no_default
+
+style	Style	string	Basic	menu		false
+
+menumode	Menu Mode	string	basic	tabbed		false
+dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
+innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
+outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}
+innerGlow	Inner Glow	graphicEffect	Effects		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}	
+colorOverlay	ColorOverlay	graphicEffect	Effects		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}
