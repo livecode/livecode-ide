@@ -1,0 +1,49 @@
+type	Scrollbar
+
+name	Name	string	Basic	Scrollbar
+style	Type	enum	Basic	scrollbar	progress,scale,scrollbar
+visible	Visible	boolean	Basic	true
+disabled	Disabled	boolean	Basic	false	
+traversalOn	Focus with keyboard	boolean	Basic	true
+focusBorder	Focus border	boolean	Basic	
+orientation	Orientation	enum	Basic		Horizontal,Vertical		true
+startValue	Start value	number	Basic		
+endValue	End value	number	Basic	65535
+thumbPosition	Current value	number	Basic	0
+thumbSize	Thumb size	number	Basic	8192
+lineInc	Scroll distance on arrow click	number	Basic	512
+pageInc	Scroll distance on bar click	number	Basic	8192
+layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
+behavior	Behavior	string	Basic		long id	
+backgroundColor	Background Color	color	Colors					backgroundPattern
+backgroundPattern	Background Pattern	pattern	Colors					backgroundColor
+borderColor	Border Color	color	Colors					borderPattern
+borderPattern	Border Pattern	pattern	Colors					borderColor
+topColor	Top Color	color	Colors					topPattern
+topPattern	Top Pattern	pattern	Colors					topColor
+bottomColor	Bottom Color	color	Colors					bottomPattern
+bottomPattern	Bottom Pattern	pattern	Colors					bottomColor
+shadowColor	Bar Color	color	Colors					shadowPattern
+shadowPattern	Bar Pattern	pattern	Colors					shadowColor	
+customProperties	Custom Properties	customProperties	Custom
+blendLevel	Blend Level	number	Colors	0	0,100
+ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
+textFont	Font	enum	Text		execute:get the fontNames
+textSize	Text Size	number	Text
+textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
+textAlign	Text Align	enum	Text		left,center,right
+margins	Margins	string	Text	4
+lockLoc	Lock size and position	boolean	Position	false	
+width	Width	number	Position	200				left,right
+height	Height	number	Position	20				top,bottom
+location	location	point	Position	no_default	left,top,right,bottom
+left	Left	number	Position					location,right
+top	Top	number	Position					location,bottom
+right	Right	number	Position					location,left
+bottom	Bottom	number	Position					location,top
+layer 	Layer	number	Position	no_default
+dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
+innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
+outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}
+innerGlow	Inner Glow	graphicEffect	Effects		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}	
+colorOverlay	ColorOverlay	graphicEffect	Effects		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}
