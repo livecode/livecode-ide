@@ -860,6 +860,9 @@ component Externals.CEF.Linux
 		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_100_percent.pak
 		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_200_percent.pak
 		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
+	// Horrible workaround for a libCEF bug
+	into [[TargetFolder]] place
+		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
