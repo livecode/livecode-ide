@@ -375,7 +375,7 @@ private function __objectType pObjectID
          end if
          break
       case "field"
-         if the cRevGeneral["table"] of pObjectID is true then
+         if the tabStops of pObjectID is not empty then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
@@ -610,7 +610,7 @@ end __readStructureOfStackForDataView
 function __readStructureOfContainerForDataView @pData, pParentIndex, pLevel
    # 1) Repeat for each control in the container
    local tChildIDs, tChildCount
-   
+      
    //repeat with x = 1 to the number of controls of the target
    --repeat for each line tControlId in the childcontrolIDs of the target
    put the number of lines in the childcontrolIDs of the target into tChildCount
@@ -740,6 +740,7 @@ end __readStructureOfContainer
 # for each of the properties
 function __readPropertiesOfControl pList, @pData
    local tError
+   
    repeat for each line tProp in pList      
       put empty into tError
       try
@@ -787,6 +788,27 @@ function __readPropertiesOfControl pList, @pData
                break
          end switch
          put the short name of the target into pData["name"]
+      catch tError 
+      end try
+      
+      ## Temporary solution for multiprops such as fill
+      local tPropertyName, tPropertyList, tSubPropName
+      try
+         if tProp contains "{" then
+            set the itemDel to "{"
+            put tProp into tPropertyName
+            put item 2 of tProp into tPropertyList
+            if char 1 of tPropertyList is "{" then delete char 1 of tPropertyList
+            if char -1 of tPropertyList is "}" then delete char -1 of tPropertyList
+            set the itemDel to comma
+            repeat for each item tWord in tPropertyList
+               set the itemDel to ":"
+               put  item 2 of tWord into tSubPropName
+               put tSubPropName into pData[tPropertyName][item 1 of tWord]["name"]
+               put the tSubPropName of the target into pData[tPropertyName][item 1 of tWord]["value"]
+               set the itemDel to comma
+            end repeat
+         end if
       catch tError 
       end try
       
@@ -1242,6 +1264,10 @@ function revIDEGetPropertiesOfObjects pObjects
    
    return tSharedProperties
 end revIDEGetPropertiesOfObjects
+
+function revIDEGetPropertyOfObject pObject, pProperty
+   return the pProperty of pObject
+end revIDEGetPropertyOfObject
 
 /*
 Use to get a complete list of all editable stacks in the IDE. 
@@ -1747,9 +1773,20 @@ function revIDECardPropertiesOfStack pStackID, pLevel
 end revIDECardPropertiesOfStack
 
 function revIDEControlPropertiesOfCard pCardID, pLevel
-   local tControlArray, tIndex, tFullArray
+   local tChildControls, tControlArray, tIndex, tFullArray, tChildCount
    
-   repeat for each line tControlId in the childcontrolIDs of pCardID
+   --repeat for each line tControlId in the childcontrolIDs of pCardID
+   put  the childcontrolIDs of pCardID into tChildControls
+   put the number of lines in tChildControls into tChildCount
+   
+   repeat with x = 1 to the number of lines in tChildControls
+      local tControlId
+      if revIDEGetPreference("ideProjectBrowser_sortOrder") is "bottom to top" then
+         put line x of tChildControls into tControlId
+      else
+         put line (tChildCount -x) + 1 of tChildControls into tControlId
+      end if 
+      
       add 1 to tIndex
       put empty into tControlArray      
       dispatch function "__readPropertiesOfControl" to control id tControlID of pCardID with sControlPropertiesToRead, tControlArray
@@ -2461,6 +2498,9 @@ function revIDESpecialFolderPath pKey
       case "Toolset"
          return item 1 to -3 of the filename of stack "revideLibrary" & "/Toolset"
          break
+      case "Toolchain"
+         return item 1 to -3 of the filename of stack "revideLibrary" & "/Toolchain"
+         break
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "revideLibrary" & "/Toolset/resources/supporting_files/property_definitions"
          break
@@ -2508,6 +2548,11 @@ function revIDESpecialFolderPath pKey
          break
       case "guide"
          return item 1 to -3 of the filename of stack "revideLibrary" & "/Documentation/html_viewer/resources/data/guide"
+         break
+      case "examples"
+         put  item 1 to -3 of the filename of stack "revideLibrary" & "/examples" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
    end switch
 end revIDESpecialFolderPath

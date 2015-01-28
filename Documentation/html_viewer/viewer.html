@@ -192,9 +192,9 @@
 	}
 	
 	function compareEntryObject(entryObject1,entryObject2) {
-		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
+		if(entryObject1["display syntax"][0].toLowerCase() < entryObject2["display syntax"][0].toLowerCase())
 			return -1;
-		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
+		if (entryObject1["display syntax"][0].toLowerCase() > entryObject2["display syntax"][0].toLowerCase())
 			return 1;
 		return 0;
 	}
@@ -400,15 +400,15 @@
 						$.each(value, function(index2, value2) {
 							switch(value2.type){
 								case "array":
-									//tEntryObject.description = replace_link_placeholders_with_links(tEntryObject.description);
+									value2.description = replace_link_placeholders_with_links(value2.description,tEntryObject);
 									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("array", value2),tEntryObject+'</td></tr>';
 									break;
 								case "enum":
-									tEntryObject.description = replace_link_placeholders_with_links(tEntryObject.description);
+									value2.description = replace_link_placeholders_with_links(value2.description,tEntryObject);
 									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2),tEntryObject+'</td></tr>';
 									break;
 								default:
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+value2.description,tEntryObject+'</td></tr>';
+									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
 									break;
 							}
 						});
@@ -425,7 +425,7 @@
 						tHTML += '<div class="table-responsive"><table class="table table-bordered">';
 						tHTML += '<thead><tr><th>Return Type</th><th>Type</th><th>Description</th></tr></thead><tbody>';
 						$.each(value, function(index2, value2) {
-							tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
+							tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
 						});
 						tHTML += '</tbody></table></div>';
 						tHTML += '</div>';
@@ -456,6 +456,8 @@
 					if($.isArray(value)){
 						$.each(value, function(index2, value2) {
 							tSyntaxHTML += replace_link_placeholders_with_param(value2);
+							// Syntax can be multi-line
+							tSyntaxHTML = tSyntaxHTML.replace(/\n/g, "<br />")
 							tSyntaxHTML += '<br />';
 						});
 					} else {
@@ -517,9 +519,9 @@
 					 tMarkdown = tMarkdown.replace('<'+value.name+'>', '*'+value.name+'*');	
 				 });
 				}
-			
+
 				tMarkdown = replace_link_placeholders_with_links(tMarkdown,tEntryObject);
-			
+		
 				tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10" style="margin-bottom:10px">';
 						tHTML += marked(tMarkdown);
 						tHTML += '</div>';
@@ -587,7 +589,6 @@
 		if(pText && pEntryObject){
 			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
 				var return_text = matched_whole;
-				
 				
 				if(pEntryObject.hasOwnProperty("display name")) {
 					if(pEntryObject["display name"] != "" && matched_text == pEntryObject["display name"]){

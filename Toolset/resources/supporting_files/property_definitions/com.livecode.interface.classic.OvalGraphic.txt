@@ -11,16 +11,12 @@ lineSize	Border size	integer	Basic	1
 dashes	Dashed lines	boolean	Basic
 startAngle	Start	number	Basic	0
 arcAngle	Arc	number	Basic	360	
-layerMode	Layer MOde	enum	Basic	Static	Static,Dynamic,Scrolling
+layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
 behavior	Behavior	string	Basic		long id	
-foregroundColor	Text/Border Color	color	Colors					foregroundPattern				
-foregroundPattern	Text/BorderPattern	pattern	Colors					foregroundColor
-backgroundColor	Fill Color	color	Colors					backgroundPattern						
-backgroundPattern	Fil Pattern	pattern	Colors					backgroundColor
-topColor	Top 3D Bevel Color	color	Colors					topPattern
-topPattern	Top 3D Bevel Pattern	pattern	Colors					topColor
-bottomColor	Bottom 3D Bevel Color	color	Colors					bottomPattern
-bottomPattern	Bottom 3D Bevel Pattern	pattern	Colors					bottomColor
+border {color:foregroundColor;pattern:foregroundPattern}	Text/Border	fill	Colors
+fill {color:backgroundColor;pattern:backgroundPattern;gradient:fillGradient}	Fill	fill	Colors
+top {color:topColor;pattern:topPattern}	Top	fill	Colors
+bottom {color:bottomColor;pattern:bottomPattern}	Bottom	fill	Colors
 customProperties	Custom Properties	customProperties	Custom	
 blendLevel	Blend Level	number 	Colors	0	0,100
 ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	

@@ -27,17 +27,22 @@ on objectSelectionEnded
    pass objectSelectionEnded
 end objectSelectionEnded
 
+on resizeControl
+   if revIDEStackIsRevStack(the long id of the target) is true then pass resizeControl
+   
+   revIDEMessageSend "ideResizeControl"
+   pass resizeControl
+end resizeControl
+
 on resumeStack
+   local tTarget
+   
    if revIDEStackIsRevStack(the long id of the target) is true then pass resumeStack
    
-   local tTarget
-   put the long ID of the owner of the target into tTarget
+   put the long id of the target into tTarget
    
-   if word 1 of tTarget is "stack" then
-      --revIDEMessageSend "ideResumeStack", tTarget
-      send "revIDEMessageSend" &&  "ideResumeStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
-   end if
-   pass resumeStack
+   send "revIDEMessageSend" &&  "ideResumeStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   --   pass resumeStack
 end resumeStack
 
 on newCard

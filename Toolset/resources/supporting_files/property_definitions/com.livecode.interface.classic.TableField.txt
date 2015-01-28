@@ -57,7 +57,7 @@ ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOv
 textFont	Font	enum	Text		execute:get the fontNames
 textSize	Text Size	number	Text
 textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text 	left	left,center,right
+textAlign	Text Align	enum	Text	left	left,center,right
 margins	Margins	string	Text	8
 lockLoc	Lock size and position	boolean	Position	false	
 width	Width	number	Position	250				left,right

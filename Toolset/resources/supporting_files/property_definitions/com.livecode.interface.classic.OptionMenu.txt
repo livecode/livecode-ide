@@ -44,7 +44,7 @@ focusColor	Focus Color	color	Colors					focusPattern
 focusPattern	Focus Pattern	pattern	Colors					focusColor
 focusPattern	Focus Pattern	pattern	Colors
 customProperties	Custom Properties	customProperties	Custom
-blendLevel	Blend Level	number		0	0,100
+blendLevel	Blend Level	number	Colors	0	0,100
 ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
 textFont	Font	enum	Text		execute:get the fontNames
 textSize	Text Size	number	Text

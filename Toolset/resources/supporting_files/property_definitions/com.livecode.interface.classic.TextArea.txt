@@ -50,7 +50,7 @@ ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOv
 textFont	Font	enum	Text		execute:get the fontNames
 textSize	Text Size	number	Text
 textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text 	left	left,center,right
+textAlign	Text Align	enum	Text	left	left,center,right
 margins	Margins	number	Text	8
 lockLoc	Lock size and position	boolean	Position	false	
 width	Width	number	Position	250				left,right
@@ -61,6 +61,13 @@ top	Top	number	Position					location,bottom
 right	Right	number	Position					location,left
 bottom	Bottom	number	Position					location,top
 layer 	Layer	number	Position	no_default
+basicTableObject	Basic table object	boolean	Table	false
+maxEditableColumns	Maximum editable columns	number	Table	
+cellFormatting	Cell formatting	boolean	Table	false	
+showLines	Text baselines	boolean	Table	false
+hGrid	Horizontal grid	boolean	Table	false
+vGrid	Vertical grid	boolean	Table	false
+tabStops	Tab stops	string	Table
 dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
 innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
 outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}

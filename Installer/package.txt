@@ -31,6 +31,8 @@ installer LiveCode
 	include Plugins
 	include Resources
 	include Documentation
+	include Toolchain.[[TargetPlatform]]
+	include Examples
 	codesign
 		include Engine.[[TargetPlatform]]
 		with TargetFolder as [[ToolsFolder]] do
@@ -81,6 +83,8 @@ component Runtime
 component Externals
 	include Externals.[[TargetPlatform]]
 	include Databases.[[TargetPlatform]]
+	if TargetPlatform is Linux then
+		include Externals.CEF.Linux
 	if TargetPlatform is Windows then
 		include Externals.CEF.Windows
 	if TargetPlatform is MacOSX then
@@ -134,6 +138,7 @@ component Plugins
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
 		stack "ide:Plugins/revTabRuler 1.2.rev"
+		stack "ide:Plugins/revWidgetBuilder.livecode"
 
 component Resources
 	into [[SupportFolder]]/Resources/Examples place
@@ -317,7 +322,7 @@ component Resources
 
 component Documentation
 	into [[ToolsFolder]]/Documentation place
-		file	"ide:Documentation/glos.rsindex"
+		file "ide:Documentation/glos.rsindex"
 		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
 		file "docs:glos.index"
@@ -338,6 +343,206 @@ component Documentation
 		file "ide:Documentation/rev/Shortcut Reference.rev"
 		file "ide:Documentation/rev/Supported Platforms Referen.rev"
 		file "ide:Documentation/rev/videos.rev"
+	into [[ToolsFolder]]/Documentation/guides place
+		file "ide:Documentation/guides/Extending LiveCode.md"
+		file "ide:Documentation/guides/guides.txt"
+		file "ide:Documentation/guides/LiveCode Script.md"
+	into [[ToolsFolder]]/Documentation/html_viewer place
+		file ide:Documentation/html_viewer/css/bootstrap.min.css as css/bootstrap.min.css
+		file ide:Documentation/html_viewer/css/codestyle.css as css/codestyle.css
+		file ide:Documentation/html_viewer/css/lcdoc.css as css/lcdoc.css
+		file ide:Documentation/html_viewer/css/stackedit.css as css/stackedit.css
+		file ide:Documentation/html_viewer/css/userguide.css as css/userguide.css
+		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.eot as fonts/glyphicons-halflings-regular.eot
+		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.svg as fonts/glyphicons-halflings-regular.svg
+		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.ttf as fonts/glyphicons-halflings-regular.ttf
+		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.woff as fonts/glyphicons-halflings-regular.woff
+		file ide:Documentation/html_viewer/images/extensions-canvas-docs.png as images/extensions-canvas-docs.png
+		file ide:Documentation/html_viewer/images/extensions-clock.png as images/extensions-clock.png
+		file ide:Documentation/html_viewer/images/extensions-documentation.png as images/extensions-documentation.png
+		file ide:Documentation/html_viewer/images/extensions-guides.jpg as images/extensions-guides.jpg
+		file ide:Documentation/html_viewer/images/extensions-home.png as images/extensions-home.png
+		file ide:Documentation/html_viewer/images/extensions-id.png as images/extensions-id.png
+		file ide:Documentation/html_viewer/images/extensions-installed.png as images/extensions-installed.png
+		file ide:Documentation/html_viewer/images/extensions-manager.png as images/extensions-manager.png
+		file ide:Documentation/html_viewer/images/extensions-plugin-example.png as images/extensions-plugin-example.png
+		file ide:Documentation/html_viewer/images/extensions-plugin-overview.png as images/extensions-plugin-overview.png
+		file ide:Documentation/html_viewer/images/extensions-site-account.png as images/extensions-site-account.png
+		file ide:Documentation/html_viewer/images/extensions-site-login.png as images/extensions-site-login.png
+		file ide:Documentation/html_viewer/images/extensions-site-upload.png as images/extensions-site-upload.png
+		file ide:Documentation/html_viewer/images/extensions-widget-first.png as images/extensions-widget-first.png
+		file ide:Documentation/html_viewer/images/extensions-widgets.png as images/extensions-widgets.png
+		file ide:Documentation/html_viewer/images/image1.png as images/image1.png
+		file ide:Documentation/html_viewer/images/image10.png as images/image10.png
+		file ide:Documentation/html_viewer/images/image100.png as images/image100.png
+		file ide:Documentation/html_viewer/images/image101.png as images/image101.png
+		file ide:Documentation/html_viewer/images/image102.png as images/image102.png
+		file ide:Documentation/html_viewer/images/image103.png as images/image103.png
+		file ide:Documentation/html_viewer/images/image104.png as images/image104.png
+		file ide:Documentation/html_viewer/images/image105.png as images/image105.png
+		file ide:Documentation/html_viewer/images/image106.png as images/image106.png
+		file ide:Documentation/html_viewer/images/image107.png as images/image107.png
+		file ide:Documentation/html_viewer/images/image108.png as images/image108.png
+		file ide:Documentation/html_viewer/images/image109.png as images/image109.png
+		file ide:Documentation/html_viewer/images/image11.png as images/image11.png
+		file ide:Documentation/html_viewer/images/image110.png as images/image110.png
+		file ide:Documentation/html_viewer/images/image111.png as images/image111.png
+		file ide:Documentation/html_viewer/images/image112.png as images/image112.png
+		file ide:Documentation/html_viewer/images/image113.png as images/image113.png
+		file ide:Documentation/html_viewer/images/image114.png as images/image114.png
+		file ide:Documentation/html_viewer/images/image115.png as images/image115.png
+		file ide:Documentation/html_viewer/images/image116.png as images/image116.png
+		file ide:Documentation/html_viewer/images/image117.png as images/image117.png
+		file ide:Documentation/html_viewer/images/image118.png as images/image118.png
+		file ide:Documentation/html_viewer/images/image119.png as images/image119.png
+		file ide:Documentation/html_viewer/images/image12.png as images/image12.png
+		file ide:Documentation/html_viewer/images/image120.png as images/image120.png
+		file ide:Documentation/html_viewer/images/image121.png as images/image121.png
+		file ide:Documentation/html_viewer/images/image122.png as images/image122.png
+		file ide:Documentation/html_viewer/images/image123.png as images/image123.png
+		file ide:Documentation/html_viewer/images/image124.png as images/image124.png
+		file ide:Documentation/html_viewer/images/image125.png as images/image125.png
+		file ide:Documentation/html_viewer/images/image126.png as images/image126.png
+		file ide:Documentation/html_viewer/images/image127.png as images/image127.png
+		file ide:Documentation/html_viewer/images/image128.png as images/image128.png
+		file ide:Documentation/html_viewer/images/image129.png as images/image129.png
+		file ide:Documentation/html_viewer/images/image13.png as images/image13.png
+		file ide:Documentation/html_viewer/images/image130.png as images/image130.png
+		file ide:Documentation/html_viewer/images/image131.png as images/image131.png
+		file ide:Documentation/html_viewer/images/image132.png as images/image132.png
+		file ide:Documentation/html_viewer/images/image133.png as images/image133.png
+		file ide:Documentation/html_viewer/images/image134.png as images/image134.png
+		file ide:Documentation/html_viewer/images/image135.png as images/image135.png
+		file ide:Documentation/html_viewer/images/image14.png as images/image14.png
+		file ide:Documentation/html_viewer/images/image15.png as images/image15.png
+		file ide:Documentation/html_viewer/images/image16.png as images/image16.png
+		file ide:Documentation/html_viewer/images/image17.png as images/image17.png
+		file ide:Documentation/html_viewer/images/image18.png as images/image18.png
+		file ide:Documentation/html_viewer/images/image19.png as images/image19.png
+		file ide:Documentation/html_viewer/images/image2.png as images/image2.png
+		file ide:Documentation/html_viewer/images/image20.png as images/image20.png
+		file ide:Documentation/html_viewer/images/image21.png as images/image21.png
+		file ide:Documentation/html_viewer/images/image22.png as images/image22.png
+		file ide:Documentation/html_viewer/images/image23.png as images/image23.png
+		file ide:Documentation/html_viewer/images/image24.png as images/image24.png
+		file ide:Documentation/html_viewer/images/image25.png as images/image25.png
+		file ide:Documentation/html_viewer/images/image26.png as images/image26.png
+		file ide:Documentation/html_viewer/images/image27.png as images/image27.png
+		file ide:Documentation/html_viewer/images/image28.png as images/image28.png
+		file ide:Documentation/html_viewer/images/image29.png as images/image29.png
+		file ide:Documentation/html_viewer/images/image3.png as images/image3.png
+		file ide:Documentation/html_viewer/images/image30.png as images/image30.png
+		file ide:Documentation/html_viewer/images/image31.png as images/image31.png
+		file ide:Documentation/html_viewer/images/image32.png as images/image32.png
+		file ide:Documentation/html_viewer/images/image33.png as images/image33.png
+		file ide:Documentation/html_viewer/images/image34.png as images/image34.png
+		file ide:Documentation/html_viewer/images/image35.png as images/image35.png
+		file ide:Documentation/html_viewer/images/image36.png as images/image36.png
+		file ide:Documentation/html_viewer/images/image37.png as images/image37.png
+		file ide:Documentation/html_viewer/images/image38.png as images/image38.png
+		file ide:Documentation/html_viewer/images/image39.png as images/image39.png
+		file ide:Documentation/html_viewer/images/image4.png as images/image4.png
+		file ide:Documentation/html_viewer/images/image40.png as images/image40.png
+		file ide:Documentation/html_viewer/images/image41.png as images/image41.png
+		file ide:Documentation/html_viewer/images/image42.png as images/image42.png
+		file ide:Documentation/html_viewer/images/image43.png as images/image43.png
+		file ide:Documentation/html_viewer/images/image44.png as images/image44.png
+		file ide:Documentation/html_viewer/images/image45.png as images/image45.png
+		file ide:Documentation/html_viewer/images/image46.png as images/image46.png
+		file ide:Documentation/html_viewer/images/image47.png as images/image47.png
+		file ide:Documentation/html_viewer/images/image48.png as images/image48.png
+		file ide:Documentation/html_viewer/images/image49.png as images/image49.png
+		file ide:Documentation/html_viewer/images/image5.png as images/image5.png
+		file ide:Documentation/html_viewer/images/image50.png as images/image50.png
+		file ide:Documentation/html_viewer/images/image51.png as images/image51.png
+		file ide:Documentation/html_viewer/images/image52.png as images/image52.png
+		file ide:Documentation/html_viewer/images/image53.png as images/image53.png
+		file ide:Documentation/html_viewer/images/image54.png as images/image54.png
+		file ide:Documentation/html_viewer/images/image55.png as images/image55.png
+		file ide:Documentation/html_viewer/images/image56.png as images/image56.png
+		file ide:Documentation/html_viewer/images/image57.png as images/image57.png
+		file ide:Documentation/html_viewer/images/image58.png as images/image58.png
+		file ide:Documentation/html_viewer/images/image59.png as images/image59.png
+		file ide:Documentation/html_viewer/images/image6.png as images/image6.png
+		file ide:Documentation/html_viewer/images/image60.png as images/image60.png
+		file ide:Documentation/html_viewer/images/image61.png as images/image61.png
+		file ide:Documentation/html_viewer/images/image62.png as images/image62.png
+		file ide:Documentation/html_viewer/images/image63.png as images/image63.png
+		file ide:Documentation/html_viewer/images/image64.png as images/image64.png
+		file ide:Documentation/html_viewer/images/image65.png as images/image65.png
+		file ide:Documentation/html_viewer/images/image66.png as images/image66.png
+		file ide:Documentation/html_viewer/images/image67.png as images/image67.png
+		file ide:Documentation/html_viewer/images/image68.png as images/image68.png
+		file ide:Documentation/html_viewer/images/image69.png as images/image69.png
+		file ide:Documentation/html_viewer/images/image7.png as images/image7.png
+		file ide:Documentation/html_viewer/images/image70.png as images/image70.png
+		file ide:Documentation/html_viewer/images/image71.png as images/image71.png
+		file ide:Documentation/html_viewer/images/image72.png as images/image72.png
+		file ide:Documentation/html_viewer/images/image73.png as images/image73.png
+		file ide:Documentation/html_viewer/images/image74.png as images/image74.png
+		file ide:Documentation/html_viewer/images/image75.png as images/image75.png
+		file ide:Documentation/html_viewer/images/image76.png as images/image76.png
+		file ide:Documentation/html_viewer/images/image77.png as images/image77.png
+		file ide:Documentation/html_viewer/images/image78.png as images/image78.png
+		file ide:Documentation/html_viewer/images/image79.png as images/image79.png
+		file ide:Documentation/html_viewer/images/image8.png as images/image8.png
+		file ide:Documentation/html_viewer/images/image80.png as images/image80.png
+		file ide:Documentation/html_viewer/images/image81.png as images/image81.png
+		file ide:Documentation/html_viewer/images/image82.png as images/image82.png
+		file ide:Documentation/html_viewer/images/image83.png as images/image83.png
+		file ide:Documentation/html_viewer/images/image84.png as images/image84.png
+		file ide:Documentation/html_viewer/images/image85.png as images/image85.png
+		file ide:Documentation/html_viewer/images/image86.png as images/image86.png
+		file ide:Documentation/html_viewer/images/image87.png as images/image87.png
+		file ide:Documentation/html_viewer/images/image88.png as images/image88.png
+		file ide:Documentation/html_viewer/images/image89.png as images/image89.png
+		file ide:Documentation/html_viewer/images/image9.png as images/image9.png
+		file ide:Documentation/html_viewer/images/image90.png as images/image90.png
+		file ide:Documentation/html_viewer/images/image91.png as images/image91.png
+		file ide:Documentation/html_viewer/images/image92.png as images/image92.png
+		file ide:Documentation/html_viewer/images/image93.png as images/image93.png
+		file ide:Documentation/html_viewer/images/image94.png as images/image94.png
+		file ide:Documentation/html_viewer/images/image95.png as images/image95.png
+		file ide:Documentation/html_viewer/images/image96.png as images/image96.png
+		file ide:Documentation/html_viewer/images/image97.png as images/image97.png
+		file ide:Documentation/html_viewer/images/image98.png as images/image98.png
+		file ide:Documentation/html_viewer/images/image99.png as images/image99.png
+		file ide:Documentation/html_viewer/js/bootstrap.min.js as js/bootstrap.min.js
+		file ide:Documentation/html_viewer/js/highlight.pack.js as js/highlight.pack.js
+		file ide:Documentation/html_viewer/js/jquery-1.11.1.min.js as js/jquery-1.11.1.min.js
+		file ide:Documentation/html_viewer/js/jquery-cookie.js as js/jquery-cookie.js
+		file ide:Documentation/html_viewer/js/jquery.session.js as js/jquery.session.js
+		file ide:Documentation/html_viewer/js/marked.js as js/marked.js
+		file ide:Documentation/html_viewer/js/remarkable.min.js as js/remarkable.min.js
+		file ide:Documentation/html_viewer/resources/data/api/distributed_api.js as resources/data/api/distributed_api.js
+		file ide:Documentation/html_viewer/resources/data/guide/distributed_guide.js as resources/data/guide/distributed_guide.js
+		file ide:Documentation/html_viewer/resources/media/spinner.gif as resources/media/spinner.gif
+		stack ide:Documentation/html_viewer/dictionary.livecode
+		file ide:Documentation/html_viewer/guide.html
+		file ide:Documentation/html_viewer/viewer.html
+
+component Examples
+	into [[ToolsFolder]]/Examples place
+		file ide:examples/basic-button/main.mlc as basic-button/main.mlc
+		file ide:examples/canvas/main.mlc as canvas/main.mlc
+		file ide:examples/clock/icon.png as clock/icon.png
+		file ide:examples/clock/icon@extra-high.png as clock/icon@extra-high.png
+		file ide:examples/clock/main.mlc as clock/main.mlc
+
+component Toolchain.MacOSX
+	into [[ToolsFolder]]/Toolchain place
+		executable macosx:lc-compile as lc-compile
+		rfolder macosx:modules
+
+component Toolchain.Windows
+	into [[ToolsFolder]]/Toolchain place
+		executable windows:lc-compile.exe as lc-compile.exe
+		rfolder macosx:modules
+
+component Toolchain.Linux
+	into [[ToolsFolder]]/Toolchain place
+		executable linux:[[TargetArchitecture]]/release/lc-compile as lc-compile
+		rfolder macosx:modules
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,6 +667,7 @@ component Runtime.iOS
 		file ios:iphonesimulator5.0/Release/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator5.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator5.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator5.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator5.0/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
 		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
@@ -475,6 +681,7 @@ component Runtime.iOS
 		file ios:iphonesimulator6.1/Release/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator6.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
 		executable ios:iphonesimulator7.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
@@ -488,7 +695,36 @@ component Runtime.iOS
 		file ios:iphonesimulator7.1/Release/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_0" place
+		executable ios:iphonesimulator8.0/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.0/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
+		executable ios:iphonesimulator8.0/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
+		executable ios:iphonesimulator8.0/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
+		executable ios:iphonesimulator8.0/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
+		executable ios:iphonesimulator8.0/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
+		executable ios:iphonesimulator8.0/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
+		executable ios:iphonesimulator8.0/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
+		file ios:iphonesimulator8.0/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.0/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_1" place
+		executable ios:iphonesimulator8.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator4.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator4.3/Release/revsecurity.dylib
+		executable ios:iphonesimulator8.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator4.3/Release/revpdfprinter.dylib
+		executable ios:iphonesimulator8.1/Release/revzip.dylib as RevZip base ios:iphonesimulator4.3/Release/revzip.dylib
+		executable ios:iphonesimulator8.1/Release/revxml.dylib as RevXml base ios:iphonesimulator4.3/Release/revxml.dylib
+		executable ios:iphonesimulator8.1/Release/revdb.dylib as RevDb base ios:iphonesimulator4.3/Release/revdb.dylib
+		executable ios:iphonesimulator8.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator4.3/Release/dbsqlite.dylib
+		executable ios:iphonesimulator8.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator4.3/Release/dbmysql.dylib
+		file ios:iphonesimulator8.1/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 	into "[[ToolsFolder]]/Runtime/iOS/Device-5_0" place
 		executable ios:iphoneos5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
 		executable ios:iphoneos5.0/Release/revsecurity.lcext as RevSecurity
@@ -501,6 +737,7 @@ component Runtime.iOS
 		file ios:iphoneos5.0/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos5.0/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos5.0/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos5.0/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos5.0/Release/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos5.0/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
 		file ios:iphoneos5.0/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
@@ -519,6 +756,7 @@ component Runtime.iOS
 		file ios:iphoneos6.1/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos6.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos6.1/Release/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos6.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
 		file ios:iphoneos6.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
@@ -528,21 +766,41 @@ component Runtime.iOS
 	into "[[ToolsFolder]]/Runtime/iOS/Device-7_1" place
 		executable ios:iphoneos7.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator5.0/Release/standalone-mobile-lib[[EditionTagLower]].lcext
 		executable ios:iphoneos7.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
-		executable ios:iphoneos7.1/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphonesimulator5.0/Release/revpdfprinter.lcext
-		executable ios:iphoneos7.1/Release/revzip.lcext as RevZip base ios:iphonesimulator5.0/Release/revzip.lcext
-		executable ios:iphoneos7.1/Release/revxml.lcext as RevXml base ios:iphonesimulator5.0/Release/revxml.lcext
-		executable ios:iphoneos7.1/Release/revdb.lcext as RevDb base ios:iphonesimulator5.0/Release/revdb.lcext
-		executable ios:iphoneos7.1/Release/dbsqlite.lcext as DbSqlite base ios:iphonesimulator5.0/Release/dbsqlite.lcext
-		executable ios:iphoneos7.1/Release/dbmysql.lcext as DbMysql base ios:iphonesimulator5.0/Release/dbmysql.lcext
+		executable ios:iphoneos7.1/Release/revpdfprinter.lcext as RevPdfPrinter
+		executable ios:iphoneos7.1/Release/revzip.lcext as RevZip
+		executable ios:iphoneos7.1/Release/revxml.lcext as RevXml
+		executable ios:iphoneos7.1/Release/revdb.lcext as RevDb
+		executable ios:iphoneos7.1/Release/dbsqlite.lcext as DbSqlite
+		executable ios:iphoneos7.1/Release/dbmysql.lcext as DbMysql
 		file ios:iphoneos7.1/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos7.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos7.1/Release/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos7.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
 		file ios:iphoneos7.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos7.1/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos7.1/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8_1" place
+		executable ios:iphoneos8.1/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
+		executable ios:iphoneos8.1/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator5.0/Release/revsecurity.lcext
+		executable ios:iphoneos8.1/Release/revpdfprinter.lcext as RevPdfPrinter
+		executable ios:iphoneos8.1/Release/revzip.lcext as RevZip
+		executable ios:iphoneos8.1/Release/revxml.lcext as RevXml
+		executable ios:iphoneos8.1/Release/revdb.lcext as RevDb
+		executable ios:iphoneos8.1/Release/dbsqlite.lcext as DbSqlite
+		executable ios:iphoneos8.1/Release/dbmysql.lcext as DbMysql
+		file ios:iphonesimulator8.1/Release/mobile-device-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.1/Release/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphonesimulator8.1/Release/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphonesimulator8.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -550,8 +808,10 @@ component Externals.Linux
 	into [[TargetFolder]]/Externals place
 		executable linux:[[TargetArchitecture]]/release/revxml.so
 		executable linux:[[TargetArchitecture]]/release/revzip.so
+		executable linux:[[TargetArchitecture]]/release/revbrowser.so
 	declare external "XML" using revxml.so
 	declare external "Revolution Zip" using revzip.so
+	declare external "Browser" using revbrowser.so
 
 //////////
 
@@ -588,6 +848,18 @@ component Externals.MacOSX
 	declare external "Font Support" using revfont.bundle
 
 //////////
+
+component Externals.CEF.Linux
+	into [[TargetFolder]]/Externals/CEF place
+		executable linux:[[TargetArchitecture]]/release/revbrowser-cefprocess
+		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libcef.so
+		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libffmpegsumo.so
+		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libpdf.so
+		rfolder prebuilt:lib/libcef/linux/[[TargetArchitecture]]/locales
+		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef.pak
+		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_100_percent.pak
+		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_200_percent.pak
+		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
@@ -676,6 +948,21 @@ component Databases.MacOSX
 
 component Toolset
 	into [[ToolsFolder]]/Toolset place
+		file ide:Toolset/libraries/revideextensionlibrary.livecode as libraries/revideextensionlibrary.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.array.livecode as propertyInspectorControllers/com.runrev.pi.array.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.BooleanRow.livecode as propertyInspectorControllers/com.runrev.pi.BooleanRow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.colorrow.livecode as propertyInspectorControllers/com.runrev.pi.colorrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.customproperties.livecode as propertyInspectorControllers/com.runrev.pi.customproperties.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.enumrow.livecode as propertyInspectorControllers/com.runrev.pi.enumrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.fillrow.livecode as propertyInspectorControllers/com.runrev.pi.fillrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.graphiceffectrow.livecode as propertyInspectorControllers/com.runrev.pi.graphiceffectrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.iconrow.livecode as propertyInspectorControllers/com.runrev.pi.iconrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.numberrow.livecode as propertyInspectorControllers/com.runrev.pi.numberrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.patternrow.livecode as propertyInspectorControllers/com.runrev.pi.patternrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.setrow.livecode as propertyInspectorControllers/com.runrev.pi.setrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.stringrow.livecode as propertyInspectorControllers/com.runrev.pi.stringrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.textrow.livecode as propertyInspectorControllers/com.runrev.pi.textrow.livecode
+		stack ide:Toolset/propertyInspectorControllers/com.runrev.pi.titlerow.livecode as propertyInspectorControllers/com.runrev.pi.titlerow.livecode
 		file ide:Toolset/resources/commercial/ideSkin/about-background.png as resources/commercial/ideSkin/about-background.png
 		file ide:Toolset/resources/commercial/ideSkin/about-background_legacy.png as resources/commercial/ideSkin/about-background_legacy.png
 		file ide:Toolset/resources/commercial/ideSkin/bubble.png as resources/commercial/ideSkin/bubble.png
@@ -693,6 +980,8 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_on.png as resources/commercial/ideSkin/IDEthumb4_on.png
 		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_over.png as resources/commercial/ideSkin/IDEthumb4_over.png
 		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_up.png as resources/commercial/ideSkin/IDEthumb4_up.png
+		file ide:Toolset/resources/commercial/ideSkin/logo.png as resources/commercial/ideSkin/logo.png
+		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-bottom.png as resources/commercial/ideSkin/resource-center-bottom.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-title.png as resources/commercial/ideSkin/resource-center-title.png
 		file ide:Toolset/resources/commercial/ideSkin/resource-center-title_legacy.png as resources/commercial/ideSkin/resource-center-title_legacy.png
@@ -712,36 +1001,395 @@ component Toolset
 		file ide:Toolset/resources/commercial/ideSkin/visit_foum_up.png as resources/commercial/ideSkin/visit_foum_up.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_over.png as resources/commercial/ideSkin/visit_stack_over.png
 		file ide:Toolset/resources/commercial/ideSkin/visit_stack_up.png as resources/commercial/ideSkin/visit_stack_up.png
-		file ide:Toolset/resources/commercial/ideSkin/logo.png as resources/commercial/ideSkin/logo.png
-		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
-		if TargetEdition is "Community" then
-			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
-			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background_legacy.png
-			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-top_legacy.png as resources/community/ideSkin/resource-center-top_legacy.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-title.png as resources/community/ideSkin/resource-center-title.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-title_legacy.png as resources/community/ideSkin/resource-center-title_legacy.png
-			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
-			file ide:Toolset/resources/community/ideSkin/revOnline-top_legacy.png as resources/community/ideSkin/revOnline-top_legacy.png
-			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
-			file ide:Toolset/resources/community/ideSkin/splash_legacy.png as resources/community/ideSkin/splash_legacy.png
-			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
-			file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
-			file ide:Toolset/resources/community/ideSkin/logo@extra-high.png as resources/community/ideSkin/logo@extra-high.png
-			file ide:Toolset/resources/community/ideSkin/html-donate.png as resources/community/ideSkin/html-donate.png
-			file ide:Toolset/resources/community/ideSkin/html-donate@extra-high.png as resources/community/ideSkin/html-donate@extra-high.png
-			file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png
-			file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
+		file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
+		file ide:Toolset/resources/community/ideSkin/about-background_legacy.png as resources/community/ideSkin/about-background_legacy.png
+		file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
+		file ide:Toolset/resources/community/ideSkin/html-donate.png as resources/community/ideSkin/html-donate.png
+		file ide:Toolset/resources/community/ideSkin/html-donate@extra-high.png as resources/community/ideSkin/html-donate@extra-high.png
+		file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png
+		file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
+		file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
+		file ide:Toolset/resources/community/ideSkin/logo@extra-high.png as resources/community/ideSkin/logo@extra-high.png
+		file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
+		file ide:Toolset/resources/community/ideSkin/resource-center-title.png as resources/community/ideSkin/resource-center-title.png
+		file ide:Toolset/resources/community/ideSkin/resource-center-title_legacy.png as resources/community/ideSkin/resource-center-title_legacy.png
+		file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
+		file ide:Toolset/resources/community/ideSkin/resource-center-top_legacy.png as resources/community/ideSkin/resource-center-top_legacy.png
+		file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
+		file ide:Toolset/resources/community/ideSkin/revOnline-top_legacy.png as resources/community/ideSkin/revOnline-top_legacy.png
+		file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
+		file ide:Toolset/resources/community/ideSkin/splash_legacy.png as resources/community/ideSkin/splash_legacy.png
+		file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
+		file ide:Toolset/resources/supporting_files/fonts/fontawesome.ttf as resources/supporting_files/fonts/fontawesome.ttf
+		file ide:Toolset/resources/supporting_files/fonts/lcideicons.ttf as resources/supporting_files/fonts/lcideicons.ttf
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Button.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Button.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Card.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Card.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Checkbox.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Checkbox.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.ComboBox.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.ComboBox.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.CurveGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.CurveGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.DefaultButton.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.DefaultButton.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Field.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Field.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Group.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Group.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Image.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Image.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.LabelField.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.LabelField.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.LineGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.LineGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.ListField.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.ListField.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.LittleArrows.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.LittleArrows.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.OptionMenu.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.OptionMenu.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.OvalGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.OvalGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Player.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Player.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.PolygonGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.PolygonGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.PopupMenu.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.PopupMenu.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Progressbar.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Progressbar.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.PulldownMenu.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.PulldownMenu.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.RadioButton.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.RadioButton.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.RectangleButton.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.RectangleButton.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.RectangleGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.RectangleGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.RegularGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.RegularGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.RoundRectGraphic.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.RoundRectGraphic.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Scrollbar.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Scrollbar.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Slider.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Slider.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.Stack.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.Stack.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.TableField.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.TableField.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.TabPanel.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.TabPanel.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.TextArea.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.TextArea.txt
+		file ide:Toolset/resources/supporting_files/property_definitions/com.livecode.interface.classic.widget.txt as resources/supporting_files/property_definitions/com.livecode.interface.classic.widget.txt
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.cursor.grab.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.cursor.grab.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.cursor.grabclose.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.cursor.grabclose.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Button.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Button.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Button.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Button.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Checkbox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Checkbox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Checkbox.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Checkbox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Combobox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Combobox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Combobox.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Combobox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.CurveGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.CurveGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DataGrid.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DataGrid.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DataGrid.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DataGrid.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DefaultButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DefaultButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DefaultButton.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.DefaultButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Field.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Field.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Field.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Field.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.FreehandGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.FreehandGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Image.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Image.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Image.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Image.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LabelField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LabelField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LabelField.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LabelField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LineGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LineGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.ListField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.ListField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.ListField.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.ListField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LittleArrows.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LittleArrows.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LittleArrows.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.LittleArrows.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OptionMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OptionMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OptionMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OptionMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OvalGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OvalGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OvalGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.OvalGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.player.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.player.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.player.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.player.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PolygonGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PolygonGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PopupMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PopupMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PopupMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PopupMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Progressbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Progressbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Progressbar.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Progressbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PulldownMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PulldownMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PulldownMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.PulldownMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RadioButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RadioButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RadioButton.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RadioButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleButton.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangleGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RectangularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RegularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RegularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RoundRectGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.RoundRectGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Scrollbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Scrollbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Scrollbar.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Scrollbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Slider.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Slider.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Slider.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.Slider.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TableField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TableField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TableField.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TableField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TabPanel.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TabPanel.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TabPanel.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TabPanel.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TextArea.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TextArea.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TextArea.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.classic.TextArea.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.widget.generic.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.interface.widget.generic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.expand.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.expand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.expanded.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.expanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linecorner.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linecorner.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.lineexpanded.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.lineexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linehorz.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linehorz.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.lineitem.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.lineitem.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linepattern.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.linepattern.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.noexpand.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.noexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.topexpand.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.topexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.topexpanded.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.pb.tree.topexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Browse.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Browse.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Brush.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Brush.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Bucket.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Bucket.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Curve.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Curve.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Eraser.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Eraser.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Pencil.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Pencil.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Pointer.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Pointer.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Polygon.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Polygon.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Select.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.Select.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.SprayCan.icon.png as resources/supporting_files/themes/com.livecode.theme.linux/com.livecode.tool.SprayCan.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.linux/loading.gif as resources/supporting_files/themes/com.livecode.theme.linux/loading.gif
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.cursor.grab.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.cursor.grab.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.cursor.grabclose.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.cursor.grabclose.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Button.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Button.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Button.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Button.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Checkbox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Checkbox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Checkbox.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Checkbox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Combobox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Combobox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Combobox.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Combobox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.CurveGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.CurveGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DataGrid.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DataGrid.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DataGrid.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DataGrid.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DefaultButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DefaultButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DefaultButton.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.DefaultButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Field.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Field.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Field.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Field.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.FreehandGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.FreehandGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Image.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Image.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Image.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Image.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LabelField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LabelField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LabelField.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LabelField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LineGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LineGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.ListField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.ListField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.ListField.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.ListField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LittleArrows.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LittleArrows.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LittleArrows.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.LittleArrows.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OptionMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OptionMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OptionMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OptionMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OvalGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OvalGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OvalGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.OvalGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.player.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.player.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.player.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.player.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PolygonGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PolygonGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PopupMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PopupMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PopupMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PopupMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Progressbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Progressbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Progressbar.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Progressbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PulldownMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PulldownMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PulldownMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.PulldownMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RadioButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RadioButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RadioButton.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RadioButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleButton.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangleGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RectangularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RegularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RegularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RoundRectGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.RoundRectGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Scrollbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Scrollbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Scrollbar.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Scrollbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Slider.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Slider.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Slider.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.Slider.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TableField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TableField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TableField.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TableField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TabPanel.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TabPanel.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TabPanel.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TabPanel.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TextArea.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TextArea.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TextArea.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.classic.TextArea.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.tools.hover.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.tools.hover.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.widget.generic.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.interface.widget.generic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.expand.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.expand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.expanded.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.expanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linecorner.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linecorner.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.lineexpanded.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.lineexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linehorz.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linehorz.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.lineitem.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.lineitem.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linepattern.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.linepattern.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.noexpand.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.noexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.topexpand.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.topexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.topexpanded.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.pb.tree.topexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.property.brush.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.property.brush.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Browse.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Browse.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Brush.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Brush.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Bucket.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Bucket.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Curve.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Curve.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Eraser.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Eraser.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Pencil.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Pencil.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Pointer.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Pointer.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Polygon.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Polygon.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Select.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.Select.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.SprayCan.icon.png as resources/supporting_files/themes/com.livecode.theme.mac.10.0/com.livecode.tool.SprayCan.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.mac.10.0/loading.gif as resources/supporting_files/themes/com.livecode.theme.mac.10.0/loading.gif
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.cursor.grab.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.cursor.grab.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.cursor.grabclose.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.cursor.grabclose.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Button.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Button.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Button.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Button.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Checkbox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Checkbox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Checkbox.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Checkbox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Combobox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Combobox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Combobox.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Combobox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.CurveGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.CurveGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DataGrid.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DataGrid.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DataGrid.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DataGrid.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DefaultButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DefaultButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DefaultButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.DefaultButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Field.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Field.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Field.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Field.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.FreehandGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.FreehandGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Image.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Image.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Image.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Image.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LabelField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LabelField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LabelField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LabelField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LineGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LineGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.ListField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.ListField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.ListField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.ListField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LittleArrows.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LittleArrows.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LittleArrows.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.LittleArrows.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OptionMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OptionMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OptionMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OptionMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OvalGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OvalGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OvalGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.OvalGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.player.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.player.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.player.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.player.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PolygonGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PolygonGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PopupMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PopupMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PopupMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PopupMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Progressbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Progressbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Progressbar.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Progressbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PulldownMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PulldownMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PulldownMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.PulldownMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RadioButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RadioButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RadioButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RadioButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangleGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RectangularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RegularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RegularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RoundRectGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.RoundRectGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Scrollbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Scrollbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Scrollbar.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Scrollbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Slider.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Slider.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Slider.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.Slider.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TableField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TableField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TableField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TableField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TabPanel.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TabPanel.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TabPanel.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TabPanel.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TextArea.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TextArea.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TextArea.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.classic.TextArea.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.tools.hover.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.tools.hover.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.widget.generic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.interface.widget.generic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.expand.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.expand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.expanded.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.expanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linecorner.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linecorner.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.lineexpanded.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.lineexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linehorz.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linehorz.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.lineitem.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.lineitem.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linepattern.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.linepattern.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.noexpand.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.noexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.topexpand.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.topexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.topexpanded.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.pb.tree.topexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Browse.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Browse.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Brush.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Brush.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Bucket.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Bucket.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Curve.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Curve.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Eraser.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Eraser.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Pencil.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Pencil.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Pointer.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Pointer.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Polygon.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Polygon.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Select.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.Select.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.SprayCan.icon.png as resources/supporting_files/themes/com.livecode.theme.win.5.1/com.livecode.tool.SprayCan.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.5.1/loading.gif as resources/supporting_files/themes/com.livecode.theme.win.5.1/loading.gif
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.cursor.grab.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.cursor.grab.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.cursor.grabclose.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.cursor.grabclose.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Button.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Button.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Button.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Button.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Checkbox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Checkbox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Checkbox.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Checkbox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Combobox.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Combobox.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Combobox.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Combobox.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.CurveGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.CurveGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DataGrid.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DataGrid.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DataGrid.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DataGrid.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DefaultButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DefaultButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DefaultButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.DefaultButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Field.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Field.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Field.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Field.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.FreehandGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.FreehandGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Image.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Image.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Image.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Image.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LabelField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LabelField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LabelField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LabelField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LineGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LineGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.ListField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.ListField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.ListField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.ListField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LittleArrows.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LittleArrows.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LittleArrows.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.LittleArrows.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OptionMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OptionMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OptionMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OptionMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OvalGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OvalGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OvalGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.OvalGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.player.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.player.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.player.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.player.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PolygonGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PolygonGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PopupMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PopupMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PopupMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PopupMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Progressbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Progressbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Progressbar.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Progressbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PulldownMenu.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PulldownMenu.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PulldownMenu.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.PulldownMenu.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RadioButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RadioButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RadioButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RadioButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleButton.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleButton.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleButton.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleButton.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleGraphic.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangleGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RectangularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RegularGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RegularGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RoundRectGraphic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.RoundRectGraphic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Scrollbar.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Scrollbar.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Scrollbar.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Scrollbar.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Slider.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Slider.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Slider.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.Slider.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TableField.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TableField.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TableField.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TableField.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TabPanel.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TabPanel.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TabPanel.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TabPanel.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TextArea.icon-hilite.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TextArea.icon-hilite.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TextArea.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.classic.TextArea.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.widget.generic.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.interface.widget.generic.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.expand.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.expand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.expanded.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.expanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linecorner.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linecorner.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.lineexpanded.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.lineexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linehorz.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linehorz.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.lineitem.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.lineitem.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linepattern.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.linepattern.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.noexpand.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.noexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.topexpand.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.topexpand.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.topexpanded.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.pb.tree.topexpanded.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Browse.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Browse.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Brush.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Brush.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Bucket.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Bucket.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Curve.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Curve.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Eraser.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Eraser.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Pencil.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Pencil.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Pointer.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Pointer.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Polygon.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Polygon.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Select.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.Select.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.SprayCan.icon.png as resources/supporting_files/themes/com.livecode.theme.win.6.0/com.livecode.tool.SprayCan.icon.png
+		file ide:Toolset/resources/supporting_files/themes/com.livecode.theme.win.6.0/loading.gif as resources/supporting_files/themes/com.livecode.theme.win.6.0/loading.gif
 		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
+		stack ide:Toolset/Unsupported/revCore.livecode as Unsupported/revCore.livecode
 		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
+		stack ide:Toolset/Unsupported/revMessageLibrary.livecode as Unsupported/revMessageLibrary.livecode
+		stack ide:Toolset/Unsupported/revProjectBrowser.livecode as Unsupported/revProjectBrowser.livecode
+		stack ide:Toolset/Unsupported/revProjectInformationLibrary.livecode as Unsupported/revProjectInformationLibrary.livecode
 		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
+		stack ide:Toolset/extensionLibraryTest.livecode
 		stack ide:Toolset/home.rev
 		stack ide:Toolset/ideCore.livecode
+		stack ide:Toolset/ideMessageBox.livecode
 		stack ide:Toolset/ideMessageLibrary.livecode
 		stack ide:Toolset/ideProjectBrowser.livecode
+		stack ide:Toolset/ideProjectBrowserView.livecode
 		stack ide:Toolset/ideProjectInformationLibrary.livecode
+		stack ide:Toolset/ideTools.livecode
+		stack ide:Toolset/MessageBox.livecode
 		stack ide:Toolset/revabout.rev
 		stack ide:Toolset/revanswerdialog.rev
 		stack ide:Toolset/revapplicationoverview.rev
@@ -751,7 +1399,6 @@ component Toolset
 		stack ide:Toolset/revcursors.rev
 		stack ide:Toolset/revdatagridlibrary.rev
 		stack ide:Toolset/revdebugger.rev
-		stack ide:Toolset/revdeploylibrary.rev
 		stack ide:Toolset/revdictionary.rev
 		stack ide:Toolset/revdocumentationlibrary.rev
 		stack ide:Toolset/reverrordisplay.rev
@@ -760,6 +1407,13 @@ component Toolset
 		stack ide:Toolset/revgeneralpatterns.rev
 		stack ide:Toolset/reviconchooser.rev
 		stack ide:Toolset/revicons.rev
+		stack ide:Toolset/revideali.livecode
+		stack ide:Toolset/revIDEExtensionManager.livecode
+		stack ide:Toolset/revidelibrary.livecode
+		stack ide:Toolset/revideMessageBox.livecode
+		stack ide:Toolset/revidemessagehandler.livecode
+		stack ide:Toolset/revIDEProjectBrowserView.livecode
+		stack ide:Toolset/revIDEPropertyInspectorView.livecode
 		stack ide:Toolset/revimagelibrary.rev
 		stack ide:Toolset/revlauncher.rev
 		stack ide:Toolset/revlibrary.rev
@@ -768,12 +1422,12 @@ component Toolset
 		stack ide:Toolset/revmenubar.rev
 		stack ide:Toolset/revmenumanager.rev
 		stack ide:Toolset/revmessagebox.rev
-		stack ide:Toolset/revMessageLibrary.livecode
 		stack ide:Toolset/revmessagewatcher.rev
 		stack ide:Toolset/revmetadata.rev
 		stack ide:Toolset/revmobiledeployer.rev
 		stack ide:Toolset/revonline.rev
 		stack ide:Toolset/revonlinelibrary.rev
+		stack ide:Toolset/revpackagebuilder.livecode
 		stack ide:Toolset/revpagesetup.rev
 		stack ide:Toolset/revpagesetupdialog.rev
 		stack ide:Toolset/revpalette.rev
@@ -783,8 +1437,6 @@ component Toolset
 		stack ide:Toolset/revpreferencestemplate.rev
 		stack ide:Toolset/revprintdialog.rev
 		stack ide:Toolset/revprinterchooser.rev
-		stack ide:Toolset/revProjectBrowser.livecode
-		stack ide:Toolset/revProjectInformationLibrary.livecode
 		stack ide:Toolset/revreplicate.rev
 		stack ide:Toolset/revresourcecenter.rev
 		stack ide:Toolset/revrulersh.rev
@@ -794,9 +1446,15 @@ component Toolset
 		stack ide:Toolset/revsearchengine.rev
 		stack ide:Toolset/revstandalonesettings.rev
 		stack ide:Toolset/revstartcenter.livecode
+		stack ide:Toolset/revstartcenter.rev
 		stack ide:Toolset/revtemplatechooser.rev
 		stack ide:Toolset/revtools.rev
 		stack ide:Toolset/revupdatechecker.rev
 		stack ide:Toolset/revvariablewatcher.rev
+		file ide-support:revdeploylibrary.livecodescript
+		file ide-support:revdeploylibraryandroid.livecodescript
+		file ide-support:revdeploylibraryios.livecodescript
+		file ide-support:revsaveasiosstandalone.livecodescript
+		file ide-support:revsaveasandroidstandalone.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
