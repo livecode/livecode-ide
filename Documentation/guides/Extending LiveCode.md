@@ -1,3 +1,5 @@
+[toc]
+
 # Introduction
 
 LiveCode 8.0 is the most exciting release in the history of the technology. It provides a simple way to extend the functionality or control set of LiveCode.
@@ -41,26 +43,26 @@ Notice the extension manager has three tabs:
 ## 2) Go to the extension store
 Go to the extension by clicking on the extension store tab and wait for it to load (Internet connectivity is required).
 
-![](images/extensions-home.png)
+![enter image description here](images/extensions-home.png)
 
 You can browse by category or search for an extension.
 
 ## 3) Select an extension
 Click on any of the extensions to load full details and installation options.
 
-![](images/extensions-clock.png)
+![enter image description here](images/extensions-clock.png)
 
 ## 4) Install the extension
 Click on the install button to begin the download and installation of the extension. It should only take a matter of seconds to download and install.
 
-![](images/extensions-installed.png)
+![enter image description here](images/extensions-installed.png)
 
 ## 5) Try out your extension
 
 **Widgets**
 If you downloaded a widget it will appear in your list of installed widgets and also in your Tools Palette. Using the widget is no different from any of the classic LiveCode controls you've been used to. Simply drag it onto a stack and start interacting with it as you could any another control.
 
-![](images/extensions-widgets.png)
+![enter image description here](images/extensions-widgets.png)
 
 You can reference the widget in script as a control:
 
@@ -82,7 +84,7 @@ Extensions can provide an API (Dictionary) and User Guide as part of the install
 
 **API (Dictionary)**
 
-![](images/extensions-documentation.png)
+![enter image description here](images/extensions-documentation.png)
 
 1. Open the documentation stack from the menubar
 2. API chooser - Choose which API to view. By default, LiveCode 8.0 comes with the LiveCode Script API and the new LiveCode Builder API. Any extension that contains an API is displayed here.
@@ -94,7 +96,7 @@ Extensions can provide an API (Dictionary) and User Guide as part of the install
 
 **User Guide**
 
-![](images/extensions-guides.jpg)
+![enter image description here](images/extensions-guides.jpg)
 
 1. Click on the "Guide" tab at the top of the documentation stack
 2. Select the guide you wish to view
@@ -115,7 +117,7 @@ Open the "Widget Builder" plugin for the development menu:
 Development > Plugins > Widget Builder
 ```
 
-![](images/extensions-plugin-overview.png)
+![enter image description here](images/extensions-plugin-overview.png)
 
 1. Choose a Widget - This list includes the source for the example extensions as well as any you have created.
 2. Open a Widget - If you have created a extensions using an external editor you can load it into the builder here.
@@ -130,7 +132,7 @@ Development > Plugins > Widget Builder
 2. Push "test"
 3. Notice that a stack is create with the widget. If you can't see it, it may be behind the plugin stack.
 
-![](images/extensions-plugin-example.png)
+![enter image description here](images/extensions-plugin-example.png)
 
 > **Note:** A great way to get started is to tweak the script of the clock or one of the other examples. Perhaps change a few colors and click "build" to test your changes.
 
@@ -157,7 +159,7 @@ end widget
 This is the unique identifier by which your extension will be referred to by the LiveCode Engine.
 
 ### Declare Meta Data
-Next we a some meta data to ensure our extensions display correctly in LiveCode.
+Next, provide meta data to help LiveCode display your product correctly in product and in the online portal.
 
 ```
 widget com.livecode.extensions.beaumont.pinkCircle
@@ -169,9 +171,73 @@ metadata version is "1.0.0"
 end widget
 ```
 
-### Add Paint Handler
+### Importing libraries
+The LiveCode builder syntax is broken down into **modules**. There are 3 classes of module:
 
-A widget receives onPaint() calls whenever LiveCode wants you to redraw your widget. 
+Type|Description
+---|---
+Default|The module is part of LiveCode builder and is included by default. Their syntax is always available to you as a LiveCode developer.
+Optional|The module is created and distributed by LiveCode Ltd and must be imported by the extension developer in order to make use of the syntax.
+Custom|This module is created and distributed through the online portal and must be imported by the extension developer in order to make use of the syntax.
+
+LiveCode builder contains the following modules:
+
+Module|Type|Description
+---|---|---
+com.livecode.canvas|Optional|Provides the syntax and types for 2D drawing allowing developers to draw to a canvas. Required if creating a widget.
+com.livecode.Widget|Optional|Contains syntax specific to widget building such as "my width" and "the mouse position".
+com.livecode.Engine|Optional|Contains syntax for all extension building such as "dispatch" and "log".
+com.livecode.stream|Default|
+com.livecode.file|Default|
+com.livecode.mathfoundation|Default|
+com.livecode.array|Default|
+com.livecode.list|Default|
+com.livecode.arithmetic|Default|
+com.livecode.binary|Default|
+com.livecode.bitwise|Default|
+com.livecode.byte|Default|
+com.livecode.char|Default|
+com.livecode.date|Default|
+com.livecode.logic|Default|
+com.livecode.math|Default|
+com.livecode.sort|Default|
+com.livecode.string|Default|
+com.livecode.system|Default|
+com.livecode.type|Default|
+
+> **Warning!** Module names are subject to change.
+
+The new LiveCode dictionary has a full list of all available syntax as well as the module each belongs to. As a general rule we recommend importing all three optional module whenever developing widgets.
+
+```
+widget com.livecode.extensions.beaumont.pinkCircle
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+metadata title is "My Pink Circle"
+metadata author is "Benjamin Beaumont"
+metadata version is "1.0.0"
+
+end widget
+```
+
+
+
+
+
+### Core Handlers
+
+There are three core handlers that any widget developer should implement:
+
+Handler|Description
+------|------
+onPaint|The *onPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of you widget is tied primarily to this handler and should be kept as efficient as possible.
+onCreate|The *onCreate* message is sent to your widget when it is first created by LiveCode. This can be used to initialise default data and where applicable, reduce the burden for calculating constants etc in the onPaint handler.
+onGeometryChanged| The *onGeometryChanged* message is send when the control is changed in size.
+
+For the most basic example, only the onPaint() handler is required.
 
 ```
 widget com.livecode.extensions.beaumont.pinkCircle
@@ -181,7 +247,7 @@ metadata author is "Benjamin Beaumont"
 metadata version is "1.0.0"
 
 public handler OnPaint()
-   # Drawing code
+   // Draw widget
 end handler
 
 end widget
@@ -196,49 +262,114 @@ metadata title is "My Pink Circle"
 metadata author is "Benjamin Beaumont"
 metadata version is "1.0.0"
 
+use com.livecode.canvas
+
 public handler OnPaint()
-   # Get the width and height of the widget
-   variable tWidth
-   variable tHeight
-   put the width of my bounds/2 into tWidth
-   put the height of my bounds/2 into tHeight
-   
-   # Create a point at the center of the canvas
-   variable tCenter
-   put point [tWidth, tHeight] into tCenter
-   
-   # Create a path with a radius of half the width of the canvas
+   // Create a path with a radius of half the width of the canvas
+   // Set the paint to a solid pink color
+   // Fill the path
    variable tCirclePath as Path
-   put circle path centered at tCenter with radius (the width of my bounds/2) into tFacePath
-
-   # Set the paint of this canvas to a solid color
+   put circle path centered at point [my width / 2, my height / 2] with radius (my width/2) into tCirclePath
    set the paint of this canvas to solid paint with color [1, 0, 1]
-
-   # Fill our circle path
-   fill tFacePath on this canvas
+   fill tCirclePath on this canvas
 end handler
 
 end widget
 ```
 
-For readability we've broken the script into sections, but just as with LiveCode you can chain functionality together to shorten your script. The above example condensed:
-
-```
-public handler OnPaint()
-   variable tCirclePath as Path
-   put circle path centered at point [the width of my bounds/2,the height of my bounds/2] with radius (the width of my bounds/2) into tFacePath
-   set the paint of this canvas to solid paint with color [1, 0, 1]
-   fill tFacePath on this canvas
-end handler
-```
-
 ### Test the Code
 
-![](images/extensions-widget-first.png)
+![enter image description here](images/extensions-widget-first.png)
 
 1. Your script should be in this box of the widget builder
 2. Click test
 3. Your widget should look like this
+
+### Properties
+In order to make a widget useful to end users it is likely that you'll want to expose properties that allow them to specify how your widget should behave. 
+
+To specify a property you must provide a name and the method to get and set the property.
+```
+property <name> get <variable/handler> set <variable/handler>
+```
+
+The simplest properties to get/set are numbers or strings. So lets create a circleMargin property that allows users to define a margin.
+
+```
+property circleMargin get mMargin set setMargin
+```
+
+In the above example, when the ***circleMargin*** property is requested, the variable "mMargin" is returned, when set, the handler "setMargin" is called. To have LiveCode Builder handle the getting/setting of data, provide the variable name, to take full control over the getting/setting process define handlers. In our case we're taking a mixed approach.
+
+```
+private variable mMargin as real
+```
+
+We'll define a member variable to store the value for the margin. LiveCode Builder is type so you must also specify the type of your variable. Remember, the canvas you are drawing to has subpixel precision so our margin can be a decimal number. As a result, we've chosen the specify our margin as a real number. For a full list of types available in LiveCode builder please see the [Typing](#Typing) section of the language specification guide below. We also suggest a nameing convension for variable in the section on [variable and case sensitivity](#Case-Sensitivity).
+
+We also need to insatiate our circleMargin to a default value. We do this by adding an onCreate handler which is called when the widget is first created.
+
+```
+public handler setMargin(in pMargin as real) as undefined
+	put pMargin into mMargin
+	redraw all
+end handler
+```
+
+Finally we have to implement our setMargin handler.
+```
+public handler onCreate() 
+	put 0 into mMargin
+end handler
+```
+
+Implementing the "setter" ourselves provides us with a little more flexibility. In this case when the property is set we want our pink circle to immediately redraw to reflect the property change. We do this by calling "redraw all".
+
+To test the property click "test" and from the message box set the property.
+
+```
+set the cicleMargin of widget 1 to 15
+```
+
+**Full Example**
+```
+widget com.livecode.extensions.beaumont.pinkCircle
+
+metadata title is "My Pink Circle"
+metadata author is "Benjamin Beaumont"
+metadata version is "1.0.0"
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+
+// Properties
+property circleMargin get mMargin set setMargin
+
+// Local variables
+private variable mMargin as real
+
+public handler onCreate() 
+	put 0 into mMargin
+end handler
+
+public handler OnPaint()
+   // Create a path with a radius of half the width of the canvas
+   // Set the paint to a solid pink color
+   // Fill the path
+   variable tCirclePath as Path
+   put circle path centered at point [my width / 2, my height / 2] with radius ((my width - mMargin)/2) into tCirclePath
+   set the paint of this canvas to solid paint with color [1, 0, 1]
+   fill tCirclePath on this canvas
+end handler
+
+public handler setMargin(in pMargin as real) as undefined
+	put pMargin into mMargin
+	redraw all
+end handler
+	
+end widget
+```
 
 ### Understanding Error Messages
 Clicking on the "test" button causes the extension builder to compile your source code file (***.mlc***) and produce a compiled module file (***.lcm***). If an error is encountered it is output in the "console" section of the builder:
@@ -255,7 +386,7 @@ Error: <source path>: <line number>: <char number>: <error message>
 ### LiveCode Builder API
 To start creating more complex widgets see the LiveCode Builder api in the documentation stack in the IDE.
 
-![](images/extensions-canvas-docs.png)
+![enter image description here](images/extensions-canvas-docs.png)
 
 1. Open the dictionary
 2. API chooser
@@ -337,7 +468,7 @@ Once you've created a ***.lce*** package you are ready to upload it to the exten
 ## 1) Login
 Go to http://ng.livecode.com/login/ and login. The user credentials are the same ones you use on the main LiveCode website or when activating a commercial LiveCode license.
 
-![](images/extensions-site-login.png)
+![enter image description here](images/extensions-site-login.png)
 
 ## 2) Select a Developer ID
 In order to ensure that every extension publisher has a unique ID we use a reverse domain name notation. For this alpha, all testers will be required to upload with an ID:
@@ -353,7 +484,7 @@ com.livecode.extensions.waddingham.clock.1.0.0
 
 When logging in for the first time you will be asked to choose a unique *developer_name*. This is a one time step which will be added to your user account and used for all subsequent visits. 
 
-![](images/extensions-id.png)
+![enter image description here](images/extensions-id.png)
 
 > **Note:** When uploading a package to the online portal it must have a matching identifier. So if you chose the developer name "mickey", it must start "com.livecode.extensions.mickey".
 
@@ -365,7 +496,7 @@ When logging in for the first time you will be asked to choose a unique *develop
 
 Once logged in you will be taken to your extensions account page:
 
-![](images/extensions-site-account.png)
+![enter image description here](images/extensions-site-account.png)
 
 1. To upload a new package click on the "Add New Extension" button
 2. A list of extensions you've previously uploaded are listed here. 
@@ -374,7 +505,7 @@ Once logged in you will be taken to your extensions account page:
 
 ## 4) Upload Your Package
 
-![](images/extensions-site-upload.png)
+![enter image description here](images/extensions-site-upload.png)
 
 1. Click to browse to your package file.
 2. Drag your package file anywhere within the grey dashed box
@@ -686,7 +817,7 @@ Syntax: sort <Target> in ascending [text] order
 
 In general, writing inline docs has fewer requirements since several of the elements are auto-generated.
 
-#### LiveCode Builder Syntax Sxample
+#### LiveCode Builder syntax example
 
 ```
 /*  

@@ -5,6 +5,9 @@
 # Reads all the of the extension files into an internal array which is then used by all revIDEExtension and revIDEWidget
 # type functions
 
+local sExtensionData
+local sExtensionDataForDisplay
+
 private on __loadExtensions
    local tInactiveExtensionFolder, tExtensionData
    
@@ -2235,15 +2238,6 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
-function setExtensionData
-end setExtensionData
-
-function searchExtensions
-end searchExtensions
-
-function parseExtension
-end parseExtension
-
 command revIDEInspectObjects pObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
 end revIDEInspectObjects
@@ -2540,6 +2534,11 @@ function revIDESpecialFolderPath pKey
          break
       case "documentation"
          put item 1 to -3 of the filename of stack "revideLibrary" & "/Documentation" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
+         break
+      case "documentation cache"
+         put revEnvironmentCustomizationPath() & "/Documentation" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
