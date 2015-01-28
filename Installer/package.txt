@@ -520,6 +520,9 @@ component Documentation
 		stack ide:Documentation/html_viewer/dictionary.livecode
 		file ide:Documentation/html_viewer/guide.html
 		file ide:Documentation/html_viewer/viewer.html
+		// Temporary work-around
+		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
+		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
 
 component Examples
 	into [[ToolsFolder]]/Examples place
