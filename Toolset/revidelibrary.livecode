@@ -2753,7 +2753,7 @@ command revIDEOpenPalette pPaletteName
          --palette stack "revPropertyInspectorView"
          put revIDEPropertyInspector() into tExistingPalette
          if tExistingPalette is not empty then
-            modeless stack tExistingPalette
+            palette stack tExistingPalette
          else
             // Create new unlocked palette and open
             put revIDENextPropertyInspectorID() into tPaletteID
@@ -2763,7 +2763,7 @@ command revIDEOpenPalette pPaletteName
             clone invisible stack "revIDEPropertyInspectorView" as tPalette
             unlock messages
             set the behavior of stack tPalette to revIDEFrameBehavior()
-            modeless stack tPalette
+            palette stack tPalette
             show stack tPalette
          end if
          break

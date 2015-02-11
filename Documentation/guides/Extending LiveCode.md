@@ -1,5 +1,3 @@
-[toc]
-
 # Introduction
 
 LiveCode 8.0 is the most exciting release in the history of the technology. It provides a simple way to extend the functionality or control set of LiveCode.
@@ -43,26 +41,26 @@ Notice the extension manager has three tabs:
 ## 2) Go to the extension store
 Go to the extension by clicking on the extension store tab and wait for it to load (Internet connectivity is required).
 
-![enter image description here](images/extensions-home.png)
+![](images/extensions-home.png)
 
 You can browse by category or search for an extension.
 
 ## 3) Select an extension
 Click on any of the extensions to load full details and installation options.
 
-![enter image description here](images/extensions-clock.png)
+![](images/extensions-clock.png)
 
 ## 4) Install the extension
 Click on the install button to begin the download and installation of the extension. It should only take a matter of seconds to download and install.
 
-![enter image description here](images/extensions-installed.png)
+![](images/extensions-installed.png)
 
 ## 5) Try out your extension
 
 **Widgets**
 If you downloaded a widget it will appear in your list of installed widgets and also in your Tools Palette. Using the widget is no different from any of the classic LiveCode controls you've been used to. Simply drag it onto a stack and start interacting with it as you could any another control.
 
-![enter image description here](images/extensions-widgets.png)
+![](images/extensions-widgets.png)
 
 You can reference the widget in script as a control:
 
@@ -84,7 +82,7 @@ Extensions can provide an API (Dictionary) and User Guide as part of the install
 
 **API (Dictionary)**
 
-![enter image description here](images/extensions-documentation.png)
+![](images/extensions-documentation.png)
 
 1. Open the documentation stack from the menubar
 2. API chooser - Choose which API to view. By default, LiveCode 8.0 comes with the LiveCode Script API and the new LiveCode Builder API. Any extension that contains an API is displayed here.
@@ -96,7 +94,7 @@ Extensions can provide an API (Dictionary) and User Guide as part of the install
 
 **User Guide**
 
-![enter image description here](images/extensions-guides.jpg)
+![](images/extensions-guides.jpg)
 
 1. Click on the "Guide" tab at the top of the documentation stack
 2. Select the guide you wish to view
@@ -117,7 +115,7 @@ Open the "Widget Builder" plugin for the development menu:
 Development > Plugins > Widget Builder
 ```
 
-![enter image description here](images/extensions-plugin-overview.png)
+![](images/extensions-plugin-overview.png)
 
 1. Choose a Widget - This list includes the source for the example extensions as well as any you have created.
 2. Open a Widget - If you have created a extensions using an external editor you can load it into the builder here.
@@ -132,7 +130,7 @@ Development > Plugins > Widget Builder
 2. Push "test"
 3. Notice that a stack is create with the widget. If you can't see it, it may be behind the plugin stack.
 
-![enter image description here](images/extensions-plugin-example.png)
+![](images/extensions-plugin-example.png)
 
 > **Note:** A great way to get started is to tweak the script of the clock or one of the other examples. Perhaps change a few colors and click "build" to test your changes.
 
@@ -279,7 +277,7 @@ end widget
 
 ### Test the Code
 
-![enter image description here](images/extensions-widget-first.png)
+![](images/extensions-widget-first.png)
 
 1. Your script should be in this box of the widget builder
 2. Click test
@@ -386,7 +384,7 @@ Error: <source path>: <line number>: <char number>: <error message>
 ### LiveCode Builder API
 To start creating more complex widgets see the LiveCode Builder api in the documentation stack in the IDE.
 
-![enter image description here](images/extensions-canvas-docs.png)
+![](images/extensions-canvas-docs.png)
 
 1. Open the dictionary
 2. API chooser
@@ -468,7 +466,7 @@ Once you've created a ***.lce*** package you are ready to upload it to the exten
 ## 1) Login
 Go to http://ng.livecode.com/login/ and login. The user credentials are the same ones you use on the main LiveCode website or when activating a commercial LiveCode license.
 
-![enter image description here](images/extensions-site-login.png)
+![](images/extensions-site-login.png)
 
 ## 2) Select a Developer ID
 In order to ensure that every extension publisher has a unique ID we use a reverse domain name notation. For this alpha, all testers will be required to upload with an ID:
@@ -484,7 +482,7 @@ com.livecode.extensions.waddingham.clock.1.0.0
 
 When logging in for the first time you will be asked to choose a unique *developer_name*. This is a one time step which will be added to your user account and used for all subsequent visits. 
 
-![enter image description here](images/extensions-id.png)
+![](images/extensions-id.png)
 
 > **Note:** When uploading a package to the online portal it must have a matching identifier. So if you chose the developer name "mickey", it must start "com.livecode.extensions.mickey".
 
@@ -496,7 +494,7 @@ When logging in for the first time you will be asked to choose a unique *develop
 
 Once logged in you will be taken to your extensions account page:
 
-![enter image description here](images/extensions-site-account.png)
+![](images/extensions-site-account.png)
 
 1. To upload a new package click on the "Add New Extension" button
 2. A list of extensions you've previously uploaded are listed here. 
@@ -505,7 +503,7 @@ Once logged in you will be taken to your extensions account page:
 
 ## 4) Upload Your Package
 
-![enter image description here](images/extensions-site-upload.png)
+![](images/extensions-site-upload.png)
 
 1. Click to browse to your package file.
 2. Drag your package file anywhere within the grey dashed box
