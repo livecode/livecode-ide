@@ -115,6 +115,7 @@ on newScrollbar
 end newScrollbar
 
 on newButton
+   put the milliseconds && the long name of the target
    if revIDEStackIsRevStack(the long id of the target) is true then pass newButton
    
    local tTarget
@@ -122,15 +123,6 @@ on newButton
    revIDEMessageSend "ideNewControl",tTarget
    pass newButton
 end newButton
-
-on newWidget
-   if revIDEStackIsRevStack(the long id of the target) is true then pass newWidget
-   
-   local tTarget
-   put the long ID of the target into tTarget
-   revIDEMessageSend "ideNewControl",tTarget
-   pass newWidget
-end newWidget
 
 on newBackground
    if revIDEStackIsRevStack(the long id of the target) is true then pass newBackground
@@ -227,15 +219,6 @@ on deleteScrollbar
    send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteScrollbar
 end deleteScrollbar
-
-on deleteWidget 
-   if revIDEStackIsRevStack(the long id of the target) is true then pass deleteWidget
-   
-   local tTarget
-   put the long ID of the target into tTarget
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
-   pass deleteWidget
-end deleteWidget
 
 on deleteStack
    if revIDEStackIsRevStack(the long id of the target) is true then pass deleteStack
