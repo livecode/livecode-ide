@@ -34,16 +34,11 @@ private function __revIDEDeveloperLastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
    set the defaultFolder to pFolder
    put the detailed files into tDetailedFiles
-   return  item 5 of line lineOffset(tDetailedFiles, pFile) of tDetailedFiles
+   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end __revIDEDeveloperLastModifiedTimeOfFile
 
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    # To avoid excessive recompilation, test to see if the compiled module exists and is up to date.
-   
-   # Recompile because compiled module file is missing.
-   if there is not a file (pFolder & slash & "module.lcm") then 
-      return true
-   end if
    
    # Recompile because manifest file is missing.
    if there is not a file (pFolder & slash & "manifest.xml") then 
@@ -55,9 +50,63 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
    
-   return tLastModified > tLastCompiled 
+   return (tLastCompiled is empty or tLastModified > tLastCompiled)
 end __revIDEDeveloperExtensionShouldRecompile
 
+private on __revIDEDeveloperExtensionRemoveFolder pFolder
+   local tDeveloperExtensionsFolders
+   put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
+   
+   set the itemdelimiter to slash
+   local tRootFolder
+   put item 1 to -2 of pFolder into tRootFolder
+   
+   local tLine
+   put lineOffset(tRootFolder, tDeveloperExtensionsFolders) into tLine
+   if tLine is not 0 then
+      delete line tLine of tDeveloperExtensionsFolders
+      revIDESetPreference "cDeveloperExtensionsFolders", tDeveloperExtensionsFolders
+   end if
+end __revIDEDeveloperExtensionRemoveFolder
+
+private on __revIDEDeveloperExtensionAddFolder pFolder
+   local tDeveloperExtensionsFolders
+   put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
+   
+   set the itemdelimiter to slash
+   local tRootFolder
+   put item 1 to -2 of pFolder into tRootFolder
+   if tDeveloperExtensionsFolders is empty then
+      put tRootFolder into tDeveloperExtensionsFolders
+   else
+      if tRootFolder is not among the lines of tDeveloperExtensionsFolders then
+         put return & tRootFolder after tDeveloperExtensionsFolders
+      end if
+   end if
+   
+   revIDESetPreference "cDeveloperExtensionsFolders", tDeveloperExtensionsFolders
+end __revIDEDeveloperExtensionAddFolder
+
+/*
+Summary: Returns an array of details of the extensions found in user folders
+Returns (array):
+{ key: The path to the folder containing the extensions
+value (array): The array of details pertaining to the extension
+{ key: "id"
+value: The extension ID
+key: "name"
+value: The title of the extension
+key: "author"
+value: The author of the extension
+key: "api"
+value: An array describing the documented elements of this extension
+key: "guide"
+value: The user guide
+key: "icon"
+value: The path to the icon of this extension
+key: "retina_icon"
+value: The path to the retina icon of this extension } } 
+*/
 function revIDEDeveloperExtensions
    local tExtensionDetailsA
    
@@ -71,7 +120,10 @@ function revIDEDeveloperExtensions
    # Look for extension examples in previously selected user folders.
    put revIDEGetPreference("cDeveloperExtensionsFolders") after tFolders
    local tFolder, tExtensionFolders, tExtensionFolder, tFiles, tExtension
+   
+   local tFolderHasModule
    repeat for each line tFolder in tFolders
+      put false into tFolderHasModule
       if tFolder is empty then
          next repeat
       end if
@@ -81,15 +133,23 @@ function revIDEDeveloperExtensions
          if tExtensionFolder is ".." then 
             next repeat
          end if
-         put revIDEDeveloperExtension(tFolder & slash & tExtensionFolder) into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
+         local tExtensionA
+         put  revIDEDeveloperExtension(tFolder & slash & tExtensionFolder)  into tExtensionA
+         if tExtensionA is not empty then
+            put tExtensionA into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
+            put true into tFolderHasModule
+         end if
       end repeat
+      if tFolderHasModule is false then
+         __revIDEDeveloperExtensionRemoveFolder tFolder
+      end if
    end repeat
    
    put tExtensionDetailsA into sExtensionDetailsA
    return sExtensionDetailsA
 end revIDEDeveloperExtensions
 
-function revIDEDeveloperExtension pFolder
+private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
    set the defaultfolder to pFolder
    
    local tFiles
@@ -104,6 +164,17 @@ function revIDEDeveloperExtension pFolder
    else
       put tFiles into tFile
    end if
+   return tFile
+end __revIDEDeveloperExtensionFetchModuleInFolder
+
+function revIDEDeveloperExtension pFolder
+   local tFile
+   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   
+   if tFile is empty then
+      return empty
+   end if
+   
    return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
 end revIDEDeveloperExtension
 
@@ -141,9 +212,38 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tLastGenerated, tLastModified
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   if tLastModified > tLastGenerated then
-      put revDocsGenerateDocsFileFromBuilderFile(pFolder & slash & pFile) into tDetailsA["api"]
+   local tAPI
+   if tLastGenerated is empty or tLastModified > tLastGenerated then
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPI 
    end if
+   if tAPI is not empty then
+      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+   else
+      local tData
+      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+      put textDecode(tData, "utf-8") into tAPI
+   end if
+   
+   if tAPI is not empty then
+      local tLibraryA
+      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      put tLibraryA["doc"] into tDetailsA["api"]
+   end if
+   
+   if there is a file (pFolder & slash & "icon.png") then
+      put (pFolder & slash & "icon.png") into tDetailsA["icon"]
+   end if
+   
+   if there is a file (pFolder & slash & "icon@extra-high.png") then
+      put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+   end if
+   
+   if there is a file (pFolder & slash & "guide.md") then
+      local tGuide
+      put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
+      put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
+   end if
+   
    put tDetailsA into sExtensionDetailsA[pFolder]
    return tDetailsA
 end __revIDEDeveloperExtensionDetailsFromFile
@@ -216,6 +316,24 @@ on revIDEDeveloperExtensionTest pPath
    __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
+private function __testStackLoc
+   if there is a stack "LiveCode Extension Test Window" then
+      return the loc of stack "LiveCode Extension Test Window"
+   end if
+   
+   local tScreenRect
+   put the working screenrect into tScreenRect
+   
+   local tX, tY
+   if the left of this stack + 200 < (item 3 of tScreenRect) / 2 then
+      put the right of this stack + 200 into tX
+   else
+      put the left of this stack - 200 into tX
+   end if
+   put item 2 of the loc of this stack into tY
+   return tX,tY
+end __testStackLoc
+
 private function __testStackScript
    local tScript
    put "on closeStackRequest;revIDEDeveloperExtensionClearTestStack;exit closeStackRequest;end closeStackRequest;on saveStackRequest;exit saveStackRequest;end saveStackRequest" into tScript
@@ -224,6 +342,9 @@ private function __testStackScript
 end __testStackScript
 
 private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
+   local tLoc
+   put __testStackLoc() into tLoc
+   
    if there is a stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionDoClearTestStack
    end if
@@ -233,7 +354,9 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    else
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
    end if
+   
    create stack "LiveCode Extension Test Window"
+   set the loc of it to tLoc
    set the destroyStack of stack "LiveCode Extension Test Window" to true
    set the title of it to pDetailsA["name"]
    set the script of it to __testStackScript()
@@ -245,7 +368,7 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionLaunchTestStack
    end if
-   set the cCurExtension of stack "LiveCode Extension Test Window" to pDetailsA["id"]
+   set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
 end __revIDEDeveloperExtensionLaunchTestStack
 
 on revIDEDeveloperExtensionClearTestStack
@@ -265,21 +388,10 @@ on __revIDEDeveloperExtensionDoClearTestStack
    end if
 end __revIDEDeveloperExtensionDoClearTestStack
 
-on revIDEDeveloperExtensionInstall pPath
-   local tDetailsA
-   put revIDEDeveloperExtension(pPath) into tDetailsA
-   
-   if tDetailsA["file"] is empty then
-      __revIDEDeveloperExtensionSendError "No extension to test in" && pPath
-      exit revIDEDeveloperExtensionInstall
-   end if
-   
-   if there is not a file (pPath & slash & "module.lcm") then
-     __revIDEDeveloperExtensionSendError "No compiled module in" && pPath
-      exit revIDEDeveloperExtensionInstall
-   end if
-   
-   revIDEInstallExtension (pPath & slash & "module.lcm")
+on revIDEDeveloperExtensionInstall pFolder
+   local tPackage
+   __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
+   revIDEInstallExtension tPackage
 end revIDEDeveloperExtensionInstall
 
 on revIDEDeveloperExtensionUninstall pPath
@@ -295,33 +407,21 @@ on revIDEDeveloperExtensionUninstall pPath
    
 end revIDEDeveloperExtensionUninstall
 
-on revIDEDeveloperExtensionEditScript pPath
-   launch document pPath
+on revIDEDeveloperExtensionEditScript pFolder
+   local tFile
+   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   
+   launch document tFile
    if the result is "no association" then
       answer file "Select text editor..."
       if it is not empty then
-         launch pPath with it
+         launch tFile with it
       end if
    end if
 end revIDEDeveloperExtensionEditScript
 
 on revIDEDeveloperExtensionOpen pFolder
-   local tDeveloperExtensionsFolders
-   put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
-   
-   set the itemdelimiter to slash
-   local tRootFolder
-   put item 1 to -2 of pFolder into tRootFolder
-   if tDeveloperExtensionsFolders is empty then
-      put tRootFolder into tDeveloperExtensionsFolders
-   else
-      if tRootFolder is not among the lines of tDeveloperExtensionsFolders then
-         put return & tRootFolder after tDeveloperExtensionsFolders
-      end if
-   end if
-   
-   revIDESetPreference "cDeveloperExtensionsFolders", tDeveloperExtensionsFolders
-   
+   __revIDEDeveloperExtensionAddFolder pFolder
    return revIDEDeveloperExtension(pFolder)
 end revIDEDeveloperExtensionOpen
 
@@ -358,6 +458,15 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
       return "Error: invalid xml in manifest"
    end if
    
+   local tTargetType
+   put textDecode(revXMLNodeContents(tId, "/package/type"), "utf-8") into tTargetType
+   
+   if tTargetType begins with "xmlerr" then
+      __revIDEDeveloperExtensionSendError "couldn't retrieve extension type from manifest" && pManifestPath
+      exit __revIDEDeveloperExtensionFetchMetadata
+   end if
+   put tTargetType into tDataA["type"]
+   
    local tTargetName
    put textDecode(revXMLNodeContents(tId, "/package/name"), "utf-8") into tTargetName
    
@@ -372,14 +481,17 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    put tTargetName into tDataA["id"]
    
-   local tTargetTitle
-   put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
-   
-   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
-      put empty into tTargetTitle
+   # If we have a library, we don't require various packaged elements
+   if tTargetType is "widget" then
+      local tTargetTitle
+      put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
+      
+      if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
+         __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
+         put empty into tTargetTitle
+      end if
+      put tTargetTitle into tDataA["name"]
    end if
-   put tTargetTitle into tDataA["name"]
    
    local tTargetVersion
    put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
@@ -483,51 +595,46 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    return empty
 end __revIDEDeveloperCompileModule
 
-private command __revIDEDeveloperBuildPackage pChosenModule, pTargetDirectory
+on revIDEDeveloperExtensionBuildPackage pFolder
+   local tBuiltLocation
+   __revIDEDeveloperBuildPackage pFolder, "", tBuiltLocation
+      answer "Package" && tBuiltLocation && "built successfully"
+end revIDEDeveloperExtensionBuildPackage
+
+private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
+   local tDetailsA
+   put revIDEDeveloperExtension(pFolder) into tDetailsA
+   
    local tFullPath
-   put pChosenModule into tFullPath
+   put pFolder & slash & tDetailsA["file"] into tFullPath
    
    if there is not a file tFullPath then
       return "Error: missing file" && tFullPath
    end if
    
-   local tFolder, tFilename, tSourceFolder
-   set the itemdelimiter to slash
-   put item -1 of tFullPath into tFilename
-   put item 1 to -2 of tFullPath into tSourceFolder
-   
-   put the temporary folder into tFolder
-   
-   local tName
-   set the itemdelimiter to "."
-   put item 1 to -2 of tFilename into tName
-   
-   local tError
-   local tCompiledPath, tManifestPath
-   put tFolder & slash & "module.lcm" into tCompiledPath   
-   put tFolder & slash & "manifest.xml" into tManifestPath
-   
-   // compile the module
-   put __revIDEDeveloperCompileModule(tFullpath, tFolder) into tError
-   
-   if tError is not empty then
-      return "Error: couldn't compile module"
+   local tTargetFolder
+   if pTargetFolder is empty then
+      put pFolder into tTargetFolder
+   else
+      put pTargetFolder into tTargetFolder
    end if
    
-   // fetch name from manifest
-   local tTargetName, tTargetVersion, tTargetTitle
-   put fetchMetadata(tManifestPath, tTargetName, tTargetVersion, tTargetTitle) into tError
-   
-   if tError is not empty then
-      return "Error:" && tError
+   local tTargetName
+   if tDetailsA["id"] is empty then
+      __revIDEDeveloperExtensionSendError "no id found in " && tFullpath
+      exit __revIDEDeveloperExtensionBuildPackage
    end if
+   put tDetailsA["id"] into tTargetName
+   
+   local tTargetVersion
+   if tDetailsA["version"] is empty then
+      __revIDEDeveloperExtensionSendError "no version found in " && tFullpath
+      exit __revIDEDeveloperExtensionBuildPackage
+   end if
+   put tDetailsA["version"] into tTargetVersion
    
    local tArchive
-   if pTargetDirectory is not empty then
-      put pTargetDirectory & slash & tTargetName & "." & tTargetVersion & ".lce" into tArchive
-   else
-      put revEnvironmentCustomizationPath() & slash & tTargetName & "." & tTargetVersion & ".lce" into tArchive
-   end if
+   put tTargetFolder & slash & tTargetName & "." & tTargetVersion & ".lce" into tArchive
    
    if there is a file tArchive then
       delete file tArchive
@@ -535,191 +642,95 @@ private command __revIDEDeveloperBuildPackage pChosenModule, pTargetDirectory
    revZipOpenArchive tArchive, "write"
    
    if the result begins with "ziperr" then
-      return "Error: couldn't open zip archive"
+      __revIDEDeveloperExtensionSendError "couldn't open zip archive" &&  tArchive
+      exit __revIDEDeveloperExtensionBuildPackage
    end if
    
-   local tDeleteApi
-   if there is not a file (tFolder & slash & "api.lcdoc") then
-      put true into tDeleteApi
-   else
-      put false into tDeleteApi
-   end if
+   local tError
    
-   if pChosenModule is empty then
-      local tIcon
-      local tRetinaIcon
-      local tGuide
-      local tDocs
-      
-      put (tSourceFolder & slash & "icon.png") into tIcon
-      if there is not a file tIcon then
+   local tIcon
+   if tError is empty then
+      put tDetailsA["icon"] into tIcon
+      if tIcon is empty or there is not a file tIcon then
          answer file "Select icon file" with type "|png|"
          if it is empty then
             put "Must select an icon" into tError
          end if
          put it into tIcon
       end if
-      
-      put (tSourceFolder & slash & "icon@extra-high.png") into tRetinaIcon
-      if there is not a file tRetinaIcon then
+   end if
+   
+   local tRetinaIcon
+   if tError is empty then
+      put tDetailsA["retina_icon"] into tRetinaIcon
+      if tRetinaIcon is empty or there is not a file tRetinaIcon then
          answer file "Select retina icon file" with type "|png|"
          if it is empty then
             put "Must select a retina icon" into tError
          end if
          put it into tRetinaIcon
       end if
-      
-      put (tSourceFolder & slash & "guide.md") into tGuide
-      if there is not a file tGuide then
-         put empty into tGuide
-      end if
-      
-      put (tSourceFolder & slash & "api.lcdoc") into tDocs
-      if there is not a file tDocs then
-         put empty into tDocs
-      end if
    end if
    
-   if tError is empty then
-      put __revIDEDeveloperExtensionAddFilesToPackage(tArchive, tFolder, tFullPath) into tError
+   local tGuide
+   put tDetailsA["guide"] into tGuide
+   if there is not a file tGuide then
+      put empty into tGuide
    end if
    
+   local tDocs
+   put (pFolder & slash & "api.lcdoc") into tDocs
+   if there is not a file tDocs then
+      put empty into tDocs
+   end if
+   
+   local tResources
+   put (pFolder & slash & "resources") into tResources
+   if there is not a folder tResources then
+      put empty into tResources
+   end if
+   
+   
    if tError is empty then
-      revZipCloseArchive tArchive
-      
+      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources) into tError
+   end if
+   
+   revZipCloseArchive tArchive
+   
+   if tError is empty then
       if the result begins with "ziperr" then
          put "Error: couldn't close zip archive" into tError
       end if
    end if
    
-   if tDeleteApi then
-      delete file tFolder & slash & "api.lcdoc"
-   end if
-   
    if tError is not empty then
-      return "Error" & tError
+      __revIDEDeveloperExtensionSendError tError
+      exit __revIDEDeveloperExtensionBuildPackage
    end if
    
-   answer "Package" && tArchive && "built successfully"
-   
-end __revIDEDeveloperBuildPackage
+   put tArchive into rBuiltLocation
+   return empty
+end __revIDEDeveloperExtensionBuildPackage
 
-private function __revIDEDeveloperExtensionAddFilesToPackage pArchive, pFolder, pSource
-   local tError
-   
-   local tModule
-   put pFolder & slash & "module.lcm" into tModule
-   
-   // Check manifest
-   if tError is empty then
-      local tManifest
-      put pFolder & slash & "manifest.xml" into tManifest
-      
-      if there is not a file tManifest then
-         put "failed to create manifest" into tError
-      end if
-   end if
-   
-   // Add user guide
-   if tError is empty then
-      local tUserGuide
-      put pFolder & slash & "guide.md" into tUserGuide
-      
-      if there is not a file tUserGuide then
-         put empty into tUserGuide
-      end if
-   end if
-   
-   if tError is empty then
-      local tIcon
-      put pFolder & slash & "icon.png" into tIcon
-      
-      if there is not a file tIcon then
-         put "no icon" into tError
-      end if
-   end if
-   
-   if tError is empty then
-      local tRetinaIcon
-      put pFolder & slash & "icon@extra-high.png" into tRetinaIcon
-      
-      if there is not a file tRetinaIcon then
-         put "no retina icon" into tError
-      end if
-   end if
-   
-   local tIconList
-   if tError is empty then
-      get the files
-      filter it with "icon@*.png"
-      
-      repeat for each line tFile in it
-         if tFile is "icon@extra-high.png" then
-            next repeat
-         end if
-         put pFolder & slash & tFile & CR after tIconList
-      end repeat
-      delete the last char of tIconList
-   end if
-   
-   // Add docs
-   local tDocList
-   if tError is empty then
-      local tDocs
-      set the defaultfolder to pFolder
-      get the files
-      filter it with "*.lcdoc"
-      if it is not empty then
-         repeat for each line tDoc in it
-            if tDoc is "api.lcdoc" then
-               next repeat
-            end if
-            put pFolder & slash & tDoc & CR after tDocList
-         end repeat
-         delete the last char of tDocList
-      end if
-   end if
-   
-   local tAPI
-   if tError is empty then
-      if there is a file (pFolder & slash & "api.lcdoc") then
-         put pFolder & slash & "api.lcdoc" into tAPI
-      end if
-   end if
-   
-   local tResourcesFolder
-   if tError is empty then
-      if there is a folder (pFolder & slash & "resources") then
-         put pFolder & slash & "resources" into tResourcesFolder
-      end if
-   end if
-   
-   if tError is empty then
-      return __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(pSource, pFolder, pArchive, tModule, tIcon, tRetinaIcon, tIconList, tUserGuide, tAPI, tDocList, tResourcesFolder)
-   end if
-   
-   return tError
-end __revIDEDeveloperExtensionAddFilesToPackage
-
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pIconList, pGuide, pDocs, pDocList, pResourcesFolder
+private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder
    local tError
    
    set the itemdelimiter to slash
-   // Add source into package
+   # Add source into package
    revZipAddItemWithFile pArchive, item -1 of pSource, pSource
    
    if the result begins with "ziperr" then
       put "couldn't add source" into tError
    end if
    
-   // Add module into package
+   # Add module into package
    revZipAddItemWithFile pArchive, "module.lcm", pModule
    
    if the result begins with "ziperr" then
       put "couldn't add module" into tError
    end if
    
-   // Add manifest into package
+   # Add manifest into package
    if tError is empty then
       revZipAddItemWithFile pArchive, "manifest.xml", pFolder & slash & "manifest.xml"
       
@@ -728,7 +739,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
-   // Add user guide
+   # Add user guide
    if tError is empty then
       revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
       
@@ -737,7 +748,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
-   // Add icons
+   # Add icons
    if tError is empty then
       revZipAddItemWithFile pArchive, "support/icon.png", pIcon
       
@@ -754,49 +765,19 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
-   if tError is empty and pIconList is not empty then
-      repeat for each line tLine in pIconList
-         set the itemdelimiter to slash
-         revZipAddItemWithFile pArchive, "support/" & item -1 of tLine, tLine
-         
-         if the result begins with "ziperr" then
-            put "couldn't add icon" & tLine into tError
-         end if
-      end repeat
-   end if
-   
-   // Add docs
+   # Add docs
    if tError is empty then
       if pDocs is empty then
-         local tDocs
-         put revDocsGenerateDocsFileFromModularFile(pSource) into tDocs
-         if tDocs is empty then
-            logToConsole "Warning: docs formatting error. Docs may be empty"
-         end if
-         put textEncode(tDocs, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
-         revZipAddUncompressedItemWithFile pArchive,"docs/api/api.lcdoc", pFolder & slash & "api.lcdoc"
+         __revIDEDeveloperExtensionSendWarning "docs formatting error. Docs may be empty"
       else
-         set the itemdelimiter to slash
-         get item -1 of pDocs
-         revZipAddItemWithFile pArchive, "docs/api/" & it, pDocs
+         revZipAddItemWithFile pArchive, "docs/api/api.lcdoc", pDocs
       end if
       if the result begins with "ziperr" then
          put "couldn't add doc " & pDocs into tError
       end if
    end if
    
-   if tError is empty and pDocList is not empty then
-      repeat for each line tLine in pDocList
-         set the itemdelimiter to slash
-         revZipAddItemWithFile pArchive, "docs/api/" & item -1 of tLine, tLine
-         
-         if the result begins with "ziperr" then
-            put "couldn't add doc" & tLine into tError
-         end if
-      end repeat
-   end if
-   
-   // Add resources
+   # Add resources
    if tError is empty and pResourcesFolder is not empty then
       set the defaultfolder to pResourcesFolder
       local tFiles
@@ -805,7 +786,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
          revZipAddItemWithFile pArchive, "resources/" & tLine, pResourcesFolder & slash & tLine
          
          if the result begins with "ziperr" then
-            put "couldn't add resource" && pResourcesFolder & slash & tLine into tError
+         __revIDEDeveloperExtensionSendWarning "couldn't add resource" && pResourcesFolder & slash & tLine
          end if
       end repeat
    end if

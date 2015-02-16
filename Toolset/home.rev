@@ -487,11 +487,9 @@ function revInternal__StackFiles
 	local tFolders
 	put revEnvironmentToolsetPath() & slash & "/palettes/" into tFolders
 	if revEnvironmentIsInstalled() then
-		put return & revEnvironmentToolsetPath() & slash & "ide-support/ide-libraries/" after tFolders
-		put return & revEnvironmentToolsetPath() & slash & "ide-support/libraries/" after tFolders
+		put return & revEnvironmentToolsetPath() & slash & "ide-support/" after tFolders
 	else
-		put return & revEnvironmentRepositoryPath() & slash & "ide-support/ide-libraries/" after tFolders
-		put return & revEnvironmentRepositoryPath() & slash & "ide-support/libraries/" after tFolders
+		put return & revEnvironmentRepositoryPath() & slash & "ide-support/" after tFolders
 	end if	
 	
 	local tStackFiles, tStackName
