@@ -486,6 +486,7 @@ end revInternal__SetupCustomizationPath
 function revInternal__StackFiles
 	local tFolders
 	put revEnvironmentToolsetPath() & slash & "/palettes/" into tFolders
+	put return & revEnvironmentToolsetPath() & slash & "/libraries/" after tFolders
 	if revEnvironmentIsInstalled() then
 		put return & revEnvironmentToolsetPath() & slash & "ide-support/" after tFolders
 	else
