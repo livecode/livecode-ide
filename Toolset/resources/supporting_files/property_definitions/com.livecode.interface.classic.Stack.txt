@@ -1,58 +1,1 @@
-type	stack
-
-name	Name	string	Basic
-title	Title	string	Basic
-mainStack	Main stack	enum	Basic		execute:get revIDEMainStacks()
-decorations	Controls	enum	Basic
-windowShape	Shape	imageID	Basic
-scaleFactor	Scale factor	number	Basic	1
-metal	Metal texture	boolean	Basic	false	
-liveResizing	Live resizing	boolean	Basic	false	
-shadow	Shadow	boolean	Basic	true	
-visible	Visible	boolean	Basic	true	
-formatForPrinting	Format for printing	boolean	Basic	false	
-systemWindow	Float abve everything	boolean	Basic	false	
-iconic	Minimized	boolean	Basic	false	
-startupIconic	Open minimized	boolean	Basic	false	
-destroyStack	Purge stack on close	boolean	Basic	false	
-destroyWindow	Purge windwow on closed	boolean	Basic	false	
-cantDelete	Can't delete	boolean	Basic	false	
-cantModify	Can't modify	boolean	Basic	false	
-cantAbort	User can't abort scripts	boolean	Basic	false
-stackFiles	Stack files	text	StackFiles
-externalReferences	External references	text	externalRefs	
-foregroundColor	Foreground Color	color	Colors					foregroundPattern
-foregroundPattern	Foreground Pattern	pattern	Colors					foregroundColor
-backgroundColor	Background Color	color	Colors					backgroundPattern
-backgroundPattern	Background Pattern	pattern	Colors					backgroundColor
-hiliteColor	Hilited color	color	Colors				hilitePattern
-hilitePattern	Hilites pattern	pattern	Colors					hiliteColor
-borderColor	Border Color	color	Colors					borderPattern
-borderPattern	Border Pattern	pattern	Colors						borderColor	
-topColor	Top Color	color	Colors				topPattern
-topPattern	Top Pattern	pattern	Colors					topColor
-bottomColor	Bottom Color	color	Colors				bottomPattern
-bottomPattern	Bottom Pattern	pattern	Colors					bottomColor
-shadowColor	Shadow Color	color	Colors					shadowPattern
-shadowPattern	Shadow Pattern	pattern	Colors						shadowColor
-focusColor	Focus Color	color	Colors					focusPattern
-focusPattern	Focus Pattern	pattern	Colors						focusColor
-linkColor	Link Color	color	Colors
-clickColor	Click Color	color	Colors
-visitedColor	Visited Color	color	Colors
-underlineLinks	Underline Links	boolean	Colors	true	
-customProperties	Custom Properties	customProperties	Custom	
-blendLevel	Blend Level	number 	Colors	0	0,100
-ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
-textFont	Font	enum	Text		execute:get the fontNames
-textSize	Text Size	number	Text
-textStyle	Text Style	set	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text	empty	left,center,right
-resizable	Resizable	boolean	Position	true
-width	Width	number	Position	400
-height	Height	number	Position	400
-location	location	point	Position	no_default
-minWidth	Min Width	number	Position	32
-minHeight	Min Height	number	Position	32
-maxWidth	Max Width	number	Position	65535
-maxHeight	Max Height	number	Position	65535
+type	stackProperty	Default	Options----------------------------------------------------------------------------------------------------name		title		mainStack		execute:get revIDEMainStacks()decorations		windowShape		scaleFactor	1	metal	false	liveResizing	false	shadow	true	visible	true	formatForPrinting	false	systemWindow	false	iconic	false	startupIconic	false	destroyStack	false	destroyWindow	false	cantDelete	false	cantModify	false	cantAbort	false	stackFiles		externalReferences		foregroundColor		foregroundPattern		backgroundColor		backgroundPattern		hiliteColor		hilitePattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		shadowColor		shadowPattern		focusColor		focusPattern		linkColor		clickColor		visitedColor		underlineLinks	true	customProperties		blendLevel	0	0,100ink	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMaxtextFont		execute:get the fontNamestextSize		textStyle		bold,italic,underline,box,threeDBox,link,strikeouttextAlign	empty	left,center,rightresizable	true	width	400	height	400	location	no_default	minWidth	32	minHeight	32	maxWidth	65535	maxHeight	65535	

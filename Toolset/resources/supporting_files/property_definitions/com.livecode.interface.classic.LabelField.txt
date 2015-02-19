@@ -1,63 +1,1 @@
-type	field
-name	Name	string	Basic	Label Field
-text	Text	text	Basic	Label:
-tooltip	Tooltip	text	Basic
-disabled	Disabled	boolean	Basic	false	
-traversalOn	Focusable	boolean	Basic	false
-visible	Visible	boolean	Basic	true
-showFocusBorder	Focus Border	boolean	Basic	true	
-sharedText	share Text	boolean	Basic	true
-autoTab	Tab on return	boolean	Basic	true
-dontWrap	Don't Wrap	boolean	Basic	true
-threeD	3-D	boolean	Basic	true	
-lockText	Lock Text	boolean	Basic	true	
-showBorder	show Border	boolean	Basic	false
-opaque	opaque	boolean	Basic	false
-borderWidth	Border Width	number	Basic	2	
-hScrollbar	Horizontal scrollbar	boolean	Basic	false	
-vScrollbar	Vertical Scrollbar	boolean	Basic	false	
-autoHilite	Auto Hilite	boolean	Basic	false	
-listBehavior	List Behavior	boolean	Basic	false	
-multipleHilites	Multi-line	boolean	Basic	false	
-nonContiguousHilites	Non-contiguous	boolean	Basic	false	
-toggleHilites	Click to toggle	boolean	Basic	false	
-fixedLineHeight	Fixed line height	boolean	Basic	true
-textHeight	Text height	number	Basic	16	
-firstIndent	First indent	number	Basic	0	
-dontSearch	Don't search	boolean	Basic	false	
-layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
-behavior	Behavior	string	Basic		long id				
-foregroundColor	Text Color	color	Colors					foregroundPattern
-foregroundPattern	Text Pattern	pattern	Colors					foregroundColor
-backgroundColor	Fill Color	color	Colors					backgroundPattern
-backgroundPattern	Fill Pattern	pattern	Colors					backgroundColor
-hiliteColor	Hilited text color	color	Colors					hilitePattern
-hilitePattern	Hilites text pattern	pattern	Colors					hiliteColor
-borderColor	Border Color	color	Colors					borderPattern
-borderPattern	Border Pattern	pattern	Colors					borderColor	
-topColor	Top 3D Bevel Color	color	Colors					topPattern
-topPattern	Top 3D Bevel Pattern	pattern	Colors					topColor
-bottomColor	Bottom 3D Bevel Color	color	Colors					bottomPattern
-bottomPattern	Bottom 3D Bevel Pattern	pattern	Colors					bottomColor
-shadowColor	Shadow Color	color	Colors					shadowPattern
-shadowPattern	Shadow Pattern	pattern	Colors					shadowColor
-focusColor	Focus Color	color	Colors					focusPattern
-focusPattern	Focus Pattern	pattern	Colors					focusColor	
-customProperties	Custom Properties	customProperties	Custom
-blendLevel	Blend Level	number 	Colors	0	0,100
-ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
-textFont	Font	enum	Text		execute:get the fontNames
-textSize	Text Size	number	Text
-textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text 	right	left,center,right
-margins	Margins	number	Text	8
-lockLoc	Lock size and position	boolean	Position	false	
-width	Width	number	Position	100				left,right
-height	Height	number	Position	21				top,bottom
-location	location	point	Position	no_default	left,top,right,bottom
-left	Left	number	Position					location,right
-top	Top	number	Position					location,bottom
-right	Right	number	Position					location,left
-bottom	Bottom	number	Position					location,top
-layer 	Layer	number	Position	no_default
-
+type	fieldProperty	Default	Options----------------------------------------------------------------------------------------------------name	Label Field	text	Label:	tooltip		disabled	false	traversalOn	false	visible	true	showFocusBorder	true	sharedText	true	autoTab	true	dontWrap	true	threeD	true	lockText	true	showBorder	false	opaque	false	borderWidth	2	hScrollbar	false	vScrollbar	false	autoHilite	false	listBehavior	false	multipleHilites	false	nonContiguousHilites	false	toggleHilites	false	fixedLineHeight	true	textHeight	16	firstIndent	0	dontSearch	false	layerMode	Static	Static,Dynamic,Scrollingbehavior		long idforegroundColor		foregroundPattern		backgroundColor		backgroundPattern		hiliteColor		hilitePattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		shadowColor		shadowPattern		focusColor		focusPattern		customProperties		blendLevel	0	0,100ink	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMaxtextFont		execute:get the fontNamestextSize		textStyle		bold,italic,underline,box,threeDBox,link,strikeouttextAlign	right	left,center,rightmargins	8	lockLoc	false	width	100	height	21	location	no_default	left,top,right,bottomleft		top		right		bottom		layer 	no_default	
