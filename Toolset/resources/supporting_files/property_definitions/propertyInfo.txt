@@ -1,0 +1,190 @@
+Property	Label	Section	Editor	User Visible	Read Only	Related	Array Map	
+----------------------------------------------------------------------------------------------------
+acceleratorKey	Shortcut	Basic	com.runrev.pi.stringrow.livecode	true	false			
+acceleratorModifier	Shortcut key	Basic	com.runrev.pi.setrow.livecode	true	false			
+acceleratorModifiers	Shortcut key	Basic	com.runrev.pi.setrow.livecode	true	false			
+acceleratorText	Shortcut hint	Basic	com.runrev.pi.stringrow.livecode	true	false			
+alwaysBuffer	Buffer	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+angle	Rotation	Basic	com.runrev.pi.numberrow.livecode	true	false			
+antialiased	Antialiased	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+arcAngle	Arc	Basic	com.runrev.pi.numberrow.livecode	true	false			
+armedIcon	Armed Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+autoHilite	Auto Hilite	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+autoTab	Tab om return	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+backgroundBehavior	Behave like a background	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+backgroundColor	Fill Color	Colors	com.runrev.pi.colorrow.livecode	true	false	backgroundPattern		
+backgroundPattern	Fill Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	backgroundColor		
+basicTableObject	Basic table object	Table	com.runrev.pi.booleanrow.livecode	true	false			
+behavior	Behavior	Basic	com.runrev.pi.stringrow.livecode	true	false			
+blendLevel	Blend Level	Colors	com.runrev.pi.numberrow.livecode	true	false			
+border	Text/Border	Colors	com.runrev.pi.fillrow.livecode	true	false		{color:foregroundColor;pattern:foregroundPattern}	
+borderColor	Border/Grid Color	Colors	com.runrev.pi.colorrow.livecode	true	false	borderPattern		
+borderPattern	Border/Grid Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	borderColor		
+borderWidth	Border Width	Basic	com.runrev.pi.numberrow.livecode	true	false			
+bottom	Bottom	Position	com.runrev.pi.numberrow.livecode	true	false	location,top	{color:bottomColor;pattern:bottomPattern}	
+bottomColor	Inset Bevel Color	Colors	com.runrev.pi.colorrow.livecode	true	false	bottomPattern		
+bottomPattern	Inset Bevel Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	bottomColor		
+boundingRect	Bounding rect	Basic	com.runrev.pi.stringrow.livecode	true	false			
+callbacks	Callbacks	Callbacks	com.runrev.pi.stringrow.livecode	true	false			
+cantAbort	User can't abort scripts	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+cantDelete	Can't delete	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+cantModify	Can't modify	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+cellFormatting	Cell formatting	Table	com.runrev.pi.booleanrow.livecode	true	false			
+clickColor	Click Color	Colors	com.runrev.pi.colorrow.livecode	true	false			
+colorOverlay	ColorOverlay	Effects	com.runrev.pi.graphicEffectrow.livecode	true	false			
+currentFrame	Frame	Basic	com.runrev.pi.integerrow.livecode	true	false			
+currentNode	Current node	Quicktime	com.runrev.pi.stringrow.livecode	true	false			
+currentTime	Time	Basic	com.runrev.pi.integerrow.livecode	true	false			
+customProperties	Custom Properties	Custom	com.runrev.pi.customPropertiesrow.livecode	true	false			
+dashes	Dashed lines	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+decorations	Controls	Basic	com.runrev.pi.enumrow.livecode	true	false			
+default	Default button	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+destroyStack	Purge stack on close	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+destroyWindow	Purge windwow on closed	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+disabled	Disabled	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+disabledIcon	Disabled Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+dontDither	Don't Dither	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+dontSearch	Don't search	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+dontWrap	Don't Wrap	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+dropShadow	Drop Shadow	Effects	com.runrev.pi.graphicEffectrow.livecode	true	false			
+enabledTracks	Track is enabled	Tracks	com.runrev.pi.textrow.livecode	true	true			
+endArrow	End Arrow	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+endTime	End	Basic	com.runrev.pi.integerrow.livecode	true	false			
+endValue	End value	Basic	com.runrev.pi.integerrow.livecode	true	false			
+externalReferences	External references	externalRefs	com.runrev.pi.textrow.livecode	true	false			
+filename	Source	Basic	com.runrev.pi.stringrow.livecode	true	false			
+fill	Fill	Colors	com.runrev.pi.fillrow.livecode	true	false		{color:backgroundColor;pattern:backgroundPattern;gradient:fillGradient}	
+firstIndent	First indent	Basic	com.runrev.pi.numberrow.livecode	true	false			
+fixedLineHeight	Fixed line height	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+focusBorder	Focus border	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+focusColor	Focus Color	Colors	com.runrev.pi.colorrow.livecode	true	false	focusPattern		
+focusPattern	Focus Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	focusColor		
+foregroundColor	Text Color	Colors	com.runrev.pi.colorrow.livecode	true	false	foregroundPattern		
+foregroundPattern	Text Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	foregroundColor		
+formatForPrinting	Format for printing	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+height	Height	Position	com.runrev.pi.numberrow.livecode	true	false	top,bottom		
+hGrid	Horizontal grid	Table	com.runrev.pi.booleanrow.livecode	true	false			
+hiliteBorder	Hilite Border	Icons	com.runrev.pi.booleanrow.livecode	true	false			
+hiliteColor	Text Hilite Color	Colors	com.runrev.pi.colorrow.livecode	true	false	hilitePattern		
+hiliteIcon	Hilite Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+hilitePattern	Text Hilite Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	hiliteColor		
+hotspot	Hotspot	Basic	com.runrev.pi.pointrow.livecode	true	false			
+hotspots	Hotspots	Quicktime	com.runrev.pi.stringrow.livecode	true	true			
+hoverIcon	Hover Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+hScrollbar	Horizontal scrollbar	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+icon	Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+iconic	Minimized	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+id	ID	Basic	com.runrev.pi.image_idrow.livecode	true	false			
+ink	Ink	Colors	com.runrev.pi.enumrow.livecode	true	false			
+innerGlow	Inner Glow	Effects	com.runrev.pi.graphicEffectrow.livecode	true	false			
+innerShadow	Inner Shadow	Effects	com.runrev.pi.graphicEffectrow.livecode	true	false			
+label	Label	Basic	com.runrev.pi.stringrow.livecode	true	false			
+layer 	Layer	Position	com.runrev.pi.numberrow.livecode	true	false			
+layerMode	Layer Mode	Basic	com.runrev.pi.enumrow.livecode	true	false			
+left	Left	Position	com.runrev.pi.numberrow.livecode	true	false	location,right		
+lineInc	Scroll distance on arrow click	Basic	com.runrev.pi.numberrow.livecode	true	false			
+lineSize	Line thickness	Basic	com.runrev.pi.numberrow.livecode	true	false			
+linkColor	Link Color	Colors	com.runrev.pi.colorrow.livecode	true	false			
+listBehavior	List Behavior	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+liveResizing	Live resizing	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+location	location	Position	com.runrev.pi.pointrow.livecode	true	false			
+lockLoc	Lock size and position	Position	com.runrev.pi.booleanrow.livecode	true	false			
+lockText	Lock Text	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+looping	Loop	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+mainStack	Main stack	Basic	com.runrev.pi.enumrow.livecode	true	false			
+margins	Margins	Text	com.runrev.pi.numberrow.livecode	true	false			
+mark	Marked	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+markerDrawn	Draw shape at vertices	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+markerFilled	Marker Filled	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+markerLineSize	Marker line thickness	Basic	com.runrev.pi.nubmberrow.livecode	true	false			
+markerPoints	Marker Points	Basic	com.runrev.pi.textrow.livecode	true	false			
+maxEditableColumns	Maximum editable columns	Table	com.runrev.pi.numberrow.livecode	true	false			
+maxHeight	Max Height	Position	com.runrev.pi.numberrow.livecode	true	false			
+maxWidth	Max Width	Position	com.runrev.pi.numberrow.livecode	true	false			
+menuLines	Number of lines to display	Basic	com.runrev.pi.numberrow.livecode	true	false			
+menuMode	Menu Mode	basic	com.runrev.pi.stringrow.livecode	false	false			
+menuMouseButton	Access with mouse button:	Basic	com.runrev.pi.enumrow.livecode	true	false			
+menuName	Use stack panel:	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+metal	Metal texture	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+minHeight	Min Height	Position	com.runrev.pi.numberrow.livecode	true	false			
+minWidth	Min Width	Position	com.runrev.pi.numberrow.livecode	true	false			
+mnemonic	Mnemonic	Basic	com.runrev.pi.enumrow.livecode	true	false			
+multipleHilites	Multi-line	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+name	Name	Basic	com.runrev.pi.stringrow.livecode	true	false			
+nonContiguousHilites	Non-contiguous	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+number	Number	Basic	com.runrev.pi.numberrow.livecode	true	false			
+numberFormat	Value format	Basic	com.runrev.pi.stringrow.livecode	true	false			
+opaque	opaque	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+orientation	Orientation	Basic	com.runrev.pi.enumrow.livecode	true	true			
+outerGlow	Outer Glow	Effects	com.runrev.pi.graphicEffectrow.livecode	true	false			
+pageInc	Scroll distance on bar click	Basic	com.runrev.pi.numberrow.livecode	true	false			
+palindromeFrames	Repeat in reverse	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+pan	Pan	Quicktime	com.runrev.pi.numberrow.livecode	true	false			
+playLoudness	Volume	Basic	com.runrev.pi.integerrow.livecode	true	false			
+playRate	Speed	Basic	com.runrev.pi.integerrow.livecode	true	false			
+playSelection	Play selection only	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+points		text	com.runrev.pi.Pointsrow.livecode	true	false			
+polySides	Sides	Basic	com.runrev.pi.numberrow.livecode	true	false			
+profile	Property Profile	Profiles	com.runrev.pi.propertyProfilerow.livecode	true	false			
+radioBehavior	Hilite one radio button at a time	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+repeatCount	Repeat	Basic	com.runrev.pi.integerrow.livecode	true	false			
+resizable	Resizable	Position	com.runrev.pi.booleanrow.livecode	true	false			
+resizeQuality	Resize quality	Basic	com.runrev.pi.enumrow.livecode	true	false			
+right	Right	Position	com.runrev.pi.numberrow.livecode	true	false	location,left		
+roundRadius	Corner radius	Basic	com.runrev.pi.numberrow.livecode	true	false			
+scaleFactor	Scale factor	Basic	com.runrev.pi.numberrow.livecode	true	false			
+scrollbarWidth	Scrollbar Width	Basic	com.runrev.pi.enumrow.livecode	true	false			
+selectGroupedControls	Select grouped controls	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+shadow	Shadow	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+shadowColor	Shadow Color	Colors	com.runrev.pi.colorrow.livecode	true	false	shadowPattern		
+shadowOffset	Shadow Offset	Icons	com.runrev.pi.numberrow.livecode	true	false			
+shadowPattern	Shadow Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	shadowColor		
+sharedBehavior	Shared group	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+sharedHilite	Shared Hilite	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+sharedText	share Text	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showBadge	Controller toggel	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showBorder	show Border	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showController	Controller	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showFocusBorder	Focus Border	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showLines	Text baselines	Table	com.runrev.pi.booleanrow.livecode	true	false			
+showName	Show Name	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showSelection	Hilite selection	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+showValue	Show Value	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+stackFiles	Stack files	StackFiles	com.runrev.pi.textrow.livecode	true	false			
+startAngle	Start	Basic	com.runrev.pi.numberrow.livecode	true	false			
+startArrow	Start Arrow	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+startTime	Start	Basic	com.runrev.pi.integerrow.livecode	true	false			
+startupIconic	Open minimized	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+startValue	Start value	Basic	com.runrev.pi.integerrow.livecode	true	false			
+style	Style	Basic	com.runrev.pi.stringrow.livecode	false	false			
+systemWindow	Float abve everything	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+tabGroupBehavior	Contents focus with keyboard	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+tabStops	Tab stops	Table	com.runrev.pi.stringrow.livecode	true	false			
+text	Text	Basic	com.runrev.pi.textrow.livecode	true	false			
+textAlign	Text Align	Text	com.runrev.pi.enumrow.livecode	true	false			
+textFont	Font	Text	com.runrev.pi.enumrow.livecode	true	false			
+textHeight	Text height	Basic	com.runrev.pi.numberrow.livecode	true	false			
+textSize	Text Size	Text	com.runrev.pi.numberrow.livecode	true	false			
+textStyle	Text Style	Text	com.runrev.pi.enumrow.livecode	true	false			
+threeD	3-D	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+thumbPosition	Current value	Basic	com.runrev.pi.integerrow.livecode	true	false			
+thumbSize	Thumb size	Basic	com.runrev.pi.numberrow.livecode	true	false			
+tilt	Tilt	Quicktime	com.runrev.pi.numberrow.livecode	true	false			
+title	Title	Basic	com.runrev.pi.stringrow.livecode	true	false			
+toggleHilites	Click to toggle	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+tool	graphic tool		com.runrev.pi.row.livecode	true	false			
+tooltip	Tooltip	Basic	com.runrev.pi.stringrow.livecode	true	false			
+top	Top	Position	com.runrev.pi.numberrow.livecode	true	false	location,bottom	{color:topColor;pattern:topPattern}	
+topColor	Outset Bevel Color	Colors	com.runrev.pi.colorrow.livecode	true	false	topPattern		
+topPattern	Outset Bevel Pattern	Colors	com.runrev.pi.patternrow.livecode	true	false	topColor		
+tracks	Tracks	Tracks	com.runrev.pi.textrow.livecode	true	true			
+traversalOn	Focus with keyboard	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+underlineLinks	Underline Links	Colors	com.runrev.pi.booleanrow.livecode	true	false			
+vGrid	Vertical grid	Table	com.runrev.pi.booleanrow.livecode	true	false			
+visible	Visible	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+visitedColor	Visited Color	Colors	com.runrev.pi.colorrow.livecode	true	false			
+visitedIcon	Visited Icon	Icons	com.runrev.pi.iconrow.livecode	true	false			
+vScrollbar	Vertical Scrollbar	Basic	com.runrev.pi.booleanrow.livecode	true	false			
+width	Width	Position	com.runrev.pi.numberrow.livecode	true	false	left,right		
+windowShape	Shape	Basic	com.runrev.pi.imageIDrow.livecode	true	false			
+zoom	Zoom	Quicktime	com.runrev.pi.numberrow.livecode	true	false			
