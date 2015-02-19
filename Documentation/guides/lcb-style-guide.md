@@ -7,7 +7,7 @@ Copyright 2015 LiveCode Ltd.
 
 This document describes best practices to be followed when working with
 LiveCode Builder source code.  Please follow it *especially* when writing code
-to be included with the main LiveCode product distributable.
+to be included with the main LiveCode product package.
 
 ## Copyright headers
 
@@ -26,7 +26,11 @@ the Example Organisation would use module names beginning with `org.example`.
 
 Replace any hyphen (`-`) characters in a domain name with underscore (`_`)
 characters.  For example, a module derived from the `fizz-buzz.example.org`
-domain could be `org.example.fizz-buzz`.
+domain could be `org.example.fizz_buzz`.
+
+Additionally, add an underscore (`_`) to the start of any element in the domain
+name starting with a digit.  For example, a module derived from the
+`999.example.org` domain could be `org.example._999`.
 
 You must only use module names corresponding to domain names that you control
 or are allowed to use.  This restriction is enforced by the the LiveCode
@@ -52,8 +56,9 @@ The meanings of the leading lowercase characters are:
 
 Prefix | Context             | Meaning
 ------ | ------------------- | -------
+k      | all                 | constant
 s      | module              | static variable
-k      | module              | constant
+m      | widget              | static variable
 p      | handler definitions | `in` argument
 r      | handler definitions | `out` argument
 x      | handler definitions | `inout` argument
@@ -79,6 +84,36 @@ In general, please use verbs to name your handlers.  For example,
     handler RotateShape(inout xShape, in pAngleInDegrees)
         -- ...
     end handler
+
+## Documenting the source code
+
+You should add in-line documentation to `syntax` and `handler` definitions in
+LiveCode Builder source code.  It is particularly important to add in-line
+documentation to all syntax and to any public handlers that aren't primarily
+accessed using syntax.
+
+In-line documentation for a handler or syntax definition is extracted from a
+`/* */` comment block immediately before the start of the definition.
+
+Please refer to the [Extending LiveCode](Extending LiveCode.md) guide for full
+details of the syntax of in-line documentation comments, including examples.
+
+## Named constants
+
+Often, it is useful to use constant values in your code.  Please declare named
+constants rather than placing the values in-line.  For example, you may
+want to create three tabs labelled "Things", "Stuff", and "Misc":
+
+    constant kTabNames is ["Things", "Stuff", "Misc"]
+
+    handler CreateTabs()
+        variable tName
+        repeat for each element tName in kTabNames
+            -- Create the tab
+        end repeat
+    end handler
+
+In particular, please avoid any "magic numbers" in your code.
 
 ## Whitespace
 
