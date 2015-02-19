@@ -1,63 +1,1 @@
-type	group
-name	Name	string	Basic
-label	Label	string	Basic
-disabled	Disabled	boolean	Basic	false
-visible	Visible	boolean	Basic	true
-showName	Show name	boolean	Basic	true		
-threeD	3-D	boolean	Basic	true	
-opaque	Opaque	boolean	Basic	true	
-selectGroupedControls	Select grouped controls	boolean	Basic	true
-showBorder	Show border	boolean	Basic	true	
-borderWidth	Border width	number	Basic	2
-hScrollbar	Horizontal scrollbar	boolean	Basic	false
-vScrollbar	Vertical scrollbar	boolean	Basic	false
-scrollbarWidth	Scrollbar width	number	Basic	20
-radioBehavior	Hilite one radio button at a time	boolean	Basic	true
-traversalOn	Contents focus with keyboard	boolean	Basic	false
-tabGroupBehavior	Contents focus with keyboard	boolean	Basic	false
-traversalOn	Arrow keys navigate contents	boolean	Basic	false	
-dontSearch	Find command ignores	boolean	Basic	false
-cantDelete	Can'd delete	boolean	Basic	false
-sharedBehavior	Shared group	boolean	Basic	false
-backgroundBehavior	Behave like a background	boolean	Basic	false
-boundingRect	Bounding rect	string	Basic	
-layerMode	Layer MOde	enum	Basic	Static	Static,Dynamic,Scrolling
-behavior	Behavior	string	Basic	empty	long id
-foregroundColor	Text Color	color	Colors					foregroundPattern
-foregroundPattern	Text Pattern	pattern	Colors					foregroundColor
-backgroundColor	Fill Color	color	Colors					backgroundPattern
-backgroundPattern	Fill Pattern	pattern	Colors					backgroundColor
-hiliteColor	Hilited text color	color	Colors					hilitePattern
-hilitePattern	Hilites text pattern	pattern	Colors					hiliteColor
-borderColor	Border Color	color	Colors					borderPattern
-borderPattern	Border Pattern	pattern	Colors					borderColor	
-topColor	Top 3D Bevel Color	color	Colors					topPattern
-topPattern	Top 3D Bevel Pattern	pattern	Colors					topColor
-bottomColor	Bottom 3D Bevel Color	color	Colors					bottomPattern
-bottomPattern	Bottom 3D Bevel Pattern	pattern	Colors					bottomColor
-shadowColor	Shadow Color	color	Colors					shadowPattern
-shadowPattern	Shadow Pattern	pattern	Colors					shadowColor
-focusColor	Focus Color	color	Colors					focusPattern
-focusPattern	Focus Pattern	pattern	Colors					focusColor	
-customProperties	Custom Properties	customProperties	Custom	
-blendLevel	Blend Level	number 	Colors	0	0,100
-ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
-textFont	Font	enum	Text		execute:get the fontNames
-textSize	Text Size	number	Text
-textStyle	Text Style	enum	Text	empty	bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text	empty	left,center,right
-margins	Margins	string	Text	8
-lockLoc	Lock size and position	boolean	Position	false	
-width	Width	number	Position					left,right
-height	Height	number	Position					top,bottom
-location	location	point	Position	no_default	left,top,right,bottom
-left	Left	number	Position					location,right
-top	Top	number	Position					location,bottom
-right	Right	number	Position					location,left
-bottom	Bottom	number	Position					location,top
-layer 	Layer	number	Position
-dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
-innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
-outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}
-innerGlow	Inner Glow	graphicEffect	Effects		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}	
-colorOverlay	ColorOverlay	graphicEffect	Effects		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}
+type	groupProperty	Default	Options----------------------------------------------------------------------------------------------------name		label		disabled	false	visible	true	showName	true	threeD	true	opaque	true	selectGroupedControls	true	showBorder	true	borderWidth	2	hScrollbar	false	vScrollbar	false	scrollbarWidth	20	radioBehavior	true	traversalOn	false	tabGroupBehavior	false	traversalOn	false	dontSearch	false	cantDelete	false	sharedBehavior	false	backgroundBehavior	false	boundingRect		layerMode	Static	Static,Dynamic,Scrollingbehavior	empty	long idforegroundColor		foregroundPattern		backgroundColor		backgroundPattern		hiliteColor		hilitePattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		shadowColor		shadowPattern		focusColor		focusPattern		customProperties		blendLevel	0	0,100ink	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMaxtextFont		execute:get the fontNamestextSize		textStyle	empty	bold,italic,underline,box,threeDBox,link,strikeouttextAlign	empty	left,center,rightmargins	8	lockLoc	false	width		height		location	no_default	left,top,right,bottomleft		top		right		bottom		layer 		dropShadow		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}innerShadow		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}outerGlow		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}innerGlow		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}colorOverlay		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}

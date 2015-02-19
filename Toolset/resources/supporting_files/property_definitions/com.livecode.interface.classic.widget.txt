@@ -1,21 +1,1 @@
-type	widget
-
-name	Name	string	Basic	Button
-tooltip	Tooltip	string	Basic
-visible	Visible	boolean	Basic	true
-traversalOn	Focus with keyboard	boolean	Basic	false
-behavior	Behavior	string	Basic		long id	
-layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
-customProperties	Custom Properties	customProperties	Custom
-ink	Ink	enum	Colors	srcCopy	
-blendLevel	Blend Level	number	Colors	0	0,100
-lockLoc	Lock size and position	boolean	Position	false	
-width	Width	number	Position					left,right
-height	Height	number	Position					top,bottom
-location	location	point	Position	no_default	left,top,right,bottom
-left	Left	number	Position					location,right
-top	Top	number	Position					location,bottom
-right	Right	number	Position					location,left
-bottom	Bottom	number	Position					location,top
-layer 	Layer	number	Position	no_default
-
+type	widgetProperty	Default	Options----------------------------------------------------------------------------------------------------name	Button	tooltip		visible	true	traversalOn	false	behavior		long idlayerMode	Static	Static,Dynamic,ScrollingcustomProperties		ink	srcCopy	blendLevel	0	0,100lockLoc	false	width		height		location	no_default	left,top,right,bottomleft		top		right		bottom		layer 	no_default	
