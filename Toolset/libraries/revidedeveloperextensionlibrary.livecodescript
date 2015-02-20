@@ -180,6 +180,7 @@ end revIDEDeveloperExtension
 
 private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tDetailsA
+   put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
       __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
       # The stored info is up to date.
@@ -195,7 +196,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
       if the result is not empty then
          # This may be better as a warning, and try to parse info direct from the file.
          __revIDEDeveloperExtensionSendError the result
-         return empty
+         return tDetailsA
       end if
    end if
    
@@ -203,10 +204,8 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
-      return empty
+      return tDetailsA
    end if
-   
-   put pFile into tDetailsA["file"]
    
    # Check timestamps to see if API  is out of date.
    local tLastGenerated, tLastModified
