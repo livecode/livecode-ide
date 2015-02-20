@@ -524,6 +524,7 @@ function revInternal__StackFiles
 			else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
 			else if tStackName is "revmessagebox" then put "Message Box" into tStackName
 			else if tStackName is "revideprojectbrowserview" then put "revIDEProjectBrowser" into tStackName
+			else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
 			
 			// AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
 			local tExistingVersion
@@ -996,9 +997,8 @@ command revInternal__InitialiseLibraries
 	    	 	
 	try 	 	
 		insert script of stack "revidedocumentationlibrary" into back 	 	
-		insert script of stack "revidelibrary" into back 	 	
-  	 	
-		revIDEInitialiseIDELibrary 	 	
+   		revInternal__LoadLibrary "revIDELibrary.8"	
+  	 		 	
 		insert script of stack "revidemessagehandler" into front 	 	
 	catch tError 	 	
 		answer "Error loading main IDE" & return & tError 	 	
@@ -1019,7 +1019,7 @@ command revInternal__InitialiseLibraries
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back
    
-   revInternal__LoadLibrary "revOldIdeLibrary"
+   revInternal__LoadLibrary "revIdeLibrary"
    revInternal__LoadLibrary "revLibUrl"
    revInternal__LoadLibrary "revCommonLibrary"
    revInternal__LoadLibrary "revPrintLibrary"
