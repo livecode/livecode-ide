@@ -7,6 +7,8 @@ command revInternal__LoadLibrary pLibraryName
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
    
+   put toLower(pLibraryName) into pLibraryName
+
    if sLoadedLibraries[pLibraryName] then
       return "Library" && pLibraryName && "already loaded"
    end if
