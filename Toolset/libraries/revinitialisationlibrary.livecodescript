@@ -3,21 +3,18 @@
 // sLoadedLibraries["library name"] = true
 local sLoadedLibraries
 
-command revInternal__LoadLibrary pLibraryName
+command revInternal__LoadLibrary pLibrary
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
    
-   if sLoadedLibraries[pLibraryName] then
-      return "Library already loaded"
-   end if
-   
-   if the environment is "development" then      
+   // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
+   if the environment is "development" then
       local tLibraryPath
-      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else return "no file for that library:" && tLibraryPath 
+      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
+      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
+      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
+      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
+      else return "no file for library" && pLibrary
       
       try
       	--local tDefaultStack
@@ -30,6 +27,10 @@ command revInternal__LoadLibrary pLibraryName
          // Get it's name
          local tStackName
          put the name of stack tLibraryPath into tStackName
+         
+         if sLoadedLibraries[tStackName] then
+     	   return "Library" && pLibrary && "already loaded as" && tStackName
+  		 end if
          
          // Insert the script into the backscript
          send "revLoadLibrary" to stack tStackName
@@ -89,22 +90,3 @@ command revInternal__SetSmallAppIcon pSmallAppIcon
    set the paintCompression to "png" -- match the engine
    put pSmallAppIcon into gRevAppIcon
 end revInternal__SetSmallAppIcon
-
-command revInternal__InitialiseExternals
-  local tName,tExternalList
-  if (the platform <> "MacOS" or char 1 of the systemVersion = 1) and there is a stack "revExternalLibrary" then
-    set the itemDel to "/"
-    put the effective filename of this stack into tName
-    repeat for each line tLine in the cExternals of stack "revExternalLibrary"
-       put item 1 to -2 of tName&"/"&tLine&cr after tExternalList
-    end repeat
-    delete char -1 of tExternalList
-    set the externals of stack "revExternalLibrary" to tExternalList
-    
-    lock messages -- fix bug 2284
-    toplevel stack "revExternalLibrary"
-    start using stack "revExternalLibrary"
-    close stack "revExternalLibrary"
-    unlock messages -- fix bug 2284
-  end if
-end revInternal__InitialiseExternals
