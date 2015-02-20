@@ -523,6 +523,7 @@ function revInternal__StackFiles
 			else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
 			else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
 			else if tStackName is "revmessagebox" then put "Message Box" into tStackName
+			else if tStackName is "revideprojectbrowserview" then put "revIDEProjectBrowser" into tStackName
 			
 			// AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
 			local tExistingVersion
