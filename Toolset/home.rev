@@ -494,14 +494,27 @@ function revInternal__StackFiles
 	end if	
 	
 	local tStackFiles, tStackName
+	local tStackFilesA, tIDEVersion
 	set the itemdel to "."
+	
+	put item 1 of the version into tIDEVersion
 	repeat for each line tPath in tFolders
 		set the defaultfolder to tPath
 		
 		repeat for each line tFile in the files
 			if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
 			
-			put item 1 to -2 of tFile into tStackName
+			local tVersion
+			put empty into tVersion
+			// AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
+			if the number of items in tFile is 3 then
+				put item 2 of tFile into tVersion
+				if tVersion > tIDEVersion then
+					next repeat
+				end if
+			end if
+			
+			put item 1 of tFile into tStackName
 			
 			if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
 			else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
@@ -510,15 +523,21 @@ function revInternal__StackFiles
 			else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
 			else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
 			else if tStackName is "revmessagebox" then put "Message Box" into tStackName
-
-			if tStackFiles is empty then
-				put tStackName & comma & tPath & tFile into tStackFiles
-			else
-				put return & tStackName & comma & tPath & tFile after tStackFiles
-			end if
+			
+			// AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
+			local tExistingVersion
+			put tStackFilesA[tStackName]["version"] into tExistingVersion
+			if tExistingVersion is empty or tVersion > tExistingVersion then
+				put tPath & tFile into tStackFilesA[tStackName]["file"]
+				put tVersion into tStackFilesA[tStackName]["version"]
+			end if	
 		end repeat
 	end repeat
 	
+	repeat for each key tKey in tStackFilesA
+		put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+	end repeat
+	delete the last char of tStackFiles
 	return tStackFiles
    /*
    local tStackFiles
