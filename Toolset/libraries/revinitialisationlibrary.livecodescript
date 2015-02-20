@@ -8,16 +8,17 @@ command revInternal__LoadLibrary pLibraryName
    //set the itemdel to "/"
    
    if sLoadedLibraries[pLibraryName] then
-      return "Library already loaded"
+      return "Library" && pLibraryName && "already loaded"
    end if
    
-   if the environment is "development" then      
+   // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
+   if the environment is "development" then
       local tLibraryPath
-      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
+      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
+      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibraryName & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibraryName & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & "/" & pLibraryName & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibraryName & ".livecodescript" into tLibraryPath
-      else return "no file for that library:" && tLibraryPath 
+      else return "no file for library" && pLibraryName
       
       try
       	--local tDefaultStack
