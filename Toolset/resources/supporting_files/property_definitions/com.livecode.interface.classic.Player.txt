@@ -1,62 +1,1 @@
-type	player
-name	Name	string	Basic
-filename	Source	string	Basic	Resources/Sample.mov
-tooltip	Tool tip	string	Basic
-alwaysBuffer	Buffer	boolean	Basic	false	
-visible	Visible	boolean	Basic	true
-showController	Controller	boolean	Basic	true	
-showBadge	Controller toggel	boolean	Basic	false	
-traversalOn	Focus with keyboard	boolean	Basic	true	
-currentTime	Time	integer	Basic	0	
-startTime	Start	integer	Basic	
-endTime	End	integer	Basic	
-showSelection	Hilite selection	boolean	Basic	false	
-playSelection	Play selection only	boolean	Basic	false	
-playRate	Speed	integer	Basic	1	
-looping	Loop	boolean	Basic	false	
-playLoudness	Volume	integer	Basic	100	0,100
-showBorder	Border	boolean	Basic	true	
-threeD	3-D	boolean	Basic	true	
-borderWidth	Border width	integer	Basic	2	
-layerMode	Layer Mode	enum	Basic	Static	Static,Dynamic,Scrolling
-behavior	Behavior	string	Basic		long id	
-callbacks	Callbacks	string	Callbacks
-tracks	Tracks	text	Tracks				true
-enabledTracks	Track is enabled	text	Tracks				true
-pan	Pan	number	Quicktime
-tilt	Tilt	number	Quicktime
-zoom	Zoom	number	Quicktime	0
-currentNode	Current node	string	Quicktime
-hotspots	Hotspots	string	Quicktime				true
-foregroundColor	Foreground Color	color	Colors					foregroundPattern
-foregroundPattern	Foreground Pattern	pattern	Colors					foregroundColor
-hiliteColor	Hilite Color	color	Colors					hilitePattern
-hilitePattern	Hilite Pattern	pattern	Colors					hiliteColor
-borderColor	Border Color	color	Colors					borderPattern				
-borderPattern	Border Pattern	pattern	Colors					borderColor
-topColor	Top 3D Bevel Color	color	Colors					topPattern
-topPattern	Top 3D Bevel Pattern	pattern	Colors					topColor
-bottomColor	Bottom 3D Bevel Color	color	Colors					bottomPattern
-bottomPattern	Bottom 3D Bevel Pattern	pattern	Colors					bottomColor
-customProperties	Custom Properties	customProperties	Custom	
-blendLevel	Blend Level	number 	Colors	0	0,100
-ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
-textFont	Font	enum	Text		execute:get the fontNames
-textSize	Text Size	number	Text
-textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text		left,center,right
-margins	Margins	string	Text	8
-lockLoc	Lock size and position	boolean	Position	false	
-width	Width	number	Position	310				left,right
-height	Height	number	Position	264				top,bottom
-location	location	point	Position	no_default	left,top,right,bottom
-left	Left	number	Position					location,right
-top	Top	number	Position					location,bottom
-right	Right	number	Position					location,left
-bottom	Bottom	number	Position					location,top
-layer 	Layer	number	Position	no_default
-dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
-innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
-outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}
-innerGlow	Inner Glow	graphicEffect	Effects		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}	
-colorOverlay	ColorOverlay	graphicEffect	Effects		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}
+type	playerProperty	Default	Options----------------------------------------------------------------------------------------------------name		filename	Resources/Sample.mov	tooltip		alwaysBuffer	false	visible	true	showController	true	showBadge	false	traversalOn	true	currentTime	0	startTime		endTime		showSelection	false	playSelection	false	playRate	1	looping	false	playLoudness	100	0,100showBorder	true	threeD	true	borderWidth	2	layerMode	Static	Static,Dynamic,Scrollingbehavior		long idcallbacks		tracks		enabledTracks		pan		tilt		zoom	0	currentNode		hotspots		foregroundColor		foregroundPattern		hiliteColor		hilitePattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		customProperties		blendLevel	0	0,100ink	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMaxtextFont		execute:get the fontNamestextSize		textStyle		bold,italic,underline,box,threeDBox,link,strikeouttextAlign		left,center,rightmargins	8	lockLoc	false	width	310	height	264	location	no_default	left,top,right,bottomleft		top		right		bottom		layer 	no_default	dropShadow		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}innerShadow		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}outerGlow		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}innerGlow		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}colorOverlay		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}

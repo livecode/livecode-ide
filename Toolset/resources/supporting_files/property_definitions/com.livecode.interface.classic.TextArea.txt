@@ -1,76 +1,1 @@
-type	field
-name	Name	string	Basic
-text	Text	text	Basic
-tooltip	Tooltip	text	Basic
-disabled	Disabled	boolean	Basic	false	
-traversalOn	Focusable	boolean	Basic	true	
-visible	Visible	boolean	Basic	true
-showFocusBorder	Focus Border	boolean	Basic	true	
-sharedText	share Text	boolean	Basic	false	
-autoTab	Tab om return	boolean	Basic	false	
-dontWrap	Don't Wrap	boolean	Basic	false	
-threeD	3-D	boolean	Basic	true	
-lockText	Lock Text	boolean	Basic	false
-showBorder	show Border	boolean	Basic	true	
-opaque	opaque	boolean	Basic	true	
-borderWidth	Border Width	number	Basic	2	
-hScrollbar	Horizontal scrollbar	boolean	Basic	false	
-vScrollbar	Vertical Scrollbar	boolean	Basic	true
-scrollbarWidth	Scrollbar Width	enum	Basic	16	16,12
-autoHilite	Auto Hilite	boolean	Basic	true
-listBehavior	List Behavior	boolean	Basic	false	
-multipleHilites	Multi-line	boolean	Basic	false	
-nonContiguousHilites	Non-contiguous	boolean	Basic	false	
-toggleHilites	Click to toggle	boolean	Basic	false	
-fixedLineHeight	Fixed line height	boolean	Basic	true
-textHeight	Text height	number	Basic	16	
-firstIndent	First indent	number	Basic	0	
-dontSearch	Don't search	boolean	Basic	false	
-layerMode	Layer MOde	enum	Basic	Static	Static,Dynamic,Scrolling
-behavior	Behavior	string	Basic		long id		
-foregroundColor	Text Color	color	Colors					foregroundPattern
-foregroundPattern	Text Pattern	pattern	Colors					foregroundColor
-backgroundColor	Fill Color	color	Colors					backgroundPattern
-backgroundPattern	Fill Pattern	pattern	Colors					backgroundColor
-hiliteColor	Text Hilite Color	color	Colors					hilitePattern
-hilitePattern	Text Hilite Pattern	pattern	Colors					hiliteColor
-borderColor	Border/Grid Color	color	Colors					borderPattern
-borderPattern	Border/Grid Pattern	pattern	Colors					borderColor
-topColor	Outset Bevel Color	color	Colors					topPattern
-topPattern	Outset Bevel Pattern	pattern	Colors					topColor
-bottomColor	Inset Bevel Color	color	Colors					bottomPattern
-bottomPattern	Inset Bevel Pattern	pattern	Colors					bottomColor
-shadowColor	Shadow Color	color	Colors					shadowPattern
-shadowPattern	Shadow Pattern	pattern	Colors					shadowColor
-focusColor	Focus Color	color	Colors					focusPattern
-focusPattern	Focus Pattern	pattern	Colors					focusColor	
-customProperties	Custom Properties	customProperties	Custom
-blendLevel	Blend Level	number 	Colors	0	0,100
-ink	Ink	enum	Colors	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax	
-textFont	Font	enum	Text		execute:get the fontNames
-textSize	Text Size	number	Text
-textStyle	Text Style	enum	Text		bold,italic,underline,box,threeDBox,link,strikeout
-textAlign	Text Align	enum	Text	left	left,center,right
-margins	Margins	number	Text	8
-lockLoc	Lock size and position	boolean	Position	false	
-width	Width	number	Position	250				left,right
-height	Height	number	Position	56				top,bottom
-location	location	point	Position	no_default	left,top,right,bottom
-left	Left	number	Position					location,right
-top	Top	number	Position					location,bottom
-right	Right	number	Position					location,left
-bottom	Bottom	number	Position					location,top
-layer 	Layer	number	Position	no_default
-basicTableObject	Basic table object	boolean	Table	false
-maxEditableColumns	Maximum editable columns	number	Table	
-cellFormatting	Cell formatting	boolean	Table	false	
-showLines	Text baselines	boolean	Table	false
-hGrid	Horizontal grid	boolean	Table	false
-vGrid	Vertical grid	boolean	Table	false
-tabStops	Tab stops	string	Table
-dropShadow	Drop Shadow	graphicEffect	Effects		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}
-innerShadow	Inner Shadow	graphicEffect	Effects		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}
-outerGlow	Outer Glow	graphicEffect	Effects		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}
-innerGlow	Inner Glow	graphicEffect	Effects		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}	
-colorOverlay	ColorOverlay	graphicEffect	Effects		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}
-
+type	fieldProperty	Default	Options----------------------------------------------------------------------------------------------------name		text		tooltip		disabled	false	traversalOn	true	visible	true	showFocusBorder	true	sharedText	false	autoTab	false	dontWrap	false	threeD	true	lockText	false	showBorder	true	opaque	true	borderWidth	2	hScrollbar	false	vScrollbar	true	scrollbarWidth	16	16,12autoHilite	true	listBehavior	false	multipleHilites	false	nonContiguousHilites	false	toggleHilites	false	fixedLineHeight	true	textHeight	16	firstIndent	0	dontSearch	false	layerMode	Static	Static,Dynamic,Scrollingbehavior		long idforegroundColor		foregroundPattern		backgroundColor		backgroundPattern		hiliteColor		hilitePattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		shadowColor		shadowPattern		focusColor		focusPattern		customProperties		blendLevel	0	0,100ink	srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMaxtextFont		execute:get the fontNamestextSize		textStyle		bold,italic,underline,box,threeDBox,link,strikeouttextAlign	left	left,center,rightmargins	8	lockLoc	false	width	250	height	56	location	no_default	left,top,right,bottomleft		top		right		bottom		layer 	no_default	basicTableObject	false	maxEditableColumns		cellFormatting	false	showLines	false	hGrid	false	vGrid	false	tabStops		dropShadow		{color:dropShadow["color"];blendMode:dropShadow["blendMode"];opacity:dropShadow["opacity"];filter:dropShadow["filter"];spread:dropShadow["spread"];size:dropShadow["size"];distance:dropShadow["distance"];angle:dropShadow["angle"]}innerShadow		{color:innerShadow["color"];blendMode:innerShadow["blendMode"];opacity:innerShadow["opacity"];filter:innerShadow["filter"];spread:innerShadow["spread"];size:innerShadow["size"];distance:innerShadow["distance"];angle:innerShadow["angle"]}outerGlow		{color:outerGlow["color"];blendMode:outerGlow["blendMode"];opacity:outerGlow["opacity"];filter:outerGlow["filter"];spread:outerGlow["spread"];size:outerGlow["size"];distance:outerGlow["distance"];angle:outerGlow["angle"]}innerGlow		{color:innerGlow["color"];blendMode:innerGlow["blendMode"];opacity:innerGlow["opacity"];filter:innerGlow["filter"];spread:innerGlow["spread"];size:innerGlow["size"];distance:innerGlow["distance"];angle:innerGlow["angle"]}colorOverlay		{color:colorOverlay["color"];blendMode:colorOverlay["blendMode"];opacity:colorOverlay["opacity"];filter:colorOverlay["filter"];spread:colorOverlay["spread"];size:colorOverlay["size"];distance:colorOverlay["distance"];angle:colorOverlay["angle"]}

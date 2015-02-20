@@ -251,84 +251,131 @@ private on __toolDefinitionsRead
    revIDERestoreDefaultFolder
 end __toolDefinitionsRead
 
+private function __propertyDataFromInfoFile pFileName
+   local tPropertyInfo
+   put URL ("file:" & pFileName) into tPropertyInfo
+   
+   local tDataStart, tDataA, tPropName
+   put false into tDataStart
+   
+   set the itemdelimiter to tab
+   repeat for each line tLine in tPropertyInfo
+      if tLine begins with "-----" then
+         put true into tDataStart
+         next repeat
+      end if
+      
+      if not tDataStart then next repeat
+      
+      put item 1 of tLine into tPropName
+      put item 2 of tLine into tDataA[tPropName]["label"]
+      put item 3 of tLine into tDataA[tPropName]["section"]
+      put item 4 of tLine into tDataA[tPropName]["editor"]
+      put item 5 of tLine into tDataA[tPropName]["user_visible"]
+      put item 6 of tLine into tDataA[tPropName]["read_only"]
+      put item 7 of tLine into tDataA[tPropName]["related"]
+      put item 8 of tLine into tDataA[tPropName]["array_map"]
+   end repeat
+   return tDataA
+end __propertyDataFromInfoFile
+
+private function  __propertyDataOfObjectFromFile pFile
+   local tObjectData
+   
+   # Get the data from the file
+   put URL ("file:" & pFile) into tObjectData
+   
+   # Parse the file into a structure array
+   local tObjectPropertiesA, tPropertyName, tCount
+   set the itemdel to tab
+   put 1 into tCount
+   
+   local tDataStart
+   put false into tDataStart
+   repeat for each line tLine in tObjectData
+      if tLine is empty then next repeat
+      
+      put item 1 of tLine into tPropertyName
+      
+      if tPropertyName is "type" then
+         put item 2 of tLine into tObjectPropertiesA["type"]
+         next repeat
+      else if tPropertyName begins with "-----" then
+         put true into tDataStart
+         next repeat
+      else if tDataStart is false then
+         next repeat
+      else
+         put tPropertyName into tObjectPropertiesA[tCount]["name"] 
+         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tCount]["default"] 
+         put item 3 of tLine into tObjectPropertiesA[tCount]["options"] 
+      end if
+      add 1 to tCount
+   end repeat
+   
+   return tObjectPropertiesA
+end __propertyDataOfObjectFromFile
+
+private function __propertyInfoFilename
+   return "propertyInfo.txt"
+end __propertyInfoFilename
+
 # Reads in the basic property data for classic controls
-local sClassicObjectProperties, sClassicPropertyNames
-private on __objectPropertiesRead
+local sClassicObjectProperties, sClassicPropertiesInfo
+on __objectPropertiesRead
    --put "reading object properties" after msg
    revIDEStoreDefaultFolder
    
    put empty into sClassicObjectProperties
-   put empty into sClassicPropertyNames
+   put empty into sClassicPropertiesInfo
    
    # Set to folder to the path where the object definition files for classic controls are stored
    local tObjectDefinitionsPath
    put revIDESpecialFolderPath("Object Property Definitions") into tObjectDefinitionsPath
+   
+   put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
+   
    set the defaultfolder to tObjectDefinitionsPath
    
    # Read in each file and build an array
-   local tObjectData, tObjectType
+   local tObjectDataA, tObjectPropertiesA, tObjectType
    
    repeat for each line tFile in the files
+      if tFile is __propertyInfoFilename() then next repeat
       if char 1 of tFile is "." then next repeat
       
+      put tFile into tObjectType
       # Get the name of the object
       set the itemdel to "."
-      put tFile into tObjectType
       if the last item of tObjectType is "txt" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
       
-      # Get the data from the file
-      put URL ("file:" & tObjectDefinitionsPath & slash & tFile) into tObjectData
+      put __propertyDataOfObjectFromFile(tObjectDefinitionsPath & slash & tFile) into tObjectDataA
+      if tObjectDataA is empty then next repeat
       
-      # Parse the file into a structure array
-      local tObjectProperties, tPropertyName, tCount
-      set the itemdel to tab
-      put 1 into tCount
-      repeat for each line tLine in tObjectData
-         if tLine is empty then next repeat
-         
-         put item 1 of tLine into tPropertyName
-         
-         if tPropertyName is "type" then
-            //if tFile contains "lineGraphic" then breakpoint
-            //local tTest
-            //put item 2 of tLine into tTest
-            put item 2 of tLine into tObjectProperties["type"]
-         else
-            put tCount into tObjectProperties["properties"][tPropertyName]["order"]
-            put item 2 of tLine into tObjectProperties["properties"][tPropertyName]["label"]
-            put item 3 of tLine into tObjectProperties["properties"][tPropertyName]["type"]
-            put item 4 of tLine into tObjectProperties["properties"][tPropertyName]["group"]
-            put __unescapeString(item 5 of tLine) into tObjectProperties["properties"][tPropertyName]["default"] 
-            put item 6 of tLine into tObjectProperties["properties"][tPropertyName]["options"] 
-            if item 7 of tLine is false then put false into tObjectProperties["properties"][tPropertyName]["user_visible"] 
-            else put true into tObjectProperties["properties"][tPropertyName]["user_visible"] 
-            if item 8 of tLine is true then put true into tObjectProperties["properties"][tPropertyName]["read_only"] 
-            else put false into tObjectProperties["properties"][tPropertyName]["read_only"] 
-            put item 9 of tLine into tObjectProperties["properties"][tPropertyName]["related"]
-         end if
-         add 1 to tCount
+      local tPropertyName
+      put tObjectDataA["type"] into tObjectPropertiesA["type"]
+      repeat with x = 1 to the number of elements in tObjectDataA
+         put tObjectDataA[x]["name"] into tPropertyName
+         put tObjectDataA[x]["default"] into tObjectPropertiesA["properties"][tPropertyName]["default"]
+         put tObjectDataA[x]["options"] into tObjectPropertiesA["properties"][tPropertyName]["options"]
+         put x into tObjectPropertiesA["properties"][tPropertyName]["order"]
+         union tObjectPropertiesA["properties"][tPropertyName] with tPropertiesInfo[tPropertyName]
       end repeat
       
-      put tObjectProperties into sClassicObjectProperties[tObjectType]
-      put empty into tObjectProperties
+      put tObjectPropertiesA into sClassicObjectProperties[tObjectType]
+      put empty into tObjectPropertiesA
    end repeat
    
-   # Generate a list of all the property names
-   put empty into sClassicPropertyNames
-   repeat for each element tObjectType in sClassicObjectProperties
-      repeat for each line tProperty in the keys of tObjectType["properties"]
-         if tProperty is not among the lines of sClassicPropertyNames then
-            put tProperty & return after sClassicPropertyNames
-         end if
-      end repeat
+   # Store classic properties info by section
+   repeat for each key tKey in tPropertiesInfo
+      put tPropertiesInfo[tKey] into sClassicPropertiesInfo[tPropertiesInfo[tKey]["section"]][tKey]
    end repeat
-   delete the last char of sClassicPropertyNames
    
    revIDERestoreDefaultFolder
 end __objectPropertiesRead
 
-private function __objectPropertiesShared pObjectTypeList
+private function __objectPropertiesShared pObjectTypeList, pOptionalSection
    local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x
    put 1 into x
    repeat for each line tObjectType in pObjectTypeList
@@ -336,8 +383,14 @@ private function __objectPropertiesShared pObjectTypeList
          # Classic control
          if x is 1 then
             put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray
+            # Restrict to group, if present
+            if pOptionalSection is not empty then
+               intersect tPropertiesArray with sClassicPropertiesInfo[pOptionalSection]
+            end if
+            
          else
             put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray2
+            
             intersect tPropertiesArray with tPropertiesArray2
          end if
       else
@@ -347,6 +400,11 @@ private function __objectPropertiesShared pObjectTypeList
             put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray2
             
             union tPropertiesArray with tPropertiesArray2
+            
+            # Restrict to group, if present
+            if pOptionalSection is not empty then
+               intersect tPropertiesArray with sClassicPropertiesInfo[pOptionalSection]
+            end if
          else
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
             put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray3
@@ -3035,3 +3093,197 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
    # Now regenerate the built APIs
    revDocsAddAPIAndRegenerate tAPIJSON
 end revIDEInstallAPI
+
+#############
+# Properties API
+#############
+
+local sLockUpdates
+on revIDEPropertyLibraryInitialise
+   put false into sLockUpdates
+end revIDEPropertyLibraryInitialise
+
+## Register new listeners for objects
+on revIDEPropertyRegisterListenersForObjects pObjectList
+   repeat for each line tObject in pObjectList
+      if exists(tObject) then
+         _internal listen to tObject
+      end if
+   end repeat
+end revIDEPropertyRegisterListenersForObjects
+
+## Cancel all object listeners
+on revIDEPropertyCancelAllListeners
+   local tOldListeners
+   put the revObjectListeners into tOldListeners
+   repeat for each line tTarget in tOldListeners
+      _internal cancel listener for tTarget
+   end repeat
+end revIDEPropertyCancelAllListeners
+
+on propertyChanged pObject
+   if sLockUpdates is true then
+      put false into sLockUpdates
+      exit propertyChanged
+   end if
+   
+   revIDEMessageSend("idePropertyChanged" && pObject)
+end propertyChanged
+
+on revIDEHideProperty pProperty
+   
+end revIDEHideProperty
+
+on revIDEShowProperty pProperty
+   
+end revIDEShowProperty
+
+function revIDEPropertiesInfo pObjectList
+   return revIDEPropertiesInfoOfSection(pObjectList)
+end revIDEPropertiesInfo
+
+function revIDEPropertiesInfoOfSection pObjectList, pSection
+   repeat for each line tObject in pObjectList
+      if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
+   end repeat
+   
+   # Work out the type of the selected objects
+   local tObjectTypeList
+   put __objectTypes(pObjectList) into  tObjectTypeList
+   
+   # Get this list of all the properties to read for the given type list
+   local tSharedPropertiesA
+   put __objectPropertiesShared(tObjectTypeList, pSection) into tSharedPropertiesA
+   
+   return tSharedPropertiesA
+end revIDEPropertiesInfoOfSection
+
+on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
+   if pLockUpdates then
+      put true into sLockUpdates
+   end if
+   
+   repeat for each line tObject in pObjectList
+      set the pProperty of tObject to pValue
+   end repeat
+end revIDEPropertySet
+
+local sStoredPropsA
+on revIDEPropertyStore pObjectList, pProperty
+   put revIDEProperty(pObjectList, pProperty) into sStoredPropsA[pObjectList]
+end revIDEPropertyStore
+
+on revIDEPropertyRestore pObjectList, pProperty
+   if sStoredPropsA[pObjectList] is not empty then
+      put revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
+   end if
+end revIDEPropertyRestore
+
+private function __customPropInfo pObject
+   local tCustomPropSets, tCustomPropSetsA, tCustomKeys
+   put the custompropertysets of pObject into tCustomPropSets
+   repeat for each line tLine in tCustomPropSets
+      set the custompropertyset of pObject to tLine
+      put the customkeys of pObject into tCustomKeys
+      repeat for each line tKey in tCustomKeys
+         put true into tCustomPropSetsA[tLine][tKey]
+      end repeat
+   end repeat
+   return tCustomPropSetsA
+end __customPropInfo
+
+function revIDECustomPropertiesInfo pObjectList
+   local tFirst, tCustomPropsA
+   put true into tFirst
+   repeat for each line tObject in tObjectList
+      if tFirst then
+         put __customPropInfo(tObject) into tCustomPropsA
+         put false into tFirst
+         next repeat
+      end if
+      
+      union tCustomPropsA with __customPropInfo(tObject) recursively
+   end repeat
+   
+   return tCustomPropsA
+end revIDECustomPropertiesInfo
+
+on revIDECustomPropertySet pObjectList, pSet, pProperty, pValue
+   if pLockUpdates then
+      put true into sLockUpdates
+   end if
+   
+   repeat for each line tObject in pObjectList
+      set the pSet[pProperty] of tObject to pValue
+   end repeat
+end revIDECustomPropertySet
+
+function revIDECustomProperty pObjectList, pSet, pProperty
+   
+end revIDECustomProperty
+
+private on __populatePropertyArray pPropertyValues, @xPropertiesA
+   repeat for each line tPropertyName in the keys of pPropertyValues
+      if tPropertyName begins with "effective" then next repeat
+      if tPropertyValues["effective" && tPropertyName] is not empty then
+         put tPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][tObject]
+      end if
+      put tPropertyValues[tPropertyName] into xPropertiesA[tPropertyName]["value"][tObject]
+   end repeat
+end __populatePropertyArray
+
+private function __revIDEPropertiesOfObjectsWithList pObjectList, pPropertiesList, pSharedProperties
+   # Generate a list of the properties we want to retreive
+   local tResultA, tNewList
+   repeat for each line tLine in pPropertiesList
+      if pSharedProperties[tLine] is not empty then
+         put tLine & CR after tNewList
+      end if
+   end repeat
+   delete the last char of tNewList
+   
+   local tPropertyValues
+   repeat for each line tObject in pObjects 
+      dispatch function "__readPropertiesOfControl" to tObject with tNewList, tPropertyValues
+      __populatePropertyArray tPropertyValues, tResultA
+   end repeat
+   
+   return tResultA
+end __revIDEPropertiesOfObjectsWithList
+
+private function __revIDEPropertiesOfObjects pObjectList, pPropertyInfoA
+   # Generate a list of the properties we want to retreive
+   local tPropertyValues
+   repeat for each line tObject in pObjects 
+      dispatch function "__readPropertiesOfControl" to tObject with the keys of pPropertyInfoA, tPropertyValues
+      __populatePropertyArray tPropertyValues, pPropertyInfoA
+   end repeat
+   return pPropertyInfoA
+end __revIDEPropertiesOfObjects
+
+function revIDEPropertiesOfObjects pObjectList, pPropertyList
+   put revIDEPropertiesInfo(pObjectList) into tSharedProperties
+   # Error if we didn't get an array back
+   if tSharedProperties is not an array then
+      return tSharedProperties
+   end if
+   
+   return __revIDEPropertiesOfObjectsWithList pObjectList, pPropertyList, tSharedProperties
+end revIDEPropertiesOfObjects
+
+function revIDEPropertiesOfSection pObjectList, pSection
+   put revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
+   # Error if we didn't get an array back
+   if tSharedProperties is not an array then
+      return tSharedProperties
+   end if
+   
+   return __revIDEPropertiesOfObjects pObjectList, pPropertyList
+end revIDEPropertiesOfSection
+
+function revIDEProperty pObjectList, pProperty
+   return revIDEPropertiesOfObjectsWithList pObjectList, pProperty
+end revIDEProperty
+
+on revIDEPropertyReset pObjectList, pProperty
+end revIDEPropertyReset
