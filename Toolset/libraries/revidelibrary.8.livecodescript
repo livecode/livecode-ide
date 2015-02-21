@@ -280,16 +280,15 @@ private function __propertyDataFromInfoFile pFileName
    return tDataA
 end __propertyDataFromInfoFile
 
-private function  __propertyDataOfObjectFromFile pFile
+private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
    local tObjectData
    
    # Get the data from the file
    put URL ("file:" & pFile) into tObjectData
    
    # Parse the file into a structure array
-   local tObjectPropertiesA, tPropertyName, tCount
+   local tObjectPropertiesA, tPropertyName, tCountsA, tSection
    set the itemdel to tab
-   put 1 into tCount
    
    local tDataStart
    put false into tDataStart
@@ -307,11 +306,19 @@ private function  __propertyDataOfObjectFromFile pFile
       else if tDataStart is false then
          next repeat
       else
-         put tPropertyName into tObjectPropertiesA[tCount]["name"] 
-         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tCount]["default"] 
-         put item 3 of tLine into tObjectPropertiesA[tCount]["options"] 
+         put pPropInfoA[tPropertyName]["section"] into tSection
+         if tCountsA[tSection] is empty then
+            put 1 into tCountsA[tSection]
+         end if
+         
+         # At the moment, property_name == section
+         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]
+         put pPropInfoA[tPropertyName]["label"] into tObjectPropertiesA[tSection][tCountsA[tSection]]["label"]
+         put tPropertyName into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["property_name"] 
+         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["default"] 
+         put item 3 of tLine into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["options"] 
+         add 1 to tCountsA[tSection]
       end if
-      add 1 to tCount
    end repeat
    
    return tObjectPropertiesA
@@ -334,6 +341,7 @@ on __objectPropertiesRead
    local tObjectDefinitionsPath
    put revIDESpecialFolderPath("Object Property Definitions") into tObjectDefinitionsPath
    
+   local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
    
    set the defaultfolder to tObjectDefinitionsPath
@@ -351,20 +359,10 @@ on __objectPropertiesRead
       if the last item of tObjectType is "txt" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
       
-      put __propertyDataOfObjectFromFile(tObjectDefinitionsPath & slash & tFile) into tObjectDataA
+      put __propertyDataOfObjectFromFile(tObjectDefinitionsPath & slash & tFile, tPropertiesInfo) into tObjectDataA
       if tObjectDataA is empty then next repeat
       
-      local tPropertyName
-      put tObjectDataA["type"] into tObjectPropertiesA["type"]
-      repeat with x = 1 to the number of elements in tObjectDataA
-         put tObjectDataA[x]["name"] into tPropertyName
-         put tObjectDataA[x]["default"] into tObjectPropertiesA["properties"][tPropertyName]["default"]
-         put tObjectDataA[x]["options"] into tObjectPropertiesA["properties"][tPropertyName]["options"]
-         put x into tObjectPropertiesA["properties"][tPropertyName]["order"]
-         union tObjectPropertiesA["properties"][tPropertyName] with tPropertiesInfo[tPropertyName]
-      end repeat
-      
-      put tObjectPropertiesA into sClassicObjectProperties[tObjectType]
+      put tObjectDataA into sClassicObjectProperties[tObjectType]
       put empty into tObjectPropertiesA
    end repeat
    
@@ -383,14 +381,14 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       if tObjectType begins with "com.livecode.interface.classic" then
          # Classic control
          if x is 1 then
-            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray
+            put sClassicObjectProperties[tObjectType] into tPropertiesArray
             # Restrict to group, if present
             if pOptionalSection is not empty then
                intersect tPropertiesArray with sClassicPropertiesInfo[pOptionalSection]
             end if
             
          else
-            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray2
+            put sClassicObjectProperties[tObjectType] into tPropertiesArray2
             
             intersect tPropertiesArray with tPropertiesArray2
          end if
@@ -398,7 +396,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          # Widget
          if x is 1 then
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray2
+            put sClassicObjectProperties["com.livecode.interface.classic.widget"] into tPropertiesArray2
             
             union tPropertiesArray with tPropertiesArray2
             
@@ -408,7 +406,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
             end if
          else
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray3
+            put sClassicObjectProperties["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3
             
             intersect tPropertiesArray with tPropertiesArray2
@@ -3176,7 +3174,7 @@ end revIDEPropertyStore
 
 on revIDEPropertyRestore pObjectList, pProperty
    if sStoredPropsA[pObjectList] is not empty then
-      put revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
+    	revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
    end if
 end revIDEPropertyRestore
 
