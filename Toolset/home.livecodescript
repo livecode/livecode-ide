@@ -504,17 +504,21 @@ function revInternal__StackFiles
 		repeat for each line tFile in the files
 			if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
 			
+			put item 1 to -2 of tFile into tStackName
+			
 			local tVersion
 			put empty into tVersion
 			// AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
-			if the number of items in tFile is 3 then
-				put item 2 of tFile into tVersion
-				if tVersion > tIDEVersion then
-					next repeat
+			if the number of items in tFile > 2 then
+				get item -2 of tFile 
+				if it is a number then 
+					put it into tVersion
+					put item 1 to -3 of tFile into tStackName
+					if tVersion > tIDEVersion then
+						next repeat
+					end if
 				end if
 			end if
-			
-			put item 1 of tFile into tStackName
 			
 			if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
 			else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName

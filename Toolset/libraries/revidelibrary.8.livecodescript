@@ -390,7 +390,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          else
             put sClassicObjectProperties[tObjectType] into tPropertiesArray2
             
-            intersect tPropertiesArray with tPropertiesArray2
+            intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       else
          # Widget
@@ -409,7 +409,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
             put sClassicObjectProperties["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3
             
-            intersect tPropertiesArray with tPropertiesArray2
+            intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       end if
       add 1 to x

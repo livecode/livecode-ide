@@ -451,6 +451,16 @@ end __extensionUninstallUpdateCache
 # PRIVATE SHARED
 ##############################
 
+function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
+   local tNode
+   put revXMLMatchingNode(pXMLTree, "package", "metadata", "key", pProperty &"." & pElement, 1) into tNode
+   if tNode is not empty then
+      return revXMLNodeContents(pXMLTree, tNode)
+   end if
+   
+   return empty
+end __extensionFetchPropertyMetadata
+
 function __extensionProperties pTypeID
    # Get the internal cache ID
    local tIndex
@@ -466,14 +476,22 @@ function __extensionProperties pTypeID
    local tXMLTree, tProperties, tExtensionData
    put revXMLCreateTreeFromFile(tManifestPath,true,true,false) into tXMLTree
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   repeat with x = 1 to the number of lines in tProperties
-      local tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"name") into tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"name") into tExtensionData[tName]["label"]
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"get") into tExtensionData[tName]["type"]
+   repeat for each line tProperty in tProperties
+      local tName, tSection
+      
+      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "section")  into tSection
+      if tSection is empty then
+         put "Basic" into tSection
+      end if
+      
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tExtensionData[tName]["label"]
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tExtensionData[tName]["type"]
+      
       //put "number" into tExtensionData[tName]["type"]
       put 100 into tExtensionData[tName]["order"]
-      put "basic" into tExtensionData[tName]["group"]
+      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tExtensionData[tName]["section"]
+      
       put empty into tExtensionData[tName]["default"]
       put true into tExtensionData[tName]["user_visible"]
       put empty into tExtensionData[tName]["options"]
