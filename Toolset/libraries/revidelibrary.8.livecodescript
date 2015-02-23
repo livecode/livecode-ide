@@ -2836,22 +2836,23 @@ command revIDEOpenPalette pPaletteName
    
    switch pPaletteName
       case "inspector"
-         --palette stack "revPropertyInspectorView"
-         put revIDEPropertyInspector() into tExistingPalette
-         if tExistingPalette is not empty then
-            palette stack tExistingPalette
-         else
-            // Create new unlocked palette and open
-            put revIDENextPropertyInspectorID() into tPaletteID
-            put "revIDEPropertyInspector" & "_" & tPaletteID into tPalette           
-            
-            lock messages
-            clone invisible stack "revIDEPropertyInspectorView" as tPalette
-            unlock messages
-            set the behavior of stack tPalette to revIDEFrameBehavior()
-            palette stack tPalette
-            show stack tPalette
-         end if
+         palette stack "propertyInspectorBen"
+         
+         --         put revIDEPropertyInspector() into tExistingPalette
+         --         if tExistingPalette is not empty then
+         --            palette stack tExistingPalette
+         --         else
+         --            // Create new unlocked palette and open
+         --            put revIDENextPropertyInspectorID() into tPaletteID
+         --            put "revIDEPropertyInspector" & "_" & tPaletteID into tPalette           
+         
+         --            lock messages
+         --            clone invisible stack "revIDEPropertyInspectorView" as tPalette
+         --            unlock messages
+         --            set the behavior of stack tPalette to revIDEFrameBehavior()
+         --            palette stack tPalette
+         --            show stack tPalette
+         --         end if
          break
       case "project browser"
          modeless stack "revIDEProjectBrowser"
@@ -3192,7 +3193,7 @@ private function __customPropInfo pObject
 end __customPropInfo
 
 function revIDECustomPropertiesInfo pObjectList
-   local tFirst, tCustomPropsA
+   local tFirst, tCustomPropsA, tObjectList
    put true into tFirst
    repeat for each line tObject in tObjectList
       if tFirst then
@@ -3208,9 +3209,9 @@ function revIDECustomPropertiesInfo pObjectList
 end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pSet, pProperty, pValue
-   if pLockUpdates then
-      put true into sLockUpdates
-   end if
+   --if pLockUpdates then
+      --put true into sLockUpdates
+   --end if
    
    repeat for each line tObject in pObjectList
       set the pSet[pProperty] of tObject to pValue
@@ -3221,13 +3222,14 @@ function revIDECustomProperty pObjectList, pSet, pProperty
    
 end revIDECustomProperty
 
-private on __populatePropertyArray pPropertyValues, @xPropertiesA
+private on __populatePropertyArray pPropertyValues, @xPropertiesA 
+   local tObject
    repeat for each line tPropertyName in the keys of pPropertyValues
       if tPropertyName begins with "effective" then next repeat
-      if tPropertyValues["effective" && tPropertyName] is not empty then
-         put tPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][tObject]
+      if pPropertyValues["effective" && tPropertyName] is not empty then
+         put pPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][tObject]
       end if
-      put tPropertyValues[tPropertyName] into xPropertiesA[tPropertyName]["value"][tObject]
+      put pPropertyValues[tPropertyName] into xPropertiesA[tPropertyName]["value"][tObject]
    end repeat
 end __populatePropertyArray
 
@@ -3242,7 +3244,7 @@ private function __revIDEPropertiesOfObjectsWithList pObjectList, pPropertiesLis
    delete the last char of tNewList
    
    local tPropertyValues
-   repeat for each line tObject in pObjects 
+   repeat for each line tObject in pObjectList 
       dispatch function "__readPropertiesOfControl" to tObject with tNewList, tPropertyValues
       __populatePropertyArray tPropertyValues, tResultA
    end repeat
@@ -3253,7 +3255,7 @@ end __revIDEPropertiesOfObjectsWithList
 private function __revIDEPropertiesOfObjects pObjectList, pPropertyInfoA
    # Generate a list of the properties we want to retreive
    local tPropertyValues
-   repeat for each line tObject in pObjects 
+   repeat for each line tObject in pObjectList 
       dispatch function "__readPropertiesOfControl" to tObject with the keys of pPropertyInfoA, tPropertyValues
       __populatePropertyArray tPropertyValues, pPropertyInfoA
    end repeat
@@ -3261,27 +3263,29 @@ private function __revIDEPropertiesOfObjects pObjectList, pPropertyInfoA
 end __revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfObjects pObjectList, pPropertyList
+   local tSharedProperties
    put revIDEPropertiesInfo(pObjectList) into tSharedProperties
    # Error if we didn't get an array back
    if tSharedProperties is not an array then
       return tSharedProperties
    end if
    
-   return __revIDEPropertiesOfObjectsWithList pObjectList, pPropertyList, tSharedProperties
+   return __revIDEPropertiesOfObjectsWithList(pObjectList, pPropertyList, tSharedProperties)
 end revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfSection pObjectList, pSection
+   local tSharedProperties
    put revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
    # Error if we didn't get an array back
    if tSharedProperties is not an array then
       return tSharedProperties
    end if
    
-   return __revIDEPropertiesOfObjects pObjectList, pPropertyList
+   return __revIDEPropertiesOfObjects(pObjectList, tSharedProperties)
 end revIDEPropertiesOfSection
 
 function revIDEProperty pObjectList, pProperty
-   return revIDEPropertiesOfObjectsWithList pObjectList, pProperty
+   return revIDEPropertiesOfObjectsWithList(pObjectList, pProperty)
 end revIDEProperty
 
 on revIDEPropertyReset pObjectList, pProperty
