@@ -3289,3 +3289,38 @@ end revIDEProperty
 
 on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
+
+function revIDEFontawesomeNameToCodepoint pName
+   switch pName
+      case "basic"
+         return "f015"
+         break
+      case "color"
+      case "colour"
+      case "colors"
+      case "colours"
+         return "f1fc"
+         break
+      case "image"
+      case "icons"
+         return "f03e"
+         break
+      case "font"
+      case "text"
+         return "f031"
+         break
+      case "position"
+         return "f047"
+         break
+      case "effects"
+      case "effect"
+         return "f0d0"
+         break
+      case "custom"
+         return "f1c0"
+         break
+      default
+         return "f00d"
+         break
+   end switch
+end revIDEFontawesomeNameToCodepoint
