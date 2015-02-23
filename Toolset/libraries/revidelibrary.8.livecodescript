@@ -3222,14 +3222,13 @@ function revIDECustomProperty pObjectList, pSet, pProperty
    
 end revIDECustomProperty
 
-private on __populatePropertyArray pPropertyValues, @xPropertiesA 
-   local tObject
+private on __populatePropertyArray pObject, pPropertyValues, @xPropertiesA 
    repeat for each line tPropertyName in the keys of pPropertyValues
       if tPropertyName begins with "effective" then next repeat
       if pPropertyValues["effective" && tPropertyName] is not empty then
-         put pPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][tObject]
+         put pPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][pObject]
       end if
-      put pPropertyValues[tPropertyName] into xPropertiesA[tPropertyName]["value"][tObject]
+      put pPropertyValues[tPropertyName] into xPropertiesA[tPropertyName]["value"][pObject]
    end repeat
 end __populatePropertyArray
 
@@ -3246,7 +3245,7 @@ private function __revIDEPropertiesOfObjectsWithList pObjectList, pPropertiesLis
    local tPropertyValues
    repeat for each line tObject in pObjectList 
       dispatch function "__readPropertiesOfControl" to tObject with tNewList, tPropertyValues
-      __populatePropertyArray tPropertyValues, tResultA
+      __populatePropertyArray tObject, tPropertyValues, tResultA
    end repeat
    
    return tResultA
@@ -3257,7 +3256,7 @@ private function __revIDEPropertiesOfObjects pObjectList, pPropertyInfoA
    local tPropertyValues
    repeat for each line tObject in pObjectList 
       dispatch function "__readPropertiesOfControl" to tObject with the keys of pPropertyInfoA, tPropertyValues
-      __populatePropertyArray tPropertyValues, pPropertyInfoA
+      __populatePropertyArray tObject, tPropertyValues, pPropertyInfoA
    end repeat
    return pPropertyInfoA
 end __revIDEPropertiesOfObjects
