@@ -477,7 +477,7 @@ function __extensionProperties pTypeID
    put revXMLCreateTreeFromFile(tManifestPath,true,true,false) into tXMLTree
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
    repeat for each line tProperty in tProperties
-      local tName, tSection
+      local tName, tLabel, tSection
       
       put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "section")  into tSection
       if tSection is empty then
@@ -485,18 +485,24 @@ function __extensionProperties pTypeID
       end if
       
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tExtensionData[tName]["label"]
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tExtensionData[tName]["type"]
+      
+      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "label")  into tLabel
+      if tLabel is empty then
+         put tName into tLabel
+      end if
+      
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tExtensionData[tSection][tLabel][tName]["type"]
       
       //put "number" into tExtensionData[tName]["type"]
-      put 100 into tExtensionData[tName]["order"]
-      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tExtensionData[tName]["section"]
+      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tExtensionData[tSection][tLabel][tName]["editor"]
       
-      put empty into tExtensionData[tName]["default"]
-      put true into tExtensionData[tName]["user_visible"]
-      put empty into tExtensionData[tName]["options"]
-      put empty into tExtensionData[tName]["related"]
-      put false into tExtensionData[tName]["read_only"]
+      put "NaN" into tExtensionData[tSection][tLabel]["order"]
+      put empty into tExtensionData[tSection][tLabel][tName]["default"]
+      put true into tExtensionData[tSection][tLabel][tName]["user_visible"]
+      put empty into tExtensionData[tSection][tLabel][tName]["options"]
+      put empty into tExtensionData[tSection][tLabel][tName]["related"]
+      put false into tExtensionData[tSection][tLabel][tName]["read_only"]
+      put 1 into tExtensionData[tSection][tLabel][tName]["order"]
    end repeat
    
    revXMLDeleteTree tXMLTree

@@ -290,7 +290,7 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
    local tObjectPropertiesA, tPropertyName, tCountsA, tSection
    set the itemdel to tab
    
-   local tDataStart
+   local tDataStart, tDataA
    put false into tDataStart
    repeat for each line tLine in tObjectData
       if tLine is empty then next repeat
@@ -298,7 +298,7 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
       put item 1 of tLine into tPropertyName
       
       if tPropertyName is "type" then
-         put item 2 of tLine into tObjectPropertiesA["type"]
+         put item 2 of tLine into tDataA["type"]
          next repeat
       else if tPropertyName begins with "-----" then
          put true into tDataStart
@@ -311,17 +311,19 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
             put 1 into tCountsA[tSection]
          end if
          
-         # At the moment, property_name == section
-         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]
-         put pPropInfoA[tPropertyName]["label"] into tObjectPropertiesA[tSection][tCountsA[tSection]]["label"]
-         put tPropertyName into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["property_name"] 
-         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["default"] 
-         put item 3 of tLine into tObjectPropertiesA[tSection][tCountsA[tSection]]["proplist"][1]["options"] 
+         # At the moment, property_label == group
+         local tGroupLabel
+         put pPropInfoA[tPropertyName]["label"] into tGroupLabel
+         put tCountsA[tSection] into tObjectPropertiesA[tSection][tGroupLabel]["order"]
+         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["default"] 
+         put 1 into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["order"] 
+         put item 3 of tLine into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["options"] 
          add 1 to tCountsA[tSection]
       end if
    end repeat
    
-   return tObjectPropertiesA
+   put tObjectPropertiesA into tDataA["properties"]
+   return tDataA
 end __propertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
@@ -343,7 +345,6 @@ on __objectPropertiesRead
    
    local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
-   
    set the defaultfolder to tObjectDefinitionsPath
    
    # Read in each file and build an array
@@ -374,21 +375,72 @@ on __objectPropertiesRead
    revIDERestoreDefaultFolder
 end __objectPropertiesRead
 
+private function __orderPropGroup pGroupA
+   local tSparseOrderedA
+   repeat for each key tKey in pGroupA
+      put pGroupA[tKey] into tSparseOrderedA[pGroupA[tKey]["order"]]
+      put tKey into tSparseOrderedA[pGroupA[tKey]["order"]]["property_name"]
+   end repeat
+   
+   local tKeys, tCount, tOrderedA
+   put 1 into tCount
+   put the keys of tSparseOrderedA into tKeys
+   sort tKeys ascending numeric
+   repeat for each line tNumber in tKeys
+      put tSparseOrderedA[tNumber] into tOrderedA[tCount]
+      add 1 to tCount
+   end repeat
+   
+   return tOrderedA
+end __orderPropGroup
+
+private function __orderPropSection pSectionA
+   local tSparseOrderedA
+   repeat for each key tKey in pSectionA
+      put pSectionA[tKey] into tSparseOrderedA[pSectionA[tKey]["order"]]
+      put tKey into tSparseOrderedA[pSectionA[tKey]["order"]]["label"]
+   end repeat
+   
+   local tKeys, tCount, tOrderedA
+   put 1 into tCount
+   put the keys of tSparseOrderedA into tKeys
+   sort tKeys ascending numeric
+   repeat for each line tNumber in tKeys
+      put tSparseOrderedA[tNumber]["label"] into tOrderedA[tCount]["label"]
+      put __orderPropGroup(tSparseOrderedA[tNumber]) into tOrderedA[tCount]["proplist"]
+      add 1 to tCount
+   end repeat
+   
+   return tOrderedA
+end __orderPropSection
+
+private function __orderPropertiesArray pPropsA
+   local tOrderedPropsA,x,tSections
+   put revIDEPropertySections() into tSections
+   
+   repeat with x = 1 to the number of items in tSections
+      put __orderPropSection(pPropsA[item x of tSections]) into tOrderedPropsA[x]
+      put item x of tSections into tOrderedPropsA[x]["label"]
+   end repeat
+   return tOrderedPropsA
+end __orderPropertiesArray
+
 private function __objectPropertiesShared pObjectTypeList, pOptionalSection
-   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x
+   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps
    put 1 into x
    repeat for each line tObjectType in pObjectTypeList
       if tObjectType begins with "com.livecode.interface.classic" then
          # Classic control
          if x is 1 then
-            put sClassicObjectProperties[tObjectType] into tPropertiesArray
+            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray
             # Restrict to group, if present
             if pOptionalSection is not empty then
-               intersect tPropertiesArray with sClassicPropertiesInfo[pOptionalSection]
+               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+               put tSectionProps into tPropertiesArray
             end if
             
          else
-            put sClassicObjectProperties[tObjectType] into tPropertiesArray2
+            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray2
             
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
@@ -396,17 +448,18 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          # Widget
          if x is 1 then
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"] into tPropertiesArray2
+            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray2
             
             union tPropertiesArray with tPropertiesArray2
             
             # Restrict to group, if present
             if pOptionalSection is not empty then
-               intersect tPropertiesArray with sClassicPropertiesInfo[pOptionalSection]
+               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+               put tSectionProps into tPropertiesArray
             end if
          else
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"] into tPropertiesArray3
+            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3
             
             intersect tPropertiesArray with tPropertiesArray2 recursively
@@ -415,7 +468,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       add 1 to x
    end repeat
    
-   return tPropertiesArray
+   return __orderPropertiesArray(tPropertiesArray)
 end __objectPropertiesShared
 
 private function __objectTypes pObjectIDs
@@ -3289,6 +3342,10 @@ end revIDEProperty
 
 on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
+
+function revIDEPropertySections
+   return "Basic"
+end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
    switch pName
