@@ -178,13 +178,81 @@ function revIDEDeveloperExtension pFolder
    return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
 end revIDEDeveloperExtension
 
+private function __revIDEDeveloperExtensionFetchFolderDetails pFolder
+   local tDetailsA
+   
+   # Check timestamps to see if API  is out of date.
+   local tLastGenerated, tLastModified
+   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
+   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
+   local tAPI
+   if tLastGenerated is empty or tLastModified > tLastGenerated then
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPI 
+   end if
+   if tAPI is not empty then
+      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+   else
+      local tData
+      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+      put textDecode(tData, "utf-8") into tAPI
+   end if
+   
+   if tAPI is not empty then
+      local tLibraryA
+      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      put tLibraryA["doc"] into tDetailsA["api"]
+   else
+      put empty into tDetailsA["api"]
+   end if
+   
+   if there is a file (pFolder & slash & "icon.png") then
+      put (pFolder & slash & "icon.png") into tDetailsA["icon"]
+   else
+      put empty into tDetailsA["icon"]
+   end if
+   
+   if there is a file (pFolder & slash & "icon@extra-high.png") then
+      put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+   else
+      put empty into tDetailsA["retina_icon"]
+   end if
+   
+   if there is a file (pFolder & slash & "guide.md") then
+      local tGuide
+      put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
+      put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
+   else
+      put empty into tDetailsA["guide"]
+   end if
+   
+   // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
+   local tResourceFolder, tResources
+   put pFolder & slash & "resources" into tResourceFolder
+   if there is a folder tResourceFolder then
+      set the defaultfolder to tResourceFolder
+      local tResource
+      repeat for each line tResource in the files
+         if tResource begins with "." then next repeat
+         put tResource & CR after tResources
+      end repeat
+      delete the last char of tResources
+      put tResources into tDetailsA["resources"]
+   end if
+   
+   return tDetailsA
+end __revIDEDeveloperExtensionFetchFolderDetails
+
 private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tDetailsA
+   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder) into tDetailsA
+   
    put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
       __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
       # The stored info is up to date.
       if sExtensionDetailsA[pFolder] is not empty then
+         union tDetailsA with sExtensionDetailsA[pFolder]
+         put tDetailsA into sExtensionDetailsA[pFolder]
          return sExtensionDetailsA[pFolder]
       end if
       # The compiled module and manifest are up to date, but we haven't fetched the information yet.
@@ -207,44 +275,9 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
       return tDetailsA
    end if
    
-   # Check timestamps to see if API  is out of date.
-   local tLastGenerated, tLastModified
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   local tAPI
-   if tLastGenerated is empty or tLastModified > tLastGenerated then
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPI 
-   end if
-   if tAPI is not empty then
-      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
-   else
-      local tData
-      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
-      put textDecode(tData, "utf-8") into tAPI
-   end if
-   
-   if tAPI is not empty then
-      local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
-      put tLibraryA["doc"] into tDetailsA["api"]
-   end if
-   
-   if there is a file (pFolder & slash & "icon.png") then
-      put (pFolder & slash & "icon.png") into tDetailsA["icon"]
-   end if
-   
-   if there is a file (pFolder & slash & "icon@extra-high.png") then
-      put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
-   end if
-   
-   if there is a file (pFolder & slash & "guide.md") then
-      local tGuide
-      put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
-      put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
-   end if
-   
    put tDetailsA into sExtensionDetailsA[pFolder]
-   return tDetailsA
+   return sExtensionDetailsA[pFolder]
+   
 end __revIDEDeveloperExtensionDetailsFromFile
 
 on revIDEDeveloperExtensionAddResourceFile pExtensionFolder, pResourcePath, pType
