@@ -280,7 +280,8 @@ private function __propertyDataFromInfoFile pFileName
    return tDataA
 end __propertyDataFromInfoFile
 
-private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
+local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
+private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    local tObjectData
    
    # Get the data from the file
@@ -298,7 +299,7 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
       put item 1 of tLine into tPropertyName
       
       if tPropertyName is "type" then
-         put item 2 of tLine into tDataA["type"]
+         put item 2 of tLine into sClassicObjectProperties[pObjectType]["type"]
          next repeat
       else if tPropertyName begins with "-----" then
          put true into tDataStart
@@ -306,6 +307,7 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
       else if tDataStart is false then
          next repeat
       else
+         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
          put pPropInfoA[tPropertyName]["section"] into tSection
          if tCountsA[tSection] is empty then
             put 1 into tCountsA[tSection]
@@ -321,27 +323,27 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
          put tCountsA[tSection] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["order"]
          put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
          put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
+         put __unescapeString(item 2 of tLine) into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          put 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
          put item 3 of tLine into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"] 
          add 1 to tCountsA[tSection]
       end if
    end repeat
    
-   put tObjectPropertiesA into tDataA["properties"]
-   return tDataA
-end __propertyDataOfObjectFromFile
+   put tObjectPropertiesA into sClassicObjectPropertiesInfo[pObjectType]
+end __setPropertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
    return "propertyInfo.txt"
 end __propertyInfoFilename
 
 # Reads in the basic property data for classic controls
-local sClassicObjectProperties, sClassicPropertiesInfo
 on __objectPropertiesRead
    --put "reading object properties" after msg
    revIDEStoreDefaultFolder
    
    put empty into sClassicObjectProperties
+   put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
    
    # Set to folder to the path where the object definition files for classic controls are stored
@@ -353,7 +355,7 @@ on __objectPropertiesRead
    set the defaultfolder to tObjectDefinitionsPath
    
    # Read in each file and build an array
-   local tObjectDataA, tObjectPropertiesA, tObjectType
+   local tObjectType
    
    repeat for each line tFile in the files
       if tFile is __propertyInfoFilename() then next repeat
@@ -365,11 +367,7 @@ on __objectPropertiesRead
       if the last item of tObjectType is "txt" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
       
-      put __propertyDataOfObjectFromFile(tObjectDefinitionsPath & slash & tFile, tPropertiesInfo) into tObjectDataA
-      if tObjectDataA is empty then next repeat
-      
-      put tObjectDataA into sClassicObjectProperties[tObjectType]
-      put empty into tObjectPropertiesA
+      __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
    
    # Store classic properties info by section
@@ -437,7 +435,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       if tObjectType begins with "com.livecode.interface.classic" then
          # Classic control
          if x is 1 then
-            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray
+            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray
             # Restrict to group, if present
             if pOptionalSection is not empty then
                put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
@@ -445,7 +443,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
             end if
             
          else
-            put sClassicObjectProperties[tObjectType]["properties"] into tPropertiesArray2
+            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray2
             
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
@@ -453,7 +451,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          # Widget
          if x is 1 then
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray2
+            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
             
             union tPropertiesArray with tPropertiesArray2
             
@@ -464,7 +462,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
             end if
          else
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
-            put sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"] into tPropertiesArray3
+            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3
             
             intersect tPropertiesArray with tPropertiesArray2 recursively
@@ -2186,23 +2184,25 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       local tObjectType
       put sClassicObjectProperties[pObjectTypeID]["type"] into tObjectType
       
-      if tObjectType is empty then return __revIDEError("Invalid classic control typoe ID: " && pTarget)
+      if tObjectType is empty then return __revIDEError("Invalid classic control type ID: " && pTarget)
       
       # A classic control
       local tCreatedControlID
       do "create" && tObjectType
       put the long ID of the last control into tCreatedControlID
       
+      local tPropInfoA
       # Set all the properties to their default
-      repeat for each line tProperty in the keys of sClassicObjectProperties[pObjectTypeID]["properties"]
-         if sClassicObjectProperties[pObjectTypeID]["properties"][tProperty]["default"] is "no_default" then next repeat
-         if sClassicObjectProperties[pObjectTypeID]["properties"][tProperty]["read_only"] is true then next repeat
-         revIDESetPropertyOfObject tCreatedControlID, tProperty, sClassicObjectProperties[pObjectTypeID]["properties"][tProperty]["default"]
+      repeat for each key tProperty in sClassicObjectProperties[pObjectTypeID]["properties"]
+         put sClassicObjectProperties[pObjectTypeID]["properties"][tProperty] into tPropInfoA
+         if tPropInfoA["default"] is "no_default" then next repeat
+         if tPropInfoA["read_only"] is true then next repeat
+         revIDESetPropertyOfObject tCreatedControlID, tProperty, tPropInfoA["default"]
       end repeat
    else
       # Not a classic control
       try
-        create widget as pObjectTypeID
+         create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
       catch tError
          return false
