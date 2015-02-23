@@ -314,10 +314,15 @@ private function  __propertyDataOfObjectFromFile pFile, pPropInfoA
          # At the moment, property_label == group
          local tGroupLabel
          put pPropInfoA[tPropertyName]["label"] into tGroupLabel
-         put tCountsA[tSection] into tObjectPropertiesA[tSection][tGroupLabel]["order"]
-         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["default"] 
-         put 1 into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["order"] 
-         put item 3 of tLine into tObjectPropertiesA[tSection][tGroupLabel][tPropertyName]["options"] 
+         if tGroupLabel is empty then
+            put tPropertyName into tGroupLabel
+         end if
+         
+         put tCountsA[tSection] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["order"]
+         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
+         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
+         put 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
+         put item 3 of tLine into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"] 
          add 1 to tCountsA[tSection]
       end if
    end repeat
@@ -377,9 +382,9 @@ end __objectPropertiesRead
 
 private function __orderPropGroup pGroupA
    local tSparseOrderedA
-   repeat for each key tKey in pGroupA
-      put pGroupA[tKey] into tSparseOrderedA[pGroupA[tKey]["order"]]
-      put tKey into tSparseOrderedA[pGroupA[tKey]["order"]]["property_name"]
+   repeat for each key tKey in pGroupA["proplist"]
+      put pGroupA["proplist"][tKey] into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]
+      put tKey into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]["property_name"]
    end repeat
    
    local tKeys, tCount, tOrderedA
@@ -396,9 +401,9 @@ end __orderPropGroup
 
 private function __orderPropSection pSectionA
    local tSparseOrderedA
-   repeat for each key tKey in pSectionA
-      put pSectionA[tKey] into tSparseOrderedA[pSectionA[tKey]["order"]]
-      put tKey into tSparseOrderedA[pSectionA[tKey]["order"]]["label"]
+   repeat for each key tKey in pSectionA["grouplist"]
+      put pSectionA["grouplist"][tKey] into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]
+      put tKey into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]["label"]
    end repeat
    
    local tKeys, tCount, tOrderedA
@@ -419,7 +424,7 @@ private function __orderPropertiesArray pPropsA
    put revIDEPropertySections() into tSections
    
    repeat with x = 1 to the number of items in tSections
-      put __orderPropSection(pPropsA[item x of tSections]) into tOrderedPropsA[x]
+      put __orderPropSection(pPropsA[item x of tSections]) into tOrderedPropsA[x]["grouplist"]
       put item x of tSections into tOrderedPropsA[x]["label"]
    end repeat
    return tOrderedPropsA
@@ -468,7 +473,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       add 1 to x
    end repeat
    
-   return __orderPropertiesArray(tPropertiesArray)
+   return tPropertiesArray
 end __objectPropertiesShared
 
 private function __objectTypes pObjectIDs
@@ -3207,6 +3212,9 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    # Get this list of all the properties to read for the given type list
    local tSharedPropertiesA
    put __objectPropertiesShared(tObjectTypeList, pSection) into tSharedPropertiesA
+   
+   # Return ordered list
+   return __orderPropertiesArray(tSharedPropertiesA)
    
    return tSharedPropertiesA
 end revIDEPropertiesInfoOfSection
