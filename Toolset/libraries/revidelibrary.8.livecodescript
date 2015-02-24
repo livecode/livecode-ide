@@ -274,8 +274,7 @@ private function __propertyDataFromInfoFile pFileName
       put item 4 of tLine into tDataA[tPropName]["editor"]
       put item 5 of tLine into tDataA[tPropName]["user_visible"]
       put item 6 of tLine into tDataA[tPropName]["read_only"]
-      put item 7 of tLine into tDataA[tPropName]["related"]
-      put item 8 of tLine into tDataA[tPropName]["array_map"]
+      put item 7 of tLine into tDataA[tPropName]["group"]
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
@@ -315,6 +314,9 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
+         if tGroupLabel is empty then
+            put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+         end if
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["label"] into tGroupLabel
          end if
@@ -902,14 +904,9 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
       end repeat
    end repeat
    
-   local tDataA, tArrayMap
+   local tDataA
    repeat for each key tKey in tPropMappingA
-      put pGroupsA[tPropMappingA[tKey]][tKey]["array_map"] into tArrayMap
-      if tArrayMap is not empty then
-         __fetchPropertyOfControl tKey & tArrayMap, tDataA
-      else
-         __fetchPropertyOfControl tKey, tDataA
-      end if
+      __fetchPropertyOfControl tKey, tDataA
    end repeat
    
    local tValue, tEffective
@@ -981,25 +978,6 @@ private on __fetchPropertyOfControl pProp, @pData
             break
       end switch
       put the short name of the target into pData["name"]
-   catch tError 
-   end try
-   
-   ## Temporary solution for array props
-   local tProp, tPropertyName, tPropertyList, tSubPropName
-   try
-      if pProp contains "{" then
-         set the itemDel to "{"
-         put word 1 to -1 of item 1 of pProp into tProp
-         put pProp into tPropertyName
-         put item 2 of pProp into tPropertyList
-         if char 1 of tPropertyList is "{" then delete char 1 of tPropertyList
-         if char -1 of tPropertyList is "}" then delete char -1 of tPropertyList
-         set the itemDel to comma
-         repeat for each item tWord in tPropertyList
-            put tProp & "[" & quote & tWord & quote & "]" into tSubPropName
-            put the tSubPropName of the target into pData[tProp]["value"][tWord]["value"]
-         end repeat
-      end if
    catch tError 
    end try
    
