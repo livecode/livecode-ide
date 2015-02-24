@@ -421,9 +421,13 @@ private function __orderPropArray pPropsA
    local tOrderedPropsA,x,tSections
    put revIDEPropertySections() into tSections
    
-   repeat with x = 1 to the number of items in tSections
-      put __orderPropSection(pPropsA[item x of tSections]) into tOrderedPropsA[x]["grouplist"]
-      put item x of tSections into tOrderedPropsA[x]["label"]
+   local tCount
+   put 1 into tCount
+   repeat for each item tSection in tSections
+      if pPropsA[tSection] is empty then next repeat
+      put __orderPropSection(pPropsA[tSection]) into tOrderedPropsA[tCount]["grouplist"]
+      put tSection into tOrderedPropsA[tCount]["label"]
+      add 1 to tCount
    end repeat
    return tOrderedPropsA
 end __orderPropArray
