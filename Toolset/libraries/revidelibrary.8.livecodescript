@@ -23,7 +23,7 @@ private on __loadExtensions
    
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
-   
+    
    revIDEStoreDefaultFolder
    
    ## Load installed extensions
@@ -370,10 +370,7 @@ on __objectPropertiesRead
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
    
-   # Store classic properties info by section
-   repeat for each key tKey in tPropertiesInfo
-      put tPropertiesInfo[tKey] into sClassicPropertiesInfo[tPropertiesInfo[tKey]["section"]][tKey]
-   end repeat
+   put tPropertiesInfo into sClassicPropertiesInfo
    
    revIDERestoreDefaultFolder
 end __objectPropertiesRead
@@ -480,6 +477,14 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       return tPropertiesArray
    end if
 end __objectPropertiesShared
+
+function revIDEPropertyInfo pPropName
+   return sClassicPropertiesInfo[pPropName]
+end revIDEPropertyInfo
+
+function revIDEObjectPropertyInfo pObjectType, pPropName
+   return sClassicObjectPropertiesInfo[pObjectType][pPropName]
+end revIDEObjectPropertyInfo
 
 private function __objectTypes pObjectIDs
    local tObjectTypeList, tObjectType
@@ -874,14 +879,25 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
          put tGroup into tPropMappingA[tProp]
       end repeat
    end repeat
- 
+   
    local tDataA
    repeat for each key tKey in tPropMappingA
       __fetchPropertyOfControl tKey, tDataA
    end repeat
    
+   local tValue, tEffective
    repeat for each key tKey in tDataA
-      put tDataA[tKey] into pDataA[tPropMappingA[tKey]][tKey]
+      if tKey begins with "effective" then next repeat
+      put false into tEffective
+      put tDataA[tKey] into tValue
+      put tPropMappingA[tKey] into tGroup
+      if tValue is empty and tDataA["effective" && tKey] is not empty then
+         put tDataA["effective" && tKey] into tValue
+         put true into tEffective
+      end if
+      put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey] 
+      put tValue into pDataA[tGroup][tKey]["value"]
+      put tEffective into pDataA[tGroup][tKey]["effective"]
    end repeat
 end __readGroupedPropertiesOfControl
 

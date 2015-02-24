@@ -491,10 +491,18 @@ function __extensionProperties pTypeID
          put tName into tLabel
       end if
       
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tExtensionData[tSection][tLabel][tName]["type"]
+      local tType
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
+      put tType into tExtensionData[tSection][tLabel][tName]["type"]
+      
       
       //put "number" into tExtensionData[tName]["type"]
-      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tExtensionData[tSection][tLabel][tName]["editor"]
+      local tEditor
+      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tEditor
+      if tEditor is empty then 
+         put "com.livecode.pi." & tType into tEditor
+      end if
+      put tEditor into tExtensionData[tSection][tLabel][tName]["editor"]
       
       put "NaN" into tExtensionData[tSection][tLabel]["order"]
       put empty into tExtensionData[tSection][tLabel][tName]["default"]
