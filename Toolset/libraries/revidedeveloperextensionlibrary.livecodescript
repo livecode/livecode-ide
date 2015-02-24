@@ -178,35 +178,8 @@ function revIDEDeveloperExtension pFolder
    return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
 end revIDEDeveloperExtension
 
-private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
+private function __revIDEDeveloperExtensionFetchFolderDetails pFolder
    local tDetailsA
-   if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
-      __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
-      # The stored info is up to date.
-      if sExtensionDetailsA[pFolder] is not empty then
-         return sExtensionDetailsA[pFolder]
-      end if
-      # The compiled module and manifest are up to date, but we haven't fetched the information yet.
-   else
-      # The compiled module or manifest is not up to date, so compile.
-      __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
-      __revIDEDeveloperCompileModule pFile, pFolder
-      
-      if the result is not empty then
-         # This may be better as a warning, and try to parse info direct from the file.
-         __revIDEDeveloperExtensionSendError the result
-         return empty
-      end if
-   end if
-   
-   __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
-   if the result is not empty then
-      __revIDEDeveloperExtensionSendError the result
-      return empty
-   end if
-   
-   put pFile into tDetailsA["file"]
    
    # Check timestamps to see if API  is out of date.
    local tLastGenerated, tLastModified
@@ -228,24 +201,83 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
       local tLibraryA
       put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
+   else
+      put empty into tDetailsA["api"]
    end if
    
    if there is a file (pFolder & slash & "icon.png") then
       put (pFolder & slash & "icon.png") into tDetailsA["icon"]
+   else
+      put empty into tDetailsA["icon"]
    end if
    
    if there is a file (pFolder & slash & "icon@extra-high.png") then
       put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+   else
+      put empty into tDetailsA["retina_icon"]
    end if
    
    if there is a file (pFolder & slash & "guide.md") then
       local tGuide
       put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
       put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
+   else
+      put empty into tDetailsA["guide"]
+   end if
+   
+   // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
+   local tResourceFolder, tResources
+   put pFolder & slash & "resources" into tResourceFolder
+   if there is a folder tResourceFolder then
+      set the defaultfolder to tResourceFolder
+      local tResource
+      repeat for each line tResource in the files
+         if tResource begins with "." then next repeat
+         put tResource & CR after tResources
+      end repeat
+      delete the last char of tResources
+      put tResources into tDetailsA["resources"]
+   end if
+   
+   return tDetailsA
+end __revIDEDeveloperExtensionFetchFolderDetails
+
+private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
+   local tDetailsA
+   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder) into tDetailsA
+   
+   put pFile into tDetailsA["file"]
+   if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
+      __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
+      # The stored info is up to date.
+      if sExtensionDetailsA[pFolder] is not empty then
+         union tDetailsA with sExtensionDetailsA[pFolder]
+         put tDetailsA into sExtensionDetailsA[pFolder]
+         return sExtensionDetailsA[pFolder]
+      end if
+      # The compiled module and manifest are up to date, but we haven't fetched the information yet.
+   else
+      # The compiled module or manifest is not up to date, so compile.
+      __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
+      __revIDEDeveloperCompileModule pFile, pFolder
+      
+      if the result is not empty then
+         # This may be better as a warning, and try to parse info direct from the file.
+         __revIDEDeveloperExtensionSendError the result
+         return tDetailsA
+      end if
+   end if
+   
+   __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
+   if the result is not empty then
+      __revIDEDeveloperExtensionSendError the result
+      return tDetailsA
    end if
    
    put tDetailsA into sExtensionDetailsA[pFolder]
-   return tDetailsA
+   return sExtensionDetailsA[pFolder]
+   
 end __revIDEDeveloperExtensionDetailsFromFile
 
 on revIDEDeveloperExtensionAddResourceFile pExtensionFolder, pResourcePath, pType
