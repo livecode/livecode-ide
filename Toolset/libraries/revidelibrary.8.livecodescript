@@ -907,6 +907,7 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
    end repeat
    
    local tValue, tEffective
+   set the itemdelimiter to ":"
    repeat for each key tKey in tDataA
       if tKey begins with "effective" then next repeat
       put false into tEffective
@@ -917,6 +918,10 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
          put true into tEffective
       end if
       put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey] 
+      if pDataA[tGroup][tKey] ["options"] begins with "execute:" then
+         do item 2 of pDataA[tGroup][tKey] ["options"] 
+         put it into pDataA[tGroup][tKey] ["options"] 
+      end if
       put tValue into pDataA[tGroup][tKey]["value"]
       put tEffective into pDataA[tGroup][tKey]["effective"]
    end repeat
