@@ -417,7 +417,7 @@ private function __orderPropSection pSectionA
    return tOrderedA
 end __orderPropSection
 
-private function __orderPropertiesArray pPropsA
+private function __orderPropArray pPropsA
    local tOrderedPropsA,x,tSections
    put revIDEPropertySections() into tSections
    
@@ -426,7 +426,7 @@ private function __orderPropertiesArray pPropsA
       put item x of tSections into tOrderedPropsA[x]["label"]
    end repeat
    return tOrderedPropsA
-end __orderPropertiesArray
+end __orderPropArray
 
 private function __objectPropertiesShared pObjectTypeList, pOptionalSection
    local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps
@@ -453,7 +453,7 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
             
-            union tPropertiesArray with tPropertiesArray2
+            union tPropertiesArray with tPropertiesArray2 recursively
             
             # Restrict to group, if present
             if pOptionalSection is not empty then
@@ -463,15 +463,18 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          else
             put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
-            union tPropertiesArray2 with tPropertiesArray3
+            union tPropertiesArray2 with tPropertiesArray3 recursively
             
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       end if
       add 1 to x
    end repeat
-   
-   return tPropertiesArray
+   if pOptionalSection is not empty then
+      return tPropertiesArray[pOptionalSection]
+   else
+      return tPropertiesArray
+   end if
 end __objectPropertiesShared
 
 private function __objectTypes pObjectIDs
@@ -860,100 +863,122 @@ function __readStructureOfContainer @pData
    return tControlsProcessedInContainer
 end __readStructureOfContainer
 
+function __readGroupedPropertiesOfControl pGroupsA, @pDataA
+   local tPropMappingA, tProp
+   repeat for each key tGroup in pGroupsA
+      repeat for each key tProp in pGroupsA[tGroup]["proplist"]
+         put tGroup into tPropMappingA[tProp]
+      end repeat
+   end repeat
+ 
+   local tDataA
+   repeat for each key tKey in tPropMappingA
+      __fetchPropertyOfControl tKey, tDataA
+   end repeat
+   
+   repeat for each key tKey in tDataA
+      put tDataA[tKey] into pDataA[tPropMappingA[tKey]][tKey]
+   end repeat
+end __readGroupedPropertiesOfControl
+
+private on __fetchPropertyOfControl pProp, @pData
+   local tError 
+   put empty into tError
+   try
+      switch pProp
+         case "short name"
+            put the short name of the target into pData[pProp]
+            break
+         case "scriptlines"
+            put the number of lines of the script of the target into pData[pProp]
+            break
+         case "behavior scriptlines"
+            put the number of lines of the script of the behavior of the target into pData[pProp]
+            break
+         case "long id"
+            put the long id of the target into pData[pProp]
+            break
+         case "owner"
+            put the long id of the owner of the target into pData[pProp]
+            break
+         case "type"
+            put word 1 of the name of the target into pData["type"]
+            break
+         case "customProperties"
+            put __customPropertyData(the long id of the target) into pData["customProperties"]
+            break
+         case "dropShadow" 
+         case "innerShadow"	
+         case "outerGlow"
+         case "innerGlow"
+         case "colorOverlay"
+            put the pProp of the Target into pData[pProp]
+            if pData[pProp] is empty then
+               put empty into pData[pProp]["color"]
+               put empty into pData[pProp]["blendMode"]
+               put empty into pData[pProp]["opacity"]
+               put empty into pData[pProp]["filter"]
+               put empty into pData[pProp]["spread"]
+               put empty into pData[pProp]["size"]
+               put empty into pData[pProp]["distance"]
+               put empty into pData[pProp]["angle"]
+            end if
+            break
+         default
+            put the pProp of the Target into pData[pProp]
+            break
+      end switch
+      put the short name of the target into pData["name"]
+   catch tError 
+   end try
+   
+   ## Temporary solution for multiprops such as fill
+   local tPropertyName, tPropertyList, tSubPropName
+   try
+      if pProp contains "{" then
+         set the itemDel to "{"
+         put pProp into tPropertyName
+         put item 2 of pProp into tPropertyList
+         if char 1 of tPropertyList is "{" then delete char 1 of tPropertyList
+         if char -1 of tPropertyList is "}" then delete char -1 of tPropertyList
+         set the itemDel to comma
+         repeat for each item tWord in tPropertyList
+            set the itemDel to ":"
+            put  item 2 of tWord into tSubPropName
+            put tSubPropName into pData[tPropertyName][item 1 of tWord]["name"]
+            put the tSubPropName of the target into pData[tPropertyName][item 1 of tWord]["value"]
+            set the itemDel to comma
+         end repeat
+      end if
+   catch tError 
+   end try
+   
+   if tError is not empty then
+      try
+         do ("put" && pProp && "of" && the target && "into pData[pProp]")
+      catch tError
+      end try
+   end if
+   
+   if pData[pProp] is empty then
+      try
+         local tEffective
+         do ("put effective" && pProp && "of" && the target && "into tEffective")
+         if tEffective is not empty then
+            put tEffective into pData["effective" && pProp]
+         end if
+      catch tError
+      end try
+   end if
+end __fetchPropertyOfControl
+
 # Used internall but not private. This function is dispatched to the object and reads the properties 
 # In the list. Sending it to the object allows the use of the target which reduces the lookup time
 # for each of the properties
 function __readPropertiesOfControl pList, @pData
    local tError
-   
    repeat for each line tProp in pList      
-      put empty into tError
-      try
-         switch tProp
-            case "short name"
-               put the short name of the target into pData[tProp]
-               break
-            case "scriptlines"
-               put the number of lines of the script of the target into pData[tProp]
-               break
-            case "behavior scriptlines"
-               put the number of lines of the script of the behavior of the target into pData[tProp]
-               break
-            case "long id"
-               put the long id of the target into pData[tProp]
-               break
-            case "owner"
-               put the long id of the owner of the target into pData[tProp]
-               break
-            case "type"
-               put word 1 of the name of the target into pData["type"]
-               break
-            case "customProperties"
-               put __customPropertyData(the long id of the target) into pData["customProperties"]
-               break
-            case "dropShadow"
-            case "innerShadow"	
-            case "outerGlow"
-            case "innerGlow"
-            case "colorOverlay"
-               put the tProp of the Target into pData[tProp]
-               if pData[tProp] is empty then
-                  put empty into pData[tProp]["color"]
-                  put empty into pData[tProp]["blendMode"]
-                  put empty into pData[tProp]["opacity"]
-                  put empty into pData[tProp]["filter"]
-                  put empty into pData[tProp]["spread"]
-                  put empty into pData[tProp]["size"]
-                  put empty into pData[tProp]["distance"]
-                  put empty into pData[tProp]["angle"]
-               end if
-               break
-            default
-               put the tProp of the Target into pData[tProp]
-               break
-         end switch
-         put the short name of the target into pData["name"]
-      catch tError 
-      end try
-      
-      ## Temporary solution for multiprops such as fill
-      local tPropertyName, tPropertyList, tSubPropName
-      try
-         if tProp contains "{" then
-            set the itemDel to "{"
-            put tProp into tPropertyName
-            put item 2 of tProp into tPropertyList
-            if char 1 of tPropertyList is "{" then delete char 1 of tPropertyList
-            if char -1 of tPropertyList is "}" then delete char -1 of tPropertyList
-            set the itemDel to comma
-            repeat for each item tWord in tPropertyList
-               set the itemDel to ":"
-               put  item 2 of tWord into tSubPropName
-               put tSubPropName into pData[tPropertyName][item 1 of tWord]["name"]
-               put the tSubPropName of the target into pData[tPropertyName][item 1 of tWord]["value"]
-               set the itemDel to comma
-            end repeat
-         end if
-      catch tError 
-      end try
-      
-      if tError is not empty then
-         try
-            do ("put" && tProp && "of" && the target && "into pData[tProp]")
-         catch tError
-         end try
-      end if
-      
-      if pData[tProp] is empty then
-         try
-            local tEffective
-            do ("put effective" && tProp && "of" && the target && "into tEffective")
-            if tEffective is not empty then
-               put tEffective into pData["effective" && tProp]
-            end if
-         catch tError
-         end try
-      end if
+      __fetchPropertyOfControl tProp, pData
    end repeat
 end __readPropertiesOfControl
 
@@ -1376,7 +1401,7 @@ function revIDEGetPropertiesOfObjects pObjects
    repeat for each line tObject in pObjects 
       dispatch function "__readPropertiesOfControl" to tObject with the keys of tSharedProperties, tPropertyValues
       
-      repeat for each line tPropertyName in the keys of tPropertyValues
+      repeat for each key tPropertyName in tPropertyValues
          if tPropertyName begins with "effective" then next repeat
          if tPropertyValues["effective" && tPropertyName] is not empty then
             put tPropertyValues["effective" && tPropertyName] into tSharedProperties[tPropertyName]["effective value"][tObject]
@@ -3200,7 +3225,7 @@ function revIDEPropertiesInfo pObjectList
    return revIDEPropertiesInfoOfSection(pObjectList)
 end revIDEPropertiesInfo
 
-function revIDEPropertiesInfoOfSection pObjectList, pSection
+function __revIDEPropertiesInfoOfSection pObjectList, pSection
    repeat for each line tObject in pObjectList
       if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
    end repeat
@@ -3209,14 +3234,20 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    local tObjectTypeList
    put __objectTypes(pObjectList) into  tObjectTypeList
    
-   # Get this list of all the properties to read for the given type list
+   # Return this list of all the properties to read for the given type list
+   return __objectPropertiesShared(tObjectTypeList, pSection)
+end __revIDEPropertiesInfoOfSection
+
+function revIDEPropertiesInfoOfSection pObjectList, pSection
    local tSharedPropertiesA
-   put __objectPropertiesShared(tObjectTypeList, pSection) into tSharedPropertiesA
+   put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedPropertiesA
    
    # Return ordered list
-   return __orderPropertiesArray(tSharedPropertiesA)
-   
-   return tSharedPropertiesA
+   if pSection is empty then
+      return __orderPropArray(tSharedPropertiesA)
+   else
+      return __orderPropSection(tSharedPropertiesA["grouplist"])
+   end if
 end revIDEPropertiesInfoOfSection
 
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
@@ -3306,21 +3337,19 @@ private function __revIDEPropertiesOfObjectsWithList pObjectList, pPropertiesLis
    local tPropertyValues
    repeat for each line tObject in pObjectList 
       dispatch function "__readPropertiesOfControl" to tObject with tNewList, tPropertyValues
-      __populatePropertyArray tObject, tPropertyValues, tResultA
    end repeat
    
-   return tResultA
+   return tPropertyValues
 end __revIDEPropertiesOfObjectsWithList
 
-private function __revIDEPropertiesOfObjects pObjectList, pPropertyInfoA
+private function __revIDEPropertiesOfObjectsInSection pObjectList, pSectionInfoA
    # Generate a list of the properties we want to retreive
-   local tPropertyValues
+   local tPropertyValuesA
    repeat for each line tObject in pObjectList 
-      dispatch function "__readPropertiesOfControl" to tObject with the keys of pPropertyInfoA, tPropertyValues
-      __populatePropertyArray tObject, tPropertyValues, pPropertyInfoA
+      dispatch function "__readGroupedPropertiesOfControl" to tObject with pSectionInfoA, tPropertyValuesA
    end repeat
-   return pPropertyInfoA
-end __revIDEPropertiesOfObjects
+   return tPropertyValuesA
+end __revIDEPropertiesOfObjectsInSection
 
 function revIDEPropertiesOfObjects pObjectList, pPropertyList
    local tSharedProperties
@@ -3335,13 +3364,13 @@ end revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfSection pObjectList, pSection
    local tSharedProperties
-   put revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
+   put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
    # Error if we didn't get an array back
    if tSharedProperties is not an array then
       return tSharedProperties
    end if
-   
-   return __revIDEPropertiesOfObjects(pObjectList, tSharedProperties)
+    
+   return __revIDEPropertiesOfObjectsInSection(pObjectList, tSharedProperties["grouplist"])
 end revIDEPropertiesOfSection
 
 function revIDEProperty pObjectList, pProperty
@@ -3352,7 +3381,7 @@ on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
 
 function revIDEPropertySections
-   return "Basic"
+   return "Basic,Color,Effect,Custom,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
