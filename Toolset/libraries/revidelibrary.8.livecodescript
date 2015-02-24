@@ -320,12 +320,33 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             put tPropertyName into tGroupLabel
          end if
          
+         # The groups are ordered by their appearance in the spec file
          put tCountsA[tSection] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["order"]
+         
+         # Carry over the generic prop information into the object prop info array
          put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
-         put __unescapeString(item 2 of tLine) into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
-         put __unescapeString(item 2 of tLine) into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
+         
+         # Get the per-object default value of this property
+         local tDefault
+         put __unescapeString(item 2 of tLine) into tDefault
+         if tDefault is empty then 
+            put "no_default" into tDefault
+         else if tDefault is "empty" then
+            put empty into tDefault
+         end if
+         put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
+         put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
+         
+         # Every prop is first in its group at the moment
          put 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
-         put item 3 of tLine into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"] 
+         
+         # If this is an enum property, there are per-object options
+         local tOptions
+         put item 3 of tLine into tOptions
+         replace comma with return in tOptions
+         put tOptions into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"]
+         
+         # Increment the count for this section
          add 1 to tCountsA[tSection]
       end if
    end repeat
