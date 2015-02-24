@@ -17,11 +17,9 @@ backgroundPattern	Fill Pattern	Colors	com.livecode.pi.pattern	true	false	backgro
 basicTableObject	Basic table object	Table	com.livecode.pi.boolean	true	false			
 behavior	Behavior	Basic	com.livecode.pi.string	true	false			
 blendLevel	Blend Level	Colors	com.livecode.pi.number	true	false			
-border	Text/Border	Colors	com.livecode.pi.fill	true	false		{color:foregroundColor;pattern:foregroundPattern}	
 borderColor	Border/Grid Color	Colors	com.livecode.pi.color	true	false	borderPattern		
 borderPattern	Border/Grid Pattern	Colors	com.livecode.pi.pattern	true	false	borderColor		
 borderWidth	Border Width	Basic	com.livecode.pi.number	true	false			
-bottom	Bottom	Position	com.livecode.pi.number	true	false	location,top	{color:bottomColor;pattern:bottomPattern}	
 bottomColor	Inset Bevel Color	Colors	com.livecode.pi.color	true	false	bottomPattern		
 bottomPattern	Inset Bevel Pattern	Colors	com.livecode.pi.pattern	true	false	bottomColor		
 boundingRect	Bounding rect	Basic	com.livecode.pi.string	true	false			
@@ -53,7 +51,7 @@ endTime	End	Basic	com.livecode.pi.integer	true	false
 endValue	End value	Basic	com.livecode.pi.integer	true	false			
 externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
 filename	Source	Basic	com.livecode.pi.string	true	false			
-fill	Fill	Colors	com.livecode.pi.fill	true	false		{color:backgroundColor;pattern:backgroundPattern;gradient:fillGradient}	
+fillGradient	Fill Gradient	Colors	com.livecode.pi.gradient	true	false		{type,ramp,position,color,alpha,from,to,via,quality,repeat,mirror,wrap}
 firstIndent	First indent	Basic	com.livecode.pi.number	true	false			
 fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false			
 focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false			
@@ -174,7 +172,6 @@ title	Title	Basic	com.livecode.pi.string	true	false
 toggleHilites	Click to toggle	Basic	com.livecode.pi.boolean	true	false			
 tool	graphic tool		com.livecode.pi.	true	false			
 tooltip	Tooltip	Basic	com.livecode.pi.string	true	false			
-top	Top	Position	com.livecode.pi.number	true	false	location,bottom	{color:topColor;pattern:topPattern}	
 topColor	Outset Bevel Color	Colors	com.livecode.pi.color	true	false	topPattern		
 topPattern	Outset Bevel Pattern	Colors	com.livecode.pi.pattern	true	false	topColor		
 tracks	Tracks	Tracks	com.livecode.pi.text	true	true			

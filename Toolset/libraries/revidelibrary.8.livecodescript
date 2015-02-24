@@ -313,9 +313,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             put 1 into tCountsA[tSection]
          end if
          
-         # At the moment, property_label == group
          local tGroupLabel
-         put pPropInfoA[tPropertyName]["label"] into tGroupLabel
+         put item 4 of tLine into tGroupLabel
+         if tGroupLabel is empty then
+            put pPropInfoA[tPropertyName]["label"] into tGroupLabel
+         end if
          if tGroupLabel is empty then
             put tPropertyName into tGroupLabel
          end if
@@ -335,8 +337,9 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
          put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          
-         # Every prop is first in its group at the moment
-         put 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
+         local tPropCount
+         put the number of elements of tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
+         put tPropCount + 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
          
          # If this is an enum property, there are per-object options
          local tOptions
@@ -981,22 +984,20 @@ private on __fetchPropertyOfControl pProp, @pData
    catch tError 
    end try
    
-   ## Temporary solution for multiprops such as fill
-   local tPropertyName, tPropertyList, tSubPropName
+   ## Temporary solution for array props
+   local tProp, tPropertyName, tPropertyList, tSubPropName
    try
       if pProp contains "{" then
          set the itemDel to "{"
+         put word 1 to -1 of item 1 of pProp into tProp
          put pProp into tPropertyName
          put item 2 of pProp into tPropertyList
          if char 1 of tPropertyList is "{" then delete char 1 of tPropertyList
          if char -1 of tPropertyList is "}" then delete char -1 of tPropertyList
          set the itemDel to comma
          repeat for each item tWord in tPropertyList
-            set the itemDel to ":"
-            put  item 2 of tWord into tSubPropName
-            put tSubPropName into pData[tPropertyName][item 1 of tWord]["name"]
-            put the tSubPropName of the target into pData[tPropertyName][item 1 of tWord]["value"]
-            set the itemDel to comma
+            put tProp & "[" & quote & tWord & quote & "]" into tSubPropName
+            put the tSubPropName of the target into pData[tProp]["value"][tWord]["value"]
          end repeat
       end if
    catch tError 
@@ -1129,7 +1130,10 @@ on revIDEInitialiseIDELibrary
    
    ## Regenerate dictionary data
    revDocsRegenerateBuiltDictionaryData
-
+   
+   ## Initialise property library
+   revIDEPropertyLibraryInitialise
+   
 end revIDEInitialiseIDELibrary
 
 #############
@@ -1156,7 +1160,17 @@ on ideSelectedObjectsChanged
    # Handle the notification
 end ideSelectedObjectsChanged
 */
-on revIDESubscribe pMessage
+on __revIDEAddSubscription pMessage, pCallingObject
+   if sSubscriptions[pMessage]["callback targets"] is empty then
+      put pCallingObject into sSubscriptions[pMessage]["callback targets"]
+   else if pCallingObject is not among the lines of sSubscriptions[pMessage]["callback targets"] then
+      put return & pCallingObject after sSubscriptions[pMessage]["callback targets"]
+   else
+      return "Already subscribed"
+   end if
+end __revIDEAddSubscription
+
+on revIDESubscribe pMessage, pObjectList
    # Validate input
    if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
    
@@ -1164,12 +1178,18 @@ on revIDESubscribe pMessage
    local tCallingObjectID
    put the long ID of the target into tCallingObjectID
    
-   if sSubscriptions[pMessage]["callback targets"] is empty then
-      put tCallingObjectID into sSubscriptions[pMessage]["callback targets"]
-   else if tCallingObjectID is not among the lines of sSubscriptions[pMessage]["callback targets"] then
-      put return & tCallingObjectID after sSubscriptions[pMessage]["callback targets"]
+   # Special case propertyChanged where we have to register for listeners for obejcts
+   if pMessage is "idePropertyChanged" then
+      repeat for each line tObject in pObjectList
+         revIDEPropertyRegisterListenerForObject tObject
+         __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
+      end repeat
    else
-      return "Already subscribed"
+      __revIDEAddSubscription pMessage, tCallingObjectID
+   end if
+   
+   if the result is not empty then
+      return the result
    end if
 end revIDESubscribe
 
@@ -1179,15 +1199,26 @@ Unsubscribes the calling object from the given message
 pMessage (enum): The message to unsubscribe from. Must be a valid message as described in [revIDESubscribe].
 pObject (String): The long ID of the object you wish to unsubscribe from the message. This is an optional parameter, if not specified, the calling object will be used.
 */
-on revIDEUnsubscribe pMessage, pObject
+on revIDEUnsubscribe pMessage, pObject, pObjectList
    # If not object is specified, get the long ID of the calling object
    if pObject is empty then
       put the long ID of the target into pObject
    end if
    
-   # Delete the calling object from the message: sSubscriptions[pMessage]["callback targets"]
-   if lineoffset(pObject, sSubscriptions[pMessage]["callback targets"]) > 0 then
-      delete line lineoffset(pObject, sSubscriptions[pMessage]["callback targets"]) of sSubscriptions[pMessage]["callback targets"]
+   # Special case propertyChanged where we have to register for listeners for obejcts
+   if pMessage is "idePropertyChanged" then
+      repeat for each line tObject in pObjectList
+         delete line lineoffset(pObject, sSubscriptions[pMessage & "," & tObject]["callback targets"]) of sSubscriptions[pMessage & "," & tObject]["callback targets"]
+         # If the object is no longer needed, unlisten.
+         if sSubscriptions[pMessage & "," & tObject]["callback targets"] is empty then
+            revIDEPropertyDeregisterListenerForObject tObject
+         end if
+      end repeat
+   else
+      # Delete the calling object from the message: sSubscriptions[pMessage]["callback targets"]
+      if lineoffset(pObject, sSubscriptions[pMessage]["callback targets"]) > 0 then
+         delete line lineoffset(pObject, sSubscriptions[pMessage]["callback targets"]) of sSubscriptions[pMessage]["callback targets"]
+      end if
    end if
 end revIDEUnsubscribe
 
@@ -1197,7 +1228,7 @@ Unsubscribes the object from all messages
 pObject (String): The long ID of the object you wish to unsubscribe from all message. This is an optional parameter, if not specified, the calling object will be used.
 */
 on revIDEUnsubscribeAll pObject
-      # If not object is specified, get the long ID of the calling object
+   # If not object is specified, get the long ID of the calling object
    if pObject is empty then
       put the long ID of the target into pObject
    end if
@@ -1252,7 +1283,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
  
 # System function telling the IDE to send 
@@ -1267,7 +1298,21 @@ on revIDEMessageSend pMessage, pEffectedTarget
    # If in run mode don't send any updates
    //if the tool is not "pointer tool" then exit revIDEMessageSend
    
-   repeat for each line tObjectID in sSubscriptions[pMessage]["callback targets"]
+   local tSubscriptionList
+   if pMessage is "idePropertyChanged" then
+      local tTargetsA, tSubscription
+      repeat for each line tLine in pEffectedTarget
+         put pMessage & "," & tLine into tSubscription
+         repeat for each line tTarget in sSubscriptions[tSubscription]["callback targets"]
+            put true into tTargetsA[tTarget]
+         end repeat
+      end repeat
+      put the keys of tTargetsA into tSubscriptionList
+   else
+      put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
+   end if
+   
+   repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
@@ -1301,6 +1346,9 @@ on revIDEMessageSend pMessage, pEffectedTarget
                send pMessage && pEffectedTarget to tObjectID in 10 milliseconds
             catch tError
             end try
+            break
+         case "idePropertyChanged"
+            dispatch pMessage to tObjectID with pEffectedTarget
             break
          default
             dispatch pMessage to tObjectID with pEffectedTarget
@@ -3236,13 +3284,18 @@ on revIDEPropertyLibraryInitialise
 end revIDEPropertyLibraryInitialise
 
 ## Register new listeners for objects
-on revIDEPropertyRegisterListenersForObjects pObjectList
-   repeat for each line tObject in pObjectList
-      if exists(tObject) then
-         _internal listen to tObject
-      end if
-   end repeat
-end revIDEPropertyRegisterListenersForObjects
+on revIDEPropertyRegisterListenerForObject pObject
+   if exists(pObject) then
+      _internal listen to pObject
+   end if
+end revIDEPropertyRegisterListenerForObject
+
+## Deregister listeners for objects
+on revIDEPropertyDeregisterListenerForObject pObject
+   if exists(pObject) then
+      _internal cancel listener for pObject
+   end if
+end revIDEPropertyDeregisterListenerForObject
 
 ## Cancel all object listeners
 on revIDEPropertyCancelAllListeners
@@ -3255,11 +3308,10 @@ end revIDEPropertyCancelAllListeners
 
 on propertyChanged pObject
    if sLockUpdates is true then
-      put false into sLockUpdates
       exit propertyChanged
    end if
    
-   revIDEMessageSend("idePropertyChanged" && pObject)
+   revIDEMessageSend "idePropertyChanged", pObject
 end propertyChanged
 
 on revIDEHideProperty pProperty
@@ -3300,13 +3352,22 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
 end revIDEPropertiesInfoOfSection
 
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
-   if pLockUpdates then
+   local tThrottlePropertyChanged
+   put false into tThrottlePropertyChanged
+   if the number of lines in pObjectList > 1 then 
+      put true into tThrottlePropertyChanged
+   end if
+   
+   if tThrottlePropertyChanged or pLockUpdates then
       put true into sLockUpdates
    end if
    
    repeat for each line tObject in pObjectList
       set the pProperty of tObject to pValue
    end repeat
+   
+   put false into sLockUpdates
+   revIDEMessageSend "idePropertyChanged", pObjectList
 end revIDEPropertySet
 
 local sStoredPropsA
@@ -3350,10 +3411,6 @@ function revIDECustomPropertiesInfo pObjectList
 end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pSet, pProperty, pValue
-   --if pLockUpdates then
-      --put true into sLockUpdates
-   --end if
-   
    repeat for each line tObject in pObjectList
       set the pSet[pProperty] of tObject to pValue
    end repeat
