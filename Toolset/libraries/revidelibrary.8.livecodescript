@@ -329,9 +329,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
-         if tDefault is empty then 
-            put "no_default" into tDefault
-         else if tDefault is "empty" then
+         if tDefault is "empty" then
             put empty into tDefault
          end if
          put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
@@ -901,12 +899,18 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
       end repeat
    end repeat
    
-   local tDataA
+   local tDataA, tArrayMap
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      put pGroupsA[tPropMappingA[tKey]][tKey]["array_map"] into tArrayMap
+      if tArrayMap is not empty then
+         __fetchPropertyOfControl tKey & tArrayMap, tDataA
+      else
+         __fetchPropertyOfControl tKey, tDataA
+      end if
    end repeat
    
    local tValue, tEffective
+   set the itemdelimiter to ":"
    repeat for each key tKey in tDataA
       if tKey begins with "effective" then next repeat
       put false into tEffective
@@ -917,6 +921,10 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
          put true into tEffective
       end if
       put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey] 
+      if pDataA[tGroup][tKey] ["options"] begins with "execute:" then
+         do item 2 of pDataA[tGroup][tKey] ["options"] 
+         put it into pDataA[tGroup][tKey] ["options"] 
+      end if
       put tValue into pDataA[tGroup][tKey]["value"]
       put tEffective into pDataA[tGroup][tKey]["effective"]
    end repeat
@@ -3422,7 +3430,7 @@ on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
 
 function revIDEPropertySections
-   return "Basic,Color,Effect,Custom,Icons,Position,Text"
+   return "Basic,Colors,Effect,Custom,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
