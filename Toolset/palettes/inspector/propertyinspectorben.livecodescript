@@ -5,7 +5,6 @@ local sSelectedObjects
 local sInspectorLock
 
 on preOpenStack
-   set the visible of me to true
    put false into sInspectorLock
    put empty into sSelectedObjects
    put empty into sSelectedObjects
@@ -40,6 +39,7 @@ on preOpenStack
    
    # Render the inspector for the given selected object
    ideSelectedObjectChanged
+   set the visible of me to true
 end preOpenStack
 
 on resizeStack
