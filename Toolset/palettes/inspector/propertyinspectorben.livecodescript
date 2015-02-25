@@ -13,6 +13,23 @@ on preOpenStack
    # Set the palette frame behaviour
    set the behavior of me to revIDEFrameBehavior()
    
+   # Open all the editors
+   local tEditorsFolder, tStackFiles
+   set the itemdel to "/"
+   put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
+   set the defaultfolder to tEditorsFolder
+   set the itemdel to "."
+   repeat for each line tFile in the files
+      if char 1 of tFile is "." then next repeat
+      
+      if tStackfiles is empty then
+         put item 1 to -2 of tFile &comma&tEditorsFolder&tFile into tStackFiles
+      else
+         put return & item 1 to -2 of tFile &comma& tEditorsFolder&tFile after tStackFiles
+      end if
+   end repeat
+   set the stackfiles of me to tStackFiles
+   
    # Register of IDE messages
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"

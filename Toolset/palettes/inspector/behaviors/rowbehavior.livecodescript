@@ -5,13 +5,9 @@ on propertyRegister pProperty, pEditor
    # Check that the property has not already been registered
    if pProperty is among the keys of sProperties then exit propertyRegister
    
-   # Try and open the editor if it's a stack
-   inpectorOpenEditor pEditor
-   
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack pEditor then
-      inpectorOpenEditor "com.livecode.pi.string"
       put "com.livecode.pi.string" into pEditor
    end if
    
