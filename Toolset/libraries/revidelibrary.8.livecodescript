@@ -1,12 +1,12 @@
 ﻿script "revidelibrary"
 
 on revLoadLibrary
-	insert the script of me into back
-	revIDEInitialiseIDELibrary
+   insert the script of me into back
+   revIDEInitialiseIDELibrary
 end revLoadLibrary
 
 on revUnloadLibrary
-	remove the script of me from back
+   remove the script of me from back
 end revUnloadLibrary
 
 #############
@@ -23,7 +23,7 @@ private on __loadExtensions
    
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
-    
+   
    revIDEStoreDefaultFolder
    
    ## Load installed extensions
@@ -330,6 +330,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          # Carry over the generic prop information into the object prop info array
          put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
          
+         # Assign the order of this property within the group
+         local tPropCount
+         put the number of elements of tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
+         put tPropCount into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
+         
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
@@ -338,10 +343,6 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          end if
          put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
          put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
-         
-         local tPropCount
-         put the number of elements of tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
-         put tPropCount + 1 into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
          
          # If this is an enum property, there are per-object options
          local tOptions
@@ -399,44 +400,51 @@ on __objectPropertiesRead
    revIDERestoreDefaultFolder
 end __objectPropertiesRead
 
-private function __orderPropGroup pGroupA
-   local tSparseOrderedA
-   repeat for each key tKey in pGroupA["proplist"]
-      put pGroupA["proplist"][tKey] into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]
-      put tKey into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]["property_name"]
+private function __orderPropSubArray pSectionA, pIsGroupList
+   local tSubKey
+   if pIsGroupList then
+      put "grouplist" into tSubKey
+   else
+      put "proplist" into tSubKey
+   end if
+   
+   local tSparseOrderedA, tOrder, tWidgetProps
+   repeat for each key tKey in pSectionA[tSubKey]
+      put pSectionA[tSubKey][tKey]["order"] into tOrder
+      if tOrder is "NaN" then
+         put tKey & CR after tWidgetProps
+      else
+         put pSectionA[tSubKey][tKey] into tSparseOrderedA[tOrder]
+         put tKey into tSparseOrderedA[tOrder]["name"]
+      end if
    end repeat
    
    local tKeys, tCount, tOrderedA
    put 1 into tCount
    put the keys of tSparseOrderedA into tKeys
    sort tKeys ascending numeric
-   repeat for each line tNumber in tKeys
-      put tSparseOrderedA[tNumber] into tOrderedA[tCount]
-      add 1 to tCount
-   end repeat
-   
-   return tOrderedA
-end __orderPropGroup
 
-private function __orderPropSection pSectionA
-   local tSparseOrderedA
-   repeat for each key tKey in pSectionA["grouplist"]
-      put pSectionA["grouplist"][tKey] into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]
-      put tKey into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]["label"]
+   repeat for each line tLine in tWidgetProps
+      put pSectionA[tSubKey][tLine] into tSparseOrderedA[tLine]
+      put tLine into tSparseOrderedA[tLine]["name"]
    end repeat
+   if tWidgetProps is not empty then
+      put CR & tWidgetProps after tKeys
+   end if
    
-   local tKeys, tCount, tOrderedA
-   put 1 into tCount
-   put the keys of tSparseOrderedA into tKeys
-   sort tKeys ascending numeric
    repeat for each line tNumber in tKeys
-      put tSparseOrderedA[tNumber]["label"] into tOrderedA[tCount]["label"]
-      put __orderPropGroup(tSparseOrderedA[tNumber]) into tOrderedA[tCount]["proplist"]
+      if pIsGroupList then
+         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["label"]
+         put __orderPropSubArray(tSparseOrderedA[tNumber], false) into tOrderedA[tCount]["proplist"]
+      else
+         put tSparseOrderedA[tNumber] into tOrderedA[tCount]
+         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["property_name"]
+      end if
       add 1 to tCount
    end repeat
    
    return tOrderedA
-end __orderPropSection
+end __orderPropSubArray
 
 private function __orderPropArray pPropsA
    local tOrderedPropsA,x,tSections
@@ -446,7 +454,7 @@ private function __orderPropArray pPropsA
    put 1 into tCount
    repeat for each item tSection in tSections
       if pPropsA[tSection] is empty then next repeat
-      put __orderPropSection(pPropsA[tSection]) into tOrderedPropsA[tCount]["grouplist"]
+      put __orderPropSubArray(pPropsA[tSection], true) into tOrderedPropsA[tCount]["grouplist"]
       put tSection into tOrderedPropsA[tCount]["label"]
       add 1 to tCount
    end repeat
