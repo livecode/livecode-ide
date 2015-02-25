@@ -19,6 +19,7 @@ on propertyRegister pProperty, pEditor
       set the behavior of button "behavior" of stack pEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
       set the behavior of tGroupLongID to the long ID of button "behavior" of stack pEditor
       set the editorProperty of tGroupLongID to pProperty
+      dispatch "editorInitialize" to tGroupLongID
    else
       return "No editor template editor found"
    end if
@@ -43,7 +44,9 @@ end rowReset
 setProp rowData pData
    repeat for each key tProperty in pData
       if there is a group tProperty of me then
-         set the editorValue of group tProperty of me to pData[tProperty]
+         set the editorValue of group tProperty of me to pData[tProperty]["value"]
+         set the editorEffective of group tProperty of me to pData[tProperty]["effective"]
+         dispatch "editorUpdate" to group tProperty of me
       end if
    end repeat
 end rowData
