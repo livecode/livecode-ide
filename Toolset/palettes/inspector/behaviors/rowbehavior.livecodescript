@@ -1,6 +1,6 @@
 ﻿script "revIDEInspectorBehaviorRow"
 # Adds the editor to the row
-local sProperties
+local sProperties, sOrder
 on propertyRegister pProperty, pEditor
    # Check that the property has not already been registered
    if pProperty is among the keys of sProperties then exit propertyRegister
@@ -26,6 +26,11 @@ on propertyRegister pProperty, pEditor
    
    # Store the property name
    put pProperty into sProperties[pProperty]["property"]
+   if sOrder is empty then
+      put pProperty into sOrder
+   else
+      put return & pProperty after sOrder
+   end if
 end propertyRegister
 
 on rowReset
@@ -59,6 +64,7 @@ on propertyDeregistor pProperty
    
    # Remove the property from the list
    delete variable sProperties[pProperty]
+   delete line lineOffset(pProperty, sOrder) of sOrder
 end propertyDeregistor
 
 # Sets the text for the row label
@@ -124,7 +130,9 @@ on rowResize
    local tEditorWidth, x, tMinWidth, tMaxWidth
    put 0 into x
    put tLabelWidth into tLeft
-   repeat for each element tElement in sProperties
+   local tElement
+   repeat for each line tProperty in sOrder
+      put sProperties[tProperty] into tElement
       put tEditorSpace /  (tEditorCount - x) into tEditorWidth
       put the editorMinWidth of group tElement["property"] of me into tMinWidth
       put the editorMaxWidth of group tElement["property"] of me into tMaxWidth
