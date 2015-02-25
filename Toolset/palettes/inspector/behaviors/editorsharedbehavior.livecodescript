@@ -10,21 +10,21 @@ getProp editorProperty
 end editorProperty
 
 local sEditorEffective
-setProp editorValueStyle pStyle
-   if pStyle is "effective" then
+setProp editorEffective pStyle
+   if pStyle is true then
       put true into sEditorEffective
    else
       put false into sEditorEffective
    end if
-end editorValueStyle
+end editorEffective
 
-getprop editorValueStyle
+getprop editorEffective
    if sEditorEffective is true then
       return true	
    else
       return false
    end if
-end editorValueStyle
+end editorEffective
 
 local sMaxWidth
 setprop editorMaxWidth pMaxWidth

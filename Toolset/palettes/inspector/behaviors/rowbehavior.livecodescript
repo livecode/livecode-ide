@@ -47,6 +47,7 @@ on rowReset
 end rowReset
 
 setProp rowData pData
+   lock screen
    repeat for each key tProperty in pData
       if there is a group tProperty of me then
          set the editorValue of group tProperty of me to pData[tProperty]["value"]
@@ -54,6 +55,7 @@ setProp rowData pData
          dispatch "editorUpdate" to group tProperty of me
       end if
    end repeat
+   unlock screen
 end rowData
 
 on propertyDeregistor pProperty
