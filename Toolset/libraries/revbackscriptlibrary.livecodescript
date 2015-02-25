@@ -2220,9 +2220,9 @@ end revGoScriptEditor
 
 function revIsMenuBarGroup pGroupID
    local tOwnerStack
-   put char 2 to -2 of word wordOffset("stack",pGroupID)+1 of pGroupID into tOwnerStack
-   if the short name of pGroupID is the menubar of the stack tOwnerStack \
-   or the long name of pGroupID is the defaultMenuBar
+   put word wordOffset("stack",pGroupID)+1 of pGroupID into tOwnerStack
+   put char 2 to -2 of tOwnerStack into tOwnerStack
+   if the short name of pGroupID is the menubar of the stack tOwnerStack or the long name of pGroupID is the defaultMenuBar
    then return true
    else return false
 end revIsMenuBarGroup
