@@ -11,6 +11,7 @@ on startup
    
    revInternal__SetupStartup
    
+   revInternal__Log "Start"
    revInternal__Log "Enter", "Startup"
    
    try
@@ -485,7 +486,7 @@ end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
 	local tPaletteFolder, tFolders
-	put revEnvironmentToolsetPath() & slash & "/palettes/" into tPaletteFolder
+	put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
 	put tPaletteFolder into tFolders
 	
 	set the defaultfolder to tPaletteFolder
@@ -494,12 +495,11 @@ function revInternal__StackFiles
 		put return & tPaletteFolder & slash & tFolder after tFolders
 	end repeat
 	
-	
-	put return & revEnvironmentToolsetPath() & slash & "/libraries/" after tFolders
+	put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
 	if revEnvironmentIsInstalled() then
-		put return & revEnvironmentToolsetPath() & slash & "ide-support/" after tFolders
+		put return & revEnvironmentToolsetPath() & slash & "ide-support" after tFolders
 	else
-		put return & revEnvironmentRepositoryPath() & slash & "ide-support/" after tFolders
+		put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
 	end if	
 
 	
@@ -544,7 +544,7 @@ function revInternal__StackFiles
 			local tExistingVersion
 			put tStackFilesA[tStackName]["version"] into tExistingVersion
 			if tExistingVersion is empty or tVersion > tExistingVersion then
-				put tPath & tFile into tStackFilesA[tStackName]["file"]
+				put tPath & slash & tFile into tStackFilesA[tStackName]["file"]
 				put tVersion into tStackFilesA[tStackName]["version"]
 			end if	
 		end repeat
