@@ -3513,7 +3513,6 @@ end revIDEFontawesomeNameToCodepoint
 
 function revIDEPaletteResourcePath pFilename
    local tPalettePath
-   put the long id of the target
    set the itemdel to slash
    put item 1 to -2 of the filename of revIDEStackOfObject(the long id of the target) into tPalettePath
    if there is not a file tPalettePath & slash  & pFilename then

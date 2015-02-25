@@ -15,12 +15,14 @@ on propertyRegister pProperty, pEditor
       put "com.livecode.pi.string" into pEditor
    end if
    
+   local tGroupLongID
    if there is a group "template" of stack pEditor and there is a button "behavior" of stack pEditor then
       copy group "template" of stack pEditor to me
-      set the name of the last group of me to pProperty
+      put it into tGroupLongID
+      set the name of it to pProperty
       set the behavior of button "behavior" of stack pEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
-      set the behavior of group pProperty of me to the long ID of button "behavior" of stack pEditor
-      set the editorProperty of group pProperty of me to pProperty
+      set the behavior of tGroupLongID to the long ID of button "behavior" of stack pEditor
+      set the editorProperty of tGroupLongID to pProperty
    else
       return "No editor template editor found"
    end if
