@@ -484,14 +484,24 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
-	local tFolders
-	put revEnvironmentToolsetPath() & slash & "/palettes/" into tFolders
+	local tPaletteFolder, tFolders
+	put revEnvironmentToolsetPath() & slash & "/palettes/" into tPaletteFolder
+	put tPaletteFolder into tFolders
+	
+	set the defaultfolder to tPaletteFolder
+	repeat for each line tFolder in the folders
+		if char 1 of tFolder is "." then next repeat
+		put return & tPaletteFolder & slash & tFolder after tFolders
+	end repeat
+	
+	
 	put return & revEnvironmentToolsetPath() & slash & "/libraries/" after tFolders
 	if revEnvironmentIsInstalled() then
 		put return & revEnvironmentToolsetPath() & slash & "ide-support/" after tFolders
 	else
 		put return & revEnvironmentRepositoryPath() & slash & "ide-support/" after tFolders
 	end if	
+
 	
 	local tStackFiles, tStackName
 	local tStackFilesA, tIDEVersion

@@ -400,14 +400,10 @@ on __objectPropertiesRead
 end __objectPropertiesRead
 
 private function __orderPropGroup pGroupA
-   local tSparseOrderedA, tOrder
+   local tSparseOrderedA
    repeat for each key tKey in pGroupA["proplist"]
-      put pGroupA["proplist"][tKey]["order"] into tOrder
-      if tOrder is "NaN" then
-         put ""
-      end if
-      put pGroupA["proplist"][tKey] into tSparseOrderedA[tOrder]
-      put tKey into tSparseOrderedA[tOrder]["property_name"]
+      put pGroupA["proplist"][tKey] into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]
+      put tKey into tSparseOrderedA[pGroupA["proplist"][tKey]["order"]]["property_name"]
    end repeat
    
    local tKeys, tCount, tOrderedA
@@ -423,28 +419,16 @@ private function __orderPropGroup pGroupA
 end __orderPropGroup
 
 private function __orderPropSection pSectionA
-   local tSparseOrderedA, tOrder, tWidgetProps
+   local tSparseOrderedA
    repeat for each key tKey in pSectionA["grouplist"]
-      put pSectionA["grouplist"][tKey]["order"] into tOrder
-      if tOrder is "NaN" then
-         put tKey & CR after tWidgetProps
-      else
-         put pSectionA["grouplist"][tKey] into tSparseOrderedA[tOrder]
-         put tKey into tSparseOrderedA[tOrder]["label"]
-      end if
+      put pSectionA["grouplist"][tKey] into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]
+      put tKey into tSparseOrderedA[pSectionA["grouplist"][tKey]["order"]]["label"]
    end repeat
-   delete the last char of tWidgetProps
    
    local tKeys, tCount, tOrderedA
    put 1 into tCount
    put the keys of tSparseOrderedA into tKeys
    sort tKeys ascending numeric
-   repeat for each line tLine in tWidgetProps
-      put pSectionA["grouplist"][tLine] into tSparseOrderedA[tLine]
-      put tLine into tSparseOrderedA[tLine]["label"]
-   end repeat
-   put CR & tWidgetProps after tKeys
-   
    repeat for each line tNumber in tKeys
       put tSparseOrderedA[tNumber]["label"] into tOrderedA[tCount]["label"]
       put __orderPropGroup(tSparseOrderedA[tNumber]) into tOrderedA[tCount]["proplist"]
@@ -491,17 +475,18 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
       else
          # Widget
          if x is 1 then
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray
+            put revIDEExtensionProperties(tObjectType) into tPropertiesArray
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
             
             union tPropertiesArray with tPropertiesArray2 recursively
+            
             # Restrict to group, if present
             if pOptionalSection is not empty then
                put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
                put tSectionProps into tPropertiesArray
             end if
          else
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray2
+            put revIDEExtensionProperties(tObjectType) into tPropertiesArray2
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3 recursively
             
@@ -3517,3 +3502,15 @@ function revIDEFontawesomeNameToCodepoint pName
          break
    end switch
 end revIDEFontawesomeNameToCodepoint
+
+function revIDEPaletteResourcePath pFilename
+   local tPalettePath
+   put the long id of the target
+   set the itemdel to slash
+   put item 1 to -2 of the filename of revIDEStackOfObject(the long id of the target) into tPalettePath
+   if there is not a file tPalettePath & slash  & pFilename then
+      return "file not found"
+   end if
+   
+   return  tPalettePath & slash  & pFilename
+end revIDEPaletteResourcePath
