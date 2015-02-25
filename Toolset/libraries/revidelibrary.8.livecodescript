@@ -275,6 +275,8 @@ private function __propertyDataFromInfoFile pFileName
       put item 5 of tLine into tDataA[tPropName]["user_visible"]
       put item 6 of tLine into tDataA[tPropName]["read_only"]
       put item 7 of tLine into tDataA[tPropName]["group"]
+      put item 8 of tLine into tDataA[tPropName]["default"]
+      put item 9 of tLine into tDataA[tPropName]["options"]
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
@@ -338,15 +340,20 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
-         if tDefault is "empty" then
-            put empty into tDefault
+         if tDefault is not empty then
+            if tDefault is "empty" then
+               put empty into tDefault
+            end if
+            put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
+            put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          end if
-         put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
-         put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          
          # If this is an enum property, there are per-object options
          local tOptions
          put item 3 of tLine into tOptions
+         if tOptions is empty then
+            put pPropInfoA[tPropertyName]["options"] into tOptions
+         end if
          replace comma with return in tOptions
          put tOptions into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"]
          
