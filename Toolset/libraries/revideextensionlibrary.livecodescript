@@ -93,6 +93,17 @@ function revIDEExtensionProperties pTypeID
    return sExtensionProperties[pTypeID]
 end revIDEExtensionProperties
 
+function revIDEExtensionPropertiesInfo pTypeId
+   local tPropsA, tPropInfoA
+   put revIDEExtensionProperties(pTypeId) into tPropsA
+   
+   repeat for each key tProp in tPropsA
+      put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
+      put "NaN" into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
+   end repeat
+   return tPropInfoA
+end revIDEExtensionPropertiesInfo
+
 ##############################
 # PRIVATE INSTALLATION PROCESS
 ##############################
@@ -478,23 +489,24 @@ function __extensionProperties pTypeID
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
    repeat for each line tProperty in tProperties
       local tName, tLabel, tSection
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
       
       put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "section")  into tSection
       if tSection is empty then
          put "Basic" into tSection
       end if
-      
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
+      put tSection into tExtensionData[tName]["section"]
       
       put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "label")  into tLabel
       if tLabel is empty then
          put tName into tLabel
       end if
+      put tLabel into tExtensionData[tName]["label"]
       
       local tType
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
-      put tType into tExtensionData[tSection][tLabel][tName]["type"]
-      
+      # We don't actually need the type other than to determine the default editor
+      --put tType into tExtensionData["type"]
       
       //put "number" into tExtensionData[tName]["type"]
       local tEditor
@@ -502,15 +514,14 @@ function __extensionProperties pTypeID
       if tEditor is empty then 
          put "com.livecode.pi." & tType into tEditor
       end if
-      put tEditor into tExtensionData[tSection][tLabel][tName]["editor"]
+      put tEditor into tExtensionData[tName]["editor"]
       
-      put "NaN" into tExtensionData[tSection][tLabel]["order"]
-      put empty into tExtensionData[tSection][tLabel][tName]["default"]
-      put true into tExtensionData[tSection][tLabel][tName]["user_visible"]
-      put empty into tExtensionData[tSection][tLabel][tName]["options"]
-      put empty into tExtensionData[tSection][tLabel][tName]["related"]
-      put false into tExtensionData[tSection][tLabel][tName]["read_only"]
-      put 1 into tExtensionData[tSection][tLabel][tName]["order"]
+      put "NaN" into tExtensionData[tName]["order"]
+      put empty into tExtensionData[tName]["default"]
+      put true into tExtensionData[tName]["user_visible"]
+      put empty into tExtensionData[tName]["options"]
+      put empty into tExtensionData[tName]["related"]
+      put false into tExtensionData[tName]["read_only"]
    end repeat
    
    revXMLDeleteTree tXMLTree
