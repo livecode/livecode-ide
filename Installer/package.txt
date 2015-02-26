@@ -909,6 +909,7 @@ component Toolset
 		file ide-support:revdeploylibraryios.livecodescript
 		file ide-support:revsaveasiosstandalone.livecodescript
 		file ide-support:revsaveasandroidstandalone.livecodescript
+		file ide-support:revsaveasstandalone.livecodescript
 		file ide-support:revliburl.livecodescript
 		file ide-support:revsblibrary.livecodescript
 
