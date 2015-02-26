@@ -1,6 +1,5 @@
 ﻿script "revidelibrary"
 
-
 on revLoadLibrary
    insert the script of me into back
    revIDEInitialiseIDELibrary
@@ -937,10 +936,6 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
          put true into tEffective
       end if
       put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey] 
-      if pDataA[tGroup][tKey] ["options"] begins with "execute:" then
-         do item 2 of pDataA[tGroup][tKey] ["options"] 
-         put it into pDataA[tGroup][tKey] ["options"] 
-      end if
       put tValue into pDataA[tGroup][tKey]["value"]
       put tEffective into pDataA[tGroup][tKey]["effective"]
    end repeat
@@ -3493,7 +3488,7 @@ function revIDEFontawesomeNameToCodepoint pName
       case "colour"
       case "colors"
       case "colours"
-         return "f040"
+         return "f1fc"
          break
       case "image"
       case "icons"
