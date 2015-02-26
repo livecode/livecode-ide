@@ -3481,7 +3481,7 @@ on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
 
 function revIDEPropertySections
-   return "Basic,Colors,Effect,Custom,Icons,Position,Text"
+   return "Basic,Colors,Effects,Custom,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
