@@ -199,15 +199,29 @@ private on inspectorLayout
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
    
+   put empty into msg
    lock screen
    repeat for each element tElement in sPropertyInfo[tSelectedGroup]["grouplist"]
+      put tTop & return after msg
       if there is a group tElement["label"] of me then
          lock messages
+         set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
          set the topleft of group tElement["label"] of me to tLeft,tTop
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
-         add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
+         
+         local tHeight
+         put the editorHeight of group tElement["label"] of me into tHeight
+         if tHeight > 0 then
+            add tHeight + tEditorPadding to tTop
+         else
+            lock messages
+            set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
+            set the topleft of group tElement["label"] of me to tLeft,tTop
+            unlock messages
+            add the height of group tElement["label"] of me + tEditorPadding to tTop
+         end if
       end if
    end repeat
    
@@ -244,11 +258,14 @@ on inspectorSectionChanged pSection
    # Set values for all editors
    inspectorFill
    
+   # Layout again as values will not doubt have effected teh size of some elements
+   inspectorLayout
+   
    # Layout
    dispatch "resizeStack" to me
    unlock screen
    
-   put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
+   //put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
 end inspectorSectionChanged
 
 on idePropertyChanged
@@ -410,7 +427,7 @@ end menuitemEscape
 
 private on inspectorFill
    # store the selected object and position
-   
+   lock screen
    local tProperties
    put revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName()) into tProperties
    
@@ -419,6 +436,7 @@ private on inspectorFill
          set the rowData of group tRow of me to tProperties[tRow]
       end if
    end repeat
+   unlock screen
 end inspectorFill
 
 private on inspectorClear
@@ -542,14 +560,13 @@ on ideSelectedObjectChanged
    # Set values for all editors
    inspectorFill
    
-   # Layout
-   dispatch "resizeStack" to me
-   
    # Set the title of the inspector
    inspectorTitleUpdate
-   unlock screen
    
-   --put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
+   # Layout
+   send "resizeStack" to me
+   
+   unlock screen
 end ideSelectedObjectChanged
 
 on idePreferenceChanged pPreference, pValue
