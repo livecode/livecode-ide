@@ -1,35 +1,39 @@
 ﻿script "revIDEInspectorBehaviorRow"
 # Adds the editor to the row
 local sProperties, sOrder
-on propertyRegister pProperty, pEditor
+on propertyRegister pPropertyInfo
+   local tPropName, tEditor
+   put pPropertyInfo["property_name"] into tPropName
+   put pPropertyInfo["editor"] into tEditor
+   
    # Check that the property has not already been registered
-   if pProperty is among the keys of sProperties then exit propertyRegister
+   if tPropName is among the keys of sProperties then exit propertyRegister
    
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
-   if there is not a stack pEditor then
-      put "com.livecode.pi.string" into pEditor
+   if there is not a stack tEditor then
+      put "com.livecode.pi.string" into tEditor
    end if
    
    local tGroupLongID
-   if there is a group "template" of stack pEditor and there is a button "behavior" of stack pEditor then
-      copy group "template" of stack pEditor to me
+   if there is a group "template" of stack tEditor and there is a button "behavior" of stack tEditor then
+      copy group "template" of stack tEditor to me
       put it into tGroupLongID
-      set the name of it to pProperty
-      set the behavior of button "behavior" of stack pEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
-      set the behavior of tGroupLongID to the long ID of button "behavior" of stack pEditor
-      set the editorProperty of tGroupLongID to pProperty
+      set the name of it to tPropName
+      set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
+      set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
+      set the editorPropertyInfo of tGroupLongId to pPropertyInfo
       dispatch "editorInitialize" to tGroupLongID
    else
       return "No editor template editor found"
    end if
    
    # Store the property name
-   put pProperty into sProperties[pProperty]["property"]
+   put tPropName into sProperties[tPropName]["property"]
    if sOrder is empty then
-      put pProperty into sOrder
+      put tPropName into sOrder
    else
-      put return & pProperty after sOrder
+      put return & tPropName after sOrder
    end if
 end propertyRegister
 

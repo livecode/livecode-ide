@@ -1,12 +1,27 @@
 ﻿script "editorSharedBehavior"
-local sPropertyName
-setProp editorProperty pPropertyName
-   put pPropertyName into sPropertyName
-end editorProperty
+local sPropertyInfo
+setProp editorPropertyInfo pPropertyInfo
+   put pPropertyInfo into sPropertyInfo
+end editorPropertyInfo
 
 getProp editorProperty
-   return sPropertyName
+   return sPropertyInfo["property_name"]
 end editorProperty
+
+getProp editorOptions
+   local tOptions
+   put sPropertyInfo["options"] into tOptions
+   if tOptions begins with "execute" then
+      set the itemdelimiter to ":"
+      do item 2 of tOptions
+      return it
+   end if
+   return tOptions
+end editorOptions
+
+getProp editorDefault
+   return sPropertyInfo["default"]
+end editorDefault
 
 local sEditorEffective
 setProp editorEffective pStyle
@@ -81,20 +96,11 @@ getProp editorValue
    return sValue
 end editorValue
 
-local sDefault
-setProp editorDefault pValue
-   put pValue into sDefault
-end editorDefault
-
-getProp editorDefault
-   return sDefault
-end editorDefault
-
 local sLastValue
 on updateProperty
    if sValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
-      editorValueChanged sPropertyName, sValue
+      editorValueChanged sPropertyInfo["property_name"], sValue
    end if
 end updateProperty
 

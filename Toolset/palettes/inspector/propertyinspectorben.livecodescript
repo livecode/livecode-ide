@@ -146,7 +146,7 @@ private on inspectorGenerate
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
-            dispatch "propertyRegister" to group tElement["label"] of me with tProperty["property_name"],tProperty["editor"]
+            dispatch "propertyRegister" to group tElement["label"] of me with tProperty
             
             # Build the list of properties to display in the tooltip for the row
             if tPropList is empty then
