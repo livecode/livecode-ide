@@ -49,7 +49,7 @@ endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false
 endTime	End	Basic	com.livecode.pi.integer	true	false			
 endValue	End value	Basic	com.livecode.pi.integer	true	false			
 externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
-filename	Source	Basic	com.livecode.pi.string	true	false			
+filename	Source	Basic	com.livecode.pi.file	true	false			
 fillGradient	Fill Gradient	Colors	com.livecode.pi.gradient	true	false	Background Fill
 firstIndent	First indent	Basic	com.livecode.pi.number	true	false		0	
 fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false		true	
