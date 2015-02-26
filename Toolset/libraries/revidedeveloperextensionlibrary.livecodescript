@@ -629,7 +629,7 @@ end __revIDEDeveloperCompileModule
 
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
-   __revIDEDeveloperBuildPackage pFolder, "", tBuiltLocation
+   __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
       answer "Package" && tBuiltLocation && "built successfully"
 end revIDEDeveloperExtensionBuildPackage
 
