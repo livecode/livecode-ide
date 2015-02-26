@@ -63,6 +63,7 @@ on inspectorMessagesRegister
    revIDESubscribe "ideNewStack"
    revIDESubscribe "ideInspectObjects"
    revIDESubscribe "ideCloseStack"
+   revIDESubscribe "ideNameChanged"
 end inspectorMessagesRegister
 
 on inspectorMessagesDeRegister
@@ -71,6 +72,7 @@ on inspectorMessagesDeRegister
    revIDEUnsubscribe "ideInspectObjects"
    revIDEUnsubscribe "ideNewStack"
    revIDEUnsubscribe "ideCloseStack"
+   revIDEUnsubscribe "ideNameChanged"
 end inspectorMessagesDeRegister 
 
 on inpectorOpenEditor pEditor
@@ -250,7 +252,10 @@ on inspectorSectionChanged pSection
 end inspectorSectionChanged
 
 on idePropertyChanged
-   
+   lock screen
+   inspectorFill
+   inspectorTitleUpdate
+   unlock screen
 end idePropertyChanged
 
 
@@ -404,6 +409,8 @@ private function menuitemEscape pItem, pFirst
 end menuitemEscape
 
 private on inspectorFill
+   # store the selected object and position
+   
    local tProperties
    put revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName()) into tProperties
    
@@ -452,7 +459,9 @@ private on inspectorTitleUpdate
    if sSelectedObjects is empty then 
       set the title of me to "No object selected"
    else if the number of lines of sSelectedObjects is 1 then
-      set the title of me to the name of sSelectedObjects && "(id"&& the id of sSelectedObjects&")"
+      if exists(sSelectedObjects) then
+         set the title of me to the name of sSelectedObjects && "(id"&& the id of sSelectedObjects&")"
+      end if
    else
       set the title of me to "Multiple objects"
    end if
@@ -509,6 +518,11 @@ on ideSelectedObjectChanged
       inspectorClear
       exit ideSelectedObjectChanged
    end if
+   
+   # Unsubscribe the the objects previously 
+   revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
+   revIDESubscribe "idePropertyChanged",tSelectedObjects
+   
    put tSelectedObjects into sSelectedObjects
    
    lock screen
