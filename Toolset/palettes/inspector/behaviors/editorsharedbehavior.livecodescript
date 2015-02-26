@@ -100,7 +100,7 @@ end updateProperty
 
 before mouseUp pButtonNumber
    if pButtonNumber is 3 then
-      editorPopupMenu "Reset to default", the loc of me
+      editorPopupMenu "Reset to default", the mouseloc
    else
       pass mouseUp
    end if
