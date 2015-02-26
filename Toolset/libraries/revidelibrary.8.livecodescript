@@ -1,5 +1,6 @@
 ﻿script "revidelibrary"
 
+
 on revLoadLibrary
    insert the script of me into back
    revIDEInitialiseIDELibrary
@@ -3492,7 +3493,7 @@ function revIDEFontawesomeNameToCodepoint pName
       case "colour"
       case "colors"
       case "colours"
-         return "f1fc"
+         return "f040"
          break
       case "image"
       case "icons"
