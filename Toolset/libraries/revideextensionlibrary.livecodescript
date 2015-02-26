@@ -491,13 +491,13 @@ function __extensionProperties pTypeID
       local tName, tLabel, tSection
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
       
-      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "section")  into tSection
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "section")  into tSection
       if tSection is empty then
          put "Basic" into tSection
       end if
       put tSection into tExtensionData[tName]["section"]
       
-      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "label")  into tLabel
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "label")  into tLabel
       if tLabel is empty then
          put tName into tLabel
       end if
@@ -510,7 +510,7 @@ function __extensionProperties pTypeID
       
       //put "number" into tExtensionData[tName]["type"]
       local tEditor
-      put __extensionFetchPropertyMetadata(tXMLTree, tProperty, "editor")  into tEditor
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "editor")  into tEditor
       if tEditor is empty then 
          put "com.livecode.pi." & tType into tEditor
       end if
