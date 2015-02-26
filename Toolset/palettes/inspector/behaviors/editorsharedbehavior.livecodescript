@@ -1,12 +1,27 @@
 ﻿script "editorSharedBehavior"
-local sPropertyName
-setProp editorProperty pPropertyName
-   put pPropertyName into sPropertyName
-end editorProperty
+local sPropertyInfo
+setProp editorPropertyInfo pPropertyInfo
+   put pPropertyInfo into sPropertyInfo
+end editorPropertyInfo
 
 getProp editorProperty
-   return sPropertyName
+   return sPropertyInfo["property_name"]
 end editorProperty
+
+getProp editorOptions
+   local tOptions
+   put sPropertyInfo["options"] into tOptions
+   if tOptions begins with "execute" then
+      set the itemdelimiter to ":"
+      do item 2 of tOptions
+      return it
+   end if
+   return tOptions
+end editorOptions
+
+getProp editorDefault
+   return sPropertyInfo["default"]
+end editorDefault
 
 local sEditorEffective
 setProp editorEffective pStyle
@@ -55,22 +70,22 @@ getprop editorMinWidth
    return sMinWidth
 end editorMinWidth
 
-local sDisabled
-setProp editorDisabled pDisabled
-   if pDisabled is true then
-      put true into sDisabled
+local sEnabled
+setProp editorEnabled pEnabled
+   if pEnabled is true then
+      put true into sEnabled
    else
-      put false into sDisabled
+      put false into sEnabled
    end if
-end editorDisabled
+end editorEnabled
 
-getProp editorDisabled 
-   if sDisabled is true then
+getProp editorEnabled 
+   if sEnabled is true then
       return true
    else
       return false
    end if
-end editorDisabled
+end editorEnabled
 
 local sValue
 setProp editorValue pValue
@@ -81,20 +96,11 @@ getProp editorValue
    return sValue
 end editorValue
 
-local sDefault
-setProp editorDefault pValue
-   put pValue into sDefault
-end editorDefault
-
-getProp editorDefault
-   return sDefault
-end editorDefault
-
 local sLastValue
 on updateProperty
    if sValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
-      editorValueChanged sPropertyName, sValue
+      editorValueChanged sPropertyInfo["property_name"], sValue
    end if
 end updateProperty
 
@@ -126,7 +132,15 @@ end editorPopupMenu
 
 on menuPick pPick
    lock screen
-   set the editorValue of me to the editorDefault of me
-   updateProperty
+   local tDefault
+   put the editorDefault of me into tDefault
+   if tDefault is not "no_default" then
+      if tDefault is "empty" then
+         set the editorValue of me to empty
+      else
+         set the editorValue of me to tDefault
+      end if
+      updateProperty
+   end if
    unlock screen
 end menuPick
