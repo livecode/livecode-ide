@@ -70,22 +70,22 @@ getprop editorMinWidth
    return sMinWidth
 end editorMinWidth
 
-local sDisabled
-setProp editorDisabled pDisabled
-   if pDisabled is true then
-      put true into sDisabled
+local sEnabled
+setProp editorEnabled pEnabled
+   if pEnabled is true then
+      put true into sEnabled
    else
-      put false into sDisabled
+      put false into sEnabled
    end if
-end editorDisabled
+end editorEnabled
 
-getProp editorDisabled 
-   if sDisabled is true then
+getProp editorEnabled 
+   if sEnabled is true then
       return true
    else
       return false
    end if
-end editorDisabled
+end editorEnabled
 
 local sValue
 setProp editorValue pValue
@@ -132,7 +132,15 @@ end editorPopupMenu
 
 on menuPick pPick
    lock screen
-   set the editorValue of me to the editorDefault of me
-   updateProperty
+   local tDefault
+   put the editorDefault of me into tDefault
+   if tDefault is not "no_default" then
+      if tDefault is "empty" then
+         set the editorValue of me to empty
+      else
+         set the editorValue of me to tDefault
+      end if
+      updateProperty
+   end if
    unlock screen
 end menuPick
