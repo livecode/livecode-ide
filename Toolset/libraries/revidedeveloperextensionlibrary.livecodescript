@@ -108,7 +108,6 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
-   return empty
    local tExtensionDetailsA
    
    local tFolders
