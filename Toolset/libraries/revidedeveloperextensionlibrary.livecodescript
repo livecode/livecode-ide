@@ -178,7 +178,7 @@ function revIDEDeveloperExtension pFolder
    return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
 end revIDEDeveloperExtension
 
-private function __revIDEDeveloperExtensionFetchFolderDetails pFolder
+private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tDetailsA
    
    # Check timestamps to see if API  is out of date.
@@ -244,7 +244,7 @@ end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tDetailsA
-   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder) into tDetailsA
+   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, pFile) into tDetailsA
    
    put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
@@ -629,7 +629,7 @@ end __revIDEDeveloperCompileModule
 
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
-   __revIDEDeveloperBuildPackage pFolder, "", tBuiltLocation
+   __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
       answer "Package" && tBuiltLocation && "built successfully"
 end revIDEDeveloperExtensionBuildPackage
 
