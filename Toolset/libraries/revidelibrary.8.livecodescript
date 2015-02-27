@@ -1382,16 +1382,14 @@ function revIDEGlobalVariables
 end revIDEGlobalVariables
 
 function revIDEGlobalProperties
-   set the itemdel to slash
-   set the defaultfolder to item 1 to -4 of the filename of me
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
    return URL("file:globalProperties.txt")
 end revIDEGlobalProperties
 
 function revIDEGlobalPropertyRange pProperty
    local tRangeArray, tLine
    
-   set the itemdel to slash
-   set the defaultfolder to item 1 to -4 of the filename of me
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
    put URL("file:rangeArray.txt") into tRangeArray
    set the itemdel to tab
    
@@ -1406,8 +1404,7 @@ end revIDEGlobalPropertyRange
 function revIDEGlobalPropertyContinuousRange pProperty
    local tContinuousArray, tLine
    
-   set the itemdel to slash
-   set the defaultfolder to item 1 to -4 of the filename of me
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
    put URL("file:continuousArray.txt") into tContinuousArray
    set the itemdel to tab
    
