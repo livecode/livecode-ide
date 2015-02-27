@@ -217,8 +217,8 @@ private on inspectorLayout
             lock messages
             set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
             set the topleft of group tElement["label"] of me to tLeft,tTop
-            unlock messages
             add the height of group tElement["label"] of me + tEditorPadding to tTop
+            unlock messages
          end if
       end if
    end repeat

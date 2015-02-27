@@ -2,6 +2,7 @@
 # Adds the editor to the row
 local sProperties, sOrder
 on propertyRegister pPropertyInfo
+   lock screen
    local tPropName, tEditor
    put pPropertyInfo["property_name"] into tPropName
    put pPropertyInfo["editor"] into tEditor
@@ -17,11 +18,13 @@ on propertyRegister pPropertyInfo
    
    local tGroupLongID
    if there is a group "template" of stack tEditor and there is a button "behavior" of stack tEditor then
+      lock messages
       copy group "template" of stack tEditor to me
       put it into tGroupLongID
       set the name of it to tPropName
       set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
       set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
+      unlock messages
       set the editorPropertyInfo of tGroupLongId to pPropertyInfo
       dispatch "editorInitialize" to tGroupLongID
    else
@@ -35,6 +38,7 @@ on propertyRegister pPropertyInfo
    else
       put return & tPropName after sOrder
    end if
+   unlock screen
 end propertyRegister
 
 on rowReset

@@ -1281,7 +1281,8 @@ end revIDEMessages
  
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
-   --put pMessage, pEffectedTarget
+   if the tool is "browse tool" then exit revIDEMessageSend
+   --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
    # Validate input
    --put the milliseconds && pMessage & return & line 1 to 20 of msg into msg
    
@@ -1556,7 +1557,7 @@ function revIDEGlobalProperties
 end revIDEGlobalProperties
 
 function revIDEGlobalPropertyRange pProperty
-   local tRangeArray, tLine
+   local tRangeArray, tLine, revRangeArray
    
    set the defaultfolder to revIDESpecialFolderPath("IDE")
    put URL("file:rangeArray.txt") into tRangeArray
@@ -1571,7 +1572,7 @@ function revIDEGlobalPropertyRange pProperty
 end revIDEGlobalPropertyRange
 
 function revIDEGlobalPropertyContinuousRange pProperty
-   local tContinuousArray, tLine
+   local tContinuousArray, tLine, revContinuousRangeArray
    
    set the defaultfolder to revIDESpecialFolderPath("IDE")
    put URL("file:continuousArray.txt") into tContinuousArray
