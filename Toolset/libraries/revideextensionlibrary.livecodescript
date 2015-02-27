@@ -516,12 +516,27 @@ function __extensionProperties pTypeID
       end if
       put tEditor into tExtensionData[tName]["editor"]
       
+      local tOptions
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "options")  into tOptions
+      replace comma with return in tOptions
+      put tOptions into tExtensionData[tName]["options"]
+      
+      local tDefault
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "default")  into tDefault
+      put tDefault into tExtensionData[tName]["default"]
+      
+      local tReadOnly
+      get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
+      if it is empty or it begins with "xmlerr" then
+         put true into tReadOnly
+      else
+         put false into tReadOnly
+      end if
+      put tReadOnly into tExtensionData[tName]["read_only"]
+      
       put "NaN" into tExtensionData[tName]["order"]
-      put empty into tExtensionData[tName]["default"]
       put true into tExtensionData[tName]["user_visible"]
-      put empty into tExtensionData[tName]["options"]
       put empty into tExtensionData[tName]["related"]
-      put false into tExtensionData[tName]["read_only"]
    end repeat
    
    revXMLDeleteTree tXMLTree
