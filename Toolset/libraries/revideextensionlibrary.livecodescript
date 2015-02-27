@@ -523,7 +523,9 @@ function __extensionPropertiesFromManifest pManifestPath
       
       local tDefault
       put __extensionFetchPropertyMetadata(tXMLTree, tName, "default")  into tDefault
+      replace "\n" with return in tDefault
       put tDefault into tExtensionData[tName]["default"]
+      
       
       local tReadOnly
       get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")

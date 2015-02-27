@@ -94,7 +94,7 @@ local sAllowUpdate
 local sLastValue
 local sValue
 setProp editorValue pValue
-   if (sLastValue is empty and pValue is not empty) or (pValue is not sLastValue) or sEditorEffective then 
+   if sLastValue is empty or pValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
       put pValue into sValue
       put true into sAllowUpdate
