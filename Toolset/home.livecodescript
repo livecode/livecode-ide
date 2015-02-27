@@ -1000,23 +1000,26 @@ command revInternal__InitialiseLibraries
    revInternal__Log "Enter", "Libraries Initialisation"
    
    insert script of stack "revInitialisationLibrary" into back
-
-	# BB-2014-09-30: New IDE library
-	try	
-		insert script of stack "revideextensionlibrary" into back 	 
-		insert script of stack "revidedeveloperextensionlibrary" into back	
-	catch tError 	 	
-		answer "Error loading extensions library" & return & tError 	 	
-	end try 	 	
-	    	 	
-	try 	 	
-		insert script of stack "revidedocumentationlibrary" into back 	 	
-   		revInternal__LoadLibrary "revIDELibrary.8"	
-  	 		 	
-		insert script of stack "revidemessagehandler" into front 	 	
-	catch tError 	 	
-		answer "Error loading main IDE" & return & tError 	 	
-	end try 
+   
+   # BB-2014-09-30: New IDE library
+   try	
+      insert script of stack "revideextensionlibrary" into back 	 
+      insert script of stack "revidedeveloperextensionlibrary" into back	
+      insert script of stack "revsaveasstandalone" into back
+      insert script of stack "revsaveasiosstandalone" into back
+      insert script of stack "revsaveasandroidstandalone" into back
+   catch tError 	 	
+      answer "Error loading extensions library" & return & tError 	 	
+   end try 	 	
+   	    	 	
+   try 	 	
+      insert script of stack "revidedocumentationlibrary" into back 	 	
+      revInternal__LoadLibrary "revIDELibrary.8"	
+      	 		 	
+      insert script of stack "revidemessagehandler" into front 	 	
+   catch tError 	 	
+      answer "Error loading main IDE" & return & tError 	 	
+   end try 
    
    revInternal__LoadLibrary "revBackScriptLibrary"
    
