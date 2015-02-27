@@ -1382,12 +1382,12 @@ function revIDEGlobalVariables
    return tGlobalList
 end revIDEGlobalVariables
 
-local sRangeArray
 function revIDEGlobalProperties
    set the defaultfolder to revIDESpecialFolderPath("IDE")
    return URL("file:globalProperties.txt")
 end revIDEGlobalProperties
 
+local sRangeArray
 function revIDEGlobalPropertyRange pProperty
    if sRangeArray is empty then
       local tRangeArray, tLine
