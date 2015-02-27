@@ -9,7 +9,7 @@ antialiased	Antialiased	Basic	com.livecode.pi.boolean	true	false
 arcAngle	Arc	Basic	com.livecode.pi.number	true	false			
 armedIcon	Armed Icon	Icons	com.livecode.pi.icon	true	false		0	
 autoHilite	Auto Hilite	Basic	com.livecode.pi.boolean	true	false			
-autoTab	Tab om return	Basic	com.livecode.pi.boolean	true	false			
+autoTab	Tab on return	Basic	com.livecode.pi.boolean	true	false			
 backgroundBehavior	Behave like a background	Basic	com.livecode.pi.boolean	true	false		false	
 backgroundColor	Fill Color	Colors	com.livecode.pi.color	true	false	Background Fill			
 backgroundPattern	Fill Pattern	Colors	com.livecode.pi.pattern	true	false	Background Fill		
@@ -112,7 +112,7 @@ name	Name	Basic	com.livecode.pi.string	true	false
 nonContiguousHilites	Non-contiguous	Basic	com.livecode.pi.boolean	true	false			
 number	Number	Basic	com.livecode.pi.number	true	false			
 numberFormat	Value format	Basic	com.livecode.pi.string	true	false			
-opaque	opaque	Basic	com.livecode.pi.boolean	true	false			
+opaque	Opaque	Basic	com.livecode.pi.boolean	true	false			
 orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical
 outerGlow	Outer Glow	Effects	com.livecode.pi.graphicEffect	true	false			
 pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false			
@@ -137,11 +137,11 @@ shadow	Shadow	Basic	com.livecode.pi.boolean	true	false
 shadowColor	Shadow Color	Colors	com.livecode.pi.color	true	false	Shadow Fill		
 shadowOffset	Shadow Offset	Icons	com.livecode.pi.number	true	false			
 shadowPattern	Shadow Pattern	Colors	com.livecode.pi.pattern	true	false	Shadow Fill		
-sharedBehavior	Shared group	Basic	com.livecode.pi.boolean	true	false		false	
+sharedBehavior	Shared Group	Basic	com.livecode.pi.boolean	true	false		false	
 sharedHilite	Shared Hilite	Basic	com.livecode.pi.boolean	true	false			
-sharedText	share Text	Basic	com.livecode.pi.boolean	true	false			
+sharedText	Share Text	Basic	com.livecode.pi.boolean	true	false			
 showBadge	Controller toggel	Basic	com.livecode.pi.boolean	true	false			
-showBorder	show Border	Basic	com.livecode.pi.boolean	true	false			
+showBorder	Show Border	Basic	com.livecode.pi.boolean	true	false			
 showController	Controller	Basic	com.livecode.pi.boolean	true	false			
 showFocusBorder	Focus Border	Basic	com.livecode.pi.boolean	true	false			
 showLines	Text baselines	Table	com.livecode.pi.boolean	true	false			

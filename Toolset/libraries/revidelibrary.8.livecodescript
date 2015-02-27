@@ -357,6 +357,13 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          replace comma with return in tOptions
          put tOptions into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"]
          
+         # Read any per-object 'read-only' data
+         local tReadOnly
+         put item 5 of tLine into tReadOnly
+         if tReadOnly is not empty then
+            put tReadOnly into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["read_only"]
+         end if
+         
          # Increment the count for this section
          add 1 to tCountsA[tSection]
       end if
