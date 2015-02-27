@@ -1276,7 +1276,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
  
 # System function telling the IDE to send 
@@ -1556,34 +1556,38 @@ function revIDEGlobalProperties
    return URL("file:globalProperties.txt")
 end revIDEGlobalProperties
 
+local sRangeArray
 function revIDEGlobalPropertyRange pProperty
-   local tRangeArray, tLine, revRangeArray
-   
-   set the defaultfolder to revIDESpecialFolderPath("IDE")
-   put URL("file:rangeArray.txt") into tRangeArray
-   set the itemdel to tab
-   
-   repeat for each line tLine in tRangeArray
-      replace comma with return in item 2 of tLine
-      put item 2 of tLine into revRangeArray[item 1 of tLine]
-   end repeat
-   
-   return revRangeArray[pProperty]
+   if sRangeArray is empty then
+      local tRangeArray, tLine
+      
+      set the defaultfolder to revIDESpecialFolderPath("IDE")
+      put URL("file:rangeArray.txt") into tRangeArray
+      set the itemdel to tab
+      
+      repeat for each line tLine in tRangeArray
+         replace comma with return in item 2 of tLine
+         put item 2 of tLine into sRangeArray[item 1 of tLine]
+      end repeat
+   end if
+   return sRangeArray[pProperty]
 end revIDEGlobalPropertyRange
 
+local sContinuousRangeArray
 function revIDEGlobalPropertyContinuousRange pProperty
-   local tContinuousArray, tLine, revContinuousRangeArray
-   
-   set the defaultfolder to revIDESpecialFolderPath("IDE")
-   put URL("file:continuousArray.txt") into tContinuousArray
-   set the itemdel to tab
-   
-   repeat for each line tLine in tContinuousArray
-      replace comma with return in item 2 of tLine
-      put item 2 of tLine into revContinuousRangeArray[item 1 of tLine]
-   end repeat
-   
-   return revContinuousRangeArray[pProperty]
+   if sContinuousRangeArray is empty then
+      local tContinuousArray, tLine
+      
+      set the defaultfolder to revIDESpecialFolderPath("IDE")
+      put URL("file:continuousArray.txt") into tContinuousArray
+      set the itemdel to tab
+      
+      repeat for each line tLine in tContinuousArray
+         replace comma with return in item 2 of tLine
+         put item 2 of tLine into sContinuousRangeArray[item 1 of tLine]
+      end repeat
+   end if
+   return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
 /*
@@ -3558,3 +3562,8 @@ function revIDEPaletteResourcePath pFilename
    
    return  tPalettePath & slash  & pFilename
 end revIDEPaletteResourcePath
+
+on logChanged pLog
+   revIDEMessageSend "ideExtensionLog", pLog
+end logChanged
+

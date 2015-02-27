@@ -318,6 +318,13 @@ on __extensionInstallAPI pExtensionID
    send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
 end __extensionInstallAPI
 
+on __updateExtensionPropertiesFromManifest pManifestPath, pID
+   get __extensionPropertiesFromManifest(pManifestPath)
+   if it is not empty then
+      put it into sExtensionProperties[pID]
+   end if
+end __updateExtensionPropertiesFromManifest
+
 on __extensionInstallLoad pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Loading extension", 60
@@ -330,7 +337,9 @@ on __extensionInstallLoad pExtensionID
    load extension tModuleFile
    //put the result && return &  the loadedextensions
    
-   put __extensionProperties(__extensionPropertyGet(pExtensionID, "name")) into sExtensionProperties[ __extensionPropertyGet(pExtensionID, "name")]
+   local tID
+   put  __extensionPropertyGet(pExtensionID, "name") into tID
+   put __extensionProperties(tID) into sExtensionProperties[tID]
    
    # Next step
    send "__extensionInstallMakeLive" && pExtensionID to me in 0 milliseconds
@@ -472,20 +481,11 @@ function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
    return empty
 end __extensionFetchPropertyMetadata
 
-function __extensionProperties pTypeID
-   # Get the internal cache ID
-   local tIndex
-   put __extensionCacheID("name", pTypeID) into tIndex
-   
-   # Now get the path to the manifest file
-   local tManifestPath
-   put __extensionPropertyGet(tIndex, "install_path") & slash & "manifest.xml" into tManifestPath
-   
-   if not there is a file tManifestPath then return empty
-   
+function __extensionPropertiesFromManifest pManifestPath
+   if not there is a file pManifestPath then return empty
    # Create the XML tree
    local tXMLTree, tProperties, tExtensionData
-   put revXMLCreateTreeFromFile(tManifestPath,true,true,false) into tXMLTree
+   put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
    repeat for each line tProperty in tProperties
       local tName, tLabel, tSection
@@ -541,6 +541,28 @@ function __extensionProperties pTypeID
    
    revXMLDeleteTree tXMLTree
    return tExtensionData
+end __extensionPropertiesFromManifest
+
+function __extensionProperties pTypeID
+   set the itemdelimiter to slash
+   
+   # Get the internal cache ID
+   local tIndex
+   put __extensionCacheID("name", pTypeID) into tIndex
+   
+   # Now get the path to the manifest file
+   local tManifestPath
+   put __extensionPropertyGet(tIndex, "install_path") into tManifestPath
+   if tManifestPath is empty then
+      put item 1 to -2 of __extensionPropertyGet(tIndex, "download_package_path") into tManifestPath
+   end if
+   
+   if tManifestPath is empty then return empty
+   
+   put slash & "manifest.xml" after tManifestPath
+   if not there is a file tManifestPath then return empty
+   
+   return __extensionPropertiesFromManifest(tManifestPath)
 end __extensionProperties
 
 function __extensionError pExtensionID, pErrorMessage

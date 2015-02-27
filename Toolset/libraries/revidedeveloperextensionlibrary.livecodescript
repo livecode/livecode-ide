@@ -269,7 +269,10 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    end if
    
    __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
+   local tMetadataA
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tMetadataA
+   union tDetailsA with tMetadataA
+   
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
       return tDetailsA
@@ -344,6 +347,8 @@ on revIDEDeveloperExtensionTest pPath
    end if
    
    __revIDEDeveloperExtensionLog "Launching in Test Window"
+   
+   __updateExtensionPropertiesFromManifest pPath & slash & "manifest.xml", tDetailsA["id"]
    
    __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
 end revIDEDeveloperExtensionTest
@@ -629,7 +634,7 @@ end __revIDEDeveloperCompileModule
 
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
-   __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
+   __revIDEDeveloperBuildPackage pFolder, "", tBuiltLocation
       answer "Package" && tBuiltLocation && "built successfully"
 end revIDEDeveloperExtensionBuildPackage
 
