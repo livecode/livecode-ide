@@ -2,6 +2,9 @@
 local sPropertyInfo
 setProp editorPropertyInfo pPropertyInfo
    put pPropertyInfo into sPropertyInfo
+   if pPropertyInfo["read_only"] is true then
+      set the editorEnabled of me to false
+   end if
 end editorPropertyInfo
 
 getProp editorProperty
@@ -87,20 +90,25 @@ getProp editorEnabled
    end if
 end editorEnabled
 
+local sAllowUpdate
+local sLastValue
 local sValue
 setProp editorValue pValue
-   put pValue into sValue
+   if (sLastValue is empty and pValue is not empty) or (pValue is not sLastValue) or sEditorEffective then 
+      put sValue into sLastValue
+      put pValue into sValue
+      put true into sAllowUpdate
+   end if
 end editorValue
 
 getProp editorValue
    return sValue
 end editorValue
 
-local sLastValue
 on updateProperty
-   if sValue is not sLastValue or sEditorEffective then 
-      put sValue into sLastValue
-      editorValueChanged sPropertyInfo["property_name"], sValue
+  if sAllowUpdate is true then
+     editorValueChanged sPropertyInfo["property_name"], sValue
+     put false into sAllowUpdate
    end if
 end updateProperty
 
