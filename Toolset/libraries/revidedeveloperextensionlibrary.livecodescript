@@ -269,7 +269,10 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    end if
    
    __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
+   local tMetadataA
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tMetadataA
+   union tDetailsA with tMetadataA
+   
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
       return tDetailsA
@@ -629,7 +632,7 @@ end __revIDEDeveloperCompileModule
 
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
-   __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
+   __revIDEDeveloperBuildPackage pFolder, "", tBuiltLocation
       answer "Package" && tBuiltLocation && "built successfully"
 end revIDEDeveloperExtensionBuildPackage
 
