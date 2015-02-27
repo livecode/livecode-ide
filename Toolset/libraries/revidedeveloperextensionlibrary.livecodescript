@@ -178,7 +178,7 @@ function revIDEDeveloperExtension pFolder
    return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
 end revIDEDeveloperExtension
 
-private function __revIDEDeveloperExtensionFetchFolderDetails pFolder
+private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tDetailsA
    
    # Check timestamps to see if API  is out of date.
@@ -244,7 +244,7 @@ end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tDetailsA
-   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder) into tDetailsA
+   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, pFile) into tDetailsA
    
    put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
@@ -269,7 +269,10 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    end if
    
    __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDetailsA
+   local tMetadataA
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tMetadataA
+   union tDetailsA with tMetadataA
+   
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
       return tDetailsA
