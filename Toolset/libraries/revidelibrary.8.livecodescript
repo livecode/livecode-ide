@@ -3038,7 +3038,7 @@ command revIDEOpenPalette pPaletteName
    
    switch pPaletteName
       case "inspector"
-         palette stack "propertyInspectorBen"
+         palette stack "revInspector"
          
          --         put revIDEPropertyInspector() into tExistingPalette
          --         if tExistingPalette is not empty then
