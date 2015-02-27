@@ -83,10 +83,10 @@ setProp editorEnabled pEnabled
 end editorEnabled
 
 getProp editorEnabled 
-   if sEnabled is true then
-      return true
-   else
+   if sEnabled is false then
       return false
+   else
+      return true
    end if
 end editorEnabled
 
