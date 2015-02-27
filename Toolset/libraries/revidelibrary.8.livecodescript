@@ -1551,10 +1551,39 @@ function revIDEGlobalVariables
 end revIDEGlobalVariables
 
 function revIDEGlobalProperties
-   set the itemdel to slash
-   set the defaultfolder to item 1 to -3 of the filename of me
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
    return URL("file:globalProperties.txt")
 end revIDEGlobalProperties
+
+function revIDEGlobalPropertyRange pProperty
+   local tRangeArray, tLine
+   
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
+   put URL("file:rangeArray.txt") into tRangeArray
+   set the itemdel to tab
+   
+   repeat for each line tLine in tRangeArray
+      replace comma with return in item 2 of tLine
+      put item 2 of tLine into revRangeArray[item 1 of tLine]
+   end repeat
+   
+   return revRangeArray[pProperty]
+end revIDEGlobalPropertyRange
+
+function revIDEGlobalPropertyContinuousRange pProperty
+   local tContinuousArray, tLine
+   
+   set the defaultfolder to revIDESpecialFolderPath("IDE")
+   put URL("file:continuousArray.txt") into tContinuousArray
+   set the itemdel to tab
+   
+   repeat for each line tLine in tContinuousArray
+      replace comma with return in item 2 of tLine
+      put item 2 of tLine into revContinuousRangeArray[item 1 of tLine]
+   end repeat
+   
+   return revContinuousRangeArray[pProperty]
+end revIDEGlobalPropertyContinuousRange
 
 /*
 Gets a list of the mainstacks, taking into account the Show IDE Stacks preference. 
