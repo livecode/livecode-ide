@@ -497,7 +497,7 @@ function revInternal__StackFiles
 	
 	put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
 	if revEnvironmentIsInstalled() then
-		put return & revEnvironmentToolsetPath() & slash & "ide-support" after tFolders
+		put return & revEnvironmentToolsetPath() after tFolders
 	else
 		put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
 	end if	
