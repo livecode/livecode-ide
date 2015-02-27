@@ -655,133 +655,14 @@ component Databases.MacOSX
 ////////////////////////////////////////////////////////////////////////////////
 
 component Toolset
+	into [[ToolsFolder]] place
+		rfolder ide:Toolset
 	into [[ToolsFolder]]/Toolset place
-		file ide:Toolset/resources/commercial/ideSkin/about-background.png as resources/commercial/ideSkin/about-background.png
-		file ide:Toolset/resources/commercial/ideSkin/about-background_legacy.png as resources/commercial/ideSkin/about-background_legacy.png
-		file ide:Toolset/resources/commercial/ideSkin/bubble.png as resources/commercial/ideSkin/bubble.png
-		file ide:Toolset/resources/commercial/ideSkin/getStartedAcademy.png as resources/commercial/ideSkin/getStartedAcademy.png
-		file ide:Toolset/resources/commercial/ideSkin/getStartedVideo.png as resources/commercial/ideSkin/getStartedVideo.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb1_on.png as resources/commercial/ideSkin/IDEthumb1_on.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb1_over.png as resources/commercial/ideSkin/IDEthumb1_over.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb1_up.png as resources/commercial/ideSkin/IDEthumb1_up.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb2_on.png as resources/commercial/ideSkin/IDEthumb2_on.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb2_over.png as resources/commercial/ideSkin/IDEthumb2_over.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb2_up.png as resources/commercial/ideSkin/IDEthumb2_up.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb3_on.png as resources/commercial/ideSkin/IDEthumb3_on.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb3_over.png as resources/commercial/ideSkin/IDEthumb3_over.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb3_up.png as resources/commercial/ideSkin/IDEthumb3_up.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_on.png as resources/commercial/ideSkin/IDEthumb4_on.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_over.png as resources/commercial/ideSkin/IDEthumb4_over.png
-		file ide:Toolset/resources/commercial/ideSkin/IDEthumb4_up.png as resources/commercial/ideSkin/IDEthumb4_up.png
-		file ide:Toolset/resources/commercial/ideSkin/resource-center-bottom.png as resources/commercial/ideSkin/resource-center-bottom.png
-		file ide:Toolset/resources/commercial/ideSkin/resource-center-title.png as resources/commercial/ideSkin/resource-center-title.png
-		file ide:Toolset/resources/commercial/ideSkin/resource-center-title_legacy.png as resources/commercial/ideSkin/resource-center-title_legacy.png
-		file ide:Toolset/resources/commercial/ideSkin/resource-center-top.png as resources/commercial/ideSkin/resource-center-top.png
-		file ide:Toolset/resources/commercial/ideSkin/resource-center-top_legacy.png as resources/commercial/ideSkin/resource-center-top_legacy.png
-		file ide:Toolset/resources/commercial/ideSkin/revOnline-top.png as resources/commercial/ideSkin/revOnline-top.png
-		file ide:Toolset/resources/commercial/ideSkin/revOnline-top_legacy.png as resources/commercial/ideSkin/revOnline-top_legacy.png
-		file ide:Toolset/resources/commercial/ideSkin/road-map-up.png as resources/commercial/ideSkin/road-map-up.png
-		file ide:Toolset/resources/commercial/ideSkin/splash.png as resources/commercial/ideSkin/splash.png
-		file ide:Toolset/resources/commercial/ideSkin/splash_legacy.png as resources/commercial/ideSkin/splash_legacy.png
-		file ide:Toolset/resources/commercial/ideSkin/startCenterBackground.png as resources/commercial/ideSkin/startCenterBackground.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_blog_over.png as resources/commercial/ideSkin/visit_blog_over.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_blog_up.png as resources/commercial/ideSkin/visit_blog_up.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_forum_over.png as resources/commercial/ideSkin/visit_forum_over.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_forum_up.png as resources/commercial/ideSkin/visit_forum_up.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_foum_over.png as resources/commercial/ideSkin/visit_foum_over.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_foum_up.png as resources/commercial/ideSkin/visit_foum_up.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_stack_over.png as resources/commercial/ideSkin/visit_stack_over.png
-		file ide:Toolset/resources/commercial/ideSkin/visit_stack_up.png as resources/commercial/ideSkin/visit_stack_up.png
-		file ide:Toolset/resources/commercial/ideSkin/logo.png as resources/commercial/ideSkin/logo.png
-		file ide:Toolset/resources/commercial/ideSkin/logo@extra-high.png as resources/commercial/ideSkin/logo@extra-high.png
-		if TargetEdition is "Community" then
-			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background.png
-			file ide:Toolset/resources/community/ideSkin/about-background.png as resources/community/ideSkin/about-background_legacy.png
-			file ide:Toolset/resources/community/ideSkin/bubble.png as resources/community/ideSkin/bubble.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-bottom.png as resources/community/ideSkin/resource-center-bottom.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-top.png as resources/community/ideSkin/resource-center-top.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-top_legacy.png as resources/community/ideSkin/resource-center-top_legacy.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-title.png as resources/community/ideSkin/resource-center-title.png
-			file ide:Toolset/resources/community/ideSkin/resource-center-title_legacy.png as resources/community/ideSkin/resource-center-title_legacy.png
-			file ide:Toolset/resources/community/ideSkin/revOnline-top.png as resources/community/ideSkin/revOnline-top.png
-			file ide:Toolset/resources/community/ideSkin/revOnline-top_legacy.png as resources/community/ideSkin/revOnline-top_legacy.png
-			file ide:Toolset/resources/community/ideSkin/splash.png as resources/community/ideSkin/splash.png
-			file ide:Toolset/resources/community/ideSkin/splash_legacy.png as resources/community/ideSkin/splash_legacy.png
-			file ide:Toolset/resources/community/ideSkin/startCenterBackground.png as resources/community/ideSkin/startCenterBackground.png
-			file ide:Toolset/resources/community/ideSkin/logo.png as resources/community/ideSkin/logo.png
-			file ide:Toolset/resources/community/ideSkin/logo@extra-high.png as resources/community/ideSkin/logo@extra-high.png
-			file ide:Toolset/resources/community/ideSkin/html-donate.png as resources/community/ideSkin/html-donate.png
-			file ide:Toolset/resources/community/ideSkin/html-donate@extra-high.png as resources/community/ideSkin/html-donate@extra-high.png
-			file ide:Toolset/resources/community/ideSkin/html-tease.png as resources/community/ideSkin/html-tease.png
-			file ide:Toolset/resources/community/ideSkin/html-tease@extra-high.png as resources/community/ideSkin/html-tease@extra-high.png
-		stack ide:Toolset/Unsupported/revanimation.rev as Unsupported/revanimation.rev
-		stack ide:Toolset/Unsupported/revdbquerysetup.rev as Unsupported/revdbquerysetup.rev
-		stack ide:Toolset/Unsupported/revreportsetup.rev as Unsupported/revreportsetup.rev
-		stack ide:Toolset/home.rev
-		stack ide:Toolset/ideCore.livecode
-		stack ide:Toolset/ideMessageLibrary.livecode
-		stack ide:Toolset/ideProjectBrowser.livecode
-		stack ide:Toolset/ideProjectInformationLibrary.livecode
-		stack ide:Toolset/revabout.rev
-		stack ide:Toolset/revanswerdialog.rev
-		stack ide:Toolset/revapplicationoverview.rev
-		stack ide:Toolset/revaskdialog.rev
-		stack ide:Toolset/revcolorchooser.rev
-		stack ide:Toolset/revCore.livecode
-		stack ide:Toolset/revcursors.rev
-		stack ide:Toolset/revdatagridlibrary.rev
-		stack ide:Toolset/revdebugger.rev
 		stack ide-support:revdeploylibrary.livecodescript
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
-		stack ide:Toolset/revdictionary.rev
-		stack ide:Toolset/revdocumentationlibrary.rev
-		stack ide:Toolset/reverrordisplay.rev
-		stack ide:Toolset/revexecutionerror.rev
-		stack ide:Toolset/revgeneralicons.rev
-		stack ide:Toolset/revgeneralpatterns.rev
-		stack ide:Toolset/reviconchooser.rev
-		stack ide:Toolset/revicons.rev
-		stack ide:Toolset/revimagelibrary.rev
-		stack ide:Toolset/revlauncher.rev
-		stack ide:Toolset/revlibrary.rev
-		stack ide:Toolset/revlinuxcursors.rev
-		stack ide:Toolset/revmaccursors.rev
-		stack ide:Toolset/revmenubar.rev
-		stack ide:Toolset/revmenumanager.rev
-		stack ide:Toolset/revmessagebox.rev
-		stack ide:Toolset/revMessageLibrary.livecode
-		stack ide:Toolset/revmessagewatcher.rev
-		stack ide:Toolset/revmetadata.rev
-		stack ide:Toolset/revmobiledeployer.rev
-		stack ide:Toolset/revonline.rev
-		stack ide:Toolset/revonlinelibrary.rev
-		stack ide:Toolset/revpagesetup.rev
-		stack ide:Toolset/revpagesetupdialog.rev
-		stack ide:Toolset/revpalette.rev
-		stack ide:Toolset/revplugineditor.rev
-		stack ide:Toolset/revpreferences.rev
-		stack ide:Toolset/revpreferencesgui.rev
-		stack ide:Toolset/revpreferencestemplate.rev
-		stack ide:Toolset/revprintdialog.rev
-		stack ide:Toolset/revprinterchooser.rev
-		stack ide:Toolset/revProjectBrowser.livecode
-		stack ide:Toolset/revProjectInformationLibrary.livecode
-		stack ide:Toolset/revreplicate.rev
-		stack ide:Toolset/revresourcecenter.rev
-		stack ide:Toolset/revrulersh.rev
-		stack ide:Toolset/revrulersv.rev
-		stack ide:Toolset/revscripteditor.rev
-		stack ide:Toolset/revsearch.rev
-		stack ide:Toolset/revsearchengine.rev
-		stack ide:Toolset/revstandalonesettings.rev
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasandroidstandalone.livecodescript
-		stack ide:Toolset/revstartcenter.livecode
-		stack ide:Toolset/revtemplatechooser.rev
-		stack ide:Toolset/revtools.rev
-		stack ide:Toolset/revupdatechecker.rev
-		stack ide:Toolset/revvariablewatcher.rev
 		stack ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
