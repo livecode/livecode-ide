@@ -93,6 +93,17 @@ function revIDEExtensionProperties pTypeID
    return sExtensionProperties[pTypeID]
 end revIDEExtensionProperties
 
+function revIDEExtensionPropertiesInfo pTypeId
+   local tPropsA, tPropInfoA
+   put revIDEExtensionProperties(pTypeId) into tPropsA
+   
+   repeat for each key tProp in tPropsA
+      put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
+      put "NaN" into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
+   end repeat
+   return tPropInfoA
+end revIDEExtensionPropertiesInfo
+
 ##############################
 # PRIVATE INSTALLATION PROCESS
 ##############################
@@ -307,6 +318,13 @@ on __extensionInstallAPI pExtensionID
    send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
 end __extensionInstallAPI
 
+on __updateExtensionPropertiesFromManifest pManifestPath, pID
+   get __extensionPropertiesFromManifest(pManifestPath)
+   if it is not empty then
+      put it into sExtensionProperties[pID]
+   end if
+end __updateExtensionPropertiesFromManifest
+
 on __extensionInstallLoad pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Loading extension", 60
@@ -319,7 +337,9 @@ on __extensionInstallLoad pExtensionID
    load extension tModuleFile
    //put the result && return &  the loadedextensions
    
-   put __extensionProperties(__extensionPropertyGet(pExtensionID, "name")) into sExtensionProperties[ __extensionPropertyGet(pExtensionID, "name")]
+   local tID
+   put  __extensionPropertyGet(pExtensionID, "name") into tID
+   put __extensionProperties(tID) into sExtensionProperties[tID]
    
    # Next step
    send "__extensionInstallMakeLive" && pExtensionID to me in 0 milliseconds
@@ -451,38 +471,100 @@ end __extensionUninstallUpdateCache
 # PRIVATE SHARED
 ##############################
 
+function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
+   local tNode
+   put revXMLMatchingNode(pXMLTree, "package", "metadata", "key", pProperty &"." & pElement, 1) into tNode
+   if tNode is not empty then
+      return revXMLNodeContents(pXMLTree, tNode)
+   end if
+   
+   return empty
+end __extensionFetchPropertyMetadata
+
+function __extensionPropertiesFromManifest pManifestPath
+   if not there is a file pManifestPath then return empty
+   # Create the XML tree
+   local tXMLTree, tProperties, tExtensionData
+   put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
+   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
+   repeat for each line tProperty in tProperties
+      local tName, tLabel, tSection
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
+      
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "section")  into tSection
+      if tSection is empty then
+         put "Basic" into tSection
+      end if
+      put tSection into tExtensionData[tName]["section"]
+      
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "label")  into tLabel
+      if tLabel is empty then
+         put tName into tLabel
+      end if
+      put tLabel into tExtensionData[tName]["label"]
+      
+      local tType
+      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
+      # We don't actually need the type other than to determine the default editor
+      --put tType into tExtensionData["type"]
+      
+      //put "number" into tExtensionData[tName]["type"]
+      local tEditor
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "editor")  into tEditor
+      if tEditor is empty then 
+         put "com.livecode.pi." & tType into tEditor
+      end if
+      put tEditor into tExtensionData[tName]["editor"]
+      
+      local tOptions
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "options")  into tOptions
+      replace comma with return in tOptions
+      put tOptions into tExtensionData[tName]["options"]
+      
+      local tDefault
+      put __extensionFetchPropertyMetadata(tXMLTree, tName, "default")  into tDefault
+      replace "\n" with return in tDefault
+      put tDefault into tExtensionData[tName]["default"]
+      
+      
+      local tReadOnly
+      get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
+      if it is empty or it begins with "xmlerr" then
+         put true into tReadOnly
+      else
+         put false into tReadOnly
+      end if
+      put tReadOnly into tExtensionData[tName]["read_only"]
+      
+      put "NaN" into tExtensionData[tName]["order"]
+      put true into tExtensionData[tName]["user_visible"]
+      put empty into tExtensionData[tName]["related"]
+   end repeat
+   
+   revXMLDeleteTree tXMLTree
+   return tExtensionData
+end __extensionPropertiesFromManifest
+
 function __extensionProperties pTypeID
+   set the itemdelimiter to slash
+   
    # Get the internal cache ID
    local tIndex
    put __extensionCacheID("name", pTypeID) into tIndex
    
    # Now get the path to the manifest file
    local tManifestPath
-   put __extensionPropertyGet(tIndex, "install_path") & slash & "manifest.xml" into tManifestPath
+   put __extensionPropertyGet(tIndex, "install_path") into tManifestPath
+   if tManifestPath is empty then
+      put item 1 to -2 of __extensionPropertyGet(tIndex, "download_package_path") into tManifestPath
+   end if
    
+   if tManifestPath is empty then return empty
+   
+   put slash & "manifest.xml" after tManifestPath
    if not there is a file tManifestPath then return empty
    
-   # Create the XML tree
-   local tXMLTree, tProperties, tExtensionData
-   put revXMLCreateTreeFromFile(tManifestPath,true,true,false) into tXMLTree
-   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   repeat with x = 1 to the number of lines in tProperties
-      local tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"name") into tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"name") into tExtensionData[tName]["label"]
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tProperties,"get") into tExtensionData[tName]["type"]
-      //put "number" into tExtensionData[tName]["type"]
-      put 100 into tExtensionData[tName]["order"]
-      put "basic" into tExtensionData[tName]["group"]
-      put empty into tExtensionData[tName]["default"]
-      put true into tExtensionData[tName]["user_visible"]
-      put empty into tExtensionData[tName]["options"]
-      put empty into tExtensionData[tName]["related"]
-      put false into tExtensionData[tName]["read_only"]
-   end repeat
-   
-   revXMLDeleteTree tXMLTree
-   return tExtensionData
+   return __extensionPropertiesFromManifest(tManifestPath)
 end __extensionProperties
 
 function __extensionError pExtensionID, pErrorMessage

@@ -11,6 +11,7 @@ on startup
    
    revInternal__SetupStartup
    
+   revInternal__Log "Start"
    revInternal__Log "Enter", "Startup"
    
    try
@@ -484,14 +485,23 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
-	local tFolders
-	put revEnvironmentToolsetPath() & slash & "/palettes/" into tFolders
-	put return & revEnvironmentToolsetPath() & slash & "/libraries/" after tFolders
+	local tPaletteFolder, tFolders
+	put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
+	put tPaletteFolder into tFolders
+	
+	set the defaultfolder to tPaletteFolder
+	repeat for each line tFolder in the folders
+		if char 1 of tFolder is "." then next repeat
+		put return & tPaletteFolder & slash & tFolder after tFolders
+	end repeat
+	
+	put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
 	if revEnvironmentIsInstalled() then
-		put return & revEnvironmentToolsetPath() & slash & "ide-support/" after tFolders
+		put return & revEnvironmentToolsetPath() after tFolders
 	else
-		put return & revEnvironmentRepositoryPath() & slash & "ide-support/" after tFolders
+		put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
 	end if	
+
 	
 	local tStackFiles, tStackName
 	local tStackFilesA, tIDEVersion
@@ -504,17 +514,21 @@ function revInternal__StackFiles
 		repeat for each line tFile in the files
 			if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
 			
+			put item 1 to -2 of tFile into tStackName
+			
 			local tVersion
 			put empty into tVersion
 			// AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
-			if the number of items in tFile is 3 then
-				put item 2 of tFile into tVersion
-				if tVersion > tIDEVersion then
-					next repeat
+			if the number of items in tFile > 2 then
+				get item -2 of tFile 
+				if it is a number then 
+					put it into tVersion
+					put item 1 to -3 of tFile into tStackName
+					if tVersion > tIDEVersion then
+						next repeat
+					end if
 				end if
 			end if
-			
-			put item 1 of tFile into tStackName
 			
 			if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
 			else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
@@ -530,7 +544,7 @@ function revInternal__StackFiles
 			local tExistingVersion
 			put tStackFilesA[tStackName]["version"] into tExistingVersion
 			if tExistingVersion is empty or tVersion > tExistingVersion then
-				put tPath & tFile into tStackFilesA[tStackName]["file"]
+				put tPath & slash & tFile into tStackFilesA[tStackName]["file"]
 				put tVersion into tStackFilesA[tStackName]["version"]
 			end if	
 		end repeat
@@ -986,23 +1000,26 @@ command revInternal__InitialiseLibraries
    revInternal__Log "Enter", "Libraries Initialisation"
    
    insert script of stack "revInitialisationLibrary" into back
-
-	# BB-2014-09-30: New IDE library
-	try	
-		insert script of stack "revideextensionlibrary" into back 	 
-		insert script of stack "revidedeveloperextensionlibrary" into back	
-	catch tError 	 	
-		answer "Error loading extensions library" & return & tError 	 	
-	end try 	 	
-	    	 	
-	try 	 	
-		insert script of stack "revidedocumentationlibrary" into back 	 	
-   		revInternal__LoadLibrary "revIDELibrary.8"	
-  	 		 	
-		insert script of stack "revidemessagehandler" into front 	 	
-	catch tError 	 	
-		answer "Error loading main IDE" & return & tError 	 	
-	end try 
+   
+   # BB-2014-09-30: New IDE library
+   try	
+      insert script of stack "revideextensionlibrary" into back 	 
+      insert script of stack "revidedeveloperextensionlibrary" into back	
+      insert script of stack "revsaveasstandalone" into back
+      insert script of stack "revsaveasiosstandalone" into back
+      insert script of stack "revsaveasandroidstandalone" into back
+   catch tError 	 	
+      answer "Error loading extensions library" & return & tError 	 	
+   end try 	 	
+   	    	 	
+   try 	 	
+      insert script of stack "revidedocumentationlibrary" into back 	 	
+      revInternal__LoadLibrary "revIDELibrary.8"	
+      	 		 	
+      insert script of stack "revidemessagehandler" into front 	 	
+   catch tError 	 	
+      answer "Error loading main IDE" & return & tError 	 	
+   end try 
    
    revInternal__LoadLibrary "revBackScriptLibrary"
    
