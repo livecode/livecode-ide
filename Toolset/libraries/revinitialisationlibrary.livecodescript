@@ -7,6 +7,14 @@ command revInternal__LoadLibrary pLibrary
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
    
+   -- SN-2015-02-20: Linux uses case-sensitive filenames, so we
+   --  follow the lower-case naming of the library names
+   put toLower(pLibraryName) into pLibraryName
+
+   if sLoadedLibraries[pLibraryName] then
+      return "Library" && pLibraryName && "already loaded"
+   end if
+   
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
    if the environment is "development" then
       local tLibraryPath
