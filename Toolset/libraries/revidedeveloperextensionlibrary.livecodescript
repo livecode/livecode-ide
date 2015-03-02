@@ -113,12 +113,23 @@ function revIDEDeveloperExtensions
    local tFolders
    if not revEnvironmentIsInstalled() then
       # Look for extension examples in git repo.
-      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" & CR after tFolders 
-      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" & CR after tFolders
+      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" into tFolders 
+      put return & revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" after tFolders
    end if
    
    # Look for extension examples in previously selected user folders.
-   put revIDEGetPreference("cDeveloperExtensionsFolders") after tFolders
+   local tUserFolders
+   put revIDEGetPreference("cDeveloperExtensionsFolders") into tUserFolders
+   repeat for each line tLine in tUserFolders
+      if tLine is among the lines of tFolders then next repeat
+      
+      if tFolders is empty then
+         put tLine into tFolders
+      else
+         put return & tLine after tFolders
+      end if
+   end repeat
+   
    local tFolder, tExtensionFolders, tExtensionFolder, tFiles, tExtension
    
    local tFolderHasModule
@@ -159,8 +170,9 @@ private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
    if the number of lines of tFiles > 1 then
-      put line 1 of tFiles into tFile
-      __revIDEDeveloperExtensionSendWarning "multiple lcb files in folder" && pFolder & ": using" && tFile
+      put replaceText(tFiles, return, ",") into tFiles
+      __revIDEDeveloperExtensionSendError "multiple lcb files in folder" && pFolder & ":" && tFiles
+      return empty
    else
       put tFiles into tFile
    end if
@@ -185,25 +197,31 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tLastGenerated, tLastModified
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
    put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   local tAPI
+   local tAPI, tAPIData
    if tLastGenerated is empty or tLastModified > tLastGenerated then
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPI 
-   end if
-   if tAPI is not empty then
-      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+      # We have to regenerate the docs
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPIData
+      put textEncode(tAPIDAta, "utf-8") into url ("binfile:" & pFolder & slash & "docs" & slash & "api" & slash & "api.lcdoc")
    else
-      local tData
-      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
-      put textDecode(tData, "utf-8") into tAPI
+      # Check to see if we've already parsed to a docs library array
+      get sExtensionDetailsA["api"] 
+      if it is empty then 
+         # if not then get the api data from the up to date api docs file
+         local tData
+         put url ("binfile:" & pFolder & slash & "docs" & slash & "api" & slash & "api.lcdoc") into tData
+         put textDecode(tData, "utf-8") into tAPIData
+      else
+         put it into tAPI
+      end if
    end if
    
-   if tAPI is not empty then
+   if tAPI is empty then
+      # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
-      put tLibraryA["doc"] into tDetailsA["api"]
-   else
-      put empty into tDetailsA["api"]
+      put revDocsParseDocTextToLibraryArray(tAPIData, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      put tLibraryA["doc"] into tAPI
    end if
+   put tAPI into tDetailsA["api"]
    
    if there is a file (pFolder & slash & "icon.png") then
       put (pFolder & slash & "icon.png") into tDetailsA["icon"]
@@ -248,7 +266,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    
    put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
-      __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
+      __revIDEDeveloperExtensionLog "Skipping recompilation of" && pFolder & slash & "module.lcm - module is up to date"
       # The stored info is up to date.
       if sExtensionDetailsA[pFolder] is not empty then
          union tDetailsA with sExtensionDetailsA[pFolder]
@@ -458,6 +476,10 @@ on revIDEDeveloperExtensionEditScript pFolder
 end revIDEDeveloperExtensionEditScript
 
 on revIDEDeveloperExtensionOpen pFolder
+   if __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) is empty then
+      exit revIDEDeveloperExtensionOpen
+   end if
+   
    __revIDEDeveloperExtensionAddFolder pFolder
    return revIDEDeveloperExtension(pFolder)
 end revIDEDeveloperExtensionOpen
