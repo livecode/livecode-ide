@@ -9,12 +9,8 @@ command revInternal__LoadLibrary pLibrary
    
    -- SN-2015-02-20: Linux uses case-sensitive filenames, so we
    --  follow the lower-case naming of the library names
-   put toLower(pLibraryName) into pLibraryName
+   put toLower(pLibrary) into pLibrary
 
-   if sLoadedLibraries[pLibraryName] then
-      return "Library" && pLibraryName && "already loaded"
-   end if
-   
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
    if the environment is "development" then
       local tLibraryPath
@@ -22,7 +18,7 @@ command revInternal__LoadLibrary pLibrary
       else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
-      else return "no file for library" && pLibrary
+      else answer "no file for library" && pLibrary
       
       try
       	--local tDefaultStack
@@ -47,15 +43,15 @@ command revInternal__LoadLibrary pLibrary
          
          return true
       catch tError
-         put tError
-         return "Error while loading stack:" && tLibraryPath
+         answer tError
+         answer "Error while loading stack:" && tLibraryPath
       end try
       
    else
       try
          send "revLoadLibrary" to stack pLibraryName
       catch tError
-         return "Error" && tError && "while loading stack:" && pLibraryName
+         answer "Error" && tError && "while loading stack:" && pLibraryName
       end try
    end if
 end revInternal__LoadLibrary
