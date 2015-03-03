@@ -1173,7 +1173,7 @@ end __revIDEAddSubscription
 
 on revIDESubscribe pMessage, pObjectList
    # Validate input
-   if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
+   //if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
    
    # Get the log ID of the calling object
    local tCallingObjectID
@@ -1289,8 +1289,9 @@ end revIDEMessages
  
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
-   if the tool is "browse tool" then exit revIDEMessageSend
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
+   //if the tool is "browse tool" and pMessage is not "ideToolChanged" then exit revIDEMessageSend
+   
    # Validate input
    --put the milliseconds && pMessage & return & line 1 to 20 of msg into msg
    
