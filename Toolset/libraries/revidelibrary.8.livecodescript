@@ -1353,7 +1353,6 @@ on revIDEMessageSend pMessage, pEffectedTarget
             dispatch "idePreferenceChanged" to tObjectID with item 2 of pMessage
             break
          case "ideFindMoreWidgets"
-            answer tObjectID
             dispatch pMessage to tObjectID with pEffectedTarget
             break
          case "ideNewStack"
@@ -2335,7 +2334,10 @@ on revIDEDownloadFinished pURL
 end revIDEDownloadFinished
 
 on revIDEFindMoreWidgets
+   lock screen
+   revIDEOpenPalette "extension manager"
    revIDEMessageSend "ideFindMoreWidgets"
+   unlock screen
 end revIDEFindMoreWidgets
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc  
