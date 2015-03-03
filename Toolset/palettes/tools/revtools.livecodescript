@@ -120,9 +120,12 @@ on framePreferenceSelected pPreference, pValue
       case "revTools_show"
          local tCurrentPreferenceValue, tPreferencePosition
          put revIDEGetPreference("revTools_show") into tCurrentPreferenceValue
-         put itemoffset(pValue, tCurrentPreferenceValue) into tPreferencePosition
-         if tPreferencePosition > 0 and item tPreferencePosition of tCurrentPreferenceValue is pValue then
-            delete item tPreferencePosition of tCurrentPreferenceValue
+         if pValue is among the items of tCurrentPreferenceValue then
+            repeat with x = the number of items of tCurrentPreferenceValue down to 1
+               if item x of tCurrentPreferenceValue is pValue then
+                  delete item x of tCurrentPreferenceValue
+               end if
+            end repeat
          else
             put "," & pValue after tCurrentPreferenceValue
          end if
