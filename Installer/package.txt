@@ -657,12 +657,13 @@ component Databases.MacOSX
 component Toolset
 	into [[ToolsFolder]] place
 		rfolder ide:Toolset
-	into [[ToolsFolder]]/Toolset place
-		stack ide-support:revdeploylibrary.livecodescript
+	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
-		stack ide-support:revsaveasiosstandalone.livecodescript
-		stack ide-support:revsaveasandroidstandalone.livecodescript
 		stack ide-support:revliburl.livecodescript
+		stack ide-support:revsaveasandroidstandalone.livecodescript
+		stack ide-support:revsaveasiosstandalone.livecodescript
+		stack ide-support:revsaveasstandalone.livecodescript
+		stack ide-support:revsblibrary.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
