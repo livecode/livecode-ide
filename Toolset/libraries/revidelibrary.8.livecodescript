@@ -689,10 +689,22 @@ private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
 end __dumpArrayRecurse
 
 function __revIDEError pMessage
-   local tErrorContext
+   local tErrorContext, tErrorText, tLockedMessages
    put line -2 of the executioncontexts into tErrorContext
-   put "IDE ERROR:" && tErrorContext && ":" && pMessage & return after msg
-   return "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext
+   
+   # Unlock messages to ensure the errors get through to the message box
+   put the lockmessages into  tLockedMessages
+   unlock messages
+   
+   put "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext into tErrorText
+   put return & tErrorText after msg
+   
+   # if the messages were locked, lock them again
+   if tLockedMessages is true then
+      lock messages
+   end if
+   
+   return tErrorText
 end __revIDEError
 
 
