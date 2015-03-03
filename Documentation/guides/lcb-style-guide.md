@@ -36,11 +36,11 @@ You must only use module names corresponding to domain names that you control
 or are allowed to use.  This restriction is enforced by the the LiveCode
 extension store.
 
-If you don't have a domain name of your own, you may use module names beginning
-with `org.livecode.users.<username>`, replacing `<username>` with the username
-you use to log into the LiveCode extension store.  For example, if your
-username is "sophie", then you can create a module named
-`org.livecode.users.sophie.mymodule`.
+If you don't have a domain name of your own, you may use module names
+beginning with `community.livecode.<username>`, replacing `<username>`
+with the username you use to log into the LiveCode extension store.
+For example, if your username is "sophie", then you can create a
+module named `community.livecode.sophie.mymodule`.
 
 For the main LiveCode repository, please use module names beginning with
 `com.livecode`
