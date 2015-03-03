@@ -3523,7 +3523,8 @@ on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
 
 function revIDEPropertySections
-   return "Basic,Colors,Effects,Custom,Icons,Position,Text"
+	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
+   return "Basic,Table,Colors,Effects,Custom,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
@@ -3554,6 +3555,10 @@ function revIDEFontawesomeNameToCodepoint pName
          break
       case "custom"
          return "f1c0"
+         break
+	  // AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section icon for the property inspector
+      case "table"
+         return "f0ce"
          break
       default
          return "f00d"
