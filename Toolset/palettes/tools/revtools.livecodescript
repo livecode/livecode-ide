@@ -109,7 +109,7 @@ on ideToolChanged
          end if
       end if
    end repeat
-end ideToolChanged
+end ideToolChanged 
 
 on framePreferenceSelected pPreference, pValue
    switch pPreference
