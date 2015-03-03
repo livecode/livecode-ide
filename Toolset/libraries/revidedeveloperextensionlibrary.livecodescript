@@ -778,8 +778,12 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    
    # Add user guide
    if tError is empty then
-      revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
-      
+      // AL-2015-03-03: [[ Bug 14781 ]] If there is no guide, warn and don't try to add a file
+   	  if pGuide is empty then
+   	    __revIDEDeveloperExtensionSendWarning "no user guide found"
+   	  else
+	    revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
+      end if
       if the result begins with "ziperr" then
          put "couldn't add guide" into tError
       end if
