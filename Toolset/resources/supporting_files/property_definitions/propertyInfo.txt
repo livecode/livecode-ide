@@ -34,7 +34,7 @@ currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0	
 customProperties	Custom Properties	Custom	com.livecode.pi.customProperties	true	false			
-dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false		false	
+dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
 decorations	Controls	Basic	com.livecode.pi.enum	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			
 destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
