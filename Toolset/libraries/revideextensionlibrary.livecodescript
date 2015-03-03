@@ -633,7 +633,7 @@ function __extensionPackagePaths
    
    if not revEnvironmentIsInstalled() then
       local tPackagesFolder
-      put revEnvironmentRepositoryPath() & slash & "_build/packaged_extensions" into tPackagesFolder
+      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tPackagesFolder
       if there is a folder tPackagesFolder then
          set the defaultFolder to tPackagesFolder
          repeat for each line tPackage in the files
