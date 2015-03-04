@@ -777,4 +777,26 @@ function revIDEExtensionDocsData
    return tDataA
 end revIDEExtensionDocsData
 
+on revIDEExtensionUpdateAPI pFolder, pExtensionSource
+   if pExtensionSource is empty then
+      local tFiles
+      set the defaultfolder to pFolder
+      put the files into tFiles
+      filter tFiles with "*.lcb"
+      if tFiles is empty then exit revIDEExtensionUpdateAPI
+      put line 1 of tFiles into pExtensionSource
+   end if
+   
+   # Check timestamps to see if API  is out of date.
+   local tLastGenerated, tLastModified
+   put revIDELastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
+   put revIDELastModifiedTimeOfFile(pFolder, pExtensionSource) into tLastModified
+   
+   if tLastGenerated is empty or tLastModified > tLastGenerated then
+      local tAPI
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
+      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+   end if
+end revIDEExtensionUpdateAPI
+
 
