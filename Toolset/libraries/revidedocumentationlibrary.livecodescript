@@ -73,7 +73,6 @@ command revDocsLaunchPreview pJSON
 end revDocsLaunchPreview
 
 command generateDistributedDocs
-   start using stack "revidelibrary"
    generateDistributedGuide
    generateDistributedAPI
 end generateDistributedDocs

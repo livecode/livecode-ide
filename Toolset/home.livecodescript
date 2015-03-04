@@ -1012,9 +1012,8 @@ command revInternal__InitialiseLibraries
    end try 	 	
    	    	 	
    try 	 	
-      insert script of stack "revidedocumentationlibrary" into back 	 	
-      revInternal__LoadLibrary "revIDELibrary.8"	
-      	 		 	
+      revInternal__LoadLibrary "revidedocumentationlibrary"	
+      revInternal__LoadLibrary "revIDELibrary.8"	 
       insert script of stack "revidemessagehandler" into front 	 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
