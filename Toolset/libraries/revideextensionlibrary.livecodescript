@@ -604,7 +604,7 @@ function __extensionModulePaths
    
    local tExtensionModulePaths
    set the itemdel to "."
-   repeat for each line tExtensionFolder in __extensionFolders()
+   repeat for each line tExtensionFolder in revIDEExtensionFolders()
       set the defaultfolder to tExtensionFolder
       repeat for each line tFolder in the folders
          if tFolder begins with "." then next repeat
@@ -753,15 +753,6 @@ function __extensionManifestValueFromFile pExtensionID, pProperty
       return tValue
    end if
 end __extensionManifestValueFromFile
-
-private function __extensionFolders
-   local tFolders
-   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
-   if not revEnvironmentIsInstalled() then
-      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
-   end if
-   return tFolders
-end __extensionFolders
 
 # Returns a value from the manifest
 //private on __extensionManifestValue pExtensionID, pManifestKey
