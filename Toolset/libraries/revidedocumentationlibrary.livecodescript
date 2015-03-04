@@ -100,8 +100,9 @@ command generateDistributedAPI
    end if
    
    local tList, tDictionaryFolder
-   put revEnvironmentRepositoryPath() & "/../livecode-docs" into tDictionaryFolder
-   
+   set the itemdelimiter to slash
+   put item 1 to -2 of revEnvironmentRepositoryPath() & slash & "livecode-docs" into tDictionaryFolder
+   set the itemdelimiter to comma
    if there is not a folder tDictionaryFolder then
       answer "No dictionary data found at" && tDictionaryFolder
    end if
