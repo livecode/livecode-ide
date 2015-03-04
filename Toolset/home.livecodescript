@@ -109,6 +109,7 @@ on openStack
    revInternal__Log "Leave", "Open Stack"
 end openStack
 
+local sSplashStartTime
 on revInternal__openStack
    revInternal__Log "Enter", "revInternal__openStack"
    
@@ -328,8 +329,6 @@ local sOldSupportPath
 local sBinariesPath
 -- MW-2013-06-10: [[ CloneAndRun ]] This is the path containing the root of the git repository.
 local sRepositoryPath
-
-local sSplashStartTime
 
 //EJB
 local sOverrideRuntimePath, sTestEnvironment
