@@ -694,6 +694,13 @@ on __extensionLoad pExtensionPath
       __extensionPropertySet tIndex, "label", __extensionManifestValueFromFile(tIndex,"title")
       
       put __extensionProperties(tName) into sExtensionProperties[tName]
+      
+      # Generate extension API from source if there is not one present in the folder
+      # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+      if not revEnvironmentIsInstalled() and not there is a file (pExtensionPath & slash & "api.lcdoc") then
+         revIDEExtensionUpdateAPI pExtensionPath
+      end if
+      
    catch tError
       # Think about deleting the module here?
    end try
