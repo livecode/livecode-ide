@@ -197,35 +197,37 @@ end revDocsGenerateDocsFilesFromBuiltIn
 #
 ##################################################
 
-private function revDocsGetAPIData
+function revDocsGetAPIData
    local tData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
    put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
    
-   local tExtensionAPI
-   # Go through the extensions folder and add all the APIs to the JSON
-   local tExtensionsFolder
-   repeat for each item tItem in "extensions,user extensions"
-      put revIDESpecialFolderPath(tItem) into tExtensionsFolder
-      set the defaultfolder to tExtensionsFolder
-      repeat for each line tFolder in the folders
-         if tFolder is ".." then next repeat
-         
-         if there is a file (tFolder & "api.js") then
-            put url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "api.js") into tExtensionAPI
-         else if there is a file (tFolder & "api.lcdoc") then
-            local tLcdoc
-            put revDocsFormatDocFileAsJSON(tExtensionsFolder & slash & tFolder & slash & "api.lcdoc") into tExtensionAPI
-            put tExtensionAPI into url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "api.js") 
-         end if
-         
-         if tExtensionAPI is not empty then
-            put comma & tExtensionAPI after tData
-         end if
-         
-      end repeat
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionAPI
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
+      else
+         local tLcdoc
+         put revDocsFormatDocFileAsJSON(tFolder & slash & "api.lcdoc", tExtensionData["name"], tExtensionData["author"]) into tExtensionAPI
+         put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
+      end if
+      
+      if tExtensionAPI is not empty then
+         put comma & tExtensionAPI after tData
+      end if
    end repeat
    
    return tData
@@ -238,37 +240,39 @@ private function revDocsGetGuideData
    put revIDESpecialFolderPath("guide") into tGuidePath
    put url ("binfile:" & tGuidePath & slash & "distributed_guide.js") into tData
    
-   # Go through the extensions folder and add all the guides to the JSON
-   local tExtensionsFolder
-   repeat for each item tItem in "extensions,user extensions"
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionGuide
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "guide.md")  then next repeat
       
-      put revIDESpecialFolderPath(tItem) into tExtensionsFolder
-      set the defaultfolder to tExtensionsFolder
-      repeat for each line tFolder in the folders
-         if tFolder is ".." then next repeat
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.md") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "guide.js") into tExtensionGuide
+      else
+         local tGuide
+         put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
+         put textDecode(tGuide, "utf-8") into tGuide
          
-         local tExtensionGuide
-         if there is a file (tFolder & "guide.js") then
-            put url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "guide.js") into tExtensionGuide
-         else if there is a file (tFolder & slash & "guide.md") then
-            local tGuide
-            put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
-            put textDecode(tGuide, "utf-8") into tGuide
-            
-            put "{" & CR after tExtensionGuide
-            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
-            put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
-            put "}" after tExtensionGuide
-            
-            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "guide.js")
-         end if
+         put "{" & CR after tExtensionGuide
+         put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+         put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
+         put "}" after tExtensionGuide
          
-         if tExtensionGuide is not empty then
-            put comma & tExtensionGuide after tData
-         end if
-         
-      end repeat
+         put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+      end if
+      
+      if tExtensionGuide is not empty then
+         put comma & tExtensionGuide after tData
+      end if
    end repeat
+   
    return tData
 end revDocsGetGuideData
 

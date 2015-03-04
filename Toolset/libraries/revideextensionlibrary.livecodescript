@@ -766,6 +766,15 @@ end __extensionManifestValueFromFile
 on extensionUpdateDataReceived
 end extensionUpdateDataReceived
 
-
+function revIDEExtensionDocsData
+   local tDataA, tCount
+   repeat for each key tExtensionID in sExtensions
+      add 1 to tCount
+      put __extensionPropertyGet(tExtensionID, "install_path") into tDataA[tCount]["folder"]
+      put __extensionPropertyGet(tExtensionID, "title") into tDataA[tCount]["name"]
+      put __extensionPropertyGet(tExtensionID, "author") into tDataA[tCount]["author"]
+   end repeat
+   return tDataA
+end revIDEExtensionDocsData
 
 
