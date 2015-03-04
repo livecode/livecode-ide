@@ -174,7 +174,14 @@ end revIDEDeveloperExtension
 private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tDetailsA
    
-   revIDEExtensionUpdateAPI pFolder, pFile
+   # Check timestamps to see if API  is out of date.
+   local tLastGenerated, tLastModified, tAPIFolder
+   if there is a folder (pFolder & slash & "docs" & slash & "api") then
+      put pFolder & slash & "docs" & slash & "api" into tAPIFolder
+   else
+      put pFolder into tAPIFolder
+   end if
+   revIDEExtensionUpdateAPI tAPIFolder, pFile
    
    local tData, tAPI
    put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
@@ -184,29 +191,41 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       local tLibraryA
       put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
+      put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
    else
       put empty into tDetailsA["api"]
    end if
    
-   if there is a file (pFolder & slash & "icon.png") then
+   if there is a file (pFolder & slash & "support" & slash & "icon.png") then
+      put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA["icon"]
+   else if there is a file  (pFolder & slash & "icon.png") then
       put (pFolder & slash & "icon.png") into tDetailsA["icon"]
    else
       put empty into tDetailsA["icon"]
    end if
    
-   if there is a file (pFolder & slash & "icon@extra-high.png") then
+   if there is a file (pFolder & slash & "support" & slash & "icon@extra-high.png") then
+      put (pFolder & slash & "support" & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+   else if there is a file (pFolder & slash & "icon@extra-high.png") then
       put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
    else
       put empty into tDetailsA["retina_icon"]
    end if
    
-   if there is a file (pFolder & slash & "guide.md") then
-      local tGuide
-      put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
-      put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
-   else
-      put empty into tDetailsA["guide"]
+   local tGuide, tGuideFile
+   if there is a file (pFolder & slash & "docs" & slash & "guide" & slash & "guide.md") then
+      put pFolder & slash & "docs" & slash & "guide" & slash & "guide.md" into tGuideFile
+   else if there is a file (pFolder & slash & "guide.md") then
+      put pFolder & slash & "guide.md" into tGuideFile
    end if
+   
+   if tGuideFile is not empty then
+      put tGuideFile into tDetailsA["guide_file"]
+      put url ("binfile:" & tGuideFile) into tGuide
+      put textDecode(tGuide, "utf-8") into tGuide
+   end if 
+   
+   put tGuide into tDetailsA["guide"]
    
    // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
    local tResourceFolder, tResources
@@ -693,13 +712,13 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    end if
    
    local tGuide
-   put tDetailsA["guide"] into tGuide
+   put tDetailsA["guide_file"] into tGuide
    if there is not a file tGuide then
       put empty into tGuide
    end if
    
    local tDocs
-   put (pFolder & slash & "api.lcdoc") into tDocs
+   put tDetailsA["api_file"] into tDocs
    if there is not a file tDocs then
       put empty into tDocs
    end if
