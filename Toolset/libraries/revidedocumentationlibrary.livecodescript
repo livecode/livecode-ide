@@ -1308,7 +1308,7 @@ end revDocsParseDocFileToLibraryArray
 function revDocsParseDocTextToLibraryArray pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText) into tLibraryA
-   if tLibraryA["name"] is empty then
+   if pLibraryName is not empty then
       put pLibraryName into tLibraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
