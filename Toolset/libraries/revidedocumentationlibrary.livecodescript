@@ -349,8 +349,10 @@ There are a number of ways of creating a library array:
 function revDocsFormatLibrariesArrayAsJSON pLibrariesA
    local tJSON
    repeat for each element tLibraryA in pLibrariesA
-      put revDocsFormatLibraryArrayAsJSON(tLibraryA) after tJSON
-      put comma after tJSON
+      get revDocsFormatLibraryArrayAsJSON(tLibraryA) 
+      if it is not empty then 
+         put it & comma after tJSON
+      end if
    end repeat
    
    delete the last char of tJSON
