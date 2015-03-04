@@ -3595,3 +3595,19 @@ on logChanged pLog
    revIDEMessageSend "ideExtensionLog", pLog
 end logChanged
 
+function revIDELastModifiedTimeOfFile pFolder, pFile
+   local tDetailedFiles
+   set the defaultFolder to pFolder
+   put the detailed files into tDetailedFiles
+   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
+end revIDELastModifiedTimeOfFile
+
+function revIDEExtensionFolders
+   local tFolders
+   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
+   if not revEnvironmentIsInstalled() then
+      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
+   end if
+   return tFolders
+end revIDEExtensionFolders
+

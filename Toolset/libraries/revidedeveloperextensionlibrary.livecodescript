@@ -30,13 +30,6 @@ private on __revIDEDeveloperCompilationError pError, pFile
    revIDEMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperCompilationError
 
-private function __revIDEDeveloperLastModifiedTimeOfFile pFolder, pFile
-   local tDetailedFiles
-   set the defaultFolder to pFolder
-   put the detailed files into tDetailedFiles
-   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
-end __revIDEDeveloperLastModifiedTimeOfFile
-
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    # To avoid excessive recompilation, test to see if the compiled module exists and is up to date.
    
@@ -47,8 +40,8 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    
    # Check timestamps to see if compiled module is out of date.
    local tLastCompiled, tLastModified
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
+   put revIDELastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
+   put revIDELastModifiedTimeOfFile(pFolder, pFile) into tLastModified
    
    return (tLastCompiled is empty or tLastModified > tLastCompiled)
 end __revIDEDeveloperExtensionShouldRecompile
@@ -189,8 +182,8 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put pFolder into tAPIFolder
    end if
    
-   put __revIDEDeveloperLastModifiedTimeOfFile(tAPIFolder, "api.lcdoc") into tLastGenerated
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
+   put revIDELastModifiedTimeOfFile(tAPIFolder, "api.lcdoc") into tLastGenerated
+   put revIDELastModifiedTimeOfFile(pFolder, pFile) into tLastModified
    
    local tAPI
    if tLastGenerated is empty or tLastModified > tLastGenerated then
