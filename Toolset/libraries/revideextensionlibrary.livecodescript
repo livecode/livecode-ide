@@ -630,23 +630,6 @@ end __extensionModulePaths
 # Returns: List of the packages that are in the directory but not installed
 function __extensionPackagePaths
    local tPaths
-   
-   if not revEnvironmentIsInstalled() then
-      local tPackagesFolder
-      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tPackagesFolder
-      if there is a folder tPackagesFolder then
-         set the defaultFolder to tPackagesFolder
-         repeat for each line tPackage in the files
-            if not tPackage ends with ".lce" then next repeat
-            if tPaths is empty then
-               put tPackagesFolder & slash & tPackage into tPaths
-            else
-               put return & tPackagesFolder & slash & tPackage after tPaths
-            end if
-         end repeat
-      end if
-   end if
-   
    return tPaths
 end __extensionPackagePaths
 
@@ -772,7 +755,12 @@ function __extensionManifestValueFromFile pExtensionID, pProperty
 end __extensionManifestValueFromFile
 
 private function __extensionFolders
-   return revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions")
+   local tFolders
+   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
+   if not revEnvironmentIsInstalled() then
+      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
+   end if
+   return tFolders
 end __extensionFolders
 
 # Returns a value from the manifest
