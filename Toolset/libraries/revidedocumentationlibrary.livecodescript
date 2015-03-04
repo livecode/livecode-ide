@@ -95,8 +95,17 @@ command generateDistributedGuide
 end generateDistributedGuide
 
 command generateDistributedAPI
-   local tList
-   put "LiveCode Script,/Users/alilloyd/Documents/GitHub/livecode-docs,dictionary" into tList
+   if revEnvironmentIsInstalled() then
+      exit generateDistributedAPI
+   end if
+   
+   local tList, tDictionaryFolder
+   put revEnvironmentRepositoryPath() & "/../livecode-docs" into tDictionaryFolder
+   
+   if there is not a folder tDictionaryFolder then
+      answer "No dictionary data found at" && tDictionaryFolder
+   end if
+   put "LiveCode Script," & tDictionaryFolder & ",dictionary" into tList
    
    local tLibrariesA, tCount
    put 1 into tCount
