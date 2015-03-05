@@ -139,37 +139,38 @@ command generateDistributedAPI
 end generateDistributedAPI
 
 function revDocsGenerateDocsFilesFromBuiltIn
-   local tPath, tEngine, tScript
+   local tModulePath, tEngine, tScript
    
-   put revEnvironmentBinariesPath() & slash & "modules" into tPath
+   put revEnvironmentBinariesPath() & slash & "modules" into tModulePath
    put revEnvironmentRepositoryPath() & slash & "engine" & slash & "src" into tEngine
    put revEnvironmentRepositoryPath() & slash & "libscript" & slash & "src" into tScript
    
-   local tFiles
-   
    local tInstalled
-   set the defaultFolder to tPath
+   set the defaultFolder to tModulePath
    put the files into tInstalled
    filter tInstalled with "*.lci"
-   set the itemdelimiter to "."
-   repeat with x = 1 to the number of lines in tInstalled
-      put item -2 of line x of tInstalled & ".lcb" into line x of tInstalled 
-   end repeat
    
-   local tPaths
-   put tScript into tPaths[1]
-   put tEngine into tPaths[2]
+   local tSourcePaths
+   put tScript into tSourcePaths[1]
+   put tEngine into tSourcePaths[2]
    
    local tCount
    put 1 into tCount
    
-   repeat for each element tElement in tPaths
+   set the itemdelimiter to "."
+   local tFiles
+   repeat for each element tElement in tSourcePaths
       set the defaultfolder to tElement
       local tDocsA
       put the files into tFiles
-      filter tFiles with "*.lcb"
+      filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
+      # Check to see if the corresponding interface file exists so that we 
+      # don't add anything to the dictionary that isn't actually there.
       repeat for each line tFile in tFiles
-         if replaceText(tFile, "-", "") is not among the lines of tInstalled then next repeat
+         local tInterfaceFile
+         put "com.livecode." & tFile into tInterfaceFile
+         put "lci" into item -1 of tInterfaceFile
+         if replaceText(tInterfaceFile, "-", "") is not among the lines of tInstalled then next repeat
          get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
          if it is not empty then
             put it into tDocsA[tCount]
@@ -531,7 +532,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    local tFiles
    put the files into tFiles
-   filter tFiles with "*.lcb"
+   filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
    
    local tDocsA, tCount
    
