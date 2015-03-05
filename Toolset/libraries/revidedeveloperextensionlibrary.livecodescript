@@ -106,12 +106,23 @@ function revIDEDeveloperExtensions
    local tFolders
    if not revEnvironmentIsInstalled() then
       # Look for extension examples in git repo.
-      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" & CR after tFolders 
-      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" & CR after tFolders
+      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" into tFolders 
+      put return & revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" after tFolders
    end if
    
    # Look for extension examples in previously selected user folders.
-   put revIDEGetPreference("cDeveloperExtensionsFolders") after tFolders
+   local tUserFolders
+   put revIDEGetPreference("cDeveloperExtensionsFolders") into tUserFolders
+   repeat for each line tLine in tUserFolders
+      if tLine is among the lines of tFolders then next repeat
+      
+      if tFolders is empty then
+         put tLine into tFolders
+      else
+         put return & tLine after tFolders
+      end if
+   end repeat
+   
    local tFolder, tExtensionFolders, tExtensionFolder, tFiles, tExtension
    
    local tFolderHasModule
@@ -152,8 +163,9 @@ private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
    if the number of lines of tFiles > 1 then
-      put line 1 of tFiles into tFile
-      __revIDEDeveloperExtensionSendWarning "multiple lcb files in folder" && pFolder & ": using" && tFile
+      put replaceText(tFiles, return, ",") into tFiles
+      __revIDEDeveloperExtensionSendError "multiple lcb files in folder" && pFolder & ":" && tFiles
+      return empty
    else
       put tFiles into tFile
    end if
@@ -180,22 +192,31 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put pFolder & slash & "docs" & slash & "api" into tAPIFolder
    else
       put pFolder into tAPIFolder
+
    end if
    revIDEExtensionUpdateAPI tAPIFolder, pFile
    
-   local tData, tAPI
-   put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
-   put textDecode(tData, "utf-8") into tAPI
+   local tAPI
+   if the result is empty then
+      # Check to see if we've already parsed to a docs library array
+      put sExtensionDetailsA["api"] into tAPI
+    end if	
+    if tAPI is empty then
+    	local tData
+	   put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+   		put textDecode(tData, "utf-8") into tAPI
+   	end if
+
    
-   if tAPI is not empty then
+   if tAPI is empty then
+      # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
       put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
       put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
    else
-      put empty into tDetailsA["api"]
-   end if
-   
+      put tAPI into tDetailsA["api"]
+
    if there is a file (pFolder & slash & "support" & slash & "icon.png") then
       put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA["icon"]
    else if there is a file  (pFolder & slash & "icon.png") then
@@ -250,7 +271,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    
    put pFile into tDetailsA["file"]
    if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
-      __revIDEDeveloperExtensionLog pFolder & slash & "module.lcm up to date"
+      __revIDEDeveloperExtensionLog "Skipping recompilation of" && pFolder & slash & "module.lcm - module is up to date"
       # The stored info is up to date.
       if sExtensionDetailsA[pFolder] is not empty then
          union tDetailsA with sExtensionDetailsA[pFolder]
@@ -460,6 +481,10 @@ on revIDEDeveloperExtensionEditScript pFolder
 end revIDEDeveloperExtensionEditScript
 
 on revIDEDeveloperExtensionOpen pFolder
+   if __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) is empty then
+      exit revIDEDeveloperExtensionOpen
+   end if
+   
    __revIDEDeveloperExtensionAddFolder pFolder
    return revIDEDeveloperExtension(pFolder)
 end revIDEDeveloperExtensionOpen
