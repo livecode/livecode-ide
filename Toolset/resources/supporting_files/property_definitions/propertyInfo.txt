@@ -34,7 +34,7 @@ currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0	
 customProperties	Custom Properties	Custom	com.livecode.pi.customProperties	true	false			
-dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false		false	
+dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
 decorations	Controls	Basic	com.livecode.pi.enum	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			
 destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
@@ -77,7 +77,7 @@ ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blen
 innerGlow	Inner Glow	Effects	com.livecode.pi.graphicEffect	true	false			
 innerShadow	Inner Shadow	Effects	com.livecode.pi.graphicEffect	true	false			
 label	Label	Basic	com.livecode.pi.string	true	false			
-layer 	Layer	Position	com.livecode.pi.number	true	false			
+layer	Layer	Position	com.livecode.pi.number	true	false		no_default
 layerMode	Layer Mode	Basic	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
 left	Left	Position	com.livecode.pi.number	true	false		no_default	
 lineInc	Scroll distance on arrow click	Basic	com.livecode.pi.number	true	false		512	
@@ -101,12 +101,11 @@ maxHeight	Max Height	Position	com.livecode.pi.number	true	false		65535
 maxWidth	Max Width	Position	com.livecode.pi.number	true	false		65535	
 menuLines	Number of lines to display	Basic	com.livecode.pi.number	true	false		5	
 menuMode	Menu Mode	basic	com.livecode.pi.string	false	false			cascade,combobox,option,popup,pulldown
-menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false	1	1,2,3,0	
+menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false		1	1,2,3,0	
 menuName	Use stack panel:	Basic	com.livecode.pi.boolean	true	false			
 metal	Metal texture	Basic	com.livecode.pi.boolean	true	false		false	
 minHeight	Min Height	Position	com.livecode.pi.number	true	false		32	
 minWidth	Min Width	Position	com.livecode.pi.number	true	false		32	
-mnemonic	Mnemonic	Basic	com.livecode.pi.enum	true	false			,B,u,t,t,o,n
 multipleHilites	Multi-line	Basic	com.livecode.pi.boolean	true	false		false	
 name	Name	Basic	com.livecode.pi.string	true	false			
 nonContiguousHilites	Non-contiguous	Basic	com.livecode.pi.boolean	true	false			

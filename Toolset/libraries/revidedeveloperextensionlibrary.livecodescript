@@ -30,13 +30,6 @@ private on __revIDEDeveloperCompilationError pError, pFile
    revIDEMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperCompilationError
 
-private function __revIDEDeveloperLastModifiedTimeOfFile pFolder, pFile
-   local tDetailedFiles
-   set the defaultFolder to pFolder
-   put the detailed files into tDetailedFiles
-   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
-end __revIDEDeveloperLastModifiedTimeOfFile
-
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    # To avoid excessive recompilation, test to see if the compiled module exists and is up to date.
    
@@ -47,8 +40,8 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    
    # Check timestamps to see if compiled module is out of date.
    local tLastCompiled, tLastModified
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
+   put revIDELastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
+   put revIDELastModifiedTimeOfFile(pFolder, pFile) into tLastModified
    
    return (tLastCompiled is empty or tLastModified > tLastCompiled)
 end __revIDEDeveloperExtensionShouldRecompile
@@ -194,54 +187,66 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tDetailsA
    
    # Check timestamps to see if API  is out of date.
-   local tLastGenerated, tLastModified
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
-   put __revIDEDeveloperLastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   local tAPI, tAPIData
-   if tLastGenerated is empty or tLastModified > tLastGenerated then
-      # We have to regenerate the docs
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPIData
-      put textEncode(tAPIDAta, "utf-8") into url ("binfile:" & pFolder & slash & "docs" & slash & "api" & slash & "api.lcdoc")
+   local tLastGenerated, tLastModified, tAPIFolder
+   if there is a folder (pFolder & slash & "docs" & slash & "api") then
+      put pFolder & slash & "docs" & slash & "api" into tAPIFolder
    else
-      # Check to see if we've already parsed to a docs library array
-      get sExtensionDetailsA["api"] 
-      if it is empty then 
-         # if not then get the api data from the up to date api docs file
-         local tData
-         put url ("binfile:" & pFolder & slash & "docs" & slash & "api" & slash & "api.lcdoc") into tData
-         put textDecode(tData, "utf-8") into tAPIData
-      else
-         put it into tAPI
-      end if
+      put pFolder into tAPIFolder
+
    end if
+   revIDEExtensionUpdateAPI tAPIFolder, pFile
+   
+   local tAPI
+   if the result is empty then
+      # Check to see if we've already parsed to a docs library array
+      put sExtensionDetailsA["api"] into tAPI
+    end if	
+    if tAPI is empty then
+    	local tData
+	   put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+   		put textDecode(tData, "utf-8") into tAPI
+   	end if
+
    
    if tAPI is empty then
       # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tAPIData, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
-      put tLibraryA["doc"] into tAPI
-   end if
-   put tAPI into tDetailsA["api"]
-   
-   if there is a file (pFolder & slash & "icon.png") then
+      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      put tLibraryA["doc"] into tDetailsA["api"]
+      put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
+   else
+      put tAPI into tDetailsA["api"]
+
+   if there is a file (pFolder & slash & "support" & slash & "icon.png") then
+      put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA["icon"]
+   else if there is a file  (pFolder & slash & "icon.png") then
       put (pFolder & slash & "icon.png") into tDetailsA["icon"]
    else
       put empty into tDetailsA["icon"]
    end if
    
-   if there is a file (pFolder & slash & "icon@extra-high.png") then
+   if there is a file (pFolder & slash & "support" & slash & "icon@extra-high.png") then
+      put (pFolder & slash & "support" & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
+   else if there is a file (pFolder & slash & "icon@extra-high.png") then
       put (pFolder & slash & "icon@extra-high.png") into tDetailsA["retina_icon"]
    else
       put empty into tDetailsA["retina_icon"]
    end if
    
-   if there is a file (pFolder & slash & "guide.md") then
-      local tGuide
-      put url ("binfile:" & pFolder & slash & "guide.md") into tGuide
-      put textDecode(tGuide, "utf-8") into tDetailsA["guide"]
-   else
-      put empty into tDetailsA["guide"]
+   local tGuide, tGuideFile
+   if there is a file (pFolder & slash & "docs" & slash & "guide" & slash & "guide.md") then
+      put pFolder & slash & "docs" & slash & "guide" & slash & "guide.md" into tGuideFile
+   else if there is a file (pFolder & slash & "guide.md") then
+      put pFolder & slash & "guide.md" into tGuideFile
    end if
+   
+   if tGuideFile is not empty then
+      put tGuideFile into tDetailsA["guide_file"]
+      put url ("binfile:" & tGuideFile) into tGuide
+      put textDecode(tGuide, "utf-8") into tGuide
+   end if 
+   
+   put tGuide into tDetailsA["guide"]
    
    // AL-2015-02-23: [[ Bug 14552 ]] Find resource folder and return details
    local tResourceFolder, tResources
@@ -732,13 +737,13 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    end if
    
    local tGuide
-   put tDetailsA["guide"] into tGuide
+   put tDetailsA["guide_file"] into tGuide
    if there is not a file tGuide then
       put empty into tGuide
    end if
    
    local tDocs
-   put (pFolder & slash & "api.lcdoc") into tDocs
+   put tDetailsA["api_file"] into tDocs
    if there is not a file tDocs then
       put empty into tDocs
    end if
@@ -800,8 +805,12 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    
    # Add user guide
    if tError is empty then
-      revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
-      
+      // AL-2015-03-03: [[ Bug 14781 ]] If there is no guide, warn and don't try to add a file
+   	  if pGuide is empty then
+   	    __revIDEDeveloperExtensionSendWarning "no user guide found"
+   	  else
+	    revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
+      end if
       if the result begins with "ziperr" then
          put "couldn't add guide" into tError
       end if

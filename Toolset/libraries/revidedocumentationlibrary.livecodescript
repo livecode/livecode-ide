@@ -73,7 +73,6 @@ command revDocsLaunchPreview pJSON
 end revDocsLaunchPreview
 
 command generateDistributedDocs
-   start using stack "revidelibrary"
    generateDistributedGuide
    generateDistributedAPI
 end generateDistributedDocs
@@ -96,8 +95,18 @@ command generateDistributedGuide
 end generateDistributedGuide
 
 command generateDistributedAPI
-   local tList
-   put "LiveCode Script,/Users/alilloyd/Documents/GitHub/livecode-docs,dictionary" into tList
+   if revEnvironmentIsInstalled() then
+      exit generateDistributedAPI
+   end if
+   
+   local tList, tDictionaryFolder
+   set the itemdelimiter to slash
+   put item 1 to -2 of revEnvironmentRepositoryPath() & slash & "livecode-docs" into tDictionaryFolder
+   set the itemdelimiter to comma
+   if there is not a folder tDictionaryFolder then
+      answer "No dictionary data found at" && tDictionaryFolder
+   end if
+   put "LiveCode Script," & tDictionaryFolder & ",dictionary" into tList
    
    local tLibrariesA, tCount
    put 1 into tCount
@@ -130,37 +139,38 @@ command generateDistributedAPI
 end generateDistributedAPI
 
 function revDocsGenerateDocsFilesFromBuiltIn
-   local tPath, tEngine, tScript
+   local tModulePath, tEngine, tScript
    
-   put revEnvironmentBinariesPath() & slash & "modules" into tPath
+   put revEnvironmentBinariesPath() & slash & "modules" into tModulePath
    put revEnvironmentRepositoryPath() & slash & "engine" & slash & "src" into tEngine
    put revEnvironmentRepositoryPath() & slash & "libscript" & slash & "src" into tScript
    
-   local tFiles
-   
    local tInstalled
-   set the defaultFolder to tPath
+   set the defaultFolder to tModulePath
    put the files into tInstalled
    filter tInstalled with "*.lci"
-   set the itemdelimiter to "."
-   repeat with x = 1 to the number of lines in tInstalled
-      put item -2 of line x of tInstalled & ".lcb" into line x of tInstalled 
-   end repeat
    
-   local tPaths
-   put tScript into tPaths[1]
-   put tEngine into tPaths[2]
+   local tSourcePaths
+   put tScript into tSourcePaths[1]
+   put tEngine into tSourcePaths[2]
    
    local tCount
    put 1 into tCount
    
-   repeat for each element tElement in tPaths
+   set the itemdelimiter to "."
+   local tFiles
+   repeat for each element tElement in tSourcePaths
       set the defaultfolder to tElement
       local tDocsA
       put the files into tFiles
-      filter tFiles with "*.lcb"
+      filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
+      # Check to see if the corresponding interface file exists so that we 
+      # don't add anything to the dictionary that isn't actually there.
       repeat for each line tFile in tFiles
-         if replaceText(tFile, "-", "") is not among the lines of tInstalled then next repeat
+         local tInterfaceFile
+         put "com.livecode." & tFile into tInterfaceFile
+         put "lci" into item -1 of tInterfaceFile
+         if replaceText(tInterfaceFile, "-", "") is not among the lines of tInstalled then next repeat
          get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
          if it is not empty then
             put it into tDocsA[tCount]
@@ -189,35 +199,37 @@ end revDocsGenerateDocsFilesFromBuiltIn
 #
 ##################################################
 
-private function revDocsGetAPIData
+function revDocsGetAPIData
    local tData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
    put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
    
-   local tExtensionAPI
-   # Go through the extensions folder and add all the APIs to the JSON
-   local tExtensionsFolder
-   repeat for each item tItem in "extensions,user extensions"
-      put revIDESpecialFolderPath(tItem) into tExtensionsFolder
-      set the defaultfolder to tExtensionsFolder
-      repeat for each line tFolder in the folders
-         if tFolder is ".." then next repeat
-         
-         if there is a file (tFolder & "api.js") then
-            put url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "api.js") into tExtensionAPI
-         else if there is a file (tFolder & "api.lcdoc") then
-            local tLcdoc
-            put revDocsFormatDocFileAsJSON(tExtensionsFolder & slash & tFolder & slash & "api.lcdoc") into tExtensionAPI
-            put tExtensionAPI into url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "api.js") 
-         end if
-         
-         if tExtensionAPI is not empty then
-            put comma & tExtensionAPI after tData
-         end if
-         
-      end repeat
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionAPI
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
+      else
+         local tLcdoc
+         put revDocsFormatDocFileAsJSON(tFolder & slash & "api.lcdoc", tExtensionData["name"], tExtensionData["author"]) into tExtensionAPI
+         put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
+      end if
+      
+      if tExtensionAPI is not empty then
+         put comma & tExtensionAPI after tData
+      end if
    end repeat
    
    return tData
@@ -230,37 +242,39 @@ private function revDocsGetGuideData
    put revIDESpecialFolderPath("guide") into tGuidePath
    put url ("binfile:" & tGuidePath & slash & "distributed_guide.js") into tData
    
-   # Go through the extensions folder and add all the guides to the JSON
-   local tExtensionsFolder
-   repeat for each item tItem in "extensions,user extensions"
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionGuide
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "guide.md")  then next repeat
       
-      put revIDESpecialFolderPath(tItem) into tExtensionsFolder
-      set the defaultfolder to tExtensionsFolder
-      repeat for each line tFolder in the folders
-         if tFolder is ".." then next repeat
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.md") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "guide.js") into tExtensionGuide
+      else
+         local tGuide
+         put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
+         put textDecode(tGuide, "utf-8") into tGuide
          
-         local tExtensionGuide
-         if there is a file (tFolder & "guide.js") then
-            put url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "guide.js") into tExtensionGuide
-         else if there is a file (tFolder & slash & "guide.md") then
-            local tGuide
-            put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
-            put textDecode(tGuide, "utf-8") into tGuide
-            
-            put "{" & CR after tExtensionGuide
-            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
-            put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
-            put "}" after tExtensionGuide
-            
-            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tExtensionsFolder & slash & tFolder & slash & "guide.js")
-         end if
+         put "{" & CR after tExtensionGuide
+         put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+         put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
+         put "}" after tExtensionGuide
          
-         if tExtensionGuide is not empty then
-            put comma & tExtensionGuide after tData
-         end if
-         
-      end repeat
+         put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+      end if
+      
+      if tExtensionGuide is not empty then
+         put comma & tExtensionGuide after tData
+      end if
    end repeat
+   
    return tData
 end revDocsGetGuideData
 
@@ -336,8 +350,10 @@ There are a number of ways of creating a library array:
 function revDocsFormatLibrariesArrayAsJSON pLibrariesA
    local tJSON
    repeat for each element tLibraryA in pLibrariesA
-      put revDocsFormatLibraryArrayAsJSON(tLibraryA) after tJSON
-      put comma after tJSON
+      get revDocsFormatLibraryArrayAsJSON(tLibraryA) 
+      if it is not empty then 
+         put it & comma after tJSON
+      end if
    end repeat
    
    delete the last char of tJSON
@@ -516,7 +532,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    local tFiles
    put the files into tFiles
-   filter tFiles with "*.lcb"
+   filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
    
    local tDocsA, tCount
    
@@ -1296,7 +1312,7 @@ end revDocsParseDocFileToLibraryArray
 function revDocsParseDocTextToLibraryArray pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText) into tLibraryA
-   if tLibraryA["name"] is empty then
+   if pLibraryName is not empty then
       put pLibraryName into tLibraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
@@ -1451,6 +1467,17 @@ function revDocsParseDocText pText
       
       put tElementA into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
    end repeat
+   
+   // Add association and tag to the last element, if they were not found
+   if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
+      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
+      add 1 to tEntryElementCount
+   end if
+   if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
+      put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
+      put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
+      add 1 to tEntryElementCount
+   end if
    
    // Add a library entry
    local tLibraryElements

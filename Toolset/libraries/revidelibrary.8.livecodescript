@@ -689,10 +689,22 @@ private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
 end __dumpArrayRecurse
 
 function __revIDEError pMessage
-   local tErrorContext
+   local tErrorContext, tErrorText, tLockedMessages
    put line -2 of the executioncontexts into tErrorContext
-   put "IDE ERROR:" && tErrorContext && ":" && pMessage & return after msg
-   return "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext
+   
+   # Unlock messages to ensure the errors get through to the message box
+   put the lockmessages into  tLockedMessages
+   unlock messages
+   
+   put "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext into tErrorText
+   put return & tErrorText after msg
+   
+   # if the messages were locked, lock them again
+   if tLockedMessages is true then
+      lock messages
+   end if
+   
+   return tErrorText
 end __revIDEError
 
 
@@ -1173,7 +1185,7 @@ end __revIDEAddSubscription
 
 on revIDESubscribe pMessage, pObjectList
    # Validate input
-   if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
+   //if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
    
    # Get the log ID of the calling object
    local tCallingObjectID
@@ -1289,8 +1301,9 @@ end revIDEMessages
  
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
-   if the tool is "browse tool" then exit revIDEMessageSend
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
+   //if the tool is "browse tool" and pMessage is not "ideToolChanged" then exit revIDEMessageSend
+   
    # Validate input
    --put the milliseconds && pMessage & return & line 1 to 20 of msg into msg
    
@@ -1340,7 +1353,6 @@ on revIDEMessageSend pMessage, pEffectedTarget
             dispatch "idePreferenceChanged" to tObjectID with item 2 of pMessage
             break
          case "ideFindMoreWidgets"
-            answer tObjectID
             dispatch pMessage to tObjectID with pEffectedTarget
             break
          case "ideNewStack"
@@ -2322,7 +2334,10 @@ on revIDEDownloadFinished pURL
 end revIDEDownloadFinished
 
 on revIDEFindMoreWidgets
+   lock screen
+   revIDEOpenPalette "extension manager"
    revIDEMessageSend "ideFindMoreWidgets"
+   unlock screen
 end revIDEFindMoreWidgets
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc  
@@ -3522,7 +3537,8 @@ on revIDEPropertyReset pObjectList, pProperty
 end revIDEPropertyReset
 
 function revIDEPropertySections
-   return "Basic,Colors,Effects,Custom,Icons,Position,Text"
+	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
+   return "Basic,Table,Colors,Effects,Custom,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
@@ -3554,6 +3570,10 @@ function revIDEFontawesomeNameToCodepoint pName
       case "custom"
          return "f1c0"
          break
+	  // AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section icon for the property inspector
+      case "table"
+         return "f0ce"
+         break
       default
          return "f00d"
          break
@@ -3574,4 +3594,20 @@ end revIDEPaletteResourcePath
 on logChanged pLog
    revIDEMessageSend "ideExtensionLog", pLog
 end logChanged
+
+function revIDELastModifiedTimeOfFile pFolder, pFile
+   local tDetailedFiles
+   set the defaultFolder to pFolder
+   put the detailed files into tDetailedFiles
+   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
+end revIDELastModifiedTimeOfFile
+
+function revIDEExtensionFolders
+   local tFolders
+   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
+   if not revEnvironmentIsInstalled() then
+      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
+   end if
+   return tFolders
+end revIDEExtensionFolders
 

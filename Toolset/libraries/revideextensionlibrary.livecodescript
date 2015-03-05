@@ -604,7 +604,7 @@ function __extensionModulePaths
    
    local tExtensionModulePaths
    set the itemdel to "."
-   repeat for each line tExtensionFolder in __extensionFolders()
+   repeat for each line tExtensionFolder in revIDEExtensionFolders()
       set the defaultfolder to tExtensionFolder
       repeat for each line tFolder in the folders
          if tFolder begins with "." then next repeat
@@ -629,7 +629,8 @@ end __extensionModulePaths
 
 # Returns: List of the packages that are in the directory but not installed
 function __extensionPackagePaths
-   
+   local tPaths
+   return tPaths
 end __extensionPackagePaths
 
 # Calls Weservice and returns updates
@@ -693,6 +694,13 @@ on __extensionLoad pExtensionPath
       __extensionPropertySet tIndex, "label", __extensionManifestValueFromFile(tIndex,"title")
       
       put __extensionProperties(tName) into sExtensionProperties[tName]
+      
+      # Generate extension API from source if there is not one present in the folder
+      # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+      if not revEnvironmentIsInstalled() and not there is a file (pExtensionPath & slash & "api.lcdoc") then
+         revIDEExtensionUpdateAPI pExtensionPath
+      end if
+      
    catch tError
       # Think about deleting the module here?
    end try
@@ -753,10 +761,6 @@ function __extensionManifestValueFromFile pExtensionID, pProperty
    end if
 end __extensionManifestValueFromFile
 
-private function __extensionFolders
-   return revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions")
-end __extensionFolders
-
 # Returns a value from the manifest
 //private on __extensionManifestValue pExtensionID, pManifestKey
 //end __extensionManifestValue
@@ -769,6 +773,37 @@ end __extensionFolders
 on extensionUpdateDataReceived
 end extensionUpdateDataReceived
 
+function revIDEExtensionDocsData
+   local tDataA, tCount
+   repeat for each key tExtensionID in sExtensions
+      add 1 to tCount
+      put __extensionPropertyGet(tExtensionID, "install_path") into tDataA[tCount]["folder"]
+      put __extensionPropertyGet(tExtensionID, "title") into tDataA[tCount]["name"]
+      put __extensionPropertyGet(tExtensionID, "author") into tDataA[tCount]["author"]
+   end repeat
+   return tDataA
+end revIDEExtensionDocsData
 
+on revIDEExtensionUpdateAPI pFolder, pExtensionSource
+   if pExtensionSource is empty then
+      local tFiles
+      set the defaultfolder to pFolder
+      put the files into tFiles
+      filter tFiles with "*.lcb"
+      if tFiles is empty then exit revIDEExtensionUpdateAPI
+      put line 1 of tFiles into pExtensionSource
+   end if
+   
+   # Check timestamps to see if API  is out of date.
+   local tLastGenerated, tLastModified
+   put revIDELastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
+   put revIDELastModifiedTimeOfFile(pFolder, pExtensionSource) into tLastModified
+   
+   if tLastGenerated is empty or tLastModified > tLastGenerated then
+      local tAPI
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
+      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+   end if
+end revIDEExtensionUpdateAPI
 
 

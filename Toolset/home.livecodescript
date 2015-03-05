@@ -109,6 +109,7 @@ on openStack
    revInternal__Log "Leave", "Open Stack"
 end openStack
 
+local sSplashStartTime
 on revInternal__openStack
    revInternal__Log "Enter", "revInternal__openStack"
    
@@ -328,8 +329,6 @@ local sOldSupportPath
 local sBinariesPath
 -- MW-2013-06-10: [[ CloneAndRun ]] This is the path containing the root of the git repository.
 local sRepositoryPath
-
-local sSplashStartTime
 
 //EJB
 local sOverrideRuntimePath, sTestEnvironment
@@ -1013,9 +1012,8 @@ command revInternal__InitialiseLibraries
    end try 	 	
    	    	 	
    try 	 	
-      insert script of stack "revidedocumentationlibrary" into back 	 	
-      revInternal__LoadLibrary "revIDELibrary.8"	
-      	 		 	
+      revInternal__LoadLibrary "revidedocumentationlibrary"	
+      revInternal__LoadLibrary "revIDELibrary.8"	 
       insert script of stack "revidemessagehandler" into front 	 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
