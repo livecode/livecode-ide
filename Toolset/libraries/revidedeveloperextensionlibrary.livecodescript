@@ -192,7 +192,6 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put pFolder & slash & "docs" & slash & "api" into tAPIFolder
    else
       put pFolder into tAPIFolder
-
    end if
    revIDEExtensionUpdateAPI tAPIFolder, pFile
    
@@ -200,23 +199,20 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    if the result is empty then
       # Check to see if we've already parsed to a docs library array
       put sExtensionDetailsA["api"] into tAPI
-    end if	
-    if tAPI is empty then
-    	local tData
-	   put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
-   		put textDecode(tData, "utf-8") into tAPI
-   	end if
-
+   end if	
    
    if tAPI is empty then
+      local tData
+      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+      put textDecode(tData, "utf-8") into tData
+      
       # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tAPI, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      put revDocsParseDocTextToLibraryArray(tData, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
       put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
-   else
-      put tAPI into tDetailsA["api"]
-
+   end if
+   
    if there is a file (pFolder & slash & "support" & slash & "icon.png") then
       put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA["icon"]
    else if there is a file  (pFolder & slash & "icon.png") then
@@ -841,7 +837,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
          revZipAddItemWithFile pArchive, "docs/api/api.lcdoc", pDocs
       end if
       if the result begins with "ziperr" then
-         put "couldn't add doc " & pDocs into tError
+         put "couldn't add doc " & pDocs into tError 
       end if
    end if
    
