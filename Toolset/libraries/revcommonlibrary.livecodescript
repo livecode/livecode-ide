@@ -1385,7 +1385,7 @@ end revAnswerFile
 function revAnswerFiles pType, pPrompt
   switch pType
   case "stack"
-    answer files pPrompt with type "LiveCode Stacks|livecode,rev,mc|RSTK,MSTK" or type "All Files|"
+    answer files pPrompt with type "LiveCode Stacks|livecode,rev,mc,livecodescript|RSTK,MSTK" or type "All Files|"
     break
   case "image"
     answer files pPrompt with type "All Picture Files|png,gif,jpg,jpeg,bmp,pct,xbm,xpm,xwd,pbm,ppm,pgm" or type "Portable Network Graphics|png" or type "Joint Photographics Experts Group|jpg,jpeg" or type "Graphics Interchange Format|gif" or type "Windows Bitmap|bmp" or type "Unix Formats|xbm,xpm,xwd,pbm,ppm,pgm" or type "Macintosh PICT - displays on MacOS only|pct" or type "All Files|"
