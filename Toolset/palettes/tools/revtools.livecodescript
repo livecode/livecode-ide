@@ -280,7 +280,7 @@ on generatePalette
             set the cToolName of the templatebutton to tToolName
          else
             if the tooltip of the templatebutton is empty then
-               set the tooltip of the templatebutton to "Click and drag or double click to create this object"
+               set the tooltip of the templatebutton to "Click and drag or double click to create object:" & return & tControlTypeID
             end if
             set the cTool of the templatebutton to false
          end if
