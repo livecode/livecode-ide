@@ -694,6 +694,13 @@ on __extensionLoad pExtensionPath
       __extensionPropertySet tIndex, "label", __extensionManifestValueFromFile(tIndex,"title")
       
       put __extensionProperties(tName) into sExtensionProperties[tName]
+      
+      # Generate extension API from source if there is not one present in the folder
+      # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+      if not revEnvironmentIsInstalled() and not there is a file (pExtensionPath & slash & "api.lcdoc") then
+         revIDEExtensionUpdateAPI pExtensionPath
+      end if
+      
    catch tError
       # Think about deleting the module here?
    end try
@@ -776,5 +783,27 @@ function revIDEExtensionDocsData
    end repeat
    return tDataA
 end revIDEExtensionDocsData
+
+on revIDEExtensionUpdateAPI pFolder, pExtensionSource
+   if pExtensionSource is empty then
+      local tFiles
+      set the defaultfolder to pFolder
+      put the files into tFiles
+      filter tFiles with "*.lcb"
+      if tFiles is empty then exit revIDEExtensionUpdateAPI
+      put line 1 of tFiles into pExtensionSource
+   end if
+   
+   # Check timestamps to see if API  is out of date.
+   local tLastGenerated, tLastModified
+   put revIDELastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
+   put revIDELastModifiedTimeOfFile(pFolder, pExtensionSource) into tLastModified
+   
+   if tLastGenerated is empty or tLastModified > tLastGenerated then
+      local tAPI
+      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
+      put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+   end if
+end revIDEExtensionUpdateAPI
 
 

@@ -181,21 +181,11 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    else
       put pFolder into tAPIFolder
    end if
+   revIDEExtensionUpdateAPI tAPIFolder, pFile
    
-   put revIDELastModifiedTimeOfFile(tAPIFolder, "api.lcdoc") into tLastGenerated
-   put revIDELastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   
-   local tAPI
-   if tLastGenerated is empty or tLastModified > tLastGenerated then
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pFile) into tAPI 
-   end if
-   if tAPI is not empty then
-      put textEncode(tAPI, "utf-8") into url ("binfile:" & tAPIFolder & slash & "api.lcdoc")
-   else
-      local tData
-      put url ("binfile:" & tAPIFolder & slash & "api.lcdoc") into tData
-      put textDecode(tData, "utf-8") into tAPI
-   end if
+   local tData, tAPI
+   put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+   put textDecode(tData, "utf-8") into tAPI
    
    if tAPI is not empty then
       local tLibraryA

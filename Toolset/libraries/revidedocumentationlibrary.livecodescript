@@ -100,8 +100,9 @@ command generateDistributedAPI
    end if
    
    local tList, tDictionaryFolder
-   put revEnvironmentRepositoryPath() & "/../livecode-docs" into tDictionaryFolder
-   
+   set the itemdelimiter to slash
+   put item 1 to -2 of revEnvironmentRepositoryPath() & slash & "livecode-docs" into tDictionaryFolder
+   set the itemdelimiter to comma
    if there is not a folder tDictionaryFolder then
       answer "No dictionary data found at" && tDictionaryFolder
    end if
@@ -138,37 +139,38 @@ command generateDistributedAPI
 end generateDistributedAPI
 
 function revDocsGenerateDocsFilesFromBuiltIn
-   local tPath, tEngine, tScript
+   local tModulePath, tEngine, tScript
    
-   put revEnvironmentBinariesPath() & slash & "modules" into tPath
+   put revEnvironmentBinariesPath() & slash & "modules" into tModulePath
    put revEnvironmentRepositoryPath() & slash & "engine" & slash & "src" into tEngine
    put revEnvironmentRepositoryPath() & slash & "libscript" & slash & "src" into tScript
    
-   local tFiles
-   
    local tInstalled
-   set the defaultFolder to tPath
+   set the defaultFolder to tModulePath
    put the files into tInstalled
    filter tInstalled with "*.lci"
-   set the itemdelimiter to "."
-   repeat with x = 1 to the number of lines in tInstalled
-      put item -2 of line x of tInstalled & ".lcb" into line x of tInstalled 
-   end repeat
    
-   local tPaths
-   put tScript into tPaths[1]
-   put tEngine into tPaths[2]
+   local tSourcePaths
+   put tScript into tSourcePaths[1]
+   put tEngine into tSourcePaths[2]
    
    local tCount
    put 1 into tCount
    
-   repeat for each element tElement in tPaths
+   set the itemdelimiter to "."
+   local tFiles
+   repeat for each element tElement in tSourcePaths
       set the defaultfolder to tElement
       local tDocsA
       put the files into tFiles
-      filter tFiles with "*.lcb"
+      filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
+      # Check to see if the corresponding interface file exists so that we 
+      # don't add anything to the dictionary that isn't actually there.
       repeat for each line tFile in tFiles
-         if replaceText(tFile, "-", "") is not among the lines of tInstalled then next repeat
+         local tInterfaceFile
+         put "com.livecode." & tFile into tInterfaceFile
+         put "lci" into item -1 of tInterfaceFile
+         if replaceText(tInterfaceFile, "-", "") is not among the lines of tInstalled then next repeat
          get revDocsGenerateDocsFileFromModular(url ("file:" & tFile))
          if it is not empty then
             put it into tDocsA[tCount]
@@ -348,8 +350,10 @@ There are a number of ways of creating a library array:
 function revDocsFormatLibrariesArrayAsJSON pLibrariesA
    local tJSON
    repeat for each element tLibraryA in pLibrariesA
-      put revDocsFormatLibraryArrayAsJSON(tLibraryA) after tJSON
-      put comma after tJSON
+      get revDocsFormatLibraryArrayAsJSON(tLibraryA) 
+      if it is not empty then 
+         put it & comma after tJSON
+      end if
    end repeat
    
    delete the last char of tJSON
@@ -528,7 +532,7 @@ function revDocsGenerateDocsFilesFromModularDirectory pDir
    
    local tFiles
    put the files into tFiles
-   filter tFiles with "*.lcb"
+   filter tFiles with regex pattern ".*(\.(mlc|lcb))+"
    
    local tDocsA, tCount
    
@@ -1463,6 +1467,17 @@ function revDocsParseDocText pText
       
       put tElementA into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
    end repeat
+   
+   // Add association and tag to the last element, if they were not found
+   if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
+      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
+      add 1 to tEntryElementCount
+   end if
+   if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
+      put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
+      put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
+      add 1 to tEntryElementCount
+   end if
    
    // Add a library entry
    local tLibraryElements
