@@ -803,6 +803,7 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
       local tAPI
       put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
       put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
+      return "updated"
    end if
 end revIDEExtensionUpdateAPI
 
