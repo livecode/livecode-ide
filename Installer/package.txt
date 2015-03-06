@@ -138,7 +138,7 @@ component Plugins
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
 		stack "ide:Plugins/revTabRuler 1.2.rev"
-		stack "ide:Plugins/revWidgetBuilder.livecode"
+		stack "ide:Plugins/revExtensionBuilder.livecode"
 
 component Resources
 	into [[SupportFolder]]/Resources/Examples place
