@@ -1,8 +1,5 @@
 Property	Label	Section	Editor	User Visible	Read Only	Group	Default	Options
-----------------------------------------------------------------------------------------------------
-acceleratorKey	Shortcut	Basic	com.livecode.pi.string	true	false	Accelerators				
-acceleratorModifiers	Shortcut key	Basic	com.livecode.pi.set	true	false	Accelerators		Control key,Alt key,Shift key
-acceleratorText	Shortcut hint	Basic	com.livecode.pi.string	true	false	Accelerators		
+----------------------------------------------------------------------------------------------------	
 alwaysBuffer	Buffer	Basic	com.livecode.pi.boolean	true	false		false	
 angle	Rotation	Basic	com.livecode.pi.number	true	false		0	
 antialiased	Antialiased	Basic	com.livecode.pi.boolean	true	false			
