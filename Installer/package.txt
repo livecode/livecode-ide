@@ -32,7 +32,7 @@ installer LiveCode
 	include Resources
 	include Documentation
 	include Toolchain.[[TargetPlatform]]
-	include Examples
+	include Extensions
 	codesign
 		include Engine.[[TargetPlatform]]
 		with TargetFolder as [[ToolsFolder]] do
@@ -524,9 +524,19 @@ component Documentation
 		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
 
-component Examples
-	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions
+component Extensions
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.clock place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.clock.lcb
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.graph place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph.lcb
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.header place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header.lcb
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.navbar place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar.lcb
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.segmented place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented.lcb
+	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.switchButton place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchButton.lcb
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
