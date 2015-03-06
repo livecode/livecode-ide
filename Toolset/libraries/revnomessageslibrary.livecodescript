@@ -635,7 +635,7 @@ on moveControl
   try
     if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send moveControl to stack "revFrontScriptLibrary"
     if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send moveControl to stack "revBackScriptLibrary"
-    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of btn "revGeometryBack" of stack "revLibrary" then send moveControl to btn "revGeometryBack" of stack "revLibrary"
+    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send moveControl to stack "revGeometryLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -648,7 +648,7 @@ on resizeControl
   try
     if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send resizeControl to stack "revFrontScriptLibrary"
     if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send resizeControl to stack "revBackScriptLibrary"
-    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of btn "revGeometryBack" of stack "revLibrary" then send resizeControl to btn "revGeometryBack" of stack "revLibrary"
+    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send resizeControl to stack "revGeometryLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -701,7 +701,7 @@ on resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight
   try
     if "resizeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight" to stack "revFrontScriptLibrary"
     if "resizeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight" to stack "revBackScriptLibrary"
-    if "resizeStack" is among the lines of the cREVGeneral["handlerlist"] of btn "revGeometryBack" of stack "revLibrary" then send "resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight" to btn "revGeometryBack" of stack "revLibrary"
+    if "resizeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send "resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight" to stack "revGeometryLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -748,7 +748,7 @@ end resumeStack
 on suspendStack
   if revOKTarget() then pass suspendStack
   try
-    if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "revIDESuspendStackFront" to button "revFrontScript" of stack "revLibrary"
+    if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "revIDESuspendStackFront" to stack "revFrontScriptLibrary"
     if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send suspendStack to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
