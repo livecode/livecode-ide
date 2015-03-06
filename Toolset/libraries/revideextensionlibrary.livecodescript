@@ -44,6 +44,9 @@ on revIDEInstallExtension pExtensionPath, pType, pCallbackObject, pCallbackMessa
       __extensionPropertySet tIndex, "callback_handler", pCallbackMessage
       __extensionPropertySet tIndex, "name", "New Extension Installing"
       
+      # AL-2015-03-06: [[ Bug 14820 ]] Set the type so that the icon is correct while downloading
+      __extensionPropertySet tIndex, "type", pType
+      
       if pExtensionPath begins with "http" then 
          # Download the package and install
          __extensionPropertySet tIndex, "package_url", pExtensionPath
