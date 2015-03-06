@@ -535,16 +535,19 @@ component Examples
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
 		executable macosx:lc-compile as lc-compile
+		executable macosx:lc-run as lc-run
 		rfolder macosx:modules
 
 component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
+		executable windows:lc-run.exe as lc-run.exe
 		rfolder macosx:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
 		executable linux:[[TargetArchitecture]]/release/lc-compile as lc-compile
+		executable linux:[[TargetArchitecture]]/release/lc-run as lc-run
 		rfolder macosx:modules
 
 ////////////////////////////////////////////////////////////////////////////////
