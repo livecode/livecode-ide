@@ -86,6 +86,11 @@ function revIDEExtensions pType, pStatus
       if pType is not empty and sExtensions[tExtensionKey]["type"] is not pType then next repeat
       if pStatus is not empty and sExtensions[tExtensionKey]["status"] is not pStatus then next repeat
       
+      local tIconPath
+      if there is not a file sExtensions[tExtensionKey]["icon"] then 
+         put revIDESpecialFolderPath("toolset") & "/resources/supporting_files/images/extension-widget.png" into sExtensions[tExtensionKey]["icon"]
+      end if
+      
       put sExtensions[tExtensionKey] into tExtensions[sExtensions[tExtensionKey]["name"]]
    end repeat
    return tExtensions
