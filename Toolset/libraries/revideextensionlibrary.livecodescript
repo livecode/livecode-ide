@@ -579,6 +579,7 @@ function __extensionError pExtensionID, pErrorMessage
    __extensionSendProgressUpdate pExtensionID, "Error:" && pErrorMessage, 100
    --put "Error:" && pErrorMessage, 100
    --revIDEUninstallExtension pExtensionID
+   return empty
 end __extensionError
 
 # Send notication that widget has been added/removed
