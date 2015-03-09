@@ -883,7 +883,8 @@ component Toolset
 		file ide-support:revsaveasiosstandalone.livecodescript
 		file ide-support:revsaveasandroidstandalone.livecodescript
 		file ide-support:revsaveasstandalone.livecodescript
-		file ide-support:revliburl.livecodescript
 		file ide-support:revsblibrary.livecodescript
+	into [[ToolsFolder]]/Toolset/libraries place
+		file ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
