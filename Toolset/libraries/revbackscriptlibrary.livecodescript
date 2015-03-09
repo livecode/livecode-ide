@@ -2263,29 +2263,35 @@ end _revCheckScriptSavedNew
 on errorDialog pWhatError, pWhatError2
    ######################
    close printing
-  global gREVSuppressErrors, gREVDevelopment
-  if gREVDevelopment then write the params & cr & the long time & cr & "--------" & cr & cr to stdOut
-  if gREVSuppressErrors then exit errorDialog
-  filter pWhatError without "*,0,0"
-  if (item 1 of pWhatError is not a number or item 2 of pWhatError is not a number) and the number of words in pWhatError is not 0 then
-    answer "The following user thrown error was generated and not handled, so it was intercepted by Revolution:" & cr & cr & the params
-    exit errorDialog
-  end if
-  if the number of lines in pWhatError is 0 then exit errorDialog -- bogus error
-  set the executionError of stack "revErrorDisplay" to pWhatError
-  set the scriptError of stack "revErrorDisplay" to pWhatError2
-  repeat for each line l in pWhatError
-    if item 1 of l is 353 then
-      set the errorObject of stack "revErrorDisplay" to item -1 of l
-      exit repeat
-    end if
-  end repeat
-  if the mode of stack "revErrorDisplay" is not 0 then
-    send "preOpenCard" to cd 1 of stack "revErrorDisplay"
-    send "opencard" to cd 1 of stack "revErrorDisplay"
-  else
-    modeless "revErrorDisplay"
-  end if
+   global gREVSuppressErrors, gREVDevelopment
+   if gREVDevelopment then write the params & cr & the long time & cr & "--------" & cr & cr to stdOut
+   if gREVSuppressErrors then exit errorDialog
+   filter pWhatError without "*,0,0"
+   if (item 1 of pWhatError is not a number or item 2 of pWhatError is not a number) and the number of words in pWhatError is not 0 then
+      answer "The following user thrown error was generated and not handled, so it was intercepted by Revolution:" & cr & cr & the params
+      exit errorDialog
+   end if
+   if the number of lines in pWhatError is 0 then exit errorDialog -- bogus error
+   set the executionError of stack "revErrorDisplay" to pWhatError
+   set the scriptError of stack "revErrorDisplay" to pWhatError2
+   local tObject
+   put empty into tObject
+   repeat for each line l in pWhatError
+      if item 1 of l is 353 then
+         put item -1 of l into tObject
+         exit repeat
+      end if
+   end repeat
+   if tObject is empty then
+      put the long id of the target into tObject
+   end if
+   set the errorObject of stack "revErrorDisplay" to tObject
+   if the mode of stack "revErrorDisplay" is not 0 then
+      send "preOpenCard" to cd 1 of stack "revErrorDisplay"
+      send "opencard" to cd 1 of stack "revErrorDisplay"
+   else
+      modeless "revErrorDisplay"
+   end if
 end errorDialog
 
 
