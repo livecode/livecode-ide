@@ -3538,7 +3538,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Table,Colors,Effects,Custom,Icons,Position,Text"
+   return "Basic,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
