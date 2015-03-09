@@ -405,7 +405,7 @@ end __extensionInstallFinalise
 # Check if the widget to be uninstalled is in use
 on __extensionUninstallCheckInUse pExtensionID
    # Update progress
-   if pExtensionID is not a number then return __extensionError("Could not remove extension '" & pExtensionID & "' because it is not a valid index") 
+   if pExtensionID is not a number then return __extensionError(pExtensionID, "Could not remove extension '" & pExtensionID & "' because it is not a valid index")
    
    __extensionSendProgressUpdate pExtensionID, "Ckecking if extension is in use", 20
    
@@ -719,7 +719,7 @@ function __extensionManifestValue pExtensionID, pProperty
    local tExtensionPackageFile
    put __extensionPropertyGet(pExtensionID, "download_package_path") into tExtensionPackageFile
    
-   if not there is a file tExtensionPackageFile then __extensionsError(pExtensionID,"Could not extract manifest because package was not found in downloads folder")
+   if not there is a file tExtensionPackageFile then return __extensionError(pExtensionID,"Could not extract manifest because package was not found in downloads folder")
    
    # A zip can come compressed with a base folder or without. So work out what the 
    # root folder is before trying to extract files
@@ -755,7 +755,7 @@ function __extensionManifestValueFromFile pExtensionID, pProperty
    put __extensionPropertyGet(pExtensionID, "install_path") into tExtensionInstallPath
    put tExtensionInstallPath & slash & "manifest.xml" into tManifestFilepath
    
-   if not there is a file tManifestFilepath then __extensionsError(pExtensionID,"Could not get extension manifest information because extension folder does not contain a manifest file")
+   if not there is a file tManifestFilepath then return __extensionError(pExtensionID,"Could not get extension manifest information because extension folder does not contain a manifest file")
    
    # Extract the package manfiest to a variable to read key data
    local tManifestXMLTree, tValue

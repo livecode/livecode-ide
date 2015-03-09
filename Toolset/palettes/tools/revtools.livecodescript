@@ -385,7 +385,7 @@ on layoutPalette
    
    reset the templatebutton
    
-   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, the formattedheight of group "contents" of me + the bottom of graphic "header_background" of group "background" of me + the top of me
+   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, the formattedheight of group "contents" of me + the headerHeight of me + the top of me
    
    ideToolChanged
    --layoutFrame
