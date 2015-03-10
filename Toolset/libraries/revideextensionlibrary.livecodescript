@@ -339,13 +339,27 @@ on __extensionInstallLoad pExtensionID
    local tModuleFile
    put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pExtensionID, "type_id") & slash & "module.lcm" into tModuleFile
    
-   # Load module file into the engine
-   load extension tModuleFile
-   //put the result && return &  the loadedextensions
-   
    local tID
    put  __extensionPropertyGet(pExtensionID, "name") into tID
    put __extensionProperties(tID) into sExtensionProperties[tID]
+   
+   # Load module file into the engine
+   local tDataA
+   put sExtensions[pExtensionID] into tDataA["copies"][1]
+   
+   local tExisting
+   repeat for each key tExtensionID in sExtensions
+      if tExtensionID is pExtensionID then next repeat
+      if sExtensions[tExtensionID]["name"] is tID then
+         put sExtensions[tExtensionID]["copies"] into tExisting
+      end if
+   end repeat
+   
+   repeat for each key tKey in tExisting
+      put tExisting[tKey] into tDataA["copies"][tKey + 1]
+   end repeat
+   
+   __extensionLoad tID, tDataA
    
    # Next step
    send "__extensionInstallMakeLive" && pExtensionID to me in 0 milliseconds
@@ -671,7 +685,7 @@ on __extensionsLoad
       repeat for each item tItem in "user,ide"
          repeat for each key tFolder in tDataA[tID][tFoldersA[tItem]]
             put tDataA[tID][tFoldersA[tItem]][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
-            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["path"]
+            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
             add 1 to tExtensionCopyCount
          end repeat
       end repeat
@@ -717,7 +731,7 @@ on __extensionLoad pID, pExtensionDataA
    
    local tStatus, tError
    if tToLoadA["status"] is not "error" then
-      load extension (tToLoadA["path"] & slash & "module.lcm")
+      load extension (tToLoadA["install_path"] & slash & "module.lcm")
       if the result is not empty then
          put the result into tError
          put "error" into tStatus
@@ -731,7 +745,7 @@ on __extensionLoad pID, pExtensionDataA
    
    # Find entry in the cache if it exists
    local tIndex
-   put __extensionCacheID("install_path", tToLoadA["path"]) into tIndex
+   put __extensionCacheID("install_path", tToLoadA["install_path"]) into tIndex
    
    # If no extry is in the cache, create one
    if tIndex is not a number then
@@ -739,14 +753,14 @@ on __extensionLoad pID, pExtensionDataA
    end if
    
    # Pull key into out of manifest etc into extensions cache
-   __extensionPropertySet tIndex, "install_path", tToLoadA["path"]
+   __extensionPropertySet tIndex, "install_path", tToLoadA["install_path"]
    
    __extensionPropertySet tIndex, "name", tToLoadA["name"] 
    __extensionPropertySet tIndex, "version", tToLoadA["version"] 
    __extensionPropertySet tIndex, "title", tToLoadA["name"] 
    __extensionPropertySet tIndex, "author", tToLoadA["author"] 
    __extensionPropertySet tIndex, "type", tToLoadA["type"] 
-   __extensionPropertySet tIndex, "icon", tToLoadA["path"] & "/support/icon.png"
+   __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
    __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
    __extensionPropertySet tIndex, "status", tStatus
    __extensionPropertySet tIndex, "error", tError
@@ -757,8 +771,8 @@ on __extensionLoad pID, pExtensionDataA
    
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
-   if not revEnvironmentIsInstalled() and not there is a file (tToLoadA["path"] & slash & "api.lcdoc") then
-      revIDEExtensionUpdateAPI tToLoadA["path"]
+   if not revEnvironmentIsInstalled() and not there is a file (tToLoadA["install_path"] & slash & "api.lcdoc") then
+      revIDEExtensionUpdateAPI tToLoadA["install_path"]
    end if
    
 end __extensionLoad
