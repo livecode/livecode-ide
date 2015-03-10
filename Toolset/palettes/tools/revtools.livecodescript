@@ -162,7 +162,7 @@ on generatePalette
    repeat for each item tView in tViews
       switch tView
          case "widget"
-            put revIDEExtensions("","installed") into sViewsData["widget"]
+            put revIDEExtensions("","") into sViewsData["widget"]
             break
          case "classic"
             put revIDEClassicControls() into sViewsData["classic"]
@@ -233,7 +233,7 @@ on generatePalette
       repeat for each line tControlTypeID in tOrder
          if tControlTypeID is a number then
             
-            end if
+         end if
          set the itemdel to ","
          put item 1 of tControlTypeID into tControlTypeID
          set the itemdel to "."
@@ -250,6 +250,8 @@ on generatePalette
          set the borderwidth of the templatebutton to 0
          set the cType of the templatebutton to tView
          set the cStyle of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
+         //put "Status" && sViewsData[tView][tControlTypeID]["status"] & return after msg
+         set the cStatus of the templatebutton to sViewsData[tView][tControlTypeID]["status"]
          
          if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
             set the name of the templateimage to tControlTypeID & ".icon.png"
@@ -286,6 +288,11 @@ on generatePalette
          end if
          
          # Create the button
+         set the blendlevel of the templatebutton to 0
+          if sViewsData[tView][tControlTypeID]["status"] is "error" then
+            set the blendlevel of the templatebutton to 50
+            set the tooltip of the templatebutton to "There was an error while loading this extension. Click to load the extension manager for more information."
+         end if
          create button tControlTypeID in group tView of group "contents"
       end repeat
       
@@ -435,6 +442,10 @@ end mouseDoubleUp
 
 on mouseDown
    if the cType of the target is empty then exit mouseDown
+   if the cStatus of the target is "error" then
+      answer "Widget could not be created because there was an error while loading it. To resolve, please go to the extension manager." 
+      exit mouseDown
+   end if
    if the cTool of the target is false then 
       revIDESetCursor "com.livecode.cursor.grabclose"
    end if
@@ -582,7 +593,7 @@ end mouseDown
 
 on mouseEnter
    if the cType of the target is empty then exit mouseEnter
-   if the cTool of the target is false then 
+   if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
       set the coloroverlay["opacity"] of the target to "50"
