@@ -3603,11 +3603,13 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
 end revIDELastModifiedTimeOfFile
 
 function revIDEExtensionFolders
-   local tFolders
-   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
+   local tFoldersA
+   put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
    if not revEnvironmentIsInstalled() then
-      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
+      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tFoldersA["ide"]
+   else
+      put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
    end if
-   return tFolders
+   return tFoldersA
 end revIDEExtensionFolders
 

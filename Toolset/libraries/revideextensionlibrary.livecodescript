@@ -2,11 +2,11 @@
 local sExtensions, sExtensionProperties
 
 on revLoadLibrary
-	insert script of me into back 
+   insert script of me into back 
 end revLoadLibrary
 
 on revUnloadLibrary
-	remove script of me from back
+   remove script of me from back
 end revUnloadLibrary
 
 # Called at startup. Loads all the extensions ready for use
@@ -17,9 +17,7 @@ on revIDEInitialiseExtensions
    end repeat
    
    # Load all the extensions ready for use
-   repeat for each line tExtensionModulePath in __extensionModulePaths()
-      __extensionLoad tExtensionModulePath
-   end repeat
+   __extensionsLoad
 end revIDEInitialiseExtensions
 
 # Intalls the extension
@@ -31,7 +29,7 @@ on revIDEInstallExtension pExtensionPath, pType, pCallbackObject, pCallbackMessa
       put __extensionCacheID("package_url",pExtensionPath) into tIndex
       
       if tIndex is empty then
-          put __extensionCacheID("download_package_path",pExtensionPath) into tIndex
+         put __extensionCacheID("download_package_path",pExtensionPath) into tIndex
       end if
       
       # If the extension cache ID couldn't be found, generate a new one
@@ -53,7 +51,7 @@ on revIDEInstallExtension pExtensionPath, pType, pCallbackObject, pCallbackMessa
          __extensionInstallDownload tIndex
       else
          # Package already downloaded - begin installation
-          __extensionPropertySet tIndex, "download_package_path", pExtensionPath
+         __extensionPropertySet tIndex, "download_package_path", pExtensionPath
          __extensionInstallVerify tIndex
       end if
    else
@@ -79,7 +77,7 @@ function revIDEExtensions pType, pStatus
    # Repeat over the extension array looking for elements with matching type
    local tExtensions
    repeat for each line tExtensionKey in the keys of sExtensions
-      if sExtensions[tExtensionKey]["name"] is empty then 
+      if sExtensions[tExtensionKey]["type_id"] is empty then 
          delete variable sExtensions[tExtensionKey]
          next repeat
       end if
@@ -293,7 +291,7 @@ on __extensionInstallGuide pExtensionID
    local tUserGuideFolder
    put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pExtensionID, "type_id") & slash & "docs/guide" into tUserGuideFolder
    
-    # Get the name and author required by user guide install function
+   # Get the name and author required by user guide install function
    local tExtensionName, tExtensionAuthor
    put __extensionPropertyGet(pExtensionID, "name") into tExtensionName
    put __extensionPropertyGet(pExtensionID, "author") into tExtensionAuthor
@@ -464,7 +462,7 @@ on __extensionUninstallUpdateCache pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Removing extension data", 90
    
-   delete variable sExtensions[pExtensionID]
+   __extensionPropertySet pExtensionID, "status", "uninstalled"
    
    # Notify IDE uninstallation complete
    __extensionSendProgressUpdate pExtensionID, "Complete", 100
@@ -588,7 +586,7 @@ end __extensionError
 
 # Send notication that widget has been added/removed
 on __extensionsChanged
-    revIDEMessageSend "ideExtensionsChanged"
+   revIDEMessageSend "ideExtensionsChanged"
 end __extensionsChanged
 
 # Sent progress update on installation of widget
@@ -606,39 +604,81 @@ on __extensionSendProgressUpdate pExtensionID, pMessage, pProgress
    //put __extensionPropertyGet(pExtensionID, "callback_target") into tCallbackTarget
    //put __extensionPropertyGet(pExtensionID, "callback_handler") into tCallBackHandler
    //if exists(tCallbackTarget) then
-      //dispatch tCallBackHandler to tCallbackTarget with pMessage,pProgress
+   //dispatch tCallBackHandler to tCallbackTarget with pMessage,pProgress
    //end if
    // Send message to registered targets
 end __extensionSendProgressUpdate
 
-# Returns: List of the paths to the installed modules
-function __extensionModulePaths
+private function __fetchModuleData pExtensionFile
+   local tDataA, tFolder
+   set the itemdelimiter to slash
+   put item 1 to -2 of pExtensionFile into tFolder
+   revIDEExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
+   # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
+   if the result is not empty then
+      put "Invalid manifest" into tDataA["error"]
+      put "error" into tDataA["status"]
+   end if
+   return tDataA
+end __fetchModuleData
+
+on __extensionsLoad
+   local tDataA
    revIDEStoreDefaultFolder
    
-   local tExtensionModulePaths
+   # Fetch all the available data about extensions in the search paths
+   local tFoldersA, tExtensionFolder, tPath
+   put revIDEExtensionFolders() into tFoldersA
    set the itemdel to "."
-   repeat for each line tExtensionFolder in revIDEExtensionFolders()
+   repeat for each key tKey in tFoldersA
+      put tFoldersA[tKey] into tExtensionFolder
       set the defaultfolder to tExtensionFolder
       repeat for each line tFolder in the folders
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
-         local tExtensionModulePath
-         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tExtensionModulePath
-         if there is a file tExtensionModulePath then
-            if tExtensionModulePaths is empty then
-               put tExtensionModulePath into tExtensionModulePaths
+         local tExtensionModulePath, tArray
+         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tPath
+         if there is a file tPath then
+            put __fetchModuleData(tPath) into tArray
+            if tKey is "ide" then
+               put false into tArray["visible"]
             else
-               put return & tExtensionModulePath after tExtensionModulePaths
+               put true into tArray["visible"]
             end if
+            local tID
+            if tArray["id"] is empty then
+               put tFolder into tID
+            else
+               put tArray["id"] into tID
+            end if
+            delete variable tArray["id"]
+            
+            put tArray into tDataA[tID][tExtensionFolder][tFolder]
          end if
       end repeat
    end repeat
    
-   revIDERestoreDefaultFolder
+   # Now loop through, checking the status of them
+   local tExtensionsList, tExtensionsA, tExtensionCount, tExtensionCopyCount, tExtensionDataA
+   put the keys of tDataA into tExtensionsList
+   sort tExtensionsList
    
-   return tExtensionModulePaths
-end __extensionModulePaths
+   set the itemdel to ","
+   put 1 into tExtensionCount
+   repeat for each line tID in tExtensionsList
+      put 1 into tExtensionCopyCount
+      repeat for each item tItem in "user,ide"
+         repeat for each key tFolder in tDataA[tID][tFoldersA[tItem]]
+            put tDataA[tID][tFoldersA[tItem]][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["path"]
+            add 1 to tExtensionCopyCount
+         end repeat
+      end repeat
+      __extensionLoad tID, tExtensionDataA
+      put empty into tExtensionDataA
+   end repeat
+end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
 function __extensionPackagePaths
@@ -670,53 +710,57 @@ on __extensionPropertySet pExtensionID, pProperty, pValue
 end __extensionPropertySet
 
 # Loads an extension
-on __extensionLoad pExtensionPath
-   try
-      # Load the extension into the engine
-      load extension pExtensionPath
-      
-      
-      set the itemdel to "/"
-      put item 1 to -2 of pExtensionPath into pExtensionPath
-      
-      # Find entry in the cache if it exists
-      
-      local tIndex
-      put __extensionCacheID("install_path", pExtensionPath) into tIndex
-      
-      # If no extry is in the cache, create one
-      if tIndex is not a number then
-         put the number of elements of sExtensions + 1 into tIndex
+on __extensionLoad pID, pExtensionDataA
+   local tLoadedDataA, tToLoadA
+   # Only try to load the first copy in the load order
+   put pExtensionDataA["copies"][1] into tToLoadA
+   
+   local tStatus, tError
+   if tToLoadA["status"] is not "error" then
+      load extension (tToLoadA["path"] & slash & "module.lcm")
+      if the result is not empty then
+         put the result into tError
+         put "error" into tStatus
+      else
+         put "installed" into tStatus
       end if
-      
-      # Pull key into out of manifest etc into extensions cache
-      __extensionPropertySet tIndex, "install_path", pExtensionPath
-      
-      local tVersion,tName
-      put __extensionManifestValueFromFile(tIndex,"name") into tName
-      put __extensionManifestValueFromFile(tIndex,"version") into tVersion
-      
-      __extensionPropertySet tIndex, "name", tName
-      __extensionPropertySet tIndex, "version", tVersion
-      __extensionPropertySet tIndex, "title", __extensionManifestValueFromFile(tIndex,"title")
-      __extensionPropertySet tIndex, "author", __extensionManifestValueFromFile(tIndex,"author")
-      __extensionPropertySet tIndex, "type", __extensionManifestValueFromFile(tIndex,"type")
-      __extensionPropertySet tIndex, "icon", pExtensionPath & "/support/icon.png"
-      __extensionPropertySet tIndex, "type_id", tName & "." & tVersion
-      __extensionPropertySet tIndex, "status", "installed"
-      __extensionPropertySet tIndex, "label", __extensionManifestValueFromFile(tIndex,"title")
-      
-      put __extensionProperties(tName) into sExtensionProperties[tName]
-      
-      # Generate extension API from source if there is not one present in the folder
-      # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
-      if not revEnvironmentIsInstalled() and not there is a file (pExtensionPath & slash & "api.lcdoc") then
-         revIDEExtensionUpdateAPI pExtensionPath
-      end if
-      
-   catch tError
-      # Think about deleting the module here?
-   end try
+   else
+      put tToLoadA["status"] into tStatus
+      put tToLoadA["error"] into tError
+   end if
+   
+   # Find entry in the cache if it exists
+   local tIndex
+   put __extensionCacheID("install_path", tToLoadA["path"]) into tIndex
+   
+   # If no extry is in the cache, create one
+   if tIndex is not a number then
+      put the number of elements of sExtensions + 1 into tIndex
+   end if
+   
+   # Pull key into out of manifest etc into extensions cache
+   __extensionPropertySet tIndex, "install_path", tToLoadA["path"]
+   
+   __extensionPropertySet tIndex, "name", tToLoadA["name"] 
+   __extensionPropertySet tIndex, "version", tToLoadA["version"] 
+   __extensionPropertySet tIndex, "title", tToLoadA["name"] 
+   __extensionPropertySet tIndex, "author", tToLoadA["author"] 
+   __extensionPropertySet tIndex, "type", tToLoadA["type"] 
+   __extensionPropertySet tIndex, "icon", tToLoadA["path"] & "/support/icon.png"
+   __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
+   __extensionPropertySet tIndex, "status", tStatus
+   __extensionPropertySet tIndex, "error", tError
+   __extensionPropertySet tIndex, "label", tToLoadA["name"] 
+   __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
+   
+   put __extensionProperties(pID) into sExtensionProperties[pID]
+   
+   # Generate extension API from source if there is not one present in the folder
+   # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+   if not revEnvironmentIsInstalled() and not there is a file (tToLoadA["path"] & slash & "api.lcdoc") then
+      revIDEExtensionUpdateAPI tToLoadA["path"]
+   end if
+   
 end __extensionLoad
 
 function __extensionManifestValue pExtensionID, pProperty
@@ -820,4 +864,55 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-
+private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
+   local tDataA
+   
+   local tManifestContents, tId
+   put url ("file:" & pManifestPath) into tManifestContents
+   put revXMLCreateTree(tManifestContents,true,true,false) into tId
+   
+   if tId begins with "xmlerr" then
+      return "Error: invalid xml in manifest"
+   end if
+   
+   local tTargetType
+   put textDecode(revXMLNodeContents(tId, "/package/type"), "utf-8") into tTargetType
+   
+   if tTargetType begins with "xmlerr" then
+      return "Error: no type found in manifest"
+   end if
+   put tTargetType into tDataA["type"]
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tId, "/package/name"), "utf-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return "Error: couldn't retrieve extension name from manifest"
+   end if
+   put tTargetName into tDataA["id"]
+   
+   local tTargetTitle
+   put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
+   
+   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
+      put empty into tTargetTitle
+   end if
+   put tTargetTitle into tDataA["name"]
+   
+   local tTargetVersion
+   put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
+   
+   if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
+      put empty into tTargetVersion
+   end if
+   put tTargetVersion into tDataA["version"]
+   
+   local tTargetAuthor
+   put textDecode(revXMLNodeContents(tId, "/package/author"), "utf-8") into tTargetAuthor
+   if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
+      put empty into tTargetAuthor
+   end if
+   put tTargetAuthor into tDataA["author"]
+   
+   put tDataA into rDataA
+   return empty
+end revIDEExtensionFetchMetadata
