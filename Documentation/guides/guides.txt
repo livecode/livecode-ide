@@ -1,2 +1,0 @@
-LiveCode
-Extending LiveCode

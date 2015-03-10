@@ -82,12 +82,16 @@ command generateDistributedGuide
    put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
    set the defaultfolder to tGuideFolder
    
-   local tGuideData
-   repeat for each item tItem in "LiveCode Script,Extending LiveCode"
-      get url ("binfile:" & tGuideFolder & slash & tItem & ".md")
+   local tGuideData, tGuideName
+   set the itemdelimiter to "."
+   repeat for each line tFile in the files
+      if tFile begins with "."  then next repeat
+      put item 1 to -2 of tFile into tGuideName
+      get url ("binfile:" & tGuideFolder & slash & tFile)
       if it is not empty then
          get textDecode(it, "utf-8")
-         put tab & "{" & CR & tab & escape("guide") & ":" & escape(tItem) & comma & CR & tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+         replace "[toc]" with empty in it
+         put tab & "{" & CR & tab & escape("guide") & ":" & escape(tGuideName) & comma & CR & tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
       end if
    end repeat
    delete the last char of tGuideData
@@ -248,6 +252,7 @@ private function revDocsGetGuideData
    local tFolder
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionGuide
+      put empty into tExtensionGuide
       put tExtensionData["folder"] into tFolder
       if there is a not file (tFolder & slash & "guide.md")  then next repeat
       
@@ -262,12 +267,14 @@ private function revDocsGetGuideData
          put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
          put textDecode(tGuide, "utf-8") into tGuide
          
-         put "{" & CR after tExtensionGuide
-         put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
-         put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
-         put "}" after tExtensionGuide
-         
-         put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+         if tGuide is not empty then
+            put "{" & CR after tExtensionGuide
+            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
+            put "}" after tExtensionGuide
+            
+            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+         end if
       end if
       
       if tExtensionGuide is not empty then
