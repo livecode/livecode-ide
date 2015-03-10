@@ -494,46 +494,46 @@ function __extensionPropertiesFromManifest pManifestPath
    # Create the XML tree
    local tXMLTree, tProperties, tExtensionData
    put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
+   
+   # Process the general property metadata into an array
+   local tMetadataNodes, tMetadataA, tKeys, tValue
+   put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
+   set the itemdelimiter to "."
+   repeat for each line tMetadata in tMetadataNodes
+      put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tKeys
+      put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tValue
+      repeat with x = the number of items in tKeys down to 1
+         get tValue
+         put empty into tValue
+         put it into tValue[item x of tKeys]
+      end repeat
+      union tMetadataA with tValue recursively
+   end repeat
+   
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
    repeat for each line tProperty in tProperties
       local tName, tLabel, tSection
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
+      put tMetadataA[tName] into tExtensionData[tName]
       
-      put __extensionFetchPropertyMetadata(tXMLTree, tName, "section")  into tSection
-      if tSection is empty then
-         put "Basic" into tSection
+      if tExtensionData[tName]["section"] is empty then
+         put "Basic" into tExtensionData[tName]["section"]
       end if
-      put tSection into tExtensionData[tName]["section"]
       
-      put __extensionFetchPropertyMetadata(tXMLTree, tName, "label")  into tLabel
-      if tLabel is empty then
-         put tName into tLabel
+      if tExtensionData[tName]["label"] is empty then
+         put tName into tExtensionData[tName]["label"]
       end if
-      put tLabel into tExtensionData[tName]["label"]
       
       local tType
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
-      # We don't actually need the type other than to determine the default editor
-      --put tType into tExtensionData["type"]
       
-      //put "number" into tExtensionData[tName]["type"]
-      local tEditor
-      put __extensionFetchPropertyMetadata(tXMLTree, tName, "editor")  into tEditor
-      if tEditor is empty then 
-         put "com.livecode.pi." & tType into tEditor
+      if tExtensionData[tName]["editor"] is empty then 
+         put "com.livecode.pi." & tType into tExtensionData[tName]["editor"]
       end if
-      put tEditor into tExtensionData[tName]["editor"]
       
-      local tOptions
-      put __extensionFetchPropertyMetadata(tXMLTree, tName, "options")  into tOptions
-      replace comma with return in tOptions
-      put tOptions into tExtensionData[tName]["options"]
-      
-      local tDefault
-      put __extensionFetchPropertyMetadata(tXMLTree, tName, "default")  into tDefault
-      replace "\n" with return in tDefault
-      put tDefault into tExtensionData[tName]["default"]
-      
+      # Process value options and defaul
+      replace comma with return in tExtensionData[tName]["options"]
+      replace "\n" with return in tExtensionData[tName]["default"]
       
       local tReadOnly
       get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
@@ -544,9 +544,13 @@ function __extensionPropertiesFromManifest pManifestPath
       end if
       put tReadOnly into tExtensionData[tName]["read_only"]
       
-      put "NaN" into tExtensionData[tName]["order"]
-      put true into tExtensionData[tName]["user_visible"]
-      put empty into tExtensionData[tName]["related"]
+      if tExtensionData[tName]["order"] is empty then
+         put "NaN" into tExtensionData[tName]["order"]
+      end if
+      
+      if tExtensionData[tName]["user_visible"] is empty then
+         put true into tExtensionData[tName]["user_visible"]
+      end if
    end repeat
    
    revXMLDeleteTree tXMLTree
