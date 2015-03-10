@@ -77,7 +77,7 @@ function revIDEExtensions pType, pStatus
    # Repeat over the extension array looking for elements with matching type
    local tExtensions
    repeat for each line tExtensionKey in the keys of sExtensions
-      if sExtensions[tExtensionKey]["type_id"] is empty then 
+      if sExtensions[tExtensionKey]["name"] is empty then 
          delete variable sExtensions[tExtensionKey]
          next repeat
       end if
