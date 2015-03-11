@@ -483,7 +483,13 @@ on __extensionUninstallUpdateCache pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Removing extension data", 90
    
-   __extensionPropertySet pExtensionID, "status", "uninstalled"
+   local tCopies
+   put __extensionPropertyGet(pExtensionID, "copies") into tCopies
+   if the number of elements in tCopies is 1 then
+      delete variable sExtensions[pExtensionID]
+   else
+      __extensionPropertySet pExtensionID, "status", "uninstalled"
+   end if
    
    # Notify IDE uninstallation complete
    __extensionSendProgressUpdate pExtensionID, "Complete", 100
