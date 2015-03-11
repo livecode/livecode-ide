@@ -165,7 +165,7 @@ on generatePalette
    repeat for each item tView in tViews
       switch tView
          case "widget"
-            put revIDEExtensions("","") into sViewsData["widget"]
+            put revIDEExtensions("widget","installed") into sViewsData["widget"]
             break
          case "classic"
             put revIDEClassicControls() into sViewsData["classic"]

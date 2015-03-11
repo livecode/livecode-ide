@@ -82,7 +82,15 @@ function revIDEExtensions pType, pStatus
          next repeat
       end if
       if pType is not empty and sExtensions[tExtensionKey]["type"] is not pType then next repeat
-      if pStatus is not empty and sExtensions[tExtensionKey]["status"] is not pStatus then next repeat
+      if pStatus is "installed" then
+         if sExtensions[tExtensionKey]["status"] is "uninstalled" then
+            next repeat
+         end if
+      else if pStatus is not empty then
+         if sExtensions[tExtensionKey]["status"] is not pStatus then 
+            next repeat
+         end if
+      end if
       
       local tIconPath
       if there is not a file sExtensions[tExtensionKey]["icon"] then 
@@ -418,7 +426,7 @@ on __extensionUninstallCheckInUse pExtensionID
    # Update progress
    if pExtensionID is not a number then return __extensionError(pExtensionID, "Could not remove extension '" & pExtensionID & "' because it is not a valid index")
    
-   __extensionSendProgressUpdate pExtensionID, "Ckecking if extension is in use", 20
+   __extensionSendProgressUpdate pExtensionID, "Checking if extension is in use", 20
    
    # Next step
    send "__extensionUninstallUnload" && pExtensionID to me in 0 milliseconds
@@ -475,7 +483,13 @@ on __extensionUninstallUpdateCache pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Removing extension data", 90
    
-   __extensionPropertySet pExtensionID, "status", "uninstalled"
+   local tCopies
+   put __extensionPropertyGet(pExtensionID, "copies") into tCopies
+   if the number of elements in tCopies is 1 then
+      delete variable sExtensions[pExtensionID]
+   else
+      __extensionPropertySet pExtensionID, "status", "uninstalled"
+   end if
    
    # Notify IDE uninstallation complete
    __extensionSendProgressUpdate pExtensionID, "Complete", 100
