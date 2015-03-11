@@ -150,6 +150,9 @@ on generatePalette
    end repeat
    create group "contents"
    
+   # Clear the error group
+   if there is a group "errors" then delete group "errors"
+   
    # Get the appropriate platform theme folder
    local tThemePath
    put revIDEThemePath() into tThemePath
@@ -166,7 +169,6 @@ on generatePalette
             break
          case "classic"
             put revIDEClassicControls() into sViewsData["classic"]
-            
             break
          case "graphic"
             put revIDEGraphics() into sViewsData["graphic"]
@@ -179,8 +181,6 @@ on generatePalette
             break
       end switch
    end repeat
-   
-   
    
    # Generate UI
    lock messages
@@ -247,31 +247,38 @@ on generatePalette
          set the icongravity of the templatebutton to "top"
          set the threed of the templatebutton to false
          set the borderwidth of the templatebutton to 0
+         set the blendlevel of the templatebutton to 0
          set the cType of the templatebutton to tView
          set the cStyle of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
-         //put "Status" && sViewsData[tView][tControlTypeID]["status"] & return after msg
          set the cStatus of the templatebutton to sViewsData[tView][tControlTypeID]["status"]
          
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
-            # There was an error loading a widget so create a error icons
-            set the filename of the templateimage to revIDESpecialFOlderPath("Toolset") & "/resources/supporting_files/images/warning.png"
-            set the name of the templateimage to tControlTypeID & ".icon.png"
-            create image in group "images" of group "contents"
-            set the icon of the templatebutton to the ID of the last image
-         else if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
+            # Create a group to store the error icons
+            if there is not a group "errors" of group "contents" then create group "errors" in group "contents"
+            
+            set the filename of the templateimage to revIDESpecialFolderPath("Toolset") & "/resources/supporting_files/images/warning.png"
+            set the name of the templateimage to tControlTypeID
+            set the visible of the templateimage to true
+            create image in group "errors" of group "contents"
+         end if
+         
+         local tImageID
+         if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
             set the name of the templateimage to tControlTypeID & ".icon.png"
             set the visible of the templateimage to false
             set the filename of the templateimage to sViewsData[tView][tControlTypeID]["icon"]
             create image in group "images" of group "contents"
-            revIDEResizeImageInBounds the long ID of the last image, BLOCK_SIZE * 2,BLOCK_SIZE
-            set the icon of the templatebutton to the ID of the last image
+            put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
+            revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
+            set the icon of the templatebutton to the ID of tImageID
          else if there is a file (tThemePath & slash & tControlTypeID & ".icon.png") then 
             # If we can find an icon file in the theme, create it
             set the name of the templateimage to tControlTypeID & ".icon.png"
             set the visible of the templateimage to false
             set the filename of the templateimage to tThemePath & slash & tControlTypeID & ".icon.png"
             create image in group "images" of group "contents"
-            set the icon of the templatebutton to the ID of the last image
+            put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
+            set the icon of the templatebutton to the ID of tImageID
          else 
             set the icon of the templatebutton to empty
          end if
@@ -293,7 +300,12 @@ on generatePalette
          end if
          
          # Create the button
+         if sViewsData[tView][tControlTypeID]["status"] is "error" then
+            set the tooltip of the templatebutton to "There was an error while loading widget:" & return & tControlTypeID
+            set the blendlevel of the templatebutton to 50
+            end if
          create button tControlTypeID in group tView of group "contents"
+         
       end repeat
       
       # Create the seperator
@@ -344,7 +356,7 @@ on layoutPalette
    put objectTypes() into tObjectTypeData
    
    repeat with x = 1 to the number of elements of tObjectTypeData
-      # Check if the group of obejct type exists
+      # Check if the group of object type exists
       put tObjectTypeData[x]["name"] into tView
       if there is not a group tView of group "contents" then next repeat
       put tView into tLastView
@@ -365,9 +377,19 @@ on layoutPalette
       put tPaletteMargin  into tLeft
       
       repeat with y = 1 to the number of controls of group tView of group "contents"
-         set the width of control y of group tView of group "contents" to tBlockSize
-         set the topleft of control y of group tView of group "contents" to tLeft, tTop
-         put the right of control y of group tView of group "contents" + (tPadding * 2) into tLeft
+         # Get the short name of the object
+         local tObjectID, tObjectName
+         put the long id of control y of group tView of group "contents" into tObjectID
+         put the short name of tObjectID into tObjectName
+         
+         set the width of tObjectID to tBlockSize
+         set the topleft of tObjectID to tLeft, tTop
+         put the right of tObjectID + (tPadding * 2) into tLeft
+         
+         # Check if there is an error icon
+         if there is an image tObjectName of group "errors" of group "contents" then
+            set the topright of image tObjectName of group "errors" of group "contents" to the topright of tObjectID
+         end if
          
          if tLeft >= the width of me - tPaletteMargin - 5 then
             put tPaletteMargin  into tLeft
@@ -599,6 +621,8 @@ on mouseEnter
       revIDESetCursor "com.livecode.cursor.grab"
       set the coloroverlay["opacity"] of the target to "50"
       set the coloroverlay["color"] of the target to "0,0,0"
+   else if the cStatus of the target is "error" then
+       revIDESetCursor "help"
    else if the cTool of the target is true then
       # We are hovering over a tool
       set the loc of graphic "tool_hover" of group "contents" to the loc of the target
