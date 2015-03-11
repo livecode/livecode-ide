@@ -82,7 +82,15 @@ function revIDEExtensions pType, pStatus
          next repeat
       end if
       if pType is not empty and sExtensions[tExtensionKey]["type"] is not pType then next repeat
-      if pStatus is not empty and sExtensions[tExtensionKey]["status"] is not pStatus then next repeat
+      if pStatus is "installed" then
+         if sExtensions[tExtensionKey]["status"] is "uninstalled" then
+            next repeat
+         end if
+      else if pStatus is not empty then
+         if sExtensions[tExtensionKey]["status"] is not pStatus then 
+            next repeat
+         end if
+      end if
       
       local tIconPath
       if there is not a file sExtensions[tExtensionKey]["icon"] then 
