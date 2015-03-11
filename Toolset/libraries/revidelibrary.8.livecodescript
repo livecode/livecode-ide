@@ -2803,6 +2803,9 @@ function revIDESpecialFolderPath pKey
       case "themes"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/themes"
          break
+      case "images"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
+         break
       case "extensions"
          put  item 1 to -3 of the filename of stack "home" & "/extensions" into tPath
          revIDEEnsurePath(tPath)
@@ -3603,11 +3606,22 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
 end revIDELastModifiedTimeOfFile
 
 function revIDEExtensionFolders
-   local tFolders
-   put revIDESpecialFolderPath("user extensions") & return & revIDESpecialFolderPath("extensions") into tFolders
+   local tFoldersA
+   put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
    if not revEnvironmentIsInstalled() then
-      put return & revEnvironmentBinariesPath() & slash & "packaged_extensions" after tFolders
+      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tFoldersA["ide"]
+   else
+      put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
    end if
-   return tFolders
+   return tFoldersA
 end revIDEExtensionFolders
 
+function revIDEDefaultExtensionIcon pType
+   switch pType
+      case "library"
+         return revIDESpecialFolderPath("images") & slash & "extension-library.png"
+      case "widget"
+      default
+         return revIDESpecialFolderPath("images") & slash & "extension-widget.png"
+   end switch
+end revIDEDefaultExtensionIcon
