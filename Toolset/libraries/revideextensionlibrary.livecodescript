@@ -655,9 +655,9 @@ on __extensionsLoad
          if there is a file tPath then
             put __fetchModuleData(tPath) into tArray
             if tKey is "ide" then
-               put false into tArray["visible"]
+               put true into tArray["builtin"]
             else
-               put true into tArray["visible"]
+               put false into tArray["builtin"]
             end if
             local tID
             if tArray["name"] is empty then
@@ -760,6 +760,7 @@ on __extensionLoad pID, pExtensionDataA
    __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
    __extensionPropertySet tIndex, "status", tStatus
    __extensionPropertySet tIndex, "error", tError
+   __extensionPropertySet tIndex, "builtin", tToLoadA["builtin"]
    __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
