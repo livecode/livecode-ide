@@ -302,7 +302,7 @@ on generatePalette
          # Create the button
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
             set the tooltip of the templatebutton to "There was an error while loading widget:" & return & tControlTypeID
-            set the blendlevel of the templatebutton to 50
+            --set the blendlevel of the templatebutton to 50
             end if
          create button tControlTypeID in group tView of group "contents"
          
