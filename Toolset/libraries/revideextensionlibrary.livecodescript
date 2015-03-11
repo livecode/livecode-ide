@@ -661,13 +661,11 @@ on __extensionsLoad
                put true into tArray["visible"]
             end if
             local tID
-            if tArray["id"] is empty then
+            if tArray["name"] is empty then
                put tFolder into tID
             else
-               put tArray["id"] into tID
+               put tArray["name"] into tID
             end if
-            delete variable tArray["id"]
-            
             put tArray into tDataA[tID][tExtensionFolder][tFolder]
          end if
       end repeat
