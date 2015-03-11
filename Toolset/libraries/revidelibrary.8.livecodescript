@@ -2803,6 +2803,9 @@ function revIDESpecialFolderPath pKey
       case "themes"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/themes"
          break
+      case "images"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
+         break
       case "extensions"
          put  item 1 to -3 of the filename of stack "home" & "/extensions" into tPath
          revIDEEnsurePath(tPath)
@@ -3613,3 +3616,12 @@ function revIDEExtensionFolders
    return tFoldersA
 end revIDEExtensionFolders
 
+function revIDEDefaultExtensionIcon pType
+   switch pType
+      case "library"
+         return revIDESpecialFolderPath("images") & slash & "extension-library.png"
+      case "widget"
+      default
+         return revIDESpecialFolderPath("images") & slash & "extension-widget.png"
+   end switch
+end revIDEDefaultExtensionIcon
