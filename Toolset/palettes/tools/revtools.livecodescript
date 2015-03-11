@@ -213,7 +213,6 @@ on generatePalette
    set the itemdel to "."
    create group "images" in group "contents"
    
-   
    repeat for each line tView in the keys of sViewsData
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
@@ -253,7 +252,13 @@ on generatePalette
          //put "Status" && sViewsData[tView][tControlTypeID]["status"] & return after msg
          set the cStatus of the templatebutton to sViewsData[tView][tControlTypeID]["status"]
          
-         if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
+         if sViewsData[tView][tControlTypeID]["status"] is "error" then
+            # There was an error loading a widget so create a error icons
+            set the filename of the templateimage to revIDESpecialFOlderPath("Toolset") & "/resources/supporting_files/images/warning.png"
+            set the name of the templateimage to tControlTypeID & ".icon.png"
+            create image in group "images" of group "contents"
+            set the icon of the templatebutton to the ID of the last image
+         else if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
             set the name of the templateimage to tControlTypeID & ".icon.png"
             set the visible of the templateimage to false
             set the filename of the templateimage to sViewsData[tView][tControlTypeID]["icon"]
@@ -288,11 +293,6 @@ on generatePalette
          end if
          
          # Create the button
-         set the blendlevel of the templatebutton to 0
-          if sViewsData[tView][tControlTypeID]["status"] is "error" then
-            set the blendlevel of the templatebutton to 50
-            set the tooltip of the templatebutton to "There was an error while loading this extension. Click to load the extension manager for more information."
-         end if
          create button tControlTypeID in group tView of group "contents"
       end repeat
       
@@ -300,12 +300,10 @@ on generatePalette
       create graphic tView in group "contents"
    end repeat
    
-   
    # Reset the templates back post use
    reset the templatebutton
    reset the templategraphic
    reset the templateimage
-   
    
    unlock messages
    unlock screen
@@ -477,11 +475,13 @@ on mouseDown
          exit repeat
       end if
    end repeat
+   unlock messages
    
    local tTarget, tObjectTypeID, tToolsStackID
    put the long ID of the target into tTarget
    put the short name of the target into tObjectTypeID
    put the long ID of this stack into tToolsStackID
+   put "TypeID" && tObjectTypeID
    
    # Generate the drag stack
    reset the templatestack
@@ -497,6 +497,7 @@ on mouseDown
    set the defaultStack to "revDragControl"
    
    # Create a control and Generate a drag image
+   
    revIDECreateObject tObjectTypeID, the long ID of card 1 of this stack, "0,0"
    if the result is false then exit mouseDown
    
