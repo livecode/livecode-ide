@@ -503,7 +503,6 @@ on mouseDown
    put the long ID of the target into tTarget
    put the short name of the target into tObjectTypeID
    put the long ID of this stack into tToolsStackID
-   put "TypeID" && tObjectTypeID
    
    # Generate the drag stack
    reset the templatestack
