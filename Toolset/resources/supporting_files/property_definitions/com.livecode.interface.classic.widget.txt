@@ -1,0 +1,1 @@
+type	widgetProperty	Default	Options	Group----------------------------------------------------------------------------------------------------name	Widget	tooltip		visible	traversalOn	false	behaviorlayerModecustomProperties		ink	srcCopy	blendLevel	0	0,100lockLoc	false	width		height		locationleft		top		right		bottom		layer

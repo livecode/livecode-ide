@@ -1,0 +1,185 @@
+Property	Label	Section	Editor	User Visible	Read Only	Group	Default	Options
+----------------------------------------------------------------------------------------------------	
+alwaysBuffer	Buffer	Basic	com.livecode.pi.boolean	true	false		false	
+angle	Rotation	Basic	com.livecode.pi.number	true	false		0	
+antialiased	Antialiased	Basic	com.livecode.pi.boolean	true	false			
+arcAngle	Arc	Basic	com.livecode.pi.number	true	false			
+armedIcon	Armed Icon	Icons	com.livecode.pi.icon	true	false		0	
+autoHilite	Auto Hilite	Basic	com.livecode.pi.boolean	true	false			
+autoTab	Tab on return	Basic	com.livecode.pi.boolean	true	false			
+backgroundBehavior	Behave like a background	Basic	com.livecode.pi.boolean	true	false		false	
+backgroundColor	Fill Color	Colors	com.livecode.pi.color	true	false	Background Fill			
+backgroundPattern	Fill Pattern	Colors	com.livecode.pi.pattern	true	false	Background Fill		
+basicTableObject	Basic table object	Table	com.livecode.pi.boolean	true	false			
+behavior	Behavior	Basic	com.livecode.pi.string	true	false			
+blendLevel	Blend Level	Colors	com.livecode.pi.number	true	false			
+borderColor	Border/Grid Color	Colors	com.livecode.pi.color	true	false	Border Fill		
+borderPattern	Border/Grid Pattern	Colors	com.livecode.pi.pattern	true	false	Border Fill		
+borderWidth	Border Width	Basic	com.livecode.pi.number	true	false			
+bottom	Bottom	Position	com.livecode.pi.number	true	false		no_default	
+bottomColor	Inset Bevel Color	Colors	com.livecode.pi.color	true	false	Bottom Bevel Fill		
+bottomPattern	Inset Bevel Pattern	Colors	com.livecode.pi.pattern	true	false	Bottom Bevel Fill		
+boundingRect	Bounding rect	Basic	com.livecode.pi.string	true	false			
+callbacks	Callbacks	Callbacks	com.livecode.pi.string	true	false			
+cantAbort	User can't abort scripts	Basic	com.livecode.pi.boolean	true	false		false		
+cantDelete	Can't delete	Basic	com.livecode.pi.boolean	true	false		false	
+cantModify	Can't modify	Basic	com.livecode.pi.boolean	true	false		false	
+cellFormatting	Cell formatting	Table	com.livecode.pi.boolean	true	false	false		
+clickColor	Click Color	Colors	com.livecode.pi.color	true	false			
+colorOverlay	ColorOverlay	Effects	com.livecode.pi.graphicEffect	true	false			
+currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1	
+currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
+currentTime	Time	Basic	com.livecode.pi.integer	true	false		0	
+customProperties	Custom Properties	Custom	com.livecode.pi.customProperties	true	false			
+dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
+decorations	Controls	Basic	com.livecode.pi.enum	true	false			
+default	Default button	Basic	com.livecode.pi.boolean	true	false			
+destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
+destroyWindow	Purge windwow on closed	Basic	com.livecode.pi.boolean	true	false		false	
+disabled	Disabled	Basic	com.livecode.pi.boolean	true	false		false	
+disabledIcon	Disabled Icon	Icons	com.livecode.pi.icon	true	false		0	
+dontDither	Don't Dither	Basic	com.livecode.pi.boolean	true	false		false	
+dontSearch	Don't search	Basic	com.livecode.pi.boolean	true	false		false	
+dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false			
+dropShadow	Drop Shadow	Effects	com.livecode.pi.graphicEffect	true	false			
+enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true			
+endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false	
+endTime	End	Basic	com.livecode.pi.integer	true	false			
+endValue	End value	Basic	com.livecode.pi.integer	true	false			
+externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
+filename	Source	Basic	com.livecode.pi.file	true	false			
+fillGradient	Fill Gradient	Colors	com.livecode.pi.gradient	true	false	Background Fill		type,ramp,from,to,via,quality,repeat,mirror,wrap
+firstIndent	First indent	Basic	com.livecode.pi.number	true	false		0	
+fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false		true	
+focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false			
+focusColor	Focus Color	Colors	com.livecode.pi.color	true	false	Focus Fill		
+focusPattern	Focus Pattern	Colors	com.livecode.pi.pattern	true	false	Focus Fill		
+foregroundColor	Text Color	Colors	com.livecode.pi.color	true	false	Foreground Fill		
+foregroundPattern	Text Pattern	Colors	com.livecode.pi.pattern	true	false	Foreground Fill		
+formatForPrinting	Format for printing	Basic	com.livecode.pi.boolean	true	false			
+height	Height	Position	com.livecode.pi.number	true	false			
+hGrid	Horizontal grid	Table	com.livecode.pi.boolean	true	false			
+hiliteBorder	Hilite Border	Icons	com.livecode.pi.boolean	true	false			
+hiliteColor	Text Hilite Color	Colors	com.livecode.pi.color	true	false	Hilite Fill		
+hiliteIcon	Hilite Icon	Icons	com.livecode.pi.icon	true	false		0	
+hilitePattern	Text Hilite Pattern	Colors	com.livecode.pi.pattern	true	false	Hilite Fill		
+hotspot	Hotspot	Basic	com.livecode.pi.point	true	false			
+hotspots	Hotspots	Quicktime	com.livecode.pi.string	true	true			
+hoverIcon	Hover Icon	Icons	com.livecode.pi.icon	true	false		0	
+hScrollbar	Horizontal scrollbar	Basic	com.livecode.pi.boolean	true	false			
+icon	Icon	Icons	com.livecode.pi.icon	true	false		0	
+iconic	Minimized	Basic	com.livecode.pi.boolean	true	false		false	
+id	ID	Basic	com.livecode.pi.image_id	true	false			
+ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax
+innerGlow	Inner Glow	Effects	com.livecode.pi.graphicEffect	true	false			
+innerShadow	Inner Shadow	Effects	com.livecode.pi.graphicEffect	true	false			
+label	Label	Basic	com.livecode.pi.string	true	false			
+layer	Layer	Position	com.livecode.pi.number	true	false		no_default
+layerMode	Layer Mode	Basic	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
+left	Left	Position	com.livecode.pi.number	true	false		no_default	
+lineInc	Scroll distance on arrow click	Basic	com.livecode.pi.number	true	false		512	
+lineSize	Line thickness	Basic	com.livecode.pi.number	true	false		1	
+linkColor	Link Color	Colors	com.livecode.pi.color	true	false			
+listBehavior	List Behavior	Basic	com.livecode.pi.boolean	true	false			
+liveResizing	Live resizing	Basic	com.livecode.pi.boolean	true	false		false	
+location	Location	Position	com.livecode.pi.point	true	false		no_default	
+lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false			
+lockText	Lock Text	Basic	com.livecode.pi.boolean	true	false			
+looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
+mainStack	Main stack	Basic	com.livecode.pi.enum	true	false		execute:get revIDEMainStacks()	
+margins	Margins	Text	com.livecode.pi.number	true	false			
+mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
+markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	
+markerFilled	Marker Filled	Basic	com.livecode.pi.boolean	true	false		false	
+markerLineSize	Marker line thickness	Basic	com.livecode.pi.nubmber	true	false		1	
+markerPoints	Marker Points	Basic	com.livecode.pi.text	true	false			
+maxEditableColumns	Maximum editable columns	Table	com.livecode.pi.number	true	false			
+maxHeight	Max Height	Position	com.livecode.pi.number	true	false		65535	
+maxWidth	Max Width	Position	com.livecode.pi.number	true	false		65535	
+menuLines	Number of lines to display	Basic	com.livecode.pi.number	true	false		5	
+menuMode	Menu Mode	basic	com.livecode.pi.string	false	false			cascade,combobox,option,popup,pulldown
+menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false		1	1,2,3,0	
+menuName	Use stack panel:	Basic	com.livecode.pi.boolean	true	false			
+metal	Metal texture	Basic	com.livecode.pi.boolean	true	false		false	
+minHeight	Min Height	Position	com.livecode.pi.number	true	false		32	
+minWidth	Min Width	Position	com.livecode.pi.number	true	false		32	
+multipleHilites	Multi-line	Basic	com.livecode.pi.boolean	true	false		false	
+name	Name	Basic	com.livecode.pi.string	true	false			
+nonContiguousHilites	Non-contiguous	Basic	com.livecode.pi.boolean	true	false			
+number	Number	Basic	com.livecode.pi.number	true	false			
+numberFormat	Value format	Basic	com.livecode.pi.string	true	false			
+opaque	Opaque	Basic	com.livecode.pi.boolean	true	false			
+orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical
+outerGlow	Outer Glow	Effects	com.livecode.pi.graphicEffect	true	false			
+pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false			
+palindromeFrames	Repeat in reverse	Basic	com.livecode.pi.boolean	true	false			
+pan	Pan	Quicktime	com.livecode.pi.number	true	false			
+playLoudness	Volume	Basic	com.livecode.pi.integer	true	false			
+playRate	Speed	Basic	com.livecode.pi.integer	true	false			
+playSelection	Play selection only	Basic	com.livecode.pi.boolean	true	false			
+points		text	com.livecode.pi.Points	true	false			
+polySides	Sides	Basic	com.livecode.pi.number	true	false		8	
+profile	Property Profile	Profiles	com.livecode.pi.propertyProfile	true	false			
+radioBehavior	Hilite one radio button at a time	Basic	com.livecode.pi.boolean	true	false		true	
+repeatCount	Repeat	Basic	com.livecode.pi.integer	true	false			
+resizable	Resizable	Position	com.livecode.pi.boolean	true	false		true	
+resizeQuality	Resize quality	Basic	com.livecode.pi.enum	true	false		normal	best,good,normal	
+right	Right	Position	com.livecode.pi.number	true	false			
+roundRadius	Corner radius	Basic	com.livecode.pi.number	true	false			
+scaleFactor	Scale factor	Basic	com.livecode.pi.number	true	false			
+scrollbarWidth	Scrollbar Width	Basic	com.livecode.pi.enum	true	false			
+selectGroupedControls	Select grouped controls	Basic	com.livecode.pi.boolean	true	false		true	
+shadow	Shadow	Basic	com.livecode.pi.boolean	true	false			
+shadowColor	Shadow Color	Colors	com.livecode.pi.color	true	false	Shadow Fill		
+shadowOffset	Shadow Offset	Icons	com.livecode.pi.number	true	false			
+shadowPattern	Shadow Pattern	Colors	com.livecode.pi.pattern	true	false	Shadow Fill		
+sharedBehavior	Shared Group	Basic	com.livecode.pi.boolean	true	false		false	
+sharedHilite	Shared Hilite	Basic	com.livecode.pi.boolean	true	false			
+sharedText	Share Text	Basic	com.livecode.pi.boolean	true	false			
+showBadge	Controller toggel	Basic	com.livecode.pi.boolean	true	false			
+showBorder	Show Border	Basic	com.livecode.pi.boolean	true	false			
+showController	Controller	Basic	com.livecode.pi.boolean	true	false			
+showFocusBorder	Focus Border	Basic	com.livecode.pi.boolean	true	false			
+showLines	Text baselines	Table	com.livecode.pi.boolean	true	false			
+showName	Show Name	Basic	com.livecode.pi.boolean	true	false			
+showSelection	Hilite selection	Basic	com.livecode.pi.boolean	true	false			
+showValue	Show Value	Basic	com.livecode.pi.boolean	true	false			
+stackFiles	Stack files	StackFiles	com.livecode.pi.text	true	false			
+startAngle	Start	Basic	com.livecode.pi.number	true	false			
+startArrow	Start Arrow	Basic	com.livecode.pi.boolean	true	false			
+startTime	Start	Basic	com.livecode.pi.integer	true	false			
+startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false			
+startValue	Start value	Basic	com.livecode.pi.integer	true	false	
+strokeGradient	Stroke Gradient	Colors	com.livecode.pi.gradient	true	false			type,ramp,from,to,via,quality,repeat,mirror,wrap
+style	Style	Basic	com.livecode.pi.string	false	false			
+systemWindow	Float abve everything	Basic	com.livecode.pi.boolean	true	false		false	
+tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
+tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
+text	Text	Basic	com.livecode.pi.text	true	false			
+textAlign	Text Align	Text	com.livecode.pi.enum	true	false			left,center,right
+textFont	Font	Text	com.livecode.pi.enum	true	false			execute:get the fontNames; sort it
+textHeight	Text height	Basic	com.livecode.pi.number	true	false			
+textSize	Text Size	Text	com.livecode.pi.number	true	false			
+textStyle	Text Style	Text	com.livecode.pi.set	true	false			bold,italic,underline,box,threeDBox,link,strikeout
+threeD	3-D	Basic	com.livecode.pi.boolean	true	false			
+thumbPosition	Current value	Basic	com.livecode.pi.integer	true	false			
+thumbSize	Thumb size	Basic	com.livecode.pi.number	true	false			
+tilt	Tilt	Quicktime	com.livecode.pi.number	true	false			
+title	Title	Basic	com.livecode.pi.string	true	false			
+toggleHilites	Click to toggle	Basic	com.livecode.pi.boolean	true	false		false	
+tool	graphic tool		com.livecode.pi.	true	false			
+tooltip	Tooltip	Basic	com.livecode.pi.string	true	false
+top	Top	Position	com.livecode.pi.number	true	false		no_default				
+topColor	Outset Bevel Color	Colors	com.livecode.pi.color	true	false	Top Bevel Fill		
+topPattern	Outset Bevel Pattern	Colors	com.livecode.pi.pattern	true	false	Top Bevel Fill		
+tracks	Tracks	Tracks	com.livecode.pi.text	true	true			
+traversalOn	Focus with keyboard	Basic	com.livecode.pi.boolean	true	false			
+underlineLinks	Underline Links	Colors	com.livecode.pi.boolean	true	false		true	
+vGrid	Vertical grid	Table	com.livecode.pi.boolean	true	false			
+visible	Visible	Basic	com.livecode.pi.boolean	true	false		true	
+visitedColor	Visited Color	Colors	com.livecode.pi.color	true	false			
+visitedIcon	Visited Icon	Icons	com.livecode.pi.icon	true	false		0	
+vScrollbar	Vertical Scrollbar	Basic	com.livecode.pi.boolean	true	false			
+width	Width	Position	com.livecode.pi.number	true	false			
+windowShape	Shape	Basic	com.livecode.pi.imageID	true	false			
+zoom	Zoom	Quicktime	com.livecode.pi.number	true	false		0	

@@ -1,0 +1,68 @@
+/* LiveCode dictionary code theme */
+.hljs-comment {
+  color: #15901F;
+  font-weight: bold;
+}
+
+.hljs-attribute,
+.hljs-tag,
+.hljs-regexp {
+  color: #cc6666;
+}
+
+.hljs-preprocessor,
+.hljs-pragma,
+.hljs-params,
+.hljs-constant,
+.hljs-function,
+.hljs-operator,
+.hljs-keyword {
+  color: #932192;
+}
+
+.hljs-literal,
+.hljs-string,
+.hljs-number,
+.hljs-value,
+.hljs-inheritance,
+.hljs-header,
+.ruby .hljs-symbol,
+.xml .hljs-cdata {
+  color: #011892;
+}
+
+.hljs-command {
+  color: #918F00;
+  font-weight: bold;
+}
+
+.hljs-control_st {
+  color: #000000;
+  font-weight: bold;
+}
+
+.hljs-property {
+  color: #009092;
+}
+
+.hljs-variable {
+  color: #000000;	
+}
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  color: #000000;
+  padding: 0.5em;
+  -webkit-text-size-adjust: none;
+}
+
+.coffeescript .javascript,
+.javascript .xml,
+.tex .hljs-formula,
+.xml .javascript,
+.xml .vbscript,
+.xml .css,
+.xml .hljs-cdata {
+  opacity: 0.5;
+}
