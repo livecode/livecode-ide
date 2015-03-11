@@ -1,4 +1,4 @@
-﻿script "propertyinspectorben"
+﻿script "revInspector"
 # sPropertyInfo stores all the data about the properties to be inpspected
 local sPropertyInfo
 local sSelectedObjects
