@@ -86,7 +86,7 @@ function revIDEExtensions pType, pStatus
       
       local tIconPath
       if there is not a file sExtensions[tExtensionKey]["icon"] then 
-         put revIDESpecialFolderPath("toolset") & "/resources/supporting_files/images/extension-widget.png" into sExtensions[tExtensionKey]["icon"]
+         put revIDEDefaultExtensionIcon(pType) into sExtensions[tExtensionKey]["icon"]
       end if
       
       put sExtensions[tExtensionKey] into tExtensions[sExtensions[tExtensionKey]["name"]]
@@ -131,7 +131,6 @@ on __extensionInstallDownload pExtensionID
    __extensionPropertySet pExtensionID, "status", "downloading"
    __extensionPropertySet pExtensionID, "progress_message", "Downloading"
    __extensionPropertySet pExtensionID, "progress", 0
-   __extensionPropertySet pExtensionID, "author", "Unknown Author"
    __extensionPropertySet pExtensionID, "label", tPackageFilePath
    
    # Put is a first stab at the name
@@ -321,7 +320,7 @@ on __extensionInstallAPI pExtensionID
    revIDEInstallAPI tUserAPIFolder, tExtensionName, tExtensionAuthor
    
    # Next step
-   send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
+   send "__extensionInstallMakeLive" && pExtensionID to me in 0 milliseconds
 end __extensionInstallAPI
 
 on __updateExtensionPropertiesFromManifest pManifestPath, pID
@@ -331,9 +330,27 @@ on __updateExtensionPropertiesFromManifest pManifestPath, pID
    end if
 end __updateExtensionPropertiesFromManifest
 
+# Moves to temp extracted files into their final live location
+on __extensionInstallMakeLive pExtensionID
+   # Update progress
+   __extensionSendProgressUpdate pExtensionID, "Copying extension into install location", 60
+   
+   # Get path the directories
+   local tTempInstallPath, tFinalPath
+   put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pExtensionID, "type_id") into tTempInstallPath
+   put revIDESpecialFolderPath("user extensions") into tFinalPath
+   __extensionPropertySet pExtensionID, "install_path", tFinalPath & slash & __extensionPropertyGet(pExtensionID, "type_id")
+   
+   # Copy folder from temp directory into live directory
+   revCopyFolder tTempInstallPath,tFinalPath
+   
+      # Next step
+   send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
+end __extensionInstallMakeLive
+
 on __extensionInstallLoad pExtensionID
    # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Loading extension", 60
+   __extensionSendProgressUpdate pExtensionID, "Loading extension", 75
    
    # Path to module file
    local tModuleFile
@@ -362,26 +379,8 @@ on __extensionInstallLoad pExtensionID
    __extensionLoad tID, tDataA
    
    # Next step
-   send "__extensionInstallMakeLive" && pExtensionID to me in 0 milliseconds
-end __extensionInstallLoad
-
-# Moves to temp extracted files into their final live location
-on __extensionInstallMakeLive pExtensionID
-   # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Copying extension into install location", 75
-   
-   # Get path the directories
-   local tTempInstallPath, tFinalPath
-   put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pExtensionID, "type_id") into tTempInstallPath
-   put revIDESpecialFolderPath("user extensions") into tFinalPath
-   __extensionPropertySet pExtensionID, "install_path", tFinalPath & slash & __extensionPropertyGet(pExtensionID, "type_id")
-   
-   # Copy folder from temp directory into live directory
-   revCopyFolder tTempInstallPath,tFinalPath
-   
-   # Next step
    send "__extensionInstallFinalise" && pExtensionID to me in 0 milliseconds
-end __extensionInstallMakeLive
+end __extensionInstallLoad
 
 # Delete installation files and original package
 on __extensionInstallFinalise pExtensionID
@@ -656,9 +655,9 @@ on __extensionsLoad
          if there is a file tPath then
             put __fetchModuleData(tPath) into tArray
             if tKey is "ide" then
-               put false into tArray["visible"]
+               put true into tArray["builtin"]
             else
-               put true into tArray["visible"]
+               put false into tArray["builtin"]
             end if
             local tID
             if tArray["name"] is empty then
@@ -758,13 +757,20 @@ on __extensionLoad pID, pExtensionDataA
    __extensionPropertySet tIndex, "title", tToLoadA["title"] 
    __extensionPropertySet tIndex, "author", tToLoadA["author"] 
    __extensionPropertySet tIndex, "type", tToLoadA["type"] 
-   __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
    __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
    __extensionPropertySet tIndex, "status", tStatus
    __extensionPropertySet tIndex, "error", tError
+   __extensionPropertySet tIndex, "builtin", tToLoadA["builtin"]
    __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
+   
+   # Deal with the various icon possibilities
+   if sExtensionProperties[pID]["svg_icon_path"] is not empty then
+      __extensionPropertySet tIndex, "svg_icon_path", sExtensionProperties[pID]["svg_icon_path"]
+   else if there is a file (tToLoadA["install_path"] & "/support/icon.png") then
+      __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
+   end if
    
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
