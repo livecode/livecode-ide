@@ -661,13 +661,11 @@ on __extensionsLoad
                put true into tArray["visible"]
             end if
             local tID
-            if tArray["id"] is empty then
+            if tArray["name"] is empty then
                put tFolder into tID
             else
-               put tArray["id"] into tID
+               put tArray["name"] into tID
             end if
-            delete variable tArray["id"]
-            
             put tArray into tDataA[tID][tExtensionFolder][tFolder]
          end if
       end repeat
@@ -757,14 +755,13 @@ on __extensionLoad pID, pExtensionDataA
    
    __extensionPropertySet tIndex, "name", tToLoadA["name"] 
    __extensionPropertySet tIndex, "version", tToLoadA["version"] 
-   __extensionPropertySet tIndex, "title", tToLoadA["name"] 
+   __extensionPropertySet tIndex, "title", tToLoadA["title"] 
    __extensionPropertySet tIndex, "author", tToLoadA["author"] 
    __extensionPropertySet tIndex, "type", tToLoadA["type"] 
    __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
    __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
    __extensionPropertySet tIndex, "status", tStatus
    __extensionPropertySet tIndex, "error", tError
-   __extensionPropertySet tIndex, "label", tToLoadA["name"] 
    __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
@@ -849,7 +846,7 @@ function revIDEExtensionDocsData
    repeat for each key tExtensionID in sExtensions
       add 1 to tCount
       put __extensionPropertyGet(tExtensionID, "install_path") into tDataA[tCount]["folder"]
-      put __extensionPropertyGet(tExtensionID, "title") into tDataA[tCount]["name"]
+      put __extensionPropertyGet(tExtensionID, "title") into tDataA[tCount]["title"]
       put __extensionPropertyGet(tExtensionID, "author") into tDataA[tCount]["author"]
    end repeat
    return tDataA
@@ -902,7 +899,7 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    if tTargetName begins with "xmlerr" then
       return "Error: couldn't retrieve extension name from manifest"
    end if
-   put tTargetName into tDataA["id"]
+   put tTargetName into tDataA["name"]
    
    local tTargetTitle
    put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
@@ -910,7 +907,7 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
       put empty into tTargetTitle
    end if
-   put tTargetTitle into tDataA["name"]
+   put tTargetTitle into tDataA["title"]
    
    local tTargetVersion
    put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
