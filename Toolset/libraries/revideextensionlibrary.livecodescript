@@ -730,7 +730,7 @@ on __extensionLoad pID, pExtensionDataA
    if tToLoadA["status"] is not "error" then
       load extension (tToLoadA["install_path"] & slash & "module.lcm")
       if the result is not empty then
-         put the result into tError
+         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
          put "error" into tStatus
       else
          put "installed" into tStatus
