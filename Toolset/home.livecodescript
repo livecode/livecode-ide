@@ -9,8 +9,6 @@ on startup
    
    set the cREVLaunching of me to true
    
-   revInternal__SetupStartup
-   
    revInternal__Log "Start"
    revInternal__Log "Enter", "Startup"
    
@@ -18,8 +16,8 @@ on startup
       revInternal__SetupLicense
       revInternal__SetupPaths
       revInternal__SetupFolders
-      revInternal__SetupSplash
       revInternal__SetupStackFiles
+      revInternal__SetupSplash
       revInternal__SetupPreferences
       revInternal__SetupCustomizationPath
       revInternal__SetupExternals
@@ -70,19 +68,6 @@ on saveStackRequest
    set the cantModify of me to true
    pass saveStackRequest
 end saveStackRequest
-
-command revInternal__SetupStartup
-   local tHomePath
-   put the filename of stack "Home" into tHomePath
-   
-   local tToolsPath
-   set the itemDelimiter to "/"
-   put item 1 to -2 of tHomePath into tToolsPath
-   
-   local tStartupStackFile
-   put "revSplash", tToolsPath & slash & "palettes/splash/revSplash.livecode" into tStartupStackFile
-   set the stackFiles of stack "Home" to tStartupStackFile
-end revInternal__SetupStartup
 
 on preOpenStack
    local tEdition, tSplashPath
