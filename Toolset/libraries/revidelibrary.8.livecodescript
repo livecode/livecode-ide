@@ -1127,8 +1127,8 @@ end revIDEOpenPropertyInspectorControllerStacks
 
 on revIDEInitialiseIDELibrary
    # Load fonts
-   start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
    start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
+   start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
    
    # Setup the default lists of properties to read from objects when reading the structure of a stack
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" into sControlPropertiesToRead
