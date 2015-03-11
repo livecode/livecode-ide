@@ -701,7 +701,8 @@ function revDocsGenerateDocsFileFromModular pText
       end if
    end repeat
    
-   if tData is empty then
+   # Allow inline module description as valid docs
+   if tModuleDescription is empty and tData is empty then
       logError "No documentation included"
       return empty
    end if
