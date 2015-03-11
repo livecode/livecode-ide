@@ -621,7 +621,8 @@ on mouseEnter
       set the coloroverlay["opacity"] of the target to "50"
       set the coloroverlay["color"] of the target to "0,0,0"
    else if the cStatus of the target is "error" then
-       revIDESetCursor "help"
+      # Not working on windows.. get the egg timer so disabling for now
+       --revIDESetCursor "help"
    else if the cTool of the target is true then
       # We are hovering over a tool
       set the loc of graphic "tool_hover" of group "contents" to the loc of the target
