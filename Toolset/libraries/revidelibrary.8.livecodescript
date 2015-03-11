@@ -2892,7 +2892,7 @@ function revIDEWebPageURL pKey
 end revIDEWebPageURL
 
 function revIDEFrameBehavior
-   return the long ID of button "paletteBehavior" of stack "revCore"
+   return the long ID of stack "revPaletteBehavior"
 end revIDEFrameBehavior
 
 function revIDEDataViewBehavior
