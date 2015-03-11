@@ -426,7 +426,7 @@ on __extensionUninstallCheckInUse pExtensionID
    # Update progress
    if pExtensionID is not a number then return __extensionError(pExtensionID, "Could not remove extension '" & pExtensionID & "' because it is not a valid index")
    
-   __extensionSendProgressUpdate pExtensionID, "Ckecking if extension is in use", 20
+   __extensionSendProgressUpdate pExtensionID, "Checking if extension is in use", 20
    
    # Next step
    send "__extensionUninstallUnload" && pExtensionID to me in 0 milliseconds
