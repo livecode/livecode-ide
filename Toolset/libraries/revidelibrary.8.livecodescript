@@ -1474,6 +1474,7 @@ function revIDEClassicControls
     
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
+      if tIndex is "com.livecode.interface.classic.widget" then next repeat
       if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group" then 
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
