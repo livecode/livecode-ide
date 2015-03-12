@@ -553,7 +553,11 @@ function __extensionPropertiesFromManifest pManifestPath
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
       
       if tExtensionData[tName]["editor"] is empty then 
-         put "com.livecode.pi." & tType into tExtensionData[tName]["editor"]
+         if tType is "Integer" or tType is "Real" then
+            put "com.livecode.pi.number" into tExtensionData[tName]["editor"]
+         else
+            put "com.livecode.pi." & tolower(tType) into tExtensionData[tName]["editor"]
+         end if
       end if
       
       # Process value options and defaul
