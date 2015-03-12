@@ -294,7 +294,13 @@ on generatePalette
             set the cToolName of the templatebutton to tToolName
          else
             if the tooltip of the templatebutton is empty then
-               set the tooltip of the templatebutton to "Click and drag or double click to create object:" & return & tControlTypeID
+               local tTitle
+               put sViewsData[tView][tControlTypeID]["title"] into tTitle
+               if tTitle is empty then
+                  put item -1 of tControlTypeID into tTitle
+               end if
+               
+               set the tooltip of the templatebutton to "Click and drag or double click to create object:" & return & tTitle
             end if
             set the cTool of the templatebutton to false
          end if
@@ -303,7 +309,7 @@ on generatePalette
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
             set the tooltip of the templatebutton to "There was an error while loading widget:" & return & tControlTypeID
             --set the blendlevel of the templatebutton to 50
-            end if
+         end if
          create button tControlTypeID in group tView of group "contents"
          
       end repeat
