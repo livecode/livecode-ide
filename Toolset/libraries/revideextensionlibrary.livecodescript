@@ -352,7 +352,7 @@ on __extensionInstallMakeLive pExtensionID
    # Copy folder from temp directory into live directory
    revCopyFolder tTempInstallPath,tFinalPath
    
-      # Next step
+   # Next step
    send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
 end __extensionInstallMakeLive
 
@@ -947,3 +947,33 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    put tDataA into rDataA
    return empty
 end revIDEExtensionFetchMetadata
+
+on revIDEExtensionUnloadInstalledByName pName
+   local tIndex, tPath
+   put __extensionCacheID("name", pName) into tIndex
+   
+   if tIndex is empty then
+      return "No such extension"
+   end if
+   
+   put __extensionPropertyGet(tIndex, "install_path") into tPath
+   unload extension (tPath & slash & "module.lcm")
+end revIDEExtensionUnloadInstalledByName
+
+on revIDEExtensionReloadInstalledByName pName
+   local tIndex, tPath
+   put __extensionCacheID("name", pName) into tIndex
+   
+   if tIndex is empty then
+      return "No such extension"
+   end if
+   
+   put __extensionPropertyGet(tIndex, "install_path") into tPath
+   
+   if there is a folder (tPath & slash & "resources") then
+      load extension (tPath & slash & "module.lcm") with resource path (tPath & slash & "resources")
+   else
+      load extension (tPath & slash & "module.lcm")
+   end if
+   
+end revIDEExtensionReloadInstalledByName
