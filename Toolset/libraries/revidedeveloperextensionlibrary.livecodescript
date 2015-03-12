@@ -402,17 +402,36 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    put __testStackLoc() into tLoc
    
    if there is a stack "LiveCode Extension Test Window" then
-      __revIDEDeveloperExtensionDoClearTestStack
+      revIDEDeveloperExtensionClearTestStack
    end if
    
+   revIDEDeveloperExtensionCreateTestStack pPath, tLoc, pDetailsA
+end __revIDEDeveloperExtensionLaunchTestStack
+
+on revIDEDeveloperExtensionClearTestStack
+   send "__revIDEDeveloperExtensionDoClearTestStack" to me in 0 millisecs
+end revIDEDeveloperExtensionClearTestStack
+
+on revIDEDeveloperExtensionCreateTestStack pPath, pLoc, pDetailsA
+      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA" to me in 0 millisecs
+end revIDEDeveloperExtensionCreateTestStack
+
+on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
    if there is a folder (pPath & slash & "resources") then
-      load extension (pPath & slash & "module.lcm") 
-   else
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
+   else
+      load extension (pPath & slash & "module.lcm") 
+   end if
+   
+   local tResult
+   put the result into tResult
+   if tResult is not empty then
+      __revIDEDeveloperExtensionSendError tResult
+      exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    
    create stack "LiveCode Extension Test Window"
-   set the loc of it to tLoc
+   set the loc of it to pLoc
    set the destroyStack of stack "LiveCode Extension Test Window" to true
    set the title of it to pDetailsA["name"]
    set the script of it to __testStackScript()
@@ -422,14 +441,10 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    if there is not a widget 1 of  stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
       __revIDEDeveloperExtensionDoClearTestStack
-      exit __revIDEDeveloperExtensionLaunchTestStack
+      exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
-end __revIDEDeveloperExtensionLaunchTestStack
-
-on revIDEDeveloperExtensionClearTestStack
-   send "__revIDEDeveloperExtensionDoClearTestStack" to me in 5 millisecs
-end revIDEDeveloperExtensionClearTestStack
+end __revIDEDeveloperExtensionDoCreateTestStack
 
 on __revIDEDeveloperExtensionDoClearTestStack
    repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
@@ -536,8 +551,8 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    set the itemdelimiter to "."
-   if not tTargetName begins with "com.livecode.extensions" or the number of items of tTargetName is not 5 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be com.livecode.extensions.<yourId>.<extensionTitle>"
+   if not tTargetName begins with "community.livecode" or the number of items of tTargetName < 4 then
+      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be community.livecode.<yourId>.<extensionTitle>"
    end if
    put tTargetName into tDataA["id"]
    
@@ -628,21 +643,15 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    # The target .lcb file
    put shellFormat(pFile) after tShellCommand
    
-   local tResult
-   put shell(tShellCommand) into tResult
+   local tShellOutput
+   put shell(tShellCommand) into tShellOutput
    
-   # If this is installed then the output of lc-compile should be empty.
-   if revEnvironmentIsInstalled() then
-      if tResult is not empty then
-         __revIDEDeveloperCompilationError tResult
-         return "failed to compile module"
-      end if
-   else
-      if not (the last line of (word 1 to -1 of tResult) contains "generated module") then
-         __revIDEDeveloperCompilationError tResult
-         return "failed to compile module"
-      end if
+   if the result is not 0 then
+      __revIDEDeveloperCompilationError tShellOutput
+      return "failed to compile module"
    end if
+   
+   __revIDEDeveloperExtensionLog tShellOutput
    
    if there is not a file (pTargetFolder & slash & "module.lcm") then
       return "failed to compile module"
