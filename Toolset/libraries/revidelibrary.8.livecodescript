@@ -2890,7 +2890,7 @@ put revIDEWebPageURL("extensionsSearch") into tExtensionSearchPage
 function revIDEWebPageURL pKey
    switch pKey
       case "extensions"
-         return "http://ng.livecode.com/products/extensions/"
+         return "http://www.livecode.com/products/extensions/"
          break
    end switch
 end revIDEWebPageURL
