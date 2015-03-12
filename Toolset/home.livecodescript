@@ -523,6 +523,10 @@ function revInternal__StackFiles
 			else if tStackName is "revmessagebox" then put "Message Box" into tStackName
 			else if tStackName is "revideprojectbrowserview" then put "revIDEProjectBrowser" into tStackName
 			else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
+        	# AL-2015-03-12: [[ Bug ]] Make sure Linux stacks included in standalones have the correct name
+        	else if tStackName is "revprinterchooser" then put "Printer Chooser" into tStackName
+         	else if tStackName is "revpagesetup" then put "Page Setup" into tStackName
+         			
 			
 			// AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
 			local tExistingVersion
