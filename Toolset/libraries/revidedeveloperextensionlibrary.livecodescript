@@ -411,6 +411,13 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
       load extension (pPath & slash & "module.lcm") 
    end if
    
+   local tResult
+   put the result into tResult
+   if tResult is not empty then
+      __revIDEDeveloperExtensionSendError tResult
+      exit __revIDEDeveloperExtensionLaunchTestStack
+   end if
+   
    create stack "LiveCode Extension Test Window"
    set the loc of it to tLoc
    set the destroyStack of stack "LiveCode Extension Test Window" to true
