@@ -10,11 +10,11 @@ To make this possible we've created a new flavour of our language called ***Live
 
 This guide will take you through the process of installing and using these new widgets and libraries and for the adventurous among you, provide a guide to building and sharing your own extensions. 
 
-## LiveCode 8.0 Alpha 1
+## LiveCode 8.0 Developer Previews
 
-> Warning: This is the first ***alpha*** version of LiveCode 8.0. It is highly experimental and should be considered an early prototype. 
+> Warning: LiveCode Builder is a new language and is therefor highly experimental and should be considered an early prototype. 
 
-Our aim with this early prototype release is to provide key LiveCode developers with the opportunity to feedback at the earliest opportunity. Feedback is critical to enable us to steer the project to its successful conclusion. The primary way to support the progress of LiveCode 8.0 and LiveCode Builder is to use it and tell us about your experiences. 
+LiveCode 8.0 should be thought of as a version of LiveCode 7.0 with a new module allowing extensions to be plugged into the engine. As a result, 8.0 should be as functional and stable as LiveCode 7.0. The same cannot be said for the extensions. 
 
 It is important to stress that ***no aspect of this release should be considered final***. ***Every piece of syntax in LiveCode Builder is subject to change***.
 
@@ -22,7 +22,7 @@ It is important to stress that ***no aspect of this release should be considered
 
 Installers for the first alpha of LiveCode 8 can be found at:
 
-http://downloads.livecode.com/livecode-8-alpha/
+http://downloads.livecode.com/
 
 
 # Installing Extensions
@@ -119,40 +119,34 @@ Development > Plugins > Widget Builder
 
 ![enter image description here](images/extensions-plugin-overview.png)
 
-1. Choose a Widget - This list includes the source for the example extensions as well as any you have created.
-2. Open a Widget - If you have created a extensions using an external editor you can load it into the builder here.
-3. Source - Displays the source code to the extension and allows you to edit it. Any text changes will be written to the file automatically so no saving is required.
-4. Console - Displays status updates and error messages.
-5. Build Package - Builds a ***.lce*** package in the same folder as the widget source file ***.mlc***.
-6. Text - Builds and runs the extension in a new stack.
+1. Select the extension you wish the develop or click the "open" icon in the header back to locate an extension you've not loaded before. All LiveCode authored widgets in the application package at: /contents/extensions/. To play with one of these extensions we recommend copying the folder from the application package to your desktop and loading it from there. Changing the extension id in the source code will also mean it doesn't conflict with the existing extension.
+2. Data that the builder was able to parse from the directory such as icons, resources, API's the user guides.
+3. Console: Shows status, error and log messages.
+4. Test: Creates a stack, compiles the extensions and creates an instance.
+5. Script: Opens the lcb script in an external default editor.
+6. Insall: Installs the extension into the IDE
+7. Uninstall: Uninstalls the extension from the IDE
+8. Package: Creates a .lce package which can uploaded to the extension store. It is placed in the extension directory
 
-## Try out an Example
-
-1. Select the clock example
-2. Push "test"
-3. Notice that a stack is create with the widget. If you can't see it, it may be behind the plugin stack.
-
-![enter image description here](images/extensions-plugin-example.png)
-
-> **Note:** A great way to get started is to tweak the script of the clock or one of the other examples. Perhaps change a few colors and click "build" to test your changes.
-
+> **Note:** A great way to get started is to tweak the script of one of our widgets examples.
+> 
 ##Create your Own
 ### Simple Widget
 A widget and a library are identical, except that a widget draws to a canvas. As a result, the authoring process is much the same for both extension types.
 
-### Create a .mlc file
-Start by creating a plain text file and save it do disk with the extension "mlc":
+### Create a .lcb file
+Start by creating a plain text file and save it do disk with the extension "lcb":
 
 ```
-/Desktop/widgettest/main.mlc
+/Desktop/widgettest/main.lcb
 ```
 
-Now open the plugin as shown above and click on the load icon to load your freshly created ***.mlc*** file into the builder. You can now start authoring your first extension.
+Now open the plugin as shown above and click on the load icon to load your freshly created ***.lcb*** file into the builder. You can now start authoring your first extension.
 
 ### Declare Type and Identifier
 Start by declaring the type of extension, either "widget" or "library" followed by your identifier (See "Select A Developer ID" below).
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
    # Code for your widget
 end widget
 ```
@@ -162,7 +156,7 @@ This is the unique identifier by which your extension will be referred to by the
 Next, provide meta data to help LiveCode display your product correctly in product and in the online portal.
 
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
 
 metadata title is "My Pink Circle"
 metadata author is "Benjamin Beaumont"
@@ -210,7 +204,7 @@ com.livecode.type|Default|
 The new LiveCode dictionary has a full list of all available syntax as well as the module each belongs to. As a general rule we recommend importing all three optional module whenever developing widgets.
 
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -224,9 +218,6 @@ end widget
 ```
 
 
-
-
-
 ### Core Handlers
 
 There are three core handlers that any widget developer should implement:
@@ -235,12 +226,14 @@ Handler|Description
 ------|------
 onPaint|The *onPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of you widget is tied primarily to this handler and should be kept as efficient as possible.
 onCreate|The *onCreate* message is sent to your widget when it is first created by LiveCode. This can be used to initialise default data and where applicable, reduce the burden for calculating constants etc in the onPaint handler.
-onGeometryChanged| The *onGeometryChanged* message is send when the control is changed in size.
+onGeometryChanged| The *onGeometryChanged* message is sent when the control is changed in size.
+onSave| The *onSave* message is sent when your widget is about to be destroyed and enables the widget to save data set on the widget.
+onLoad| The *onLoad* message is sent when your widget is created and enables the widget to retrieve data saved on the widget.
 
 For the most basic example, only the onPaint() handler is required.
 
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
 
 metadata title is "My Pink Circle"
 metadata author is "Benjamin Beaumont"
@@ -256,7 +249,7 @@ end widget
 ### Draw a Pink Circle
 
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
 
 metadata title is "My Pink Circle"
 metadata author is "Benjamin Beaumont"
@@ -281,9 +274,12 @@ end widget
 
 ![enter image description here](images/extensions-widget-first.png)
 
-1. Your script should be in this box of the widget builder
+1. Notice that I'm using textWrangler
 2. Click test
-3. Your widget should look like this
+3. Your widget should be displayed on the new stack. If you can't see it, check behind the extension plugin.
+
+> Note: There is a colorising script for textWrangler here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
+
 
 ### Properties
 In order to make a widget useful to end users it is likely that you'll want to expose properties that allow them to specify how your widget should behave. 
@@ -333,7 +329,7 @@ set the cicleMargin of widget 1 to 15
 
 **Full Example**
 ```
-widget com.livecode.extensions.beaumont.pinkCircle
+widget community.livecode.beaumont.pinkCircle
 
 metadata title is "My Pink Circle"
 metadata author is "Benjamin Beaumont"
@@ -371,14 +367,35 @@ end handler
 end widget
 ```
 
+### Loading and Saving widget data
+When you widget is created you are sent a *OnSave* message. It has the following structure and expects and array return type. You can fill this array with whatever widget data you have. LiveCode saves this data along with instances of the widget in the stack file.
+
+```
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	
+	put mMargin into rProperties["margin"]
+	
+	return rProperties
+end handler
+```
+
+This same array will be returned to you when the widget is next opened.
+
+```
+public handler OnLoad(in pProperties as Array)
+	put pProperties["margin"] into mMargin
+end handler
+```
+
 ### Understanding Error Messages
-Clicking on the "test" button causes the extension builder to compile your source code file (***.mlc***) and produce a compiled module file (***.lcm***). If an error is encountered it is output in the "console" section of the builder:
+Clicking on the "test" button causes the extension builder to compile your source code file (***.lcb***) and produce a compiled module file (***.lcm***). If an error is encountered it is output in the "console" section of the builder:
 
 ```
 Error: <source path>: <line number>: <char number>: <error message>
 ```
 
-* *source path* - The path the .mlc file that is being compiled
+* *source path* - The path the .lcb file that is being compiled
 * *line number* - The line number in the script on which the error occurred.
 * *char number* - The character number on which the error occurred. 
 * *error message* - The description of the error.
@@ -421,7 +438,7 @@ Marking up your scripts is simple and follows a similar model to other documenta
 
 Consider the following handler
 ```
-public handler myHandler(in pString as string, in pNumber as number)
+public handler myHandler(in pString as String, in pNumber as Number)
    # Code 
 end handler
 ```
@@ -437,7 +454,7 @@ description:
 # Markdown Title
 Here is a full description in markdown for how this function works. Once again, any GitHub flavoured markdown is accepted.
 */
-public handler myHandler(in pString as string, in pNumber as number)
+public handler myHandler(in pString as String, in pNumber as Number)
    # Code 
 end handler
 ```
@@ -457,10 +474,19 @@ All GitHub flavoured markdown is accepted.
 Packaging extensions is easy. Simply open the "Widget Builder" plugin:
 
 ```
-Development > Plugins > Widget Builder
+Development > Plugins > ExtensionBuilder
 ```
 
-Load your ***.mlc*** file and click "Build Package". A new file will appears in the same directory as your main file with the extension ***.lce***. This is your final package file ready for upload to the extensions portal.
+Load your ***.lcb*** file and click "Build Package". A new file will appears in the same directory as your main file with the extension ***.lce***. This is your final package file ready for upload to the extensions portal.
+
+## Package requirements
+A valid package can be built from a minimum set of files:
+
+```
+widget.lcb // Widget source file
+support/icon.png // 20x40 png image
+support/icon@extra-high.png // 40x80 png image
+```
 
 # Sharing Extensions
 Once you've created a ***.lce*** package you are ready to upload it to the extensions portal.
@@ -471,24 +497,24 @@ Go to http://ng.livecode.com/login/ and login. The user credentials are the same
 ![enter image description here](images/extensions-site-login.png)
 
 ## 2) Select a Developer ID
-In order to ensure that every extension publisher has a unique ID we use a reverse domain name notation. For this alpha, all testers will be required to upload with an ID:
+In order to ensure that every extension publisher has a unique ID we use a reverse domain name notation. You will be required to select a unique developer ID that will be associated with your account:
 
 ```
-com.livecode.extensions.<developer_name>.<widget_name>.<version>
+community.livecode.<developer_name>
 ```
 
 For example:
 ```
-com.livecode.extensions.waddingham.clock.1.0.0
+community.livecode.beaumont.pinkcircle.1.0.0
 ```
 
 When logging in for the first time you will be asked to choose a unique *developer_name*. This is a one time step which will be added to your user account and used for all subsequent visits. 
 
 ![enter image description here](images/extensions-id.png)
 
-> **Note:** When uploading a package to the online portal it must have a matching identifier. So if you chose the developer name "mickey", it must start "com.livecode.extensions.mickey".
+> **Note:** When uploading a package to the online portal it must have a matching identifier. So if you chose the developer name "mickey", it must start "community.livecode.mickey".
 
-> **Future:** We plan to add the ability to register your own domains in future. This will allow you to upload widgets with custom identifiers: "com.waddingham.clock.1.0.0".
+> **Future:** We plan to add the ability to register your own domains in future. This will allow you to upload widgets with custom identifiers: "com.beaumont.pinkcircle.1.0.0".
 
 
 
@@ -791,7 +817,7 @@ Summary: Sorts <Target> in descending text order.
 Parameters:
 Target (inout list): An expression that evaluates to a list of strings. 
 Example:     
-	variable tTestList as list
+	variable tTestList as List
     put the empty list into tTestList
 
     push "abcd" onto tTestList
@@ -832,11 +858,11 @@ Target:         An expression which evaluates to a list.
 output:			The first element of <Target>
 
 Example:
-	variable tVar as list
+	variable tVar as List
 	put the empty list into tVar
 	push "first element" onto tVar
 	
-	variable tResult as boolean
+	variable tResult as Boolean
 	if the head of tVar is "first element" then
 		put "success" into tResult
 	end if
@@ -878,8 +904,8 @@ depending on the value of <pResult>
 
 */
 
-public handler testLog(in pModule as string, in pTest as string, in pResult as boolean, inout xResults as list)
-    variable tStringResult as string
+public handler testLog(in pModule as String, in pTest as String, in pResult as Boolean, inout xResults as List)
+    variable tStringResult as String
     if pResult then
         put "SUCCESS" into tStringResult
     else
@@ -892,11 +918,11 @@ end handler
 #### LiveCode script handler example
 ```
 /*
-Summary: Extracts the inline docs from a .mlc file
+Summary: Extracts the inline docs from a .lcb file
 
-pFile: The path to the .mlc file to extract docs from
+pFile: The path to the .lcb file to extract docs from
 
-Returns (string): A string consisting of all the docs for the library, and the syntax and handlers present in the .mlc file
+Returns (string): A string consisting of all the docs for the library, and the syntax and handlers present in the .lcb file
 
 Description:
 <revDocsGenerateDocsFileFromModularFile> is used when packaging a widget to create its API documentation.
