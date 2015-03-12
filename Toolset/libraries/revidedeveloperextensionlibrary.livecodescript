@@ -406,9 +406,9 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    end if
    
    if there is a folder (pPath & slash & "resources") then
-      load extension (pPath & slash & "module.lcm") 
-   else
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
+   else
+      load extension (pPath & slash & "module.lcm") 
    end if
    
    create stack "LiveCode Extension Test Window"
@@ -628,21 +628,15 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    # The target .lcb file
    put shellFormat(pFile) after tShellCommand
    
-   local tResult
-   put shell(tShellCommand) into tResult
+   local tShellOutput
+   put shell(tShellCommand) into tShellOutput
    
-   # If this is installed then the output of lc-compile should be empty.
-   if revEnvironmentIsInstalled() then
-      if tResult is not empty then
-         __revIDEDeveloperCompilationError tResult
-         return "failed to compile module"
-      end if
-   else
-      if not (the last line of (word 1 to -1 of tResult) contains "generated module") then
-         __revIDEDeveloperCompilationError tResult
-         return "failed to compile module"
-      end if
+   if the result is not 0 then
+      __revIDEDeveloperCompilationError tShellOutput
+      return "failed to compile module"
    end if
+   
+   __revIDEDeveloperExtensionLog tShellOutput
    
    if there is not a file (pTargetFolder & slash & "module.lcm") then
       return "failed to compile module"
