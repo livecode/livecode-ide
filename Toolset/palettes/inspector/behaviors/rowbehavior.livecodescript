@@ -113,7 +113,7 @@ end mutuallyExclusive
 
 # Sets the row tooltip text
 setProp rowTooltip pTooltipText
-   set the tooltip of me to pTooltipText
+   set the tooltip of field "label" of me to pTooltipText
 end rowTooltip
 
 on rowResize
