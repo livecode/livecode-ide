@@ -402,9 +402,21 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    put __testStackLoc() into tLoc
    
    if there is a stack "LiveCode Extension Test Window" then
-      __revIDEDeveloperExtensionDoClearTestStack
+      revIDEDeveloperExtensionClearTestStack
    end if
    
+   revIDEDeveloperExtensionCreateTestStack pPath, tLoc, pDetailsA
+end __revIDEDeveloperExtensionLaunchTestStack
+
+on revIDEDeveloperExtensionClearTestStack
+   send "__revIDEDeveloperExtensionDoClearTestStack" to me in 0 millisecs
+end revIDEDeveloperExtensionClearTestStack
+
+on revIDEDeveloperExtensionCreateTestStack pPath, pLoc, pDetailsA
+      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA" to me in 0 millisecs
+end revIDEDeveloperExtensionCreateTestStack
+
+on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
    if there is a folder (pPath & slash & "resources") then
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
    else
@@ -415,11 +427,11 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    put the result into tResult
    if tResult is not empty then
       __revIDEDeveloperExtensionSendError tResult
-      exit __revIDEDeveloperExtensionLaunchTestStack
+      exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    
    create stack "LiveCode Extension Test Window"
-   set the loc of it to tLoc
+   set the loc of it to pLoc
    set the destroyStack of stack "LiveCode Extension Test Window" to true
    set the title of it to pDetailsA["name"]
    set the script of it to __testStackScript()
@@ -429,14 +441,10 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    if there is not a widget 1 of  stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
       __revIDEDeveloperExtensionDoClearTestStack
-      exit __revIDEDeveloperExtensionLaunchTestStack
+      exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
-end __revIDEDeveloperExtensionLaunchTestStack
-
-on revIDEDeveloperExtensionClearTestStack
-   send "__revIDEDeveloperExtensionDoClearTestStack" to me in 5 millisecs
-end revIDEDeveloperExtensionClearTestStack
+end __revIDEDeveloperExtensionDoCreateTestStack
 
 on __revIDEDeveloperExtensionDoClearTestStack
    repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
