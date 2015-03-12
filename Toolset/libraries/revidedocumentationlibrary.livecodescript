@@ -227,7 +227,7 @@ function revDocsGetAPIData
          put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
       else
          local tLcdoc
-         put revDocsFormatDocFileAsJSON(tFolder & slash & "api.lcdoc", tExtensionData["name"], tExtensionData["author"]) into tExtensionAPI
+         put revDocsFormatDocFileAsJSON(tFolder & slash & "api.lcdoc", tExtensionData["title"], tExtensionData["author"]) into tExtensionAPI
          put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
       end if
       
