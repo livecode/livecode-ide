@@ -777,19 +777,27 @@ function revInternal__CheckFileAssociations
    put item 2 to -1 of the address into tEnginePath
    
    if the platform is "win32" then
-      -- If .rev or .livecode classes are not present, then we need new assocs
+      -- If .rev, .livecode or .livecodescript classes are not present, then we need new assocs
+      # AL-2015-03-13: [[ Bug 14910 ]] Add .livecodescript to valid stack file extensions on windows 
       if queryRegistry("HKEY_CURRENT_USER\Software\Classes\.rev\") is not "RevolutionStack" or \
-             queryRegistry("HKEY_CURRENT_USER\Software\Classes\.livecode\") is not "LiveCodeStack" then 
+            queryRegistry("HKEY_CURRENT_USER\Software\Classes\.livecode\") is not "LiveCodeStack" or \ 
+            queryRegistry("HKEY_CURRENT_USER\Software\Classes\.livecodescript\") is not "LiveCodeScriptOnlyStack"
+      then 
          return true 
       end if 
       
-      -- If .rev or .livecode are not linked ot us, we need new assocs
+      -- If .rev, .livecode or .livecodescript classes are not present, then we need new assocs
+      # AL-2015-03-13: [[ Bug 14910 ]] Add .livecodescript to valid stack file extensions on windows 
       replace slash with backslash in tEnginePath
       get queryRegistry("HKEY_CURRENT_USER\Software\Classes\RevolutionStack\Shell\Open\Command\") 
       if word 1 of it is not quote & tEnginePath & quote then 
          return true 
       end if 
       get queryRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeStack\Shell\Open\Command\") 
+      if word 1 of it is not quote & tEnginePath & quote then 
+         return true 
+      end if 
+      get queryRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeScriptOnlyStack\Shell\Open\Command\") 
       if word 1 of it is not quote & tEnginePath & quote then 
          return true 
       end if 
@@ -807,12 +815,16 @@ command revInternal__InstallFileAssociations
    
    if the platform is "win32" then
       replace slash with backslash in tEnginePath
+      # AL-2015-03-13: [[ Bug 14910 ]] Add .livecodescript to valid stack file extensions on windows 
       get setRegistry("HKEY_CURRENT_USER\Software\Classes\.rev\", "RevolutionStack") and \
-             setRegistry("HKEY_CURRENT_USER\Software\Classes\RevolutionStack\Shell\Open\Command\", quote & tEnginePath & quote && quote & "%1" & quote) and \
-             setRegistry("HKEY_CURRENT_USER\Software\Classes\RevolutionStack\DefaultIcon\", tEnginePath & comma & "1") and \
-             setRegistry("HKEY_CURRENT_USER\Software\Classes\.livecode\", "LiveCodeStack") and \
-             setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeStack\Shell\Open\Command\", quote & tEnginePath & quote && quote & "%1" & quote) and \
-             setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeStack\DefaultIcon\", tEnginePath & comma & "1")
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\RevolutionStack\Shell\Open\Command\", quote & tEnginePath & quote && quote & "%1" & quote) and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\RevolutionStack\DefaultIcon\", tEnginePath & comma & "1") and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\.livecode\", "LiveCodeStack") and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeStack\Shell\Open\Command\", quote & tEnginePath & quote && quote & "%1" & quote) and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeStack\DefaultIcon\", tEnginePath & comma & "1") and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\.livecodescript\", "LiveCodeScriptOnlyStack") and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeScriptOnlyStack\Shell\Open\Command\", quote & tEnginePath & quote && quote & "%1" & quote) and \
+            setRegistry("HKEY_CURRENT_USER\Software\Classes\LiveCodeScriptOnlyStack\DefaultIcon\", tEnginePath & comma & "1")
       if it is false then
          answer error "Failed to set file associations."
       else
