@@ -21,25 +21,32 @@ on preOpenStack
    
    local tObjectViewsPreferenceSetting, tObjectViewsToShow
    put revIDEGetPreference("revTools_show") into tObjectViewsPreferenceSetting
-   repeat for each item tView in tObjectViewsPreferenceSetting
-      if tView is among the items of tAllViewList then
-         if tObjectViewsToShow is empty then
-            put tView into tObjectViewsToShow
-         else 
-            put comma & return after tObjectViewsToShow
+   
+   # AL-2015-03-13: [[ Bug 14934 ]] Ensure empty preference results in all tools showing in the palette
+   if tObjectViewsPreferenceSetting is empty then
+      put tAllViewList into tObjectViewsToShow
+   else
+      repeat for each item tView in tObjectViewsPreferenceSetting
+         if tView is among the items of tAllViewList then
+            if tObjectViewsToShow is empty then
+               put tView into tObjectViewsToShow
+            else 
+               put comma & tView after tObjectViewsToShow
+            end if
          end if
-      end if
-   end repeat
+      end repeat
+   end if
    
    # Set the preference in the frame
-   if tObjectViewsToShow is empty then revIDESetPreference "revTools_show", tAllViewList
-   else if tObjectViewsToShow is not tObjectViewsToShow then revIDESetPreference "revTools_show", tObjectViewsToShow
+   if tObjectViewsToShow is not tObjectViewsPreferenceSetting then 
+      revIDESetPreference "revTools_show", tObjectViewsToShow
+   end if
    addFrameItem "revTools_show", "header", "preference", "Show Sections", "set","widget:Widgets Controls,classic:Classic Controls,graphic:Graphic Objects,graphictools:Graphic Tools,paint:Paint Tools", "framePreferenceSelected", the long id of me
    
    ### Properties
    
    set the resizable of me to false
-
+   
    
    
    ### Create
