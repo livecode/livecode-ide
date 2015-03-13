@@ -525,15 +525,17 @@ component Documentation
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
 
 component Extensions
-	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.graph place
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph.lcb
-	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.header place
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header.lcb
-	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.navbar place
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar.lcb
-	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.segmented place
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented.lcb
-	into [[ToolsFolder]]/extensions/com.livecode.extensions.livecode.switchButton place
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector.lcb
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchButton.lcb
 
 component Toolchain.MacOSX
