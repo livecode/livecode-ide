@@ -527,11 +527,9 @@ before mouseUp
          if sData[tIndex]["selected"] is true then
             put false into sData[tIndex]["selected"]
             dispatch tMessage to tTarget with false
-            put true
          else
             put true into sData[tIndex]["selected"]
             dispatch tMessage to tTarget with true
-            put false
          end if
          break
       default
