@@ -632,7 +632,8 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    # The built-in module path
    put shellFormat(tResourcePath & slash & "modules", "modulepath") after tShellCommand
    
-   --put shellFormat(revEnvironmentCustomizationPath() & slash & "modules", "modulepath") after tShellCommand
+   # Installed module path
+   put shellFormat(revEnvironmentCustomizationPath() & slash & "extensions/interface", "modulepath") after tShellCommand
    
    # The manifest target
    put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand

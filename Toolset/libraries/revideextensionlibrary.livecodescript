@@ -352,7 +352,15 @@ on __extensionInstallMakeLive pExtensionID
    # Copy folder from temp directory into live directory
    revCopyFolder tTempInstallPath,tFinalPath
    
-      # Next step
+   # AL-2015-03-15: [[ Bug 15008 ]] Move interface file to interface folder
+   local tInterfaceFile
+   put __extensionPropertyGet(pExtensionID, "name") & ".lci" into tInterfaceFile
+   if there is a file (tFinalPath & slash &__extensionPropertyGet(pExtensionID, "type_id") & slash & tInterfaceFile) then
+      revIDEEnsurePath(tFinalPath & slash & "interface")
+      revCopyFile tFinalPath & slash &__extensionPropertyGet(pExtensionID, "type_id") & slash & tInterfaceFile, tFinalPath & slash & "interface" & slash & tInterfaceFile
+   end if
+   
+   # Next step
    send "__extensionInstallLoad" && pExtensionID to me in 0 milliseconds
 end __extensionInstallMakeLive
 
@@ -462,6 +470,13 @@ on __extensionUninstallDeleteFiles pExtensionID
    # Make sure the path contains the folder extension as a check before deleting a folder
    if tPath contains "extension" then
       revDeleteFolder tPath
+   end if
+   
+   # AL-2015-03-15: [[ Bug 15008 ]] Delete interface file from interface folder
+   local tInterfaceFile
+   put __extensionPropertyGet(pExtensionID, "name") & ".lci" into tInterfaceFile
+   if there is a file (specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
+      revDeleteFile specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
    end if
    
    # Next step
