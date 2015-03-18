@@ -372,9 +372,14 @@ on revIDEDeveloperExtensionTest pPath
    __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
-private function __testStackLoc
+private function __testStackRects
+   local tDataA
    if there is a stack "LiveCode Extension Test Window" then
-      return the loc of stack "LiveCode Extension Test Window"
+      put the rect of stack "LiveCode Extension Test Window" into tDataA["rect"]
+      if there is a widget 1 of stack "LiveCode Extension Test Window" then
+         put the rect of widget 1 of stack "LiveCode Extension Test Window" into tDataA["wrect"]
+      end if
+      return tDataA
    end if
    
    local tScreenRect
@@ -387,8 +392,9 @@ private function __testStackLoc
       put the left of this stack - 200 into tX
    end if
    put item 2 of the loc of this stack into tY
-   return tX,tY
-end __testStackLoc
+   put tX & comma & tY into tDataA["loc"]
+   return tDataA
+end __testStackRects
 
 private function __testStackScript
    local tScript
@@ -398,25 +404,24 @@ private function __testStackScript
 end __testStackScript
 
 private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
-   local tLoc
-   put __testStackLoc() into tLoc
-   
+   local tRectsA
    if there is a stack "LiveCode Extension Test Window" then
+      put __testStackRects() into tRectsA
       revIDEDeveloperExtensionClearTestStack
    end if
    
-   revIDEDeveloperExtensionCreateTestStack pPath, tLoc, pDetailsA
+   revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
 
 on revIDEDeveloperExtensionClearTestStack
    send "__revIDEDeveloperExtensionDoClearTestStack" to me in 0 millisecs
 end revIDEDeveloperExtensionClearTestStack
 
-on revIDEDeveloperExtensionCreateTestStack pPath, pLoc, pDetailsA
-      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA" to me in 0 millisecs
+on revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
+      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA" to me in 0 millisecs
 end revIDEDeveloperExtensionCreateTestStack
 
-on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
+on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    if there is a folder (pPath & slash & "resources") then
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
    else
@@ -431,18 +436,27 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
    end if
    
    create stack "LiveCode Extension Test Window"
-   set the loc of it to pLoc
+   if tRectsA["rect"] is not empty then
+      set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
+   else
+      set the loc of stack "LiveCode Extension Test Window" to tRectsA["loc"]
+   end if
    set the destroyStack of stack "LiveCode Extension Test Window" to true
    set the title of it to pDetailsA["name"]
    set the script of it to __testStackScript()
    go stack "LiveCode Extension Test Window"
    create widget as pDetailsA["id"]
    
-   if there is not a widget 1 of  stack "LiveCode Extension Test Window" then
+   if there is not a widget 1 of stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
+   
+   if tRectsA["wrect"] is not empty then
+      set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
+   end if
+   
    set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
 end __revIDEDeveloperExtensionDoCreateTestStack
 
