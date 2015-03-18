@@ -759,9 +759,14 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put empty into tResources
    end if
    
+   # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
+   local tInterfaceFile
+   if there is a file (pFolder & slash & tTargetName & ".lci") then
+      put pFolder & slash & tTargetName & ".lci" into tInterfaceFile
+   end if
    
    if tError is empty then
-      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources) into tError
+      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tInterfaceFile) into tError
    end if
    
    revZipCloseArchive tArchive
@@ -781,7 +786,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    return empty
 end __revIDEDeveloperExtensionBuildPackage
 
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder
+private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pInterfaceFile
    local tError
    
    set the itemdelimiter to slash
@@ -859,9 +864,18 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
          revZipAddItemWithFile pArchive, "resources/" & tLine, pResourcesFolder & slash & tLine
          
          if the result begins with "ziperr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't add resource" && pResourcesFolder & slash & tLine
+            __revIDEDeveloperExtensionSendWarning "couldn't add resource" && pResourcesFolder & slash & tLine
          end if
       end repeat
+   end if
+   
+   # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
+   if tError is empty and pInterfaceFile is not empty then
+      revZipAddItemWithFile pArchive, item -1 of pInterfaceFile, pInterfaceFile
+      
+      if the result begins with "ziperr" then
+         __revIDEDeveloperExtensionSendWarning "couldn't add interface file" && pInterfaceFile
+      end if
    end if
    
    return tError
