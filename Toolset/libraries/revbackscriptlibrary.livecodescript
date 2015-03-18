@@ -1148,7 +1148,9 @@ function revFixPath pPath
       put "\/:*?<>|" & quote & tab into tRemoveChars
    else
       put " :?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
-      put tolower(pPath) into tReturnPath
+      -- SN-2015-03-09: [[ Bug 14712 ]] Do not put the lower case version
+      -- of the name
+      -- put tolower(pPath) into tReturnPath
    end if
    if revExtensionShow() then
       if not (tReturnPath ends with ".rev" or tReturnPath ends with ".livecode") then
