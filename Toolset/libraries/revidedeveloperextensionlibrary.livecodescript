@@ -392,29 +392,48 @@ end __testStackLoc
 
 private function __testStackScript
    local tScript
-   put "on closeStackRequest;revIDEDeveloperExtensionClearTestStack;exit closeStackRequest;end closeStackRequest;on saveStackRequest;exit saveStackRequest;end saveStackRequest" into tScript
+   put "on closeStackRequest;revIDEDeveloperExtensionClearTestStack true;exit closeStackRequest;end closeStackRequest;on saveStackRequest;exit saveStackRequest;end saveStackRequest" into tScript
    replace ";" with return in tScript
    return tScript
 end __testStackScript
 
+local sToUnload, sToReload
 private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
-   local tLoc
+   local tLoc, tReload
    put __testStackLoc() into tLoc
    
+   if sToReload is not empty and pDetailsA["id"] is not sToReload then
+      put true into tReload
+   end if
+   
    if there is a stack "LiveCode Extension Test Window" then
-      revIDEDeveloperExtensionClearTestStack
+      revIDEDeveloperExtensionClearTestStack tReload
+   end if
+   
+   # Must be installed somewhere
+   if pDetailsA["id"] is among the lines of the loadedExtensions then
+      put pDetailsA["id"] into sToReload
+      send "__revIDEDeveloperExtensionUnloadInstalled" to me in 0 millisecs
    end if
    
    revIDEDeveloperExtensionCreateTestStack pPath, tLoc, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
 
-on revIDEDeveloperExtensionClearTestStack
-   send "__revIDEDeveloperExtensionDoClearTestStack" to me in 0 millisecs
+on revIDEDeveloperExtensionClearTestStack pReload
+   send "__revIDEDeveloperExtensionDoClearTestStack pReload" to me in 0 millisecs
 end revIDEDeveloperExtensionClearTestStack
 
 on revIDEDeveloperExtensionCreateTestStack pPath, pLoc, pDetailsA
       send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA" to me in 0 millisecs
 end revIDEDeveloperExtensionCreateTestStack
+
+on __revIDEDeveloperExtensionUnloadInstalled
+   revIDEExtensionUnloadInstalledByName sToReload
+end __revIDEDeveloperExtensionUnloadInstalled
+
+on __revIDEDeveloperExtensionReloadInstalled
+      revIDEExtensionReloadInstalledByName sToReload
+end __revIDEDeveloperExtensionReloadInstalled
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
    if there is a folder (pPath & slash & "resources") then
@@ -443,19 +462,21 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
-   set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
+   put pPath & slash & "module.lcm" into sToUnload
 end __revIDEDeveloperExtensionDoCreateTestStack
 
-on __revIDEDeveloperExtensionDoClearTestStack
+on __revIDEDeveloperExtensionDoClearTestStack pReload
    repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
       delete widget 1 of stack "LiveCode Extension Test Window"
    end repeat
-   local tExtension
-   put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
    delete stack "LiveCode Extension Test Window"
-   if tExtension is not empty then
-      unload extension tExtension
+   if sToUnload is not empty then
+      unload extension sToUnload
       __revIDEDeveloperExtensionLog "Unloading..."
+   end if
+   
+   if pReload is true and sToReload is not empty then
+      send "__revIDEDeveloperExtensionReloadInstalled" to me in 0 millisecs
    end if
 end __revIDEDeveloperExtensionDoClearTestStack
 
