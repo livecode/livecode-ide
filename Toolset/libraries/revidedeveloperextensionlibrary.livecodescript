@@ -488,15 +488,24 @@ on __revIDEDeveloperExtensionDoClearTestStack
    put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
    delete stack "LiveCode Extension Test Window"
    if tExtension is not empty then
-      unload extension tExtension
+      __revIDEDeveloperExtensionUnload tExtension
       __revIDEDeveloperExtensionLog "Unloading..."
    end if
 end __revIDEDeveloperExtensionDoClearTestStack
+
+local sInstalledExtension
+on __revIDEDeveloperExtensionUnload pExtension
+   # Don't unload if we have installed
+   if tExtension is not sInstalledExtension then
+      unload extension tExtension
+   end if
+end __revIDEDeveloperExtensionUnload
 
 on revIDEDeveloperExtensionInstall pFolder
    local tPackage
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
    revIDEInstallExtension tPackage
+   put pFolder & slash & "module.lcm" into sInstalledExtension
 end revIDEDeveloperExtensionInstall
 
 on revIDEDeveloperExtensionUninstall pPath
