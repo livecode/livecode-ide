@@ -138,7 +138,8 @@ function revIDEDeveloperExtensions
             next repeat
          end if
          local tExtensionA
-         put  revIDEDeveloperExtension(tFolder & slash & tExtensionFolder)  into tExtensionA
+         # On first run, don't compile.
+         put  revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder)  into tExtensionA
          if tExtensionA is not empty then
             put tExtensionA into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
             put true into tFolderHasModule
@@ -149,8 +150,7 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
-   put tExtensionDetailsA into sExtensionDetailsA
-   return sExtensionDetailsA
+   return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
@@ -171,6 +171,23 @@ private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
    end if
    return tFile
 end __revIDEDeveloperExtensionFetchModuleInFolder
+
+function revIDEDeveloperExtensionNoCompile pFolder
+   local tFile
+   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   
+   if tFile is empty then
+      return empty
+   end if
+   
+   local tDataA
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDataA
+   
+   if the result is not empty then
+      put tFile into tDataA["file"]
+   end if
+   return tDataA
+end revIDEDeveloperExtensionNoCompile
 
 function revIDEDeveloperExtension pFolder
    local tFile
