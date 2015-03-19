@@ -215,7 +215,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tAPI
    if the result is empty then
       # Check to see if we've already parsed to a docs library array
-      put sExtensionDetailsA["api"] into tAPI
+      put sExtensionDetailsA[pFolder]["api"] into tAPI
    end if	
    
    if tAPI is empty then
