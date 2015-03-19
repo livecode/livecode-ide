@@ -497,7 +497,7 @@ local sInstalledExtension
 on __revIDEDeveloperExtensionUnload pExtension
    # Don't unload if we have installed
    if tExtension is not sInstalledExtension then
-      unload extension tExtension
+      unload extension pExtension
    end if
 end __revIDEDeveloperExtensionUnload
 
