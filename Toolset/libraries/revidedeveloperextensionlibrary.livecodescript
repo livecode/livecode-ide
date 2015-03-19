@@ -138,7 +138,8 @@ function revIDEDeveloperExtensions
             next repeat
          end if
          local tExtensionA
-         put  revIDEDeveloperExtension(tFolder & slash & tExtensionFolder)  into tExtensionA
+         # On first run, don't compile.
+         put  revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder)  into tExtensionA
          if tExtensionA is not empty then
             put tExtensionA into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
             put true into tFolderHasModule
@@ -149,8 +150,7 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
-   put tExtensionDetailsA into sExtensionDetailsA
-   return sExtensionDetailsA
+   return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
@@ -171,6 +171,23 @@ private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
    end if
    return tFile
 end __revIDEDeveloperExtensionFetchModuleInFolder
+
+function revIDEDeveloperExtensionNoCompile pFolder
+   local tFile
+   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   
+   if tFile is empty then
+      return empty
+   end if
+   
+   local tDataA
+   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDataA
+   
+   if the result is not empty then
+      put tFile into tDataA["file"]
+   end if
+   return tDataA
+end revIDEDeveloperExtensionNoCompile
 
 function revIDEDeveloperExtension pFolder
    local tFile
@@ -198,7 +215,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tAPI
    if the result is empty then
       # Check to see if we've already parsed to a docs library array
-      put sExtensionDetailsA["api"] into tAPI
+      put sExtensionDetailsA[pFolder]["api"] into tAPI
    end if	
    
    if tAPI is empty then
@@ -372,9 +389,14 @@ on revIDEDeveloperExtensionTest pPath
    __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
-private function __testStackLoc
+private function __testStackRects
+   local tDataA
    if there is a stack "LiveCode Extension Test Window" then
-      return the loc of stack "LiveCode Extension Test Window"
+      put the rect of stack "LiveCode Extension Test Window" into tDataA["rect"]
+      if there is a widget 1 of stack "LiveCode Extension Test Window" then
+         put the rect of widget 1 of stack "LiveCode Extension Test Window" into tDataA["wrect"]
+      end if
+      return tDataA
    end if
    
    local tScreenRect
@@ -387,8 +409,9 @@ private function __testStackLoc
       put the left of this stack - 200 into tX
    end if
    put item 2 of the loc of this stack into tY
-   return tX,tY
-end __testStackLoc
+   put tX & comma & tY into tDataA["loc"]
+   return tDataA
+end __testStackRects
 
 private function __testStackScript
    local tScript
@@ -398,25 +421,25 @@ private function __testStackScript
 end __testStackScript
 
 private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
-   local tLoc
-   put __testStackLoc() into tLoc
+   local tRectsA
+   put __testStackRects() into tRectsA
    
    if there is a stack "LiveCode Extension Test Window" then
       revIDEDeveloperExtensionClearTestStack
    end if
    
-   revIDEDeveloperExtensionCreateTestStack pPath, tLoc, pDetailsA
+   revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
 
 on revIDEDeveloperExtensionClearTestStack
    send "__revIDEDeveloperExtensionDoClearTestStack" to me in 0 millisecs
 end revIDEDeveloperExtensionClearTestStack
 
-on revIDEDeveloperExtensionCreateTestStack pPath, pLoc, pDetailsA
-      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA" to me in 0 millisecs
+on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
+      send "__revIDEDeveloperExtensionDoCreateTestStack pPath, pRectsA, pDetailsA" to me in 0 millisecs
 end revIDEDeveloperExtensionCreateTestStack
 
-on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
+on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    if there is a folder (pPath & slash & "resources") then
       load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
    else
@@ -430,20 +453,31 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, pLoc, pDetailsA
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    
+   lock screen
    create stack "LiveCode Extension Test Window"
-   set the loc of it to pLoc
+   if tRectsA["rect"] is not empty then
+      set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
+   else
+      set the loc of stack "LiveCode Extension Test Window" to tRectsA["loc"]
+   end if
    set the destroyStack of stack "LiveCode Extension Test Window" to true
    set the title of it to pDetailsA["name"]
    set the script of it to __testStackScript()
    go stack "LiveCode Extension Test Window"
    create widget as pDetailsA["id"]
    
-   if there is not a widget 1 of  stack "LiveCode Extension Test Window" then
+   if there is not a widget 1 of stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
+   
+   if tRectsA["wrect"] is not empty then
+      set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
+   end if
+   
    set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
+   unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
 
 on __revIDEDeveloperExtensionDoClearTestStack
@@ -454,15 +488,24 @@ on __revIDEDeveloperExtensionDoClearTestStack
    put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
    delete stack "LiveCode Extension Test Window"
    if tExtension is not empty then
-      unload extension tExtension
+      __revIDEDeveloperExtensionUnload tExtension
       __revIDEDeveloperExtensionLog "Unloading..."
    end if
 end __revIDEDeveloperExtensionDoClearTestStack
+
+local sInstalledExtension
+on __revIDEDeveloperExtensionUnload pExtension
+   # Don't unload if we have installed
+   if tExtension is not sInstalledExtension then
+      unload extension tExtension
+   end if
+end __revIDEDeveloperExtensionUnload
 
 on revIDEDeveloperExtensionInstall pFolder
    local tPackage
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
    revIDEInstallExtension tPackage
+   put pFolder & slash & "module.lcm" into sInstalledExtension
 end revIDEDeveloperExtensionInstall
 
 on revIDEDeveloperExtensionUninstall pPath
