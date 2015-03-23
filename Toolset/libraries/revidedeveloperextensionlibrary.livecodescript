@@ -496,7 +496,7 @@ end __revIDEDeveloperExtensionDoClearTestStack
 local sInstalledExtension
 on __revIDEDeveloperExtensionUnload pExtension
    # Don't unload if we have installed
-   if tExtension is not sInstalledExtension then
+   if pExtension is not sInstalledExtension then
       unload extension pExtension
    end if
 end __revIDEDeveloperExtensionUnload
