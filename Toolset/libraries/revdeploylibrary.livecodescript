@@ -243,11 +243,6 @@ function revIDEDeployIOSIsValidSDK pVersion, pPath
    return the result
 end revIDEDeployIOSIsValidSDK
 
-function revIDEDeployIOSUsableSDKs
-   dispatch function "deployUsableIosSdk" to stack "revDeployLibraryiOS"
-   return the result
-end revIDEDeployIOSUsableSDKs
-
 function revIDEDeployIOSGetSimulatorVersions
    dispatch function "deployGetSimulatorVersions" to stack "revDeployLibraryiOS"
    return the result
