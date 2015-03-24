@@ -1,0 +1,1 @@
+type	buttonProperty	Default	Options	Group----------------------------------------------------------------------------------------------------name	DataGrid	label		tooltip		visible	true	disabled	false	customProperties		lockLoc	false	width	250	height	160locationleft		top		right		bottom		layer	
