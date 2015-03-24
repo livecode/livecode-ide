@@ -157,7 +157,7 @@ systemWindow	Float abve everything	Basic	com.livecode.pi.boolean	true	false		fal
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
 text	Text	Basic	com.livecode.pi.text	true	false			
-textAlign	Text Align	Text	com.livecode.pi.enum	true	false			left,center,right
+textAlign	Text Align	Text	com.livecode.pi.textalign	true	false			
 textFont	Font	Text	com.livecode.pi.enum	true	false			execute:get the fontNames; sort it
 textHeight	Text height	Basic	com.livecode.pi.number	true	false			
 textSize	Text Size	Text	com.livecode.pi.number	true	false			
