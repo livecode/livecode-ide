@@ -156,9 +156,9 @@ on rowResize
       set the width of group tElement["property"] of me to tEditorWidth
       --set the loc of group tElement["property"] of me to the loc of field "label" of me
       --set the left of group tElement["property"] of me to tLeft
-      set the topleft of group tElement["property"] of me to tLeft,tTop
       unlock messages
       dispatch "editorResize" to group tElement["property"] of me
+      set the topleft of group tElement["property"] of me to tLeft,tTop
       add tEditorWidth to tLeft
       subtract tEditorWidth from tEditorSpace
       add 1 to x
