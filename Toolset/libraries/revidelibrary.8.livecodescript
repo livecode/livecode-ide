@@ -3450,6 +3450,10 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    repeat for each line tObject in pObjectList
       if pProperty is "customProperties" then
          revIDECustomPropertySet pObjectList, pValue
+      else if pProperty contains "dgProps" then
+         repeat for each key tKey in pValue
+            set the dgProps[tKey] of tObject to pValue[tKey]
+         end repeat
       else
          set the pProperty of tObject to pValue
       end if
@@ -3595,7 +3599,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Custom,Table,Colors,Effects,Icons,Position,Text"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDEFontawesomeNameToCodepoint pName
@@ -3630,6 +3634,9 @@ function revIDEFontawesomeNameToCodepoint pName
 	  // AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section icon for the property inspector
       case "table"
          return "f0ce"
+         break
+      case "data grid"
+         return "f00b"
          break
       default
          return "f00d"
