@@ -161,7 +161,7 @@ textAlign	Text Align	Text	com.livecode.pi.textalign	true	false
 textFont	Font	Text	com.livecode.pi.enum	true	false			execute:get the fontNames; sort it
 textHeight	Text height	Basic	com.livecode.pi.number	true	false			
 textSize	Text Size	Text	com.livecode.pi.number	true	false			
-textStyle	Text Style	Text	com.livecode.pi.set	true	false			bold,italic,underline,box,threeDBox,link,strikeout
+textStyle	Text Style	Text	com.livecode.pi.textstyle	true	false
 threeD	3-D	Basic	com.livecode.pi.boolean	true	false			
 thumbPosition	Current value	Basic	com.livecode.pi.integer	true	false			
 thumbSize	Thumb size	Basic	com.livecode.pi.number	true	false			
