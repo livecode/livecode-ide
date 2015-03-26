@@ -547,9 +547,8 @@ on mouseDown
    set the windowshape of this stack to the ID of image 1
    set the rect of this stack to the rect of image 1
    
-   close stack "revDragControl"
+   # AL-2015-03-26: [[ Bug 14892 ]] Simply set the visible of the revDragControl stack to true
    show this stack
-   go stack "revDragControl"
    
    # Let the user drag around
    local tExit, tCount, tValidDropStacks
