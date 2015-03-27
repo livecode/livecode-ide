@@ -5,7 +5,7 @@ on preOpenStack
    set the behavior of me to revIDEFrameBehavior()
    
    ### Header
-   addFrameItem "add_widget","header", "action", "Find More Widgets", "f055", "f13e","findMoreWidgets", the long id of me
+   addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
    
    # Preferences
    if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", 2
