@@ -530,13 +530,19 @@ component Extensions
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header.lcb
 	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker.lcb
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg.lcb
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar.lcb
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented.lcb
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector.lcb
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchButton.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton.lcb
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview.lcb
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
