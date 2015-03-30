@@ -56,6 +56,7 @@ on showFrameItem pName
    if tIndex is not a number then exit showFrameItem
    
    put false into sData[tIndex]["hidden"] 
+   generateFrame
 end showFrameItem
 
 on hideFrameItem pName
@@ -64,6 +65,7 @@ on hideFrameItem pName
    if tIndex is not a number then exit hideFrameItem
    
    put true into sData[tIndex]["hidden"] 
+   generateFrame
 end hideFrameItem
 
 on hiliteFrameItem pName
@@ -178,6 +180,7 @@ private on appendMenuItem pNavItem, @xMenuText
 end appendMenuItem
 
 private function preferenceAction pMenu
+   local tDataA
    put empty into tDataA
    put "preferences" into tDataA["name"]
    put "preferences" into tDataA["label"]
@@ -257,7 +260,6 @@ on generateFrame
    
    # If we have any preferences, add that to the beginning of the header actions
    if tPreferenceMenuText is not empty then
-      add 1 to tHeadActionCount
       put preferenceAction(tPreferenceMenuText) into tHeaderActionDataA[0]
    end if
    
@@ -317,31 +319,11 @@ function barHeight pSize
 end barHeight
 
 function barRight pSize
-   local tNumNavItems, tWidth, tTotalWidth
-   put the number of elements of sData into tNumNavItems
-   
-   if sNavStyle is "icons" then
-      put ITEM_SPACING  into tWidth
-      return tNumNavItems*tWidth + (tNumNavItems/4)*(item 1 of HEADER_NAVIGATION_MARGINS) + (tNumNavItems/4)*(item 3 of HEADER_NAVIGATION_MARGINS)
-      
-   else
-      local tKeys
-      put the keys of sData into tKeys
-      sort lines of tKeys ascending numeric
-      
-      put 0 into tTotalWidth
-      repeat for each line tKey in tKeys
-         if there is not a field sData[tKey]["name"] of group "background" of me then next repeat
-         
-         if sData[tKey]["hidden"] is true then
-            hide field sData[tKey]["name"] of group "background" of me
-            next repeat
-         end if
-         
-         add the width of field sData[tKey]["name"] of group "background" of me to tTotalWidth
-      end repeat
-      return tTotalWidth
+   if there is a widget "header_background" of group "background" of me then
+      return the navBarRight of widget "header_background" of group "background" of me
    end if
+   
+   return 0
 end barRight
 
 on layoutFrame
@@ -518,21 +500,9 @@ before openCard
    generateFrame
 end openCard
 
-before mouseEnter
-   if the cFrameButton of the target is not 1 then exit mouseEnter
-   if the disabled of the target is true then exit mouseEnter
-   if the showborder of the target is true then exit mouseEnter
-   
-   set the textColor of the target to TAB_HOVER_TEXT_COLOR
-end mouseEnter
-
-before mouseLeave
-   if the cFrameButton of the target is not 1 then exit mouseLeave
-   if the disabled of the target is true then exit mouseLeave
-   if the showborder of the target is true then exit mouseLeave
-   
-   set the textColor of the target to TAB_TEXT_COLOR
-end mouseLeave
+after openCard
+   send "resizeStack" to this stack
+end openCard
 
 after preOpenStack
    put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
