@@ -9,16 +9,19 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 on revNewTool
+   # AL-2015-03-26: [[ Bug 15045 ]] Deal with the newTool message correctly
    if the tool is "browse tool" then
-      if "button id 1109" is in the frontScripts then
+      if the long id of me is in the frontScripts then
          remove script of me from front
          insert script of me into back
          go (the topStack) -- keyboard focus for shortcuts to the running stack
       end if
-    else if the tool is "pointer tool" then
-    	remove script of me from back
-    	insert script of me into front
-    end if
+   else if the tool is "pointer tool" then
+      if the long id of me is in the backScripts then
+         remove script of me from back
+         insert script of me into front
+      end if
+   end if
 end revNewTool
 
 # OK-2008-03-19 : gREVSuppressMessages was being used with no declaration in multiple places
