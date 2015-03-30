@@ -1304,6 +1304,7 @@ end revIDEMessages
  
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
+   lock screen
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
    //if the tool is "browse tool" and pMessage is not "ideToolChanged" then exit revIDEMessageSend
    
@@ -1374,6 +1375,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
       
       --put "SENT" && the milliseconds && pMessage && "sent to" && tObjectID & return & line 1 to 20 of msg into msg
    end repeat
+   unlock screen
 end revIDEMessageSend
 
 #############
@@ -2899,7 +2901,7 @@ function revIDEWebPageURL pKey
 end revIDEWebPageURL
 
 function revIDEFrameBehavior
-   return the long ID of stack "revNewPaletteBehavior"
+   return the long ID of stack "revPaletteBehavior"
 end revIDEFrameBehavior
 
 function revIDEDataViewBehavior
