@@ -341,10 +341,12 @@ on layoutPalette
    
    # Get the space that the content should fill
    unlock messages
-   local tContentRect, tWidth, tPaletteMargin, tPalettePadding
+   local tContentRect, tWidth, tPaletteMargin, tPalettePadding, tHeaderHeight
    put the paletteMargin of me into tPaletteMargin
    put the palettePadding of me into tPalettePadding
    put the contentrect of me into tContentRect
+   # AL-2015-03-20: [[ Bug 14911 ]] Get the headerHeight with messages unlocked
+   put the headerHeight of me into tHeaderHeight
    
    lock messages
    
@@ -425,7 +427,7 @@ on layoutPalette
    
    reset the templatebutton
    
-   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, the formattedheight of group "contents" of me + the headerHeight of me + the top of me
+   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, the formattedheight of group "contents" of me + tHeaderHeight + the top of me
    
    ideToolChanged
    --layoutFrame
