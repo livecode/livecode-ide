@@ -88,7 +88,7 @@ lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false
 lockText	Lock Text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
 mainStack	Main stack	Basic	com.livecode.pi.enum	true	false		execute:get revIDEMainStacks()	
-margins	Margins	Text	com.livecode.pi.number	true	false			
+margins	Margins	Text	com.livecode.pi.string	true	false			
 mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
 markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	
 markerFilled	Marker Filled	Basic	com.livecode.pi.boolean	true	false		false	
