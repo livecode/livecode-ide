@@ -668,6 +668,68 @@ private function __fetchModuleData pExtensionFile
    return tDataA
 end __fetchModuleData
 
+private function __extensionIsBuiltin pID
+   set the itemdelimiter to "."
+   return the number of items in pID is 3
+end __extensionIsBuiltin
+
+private on __addToDependencies pDependee, pDependent, @xDependencies
+   local tNumDependencies
+   put the number of elements in xDependencies[pDependee] into tNumDependencies
+   put pDependent into xDependencies[pDependee][tNumDependencies + 1]
+end __addToDependencies
+
+private on __addToList pNode, @xList
+   if xList is empty then
+      put pNode into xList
+   else
+      put return & pNode after xList
+   end if
+end __addToList
+
+private on __removeFromList pNode, @xList
+   get lineOffset(pNode, xList)
+   if it is not 0 then
+      delete line it of xList
+   end if
+end __removeFromList
+
+local sDependencies
+private on __visitNode pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
+   if pNode is among the lines of xTemporaryMarked then
+      return "Error"
+   end if
+   if pNode is among the lines of xMarked then
+      return ""
+   end if
+   __addToList pNode, xTemporaryMarked
+   repeat for each element tNode in sDependencies[pNode]
+      __visitNode tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
+      if the result is not empty then
+         return "Error"
+      end if
+   end repeat
+   __addToList pNode, xMarked
+   __removeFromList pNode, xUnmarked
+   __removeFromList pNode, xTemporaryMarked
+   __addToList pNode, xOrder
+end __visitNode
+
+private function __dependencyOrder pDependencies, pList
+   local tUnmarked, tTemporaryMarked, tMarked, tOrder, tToVisit
+   put pDependencies into sDependencies
+   put pList into tUnmarked
+   repeat while tUnmarked is not empty
+      put any line of tUnmarked into tToVisit
+      __visitNode tToVisit, tUnmarked, tMarked, tTemporaryMarked, tOrder
+      if the result is not empty then
+         throw "Circularity in dependencies starting from" && tToVisit
+         return empty
+      end if
+   end repeat
+   return tOrder
+end __dependencyOrder
+
 on __extensionsLoad
    local tDataA
    revIDEStoreDefaultFolder
@@ -708,6 +770,7 @@ on __extensionsLoad
    put the keys of tDataA into tExtensionsList
    sort tExtensionsList
    
+   local tToLoadA, tDependencies
    set the itemdel to ","
    put 1 into tExtensionCount
    repeat for each line tID in tExtensionsList
@@ -719,8 +782,20 @@ on __extensionsLoad
             add 1 to tExtensionCopyCount
          end repeat
       end repeat
-      __extensionLoad tID, tExtensionDataA
+      put tExtensionDataA into tToLoadA[tID]
+      # Accumulate an array of dependencies
+      repeat for each element tDependent in tExtensionDataA["copies"][1]["requires"]
+         if __extensionIsBuiltin(tDependent) then
+            next repeat
+         end if
+         __addToDependencies tId, tDependent, tDependencies
+      end repeat
       put empty into tExtensionDataA
+   end repeat
+   
+   # Perform topological sort on list of dependencies so that they are loaded in the correct order
+   repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
+      __extensionLoad tLine, tToLoadA[tLine]
    end repeat
 end __extensionsLoad
 
@@ -962,6 +1037,16 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put empty into tTargetAuthor
    end if
    put tTargetAuthor into tDataA["author"]
+   
+   local tRequires, tCount
+   put 0 into tCount
+   put revXMLChildNames(tId,"package",return,"requires",true) into tRequires
+   repeat for each line tDependency in tRequires
+      add 1 to tCount
+      local tName
+      put revXMLAttribute(tId,"package" & "/" & tDependency,"name") into tName
+      put tName into tDataA["requires"][tCount]
+   end repeat
    
    put tDataA into rDataA
    return empty
