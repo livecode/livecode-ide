@@ -119,27 +119,31 @@ on clearFrameNavigationData
    end repeat
 end clearFrameNavigationData
 
-private on appendMenuItem pNavItem, @xMenuText
-   local tMenuItemText
+private on appendMenuItem pNavItem, @xMenuArray
+   local tMenuItemA
    
    local tPreferenceValue
    put revIDEGetPreference(pNavItem["name"]) into tPreferenceValue
    
+   put pNavItem["label"] into tMenuItemA["label"]
+   put pNavItem["name"] into tMenuItemA["name"]
    switch pNavItem["value_type"]
       case "enum"
          if tPreferenceValue is empty then put item 1 of pNavItem["value"] into tPreferenceValue
-         put pNavItem["label"] & "/|" & pNavItem["name"] into tMenuItemText
+         local tItemCount
          repeat for each item tItem in pNavItem["value"]
+            add 1 to tItemCount
+            put tItem into tMenuItemA["menu"][tItemCount]["label"]
             if tItem is tPreferenceValue then
-               put return & tab & "!c" & tItem after tMenuItemText
+               put true into tMenuItemA["menu"][tItemCount]["checked"]
             else
-               put return & tab & tItem after tMenuItemText
+               put false into tMenuItemA["menu"][tItemCount]["checked"]
             end if
          end repeat
          break
       case "set"
-         put pNavItem["label"] & "/|" & pNavItem["name"] into tMenuItemText
          repeat for each item tItem in pNavItem["value"]
+            add 1 to tItemCount
             # Parse out the value and label from the item
             set the itemdel to ":"
             local tValue, tLabel
@@ -151,41 +155,42 @@ private on appendMenuItem pNavItem, @xMenuText
                put tItem into tValue
             end if
             
+            put tLabel into tMenuItemA["menu"][tItemCount]["label"]
+            put tValue into tMenuItemA["menu"][tItemCount]["name"]
+            
             # Check whether the set item is in the preference value
             set the itemdel to comma
             if tValue is among the items of tPreferenceValue then
-               put return & tab & "!c" & tValue after tMenuItemText
+               put true into tMenuItemA["menu"][tItemCount]["checked"]
             else
-               put return & tab & tValue after tMenuItemText
+               put false into tMenuItemA["menu"][tItemCount]["checked"]
             end if
          end repeat
          break
       case "boolean"
          if tPreferenceValue is true then
-            put "!c" & pNavItem["label"] & "/|" & pNavItem["name"] into tMenuItemText
+            put true into tMenuItemA["checked"]
          else
-            put pNavItem["label"] & "/|" & pNavItem["name"] into tMenuItemText
+            put false into tMenuItemA["checked"]
          end if
          break
-      case default
-         put pNavItem["label"] & "/|" & pNavItem["name"]  into tMenuItemText
+      default
          break
    end switch
    
-   if xMenuText is empty then 
-      put tMenuItemText into xMenuText
-   else
-      put return & tMenuItemText after xMenuText
-   end if
+   local tCount
+   put the number of elements in xMenuArray into tCount
+   add 1 to tCount
+   put tMenuItemA into xMenuArray[tCount]
 end appendMenuItem
 
-private function preferenceAction pMenu
+private function preferenceAction pMenuArray
    local tDataA
    put empty into tDataA
    put "preferences" into tDataA["name"]
    put "preferences" into tDataA["label"]
    put "cog" into tDataA["icon"]
-   put pMenu into tDataA["menu"]
+   put pMenuArray into tDataA["menu"]
    return tDataA
 end preferenceAction
 
@@ -221,7 +226,7 @@ on generateFrame
    put false into tNavigation
    put false into tHeaderAction
    
-   local tPreferenceMenuText, tDataA, tSelected
+   local tPreferenceMenuA, tDataA, tSelected
    # Gather the data to set on the widget(s)
    repeat for each element tNavItem in sData
       if tNavItem["hidden"] is true then
@@ -237,7 +242,7 @@ on generateFrame
       switch tNavItem["type"]
          case "preference"
             # Add preference data to the preference menu
-            appendMenuItem tNavItem, tPreferenceMenuText
+            appendMenuItem tNavItem, tPreferenceMenuA
             break
          case "navigation"
             add 1 to tHeaderNavCount
@@ -259,8 +264,8 @@ on generateFrame
    end repeat
    
    # If we have any preferences, add that to the beginning of the header actions
-   if tPreferenceMenuText is not empty then
-      put preferenceAction(tPreferenceMenuText) into tHeaderActionDataA[0]
+   if tPreferenceMenuA is not empty then
+      put preferenceAction(tPreferenceMenuA) into tHeaderActionDataA[0]
    end if
    
    if tHeaderNavCount is not 0 or tHeaderActionCount is not 0 then
@@ -398,7 +403,7 @@ on layoutFrame
       set the rect of widget "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me
    end if
    
-/*
+   /*
    local tNavTop, tNavLeft
    put 0 into tNavTop
    put BAR_MARGIN / 2 into tNavLeft
@@ -425,64 +430,6 @@ on layoutFrame
    local tFooterActionsTop, tFooterActionsLeft
    put the height of me - BAR_HEIGHT into tFooterActionsTop
    put BAR_MARGIN into tFooterActionsLeft
-   
-   # Order the keys of sData so that we lay everything out in the right order
-   local tKeys
-   put the keys of sData into tKeys
-   sort lines of tKeys ascending numeric
-   
-   repeat for each line tKey in tKeys
-      if there is not a field sData[tKey]["name"] of group "background" of me then next repeat
-      
-      if sData[tKey]["hidden"] is true then
-         hide field sData[tKey]["name"] of group "background" of me
-         next repeat
-      end if
-      
-      set the textsize of field sData[tKey]["name"] of group "background" of me to tIconTextSize
-      set the height of field sData[tKey]["name"] of group "background" of me to BAR_HEIGHT
-      set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-      show field sData[tKey]["name"] of group "background" of me
-      
-      switch sData[tKey]["type"]
-         case "navigation"
-            set the margins of field sData[tKey]["name"] of group "background" of me to HEADER_NAVIGATION_MARGINS
-            if sNavStyle is "names" then
-               set the textsize of field sData[tKey]["name"] of group "background" of me to tTextSize
-               set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-            end if
-            
-            set the top of field sData[tKey]["name"] of group "background" of me to tNavTop
-            set the left of field sData[tKey]["name"] of group "background" of me to tNavLeft
-            
-            add the formattedwidth of field sData[tKey]["name"] of group "background" of me to tNavLeft
-            break
-         case "action"
-         case "toggle"
-            if sData[tKey]["location"] is "header" then
-               set the top of field sData[tKey]["name"] of group "background" of me to tHeaderActionsTop
-               set the right of field sData[tKey]["name"] of group "background" of me to tHeaderActionsRight
-               subtract the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING from tHeaderActionsRight
-               break
-            else
-               set the margins of field sData[tKey]["name"] of group "background" of me to FOOTER_ACTION_MARGINS
-               set the textsize of field sData[tKey]["name"] of group "background" of me to tIconTextSize * 0.85
-               set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-               set the top of field sData[tKey]["name"] of group "background" of me to tFooterActionsTop
-               set the left of field sData[tKey]["name"] of group "background" of me to tFooterActionsLeft
-               add the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING to tFooterActionsLeft
-               break
-            end if
-            break
-         case "list"
-            set the margins of field sData[tKey]["name"] of group "background" of me to HEADER_NAVIGATION_MARGINS
-            set the textsize of field sData[tKey]["name"] of group "background" of me to tTextSize
-            set the top of field sData[tKey]["name"] of group "background" of me to tHeaderActionsTop
-            set the right of field sData[tKey]["name"] of group "background" of me to tHeaderActionsRight
-            subtract the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING from tHeaderActionsRight
-            break
-      end switch
-   end repeat
    */
    unlock messages
    unlock screen
@@ -514,7 +461,7 @@ after preOpenStack
 end preOpenStack
 
 before idePreferenceChanged
-   layoutFrame
+   generateFrame
 end idePreferenceChanged
 
 after idePreferenceChanged
