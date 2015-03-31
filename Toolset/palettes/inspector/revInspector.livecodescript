@@ -44,9 +44,8 @@ on openStack
    lock screen
    set the visible of me to true
    
-   # BB 31/03/2015 Commented this out because it's causing a double redraw. The inspector appears to get a selected object changed after opening.
    # Render the inspector for the given selected object
-   --ideSelectedObjectChanged
+   ideSelectedObjectChanged
    
    unlock screen
 end openStack
@@ -240,7 +239,6 @@ private on inspectorLayout
    set the top of me to tStackTop
    unlock messages
    unlock screen
-   put the milliseconds && "inspector laying out" & return after msg
 end inspectorLayout
 
 # Sent when the user changes the section
