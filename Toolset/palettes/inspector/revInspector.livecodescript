@@ -35,12 +35,18 @@ on preOpenStack
    inspectorMessagesRegister
    
    //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
-   addFrameItem "lock","header", "toggle", "Lock Inspector", "f13e", "f023","inspectorLock", the long id of me
+   addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    
+   set the navigationDisplayStyle of me to "icons"
+end preOpenStack
+
+on openStack   
+   lock screen
+   set the visible of me to true
    # Render the inspector for the given selected object
    ideSelectedObjectChanged
-   set the visible of me to true
-end preOpenStack
+   unlock screen
+end openStack
 
 on resizeStack
    inspectorLayout
@@ -75,9 +81,9 @@ on inspectorMessagesDeRegister
    revIDEUnsubscribe "ideNameChanged"
 end inspectorMessagesDeRegister 
 
-on inpectorOpenEditor pEditor
+on inspectorOpenEditor pEditor
    # Check if the stack is already open
-   if there is a stack pEditor then exit inpectorOpenEditor
+   if there is a stack pEditor then exit inspectorOpenEditor
    
    # Find the file for the editor
    local tEditorStackPath
@@ -87,7 +93,7 @@ on inpectorOpenEditor pEditor
    if there is a file tEditorStackPath then 
       go invisible stack tEditorStackPath
    end if
-end inpectorOpenEditor
+end inspectorOpenEditor
 
 on inspectorLock pState
    if pState is false then
@@ -169,20 +175,18 @@ private on inspectorGenerate
    unlock screen
 end inspectorGenerate
 
-private on inpsectorNavigationGenerate
+private on inspectorNavigationGenerate
    lock screen
    # Clear the current frame data
    clearFrameNavigationData
    
    # Add all the navigation elements
    repeat for each element tSection in sPropertyInfo
-      addFrameItem tSection["label"],"header", "navigation", tSection["label"], revIDEFontawesomeNameToCodepoint(tSection["label"]), revIDEFontawesomeNameToCodepoint(tSection["label"]),"inspectorSectionChanged", the long id of me, tSection["label"]
+      addFrameItem tSection["label"],"header", "navigation", tSection["label"], revIDESectionNameToIconName(tSection["label"]), revIDESectionNameToIconName(tSection["label"]),"inspectorSectionChanged", the long id of me, tSection["label"]
    end repeat
    
-   # Highlight the selected section
-   hiliteFrameItem inspectorSectionGetName()
    unlock screen
-end inpsectorNavigationGenerate
+end inspectorNavigationGenerate
 
 # Layout inspector
 private on inspectorLayout
@@ -440,8 +444,12 @@ end inspectorFill
 private on inspectorClear
    lock screen
    lock messages
-   repeat while the number of groups of card 1 me is not 0
-      delete group 1 of card 1 of me
+   repeat while the number of groups of card 1 me is not 1
+      if the short name of group 2 of me is "background" then
+         delete group 1 of card 1 of me
+      else
+         delete group 2 of card 1 of me
+      end if
    end repeat
    
    rowLabelWidthSet 0
@@ -550,7 +558,7 @@ on ideSelectedObjectChanged
    inspectorClear
    
    # Setup the header
-   inpsectorNavigationGenerate
+   inspectorNavigationGenerate
    
    # Generate the controls for group
    inspectorGenerate
