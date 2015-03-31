@@ -30,7 +30,7 @@ colorOverlay	ColorOverlay	Effects	com.livecode.pi.graphicEffect	true	false
 currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1	
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0	
-customProperties	Custom Properties	Custom	com.livecode.pi.array	true	false			
+customProperties	Custom Properties	Custom	com.livecode.pi.array	true	false		no_default			
 dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
 decorations	Controls	Basic	com.livecode.pi.enum	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			
@@ -38,6 +38,7 @@ destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		fals
 destroyWindow	Purge windwow on closed	Basic	com.livecode.pi.boolean	true	false		false	
 disabled	Disabled	Basic	com.livecode.pi.boolean	true	false		false	
 disabledIcon	Disabled Icon	Icons	com.livecode.pi.icon	true	false		0	
+customProperties["dgProps"]	Data Grid Properties	Data Grid	com.livecode.pi.datagrid	true	false		no_default
 dontDither	Don't Dither	Basic	com.livecode.pi.boolean	true	false		false	
 dontSearch	Don't search	Basic	com.livecode.pi.boolean	true	false		false	
 dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false			

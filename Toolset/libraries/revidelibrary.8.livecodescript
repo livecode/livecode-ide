@@ -2359,15 +2359,39 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
-      local tObjectType
-      put sClassicObjectProperties[pObjectTypeID]["type"] into tObjectType
-      
-      if tObjectType is empty then return __revIDEError("Invalid classic control type ID: " && pTarget)
-      
-      # A classic control
       local tCreatedControlID
-      do "create" && tObjectType
-      put the long ID of the last control into tCreatedControlID
+      # Create data grid
+      if pObjectTypeID is "com.livecode.interface.classic.DataGrid" then
+         -- data grid library expects a rect rather than a loc
+         local tCreateRect
+         put round(the cTabButtonWidth of stack "revPreferences" / 2), round(the cTabButtonHeight of stack "revPreferences" / 2) into tCreateRect
+         put item 1 of tCreateRect + the cTabButtonWidth of stack "revPreferences" into item 3 of tCreateRect
+         put item 2 of tCreateRect + the cTabButtonHeight of stack "revPreferences" into item 4 of tCreateRect
+         
+         put true into lDataGrid -- select data grid at end not single control
+         
+         unlock messages
+         # tObjectId is passed by reference and will have the data grid group id placed into it
+         addDataGridToStack the short name of this stack, tCreateRect, empty, empty, tCreatedControlID
+         local tCount
+         put 0 into tCount
+         repeat with i = 1 to the number of groups
+            if the dgProps["control type"] of group i is "Data Grid" then 
+               add 1 to tCount
+            end if
+         end repeat
+         set the name of tCreatedControlID to (the short name of tCreatedControlID && tCount)
+         lock messages
+      else
+         local tObjectType
+         put sClassicObjectProperties[pObjectTypeID]["type"] into tObjectType
+         
+         if tObjectType is empty then return __revIDEError("Invalid classic control type ID: " && pTarget)
+         
+         # A classic control
+         do "create" && tObjectType
+         put the long ID of the last control into tCreatedControlID
+      end if
       
       local tPropInfoA
       # Set all the properties to their default
@@ -3428,6 +3452,10 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    repeat for each line tObject in pObjectList
       if pProperty is "customProperties" then
          revIDECustomPropertySet pObjectList, pValue
+      else if pProperty contains "dgProps" then
+         repeat for each key tKey in pValue
+            set the dgProps[tKey] of tObject to pValue[tKey]
+         end repeat
       else
          set the pProperty of tObject to pValue
       end if
@@ -3573,7 +3601,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Custom,Table,Colors,Effects,Icons,Position,Text"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
 function revIDESectionNameToIconName pName
@@ -3608,6 +3636,9 @@ function revIDESectionNameToIconName pName
 	  // AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section icon for the property inspector
       case "table"
          return "table"
+         break
+      case "data grid"
+         return "f00b"
          break
       default
          return "remove"
@@ -3657,3 +3688,203 @@ function revIDEDefaultExtensionIcon pType
          return revIDESpecialFolderPath("images") & slash & "extension-widget.png"
    end switch
 end revIDEDefaultExtensionIcon
+
+function revIDEScriptEditorBehavior pWhich
+   local tPathToBehaviors
+   put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
+   switch pWhich
+      case "editor"
+         return tPathToBehaviors & slash & "revseeditorbehavior.livecodescript"
+      case "handlerlist"
+         return tPathToBehaviors & slash & "revsehandlerlistbehavior.livecodescript"
+      case "menubar"
+         return tPathToBehaviors & slash & "revsemenubarbehavior.livecodescript"
+      case "scripttabs"
+         return tPathToBehaviors & slash & "revsescripttabsbehavior.livecodescript"
+      case "toolbar"
+         return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
+      case "stack"
+      default
+         return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+   end switch
+end revIDEScriptEditorBehavior
+
+#############
+# Data grid
+#############
+
+constant kResourceStack = "revDataGridLibrary"
+constant kTemplateStack = "Data Grid Templates"
+constant kDefaultRect = "0,0,300,500"
+
+## pDataGridControl is long id of data grid control (default is "DataGrid" in revDataGridLibrary stack to copy to pStack (short name).
+## pTemplateGroupSource is optional.
+command AddDataGridToStack pStack, pRect, pDataGridControl, pTemplateGroupSource, @rGroupId
+   if there is not a stack pStack then put the short name of the topstack into pStack
+   if pRect is not a rect then put kDefaultRect into pRect
+   if there is not a pDataGridControl then put the long id of group "DataGrid" of group "Templates" of stack kResourceStack into pDataGridControl 
+   
+   local theError
+   ConfirmPresenceOfTemplateStack pStack
+   put the result into theError
+   
+   if theError is empty then
+      local theDataGridGroup
+      copy pDataGridControl to stack pStack
+      put it into theDataGridGroup
+      set the rect of theDataGridGroup to pRect
+      
+      if pTemplateGroupSource is empty and pStack is not "revDragControl" then
+         CreateTemplateForControl pStack
+         put the result into pTemplateGroupSource
+      end if
+      
+      set the visible of theDataGridGroup to true
+      ## behaviors are already set in templates
+      -- set the parentscript of theDataGridGroup to the long id of button id 1005 of stack kResourceStack
+      -- set the parentscript of button "TrackDragDrop" of theDataGridGroup to the long id of button id 1006 of stack kResourceStack
+      
+      set the dgProps["record template"] of theDataGridGroup to pTemplateGroupSource
+      send "ResetControl" to theDataGridGroup
+   end if
+   
+   put theDataGridGroup into rGroupId
+   return theError
+end AddDataGridToStack
+
+## Assumes resource stack already exists
+command ConfirmPresenceOfTemplateStack pStack
+   -----
+   local theLineNo
+   local theSubstack, tStackName
+   local tUnique
+   -----
+   
+   local theMainStack
+   put the mainstack of stack pStack into theMainStack
+   
+   local i
+   repeat for each line theSubstack in the substacks of stack theMainStack
+      add 1 to i
+      if theSubstack begins with kTemplateStack then
+         put i into theLineNo
+         exit repeat
+      end if
+   end repeat
+   
+   -- put the executioncontexts
+   -- answer pStack & cr & theLineNo
+   
+   local msgsAreLocked
+   put the lockmessages into msgsAreLocked
+   lock messages
+   
+   if theLineNo < 1 then
+      lock screen
+      
+      put the milliseconds into tUnique
+      put kTemplateStack && tUnique into tStackName
+      set the topleft of the templatestack to -1000,-1000
+      create stack tStackName
+      close stack tStackName 
+      set the mainstack of stack tStackName to the mainstack of stack pStack
+      
+      set the width of stack tStackName to 600
+      set the height of stack tStackName to 400
+      set the topleft of stack tStackName to 180,180
+      
+      unlock screen
+      
+   else
+      put line theLineNo of the substacks of stack theMainStack into tStackName
+   end if
+   
+   local theRestoreStack
+   put the defaultstack into theRestoreStack
+   set the defaultstack to tStackName
+   
+   ## Make sure we have an instructions background
+   if there is not a background "_DataGridTemplateInstructions_" of stack tStackName then
+      copy group "_DataGridTemplateInstructions_" of stack kResourceStack to card 1 of stack tStackName
+      -- MW-2011-03-16: Make sure the instructions is actually a background.
+      set the backgroundBehavior of group "_DataGridTemplateInstructions_" of card 1 of stack tStackName to true
+   end if
+   
+   ## Make sure it appears on every card
+   repeat with i = 1 to the number of cards of stack tStackName
+      if there is not a group "_DataGridTemplateInstructions_" of card i of stack tStackName then
+         place background "_DataGridTemplateInstructions_" onto card i
+         set the bottomleft of group "_DataGridTemplateInstructions_" of card i to 0, the height of card i
+      end if
+   end repeat
+   
+   set the defaultstack to theRestoreStack
+   
+   set the lockmessages to msgsAreLocked
+   
+   return empty
+end ConfirmPresenceOfTemplateStack
+
+
+## Assumes presence of template stack in memory
+command CreateTemplateForControl pStack
+   -----
+   local theLineNo
+   local theSubstack, tStackName
+   local theTemplateGroup
+   local tRestore
+   -----
+   put the defaultstack into tRestore
+   lock screen
+   
+   local msgsAreLocked
+   put the lockmessages into msgsAreLocked
+   lock messages
+   
+   local theMainStack
+   put the mainstack of stack pStack into theMainStack
+   
+   local i
+   repeat for each line theSubstack in the substacks of stack theMainStack
+      add 1 to i
+      if theSubstack begins with kTemplateStack then
+         put i into theLineNo
+         exit repeat
+      end if
+   end repeat
+   put line theLineNo of (the substacks of stack theMainStack) into tStackName
+   
+   set the topleft of stack tStackname to -1000,-1000
+   hide stack tStackName
+   toplevel stack tStackName
+   set the defaultstack to tStackName
+   if the number of controls on this card > 0 then 
+      create card
+   end if
+   
+   copy group "Default Row Template" of group "Templates" of stack kResourceStack to the current card of the defaultstack
+   put it into theTemplateGroup
+   set the name of theTemplateGroup to "Row Template"
+   set the topleft of theTemplateGroup to 0,0
+   
+   create button "Behavior Script"
+   set the visible of it to false
+   
+   set the script of it to the uDefaultScript of button "Default Script" of stack kResourceStack
+   
+   set the parentscript of theTemplateGroup to it
+   
+   ## Provide instructions
+   set the bottomleft of group "_DataGridTemplateInstructions_" of card 1 to the bottomleft of the current card of the defaultstack
+   
+   close stack tStackName
+   show stack tStackName
+   set the topleft of stack tStackName to 180,180
+   
+   set the defaultstack to tRestore
+   
+   set the lockmessages to msgsAreLocked
+   unlock screen
+   
+   return theTemplateGroup
+end CreateTemplateForControl

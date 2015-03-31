@@ -2111,14 +2111,17 @@ command revEditScriptInNewWindow pObject, pSpecial
    if pSpecial then
       clone invisible revScriptEditorTemplate() as "revTempScriptEditor"
       set the behavior of stack "revTempScriptEditor" to empty
-      set the script of stack "revTempScriptEditor" to the script of button "Template Stack" of stack "revNewScriptEditor"
+      set the script of stack "revTempScriptEditor" to the script of stack revIDEScriptEditorBehavior("stack")
       clone invisible stack "revTempScriptEditor" as tNewEditorName
       delete stack "revTempScriptEditor"
    else
       clone invisible revScriptEditorTemplate() as tNewEditorName
+      set the behavior of stack tNewEditorName to the long id of stack revIDEScriptEditorBehavior("stack")
    end if
    
    put the long id of it into tEditor
+   send "setBehaviors" to tEditor
+   
    if tTemplateVisibility then
       set the visible of revScriptEditorTemplate() to true
    end if
