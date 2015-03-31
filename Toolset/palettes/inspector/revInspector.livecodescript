@@ -43,8 +43,11 @@ end preOpenStack
 on openStack   
    lock screen
    set the visible of me to true
+   
+   # BB 31/03/2015 Commented this out because it's causing a double redraw. The inspector appears to get a selected object changed after opening.
    # Render the inspector for the given selected object
-   ideSelectedObjectChanged
+   --ideSelectedObjectChanged
+   
    unlock screen
 end openStack
 
@@ -133,6 +136,7 @@ private on inspectorGenerate
    if there is not a group "template" then
       create group "template"
       create field "label" in group "template"
+      set the topleft of field "label" of group "template" to the topleft of group "template"
    end if
    unlock messages
    
@@ -209,20 +213,20 @@ private on inspectorLayout
          lock messages
          set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
-         set the topleft of group tElement["label"] of me to tLeft,tTop
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
-         
+        
          local tHeight
          put the editorHeight of group tElement["label"] of me into tHeight
          if tHeight > 0 then
+            set the topleft of group tElement["label"] of me to tLeft,tTop
             add tHeight + tEditorPadding to tTop
          else
             lock messages
-            set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
+            //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
             set the topleft of group tElement["label"] of me to tLeft,tTop
-            add the height of group tElement["label"] of me + tEditorPadding to tTop
             unlock messages
+            add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
          end if
       end if
    end repeat
@@ -236,6 +240,7 @@ private on inspectorLayout
    set the top of me to tStackTop
    unlock messages
    unlock screen
+   put the milliseconds && "inspector laying out" & return after msg
 end inspectorLayout
 
 # Sent when the user changes the section
