@@ -107,7 +107,7 @@ end editorValue
 
 on updateProperty
   if sAllowUpdate is true then
-     editorValueChanged sPropertyInfo["property_name"], sValue
+     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue
      put false into sAllowUpdate
    end if
 end updateProperty
