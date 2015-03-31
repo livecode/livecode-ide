@@ -3687,6 +3687,26 @@ function revIDEDefaultExtensionIcon pType
    end switch
 end revIDEDefaultExtensionIcon
 
+function revIDEScriptEditorBehavior pWhich
+   local tPathToBehaviors
+   put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
+   switch pWhich
+      case "editor"
+         return tPathToBehaviors & slash & "revseeditorbehavior.livecodescript"
+      case "handlerlist"
+         return tPathToBehaviors & slash & "revsehandlerlistbehavior.livecodescript"
+      case "menubar"
+         return tPathToBehaviors & slash & "revsemenubarbehavior.livecodescript"
+      case "scripttabs"
+         return tPathToBehaviors & slash & "revsescripttabsbehavior.livecodescript"
+      case "toolbar"
+         return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
+      case "stack"
+      default
+         return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+   end switch
+end revIDEScriptEditorBehavior
+
 #############
 # Data grid
 #############

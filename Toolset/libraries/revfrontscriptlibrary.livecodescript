@@ -244,7 +244,7 @@ private command _editScriptNew pObject
    
    # MW-2012-02-21: If we are editing the "Template Stack" behavior then we create a new
    #   window in 'special' mode.
-   if revRuggedId(the long id of button "Template Stack" of stack "revNewScriptEditor") is tObject then
+   if revRuggedId(the long id of stack revIDEScriptEditorBehavior("stack")) is tObject then
       revEditScriptInNewWindow pObject, true
       exit _editScriptNew
    end if
