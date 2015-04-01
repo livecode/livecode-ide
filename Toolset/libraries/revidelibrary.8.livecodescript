@@ -1304,6 +1304,7 @@ end revIDEMessages
  
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
+   lock screen
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
    //if the tool is "browse tool" and pMessage is not "ideToolChanged" then exit revIDEMessageSend
    
@@ -1374,6 +1375,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
       
       --put "SENT" && the milliseconds && pMessage && "sent to" && tObjectID & return & line 1 to 20 of msg into msg
    end repeat
+   unlock screen
 end revIDEMessageSend
 
 #############
@@ -3602,47 +3604,47 @@ function revIDEPropertySections
    return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
-function revIDEFontawesomeNameToCodepoint pName
+function revIDESectionNameToIconName pName
    switch pName
       case "basic"
-         return "f015"
+         return "home"
          break
       case "color"
       case "colour"
       case "colors"
       case "colours"
-         return "f040"
+         return "pencil"
          break
       case "image"
       case "icons"
-         return "f03e"
+         return "picture"
          break
       case "font"
       case "text"
-         return "f031"
+         return "font"
          break
       case "position"
-         return "f047"
+         return "move"
          break
       case "effects"
       case "effect"
-         return "f0d0"
+         return "magic"
          break
       case "custom"
-         return "f1c0"
+         return "database"
          break
 	  // AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section icon for the property inspector
       case "table"
-         return "f0ce"
+         return "table"
          break
       case "data grid"
          return "f00b"
          break
       default
-         return "f00d"
+         return "remove"
          break
    end switch
-end revIDEFontawesomeNameToCodepoint
+end revIDESectionNameToIconName
 
 function revIDEPaletteResourcePath pFilename
    local tPalettePath

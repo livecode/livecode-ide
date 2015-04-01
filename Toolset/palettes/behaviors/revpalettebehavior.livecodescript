@@ -56,7 +56,7 @@ on showFrameItem pName
    if tIndex is not a number then exit showFrameItem
    
    put false into sData[tIndex]["hidden"] 
-   layoutFrame
+   generateFrame
 end showFrameItem
 
 on hideFrameItem pName
@@ -65,7 +65,7 @@ on hideFrameItem pName
    if tIndex is not a number then exit hideFrameItem
    
    put true into sData[tIndex]["hidden"] 
-   layoutFrame
+   generateFrame
 end hideFrameItem
 
 on hiliteFrameItem pName
@@ -77,19 +77,11 @@ on hiliteFrameItem pName
    if tIndex is not a number then exit hiliteFrameItem
    
    put true into sData[tIndex]["selected"] 
-   __frameRehighlight
+   set the selectedNavItem of widget "header_background" of group "background" of me to pName
+   
    unlock messages
    unlock screen
 end hiliteFrameItem
-
-on unhiliteFrameItem pName
-   local tIndex
-   put __frameItemNameToIndex(pName) into tIndex
-   if tIndex is not a number then exit unhiliteFrameItem
-   
-   put false into sData[tIndex]["selected"] 
-   __frameRehighlight
-end unhiliteFrameItem
 
 on disableFrameItem pName
    if __frameItemNameToIndex(pName) is not a number then exit disableFrameItem
@@ -127,116 +119,190 @@ on clearFrameNavigationData
    end repeat
 end clearFrameNavigationData
 
+private on appendMenuItem pNavItem, @xMenuArray
+   local tMenuItemA
+   
+   local tPreferenceValue
+   put revIDEGetPreference(pNavItem["name"]) into tPreferenceValue
+   
+   put pNavItem["label"] into tMenuItemA["label"]
+   put pNavItem["name"] into tMenuItemA["name"]
+   switch pNavItem["value_type"]
+      case "enum"
+         if tPreferenceValue is empty then put item 1 of pNavItem["value"] into tPreferenceValue
+         local tItemCount
+         repeat for each item tItem in pNavItem["value"]
+            add 1 to tItemCount
+            put tItem into tMenuItemA["menu"][tItemCount]["label"]
+            if tItem is tPreferenceValue then
+               put true into tMenuItemA["menu"][tItemCount]["checked"]
+            else
+               put false into tMenuItemA["menu"][tItemCount]["checked"]
+            end if
+         end repeat
+         break
+      case "set"
+         repeat for each item tItem in pNavItem["value"]
+            add 1 to tItemCount
+            # Parse out the value and label from the item
+            set the itemdel to ":"
+            local tValue, tLabel
+            if the number of items of tItem > 1 then
+               put item 1 of tItem into tValue
+               put item 2 of tItem into tLabel
+            else
+               put tItem into tLabel
+               put tItem into tValue
+            end if
+            
+            put tLabel into tMenuItemA["menu"][tItemCount]["label"]
+            put tValue into tMenuItemA["menu"][tItemCount]["name"]
+            
+            # Check whether the set item is in the preference value
+            set the itemdel to comma
+            if tValue is among the items of tPreferenceValue then
+               put true into tMenuItemA["menu"][tItemCount]["checked"]
+            else
+               put false into tMenuItemA["menu"][tItemCount]["checked"]
+            end if
+         end repeat
+         break
+      case "boolean"
+         if tPreferenceValue is true then
+            put true into tMenuItemA["checked"]
+         else
+            put false into tMenuItemA["checked"]
+         end if
+         break
+      default
+         break
+   end switch
+   
+   local tCount
+   put the number of elements in xMenuArray into tCount
+   add 1 to tCount
+   put tMenuItemA into xMenuArray[tCount]
+end appendMenuItem
+
+private function preferenceAction pMenuArray
+   local tDataA
+   put empty into tDataA
+   put "preferences" into tDataA["name"]
+   put "preferences" into tDataA["label"]
+   put "cog" into tDataA["icon"]
+   put pMenuArray into tDataA["menu"]
+   return tDataA
+end preferenceAction
+
 on generateFrame
    lock screen
    lock messages
-   
-   repeat with x = 1 to the number of cards of me
-      repeat while there is a group "background" of card x of me then
-         delete group "background" of card x of me
-      end repeat
-   end repeat
    
    reset the templategroup
    set the defaultstack to the long ID of me
    set the backgroundbehavior of the templategroup to true
    set the sharedbehavior of the templategroup to true
-   create group "background"
+   if there is not a group "background" of me then
+      create group "background"
+   end if
    reset the templategroup
    
-   set the textsize of group "background" of me to __textsize()
-   set the textfont of group "background" of me to "fontawesome"
-   
-   # Create the header and footer backgrounds
-   set the linesize of the templategraphic to 0
-   set the backgroundcolor of the templategraphic to TAB_DISABLED_COLOR
-   set the opaque of the templategraphic to true
+   --set the textsize of group "background" of me to __textsize()
    
    # Setup the template field
-   set the sharedtext of the templatefield to true
-   set the opaque of the templatefield to false
-   set the height of the templatefield to BAR_HEIGHT
-   set the style of the templatefield to "transparent"
-   set the autohilite of the templatefield to false
-   set the fixedlineheight of the templatefield to false
-   set the cFrameButton of the templatefield to 1
-   set the textColor of the templatefield to TAB_TEXT_COLOR
-   set the textAlign of the templatefield to "center"
-   set the traversalon of the templatefield to false
-   set the showfocusborder of the templatefield to false
-   set the locktext of the templatefield to true
-   set the margins of the templatefield to 1,7,1,0
-   set the borderwidth of the templatefield to 1
-   set the threed of the templatefield to false
-   set the bordercolor of the templatefield to TAB_DISABLED_COLOR
-   set the dontwrap of the templatefield to true
+   --set the height of the templatefield to BAR_HEIGHT
+   --set the textColor of the templatefield to TAB_TEXT_COLOR
+   --set the textAlign of the templatefield to "center"
+   --set the margins of the templatefield to 1,7,1,0
+   --set the bordercolor of the templatefield to TAB_DISABLED_COLOR
    
    # Generate all the button fields 
    
    local tPreferences, tNavigation, tHeaderAction
+   local tHeaderActionDataA, tHeaderActionCount
+   local tHeaderNavDataA, tHeaderNavCount
+   local tFooterActionDataA, tFooterActionCount
    put false into tPreferences
    put false into tNavigation
    put false into tHeaderAction
    
+   local tPreferenceMenuA, tDataA, tSelected
+   # Gather the data to set on the widget(s)
    repeat for each element tNavItem in sData
-      if tNavItem["type"] is "preference" and there is not a graphic "header_background" of group "background" of me then create graphic "header_background" in group "background" of me
-      if tNavItem["location"] is "header" and there is not a graphic "header_background" of group "background" of me then create graphic "header_background" in group "background" of me
-      if tNavItem["location"] is "footer" and there is not a graphic "footer_background" of group "background" of me then create graphic "footer_background" in group "background" of me
-      if tNavItem["type"] is "navigation" then put true into tNavigation
-      if tNavItem["type"] is "action" and tNavItem["location"] is "header" then put true into tHeaderAction
-      
-      if tNavItem["type"] is "preference" then
-         put true into tPreferences
+      if tNavItem["hidden"] is true then
          next repeat
       end if
       
+      put empty into tDataA
+      put tNavItem["name"] into tDataA["name"]
+      put tNavItem["label"] into tDataA["label"]
+      put tNavItem["icon"] into tDataA["icon"]
+      --put tNavItem["icon_selected"] into tDataA["icon_selected"]
       
-      set the name of the templatefield to tNavItem["name"]
-      set the tooltip of the templatefield to tNavItem["label"]
-      set the cType of the templatefield to tNavItem["type"]
-      
-      if tNavItem["type"] is "toggle" and tNavItem["selected"] is "true" then
-         if the number of characters of tNavItem["icon_selected"] is 4 then
-            set the text of the templatefield to numtocodepoint("0x" & tNavItem["icon_selected"])
-         end if
-      else if tNavItem["type"] is "list" then
-         set the text of the templatefield to item 1 of line 1 of tNavItem["label"]
-      else if tNavItem["type"] is "navigation" then
-         if sNavStyle is "names" then
-            set the text of the templatefield to tNavItem["label"]
-         else
-            set the text of the templatefield to numtocodepoint("0x" & tNavItem["icon"])
-         end if
-      else
-         if the number of characters of tNavItem["icon"] is 4 then
-            set the text of the templatefield to numtocodepoint("0x" & tNavItem["icon"])
-         end if
-      end if
-      
-      create field in group "background" of me
+      switch tNavItem["type"]
+         case "preference"
+            # Add preference data to the preference menu
+            appendMenuItem tNavItem, tPreferenceMenuA
+            break
+         case "navigation"
+            add 1 to tHeaderNavCount
+            put tDataA into tHeaderNavDataA[tHeaderNavCount]
+            if tNavItem["selected"] then
+               put tNavItem["name"] into tSelected
+            end if
+            break
+         case "action"
+            if tNavItem["location"] is "header" then
+               add 1 to tHeaderActionCount
+               put tDataA into tHeaderActionDataA[tHeaderActionCount]
+            else if tNavItem["location"] is "footer" then
+               add 1 to tFooterActionCount
+               put tDataA into tFooterActionDataA[tFooterActionCount]
+            end if
+            break
+      end switch
    end repeat
    
-   if tNavigation is true then 
-      create graphic "tab_line_cover" in group "background" of me
-      set the backgroundcolor of graphic "tab_line_cover" of group "background" of me to the backgroundcolor of this card
-      set the height of graphic "tab_line_cover" of group "background" of me to 1
+   # If we have any preferences, add that to the beginning of the header actions
+   if tPreferenceMenuA is not empty then
+      put preferenceAction(tPreferenceMenuA) into tHeaderActionDataA[0]
    end if
    
-   # Create a seperator if there is a preference and some header actions
-   if tHeaderAction is true and tPreferences is true then
-      create graphic "pref_line" in group "background" of me
+   if tHeaderNavCount is not 0 or tHeaderActionCount is not 0 then
+      if there is not a widget "header_background" of group "background" of me then 
+         start editing group "background" of me
+         create widget "header_background" as "com.livecode.widget.paletteActions"
+         stop editing
+      end if
+      set the isHeader of widget "header_background" of group "background" of me to true
+      set the navData of widget "header_background" of group "background" of me to tHeaderNavDataA
+      set the actionData of widget "header_background" of group "background" of me to tHeaderActionDataA
+      if sNavStyle is "icons" then
+         set the showNavIcons of widget "header_background" of group "background" of me to true
+      else
+         set the showNavIcons of widget "header_background" of group "background" of me to false
+      end if
+      set the selectedNavColor of widget "header_background" to revIDEColor("edition_color")
+   else
+      if there is a widget "header_background" of group "background" of me then 
+         delete widget "header_background" of group "background" of me 
+      end if
    end if
    
-   # Generate a preferences button and a bar 
-   if tPreferences is true then
-      set the text of the templatefield to numtocodepoint("0xf013")
-      set the name of the templatefield to "preferences"
-      set the tooltip of the templatefield to "Preferences"
-      create field in group "background" of me
+   if tFooterActionCount is not 0 then
+      if there is not a widget "footer_background" of group "background" of me then 
+         start editing group "background" of me
+         create widget "footer_background" as "com.livecode.widget.paletteActions"
+         stop editing
+      end if
+      set the isHeader of widget "footer_background" of group "background" of me to false
+      set the actionData of widget "footer_background" of group "background" of me to tFooterActionDataA
+      set the navData of widget "footer_background" of group "background" of me to empty
+   else
+      if there is a widget "footer_background" of group "background" of me then 
+         delete widget "footer_background" of group "background" of me 
+      end if
    end if
-   
-   reset the templategraphic
-   reset the templatefield
    
    layoutFrame
    
@@ -258,31 +324,11 @@ function barHeight pSize
 end barHeight
 
 function barRight pSize
-   local tNumNavItems, tWidth, tTotalWidth
-   put the number of elements of sData into tNumNavItems
-   
-   if sNavStyle is "icons" then
-      put ITEM_SPACING  into tWidth
-      return tNumNavItems*tWidth + (tNumNavItems/4)*(item 1 of HEADER_NAVIGATION_MARGINS) + (tNumNavItems/4)*(item 3 of HEADER_NAVIGATION_MARGINS)
-      
-   else
-      local tKeys
-      put the keys of sData into tKeys
-      sort lines of tKeys ascending numeric
-      
-      put 0 into tTotalWidth
-      repeat for each line tKey in tKeys
-         if there is not a field sData[tKey]["name"] of group "background" of me then next repeat
-         
-         if sData[tKey]["hidden"] is true then
-            hide field sData[tKey]["name"] of group "background" of me
-            next repeat
-         end if
-         
-         add the width of field sData[tKey]["name"] of group "background" of me to tTotalWidth
-      end repeat
-      return tTotalWidth
+   if there is a widget "header_background" of group "background" of me then
+      return the navBarRight of widget "header_background" of group "background" of me
    end if
+   
+   return 0
 end barRight
 
 on layoutFrame
@@ -350,14 +396,14 @@ on layoutFrame
          break
    end switch
    
-   if there is a graphic "header_background" of group "background" of me then 
-      set the rect of graphic "header_background" of group "background" of me to 0,BAR_HEIGHT-1,the width of me,BAR_HEIGHT
+   if there is a widget "header_background" of group "background" of me then 
+      set the rect of widget "header_background" of group "background" of me to 0,0,the width of me,BAR_HEIGHT
    end if
-   if there is a graphic "footer_background" of group "background" of me then 
-      set the rect of graphic "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me - BAR_HEIGHT + 1
+   if there is a widget "footer_background" of group "background" of me then 
+      set the rect of widget "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me
    end if
    
-   # Setup the key markers for positions
+   /*
    local tNavTop, tNavLeft
    put 0 into tNavTop
    put BAR_MARGIN / 2 into tNavLeft
@@ -384,66 +430,7 @@ on layoutFrame
    local tFooterActionsTop, tFooterActionsLeft
    put the height of me - BAR_HEIGHT into tFooterActionsTop
    put BAR_MARGIN into tFooterActionsLeft
-   
-   # Order the keys of sData so that we lay everything out in the right order
-   local tKeys
-   put the keys of sData into tKeys
-   sort lines of tKeys ascending numeric
-   
-   repeat for each line tKey in tKeys
-      if there is not a field sData[tKey]["name"] of group "background" of me then next repeat
-      
-      if sData[tKey]["hidden"] is true then
-         hide field sData[tKey]["name"] of group "background" of me
-         next repeat
-      end if
-      
-      set the textsize of field sData[tKey]["name"] of group "background" of me to tIconTextSize
-      set the height of field sData[tKey]["name"] of group "background" of me to BAR_HEIGHT
-      set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-      show field sData[tKey]["name"] of group "background" of me
-      
-      switch sData[tKey]["type"]
-         case "navigation"
-            set the margins of field sData[tKey]["name"] of group "background" of me to HEADER_NAVIGATION_MARGINS
-            if sNavStyle is "names" then
-               set the textsize of field sData[tKey]["name"] of group "background" of me to tTextSize
-               set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-            end if
-            
-            set the top of field sData[tKey]["name"] of group "background" of me to tNavTop
-            set the left of field sData[tKey]["name"] of group "background" of me to tNavLeft
-            
-            add the formattedwidth of field sData[tKey]["name"] of group "background" of me to tNavLeft
-            break
-         case "action"
-         case "toggle"
-            if sData[tKey]["location"] is "header" then
-               set the top of field sData[tKey]["name"] of group "background" of me to tHeaderActionsTop
-               set the right of field sData[tKey]["name"] of group "background" of me to tHeaderActionsRight
-               subtract the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING from tHeaderActionsRight
-               break
-            else
-               set the margins of field sData[tKey]["name"] of group "background" of me to FOOTER_ACTION_MARGINS
-               set the textsize of field sData[tKey]["name"] of group "background" of me to tIconTextSize * 0.85
-               set the width of field sData[tKey]["name"] of group "background" of me to the formattedwidth of field sData[tKey]["name"] of group "background" of me
-               set the top of field sData[tKey]["name"] of group "background" of me to tFooterActionsTop
-               set the left of field sData[tKey]["name"] of group "background" of me to tFooterActionsLeft
-               add the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING to tFooterActionsLeft
-               break
-            end if
-            break
-         case "list"
-            set the margins of field sData[tKey]["name"] of group "background" of me to HEADER_NAVIGATION_MARGINS
-            set the textsize of field sData[tKey]["name"] of group "background" of me to tTextSize
-            set the top of field sData[tKey]["name"] of group "background" of me to tHeaderActionsTop
-            set the right of field sData[tKey]["name"] of group "background" of me to tHeaderActionsRight
-            subtract the width of field sData[tKey]["name"] of group "background" of me + ITEM_SPACING from tHeaderActionsRight
-            break
-      end switch
-   end repeat
-   
-   __hiliteFrameItem
+   */
    unlock messages
    unlock screen
 end layoutFrame
@@ -457,24 +444,12 @@ after resizeStack
 end resizeStack
 
 before openCard
-   layoutFrame
+   generateFrame
 end openCard
 
-before mouseEnter
-   if the cFrameButton of the target is not 1 then exit mouseEnter
-   if the disabled of the target is true then exit mouseEnter
-   if the showborder of the target is true then exit mouseEnter
-   
-   set the textColor of the target to TAB_HOVER_TEXT_COLOR
-end mouseEnter
-
-before mouseLeave
-   if the cFrameButton of the target is not 1 then exit mouseLeave
-   if the disabled of the target is true then exit mouseLeave
-   if the showborder of the target is true then exit mouseLeave
-   
-   set the textColor of the target to TAB_TEXT_COLOR
-end mouseLeave
+after openCard
+   send "resizeStack" to this stack
+end openCard
 
 after preOpenStack
    put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
@@ -486,49 +461,30 @@ after preOpenStack
 end preOpenStack
 
 before idePreferenceChanged
-   layoutFrame
+   generateFrame
 end idePreferenceChanged
 
 after idePreferenceChanged
    dispatch "resizeStack" to this card
 end idePreferenceChanged
 
-before mouseUp
-   if the cFrameButton of the target is not 1 then exit mouseUp
-   if the disabled of the target is true then exit mouseUp
-   if the short name of the target is "preferences" then
-      __preferencePopup
-      exit mouseUp
-   end if
-   if the cType of the target is "list" then
-      __listPopup the short name of the target
-      exit mouseUp
-   end if
-   
-   lock screen
-   # Get index
-   local tIndex
-   put __frameItemNameToIndex(the short name of the target) into tIndex
-   
+private on __doCallback pDataItem
    # Get callback info
    local tMessage, tTarget, tParameter
-   put sData[tIndex]["message"] into tMessage
-   put sData[tIndex]["target"] into tTarget
-   put sData[tIndex]["parameter"] into tParameter   
+   put pDataItem["message"] into tMessage
+   put pDataItem["target"] into tTarget
+   put pDataItem["parameter"] into tParameter   
    
    # Set highlight
-   switch sData[tIndex]["type"] 
+   switch pDataItem["type"] 
       case "navigation" 
          __unhiliteFrameNavigation
-         put true into sData[tIndex]["selected"]
          dispatch tMessage to tTarget with tParameter
          break
       case "toggle"
-         if sData[tIndex]["selected"] is true then
-            put false into sData[tIndex]["selected"]
+         if pDataItem["selected"] is true then
             dispatch tMessage to tTarget with false
          else
-            put true into sData[tIndex]["selected"]
             dispatch tMessage to tTarget with true
          end if
          break
@@ -536,40 +492,50 @@ before mouseUp
          dispatch tMessage to tTarget with tParameter
          break
    end switch
-   
-   __frameRehighlight
+end __doCallback
+
+before actionSelected pActionName
+   lock screen
+   # Get index
+   local tIndex
+   put __frameItemNameToIndex(pActionName) into tIndex
+   __doCallback sData[tIndex]
    unlock screen
-end mouseUp
+end actionSelected
+
+before navSelected pNavName
+   lock screen
+   # Get index
+   local tIndex
+   put __frameItemNameToIndex(pNavName) into tIndex
+   __doCallback sData[tIndex]
+   put true into sData[tIndex]["selected"]
+   unlock screen
+end navSelected
 
 before menupick pItem
-   switch the short name of the target
-      case "preferences_popup"
-         # Find out the name of the preference
-         set the itemdel to "|"
-         local tIndex, tName
-         put item 1 of pItem into tName
-         put __frameItemNameToIndex(tName) into tIndex
-         
-         # Get the callback from the data array
-         local tMessage, tTarget
-         put sData[tIndex]["message"] into tMessage
-         put sData[tIndex]["target"] into tTarget
-         
-         if not exists(tTarget) then exit menupick
-         
-         local tValue
-         if the number of items of pItem is 1 then
-            put not revIDEGetPreference(tName) into tValue
-         else
-            put item 2 of pItem into tValue
-         end if
-         
-         dispatch tMessage to tTarget with tName,tValue
-         break
-      case "list_popup"
-         
-         break
-   end switch
+   # Find out the name of the preference
+   set the itemdel to "|"
+   local tIndex, tName
+   put item 1 of pItem into tName
+   put __frameItemNameToIndex(tName) into tIndex
+   
+   # Get the callback from the data array
+   local tMessage, tTarget
+   put sData[tIndex]["message"] into tMessage
+   put sData[tIndex]["target"] into tTarget
+   
+   if not exists(tTarget) then exit menupick
+   
+   local tValue
+   if the number of items of pItem is 1 then
+      put not revIDEGetPreference(tName) into tValue
+   else
+      put item 2 of pItem into tValue
+   end if
+   
+   dispatch tMessage to tTarget with tName,tValue
+   break
 end menupick
 
 getProp contentRect
@@ -637,69 +603,26 @@ private function __frameItemNameToIndex pName
    end repeat
 end __frameItemNameToIndex
 
-private on __frameRehighlight
-   repeat for each line tIndex in the keys of sData
-      if sData[tIndex]["selected"] is true then
-        __hiliteFrameItem tIndex
-     else
-        __unhiliteFrameItem tIndex
-      end if
-   end repeat
-end __frameRehighlight
-
-local sHilitedInded
+local sHilitedIndex
 private on __hiliteFrameItem pIndex
-   if pIndex is empty then put sHilitedInded into pIndex
-   else put pIndex into sHilitedInded
+   if pIndex is empty then put sHilitedIndex into pIndex
+   else put pIndex into sHilitedIndex
    
-   if sHilitedInded is not a number then return empty
+   if sHilitedIndex is not a number then return empty
    
    lock screen
    lock messages
    local tName
    put sData[pIndex]["name"] into tName
-   if there is not a field tName of group "background" of me then exit __hiliteFrameItem
    
    if sData[pIndex]["type"] is "navigation" then
-      if TAB_SELECTED_COLOR is not empty then
-         set the opaque of field tName of group "background" of me to true
-         set the backgroundcolor of field tName of group "background" of me to TAB_SELECTED_COLOR
-         set the backgroundcolor of graphic "tab_line_cover" of group "background" of me to TAB_SELECTED_COLOR
-      end if
-      set the textcolor of field tName of group "background" of me to TAB_SELECTED_TEXT_COLOR
-      set the showborder of field tName of group "background" of me to true
-      set the height of field tName of group "background" of me to BAR_HEIGHT * 0.9
-      set the bottom of field tName of group "background" of me to the bottom of graphic "header_background" of group "background" of me
-      
-      set the width of graphic "tab_line_cover" of group "background" of me to the width of field tName of group "background" of me - 2
-      set the left of graphic "tab_line_cover" of group "background" of me to the left of field tName of group "background" of me + 1
-      set the bottom of graphic "tab_line_cover" of group "background" of me to the bottom of graphic "header_background" of group "background" of me
+      set the selectedNavItem of widget "header_background" of group "background" of me to tName
    else if sData[pIndex]["type"] is "toggle" then 
       set the text of field sData[pIndex]["name"] to numtocodepoint("0x" & sData[pIndex]["icon_selected"])
    end if
    unlock messages
    unlock screen
 end __hiliteFrameItem
-
-private on __unhiliteFrameItem pIndex
-   lock screen
-   lock messages
-   local tName
-   put sData[pIndex]["name"] into tName
-   if there is not a field tName of group "background" of me then exit __unhiliteFrameItem
-   
-   if sData[pIndex]["type"] is "navigation" then
-      set the opaque of field tName of group "background" of me to false
-      set the textColor of field tName of group "background" of me to TAB_TEXT_COLOR
-      set the showborder of field tName of group "background" of me to false
-      set the height of field tName of group "background" of me to BAR_HEIGHT
-      set the top of field tName of group "background" of me to 0
-   else if sData[pIndex]["type"] is "toggle" then 
-      set the text of field sData[pIndex]["name"] to numtocodepoint("0x" & sData[pIndex]["icon"])
-   end if
-   unlock messages
-   unlock screen
-end __unhiliteFrameItem
 
 private on __unhiliteFrameNavigation
    repeat for each line tIndex in the keys of sData
@@ -736,96 +659,6 @@ private on __listPopup pName
    unlock screen
    popup button "list_popup" of group "background" of me at the loc of the target
 end __listPopup
-
-private on __preferencePopup
-   lock screen
-   lock messages
-   # Create the menu button
-   if there is not a button "preferences_popup" of group "background" of me then 
-      create button "preferences_popup" in group "background" of me
-      set the style of button "preferences_popup" of group "background" of me to "menu"
-      set the menumode of button "preferences_popup" of group "background" of me to "popup"
-      set the visible of button "preferences_popup" of group "background" of me to false
-   end if
-   
-   # Generate the menu items
-   local tMenuText, tData, tIndex
-   put sData into tData
-   --put the number of elements of tData + 1 into tIndex
-   
-   --put "revPaletteFrameSize" into tData[tIndex]["name"]
-   --put "Header // Footer Size" into tData[tIndex]["label"]
-   --put "preference" into tData[tIndex]["type"]
-   --put "enum" into tData[tIndex]["value_type"]
-   --put "small,medium,large" into tData[tIndex]["value"]
-   
-   repeat for each element tNavItem in tData
-      if tNavItem["type"] is "preference" then
-         local tMenuItemText
-         
-         local tPreferenceValue
-         put revIDEGetPreference(tNavItem["name"]) into tPreferenceValue
-         
-         switch tNavItem["value_type"]
-            case "enum"
-               if tPreferenceValue is empty then put item 1 of tNavItem["value"] into tPreferenceValue
-               put tNavItem["label"] & "/|" & tNavItem["name"] into tMenuItemText
-               repeat for each item tItem in tNavItem["value"]
-                  if tItem is tPreferenceValue then
-                     put return & tab & "!c" & tItem after tMenuItemText
-                  else
-                     put return & tab & tItem after tMenuItemText
-                  end if
-               end repeat
-               break
-            case "set"
-               put tNavItem["label"] & "/|" & tNavItem["name"] into tMenuItemText
-               repeat for each item tItem in tNavItem["value"]
-                  # Parse out the value and label from the item
-                  set the itemdel to ":"
-                  local tValue, tLabel
-                  if the number of items of tItem > 1 then
-                     put item 1 of tItem into tValue
-                     put item 2 of tItem into tLabel
-                  else
-                     put tItem into tLabel
-                     put tItem into tValue
-                  end if
-                  
-                  # Check whether the set item is in the preference value
-                  set the itemdel to comma
-                  if tValue is among the items of tPreferenceValue then
-                     put return & tab & "!c" & tValue after tMenuItemText
-                  else
-                     put return & tab & tValue after tMenuItemText
-                  end if
-               end repeat
-               break
-            case "boolean"
-               if tPreferenceValue is true then
-                  put "!c" & tNavItem["label"] & "/|" & tNavItem["name"] into tMenuItemText
-               else
-                  put tNavItem["label"] & "/|" & tNavItem["name"] into tMenuItemText
-               end if
-               break
-            case default
-               put tNavItem["label"] & "/|" & tNavItem["name"]  into tMenuItemText
-               break
-         end switch
-         
-         if tMenuText is empty then 
-            put tMenuItemText into tMenuText
-         else
-            put return & tMenuItemText after tMenuText
-         end if
-      end if
-   end repeat
-   set the text of button "preferences_popup" of group "background" of me to tMenuText
-   
-   unlock messages
-   unlock screen
-   popup button "preferences_popup" of group "background" of me at the loc of field "preferences" of group "background" of me
-end __preferencePopup
 
 function __textsize
    return round(BAR_HEIGHT * 0.6)

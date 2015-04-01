@@ -290,8 +290,8 @@ command revIDEShowMessageBox
    if the mode of stack "Message Box" is 0 then
       set the visible of stack "Message Box" to true
       go stack "Message Box"
-   else if line 1 of the openStacks is not "Message Box" then
-      if the selectedField is not "field 2" or the number of this card of stack "message box" is not 1 then
+   else if "Message Box" is not in the openStacks then
+      if the selectedField is not "message" or the number of this card of stack "message box" is not 1 then
          lock screen
          go card 1 of stack "Message box"
          set the title of stack "Message box" to "Message Box (Single Line)"
