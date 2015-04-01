@@ -168,3 +168,13 @@ on rowResize
    set the lockloc of me to false
    unlock screen
 end rowResize
+
+getProp rowMinWidth
+   local tMinWidth, tElement
+   put the formattedwidth of field "label" of me into tMinWidth
+   repeat for each line tProperty in sOrder
+      put sProperties[tProperty] into tElement
+      add the editorMinWidth of group tElement["property"] of me to tMinWidth
+   end repeat
+   return tMinWidth
+end rowMinWidth

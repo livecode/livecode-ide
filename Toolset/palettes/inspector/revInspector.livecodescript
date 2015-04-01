@@ -216,8 +216,9 @@ private on inspectorLayout
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
          
-         local tHeight
+         local tHeight, tRowWidth
          put the editorHeight of group tElement["label"] of me into tHeight
+         put the rowMinWidth of group tElement["label"] of me into tRowWidth
          
          lock messages
          if tHeight > 0 then
@@ -226,11 +227,23 @@ private on inspectorLayout
             //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
             add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
          end if
+         
+         if tRowWidth > tInspectorWidth then
+            put tRowWidth into tInspectorWidth
+         end if
          unlock messages
       end if
    end repeat
-
+   
    lock messages
+   local tStackLeft
+   set the minWidth of me to (tInspectorWidth + tMargin * 2)
+   if tInspectorWidth > tWidth then
+      put the left of me into tStackLeft
+      set the width of me to (tInspectorWidth + tMargin * 2)
+      set the left of me to tStackLeft
+   end if
+   
    local tStackTop
    put the top of me into tStackTop
    set the minheight of me to tTop + (tMargin * 2)
