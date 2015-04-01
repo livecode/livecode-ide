@@ -38,15 +38,14 @@ on preOpenStack
    addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    
    set the navigationDisplayStyle of me to "icons"
+   
+   # Render the inspector for the given selected object
+   ideSelectedObjectChanged
 end preOpenStack
 
 on openStack   
    lock screen
    set the visible of me to true
-   
-   # Render the inspector for the given selected object
-   ideSelectedObjectChanged
-   
    unlock screen
 end openStack
 
@@ -445,9 +444,13 @@ private on inspectorFill
 end inspectorFill
 
 private on inspectorClear
+   if the number of groups of card 1 of me is 0 then
+      exit inspectorClear
+   end if
+   
    lock screen
    lock messages
-   repeat while the number of groups of card 1 me is not 1
+   repeat while the number of groups of card 1 of me is not 1
       if the short name of group 2 of me is "background" then
          delete group 1 of card 1 of me
       else
