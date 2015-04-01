@@ -623,7 +623,7 @@ component Databases.Windows
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
 		if TargetEdition is "Commercial" then
-			executable windows:dboracle.dll
+			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
@@ -643,7 +643,7 @@ component Databases.MacOSX
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
 		if TargetEdition is "Commercial" then
-			executable macosx:dboracle.bundle
+			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
