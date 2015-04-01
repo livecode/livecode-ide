@@ -206,29 +206,30 @@ private on inspectorLayout
    put inspectorSectionGet() into tSelectedGroup
    
    lock screen
+   local tInspectorWidth
    repeat for each element tElement in sPropertyInfo[tSelectedGroup]["grouplist"]
       if there is a group tElement["label"] of me then
          lock messages
+         set the topleft of group tElement["label"] of me to tLeft,tTop
          set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
-        
+         
          local tHeight
          put the editorHeight of group tElement["label"] of me into tHeight
+         
+         lock messages
          if tHeight > 0 then
-            set the topleft of group tElement["label"] of me to tLeft,tTop
             add tHeight + tEditorPadding to tTop
          else
-            lock messages
             //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
-            set the topleft of group tElement["label"] of me to tLeft,tTop
-            unlock messages
             add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
          end if
+         unlock messages
       end if
    end repeat
-   
+
    lock messages
    local tStackTop
    put the top of me into tStackTop
