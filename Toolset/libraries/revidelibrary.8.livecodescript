@@ -1082,14 +1082,15 @@ function __customPropertyData pLongID
    
    put the customPropertySets of pLongID into tSets
    if tSets is empty then
-      put the customProperties of pLongID into tArray--["customKeys"]
+      put the customProperties of pLongID into tArray[""]--["customKeys"]
    else
       set the customPropertySet of pLongID to empty
-      put the customProperties of pLongID into tArray[""]--["customKeys"]
-      
+      get the customProperties of pLongID
+      put it into tArray[""]--["customKeys"]
       repeat for each line tSet in tSets
          set the customPropertySet of pLongID to tSet
-         put the customProperties of pLongID into tArray[tSet]
+         get the customProperties of pLongID
+         put it into tArray[tSet]--["customKeys"]
       end repeat
       set the customPropertySet of pLongID to empty
    end if
@@ -2356,7 +2357,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-   
+   local lDataGrid
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -3500,12 +3501,19 @@ end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pValue
    repeat for each line tObject in pObjectList
-      repeat for each key tKey in pValue
-         set the custompropertyset of tObject to tKey
-         repeat for each key tProp in pValue[tKey]
-            set the tProp of tObject to pValue[tKey][tProp]
+      if pValue is not empty then
+         repeat for each key tKey in pValue
+            set the custompropertyset of tObject to tKey
+            set the customKeys of tObject to the keys of pValue[tKey]
+            repeat for each key tProp in pValue[tKey]
+               set the tProp of tObject to pValue[tKey][tProp]
+            end repeat
          end repeat
-      end repeat
+      else
+         set the custompropertyset of tObject to empty
+         set the customKeys of tObject to empty
+      end if
+      set the custompropertysets of tObject to the keys of pValue
    end repeat
 end revIDECustomPropertySet
 

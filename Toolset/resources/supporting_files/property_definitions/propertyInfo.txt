@@ -30,7 +30,7 @@ colorOverlay	ColorOverlay	Effects	com.livecode.pi.graphicEffect	true	false
 currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1	
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0	
-customProperties	Custom Properties	Custom	com.livecode.pi.array	true	false		no_default			
+customProperties	Custom Properties	Custom	com.livecode.pi.customprops	true	false		no_default			
 dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
 decorations	Controls	Basic	com.livecode.pi.enum	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			

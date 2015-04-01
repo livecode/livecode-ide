@@ -112,11 +112,15 @@ on clearFrameData
 end clearFrameData
 
 on clearFrameNavigationData
-   repeat for each key tKey in sData
-      if sData[tKey]["type"] is "navigation" then
-         delete variable sData[tKey]
+   local tNewDataA, tCount
+   repeat for each element tElement in sData
+      if tElement["type"] is "navigation" then
+         next repeat
       end if
+      add 1 to tCount
+      put tElement into tNewDataA[tCount]
    end repeat
+   put tNewDataA into sData
 end clearFrameNavigationData
 
 private on appendMenuItem pNavItem, @xMenuArray
