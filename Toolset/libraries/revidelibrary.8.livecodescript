@@ -2357,7 +2357,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-   local lDataGrid
+
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -2369,6 +2369,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
          put item 1 of tCreateRect + the cTabButtonWidth of stack "revPreferences" into item 3 of tCreateRect
          put item 2 of tCreateRect + the cTabButtonHeight of stack "revPreferences" into item 4 of tCreateRect
          
+         local lDataGrid
          put true into lDataGrid -- select data grid at end not single control
          
          unlock messages
