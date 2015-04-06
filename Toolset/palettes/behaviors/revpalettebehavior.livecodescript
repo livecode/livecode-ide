@@ -84,25 +84,27 @@ on hiliteFrameItem pName
 end hiliteFrameItem
 
 on disableFrameItem pName
-   if __frameItemNameToIndex(pName) is not a number then exit disableFrameItem
-   if there is not a field pName of group "background" of me then exit disableFrameItem
+   local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit disableFrameItem
    
    lock screen
    lock messages
-   disable field pName of group "background" of me
-   set the textcolor of field pName of group "background" of me to TAB_DISABLED_COLOR
-    unlock messages
+   put false into sData[tIndex]["enabled"]
+   generateFrame
+   unlock messages
    unlock screen
 end disableFrameItem
 
 on enableFrameItem pName
-   if __frameItemNameToIndex(pName) is not a number then exit enableFrameItem
-   if there is not a field pName of group "background" of me then exit enableFrameItem
+  local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit enableFrameItem
    
    lock screen
    lock messages
-   enable field pName of group "background" of me
-   set the textcolor of field pName of group "background" of me to TAB_TEXT_COLOR
+   put true into sData[tIndex]["enabled"] 
+   generateFrame
    unlock messages
    unlock screen
 end enableFrameItem
@@ -195,6 +197,7 @@ private function preferenceAction pMenuArray
    put "preferences" into tDataA["label"]
    put "cog" into tDataA["icon"]
    put pMenuArray into tDataA["menu"]
+   put true into tDataA["enabled"]
    return tDataA
 end preferenceAction
 
@@ -241,6 +244,7 @@ on generateFrame
       put tNavItem["name"] into tDataA["name"]
       put tNavItem["label"] into tDataA["label"]
       put tNavItem["icon"] into tDataA["icon"]
+      
       --put tNavItem["icon_selected"] into tDataA["icon_selected"]
       
       switch tNavItem["type"]
@@ -257,6 +261,7 @@ on generateFrame
             end if
             break
          case "action"
+            put tNavItem["enabled"] into tDataA["enabled"]
             if tNavItem["location"] is "header" then
                add 1 to tHeaderActionCount
                put tDataA into tHeaderActionDataA[tHeaderActionCount]
