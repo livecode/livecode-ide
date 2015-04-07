@@ -1015,7 +1015,7 @@ command revInternal__InitialiseLibraries
    try 	 	
       revInternal__LoadLibrary "revidedocumentationlibrary"	
       revInternal__LoadLibrary "revIDELibrary.8"	 
-      insert script of stack "revidemessagehandler" into front 	 	
+      insert script of stack "revidemessagehandler" into front
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
    end try 
@@ -1045,6 +1045,8 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revProfilesLibrary"
    revInternal__LoadLibrary "revDatabaseLibrary"
    revInternal__LoadLibrary "revTableLibrary"
+   revInternal__LoadLibrary "revAnalyticsLibrary"
+   insert the script of stack "revAnalyticsFrontscriptLibrary" into front
    
    // EJB - New IDE Libraries
    
