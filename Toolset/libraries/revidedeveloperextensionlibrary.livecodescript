@@ -525,12 +525,29 @@ on revIDEDeveloperExtensionEditScript pFolder
    local tFile
    put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
    
+   # AL-2015-04-01: [[ Bug 15130 ]] First check to see if there is an existing association
    launch document tFile
-   if the result is "no association" then
+   if the result is not empty then
+      # AL-2015-04-01: [[ Bug 15130 ]] Check to see if the text editor preference is set
+      local tEditor
+      put revIDEGetPreference("LCB_textEditor") into tEditor
+      if tEditor is not empty then
+         launch tFile with tEditor
+      end if
+   end if
+   
+   if the result is "no association" or the result is "request failed" then
       answer file "Select text editor..."
       if it is not empty then
          launch tFile with it
       end if
+   end if
+   
+   if the result is not empty then
+      __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && the result
+   else if it is not empty then
+      # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
+      revIDESetPreference "LCB_textEditor", it
    end if
 end revIDEDeveloperExtensionEditScript
 
