@@ -84,25 +84,27 @@ on hiliteFrameItem pName
 end hiliteFrameItem
 
 on disableFrameItem pName
-   if __frameItemNameToIndex(pName) is not a number then exit disableFrameItem
-   if there is not a field pName of group "background" of me then exit disableFrameItem
+   local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit disableFrameItem
    
    lock screen
    lock messages
-   disable field pName of group "background" of me
-   set the textcolor of field pName of group "background" of me to TAB_DISABLED_COLOR
-    unlock messages
+   put false into sData[tIndex]["enabled"]
+   generateFrame
+   unlock messages
    unlock screen
 end disableFrameItem
 
 on enableFrameItem pName
-   if __frameItemNameToIndex(pName) is not a number then exit enableFrameItem
-   if there is not a field pName of group "background" of me then exit enableFrameItem
+  local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit enableFrameItem
    
    lock screen
    lock messages
-   enable field pName of group "background" of me
-   set the textcolor of field pName of group "background" of me to TAB_TEXT_COLOR
+   put true into sData[tIndex]["enabled"] 
+   generateFrame
    unlock messages
    unlock screen
 end enableFrameItem
@@ -112,11 +114,15 @@ on clearFrameData
 end clearFrameData
 
 on clearFrameNavigationData
-   repeat for each key tKey in sData
-      if sData[tKey]["type"] is "navigation" then
-         delete variable sData[tKey]
+   local tNewDataA, tCount
+   repeat for each element tElement in sData
+      if tElement["type"] is "navigation" then
+         next repeat
       end if
+      add 1 to tCount
+      put tElement into tNewDataA[tCount]
    end repeat
+   put tNewDataA into sData
 end clearFrameNavigationData
 
 private on appendMenuItem pNavItem, @xMenuArray
@@ -191,6 +197,7 @@ private function preferenceAction pMenuArray
    put "preferences" into tDataA["label"]
    put "cog" into tDataA["icon"]
    put pMenuArray into tDataA["menu"]
+   put true into tDataA["enabled"]
    return tDataA
 end preferenceAction
 
@@ -221,7 +228,7 @@ on generateFrame
    local tPreferences, tNavigation, tHeaderAction
    local tHeaderActionDataA, tHeaderActionCount
    local tHeaderNavDataA, tHeaderNavCount
-   local tFooterActionDataA, tFooterActionCount
+   local tFooterActionDataA, tFooterActionCount, tHeaderPreferenceCount
    put false into tPreferences
    put false into tNavigation
    put false into tHeaderAction
@@ -237,11 +244,13 @@ on generateFrame
       put tNavItem["name"] into tDataA["name"]
       put tNavItem["label"] into tDataA["label"]
       put tNavItem["icon"] into tDataA["icon"]
+      
       --put tNavItem["icon_selected"] into tDataA["icon_selected"]
       
       switch tNavItem["type"]
          case "preference"
             # Add preference data to the preference menu
+            add 1 to tHeaderPreferenceCount
             appendMenuItem tNavItem, tPreferenceMenuA
             break
          case "navigation"
@@ -252,6 +261,7 @@ on generateFrame
             end if
             break
          case "action"
+            put tNavItem["enabled"] into tDataA["enabled"]
             if tNavItem["location"] is "header" then
                add 1 to tHeaderActionCount
                put tDataA into tHeaderActionDataA[tHeaderActionCount]
@@ -268,7 +278,7 @@ on generateFrame
       put preferenceAction(tPreferenceMenuA) into tHeaderActionDataA[0]
    end if
    
-   if tHeaderNavCount is not 0 or tHeaderActionCount is not 0 then
+   if tHeaderNavCount is not 0 or tHeaderActionCount is not 0 or tHeaderPreferenceCount is not 0 then
       if there is not a widget "header_background" of group "background" of me then 
          start editing group "background" of me
          create widget "header_background" as "com.livecode.widget.paletteActions"
@@ -403,34 +413,6 @@ on layoutFrame
       set the rect of widget "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me
    end if
    
-   /*
-   local tNavTop, tNavLeft
-   put 0 into tNavTop
-   put BAR_MARGIN / 2 into tNavLeft
-   
-   local tHeaderActionsTop, tHeaderActionsRight
-   put item 2 of HEADER_ACTION_MARGINS into tHeaderActionsTop
-   put the width of me - BAR_MARGIN into tHeaderActionsRight
-   if there is a field "preferences" of group "background" of me then
-      set the textsize of field "preferences" of group "background" of me to tIconTextSize
-      set the height of field "preferences" of group "background" of me to BAR_HEIGHT
-      set the width of field "preferences" of group "background" of me to the formattedwidth of field "preferences" of group "background" of me
-      set the topright of field "preferences" of group "background" of me to tHeaderActionsRight, tHeaderActionsTop
-      subtract the width of field "preferences" of group "background" of me + ITEM_SPACING from tHeaderActionsRight
-      
-      if there is a graphic "pref_line" of group "background" then
-         set the width of graphic "pref_line" of group "background" of me to 1
-         set the height of graphic "pref_line" of group "background" of me to BAR_HEIGHT * 0.5
-         set the top of graphic "pref_line" of group "background" of me to BAR_HEIGHT * 0.25
-         set the right of graphic "pref_line" of group "background" of me to tHeaderActionsRight
-         subtract ITEM_SPACING from tHeaderActionsRight
-      end if
-   end if
-   
-   local tFooterActionsTop, tFooterActionsLeft
-   put the height of me - BAR_HEIGHT into tFooterActionsTop
-   put BAR_MARGIN into tFooterActionsLeft
-   */
    unlock messages
    unlock screen
 end layoutFrame
@@ -533,9 +515,11 @@ before menupick pItem
    else
       put item 2 of pItem into tValue
    end if
-   
+   lock screen
    dispatch tMessage to tTarget with tName,tValue
-   break
+   generateFrame
+   layoutFrame
+   unlock screen
 end menupick
 
 getProp contentRect

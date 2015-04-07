@@ -809,7 +809,7 @@ end __readStructureOfStackForDataView
 function __readStructureOfContainerForDataView @pData, pParentIndex, pLevel
    # 1) Repeat for each control in the container
    local tChildIDs, tChildCount
-      
+   
    //repeat with x = 1 to the number of controls of the target
    --repeat for each line tControlId in the childcontrolIDs of the target
    put the number of lines in the childcontrolIDs of the target into tChildCount
@@ -1082,14 +1082,15 @@ function __customPropertyData pLongID
    
    put the customPropertySets of pLongID into tSets
    if tSets is empty then
-      put the customProperties of pLongID into tArray--["customKeys"]
+      put the customProperties of pLongID into tArray[""]--["customKeys"]
    else
       set the customPropertySet of pLongID to empty
-      put the customProperties of pLongID into tArray[""]--["customKeys"]
-      
+      get the customProperties of pLongID
+      put it into tArray[""]--["customKeys"]
       repeat for each line tSet in tSets
          set the customPropertySet of pLongID to tSet
-         put the customProperties of pLongID into tArray[tSet]
+         get the customProperties of pLongID
+         put it into tArray[tSet]--["customKeys"]
       end repeat
       set the customPropertySet of pLongID to empty
    end if
@@ -1113,16 +1114,16 @@ on revIDEOpenPropertyInspectorControllerStacks
    put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
    set the defaultfolder to tControllersFolder
    
-      repeat for each line tControllerStackFile in the files
-         if char 1 of tControllerStackFile is "." then next repeat
-   --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
-   --      if there is a stack (char 1 to -5 of tControllerStack) then next repeat
-         if there is a file (tControllersFolder & slash & tControllerStackFile) then	
-		lock messages
-           go invisible stack (tControllersFolder & slash & tControllerStackFile)
-		unlock messages
-         end if
-     end repeat
+   repeat for each line tControllerStackFile in the files
+      if char 1 of tControllerStackFile is "." then next repeat
+      --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
+      --      if there is a stack (char 1 to -5 of tControllerStack) then next repeat
+      if there is a file (tControllersFolder & slash & tControllerStackFile) then	
+         lock messages
+         go invisible stack (tControllersFolder & slash & tControllerStackFile)
+         unlock messages
+      end if
+   end repeat
    
    revIDERestoreDefaultFolder
    unlock screen
@@ -1285,7 +1286,7 @@ pMessage (String): The name of the message.
 returns (string): Return delimited list of object ID's, 1 per line.
 */
 function revIDESubscribedObjects pMessage
-    # Validate input
+   # Validate input
    if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") you are enquiring about is not valid. Please check the documentation for which messages you can subscribe to.")
    
    return sSubscriptions[pMessage]["callback targets"]
@@ -1301,7 +1302,7 @@ returns (string): Return delimited list of message names, 1 per line.
 function revIDEMessages
    return "ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
- 
+
 # System function telling the IDE to send 
 on revIDEMessageSend pMessage, pEffectedTarget
    lock screen
@@ -1476,7 +1477,7 @@ end revIDERunEditTools
 
 function revIDEClassicControls 
    if sClassicObjectProperties is empty then __objectPropertiesRead
-    
+   
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
@@ -1632,7 +1633,7 @@ function revIDEMainStacks
    else
       repeat for each line tMainStack in the mainstacks
          --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-        if revIDEStackIsRevStack(the long id of stack tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+         if revIDEStackIsRevStack(the long id of stack tMainStack) or the mode of stack tMainStack is not 1 then next repeat
          if tMainStacks is empty then 
             put tMainStack into tMainStacks
          else
@@ -1705,9 +1706,9 @@ function revIDEStacks pExpandedStackList
    repeat for each line tStack in tMainStacks
       put empty into tStacksData[tCount]
       --if tStack is among the lines of pExpandedStackList then
-         dispatch function "__readStructureOfStack" to stack tStack with tStacksData[tCount]
+      dispatch function "__readStructureOfStack" to stack tStack with tStacksData[tCount]
       --else
-         --dispatch function "__readPropertiesOfControl" to stack tStack with sStackPropertiesToRead, tStacksData[tCount]
+      --dispatch function "__readPropertiesOfControl" to stack tStack with sStackPropertiesToRead, tStacksData[tCount]
       --end if
       add 1 to tCount
    end repeat
@@ -1930,7 +1931,7 @@ end revIDEPlatform
 function revIDEPlatformVersion
    local tSystemVersion
    put the systemVersion into tSystemVersion
-  
+   
    if tSystemVersion begins with "Windows" or tSystemVersion begins with "NT"   then return the last word of tSystemVersion
    return tSystemVersion
 end revIDEPlatformVersion
@@ -2029,7 +2030,7 @@ end revIDEMoveControl
 
 function revIDEStackProperties pStackID, pLevel
    if not exists(pStackID) then return __revIDEError("You must specify an object to read from." &&  quote & pStackID & quote && "is not an object")
-    
+   
    local tStackArray
    
    dispatch function "__readPropertiesOfControl" to pStackID with sStackPropertiesToRead, tStackArray
@@ -2356,7 +2357,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-   
+
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -2368,6 +2369,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
          put item 1 of tCreateRect + the cTabButtonWidth of stack "revPreferences" into item 3 of tCreateRect
          put item 2 of tCreateRect + the cTabButtonHeight of stack "revPreferences" into item 4 of tCreateRect
          
+         local lDataGrid
          put true into lDataGrid -- select data grid at end not single control
          
          unlock messages
@@ -2641,7 +2643,7 @@ end revIDERefreshProjectBrowser
 
 on revIDEAlignControls pControls, pPosition
    local tInitialControl, tInitialValue
-      
+   
    put line 1 of pControls into tInitialControl
    
    if pPosition is "left" then
@@ -3451,6 +3453,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    
    repeat for each line tObject in pObjectList
       if pProperty is "customProperties" then
+         put true into sLockUpdates
          revIDECustomPropertySet pObjectList, pValue
       else if pProperty contains "dgProps" then
          repeat for each key tKey in pValue
@@ -3461,8 +3464,11 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       end if
    end repeat
    
-   put false into sLockUpdates
-   revIDEMessageSend "idePropertyChanged", pObjectList
+   if sLockUpdates then
+      revIDEMessageSend "idePropertyChanged", pObjectList
+      put false into sLockUpdates
+   end if
+   
 end revIDEPropertySet
 
 local sStoredPropsA
@@ -3472,7 +3478,7 @@ end revIDEPropertyStore
 
 on revIDEPropertyRestore pObjectList, pProperty
    if sStoredPropsA[pObjectList] is not empty then
-    	revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
+      revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
    end if
 end revIDEPropertyRestore
 
@@ -3500,12 +3506,19 @@ end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pValue
    repeat for each line tObject in pObjectList
-      repeat for each key tKey in pValue
-         set the custompropertyset of tObject to tKey
-         repeat for each key tProp in pValue[tKey]
-            set the tProp of tObject to pValue[tKey][tProp]
+      set the custompropertysets of tObject to empty
+      if pValue is not empty then
+         repeat for each key tKey in pValue
+            set the custompropertyset of tObject to tKey
+            set the customKeys of tObject to the keys of pValue[tKey]
+            repeat for each key tProp in pValue[tKey]
+               set the tProp of tObject to pValue[tKey][tProp]
+            end repeat
          end repeat
-      end repeat
+      else
+         set the custompropertyset of tObject to empty
+         set the customKeys of tObject to empty
+      end if
    end repeat
 end revIDECustomPropertySet
 

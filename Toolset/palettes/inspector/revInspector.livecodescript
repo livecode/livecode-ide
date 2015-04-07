@@ -38,15 +38,14 @@ on preOpenStack
    addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    
    set the navigationDisplayStyle of me to "icons"
+   
+   # Render the inspector for the given selected object
+   ideSelectedObjectChanged
 end preOpenStack
 
 on openStack   
    lock screen
    set the visible of me to true
-   
-   # Render the inspector for the given selected object
-   ideSelectedObjectChanged
-   
    unlock screen
 end openStack
 
@@ -207,30 +206,44 @@ private on inspectorLayout
    put inspectorSectionGet() into tSelectedGroup
    
    lock screen
+   local tInspectorWidth
    repeat for each element tElement in sPropertyInfo[tSelectedGroup]["grouplist"]
       if there is a group tElement["label"] of me then
          lock messages
+         set the topleft of group tElement["label"] of me to tLeft,tTop
          set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
-        
-         local tHeight
+         
+         local tHeight, tRowWidth
          put the editorHeight of group tElement["label"] of me into tHeight
+         put the rowMinWidth of group tElement["label"] of me into tRowWidth
+         
+         lock messages
          if tHeight > 0 then
-            set the topleft of group tElement["label"] of me to tLeft,tTop
             add tHeight + tEditorPadding to tTop
          else
-            lock messages
             //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
-            set the topleft of group tElement["label"] of me to tLeft,tTop
-            unlock messages
             add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
          end if
+         
+         if tRowWidth > tInspectorWidth then
+            put tRowWidth into tInspectorWidth
+         end if
+         unlock messages
       end if
    end repeat
    
    lock messages
+   local tStackLeft
+   set the minWidth of me to (tInspectorWidth + tMargin * 2)
+   if tInspectorWidth > tWidth then
+      put the left of me into tStackLeft
+      set the width of me to (tInspectorWidth + tMargin * 2)
+      set the left of me to tStackLeft
+   end if
+   
    local tStackTop
    put the top of me into tStackTop
    set the minheight of me to tTop + (tMargin * 2)
@@ -445,9 +458,13 @@ private on inspectorFill
 end inspectorFill
 
 private on inspectorClear
+   if the number of groups of card 1 of me is 0 then
+      exit inspectorClear
+   end if
+   
    lock screen
    lock messages
-   repeat while the number of groups of card 1 me is not 1
+   repeat while the number of groups of card 1 of me is not 1
       if the short name of group 2 of me is "background" then
          delete group 1 of card 1 of me
       else
