@@ -2418,6 +2418,9 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    
    ## Prevent passing of ideNewControl message for objects created on IDE stacks
    if revIDEStackIsRevStack(tCreatedControlID) is false then
+      global gRevStackStatus
+      // AL-2015-04-08: [[ Bug 14822 ]] Ensure 'edited' status of stack is set
+      put "edited" into gREVStackStatus[the short name of this stack]
       revIDEMessageSend "ideNewControl", tCreatedControlID
    end if
    
