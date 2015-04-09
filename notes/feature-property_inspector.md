@@ -47,11 +47,11 @@ Read only properties will be displayed in the property inspector but the corresp
 
 ## Widget Properties
 
-Widget metadata is used to control the display of widget properties in the inspector. Each item of metadata of the form
+Widget metadata is used to control the display of widget properties in the inspector. Items of metadata which determine property attributes are of the form:
 
 metadata <property>.<attribute> is "<value>"
 
-is stored as property data for the widget at load time. The <attribute> can be any of those specified in the Property Attributes section above. If the attributes are not specified, their values are as follows:
+These are stored as property data for the widget at load time. The <attribute> can be any of those specified in the Property Attributes section above. If the attributes are not specified, their values are as follows:
 * default - "no_default"
 * editor - "com.livecode.pi.number" for Integer/Real properties, "com.livecode.pi.<type>" for properties of type <type>.
 * group - the name of the property
