@@ -259,6 +259,7 @@ private function __propertyDataFromInfoFile pFileName
    local tDataStart, tDataA, tPropName
    put false into tDataStart
    
+   local tCountedA, tCountsA
    set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
@@ -266,20 +267,79 @@ private function __propertyDataFromInfoFile pFileName
          next repeat
       end if
       
-      if not tDataStart then next repeat
+      if not tDataStart then 
+         next repeat
+      end if
+      
+      if token 1 of tLine is empty then
+         next repeat
+      end if
       
       put item 1 of tLine into tPropName
       put item 2 of tLine into tDataA[tPropName]["label"]
-      put item 3 of tLine into tDataA[tPropName]["section"]
+      
+      local tSection
+      put item 3 of tLine into tSection
+      put tSection into tDataA[tPropName]["section"]
+      
       put item 4 of tLine into tDataA[tPropName]["editor"]
       put item 5 of tLine into tDataA[tPropName]["user_visible"]
       put item 6 of tLine into tDataA[tPropName]["read_only"]
-      put item 7 of tLine into tDataA[tPropName]["group"]
-      put item 8 of tLine into tDataA[tPropName]["default"]
-      put item 9 of tLine into tDataA[tPropName]["options"]
+      
+      local tGroupName
+      put item 7 of tLine into tGroupName
+      if tGroupName is empty then
+         put tDataA[tPropName]["label"] into tGroupName
+      end if
+      if tGroupName is empty then
+         put tPropName into tGroupName
+      end if
+      put tGroupName into tDataA[tPropName]["group"]
+      
+      if tCountedA[tSection][tGroupName] is not true then
+         add 1 to tCountsA[tSection]
+         put true into tCountedA[tSection][tGroupName]
+      end if
+      put tCountsA[tSection] into tDataA[tPropName]["order"]
+      
+      put __unescapeString(item 8 of tLine) into tDataA[tPropName]["default"]
+      
+      local tOptions
+      put item 9 of tLine into tOptions
+      replace comma with return in tOptions
+      put tOptions into tDataA[tPropName]["options"]
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
+
+private function __organisePropertyInfo pInfoA
+   local tCountsA, tOrganisedA
+   repeat for each key tKey in pInfoA
+      local tSection
+      put pInfoA[tKey]["section"] into tSection
+      if tCountsA[tSection] is empty then
+         put 1 into tCountsA[tSection]
+      end if
+      
+      local tGroupLabel
+      put pInfoA[tKey]["group"] into tGroupLabel
+      
+      # The groups are ordered by their appearance in the spec file
+      put pInfoA[tKey]["order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
+      
+      # Carry over the generic prop information into the object prop info array
+      put pInfoA[tKey] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]
+      
+      # Assign the order of this property within the group
+      local tPropCount
+      put the number of elements of tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
+      put tPropCount into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]["order"] 
+      
+      # Increment the count for this section
+      add 1 to tCountsA[tSection]
+   end repeat
+   return tOrganisedA
+end __organisePropertyInfo
 
 local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
 private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
@@ -319,23 +379,9 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["group"] into tGroupLabel
          end if
-         if tGroupLabel is empty then
-            put pPropInfoA[tPropertyName]["label"] into tGroupLabel
-         end if
-         if tGroupLabel is empty then
-            put tPropertyName into tGroupLabel
-         end if
          
          # The groups are ordered by their appearance in the spec file
-         put tCountsA[tSection] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["order"]
-         
-         # Carry over the generic prop information into the object prop info array
-         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
-         
-         # Assign the order of this property within the group
-         local tPropCount
-         put the number of elements of tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
-         put tPropCount into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
+         put tCountsA[tSection] into pPropInfoA[tPropertyName]["order"]
          
          # Get the per-object default value of this property
          local tDefault
@@ -344,32 +390,33 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             if tDefault is "empty" then
                put empty into tDefault
             end if
-            put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
-            put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
+            put tDefault into pPropInfoA[tPropertyName]["default"]
          end if
+         put pPropInfoA[tPropertyName]["default"] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          
          # If this is an enum property, there are per-object options
          local tOptions
          put item 3 of tLine into tOptions
-         if tOptions is empty then
-            put pPropInfoA[tPropertyName]["options"] into tOptions
+         if tOptions is not empty then
+            replace comma with return in tOptions
+            put tOptions into pPropInfoA[tPropertyName]["options"]
          end if
-         replace comma with return in tOptions
-         put tOptions into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"]
          
          # Read any per-object 'read-only' data
          local tReadOnly
          put item 5 of tLine into tReadOnly
          if tReadOnly is not empty then
-            put tReadOnly into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["read_only"]
+            put tReadOnly into pPropInfoA[tPropertyName]["read_only"]
          end if
+         
+         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
          
          # Increment the count for this section
          add 1 to tCountsA[tSection]
       end if
    end repeat
    
-   put tObjectPropertiesA into sClassicObjectPropertiesInfo[pObjectType]
+   put __organisePropertyInfo(tObjectPropertiesA) into sClassicObjectPropertiesInfo[pObjectType]
 end __setPropertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
@@ -464,13 +511,12 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    return tOrderedA
 end __orderPropSubArray
 
-private function __orderPropArray pPropsA
-   local tOrderedPropsA,x,tSections
-   put revIDEPropertySections() into tSections
+private function __orderPropArray pPropsA, pSections
+   local tOrderedPropsA,x
    
    local tCount
    put 1 into tCount
-   repeat for each item tSection in tSections
+   repeat for each item tSection in pSections
       if pPropsA[tSection] is empty then next repeat
       put __orderPropSubArray(pPropsA[tSection], true) into tOrderedPropsA[tCount]["grouplist"]
       put tSection into tOrderedPropsA[tCount]["label"]
@@ -2826,6 +2872,9 @@ function revIDESpecialFolderPath pKey
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/property_definitions"
          break
+      case "Standalone Settings Definitions"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/standalone_settings"
+         break
       case "Tool Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/tool_definitions"
          break
@@ -2929,6 +2978,10 @@ end revIDEWebPageURL
 function revIDEFrameBehavior
    return the long ID of stack "revPaletteBehavior"
 end revIDEFrameBehavior
+
+function revIDEInspectorBehavior
+   return the long ID of stack "revInspectorBehavior"
+end revIDEInspectorBehavior
 
 function revIDEDataViewBehavior
    return the long ID of button "DataView Behavior" of stack "DataViewControl" of stack "revCore"
@@ -3434,7 +3487,7 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    
    # Return ordered list
    if pSection is empty then
-      return __orderPropArray(tSharedPropertiesA)
+      return __orderPropArray(tSharedPropertiesA, revIDEPropertySections())
    else
       return __orderPropSection(tSharedPropertiesA["grouplist"])
    end if
@@ -3617,7 +3670,7 @@ function revIDEPropertySections
    return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
-function revIDESectionNameToIconName pName
+function revIDEPropertySectionNameToIconName pName
    switch pName
       case "basic"
          return "home"
@@ -3657,7 +3710,7 @@ function revIDESectionNameToIconName pName
          return "remove"
          break
    end switch
-end revIDESectionNameToIconName
+end revIDEPropertySectionNameToIconName
 
 function revIDEPaletteResourcePath pFilename
    local tPalettePath
@@ -3901,3 +3954,48 @@ command CreateTemplateForControl pStack
    
    return theTemplateGroup
 end CreateTemplateForControl
+
+#############
+# Standalone Settings
+#############
+
+private function __standaloneSettingsInfoFilename
+   return "standaloneSettings.txt"
+end __standaloneSettingsInfoFilename
+
+function revIDEStandaloneSettings pStack, pSection
+   local tInfo
+   put revIDEStandaloneSettingsInfo() into tInfo
+   
+   repeat for each key tGroup in tInfo[pSection]["grouplist"]
+      
+   end repeat
+   
+   local tProps
+   set the custompropertyset of pStack to "cRevStandaloneSettings"
+   put the customkeys of pStack into tProps
+   
+end revIDEStandaloneSettings
+
+function revIDEStandaloneSettingsInfo
+   local tStandaloneDefinitionsPath
+   put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
+   
+   local tInfoA
+   put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
+   
+   return __orderPropArray(__organisePropertyInfo(tInfoA), revIDEStandaloneSections())
+end revIDEStandaloneSettingsInfo
+
+function revIDEStandaloneSections
+	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
+   return "General,Stacks,Copy Files,Mac,Windows,Linux,iOS,Android,Bug Reports"
+end revIDEStandaloneSections
+
+function revIDEStandaloneSectionNameToIconName pName
+   switch pName
+      default
+         return "remove"
+         break
+   end switch
+end revIDEStandaloneSectionNameToIconName
