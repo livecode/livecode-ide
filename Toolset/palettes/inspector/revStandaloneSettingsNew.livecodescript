@@ -140,3 +140,11 @@ end displayData
 function inspectorSectionIcon pSection
    return revIDEStandaloneSectionNameToIconName(pSection)
 end inspectorSectionIcon
+
+function revStandaloneSettingsStackFiles
+   
+end revStandaloneSettingsStackFiles
+
+function revStandaloneSettingsRelativePath pPath
+   return revIDERelativeStackPath(sSelectedStack, pPath)
+end revStandaloneSettingsRelativePath

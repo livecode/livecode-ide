@@ -259,7 +259,7 @@ private function __propertyDataFromInfoFile pFileName
    local tDataStart, tDataA, tPropName
    put false into tDataStart
    
-   local tCountedA, tCountsA
+   local tCountsA, tGroupCountsA
    set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
@@ -296,11 +296,14 @@ private function __propertyDataFromInfoFile pFileName
       end if
       put tGroupName into tDataA[tPropName]["group"]
       
-      if tCountedA[tSection][tGroupName] is not true then
-         add 1 to tCountsA[tSection]
-         put true into tCountedA[tSection][tGroupName]
+      if tGroupCountsA[tSection][tGroupName] is empty then
+         add 1 to tCountsA[tSection]["count"]
+         put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupName]
       end if
-      put tCountsA[tSection] into tDataA[tPropName]["order"]
+      put tGroupCountsA[tSection][tGroupName] into tDataA[tPropName]["group_order"]
+      
+      add 1 to tCountsA[tSection][tGroupName]["count"]
+      put tCountsA[tSection][tGroupName]["count"] into tDataA[tPropName]["order"]
       
       put __unescapeString(item 8 of tLine) into tDataA[tPropName]["default"]
       
@@ -313,30 +316,19 @@ private function __propertyDataFromInfoFile pFileName
 end __propertyDataFromInfoFile
 
 private function __organisePropertyInfo pInfoA
-   local tCountsA, tOrganisedA
+   local tOrganisedA
    repeat for each key tKey in pInfoA
       local tSection
       put pInfoA[tKey]["section"] into tSection
-      if tCountsA[tSection] is empty then
-         put 1 into tCountsA[tSection]
-      end if
       
       local tGroupLabel
       put pInfoA[tKey]["group"] into tGroupLabel
       
       # The groups are ordered by their appearance in the spec file
-      put pInfoA[tKey]["order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
+      put pInfoA[tKey]["group_order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
       
       # Carry over the generic prop information into the object prop info array
       put pInfoA[tKey] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]
-      
-      # Assign the order of this property within the group
-      local tPropCount
-      put the number of elements of tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
-      put tPropCount into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]["order"] 
-      
-      # Increment the count for this section
-      add 1 to tCountsA[tSection]
    end repeat
    return tOrganisedA
 end __organisePropertyInfo
@@ -349,7 +341,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    put URL ("file:" & pFile) into tObjectData
    
    # Parse the file into a structure array
-   local tObjectPropertiesA, tPropertyName, tCountsA, tSection
+   local tObjectPropertiesA, tPropertyName, tCountsA, tGroupCountsA, tSection
    set the itemdel to tab
    
    local tDataStart, tDataA
@@ -370,9 +362,6 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       else
          put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
          put pPropInfoA[tPropertyName]["section"] into tSection
-         if tCountsA[tSection] is empty then
-            put 1 into tCountsA[tSection]
-         end if
          
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
@@ -381,8 +370,15 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          end if
          
          # The groups are ordered by their appearance in the spec file
-         put tCountsA[tSection] into pPropInfoA[tPropertyName]["order"]
+         if tGroupCountsA[tSection][tGroupLabel] is empty then
+            add 1 to tCountsA[tSection]["count"]
+            put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
+         end if
+         put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
          
+         add 1 to tCountsA[tSection][tGroupLabel]["count"]
+         put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+          
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
@@ -410,9 +406,6 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          end if
          
          put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
-         
-         # Increment the count for this section
-         add 1 to tCountsA[tSection]
       end if
    end repeat
    
@@ -2282,6 +2275,18 @@ function revIDEStackVideoClips pStack
    end repeat
    return tVideoClipArray
 end revIDEStackVideoClips
+
+function revIDERelativeStackPath pStack, pPath
+   local tMainStackPath
+   set the itemDel to "/"
+   put item 1 to -2 of the effective filename of pStack & "/" into tMainStackPath
+   local tCharCount
+   put the number of chars of tMainStackPath into tCharCount
+   if char 1 to tCharCount of pPath is tMainStackPath then 
+      delete char 1 to tCharCount of pPath
+   end if
+   return pPath
+end revIDERelativeStackPath
 
 /*
 Returns A return sepearetd list of the long ids of the selected objects

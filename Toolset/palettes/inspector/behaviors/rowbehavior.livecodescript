@@ -1,4 +1,6 @@
 ﻿script "revIDEInspectorBehaviorRow"
+constant kOverflowSize = 500
+
 # Adds the editor to the row
 local sProperties, sOrder
 on propertyRegister pPropertyInfo
@@ -24,6 +26,13 @@ on propertyRegister pPropertyInfo
       set the name of it to tPropName
       set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
       set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
+      
+      if pPropertyInfo["label"] is not empty then
+         create invisible field tPropName in me
+         set the topleft of field tPropName of me to the topleft of me
+         put pPropertyInfo["label"] into field tPropName of me
+      end if
+      
       unlock messages
       set the editorPropertyInfo of tGroupLongId to pPropertyInfo
       dispatch "editorInitialize" to tGroupLongID
@@ -137,32 +146,93 @@ on rowResize
    put the number of elements of sProperties into tEditorCount
    put tWidth - tLabelWidth into tEditorSpace
    
-   local tEditorWidth, x, tMinWidth, tMaxWidth
+   local tEditorWidth, x, tMinWidth, tMaxWidth, tPropLabelWidth
    put 0 into x
    put tLabelWidth into tLeft
    local tElement
+   
+   local tPropCount
+   put the number of lines in sOrder into tPropCount
+   
+   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tLabelPrecede
    repeat for each line tProperty in sOrder
+      put false into tLabelPrecede
       put sProperties[tProperty] into tElement
-      put tEditorSpace /  (tEditorCount - x) into tEditorWidth
-      put the editorMinWidth of group tElement["property"] of me into tMinWidth
-      put the editorMaxWidth of group tElement["property"] of me into tMaxWidth
+      put the long id of group tElement["property"] of me into tGroupLongID
+      put tEditorSpace into tEditorWidth
+      
+      if tPropCount > 1 and there is a field tElement["property"] of me then
+         show field tElement["property"] of me
+         set the width of field tElement["property"] of me to tEditorWidth
+         put the formattedWidth of field tElement["property"] of me into tPropLabelWidth
+         set the width of field tElement["property"] of me to tPropLabelWidth
+         subtract tPropLabelWidth from tEditorWidth
+      end if
+      
+      put the editorMinWidth of tGroupLongID into tMinWidth
+      put the editorMaxWidth of tGroupLongID into tMaxWidth
       if tMinWidth > 0 and tMinWidth > tEditorWidth then
          put tMinWidth into tEditorWidth
+         if tEditorSpace > tEditorWidth then
+            put tEditorSpace into tEditorWidth
+         end if
+         if tPropCount > 1 and there is a field tElement["property"] of me then
+            set the topleft of field tElement["property"] of me to tLeft,tTop
+            add the formattedheight of field tElement["property"] to tTop
+         end if
+         put true into tLabelPrecede
       else if tMaxWidth > 0 and tMaxWidth < tEditorWidth then
          put tMaxWidth into tEditorWidth
       end if
       
-      lock messages
-      set the lockloc of group tElement["property"] of me to true
-      set the width of group tElement["property"] of me to tEditorWidth
-      --set the loc of group tElement["property"] of me to the loc of field "label" of me
-      --set the left of group tElement["property"] of me to tLeft
+      set the lockloc of tGroupLongID to true
+      set the width of tGroupLongID to tEditorWidth
       unlock messages
-      dispatch "editorResize" to group tElement["property"] of me
-      set the topleft of group tElement["property"] of me to tLeft,tTop
-      add tEditorWidth to tLeft
-      subtract tEditorWidth from tEditorSpace
-      add 1 to x
+      dispatch "editorResize" to tGroupLongID
+      
+      lock messages
+      # If the editor does not fit where we tried to put it, put it on the next line
+      set the topleft of tGroupLongID to tLeft,tTop
+      if tPropCount > 1 and the left of tGroupLongID+ the formattedWidth of tGroupLongID > the width of me and tLastGroupLongID is not empty then
+         add the formattedHeight of tLastGroupLongID to tTop
+         put tLabelWidth into tLeft
+         set the topLeft of tGroupLongID to tLeft,tTop
+         put 0 into x
+      end if
+      unlock messages
+      
+      local tEditorHeight
+      put the editorHeight of tGroupLongID into tEditorHeight
+      put the editorWidth of tGroupLongID into tEditorWidth
+      
+      lock messages
+      if not tLabelPrecede and tPropCount > 1 and there is a field tElement["property"] of me then
+         set the topleft of field tElement["property"] of me to tLeft + tEditorWidth,tTop
+         add the width of field tElement["property"] of me to tLeft
+      end if
+      
+      if tEditorHeight is 0 then
+         put the formattedheight of tGroupLongID into tEditorHeight
+      else
+         set the height of tGroupLongID to tEditorHeight
+         set the top of tGroupLongID to tTop
+      end if
+      
+      if tEditorHeight > tHeightOfRow then
+         put tEditorHeight into tHeightOfRow
+      end if
+      
+      if tPropCount is 1 or tEditorWidth + tPropLabelWidth > tEditorSpace / 2  or x mod 2 is 1 then
+         put tLabelWidth into tLeft
+         add tHeightOfRow to tTop
+         put 0 into tHeightOfRow
+         put 0 into x
+      else
+         put tLabelWidth + tEditorSpace / 2  into tLeft
+         add 1 to x
+      end if
+      put tGroupLongID into tLastGroupLongID
+      unlock messages
    end repeat
    
    set the lockloc of me to false

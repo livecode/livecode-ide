@@ -1,18 +1,23 @@
 Property	Label	Section	Editor	User Visible	Read Only	Group	Default	Options
 ----------------------------------------------------------------------------------------------------
 
-answerDialog	Answer Dialog	General	com.livecode.pi.boolean	true	false	
-askDialog	Ask Dialog	General	com.livecode.pi.boolean	true	false	
-automaticallyBuildInDefaultFolder	Automatically build here	General	com.livecode.pi.boolean	true	false	Default Build Folder
-cursors	Cursors	General	com.livecode.pi.boolean	true	false	
-databaseDrivers	Database Drivers	General	com.livecode.pi.boolean	true	false	Database Drivers
+name	Standalone name	General	com.livecode.pi.string	true	false	
+
+inclusions		General	com.livecode.pi.radiogroup	true	false	Inclusions	search	Search for required inclusions when saving the application|search,Select inclusions for the standalone application|select
+askDialog	Ask Dialog	General	com.livecode.pi.boolean	true	false	Inclusions
+answerDialog	Answer Dialog	General	com.livecode.pi.boolean	true	false	Inclusions
+cursors	Cursors	General	com.livecode.pi.boolean	true	false	Inclusions
+revolutionprintdialogs	Print Dialogs	General	com.livecode.pi.boolean	true	false	Inclusions
+Brushes	Brushes	General	com.livecode.pi.boolean	true	false	Inclusions
+pdfPrinter	PDF Printer	General	com.livecode.pi.boolean	true	false	Inclusions
+scriptLibraries		General	com.livecode.pi.set	true	false	Inclusions	Inclusions	execute:dispatch function "revSBLibraryList" to stack "revSBLibrary";get the result;sort it
+databaseDrivers	Database Drivers	General	com.livecode.pi.set	true	false	Database Drivers		execute:get revDatabaseDriverList()
+
+setToProfile		General	com.livecode.pi.enum	true	false	Property Profiles	remove	Remove all profiles on objects|remove,Set all objects to profile|set,Include all profiles on objects and the profile library|all,Include selected profiles on objects and the profile library|selected
+includeProfiles	Profiles to include	General	com.livecode.pi.enum	true	false	Property Profiles
+
 defaultBuildFolder	Default Build Folder	General	com.livecode.pi.file	true	false	Default Build Folder
-errorDialog	Error Dialog	General	com.livecode.pi.boolean	true	false	
-includeProfiles		General	com.livecode.pi.string	true	false	
-inclusions	Search for required inclusions when saving the application	General	com.livecode.pi.boolean	true	false	Inclusions	true
-name		General	com.livecode.pi.string	true	false	
-scriptLibraries		General	com.livecode.pi.set	true	false	Inclusions		execute:get revSBLibraryList();sort it
-setToProfile	Set all objects to profile:	General	com.livecode.pi.string	true	false	
+automaticallyBuildInDefaultFolder	Automatically build here	General	com.livecode.pi.boolean	true	false	Default Build Folder
 
 
 destroyStack	Set destroyStack property to true for the selected stack	Stacks	com.livecode.pi.boolean	true	false	For the selected stack
@@ -21,13 +26,12 @@ password	Encrypt with password:	Stacks	com.livecode.pi.string	true	false	For the
 renameGeneric		Stacks	com.livecode.pi.boolean	true	false	For the selected stack file
 substackFolder		Stacks	com.livecode.pi.boolean	true	false	For the selected stack file
 
-
-CopyReferencedFiles	Copy Referenced Files	Copy Files	com.livecode.pi.boolean	true	false	
-files	Non-stack files in the application	Copy Files	com.livecode.pi.filelist	true	false	
+files	Non-stack files in the application	Copy Files	com.livecode.pi.filelist	true	false
+CopyReferencedFiles	Copy Referenced Files	Copy Files	com.livecode.pi.boolean	true	false		
 ReferencedFilesDestination	Destination Folder	Copy Files	com.livecode.pi.string	true	false	
 
 
-MacOSX x86-32	Mac OS X (Intel)	Mac	com.livecode.pi.string	true	false	Build for
+MacOSX x86-32		Mac	com.livecode.pi.boolean	true	false	Build for Mac OS X (Intel)
 
 OSX,iconFile	Application Icon	Mac	com.livecode.pi.file	true	false
 OSX,documenticonFile	Document Icon	Mac	com.livecode.pi.file	true	false
@@ -35,20 +39,19 @@ OSX,documenticonFile	Document Icon	Mac	com.livecode.pi.file	true	false
 OSX,appicon	Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs
 OSX,smallappicon	Small Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs
 
-OSX,plist PLIST	Mac	com.livecode.pi.boolean	true	false	Enter the information and have LiveCode write the PLIST file for you
-OSX,name	Name	Mac	com.livecode.pi.string	true	false	
-OSX,signature	Signature	Mac	com.livecode.pi.string	true	false	
-OSX,documentType	Document Type	Mac	com.livecode.pi.string	true	false	
-OSX,documentExtension	Document Extension	Mac	com.livecode.pi.string	true	false	
+OSX,plist 	Mac	com.livecode.pi.boolean	true	false	PLIST	Enter the information and have LiveCode write the PLIST file for you,Choose a PLIST file to import into the application bundle
+OSX,name	Name	Mac	com.livecode.pi.string	true	false	PLIST
+OSX,signature	Signature	Mac	com.livecode.pi.string	true	false	PLIST
+OSX,documentType	Document Type	Mac	com.livecode.pi.string	true	false	PLIST
+OSX,documentExtension	Document Extension	Mac	com.livecode.pi.string	true	false	PLIST
 
-OSX,shortVersion	Short Version	Mac	com.livecode.pi.string	true	false
-OSX,longVersion	Long Version	Mac	com.livecode.pi.string	true	false	
-OSX,info	Get Info String	Mac	com.livecode.pi.string	true	false	
-OSX,copyright	Copyright Notice	Mac	com.livecode.pi.string	true	false	
-OSX,identifier	Bundle Identifier	Mac	com.livecode.pi.string	true	false	
+OSX,shortVersion	Short Version	Mac	com.livecode.pi.string	true	false	Version Information
+OSX,longVersion	Long Version	Mac	com.livecode.pi.string	true	false	Version Information
+OSX,info	Get Info String	Mac	com.livecode.pi.string	true	false	Version Information
+OSX,copyright	Copyright Notice	Mac	com.livecode.pi.string	true	false	Version Information
+OSX,identifier	Bundle Identifier	Mac	com.livecode.pi.string	true	false	Version Information
 
-
-Windows	Windows	Windows	com.livecode.pi.string	true	false	Build for
+Windows		Windows	com.livecode.pi.string	true	false	Build for Windows
 
 Windows,iconFile	Application Icon	Windows	com.livecode.pi.file	true	false
 Windows,documenticonFile	Document Icon	Windows	com.livecode.pi.file	true	false
@@ -73,30 +76,50 @@ Windows,privateBuild	Private Build	Windows	com.livecode.pi.string	true	false
 Windows,specialBuild	Special Build	Windows	com.livecode.pi.string	true	false
 Windows,iconFile		Windows	com.livecode.pi.string	true	false	
 
-Windows,uacExecutionLevel	UAC Execution Level	Windows	com.livecode.pi.enum	true	false		Default	Default,Same as invoker,Highest Available,Request Administrator
+Windows,uacExecutionLevel	UAC Execution Level	Windows	com.livecode.pi.enum	true	false			Default|,Same as invoker|asInvoker,Highest Available|highestAvailable,Request Administrator|requestAdministrator
 
 Windows,usePixelScaling	Enable Hi-DPI scaling	Windows	com.livecode.pi.boolean	true	false	
 
 Windows,UUID		Windows	com.livecode.pi.string	true	false	
 
-Linux		Linux	com.livecode.pi.string	true	false	
-Linux ARMv6-HF		Linux	com.livecode.pi.string	true	false	
-Linux x64		Linux	com.livecode.pi.string	true	false	
-UNIX,colorChooser		Linux	com.livecode.pi.string	true	false	
-UNIX,fileSelector		Linux	com.livecode.pi.string	true	false	
-UNIX,pageSetup		Linux	com.livecode.pi.string	true	false	
-UNIX,printerChooser		Linux	com.livecode.pi.string	true	false	
+Linux	Linux	Linux	com.livecode.pi.boolean	true	false	Build for:
+Linux ARMv6-HF	Linux ARMv6-HF	Linux	com.livecode.pi.boolean	true	false	Build for:
+Linux x64	Linux x64	Linux	com.livecode.pi.boolean	true	false	Build for:
+UNIX,colorChooser	Unix Color Chooser	Linux	com.livecode.pi.boolean	true	false	Include:
+UNIX,fileSelector	Unix File Selector	Linux	com.livecode.pi.boolean	true	false	Include:
+UNIX,pageSetup	Unix Page Setup	Linux	com.livecode.pi.boolean	true	false	Include:
+UNIX,printerChooser	Unix Printer Chooser	Linux	com.livecode.pi.boolean	true	false	Include:
 
-ios		iOS	com.livecode.pi.string	true	false	
-ios,device capabilities		iOS	com.livecode.pi.string	true	false	
-ios,file sharing		iOS	com.livecode.pi.string	true	false	
-ios,ipad intial orientations		iOS	com.livecode.pi.string	true	false	
-ios,persistent wifi		iOS	com.livecode.pi.string	true	false	
-ios,prerendered icon		iOS	com.livecode.pi.string	true	false	
-ios,push notifications		iOS	com.livecode.pi.string	true	false	
-ios,status bar hidden		iOS	com.livecode.pi.string	true	false	
-ios,status bar style		iOS	com.livecode.pi.string	true	false	
-ios,url name		iOS	com.livecode.pi.string	true	false	
+ios	iOS	iOS	com.livecode.pi.boolean	true	false	Build for:
+ios,device family		iOS	com.livecode.pi.set	true	false	Build for:	1	iPod and iPhone|1,iPad|2
+ios,minimum version		iOS	com.livecode.pi.enum	true	false	Build for:	5.1.1	5.1.1 or later|5.1.1,6.0 or later|6.0,6.1 or later|6.1,7.0 or later|7.0,7.1 or later|7.1,8.0 or later|8.0,8.1 or later|8.1,8.2 or later|8.2
+
+ios,display name	Display Name	iOS	com.livecode.pi.string	true	false	Basic Application Settings
+ios,bundle version	Version	iOS	com.livecode.pi.string	true	false	Basic Application Settings
+ios,bundle id	Internal App ID	iOS	com.livecode.pi.string	true	false	Basic Application Settings
+ios,profile	Profile	iOS	com.livecode.pi.enum	true	false	Basic Application Settings
+ios,include	revzip	revZip	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,include	revxml	revXML	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,include	dbsqlite	SQLite	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,include	dbmysql	MySQL	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,include	revpdfprinter	PDF Printing	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,include	revsecurity	Encryption	iOS	com.livecode.pi.boolean	true	false	Externals	false
+
+ios,status bar hidden	iPhone Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true
+ios,iPad status bar hidden	iPad Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true
+ios,status bar style	Status Bar Style	iOS	com.livecode.pi.enum	true	false	Status Bar	Default	Default|Default,Black Opaque|BlackOpaque,Black Translucent|BlackTranslucent,Solid|Solid
+
+ios,iphone initial orientation	iPhone Initial Orientation	iOS	com.livecode.pi.enum	true	false	Orientation Options	Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight
+ios,ipad initial orientations	iPad Supported Initial Orientations	iOS	com.livecode.pi.set	true	false	Orientation Options	Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight
+
+ios,url name	URL Name	iOS	com.livecode.pi.string	true	false	Custom URL Scheme
+
+ios,location auth type		iOS	com.livecode.pi.radiogroup	true	false	Location Authorization Type	Always	Always,When In Use
+
+ios,persistent wifi	Persistent WiFi	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false	
+ios,file sharing	File Sharing	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
+ios,local notifications	Local Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
+ios,push notifications	Push Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
 
 android	Build for:	Android	com.livecode.pi.boolean	true	false			
 android,application permissions		Android	com.livecode.pi.set	true	false	Application Permissions		Write External Storage,Internet,Camera,Read Contacts,Write Contacts,Fine Location,Coarse Location,Vibration,Idle Timer,Ad Support

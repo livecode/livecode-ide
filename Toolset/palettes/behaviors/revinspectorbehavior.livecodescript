@@ -57,7 +57,7 @@ end inspectorOpenEditor
 
 # Layout inspector
 on inspectorLayout
-   local tTop, tLeft, tWidth, tContentRect, tMargin, tPadding, tEditorPadding
+   local tTop, tLeft, tWidth, tHeight, tContentRect, tMargin, tPadding, tEditorPadding
    put the contentRect of me into tContentRect
    put the palettePadding of me into tMargin
    put the palettePadding of me into tPadding
@@ -66,6 +66,7 @@ on inspectorLayout
    put item 1 of tContentRect + tMargin into tLeft
    put item 2 of tContentRect + (tMargin * 2) into tTop
    put (item 3 of tContentRect - item 1 of tContentRect) - (2* tMargin) into tWidth
+   put (item 4 of tContentRect - item 2 of tContentRect) - (2* tMargin) into tHeight
    
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
@@ -78,21 +79,20 @@ on inspectorLayout
          set the topleft of group tElement["label"] of me to tLeft,tTop
          set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
+         set the height of group tElement["label"] of me to tHeight
          unlock messages
          dispatch "rowResize" to group tElement["label"] of me
          
-         local tHeight, tRowWidth
-         put the editorHeight of group tElement["label"] of me into tHeight
+         local tRowWidth, tEditorHeight
+         put the editorHeight of group tElement["label"] of me into tEditorHeight
+         if not tEditorHeight > 0 then
+            put the formattedheight of group tElement["label"] of me into tEditorHeight
+         end if
          put the rowMinWidth of group tElement["label"] of me into tRowWidth
          
          lock messages
-         if tHeight > 0 then
-            add tHeight + tEditorPadding to tTop
-         else
-            //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
-            add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
-         end if
          
+         add tEditorHeight + tEditorPadding to tTop
          if tRowWidth > tInspectorWidth then
             put tRowWidth into tInspectorWidth
          end if

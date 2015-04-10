@@ -152,3 +152,22 @@ on menuPick pPick
    end if
    unlock screen
 end menuPick
+
+local sHeight
+setprop editorHeight pHeight
+   if pHeight is not a number then
+      put 0 into pHeight
+   end if
+   put pHeight into sHeight
+end editorHeight
+
+getprop editorHeight
+   if sHeight is empty then 
+      return 0
+   end if	
+   return sHeight
+end editorHeight
+
+getProp editorWidth
+   return the formattedWidth of me
+end editorWidth
