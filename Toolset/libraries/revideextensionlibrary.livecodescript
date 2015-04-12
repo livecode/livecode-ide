@@ -836,7 +836,7 @@ on __extensionLoad pID, pExtensionDataA
    
    local tStatus, tError
    if tToLoadA["status"] is not "error" then
-      load extension (tToLoadA["install_path"] & slash & "module.lcm")
+      load extension from file (tToLoadA["install_path"] & slash & "module.lcm")
       if the result is not empty then
          put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
          put "error" into tStatus
@@ -1051,3 +1051,11 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    put tDataA into rDataA
    return empty
 end revIDEExtensionFetchMetadata
+
+function revIDEExtensionModuleFile pKind
+   # Get the internal cache ID
+   local tIndex
+   put __extensionCacheID("name", pKind) into tIndex
+   
+   return __extensionPropertyGet(tIndex, "install_path") & slash & "module.lcm"
+end revIDEExtensionModuleFile

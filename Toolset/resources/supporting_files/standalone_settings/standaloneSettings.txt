@@ -29,7 +29,7 @@ substackFolder		Stacks	com.livecode.pi.boolean	true	false	For the selected stack
 files	Non-stack files in the application	Copy Files	com.livecode.pi.filelist	true	false
 CopyReferencedFiles	Copy Referenced Files	Copy Files	com.livecode.pi.boolean	true	false		
 ReferencedFilesDestination	Destination Folder	Copy Files	com.livecode.pi.string	true	false	
-
+extensions	Extensions to include in the application	Copy Files	com.livecode.pi.set	true	false			execute: get the loadedExtensions; sort it
 
 MacOSX x86-32		Mac	com.livecode.pi.boolean	true	false	Build for Mac OS X (Intel)
 

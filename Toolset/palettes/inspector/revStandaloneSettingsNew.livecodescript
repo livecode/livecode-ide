@@ -70,7 +70,7 @@ end inspectorTitleUpdate
 
 # Sent by an editor when a property value is being changed
 on editorValueChanged pProperty, pValue, pLockUpdates
-   
+   revIDEStandaloneSettingsSet sSelectedStack, pProperty, pValue
 end editorValueChanged
 
 on ideNameChanged

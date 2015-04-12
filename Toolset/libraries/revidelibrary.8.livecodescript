@@ -53,7 +53,7 @@ private command __loadExtension pExtensionFile
    local tExecutableModuleFile
    put revIDESpecialFolderPath("extensions") & slash & tExtensionID & slash & "module.lcm" into tExecutableModuleFile
    if there is a file tExecutableModuleFile then
-      load extension tExecutableModuleFile
+      load extension from file tExecutableModuleFile
       if the result is not empty then
          __revIDEError("loading extension failed: " && the result)
          return empty
@@ -3970,17 +3970,31 @@ end __standaloneSettingsInfoFilename
 
 function revIDEStandaloneSettings pStack, pSection
    local tInfo
-   put revIDEStandaloneSettingsInfo() into tInfo
+   put revIDEStandaloneSettingsInfoOfSection(pSection) into tInfo
    
-   repeat for each key tGroup in tInfo[pSection]["grouplist"]
-      
+   local tPropsA, tPropName
+   repeat for each element tGroup in tInfo
+      repeat for each element tProp in tGroup["proplist"]
+         put tProp["property_name"] into tPropName
+         put tProp into tPropsA[tGroup["label"]][tPropName]
+         put the cRevStandaloneSettings[tPropName] of pStack into tPropsA[tGroup["label"]][tPropName]["value"]
+      end repeat
    end repeat
-   
-   local tProps
-   set the custompropertyset of pStack to "cRevStandaloneSettings"
-   put the customkeys of pStack into tProps
-   
+   return tPropsA
 end revIDEStandaloneSettings
+
+function revIDEStandaloneSettingsInfoOfSection pSection
+   local tStandaloneDefinitionsPath
+   put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
+   
+   local tInfoA
+   put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
+   
+   local tOrganisedA
+   put __organisePropertyInfo(tInfoA) into tOrganisedA
+   
+   return __orderPropSubArray(tOrganisedA[pSection], true)
+end revIDEStandaloneSettingsInfoOfSection
 
 function revIDEStandaloneSettingsInfo
    local tStandaloneDefinitionsPath
@@ -3991,6 +4005,10 @@ function revIDEStandaloneSettingsInfo
    
    return __orderPropArray(__organisePropertyInfo(tInfoA), revIDEStandaloneSections())
 end revIDEStandaloneSettingsInfo
+
+on revIDEStandaloneSettingsSet pStack, pProperty, pValue
+   set the cRevStandaloneSettings[pProperty] of pStack to pValue
+end revIDEStandaloneSettingsSet
 
 function revIDEStandaloneSections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
