@@ -325,6 +325,14 @@ getProp displayData
    return revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName())
 end displayData
 
+getProp viewColumns [pSection]
+   return 1
+end viewColumns
+
+getProp showSubSections [pSection]
+   return false
+end showSubSections
+
 function inspectorSectionIcon pSection
    return revIDEPropertySectionNameToIconName(pSection)
 end inspectorSectionIcon

@@ -1,19 +1,23 @@
-Property	Label	Section	Editor	User Visible	Read Only	Group	Default	Options
+Property	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection
 ----------------------------------------------------------------------------------------------------
 
-name	Standalone name	General	com.livecode.pi.string	true	false	
+name	Standalone name	General	com.livecode.pi.string	true	false			
 
-inclusions		General	com.livecode.pi.radiogroup	true	false	Inclusions	search	Search for required inclusions when saving the application|search,Select inclusions for the standalone application|select
-askDialog	Ask Dialog	General	com.livecode.pi.boolean	true	false	Inclusions
-answerDialog	Answer Dialog	General	com.livecode.pi.boolean	true	false	Inclusions
-cursors	Cursors	General	com.livecode.pi.boolean	true	false	Inclusions
-revolutionprintdialogs	Print Dialogs	General	com.livecode.pi.boolean	true	false	Inclusions
-Brushes	Brushes	General	com.livecode.pi.boolean	true	false	Inclusions
-pdfPrinter	PDF Printer	General	com.livecode.pi.boolean	true	false	Inclusions
-scriptLibraries		General	com.livecode.pi.set	true	false	Inclusions	Inclusions	execute:dispatch function "revSBLibraryList" to stack "revSBLibrary";get the result;sort it
-databaseDrivers	Database Drivers	General	com.livecode.pi.set	true	false	Database Drivers		execute:get revDatabaseDriverList()
+inclusions		General	com.livecode.pi.radiogroup	true	false	Inclusions	search	Search for required inclusions when saving the application|search,Select inclusions for the standalone application|select	Inclusions
+askDialog	Ask Dialog	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+answerDialog	Answer Dialog	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+cursors	Cursors	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+revolutionprintdialogs	Print Dialogs	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+Brushes	Brushes	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+pdfPrinter	PDF Printer	General	com.livecode.pi.boolean	true	false	Inclusion Options		Inclusions
+scriptLibraries	Script Libraries	General	com.livecode.pi.set	true	false	Inclusion Options		execute:dispatch function "revSBLibraryList" to stack "revSBLibrary";get the result;sort it	Inclusions
 
-setToProfile		General	com.livecode.pi.enum	true	false	Property Profiles	remove	Remove all profiles on objects|remove,Set all objects to profile|set,Include all profiles on objects and the profile library|all,Include selected profiles on objects and the profile library|selected
+databaseSupport	Database Drivers	General	com.livecode.pi.boolean	true	false	Inclusion Options			Inclusions
+databaseDrivers	Database Drivers	General	com.livecode.pi.set	true	false	Inclusion Options		execute:get revDatabaseDriverList()	Inclusions
+
+extensions	Extensions to include in the application	General	com.livecode.pi.set	true	false			execute: get the loadedExtensions; sort it	Inclusions
+
+setToProfile		General	com.livecode.pi.enum	true	false	Property Profiles	remove	Remove all profiles on objects|remove,Set all objects to profile|set,Include all profiles on objects and the profile library|all,Include selected profiles on objects and the profile library|selected	Property Profiles
 includeProfiles	Profiles to include	General	com.livecode.pi.enum	true	false	Property Profiles
 
 defaultBuildFolder	Default Build Folder	General	com.livecode.pi.file	true	false	Default Build Folder
@@ -29,56 +33,56 @@ substackFolder		Stacks	com.livecode.pi.boolean	true	false	For the selected stack
 files	Non-stack files in the application	Copy Files	com.livecode.pi.filelist	true	false
 CopyReferencedFiles	Copy Referenced Files	Copy Files	com.livecode.pi.boolean	true	false		
 ReferencedFilesDestination	Destination Folder	Copy Files	com.livecode.pi.string	true	false	
-extensions	Extensions to include in the application	Copy Files	com.livecode.pi.set	true	false			execute: get the loadedExtensions; sort it
 
 MacOSX x86-32		Mac	com.livecode.pi.boolean	true	false	Build for Mac OS X (Intel)
 
 OSX,iconFile	Application Icon	Mac	com.livecode.pi.file	true	false
 OSX,documenticonFile	Document Icon	Mac	com.livecode.pi.file	true	false
 
-OSX,appicon	Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs
-OSX,smallappicon	Small Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs
+OSX,appicon	Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs			Icons to display on ask and answer dialogs
+OSX,smallappicon	Small Application Icon	Mac	com.livecode.pi.icon	true	false	Icons to display on ask and answer dialogs			Icons to display on ask and answer dialogs
 
-OSX,plist 	Mac	com.livecode.pi.boolean	true	false	PLIST	Enter the information and have LiveCode write the PLIST file for you,Choose a PLIST file to import into the application bundle
-OSX,name	Name	Mac	com.livecode.pi.string	true	false	PLIST
-OSX,signature	Signature	Mac	com.livecode.pi.string	true	false	PLIST
-OSX,documentType	Document Type	Mac	com.livecode.pi.string	true	false	PLIST
-OSX,documentExtension	Document Extension	Mac	com.livecode.pi.string	true	false	PLIST
+OSX,plist 	Mac	com.livecode.pi.boolean	true	false		Enter the information and have LiveCode write the PLIST file for you	Enter the information and have LiveCode write the PLIST file for you,Choose a PLIST file to import into the application bundle	PLIST
+OSX,name	Name	Mac	com.livecode.pi.string	true	false	PLIST			PLIST
+OSX,signature	Signature	Mac	com.livecode.pi.string	true	false	PLIST			PLIST
+OSX,documentType	Document Type	Mac	com.livecode.pi.string	true	false	PLIST			PLIST
+OSX,documentExtension	Document Extension	Mac	com.livecode.pi.string	true	false	PLIST			PLIST
 
-OSX,shortVersion	Short Version	Mac	com.livecode.pi.string	true	false	Version Information
-OSX,longVersion	Long Version	Mac	com.livecode.pi.string	true	false	Version Information
-OSX,info	Get Info String	Mac	com.livecode.pi.string	true	false	Version Information
-OSX,copyright	Copyright Notice	Mac	com.livecode.pi.string	true	false	Version Information
-OSX,identifier	Bundle Identifier	Mac	com.livecode.pi.string	true	false	Version Information
+OSX,shortVersion	Short Version	Mac	com.livecode.pi.string	true	false	   			Version Information
+OSX,longVersion	Long Version	Mac	com.livecode.pi.string	true	false	   			Version Information
+OSX,info	Get Info String	Mac	com.livecode.pi.string	true	false				Version Information
+OSX,copyright	Copyright Notice	Mac	com.livecode.pi.string	true	false				Version Information
+OSX,identifier	Bundle Identifier	Mac	com.livecode.pi.string	true	false				Version Information
 
 Windows		Windows	com.livecode.pi.string	true	false	Build for Windows
 
-Windows,iconFile	Application Icon	Windows	com.livecode.pi.file	true	false
-Windows,documenticonFile	Document Icon	Windows	com.livecode.pi.file	true	false
-Windows,fileDescription	File Description	Windows	com.livecode.pi.string	true	false
-Windows,LegalCopyright	Copyright Notice	Windows	com.livecode.pi.string	true	false
-Windows,comments	Comments	Windows	com.livecode.pi.string	true	false
-Windows,legalTrademarks	Legal Trademarks	Windows	com.livecode.pi.string	true	false
-Windows,ProductName	Product Name	Windows	com.livecode.pi.string	true	false	
-Windows,companyname	Company Name	Windows	com.livecode.pi.string	true	false	
+Windows,iconFile	Application Icon	Windows	com.livecode.pi.file	true	false				Icon
+Windows,documenticonFile	Document Icon	Windows	com.livecode.pi.file	true	false				Icon
+
+Windows,fileDescription	File Description	Windows	com.livecode.pi.string	true	false	Version Information			Version Information
+Windows,LegalCopyright	Copyright Notice	Windows	com.livecode.pi.string	true	false	Version Information			Version Information
+Windows,comments	Comments	Windows	com.livecode.pi.string	true	false	Version Information			Version Information
+Windows,legalTrademarks	Legal Trademarks	Windows	com.livecode.pi.string	true	false	Version Information			Version Information
+Windows,ProductName	Product Name	Windows	com.livecode.pi.string	true	false	Version Information			Version Information	
+Windows,companyname	Company Name	Windows	com.livecode.pi.string	true	false	Version Information			Version Information	
 	
-Windows,fileversion1		Windows	com.livecode.pi.string	true	false	File Version
-Windows,fileversion2		Windows	com.livecode.pi.string	true	false	File Version
-Windows,fileversion3		Windows	com.livecode.pi.string	true	false	File Version	
-Windows,fileversion4		Windows	com.livecode.pi.string	true	false	File Version
-Windows,productversion1		Windows	com.livecode.pi.string	true	false	Product Version
-Windows,productversion2		Windows	com.livecode.pi.string	true	false	Product Version	
-Windows,productversion3		Windows	com.livecode.pi.string	true	false	Product Version	
-Windows,productversion4		Windows	com.livecode.pi.string	true	false	Product Version	
-Windows,originalFilename	Original Filename	Windows	com.livecode.pi.string	true	false	
-Windows,internalName	Internal Name	Windows	com.livecode.pi.string	true	false	
-Windows,privateBuild	Private Build	Windows	com.livecode.pi.string	true	false
-Windows,specialBuild	Special Build	Windows	com.livecode.pi.string	true	false
-Windows,iconFile		Windows	com.livecode.pi.string	true	false	
+Windows,fileversion1		Windows	com.livecode.pi.string	true	false	File Version			Version Information
+Windows,fileversion2	.	Windows	com.livecode.pi.string	true	false	File Version			Version Information
+Windows,fileversion3	.	Windows	com.livecode.pi.string	true	false	File Version			Version Information
+Windows,fileversion4	.	Windows	com.livecode.pi.string	true	false	File Version			Version Information
+Windows,productversion1		Windows	com.livecode.pi.string	true	false	Product Version			Version Information
+Windows,productversion2	.	Windows	com.livecode.pi.string	true	false	Product Version			Version Information	
+Windows,productversion3	.	Windows	com.livecode.pi.string	true	false	Product Version			Version Information	
+Windows,productversion4	.	Windows	com.livecode.pi.string	true	false	Product Version			Version Information	
+Windows,originalFilename	Original Filename	Windows	com.livecode.pi.string	true	false				Version Information	
+Windows,internalName	Internal Name	Windows	com.livecode.pi.string	true	false				Version Information	
+Windows,privateBuild	Private Build	Windows	com.livecode.pi.string	true	false				Version Information
+Windows,specialBuild	Special Build	Windows	com.livecode.pi.string	true	false				Version Information
+Windows,iconFile		Windows	com.livecode.pi.string	true	false				Version Information	
 
-Windows,uacExecutionLevel	UAC Execution Level	Windows	com.livecode.pi.enum	true	false			Default|,Same as invoker|asInvoker,Highest Available|highestAvailable,Request Administrator|requestAdministrator
+Windows,uacExecutionLevel		Windows	com.livecode.pi.enum	true	false			Default|,Same as invoker|asInvoker,Highest Available|highestAvailable,Request Administrator|requestAdministrator	UAC Execution Level
 
-Windows,usePixelScaling	Enable Hi-DPI scaling	Windows	com.livecode.pi.boolean	true	false	
+Windows,usePixelScaling	Enable Hi-DPI scaling	Windows	com.livecode.pi.boolean	true	false				Hi-DPI support
 
 Windows,UUID		Windows	com.livecode.pi.string	true	false	
 
@@ -91,48 +95,91 @@ UNIX,pageSetup	Unix Page Setup	Linux	com.livecode.pi.boolean	true	false	Include:
 UNIX,printerChooser	Unix Printer Chooser	Linux	com.livecode.pi.boolean	true	false	Include:
 
 ios	iOS	iOS	com.livecode.pi.boolean	true	false	Build for:
-ios,device family		iOS	com.livecode.pi.set	true	false	Build for:	1	iPod and iPhone|1,iPad|2
-ios,minimum version		iOS	com.livecode.pi.enum	true	false	Build for:	5.1.1	5.1.1 or later|5.1.1,6.0 or later|6.0,6.1 or later|6.1,7.0 or later|7.0,7.1 or later|7.1,8.0 or later|8.0,8.1 or later|8.1,8.2 or later|8.2
+ios,device family	Device Family	iOS	com.livecode.pi.set	true	false	Build for:	1	iPod and iPhone|1,iPad|2
+ios,minimum version	Minimum Version	iOS	com.livecode.pi.enum	true	false	Build for:	5.1.1	5.1.1 or later|5.1.1,6.0 or later|6.0,6.1 or later|6.1,7.0 or later|7.0,7.1 or later|7.1,8.0 or later|8.0,8.1 or later|8.1,8.2 or later|8.2
 
-ios,display name	Display Name	iOS	com.livecode.pi.string	true	false	Basic Application Settings
-ios,bundle version	Version	iOS	com.livecode.pi.string	true	false	Basic Application Settings
-ios,bundle id	Internal App ID	iOS	com.livecode.pi.string	true	false	Basic Application Settings
-ios,profile	Profile	iOS	com.livecode.pi.enum	true	false	Basic Application Settings
-ios,include	revzip	revZip	iOS	com.livecode.pi.boolean	true	false	Externals	false
-ios,include	revxml	revXML	iOS	com.livecode.pi.boolean	true	false	Externals	false
-ios,include	dbsqlite	SQLite	iOS	com.livecode.pi.boolean	true	false	Externals	false
-ios,include	dbmysql	MySQL	iOS	com.livecode.pi.boolean	true	false	Externals	false
-ios,include	revpdfprinter	PDF Printing	iOS	com.livecode.pi.boolean	true	false	Externals	false
-ios,include	revsecurity	Encryption	iOS	com.livecode.pi.boolean	true	false	Externals	false
+ios,display name	Display Name	iOS	com.livecode.pi.string	true	false	Basic Application Settings 			Basic Application Settings
+ios,bundle version	Version	iOS	com.livecode.pi.string	true	false	Basic Application Settings 			Basic Application Settings
+ios,bundle id	Internal App ID	iOS	com.livecode.pi.string	true	false	Basic Application Settings			Basic Application Settings
+ios,profile	Profile	iOS	com.livecode.pi.enum	true	false	Basic Application Settings			Basic Application Settings
+ios,include	revzip	revZip	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+ios,include	revxml	revXML	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+ios,include	dbsqlite	SQLite	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+ios,include	dbmysql	MySQL	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+ios,include	revpdfprinter	PDF Printing	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+ios,include	revsecurity	Encryption	iOS	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
 
-ios,status bar hidden	iPhone Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true
-ios,iPad status bar hidden	iPad Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true
-ios,status bar style	Status Bar Style	iOS	com.livecode.pi.enum	true	false	Status Bar	Default	Default|Default,Black Opaque|BlackOpaque,Black Translucent|BlackTranslucent,Solid|Solid
+ios,status bar hidden	iPhone Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true	Status Bar
+ios,iPad status bar hidden	iPad Status Bar	iOS	com.livecode.pi.radiogroup	true	false	Status Bar	false	Visible|false,Hidden|true	Status Bar
+ios,status bar style	Status Bar Style	iOS	com.livecode.pi.enum	true	false	Status Bar	Default	Default|Default,Black Opaque|BlackOpaque,Black Translucent|BlackTranslucent,Solid|Solid	Status Bar
 
-ios,iphone initial orientation	iPhone Initial Orientation	iOS	com.livecode.pi.enum	true	false	Orientation Options	Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight
-ios,ipad initial orientations	iPad Supported Initial Orientations	iOS	com.livecode.pi.set	true	false	Orientation Options	Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight
+ios,iphone initial orientation	iPhone Initial Orientation	iOS	com.livecode.pi.enum	true	false		Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight	Orientation Options
+ios,ipad initial orientations	iPad Supported Initial Orientations	iOS	com.livecode.pi.set	true	false		Portrait	Portrait|Portrait,Portrait Upside-Down|PortraitUpsideDown,Landscape Left|LandscapeLeft,Landscape Right|LandscapeRight	Orientation Options
 
-ios,url name	URL Name	iOS	com.livecode.pi.string	true	false	Custom URL Scheme
+ios,url name	URL Name	iOS	com.livecode.pi.string	true	false				Custom URL Scheme
 
-ios,location auth type		iOS	com.livecode.pi.radiogroup	true	false	Location Authorization Type	Always	Always,When In Use
+ios,location auth type		iOS	com.livecode.pi.radiogroup	true	false	Location Authorization Type	Always	Always,When In Use	Location Authorization Type
 
-ios,persistent wifi	Persistent WiFi	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false	
-ios,file sharing	File Sharing	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
-ios,local notifications	Local Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
-ios,push notifications	Push Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false
+ios,persistent wifi	Persistent WiFi	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false		Requirements and Restrictions
+ios,file sharing	File Sharing	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false		Requirements and Restrictions
+ios,local notifications	Local Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false		Requirements and Restrictions
+ios,push notifications	Push Notifications	iOS	com.livecode.pi.boolean	true	false	Requirements and Restrictions	false		Requirements and Restrictions
 
-android	Build for:	Android	com.livecode.pi.boolean	true	false			
-android,application permissions		Android	com.livecode.pi.set	true	false	Application Permissions		Write External Storage,Internet,Camera,Read Contacts,Write Contacts,Fine Location,Coarse Location,Vibration,Idle Timer,Ad Support
-android,billingProvider	Store	Android	com.livecode.pi.enum	true	false	In App Purchasing	Google	Google,Samsung
-android,customUrlScheme	Custom URL Scheme	Android	com.livecode.pi.string
-android,device capabilities	Capabilities	Android	com.livecode.pi.radiogroup
-android,inAppPurchasing	In App Purchasing	Android	com.livecode.pi.boolean	true	false	In App Purchasing	
-android,include dbmysql	Externals	Android	com.livecode.pi.boolean	true	false	Externals	false
-android,include dbsqlite 	Externals	Android	com.livecode.pi.boolean	true	false	Externals	false
-android,include revsecurity	Externals	Android	com.livecode.pi.boolean	true	false	Externals	false
-android,include revzip 	Externals	Android	com.livecode.pi.boolean	true	false	Externals	false
-android,include revxml	Externals	Android	com.livecode.pi.boolean	true	false	Externals	false
-android,initial orientation	Initial Orientation	Android	com.livecode.pi.enum	true	false		Portrait	Portrait,Landscape
-android,minimum version	Minimum Android Version	Android	com.livecode.pi.enum	true	false		2.2 - Froyo	2.2 - Froyo,2.3 - Gingerbread,2.3.3,3.0 - Honeycomb,3.1
-android,signing	Signing	Android	com.livecode.pi.enum	true	false		Sign with my key	Sign with my key,Sign for development only,Do not sign
-android,storeKey	Store Public Key	Android	com.livecode.pi.string	true	false	In App Purchasing	
+ios,device capabilities		iOS	com.livecode.pi.multiplechoice	true	false		n/a	Required|true,Prohibited|false,n/a:Telephony|telephony,Peer-Peer|peer-peer,SMS|sms,Still Camera|still-camera,Auto-Focus Camera|auto-focus-camera,Front-Facing Camera|front-facing-camera,Camera Flash|camera-flash,Video Camera|video-camera,Accelerometer|accelerometer,Gyroscope|gyroscope,Location Services|location-services,GPS|gps,Magnetometer|magnetometer,Microphone|microphone,Game-Kit|gamekit,WiFi|wifi,OpenGL ES 1.1|opengles-1,OpenGL ES 2.0|opengles-2	Requirements and Restrictions
+
+ios,prerendered icon	Prerendered Icon	iOS	com.livecode.pi.boolean	true	false	Icons			Icons
+ios,iphone icon	iPhone	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,retina icon	Hi-Res iPhone	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,iOS 7 retina icon	iOS 7 Hi-Res iPhone	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,iPhone 6 Plus icon	iPhone 6 Plus	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,ipad icon	iPad	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,ipad retina icon	Hi-Res iPad	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,iOS 7 ipad icon	iOS 7 iPad	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+ios,iOS 7 ipad retina icon	iOS 7 Hi-Res iPad	iOS	com.livecode.pi.file	true	false	Icons		PNG Images|png,All files	Icons
+
+ios,iphone splash	iPhone	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,retina splash	Hi-Res iPhone	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,iphone 4inch splash icon	4 Inch iPhone	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,iphone 6 splash	iPhone 6	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,iPhone 6 Plus Portrait splash	iPhone 6 Plus Portrait	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,iPhone 6 Plus Landscape splash	iPhone 6 Plus Landscape	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,ipad portrait splash	iPad Portrait	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,ipad landscape splash	iPad Landscape	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,ipad retina portrait splash	Hi-Res iPad Portrait	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+ios,ipad retina landscape splash	Hi-Res iPad Landscape	iOS	com.livecode.pi.file	true	false	Splash Screens		PNG Images|png,All files	Splash Screens
+
+
+android	Android	Android	com.livecode.pi.boolean	true	false	Build for:
+
+android,label	Label	Android	com.livecode.pi.string	true	false				Basic Application Settings
+android,identifier	Identifier	Android	com.livecode.pi.string	true	false				Basic Application Settings
+android,version name	Version Name	Android	com.livecode.pi.string	true	false	Basic Application Settings			Basic Application Settings
+android,version code	Version Code	Android	com.livecode.pi.string	true	false	Basic Application Settings			Basic Application Settings
+android,icon	Icon	Android	com.livecode.pi.file	true	false			PNG Images|png,All files	Basic Application Settings
+android,splash	Splash	Android	com.livecode.pi.file	true	false			PNG Images|png,All files	Basic Application Settings
+android,signing	Signing	Android	com.livecode.pi.enum	true	false		Sign with my key	Sign with my key,Sign for development only,Do not sign	Basic Application Settings
+android,key	Key	Android	com.livecode.pi.file	true	false			Java keystores|keystore,All files	Basic Application Settings
+android,install location	Install Location	com.livecode.pi.enum	true	false		Internal Storage Only	Internal Storage Only,Allow External Storage,Prefer External Storage	Basic Application Settings
+
+android,include	revzip	revZip	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,include	revxml	revXML	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,include	dbsqlite	SQLite	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,include	dbmysql	MySQL	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,include	revpdfprinter	PDF Printing	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,include	revsecurity	SSL & Encryption	Android	com.livecode.pi.boolean	true	false	Externals	false		Basic Application Settings
+android,customUrlScheme	Custom URL Scheme	Android	com.livecode.pi.string	true	false			Basic Application Settings
+
+android,pushSenderID	Push Sender ID	Android	com.livecode.pi.string	true	false				Basic Application Settings
+android,statusBarIcon	Status Bar Icon	Android	com.livecode.pi.file	true	false			PNG Images|png,All files	Basic Application Settings
+
+android,inAppPurchasing	In App Purchasing	Android	com.livecode.pi.boolean	true	false				In App Purchasing	
+android,billingProvider	Store	Android	com.livecode.pi.enum	true	false		Google	Google,Samsung	In App Purchasing
+android,storeKey	Store Public Key	Android	com.livecode.pi.string	true	false				In App Purchasing	
+
+android,minimum version	Minimum Android Version	Android	com.livecode.pi.enum	true	false	Requirements and Restrictions	2.2 - Froyo	2.2 - Froyo,2.3 - Gingerbread,2.3.3,3.0 - Honeycomb,3.1	Requirements and Restrictions
+android,device capabilities	Device capabilities	Android	com.livecode.pi.multiplechoice	true	false	Requirements and Restrictions	n/a	Required|true,Prohibited|false,n/a:Camera|hardware.camera,Camera Autofocus|hardware.camera.autofocus,Camera Flash|hardware.camera.flash,Front Camera|hardware.camera.front,Accelerometer|hardware.accelerometer,Telephony|hardware.telephony,Telephony CDMA|hardware.telephony.cdma,Telephony GSM|hardware.telephony.gsm,Fake Touch|hardware.faketouch,Multitouch|hardware.touchscreen.multitouch,Multitouch Distinct|hardware.touchscreen.multitouch.distinct,Multitouch Jazzhand|hardware.touchscreen.multitouch.jazzhand	Requirements and Restrictions
+
+android,application permissions		Android	com.livecode.pi.set	true	false	Application Permissions		Write External Storage,Internet,Camera,Read Contacts,Write Contacts,Fine Location,Coarse Location,Vibration,Idle Timer,Ad Support	Application Permissions
+
+android,initial orientation	Initial Orientation	Android	com.livecode.pi.enum	true	false		Portrait	Portrait,Landscape	User Interface Options
+android,status bar hidden	Status Bar	Android	com.livecode.pi.radiogroup	true	false		false	Visible|false,Hidden|true	User Interface Options	

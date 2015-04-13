@@ -333,9 +333,10 @@ on rowLabelWidthSet pValue
 end rowLabelWidthSet
 
 private function rowLabelWidthCalculate
-   local tMaxWidth, tLabelWidth
-   repeat with x = 1 to the number of groups of me
-      put the rowLabelWidth of group x of me into tLabelWidth
+   local tMaxWidth, tLabelWidth, tChildren
+   put the childControlNames of this card of me into tChildren
+   repeat for each line tControl in tChildren
+      put the rowLabelWidth of group tControl of me into tLabelWidth
       if tLabelWidth > tMaxWidth then
          put tLabelWidth into tMaxWidth
       end if

@@ -2,7 +2,18 @@
 local sSelectedStack
 
 on preOpenStack
-   put revIDEStackOfObject(line 1 of revIDESelectedObjects()) into sSelectedStack
+   local tSelected
+   put revIDESelectedObjects() into tSelected
+   if tSelected is empty then
+      exit preOpenStack
+   end if
+   
+   put revIDEStackOfObject(line 1 of tSelected) into sSelectedStack
+   
+   if the cRevStandaloneSettings of sSelectedStack is empty then
+      dispatch "revDefaultStandaloneSettings" to stack "revSBLibrary" with sSelectedStack
+   end if
+   
    inspectorTitleUpdate
    
    # Set the inspector behaviour
@@ -110,6 +121,10 @@ on ideSelectedObjectChanged
    
    put tSelectedStack into sSelectedStack
    
+   if the cRevStandaloneSettings of sSelectedStack is empty then
+      dispatch "revDefaultStandaloneSettings" to stack "revSBLibrary" with sSelectedStack
+   end if
+   
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEStandaloneSettingsInfo()
    inspectorTitleUpdate
@@ -136,6 +151,21 @@ end revIDEPropertyChanged
 getProp displayData
    return revIDEStandaloneSettings(sSelectedStack, inspectorSectionGetName())
 end displayData
+
+getProp viewColumns [pSection]
+   switch pSection
+      case "iOS"
+         return 3
+      case "Android"
+         return 2
+      default
+         return 1
+   end switch
+end viewColumns
+
+getProp showSubSections [pSection]
+   return true
+end showSubSections
 
 function inspectorSectionIcon pSection
    return revIDEStandaloneSectionNameToIconName(pSection)
