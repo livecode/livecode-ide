@@ -126,7 +126,6 @@ component Misc
 
 component Plugins
 	into [[ToolsFolder]]/Plugins place
-		folder "ide:Plugins/Navigator Commands"
 		stack ide:Plugins/Go_RevNet.rev
 		stack ide:Plugins/Navigator.rev
 		stack "ide:Plugins/RegExBuilder 1.6.rev"
@@ -450,6 +449,21 @@ component Runtime.Android
 //////////
 
 component Runtime.iOS
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
+		executable ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
+		executable ios:iphonesimulator5.1/Release/revsecurity.dylib as RevSecurity
+		executable ios:iphonesimulator5.1/Release/revpdfprinter.dylib as RevPdfPrinter
+		executable ios:iphonesimulator5.1/Release/revzip.dylib as RevZip
+		executable ios:iphonesimulator5.1/Release/revxml.dylib as RevXml
+		executable ios:iphonesimulator5.1/Release/revdb.dylib as RevDb
+		executable ios:iphonesimulator5.1/Release/dbsqlite.dylib as DbSqlite
+		executable ios:iphonesimulator5.1/Release/dbmysql.dylib as DbMysql
+		file ios:iphonesimulator5.1/Release/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator5.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator5.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator5.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator5.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator5.1/Release/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
 		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
 		executable ios:iphonesimulator6.1/Release/revsecurity.dylib as RevSecurity
@@ -463,6 +477,7 @@ component Runtime.iOS
 		file ios:iphonesimulator6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator6.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator6.1/Release/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
 		executable ios:iphonesimulator7.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator7.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator6.1/Release/revsecurity.dylib
@@ -476,6 +491,7 @@ component Runtime.iOS
 		file ios:iphonesimulator7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator7.1/Release/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
 		executable ios:iphonesimulator8.2/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphonesimulator8.2/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator6.1/Release/revsecurity.dylib
@@ -490,6 +506,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.2/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
 		file ios:iphonesimulator8.2/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.2/Release/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
 		executable ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
 		executable ios:iphoneos8.2/Release/revsecurity.lcext as RevSecurity base ios:iphonesimulator6.1/Release/revsecurity.dylib
@@ -509,6 +526,7 @@ component Runtime.iOS
 		file ios:iphoneos8.2/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos8.2/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos8.2/Release/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -588,8 +606,6 @@ component Databases.Linux
 		executable linux:[[TargetArchitecture]]/release/dbodbc.so
 		executable linux:[[TargetArchitecture]]/release/dbpostgresql.so
 		executable linux:[[TargetArchitecture]]/release/dbsqlite.so
-		if TargetEdition is "Commercial" then
-			executable linux:[[TargetArchitecture]]/release/dboracle.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
@@ -609,7 +625,7 @@ component Databases.Windows
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
 		if TargetEdition is "Commercial" then
-			executable windows:dboracle.dll
+			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
@@ -629,7 +645,7 @@ component Databases.MacOSX
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
 		if TargetEdition is "Commercial" then
-			executable macosx:dboracle.bundle
+			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
