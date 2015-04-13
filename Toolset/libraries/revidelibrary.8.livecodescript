@@ -311,6 +311,8 @@ private function __propertyDataFromInfoFile pFileName
       put item 9 of tLine into tOptions
       replace comma with return in tOptions
       put tOptions into tDataA[tPropName]["options"]
+      
+      put item 10 of tLine into tDataA[tPropName]["subsection"]
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
@@ -326,6 +328,7 @@ private function __organisePropertyInfo pInfoA
       
       # The groups are ordered by their appearance in the spec file
       put pInfoA[tKey]["group_order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
+      put pInfoA[tKey]["subsection"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["subsection"]
       
       # Carry over the generic prop information into the object prop info array
       put pInfoA[tKey] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]
@@ -493,6 +496,7 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    repeat for each line tNumber in tKeys
       if pIsGroupList then
          put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["label"]
+         put tSparseOrderedA[tNumber]["subsection"] into tOrderedA[tCount]["subsection"]
          put __orderPropSubArray(tSparseOrderedA[tNumber], false) into tOrderedA[tCount]["proplist"]
       else
          put tSparseOrderedA[tNumber] into tOrderedA[tCount]

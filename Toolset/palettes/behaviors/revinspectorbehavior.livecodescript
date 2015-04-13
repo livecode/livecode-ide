@@ -71,9 +71,17 @@ on inspectorLayout
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
    
+   local tSubsections, tCurSection
+   put the showSubSections of me into tSubsections
+   
    lock screen
    local tInspectorWidth
    repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
+      if tSubsections and tElement["subsection"] is not tCurSection then
+         --set the topleft of group tElement["subsection"] to tLeft,tTop
+         --add the formattedheight of field tElement["subsection"] to tTop
+      end if
+      
       if there is a group tElement["label"] of me then
          lock messages
          set the topleft of group tElement["label"] of me to tLeft,tTop
@@ -174,10 +182,23 @@ private on inspectorGenerate
    end if
    unlock messages
    
+   local tSubsections
+   put the showSubSections of me into tSubsections
+   
    local tElement
    repeat with x = 1 to the number of elements in tPropertyData["grouplist"]
       put tPropertyData["grouplist"][x] into tElement
       if tElement["label"] is empty then next repeat
+      
+      if tSubsections and tElement["subsection"] is not empty then
+         if false then --there is not a group tElement["subsection"] then
+            create group tElement["subsection"]
+            create field tElement["subsection"] in it
+            set the textstyle["bold"] of it to true
+            set the textstyle["underline"] of it to true
+         end if
+      end if
+      
       lock messages
       copy group "template" to me
       set the name of it to tElement["label"]
@@ -188,7 +209,6 @@ private on inspectorGenerate
       put the short name of group tElement["label"] of me into tName
       if exists(group tElement["label"] of me) then
          set the rowLabel of group tElement["label"] of me to tElement["label"]
-         
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
@@ -209,7 +229,7 @@ private on inspectorGenerate
    end repeat
    reset the templatefield
    reset the templategroup
-
+   
    unlock screen
 end inspectorGenerate
 
