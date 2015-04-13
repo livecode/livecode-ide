@@ -126,7 +126,6 @@ component Misc
 
 component Plugins
 	into [[ToolsFolder]]/Plugins place
-		folder "ide:Plugins/Navigator Commands"
 		stack ide:Plugins/Go_RevNet.rev
 		stack ide:Plugins/Navigator.rev
 		stack "ide:Plugins/RegExBuilder 1.6.rev"
@@ -622,8 +621,6 @@ component Databases.Linux
 		executable linux:[[TargetArchitecture]]/release/dbodbc.so
 		executable linux:[[TargetArchitecture]]/release/dbpostgresql.so
 		executable linux:[[TargetArchitecture]]/release/dbsqlite.so
-		if TargetEdition is "Commercial" then
-			executable linux:[[TargetArchitecture]]/release/dboracle.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
@@ -643,7 +640,7 @@ component Databases.Windows
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
 		if TargetEdition is "Commercial" then
-			executable windows:dboracle.dll
+			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
@@ -663,7 +660,7 @@ component Databases.MacOSX
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
 		if TargetEdition is "Commercial" then
-			executable macosx:dboracle.bundle
+			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
