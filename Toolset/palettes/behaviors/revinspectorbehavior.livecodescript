@@ -154,7 +154,7 @@ private on inspectorGenerate
    set the margins of the templategroup to 0
    set the visible of the templategroup to false
    
-   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/rowbehavior.livecodescript")
+   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/revinspectorgroupbehavior.livecodescript")
    
    set the traversalon of the templatefield to false
    set the threed of the templatefield to false

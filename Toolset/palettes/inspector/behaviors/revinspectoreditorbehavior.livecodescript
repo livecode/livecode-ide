@@ -1,4 +1,4 @@
-﻿script "editorSharedBehavior"
+﻿script "revInspectorEditorBehavior"
 local sPropertyInfo
 setProp editorPropertyInfo pPropertyInfo
    put pPropertyInfo into sPropertyInfo

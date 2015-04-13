@@ -1,4 +1,4 @@
-﻿script "revIDEInspectorBehaviorRow"
+﻿script "revInspectorGroupBehavior"
 constant kOverflowSize = 500
 
 # Adds the editor to the row
@@ -24,7 +24,7 @@ on propertyRegister pPropertyInfo
       copy group "template" of stack tEditor to me
       put it into tGroupLongID
       set the name of it to tPropName
-      set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/editorsharedbehavior.livecodescript")
+      set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript")
       set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
       
       if pPropertyInfo["label"] is not empty then
