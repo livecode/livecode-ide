@@ -1,4 +1,8 @@
 ﻿script "revInspectorBehavior"
+constant kMaxHeight = 670
+constant kColumnWidth = 400
+constant kMaxLabelSize = 200
+
 # The inspector data
 local sDataA
 
@@ -56,6 +60,7 @@ on inspectorOpenEditor pEditor
 end inspectorOpenEditor
 
 # Layout inspector
+local sCurColumns
 on inspectorLayout
    local tTop, tLeft, tWidth, tHeight, tContentRect, tMargin, tPadding, tEditorPadding
    put the contentRect of me into tContentRect
@@ -63,23 +68,53 @@ on inspectorLayout
    put the palettePadding of me into tPadding
    put tPadding / 2 into tEditorPadding
    
+   local tViewColumns
+   put the viewColumns[inspectorSectionGetName()] of me into tViewColumns
+   
    put item 1 of tContentRect + tMargin into tLeft
    put item 2 of tContentRect + (tMargin * 2) into tTop
-   put (item 3 of tContentRect - item 1 of tContentRect) - (2* tMargin) into tWidth
+   put (item 3 of tContentRect - item 1 of tContentRect) into tWidth
    put (item 4 of tContentRect - item 2 of tContentRect) - (2* tMargin) into tHeight
+   
+   if sCurColumns is not empty and tViewColumns is not sCurColumns then
+      if tViewColumns < sCurColumns then
+         divide tWidth by sCurColumns
+      end if
+   end if
+   put tViewColumns into sCurColumns
+   
+   subtract (2* tViewColumns * tMargin) from tWidth
+   
+   if tViewColumns is not empty then 
+      divide tWidth by tViewColumns
+      if tWidth < kColumnWidth then
+         put kColumnWidth into tWidth
+      end if
+      put kMaxHeight into tHeight
+   end if
    
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
    
-   local tSubsections, tCurSection
+   local tSubsections, tCurSection, tNewSubsection
    put the showSubSections of me into tSubsections
    
-   lock screen
-   local tInspectorWidth
+   local tInspectorWidth, tInspectorHeight, tColumnNumber, tColumnTop
+   put 1 into tColumnNumber
    repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
-      if tSubsections and tElement["subsection"] is not tCurSection then
-         --set the topleft of group tElement["subsection"] to tLeft,tTop
-         --add the formattedheight of field tElement["subsection"] to tTop
+      put false into tNewSubsection
+      if tSubsections and tElement["subsection"] is not empty then
+         if tCurSection is empty then
+            put tTop into tColumnTop
+         end if
+         if tElement["subsection"] is not tCurSection then
+            set the width of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
+            set the width of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
+            set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
+            add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
+            put tElement["subsection"] into tCurSection
+            put true into tNewSubsection
+         end if
       end if
       
       if there is a group tElement["label"] of me then
@@ -96,33 +131,62 @@ on inspectorLayout
          if not tEditorHeight > 0 then
             put the formattedheight of group tElement["label"] of me into tEditorHeight
          end if
-         put the rowMinWidth of group tElement["label"] of me into tRowWidth
+         put rowLabelWidth() + the rowMinWidth of group tElement["label"] of me into tRowWidth
          
          lock messages
-         
          add tEditorHeight + tEditorPadding to tTop
+         if tViewColumns is not empty and tTop > kMaxHeight then
+            if tSubsections then
+               if tNewSubsection then
+                  add 1 to tColumnNumber
+                  if tColumnTop is not empty then
+                     put tColumnTop into tTop
+                  else
+                     put item 2 of tContentRect + (tMargin * 2) into tTop
+                  end if
+                  put (tColumnNumber - 1)*(2 * tMargin + tWidth) + tMargin into tLeft
+                  set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
+                  add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
+                  set the topleft of group tElement["label"] of me to tLeft,tTop 
+                  add  tEditorHeight + tEditorPadding to tTop
+               end if
+            else
+               add 1 to tColumnNumber
+               put item 2 of tContentRect + (tMargin * 2) into tTop
+               put (tColumnNumber - 1)*(2 * tMargin + tWidth) + tMargin into tLeft
+               set the topleft of group tElement["label"] of me to tLeft,tTop
+               add  tEditorHeight + tEditorPadding to tTop
+            end if
+         end if
+         
          if tRowWidth > tInspectorWidth then
             put tRowWidth into tInspectorWidth
          end if
+         if tTop > tInspectorHeight then
+            put tTop into tInspectorHeight
+         end if
+         
          unlock messages
       end if
    end repeat
    
-   lock messages
-   local tStackLeft
-   set the minWidth of me to (tInspectorWidth + tMargin * 2)
-   if tInspectorWidth > tWidth then
-      put the left of me into tStackLeft
-      set the width of me to (tInspectorWidth + tMargin * 2)
-      set the left of me to tStackLeft
-   end if
-   
-   local tStackTop
+   local tStackTop, tStackLeft
    put the top of me into tStackTop
-   set the minheight of me to tTop + (tMargin * 2)
-   set the maxheight of me to tTop + (tMargin * 2)
-   set the height of me to tTop + (tMargin * 2)
+   put the left of me into tStackLeft
+   
+   lock messages
+   set the minWidth of me to (tInspectorWidth + tMargin * 2)
+   if tInspectorWidth * tViewColumns > tWidth then
+      put (tInspectorWidth * tViewColumns) into tWidth
+   end if
+   set the width of me to tWidth +  tMargin * 2
+   set the left of me to tStackLeft
+   
+   set the minheight of me to tInspectorHeight + (tMargin * 2)
+   set the maxheight of me to tInspectorHeight + (tMargin * 2)
+   set the height of me to tInspectorHeight + (tMargin * 2)
    set the top of me to tStackTop
+   put tViewColumns into sCurColumns
    unlock messages
    unlock screen
 end inspectorLayout
@@ -172,7 +236,7 @@ private on inspectorGenerate
    set the opaque of the templatefield to false
    set the height of the templatefield to 21
    set the locktext of the templatefield to true
-   set the width of the templatefield to 1000
+   set the width of the templatefield to kMaxLabelSize
    
    lock messages
    if there is not a group "template" then
@@ -191,9 +255,11 @@ private on inspectorGenerate
       if tElement["label"] is empty then next repeat
       
       if tSubsections and tElement["subsection"] is not empty then
-         if false then --there is not a group tElement["subsection"] then
-            create group tElement["subsection"]
+         if there is not a group ("Subsection_" & tElement["subsection"]) of me then
+            create group "Subsection_" & tElement["subsection"]
+            show it
             create field tElement["subsection"] in it
+            set the text of it to tElement["subsection"]
             set the textstyle["bold"] of it to true
             set the textstyle["underline"] of it to true
          end if
@@ -208,7 +274,9 @@ private on inspectorGenerate
       local tName
       put the short name of group tElement["label"] of me into tName
       if exists(group tElement["label"] of me) then
-         set the rowLabel of group tElement["label"] of me to tElement["label"]
+         if tElement["label"] is not tElement["subsection"] then
+            set the rowLabel of group tElement["label"] of me to tElement["label"]
+         end if
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
@@ -356,7 +424,9 @@ private function rowLabelWidthCalculate
    local tMaxWidth, tLabelWidth, tChildren
    put the childControlNames of this card of me into tChildren
    repeat for each line tControl in tChildren
-      put the rowLabelWidth of group tControl of me into tLabelWidth
+      if there is a field "label" of group tControl of me then
+         put the rowLabelWidth of group tControl of me into tLabelWidth
+      end if
       if tLabelWidth > tMaxWidth then
          put tLabelWidth into tMaxWidth
       end if

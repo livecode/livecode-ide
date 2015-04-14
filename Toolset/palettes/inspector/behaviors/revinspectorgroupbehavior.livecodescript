@@ -1,6 +1,6 @@
 ﻿script "revInspectorGroupBehavior"
 constant kOverflowSize = 500
-
+constant kMaxPropsPerLine = 4
 # Adds the editor to the row
 local sProperties, sOrder
 on propertyRegister pPropertyInfo
@@ -88,7 +88,12 @@ end propertyDeregistor
 
 # Sets the text for the row label
 setprop rowLabel pLabel
+   local tTopLeft
+   put the topleft of field "label" of me into tTopLeft
    put pLabel into field "label" of me
+   set the height of field "label" of me to the formattedheight of field "label" of me
+   set the width of field "label" of me to the formattedwidth of field "label" of me
+   set the topleft of field "label" of me to tTopLeft
 end rowLabel
 
 getProp rowLabel
@@ -96,7 +101,11 @@ getProp rowLabel
 end rowLabel
 
 getprop rowLabelWidth
-   return the formattedwidth of field "label" of me
+   if field "label" of me is not empty then
+      return the formattedwidth of field "label" of me
+   else
+      return 0
+   end if
 end rowLabelWidth
 
 # Dictates whether the editors act indipendently or overwrite each
@@ -129,16 +138,18 @@ on rowResize
    lock screen
    set the lockloc of me to true
    
-   local tLeft, tTop, tRight, tWidth, tLabelWidth
-   put the left of me into tLeft
+   local tLeft, tTop, tRight, tWidth, tLabelWidth, tGroupLeft
+   put the left of me into tGroupLeft
    put the top of me into tTop
    put the right of me into tRight
    put the width of me into tWidth
-   put rowlabelWidth() into tLabelWidth 
+   put rowLabelWidth() into tLabelWidth
    
    # Position the label
    lock messages
-   set the rect of field "label" of me to tLeft,tTop,tLeft+tLabelWidth,tTop+21
+   set the width of field "label" of me to tLabelWidth
+   set the height of field "label" of me to the formattedheight of field "label" of me
+   set the topleft of field "label" of me to tGroupLeft,tTop
    unlock messages
    
    # Position the controllers
@@ -146,25 +157,42 @@ on rowResize
    put the number of elements of sProperties into tEditorCount
    put tWidth - tLabelWidth into tEditorSpace
    
-   local tEditorWidth, x, tMinWidth, tMaxWidth, tPropLabelWidth
+   local tEditorWidth, x, tMinWidth, tMaxWidth
    put 0 into x
-   put tLabelWidth into tLeft
+   put tGroupLeft + tLabelWidth into tLeft
    local tElement
    
-   local tPropCount
+   local tPropCount, tPropDivisor
    put the number of lines in sOrder into tPropCount
+   put kMaxPropsPerLine into tPropDivisor
    
-   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tLabelPrecede
+   local tPropLabelWidth
+   put propLabelWidth() into tPropLabelWidth
+   
+   repeat forever
+      if tPropDivisor is 1 then
+         exit repeat
+      end if
+      if tPropCount mod tPropDivisor is 0 and tEditorSpace / tPropDivisor > tPropLabelWidth + 50 then
+         exit repeat
+      end if
+      subtract 1 from tPropDivisor
+   end repeat
+   
+   divide tEditorSpace by tPropDivisor 
+   
+   local tSubsections
+   put the showSubSections of this stack into tSubsections
+   
+   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tLabelPrecede, tCount
    repeat for each line tProperty in sOrder
-      put false into tLabelPrecede
+      add 1 to x
       put sProperties[tProperty] into tElement
       put the long id of group tElement["property"] of me into tGroupLongID
       put tEditorSpace into tEditorWidth
       
       if tPropCount > 1 and there is a field tElement["property"] of me then
          show field tElement["property"] of me
-         set the width of field tElement["property"] of me to tEditorWidth
-         put the formattedWidth of field tElement["property"] of me into tPropLabelWidth
          set the width of field tElement["property"] of me to tPropLabelWidth
          subtract tPropLabelWidth from tEditorWidth
       end if
@@ -173,16 +201,18 @@ on rowResize
       put the editorMaxWidth of tGroupLongID into tMaxWidth
       if tMinWidth > 0 and tMinWidth > tEditorWidth then
          put tMinWidth into tEditorWidth
-         if tEditorSpace > tEditorWidth then
-            put tEditorSpace into tEditorWidth
+         if tWidth - tLabelWidth - tPropLabelWidth < tMinWidth then
+            put true into tLabelPrecede
          end if
-         if tPropCount > 1 and there is a field tElement["property"] of me then
-            set the topleft of field tElement["property"] of me to tLeft,tTop
-            add the formattedheight of field tElement["property"] to tTop
-         end if
-         put true into tLabelPrecede
       else if tMaxWidth > 0 and tMaxWidth < tEditorWidth then
          put tMaxWidth into tEditorWidth
+      end if
+      
+      if tPropCount > 1 and there is a field tElement["property"] of me then
+         if tSubsections then
+            set the topleft of field tElement["property"] of me to tLeft,tTop
+            add tPropLabelWidth to tLeft
+         end if
       end if
       
       set the lockloc of tGroupLongID to true
@@ -193,11 +223,18 @@ on rowResize
       lock messages
       # If the editor does not fit where we tried to put it, put it on the next line
       set the topleft of tGroupLongID to tLeft,tTop
-      if tPropCount > 1 and the left of tGroupLongID+ the formattedWidth of tGroupLongID > the width of me and tLastGroupLongID is not empty then
-         add the formattedHeight of tLastGroupLongID to tTop
-         put tLabelWidth into tLeft
-         set the topLeft of tGroupLongID to tLeft,tTop
-         put 0 into x
+      
+      if tLabelPrecede or (tPropCount > 1 and tLeft + tEditorWidth > tRight) then
+         if tLastGroupLongID is not empty then
+            put tGroupLeft + tLabelWidth into tLeft
+            add the formattedHeight of tLastGroupLongID to tTop
+            if there is a field tElement["property"] of me then
+               set the topleft of field tElement["property"] of me to tLeft,tTop
+               add tPropLabelWidth to tLeft
+            end if
+            set the topLeft of tGroupLongID to tLeft,tTop
+            put 0 into x
+         end if
       end if
       unlock messages
       
@@ -206,9 +243,11 @@ on rowResize
       put the editorWidth of tGroupLongID into tEditorWidth
       
       lock messages
-      if not tLabelPrecede and tPropCount > 1 and there is a field tElement["property"] of me then
+      if not tSubsections and not tLabelPrecede and tPropCount > 1 and there is a field tElement["property"] of me then
          set the topleft of field tElement["property"] of me to tLeft + tEditorWidth,tTop
-         add the width of field tElement["property"] of me to tLeft
+         put tGroupLeft + tLabelWidth + x * tEditorSpace into tLeft
+      else
+         
       end if
       
       if tEditorHeight is 0 then
@@ -222,14 +261,13 @@ on rowResize
          put tEditorHeight into tHeightOfRow
       end if
       
-      if tPropCount is 1 or tEditorWidth + tPropLabelWidth > tEditorSpace / 2  or x mod 2 is 1 then
-         put tLabelWidth into tLeft
+      if tPropCount is 1 or x mod tPropDivisor is 0 then
+         put  tGroupLeft + tLabelWidth into tLeft
          add tHeightOfRow to tTop
          put 0 into tHeightOfRow
          put 0 into x
       else
-         put tLabelWidth + tEditorSpace / 2  into tLeft
-         add 1 to x
+         put tGroupLeft + tLabelWidth + x * tEditorSpace into tLeft
       end if
       put tGroupLongID into tLastGroupLongID
       unlock messages
@@ -239,9 +277,22 @@ on rowResize
    unlock screen
 end rowResize
 
+function propLabelWidth
+   local tWidth, tElement
+   repeat for each line tProperty in sOrder
+      put sProperties[tProperty] into tElement
+      if there is a field tElement["property"] of me then
+         set the width of field tElement["property"] of me to the width of me
+         if the formattedwidth of field tElement["property"] of me > tWidth then
+            put the formattedwidth of field tElement["property"] of me into tWidth
+         end if
+      end if
+   end repeat
+   return tWidth
+end propLabelWidth
+
 getProp rowMinWidth
    local tMinWidth, tElement
-   put the formattedwidth of field "label" of me into tMinWidth
    repeat for each line tProperty in sOrder
       put sProperties[tProperty] into tElement
       add the editorMinWidth of group tElement["property"] of me to tMinWidth
