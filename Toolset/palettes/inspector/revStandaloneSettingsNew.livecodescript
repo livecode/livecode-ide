@@ -168,24 +168,24 @@ getProp displayData
          break
       case "Stacks"
          local tSubstacks
-         put tSettingsA["For the selected stack file"]["moveSubstacks"]["value"] is "true" into tSubstacks
+         put tSettingsA["For the selected stack file"]["moveSubstacks"]["value"] is true into tSubstacks
          break
       case "Mac"
-         put tSettingsA["Build for Mac OS X (Intel)"]["MacOSX x86-32"]["value"] into tBuildFor
+         put tSettingsA["Build for Mac OS X (Intel)"]["MacOSX x86-32"]["value"] is true into tBuildFor
          setEnabledOfSection tSettingsA, tBuildFor
          break
       case "Windows"
-         put tSettingsA["Build for Windows"]["Windows"]["value"] into tBuildFor
+         put tSettingsA["Build for Windows"]["Windows"]["value"] is true into tBuildFor
          setEnabledOfSection tSettingsA, tBuildFor
          break
       case "Linux"
          break
       case "iOS"
-         put tSettingsA["Build for iOS"]["iOS"]["value"] into tBuildFor
+         put tSettingsA["Build for iOS"]["iOS"]["value"]  is true into tBuildFor
          setEnabledOfSection tSettingsA, tBuildFor
          break
       case "Android"
-         put tSettingsA["Build for Android"]["android"]["value"] into tBuildFor
+         put tSettingsA["Build for Android"]["android"]["value"] is true into tBuildFor
          setEnabledOfSection tSettingsA, tBuildFor
          break
       default
