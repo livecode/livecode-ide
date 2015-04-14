@@ -299,3 +299,15 @@ getProp rowMinWidth
    end repeat
    return tMinWidth
 end rowMinWidth
+
+setProp rowEnabled pValue
+   local tElement
+   repeat for each line tProperty in sOrder
+      put sProperties[tProperty] into tElement
+      if there is a field tElement["property"] of me then
+         set the enabled of field tElement["property"]  of me to pValue
+      end if
+      set the editorEnabled of group tElement["property"] of me to pValue
+   end repeat
+   set the enabled of field "label" of me to pValue
+end rowEnabled

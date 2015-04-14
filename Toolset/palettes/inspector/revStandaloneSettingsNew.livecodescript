@@ -82,6 +82,7 @@ end inspectorTitleUpdate
 # Sent by an editor when a property value is being changed
 on editorValueChanged pProperty, pValue, pLockUpdates
    revIDEStandaloneSettingsSet sSelectedStack, pProperty, pValue
+   inspectorFill
 end editorValueChanged
 
 on ideNameChanged
@@ -149,8 +150,57 @@ on revIDEPropertyChanged
 end revIDEPropertyChanged
 
 getProp displayData
-   return revIDEStandaloneSettings(sSelectedStack, inspectorSectionGetName())
+   local tSettingsA, tSectionName
+   put inspectorSectionGetName() into tSectionName
+   put revIDEStandaloneSettings(sSelectedStack, tSectionName) into tSettingsA
+   
+   # Handle the disabled / enabled state of editors
+   local tBuildFor
+   switch tSectionName
+      case "General"
+         local tInclusions
+         put tSettingsA["Inclusions"]["inclusions"]["value"] is "select" into tInclusions
+         set the rowEnabled of group "Inclusion Options" of me to tInclusions
+         set the rowEnabled of group "Script Libraries" of me to tInclusions
+         set the rowEnabled of group "Database Drivers" of me to tInclusions
+         
+         // TODO : Property profiles
+         break
+      case "Stacks"
+         local tSubstacks
+         put tSettingsA["For the selected stack file"]["moveSubstacks"]["value"] is "true" into tSubstacks
+         break
+      case "Mac"
+         put tSettingsA["Build for Mac OS X (Intel)"]["MacOSX x86-32"]["value"] into tBuildFor
+         setEnabledOfSection tSettingsA, tBuildFor
+         break
+      case "Windows"
+         put tSettingsA["Build for Windows"]["Windows"]["value"] into tBuildFor
+         setEnabledOfSection tSettingsA, tBuildFor
+         break
+      case "Linux"
+         break
+      case "iOS"
+         put tSettingsA["Build for iOS"]["iOS"]["value"] into tBuildFor
+         setEnabledOfSection tSettingsA, tBuildFor
+         break
+      case "Android"
+         put tSettingsA["Build for Android"]["android"]["value"] into tBuildFor
+         setEnabledOfSection tSettingsA, tBuildFor
+         break
+      default
+   end switch
+   return tSettingsA
 end displayData
+
+on setEnabledOfSection pDataA, pValue
+   repeat for each key tKey in pDataA
+      if tKey begins with "Build for" then
+         next repeat
+      end if
+      set the rowEnabled of group tKey of me to pValue
+   end repeat
+end setEnabledOfSection
 
 getProp viewColumns [pSection]
    switch pSection
