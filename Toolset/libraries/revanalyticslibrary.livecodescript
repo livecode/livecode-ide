@@ -1,7 +1,7 @@
-﻿script "revanaliticslibrary"
-
+﻿script "revAnalyticsLibrary"
 on revLoadLibrary
    insert the script of me into back
+   initialiseAnalytics
 end revLoadLibrary
 
 on revUnloadLibrary
@@ -13,66 +13,21 @@ end revUnloadLibrary
 # It is used help us work out whether changes we are making to the IDE are helping improve
 # developer experience. 
 
-on revAnalyticsScreenChanged pLongID
-   local tTargetStackID
-   put revIDEStackOfObject(pLongID) into tTargetStackID
-   
-   if revIDEStackIsRevStack(tTargetStackID) is true then
-      local tTargetCardID
-      put revIDECardOfObject(pLongID) into tTargetCardID
-      
-      local tStackName, tScreenName
-      put the short name of tTargetStackID into tStackName
-      put the short name of tTargetCardID into tScreenName
-      revAnaliticsIDEHit "screenview",tStackName,tScreenName
-   end if
-end revAnalyticsScreenChanged
-
 # pType: Must be one of 'pageview', 'screenview', 'event', 'transaction', 'item', 'social', 'exception', 'timing'.
-on revAnaliticsIDEHit pType, pPath, pScreenName
-   if pType is not among the items of "pageview,screenview,event,transaction,item,social,exception,timing" then exit revAnaliticsIDEHit
-   if pPath is empty then exit revAnaliticsIDEHit
-   if pScreenName is empty then exit revAnaliticsIDEHit
+on revAnalyticsIDEHit pType, pPath, pScreenName
+   if pType is not among the items of "pageview,screenview,event,transaction,item,social,exception,timing" then exit revAnalyticsIDEHit
+   if pPath is empty then exit revAnalyticsIDEHit
+   if pScreenName is empty then exit revAnalyticsIDEHit
+   
+   local tLicence, tVersion, tScreenResolution
+   put revAnalyticsScreenResolution() into tScreenResolution
+   put revAnalyticsLiveCodeLicenseType() into tLicence
+   put revAnalyticsLiveCodeVersion() into tVersion
    
    local tData
-   
-   put pType into tData["t"] // Google analytics: hit type
-   put "ide/" & pPath into tData["dp"] // Google analytics: document path
-   put pScreenName into tData["cd"] // Google analytics: screen name
-   
-   revAnaliticsSendData tData
-end revAnaliticsIDEHit
-
-local sSessionStarted
-private on revAnaliticsSendData pData
-   put 1 into pData["v"] // Google analytics protocal version to call
-   put "UA-41842002-2" into pData["tid"] // Google analytics tracking ID
-   put "app" into pData["ds"] // Tell google the source of the hit is the LiveCode application
-   put revAnalyticsClientID() into pData["cid"] // Links all hits from anonymous client ID
-   put revAnalyticsScreenResolution() into pData["sr"] // Links all hits from anonymous client ID
-   put "LiveCode" && revAnalyticsLiveCodeLicenseType() into pData["an"] // App name LiveCode Community or LiveCode Commercial
-   put revAnalyticsLiveCodeVersion() into pData["sv"] // Application version
-   
-   if sSessionStarted is not true then
-      put true into sSessionStarted
-      put "start" into pData["sc"] // Starts a session
-   end if
-   
-   local tURL, tPayload
-   put "https://www.google-analytics.com/collect" into tURL
-   repeat for each line tKey in the keys of pData
-      put tKey & "=" & revAnalyticsURLEncode(pData[tKey]) & "&" after tPayload
-   end repeat
-   delete the last char of tPayload
-   
-   post tPayload to tURL
-   //put tURL & return & tPayload & return & the result & return & it
-end revAnaliticsSendData
-
-// Returns the anonymous client ID from the local system
-private function revAnalyticsClientID
-   return "35009a79-1a05-49d7-b876-2b884d0f825b"
-end revAnalyticsClientID
+   put pType & "," & pPath & "," & pScreenName & "," & tLicence & "," & tVersion & "," & tScreenResolution & CR into tData
+   write tData to process analyticsSlave()
+end revAnalyticsIDEHit
 
 private function revAnalyticsScreenResolution
    return item 3 of line 1 of the screenrects & "x" &  item 4 of line 1 of the screenrects
@@ -86,9 +41,85 @@ private function revAnalyticsLiveCodeVersion
    return char 1 - 5 of the version
 end revAnalyticsLiveCodeVersion
 
-private function revAnalyticsURLEncode pURL
-   replace " " with "%20" in pURL
-   replace "/" with "%2F" in pURL
-   return pURL
-end revAnalyticsURLEncode
+on revAnalyticsScreenChanged pLongID
+   local tTargetStackID
+   put revIDEStackOfObject(pLongID) into tTargetStackID
    
+   if revIDEStackIsRevStack(tTargetStackID) is true then
+      local tTargetCardID
+      put revIDECardOfObject(pLongID) into tTargetCardID
+      
+      local tStackName, tScreenName
+      put the short name of tTargetStackID into tStackName
+      put the short name of tTargetCardID into tScreenName
+      revAnalyticsIDEHit "screenview",tStackName,tScreenName
+   end if
+end revAnalyticsScreenChanged
+
+function analyticsSlave
+   return specialfolderpath("desktop") & slash & "slave"
+end analyticsSlave
+
+on initialiseAnalytics
+   local tDeployInfo
+   put empty into tDeployInfo
+   
+   put the filename of stack "revAnalytics" into tDeployInfo["stackfile"]
+   put analyticsSlave() into tDeployInfo["output"]
+   
+   local tAuxStacks
+   put the effective filename of stack "revLibUrl" after tAuxStacks
+   
+   repeat for each line tStackFile in tAuxStacks
+      local tTempStackFile
+      put the tempname into tTempStackFile
+      dispatch "revSBResaveScriptOnlyStackAsProperStackFile" to stack "revSBLibrary" with the short name of stack tStackFile, tStackFile, tTempStackFile
+      if tDeployInfo["auxiliary_stackfiles"] is empty then
+         put tTempStackFile into tDeployInfo["auxiliary_stackfiles"]
+      else
+         put return & tTempStackFile after tDeployInfo["auxiliary_stackfiles"]
+      end if
+   end repeat
+
+   put "send" && quote & "revLoadLibrary" & quote && "to stack" && quote & "revLibUrl" & quote into tDeployInfo["startup_script"] 
+   
+   get revEnvironmentRuntimePath()
+   switch the platform
+      case "MacOS"
+         if revEnvironmentIsInstalled() then
+            put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone" into tDeployInfo["engine"]
+         else
+            if revLicenseType() is "community" then
+               put revEnvironmentBinariesPath() & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tDeployInfo["engine"]
+            else
+               put revEnvironmentBinariesPath() & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tDeployInfo["engine"]
+            end if
+         end if
+         _internal deploy macosx tDeployInfo
+         break
+      case "Windows"
+         if revEnvironmentIsInstalled() then
+            put it & "/Windows/x86-32/Standalone" into tDeployInfo["engine"]
+         else
+            if revLicenseType() is "community" then
+               put revEnvironmentBinariesPath() & slash & "standalone-community.exe" into tDeployInfo["engine"]
+            else
+               put revEnvironmentBinariesPath() & slash & "standalone-commercial.exe" into tDeployInfo["engine"]
+            end if
+         end if
+         _internal deploy windows tDeployInfo
+         break
+      case "Linux"
+         if revEnvironmentIsInstalled() then
+            put it & "/Linux/x86-64/Standalone" into tDeployInfo["engine"]
+         else
+            if revLicenseType() is "community" then
+               put revEnvironmentBinariesPath() & slash & "standalone-community" into tDeployInfo["engine"]
+            else
+               put revEnvironmentBinariesPath() & slash & "standalone-commercial" into tDeployInfo["engine"]
+            end if
+         end if
+         _internal deploy linux tDeployInfo
+         break
+   end switch
+end initialiseAnalytics

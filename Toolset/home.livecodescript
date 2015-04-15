@@ -1046,7 +1046,6 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revDatabaseLibrary"
    revInternal__LoadLibrary "revTableLibrary"
    revInternal__LoadLibrary "revAnalyticsLibrary"
-   insert the script of stack "revAnalyticsFrontscriptLibrary" into front
    
    // EJB - New IDE Libraries
    
