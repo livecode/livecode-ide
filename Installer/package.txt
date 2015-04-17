@@ -543,14 +543,14 @@ component Runtime.iOS
 		file ios:iphoneos8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/Release/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8.3" place
-		executable ios:iphoneos8.3/Release/standalone-mobile-lib[[EditionTagLower]].lcext
-		executable ios:iphoneos8.3/Release/revsecurity.lcext
-		executable ios:iphoneos8.3/Release/revpdfprinter.lcext
-		executable ios:iphoneos8.3/Release/revzip.lcext
-		executable ios:iphoneos8.3/Release/revxml.lcext
-		executable ios:iphoneos8.3/Release/revdb.lcext
-		executable ios:iphoneos8.3/Release/dbsqlite.lcext
-		executable ios:iphoneos8.3/Release/dbmysql.lcext
+		executable ios:iphoneos8.3/Release/standalone-mobile-lib[[EditionTagLower]].lcext base ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext
+		executable ios:iphoneos8.3/Release/revsecurity.lcext base ios:iphoneos8.2/Release/revsecurity.lcext
+		executable ios:iphoneos8.3/Release/revpdfprinter.lcext base ios:iphoneos8.2/Release/revpdfprinter.lcext
+		executable ios:iphoneos8.3/Release/revzip.lcext base ios:iphoneos8.2/Release/revzip.lcext
+		executable ios:iphoneos8.3/Release/revxml.lcext base ios:iphoneos8.2/Release/revxml.lcext
+		executable ios:iphoneos8.3/Release/revdb.lcext base ios:iphoneos8.2/Release/revdb.lcext
+		executable ios:iphoneos8.3/Release/dbsqlite.lcext base ios:iphoneos8.2/Release/dbsqlite.lcext
+		executable ios:iphoneos8.3/Release/dbmysql.lcext base ios:iphoneos8.2/Release/dbmysql.lcext
 		file ios:iphoneos8.3/Release/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos8.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos8.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
