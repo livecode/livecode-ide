@@ -522,7 +522,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator8.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.3/Release/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2” place
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
 		executable ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
 		executable ios:iphoneos8.2/Release/revsecurity.lcext as RevSecurity
 		executable ios:iphoneos8.2/Release/revpdfprinter.lcext as RevPdfPrinter
@@ -542,7 +542,7 @@ component Runtime.iOS
 		file ios:iphoneos8.2/Release/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/Release/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_3” place
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8_3" place
 		executable ios:iphoneos8.3/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext
 		executable ios:iphoneos8.3/Release/revsecurity.lcext as RevSecurity base ios:iphoneos8.2/Release/revsecurity.lcext
 		executable ios:iphoneos8.3/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphoneos8.2/Release/revpdfprinter.lcext
