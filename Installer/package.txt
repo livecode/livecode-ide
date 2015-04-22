@@ -342,13 +342,13 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux:[[TargetArchitecture]]/release/engine[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
-		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
-		executable linux:[[TargetArchitecture]]/release/revsecurity.so
+		executable linux-[[TargetArchitecture]]:engine[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
 
 component Mobile.Linux
 	into "[[ToolsFolder]]/Externals" place
-		executable linux:[[TargetArchitecture]]/release/revandroid.so
+		executable linux-[[TargetArchitecture]]:revandroid.so
 
 //////////
 
@@ -401,16 +401,16 @@ component Engine.MacOSX
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux:[[TargetArchitecture]]/release/standalone[[EditionTagLower]] as Standalone
+		executable linux-[[TargetArchitecture]]:standalone as Standalone
 	into [[TargetFolder]]/Support place
-		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
-		executable linux:[[TargetArchitecture]]/release/revsecurity.so
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
 
 //////////
 
 component Runtime.Windows
 	into [[TargetFolder]] place
-		executable windows:standalone[[EditionTagLower]].exe as Standalone
+		executable windows:standalone.exe as Standalone
 		file "windows:w32-manifest-template.xml"
 		file "windows:w32-manifest-template-dpiaware.xml"
 		file "windows:w32-manifest-template-trustinfo.xml"
@@ -434,17 +434,17 @@ component Runtime.MacOSX
 
 component Runtime.Android
 	into "[[ToolsFolder]]/Runtime/Android" place
-		file android:Classes[[EditionTagUpper]] as Classes
+		file android:LiveCode[[EditionTagUpper]].jar as Classes
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
-		executable android:Standalone[[EditionTagUpper]] as Standalone
-		executable android:RevZip
-		executable android:RevXml
-		executable android:RevDb
-		executable android:DbSqlite
-		executable android:DbMysql
-		executable android:RevSecurity
+		executable android:Standalone[[EditionTagUpper]].so as Standalone
+		executable android:revzip.so as RevZip
+		executable android:revxml.so as RevXml
+		executable android:revdb.so as RevDb
+		executable android:dbsqlite.so as DbSqlite
+		executable android:dbmysql.so as DbMysql
+		executable android:revsecurity.so as RevSecurity
 
 //////////
 
@@ -567,8 +567,8 @@ component Runtime.iOS
 
 component Externals.Linux
 	into [[TargetFolder]]/Externals place
-		executable linux:[[TargetArchitecture]]/release/revxml.so
-		executable linux:[[TargetArchitecture]]/release/revzip.so
+		executable linux-[[TargetArchitecture]]:revxml.so
+		executable linux-[[TargetArchitecture]]:revzip.so
 	declare external "XML" using revxml.so
 	declare external "Revolution Zip" using revzip.so
 
@@ -635,12 +635,12 @@ component Externals.CEF.MacOSX
 
 component Databases.Linux
 	into "[[TargetFolder]]/Externals" place
-		executable linux:[[TargetArchitecture]]/release/revdb.so
+		executable linux-[[TargetArchitecture]]:revdb.so
 	into "[[TargetFolder]]/Externals/Database Drivers" place
-		executable linux:[[TargetArchitecture]]/release/dbmysql.so
-		executable linux:[[TargetArchitecture]]/release/dbodbc.so
-		executable linux:[[TargetArchitecture]]/release/dbpostgresql.so
-		executable linux:[[TargetArchitecture]]/release/dbsqlite.so
+		executable linux-[[TargetArchitecture]]:dbmysql.so
+		executable linux-[[TargetArchitecture]]:dbodbc.so
+		executable linux-[[TargetArchitecture]]:dbpostgresql.so
+		executable linux-[[TargetArchitecture]]:dbsqlite.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
