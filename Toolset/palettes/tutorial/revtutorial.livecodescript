@@ -165,61 +165,134 @@ on setLocForStep
    lock screen
    local tTopLeft
    local tLeft,tTop
+   local tUserStackRel
+   put true into tUserStackRel
    switch sStep
       case "stack"
-         put "160,27" into tTopLeft
+      case "image1"
+         put 160 into tLeft
+         put 27 into tTop
+         put false into tUserStackRel
+         break
+      case "graphic2"
+         put 190 into tLeft
+         put 27 into tTop
+         put false into tUserStackRel
          break
       case "stackrect"
-         put the left of sUserStack into tLeft
-         put the top of sUserStack into tTop
-         put (tLeft + 362),(tTop + 582) into tTopLeft
+         put the left of sUserStack + 362 into tLeft
+         put the top of sUserStack +582 into tTop
+         put false into tUserStackRel
          break
       case "graphic1"
          put the right of  button "com.livecode.interface.classic.RectangleGraphic" of stack "revTools" + the left of stack "revTools" into tLeft         
          put the bottom of button "com.livecode.interface.classic.RectangleGraphic" of stack "revTools" + the top of stack "revTools" into tTop
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
       case "field1"
          put the right of button "com.livecode.interface.classic.Field" of stack "revTools" + the left of stack "revTools" into tLeft         
          put the bottom of button "com.livecode.interface.classic.Field" of stack "revTools" + the top of stack "revTools" into tTop
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
       case "button1"
          put the right of  button "com.livecode.interface.classic.Button" of stack "revTools" + the left of stack "revTools" into tLeft         
          put the bottom of button "com.livecode.interface.classic.Button" of stack "revTools" + the top of stack "revTools" into tTop
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
       case "runtool1"
       case "runtool2"
       case "runtool3"
          put the right of button "com.livecode.tool.Browse" of stack "revTools" + the left of stack "revTools" into tLeft     
          put the bottom of button "com.livecode.tool.Browse" of stack "revTools" + the top of stack "revTools" into tTop    
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
       case "edittool1"
       case "edittool2"
       case "edittool3"
          put the right of button "com.livecode.tool.Pointer" of stack "revTools" + the left of stack "revTools" into tLeft     
          put the bottom of button "com.livecode.tool.Pointer" of stack "revTools" + the top of stack "revTools" into tTop    
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
       case "field2"
          put the right of button "com.livecode.interface.classic.LabelField" of stack "revTools" + the left of stack "revTools" into tLeft         
          put the bottom of button "com.livecode.interface.classic.LabelField" of stack "revTools" + the top of stack "revTools" into tTop
-         put tLeft,tTop into tTopLeft
+         put false into tUserStackRel
          break
-      case "stackrect"
-      case "graphic1rect"
-      case "graphic1props"
       case "graphic1noline"
       case "graphic1select"
-      case "graphic2"
+      case "button1label"
+      case "button1style"
+      case "button1textsize"
+      case "field1name"
+      case "field2name"
+      case "field2dontwrap"
+      case "field2color"
+      case "field2align"
+         put the right of stack "revInspector" into tLeft
+         put the bottom of stack "revInspector" into tTop
+         put false into tUserStackRel
+         break
+      case "graphic1rect"
+         put the right of graphic "graphic1guide" of sUserStack into tLeft
+         put the bottom of graphic "graphic1guide" of sUserStack into tTop
+         break
+      case "graphic2rect"
+         put the right of graphic "graphic2guide" of sUserStack into tLeft
+         put the bottom of graphic "graphic2guide" of sUserStack into tTop
+         break
+      case "button1rect"
+         put the right of graphic "button1guide" of sUserStack into tLeft
+         put the bottom of graphic "button1guide" of sUserStack into tTop
+         break
+      case "image1rect"
+         put the right of graphic "image1guide" of sUserStack into tLeft
+         put the bottom of graphic "image1guide" of sUserStack into tTop
+         break
+      case "field1rect"
+         put the right of graphic "field1guide" of sUserStack into tLeft
+         put the bottom of graphic "field1guide" of sUserStack into tTop
+         break
+      case "field2rect"
+         put the right of graphic "field2guide" of sUserStack into tLeft
+         put the bottom of graphic "field2guide" of sUserStack into tTop
+         break
+      case "graphic1props"
+         put the right of graphic 1 of sUserStack into tLeft
+         put the bottom of graphic 1 of sUserStack into tTop
+         break
+      case "button1props"
+      case "button1script"
+      case "button1script2"
+      case "button1script3"
+      case "button1scriptopen"
+      case "button1script2open"
+      case "button1script3open"
+      case "check1click"
+      case "field1contents"
+      case "field1contents2"
+         put the right of button 1 of sUserStack into tLeft
+         put the bottom of button 1 of sUserStack into tTop
+         break
+      case "field1props"
+      case "field1enter"
+         put the right of field 1 of sUserStack into tLeft
+         put the bottom of field 1 of sUserStack into tTop
+         break
+      case "field2props"
+         put the right of field  2 of sUserStack into tLeft
+         put the bottom of field 2 of sUserStack into tTop
+         break
       default
          put the right of sUserStack into tLeft
          put the bottom of sUserStack into tTop
-         put tLeft,tTop into tTopLeft
          break
    end switch
+   if tUserStackRel then
+      add the left of sUserStack to tLeft
+      add the top of sUserStack to tTop
+   end if
+   put tLeft,tTop into tTopLeft
+   
    local tAdjusted
    put (item 1 of tTopLeft - 85), (item 2 of tTopLeft) into tAdjusted
    set the topLeft of me to tAdjusted
@@ -969,7 +1042,7 @@ function revTutorialColorIsApproximatelyRight pWhich
          if the foreColor of field 2 of sUserStack is "white" then
             return true
          end if
-         repeat for each item tItem in the foreColor of field 2
+         repeat for each item tItem in the foreColor of field 2 of sUserStack
             if tItem is not a number or tItem < 240 then
                return false
             end if
