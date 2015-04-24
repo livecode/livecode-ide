@@ -80,6 +80,7 @@ end propertyDeregistor
 # Sets the text for the row label
 setprop rowLabel pLabel
    put pLabel into field "label" of me
+   set the width of field "label" of me to the formattedwidth of field "label" of me
 end rowLabel
 
 getProp rowLabel
@@ -129,7 +130,10 @@ on rowResize
    
    # Position the label
    lock messages
+   # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
    set the rect of field "label" of me to tLeft,tTop,tLeft+tLabelWidth,tTop+21
+   set the width of field "label" of me to the formattedwidth of field "label" of me
+   set the right of field "label" of me to tLeft+tLabelWidth
    unlock messages
    
    # Position the controllers
