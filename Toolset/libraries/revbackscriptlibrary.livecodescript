@@ -1147,7 +1147,7 @@ function revFixPath pPath
    else if the platform is "Win32" then
       put "\/:*?<>|" & quote & tab into tRemoveChars
    else
-      put " :?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
+      put ":?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
       put tolower(pPath) into tReturnPath
    end if
    if revExtensionShow() then
