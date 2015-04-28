@@ -180,7 +180,7 @@ on revTutorialParsePalette pTokens, @xNextToken, @rPalette
    put pTokens[xNextToken] && pTokens[xNextToken + 1] into tName
    
    if revTutorialIsPaletteType(tName) then
-      put tName into tPalette["palette"]
+      put tName into rPalette
       add 2 to xNextToken
    else
       return tName & "; expected: <palette type>"
@@ -380,7 +380,8 @@ on revTutorialParseWait pTokens, @rData
       
       if the result is empty then
          put "there is a palette" into rData["wait condition"]
-         put tCondition[1] into rData["object"]
+         put tCondition[1] into rData["palette"]
+         put tCondition[2] into rData["object"]
          return empty
       end if
       
@@ -801,6 +802,10 @@ on revTutorialWaitUntilThereIsAPaletteForObject pObjectType, pTag, pPalette
    put pTag into tWait["tag"]
    put pPalette into tWait["palette"]
    put tWait into sWait
+   
+   if pPalette is "property inspector" then
+      revIDESubscribe "ideInspectedObjectsChanged"
+   end if
 end revTutorialWaitUntilThereIsAPaletteForObject
 
 on revTutorialWaitUntilTheToolIs pTool
@@ -1102,10 +1107,11 @@ command buildFileMenu
    set the text of menu "File" to tFile
    
    if sMenuHighlight["File"] is not empty then
+      set the wholematches to false
       get lineoffset(sMenuHighlight["File"], menu "File")
       enable line it of menu "File"
    end if
-   
+   enable menu "File"
 end buildFileMenu
 
 command buildEditMenu
@@ -1177,7 +1183,10 @@ command buildEditMenu
    set the text of button "Edit" of stack "revMenuBar" to tEdit
    
    if sMenuHighlight["Edit"] is not empty then
-      enable line lineoffset(sMenuHighlight["Edit"], menu "Edit") of menu "Edit"
+      enable menu "Edit"
+      set the wholematches to false
+      get lineoffset(sMenuHighlight["Edit"], menu "Edit")
+      enable line it of menu "Edit"
    end if
    
 end buildEditMenu
@@ -1292,6 +1301,16 @@ on ideSelectedObjectChanged
    end if
    pass ideSelectedObjectChanged
 end ideSelectedObjectChanged
+
+on ideInspectedObjectsChanged pObjects
+   if sWait["type"] is "palette" and sWait["palette"] is "property inspector" then
+      if revTutorialObjectIsTaggedObject(pObjects, sWait["object type"], sWait["tag"]) then
+         revIDEUnsubscribe "ideInspectedObjectsChanged"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+   pass ideInspectedObjectsChanged
+end ideInspectedObjectsChanged
 
 on newTool pTool
    if sWait["type"] is "tool" then

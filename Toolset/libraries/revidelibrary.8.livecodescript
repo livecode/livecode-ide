@@ -1300,7 +1300,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -3721,6 +3721,18 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
    end switch
 end revIDEScriptEditorBehavior
+
+local sInspectedObjects
+on revIDESetInspectedObjects pObjectList
+   if pObjectList is not sInspectedObjects then
+      put pObjectList into sInspectedObjects
+      revIDEMessageSend "ideInspectedObjectsChanged", pObjectList
+   end if
+end revIDESetInspectedObjects
+
+function revIDEGetInspectedObjects
+   return sInspectedObjects 
+end revIDEGetInspectedObjects
 
 #############
 # Data grid

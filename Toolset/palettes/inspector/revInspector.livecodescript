@@ -58,6 +58,8 @@ on closeStack
    inspectorMessagesDeRegister
    revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
    revIDEUnsubscribe "ideNameChanged"
+   
+   revIDESetInspectedObjects ""
 end closeStack
 
 #####################
@@ -591,6 +593,9 @@ on ideSelectedObjectChanged
    
    # Layout
    send "resizeStack" to me
+   
+   # Update the inspected objects
+   revIDESetInspectedObjects sSelectedObjects
    
    unlock screen
 end ideSelectedObjectChanged
