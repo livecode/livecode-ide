@@ -435,17 +435,17 @@ component Runtime.MacOSX
 
 component Runtime.Android
 	into "[[ToolsFolder]]/Runtime/Android" place
-		file android:LiveCode[[EditionTagUpper]].jar as Classes
+		file android:Classes[[EditionTagUpper]] as Classes
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
-		executable android:Standalone[[EditionTagUpper]].so as Standalone
-		executable android:revzip.so as RevZip
-		executable android:revxml.so as RevXml
-		executable android:revdb.so as RevDb
-		executable android:dbsqlite.so as DbSqlite
-		executable android:dbmysql.so as DbMysql
-		executable android:revsecurity.so as RevSecurity
+		executable android:Standalone[[EditionTagUpper]] as Standalone
+		executable android:RevZip
+		executable android:RevXml
+		executable android:RevDb
+		executable android:DbSqlite
+		executable android:DbMysql
+		executable android:RevSecurity
 
 //////////
 
