@@ -1,472 +1,1003 @@
 ﻿script "revTutorial"
-local sStep, sStepNumber, sUserStack, sObjCount
-on revInitialiseTutorial
-   insert the script of stack "revTutorial" into front
+##############################################################################
+#
+#                     DSL PARSING
+#
+##############################################################################
+
+function revTutorialParse pFile
+   local tTutorial
+   put url("binfile:" & pFile) into tTutorial
+   put textDecode(tTutorial, "utf-8") into tTutorial
+   
+   local tTutorialName, tCurStepName
+   local tType, tSubType
+   local tLineNum, tActionNum
+   
+   local tData, tStepData, tFirstStep
+   
+   put 0 into tLineNum
+   put 0 into tActionNum
+   repeat for each line tLine in tTutorial
+      add 1 to tLineNum
+      get token 1 of tLine
+      
+      if it is empty then 
+         if tSubType is "text" then 
+            put CR after tData
+         end if
+         next repeat 
+      end if
+      
+      // If we're in a type, then extract the data appropriately
+      if tType is not empty then
+         switch it
+            case "end"
+               // End the section
+               if token 2 of tLine is tType then
+                  if tData is not empty then
+                     put tData into tStepData[tCurStepName][tSubType]
+                     put empty into tData
+                  end if
+                  put empty into tType
+                  put empty into tSubType
+                  put 0 into tActionNum
+               else
+                  put tLine & CR after tData
+               end if
+               break
+            case "action"
+            case "script"
+               // Begin a new subtype
+               if tType is not "step" then
+                  throw "action list not valid in" && tType && " on line" && tLineNum
+               end if
+               
+               if tSubType is "action" then
+                  throw "action list not valid in" && tType && " on line" && tLineNum
+               end if
+               
+               if tData is not empty then
+                  put tData into tStepData[tCurStepName][tSubType]
+                  if tSubType is "action" and tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
+                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName][tSubType]["script"]
+                  end if
+                  put empty into tData
+               end if
+               put it into tSubType
+               next repeat
+               break
+            default
+               // Get the data
+               if tSubType is "text" or tSubType is "script" then
+                  put tLine & CR after tData
+               else
+                  add 1 to  tActionNum
+                  put revTutorialParseAction(tLine, tLineNum) into tStepData[tCurStepName]["actions"][tActionNum]
+               end if 
+               break
+         end switch
+         next repeat
+      end if
+      
+      // Otherwise, start a new section
+      switch it
+         case empty
+            next repeat
+            break
+         case "tutorial"
+            put token 2 of tLine into tTutorialName
+            break
+         case "step"
+            put token 2 of tLine into tCurStepName
+            put it into tType
+            put "text" into tSubType
+            if tFirstStep is empty then
+               put tCurStepName into tFirstStep
+            end if
+            break
+         case "prologue"
+         case "epilogue"
+            put it into tType
+            put it into tCurStepName
+            put "text" into tSubType
+            break
+         default
+            throw "invalid section" && it && " on line" && tLineNum
+      end switch
+   end repeat
+   
+   put tFirstStep into tStepData["first step"]
+   return tStepData
+end revTutorialParse
+
+function revTutorialIsObjectType pType
+   switch pType
+      case "stack"
+      case "graphic"
+      case "button"
+      case "field"
+      case "image"
+      case "widget"
+      case "card"
+         return true
+   end switch
+   return false
+end revTutorialIsObjectType
+
+function revTutorialIsToolType pType
+   switch pType
+      case "edit"
+      case "run"
+         return true
+   end switch
+   return false
+end revTutorialIsToolType
+
+function revTutorialIsStateType pType
+   switch pType
+      case "clicked"
+      case "selected"
+      case "scripted"
+      case "focused"
+      case "edited"
+         return true
+   end switch
+   return false
+end revTutorialIsStateType
+
+on revTutorialParseObject pTokens, @xNextToken, @rObject
+   local tObject
+   if revTutorialIsObjectType(pTokens[xNextToken]) then
+      put pTokens[xNextToken] into tObject["type"]
+      add 1 to xNextToken
+   else
+      return pTokens[xNextToken] & "; expected: <object type>"
+   end if
+   
+   if pTokens[xNextToken] is not empty then
+      put pTokens[xNextToken] into tObject["tag"]
+      add 1 to xNextToken
+   else
+      return "expected: <object tag>"
+   end if
+   
+   put tObject into rObject
+   return empty
+end revTutorialParseObject
+
+function revTutorialIsPaletteType pType
+   switch pType
+      case "script editor"
+      case "property inspector"
+         return true
+   end switch
+   return false
+end revTutorialIsPaletteType
+
+on revTutorialParsePalette pTokens, @xNextToken, @rPalette
+   local tPalette, tName
+   put pTokens[xNextToken] && pTokens[xNextToken + 1] into tName
+   
+   if revTutorialIsPaletteType(tName) then
+      put tName into tPalette["palette"]
+      add 2 to xNextToken
+   else
+      return tName & "; expected: <palette type>"
+   end if
+   
+   return empty
+end revTutorialParsePalette
+
+// currently is subexpression til end
+on revTutorialParseSubexpression pExpected, pTokens, pStart, @rData
+   local tTokenCount
+   put 0 into tTokenCount
+   
+   local tNextToken, tNextWord
+   put pStart into tNextToken
+   put 1 into tNextWord
+   
+   local tData
+   repeat forever
+      switch word tNextWord of pExpected
+         case  "<token>" 
+            if pTokens[tNextToken] is empty then
+               return "expected: <token>"
+            end if
+            
+            add 1 to tTokenCount
+            put pTokens[tNextToken] into tData[tTokenCount]
+            add 1 to tNextWord
+            add 1 to tNextToken
+            next repeat
+         case "<object>"
+            local tObject
+            revTutorialParseObject pTokens, tNextToken, tObject
+            if the result is not empty then
+               return the result
+            end if
+            add 1 to tTokenCount
+            put tObject into tData[tTokenCount]
+            add 1 to tNextWord
+            next repeat
+         case "<palette>"
+            local tPalette
+            revTutorialParsePalette pTokens, tNextToken, tPalette
+            if the result is not empty then
+               return the result
+            end if
+            add 1 to tTokenCount
+            put tPalette into tData[tTokenCount]
+            add 1 to tNextWord
+            next repeat
+         default
+            break
+      end switch
+      
+      if pTokens[tNextToken] is not word tNextWord of pExpected then
+         if word tNextWord of pExpected is empty then
+            return "invalid syntax:"  && pTokens[tNextToken]
+         else
+            return "expected:" && word tNextWord of pExpected
+         end if
+      else if word tNextWord of pExpected is empty then
+         exit repeat
+      end if
+      add 1 to tNextWord
+      add 1 to tNextToken
+   end repeat
+   put tData into rData
+   return empty
+end revTutorialParseSubexpression
+
+on revTutorialParseLine pExpected, pTokens, @rData
+   local tFirstToken
+   put 1 into tFirstToken
+   revTutorialParseSubexpression pExpected, pTokens, tFirstToken, rData
+   return the result
+end revTutorialParseLine
+
+on revTutorialParseGo pTokens, @rData
+   local tExpected, tData
+   put "go to step <token>" into tExpected
+   revTutorialParseLine tExpected, pTokens, tData
+   if the result is not empty then
+      return the result
+   end if
+   put "go" into rData["type"]
+   put tData[1] into rData["step"]
+   return empty
+end revTutorialParseGo
+
+on revTutorialParseInterlude pTokens, @rData
+   if the number of elements of pTokens is not 1 then
+      return "invalid syntax:"  && pTokens[5]
+   end if
+   put "interlude" into rData["type"]
+   return empty
+end revTutorialParseInterlude
+
+on revTutorialParseCapture pTokens, @rData
+   local tData
+   revTutorialParseLine "capture the next new <token> of <object> as <token>", pTokens, tData
+   if the result is empty then
+      put "capture" into rData["type"]
+      put tData[1] into rData["object type"]
+      put tData[2] into rData["target stack"]
+      put tData[3] into rData["tag"]
+      return empty
+   end if
+   
+   revTutorialParseLine "capture the next new stack as <token>", pTokens, tData
+   if the result is not empty then
+      return the result
+   end if
+   put "capture" into rData["type"]
+   put "stack" into rData["object type"]
+   put tData[1] into rData["tag"]
+   return empty
+end revTutorialParseCapture
+
+on revTutorialParseHighlight pTokens, @rData
+   local tData, tFirstToken
+   put 1 into tFirstToken
+   
+   switch pTokens[2]
+      case "menu"
+         revTutorialParseSubexpression "highlight menu item <token> of menu <token>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "menu" into rData["highlight type"]
+            put tData[1] into rData["item"]
+            put tData[2] into rData["menu"]
+         end if
+         break
+      case "tool"
+         revTutorialParseSubexpression "highlight tool <token>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "tool" into rData["highlight type"]
+            put tData[1] into rData["tool"]
+         end if
+         break
+      case "property"
+         revTutorialParseSubexpression "highlight property <token> of section <token>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "property" into rData["highlight type"]
+            put tData[1] into rData["property"]
+            put tData[2] into rData["section"]
+         end if
+         break
+      default
+         revTutorialParseSubexpression "highlight <object>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "object" into rData["highlight type"]
+            put tData[1] into rData["object"]
+         end if
+         break
+   end switch
+   
+   if the result is not empty then
+      return the result
+   end if
+   put "highlight" into rData["type"]
+   return empty
+end revTutorialParseHighlight
+
+on revTutorialParseAddGuide pTokens, @rData
+   local tExpected, tData
+   put "add guide <token> with rect <token> to <object>" into tExpected
+   revTutorialParseLine tExpected, pTokens, tData
+   if the result is not empty then
+      return the result
+   end if
+   put "add guide" into rData["type"]
+   put tData[1] into rData["guide"]
+   put tData[2] into rData["rect"]
+   put tData[3] into rData["object"]
+   return empty
+end revTutorialParseAddGuide
+
+on revTutorialParseWait pTokens, @rData
+   local tCondition, tType
+   local tToken
+   put 3 into tToken
+   put "wait" into rData["type"]
+   
+   if pTokens[tToken] is "there" then
+      
+      revTutorialParseSubexpression "there is a <object>", pTokens, tToken, tCondition
+      if the result is not empty then
+         revTutorialParseSubexpression "there is an <object>", pTokens, tToken, tCondition
+      end if
+      
+      if the result is empty then
+         put "there is an object" into rData["wait condition"]
+         put tCondition[1] into rData["object"]
+         return empty
+      end if
+      
+      revTutorialParseSubexpression "there is a <palette> for <object>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         put "there is a palette" into rData["wait condition"]
+         put tCondition[1] into rData["object"]
+         return empty
+      end if
+      
+      return the result
+   end if
+   
+   if pTokens[tToken] is "the" then
+      
+      revTutorialParseSubexpression "the tool is <token>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         if not revTutorialIsToolType(tCondition[1]) then
+            return "invalid tool" && tCondition[1]
+         end if
+         put "tool" into rData["wait condition"]
+         put tCondition[1] into rData["tool"]
+         return empty
+      end if
+      
+      revTutorialParseSubexpression "the <token> of <object> is <token>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         put "property" into rData["wait condition"]
+         put tCondition[1] into rData["property"]
+         put tCondition[2] into rData["object"]
+         put tCondition[3] into rData["value"]
+      end if
+      
+      return the result
+   end if
+   
+   if pTokens[tToken + 2] is "fits" then
+      revTutorialParseSubexpression "<object> fits guide <token>", pTokens, tToken, tCondition
+      if the result is empty then
+         put "fits" into rData["wait condition"]
+         put tCondition[1] into rData["object"]
+         put tCondition[2] into rData["guide"]
+         return empty
+      end if
+      
+      revTutorialParseSubexpression "<object> fits guide <token> with tolerance <token>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         put "fits" into rData["wait condition"]
+         put tCondition[1] into rData["object"]
+         put tCondition[2] into rData["guide"]
+         put tCondition[3] into rData["tolerance"]
+      end if
+      return the result
+   end if
+   
+   if pTokens[tToken + 2] is "pops" then
+      revTutorialParseSubexpression "<object> pops up answer dialog", pTokens, tToken, tCondition
+      if the result is empty then
+         put "pops up" into rData["wait condition"]
+         put tCondition[1] into rData["object"]
+      end if
+      return the result
+   end if
+   
+   revTutorialParseSubexpression "<object> is <token>", pTokens, tToken, tCondition
+   
+   if the result is empty then
+      if not revTutorialIsStateType(tCondition[2]) then
+         return "invalid state" && tCondition[2] && "in wait condition"
+      end if
+      put "state" into rData["wait condition"]
+      put tCondition[1] into rData["object"]
+      put tCondition[2] into rData["state"]
+      return empty
+   end if
+   
+   if the result is not empty then
+      return "invalid condition"
+   end if
+   
+   return empty
+end revTutorialParseWait
+
+function revTutorialParseAction pLine, pLineNum
+   local tTokens, tCount
+   put 0 into tCount
+   repeat for each token tToken in pLine
+      add 1 to tCount
+      put tToken into tTokens[tCount]
+   end repeat
+   
+   local tActionData
+   local tError
+   switch tTokens[1]
+      case "interlude"
+         revTutorialParseInterlude tTokens, tActionData
+         break
+      case "go"
+         revTutorialParseGo tTokens, tActionData
+         break
+      case "capture"
+         revTutorialParseCapture tTokens, tActionData
+         break
+      case "highlight"
+         revTutorialParseHighlight tTokens, tActionData
+         break
+      case "wait"
+         revTutorialParseWait tTokens, tActionData
+         break
+      case "add"
+         revTutorialParseAddGuide tTokens, tActionData
+         break
+      default
+         throw "Invalid action on line" && pLineNum & "-" && the result
+   end switch
+   if the result is not empty then
+      throw "Error in" && tTokens[1] && "action on line" && pLineNum & "-" && the result
+   end if
+   return tActionData
+end revTutorialParseAction
+
+##############################################################################
+#
+#                     MAIN FUNCTIONALITY
+#
+##############################################################################
+
+constant kMessageOriginOffset = 50
+
+setProp messageTopLeft pLocation
+   set the topleft of stack "revTutorial" to (item 1 of pLocation - kMessageOriginOffset), (item 2 of pLocation)
+end messageTopLeft
+
+local sSteps, sActionNumber, sStepName
+local sWaiting
+on revInitialiseTutorial pSteps, pFirstStep
+   put false into sWaiting
+   put pSteps into sSteps
+   
    lock screen
    lock messages
    create button "Exit"
    set the topleft of it to 0,0
-   set the script of it to "on mouseUp;endTutorial;end mouseUp"
+   set the script of it to "on mouseUp;revTutorialFinish;end mouseUp"
    
    create invisible image "Shape"
    set the filename of it to revIDEPaletteResourcePath("images/quote_shape.png")
    set the windowshape of stack "revTutorial" to the id of it
-   set the width of me to 485
-   set the height of me to 285
+   set the width of stack "revTutorial" to 485
+   set the height of stack "revTutorial" to 285
    
    create field "Message"
-   set the width of it to the width of me - 40   
-   set the height of it to the height of me - 70
+   set the textsize of it to 24
+   set the width of it to the width of stack "revTutorial" - 40   
+   set the height of it to the height of stack "revTutorial" - 70
    set the left of it to 20
    set the top of it to 60
    
+   insert the script of stack "revTutorial" into front
    unlock messages
-   setRegions
    revIDESubscribe "ideNewControl"
    revIDESubscribe "ideSelectedObjectChanged"
-   palette me
-   show me
-   set the currentStep of me to "message1"      
+   palette stack "revTutorial"
    unlock screen
 end revInitialiseTutorial
 
-setProp userStack pStack
-   put pStack into sUserStack
-end userStack
-
-setProp currentStep pStep
-   if pStep is "exit" then
-      endTutorial
-      exit currentStep
-   end if
-   
-   if pStep is "button1props" and "revInspector" is in the openstacks then
-      put "button1label" into pStep
-   end if
-   
-   put pStep into sStep
-   
-   if pStep begins with "message" then
-      local tNextStep
-      switch pStep
-         case "message1"
-            put "stack" into tNextStep
-            break
-         case "message2"
-            put "button1scriptopen" into tNextStep
-            break
-         case "message3"
-            put "edittool3" into tNextStep
-            break
-         case "message4"
-            if "revNewScriptEditor" is in the openstacks then
-               put "button1script3" into tNextStep
-            else
-               put "button1script3open" into tNextStep
-            end if
-            break
-         case "message5"
-            put "exit" into tNextStep
-            break
-      end switch
-      answer textForStep()
-      send "setStep tNextStep" to me in 10 millisecs
-   else
-      disableMenuBar
-      disableToolsPalette
-      hideRegions
-      buildMenus
-      put textForStep() into field "Message"
-      setLocForStep
-      add 1 to sStepNumber
-      setEnvironmentForStep
-   end if
-end currentStep
-
-on setStep pStep
-   if "Answer Dialog" is in the openstacks then
-      send "setStep pStep" to me in 100 millisecs
-   else
-      set the currentStep of me to pStep
-   end if
-end setStep
-
-on hideRegions
-   if sUserStack is not empty and there is a group "guides" of sUserStack then
-      repeat for each line tID in the childcontrolids of group "guides" of sUserStack
-         hide control id tID of group "guides" of sUserStack
-      end repeat
-   end if
-end hideRegions
-
-on setEnvironmentForStep
-   switch sStep
-      case "stackrect"
-         break
-      case "graphic1"
-         dispatch "isolateTool" to stack "revTools" with "com.livecode.interface.classic.RectangleGraphic"
-         break
-      case "field1"
-         dispatch "isolateTool" to stack "revTools" with "com.livecode.interface.classic.Field"
-         break
-      case "button1"
-         dispatch "isolateTool" to stack "revTools" with "com.livecode.interface.classic.Button"
-         break
-      case "graphic1rect"
-         show graphic "graphic1guide" of sUserStack
-         break
-      case "graphic2"
-         enable menu "Edit"
-         break
-      case "graphic2rect"
-         show graphic "graphic2guide" of sUserStack
-         break
-      case "field1rect"
-         show graphic "field1guide" of sUserStack
-         break
-      case "button1rect"
-         show graphic "button1guide" of sUserStack
-         break
-      case "button1scriptopen"
-         enable button "standard" of this card of stack "revMenuBar"
-         break
-      case "edittool1"
-      case "edittool2"
-      case "edittool3"
-         dispatch "toolEnable" to stack "revTools" with "com.livecode.tool.Pointer"
-         break
-      case "runtool1"
-      case "runtool2"
-      case "runtool3"
-         dispatch "toolEnable" to stack "revTools" with "com.livecode.tool.Browse"
-         break
-      case "image1rect"
-         show graphic "image1guide" of sUserStack
-         break
-      case "field2"
-         dispatch "isolateTool" to stack "revTools" with "com.livecode.interface.classic.LabelField"
-         break
-      case "field2rect"
-         show graphic "field2guide" of sUserStack
-         break
-      default 
-         break
-   end switch
-   
-   if the tool is "pointer tool" then
-      dispatch "toolEnable" to stack "revTools" with "com.livecode.tool.Pointer"
-   else
-      dispatch "toolEnable" to stack "revTools" with "com.livecode.tool.Browse"
-   end if
-   
-end setEnvironmentForStep
-
-on setLocForStep
+on revFinaliseTutorial
    lock screen
-   local tTopLeft
-   local tLeft,tTop
-   local tUserStackRel
-   put true into tUserStackRel
-   switch sStep
-      case "stack"
-      case "image1"
-         put 160 into tLeft
-         put 27 into tTop
-         put false into tUserStackRel
-         break
-      case "graphic2"
-         put 190 into tLeft
-         put 27 into tTop
-         put false into tUserStackRel
-         break
-      case "stackrect"
-         put the left of sUserStack + 362 into tLeft
-         put the top of sUserStack +582 into tTop
-         put false into tUserStackRel
-         break
-      case "graphic1"
-         put the right of  button "com.livecode.interface.classic.RectangleGraphic" of stack "revTools" + the left of stack "revTools" into tLeft         
-         put the bottom of button "com.livecode.interface.classic.RectangleGraphic" of stack "revTools" + the top of stack "revTools" into tTop
-         put false into tUserStackRel
-         break
-      case "field1"
-         put the right of button "com.livecode.interface.classic.Field" of stack "revTools" + the left of stack "revTools" into tLeft         
-         put the bottom of button "com.livecode.interface.classic.Field" of stack "revTools" + the top of stack "revTools" into tTop
-         put false into tUserStackRel
-         break
-      case "button1"
-         put the right of  button "com.livecode.interface.classic.Button" of stack "revTools" + the left of stack "revTools" into tLeft         
-         put the bottom of button "com.livecode.interface.classic.Button" of stack "revTools" + the top of stack "revTools" into tTop
-         put false into tUserStackRel
-         break
-      case "runtool1"
-      case "runtool2"
-      case "runtool3"
-         put the right of button "com.livecode.tool.Browse" of stack "revTools" + the left of stack "revTools" into tLeft     
-         put the bottom of button "com.livecode.tool.Browse" of stack "revTools" + the top of stack "revTools" into tTop    
-         put false into tUserStackRel
-         break
-      case "edittool1"
-      case "edittool2"
-      case "edittool3"
-         put the right of button "com.livecode.tool.Pointer" of stack "revTools" + the left of stack "revTools" into tLeft     
-         put the bottom of button "com.livecode.tool.Pointer" of stack "revTools" + the top of stack "revTools" into tTop    
-         put false into tUserStackRel
-         break
-      case "field2"
-         put the right of button "com.livecode.interface.classic.LabelField" of stack "revTools" + the left of stack "revTools" into tLeft         
-         put the bottom of button "com.livecode.interface.classic.LabelField" of stack "revTools" + the top of stack "revTools" into tTop
-         put false into tUserStackRel
-         break
-      case "graphic1noline"
-      case "graphic1select"
-      case "button1label"
-      case "button1style"
-      case "button1textsize"
-      case "field1name"
-      case "field2name"
-      case "field2dontwrap"
-      case "field2color"
-      case "field2align"
-         put the right of stack "revInspector" into tLeft
-         put the bottom of stack "revInspector" into tTop
-         put false into tUserStackRel
-         break
-      case "graphic1rect"
-         put the right of graphic "graphic1guide" of sUserStack into tLeft
-         put the bottom of graphic "graphic1guide" of sUserStack into tTop
-         break
-      case "graphic2rect"
-         put the right of graphic "graphic2guide" of sUserStack into tLeft
-         put the bottom of graphic "graphic2guide" of sUserStack into tTop
-         break
-      case "button1rect"
-         put the right of graphic "button1guide" of sUserStack into tLeft
-         put the bottom of graphic "button1guide" of sUserStack into tTop
-         break
-      case "image1rect"
-         put the right of graphic "image1guide" of sUserStack into tLeft
-         put the bottom of graphic "image1guide" of sUserStack into tTop
-         break
-      case "field1rect"
-         put the right of graphic "field1guide" of sUserStack into tLeft
-         put the bottom of graphic "field1guide" of sUserStack into tTop
-         break
-      case "field2rect"
-         put the right of graphic "field2guide" of sUserStack into tLeft
-         put the bottom of graphic "field2guide" of sUserStack into tTop
-         break
-      case "graphic1props"
-         put the right of graphic 1 of sUserStack into tLeft
-         put the bottom of graphic 1 of sUserStack into tTop
-         break
-      case "button1props"
-      case "button1script"
-      case "button1script2"
-      case "button1script3"
-      case "button1scriptopen"
-      case "button1script2open"
-      case "button1script3open"
-      case "check1click"
-      case "field1contents"
-      case "field1contents2"
-         put the right of button 1 of sUserStack into tLeft
-         put the bottom of button 1 of sUserStack into tTop
-         break
-      case "field1props"
-      case "field1enter"
-         put the right of field 1 of sUserStack into tLeft
-         put the bottom of field 1 of sUserStack into tTop
-         break
-      case "field2props"
-         put the right of field  2 of sUserStack into tLeft
-         put the bottom of field 2 of sUserStack into tTop
-         break
-      default
-         put the right of sUserStack into tLeft
-         put the bottom of sUserStack into tTop
-         break
-   end switch
-   if tUserStackRel then
-      add the left of sUserStack to tLeft
-      add the top of sUserStack to tTop
+   if there is a field "Message" then
+      delete field "Message"
    end if
-   put tLeft,tTop into tTopLeft
+   if there is a button "Exit" then
+      delete button "Exit"
+   end if
+   remove script of stack "revTutorial" from front
+   enableToolsPalette
+   enableStack "revMenuBar"
    
-   local tAdjusted
-   put (item 1 of tTopLeft - 85), (item 2 of tTopLeft) into tAdjusted
-   set the topLeft of me to tAdjusted
+   put empty into sSteps
+   put empty into sActionNumber
+   put empty into sStepName
+   
    unlock screen
-end setLocForStep
+   close me
+end revFinaliseTutorial
 
-function textForStep
-   local tText
-   switch sStep
-      case "message1"
-         put "The first step in creating an App is the User Interface. You can design an app just like you would draw a picture." into tText
-         put return & "Each part of your app is going to be an object you drag out from the tools palette." after tText
+on revTutorialStart pTutorialFile
+   local tTutorialFile
+   put revIDEPaletteResourcePath("tutorials/" & pTutorialFile) into tTutorialFile
+   
+   local tData
+   put revTutorialParse(tTutorialFile) into tData
+   
+   revInitialiseTutorial tData
+   
+   revTutorialPrologue
+   show stack "revTutorial"
+   revTutorialDoGoToStep tData["first step"]
+   revTutorialContinue
+end revTutorialStart
+
+on revTutorialFinish
+   hide stack "revTutorial"
+   revTutorialEpilogue
+   send "revFinaliseTutorial" to stack "revTutorial" in 1 second
+   close stack "revTutorial"
+end revTutorialFinish
+
+on revTutorialPrologue
+   if sSteps["prologue"] is not empty then
+      answer sSteps["prologue"]["text"]
+   end if
+end revTutorialPrologue
+
+on revTutorialEpilogue
+   if sSteps["epilogue"] is not empty then
+      answer sSteps["epilogue"]["text"]
+   end if
+end revTutorialEpilogue
+
+on revTutorialContinue
+   repeat forever
+      add 1 to sActionNumber
+      // Tutorial finished when there was no "go" step
+      if sSteps[sStepName]["actions"][sActionNumber] is empty then
+         revTutorialFinish
+         exit repeat
+      end if
+      // Text
+      // Script
+      // Actions
+      revTutorialExecuteAction sSteps[sStepName]["actions"][sActionNumber]
+      if sWaiting then
+         exit repeat
+      end if
+   end repeat
+end revTutorialContinue
+
+on revTutorialExecuteAction pActionData
+   switch pActionData["type"]
+      case "highlight"
+         revTutorialDoHighlight pActionData
          break
-      case "stack"
-         put "Click on the File menu, and select New Mainstack..." into tText
+      case "capture"
+         revTutorialDoCapture pActionData["object type"], pActionData["tag"]
          break
-      case "stackrect"
-         put "Start by resizing your stack. You can drag the edges to change the width and height." into tText
-         put return & "Make this stack approximately the shape of a mobile device, as shown." after tText
+      case "interlude"
+         revTutorialDoInterlude pActionData["text"]
          break
-      case "graphic1"
-         put "Drag a rectangle graphic from the Tools palette onto your stack" into tText
+      case "add guide"
+         revTutorialDoAddGuide pActionData["guide"], pActionData["rect"], pActionData["object"]["type"], pActionData["object"]["tag"]
          break
-      case "edittool1"
-         put "Select the edit tool from the Tools palette to change the state of your graphic" into tText
+      case "wait"
+         revTutorialDoWait pActionData
          break
-      case "graphic1rect"
-         put "Resize the graphic, and position it at the top of the stack" into tText
-         break
-      case "graphic1props"
-         put "Double click on the graphic to open up the property inspector" into tText
-         break
-      case "graphic1noline"
-         put "Remove the outline of the graphic by setting the line thickness to 0" into tText
-         break
-      case "graphic1select"
-         put "Click on the graphic to select it" into tText
-         break
-      case "graphic2"
-         put "Click on the Edit menu, and duplicate the graphic" into tText
-         break
-      case "graphic2rect"
-         put "Position the second graphic at the bottom of the stack" into tText
-         break
-      case "field1"
-         put "Drag out a field to create a text entry control" into tText
-         break
-      case "field1rect"
-         put "Resize the field and position it at the bottom of the stack" into tText
-         break
-      case "button1"
-         put "Drag out a button to use for the message send action" into tText
-         break
-      case "button1rect"
-         put "Resize and position the button at the bottom of the stack" into tText
-         break
-      case "button1props"
-         put "Double click on the button to open up its property inspector." into tText
-         break
-      case "button1label"
-         put "We're going to set the properties of the button to make it similar to the messages app." into tText
-         put return & " First set the label of the button to 'Send'" after tText
-         break
-      case "button1style"
-         put "Set the button style to transparent by selecting 'Trasparent Button' from the style dropdown menu. This will clear everything except the text from the button." into tText
-         break
-      case "button1textsize"
-         put "We want the font of the button to be a little larger, so select the Text tab of the property inspector (the last tab), and set the size of the button text to 18." into tText
-         break
-      case "message2"
-         put "Now that we have the User Interface set up, it's time to add some code." into tText
-         break
-      case "button1scriptopen"
-         put "Right click on the button and select 'Edit Script' from the menu to open the script editor." into tText
-         break
-      case "button1script"
-         put "Type" & return & tab & "answer" && quote & "Hello World" & quote into tText
-         put return & "and click 'Apply'" after tText
-         break
-      case "runtool1"
-         put "Now test the code you have written. First, switch to run mode by clicking on the run mode tool in the Tools palette." into tText
-         break
-      case "check1click"
-         put "Click on the 'Send' button to see the result" into tText
-         break
-      case "edittool2"
-         put "Now switch back to edit mode to make some more changes to the app." into tText
-         break
-      case "field1props"
-         put "Double click on the field to open up its property inspector." into tText
-         break
-      case "field1name"
-         put "We're going to set the name of the text field so its contents can be referenced by the button script. Go to the first tab and change the name to newMessage" into tText
-         break
-      case "button1script2open"
-         put "Right click on the button and select 'Edit Script' from the menu to open the script editor again." into tText
-         break
-      case "button1script2"
-         put "Code allows your app to be flexible and interactive. Change the second line of the button script to read" into tText
-         put return & "answer field" && quote & "newMessage" & quote after tText
-         put return & "and click 'Apply'." after tText
-         break
-      case "runtool2"
-         put "Now test this new code. First, switch to run mode by clicking on the run mode tool in the Tools palette." into tText
-         break
-      case "field1enter"
-         put "Click on the field to enter text into it." into tText
-         put return & "Notice that in edit mode, clicking on the field selects it and allows you to drag it around and change the size, whereas in run mode you can enter text." after tText
-         break
-      case "field1contents"
-         put "Type a message into the field, and click the 'Send' button" into tText
-         break
-      case "message3"
-         put "Understanding what happened: " into tText
-         put return & "When you clicked the mouse, LiveCode sent the mouseUp message when you lifted your finger." after tText
-         put return & "The command 'answer' tells LiveCode to pop up a message dialog." after tText
-         put return & "First it showed the text 'Hello World'." after tText
-         put return & "You changed it to show whatever text is in the field named 'newMessage'." after tText
-         break
-      case "edittool3"
-         put "The iPhone app puts the message you send in a bubble. It's easier than you would think." into tText
-         put return & "We just need to add a couple more controls to the stack. Switch back to edit mode to make some more changes to the app." after tText
-         break
-      case "image1"
-         put "We're going to import the bubble image. Click on the file menu, and select Import As Control > Image File..." into tText
-         put return & "Find the blue-bubble.png file in the code resources folder and click open." after tText
-         break
-      case "image1rect"
-         put "Position the image as shown." into tText
-         break
-      case "field2"
-         put "Drag out a label field from the tools palette" into tText
-         break
-      case "field2rect"
-         put "Resize and position the label field over the image as shown" into tText
-         break
-      case "field2props"
-         put "Double click on the label field to open up its property inspector" into tText
-         break
-      case "field2name"
-         put "Set the name of the label field to messageLabel so it can be referenced by the button script." into tText
-         break
-      case "field2dontwrap"
-         put "Uncheck the 'Don't wrap' option so that our message will display on multiple lines in the bubble." into tText
-         break
-      case "field2color"
-         put "Select the color tab and set the foreground fill color to white. This corresponds to the text color of the label." into tText
-         break
-      case "field2align"
-         put "Select the text formatting tab and set the text align of the label to left aligned." into tText
-         break
-      case "message4"
-         put "Now we'll connect the label field with the message via the send button." into tText
-         break
-      case "button1script3open"
-         put "Right click on the button and select 'Edit Script' from the menu to open the script editor again." into tText
-         break
-      case "button1script3"
-         put "Change the second line of the button script to read" into tText
-         put return & "set the text of field" && quote & "messageLabel" & quote && "to the text of field" && quote & "newMessage" & quote after tText
-         put return & "and click 'Apply'." after tText
-         break
-      case "runtool3"
-         put "Switch to run mode again to test your code." into tText
-         break
-      case "field1contents2"
-         put "Type a message into the field, and click the 'Send' button" into tText
-         break
-      case "message5"
-         put "Congratulations, you have just made your first app!" into tText
+      case "go"
+         revTutorialDoGoToStep pActionData["step"]
          break
    end switch
-   return tText
-end textForStep
+end revTutorialExecuteAction
+
+##############################################################################
+#
+#                     ACTION IMPLEMENTATIONS
+#
+##############################################################################
+
+on revTutorialDoGoToStep pStep
+   put pStep into sStepName
+   put 0 into sActionNumber
+   revTutorialClearHighlights
+   revTutorialClearGuides
+   disableMenuBar
+   disableToolsPalette
+   buildMenus
+   put false into sWaiting
+   put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
+end revTutorialDoGoToStep
+
+local sCaptureData, sTaggedObjects
+
+on revTutorialDoCapture pType, pTag
+   put pTag into sCaptureData[pType]
+end revTutorialDoCapture
+
+on revTutorialDoInterlude pText
+   answer pText
+end revTutorialDoInterlude
+
+on revTutorialDoWait pActionData
+   put true into sWaiting
+   switch pActionData["wait condition"]
+      case "there is an object"
+         revTutorialWaitForObject pActionData["object"]["type"], pActionData["object"]["tag"]
+         break
+      case "there is a palette" 
+         revTutorialWaitUntilThereIsAPaletteForObject pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["palette"]
+         break
+      case "tool"
+         revTutorialWaitUntilTheToolIs pActionData["tool"]
+         break
+      case "property"  
+         revTutorialWaitUntilObjectPropertyHasValue pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["property"], pActionData["value"]
+         break
+      case "fits" 
+         revTutorialWaitUntilObjectFitsGuide pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["guide"], pActionData["tolerance"]
+         break
+      case "pops up" 
+         revTutorialWaitUntilAnswerDialogHasPoppedUp pActionData["object"]["type"], pActionData["object"]["tag"]
+         break
+      case "state"
+         local tObjType, tTag
+         put pActionData["object"]["type"] into tObjType 
+         put pActionData["object"]["tag"] into tTag
+         switch pActionData["state"]
+            case "clicked"
+               revTutorialWaitUntilObjectIsClicked tObjType, tTag
+               break
+            case "scripted"
+               revTutorialWaitUntilObjectIsScripted tObjType, tTag, pActionData["script"]
+               break
+            case "focused"
+               revTutorialWaitUntilObjectIsFocused tObjType, tTag
+               break
+            case "selected"
+               revTutorialWaitUntilObjectIsSelected tObjType, tTag
+               break
+         end switch
+         break
+   end switch
+   // Check to see if wait condition is immediately satisfied
+   if revTutorialCheckWaitCondition() then
+      put false into sWaiting
+   end if
+end revTutorialDoWait
+
+##############################################################################
+#
+#                     WAIT CONDITION IMPLEMENTATIONS
+#
+##############################################################################
+
+local sWait
+function revTutorialCheckWaitCondition
+   switch sWait["type"]
+      case "tool"
+         if revTutorialToolIs(sWait["tool"]) then
+            return true
+         end if
+         break
+      case "property"
+         if revTutorialObjectPropertyIsValue(sTaggedObjects[sWait["object type"]][sWait["tag"]], sWait["property"], sWait["value"]) then
+            return true
+         end if
+         break
+      case "guide"
+         if revTutorialObjectFitsGuide(sTaggedObjects[sWait["object type"]][sWait["tag"]], sWait["guide"], sWait["tolerance"]) then
+            return true
+         end if
+         break
+      case "palette"
+         if revTutorialObjectHasPalette(sWait["palette"], sTaggedObjects[sWait["object type"]][sWait["tag"]]) then
+            return true
+         end if
+         break
+   end switch
+   return false
+end revTutorialCheckWaitCondition
+
+on revTutorialWaitUntilObjectIsSelected pObjectType, pTag
+   local tWait
+   put "selected" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put tWait into sWait
+   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+end revTutorialWaitUntilObjectIsSelected
+
+on revTutorialWaitUntilObjectIsScripted pObjectType, pTag, pScript
+   local tWait
+   put "scripted" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put pScript into tWait["script"]
+   put tWait into sWait
+end revTutorialWaitUntilObjectIsScripted
+
+on revTutorialWaitUntilObjectIsClicked pObjectType, pTag
+   local tWait
+   put "clicked" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put tWait into sWait
+end revTutorialWaitUntilObjectIsClicked
+
+on revTutorialWaitForObject pObjectType, pTag
+   local tWait
+   put "exists" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put tWait into sWait
+end revTutorialWaitForObject
+
+on revTutorialWaitUntilObjectFitsGuide pObjectType, pTag, pGuide, pTolerance
+   local tWait
+   put "guide" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put pGuide into tWait["guide"]
+   if pTolerance is empty then
+      put 1 into pTolerance
+   end if
+   put pTolerance into tWait["tolerance"]
+   put tWait into sWait
+   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+end revTutorialWaitUntilObjectFitsGuide
+
+on revTutorialWaitUntilThereIsAPaletteForObject pObjectType, pTag, pPalette
+   local tWait
+   put "palette" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put pPalette into tWait["palette"]
+   put tWait into sWait
+end revTutorialWaitUntilThereIsAPaletteForObject
+
+on revTutorialWaitUntilTheToolIs pTool
+   local tWait
+   put "tool" into tWait["type"]
+   put pTool into tWait["tool"]
+   put tWait into sWait
+end revTutorialWaitUntilTheToolIs
+  
+on revTutorialWaitUntilObjectPropertyHasValue pObjectType, pTag, pProperty, pValue
+   local tWait
+   put "property" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put pProperty into tWait["property"]
+   put pValue into tWait["value"]
+   put tWait into sWait
+   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+end revTutorialWaitUntilObjectPropertyHasValue
+
+on revTutorialWaitUntilAnswerDialogHasPoppedUp pObjectType, pTag
+   local tWait
+   put "answer" into tWait["type"]
+   put pObjectType into tWait["object type"]
+   put pTag into tWait["tag"]
+   put tWait into sWait
+end revTutorialWaitUntilAnswerDialogHasPoppedUp
+
+on revTutorialWaitConditionSatisfied
+   put false into sWaiting
+   put empty into sWait
+   send "revTutorialContinue" to stack "revTutorial" in 10 milliseconds
+end revTutorialWaitConditionSatisfied
+
+##############################################################################
+#
+#                     HIGHLIGHTING IMPLEMENTATIONS
+#
+##############################################################################
+
+on revTutorialDoHighlight pActionData
+   switch pActionData["highlight type"]
+      case "object"
+         break
+      case "menu"
+         revTutorialHighlightMenuItem pActionData["menu"], pActionData["item"]
+         break
+      case "inspector"
+         revTutorialHighlightInspector pActionData["section"], pActionData["property"]
+         break
+      case "tool"
+         revTutorialHighlightTool pActionData["tool"]
+         break
+   end switch
+end revTutorialDoHighlight
+
+on revTutorialClearHighlights
+   revTutorialClearMenuHighlight
+   revTutorialClearObjectHighlight
+end revTutorialClearHighlights
+
+local sObjectState
+on revTutorialHighlightObject pObjType, pTag
+   local tObject
+   put sTaggedObjects[pObjType][pTag] into tObject
+   
+   local tState 
+   put the borderwidth of tObject into tState["borderwidth"]
+   put the bordercolor of tObject into tState["bordercolor"]
+   put tState into sObjectState
+   set the borderwidth of tObject to 5
+   set the bordercolor of tObject to "red"
+end revTutorialHighlightObject
+
+on revTutorialClearObjectHighlight
+   repeat for each key tType in sObjectState
+      repeat for each key tTag in sObjectState[tType]
+         set the borderwidth of sTaggedObjects[tType][tTag] to sObjectState[tType][tTag]["borderwidth"]
+         set the bordercolor of sTaggedObjects[tType][tTag] to sObjectState[tType][tTag]["bordercolor"]
+      end repeat
+   end repeat
+   put empty into sObjectState
+end revTutorialClearObjectHighlight
+
+on revTutorialHighlightTool pTool
+   local tTool
+   switch pTool
+      case "Run Mode"
+         put "com.livecode.tool.Browse" into tTool
+         break
+      case "Edit Mode"
+         put "com.livecode.tool.Run" into tTool
+         break
+      case "Create Data Grid"
+         put "com.livecode.interface.classic.DataGrid" into tTool
+         break
+      case "Create Label Field"
+         put "com.livecode.interface.classic.LabelField" into tTool
+         break
+      case "Create Button"
+         put "com.livecode.interface.classic.Button" into tTool
+         break
+      case "Create Text Area"
+         put "com.livecode.interface.classic.TextArea" into tTool
+         break
+      case "Create Field"
+         put "com.livecode.interface.classic.Field" into tTool
+         break
+      case "Create Combo Box"
+         put "com.livecode.interface.classic.ComboBox" into tTool
+         break
+      case "Create Option Menu"
+         put "com.livecode.interface.classic.OptionMenu" into tTool
+         break
+      case "Create Popup Menu"
+         put "com.livecode.interface.classic.Image" into tTool
+         break
+      case "Create Radio Button"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+      case "Create Image"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+      case "Create Rectangle Button"
+         put "com.livecode.interface.classic.RectangleButton" into tTool
+         break
+      case "Create Slider"
+         put "com.livecode.interface.classic.Slider" into tTool
+         break
+      case "Create Default Button"
+         put "com.livecode.interface.classic.DefaultButton" into tTool
+         break
+      case "Create Scrollbar"
+         put "com.livecode.interface.classic.Scrollbar" into tTool
+         break
+      case "Create Little Arrows"
+         put "com.livecode.interface.classic.LittleArrows" into tTool
+         break
+      case "Create Tab Panel"
+         put "com.livecode.interface.classic.TabPanel" into tTool
+         break
+      case "Create Checkbox"
+         put "com.livecode.interface.classic.Checkbox" into tTool
+         break
+      case "Create Pulldown Menu"
+         put "com.livecode.interface.classic.PulldownMenu" into tTool
+         break
+      case "Create Player"
+         put "com.livecode.interface.classic.Player" into tTool
+         break
+      case "Create Table Field"
+         put "com.livecode.interface.classic.TableField" into tTool
+         break
+      case "Create List Field"
+         put "com.livecode.interface.classic.ListField" into tTool
+         break
+      case "Create Progress Bar"
+         put "com.livecode.interface.classic.ProgressBar" into tTool
+         break
+      case "Create Regular Graphic"
+         put "com.livecode.interface.classic.RegularGraphic" into tTool
+         break
+      case "Create Oval Graphic"
+         put "com.livecode.interface.classic.OvalGraphic" into tTool
+         break
+      case "Create Round Rect Graphic"
+         put "com.livecode.interface.classic.RoundRectGraphic" into tTool
+         break
+      case "Create Rectangle Graphic"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+   end switch
+   
+   dispatch "isolateTool" to stack "revTools" with tTool
+   set the messageTopLeft of stack "revTutorial" to (the right of button tTool of stack "revTools" + the left of stack "revTools", the bottom of button tTool of stack "revTools" + the top of stack "revTools")
+end revTutorialHighlightTool
+
+on revTutorialHighlightInspector pSection, pGroup
+   
+end revTutorialHighlightInspector
+
+local sMenuHighlight
+on revTutorialHighlightMenuItem pMenu, pItem
+   local tMenuHighlight
+   put pItem into tMenuHighlight[pMenu]
+   put tMenuHighlight into sMenuHighlight
+   buildMenus
+   if pMenu is "File" then
+      set the messageTopLeft of stack "revTutorial" to "150,27"
+   else
+      set the messageTopLeft of stack "revTutorial" to "190,27"
+   end if
+end revTutorialHighlightMenuItem
+
+on revTutorialClearMenuHighlight
+   put empty into sMenuHighlight
+end revTutorialClearMenuHighlight
 
 on disableMenuBar
    disableStack "revMenuBar"
@@ -500,31 +1031,6 @@ on enableStack pStack
    end repeat
 end enableStack
 
-on endTutorial
-   send "doEndTutorial" to me in 0 millisecs
-end endTutorial
-
-on doEndTutorial
-   lock screen
-   if there is a field "Message" then
-      delete field "Message"
-   end if
-   if there is a button "Exit" then
-      delete button "Exit"
-   end if
-   remove script of stack "revTutorial" from front
-   enableToolsPalette
-   enableStack "revMenuBar"
-   
-   put empty into sStep
-   put empty into sStepNumber
-   put empty into sUserStack
-   put empty into sObjCount
-   
-   unlock screen
-   close me
-end doEndTutorial
-
 on buildMenus
    buildFileMenu
    buildEditMenu
@@ -534,11 +1040,14 @@ command buildFileMenu
    local tFile
    put "(&New Mainstack" & return after tFile
    
+   put "(&New Substack" & return after tFile
+   /*
    if sStep is not "stack" then
       put "(&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
    else
       put "(&New Substack" & return after tFile
    end if
+   */
    put "(&Open Stack.../O" & return after tFile
    put "(Open Recent File" & return after tFile
    put revIDEGetRecentPathsAsMenu() & return after tFile
@@ -592,17 +1101,10 @@ command buildFileMenu
    
    set the text of menu "File" to tFile
    
-   set the wholeMatches to false
-   switch sStep
-      case "stack"
-         enable line lineOffset("New Mainstack", menu "File") of menu "File"
-         break
-      case "image1"
-         enable line lineOffset("Import As Control", menu "File")  of menu "File"
-         break
-      default
-         break
-   end switch
+   if sMenuHighlight["File"] is not empty then
+      get lineoffset(sMenuHighlight["File"], menu "File")
+      enable line it of menu "File"
+   end if
    
 end buildFileMenu
 
@@ -673,426 +1175,211 @@ command buildEditMenu
    put "(Pre&ferences" after tEdit
    
    set the text of button "Edit" of stack "revMenuBar" to tEdit
-   set the wholematches to false
-   switch sStep
-      case "graphic2"
-         enable line lineOffset("Duplicate", menu "Edit") of menu "Edit"
-         break
-      default
-         break
-   end switch
+   
+   if sMenuHighlight["Edit"] is not empty then
+      enable line lineoffset(sMenuHighlight["Edit"], menu "Edit") of menu "Edit"
+   end if
+   
 end buildEditMenu
 
-on closeStack
-   if the short name of the target is "revTutorial" then
-      set the destroyStack of stack "revTutorial" to true
-      endTutorial
+##############################################################################
+#
+#                     GUIDE HANDLING
+#
+##############################################################################
+
+local sGuides
+on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
+   lock messages
+   if sGuides[pTag] is empty then
+      local tDefaultStack
+      set the dashes of the templateGraphic to "8,3"
+      set the lockloc of the templateGraphic to true
+      set the cantSelect of the templateGraphic to true
+      set the rect of the templateGraphic to pRect
+      
+      put the defaultStack into tDefaultStack
+      set the defaultStack to sTaggedObjects[pObjType][pObjTag]
+      create graphic // To object objtype/objtag
+      put it into sGuides[pTag]
+      set the defaultStack to tDefaultStack
+      reset the templateGraphic
    end if
-end closeStack
+   unlock messages
+end revTutorialDoAddGuide
+
+on revTutorialClearGuides
+   repeat for each element tGraphic in sGuides
+      delete tGraphic
+   end repeat
+   put empty into sGuides
+end revTutorialClearGuides
+
+##############################################################################
+#
+#                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
+#
+##############################################################################
+
+on newStack
+   if "stack" is among the keys of sCaptureData then
+      put the long id of the target into sTaggedObjects["stack"][sCaptureData["stack"]]
+      delete variable sCaptureData["stack"]
+   end if
+   
+   if sWait["type"] is "exists" and sWait["object type"] is "stack" and sWait["tag"] is among the keys of sTaggedObjects["stack"] then
+      revTutorialWaitConditionSatisfied
+   end if
+end newStack
+
+on ideNewControl pObject
+   local tObjType
+   put word 1 of pObject into tObjType
+   if tObjType is among the keys of sCaptureData then
+      put the long id of pObject into sTaggedObjects[tObjType][sCaptureData[tObjType]]
+      delete variable sCaptureData[tObjType]
+   end if
+   
+   if sWait["type"] is "exists" and sWait["object type"] is tObjType and sWait["tag"] is among the keys of sTaggedObjects[tObjType] then
+      revTutorialWaitConditionSatisfied
+   end if
+   
+end ideNewControl
 
 on idePropertyChanged pObject
-   switch sStep
-      case "stackrect"
-         if pObject is sUserStack then
-            if revTutorialRectIsApproximatelyRight("stack") then
-               set the currentStep of me to "graphic1"
-            end if
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object type"], sWait["tag"]) then
+      if sWait["type"] is among the items of "property,guide,script" then
+         if revTutorialCheckWaitCondition() then
+            revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object type"]][sWait["tag"]]
+            revTutorialWaitConditionSatisfied
          end if
-         break
-      case "graphic1noline"
-         if the lineSize of graphic 1 of sUserStack is 0 then
-            if the selobj is not empty then
-               set the currentStep of me to "graphic2"
-            else
-               set the currentStep of me to "graphic1select"
-            end if
-         end if
-         break
-      case "button1label"
-         if the label of button 1 of sUserStack is "Send" then
-            set the currentStep of me to "button1style"
-         end if
-         break
-      case "button1style"
-         if the style of button 1 of sUserStack is "transparent" then
-            set the currentStep of me to "button1textsize"
-         end if
-         break
-      case "button1textsize"
-         if the textsize of button 1 of sUserStack is 18 then
-            set the currentStep of me to "message2"
-         end if
-         break
-      case "button1script"
-         if revTutorialScriptIsApproximatelyRight("button1script") then
-            set the currentStep of me to "runtool1"
-         end if
-         break
-      case "field1name"
-         if the short name of field 1 of sUserStack is "newMessage" then
-            if "revNewScriptEditor" is in the openstacks then
-               set the currentStep of me to "button1script2"
-            else
-               set the currentStep of me to "button1script2open"
-            end if
-         end if
-         break
-      case "button1script2"
-         if revTutorialScriptIsApproximatelyRight("button1script2") then
-            set the currentStep of me to "runtool2"
-         end if
-         break
-      case "field2name"
-         if the short name of field 2 of sUserStack is "messageLabel" then
-            set the currentStep of me to "field2dontwrap"
-         end if
-         break
-      case "field2dontwrap"
-         if the dontwrap of field 2 of sUserStack is false then
-            set the currentStep of me to "field2color"
-         end if         
-         break
-      case "field2color"
-         if revTutorialColorIsApproximatelyRight("field2color") then 
-            set the currentStep of me to "field2align"
-         end if         
-         break
-      case "field2align"
-         if the textAlign of field 2 of sUserStack is "left" then
-            set the currentStep of me to "message4"
-         end if         
-         break
-      case "button1script3"
-         if revTutorialScriptIsApproximatelyRight("button1script3") then
-            set the currentStep of me to "runtool3"
-         end if
-         break
-   end switch
+      end if
+   end if
    pass idePropertyChanged
 end idePropertyChanged
 
 on mouseUp pWhich
-   local tObject
-   put the long id of the target into tObject
-   if tObject ends with sUserStack then
-      
-      switch sStep
-         case "graphic1rect"
-            if tObject begins with "graphic" and the number of tObject is 1 then
-               if revTutorialRectIsApproximatelyRight("graphic1") then
-                  set the currentStep of me to "graphic1props"
-               end if
-            end if
-            break
-         case "graphic2rect"
-            if tObject begins with "graphic" and the number of tObject is 2 then
-               if revTutorialRectIsApproximatelyRight("graphic2") then
-                  set the currentStep of me to "field1"
-               end if
-            end if
-            break
-         case "field1rect"
-            if tObject begins with "field" and the number of tObject is 1 then
-               if revTutorialRectIsApproximatelyRight("field1") then
-                  set the currentStep of me to "button1"
-               end if
-            end if
-            break
-         case "button1rect"
-            if tObject begins with "button" and the number of tObject is 1 then
-               if revTutorialRectIsApproximatelyRight("button1") then
-                  set the currentStep of me to "button1props"
-               end if
-            end if
-            break
-         case "image1rect"
-            if tObject begins with "image" and the number of tObject is 1 then
-               if revTutorialRectIsApproximatelyRight("image1") then
-                  set the currentStep of me to "field2"
-               end if
-            end if
-            break
-         case "check1click"
-            if tObject begins with "button" and the number of tObject is 1 and pWhich is 1 then
-               send "setStep edittool2" to me in 1 second
-            end if
-            break
-         case "field1contents"
-            if tObject begins with "button" and the number of tObject is 1 and pWhich is 1 then
-               send "setStep message3" to me in 1 second
-            end if
-            break
-         case "field2rect"
-            if tObject begins with "field" and the number of tObject is 2 then
-               if revTutorialRectIsApproximatelyRight("field2") then
-                  set the currentStep of me to "field2props"
-               end if
-            end if
-            break
-         case "field1contents2"
-            if tObject begins with "button" and the number of tObject is 1 and pWhich is 1 then
-               send "setStep message5" to me in 1 second
-            end if
-            break
-      end switch
+   if sWait["type"] is "clicked" then
+      local tObject
+      put the long id of the target into tObject
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+         revTutorialWaitConditionSatisfied
+      end if
    end if
+   
    pass mouseUp
 end mouseUp
 
-on openField
-   local tObject
-   put the long id of the target into tObject
-   switch sStep
-      case "field1enter"
-         if tObject begins with "field" and the number of tObject is 1 then
-            set the currentStep of me to "field1contents"
-         end if
-         break
-   end switch
-   pass openField
-end openField
-
-on menuPick pWhich
-   local tObject
-   put the long id of the target into tObject
-   
-   if pWhich is "Edit Script" and tObject is the long id of button "standard" of stack "revMenuBar" then
-      if sStep is "button1scriptopen" then
-         send "setStep button1script" to me in 10 millisecs 
-      else if sStep is "button1script2open" then
-         send "setStep button1script2" to me in 10 millisecs 
-      else if sStep is "button1script3open" then
-         send "setStep button1script3" to me in 10 millisecs 
+on mouseDoubleUp pWhich
+   if sWait["type"] is "double clicked" then
+      local tObject
+      put the long id of the target into tObject
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+         revTutorialWaitConditionSatisfied
       end if
    end if
-   pass menuPick
-end menuPick
-
-on mouseDoubleUp
-   switch sStep
-      case "graphic1props"
-         if the long id of the target begins with "graphic" and the number of the target is 1 then
-            set the currentStep of me to "graphic1noline"
-            pass mouseDoubleUp
-         end if
-         break
-      case "field1props"
-         if the long id of the target begins with "field" and the number of the target is 1 then
-            set the currentStep of me to "field1name"
-            pass mouseDoubleUp
-         end if
-         break
-      case "field2props"
-         if the long id of the target begins with "field" and the number of the target is 2 then
-            set the currentStep of me to "field2name"
-            pass mouseDoubleUp
-         end if
-         break
-   end switch
+   
+   pass mouseDoubleUp
 end mouseDoubleUp
 
-on newStack
-   if the short name of the target is "revTutorial" then
-   else
-      if sStep is "stack" then
-         put the target into sUserStack
-         revIDESubscribe "idePropertyChanged", sUserStack
-         set the currentStep of me to "stackrect"
-      end if
-   end if
-end newStack
-
-on openCard
-   if the long id of the owner of the target is sUserStack then
-      copy group "guides" of me to the target
-      set the topleft of it to "178,126"
-      show group "guides" of sUserStack
-      show graphic "stackguide" of sUserStack
-   end if
-   pass openCard
-end openCard
-
 on ideSelectedObjectChanged 
-   local tSelObj
-   put the selobj into tSelObj
-   if sStep is "graphic1select" then
-      if word 1 of tSelObj is "graphic" and the number of tSelObj is 1 then
-         set the currentStep of me to "graphic2"
+   if sWait["type"] is "selected" then
+      local tObject
+      put the long id of the target into tObject
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+         revTutorialWaitConditionSatisfied
       end if
    end if
    pass ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
-on ideNewControl pObject
-   if the long id of pObject ends with sUserStack then
-      revIDESubscribe "idePropertyChanged", pObject
-      add 1 to sObjCount
-      switch sStep
-         case "graphic1"
-            set the currentStep of me to "graphic1rect"
-            break
-         case "graphic2"
-            set the currentStep of me to "graphic2rect"
-            break
-         case "button1"
-            set the currentStep of me to "button1rect"
-            break
-         case "field1"
-            set the currentStep of me to "field1rect"
-            break
-         case "image1"
-            set the currentStep of me to "image1rect"
-            break
-         case "field2"
-            set the currentStep of me to "field2rect"
-            break
-      end switch
-      set the layer of pObject to sObjCount
-   end if
-   pass ideNewControl
-end ideNewControl
-
-on setRegions
-   lock messages
-   create invisible group "guides"
-   set the dashes of the templateGraphic to "8,3"
-   set the visible of the templateGraphic to false
-   set the lockloc of the templateGraphic to true
-   set the cantSelect of the templateGraphic to true
-   create graphic "stackguide" in group "guides"
-   set the rect of it to "1,1,361,581"
-   
-   create graphic "graphic1guide" in group "guides"
-   set the rect of it to "1,1,361,48"
-   
-   create graphic "graphic2guide" in group "guides"
-   set the rect of it to "0,546,361,581"
-   
-   create graphic "field1guide" in group "guides"
-   set the rect of it to "18,552,286,576"
-   
-   create graphic "button1guide" in group "guides"
-   set the rect of it to "294,550,356,576"
-   
-   create graphic "image1guide" in group "guides"
-   set the rect of it to "177,62,347,126"
-   
-   create graphic "field2guide" in group "guides"
-   set the rect of it to "186,70,324,120"
-   
-   reset the templateGraphic
-   set the topleft of group "guides" to 0,0
-   unlock messages
-end setRegions
-
 on newTool pTool
-   if pTool is "browse" then
-      if sStep is "runtool1" then
-         set the currentStep of me to "check1click"
-      else if sStep is "runtool2" then
-         set the currentStep of me to "field1enter"
-      else if sStep is "runtool3" then
-         set the currentStep of me to "field1contents2"
-      end if
-   else if pTool is "pointer" then
-      if sStep is "edittool1" then
-         set the currentStep of me to "graphic1rect"
-      else if sStep is "edittool2" then
-         set the currentStep of me to "field1props"
-      else if sStep is "edittool3" then
-         set the currentStep of me to "image1"
+   if sWait["type"] is "tool" then
+      if revTutorialToolIs(sWait["tool"]) then
+         revTutorialWaitConditionSatisfied
       end if
    end if
+   pass newTool
 end newTool
 
-function revTutorialScriptIsApproximatelyRight pWhich
-   local tScript
-   switch pWhich
-      case "button1script"
-         put the script of button 1 of sUserStack into tScript
-         if word 1 to -1 of line 1 of tScript is "on mouseUp" and word 1 to -1 of line 3 of tScript is "end mouseUp" then
-            if word 1 of line 2 of tScript is "answer" then
-               return true
-            end if
-         end if
-         break
-      case "button1script2"
-         put the script of button 1 of sUserStack into tScript
-         if word 1 to -1 of line 1 of tScript is "on mouseUp" and word 1 to -1 of line 3 of tScript is "end mouseUp" then
-            if word 1 to -1 of line 2 of tScript is "answer field" && quote & "newMessage" & quote then
-               return true
-            end if
-         end if
-         break
-      case "button1script3"
-         put the script of button 1 of sUserStack into tScript
-         if word 1 to -1 of line 1 of tScript is "on mouseUp" and word 1 to -1 of line 3 of tScript is "end mouseUp" then
-            if word 1 to -1 of line 2 of tScript is ("set the text of field" && quote & "messageLabel" & quote && "to the text of field" && quote & "newMessage" & quote) then
-               return true
-            end if
-         end if
-         break
-   end switch
+##############################################################################
+#
+#                     UTILITIES
+#
+##############################################################################
+
+function revTutorialObjectIsTaggedObject pLongID, pType, pTag
+   return sTaggedObjects[pType][pTag] is pLongID
+end revTutorialObjectIsTaggedObject
+
+function revTutorialToolIs pTool
+   if pTool is "edit" and the tool is "pointer tool" then
+      return true
+   end if
+   
+   if pTool is "run" and the tool is "browse tool" then
+      return true
+   end if
+   
    return false
-end revTutorialScriptIsApproximatelyRight
+end revTutorialToolIs
 
-function revTutorialColorIsApproximatelyRight pWhich
-   switch pWhich
-      case "field2color"
-         if the foreColor of field 2 of sUserStack is "white" then
-            return true
-         end if
-         repeat for each item tItem in the foreColor of field 2 of sUserStack
-            if tItem is not a number or tItem < 240 then
-               return false
-            end if
-         end repeat
-         return true
-         break
-   end switch
-end revTutorialColorIsApproximatelyRight
-
-
-function revTutorialRectIsApproximatelyRight pWhich
-   switch pWhich
-      case "graphic1"
-         return revTutorialRectsAreApproximatelyEqual(3, the rect of graphic 1 of sUserStack, the rect of graphic "graphic1guide" of sUserStack, true,true,true,false)
-      case "graphic2"
-         return revTutorialRectsAreApproximatelyEqual(3, the rect of graphic 2 of sUserStack, the rect of graphic "graphic2guide" of sUserStack, true,false,true,true)
-      case "field1"
-         return revTutorialRectsAreApproximatelyEqual(5, the rect of field 1 of sUserStack, the rect of graphic "field1guide" of sUserStack, false,false,false,false)
-      case "button1"
-         return revTutorialRectsAreApproximatelyEqual(5, the rect of button 1 of sUserStack, the rect of graphic "button1guide" of sUserStack, false,false,false,false)
-      case "image1"
-         return revTutorialRectsAreApproximatelyEqual(3, the rect of image 1 of sUserStack, the rect of graphic "image1guide" of sUserStack, false,false,false,false)
-      case "field2"
-         return revTutorialRectsAreApproximatelyEqual(3, the rect of field 2 of sUserStack, the rect of graphic "field2guide" of sUserStack, false,false,false,false)
-      case "stack"
-         local tStackRect
-         put "0,0," & the width of sUserStack & "," & the height of sUserStack into tStackRect
-         return revTutorialRectsAreApproximatelyEqual(3, tStackRect, the rect of graphic "stackguide" of sUserStack)
-   end switch
+function revTutorialObjectPropertyIsValue pLongID, pProperty, pValue
+   if pProperty ends with "color" then
+      return revTutorialColorIs(the pProperty of pLongID, pValue)
+   else if pProperty is "script" then
+      return revTutorialScriptIs(the script of pLongID, pValue)
+   end if
+   
+   if the pProperty of pLongID is pValue then
+      return true
+   end if
    return false
-end revTutorialRectIsApproximatelyRight
+end revTutorialObjectPropertyIsValue
 
-function revTutorialRectsAreApproximatelyEqual pTolerance, pRect, pTarget, pLeftOver, pTopOver, pRightOver, pBottomOver
+function revTutorialObjectHasPalette
+   return false
+end revTutorialObjectHasPalette
+
+function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
+   local tRect
+   if pObject begins with "stack" then
+      put 0,0,the width of pObject, the height of pObject into tRect
+   else
+      put the rect of pObject into tRect
+   end if
+   return revTutorialRectsAreApproximatelyEqual(pTolerance, tRect, the rect of sGuides[pGuide])
+end revTutorialObjectFitsGuide
+
+// In the future we might want to add a bit more "approximity" to this.
+function revTutorialScriptIs pObjScript, pTargetScript
+   local tObjTokens, tTargetTokens
+   repeat for each token tToken in pObjScript
+      put tToken & " " after tObjTokens
+   end repeat
+   
+   repeat for each token tToken in pTargetScript
+      put tToken & " " after tTargetTokens
+   end repeat
+   
+   return tObjTokens is tTargetTokens
+end revTutorialScriptIs
+
+constant kColorTolerance = 10
+function revTutorialColorIs pColor, pTarget
+   return revTutorialNumericItemsAreApproximatelyEqual(3, kColorTolerance, pColor, pTarget)
+end revTutorialColorIs
+
+function revTutorialRectsAreApproximatelyEqual pTolerance, pRect, pTarget
+   return revTutorialNumericItemsAreApproximatelyEqual(4, pTolerance, pRect, pTarget)
+end revTutorialRectsAreApproximatelyEqual
+
+function revTutorialNumericItemsAreApproximatelyEqual pNumItems, pTolerance, pLeft, pRight
    local tItemNo
-   repeat with tItemNo = 1 to 4
-      
-      if tItemNo is 1 and pLeftOver is true and item 1 of pRect < 0 then
-         next repeat
-      else if tItemNo is 2 and pTopOver is true and item 2 of pRect < 0 then
-         next repeat
-      else if tItemNo is 3 and pRightOver is true and item 3 of pRect > the width of sUserStack then
-         next repeat
-      else if tItemNo is 4 and pBottomOver is true and item 4 of pRect > the height of sUserStack then
-         next repeat
-      end if
-      
-      if abs(item tItemNo of pRect - item tItemNo of pTarget) > pTolerance then
+   repeat with tItemNo = 1 to pNumItems
+      if abs(item tItemNo of pLeft - item tItemNo of pRight) > pTolerance then
          return false
       end if
    end repeat
    return true
-end revTutorialRectsAreApproximatelyEqual
-
+end revTutorialNumericItemsAreApproximatelyEqual
