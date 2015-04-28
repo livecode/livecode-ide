@@ -343,7 +343,7 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux-[[TargetArchitecture]]:engine[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
+		executable linux-[[TargetArchitecture]]:livecode[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
 		executable linux-[[TargetArchitecture]]:revpdfprinter.so
 		executable linux-[[TargetArchitecture]]:revsecurity.so
 
@@ -402,7 +402,7 @@ component Engine.MacOSX
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux-[[TargetArchitecture]]:standalone as Standalone
+		executable linux-[[TargetArchitecture]]:standalone[[EditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
 		executable linux-[[TargetArchitecture]]:revpdfprinter.so
 		executable linux-[[TargetArchitecture]]:revsecurity.so
@@ -411,7 +411,7 @@ component Runtime.Linux
 
 component Runtime.Windows
 	into [[TargetFolder]] place
-		executable windows:standalone.exe as Standalone
+		executable windows:standalone[[EditionTagLower]].exe as Standalone
 		file "windows:w32-manifest-template.xml"
 		file "windows:w32-manifest-template-dpiaware.xml"
 		file "windows:w32-manifest-template-trustinfo.xml"
