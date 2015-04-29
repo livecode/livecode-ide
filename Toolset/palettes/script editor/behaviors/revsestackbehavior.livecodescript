@@ -143,6 +143,9 @@ command revSERemoveTargetObject pObject, pDontWarn, pDontCloseIfLast, pDontChang
    put "true" into tTrueString
    send "removeTab pObject, tTrueString" to group "Script Tabs" of me
    
+   # Notify the IDE
+   revIDEStopEditingScriptOfObjects pObject
+   
    local tCurrentTab
    send "getCurrentTab" to group "Script Tabs" of me
    put the result into tCurrentTab
@@ -1661,9 +1664,6 @@ command actionCloseTab
    revSEGetCurrentObject
    put the result into tObject
    revSERemoveTargetObject tObject
-   
-   # Notify the IDE
-   revIDEStopEditingScriptOfObjects tObject
 end actionCloseTab
 
 # Description

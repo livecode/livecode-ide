@@ -1300,7 +1300,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideEditScriptOfObjects,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -2595,12 +2595,12 @@ end revIDEInspectedObjects
 
 local sScriptEditingObjects
 on revIDEStartEditingScript pObject
-   put true into sScriptEditingObjects[pObject]
+   put true into sScriptEditingObjects[the long id of pObject]
 end revIDEStartEditingScript
 
 on revIDEStopEditingScriptOfObjects pObjects
    repeat for each line tObject in pObjects
-      delete variable sScriptEditingObjects[tObject]
+      delete variable sScriptEditingObjects[the long id of tObject]
    end repeat
 end revIDEStopEditingScriptOfObjects
 
@@ -2614,6 +2614,7 @@ on revIDEEditScriptOfObject pObject
    put revRuggedId(pObject) into tObject
    
    # Send the ideEditScript message
+   put "sending"
    send "revIDEMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
    
    # Update the currently editing objects
@@ -3238,6 +3239,13 @@ command revIDEOpenPalette pPaletteName
          break
    end switch
 end revIDEOpenPalette
+
+on revIDEOpenInspectorForObjects pObjects
+   lock screen
+   revIDEOpenPalette("inspector")
+   revIDEInspectObjects pObjects
+   unlock screen
+end revIDEOpenInspectorForObjects
 
 /*
 Returns a list of all the open Property Inspectors

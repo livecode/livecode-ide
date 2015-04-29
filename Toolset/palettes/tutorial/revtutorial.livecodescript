@@ -530,7 +530,7 @@ on revInitialiseTutorial pSteps, pFirstStep
    set the height of stack "revTutorial" to 285
    
    create field "Message"
-   set the textsize of it to 24
+   set the textsize of it to 18
    set the width of it to the width of stack "revTutorial" - 40   
    set the height of it to the height of stack "revTutorial" - 70
    set the left of it to 20
@@ -538,8 +538,6 @@ on revInitialiseTutorial pSteps, pFirstStep
    
    insert the script of stack "revTutorial" into front
    unlock messages
-   revIDESubscribe "ideNewControl"
-   revIDESubscribe "ideSelectedObjectChanged"
    palette stack "revTutorial"
    unlock screen
 end revInitialiseTutorial
@@ -655,6 +653,9 @@ on revTutorialDoGoToStep pStep
    buildMenus
    put false into sWaiting
    put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
+   if sSteps[pStep]["script"] is not empty then
+      put return & sSteps[pStep]["script"] after field "Message" of stack "revTutorial"
+   end if
 end revTutorialDoGoToStep
 
 local sCaptureData, sTaggedObjects
@@ -667,53 +668,6 @@ on revTutorialDoInterlude pText
    answer pText
 end revTutorialDoInterlude
 
-on revTutorialDoWait pActionData
-   put true into sWaiting
-   switch pActionData["wait condition"]
-      case "there is an object"
-         revTutorialWaitForObject pActionData["object"]["type"], pActionData["object"]["tag"]
-         break
-      case "there is a palette" 
-         revTutorialWaitUntilThereIsAPaletteForObject pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["palette"]
-         break
-      case "tool"
-         revTutorialWaitUntilTheToolIs pActionData["tool"]
-         break
-      case "property"  
-         revTutorialWaitUntilObjectPropertyHasValue pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["property"], pActionData["value"]
-         break
-      case "fits" 
-         revTutorialWaitUntilObjectFitsGuide pActionData["object"]["type"], pActionData["object"]["tag"], pActionData["guide"], pActionData["tolerance"]
-         break
-      case "pops up" 
-         revTutorialWaitUntilAnswerDialogHasPoppedUp pActionData["object"]["type"], pActionData["object"]["tag"]
-         break
-      case "state"
-         local tObjType, tTag
-         put pActionData["object"]["type"] into tObjType 
-         put pActionData["object"]["tag"] into tTag
-         switch pActionData["state"]
-            case "clicked"
-               revTutorialWaitUntilObjectIsClicked tObjType, tTag
-               break
-            case "scripted"
-               revTutorialWaitUntilObjectIsScripted tObjType, tTag, pActionData["script"]
-               break
-            case "focused"
-               revTutorialWaitUntilObjectIsFocused tObjType, tTag
-               break
-            case "selected"
-               revTutorialWaitUntilObjectIsSelected tObjType, tTag
-               break
-         end switch
-         break
-   end switch
-   // Check to see if wait condition is immediately satisfied
-   if revTutorialCheckWaitCondition() then
-      put false into sWaiting
-   end if
-end revTutorialDoWait
-
 ##############################################################################
 #
 #                     WAIT CONDITION IMPLEMENTATIONS
@@ -721,117 +675,128 @@ end revTutorialDoWait
 ##############################################################################
 
 local sWait
-function revTutorialCheckWaitCondition
-   switch sWait["type"]
+on revTutorialDoWait pActionData
+   put empty into sWait
+   // Check to see if wait condition is immediately satisfied
+   if revTutorialCheckWaitCondition(pActionData) then
+      exit revTutorialDoWait
+   end if
+   
+   put pActionData into sWait
+   put true into sWaiting
+   
+   switch pActionData["wait condition"]
+      case "there is an object"
+         revTutorialWaitForObject
+         break
+      case "there is a palette" 
+         revTutorialWaitUntilThereIsAPaletteForObject pActionData["palette"]
+         break
       case "tool"
-         if revTutorialToolIs(sWait["tool"]) then
+         revTutorialWaitUntilTheToolIs
+         break
+      case "property"  
+         revTutorialWaitUntilObjectPropertyHasValue sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         break
+      case "fits" 
+         revTutorialWaitUntilObjectFitsGuide sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         break
+      case "pops up" 
+         revTutorialWaitUntilAnswerDialogHasPoppedUp
+         break
+      case "state"
+         switch pActionData["state"]
+            case "clicked"
+               revTutorialWaitUntilObjectIsClicked
+               break
+            case "scripted"
+               revTutorialWaitUntilObjectIsScripted sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+               break
+            case "focused"
+               revTutorialWaitUntilObjectIsFocused
+               break
+            case "selected"
+               revTutorialWaitUntilObjectIsSelected
+               break
+         end switch
+         break
+   end switch
+end revTutorialDoWait
+
+function revTutorialCheckWaitCondition pActionData
+   switch pActionData["wait condition"]
+      case "tool"
+         if revTutorialToolIs(pActionData["tool"]) then
             return true
          end if
          break
       case "property"
-         if revTutorialObjectPropertyIsValue(sTaggedObjects[sWait["object type"]][sWait["tag"]], sWait["property"], sWait["value"]) then
+         if revTutorialObjectPropertyIsValue(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], pActionData["property"], pActionData["value"]) then
             return true
          end if
          break
-      case "guide"
-         if revTutorialObjectFitsGuide(sTaggedObjects[sWait["object type"]][sWait["tag"]], sWait["guide"], sWait["tolerance"]) then
+      case "fits"
+         if revTutorialObjectFitsGuide(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], pActionData["guide"], pActionData["tolerance"]) then
             return true
          end if
          break
-      case "palette"
-         if revTutorialObjectHasPalette(sWait["palette"], sTaggedObjects[sWait["object type"]][sWait["tag"]]) then
+      case "there is a palette"
+         if revTutorialObjectHasPalette(pActionData["palette"], sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]) then
             return true
+         end if
+      case "state"
+         if pActionData["state"] is "selected" then
+            if revTutorialObjectIsSelected(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]) then
+               return true
+            end if
          end if
          break
    end switch
    return false
 end revTutorialCheckWaitCondition
 
-on revTutorialWaitUntilObjectIsSelected pObjectType, pTag
-   local tWait
-   put "selected" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put tWait into sWait
-   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+on revTutorialWaitUntilObjectIsSelected
+   revIDESubscribe "ideSelectedObjectChanged"
 end revTutorialWaitUntilObjectIsSelected
 
-on revTutorialWaitUntilObjectIsScripted pObjectType, pTag, pScript
-   local tWait
-   put "scripted" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put pScript into tWait["script"]
-   put tWait into sWait
+on revTutorialWaitUntilObjectIsScripted pObject
+   revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectIsScripted
 
-on revTutorialWaitUntilObjectIsClicked pObjectType, pTag
-   local tWait
-   put "clicked" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put tWait into sWait
+on revTutorialWaitUntilObjectIsClicked
+   // Subscribe to mouseUp
 end revTutorialWaitUntilObjectIsClicked
 
-on revTutorialWaitForObject pObjectType, pTag
-   local tWait
-   put "exists" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put tWait into sWait
+on revTutorialWaitForObject
+   revIDESubscribe "ideNewControl"
 end revTutorialWaitForObject
 
-on revTutorialWaitUntilObjectFitsGuide pObjectType, pTag, pGuide, pTolerance
-   local tWait
-   put "guide" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put pGuide into tWait["guide"]
-   if pTolerance is empty then
-      put 1 into pTolerance
+on revTutorialWaitUntilObjectFitsGuide pObject
+   if sWait["tolerance"] is empty then
+      put 1 into sWait["tolerance"]
    end if
-   put pTolerance into tWait["tolerance"]
-   put tWait into sWait
-   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+   revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectFitsGuide
 
-on revTutorialWaitUntilThereIsAPaletteForObject pObjectType, pTag, pPalette
-   local tWait
-   put "palette" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put pPalette into tWait["palette"]
-   put tWait into sWait
-   
+on revTutorialWaitUntilThereIsAPaletteForObject pPalette
    if pPalette is "property inspector" then
-      revIDESubscribe "ideInspectedObjectsChanged"
+      revIDESubscribe "ideInspectObjects"
+   else if pPalette is "script editor" then
+      enable button "standard" of this card of stack "revMenuBar"
+      revIDESubscribe "ideEditScript"
    end if
 end revTutorialWaitUntilThereIsAPaletteForObject
 
-on revTutorialWaitUntilTheToolIs pTool
-   local tWait
-   put "tool" into tWait["type"]
-   put pTool into tWait["tool"]
-   put tWait into sWait
+on revTutorialWaitUntilTheToolIs
+   // Subscribe to newTool
 end revTutorialWaitUntilTheToolIs
   
-on revTutorialWaitUntilObjectPropertyHasValue pObjectType, pTag, pProperty, pValue
-   local tWait
-   put "property" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put pProperty into tWait["property"]
-   put pValue into tWait["value"]
-   put tWait into sWait
-   revIDESubscribe "idePropertyChanged", sTaggedObjects[pObjectType][pTag]
+on revTutorialWaitUntilObjectPropertyHasValue pObject
+   revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectPropertyHasValue
 
-on revTutorialWaitUntilAnswerDialogHasPoppedUp pObjectType, pTag
-   local tWait
-   put "answer" into tWait["type"]
-   put pObjectType into tWait["object type"]
-   put pTag into tWait["tag"]
-   put tWait into sWait
+on revTutorialWaitUntilAnswerDialogHasPoppedUp
+   // Subscribe to appropriate message
 end revTutorialWaitUntilAnswerDialogHasPoppedUp
 
 on revTutorialWaitConditionSatisfied
@@ -1236,7 +1201,7 @@ on newStack
       delete variable sCaptureData["stack"]
    end if
    
-   if sWait["type"] is "exists" and sWait["object type"] is "stack" and sWait["tag"] is among the keys of sTaggedObjects["stack"] then
+   if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
       revTutorialWaitConditionSatisfied
    end if
 end newStack
@@ -1249,17 +1214,18 @@ on ideNewControl pObject
       delete variable sCaptureData[tObjType]
    end if
    
-   if sWait["type"] is "exists" and sWait["object type"] is tObjType and sWait["tag"] is among the keys of sTaggedObjects[tObjType] then
+   if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is tObjType and sWait["object"]["tag"] is among the keys of sTaggedObjects[tObjType] then
+      revIDEUnsubscribe "ideNewControl"
       revTutorialWaitConditionSatisfied
    end if
    
 end ideNewControl
 
 on idePropertyChanged pObject
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object type"], sWait["tag"]) then
-      if sWait["type"] is among the items of "property,guide,script" then
-         if revTutorialCheckWaitCondition() then
-            revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object type"]][sWait["tag"]]
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
+         if revTutorialCheckWaitCondition(sWait) then
+            revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["tag"]]
             revTutorialWaitConditionSatisfied
          end if
       end if
@@ -1268,10 +1234,10 @@ on idePropertyChanged pObject
 end idePropertyChanged
 
 on mouseUp pWhich
-   if sWait["type"] is "clicked" then
+   if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
       local tObject
       put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1279,11 +1245,15 @@ on mouseUp pWhich
    pass mouseUp
 end mouseUp
 
+on menuPick pWhich
+   pass menuPick
+end menuPick
+
 on mouseDoubleUp pWhich
-   if sWait["type"] is "double clicked" then
+   if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
       local tObject
       put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1292,28 +1262,38 @@ on mouseDoubleUp pWhich
 end mouseDoubleUp
 
 on ideSelectedObjectChanged 
-   if sWait["type"] is "selected" then
+   if sWait["wait condition"] is "state" and sWait["state"] is "selected" then
       local tObject
-      put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object type"], sWait["tag"]) then
+      put revIDESelectedObjects() into tObject
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
    pass ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
-on ideInspectedObjectsChanged pObjects
-   if sWait["type"] is "palette" and sWait["palette"] is "property inspector" then
-      if revTutorialObjectIsTaggedObject(pObjects, sWait["object type"], sWait["tag"]) then
+on ideInspectObjects pObjects
+   if sWait["wait condition"] is "there is a palette" and sWait["palette"] is "property inspector" then
+      if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]["type"], sWait["object"]["tag"]) then
          revIDEUnsubscribe "ideInspectedObjectsChanged"
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideInspectedObjectsChanged
-end ideInspectedObjectsChanged
+   pass ideInspectObjects
+end ideInspectObjects
+
+on ideEditScript pObject
+   if sWait["wait condition"] is "there is a palette" and sWait["palette"] is "script editor" then
+      if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+         revIDEUnsubscribe "ideEditScript"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+   pass ideEditScript
+end ideEditScript
 
 on newTool pTool
-   if sWait["type"] is "tool" then
+   if sWait["wait condition"] is "tool" then
       if revTutorialToolIs(sWait["tool"]) then
          revTutorialWaitConditionSatisfied
       end if
@@ -1326,6 +1306,10 @@ end newTool
 #                     UTILITIES
 #
 ##############################################################################
+
+function revTutorialObjectIsSelected pLongID
+   return pLongID is among the lines of revIDESelectedObjects()
+end revTutorialObjectIsSelected
 
 function revTutorialObjectIsTaggedObject pLongID, pType, pTag
    return sTaggedObjects[pType][pTag] is pLongID
@@ -1356,7 +1340,15 @@ function revTutorialObjectPropertyIsValue pLongID, pProperty, pValue
    return false
 end revTutorialObjectPropertyIsValue
 
-function revTutorialObjectHasPalette
+function revTutorialObjectHasPalette pPalette, pObject
+   if pPalette is "property inspector" then
+      return pObject is among the lines of revIDEInspectedObjects()
+   end if
+   
+   if pPalette is "script editor" then
+      return pObject is among the lines of revIDEScriptEditingObjects()
+   end if
+   
    return false
 end revTutorialObjectHasPalette
 

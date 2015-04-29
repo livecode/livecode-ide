@@ -646,11 +646,11 @@ on mouseUp pWhich
 end mouseUp
 
 on mouseDoubleUp pButtonNo, pTarget
-  if revCheckEdit(pTarget) then
-  	revIDEOpenPalette("inspector")
-  else if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
-  	pass mouseDoubleUp
-  end if
+   if revCheckEdit(pTarget) then
+      revIDEOpenInspectorForObjects the long id of the target
+   else if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
+      pass mouseDoubleUp
+   end if
 end mouseDoubleUp
 
 on openField

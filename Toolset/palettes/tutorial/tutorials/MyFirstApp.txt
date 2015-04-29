@@ -67,7 +67,14 @@ action
     -- property editor 
     highlight property "Line Size" of section "Basic"
     wait until the lineSize of graphic "Header Graphic" is 0
-    go to step "Duplicate Header Graphic"
+    go to step "Select Header Graphic"
+end step
+
+step "Select Header Graphic"
+    Select the header graphic by left-clicking on it.
+action
+    wait until graphic "Header Graphic" is selected
+    go to step "Duplicate Header Graphic"	
 end step
 
 step "Duplicate Header Graphic"
@@ -110,6 +117,14 @@ action
     highlight tool "Create Button"
     capture the next new button of stack "Mainstack" as "Send Button"
     wait until there is a button "Send Button"
+    go to step "Set Send Button Area"
+end step
+
+step "Set Send Button Area"
+    Resize and position the message field at the bottom of the stack as shown.
+action
+    add guide "Area" with rect "294,550,356,576" to stack "Mainstack"
+    wait until button "Send Button" fits guide "Area" with tolerance 5
     go to step "Set Send Button Properties"
 end step
 
@@ -156,10 +171,10 @@ action
 end step
 
 step "Set Send Button Script"
-    Type
+    Set the script of the button to:
 script
     on mouseUp
-    answer "Hello World"
+    	answer "Hello World"
     end mouseUp
 action
     wait until button "Send Button" is scripted

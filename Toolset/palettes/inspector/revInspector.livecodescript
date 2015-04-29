@@ -3,10 +3,9 @@
 local sPropertyInfo
 local sSelectedObjects
 local sInspectorLock
-
 on preOpenStack
    put false into sInspectorLock
-   put empty into sSelectedObjects
+   put false into sInitialised
    put empty into sSelectedObjects
    
    # Set the palette frame behaviour
@@ -30,24 +29,27 @@ on preOpenStack
    set the stackfiles of me to tStackFiles
    
    # Register of IDE messages
-   revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    inspectorMessagesRegister
    
    //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
    addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
-   
    set the navigationDisplayStyle of me to "icons"
-   
-   # Render the inspector for the given selected object
-   ideSelectedObjectChanged
 end preOpenStack
 
-on openStack   
+on openStack
    lock screen
    set the visible of me to true
    unlock screen
 end openStack
+
+on inspectorInitialise   
+   if sInitialised is true then
+      exit inspectorInitialise
+   end if
+   put true into sInitialised
+
+end inspectorInitialise
 
 on resizeStack
    inspectorLayout
@@ -526,7 +528,7 @@ on ideNameChanged
    ideInspectObjects
 end ideNameChanged
 
-on ideInspectObjects
+on ideInspectObjects pObjects
    # If the inspector is locked and a selected object changed message comes through
    # ignore it
    if sInspectorLock is true and exists(line 1 of sSelectedObjects) then 
@@ -541,20 +543,23 @@ on ideInspectObjects
    
    # Get the selected objects
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   if pObjects is not empty then
+      put pObjects into tSelectedObjects
+   else
+      put revIDESelectedObjects() into tSelectedObjects
+   end if
    if tSelectedObjects is sSelectedObjects then exit ideInspectObjects
    if tSelectedObjects is empty then
       inspectorClear
       exit ideInspectObjects
    end if
    
+   lock screen
    # Unsubscribe the the objects previously 
    revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
    revIDESubscribe "idePropertyChanged",tSelectedObjects
    
    put tSelectedObjects into sSelectedObjects
-   
-   lock screen
    
    # Get a list of the properties and groups we'll be displaying
    put revIDEPropertiesInfo(sSelectedObjects) into sPropertyInfo
