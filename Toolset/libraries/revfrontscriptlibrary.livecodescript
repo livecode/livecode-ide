@@ -211,83 +211,12 @@ end mainstackChanged
 
 on editScript pObject
    local tResult
-   _editScriptNew pObject
+   revIDEEditScriptOfObject pObject
    put the result into tResult 
    if tResult is "pass" then
       pass editScript
    end if
 end editScript
-
-
-private command _editScriptNew pObject
-   # First obtain a correct object reference. The reason for this is edit group mode
-   local tObject
-   put revRuggedId(pObject) into tObject
-   
-   # OK-2008-08-19 : Bug 6957
-   # Dispatch the "revEditScript" message to any plugins that require it.
-   global gREVMessageDispatch
-   repeat for each line tPlugin in gREVMessageDispatch["revEditScript"]
-      try
-         send "revEditScript tObject" to this card of stack tPlugin
-      end try
-   end repeat
-   
-   # Search for existing editor first.
-   local tExistingEditor
-   put revScriptEditor(tObject) into tExistingEditor
-   if tExistingEditor is not empty then
-      revGoScriptEditor the long id of stack tExistingEditor
-      send "revSESetCurrentObject tObject" to stack tExistingEditor
-      exit _editScriptNew
-   end if
-   
-   # MW-2012-02-21: If we are editing the "Template Stack" behavior then we create a new
-   #   window in 'special' mode.
-   if revRuggedId(the long id of stack revIDEScriptEditorBehavior("stack")) is tObject then
-      revEditScriptInNewWindow pObject, true
-      exit _editScriptNew
-   end if
-   
-   # If the preference is to use tabs, then we find the topmost script editor
-   # and add the specified object as a tab to it.
-   local tUseTabs
-   
-   local tUseTabsString
-   put "useTabs" into tUseTabsString
-   
-   send "revSEGetPreference tUseTabsString" to revScriptEditorMain()
-   put the result into tUseTabs
-   
-   if tUseTabs then
-      local tEditor
-      put revTopMostScriptEditor() into tEditor
-      
-      # Do not allow a script editor to edit its own objects, force a new window
-      # this makes debugging the script editor easier.
-      local tStack
-      put revTargetStack(tObject) into tStack
-      if tEditor is empty then
-         revEditScriptInNewWindow pObject
-      else if tStack is the short name of tEditor then
-         revEditScriptInNewWindow pObject
-      else
-         # OK-2008-07-24 : Use call instead of send here to prevent problems with the defaultStack changing.
-         # Specifically this fixes an issue when debugging, if the user steps into a handler located in a script that
-         # is not being edited, the script gets added to the editor, which causes the the defaultStack to change
-         # and potentially breaks the debug being run in the debugger.
-         call "revSEAddTargetObject tObject" to tEditor
-         call "revSESetCurrentObject tObject" to tEditor
-         revGoScriptEditor tEditor
-      end if
-   else
-      # If the preference is not to use tabs, then we create a new script editor for the object.
-      revEditScriptInNewWindow tObject
-   end if
-end _editScriptNew
-
-
-
 
 on resumeStack
    global gREVScriptEdit

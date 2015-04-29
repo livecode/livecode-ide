@@ -1661,6 +1661,9 @@ command actionCloseTab
    revSEGetCurrentObject
    put the result into tObject
    revSERemoveTargetObject tObject
+   
+   # Notify the IDE
+   revIDEStopEditingScriptOfObjects tObject
 end actionCloseTab
 
 # Description
@@ -2252,6 +2255,11 @@ end shortcutFindAction
 #   Called when the script editor is about to be closed. Saves various things to make sure the script
 #   editor's state is correctly preserved when its re-opened.
 command seFinalize
+   
+   # Notify the IDE
+   revSEGetTargetObjects
+   revIDEStopEditingScriptOfObjects the result
+   
    local tMode
    revSEGetMode
    put the result into tMode

@@ -59,7 +59,7 @@ on closeStack
    revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
    revIDEUnsubscribe "ideNameChanged"
    
-   revIDESetInspectedObjects ""
+   revIDEStopInspecting
 end closeStack
 
 #####################
@@ -523,31 +523,14 @@ on editorValueChanged pProperty, pValue, pLockUpdates
 end editorValueChanged
 
 on ideNameChanged
-   ideSelectedObjectChanged
+   ideInspectObjects
 end ideNameChanged
 
 on ideInspectObjects
-   ideSelectedObjectChanged
-end ideInspectObjects
-
-on ideResumeStack
-   ideSelectedObjectChanged
-end ideResumeStack
-
-on ideNewStack
-   ideSelectedObjectChanged
-end ideNewStack
-
-on ideCloseStack
-   ideSelectedObjectChanged
-end ideCloseStack
-
-# Sent by the IDE when the selection changed
-on ideSelectedObjectChanged
    # If the inspector is locked and a selected object changed message comes through
    # ignore it
    if sInspectorLock is true and exists(line 1 of sSelectedObjects) then 
-      exit ideSelectedObjectChanged
+      exit ideInspectObjects
    else
       put false into sInspectorLock
    end if
@@ -559,10 +542,10 @@ on ideSelectedObjectChanged
    # Get the selected objects
    local tSelectedObjects
    put revIDESelectedObjects() into tSelectedObjects
-   if tSelectedObjects is sSelectedObjects then exit ideSelectedObjectChanged
+   if tSelectedObjects is sSelectedObjects then exit ideInspectObjects
    if tSelectedObjects is empty then
       inspectorClear
-      exit ideSelectedObjectChanged
+      exit ideInspectObjects
    end if
    
    # Unsubscribe the the objects previously 
@@ -594,10 +577,24 @@ on ideSelectedObjectChanged
    # Layout
    send "resizeStack" to me
    
-   # Update the inspected objects
-   revIDESetInspectedObjects sSelectedObjects
-   
    unlock screen
+end ideInspectObjects
+
+on ideResumeStack
+   ideSelectedObjectChanged
+end ideResumeStack
+
+on ideNewStack
+   ideSelectedObjectChanged
+end ideNewStack
+
+on ideCloseStack
+   ideSelectedObjectChanged
+end ideCloseStack
+
+# Sent by the IDE when the selection changed
+on ideSelectedObjectChanged
+   revIDEInspectObjects revIDESelectedObjects()
 end ideSelectedObjectChanged
 
 on idePreferenceChanged pPreference, pValue
