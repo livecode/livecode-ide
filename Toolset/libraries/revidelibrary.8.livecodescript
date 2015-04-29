@@ -2614,7 +2614,6 @@ on revIDEEditScriptOfObject pObject
    put revRuggedId(pObject) into tObject
    
    # Send the ideEditScript message
-   put "sending"
    send "revIDEMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
    
    # Update the currently editing objects

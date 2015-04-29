@@ -59,9 +59,6 @@ function revTutorialParse pFile
                
                if tData is not empty then
                   put tData into tStepData[tCurStepName][tSubType]
-                  if tSubType is "action" and tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
-                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName][tSubType]["script"]
-                  end if
                   put empty into tData
                end if
                put it into tSubType
@@ -69,11 +66,16 @@ function revTutorialParse pFile
                break
             default
                // Get the data
-               if tSubType is "text" or tSubType is "script" then
+               if tSubType is "text" then
+                  put tLine & CR after tData
+               else if tSubType is "script" then
                   put tLine & CR after tData
                else
                   add 1 to  tActionNum
                   put revTutorialParseAction(tLine, tLineNum) into tStepData[tCurStepName]["actions"][tActionNum]
+                  if tStepData[tCurStepName]["actions"][tActionNum]["type"] is "wait" and tStepData[tCurStepName]["actions"][tActionNum]["wait condition"] is "state" and tStepData[tCurStepName]["actions"][tActionNum]["state"] is "scripted" then
+                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tActionNum]["script"]
+                  end if
                end if 
                break
          end switch
@@ -562,9 +564,9 @@ on revFinaliseTutorial
    close me
 end revFinaliseTutorial
 
-on revTutorialStart pTutorialFile
+on revTutorialStart pTutorialName
    local tTutorialFile
-   put revIDEPaletteResourcePath("tutorials/" & pTutorialFile) into tTutorialFile
+   put revIDEPaletteResourcePath("tutorials/" & pTutorialName & "/" & pTutorialName & ".txt") into tTutorialFile
    
    local tData
    put revTutorialParse(tTutorialFile) into tData
@@ -747,6 +749,10 @@ function revTutorialCheckWaitCondition pActionData
       case "state"
          if pActionData["state"] is "selected" then
             if revTutorialObjectIsSelected(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]) then
+               return true
+            end if
+         else if pActionData["state"] is "scripted" then
+            if revTutorialObjectPropertyIsValue(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], "script", pActionData["script"]) then
                return true
             end if
          end if
@@ -1284,7 +1290,7 @@ end ideInspectObjects
 
 on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette" and sWait["palette"] is "script editor" then
-      if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revIDEUnsubscribe "ideEditScript"
          revTutorialWaitConditionSatisfied
       end if

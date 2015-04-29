@@ -22,7 +22,7 @@ action
 end step
 
 step "Set Mainstack Rect"
-    Start by resizing your stack. You can drag the edges to change the widget
+    Start by resizing your stack. You can drag the edges to change the width
     and height.
     Make this stack approximately the shape of a mobile device, as shown.
 action
@@ -154,7 +154,7 @@ action
 end step
 
 step "Set Send Button Text Size"
-    We want the font of the button to be a little larger, so set the size of the button text to 18.
+    We want the font of the button to be a little larger, so go to the Text section of the property inspector and set the size of the button text to 18.
 action
     highlight property "Text Size" of section "Text"
     wait until the textSize of button "Send Button" is 18

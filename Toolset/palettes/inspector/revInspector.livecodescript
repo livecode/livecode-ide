@@ -5,7 +5,6 @@ local sSelectedObjects
 local sInspectorLock
 on preOpenStack
    put false into sInspectorLock
-   put false into sInitialised
    put empty into sSelectedObjects
    
    # Set the palette frame behaviour
@@ -42,14 +41,6 @@ on openStack
    set the visible of me to true
    unlock screen
 end openStack
-
-on inspectorInitialise   
-   if sInitialised is true then
-      exit inspectorInitialise
-   end if
-   put true into sInitialised
-
-end inspectorInitialise
 
 on resizeStack
    inspectorLayout
@@ -569,6 +560,8 @@ on ideInspectObjects pObjects
    
    # Setup the header
    inspectorNavigationGenerate
+   
+   generateFrame
    
    # Generate the controls for group
    inspectorGenerate
