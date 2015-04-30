@@ -1,4 +1,4 @@
-script "revDeployLibrary"
+﻿script "revDeployLibrary"
 
 on revLoadLibrary
    insert the script of me into back
@@ -275,6 +275,22 @@ function revIDEDeployIOSSanatizeSystemVersion
    dispatch function "deploySanatizeSystemVersion" to stack "revDeployLibraryiOS"
    return the result
 end revIDEDeployIOSSanatizeSystemVersion
+
+//SN-2015-04-30: [[ Bug 15300 ]]  Refactor functions used from revDeployLibraryIOS
+function revIDEDeployIOSGetInvalidityMessage piOSVersion, pXcodeVersion
+   dispatch function "deployGetInvalidityMessage" to stack "revDeployLibraryIOS" with piOSVersion, pXcodeVersion
+   return the result
+end revIDEDeployIOSGetInvalidityMessage
+
+function revIDEDeployIOSGetLatestSDKInstalled @rVersion
+   local tTooltip // Not used
+   local tVersions
+   dispatch function "deployCheckLatestSDKIsInstalled" to stack "revDeployLibraryIOS" with tTooltip, tVersions
+   put the last item of tVersions into tVersions
+   if char 1 of tVersions is space then delete char 1 of tVersions
+   put tVersions into rVersion
+   return the result
+end revIDEDeployIOSGetLatestSDKInstalled
 
 ////////////////////////////////////////////////////////////////////////////////
 //
