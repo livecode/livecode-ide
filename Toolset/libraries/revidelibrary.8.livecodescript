@@ -1300,7 +1300,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -3839,6 +3839,12 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
    end switch
 end revIDEScriptEditorBehavior
+
+on revIDEAnswerDialogClosed
+   local tPopupSource
+   put item 1 of line 1 of the executionContexts into tPopupSource
+   revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
+end revIDEAnswerDialogClosed
 
 #############
 # Data grid

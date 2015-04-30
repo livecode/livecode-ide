@@ -67,15 +67,21 @@ function revTutorialParse pFile
             default
                // Get the data
                if tSubType is "text" then
-                  put tLine & CR after tData
+                  if line -1 of tData is empty then
+                     put word 1 to -1 of tLine after tData
+                  else
+                     put " " & word 1 to -1 of tLine after tData
+                  end if
                else if tSubType is "script" then
                   put tLine & CR after tData
                else
                   add 1 to  tActionNum
-                  put revTutorialParseAction(tLine, tLineNum) into tStepData[tCurStepName]["actions"][tActionNum]
-                  if tStepData[tCurStepName]["actions"][tActionNum]["type"] is "wait" and tStepData[tCurStepName]["actions"][tActionNum]["wait condition"] is "state" and tStepData[tCurStepName]["actions"][tActionNum]["state"] is "scripted" then
-                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tActionNum]["script"]
+                  put revTutorialParseAction(tLine, tLineNum) into tData
+                  put tData into tStepData[tCurStepName]["actions"][tData["type"]]
+                  if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
+                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
                   end if
+                  put empty into tData
                end if 
                break
          end switch
@@ -329,6 +335,13 @@ on revTutorialParseHighlight pTokens, @rData
             put tData[2] into rData["section"]
          end if
          break
+      case "guide"
+         revTutorialParseSubexpression "highlight guide <token>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "guide" into rData["highlight type"]
+            put tData[1] into rData["guide"]
+         end if
+         break
       default
          revTutorialParseSubexpression "highlight <object>", pTokens, tFirstToken, tData
          if the result is empty then
@@ -507,34 +520,44 @@ end revTutorialParseAction
 #
 ##############################################################################
 
-constant kMessageOriginOffset = 50
+constant kMessageOriginOffset = 80
 
-setProp messageTopLeft pLocation
-   set the topleft of stack "revTutorial" to (item 1 of pLocation - kMessageOriginOffset), (item 2 of pLocation)
-end messageTopLeft
+on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel
+   if pStackRel is not empty then
+      add the left of pStackRel to pLeft
+      add the top of pStackRel to pTop
+   end if
+   
+   set the topleft of stack "revTutorial" to (pLeft - kMessageOriginOffset), pTop
+end revTutorialSetTopLeftOfStack
 
-local sSteps, sActionNumber, sStepName
+local sSteps, sActionNumber, sStepName, sFirstStep
 local sWaiting
-on revInitialiseTutorial pSteps, pFirstStep
+on revInitialiseTutorial pSteps
    put false into sWaiting
    put pSteps into sSteps
-   
    lock screen
    lock messages
+   
    create button "Exit"
-   set the topleft of it to 0,0
+   set the style of it to transparent
+   set the textColor of it to "white"
+   set the textsize of it to 15
+   set the right of it to 485
+   set the bottom of it to 285
+   set the autoHilite of it to false
    set the script of it to "on mouseUp;revTutorialFinish;end mouseUp"
    
-   create invisible image "Shape"
-   set the filename of it to revIDEPaletteResourcePath("images/quote_shape.png")
-   set the windowshape of stack "revTutorial" to the id of it
-   set the width of stack "revTutorial" to 485
-   set the height of stack "revTutorial" to 285
-   
    create field "Message"
-   set the textsize of it to 18
-   set the width of it to the width of stack "revTutorial" - 40   
-   set the height of it to the height of stack "revTutorial" - 70
+   set the textColor of it to "white"
+   set the textsize of it to 15
+   set the dontWrap of it to false
+   set the lockText of it to true
+   set the opaque of it to false
+   set the showborder of it to false
+   set the showFocusBorder of it to false
+   set the width of it to 465
+   
    set the left of it to 20
    set the top of it to 60
    
@@ -574,9 +597,8 @@ on revTutorialStart pTutorialName
    revInitialiseTutorial tData
    
    revTutorialPrologue
-   show stack "revTutorial"
-   revTutorialDoGoToStep tData["first step"]
-   revTutorialContinue
+   put tData["first step"] into sFirstStep
+   send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
 end revTutorialStart
 
 on revTutorialFinish
@@ -600,16 +622,40 @@ end revTutorialEpilogue
 
 on revTutorialContinue
    repeat forever
-      add 1 to sActionNumber
+      lock screen
+      hide stack "revTutorial"
       // Tutorial finished when there was no "go" step
-      if sSteps[sStepName]["actions"][sActionNumber] is empty then
+      if sStepName is empty then
+         revTutorialDoGoToStep sFirstStep
+      else if sSteps[sStepName]["actions"]["go"] is empty then
          revTutorialFinish
          exit repeat
+      else
+         // Otherwise we're here after a wait, so go to the next step
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      // Text
-      // Script
-      // Actions
-      revTutorialExecuteAction sSteps[sStepName]["actions"][sActionNumber]
+      
+      // Skip step if wait condition satisfied
+      if sSteps[sStepName]["actions"]["wait"] is not empty then
+         if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
+            next repeat
+         end if
+      end if
+      
+      if sSteps[sStepName]["actions"]["interlude"] is empty then
+         // Do text, highlight and guide actions under lock screen, to remove 'flicker'
+         // Text
+         revTutorialSetText sStepName
+         // Guide
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
+         // Highlight
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
+      end if
+      unlock screen
+      show stack "revTutorial"
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       if sWaiting then
          exit repeat
       end if
@@ -617,6 +663,10 @@ on revTutorialContinue
 end revTutorialContinue
 
 on revTutorialExecuteAction pActionData
+   if pActionData is empty then 
+      exit revTutorialExecuteAction
+   end if
+   
    switch pActionData["type"]
       case "highlight"
          revTutorialDoHighlight pActionData
@@ -639,6 +689,50 @@ on revTutorialExecuteAction pActionData
    end switch
 end revTutorialExecuteAction
 
+constant kMargin = 10
+on revTutorialSetText pStep
+   
+   create invisible image "Shape"
+   set the filename of it to revIDEPaletteResourcePath("images/quote_shape.png")
+   set the windowshape of stack "revTutorial" to the id of it
+   set the width of stack "revTutorial" to 485
+   set the height of stack "revTutorial" to 285
+   
+   put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
+   if sSteps[pStep]["script"] is not empty then
+      put return & sSteps[pStep]["script"] after field "Message" of stack "revTutorial"
+   end if
+   
+   local tWidth, tHeight
+   put the width of field "Message"of stack "revTutorial" into tWidth
+   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
+   
+   set the height of field "Message" of stack "revTutorial" to tHeight
+   set the left of field "Message" of stack "revTutorial" to 20
+   set the top of field "Message" of stack "revTutorial" to 60
+   set the backColor of stack "revTutorial" to ideCoreEditionColour()
+   
+   /*
+   local tGraphic, tWindowShape
+   create graphic "Shape"
+   put it into tGraphic
+   set the style of tGraphic to "rectangle"
+   set the lineSize of tGraphic to 0
+   set the width of tGraphic to tWidth + kMargin * 2
+   set the height of tGraphic to tHeight + kMargin * 2
+   set the backColor of tGraphic to ideCoreEditionColour()
+   set the opaque of tGraphic to true
+   import snapshot from rect (the rect of tGraphic) of tGraphic 
+   put the long id of the last image into tWindowShape
+   set the windowshape of stack "revTutorial" to the id of tWindowShape
+   set the backColor of stack "revTutorial" to ideCoreEditionColour()
+   delete tWindowShape
+   delete tGraphic
+   
+   set the loc of field "Message" of stack "revTutorial" to tWidth / 2, tHeight / 2
+   */
+end revTutorialSetText
+
 ##############################################################################
 #
 #                     ACTION IMPLEMENTATIONS
@@ -654,10 +748,6 @@ on revTutorialDoGoToStep pStep
    disableToolsPalette
    buildMenus
    put false into sWaiting
-   put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
-   if sSteps[pStep]["script"] is not empty then
-      put return & sSteps[pStep]["script"] after field "Message" of stack "revTutorial"
-   end if
 end revTutorialDoGoToStep
 
 local sCaptureData, sTaggedObjects
@@ -726,33 +816,39 @@ on revTutorialDoWait pActionData
 end revTutorialDoWait
 
 function revTutorialCheckWaitCondition pActionData
+   if pActionData["wait condition"] is "tool" then
+      return revTutorialToolIs(pActionData["tool"])
+   end if
+   
+   local tObject
+   put sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]] into tObject
+   if tObject is empty then
+      return false
+   end if
+   
    switch pActionData["wait condition"]
-      case "tool"
-         if revTutorialToolIs(pActionData["tool"]) then
-            return true
-         end if
-         break
       case "property"
-         if revTutorialObjectPropertyIsValue(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], pActionData["property"], pActionData["value"]) then
+         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], pActionData["value"]) then
             return true
          end if
          break
       case "fits"
-         if revTutorialObjectFitsGuide(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], pActionData["guide"], pActionData["tolerance"]) then
+         if revTutorialObjectFitsGuide(tObject, pActionData["guide"], pActionData["tolerance"]) then
             return true
          end if
          break
       case "there is a palette"
-         if revTutorialObjectHasPalette(pActionData["palette"], sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]) then
+         if revTutorialObjectHasPalette(pActionData["palette"], tObject) then
             return true
          end if
+         break
       case "state"
          if pActionData["state"] is "selected" then
-            if revTutorialObjectIsSelected(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]) then
+            if revTutorialObjectIsSelected(tObject) then
                return true
             end if
          else if pActionData["state"] is "scripted" then
-            if revTutorialObjectPropertyIsValue(sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]], "script", pActionData["script"]) then
+            if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
                return true
             end if
          end if
@@ -772,6 +868,10 @@ end revTutorialWaitUntilObjectIsScripted
 on revTutorialWaitUntilObjectIsClicked
    // Subscribe to mouseUp
 end revTutorialWaitUntilObjectIsClicked
+
+on revTutorialWaitUntilObjectIsFocused
+   // Subscribe to control
+end revTutorialWaitUntilObjectIsFocused
 
 on revTutorialWaitForObject
    revIDESubscribe "ideNewControl"
@@ -802,13 +902,13 @@ on revTutorialWaitUntilObjectPropertyHasValue pObject
 end revTutorialWaitUntilObjectPropertyHasValue
 
 on revTutorialWaitUntilAnswerDialogHasPoppedUp
-   // Subscribe to appropriate message
+   revIDESubscribe "ideAnswerDialogClosed"
 end revTutorialWaitUntilAnswerDialogHasPoppedUp
 
 on revTutorialWaitConditionSatisfied
    put false into sWaiting
    put empty into sWait
-   send "revTutorialContinue" to stack "revTutorial" in 10 milliseconds
+   send "revTutorialContinue" to stack "revTutorial" in 0 milliseconds
 end revTutorialWaitConditionSatisfied
 
 ##############################################################################
@@ -820,15 +920,19 @@ end revTutorialWaitConditionSatisfied
 on revTutorialDoHighlight pActionData
    switch pActionData["highlight type"]
       case "object"
+         revTutorialHighlightObject pActionData["object"]["type"], pActionData["object"]["tag"]
          break
       case "menu"
          revTutorialHighlightMenuItem pActionData["menu"], pActionData["item"]
          break
-      case "inspector"
+      case "property"
          revTutorialHighlightInspector pActionData["section"], pActionData["property"]
          break
       case "tool"
          revTutorialHighlightTool pActionData["tool"]
+         break
+      case "guide"
+         revTutorialHighlightGuide pActionData["guide"]
          break
    end switch
 end revTutorialDoHighlight
@@ -840,15 +944,21 @@ end revTutorialClearHighlights
 
 local sObjectState
 on revTutorialHighlightObject pObjType, pTag
+   
    local tObject
    put sTaggedObjects[pObjType][pTag] into tObject
-   
+   /*
    local tState 
    put the borderwidth of tObject into tState["borderwidth"]
    put the bordercolor of tObject into tState["bordercolor"]
    put tState into sObjectState
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
+   */
+   local tRight,tBottom
+   put the right of tObject into tRight
+   put the bottom of tObject into tBottom
+   revTutorialSetTopLeftOfStack tRight, tBottom, revIDEStackOfObject(tObject)
 end revTutorialHighlightObject
 
 on revTutorialClearObjectHighlight
@@ -868,7 +978,7 @@ on revTutorialHighlightTool pTool
          put "com.livecode.tool.Browse" into tTool
          break
       case "Edit Mode"
-         put "com.livecode.tool.Run" into tTool
+         put "com.livecode.tool.Pointer" into tTool
          break
       case "Create Data Grid"
          put "com.livecode.interface.classic.DataGrid" into tTool
@@ -951,24 +1061,26 @@ on revTutorialHighlightTool pTool
    end switch
    
    dispatch "isolateTool" to stack "revTools" with tTool
-   set the messageTopLeft of stack "revTutorial" to (the right of button tTool of stack "revTools" + the left of stack "revTools", the bottom of button tTool of stack "revTools" + the top of stack "revTools")
+   revTutorialSetTopLeftOfStack the right of button tTool of stack "revTools", the bottom of button tTool of stack "revTools", the long id of stack "revTools"
 end revTutorialHighlightTool
 
 on revTutorialHighlightInspector pSection, pGroup
-   
+   dispatch "hiliteFrameItem" to stack "revInspector" with pSection
+   dispatch "navSelected" to stack "revInspector" with pSection
+   revTutorialSetTopLeftOfStack the right of group pGroup of stack "revInspector", the bottom of group pGroup of stack "revInspector", the long id of stack "revInspector"
 end revTutorialHighlightInspector
 
 local sMenuHighlight
 on revTutorialHighlightMenuItem pMenu, pItem
+   if pMenu is "File" then
+      revTutorialSetTopLeftOfStack 150,27
+   else
+      revTutorialSetTopLeftOfStack 190,27 
+   end if
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    put tMenuHighlight into sMenuHighlight
    buildMenus
-   if pMenu is "File" then
-      set the messageTopLeft of stack "revTutorial" to "150,27"
-   else
-      set the messageTopLeft of stack "revTutorial" to "190,27"
-   end if
 end revTutorialHighlightMenuItem
 
 on revTutorialClearMenuHighlight
@@ -1188,6 +1300,10 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
    unlock messages
 end revTutorialDoAddGuide
 
+on revTutorialHighlightGuide pGuide
+   revTutorialSetTopLeftOfStack the right of sGuides[pGuide], the bottom of sGuides[pGuide], revIDEStackOfObject(sGuides[pGuide])
+end revTutorialHighlightGuide
+
 on revTutorialClearGuides
    repeat for each element tGraphic in sGuides
       delete tGraphic
@@ -1201,6 +1317,28 @@ end revTutorialClearGuides
 #
 ##############################################################################
 
+on openField
+   local tObject
+   put the long id of the target into tObject
+   if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+   pass openField
+end openField
+
+on focusIn
+   local tObject
+   put the long id of the target into tObject
+   if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+   pass focusIn
+end focusIn
+
 on newStack
    if "stack" is among the keys of sCaptureData then
       put the long id of the target into sTaggedObjects["stack"][sCaptureData["stack"]]
@@ -1211,6 +1349,16 @@ on newStack
       revTutorialWaitConditionSatisfied
    end if
 end newStack
+
+on ideAnswerDialogClosed pObject
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if sWait["wait condition"] is "pops up"  then
+         revIDEUnsubscribe "ideAnswerDialogClosed"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+   pass ideAnswerDialogClosed
+end ideAnswerDialogClosed
 
 on ideNewControl pObject
    local tObjType
@@ -1231,7 +1379,7 @@ on idePropertyChanged pObject
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
       if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
          if revTutorialCheckWaitCondition(sWait) then
-            revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["tag"]]
+            revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
             revTutorialWaitConditionSatisfied
          end if
       end if
@@ -1240,9 +1388,9 @@ on idePropertyChanged pObject
 end idePropertyChanged
 
 on mouseUp pWhich
+   local tObject
+   put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
-      local tObject
-      put the long id of the target into tObject
       if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revTutorialWaitConditionSatisfied
       end if
@@ -1338,6 +1486,8 @@ function revTutorialObjectPropertyIsValue pLongID, pProperty, pValue
       return revTutorialColorIs(the pProperty of pLongID, pValue)
    else if pProperty is "script" then
       return revTutorialScriptIs(the script of pLongID, pValue)
+   else if pProperty is "name" then
+      return the short name of pLongID is pValue
    end if
    
    if the pProperty of pLongID is pValue then
@@ -1359,6 +1509,10 @@ function revTutorialObjectHasPalette pPalette, pObject
 end revTutorialObjectHasPalette
 
 function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
+   if sGuides[pGuide] is empty then
+      return false
+   end if
+   
    local tRect
    if pObject begins with "stack" then
       put 0,0,the width of pObject, the height of pObject into tRect

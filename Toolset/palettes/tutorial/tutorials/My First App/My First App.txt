@@ -3,6 +3,7 @@ tutorial "My First App"
 prologue
 	The first step in creating an App is the User Interface. You can design an
 	app just like you would draw a picture.
+	
 	Each part of your app is going to be an object you drag out from the
 	tools palette.
 end prologue
@@ -11,7 +12,7 @@ step "Create Mainstack"
 	Click on the File menu, and select New Mainstack...
 action
     -- Give the user a visual hint of where they should be clicking
-    highlight menu item "New Mainstack..." of menu "File"
+    highlight menu item "New Mainstack" of menu "File"
     -- The tutorial scripts only act on 'captured' object - this will cause the next created stack
     -- to be internally tagged as 'Mainstack' so it can be referenced in the rest of the tutorial
     capture the next new stack as "Mainstack"
@@ -24,6 +25,7 @@ end step
 step "Set Mainstack Rect"
     Start by resizing your stack. You can drag the edges to change the width
     and height.
+    
     Make this stack approximately the shape of a mobile device, as shown.
 action
     -- Add a guide to the previously captured stack. Guides are local to a step, and can't be
@@ -31,6 +33,7 @@ action
     add guide "Size" with rect "1,1,361,581" to stack "Mainstack"
     -- The 'fits' operator is an approximate match of the rect of the tagged object to the named
     -- guide
+    highlight guide "Size"
     wait until stack "Mainstack" fits guide "Size" with tolerance 3
     go to step "Create Header Graphic"
 end step
@@ -48,6 +51,7 @@ step "Set Header Graphic Area"
     Resize the graphic, and position it at the top of the stack as shown.
 action
     add guide "Area" with rect "1,1,361,48" to stack "Mainstack"
+    highlight guide "Area"
     wait until graphic "Header Graphic" fits guide "Area" with tolerance 3
     go to step "Set Header Graphic Properties"
 end step
@@ -65,7 +69,7 @@ step "Set Header Graphic Line Size"
 action
     -- Navigates to the specified section of the property inspector, and highlights the specified
     -- property editor 
-    highlight property "Line Size" of section "Basic"
+    highlight property "Line thickness" of section "Basic"
     wait until the lineSize of graphic "Header Graphic" is 0
     go to step "Select Header Graphic"
 end step
@@ -73,6 +77,7 @@ end step
 step "Select Header Graphic"
     Select the header graphic by left-clicking on it.
 action
+	highlight graphic "Header Graphic"
     wait until graphic "Header Graphic" is selected
     go to step "Duplicate Header Graphic"	
 end step
@@ -90,6 +95,7 @@ step "Set Footer Graphic Area"
     Resize and position the footer graphic at the bottom of the stack as shown.
 action
     add guide "Area" with rect "1,546,361,581" to stack "Mainstack"
+    highlight guide "Area"
     wait until graphic "Footer Graphic" fits guide "Area" with tolerance 3
     go to step "Create Message Field"
 end step
@@ -107,12 +113,14 @@ step "Set Message Field Area"
     Resize and position the message field at the bottom of the stack as shown.
 action
     add guide "Area" with rect "18,552,286,576" to stack "Mainstack"
+    highlight guide "Area"
     wait until field "Message Field" fits guide "Area" with tolerance 5
     go to step "Create Send Button"
 end step
 
 step "Create Send Button"
-    Drag out a button from the Tools palette onto your stack. We will use this to trigger the message send action.
+    Drag out a button from the Tools palette onto your stack. We will use this to trigger 
+    the message send action.
 action
     highlight tool "Create Button"
     capture the next new button of stack "Mainstack" as "Send Button"
@@ -124,6 +132,7 @@ step "Set Send Button Area"
     Resize and position the message field at the bottom of the stack as shown.
 action
     add guide "Area" with rect "294,550,356,576" to stack "Mainstack"
+    highlight guide "Area"
     wait until button "Send Button" fits guide "Area" with tolerance 5
     go to step "Set Send Button Properties"
 end step
@@ -146,7 +155,8 @@ action
 end step
 
 step "Set Send Button Style"
-    Set the button style to transparent by selecting "Transparent Button" from the style dropdown menu. This will clear everything except the text from the button.
+    Set the button style to transparent by selecting "Transparent Button" from the style 
+    dropdown menu. This will clear everything except the text from the button.
 action
     highlight property "Style" of section "Basic"
     wait until the style of button "Send Button" is "Transparent"
@@ -154,7 +164,8 @@ action
 end step
 
 step "Set Send Button Text Size"
-    We want the font of the button to be a little larger, so go to the Text section of the property inspector and set the size of the button text to 18.
+    We want the font of the button to be a little larger, so go to the Text section of the 
+    property inspector and set the size of the button text to 18.
 action
     highlight property "Text Size" of section "Text"
     wait until the textSize of button "Send Button" is 18
@@ -163,6 +174,7 @@ end step
 
 step "Open Send Button Script"
     Now that we have the User Interface set up, it's time to add some code.
+    
     Right click on the button and select 'Edit Script' from the menu to open the script editor.
 action
     highlight button "Send Button"
@@ -182,7 +194,8 @@ action
 end step
 
 step "Set Tool To Run"
-    Now test the code you have written. First, switch to run mode by clicking on the run mode tool in the Tools palette.
+    Now test the code you have written. First, switch to run mode by clicking on the run 
+    mode tool in the Tools palette.
 action 
     highlight tool "Run Mode"
     wait until the tool is run
@@ -214,15 +227,18 @@ action
 end step
 
 step "Set Message Field Name"
-    We're going to set the name of the text field so its contents can be referenced by the button script.
+    We're going to set the name of the text field so its contents can be referenced by 
+    the button script.
     Go to the first tab and change the name to "newMessage"
 action
+	highlight property "Name" of section "Basic"
     wait until the name of field "Message Field" is "newMessage"
     go to step "Open Send Button Script 2"
 end step
 
 step "Open Send Button Script 2"
-    Right click on the button and select 'Edit Script' from the menu to open the script editor again.
+    Right click on the button and select 'Edit Script' from the menu to open the script 
+    editor again.
 action
     highlight button "Send Button"
     wait until there is a script editor for button "Send Button"
@@ -230,7 +246,9 @@ action
 end step
 
 step "Set Send Button Script 2"
-    Code allows your app to be flexible and interactive. Change the second line of the button script so that it reads as follows, and click "Apply":
+    Code allows your app to be flexible and interactive. 
+    
+    Change the second line of the button script so that it reads as follows, and click "Apply":
 script
     on mouseUp
         answer field "newMessage"
@@ -241,7 +259,8 @@ action
 end step
 
 step "Set Tool To Run 2"
-    Now test this new code. First, switch to run mode by clicking on the run mode tool in the Tools palette.
+    Now test this new code. First, switch to run mode by clicking on the run mode tool in 
+    the Tools palette.
 action 
     highlight tool "Run Mode"
     wait until the tool is run
@@ -250,7 +269,8 @@ end step
 
     step "Enter Message Field"
     Click on the field to enter text into it.
-    Notice that in edit mode, clicking on the field selects it and allows you to drag it around and change the size, whereas in run mode you can enter text.
+    Notice that in edit mode, clicking on the field selects it and allows you to drag it 
+    around and change the size, whereas in run mode you can enter text.
 action
     highlight field "Message Field"
     wait until field "Message Field" is focused
@@ -267,9 +287,13 @@ end step
 
 step "Understanding What Happened"
     Understanding what happened:
+    
     When you clicked the mouse, LiveCode sent the mouseUp message when you lifted your finger.
+    
     The command 'answer' tells LiveCode to pop up a message dialog.
+    
     First it showed the text "Hello World".
+    
     You changed it to show whatever text is in the field named "newMessage".
 action
     interlude
@@ -278,7 +302,9 @@ end step
 
 step "Set Tool To Edit 2"
     The iPhone app puts the message you send in a bubble. It's easier than you would think.
-    We just need to add a couple more controls to the stack. Switch back to edit mode to make some more changes to the app.
+    
+    We just need to add a couple more controls to the stack. Switch back to edit mode to 
+    make some more changes to the app.
 action
     highlight tool "Edit Mode"
     wait until the tool is edit
@@ -299,6 +325,7 @@ step "Set Bubble Image Area"
     Position the image as shown.
 action
     add guide "Area" with rect "177,62,347,126" to stack "Mainstack"
+    highlight guide "Area"
     wait until image "Bubble Image" fits guide "Area" with tolerance 5
     go to step "Create Label Field"
 end step
@@ -307,7 +334,7 @@ step "Create Label Field"
     Drag out a label field from the tools palette.
 action
     capture the next new field of stack "Mainstack" as "Label Field"
-    highlight tool "Label Field"
+    highlight tool "Create Label Field"
     wait until there is a field "Label Field"
     go to step "Set Label Field Area"
 end step
@@ -316,6 +343,7 @@ step "Set Label Field Area"
     Resize and position the label field over the image as shown.
 action
     add guide "Area" with rect "186,70,324,120" to stack "Mainstack"
+    highlight guide "Area"
     wait until field "Label Field" fits guide "Area" with tolerance 5
     go to step "Set Label Field Properties"
 end step
@@ -339,7 +367,7 @@ end step
 step "Set Label Field Wrap"
     Uncheck the "Don't wrap" option so that our message will display on multiple lines in the bubble.
 action
-    highlight property "Dont Wrap" of section "Basic"
+    highlight property "Don't Wrap" of section "Basic"
     wait until the dontWrap of field "Label Field" is false
     go to step "Set Label Field Color"
 end step
@@ -362,6 +390,7 @@ end step
 
 step "Open Send Button Script 3"
     Now we'll connect the label field with the message via the send button script.
+    
     Right click on the button and select "Edit Script" from the menu to open the script editor again.
 action
     highlight button "Send Button"
@@ -392,7 +421,7 @@ step "Enter A Message 2"
     Type a message into the field, and click the "Send" button.
 action 
     highlight button "Send Button"
-    wait until button "Send" is clicked
+    wait until button "Send Button" is clicked
 end step
 
 epilogue

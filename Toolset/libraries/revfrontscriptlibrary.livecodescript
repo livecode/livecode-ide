@@ -524,7 +524,6 @@ on closeStack
    revIDEStartCenterCheckOnStackClose tStack
    --------------------------------------------------
    
-   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass closeStack
 end closeStack
 
