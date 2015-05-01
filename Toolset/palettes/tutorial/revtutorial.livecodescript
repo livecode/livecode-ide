@@ -520,15 +520,120 @@ end revTutorialParseAction
 #
 ##############################################################################
 
-constant kMessageOriginOffset = 80
-
-on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel
+constant kMessageOriginOffset = 40
+constant kMargin = 10
+on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel, pToSide
+   lock messages
    if pStackRel is not empty then
       add the left of pStackRel to pLeft
       add the top of pStackRel to pTop
    end if
    
-   set the topleft of stack "revTutorial" to (pLeft - kMessageOriginOffset), pTop
+   local tScreenRect
+   put the screenrect into tScreenRect
+   
+   local tWidth, tHeight
+   set the width of field "Message"of stack "revTutorial" to 300
+   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
+   put the formattedWidth of field "Message" of stack "revTutorial" into tWidth
+   
+   put max(100,tHeight) into tHeight
+   set the height of field "Message" of stack "revTutorial" to tHeight
+   
+   
+   local tGraphic, tPointer, tGroup, tWindowShape
+   set the lineSize of the templateGraphic to 0
+   set the backColor of the templateGraphic to "black"
+   set the opaque of the templateGraphic to true
+   
+   create group "Group"
+   put it into tGroup
+   
+   create graphic "Shape" in tGroup
+   put it into tGraphic
+   set the style of it to "rectangle"
+   set the width of it to tWidth + kMargin * 2
+   set the height of it to tHeight + kMargin * 2
+   
+   create graphic "Pointer" in tGroup
+   put it into tPointer
+   set the style of tPointer to "regular"
+   set the polysides of tPointer to 4
+   
+   local tPointerLeft, tPointerTop
+   if pLeft < (item 3 of tScreenRect / 2) then
+      put true into tPointerLeft
+   else
+      put false into tPointerLeft
+   end if
+   
+   if pTop > (item 4 of tScreenRect / 2) then
+      put false into tPointerTop
+   else
+      put true into tPointerTop
+   end if
+   
+   local tX, tY, tStackTop, tStackLeft
+   if pToSide is true then
+      set the width of tPointer to 40
+      set the height of tPointer to 30
+      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2 + 20, tHeight + kMargin*2
+      if tPointerTop then
+         put the top of tGraphic + 40 into tY
+         put pTop - 40 into tStackTop
+      else
+         put the bottom of tGraphic - 40 into tY
+         put pTop - tHeight + 25 into tStackTop
+      end if
+      
+      if tPointerLeft then
+         put the left of tGraphic into tX
+         put pLeft + 5 into tStackLeft
+      else
+         put the right of tGraphic into tX
+         put pLeft - tWidth + 20 into tStackLeft
+      end if
+   else
+      set the width of tPointer to 30
+      set the height of tPointer to 40
+      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2 + 20
+      if tPointerTop then
+         put the top of tGraphic into tY
+         put pTop + 5 into tStackTop
+      else
+         put pTop - tHeight - 25 into tStackTop
+         put the bottom of tGraphic into tY
+      end if
+      
+      if tPointerLeft then
+         put the left of tGraphic + 40 into tX
+         put pLeft - 40 into tStackLeft
+      else
+         put the right of tGraphic - 40 into tX
+         put pLeft - tWidth + 40 into tStackLeft
+      end if
+   end if
+   
+   set the loc of tPointer to tX,tY
+   reset the templateGraphic
+   
+   import snapshot from rect (the rect of tGroup) of tGroup
+   put the long id of the last image into tWindowShape
+   set the backColor of stack "revTutorial" to ideCoreEditionColour()
+   delete tGroup
+   
+   set the windowshape of stack "revTutorial" to the id of tWindowShape
+   delete tWindowShape
+   
+   if pToSide and tPointerLeft then
+      set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
+   else if not pToSide and tPointerTop then
+      set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
+   else
+      set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+   end if
+   set the topleft of stack "revTutorial" to tStackLeft, tStackTop
+   unlock messages
 end revTutorialSetTopLeftOfStack
 
 local sSteps, sActionNumber, sStepName, sFirstStep
@@ -689,48 +794,11 @@ on revTutorialExecuteAction pActionData
    end switch
 end revTutorialExecuteAction
 
-constant kMargin = 10
 on revTutorialSetText pStep
-   
-   create invisible image "Shape"
-   set the filename of it to revIDEPaletteResourcePath("images/quote_shape.png")
-   set the windowshape of stack "revTutorial" to the id of it
-   set the width of stack "revTutorial" to 485
-   set the height of stack "revTutorial" to 285
-   
    put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
    if sSteps[pStep]["script"] is not empty then
       put return & sSteps[pStep]["script"] after field "Message" of stack "revTutorial"
    end if
-   
-   local tWidth, tHeight
-   put the width of field "Message"of stack "revTutorial" into tWidth
-   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
-   
-   set the height of field "Message" of stack "revTutorial" to tHeight
-   set the left of field "Message" of stack "revTutorial" to 20
-   set the top of field "Message" of stack "revTutorial" to 60
-   set the backColor of stack "revTutorial" to ideCoreEditionColour()
-   
-   /*
-   local tGraphic, tWindowShape
-   create graphic "Shape"
-   put it into tGraphic
-   set the style of tGraphic to "rectangle"
-   set the lineSize of tGraphic to 0
-   set the width of tGraphic to tWidth + kMargin * 2
-   set the height of tGraphic to tHeight + kMargin * 2
-   set the backColor of tGraphic to ideCoreEditionColour()
-   set the opaque of tGraphic to true
-   import snapshot from rect (the rect of tGraphic) of tGraphic 
-   put the long id of the last image into tWindowShape
-   set the windowshape of stack "revTutorial" to the id of tWindowShape
-   set the backColor of stack "revTutorial" to ideCoreEditionColour()
-   delete tWindowShape
-   delete tGraphic
-   
-   set the loc of field "Message" of stack "revTutorial" to tWidth / 2, tHeight / 2
-   */
 end revTutorialSetText
 
 ##############################################################################
@@ -1067,7 +1135,7 @@ end revTutorialHighlightTool
 on revTutorialHighlightInspector pSection, pGroup
    dispatch "hiliteFrameItem" to stack "revInspector" with pSection
    dispatch "navSelected" to stack "revInspector" with pSection
-   revTutorialSetTopLeftOfStack the right of group pGroup of stack "revInspector", the bottom of group pGroup of stack "revInspector", the long id of stack "revInspector"
+   revTutorialSetTopLeftOfStack the right of group pGroup of stack "revInspector", the top of group pGroup of stack "revInspector", the long id of stack "revInspector", true
 end revTutorialHighlightInspector
 
 local sMenuHighlight
@@ -1301,7 +1369,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revTutorialSetTopLeftOfStack the right of sGuides[pGuide], the bottom of sGuides[pGuide], revIDEStackOfObject(sGuides[pGuide])
+   revTutorialSetTopLeftOfStack the right of sGuides[pGuide], the bottom of sGuides[pGuide], revIDEStackOfObject(sGuides[pGuide]), true
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
