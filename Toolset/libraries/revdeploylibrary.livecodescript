@@ -258,6 +258,17 @@ function revIDEDeployIOSGetSDKVersions
    return the result
 end revIDEDeployIOSGetSDKVersions
 
+// SN-2015-05-01: [[ Refactor iOS SDK Version ]] Wrappers added
+function revIDEDeployIOSGetMinimumVersions
+   dispatch function "deployGetIosMinimumVersions" to stack "revDeployLibraryiOS"
+   return the result
+end revIDEDeployIOSGetMinimumVersions
+
+function revIDEDeployIOSGetIphoneOSes
+   dispatch function "deployGetIphoneOSes" to stack "revDeployLibraryiOS"
+   return the result
+end revIDEDeployIOSGetIphoneOSes
+
 command revIDEDeployIOSUpdateSimulators
    dispatch "deployUpdateSimulators" to stack "revDeployLibraryiOS"
 end revIDEDeployIOSUpdateSimulators
@@ -277,8 +288,8 @@ function revIDEDeployIOSSanatizeSystemVersion
 end revIDEDeployIOSSanatizeSystemVersion
 
 //SN-2015-04-30: [[ Bug 15300 ]]  Refactor functions used from revDeployLibraryIOS
-function revIDEDeployIOSGetInvalidityMessage piOSVersion, pXcodeVersion
-   dispatch function "deployGetInvalidityMessage" to stack "revDeployLibraryIOS" with piOSVersion, pXcodeVersion
+function revIDEDeployIOSGetInvalidityMessage piOSXcodePairs
+   dispatch function "deployGetInvalidityMessage" to stack "revDeployLibraryIOS" with piOSXcodePairs
    return the result
 end revIDEDeployIOSGetInvalidityMessage
 
