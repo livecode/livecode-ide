@@ -229,7 +229,7 @@ end step
 step "Set Message Field Name"
     We're going to set the name of the text field so its contents can be referenced by 
     the button script.
-    Go to the first tab and change the name to "newMessage"
+    Change the name of the field to "newMessage"
 action
 	highlight property "Name" of section "Basic"
     wait until the name of field "Message Field" is "newMessage"
@@ -267,7 +267,7 @@ action
     go to step "Enter Message Field"
 end step
 
-    step "Enter Message Field"
+step "Enter Message Field"
     Click on the field to enter text into it.
     Notice that in edit mode, clicking on the field selects it and allows you to drag it 
     around and change the size, whereas in run mode you can enter text.
@@ -375,13 +375,13 @@ end step
 step "Set Label Field Color"
     Set the foreground fill color to white. This corresponds to the text color of the label.
 action
-    highlight property "Foreground Color" of section "Color"
+    highlight property "Foreground Fill" of section "Colors"
     wait until the foreColor of field "Label Field" is "255,255,255"
     go to step "Set Label Field Align"
 end step
 
 step "Set Label Field Align"
-    Select the text formatting tab and set the text align of the label to left aligned.
+    Set the text align of the label to left aligned.
 action
     highlight property "Text Align" of section "Text"
     wait until the textAlign of field "Label Field" is "left"

@@ -24,7 +24,7 @@ function revTutorialParse pFile
       
       if it is empty then 
          if tSubType is "text" then 
-            put CR after tData
+            put return & return after tData
          end if
          next repeat 
       end if
@@ -80,6 +80,8 @@ function revTutorialParse pFile
                   put tData into tStepData[tCurStepName]["actions"][tData["type"]]
                   if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
                      put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
+                  else if tData["type"] is "interlude" then
+                     put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
                   end if
                   put empty into tData
                end if 
@@ -522,24 +524,51 @@ end revTutorialParseAction
 
 constant kMessageOriginOffset = 40
 constant kMargin = 10
-on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel, pToSide
+constant kMessageWidth = 200
+
+on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    lock messages
-   if pStackRel is not empty then
-      add the left of pStackRel to pLeft
-      add the top of pStackRel to pTop
-   end if
-   
    local tScreenRect
    put the screenrect into tScreenRect
    
+   local tLeft, tRight, tTop, tBottom
+   if pObject is not empty then
+      if pIsMenu and the platform is "macos" then
+         put the left of pObject + 140 into tLeft
+         put the right of pObject + 140 into tRight
+         put the top of pObject into tTop
+         put the bottom of pObject into tBottom
+      else
+         local tStack
+         put revIDEStackOfObject(pObject) into tStack
+         
+         put the left of pObject + the left of tStack into tLeft
+         put the right of pObject + the left of tStack into tRight
+         put the top of pObject + the top of tStack into tTop
+         put the bottom of pObject + the top of tStack into tBottom
+      end if
+      
+      local tPointerLeft, tPointerTop
+      if tRight < (item 3 of tScreenRect / 2) then
+         put true into tPointerLeft
+      else
+         put false into tPointerLeft
+      end if
+      
+      if tTop > (item 4 of tScreenRect / 2) then
+         put false into tPointerTop
+      else
+         put true into tPointerTop
+      end if
+   end if
    local tWidth, tHeight
-   set the width of field "Message"of stack "revTutorial" to 300
+   set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
+   set the height of field "Message" of stack "revTutorial" to 1000
    put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
    put the formattedWidth of field "Message" of stack "revTutorial" into tWidth
    
    put max(100,tHeight) into tHeight
    set the height of field "Message" of stack "revTutorial" to tHeight
-   
    
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
@@ -555,66 +584,55 @@ on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel, pToSide
    set the width of it to tWidth + kMargin * 2
    set the height of it to tHeight + kMargin * 2
    
-   create graphic "Pointer" in tGroup
-   put it into tPointer
-   set the style of tPointer to "regular"
-   set the polysides of tPointer to 4
-   
-   local tPointerLeft, tPointerTop
-   if pLeft < (item 3 of tScreenRect / 2) then
-      put true into tPointerLeft
-   else
-      put false into tPointerLeft
-   end if
-   
-   if pTop > (item 4 of tScreenRect / 2) then
-      put false into tPointerTop
-   else
-      put true into tPointerTop
-   end if
-   
-   local tX, tY, tStackTop, tStackLeft
-   if pToSide is true then
-      set the width of tPointer to 40
-      set the height of tPointer to 30
-      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2 + 20, tHeight + kMargin*2
-      if tPointerTop then
-         put the top of tGraphic + 40 into tY
-         put pTop - 40 into tStackTop
+   if pObject is not empty then
+      create graphic "Pointer" in tGroup
+      put it into tPointer
+      set the style of tPointer to "regular"
+      set the polysides of tPointer to 4
+      
+      local tX, tY, tStackTop, tStackLeft
+      if pToSide is true then
+         set the width of tPointer to 40
+         set the height of tPointer to 30
+         set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2 + 20, tHeight + kMargin*2
+         if tPointerTop then
+            put the top of tGraphic + 40 into tY
+            put tTop - 40 into tStackTop
+         else
+            put the bottom of tGraphic - 40 into tY
+            put tBottom - tHeight + 40 into tStackTop
+         end if
+         
+         if tPointerLeft then
+            put the left of tGraphic into tX
+            put tRight + 5 into tStackLeft
+         else
+            put the right of tGraphic into tX
+            put tLeft - tWidth - 25 into tStackLeft
+         end if
       else
-         put the bottom of tGraphic - 40 into tY
-         put pTop - tHeight + 25 into tStackTop
+         set the width of tPointer to 30
+         set the height of tPointer to 40
+         set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2 + 20
+         if tPointerTop then
+            put the top of tGraphic into tY
+            put tBottom + 5 into tStackTop
+         else
+            put the bottom of tGraphic into tY
+            put tTop - tHeight - 25 into tStackTop
+         end if
+         
+         if tPointerLeft then
+            put the left of tGraphic + 40 into tX
+            put tLeft - 40 into tStackLeft
+         else
+            put the right of tGraphic - 40 into tX
+            put tRight - tWidth - 40 into tStackLeft
+         end if
       end if
       
-      if tPointerLeft then
-         put the left of tGraphic into tX
-         put pLeft + 5 into tStackLeft
-      else
-         put the right of tGraphic into tX
-         put pLeft - tWidth + 20 into tStackLeft
-      end if
-   else
-      set the width of tPointer to 30
-      set the height of tPointer to 40
-      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2 + 20
-      if tPointerTop then
-         put the top of tGraphic into tY
-         put pTop + 5 into tStackTop
-      else
-         put pTop - tHeight - 25 into tStackTop
-         put the bottom of tGraphic into tY
-      end if
-      
-      if tPointerLeft then
-         put the left of tGraphic + 40 into tX
-         put pLeft - 40 into tStackLeft
-      else
-         put the right of tGraphic - 40 into tX
-         put pLeft - tWidth + 40 into tStackLeft
-      end if
+      set the loc of tPointer to tX,tY
    end if
-   
-   set the loc of tPointer to tX,tY
    reset the templateGraphic
    
    import snapshot from rect (the rect of tGroup) of tGroup
@@ -625,16 +643,22 @@ on revTutorialSetTopLeftOfStack pLeft, pTop, pStackRel, pToSide
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
-   if pToSide and tPointerLeft then
-      set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
-   else if not pToSide and tPointerTop then
-      set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
+   if pObject is not empty then
+      if pToSide and tPointerLeft then
+         set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
+      else if not pToSide and tPointerTop then
+         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
+      else
+         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+      end if
+      set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
+      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+      set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    unlock messages
-end revTutorialSetTopLeftOfStack
+end revTutorialPositionStack
 
 local sSteps, sActionNumber, sStepName, sFirstStep
 local sWaiting
@@ -644,31 +668,25 @@ on revInitialiseTutorial pSteps
    lock screen
    lock messages
    
-   create button "Exit"
-   set the style of it to transparent
-   set the textColor of it to "white"
-   set the textsize of it to 15
-   set the right of it to 485
-   set the bottom of it to 285
-   set the autoHilite of it to false
-   set the script of it to "on mouseUp;revTutorialFinish;end mouseUp"
+   set the textStyle of stack "revTutorial" to "bold"
+   set the textColor of stack "revTutorial" to "white"
+   set the textsize of stack "revTutorial" to 15
    
    create field "Message"
-   set the textColor of it to "white"
-   set the textsize of it to 15
    set the dontWrap of it to false
    set the lockText of it to true
    set the opaque of it to false
    set the showborder of it to false
    set the showFocusBorder of it to false
    set the width of it to 465
+   set the cantSelect of it to true
    
    set the left of it to 20
    set the top of it to 60
    
    insert the script of stack "revTutorial" into front
+   go invisible stack "revTutorial" as palette
    unlock messages
-   palette stack "revTutorial"
    unlock screen
 end revInitialiseTutorial
 
@@ -680,16 +698,15 @@ on revFinaliseTutorial
    if there is a button "Exit" then
       delete button "Exit"
    end if
-   remove script of stack "revTutorial" from front
    enableToolsPalette
    enableStack "revMenuBar"
    
+   remove script of stack "revTutorial" from front
    put empty into sSteps
    put empty into sActionNumber
    put empty into sStepName
    
    unlock screen
-   close me
 end revFinaliseTutorial
 
 on revTutorialStart pTutorialName
@@ -700,35 +717,41 @@ on revTutorialStart pTutorialName
    put revTutorialParse(tTutorialFile) into tData
    
    revInitialiseTutorial tData
-   
-   revTutorialPrologue
    put tData["first step"] into sFirstStep
-   send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
+   revTutorialPrologue
+   show stack "revTutorial"
 end revTutorialStart
 
 on revTutorialFinish
    hide stack "revTutorial"
+   lock screen
    revTutorialEpilogue
-   send "revFinaliseTutorial" to stack "revTutorial" in 1 second
-   close stack "revTutorial"
+   unlock screen
+   show stack "revTutorial"
 end revTutorialFinish
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
-      answer sSteps["prologue"]["text"]
+      revTutorialDoInterlude sSteps["prologue"]["text"], false
+   else
+      send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    end if
 end revTutorialPrologue
 
 on revTutorialEpilogue
    if sSteps["epilogue"] is not empty then
-      answer sSteps["epilogue"]["text"]
+      revTutorialDoInterlude sSteps["epilogue"]["text"], true
+   else
+      send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
    end if
 end revTutorialEpilogue
 
 on revTutorialContinue
    repeat forever
-      lock screen
       hide stack "revTutorial"
+      if sWaiting then
+         exit repeat
+      end if
       // Tutorial finished when there was no "go" step
       if sStepName is empty then
          revTutorialDoGoToStep sFirstStep
@@ -746,7 +769,7 @@ on revTutorialContinue
             next repeat
          end if
       end if
-      
+      lock screen
       if sSteps[sStepName]["actions"]["interlude"] is empty then
          // Do text, highlight and guide actions under lock screen, to remove 'flicker'
          // Text
@@ -755,12 +778,15 @@ on revTutorialContinue
          revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
          // Highlight
          revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
+         unlock screen
+         show stack "revTutorial"
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
+      else
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
+         unlock screen
+         show stack "revTutorial"
       end if
-      unlock screen
-      show stack "revTutorial"
-      revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
-      revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
-      revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       if sWaiting then
          exit repeat
       end if
@@ -780,7 +806,7 @@ on revTutorialExecuteAction pActionData
          revTutorialDoCapture pActionData["object type"], pActionData["tag"]
          break
       case "interlude"
-         revTutorialDoInterlude pActionData["text"]
+         revTutorialDoInterlude pActionData["text"], false
          break
       case "add guide"
          revTutorialDoAddGuide pActionData["guide"], pActionData["rect"], pActionData["object"]["type"], pActionData["object"]["tag"]
@@ -795,10 +821,17 @@ on revTutorialExecuteAction pActionData
 end revTutorialExecuteAction
 
 on revTutorialSetText pStep
-   put sSteps[pStep]["text"] into field "Message" of stack "revTutorial"
+   local tWidthOverride
+   put 0 into tWidthOverride
+   set the width of field "Message" of stack "revTutorial" to 1000
+   put empty into field "Message" of stack "revTutorial"
    if sSteps[pStep]["script"] is not empty then
-      put return & sSteps[pStep]["script"] after field "Message" of stack "revTutorial"
+      put return & return & sSteps[pStep]["script"] into field "Message" of stack "revTutorial"
+      put the formattedWidth of field "Message" into tWidthOverride
    end if
+   put sSteps[pStep]["text"] before field "Message" of stack "revTutorial"
+
+   revTutorialPositionStack "", true, false, tWidthOverride
 end revTutorialSetText
 
 ##############################################################################
@@ -812,6 +845,9 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
+   if there is a button "Got It" of stack "revTutorial" then
+      delete button "Got It" of stack "revTutorial"
+   end if
    disableMenuBar
    disableToolsPalette
    buildMenus
@@ -824,8 +860,64 @@ on revTutorialDoCapture pType, pTag
    put pTag into sCaptureData[pType]
 end revTutorialDoCapture
 
-on revTutorialDoInterlude pText
-   answer pText
+on revTutorialDoInterlude pText, pIsEpilogue
+   lock screen
+   set the windowShape of stack "revTutorial" to 0
+   lock messages
+   put pText into field "Message" of stack "revTutorial"
+   
+   local tScreenRect
+   put the screenrect into tScreenRect
+   
+   create button "Got It"
+   set the width of it to 64
+   set the height of it to 28
+   set the backColor of it to "225,177,68"
+   set the label of it to "Got It"
+   set the borderWidth of it to 0
+   set the showFocusBorder of it to false
+   set the autoHilite of it to false
+   set the threeD of it to false
+   
+   local tWidth, tHeight
+   set the width of field "Message"of stack "revTutorial" to 460
+   set the height of field "Message" of stack "revTutorial" to 1000
+   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
+   put the formattedWidth of field "Message" of stack "revTutorial" into tWidth
+   
+   put max(100,tHeight) into tHeight
+   set the height of field "Message" of stack "revTutorial" to tHeight
+   
+   put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
+   
+   local tGraphic, tWindowShape
+   set the lineSize of the templateGraphic to 0
+   set the backColor of the templateGraphic to "black"
+   set the opaque of the templateGraphic to true
+   
+   create graphic "Shape"
+   put it into tGraphic
+   set the style of it to "rectangle"
+   set the width of it to tWidth + kMargin * 2
+   set the height of it to tHeight + kMargin * 2
+   
+   reset the templateGraphic
+   
+   import snapshot from rect (the rect of tGraphic) of tGraphic
+   put the long id of the last image into tWindowShape
+   set the backColor of stack "revTutorial" to "209,137,50"
+   delete tGraphic
+   
+   set the windowshape of stack "revTutorial" to the id of tWindowShape
+   delete tWindowShape
+   
+   set the rect of stack "revTutorial" to 0,0,tWidth + kMargin*2, tHeight + kMargin*2
+   set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+   set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
+   set the loc of button "Got It" of stack "revTutorial" to tWidth - the width of button "Got It" of stack "revTutorial" / 2, tHeight - the height of button "Got It" of stack "revTutorial" / 2
+   unlock messages
+   unlock screen
+   revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
 end revTutorialDoInterlude
 
 ##############################################################################
@@ -835,6 +927,16 @@ end revTutorialDoInterlude
 ##############################################################################
 
 local sWait
+on revTutorialReturnFromInterlude
+   put false into sWaiting
+   if sWait["epilogue"] is true then
+      send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+   else
+      send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
+   end if
+   put empty into sWait 
+end revTutorialReturnFromInterlude
+
 on revTutorialDoWait pActionData
    put empty into sWait
    // Check to see if wait condition is immediately satisfied
@@ -973,6 +1075,12 @@ on revTutorialWaitUntilAnswerDialogHasPoppedUp
    revIDESubscribe "ideAnswerDialogClosed"
 end revTutorialWaitUntilAnswerDialogHasPoppedUp
 
+on revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
+   put true into sWaiting
+   put "interlude" into sWait["wait condition"]
+   put pIsEpilogue into sWait["epilogue"]
+end revTutorialWaitUntilInterludeIsDismissed
+
 on revTutorialWaitConditionSatisfied
    put false into sWaiting
    put empty into sWait
@@ -986,23 +1094,27 @@ end revTutorialWaitConditionSatisfied
 ##############################################################################
 
 on revTutorialDoHighlight pActionData
-   switch pActionData["highlight type"]
-      case "object"
-         revTutorialHighlightObject pActionData["object"]["type"], pActionData["object"]["tag"]
-         break
-      case "menu"
-         revTutorialHighlightMenuItem pActionData["menu"], pActionData["item"]
-         break
-      case "property"
-         revTutorialHighlightInspector pActionData["section"], pActionData["property"]
-         break
-      case "tool"
-         revTutorialHighlightTool pActionData["tool"]
-         break
-      case "guide"
-         revTutorialHighlightGuide pActionData["guide"]
-         break
-   end switch
+   try
+      switch pActionData["highlight type"]
+         case "object"
+            revTutorialHighlightObject pActionData["object"]["type"], pActionData["object"]["tag"]
+            break
+         case "menu"
+            revTutorialHighlightMenuItem pActionData["menu"], pActionData["item"]
+            break
+         case "property"
+            revTutorialHighlightInspector pActionData["section"], pActionData["property"]
+            break
+         case "tool"
+            revTutorialHighlightTool pActionData["tool"]
+            break
+         case "guide"
+            revTutorialHighlightGuide pActionData["guide"]
+            break
+      end switch
+   catch tError
+      // Something was specified incorrectly in the tutorial file
+   end try
 end revTutorialDoHighlight
 
 on revTutorialClearHighlights
@@ -1023,10 +1135,7 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   local tRight,tBottom
-   put the right of tObject into tRight
-   put the bottom of tObject into tBottom
-   revTutorialSetTopLeftOfStack tRight, tBottom, revIDEStackOfObject(tObject)
+   revTutorialPositionStack tObject, true
 end revTutorialHighlightObject
 
 on revTutorialClearObjectHighlight
@@ -1129,22 +1238,18 @@ on revTutorialHighlightTool pTool
    end switch
    
    dispatch "isolateTool" to stack "revTools" with tTool
-   revTutorialSetTopLeftOfStack the right of button tTool of stack "revTools", the bottom of button tTool of stack "revTools", the long id of stack "revTools"
+   revTutorialPositionStack the long id of button tTool of stack "revTools", true
 end revTutorialHighlightTool
 
 on revTutorialHighlightInspector pSection, pGroup
    dispatch "hiliteFrameItem" to stack "revInspector" with pSection
    dispatch "navSelected" to stack "revInspector" with pSection
-   revTutorialSetTopLeftOfStack the right of group pGroup of stack "revInspector", the top of group pGroup of stack "revInspector", the long id of stack "revInspector", true
+   revTutorialPositionStack the long id of group pGroup of stack "revInspector", true
 end revTutorialHighlightInspector
 
 local sMenuHighlight
 on revTutorialHighlightMenuItem pMenu, pItem
-   if pMenu is "File" then
-      revTutorialSetTopLeftOfStack 150,27
-   else
-      revTutorialSetTopLeftOfStack 190,27 
-   end if
+   revTutorialPositionStack the long id of menu pMenu, false, true
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    put tMenuHighlight into sMenuHighlight
@@ -1369,7 +1474,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revTutorialSetTopLeftOfStack the right of sGuides[pGuide], the bottom of sGuides[pGuide], revIDEStackOfObject(sGuides[pGuide]), true
+   revTutorialPositionStack sGuides[pGuide], true
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
@@ -1461,6 +1566,12 @@ on mouseUp pWhich
    if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
       if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
          revTutorialWaitConditionSatisfied
+      end if
+   end if
+   
+   if sWait["wait condition"] is "interlude" then
+      if tObject is the long id of button "Got It" of stack "revTutorial" then
+         revTutorialReturnFromInterlude
       end if
    end if
    

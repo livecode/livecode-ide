@@ -3846,6 +3846,18 @@ on revIDEAnswerDialogClosed
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
+on revIDEStartTutorial pName
+   dispatch "revTutorialStart" to stack "revTutorial" with pName
+end revIDEStartTutorial
+
+on revIDEStopTutorial
+   if "revTutorial" is in the frontscripts then
+      revFinaliseTutorial
+   end if
+   wait 0 millisecs with messages
+   delete stack "revTutorial"
+end revIDEStopTutorial
+
 #############
 # Data grid
 #############
