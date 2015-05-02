@@ -1,13 +1,12 @@
 ﻿script "revInspector"
 local sSelectedObjects
 local sInspectorLock
-
 on preOpenStack
    put false into sInspectorLock
    put revIDESelectedObjects() into sSelectedObjects
    revIDESubscribe "idePropertyChanged",sSelectedObjects
    inspectorTitleUpdate
-   
+    
    # Set the inspector behaviour
    set the behavior of me to revIDEInspectorBehavior()
 end preOpenStack
@@ -15,13 +14,11 @@ end preOpenStack
 on openStack   
    lock screen
    # Register of IDE messages
-   revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    inspectorMessagesRegister
    
    //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
    addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
-   
    set the navigationDisplayStyle of me to "icons"
    
    # Get a list of the properties and groups we'll be displaying
@@ -36,6 +33,8 @@ on closeStack
    inspectorMessagesDeRegister
    revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
    revIDEUnsubscribe "ideNameChanged"
+   
+   revIDEStopInspecting
 end closeStack
 
 on resizeStack
@@ -250,11 +249,46 @@ on editorValueChanged pProperty, pValue, pLockUpdates
 end editorValueChanged
 
 on ideNameChanged
-   ideSelectedObjectChanged
+   ideInspectObjects
 end ideNameChanged
 
-on ideInspectObjects
-   ideSelectedObjectChanged
+on ideInspectObjects pObjects
+   # If the inspector is locked and a selected object changed message comes through
+   # ignore it
+   if sInspectorLock is true and exists(line 1 of sSelectedObjects) then 
+      exit ideInspectObjects
+   else
+      put false into sInspectorLock
+   end if
+   
+   # Timing the performance of the inspector
+   local tStartTime
+   put the milliseconds into tStartTime
+   
+   # Get the selected objects
+   local tSelectedObjects
+   if pObjects is not empty then
+      put pObjects into tSelectedObjects
+   else
+      put revIDESelectedObjects() into tSelectedObjects
+   end if
+   if tSelectedObjects is sSelectedObjects then exit ideInspectObjects
+   if tSelectedObjects is empty then
+      inspectorClear
+      exit ideInspectObjects
+   end if
+   
+   lock screen
+   # Unsubscribe the the objects previously 
+   revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
+   revIDESubscribe "idePropertyChanged",tSelectedObjects
+   
+   put tSelectedObjects into sSelectedObjects
+   
+   # Get a list of the properties and groups we'll be displaying
+   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   inspectorTitleUpdate
+   unlock screen
 end ideInspectObjects
 
 on ideResumeStack
@@ -271,36 +305,7 @@ end ideCloseStack
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged
-   # If the inspector is locked and a selected object changed message comes through
-   # ignore it
-   if sInspectorLock is true and exists(line 1 of sSelectedObjects) then 
-      exit ideSelectedObjectChanged
-   else
-      put false into sInspectorLock
-   end if
-   
-   # Timing the performance of the inspector
-   local tStartTime
-   put the milliseconds into tStartTime
-   
-   # Get the selected objects
-   local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
-   if tSelectedObjects is sSelectedObjects then exit ideSelectedObjectChanged
-   if tSelectedObjects is empty then
-      inspectorClear
-      exit ideSelectedObjectChanged
-   end if
-   
-   # Unsubscribe the the objects previously 
-   revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
-   revIDESubscribe "idePropertyChanged",tSelectedObjects
-   
-   put tSelectedObjects into sSelectedObjects
-   
-   # Get a list of the properties and groups we'll be displaying
-   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
-   inspectorTitleUpdate
+   revIDEInspectObjects revIDESelectedObjects()
 end ideSelectedObjectChanged
 
 on idePreferenceChanged pPreference, pValue

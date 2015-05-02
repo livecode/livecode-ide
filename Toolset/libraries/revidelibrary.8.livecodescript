@@ -1343,7 +1343,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -2412,7 +2412,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-
+   
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -2621,9 +2621,120 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
+/*
+local sInspectedObjects
+on revIDESetInspectedObjects pObjectList
+   if pObjectList is not sInspectedObjects then
+      put pObjectList into sInspectedObjects
+      revIDEMessageSend "ideInspectedObjectsChanged", pObjectList
+   end if
+end revIDESetInspectedObjects
+
+function revIDEGetInspectedObjects
+   return sInspectedObjects 
+end revIDEGetInspectedObjects
+*/
+local sInspectingObjects
 command revIDEInspectObjects pObjects
+   put pObjects into sInspectingObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
 end revIDEInspectObjects
+
+on revIDEStopInspecting
+   put empty into sInspectingObjects
+end revIDEStopInspecting
+
+function revIDEInspectedObjects
+   return sInspectingObjects
+end revIDEInspectedObjects
+
+local sScriptEditingObjects
+on revIDEStartEditingScript pObject
+   put true into sScriptEditingObjects[the long id of pObject]
+end revIDEStartEditingScript
+
+on revIDEStopEditingScriptOfObjects pObjects
+   repeat for each line tObject in pObjects
+      delete variable sScriptEditingObjects[the long id of tObject]
+   end repeat
+end revIDEStopEditingScriptOfObjects
+
+function revIDEScriptEditingObjects
+   return the keys of sScriptEditingObjects
+end revIDEScriptEditingObjects
+
+on revIDEEditScriptOfObject pObject
+   # First obtain a correct object reference. The reason for this is edit group mode
+   local tObject
+   put revRuggedId(pObject) into tObject
+   
+   # Send the ideEditScript message
+   send "revIDEMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
+   
+   # Update the currently editing objects
+   revIDEStartEditingScript pObject
+   
+   # OK-2008-08-19 : Bug 6957
+   # Dispatch the "revEditScript" message to any plugins that require it.
+   global gREVMessageDispatch
+   repeat for each line tPlugin in gREVMessageDispatch["revEditScript"]
+      try
+         send "revEditScript tObject" to this card of stack tPlugin
+      end try
+   end repeat
+   
+   # Search for existing editor first.
+   local tExistingEditor
+   put revScriptEditor(tObject) into tExistingEditor
+   if tExistingEditor is not empty then
+      revGoScriptEditor the long id of stack tExistingEditor
+      send "revSESetCurrentObject tObject" to stack tExistingEditor
+      exit revIDEEditScriptOfObject
+   end if
+   
+   # MW-2012-02-21: If we are editing the "Template Stack" behavior then we create a new
+   #   window in 'special' mode.
+   if revRuggedId(the long id of stack revIDEScriptEditorBehavior("stack")) is tObject then
+      revEditScriptInNewWindow pObject, true
+      exit revIDEEditScriptOfObject
+   end if
+   
+   # If the preference is to use tabs, then we find the topmost script editor
+   # and add the specified object as a tab to it.
+   local tUseTabs
+   
+   local tUseTabsString
+   put "useTabs" into tUseTabsString
+   
+   send "revSEGetPreference tUseTabsString" to revScriptEditorMain()
+   put the result into tUseTabs
+   
+   if tUseTabs then
+      local tEditor
+      put revTopMostScriptEditor() into tEditor
+      
+      # Do not allow a script editor to edit its own objects, force a new window
+      # this makes debugging the script editor easier.
+      local tStack
+      put revTargetStack(tObject) into tStack
+      if tEditor is empty then
+         revEditScriptInNewWindow pObject
+      else if tStack is the short name of tEditor then
+         revEditScriptInNewWindow pObject
+      else
+         # OK-2008-07-24 : Use call instead of send here to prevent problems with the defaultStack changing.
+         # Specifically this fixes an issue when debugging, if the user steps into a handler located in a script that
+         # is not being edited, the script gets added to the editor, which causes the the defaultStack to change
+         # and potentially breaks the debug being run in the debugger.
+         call "revSEAddTargetObject tObject" to tEditor
+         call "revSESetCurrentObject tObject" to tEditor
+         revGoScriptEditor tEditor
+      end if
+   else
+      # If the preference is not to use tabs, then we create a new script editor for the object.
+      revEditScriptInNewWindow tObject
+   end if
+end revIDEEditScriptOfObject
 
 /*
 Generates API documentation for a giver object and launched it in the system browser.
@@ -3189,6 +3300,13 @@ command revIDEOpenPalette pPaletteName
          break
    end switch
 end revIDEOpenPalette
+
+on revIDEOpenInspectorForObjects pObjects
+   lock screen
+   revIDEOpenPalette("inspector")
+   revIDEInspectObjects pObjects
+   unlock screen
+end revIDEOpenInspectorForObjects
 
 /*
 Returns a list of all the open Property Inspectors
@@ -3783,6 +3901,24 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
    end switch
 end revIDEScriptEditorBehavior
+
+on revIDEAnswerDialogClosed
+   local tPopupSource
+   put item 1 of line 1 of the executionContexts into tPopupSource
+   revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
+end revIDEAnswerDialogClosed
+
+on revIDEStartTutorial pName
+   dispatch "revTutorialStart" to stack "revTutorial" with pName
+end revIDEStartTutorial
+
+on revIDEStopTutorial
+   if "revTutorial" is in the frontscripts then
+      revFinaliseTutorial
+   end if
+   wait 0 millisecs with messages
+   delete stack "revTutorial"
+end revIDEStopTutorial
 
 #############
 # Data grid
