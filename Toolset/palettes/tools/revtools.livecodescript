@@ -629,6 +629,7 @@ end mouseDown
 
 on mouseEnter
    if the cType of the target is empty then exit mouseEnter
+   if the cDisabled of the target is true then exit mouseEnter
    if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
@@ -645,6 +646,7 @@ on mouseEnter
 end mouseEnter
 
 on mouseLeave
+   if the cDisabled of the target is true then exit mouseLeave
    try
       hide graphic "tool_hover" of group "contents" 
       set the coloroverlay of the target to empty
@@ -685,3 +687,72 @@ private on __hiliteRemove
    put empty into sHighlightedStack
     unlock messages
 end __hiliteRemove
+
+on isolateTool pWhich
+   lock screen
+   disableTools
+   toolEnable pWhich
+   unlock screen
+end isolateTool
+
+on enableTools
+   lock screen
+   repeat for each item tItem in "widget,classic,graphic,graphictools,paint"
+      groupDisable tItem, false
+   end repeat
+   toolEnable "com.livecode.tool.Browse" 
+   toolEnable "com.livecode.tool.Pointer"
+   unlock screen
+end enableTools
+
+on disableTools
+   lock screen
+   repeat for each item tItem in "widget,classic,graphic,graphictools,paint"
+      groupDisable tItem, true
+   end repeat
+   toolDisable "com.livecode.tool.Browse" 
+   toolDisable "com.livecode.tool.Pointer"
+   unlock screen
+end disableTools
+
+on groupDisable pWhich, pDisable
+   lock screen
+   local tTools
+   switch pWhich
+      case "widget"
+         put revIDEExtensions("widget","installed") into tTools
+         break
+      case "classic"
+         put revIDEClassicControls() into tTools
+         break
+      case "graphic"
+         put revIDEGraphics() into tTools
+         break 
+      case "graphictools"
+         put revIDEGraphicTools() into tTools
+         break 
+      case "paint"
+         put revIDEPaintTools() into tTools
+         break
+   end switch
+   
+   repeat for each key tKey in tTools
+      if pDisable then
+         toolDisable tKey
+      else
+         toolEnable tKey
+      end if
+   end repeat
+   unlock screen
+end groupDisable
+
+on toolDisable pWhich
+   set the coloroverlay["opacity"] of button pWhich of me to "90"
+   set the coloroverlay["color"] of  button pWhich of me to "255,255,255"
+   set the cDisabled of button pWhich of me to true
+end toolDisable
+
+on toolEnable pWhich
+   set the coloroverlay of button pWhich of me to empty
+   set the cDisabled of button pWhich of me to false
+end toolEnable

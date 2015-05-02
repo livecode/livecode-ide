@@ -441,9 +441,9 @@ end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    if there is a folder (pPath & slash & "resources") then
-      load extension (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
+      load extension from file (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
    else
-      load extension (pPath & slash & "module.lcm") 
+      load extension from file (pPath & slash & "module.lcm") 
    end if
    
    local tResult
@@ -476,7 +476,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
    end if
    
-   set the cCurExtension of stack "LiveCode Extension Test Window" to (pPath & slash & "module.lcm")
+   set the cCurExtension of stack "LiveCode Extension Test Window" to pDetailsA["id"]
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
 

@@ -143,6 +143,9 @@ command revSERemoveTargetObject pObject, pDontWarn, pDontCloseIfLast, pDontChang
    put "true" into tTrueString
    send "removeTab pObject, tTrueString" to group "Script Tabs" of me
    
+   # Notify the IDE
+   revIDEStopEditingScriptOfObjects pObject
+   
    local tCurrentTab
    send "getCurrentTab" to group "Script Tabs" of me
    put the result into tCurrentTab
@@ -2252,6 +2255,11 @@ end shortcutFindAction
 #   Called when the script editor is about to be closed. Saves various things to make sure the script
 #   editor's state is correctly preserved when its re-opened.
 command seFinalize
+   
+   # Notify the IDE
+   revSEGetTargetObjects
+   revIDEStopEditingScriptOfObjects the result
+   
    local tMode
    revSEGetMode
    put the result into tMode

@@ -53,7 +53,7 @@ private command __loadExtension pExtensionFile
    local tExecutableModuleFile
    put revIDESpecialFolderPath("extensions") & slash & tExtensionID & slash & "module.lcm" into tExecutableModuleFile
    if there is a file tExecutableModuleFile then
-      load extension tExecutableModuleFile
+      load extension from file tExecutableModuleFile
       if the result is not empty then
          __revIDEError("loading extension failed: " && the result)
          return empty
@@ -259,6 +259,7 @@ private function __propertyDataFromInfoFile pFileName
    local tDataStart, tDataA, tPropName
    put false into tDataStart
    
+   local tCountsA, tGroupCountsA
    set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
@@ -266,20 +267,74 @@ private function __propertyDataFromInfoFile pFileName
          next repeat
       end if
       
-      if not tDataStart then next repeat
+      if not tDataStart then 
+         next repeat
+      end if
+      
+      if token 1 of tLine is empty then
+         next repeat
+      end if
       
       put item 1 of tLine into tPropName
       put item 2 of tLine into tDataA[tPropName]["label"]
-      put item 3 of tLine into tDataA[tPropName]["section"]
+      
+      local tSection
+      put item 3 of tLine into tSection
+      put tSection into tDataA[tPropName]["section"]
+      
       put item 4 of tLine into tDataA[tPropName]["editor"]
       put item 5 of tLine into tDataA[tPropName]["user_visible"]
       put item 6 of tLine into tDataA[tPropName]["read_only"]
-      put item 7 of tLine into tDataA[tPropName]["group"]
-      put item 8 of tLine into tDataA[tPropName]["default"]
-      put item 9 of tLine into tDataA[tPropName]["options"]
+      
+      local tGroupName
+      put item 7 of tLine into tGroupName
+      if tGroupName is empty then
+         put tDataA[tPropName]["label"] into tGroupName
+      end if
+      if tGroupName is empty then
+         put tPropName into tGroupName
+      end if
+      put tGroupName into tDataA[tPropName]["group"]
+      
+      if tGroupCountsA[tSection][tGroupName] is empty then
+         add 1 to tCountsA[tSection]["count"]
+         put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupName]
+      end if
+      put tGroupCountsA[tSection][tGroupName] into tDataA[tPropName]["group_order"]
+      
+      add 1 to tCountsA[tSection][tGroupName]["count"]
+      put tCountsA[tSection][tGroupName]["count"] into tDataA[tPropName]["order"]
+      
+      put __unescapeString(item 8 of tLine) into tDataA[tPropName]["default"]
+      
+      local tOptions
+      put item 9 of tLine into tOptions
+      replace comma with return in tOptions
+      put tOptions into tDataA[tPropName]["options"]
+      
+      put item 10 of tLine into tDataA[tPropName]["subsection"]
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
+
+private function __organisePropertyInfo pInfoA
+   local tOrganisedA
+   repeat for each key tKey in pInfoA
+      local tSection
+      put pInfoA[tKey]["section"] into tSection
+      
+      local tGroupLabel
+      put pInfoA[tKey]["group"] into tGroupLabel
+      
+      # The groups are ordered by their appearance in the spec file
+      put pInfoA[tKey]["group_order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
+      put pInfoA[tKey]["subsection"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["subsection"]
+      
+      # Carry over the generic prop information into the object prop info array
+      put pInfoA[tKey] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]
+   end repeat
+   return tOrganisedA
+end __organisePropertyInfo
 
 local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
 private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
@@ -289,7 +344,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    put URL ("file:" & pFile) into tObjectData
    
    # Parse the file into a structure array
-   local tObjectPropertiesA, tPropertyName, tCountsA, tSection
+   local tObjectPropertiesA, tPropertyName, tCountsA, tGroupCountsA, tSection
    set the itemdel to tab
    
    local tDataStart, tDataA
@@ -310,33 +365,23 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       else
          put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
          put pPropInfoA[tPropertyName]["section"] into tSection
-         if tCountsA[tSection] is empty then
-            put 1 into tCountsA[tSection]
-         end if
          
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["group"] into tGroupLabel
          end if
-         if tGroupLabel is empty then
-            put pPropInfoA[tPropertyName]["label"] into tGroupLabel
-         end if
-         if tGroupLabel is empty then
-            put tPropertyName into tGroupLabel
-         end if
          
          # The groups are ordered by their appearance in the spec file
-         put tCountsA[tSection] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["order"]
+         if tGroupCountsA[tSection][tGroupLabel] is empty then
+            add 1 to tCountsA[tSection]["count"]
+            put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
+         end if
+         put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
          
-         # Carry over the generic prop information into the object prop info array
-         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]
-         
-         # Assign the order of this property within the group
-         local tPropCount
-         put the number of elements of tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"] into tPropCount
-         put tPropCount into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["order"] 
-         
+         add 1 to tCountsA[tSection][tGroupLabel]["count"]
+         put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+          
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
@@ -344,32 +389,30 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             if tDefault is "empty" then
                put empty into tDefault
             end if
-            put tDefault into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["default"] 
-            put tDefault into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
+            put tDefault into pPropInfoA[tPropertyName]["default"]
          end if
+         put pPropInfoA[tPropertyName]["default"] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
          
          # If this is an enum property, there are per-object options
          local tOptions
          put item 3 of tLine into tOptions
-         if tOptions is empty then
-            put pPropInfoA[tPropertyName]["options"] into tOptions
+         if tOptions is not empty then
+            replace comma with return in tOptions
+            put tOptions into pPropInfoA[tPropertyName]["options"]
          end if
-         replace comma with return in tOptions
-         put tOptions into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["options"]
          
          # Read any per-object 'read-only' data
          local tReadOnly
          put item 5 of tLine into tReadOnly
          if tReadOnly is not empty then
-            put tReadOnly into tObjectPropertiesA[tSection]["grouplist"][tGroupLabel]["proplist"][tPropertyName]["read_only"]
+            put tReadOnly into pPropInfoA[tPropertyName]["read_only"]
          end if
          
-         # Increment the count for this section
-         add 1 to tCountsA[tSection]
+         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
       end if
    end repeat
    
-   put tObjectPropertiesA into sClassicObjectPropertiesInfo[pObjectType]
+   put __organisePropertyInfo(tObjectPropertiesA) into sClassicObjectPropertiesInfo[pObjectType]
 end __setPropertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
@@ -453,6 +496,7 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    repeat for each line tNumber in tKeys
       if pIsGroupList then
          put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["label"]
+         put tSparseOrderedA[tNumber]["subsection"] into tOrderedA[tCount]["subsection"]
          put __orderPropSubArray(tSparseOrderedA[tNumber], false) into tOrderedA[tCount]["proplist"]
       else
          put tSparseOrderedA[tNumber] into tOrderedA[tCount]
@@ -464,13 +508,12 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    return tOrderedA
 end __orderPropSubArray
 
-private function __orderPropArray pPropsA
-   local tOrderedPropsA,x,tSections
-   put revIDEPropertySections() into tSections
+private function __orderPropArray pPropsA, pSections
+   local tOrderedPropsA,x
    
    local tCount
    put 1 into tCount
-   repeat for each item tSection in tSections
+   repeat for each item tSection in pSections
       if pPropsA[tSection] is empty then next repeat
       put __orderPropSubArray(pPropsA[tSection], true) into tOrderedPropsA[tCount]["grouplist"]
       put tSection into tOrderedPropsA[tCount]["label"]
@@ -1300,7 +1343,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -2237,6 +2280,18 @@ function revIDEStackVideoClips pStack
    return tVideoClipArray
 end revIDEStackVideoClips
 
+function revIDERelativeStackPath pStack, pPath
+   local tMainStackPath
+   set the itemDel to "/"
+   put item 1 to -2 of the effective filename of pStack & "/" into tMainStackPath
+   local tCharCount
+   put the number of chars of tMainStackPath into tCharCount
+   if char 1 to tCharCount of pPath is tMainStackPath then 
+      delete char 1 to tCharCount of pPath
+   end if
+   return pPath
+end revIDERelativeStackPath
+
 /*
 Returns A return sepearetd list of the long ids of the selected objects
 */
@@ -2357,7 +2412,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-
+   
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -2566,9 +2621,120 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
+/*
+local sInspectedObjects
+on revIDESetInspectedObjects pObjectList
+   if pObjectList is not sInspectedObjects then
+      put pObjectList into sInspectedObjects
+      revIDEMessageSend "ideInspectedObjectsChanged", pObjectList
+   end if
+end revIDESetInspectedObjects
+
+function revIDEGetInspectedObjects
+   return sInspectedObjects 
+end revIDEGetInspectedObjects
+*/
+local sInspectingObjects
 command revIDEInspectObjects pObjects
+   put pObjects into sInspectingObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
 end revIDEInspectObjects
+
+on revIDEStopInspecting
+   put empty into sInspectingObjects
+end revIDEStopInspecting
+
+function revIDEInspectedObjects
+   return sInspectingObjects
+end revIDEInspectedObjects
+
+local sScriptEditingObjects
+on revIDEStartEditingScript pObject
+   put true into sScriptEditingObjects[the long id of pObject]
+end revIDEStartEditingScript
+
+on revIDEStopEditingScriptOfObjects pObjects
+   repeat for each line tObject in pObjects
+      delete variable sScriptEditingObjects[the long id of tObject]
+   end repeat
+end revIDEStopEditingScriptOfObjects
+
+function revIDEScriptEditingObjects
+   return the keys of sScriptEditingObjects
+end revIDEScriptEditingObjects
+
+on revIDEEditScriptOfObject pObject
+   # First obtain a correct object reference. The reason for this is edit group mode
+   local tObject
+   put revRuggedId(pObject) into tObject
+   
+   # Send the ideEditScript message
+   send "revIDEMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
+   
+   # Update the currently editing objects
+   revIDEStartEditingScript pObject
+   
+   # OK-2008-08-19 : Bug 6957
+   # Dispatch the "revEditScript" message to any plugins that require it.
+   global gREVMessageDispatch
+   repeat for each line tPlugin in gREVMessageDispatch["revEditScript"]
+      try
+         send "revEditScript tObject" to this card of stack tPlugin
+      end try
+   end repeat
+   
+   # Search for existing editor first.
+   local tExistingEditor
+   put revScriptEditor(tObject) into tExistingEditor
+   if tExistingEditor is not empty then
+      revGoScriptEditor the long id of stack tExistingEditor
+      send "revSESetCurrentObject tObject" to stack tExistingEditor
+      exit revIDEEditScriptOfObject
+   end if
+   
+   # MW-2012-02-21: If we are editing the "Template Stack" behavior then we create a new
+   #   window in 'special' mode.
+   if revRuggedId(the long id of stack revIDEScriptEditorBehavior("stack")) is tObject then
+      revEditScriptInNewWindow pObject, true
+      exit revIDEEditScriptOfObject
+   end if
+   
+   # If the preference is to use tabs, then we find the topmost script editor
+   # and add the specified object as a tab to it.
+   local tUseTabs
+   
+   local tUseTabsString
+   put "useTabs" into tUseTabsString
+   
+   send "revSEGetPreference tUseTabsString" to revScriptEditorMain()
+   put the result into tUseTabs
+   
+   if tUseTabs then
+      local tEditor
+      put revTopMostScriptEditor() into tEditor
+      
+      # Do not allow a script editor to edit its own objects, force a new window
+      # this makes debugging the script editor easier.
+      local tStack
+      put revTargetStack(tObject) into tStack
+      if tEditor is empty then
+         revEditScriptInNewWindow pObject
+      else if tStack is the short name of tEditor then
+         revEditScriptInNewWindow pObject
+      else
+         # OK-2008-07-24 : Use call instead of send here to prevent problems with the defaultStack changing.
+         # Specifically this fixes an issue when debugging, if the user steps into a handler located in a script that
+         # is not being edited, the script gets added to the editor, which causes the the defaultStack to change
+         # and potentially breaks the debug being run in the debugger.
+         call "revSEAddTargetObject tObject" to tEditor
+         call "revSESetCurrentObject tObject" to tEditor
+         revGoScriptEditor tEditor
+      end if
+   else
+      # If the preference is not to use tabs, then we create a new script editor for the object.
+      revEditScriptInNewWindow tObject
+   end if
+end revIDEEditScriptOfObject
 
 /*
 Generates API documentation for a giver object and launched it in the system browser.
@@ -2826,6 +2992,9 @@ function revIDESpecialFolderPath pKey
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/property_definitions"
          break
+      case "Standalone Settings Definitions"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/standalone_settings"
+         break
       case "Tool Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/tool_definitions"
          break
@@ -2929,6 +3098,10 @@ end revIDEWebPageURL
 function revIDEFrameBehavior
    return the long ID of stack "revPaletteBehavior"
 end revIDEFrameBehavior
+
+function revIDEInspectorBehavior
+   return the long ID of stack "revInspectorBehavior"
+end revIDEInspectorBehavior
 
 function revIDEDataViewBehavior
    return the long ID of button "DataView Behavior" of stack "DataViewControl" of stack "revCore"
@@ -3127,6 +3300,13 @@ command revIDEOpenPalette pPaletteName
          break
    end switch
 end revIDEOpenPalette
+
+on revIDEOpenInspectorForObjects pObjects
+   lock screen
+   revIDEOpenPalette("inspector")
+   revIDEInspectObjects pObjects
+   unlock screen
+end revIDEOpenInspectorForObjects
 
 /*
 Returns a list of all the open Property Inspectors
@@ -3434,7 +3614,7 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    
    # Return ordered list
    if pSection is empty then
-      return __orderPropArray(tSharedPropertiesA)
+      return __orderPropArray(tSharedPropertiesA, revIDEPropertySections())
    else
       return __orderPropSection(tSharedPropertiesA["grouplist"])
    end if
@@ -3617,7 +3797,7 @@ function revIDEPropertySections
    return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
 end revIDEPropertySections
 
-function revIDESectionNameToIconName pName
+function revIDEPropertySectionNameToIconName pName
    switch pName
       case "basic"
          return "home"
@@ -3657,7 +3837,7 @@ function revIDESectionNameToIconName pName
          return "remove"
          break
    end switch
-end revIDESectionNameToIconName
+end revIDEPropertySectionNameToIconName
 
 function revIDEPaletteResourcePath pFilename
    local tPalettePath
@@ -3721,6 +3901,24 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
    end switch
 end revIDEScriptEditorBehavior
+
+on revIDEAnswerDialogClosed
+   local tPopupSource
+   put item 1 of line 1 of the executionContexts into tPopupSource
+   revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
+end revIDEAnswerDialogClosed
+
+on revIDEStartTutorial pName
+   dispatch "revTutorialStart" to stack "revTutorial" with pName
+end revIDEStartTutorial
+
+on revIDEStopTutorial
+   if "revTutorial" is in the frontscripts then
+      revFinaliseTutorial
+   end if
+   wait 0 millisecs with messages
+   delete stack "revTutorial"
+end revIDEStopTutorial
 
 #############
 # Data grid
@@ -3901,3 +4099,66 @@ command CreateTemplateForControl pStack
    
    return theTemplateGroup
 end CreateTemplateForControl
+
+#############
+# Standalone Settings
+#############
+
+private function __standaloneSettingsInfoFilename
+   return "standaloneSettings.txt"
+end __standaloneSettingsInfoFilename
+
+function revIDEStandaloneSettings pStack, pSection
+   local tInfo
+   put revIDEStandaloneSettingsInfoOfSection(pSection) into tInfo
+   
+   local tPropsA, tPropName
+   repeat for each element tGroup in tInfo
+      repeat for each element tProp in tGroup["proplist"]
+         put tProp["property_name"] into tPropName
+         put tProp into tPropsA[tGroup["label"]][tPropName]
+         put the cRevStandaloneSettings[tPropName] of pStack into tPropsA[tGroup["label"]][tPropName]["value"]
+      end repeat
+   end repeat
+   return tPropsA
+end revIDEStandaloneSettings
+
+function revIDEStandaloneSettingsInfoOfSection pSection
+   local tStandaloneDefinitionsPath
+   put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
+   
+   local tInfoA
+   put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
+   
+   local tOrganisedA
+   put __organisePropertyInfo(tInfoA) into tOrganisedA
+   
+   return __orderPropSubArray(tOrganisedA[pSection], true)
+end revIDEStandaloneSettingsInfoOfSection
+
+function revIDEStandaloneSettingsInfo
+   local tStandaloneDefinitionsPath
+   put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
+   
+   local tInfoA
+   put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
+   
+   return __orderPropArray(__organisePropertyInfo(tInfoA), revIDEStandaloneSections())
+end revIDEStandaloneSettingsInfo
+
+on revIDEStandaloneSettingsSet pStack, pProperty, pValue
+   set the cRevStandaloneSettings[pProperty] of pStack to pValue
+end revIDEStandaloneSettingsSet
+
+function revIDEStandaloneSections
+	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
+   return "General,Stacks,Copy Files,Mac,Windows,Linux,iOS,Android,Bug Reports"
+end revIDEStandaloneSections
+
+function revIDEStandaloneSectionNameToIconName pName
+   switch pName
+      default
+         return "remove"
+         break
+   end switch
+end revIDEStandaloneSectionNameToIconName
