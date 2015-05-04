@@ -417,7 +417,7 @@ component Runtime.Windows
 		file "windows:w32-manifest-template-trustinfo.xml"
 	into [[TargetFolder]]/Support place
 		executable windows:revpdfprinter.dll
-		executable prebuilt:lib/revsecurity.dll
+		executable windows:revsecurity.dll
 	into "[[TargetFolder]]/Support/Sample Icons" place
 		file "ide:Resources/Sample Icons/genericapp.ico"
 		file "ide:Resources/Sample Icons/genericdoc.ico"
