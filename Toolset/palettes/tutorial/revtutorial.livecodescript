@@ -564,8 +564,8 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
-   put the formattedWidth of field "Message" of stack "revTutorial" into tWidth
+   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
+   put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
    put max(100,tHeight) into tHeight
    set the height of field "Message" of stack "revTutorial" to tHeight
@@ -581,8 +581,8 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    create graphic "Shape" in tGroup
    put it into tGraphic
    set the style of it to "rectangle"
-   set the width of it to tWidth + kMargin * 2
-   set the height of it to tHeight + kMargin * 2
+   set the width of it to tWidth 
+   set the height of it to tHeight
    
    if pObject is not empty then
       create graphic "Pointer" in tGroup
@@ -590,17 +590,20 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       set the style of tPointer to "regular"
       set the polysides of tPointer to 4
       
-      local tX, tY, tStackTop, tStackLeft
+      local tX, tY, tStackTop, tStackLeft, tMiddle
+
       if pToSide is true then
          set the width of tPointer to 40
          set the height of tPointer to 30
-         set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2 + 20, tHeight + kMargin*2
+         set the rect of stack "revTutorial" to 0, 0, tWidth + 20, tHeight
+         
+         put (tBottom + tTop) / 2 into tMiddle
          if tPointerTop then
             put the top of tGraphic + 40 into tY
-            put tTop - 40 into tStackTop
+            put tMiddle - 40 into tStackTop
          else
             put the bottom of tGraphic - 40 into tY
-            put tBottom - tHeight + 40 into tStackTop
+            put tMiddle - tHeight + 40 into tStackTop
          end if
          
          if tPointerLeft then
@@ -613,7 +616,9 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       else
          set the width of tPointer to 30
          set the height of tPointer to 40
-         set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2 + 20
+         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + 20
+         
+         put (tRight + tLeft) / 2 into tMiddle
          if tPointerTop then
             put the top of tGraphic into tY
             put tBottom + 5 into tStackTop
@@ -624,10 +629,10 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
          
          if tPointerLeft then
             put the left of tGraphic + 40 into tX
-            put tLeft - 40 into tStackLeft
+            put tLeft - 25 into tStackLeft
          else
             put the right of tGraphic - 40 into tX
-            put tRight - tWidth - 40 into tStackLeft
+            put tRight - tWidth - 25 into tStackLeft
          end if
       end if
       
@@ -653,7 +658,7 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       end if
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
-      set the rect of stack "revTutorial" to 0, 0, tWidth + kMargin * 2, tHeight + kMargin*2
+      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
