@@ -518,16 +518,37 @@ end revTutorialParseAction
 
 ##############################################################################
 #
-#                     MAIN FUNCTIONALITY
+#                     STACK APPEARANCE
 #
 ##############################################################################
 
+function revTutorialInterludeColor
+   return "209,137,50"
+end revTutorialInterludeColor
+
+function revTutorialInterludeAltColor
+   return "225,177,68"
+end revTutorialInterludeAltColor
+
+function revTutorialMessageColor
+   return "55,165,196"
+end revTutorialMessageColor
+
+function revTutorialMessageAltColor
+   return "75,196,216"
+end revTutorialMessageAltColor
+
 constant kMessageOriginOffset = 40
-constant kMargin = 10
+constant kMargin = 20
 constant kMessageWidth = 200
+constant kProgressHeight = 5
 
 on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    lock messages
+   
+   hide button "Got It" of stack "revTutorial"
+   show group "Progress" of stack "revTutorial"
+   
    local tScreenRect
    put the screenrect into tScreenRect
    
@@ -564,17 +585,16 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
+   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 3 + kProgressHeight into tHeight
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
    put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight
+   set the height of field "Message" of stack "revTutorial" to tHeight - kProgressHeight - 2*kMargin
    
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
    set the opaque of the templateGraphic to true
-   
    create group "Group"
    put it into tGroup
    
@@ -591,7 +611,7 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       set the polysides of tPointer to 4
       
       local tX, tY, tStackTop, tStackLeft, tMiddle
-
+      
       if pToSide is true then
          set the width of tPointer to 40
          set the height of tPointer to 30
@@ -638,40 +658,116 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       
       set the loc of tPointer to tX,tY
    end if
+   
    reset the templateGraphic
    
    import snapshot from rect (the rect of tGroup) of tGroup
    put the long id of the last image into tWindowShape
-   set the backColor of stack "revTutorial" to ideCoreEditionColour()
+   set the backColor of stack "revTutorial" to revTutorialMessageColor()
    delete tGroup
    
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
+   set the rect of graphic "Trough" of group "Progress" of stack "revTutorial" to 0, 0, tWidth - kMargin * 2, kProgressHeight
+   set the rect of graphic "Bar" of group "Progress" of stack "revTutorial" to 0, 0, revTutorialDoneRatio() * (tWidth - kMargin * 4), kProgressHeight
+   
    if pObject is not empty then
       if pToSide and tPointerLeft then
          set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
+         set the topleft of group "Progress" of stack "revTutorial" to kMargin + 20, tHeight - kMargin - kProgressHeight
       else if not pToSide and tPointerTop then
          set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
+         set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight + 20
       else
          set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+         set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight
       end if
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+      set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
    unlock messages
 end revTutorialPositionStack
 
-local sSteps, sActionNumber, sStepName, sFirstStep
+on revTutorialSetInterludeAppearance pText
+   lock screen
+   
+   show button "Got It" of stack "revTutorial"
+   hide group "Progress" of stack "revTutorial"
+   
+   set the windowShape of stack "revTutorial" to 0
+   lock messages
+   put pText into field "Message" of stack "revTutorial"
+   
+   local tScreenRect
+   put the screenrect into tScreenRect
+   
+   local tWidth, tHeight
+   set the width of field "Message"of stack "revTutorial" to 460
+   set the height of field "Message" of stack "revTutorial" to 1000
+   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
+   put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
+   
+   put max(100,tHeight) into tHeight
+   set the height of field "Message" of stack "revTutorial" to tHeight - 2 * kMargin
+   
+   put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
+   
+   local tGraphic, tWindowShape
+   set the lineSize of the templateGraphic to 0
+   set the backColor of the templateGraphic to "black"
+   set the opaque of the templateGraphic to true
+   
+   create graphic "Shape"
+   put it into tGraphic
+   set the style of it to "rectangle"
+   set the width of it to tWidth
+   set the height of it to tHeight
+   
+   reset the templateGraphic
+   
+   import snapshot from rect (the rect of tGraphic) of tGraphic
+   put the long id of the last image into tWindowShape
+   set the backColor of stack "revTutorial" to revTutorialInterludeColor()
+   delete tGraphic
+   
+   set the windowshape of stack "revTutorial" to the id of tWindowShape
+   delete tWindowShape
+   
+   set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
+   set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+   set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
+   set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
+   unlock messages
+   unlock screen
+end revTutorialSetInterludeAppearance
+
+##############################################################################
+#
+#                     MAIN FUNCTIONALITY
+#
+##############################################################################
+
+local sSteps, sActionNumber, sStepName, sFirstStep, sStepNum, sNumSteps
 local sWaiting
 on revInitialiseTutorial pSteps
-   put false into sWaiting
-   put pSteps into sSteps
    lock screen
    lock messages
+   
+   put false into sWaiting
+   put pSteps into sSteps
+   
+   local tStep, tNumSteps
+   put pSteps["first step"] into tStep
+   repeat until tStep is empty
+      add 1 to tNumSteps
+      put pSteps[tStep]["actions"]["go"]["step"] into tStep
+   end repeat
+   put tNumSteps into sNumSteps 
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
@@ -685,9 +781,31 @@ on revInitialiseTutorial pSteps
    set the showFocusBorder of it to false
    set the width of it to 465
    set the cantSelect of it to true
+   set the margins of it to 0
    
    set the left of it to 20
    set the top of it to 60
+   
+   create button "Got It"
+   set the width of it to 64
+   set the height of it to 28
+   set the backColor of it to revTutorialInterludeAltColor()
+   set the label of it to "Got It"
+   set the borderWidth of it to 0
+   set the showFocusBorder of it to false
+   set the autoHilite of it to false
+   set the threeD of it to false
+   set the visible of it to false
+   
+   create group "Progress"
+   set the margins of it to 0
+   set the opaque of the templateGraphic to true
+   set the style of the templateGraphic to "rectangle"
+   set the lineSize of the templateGraphic to 0
+   create graphic "Trough" in group "Progress"
+   set the backcolor of it to revTutorialMessageAltColor()
+   create graphic "Bar" in group "Progress"
+   set the backcolor of it to "white"
    
    insert the script of stack "revTutorial" into front
    go invisible stack "revTutorial" as palette
@@ -723,6 +841,7 @@ on revTutorialStart pTutorialName
    
    revInitialiseTutorial tData
    put tData["first step"] into sFirstStep
+   put 0 into sStepNum
    revTutorialPrologue
    show stack "revTutorial"
 end revTutorialStart
@@ -734,6 +853,10 @@ on revTutorialFinish
    unlock screen
    show stack "revTutorial"
 end revTutorialFinish
+
+function revTutorialDoneRatio
+   return (sStepNum - 1) / sNumSteps
+end revTutorialDoneRatio
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
@@ -847,11 +970,13 @@ end revTutorialSetText
 
 on revTutorialDoGoToStep pStep
    put pStep into sStepName
+   add 1 to sStepNum
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
    if there is a button "Got It" of stack "revTutorial" then
-      delete button "Got It" of stack "revTutorial"
+      hide button "Got It" of stack "revTutorial"
+      show group "Progress" of stack "revTutorial"
    end if
    disableMenuBar
    disableToolsPalette
@@ -866,62 +991,7 @@ on revTutorialDoCapture pType, pTag
 end revTutorialDoCapture
 
 on revTutorialDoInterlude pText, pIsEpilogue
-   lock screen
-   set the windowShape of stack "revTutorial" to 0
-   lock messages
-   put pText into field "Message" of stack "revTutorial"
-   
-   local tScreenRect
-   put the screenrect into tScreenRect
-   
-   create button "Got It"
-   set the width of it to 64
-   set the height of it to 28
-   set the backColor of it to "225,177,68"
-   set the label of it to "Got It"
-   set the borderWidth of it to 0
-   set the showFocusBorder of it to false
-   set the autoHilite of it to false
-   set the threeD of it to false
-   
-   local tWidth, tHeight
-   set the width of field "Message"of stack "revTutorial" to 460
-   set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" into tHeight
-   put the formattedWidth of field "Message" of stack "revTutorial" into tWidth
-   
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight
-   
-   put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
-   
-   local tGraphic, tWindowShape
-   set the lineSize of the templateGraphic to 0
-   set the backColor of the templateGraphic to "black"
-   set the opaque of the templateGraphic to true
-   
-   create graphic "Shape"
-   put it into tGraphic
-   set the style of it to "rectangle"
-   set the width of it to tWidth + kMargin * 2
-   set the height of it to tHeight + kMargin * 2
-   
-   reset the templateGraphic
-   
-   import snapshot from rect (the rect of tGraphic) of tGraphic
-   put the long id of the last image into tWindowShape
-   set the backColor of stack "revTutorial" to "209,137,50"
-   delete tGraphic
-   
-   set the windowshape of stack "revTutorial" to the id of tWindowShape
-   delete tWindowShape
-   
-   set the rect of stack "revTutorial" to 0,0,tWidth + kMargin*2, tHeight + kMargin*2
-   set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
-   set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
-   set the loc of button "Got It" of stack "revTutorial" to tWidth - the width of button "Got It" of stack "revTutorial" / 2, tHeight - the height of button "Got It" of stack "revTutorial" / 2
-   unlock messages
-   unlock screen
+   revTutorialSetInterludeAppearance pText
    revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
 end revTutorialDoInterlude
 
