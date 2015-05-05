@@ -57,7 +57,7 @@ on revAnalyticsScreenChanged pLongID
 end revAnalyticsScreenChanged
 
 function analyticsSlave
-   return specialfolderpath("desktop") & slash & "slave"
+   return specialfolderpath("support") & slash & "LiveCode" & slash & "LCAnalytics"
 end analyticsSlave
 
 on initialiseAnalytics
