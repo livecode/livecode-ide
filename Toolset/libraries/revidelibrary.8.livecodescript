@@ -1874,6 +1874,7 @@ Returns (Any): The value of the preference
 */
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue 
+   save stack "revpreferences"
    revIDEMessageSend "idePreferenceChanged:" & pPreferenceName
 end revIDESetPreference
 
@@ -3118,7 +3119,7 @@ end revIDEEndTiming
 
 on revIDESetCursor pCursor
    lock cursor
-   if pCursor is among the items of "busy,watch,array,cross,hard,ibeam,plus,help" then 
+   if pCursor is among the items of "busy,watch,array,cross,hand,ibeam,plus,help" then 
       do "set the cursor to" && pCursor
    end if
    
@@ -3273,24 +3274,19 @@ command revIDEOpenPalette pPaletteName
    local tExistingPalette, tPalette, tPaletteID
    
    switch pPaletteName
+      case "Start Center"
+         show stack "revStartCenter"
+         set the cMode of stack "revStartCenter" to "run"
+         modeless stack "revStartCenter"
+         break
+      case "Welcome"
+         if the visible of stack "revStartCenter" is true then
+            close stack "revStartCenter"
+         end if
+         modeless stack "revwelcome"
+         break
       case "inspector"
          palette stack "revInspector"
-         
-         --         put revIDEPropertyInspector() into tExistingPalette
-         --         if tExistingPalette is not empty then
-         --            palette stack tExistingPalette
-         --         else
-         --            // Create new unlocked palette and open
-         --            put revIDENextPropertyInspectorID() into tPaletteID
-         --            put "revIDEPropertyInspector" & "_" & tPaletteID into tPalette           
-         
-         --            lock messages
-         --            clone invisible stack "revIDEPropertyInspectorView" as tPalette
-         --            unlock messages
-         --            set the behavior of stack tPalette to revIDEFrameBehavior()
-         --            palette stack tPalette
-         --            show stack tPalette
-         --         end if
          break
       case "project browser"
          modeless stack "revIDEProjectBrowser"
