@@ -1,9 +1,11 @@
 ﻿script "revnomessageslibrary"
 
 on revLoadLibrary
+  insert the script of stack "revNoMessagesLibrary" into front
 end revLoadLibrary
 
 on revUnloadLibrary
+  remove the script of stack "revNoMessagesLibrary" from front
 end revUnloadLibrary
 
 --Bug 5765:  Added try/catches to handle errors.
