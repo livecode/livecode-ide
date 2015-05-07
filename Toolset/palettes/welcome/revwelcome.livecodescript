@@ -167,7 +167,8 @@ on stackGenerate
    
    # Reset all the templates we've used as they are global
    reset the templatefield
-   reset the templatefield
+   reset the templategraphic
+   reset the templatebutton
    reset the templateimage
    
    stackLayout
@@ -285,8 +286,8 @@ on mouseUp
          revIDEOpenPalette "Start Center"
       end if
    else if the mouseloc is within the rect of graphic "nonprogrammer-hover" then
-      answer "closing this stack and starting nonprogrammer walkthrough"
       stackClose
+      revIDEStartTutorial "My First App"
    else if the mouseloc is within the rect of graphic "programmer-hover" then
       answer "closing this stack and starting programmer walkthrough"
       stackClose
