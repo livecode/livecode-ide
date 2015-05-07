@@ -1,0 +1,1 @@
+# card 'Single Line' Message Box script doesn't pass openCard and resizestack
