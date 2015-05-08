@@ -393,10 +393,10 @@ component Engine.MacOSX
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 	into "[[TargetFolder]]/Contents/Frameworks/" place
-		executable macosx:revbrowser-cefprocess.app
-		executable "macosx:revbrowser-cefprocess EH.app"
-		executable "macosx:revbrowser-cefprocess NP.app"
-		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
+		executable macosx:Frameworks/revbrowser-cefprocess.app
+		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
+		rfolder "macosx:Frameworks/Chromium Embedded Framework.framework"
 
 ////////////////////////////////////////////////////////////////////////////////
 
