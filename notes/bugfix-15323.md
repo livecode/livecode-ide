@@ -1,0 +1,1 @@
+# Style property should be an enum
