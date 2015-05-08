@@ -619,7 +619,7 @@ component Externals.CEF.Windows
 		executable prebuilt:lib/libcef/win32/libEGL.dll
 		executable prebuilt:lib/libcef/win32/libGLESv2.dll
 		executable prebuilt:lib/libcef/win32/pdf.dll
-		rfolder prebuilt:lib/libcef/win32/locales
+		file prebuilt:lib/libcef/win32/locales/en-US.pak
 		file prebuilt:lib/libcef/win32/cef.pak
 		file prebuilt:lib/libcef/win32/cef_100_percent.pak
 		file prebuilt:lib/libcef/win32/cef_200_percent.pak
@@ -627,10 +627,10 @@ component Externals.CEF.Windows
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
-		executable macosx:revbrowser-cefprocess.app
-		executable "macosx:revbrowser-cefprocess EH.app"
-		executable "macosx:revbrowser-cefprocess NP.app"
-		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
+		executable macosx:Frameworks/revbrowser-cefprocess.app
+		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
+		rfolder "macosx:Frameworks/Chromium Embedded Framework.framework"
 		
 ////////////////////////////////////////////////////////////////////////////////
 
