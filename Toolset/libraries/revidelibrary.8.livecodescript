@@ -3223,6 +3223,9 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack "revwelcome"
          break
+      case "CreateItWelcome"
+         modeless stack "createitwelcome"
+         break
       case "inspector"
          palette stack "revInspector"
          break
@@ -3852,6 +3855,7 @@ on revIDEStopTutorial
    end if
    wait 0 millisecs with messages
    delete stack "revTutorial"
+   revIDEOpenPalette "CreateItWelcome"
 end revIDEStopTutorial
 
 #############
