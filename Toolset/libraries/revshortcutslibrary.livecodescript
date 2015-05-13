@@ -1,6 +1,11 @@
 ﻿script "revshortcutslibrary"
 
 on revLoadLibrary
+   // SN-2015-05-13: [[ Bug 15329 ]] Make sure that we don't catch
+   //  revLoadLibrary message if we are not the target
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if
    insert the script of me into front
 end revLoadLibrary
 
