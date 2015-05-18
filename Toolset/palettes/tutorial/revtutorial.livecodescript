@@ -544,6 +544,7 @@ constant kMessageWidth = 200
 constant kProgressHeight = 5
 
 on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProperty
+   lock screen
    lock messages
    
    hide button "Got It" of stack "revTutorial"
@@ -708,6 +709,7 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProper
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
    unlock messages
+   unlock screen
 end revTutorialPositionStack
 
 on revTutorialSetInterludeAppearance pText
@@ -893,7 +895,7 @@ end revTutorialEpilogue
 
 on revTutorialContinue
    repeat forever
-      hide stack "revTutorial"
+      --hide stack "revTutorial"
       if sWaiting then
          exit repeat
       end if
@@ -924,13 +926,13 @@ on revTutorialContinue
          // Highlight
          revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
          unlock screen
-         show stack "revTutorial"
+         --show stack "revTutorial"
          revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
          revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
       else
          revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
          unlock screen
-         show stack "revTutorial"
+         --show stack "revTutorial"
       end if
       if sWaiting then
          exit repeat
@@ -991,10 +993,6 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   if there is a button "Got It" of stack "revTutorial" then
-      hide button "Got It" of stack "revTutorial"
-      show group "Progress" of stack "revTutorial"
-   end if
    disableMenuBar
    disableToolsPalette
    buildMenus
