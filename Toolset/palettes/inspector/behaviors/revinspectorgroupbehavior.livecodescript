@@ -144,14 +144,18 @@ on rowResize
    put the right of me into tRight
    put the width of me into tWidth
    put rowLabelWidth() into tLabelWidth
+
    
-   # Position the label
+    # Position the label
    lock messages
-   # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
-   set the rect of field "label" of me to tLeft,tTop,tLeft+tLabelWidth,tTop+21
+    # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
    set the width of field "label" of me to the formattedwidth of field "label" of me
-   set the right of field "label" of me to tLeft+tLabelWidth
+   set the height of field "label" of me to the formattedheight of field "label" of me
+   set the top of field "label" of me to tTop
+   set the right of field "label" of me to tGroupLeft+tLabelWidth
    unlock messages
+   	
+   
    
    # Position the controllers
    local tEditorSpace, tEditorCount
