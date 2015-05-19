@@ -62,6 +62,7 @@ end inspectorOpenEditor
 # Layout inspector
 local sCurColumns
 on inspectorLayout
+   lock screen
    local tTop, tLeft, tWidth, tHeight, tContentRect, tMargin, tPadding, tEditorPadding
    put the contentRect of me into tContentRect
    put the palettePadding of me into tMargin
