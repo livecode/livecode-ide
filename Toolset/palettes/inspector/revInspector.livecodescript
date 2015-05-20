@@ -1,32 +1,18 @@
 ﻿script "revInspector"
-# sPropertyInfo stores all the data about the properties to be inpspected
-local sPropertyInfo
 local sSelectedObjects
 local sInspectorLock
 on preOpenStack
    put false into sInspectorLock
-   put empty into sSelectedObjects
-   
-   # Set the palette frame behaviour
-   set the behavior of me to revIDEFrameBehavior()
-   
-   # Open all the editors
-   local tEditorsFolder, tStackFiles
-   set the itemdel to "/"
-   put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
-   set the defaultfolder to tEditorsFolder
-   set the itemdel to "."
-   repeat for each line tFile in the files
-      if char 1 of tFile is "." then next repeat
-      
-      if tStackfiles is empty then
-         put item 1 to -2 of tFile &comma&tEditorsFolder&tFile into tStackFiles
-      else
-         put return & item 1 to -2 of tFile &comma& tEditorsFolder&tFile after tStackFiles
-      end if
-   end repeat
-   set the stackfiles of me to tStackFiles
-   
+   put revIDESelectedObjects() into sSelectedObjects
+   revIDESubscribe "idePropertyChanged",sSelectedObjects
+   inspectorTitleUpdate
+    
+   # Set the inspector behaviour
+   set the behavior of me to revIDEInspectorBehavior()
+end preOpenStack
+
+on openStack   
+   lock screen
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    inspectorMessagesRegister
@@ -34,17 +20,13 @@ on preOpenStack
    //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
    addFrameItem "lock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    set the navigationDisplayStyle of me to "icons"
-end preOpenStack
-
-on openStack
-   lock screen
+   
+   # Get a list of the properties and groups we'll be displaying
+   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   
    set the visible of me to true
    unlock screen
 end openStack
-
-on resizeStack
-   inspectorLayout
-end resizeStack
 
 on closeStack
    ## Unsubscribe from all messges
@@ -54,6 +36,10 @@ on closeStack
    
    revIDEStopInspecting
 end closeStack
+
+on resizeStack
+   resizeInspector
+end resizeStack
 
 #####################
 #### PI FUNCTIONS #####
@@ -77,20 +63,6 @@ on inspectorMessagesDeRegister
    revIDEUnsubscribe "ideNameChanged"
 end inspectorMessagesDeRegister 
 
-on inspectorOpenEditor pEditor
-   # Check if the stack is already open
-   if there is a stack pEditor then exit inspectorOpenEditor
-   
-   # Find the file for the editor
-   local tEditorStackPath
-   put revIDEPaletteResourcePath("editors/" & pEditor & ".livecode") into tEditorStackPath
-   
-   # open editor stack if it exists
-   if there is a file tEditorStackPath then 
-      go invisible stack tEditorStackPath
-   end if
-end inspectorOpenEditor
-
 on inspectorLock pState
    if pState is false then
       put false into sInspectorLock
@@ -100,195 +72,12 @@ on inspectorLock pState
    end if
 end inspectorLock
 
-# Generate inspector
-private on inspectorGenerate
-   lock screen
-   
-   local tSelectedSection
-   put inspectorSectionGet() into tSelectedSection
-   
-   local tPropertyData
-   put sPropertyInfo[tSelectedSection] into tPropertyData
-   
-   set the margins of the templategroup to 0
-   set the visible of the templategroup to false
-   
-   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/rowbehavior.livecodescript")
-   
-   set the traversalon of the templatefield to false
-   set the threed of the templatefield to false
-   set the showborder of the templatefield to false
-   set the showfocusborder of the templatefield to false
-   set the textalign of the templatefield to right
-   set the opaque of the templatefield to false
-   set the height of the templatefield to 21
-   set the locktext of the templatefield to true
-   set the width of the templatefield to 1000
-   
-   lock messages
-   if there is not a group "template" then
-      create group "template"
-      create field "label" in group "template"
-      set the topleft of field "label" of group "template" to the topleft of group "template"
-   end if
-   unlock messages
-   
-   local tElement
-   repeat with x = 1 to the number of elements in tPropertyData["grouplist"]
-      put tPropertyData["grouplist"][x] into tElement
-      if tElement["label"] is empty then next repeat
-      lock messages
-      copy group "template" to me
-      set the name of it to tElement["label"]
-      show group tElement["label"] of me
-      unlock messages
-      
-      local tName
-      put the short name of group tElement["label"] of me into tName
-      if exists(group tElement["label"] of me) then
-         set the rowLabel of group tElement["label"] of me to tElement["label"]
-         
-         local tPropList, tProperty
-         repeat with y = 1 to the number of elements in tElement["proplist"]
-            put tElement["proplist"][y] into tProperty
-            dispatch "propertyRegister" to group tElement["label"] of me with tProperty
-            
-            # Build the list of properties to display in the tooltip for the row
-            if tPropList is empty then
-               put tProperty["property_name"] into tPropList
-            else
-               put return & tProperty["property_name"] after tPropList
-            end if
-         end repeat
-         
-         # Set the tooltip for the row
-         set the rowTooltip of group tElement["label"] of me to tPropList
-      end if
-      put empty into tPropList
-   end repeat
-   reset the templatefield
-   reset the templategroup
-   
-   unlock screen
-end inspectorGenerate
-
-private on inspectorNavigationGenerate
-   lock screen
-   # Clear the current frame data
-   clearFrameNavigationData
-   
-   # Add all the navigation elements
-   repeat for each element tSection in sPropertyInfo
-      addFrameItem tSection["label"],"header", "navigation", tSection["label"], revIDESectionNameToIconName(tSection["label"]), revIDESectionNameToIconName(tSection["label"]),"inspectorSectionChanged", the long id of me, tSection["label"]
-   end repeat
-   
-   unlock screen
-end inspectorNavigationGenerate
-
-# Layout inspector
-private on inspectorLayout
-   local tTop, tLeft, tWidth, tContentRect, tMargin, tPadding, tEditorPadding
-   put the contentRect of me into tContentRect
-   put the palettePadding of me into tMargin
-   put the palettePadding of me into tPadding
-   put tPadding / 2 into tEditorPadding
-   
-   put item 1 of tContentRect + tMargin into tLeft
-   put item 2 of tContentRect + (tMargin * 2) into tTop
-   put (item 3 of tContentRect - item 1 of tContentRect) - (2* tMargin) into tWidth
-   
-   local tSelectedGroup
-   put inspectorSectionGet() into tSelectedGroup
-   
-   lock screen
-   local tInspectorWidth
-   repeat for each element tElement in sPropertyInfo[tSelectedGroup]["grouplist"]
-      if there is a group tElement["label"] of me then
-         lock messages
-         set the topleft of group tElement["label"] of me to tLeft,tTop
-         set the lockloc of  group tElement["label"] of me to true
-         set the width of group tElement["label"] of me to tWidth
-         unlock messages
-         dispatch "rowResize" to group tElement["label"] of me
-         
-         local tHeight, tRowWidth
-         put the editorHeight of group tElement["label"] of me into tHeight
-         put the rowMinWidth of group tElement["label"] of me into tRowWidth
-         
-         lock messages
-         if tHeight > 0 then
-            add tHeight + tEditorPadding to tTop
-         else
-            //set the height of group tElement["label"] of me to the formattedheight of group tElement["label"] of me
-            add the formattedheight of group tElement["label"] of me + tEditorPadding to tTop
-         end if
-         
-         if tRowWidth > tInspectorWidth then
-            put tRowWidth into tInspectorWidth
-         end if
-         unlock messages
-      end if
-   end repeat
-   
-   lock messages
-   local tStackLeft
-   set the minWidth of me to (tInspectorWidth + tMargin * 2)
-   if tInspectorWidth > tWidth then
-      put the left of me into tStackLeft
-      set the width of me to (tInspectorWidth + tMargin * 2)
-      set the left of me to tStackLeft
-   end if
-   
-   local tStackTop
-   put the top of me into tStackTop
-   set the minheight of me to tTop + (tMargin * 2)
-   set the maxheight of me to tTop + (tMargin * 2)
-   set the height of me to tTop + (tMargin * 2)
-   set the top of me to tStackTop
-   unlock messages
-   unlock screen
-end inspectorLayout
-
-# Sent when the user changes the section
-on inspectorSectionChanged pSection
-   # Timing log
-   local tStartTime
-   put the milliseconds into tStartTime
-   
-   # Check if the section is different
-   if inspectorSectionGetName() is pSection then exit inspectorSectionChanged
-   
-   lock screen
-   # Set the section
-   inspectorSectionSet pSection
-   
-   # Clear the current inspector
-   inspectorClear
-   
-   # Generate the controls for group
-   inspectorGenerate
-   
-   # Set values for all editors
-   inspectorFill
-   
-   # Layout again as values will not doubt have effected teh size of some elements
-   inspectorLayout
-   
-   # Layout
-   dispatch "resizeStack" to me
-   unlock screen
-   
-   //put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
-end inspectorSectionChanged
-
 on idePropertyChanged
    lock screen
    inspectorFill
    inspectorTitleUpdate
    unlock screen
 end idePropertyChanged
-
-
 
 on inspectorTreeMenuDisplay
    local tObjects, tStack, tDefaultStack, tControls, tNumControls, tCheck
@@ -438,62 +227,6 @@ private function menuitemEscape pItem, pFirst
    return pItem
 end menuitemEscape
 
-private on inspectorFill
-   # store the selected object and position
-   lock screen
-   local tProperties
-   put revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName()) into tProperties
-   
-   repeat for each key tRow in tProperties
-      if there is a group tRow of me then
-         set the rowData of group tRow of me to tProperties[tRow]
-      end if
-   end repeat
-   unlock screen
-end inspectorFill
-
-private on inspectorClear
-   if the number of groups of card 1 of me is 0 then
-      exit inspectorClear
-   end if
-   
-   lock screen
-   lock messages
-   repeat while the number of groups of card 1 of me is not 1
-      if the short name of group 2 of me is "background" then
-         delete group 1 of card 1 of me
-      else
-         delete group 2 of card 1 of me
-      end if
-   end repeat
-   
-   rowLabelWidthSet 0
-   unlock messages
-   unlock screen
-end inspectorClear
-
-local sSelectedSection
-private on inspectorSectionSet pSection
-   put pSection into sSelectedSection
-end inspectorSectionSet
-
-private function inspectorSectionGet
-   repeat for each key tIndex in sPropertyInfo
-      if sPropertyInfo[tIndex]["label"] is sSelectedSection then
-         return tIndex
-      end if
-   end repeat
-   return 1
-end inspectorSectionGet
-
-private function inspectorSectionGetName
-   if sSelectedSection is not empty then 
-      return sSelectedSection
-   else
-      return sPropertyInfo[1]["label"]
-   end if
-end inspectorSectionGetName
-
 private on inspectorTitleUpdate
    if sSelectedObjects is empty then 
       set the title of me to "No object selected"
@@ -553,28 +286,8 @@ on ideInspectObjects pObjects
    put tSelectedObjects into sSelectedObjects
    
    # Get a list of the properties and groups we'll be displaying
-   put revIDEPropertiesInfo(sSelectedObjects) into sPropertyInfo
-   
-   # Clear the current inspector
-   inspectorClear
-   
-   # Setup the header
-   inspectorNavigationGenerate
-   
-   generateFrame
-   
-   # Generate the controls for group
-   inspectorGenerate
-   
-   # Set values for all editors
-   inspectorFill
-   
-   # Set the title of the inspector
+   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
    inspectorTitleUpdate
-   
-   # Layout
-   send "resizeStack" to me
-   
    unlock screen
 end ideInspectObjects
 
@@ -613,47 +326,18 @@ on revIDEPropertyChanged
    # Layout
 end revIDEPropertyChanged
 
-#####################
-#### PROPERTIES #####
-#####################
+getProp displayData
+   return revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName())
+end displayData
 
-# Whether or not we display labels or 
-on inspectorLabelTypeSet pType
-   # Check if the value has changed
-   
-   # Repeat through the rows and set the label to the right value
-   
-   # Layout to adjust the width of the labels
-end inspectorLabelTypeSet
+getProp viewColumns [pSection]
+   return 1
+end viewColumns
 
-function inspectorLabelTypeGet
-   # Return the label type
-end inspectorLabelTypeGet
+getProp showSubSections [pSection]
+   return false
+end showSubSections
 
-local sRowLabelWidth
-function rowlabelWidth
-   if sRowLabelWidth <= 0 then
-      put rowLabelWidthCalculate() into sRowLabelWidth
-      if sRowLabelWidth is not a number then
-         rowLabelWidthSet 100
-      end if
-   end if
-   return sRowLabelWidth
-end rowlabelWidth
-
-on rowLabelWidthSet pValue
-   put pValue into sRowLabelWidth
-end rowLabelWidthSet
-
-private function rowLabelWidthCalculate
-   local tMaxWidth, tLabelWidth
-   repeat with x = 1 to the number of groups of me
-      put the rowLabelWidth of group x of me into tLabelWidth
-      if tLabelWidth > tMaxWidth then
-         put tLabelWidth into tMaxWidth
-      end if
-   end repeat
-   return tMaxWidth
-end rowLabelWidthCalculate
-
-
+function inspectorSectionIcon pSection
+   return revIDEPropertySectionNameToIconName(pSection)
+end inspectorSectionIcon

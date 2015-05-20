@@ -21,7 +21,7 @@ function revTutorialParse pFile
    repeat for each line tLine in tTutorial
       add 1 to tLineNum
       get token 1 of tLine
-      
+       
       if it is empty then 
          if tSubType is "text" then 
             put return & return after tData
@@ -521,7 +521,7 @@ end revTutorialParseAction
 #                     STACK APPEARANCE
 #
 ##############################################################################
-
+local sShowProgress
 function revTutorialInterludeColor
    return "209,137,50"
 end revTutorialInterludeColor
@@ -543,11 +543,16 @@ constant kMargin = 20
 constant kMessageWidth = 200
 constant kProgressHeight = 5
 
-on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
+on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProperty
+   lock screen
    lock messages
    
    hide button "Got It" of stack "revTutorial"
-   show group "Progress" of stack "revTutorial"
+   if sShowProgress is true then
+      show group "Progress" of stack "revTutorial"
+   else
+      hide group "Progress" of stack "revTutorial"
+   end if
    
    local tScreenRect
    put the screenrect into tScreenRect
@@ -567,6 +572,11 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
          put the right of pObject + the left of tStack into tRight
          put the top of pObject + the top of tStack into tTop
          put the bottom of pObject + the top of tStack into tBottom
+         
+         if pIsProperty then
+            put tTop + 21 into tBottom
+         end if
+         
       end if
       
       local tPointerLeft, tPointerTop
@@ -585,11 +595,19 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 3 + kProgressHeight into tHeight
+   
+   if sShowProgress is true then
+      put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 3 + kProgressHeight into tHeight
+      put max(100,tHeight) into tHeight
+      set the height of field "Message" of stack "revTutorial" to tHeight - kProgressHeight - 2*kMargin
+   else
+      put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
+      put max(100,tHeight) into tHeight
+      set the height of field "Message" of stack "revTutorial" to tHeight - kMargin
+   end if
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight - kProgressHeight - 2*kMargin
+   
    
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
@@ -691,6 +709,7 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
    unlock messages
+   unlock screen
 end revTutorialPositionStack
 
 on revTutorialSetInterludeAppearance pText
@@ -757,7 +776,7 @@ local sWaiting
 on revInitialiseTutorial pSteps
    lock screen
    lock messages
-   
+   put false into sShowProgress
    put false into sWaiting
    put pSteps into sSteps
    
@@ -876,7 +895,7 @@ end revTutorialEpilogue
 
 on revTutorialContinue
    repeat forever
-      hide stack "revTutorial"
+      --hide stack "revTutorial"
       if sWaiting then
          exit repeat
       end if
@@ -907,13 +926,13 @@ on revTutorialContinue
          // Highlight
          revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
          unlock screen
-         show stack "revTutorial"
+         --show stack "revTutorial"
          revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
          revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
       else
          revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
          unlock screen
-         show stack "revTutorial"
+         --show stack "revTutorial"
       end if
       if sWaiting then
          exit repeat
@@ -974,10 +993,6 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   if there is a button "Got It" of stack "revTutorial" then
-      hide button "Got It" of stack "revTutorial"
-      show group "Progress" of stack "revTutorial"
-   end if
    disableMenuBar
    disableToolsPalette
    buildMenus
@@ -1319,10 +1334,10 @@ end revTutorialHighlightTool
 on revTutorialHighlightInspector pSection, pGroup
    dispatch "hiliteFrameItem" to stack "revInspector" with pSection
    dispatch "navSelected" to stack "revInspector" with pSection
-   revTutorialPositionStack the long id of group pGroup of stack "revInspector", true
+   revTutorialPositionStack the long id of group pGroup of stack "revInspector", true, false, "", true
 end revTutorialHighlightInspector
 
-local sMenuHighlight
+local sMenuHighlight, sDisabled
 on revTutorialHighlightMenuItem pMenu, pItem
    revTutorialPositionStack the long id of menu pMenu, false, true
    local tMenuHighlight
@@ -1337,8 +1352,18 @@ end revTutorialClearMenuHighlight
 
 on disableMenuBar
    disableStack "revMenuBar"
-   enable menu "File"
+   --disableMenus
 end disableMenuBar
+
+on disableMenus
+   enable group "revMenuBar" of stack "revMenuBar"
+   repeat for each line tControl in the childControlIDs of group "revMenuBar" of stack "revMenuBar"
+      if the enabled of control id tControl stack "revMenuBar" then
+         put true into sDisabled["revMenuBar"][tControl]
+      end if
+      disable control id tControl group "revMenuBar" of stack "revMenuBar"
+   end repeat
+end disableMenus
 
 on disableToolsPalette
    dispatch "disableTools" to stack "revTools"
@@ -1348,7 +1373,6 @@ on enableToolsPalette
    dispatch "enableTools" to stack "revTools"
 end enableToolsPalette
 
-local sDisabled
 on disableStack pStack
    repeat for each line tControl in the childControlIDs of this card of stack pStack
       if the enabled of control id tControl of this card of stack pStack then
@@ -1564,6 +1588,21 @@ end revTutorialClearGuides
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
 #
 ##############################################################################
+
+on closeStackRequest
+   local tStack
+   put revIDEStackOfObject(the long id of the target) into tStack
+   repeat for each element tMainstack in sTaggedObjects["stack"]
+      if tMainstack is tStack then
+         answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
+         if it is "No" then
+            exit closeStackRequest
+         end if
+         send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+      end if
+   end repeat
+   pass closeStackRequest
+end closeStackRequest
 
 on openField
    local tObject
