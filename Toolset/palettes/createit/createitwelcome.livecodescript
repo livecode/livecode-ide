@@ -1,5 +1,5 @@
 ﻿script "createitwelcome"
-local sAppCount, sSelectedAppNumber
+local sAppCount, sSelectedAppNumber, sHoverAppNumber
 constant WINDOW_MARGIN = 40
 constant CONTENT_PADDING = 20
 
@@ -83,6 +83,14 @@ on stackGenerate
    set the text of the templatefield to "If you are new to LiveCode we suggest following the Create It course to develop all the skills you need to build your own app idea. If you’re a coder, why not use the final apps below as a starting point for learning." 
    create field "intro"
    
+   # Create the intro text
+   set the textsize of the templatefield to 14
+   set the textstyle of the templatefield to empty
+   set the dontwrap of the templatefield to true
+   set the text of the templatefield to "App Name"
+    set the textalign of the templatefield to "center"
+   create field "app name"
+   
    # Create the line
    set the backcolor of the templategraphic to empty
    set the bordercolor of the templategraphic to "255,255,255"
@@ -137,6 +145,8 @@ on stackGenerate
       set the textsize of the templatefield to 11
       set the textfont of the templatefield to empty
       set the opaque of the templatefield to false
+      set the textalign of the templatefield to "left"
+      set the dontwrap of the templatefield to false
       create field ("info" & tCourseAppNumber)
       set the textsize of line 1 of field ("info" & tCourseAppNumber) to 14
       set the textcolor of line 4 to -1 of field ("info" & tCourseAppNumber) to "187,219,231"
@@ -217,8 +227,14 @@ on stackLayout
       put 0.35 into tOpenWidthRatio
       put 0.65 into tAccordionWidthRatio
       put the width of me - (WINDOW_MARGIN * 2) into tTotalWidth
-      put ((tTotalWidth * tAccordionWidthRatio) - the width of image "app1") / (sAppCount-2) into tAccordionItemWidth
+      if sHoverAppNumber is a number then
+         put ((tTotalWidth * tAccordionWidthRatio) - the width of image "app1") / (sAppCount) into tAccordionItemWidth
+      else
+         put ((tTotalWidth * tAccordionWidthRatio) - the width of image "app1") / (sAppCount-2) into tAccordionItemWidth
+      end if
       put WINDOW_MARGIN into tLeft
+      
+      put sHoverAppNumber
       repeat with x = 1 to sAppCount
          set the topleft of image ("app" & x) to tLeft, tTop
          if x is sSelectedAppNumber then
@@ -230,6 +246,12 @@ on stackLayout
             set the topleft of field ("startlesson" & x) to the left field ("info" & x)+the margins of field ("info" & x), the bottom of field ("info" & x) 
             set the topleft of field ("openapp" & x) to the left field ("startlesson" & x), the bottom of field ("startlesson" & x) 
             add tTotalWidth * tOpenWidthRatio to tLeft
+         else if x is sHoverAppNumber then
+            add tAccordionItemWidth * 3 to tLeft
+            put line 1 of field ("info" & sHoverAppNumber) into field "app name"
+            show field "app name"
+            set the loc of field "app name" to the loc of image ("app" & x)
+            set the top of field "app name" to the bottom of image ("app" & x) + 5
          else
             add tAccordionItemWidth to tLeft
          end if
@@ -262,8 +284,11 @@ on mouseUp
       if exists(field ("info" & sSelectedAppNumber)) then
          hide field ("info" & sSelectedAppNumber)
          hide field ("startlesson" & sSelectedAppNumber)
+         
       end if
       put tTarget into sSelectedAppNumber
+      put empty into sHoverAppNumber
+      hide field "app name"
       stackLayout
       unlock screen
    end if
@@ -273,8 +298,14 @@ on mouseEnter
    if the short name of the target begins with "app" and the short name of the target is not ("app" & sSelectedAppNumber) then
       lock screen
       lock messages
-      set the coloroverlay["color"] of the target to "0,0,0"
-      set the coloroverlay["opacity"] of the target to 25
+      local tTarget
+      put the short name of the target into tTarget
+      delete char 1 to 3 of tTarget
+      put tTarget into sHoverAppNumber
+      
+      --set the coloroverlay["color"] of the target to "0,0,0"
+      --set the coloroverlay["opacity"] of the target to 25
+      stackLayout
       unlock messages
       unlock screen
       end if
@@ -284,8 +315,22 @@ on mouseLeave
    if the short name of the target begins with "app" then
       lock messages
       set the coloroverlay of the target to empty
-      unlock messages
+      --put empty into sHoverAppNumber
+      --stackLayout
+      local tFoundAppTarget
+      repeat with x = 1 to sAppCount
+         if the mouseloc is within the rect of image ("app" & x) then
+            put true into tFoundAppTarget
+            exit repeat
+         end if
+      end repeat
+      
+      if tFoundAppTarget is not true then
+         put empty into sHoverAppNumber
+         stackLayout
       end if
+      unlock messages
+   end if
 end mouseLeave
 
 on stackClose
