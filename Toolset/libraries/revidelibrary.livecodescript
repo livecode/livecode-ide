@@ -272,12 +272,6 @@ function revIDESideWindows
    return tWindows
 end revIDESideWindows
 
-command revIDEShowStartCenter
-   show stack "revStartCenter"
-   set the cMode of stack "revStartCenter" to "run"
-   modeless stack "revStartCenter"
-end revIDEShowStartCenter
-
 command revIDEShowSearchEngine
    go stack "revSearchEngine"
 end revIDEShowSearchEngine

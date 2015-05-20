@@ -236,8 +236,10 @@ on revInternal__openStack
       end if
    end if
    
-   if revIDEPrefGet("StartPageShow") is not "false" then
-      revIDEShowStartCenter
+   if revIDEGetPreference("welcomeScreenShown") is not "true" then
+      revIDEOpenPalette "Welcome"
+   else if revIDEPrefGet("StartPageShow") is not "false" then
+      revIDEOpenPalette "Start Center"
    end if
    
     try 	 	
