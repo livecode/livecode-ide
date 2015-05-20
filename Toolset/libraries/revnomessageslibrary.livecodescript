@@ -1,9 +1,16 @@
 ﻿script "revnomessageslibrary"
 
 on revLoadLibrary
+   // SN-2015-05-13: [[ Bug 15365 ]] Make sure that we don't catch
+   //  revLoadLibrary message if we are not the target
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if
+  insert the script of stack "revNoMessagesLibrary" into front
 end revLoadLibrary
 
 on revUnloadLibrary
+  remove the script of stack "revNoMessagesLibrary" from front
 end revUnloadLibrary
 
 --Bug 5765:  Added try/catches to handle errors.
