@@ -1,0 +1,1 @@
+# Close and remove from memory does nothing from File menu
