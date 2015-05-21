@@ -328,4 +328,22 @@ command revIDEDeployAndroidInitialize
    dispatch "deployInitialize" to stack "revDeployLibraryAndroid"
 end revIDEDeployAndroidInitialize
 
+
+// SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
+//  something changeable from a script-only stack
+function revIDEDeployAndroidGetVersionsList
+   dispatch function "deployGetVersionsList" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidGetVersionsList
+
+function revIDEDeployAndroidApiFromVersion pVersion
+   dispatch function "deployGetApiFromVersion" to stack "revDeployLibraryAndroid" with pVersion
+   return the result
+end revIDEDeployAndroidApiFromVersion
+
+function revIDEDeployAndroidGetAPIsList
+   dispatch function "deployGetAPIsList" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidGetAPIsList
+
 ////////////////////////////////////////////////////////////////////////////////
