@@ -42,7 +42,7 @@ on resumeStack
    put the long id of the target into tTarget
    
    send "revIDEMessageSend" &&  "ideResumeStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
-   --   pass resumeStack
+   pass resumeStack
 end resumeStack
 
 on newCard
