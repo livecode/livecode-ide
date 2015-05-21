@@ -280,9 +280,7 @@ on generateFrame
    
    if tHeaderNavCount is not 0 or tHeaderActionCount is not 0 or tHeaderPreferenceCount is not 0 then
       if there is not a widget "header_background" of group "background" of me then 
-         start editing group "background" of me
-         create widget "header_background" as "com.livecode.widget.paletteActions"
-         stop editing
+         create widget "header_background" as "com.livecode.widget.paletteActions" in group "background" of me
       end if
       set the isHeader of widget "header_background" of group "background" of me to true
       set the navData of widget "header_background" of group "background" of me to tHeaderNavDataA
@@ -301,9 +299,7 @@ on generateFrame
    
    if tFooterActionCount is not 0 then
       if there is not a widget "footer_background" of group "background" of me then 
-         start editing group "background" of me
-         create widget "footer_background" as "com.livecode.widget.paletteActions"
-         stop editing
+         create widget "footer_background" as "com.livecode.widget.paletteActions" in group "background" of me
       end if
       set the isHeader of widget "footer_background" of group "background" of me to false
       set the actionData of widget "footer_background" of group "background" of me to tFooterActionDataA
