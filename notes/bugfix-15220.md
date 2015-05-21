@@ -1,0 +1,1 @@
+# Widgets Tab of extension manager is empty when reopening
