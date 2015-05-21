@@ -273,13 +273,18 @@ function revIDESideWindows
 end revIDESideWindows
 
 command revIDEShowSearchEngine
-   go stack "revSearchEngine"
+   revIDEOpenPalette "search engine"
 end revIDEShowSearchEngine
 
 # OK-2008-06-24: Bug 6575 - Message box command + m shortcut not working in script editor
 # Description
 #   Launches and shows the message box, the same as the Tools -> Message box menu item
 command revIDEShowMessageBox
+   # BB-2015-05-21 - This handler should ultimately be deleted. Calling into new IDE library
+   # to open the message box.
+   revIDEOpenPalette "message box"
+   exit revIDEShowMessageBox
+   
    set the cUserOpen of stack "Message Box" to true
    if the mode of stack "Message Box" is 0 then
       set the visible of stack "Message Box" to true

@@ -3294,6 +3294,12 @@ command revIDEOpenPalette pPaletteName
       case "extension manager"
          modeless stack "revIDEExtensionManager"
          break
+      case "message box"
+         palette stack "Message Box"
+         break
+      case "search engine"
+         go stack "revSearchEngine"
+         break
    end switch
 end revIDEOpenPalette
 
