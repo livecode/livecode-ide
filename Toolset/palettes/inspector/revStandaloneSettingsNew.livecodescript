@@ -89,8 +89,16 @@ on ideNameChanged
    ideSelectedObjectChanged
 end ideNameChanged
 
-on ideInspectObjects
-   ideSelectedObjectChanged
+on ideInspectObjects pStack
+   put pStack into sSelectedStack
+   
+   if the cRevStandaloneSettings of sSelectedStack is empty then
+      dispatch "revDefaultStandaloneSettings" to stack "revSBLibrary" with sSelectedStack
+   end if
+   
+   # Get a list of the properties and groups we'll be displaying
+   set the inspectorData of me to revIDEStandaloneSettingsInfo()
+   inspectorTitleUpdate
 end ideInspectObjects
 
 on ideResumeStack
@@ -120,15 +128,7 @@ on ideSelectedObjectChanged
       exit ideSelectedObjectChanged
    end if
    
-   put tSelectedStack into sSelectedStack
-   
-   if the cRevStandaloneSettings of sSelectedStack is empty then
-      dispatch "revDefaultStandaloneSettings" to stack "revSBLibrary" with sSelectedStack
-   end if
-   
-   # Get a list of the properties and groups we'll be displaying
-   set the inspectorData of me to revIDEStandaloneSettingsInfo()
-   inspectorTitleUpdate
+   ideInspectObjects tSelectedStack
 end ideSelectedObjectChanged
 
 on idePreferenceChanged pPreference, pValue
@@ -228,3 +228,63 @@ end revStandaloneSettingsStackFiles
 function revStandaloneSettingsRelativePath pPath
    return revIDERelativeStackPath(sSelectedStack, pPath)
 end revStandaloneSettingsRelativePath
+
+on inspectorAddActions
+   addFrameItem "inspectorTarget", "header", "action", "Select stack to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
+end inspectorAddActions
+
+on inspectorTreeMenuDisplay
+   local tDefaultStack
+   local tOpenStacks, tStacks
+   
+   global gREVShowStacks
+   put the defaultStack into tDefaultStack
+   
+   # Create the button that we're going to popup on this stack
+   set the defaultstack to me
+   lock messages
+   if there is a button "inspectMenu" of me then delete button "inspectMenu" of me
+   create button "inspectMenu"
+   set the style of button "inspectMenu" of me to "menu"
+   set the menumode of button "inspectMenu" of me to "popup"
+   set the visible of button "inspectMenu" of me to false
+   set the script of button "inspectMenu" of me to "on menuPick pItem;send" && quote & "menuPick pItem" & quote && "to this stack; end menuPick"
+   unlock messages
+   
+   set the defaultStack to tDefaultStack
+   
+   if gREVShowStacks then put the openStacks into tOpenStacks
+   else put revFilterStacksList(the openStacks) into tOpenStacks
+   put empty into tStacks
+   repeat for each line l in tOpenStacks
+      if the long id of stack l is sSelectedStack
+      then put "!c" into tCheck
+      else put "!n" into tCheck
+      put tCheck & menuitemEscape(l, false) & cr after tStacks
+   end repeat
+   delete last char of tStacks
+   sort lines of tStacks by item 2 of each
+   
+   set the text of button "inspectMenu" of this stack to tStacks
+   
+   popup button "inspectMenu" of this stack at the mouseloc
+end inspectorTreeMenuDisplay
+
+on menuPick pWhich
+   global gREVTemplateMasterName, gREVStacksList
+   put word 1 to -1 of item -1 of pWhich into tNewStack
+   try
+      ideInspectObjects the long id of stack tNewStack
+   catch tError
+      answer error "There was an error selecting stack" && tNewStack
+   end try
+   break
+end menuPick
+
+private function menuitemEscape pItem, pFirst
+   -- MW-2011-04-08: [[ Bug 9496 ]] Make sure we escape '!!' properly.
+   replace "!" with "!!" in pItem
+   replace "&" with "&&" in pItem
+   replace "(" with "((" in pItem
+   return pItem
+end menuitemEscape

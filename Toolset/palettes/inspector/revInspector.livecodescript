@@ -85,9 +85,9 @@ on inspectorTreeMenuDisplay
    local tCurrentProfile, tProfiles2, tHandlers, tSendMessageList, tLockInspector, tFocusedObject
    
    global gREVShowStacks
-   revSetGeometryObject revIDESelectedObjects()
+   revSetGeometryObject sSelectedObjects
    
-   put revIDESelectedObjects() into tObjects
+   put sSelectedObjects into tObjects
    put revTargetStack(line 1 of tObjects) into tStack
    put the defaultStack into tDefaultStack
    
@@ -99,6 +99,7 @@ on inspectorTreeMenuDisplay
    set the style of button "inspectMenu" of me to "menu"
    set the menumode of button "inspectMenu" of me to "popup"
    set the visible of button "inspectMenu" of me to false
+   set the script of button "inspectMenu" of me to "on menuPick pItem;send" && quote & "menuPick pItem" & quote && "to this stack; end menuPick"
    unlock messages
    
    # Generate the inspect 
@@ -117,10 +118,6 @@ on inspectorTreeMenuDisplay
       delete last char of tControls
       set the itemDel to tab
       sort lines of tControls numeric by item 2 of each
-      
-      # TH 14/12/07 - This line causes names containing dashes to be incorrectly displayed in the property
-      # inspector, haven't found any adverse efffects of removing it.
-      --replace "-" with empty in tControls
       
       if the number of lines in tControls > 20 then
          repeat for each line l in tControls -- sort into individual object types
@@ -146,11 +143,7 @@ on inspectorTreeMenuDisplay
    end repeat
    delete last char of tCards
    sort lines of tCards by item 2 of each
-   
-   # TH 14/12/07 - This line causes names containing dashes to be incorrectly displayed in the property
-   # inspector, haven't found any adverse efffects of removing it.
-   --replace "-" with empty in tControls
-   
+
    put tab & "Card" & cr before tCards
    
    set the defaultStack to tDefaultStack
@@ -187,34 +180,77 @@ on inspectorTreeMenuDisplay
    then put "!cLock Inspector" into tLockInspector
    else put "!nLock Inspector" into tLockInspector
    
-   
    if the number of lines in tControls > 20 then 
       replace cr with cr & tab & tab in tCards
       replace cr with cr & tab & tab in tStacks
       set the text of button "inspectMenu" of this stack to tControlsList & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & tProfiles2 & cr & "-" & cr & "Edit Script" & cr & tSendMessageList \
-            & cr & "-" & cr & tLockInspector
+            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
    else
       set the text of button "inspectMenu" of this stack to tControls & cr & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & tProfiles2 & cr & "-" & cr & "Edit Script" & cr & tSendMessageList \
-            & cr & "-" & cr & tLockInspector
+            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
    end if
    
-   popup button "inspectMenu" of this stack at the loc of field "inspect" of group "background" of this stack
+   popup button "inspectMenu" of this stack at the mouseloc
 end inspectorTreeMenuDisplay
 
-on menuPick pPick
-   set the itemdel to "|"
-   switch item 1 of pPick
-      case "inspect"
-         local tObject
-         put the last item of pPick into tObject
-         set the itemdel to "["
-         put word 1 to -1 of item 1 of tObject into tObject
-         set the defaultstack to this stack
-         do "select" && tObject && "of this stack"
+on menuPick pWhich
+   global gREVTemplateMasterName, gREVStacksList
+   
+   put the focusedObject into tFocusedObject
+   if word 1 of tFocusedObject is "field" \
+         and revTargetStack(tFocusedObject) is the short name of this stack
+   then send "closeField" to tFocusedObject
+   
+   put sSelectedObjects into tObjects
+   put revTargetStack(line 1 of tObjects) into tStack
+   set the itemDel to "|"
+   switch item 1 of pWhich
+      case "Inspect"
+         if the short name of this stack is not among the lines of gREVStacksList
+         then put cr & the short name of this stack after gREVStacksList
+         
+         switch item 2 of pWhich
+            case "Card"
+               put char 2 to -2 of word -1 of item -1 of pWhich into tNum
+               try
+                  if the mode of stack tStack is 0 \
+                        or the num of this cd of stack tStack is not tNum
+                  then go cd tNum of stack tStack
+                  ideInspectObjects the long id of cd tNum of stack tStack
+               catch tError
+                  answer error "There was an error selecting" && the name of cd tNum of stack tStack
+               end try
+               break
+            case "Stack"
+               put word 1 to -1 of item -1 of pWhich into tNewStack
+               try
+                  ideInspectObjects the long id of stack tNewStack
+               catch tError
+                  answer error "There was an error selecting stack" && tNewStack
+               end try
+               break
+            default
+               put char 2 to -2 of word -1 of item -1 of pWhich into tNum
+               try
+                  if the mode of stack tStack is 0
+                  then go stack tStack        
+                  ideInspectObjects the long id of control tNum of this cd of stack tStack
+               catch tError
+                  answer error "There was an error selecting" \
+                        && the name of control tNum of this cd of stack tStack
+               end try
+               break
+         end switch
+         break
+      case "Send Message"
+         send "revSendMessage item 2 of pWhich, tObjects" to cd 1 of stack "revMenuBar"
+         break
+      case "Edit Script"
+         repeat for each line l in tObjects
+            edit script of l
+         end repeat
          break
    end switch
 end menuPick
@@ -341,3 +377,8 @@ end showSubSections
 function inspectorSectionIcon pSection
    return revIDEPropertySectionNameToIconName(pSection)
 end inspectorSectionIcon
+
+# Add to header actions/preferences
+on inspectorAddActions
+   addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
+end inspectorAddActions
