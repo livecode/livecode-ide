@@ -968,18 +968,30 @@ on revTutorialExecuteAction pActionData
 end revTutorialExecuteAction
 
 on revTutorialSetText pStep
+   revTutorialSetTextOfMessage  sSteps[pStep]["text"], sSteps[pStep]["script"]
+end revTutorialSetText
+
+on revTutorialSetTextOfMessage pText, pScript
    local tWidthOverride
    put 0 into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
    put empty into field "Message" of stack "revTutorial"
-   if sSteps[pStep]["script"] is not empty then
-      put return & return & sSteps[pStep]["script"] into field "Message" of stack "revTutorial"
-      put the formattedWidth of field "Message" into tWidthOverride
+   if pScript is not empty then
+      put return & return & pScript into field "Message" of stack "revTutorial"
+      put the formattedWidth of field "Message" of stack "revTutorial" into tWidthOverride
    end if
-   put sSteps[pStep]["text"] before field "Message" of stack "revTutorial"
-
+   put pText before field "Message" of stack "revTutorial"
    revTutorialPositionStack "", true, false, tWidthOverride
-end revTutorialSetText
+end revTutorialSetTextOfMessage
+
+function revTutorialScriptRetry pCurrent
+   local tText
+   put "Your script is not quite right. You have:" & return & return after tText
+   put pCurrent after tText
+   put return & return after tText
+   put "Set the script to the following and click the apply button:" after tText
+   return tText
+end revTutorialScriptRetry
 
 ##############################################################################
 #
@@ -1109,8 +1121,17 @@ function revTutorialCheckWaitCondition pActionData
                return true
             end if
          else if pActionData["state"] is "scripted" then
+            # If the script hasn't changed then don't do anything.
+            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+               break
+            end if
             if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
                return true
+            else
+               add 1 to sWait["incorrect attempts"]
+               put the script of tObject into sWait["current script"]
+               # Show the current script and the target script in the tip stack
+               revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
             end if
          end if
          break
@@ -1123,6 +1144,8 @@ on revTutorialWaitUntilObjectIsSelected
 end revTutorialWaitUntilObjectIsSelected
 
 on revTutorialWaitUntilObjectIsScripted pObject
+   put the script of pObject into sWait["current script"]
+   put 0 into sWait["incorrect attempts"]
    revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectIsScripted
 
