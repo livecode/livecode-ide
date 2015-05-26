@@ -164,8 +164,7 @@ action
 end step
 
 step "Set Send Button Text Size"
-    We want the font of the button to be a little larger, so go to the Text section of the 
-    property inspector and set the size of the button text to 18.
+    We want the font of the button to be a little larger, so set the size of the button text to 18.
 action
     highlight property "Text Size" of section "Text"
     wait until the textSize of button "Send Button" is 18
@@ -183,7 +182,7 @@ action
 end step
 
 step "Set Send Button Script"
-    Set the script of the button to:
+    Set the script of the button to the following, and click apply:
 script
     on mouseUp
     	answer "Hello World"
