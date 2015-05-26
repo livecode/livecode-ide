@@ -1,0 +1,1 @@
+# PI color editor doesn't react well to colors with alpha value
