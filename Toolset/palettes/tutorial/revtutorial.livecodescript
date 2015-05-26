@@ -895,7 +895,7 @@ end revTutorialEpilogue
 
 on revTutorialContinue
    repeat forever
-      --hide stack "revTutorial"
+      hide stack "revTutorial"
       if sWaiting then
          exit repeat
       end if
@@ -926,13 +926,13 @@ on revTutorialContinue
          // Highlight
          revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
          unlock screen
-         --show stack "revTutorial"
+         show stack "revTutorial"
          revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
          revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
       else
          revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
          unlock screen
-         --show stack "revTutorial"
+         show stack "revTutorial"
       end if
       if sWaiting then
          exit repeat
@@ -1094,6 +1094,7 @@ function revTutorialCheckWaitCondition pActionData
          break
       case "fits"
          if revTutorialObjectFitsGuide(tObject, pActionData["guide"], pActionData["tolerance"]) then
+            revTutorialSnapObjectToGuide tObject, pActionData["guide"]
             return true
          end if
          break
@@ -1814,6 +1815,18 @@ function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
    end if
    return revTutorialRectsAreApproximatelyEqual(pTolerance, tRect, the rect of sGuides[pGuide])
 end revTutorialObjectFitsGuide
+
+on revTutorialSnapObjectToGuide pObject, pGuide
+   local tRect
+   put the rect of sGuides[pGuide] into tRect
+   if pObject begins with "stack" then
+      set the resizable of pObject to false
+      set the width of pObject to item 3 of tRect + 1
+      set the height of pObject to item 4 of tRect + 1
+   else 
+      set the rect of pObject to item 1 of tRect - 1, item 2 of tRect - 1, item 3 of tRect + 1, item 4 of tRect + 1
+   end if
+end revTutorialSnapObjectToGuide
 
 // In the future we might want to add a bit more "approximity" to this.
 function revTutorialScriptIs pObjScript, pTargetScript
