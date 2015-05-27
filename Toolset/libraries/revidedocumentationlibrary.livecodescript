@@ -701,6 +701,10 @@ function revDocsGenerateDocsFileFromModular pText
       end if
    end repeat
    
+   if word 1 to 3 of tModuleDescription begins with "Copyright (C) 2003" then
+      put empty into tModuleDescription
+   end if
+   
    # Allow inline module description as valid docs
    if tModuleDescription is empty and tData is empty then
       logError "No documentation included"
