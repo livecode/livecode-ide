@@ -4123,37 +4123,39 @@ end revBringToFront
 ##### mf 03/08/2005 Functions to check whether a stack can be removed from memory 
 ##### without causing problems (Bug 2475).
 function revBeforeRemovingStackFromMemory pStack
-  local tStack, tStacksList, tInstructions, tCheckScriptEditors
-  
-  put the mainStack of stack pStack into tStack
-  if the substacks of stack tStack is empty
-  then put tStack into tStacksList
-  else put tStack & cr & the substacks of stack tStack into tStacksList
-  put revCheckLockedInspectors(tStacksList) into tInstructions
-  put revCheckScriptEditors(tStacksList) into tCheckScriptEditors
-  if tCheckScriptEditors is not empty then put cr & tCheckScriptEditors after tInstructions
-  
-  if the mode of stack "revMenuManager" is not 0 and \
-      the cREVDefaultStack of stack "revMenuManager" is among the lines of tStacksList
-  then put cr & "Close the Menu Builder." after tInstructions
+   local tStack, tStacksList, tInstructions, tCheckScriptEditors
    
-  if the mode of stack "revSearch" is not 0
-  then put cr & "Close the Find and Replace dialog." after tInstructions
+   put the mainStack of stack pStack into tStack
+   if the substacks of stack tStack is empty
+   then put tStack into tStacksList
+   else put tStack & cr & the substacks of stack tStack into tStacksList
+   put revCheckLockedInspectors(tStacksList) into tInstructions
+   put revCheckScriptEditors(tStacksList) into tCheckScriptEditors
+   if tCheckScriptEditors is not empty then put cr & tCheckScriptEditors after tInstructions
    
-  if the mode of stack "revDBQuerySetup" is not 0 and \
-      the short name of the topStack is among the lines of tStacksList
-  then put cr & "Close the Database Query Builder." after tInstructions
+   if the mode of stack "revMenuManager" is not 0 and \
+         the cREVDefaultStack of stack "revMenuManager" is among the lines of tStacksList
+   then put cr & "Close the Menu Builder." after tInstructions
    
-  if the mode of stack "revStandaloneSettings" is not 0 and \
-      the cREVTargetStack of stack "revStandaloneSettings" is among the lines of tStacksList
-  then put cr & "Close the Standalone Application Settings dialog." after tInstructions
+   if the mode of stack "revSearch" is not 0
+   then put cr & "Close the Find and Replace dialog." after tInstructions
    
-  if (the cREVLockedtoStack of stack "Message Box") and \
-      the cREVLinkedStack of stack "Message Box" is among the lines of tStacksList
-  then put cr & "Unlock the Message Box." after tInstructions
+   # AL-2015-05-21: [[ Bug 14873 ]] revDBQuerySetup stack is no longer supported
+   if there is a stack "revDBQuerySetup" and \
+         the mode of stack "revDBQuerySetup" is not 0 and \
+         the short name of the topStack is among the lines of tStacksList
+   then put cr & "Close the Database Query Builder." after tInstructions
    
-  if char 1 of tInstructions is cr then delete char 1 of tInstructions
-  return tInstructions
+   if the mode of stack "revStandaloneSettings" is not 0 and \
+         the cREVTargetStack of stack "revStandaloneSettings" is among the lines of tStacksList
+   then put cr & "Close the Standalone Application Settings dialog." after tInstructions
+   
+   if (the cREVLockedtoStack of stack "Message Box") and \
+         the cREVLinkedStack of stack "Message Box" is among the lines of tStacksList
+   then put cr & "Unlock the Message Box." after tInstructions
+   
+   if char 1 of tInstructions is cr then delete char 1 of tInstructions
+   return tInstructions
 end revBeforeRemovingStackFromMemory
 
 function revCheckLockedInspectors pStacksList
