@@ -1388,39 +1388,35 @@ command revInternal__InitialiseIcons
 end revInternal__InitialiseIcons
 
 command revInternal__InitialiseMenus
-  revInternal__Log "Enter", "Menus Initialisation"
+   revInternal__Log "Enter", "Menus Initialisation"
    
-  revInternal__Log "message", "Trying to get the platform"
+   revInternal__Log "message", "Trying to get the platform"
    revInternal__Log "message", the platform
    
-  if the platform is "MacOS" then
-    hide stack "revMenubar"
-    lock messages
-    show stack "revMenuBar"
-    -- LG-2008-01-07 Bug 5706: Moved palette to after show stack so revMenuBar is not 
-    -- reset to visible.
-    palette "revMenuBar"
-    
-    unlock messages
-    set the defaultMenuBar to "revMenuBar"
-  else
-    hide stack "revMenuBar"
-    toplevel "revMenuBar"
-    show stack "revMenuBar"
-    set the defaultMenuBar to "revMenuBar"
-  end if
-  
-  revInternal__ConstrainStack "revMenuBar"
-  
-  local tWindowRect
-  put line (the screen of stack "revMenuBar") of the working screenRects into tWindowRect
-  if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
-  put the bottom of stack "revMenuBar" + 5 into item 2 of tWindowRect
-  set the windowBoundingRect to tWindowRect
+   open stack "revMenuBar"
+   hide stack "revMenuBar"
+   if the platform is "MacOS" then
+      lock messages
+      palette "revMenuBarUI"
+      show stack "revMenuBarUI"
+      unlock messages
+   else
+      toplevel "revMenuBarUI"
+      show stack "revMenuBarUI"
+   end if
+   set the defaultMenuBar to "revMenuBar"
    
-  revInternal__Log "Leave", "Menus Initialisation"
-  
-  return true
+   revInternal__ConstrainStack "revMenuBarUI"
+   
+   local tWindowRect
+   put line (the screen of stack "revMenuBarUI") of the working screenRects into tWindowRect
+   if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
+   put the bottom of stack "revMenuBarUI" + 5 into item 2 of tWindowRect
+   set the windowBoundingRect to tWindowRect
+   
+   revInternal__Log "Leave", "Menus Initialisation"
+   
+   return true
 end revInternal__InitialiseMenus
 
 command revInternal__InitialiseApplicationOverview
