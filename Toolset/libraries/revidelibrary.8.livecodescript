@@ -1343,7 +1343,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideTutorialProgressChanged,ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -3913,18 +3913,27 @@ on revIDEAnswerDialogClosed
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
+local sTutorialName
 on revIDEStartTutorial pName
    dispatch "revTutorialStart" to stack "revTutorial" with pName
+   put pName into sTutorialName
+   revIDEMessageSend "ideTutorialProgressChanged"
 end revIDEStartTutorial
 
 on revIDEStopTutorial
-   if "revTutorial" is in the frontscripts then
+   if revIDETutorialInProgress() is not empty then
       revFinaliseTutorial
    end if
+   put empty into sTutorialName
+   revIDEMessageSend "ideTutorialProgressChanged"
    wait 0 millisecs with messages
    delete stack "revTutorial"
    revIDEOpenPalette "CreateItWelcome"
 end revIDEStopTutorial
+
+function revIDETutorialInProgress
+   return sTutorialName
+end revIDETutorialInProgress
 
 #############
 # Data grid

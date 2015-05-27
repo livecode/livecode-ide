@@ -607,8 +607,6 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProper
    end if
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
-   
-   
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
@@ -934,6 +932,7 @@ on revTutorialContinue
          unlock screen
          show stack "revTutorial"
       end if
+      revIDEMessageSend "ideTutorialProgressChanged"
       if sWaiting then
          exit repeat
       end if

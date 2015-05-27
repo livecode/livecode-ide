@@ -5,10 +5,9 @@ on preOpenStack
    set the height of me to 47
    
    revIDESubscribe "ideSelectedObjectChanged"
-   
+   revIDESubscribe "ideTutorialProgressChanged"
    generateMenu
    layoutMenu
-   set the topleft of me to the topleft of stack "revMenuBar"
 end preOpenStack
 
 on openStack
@@ -17,6 +16,10 @@ end openStack
 on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
+
+on ideTutorialProgressChanged
+   layoutMenu
+end ideTutorialProgressChanged
 
 on generateMenu
    if there is a group "icons" of me then
@@ -40,7 +43,18 @@ on generateMenu
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
    
+   # Setup the default image
    set the resizequality of the templateimage to "best"
+   
+   # Setup the default field
+   set the traversalon of the templatefield to false
+   set the threed of the templatefield to false
+   set the showborder of the templatefield to false
+   set the showfocusborder of the templatefield to false
+   set the textalign of the templatefield to right
+   set the opaque of the templatefield to false
+   set the height of the templatefield to 21
+   set the locktext of the templatefield to true
    
    local tDividerCount
    put 1 into tDividerCount
@@ -80,8 +94,28 @@ on generateMenu
       end if
    end repeat
    
+   if there is a group "tutorial" of me then
+      delete group "tutorial" of me
+   end if
+   
+   create group "tutorial"
+   create group "progress" in group "tutorial" of me
+   set the margins of it to 0
+   set the opaque of the templateGraphic to true
+   set the style of the templateGraphic to "rectangle"
+   set the lineSize of the templateGraphic to 0
+   create graphic "Trough" in group "Progress" of group "tutorial" of me
+   create graphic "Bar" in group "Progress" of group "tutorial" of me
+   set the backcolor of it to "white"
+   
+   create field "label" in group "tutorial" of me
+   
+   hide group "tutorial" of me
+   
+   reset the templategraphic
    reset the templatebutton
    reset the templateimage
+   reset the templatefield
    unlock messages
 end generateMenu
 
@@ -92,13 +126,14 @@ on layoutMenu
    local tDividerCount
    put 1 into tDividerCount
    
-   local tLeft
+   local tLeft, tLastDivide
    put 10 into tLeft
    repeat for each item tItem in revMenubarItems()
       if tItem is "Divide" then
          local tName
          put tItem & tDividerCount into tName
          set the rect of image tName of group "menu" of me to tLeft + 4, 3, tLeft + 6, 44
+         put the long id of image tName of group "menu" of me into tLastDivide
          add 1 to tDividerCount
          add 10 to tLeft
       else
@@ -109,7 +144,30 @@ on layoutMenu
          add tWidth to tLeft
       end if
    end repeat
-   set the width of me to tLeft + 10
+   
+   local tTutorial
+   put revIDETutorialInProgress() into tTutorial
+   if tTutorial is not empty then
+      show group "tutorial" of me
+      show tLastDivide
+      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial
+      set the topleft of field "label" of group "tutorial" of me to 10, 10
+      
+      set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
+      set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revTutorialDoneRatio() * 100, 5
+      set the loc of group "progress" of me to the loc of field "label" of me
+      set the top of group "progress" of me to 35
+      
+      set the topleft of group "tutorial" of me to tLeft, 0
+      add the formattedWidth of group "tutorial" of me to tLeft
+   else
+      hide tLastDivide
+      hide group "tutorial" of me
+   end if
+   
+   set the width of me to tLeft
+   set the topleft of me to the topleft of stack "revMenuBar"
    updateButtonState
    unlock messages
    unlock screen
@@ -138,7 +196,7 @@ on updateButtonState
 end updateButtonState
 
 function revMenubarItems
-   return "Inspector,Code,Message Box,Divide,Group,Edit Group,Select Grouped,Divide,Messages,Errors,Divide,Sample Stacks,Tutorials,Resources,Dictionary,Divide,Test"
+   return "Inspector,Code,Message Box,Divide,Group,Edit Group,Select Grouped,Divide,Messages,Errors,Divide,Sample Stacks,Tutorials,Resources,Dictionary,Divide,Test,Divide"
 end revMenubarItems
 
 function revMenubarButtonNameToIconPath pName, pStyle
