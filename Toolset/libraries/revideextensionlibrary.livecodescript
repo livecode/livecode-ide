@@ -674,9 +674,8 @@ private function __extensionIsBuiltin pID
 end __extensionIsBuiltin
 
 private on __addToDependencies pDependee, pDependent, @xDependencies
-   local tNumDependencies
-   put the number of elements in xDependencies[pDependee] into tNumDependencies
-   put pDependent into xDependencies[pDependee][tNumDependencies + 1]
+   # AL-2015-04-13: [[ Bug 15216 ]] Use keys of array to remove duplicates
+   put true into xDependencies[pDependee][pDependent]
 end __addToDependencies
 
 private on __addToList pNode, @xList
@@ -700,10 +699,12 @@ private on __visitNode pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
       return "Error"
    end if
    if pNode is among the lines of xMarked then
+      # AL-2015-04-13: [[ Bug 15216 ]] Remove from unmarked if this was already marked
+      __removeFromList pNode, xUnmarked
       return ""
    end if
    __addToList pNode, xTemporaryMarked
-   repeat for each element tNode in sDependencies[pNode]
+   repeat for each key tNode in sDependencies[pNode]
       __visitNode tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
       if the result is not empty then
          return "Error"
