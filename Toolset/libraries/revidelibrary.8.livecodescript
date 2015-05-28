@@ -3935,6 +3935,35 @@ function revIDETutorialInProgress
    return sTutorialName
 end revIDETutorialInProgress
 
+function revIDEPaletteToStackName pPalette
+   switch pPalette
+      case "menubar"
+         return "revMenubarUI"
+      case "tools"
+         return "revTools"
+      case "inspector"
+         return "revInspector"
+   end switch
+end revIDEPaletteToStackName
+
+function revIDEAbsoluteRectOfObject pPalette, pObjectTag
+   dispatch function "absoluteRectOfObject" to stack revIDEPaletteToStackName(pPalette) with pObjectTag
+   return the result
+end revIDEAbsoluteRectOfObject
+
+function revIDERelativeRectToAbsolute pRect, pStack
+   put item 1 of pRect + the left of pStack into item 1 of pRect
+   put item 3 of pRect + the left of pStack into item 3 of pRect
+   
+   put item 2 of pRect + the top of pStack into item 2 of pRect
+   put item 4 of pRect + the top of pStack into item 4 of pRect
+   return pRect
+end revIDERelativeRectToAbsolute
+
+on revIDEHighlightObject pPalette, pObjectData
+   dispatch "highlightObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+end revIDEHighlightObject
+
 #############
 # Data grid
 #############

@@ -434,3 +434,17 @@ private function rowLabelWidthCalculate
    end repeat
    return tMaxWidth
 end rowLabelWidthCalculate
+
+function absoluteRectOfObject pObject
+   local tRect
+   put the rect of group pObject of me into tRect
+   # Work around the fact that groups are too large
+   put item 2 of tRect + 21 into item 4 of tRect
+   
+   return revIDERelativeRectToAbsolute(tRect, me)
+end absoluteRectOfObject
+
+on highlightObject pObjectData
+   dispatch "hiliteFrameItem" to me with pObjectData["section"]
+   dispatch "navSelected" to me with pObjectData["section"]
+end highlightObject

@@ -756,3 +756,107 @@ on toolEnable pWhich
    set the coloroverlay of button pWhich of me to empty
    set the cDisabled of button pWhich of me to false
 end toolEnable
+
+function absoluteRectOfObject pObject
+   local tRect, tTool
+   put toolObjectName(pObject) into tTool
+   put the rect of button tTool into tRect
+   return revIDERelativeRectToAbsolute(tRect, me)
+end absoluteRectOfObject
+
+on highlightObject pObject
+   local tTool
+   put toolObjectName(pObject) into tTool
+   isolateTool tTool
+end highlightObject
+
+function toolObjectName pTool
+   local tTool
+   switch pTool
+      case "Run Mode"
+         put "com.livecode.tool.Browse" into tTool
+         break
+      case "Edit Mode"
+         put "com.livecode.tool.Pointer" into tTool
+         break
+      case "Create Data Grid"
+         put "com.livecode.interface.classic.DataGrid" into tTool
+         break
+      case "Create Label Field"
+         put "com.livecode.interface.classic.LabelField" into tTool
+         break
+      case "Create Button"
+         put "com.livecode.interface.classic.Button" into tTool
+         break
+      case "Create Text Area"
+         put "com.livecode.interface.classic.TextArea" into tTool
+         break
+      case "Create Field"
+         put "com.livecode.interface.classic.Field" into tTool
+         break
+      case "Create Combo Box"
+         put "com.livecode.interface.classic.ComboBox" into tTool
+         break
+      case "Create Option Menu"
+         put "com.livecode.interface.classic.OptionMenu" into tTool
+         break
+      case "Create Popup Menu"
+         put "com.livecode.interface.classic.Image" into tTool
+         break
+      case "Create Radio Button"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+      case "Create Image"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+      case "Create Rectangle Button"
+         put "com.livecode.interface.classic.RectangleButton" into tTool
+         break
+      case "Create Slider"
+         put "com.livecode.interface.classic.Slider" into tTool
+         break
+      case "Create Default Button"
+         put "com.livecode.interface.classic.DefaultButton" into tTool
+         break
+      case "Create Scrollbar"
+         put "com.livecode.interface.classic.Scrollbar" into tTool
+         break
+      case "Create Little Arrows"
+         put "com.livecode.interface.classic.LittleArrows" into tTool
+         break
+      case "Create Tab Panel"
+         put "com.livecode.interface.classic.TabPanel" into tTool
+         break
+      case "Create Checkbox"
+         put "com.livecode.interface.classic.Checkbox" into tTool
+         break
+      case "Create Pulldown Menu"
+         put "com.livecode.interface.classic.PulldownMenu" into tTool
+         break
+      case "Create Player"
+         put "com.livecode.interface.classic.Player" into tTool
+         break
+      case "Create Table Field"
+         put "com.livecode.interface.classic.TableField" into tTool
+         break
+      case "Create List Field"
+         put "com.livecode.interface.classic.ListField" into tTool
+         break
+      case "Create Progress Bar"
+         put "com.livecode.interface.classic.ProgressBar" into tTool
+         break
+      case "Create Regular Graphic"
+         put "com.livecode.interface.classic.RegularGraphic" into tTool
+         break
+      case "Create Oval Graphic"
+         put "com.livecode.interface.classic.OvalGraphic" into tTool
+         break
+      case "Create Round Rect Graphic"
+         put "com.livecode.interface.classic.RoundRectGraphic" into tTool
+         break
+      case "Create Rectangle Graphic"
+         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         break
+   end switch
+   return tTool
+end toolObjectName

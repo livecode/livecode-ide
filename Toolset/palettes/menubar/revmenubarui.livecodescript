@@ -1,8 +1,9 @@
 ﻿script "revMenubarUI"
 on preOpenStack
-   set the decorations of me to empty
+   if the platform is "macos" then
+      set the decorations of me to empty
+   end if
    set the resizable of me to false
-   set the height of me to 47
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideTutorialProgressChanged"
@@ -19,6 +20,7 @@ end ideSelectedObjectChanged
 
 on ideTutorialProgressChanged
    layoutMenu
+   updateMenus
 end ideTutorialProgressChanged
 
 on generateMenu
@@ -51,7 +53,6 @@ on generateMenu
    set the threed of the templatefield to false
    set the showborder of the templatefield to false
    set the showfocusborder of the templatefield to false
-   set the textalign of the templatefield to right
    set the opaque of the templatefield to false
    set the height of the templatefield to 21
    set the locktext of the templatefield to true
@@ -94,6 +95,9 @@ on generateMenu
       end if
    end repeat
    
+   set the hilitedIcon of the templatebutton to 0
+   set the disabledIcon of the templatebutton to 0
+   
    if there is a group "tutorial" of me then
       delete group "tutorial" of me
    end if
@@ -109,6 +113,15 @@ on generateMenu
    set the backcolor of it to "white"
    
    create field "label" in group "tutorial" of me
+   
+   set the icongravity of the templatebutton to empty
+   set the showname of the templatebutton to false
+   create button "quit" in group "tutorial" of me
+   set the width of it to 15
+   set the height of it to 21
+   create invisible image "quit" in group "icons" of me
+   set the filename of image "quit" of me to revIDEPaletteResourcePath("images/") & "quit.png"
+   set the icon of button "quit" of group "tutorial" of me to the id of image "quit" of group "icons" of me
    
    hide group "tutorial" of me
    
@@ -151,7 +164,10 @@ on layoutMenu
       show group "tutorial" of me
       show tLastDivide
       set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial
+      set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
       set the topleft of field "label" of group "tutorial" of me to 10, 10
+      
+      set the topleft of button "quit" of group "tutorial" of me to 10 + the width of field "label" of group "tutorial" of me, 10
       
       set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
       set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
@@ -160,15 +176,21 @@ on layoutMenu
       set the top of group "progress" of me to 35
       
       set the topleft of group "tutorial" of me to tLeft, 0
-      add the formattedWidth of group "tutorial" of me to tLeft
+      add the formattedWidth of group "tutorial" of me + 10 to tLeft
    else
       hide tLastDivide
       hide group "tutorial" of me
    end if
    
-   set the width of me to tLeft
-   set the topleft of me to the topleft of stack "revMenuBar"
    updateButtonState
+   set the width of me to tLeft
+   set the height of me to 47
+   if the platform is "macos" then
+      local tTopLeft
+      put the topleft of stack "revMenuBar" into tTopLeft
+      put item 2 of tTopLeft + 3 into item 2 of tTopLeft
+      set the topleft of me to tTopLeft
+   end if
    unlock messages
    unlock screen
 end layoutMenu
@@ -248,12 +270,233 @@ on mouseUp
    if the target begins with "button" then
       local tOriginButton, tTarget
       put the short name of the target into tTarget
-      put revMenubarButtonNameToOldButtonName(tTarget) into tOriginButton
-      send "mouseUp" to button tOriginButton of stack "revMenuBar"
-      layoutMenu
+      if tTarget is "quit" then
+         answer "Are you sure you want to exit this tutorial?" with "OK" or "Cancel"
+         if it is "OK" then
+            revIDEStopTutorial
+         end if
+      else
+         put revMenubarButtonNameToOldButtonName(tTarget) into tOriginButton
+         send "mouseUp" to button tOriginButton of stack "revMenuBar"
+         layoutMenu
+      end if
    end if
    unlock screen
 end mouseUp
 
-on mouseDown
-end mouseDown
+local sMenuHighlight
+function absoluteRectOfObject pObject
+   local tRect
+   put the rect of menu pObject into tRect
+   if the platform is "macos" then
+      put item 1 of tRect + 140 into item 1 of tRect
+      put item 3 of tRect + 140 into item 3 of tRect
+   end if
+   return tRect
+end absoluteRectOfObject
+
+on highlightObject pObject
+   if pObject is empty or pObject is an array then
+      put pObject into sMenuHighlight
+      buildMenus
+   else if there is a button pObject of stack "revMenubar" then
+      enable button pObject of stack "revMenubar"
+   end if
+   layoutMenu
+end highlightObject
+
+local sMenuState
+on storeMenuState
+   repeat for each line tControl in the childControlIDs of this card of stack "revMenubar"
+      if the enabled of control id tControl of this card of stack "revMenubar" then
+         put true into sMenuState[tControl]
+      else
+         put false into sMenuState[tControl]
+      end if
+   end repeat
+end storeMenuState
+
+on restoreMenuState
+   if sMenuState is empty then
+      exit restoreMenuState
+   end if
+   repeat for each key tID in sMenuState
+      set the enabled of control id tID of this card of stack "revMenubar" to sMenuState[tID]
+   end repeat
+   put empty into sMenuState
+end restoreMenuState
+
+on disableMenus
+   put empty into sMenuHighlight
+   repeat for each line tControl in the childControlIDs of this card of stack "revMenubar"
+      disable control id tControl of stack "revMenubar"
+   end repeat
+end disableMenus
+
+on updateMenus
+   if revIDETutorialInProgress() is not empty then
+      if sMenuState is empty then
+         storeMenuState
+      end if
+      disableMenus
+   else
+      restoreMenuState
+      dispatch "buildMenus" to group "revMenuBar" of stack "revMenubar"
+   end if
+   layoutMenu
+end updateMenus
+   
+on buildMenus
+   buildFileMenu
+   buildEditMenu
+end buildMenus
+
+command buildFileMenu
+   local tFile
+   put "(&New Mainstack" & return after tFile
+   
+   put "(&New Substack" & return after tFile
+   /*
+   if sStep is not "stack" then
+      put "(&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
+   else
+      put "(&New Substack" & return after tFile
+   end if
+   */
+   put "(&Open Stack.../O" & return after tFile
+   put "(Open Recent File" & return after tFile
+   put revIDEGetRecentPathsAsMenu() & return after tFile
+   put "(&Close/W" & return after tFile
+   put "(Close and Remove From Memor&y" & return after tFile
+   put "-" & return after tFile
+   
+   put "(Import As Control" & return after tFile
+   put tab & "Image File.../>" & return after tFile
+   put tab & "Audio File..." & return after tFile
+   put tab & "Video File..." & return after tFile
+   put tab & "Text File..." & return after tFile
+   put tab & "Snapshot of Screen" & return after tFile
+   put tab & "Snapshot of Selected Object" & return after tFile
+   put tab & "-" & return after tFile
+   put tab & "All Images in Folder..." & return after tFile
+   put tab & "All Audio Files in Folder..." & return after tFile
+   
+   put "(New Referenced Control" & return after tFile
+   put tab & "Image File..." & return after tFile
+   put tab & "Quicktime-Supported File..." & return after tFile
+   put tab & "-" & return after tFile
+   put tab & "All Images in Folder..." & return after tFile
+   put "-" & return after tFile
+   
+   put "(&Save/S" & return after tFile
+   put "(Save &As..." & return after tFile
+   put "(Move S&ubstack to File..." & return after tFile
+   put "(&Revert to Saved..." & return after tFile
+   put "-" & return after tFile
+   
+   put "(Share This Stack..." & return after tFile
+   put "-" & return after tFile
+   
+   put"(Standalone Application Settings..." & return after tFile
+   put "(Save as Standalone Application..." & return after tFile
+   put "-" & return after tFile
+   
+   put "(P&age Setup..." & return after tFile
+   put "(&Print Card.../P" & return after tFile
+   put "(Print Field..." & return after tFile
+   put "-" & return after tFile
+   
+   ## EJB 2014-08-26
+   ## [[Bug 12880]]
+   if the platform is "Linux" then
+      put "&Quit" & return after tFile
+   else
+      put "E&xit" & return after tFile
+   end if
+   
+   set the text of menu "File" to tFile
+   
+   if sMenuHighlight["File"] is not empty then
+      set the wholematches to false
+      get lineoffset(sMenuHighlight["File"], menu "File")
+      enable line it of menu "File"
+   end if
+   enable menu "File"
+end buildFileMenu
+
+command buildEditMenu
+   local tEdit
+   
+   local tObjectsLabel
+   if word 1 of the selObj is "card" then
+      put "Card" into tObjectsLabel
+   else if word 1 of the selobj is not "stack" then
+      put "Objects" into tObjectsLabel
+   else
+      put empty into tObjectsLabel
+   end if
+   
+   local tSelectionLabel
+   if the selectedImage is not empty then
+      put "Image Selection" into tSelectionLabel
+   else if false then
+      put "Text" into tSelectionLabel
+   else if true then
+      put tObjectsLabel into tSelectionLabel
+   else
+      put empty into tSelectionLabel
+   end if
+   
+   local tClipboardLabel
+   switch the clipboard
+      case "empty"
+         put empty into tClipboardLabel
+         break
+         -- MW-2012-09-19: [[ Bug 9600 ]] Treat 'files' as 'text' clipboard type.
+      case "text"
+      case "files"
+         if the selectedField is empty then
+            put empty into tClipboardLabel
+         else
+            put "Text" into tClipboardLabel
+         end if
+         break
+      case "objects"
+         put "Objects" into tClipboardLabel
+         break
+      case "image"
+         put "Image" into tClipboardLabel
+         break
+   end switch
+   
+   put "(&Undo/Z" & return after tEdit
+   put "-" & return after tEdit
+   put "(Cu&t" && tSelectionLabel & "/X|cut" & return after tEdit
+   put "(&Copy" && tSelectionLabel & "/C|copy" & return after tEdit
+   put "(&Paste"&& tClipboardLabel & "/V|paste" & return after tEdit
+   put "(Paste &Unformatted/Cmd Shift Opt V" & return after tEdit
+   put "(Clea&r" && tSelectionLabel & return after tEdit
+   put "-" & return after tEdit
+   put "(&Duplicate" && tObjectsLabel &"/D" & return after tEdit
+   put "(&Replicate..." & return after tEdit
+   put "-" & return after tEdit
+   put "(Select All/A" & return after tEdit
+   put "(Deselect All" & return after tEdit
+   put "(In&vert Selection" & return after tEdit
+   put "(Select Grouped Controls" & return after tEdit
+   put "(Intersected Selections" & return after tEdit
+   put "-" & return after tEdit
+   put "(Find and Replace.../F" & return after tEdit
+   put "-" & return after tEdit
+   put "(Pre&ferences" after tEdit
+   
+   set the text of button "Edit" of stack "revMenuBar" to tEdit
+   
+   if sMenuHighlight["Edit"] is not empty then
+      enable menu "Edit"
+      set the wholematches to false
+      get lineoffset(sMenuHighlight["Edit"], menu "Edit")
+      enable line it of menu "Edit"
+   end if
+   
+end buildEditMenu

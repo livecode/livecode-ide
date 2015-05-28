@@ -543,7 +543,7 @@ constant kMargin = 20
 constant kMessageWidth = 200
 constant kProgressHeight = 5
 
-on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProperty
+on revTutorialPositionStack pStack, pObject, pToSide, pIsMenu, pWidthOverride, pIsProperty
    lock screen
    lock messages
    
@@ -559,25 +559,16 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride, pIsProper
    
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
-      if pIsMenu and the platform is "macos" then
-         put the left of pObject + 140 into tLeft
-         put the right of pObject + 140 into tRight
-         put the top of pObject into tTop
-         put the bottom of pObject into tBottom
+      local tRect
+      if pStack is not empty then
+         put revIDEAbsoluteRectOfObject(pStack, pObject) into tRect
       else
-         local tStack
-         put revIDEStackOfObject(pObject) into tStack
-         
-         put the left of pObject + the left of tStack into tLeft
-         put the right of pObject + the left of tStack into tRight
-         put the top of pObject + the top of tStack into tTop
-         put the bottom of pObject + the top of tStack into tBottom
-         
-         if pIsProperty then
-            put tTop + 21 into tBottom
-         end if
-         
+         put revIDERelativeRectToAbsolute(the rect of pObject, revIDEStackOfObject(pObject)) into tRect
       end if
+      put item 1 of tRect into tLeft
+      put item 2 of tRect into tTop
+      put item 3 of tRect into tRight
+      put item 4 of tRect into tBottom
       
       local tPointerLeft, tPointerTop
       if tRight < (item 3 of tScreenRect / 2) then
@@ -839,7 +830,6 @@ on revFinaliseTutorial
       delete button "Exit"
    end if
    enableToolsPalette
-   enableStack "revMenuBar"
    
    remove script of stack "revTutorial" from front
    put empty into sSteps
@@ -980,7 +970,7 @@ on revTutorialSetTextOfMessage pText, pScript
       put the formattedWidth of field "Message" of stack "revTutorial" into tWidthOverride
    end if
    put pText before field "Message" of stack "revTutorial"
-   revTutorialPositionStack "", true, false, tWidthOverride
+   revTutorialPositionStack "", "", true, false, tWidthOverride
 end revTutorialSetTextOfMessage
 
 function revTutorialScriptRetry pCurrent
@@ -1004,9 +994,7 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   disableMenuBar
    disableToolsPalette
-   buildMenus
    put false into sWaiting
 end revTutorialDoGoToStep
 
@@ -1171,7 +1159,7 @@ on revTutorialWaitUntilThereIsAPaletteForObject pPalette
    if pPalette is "property inspector" then
       revIDESubscribe "ideInspectObjects"
    else if pPalette is "script editor" then
-      enable button "standard" of this card of stack "revMenuBar"
+      revIDEHighlightObject "menubar", "standard"
       revIDESubscribe "ideEditScript"
    end if
 end revTutorialWaitUntilThereIsAPaletteForObject
@@ -1248,7 +1236,7 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   revTutorialPositionStack tObject, true
+   revTutorialPositionStack "", tObject, true
 end revTutorialHighlightObject
 
 on revTutorialClearObjectHighlight
@@ -1262,131 +1250,29 @@ on revTutorialClearObjectHighlight
 end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
-   local tTool
-   switch pTool
-      case "Run Mode"
-         put "com.livecode.tool.Browse" into tTool
-         break
-      case "Edit Mode"
-         put "com.livecode.tool.Pointer" into tTool
-         break
-      case "Create Data Grid"
-         put "com.livecode.interface.classic.DataGrid" into tTool
-         break
-      case "Create Label Field"
-         put "com.livecode.interface.classic.LabelField" into tTool
-         break
-      case "Create Button"
-         put "com.livecode.interface.classic.Button" into tTool
-         break
-      case "Create Text Area"
-         put "com.livecode.interface.classic.TextArea" into tTool
-         break
-      case "Create Field"
-         put "com.livecode.interface.classic.Field" into tTool
-         break
-      case "Create Combo Box"
-         put "com.livecode.interface.classic.ComboBox" into tTool
-         break
-      case "Create Option Menu"
-         put "com.livecode.interface.classic.OptionMenu" into tTool
-         break
-      case "Create Popup Menu"
-         put "com.livecode.interface.classic.Image" into tTool
-         break
-      case "Create Radio Button"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-      case "Create Image"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-      case "Create Rectangle Button"
-         put "com.livecode.interface.classic.RectangleButton" into tTool
-         break
-      case "Create Slider"
-         put "com.livecode.interface.classic.Slider" into tTool
-         break
-      case "Create Default Button"
-         put "com.livecode.interface.classic.DefaultButton" into tTool
-         break
-      case "Create Scrollbar"
-         put "com.livecode.interface.classic.Scrollbar" into tTool
-         break
-      case "Create Little Arrows"
-         put "com.livecode.interface.classic.LittleArrows" into tTool
-         break
-      case "Create Tab Panel"
-         put "com.livecode.interface.classic.TabPanel" into tTool
-         break
-      case "Create Checkbox"
-         put "com.livecode.interface.classic.Checkbox" into tTool
-         break
-      case "Create Pulldown Menu"
-         put "com.livecode.interface.classic.PulldownMenu" into tTool
-         break
-      case "Create Player"
-         put "com.livecode.interface.classic.Player" into tTool
-         break
-      case "Create Table Field"
-         put "com.livecode.interface.classic.TableField" into tTool
-         break
-      case "Create List Field"
-         put "com.livecode.interface.classic.ListField" into tTool
-         break
-      case "Create Progress Bar"
-         put "com.livecode.interface.classic.ProgressBar" into tTool
-         break
-      case "Create Regular Graphic"
-         put "com.livecode.interface.classic.RegularGraphic" into tTool
-         break
-      case "Create Oval Graphic"
-         put "com.livecode.interface.classic.OvalGraphic" into tTool
-         break
-      case "Create Round Rect Graphic"
-         put "com.livecode.interface.classic.RoundRectGraphic" into tTool
-         break
-      case "Create Rectangle Graphic"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-   end switch
-   
-   dispatch "isolateTool" to stack "revTools" with tTool
-   revTutorialPositionStack the long id of button tTool of stack "revTools", true
+   revIDEHighlightObject "tools", pTool
+   revTutorialPositionStack "tools", pTool, true
 end revTutorialHighlightTool
 
 on revTutorialHighlightInspector pSection, pGroup
-   dispatch "hiliteFrameItem" to stack "revInspector" with pSection
-   dispatch "navSelected" to stack "revInspector" with pSection
-   revTutorialPositionStack the long id of group pGroup of stack "revInspector", true, false, "", true
+   local tObjectData
+   put pSection into tObjectData["section"]
+   put pGroup into tObjectData["group"]
+   revIDEHighlightObject "inspector", tObjectData
+   revTutorialPositionStack "inspector", pGroup, true, false, "", true
 end revTutorialHighlightInspector
 
-local sMenuHighlight, sDisabled
+local sDisabled
 on revTutorialHighlightMenuItem pMenu, pItem
-   revTutorialPositionStack the long id of menu pMenu, false, true
+   revTutorialPositionStack "menubar", pMenu, false, true
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
-   put tMenuHighlight into sMenuHighlight
-   buildMenus
+   revIDEHighlightObject "menubar", tMenuHighlight
 end revTutorialHighlightMenuItem
 
 on revTutorialClearMenuHighlight
-   put empty into sMenuHighlight
+   revIDEHighlightObject "menubar", empty
 end revTutorialClearMenuHighlight
-
-on disableMenuBar
-   disableStack "revMenuBar"
-   --disableMenus
-end disableMenuBar
-
-on disableMenus
-   enable group "revMenuBar" of stack "revMenuBar"
-   repeat for each line tControl in the childControlIDs of group "revMenuBar" of stack "revMenuBar"
-      if the enabled of control id tControl stack "revMenuBar" then
-         put true into sDisabled["revMenuBar"][tControl]
-      end if
-      disable control id tControl group "revMenuBar" of stack "revMenuBar"
-   end repeat
-end disableMenus
 
 on disableToolsPalette
    dispatch "disableTools" to stack "revTools"
@@ -1413,161 +1299,6 @@ on enableStack pStack
       put false into sDisabled[pStack][tControl]
    end repeat
 end enableStack
-
-on buildMenus
-   buildFileMenu
-   buildEditMenu
-end buildMenus
-
-command buildFileMenu
-   local tFile
-   put "(&New Mainstack" & return after tFile
-   
-   put "(&New Substack" & return after tFile
-   /*
-   if sStep is not "stack" then
-      put "(&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
-   else
-      put "(&New Substack" & return after tFile
-   end if
-   */
-   put "(&Open Stack.../O" & return after tFile
-   put "(Open Recent File" & return after tFile
-   put revIDEGetRecentPathsAsMenu() & return after tFile
-   put "(&Close/W" & return after tFile
-   put "(Close and Remove From Memor&y" & return after tFile
-   put "-" & return after tFile
-   
-   put "(Import As Control" & return after tFile
-   put tab & "Image File.../>" & return after tFile
-   put tab & "Audio File..." & return after tFile
-   put tab & "Video File..." & return after tFile
-   put tab & "Text File..." & return after tFile
-   put tab & "Snapshot of Screen" & return after tFile
-   put tab & "Snapshot of Selected Object" & return after tFile
-   put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
-   put tab & "All Audio Files in Folder..." & return after tFile
-   
-   put "(New Referenced Control" & return after tFile
-   put tab & "Image File..." & return after tFile
-   put tab & "Quicktime-Supported File..." & return after tFile
-   put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(&Save/S" & return after tFile
-   put "(Save &As..." & return after tFile
-   put "(Move S&ubstack to File..." & return after tFile
-   put "(&Revert to Saved..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(Share This Stack..." & return after tFile
-   put "-" & return after tFile
-   
-   put"(Standalone Application Settings..." & return after tFile
-   put "(Save as Standalone Application..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(P&age Setup..." & return after tFile
-   put "(&Print Card.../P" & return after tFile
-   put "(Print Field..." & return after tFile
-   put "-" & return after tFile
-   
-   ## EJB 2014-08-26
-   ## [[Bug 12880]]
-   if the platform is "Linux" then
-      put "&Quit" & return after tFile
-   else
-      put "E&xit" & return after tFile
-   end if
-   
-   set the text of menu "File" to tFile
-   
-   if sMenuHighlight["File"] is not empty then
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["File"], menu "File")
-      enable line it of menu "File"
-   end if
-   enable menu "File"
-end buildFileMenu
-
-command buildEditMenu
-   local tEdit
-   
-   local tObjectsLabel
-   if word 1 of the selObj is "card" then
-      put "Card" into tObjectsLabel
-   else if word 1 of the selobj is not "stack" then
-      put "Objects" into tObjectsLabel
-   else
-      put empty into tObjectsLabel
-   end if
-   
-   local tSelectionLabel
-   if the selectedImage is not empty then
-      put "Image Selection" into tSelectionLabel
-   else if false then
-      put "Text" into tSelectionLabel
-   else if true then
-      put tObjectsLabel into tSelectionLabel
-   else
-      put empty into tSelectionLabel
-   end if
-   
-   local tClipboardLabel
-   switch the clipboard
-      case "empty"
-         put empty into tClipboardLabel
-         break
-         -- MW-2012-09-19: [[ Bug 9600 ]] Treat 'files' as 'text' clipboard type.
-      case "text"
-      case "files"
-         if the selectedField is empty then
-            put empty into tClipboardLabel
-         else
-            put "Text" into tClipboardLabel
-         end if
-         break
-      case "objects"
-         put "Objects" into tClipboardLabel
-         break
-      case "image"
-         put "Image" into tClipboardLabel
-         break
-   end switch
-   
-   put "(&Undo/Z" & return after tEdit
-   put "-" & return after tEdit
-   put "(Cu&t" && tSelectionLabel & "/X|cut" & return after tEdit
-   put "(&Copy" && tSelectionLabel & "/C|copy" & return after tEdit
-   put "(&Paste"&& tClipboardLabel & "/V|paste" & return after tEdit
-   put "(Paste &Unformatted/Cmd Shift Opt V" & return after tEdit
-   put "(Clea&r" && tSelectionLabel & return after tEdit
-   put "-" & return after tEdit
-   put "(&Duplicate" && tObjectsLabel &"/D" & return after tEdit
-   put "(&Replicate..." & return after tEdit
-   put "-" & return after tEdit
-   put "(Select All/A" & return after tEdit
-   put "(Deselect All" & return after tEdit
-   put "(In&vert Selection" & return after tEdit
-   put "(Select Grouped Controls" & return after tEdit
-   put "(Intersected Selections" & return after tEdit
-   put "-" & return after tEdit
-   put "(Find and Replace.../F" & return after tEdit
-   put "-" & return after tEdit
-   put "(Pre&ferences" after tEdit
-   
-   set the text of button "Edit" of stack "revMenuBar" to tEdit
-   
-   if sMenuHighlight["Edit"] is not empty then
-      enable menu "Edit"
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["Edit"], menu "Edit")
-      enable line it of menu "Edit"
-   end if
-   
-end buildEditMenu
 
 ##############################################################################
 #
@@ -1596,7 +1327,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revTutorialPositionStack sGuides[pGuide], true
+   revTutorialPositionStack "", sGuides[pGuide], true
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
