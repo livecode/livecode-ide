@@ -3877,13 +3877,21 @@ function revIDEExtensionFolders
    return tFoldersA
 end revIDEExtensionFolders
 
-function revIDEDefaultExtensionIcon pType
+function revIDEDefaultExtensionIcon pType, pRetina
    switch pType
       case "library"
-         return revIDESpecialFolderPath("images") & slash & "extension-library.png"
+         if pRetina is true then
+            return revIDESpecialFolderPath("images") & slash & "extension-library@extra-high.png"
+         else
+            return revIDESpecialFolderPath("images") & slash & "extension-library.png"
+         end if
       case "widget"
       default
-         return revIDESpecialFolderPath("images") & slash & "extension-widget.png"
+         if pRetina is true then
+            return revIDESpecialFolderPath("images") & slash & "extension-widget@extra-high.png"
+         else
+            return revIDESpecialFolderPath("images") & slash & "extension-widget.png"
+         end if
    end switch
 end revIDEDefaultExtensionIcon
 

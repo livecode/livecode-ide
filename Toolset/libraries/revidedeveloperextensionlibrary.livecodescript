@@ -728,7 +728,10 @@ end __revIDEDeveloperCompileModule
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
+   # AL-2015-05-22: [[ Bug 14919 ]] Don't display success dialog when package building fails
+   if the result is empty then
       answer "Package" && tBuiltLocation && "built successfully"
+   end if
 end revIDEDeveloperExtensionBuildPackage
 
 private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
@@ -752,14 +755,14 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    local tTargetName
    if tDetailsA["id"] is empty then
       __revIDEDeveloperExtensionSendError "no id found in " && tFullpath
-      exit __revIDEDeveloperExtensionBuildPackage
+      return "no id found"
    end if
    put tDetailsA["id"] into tTargetName
    
    local tTargetVersion
    if tDetailsA["version"] is empty then
       __revIDEDeveloperExtensionSendError "no version found in " && tFullpath
-      exit __revIDEDeveloperExtensionBuildPackage
+      return "no version found"
    end if
    put tDetailsA["version"] into tTargetVersion
    
@@ -773,18 +776,20 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    if the result begins with "ziperr" then
       __revIDEDeveloperExtensionSendError "couldn't open zip archive" &&  tArchive
-      exit __revIDEDeveloperExtensionBuildPackage
+      return "couldn't open zip archive" && tArchive
    end if
    
    local tError
    
+   # AL-2015-05-22: [[ Bug 14919 ]] Use default widget and library icons if none are provided
    local tIcon
    if tError is empty then
       put tDetailsA["icon"] into tIcon
       if tIcon is empty or there is not a file tIcon then
          answer file "Select icon file" with type "|png|"
          if it is empty then
-            put "Must select an icon" into tError
+            __revIDEDeveloperExtensionLog "Using default icon"
+            get revIDEDefaultExtensionIcon(tDetailsA["type"], false)
          end if
          put it into tIcon
       end if
@@ -796,7 +801,8 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       if tRetinaIcon is empty or there is not a file tRetinaIcon then
          answer file "Select retina icon file" with type "|png|"
          if it is empty then
-            put "Must select a retina icon" into tError
+            __revIDEDeveloperExtensionLog "Using default retina icon"
+            get revIDEDefaultExtensionIcon(tDetailsA["type"], true)
          end if
          put it into tRetinaIcon
       end if
@@ -840,7 +846,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    if tError is not empty then
       __revIDEDeveloperExtensionSendError tError
-      exit __revIDEDeveloperExtensionBuildPackage
+      return tError
    end if
    
    put tArchive into rBuiltLocation
