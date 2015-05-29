@@ -1244,6 +1244,10 @@ on revIDESubscribe pMessage, pObjectList
          revIDEPropertyRegisterListenerForObject tObject
          __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
       end repeat
+   else if pMessage is "ideMoveStack" then
+      repeat for each line tObject in pObjectList
+         __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
+      end repeat
    else
       __revIDEAddSubscription pMessage, tCallingObjectID
    end if
@@ -1273,6 +1277,10 @@ on revIDEUnsubscribe pMessage, pObject, pObjectList
          if sSubscriptions[pMessage & "," & tObject]["callback targets"] is empty then
             revIDEPropertyDeregisterListenerForObject tObject
          end if
+      end repeat
+   else if pMessage is "ideMoveStack" then
+      repeat for each line tObject in pObjectList
+         delete line lineoffset(pObject, sSubscriptions[pMessage & "," & tObject]["callback targets"]) of sSubscriptions[pMessage & "," & tObject]["callback targets"]
       end repeat
    else
       # Delete the calling object from the message: sSubscriptions[pMessage]["callback targets"]
@@ -1343,7 +1351,7 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideTutorialProgressChanged,ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return "ideMoveStack,ideTutorialProgressChanged,ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
 # System function telling the IDE to send 
@@ -1362,7 +1370,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
    //if the tool is not "pointer tool" then exit revIDEMessageSend
    
    local tSubscriptionList
-   if pMessage is "idePropertyChanged" then
+   if pMessage is "idePropertyChanged" or pMessage is "ideMoveStack" then
       local tTargetsA, tSubscription
       repeat for each line tLine in pEffectedTarget
          put pMessage & "," & tLine into tSubscription
@@ -1410,6 +1418,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
             end try
             break
          case "idePropertyChanged"
+         case "ideMoveStack"
             dispatch pMessage to tObjectID with pEffectedTarget
             break
          default
@@ -3576,6 +3585,10 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
+on moveStack
+   revIDEMessageSend "ideMoveStack", the owner of the target
+end moveStack
+
 on propertyChanged pObject
    if sLockUpdates is true then
       exit propertyChanged
@@ -3943,7 +3956,10 @@ function revIDEPaletteToStackName pPalette
          return "revTools"
       case "inspector"
          return "revInspector"
+      default
+         break
    end switch
+   return empty
 end revIDEPaletteToStackName
 
 function revIDEAbsoluteRectOfObject pPalette, pObjectTag

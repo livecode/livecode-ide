@@ -835,7 +835,7 @@ on revFinaliseTutorial
    put empty into sSteps
    put empty into sActionNumber
    put empty into sStepName
-   
+   revIDEUnsubscribeAll
    unlock screen
 end revFinaliseTutorial
 
@@ -897,7 +897,7 @@ on revTutorialContinue
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      
+      revIDEMessageSend "ideTutorialProgressChanged"
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
@@ -922,7 +922,6 @@ on revTutorialContinue
          unlock screen
          show stack "revTutorial"
       end if
-      revIDEMessageSend "ideTutorialProgressChanged"
       if sWaiting then
          exit repeat
       end if
@@ -1194,6 +1193,7 @@ end revTutorialWaitConditionSatisfied
 #
 ##############################################################################
 
+local sHighlight
 on revTutorialDoHighlight pActionData
    try
       switch pActionData["highlight type"]
@@ -1218,11 +1218,6 @@ on revTutorialDoHighlight pActionData
    end try
 end revTutorialDoHighlight
 
-on revTutorialClearHighlights
-   revTutorialClearMenuHighlight
-   revTutorialClearObjectHighlight
-end revTutorialClearHighlights
-
 local sObjectState
 on revTutorialHighlightObject pObjType, pTag
    
@@ -1236,10 +1231,15 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   revTutorialPositionStack "", tObject, true
+   put "object" into sHighlight["type"]
+   put tObject into sHighlight["object"]
+   revIDESubscribe "ideMoveStack", revIDEStackOfObject(tObject)
+   revIDESubscribe "idePropertyChanged", tObject
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightObject
 
 on revTutorialClearObjectHighlight
+   /*
    repeat for each key tType in sObjectState
       repeat for each key tTag in sObjectState[tType]
          set the borderwidth of sTaggedObjects[tType][tTag] to sObjectState[tType][tTag]["borderwidth"]
@@ -1247,11 +1247,15 @@ on revTutorialClearObjectHighlight
       end repeat
    end repeat
    put empty into sObjectState
+   */
 end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
    revIDEHighlightObject "tools", pTool
-   revTutorialPositionStack "tools", pTool, true
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+   put "tool" into sHighlight["type"]
+   put pTool into sHighlight["tool"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
 on revTutorialHighlightInspector pSection, pGroup
@@ -1259,20 +1263,22 @@ on revTutorialHighlightInspector pSection, pGroup
    put pSection into tObjectData["section"]
    put pGroup into tObjectData["group"]
    revIDEHighlightObject "inspector", tObjectData
-   revTutorialPositionStack "inspector", pGroup, true, false, "", true
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+   put "property" into sHighlight["type"]
+   put pGroup into sHighlight["group"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightInspector
 
 local sDisabled
 on revTutorialHighlightMenuItem pMenu, pItem
-   revTutorialPositionStack "menubar", pMenu, false, true
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    revIDEHighlightObject "menubar", tMenuHighlight
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   put "menu" into sHighlight["type"]
+   put pMenu into sHighlight["menu"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightMenuItem
-
-on revTutorialClearMenuHighlight
-   revIDEHighlightObject "menubar", empty
-end revTutorialClearMenuHighlight
 
 on disableToolsPalette
    dispatch "disableTools" to stack "revTools"
@@ -1327,7 +1333,10 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revTutorialPositionStack "", sGuides[pGuide], true
+   revIDESubscribe "ideMoveStack", revIDEStackOfObject(sGuides[pGuide])
+   put "guide" into sHighlight["type"]
+   put pGuide into sHighlight["guide"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
@@ -1417,6 +1426,11 @@ on ideNewControl pObject
 end ideNewControl
 
 on idePropertyChanged pObject
+   # If a highlighted object moved then reposition the tutorial step pointer
+   if not pObject begins with "stack" and revTutorialObjectIsHighlighted(pObject) then
+      revTutorialPositionStackForHighlight
+   end if
+   
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
       if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
          if revTutorialCheckWaitCondition(sWait) then
@@ -1427,6 +1441,13 @@ on idePropertyChanged pObject
    end if
    pass idePropertyChanged
 end idePropertyChanged
+
+on ideMoveStack pStack
+   # If the highlighted stack is moved, then reposition the tutorial step pointer
+   if revTutorialObjectIsHighlighted(pStack) then
+      revTutorialPositionStackForHighlight
+   end if
+end ideMoveStack
 
 on mouseUp pWhich
    local tObject
@@ -1507,6 +1528,70 @@ end newTool
 #                     UTILITIES
 #
 ##############################################################################
+
+function revTutorialObjectIsHighlighted pObject
+   if sHighlight is empty then
+      return false
+   end if
+   
+   switch sHighlight["type"]
+      case "guide"
+         return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
+      case "property"
+         return pObject is the name of stack revIDEPaletteToStackName("inspector")
+      case "menu"
+         return pObject is the name of stack revIDEPaletteToStackName("menubar")
+      case "tool"
+         return pObject is the name of stack revIDEPaletteToStackName("tools")
+      case "object"
+         return pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"])
+   end switch
+   return false
+end revTutorialObjectIsHighlighted
+
+on revTutorialPositionStackForHighlight
+   lock screen
+   switch sHighlight["type"]
+      case "guide"
+         revTutorialPositionStack "", sGuides[sHighlight["guide"]], true
+         break
+      case "property"
+         revTutorialPositionStack "inspector", sHighlight["group"], true, false, "", true
+         break
+      case "menu"
+         revTutorialPositionStack "menubar", sHighlight["menu"], false, true
+         break
+      case "tool"
+         revTutorialPositionStack "tools", sHighlight["tool"], true
+         break
+      case "object"  
+         revTutorialPositionStack "", sHighlight["object"], true
+         break
+   end switch
+   unlock screen
+end revTutorialPositionStackForHighlight
+
+on revTutorialClearHighlights
+   switch sHighlight["type"]
+      case "tool"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+         break
+      case "property"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+         break
+      case "menu"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+         break
+      case "object"
+         revIDEUnsubscribe "idePropertyChanged", sHighlight["object"]
+         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sHighlight["object"])
+         break
+      case "guide"
+         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sGuides[sHighlight["guide"]])
+         break
+   end switch
+   put empty into sHighlight
+end revTutorialClearHighlights
 
 function revTutorialObjectIsSelected pLongID
    return pLongID is among the lines of revIDESelectedObjects()

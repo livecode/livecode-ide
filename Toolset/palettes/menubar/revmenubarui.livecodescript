@@ -331,6 +331,7 @@ on disableMenus
    repeat for each line tControl in the childControlIDs of this card of stack "revMenubar"
       disable control id tControl of stack "revMenubar"
    end repeat
+   highlightObject empty
 end disableMenus
 
 on updateMenus
