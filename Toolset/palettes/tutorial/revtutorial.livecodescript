@@ -817,6 +817,7 @@ on revInitialiseTutorial pSteps
    
    insert the script of stack "revTutorial" into front
    go invisible stack "revTutorial" as palette
+   
    unlock messages
    unlock screen
 end revInitialiseTutorial
@@ -1216,6 +1217,9 @@ on revTutorialDoHighlight pActionData
    catch tError
       // Something was specified incorrectly in the tutorial file
    end try
+   # Subscribe to the resumestack message so that we can respond when
+   #  the wrong palette receives focus
+   revIDESubscribe "ideResumeStack"
 end revTutorialDoHighlight
 
 local sObjectState
@@ -1448,6 +1452,16 @@ on ideMoveStack pStack
       revTutorialPositionStackForHighlight
    end if
 end ideMoveStack
+
+on ideResumeStack
+   local tStack
+   put revIDEStackOfObject(the long id of the target) into tStack
+   if not revTutorialObjectIsHighlighted(tStack) then
+      # If the target stack is not highlighted then react accordingly
+   else
+      revTutorialPositionStackForHighlight
+   end if
+end ideResumeStack
 
 on mouseUp pWhich
    local tObject
