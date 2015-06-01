@@ -54,7 +54,7 @@ on relaunch
       local tStackFile
       put param(x) into tStackFile
       if there is a file tStackFile then -- open it
-         send "revOpenStack" && quote & tStackFile & quote to button "File" of stack "revMenuBar"
+         revIDEOpenStack tStackFile
       else
          next repeat
       end if
@@ -1242,12 +1242,6 @@ command revInternal__InitialiseOptions
   
   set the gridSize to the cGridSize of stack "revPreferences"
   
-  if the cGrid of stack "revPreferences" then
-    hilite menuItem 12 of button "View" of stack "revMenuBar"
-  else
-    unhilite menuItem 12 of button "View" of stack "revMenuBar"
-  end if
-  
   if the cSelectionHandleColor of stack "revPreferences" is empty then
     set the selectionHandleColor to "Gray50"
   else
@@ -1393,8 +1387,6 @@ command revInternal__InitialiseMenus
    revInternal__Log "message", "Trying to get the platform"
    revInternal__Log "message", the platform
    
-   open stack "revMenuBar"
-   hide stack "revMenuBar"
    if the platform is "MacOS" then
       lock messages
       palette "revMenuBarUI"
@@ -1404,7 +1396,7 @@ command revInternal__InitialiseMenus
       toplevel "revMenuBarUI"
       show stack "revMenuBarUI"
    end if
-   set the defaultMenuBar to "revMenuBar"
+   set the defaultMenuBar to the long id of group "revMenuBar" of stack "revMenubarUI"
    
    revInternal__ConstrainStack "revMenuBarUI"
    

@@ -4702,17 +4702,7 @@ command revOpenStacks
 end revOpenStacks
 
 on revOpenStack pStackName
-   local tError
-   put empty into tError
-   set the cursor to watch
-   go stack pStackName
-   if the result is not empty then 
-      put the result into tError
-   end if
-   if tError is not empty then
-      answer error "There was a problem opening that stack:" & cr & tError
-      set the cursor to 1
-   end if
+   revIDEOpenStack pStackName
 end revOpenStack
 
 # Returns the *actual* path of the file specified by pPath. Returns empty if the file doesnt exist

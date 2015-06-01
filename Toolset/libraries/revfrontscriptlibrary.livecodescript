@@ -268,11 +268,6 @@ on revSetActiveStacks
    end switch
 
    send "revUpdatePaletteStack" to stack "revBackScriptLibrary" in 100 milliseconds
-   
-   -- Update the simulate button as appropriate
-   try
-      revIDEDeployUpdate
-   end try
 end revSetActiveStacks
 
 
@@ -308,7 +303,9 @@ command revUpdateRecentFiles pStack
 end revUpdateRecentFiles
 
 on rawKeyUp pWhich
-   if pWhich is 65386 then send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
+   if pWhich is 65386 then 
+      revIDEHelpKeyPressed
+   end if
    pass rawKeyUp
 end rawKeyUp
 
@@ -823,68 +820,8 @@ on revShowpopupmenu pTarget
    else
       put the long id of the target into tTarget
    end if
-   
-   global gREVMenuTarget
-   
-   local tTargetStack
-   put revTargetStack(tTarget) into tTargetStack
-   
-   local tHCAddressing
-   put the hcAddressing of stack tTargetStack into tHCAddressing
-   set the hcAddressing of stack tTargetStack to false
-   
-   put the long id of tTarget into gREVMenuTarget
-   if the number of lines in (the selObj) > 1 and the long id of tTarget is among the lines of (the selObj) then
-      send "revRefresh" to btn "MultiSelection" of this cd of stack "revMenuBar"
-      popup button "MultiSelection" of this cd of stack "revMenubar"
-      set the hcAddressing of stack tTargetStack to tHCAddressing
-      exit revShowpopupmenu
-   end if  
-   switch word 1 of the name of tTarget
-      case "button"
-         if the menuName of tTarget is not empty then
-            send "revRefresh" to btn "menu" of this cd of stack "revMenuBar"
-            popup button "menu" of this cd of stack "revMenubar"
-         else
-            send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-            popup button "standard" of this cd of stack "revMenubar"
-         end if
-      break
-      case "field"
-         send "revRefresh" to btn "field" of this cd of stack "revMenuBar"
-         popup button "field" of this cd of stack "revMenubar"
-      break
-      case "group"
-         send "revRefresh" to btn "group" of this cd of stack "revMenuBar"
-         popup button "group" of this cd of stack "revMenubar"
-      break
-      case "image"
-         send "revRefresh" to btn "image" of this cd of stack "revMenuBar"
-         popup button "image" of this cd of stack "revMenubar"
-      break
-      case "card"
-         send "revRefresh" to btn "card" of this cd of stack "revMenuBar"
-         popup button "card" of this cd of stack "revMenubar"
-      break
-      case "player"
-         send "revRefresh" to btn "player" of this cd of stack "revMenuBar"
-         popup button "player" of this cd of stack "revMenubar"
-      break
-      case "graphic"
-         if the style of tTarget is "polygon" then
-            send "revRefresh" to btn "polygon" of this cd of stack "revMenuBar"
-            popup button "polygon" of this cd of stack "revMenubar"
-         else
-            send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-            popup button "standard" of this cd of stack "revMenubar"
-         end if
-      break
-      default
-         send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-         popup button "standard" of this cd of stack "revMenubar"
-      break
-   end switch
-   set the hcAddressing of stack tTargetStack to tHCAddressing
+   	
+	dispatch "revMenubarPopupContextualMenu" to stack "revMenubarUI" with tTarget
 end revShowpopupmenu
 
 function revOKTarget pWhich

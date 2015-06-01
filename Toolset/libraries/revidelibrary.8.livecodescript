@@ -4164,3 +4164,21 @@ function revIDEStandaloneSectionNameToIconName pName
          break
    end switch
 end revIDEStandaloneSectionNameToIconName
+
+on revIDEOpenStack pStack
+   local tError
+   put empty into tError
+   set the cursor to watch
+   go stack pStack
+   if the result is not empty then 
+      put the result into tError
+   end if
+   if tError is not empty then
+      answer error "There was a problem opening stack:" && pStack & cr & tError
+      set the cursor to 1
+   end if
+end revIDEOpenStack
+
+on revIDEHelpKeyPressed
+   --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
+end revIDEHelpKeyPressed
