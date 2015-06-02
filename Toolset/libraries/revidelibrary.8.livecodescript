@@ -4182,3 +4182,132 @@ end revIDEOpenStack
 on revIDEHelpKeyPressed
    --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
 end revIDEHelpKeyPressed
+
+on revIDETogglePaletteView
+   global gRevPalettes
+   local tOpenStacks 
+   put the openStacks into tOpenStacks
+   lock screen
+   if gREVPalettes is empty then
+      repeat for each line tStack in tOpenStacks
+         if tStack is revIDEPaletteToStackName("menubar") or char 1 to 3 of tStack is not "rev" and tStack is not "Message box" then next repeat
+         if the mode of stack tStack is 4 and the visible of stack tStack then
+            hide stack tStack
+            put tStack & comma & lineOffset(tStack, tOpenStacks) & return after gREVPalettes
+         end if
+      end repeat
+      delete last char of gREVPalettes
+      --unhilite menuItem 10 of me
+      set the icon of button "toggle palettes" to 201316
+      set the rect of button "Palettes Inverted" to the rect of button "Toggle Palettes"
+   else
+      sort lines of gREVPalettes descending by item 2 of each
+      lock messages
+      repeat for each line tPaletteName in gREVPalettes
+         local tPalette
+         put item 1 of tPaletteName into tPalette
+         if the mode of stack tPalette is 4 and not the visible of stack tPalette then 
+            show stack tPalette
+         else if the platform is not in "MacOS,Win32" and the mode of stack tPalette is 0 then
+            show stack tPalette
+            palette tPalette
+            lock messages
+         end if
+      end repeat
+      --hilite menuItem 10 of me
+      put empty into gREVPalettes
+      set the icon of button "toggle palettes" to 200874
+      set the loc of button "Palettes Inverted" to -100,-100
+   end if
+   unlock screen
+end revIDETogglePaletteView
+
+on revIDEPopupContextualMenu pTarget
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTarget
+end revIDEPopupContextualMenu
+
+function revIDEPaletteToStackName pPalette		
+   switch pPalette
+      case "menubar"
+         return "revMenubarUI"
+      case "tools"
+         return "revTools"
+      case "inspector"
+         return "revInspector"
+   end switch
+end revIDEPaletteToStackName
+
+local sPluginNames
+on revIDEUpdatePlugins
+   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
+   
+   local tUserPlugins
+   put revAbsoluteFolderListing(revEnvironmentUserPluginsPath()) into tUserPlugins
+   
+   local tEnvironmentPlugins
+   put revAbsoluteFolderListing(revEnvironmentPluginsPath()) into tEnvironmentPlugins
+   
+   local tFinal
+   put revCombineFilePaths(tUserPlugins,tEnvironmentPlugins) into tFinal
+   
+   put empty into gREVStartupList
+   put empty into gREVShutdownList
+   
+   lock messages
+   local tFullList, tFullStackPaths
+   repeat for each line tStack in tFinal
+      if there is a stack tStack then
+         put the short name of stack tStack & return after tFullList -- for popup in plug ins editor
+         put tStack & return after tFullStackPaths -- for plug ins editor
+         if the cREVLoadInfo["load"] of stack tStack is "chosen" or the cREVLoadInfo["load"] of stack tStack is empty or the cREVLoadInfo["inMenu"] of stack tStack is true then
+            local tName
+            put tab & the short name of stack tStack into tName
+            
+            local tPaths
+            put tStack into tPaths[tName] -- appears in menu
+         end if
+         if the cREVLoadInfo["load"] of stack tStack is "startup" then
+            put tStack into line (the number of lines in gREVStartupList + 1) of gREVStartupList
+         else if the cREVLoadInfo["load"] of stack tStack is "shutdown" then
+            put tStack into line (the number of lines in gREVShutdownList + 1) of gREVShutDownList
+         end if
+         # See bug 2031
+         # The closeStack handler in the plugin settings dialog calls this handler
+         # So only those stacks which weren't already open should be removed from memory
+         if the mode of stack tStack is 0 then
+            # See bug 10710
+            # cantDelete has been changed and was causing an error
+            set the cantDelete of stack tStack to false
+            delete stack tStack
+         end if
+      end if
+   end repeat
+   
+   # TH-2007-11-26: Bug 5561, removing last return character from list
+   delete the last char of tFullList
+   unlock messages
+   
+   local tNames
+   put keys(tPaths) into tNames
+   sort tNames
+   
+   local tStackPaths
+   put empty into tStackPaths
+   repeat for each line l in tNames
+      put tPaths[l] & cr after tStackPaths -- appears in menu bar
+   end repeat
+   delete last char of tStackPaths
+   set the cMenuList of button "list" of stack "revPlugInEditor" to tStackPaths -- just main menu bar
+   if tNames is empty then put tab & "(None found" into tNames
+   
+   local tEnd
+   put tNames into sPluginNames
+   
+   set the text of button "list" of stack "revPlugInEditor" to tFullList
+   
+   set the cStacksList of button "list" of stack "revPlugInEditor" to tFullStackPaths -- all including hidden
+end revIDEUpdatePlugins
+
+function revIDEPluginNames
+   return sPluginNames
+end revIDEPluginNames

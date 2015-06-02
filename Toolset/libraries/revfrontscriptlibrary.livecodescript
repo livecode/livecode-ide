@@ -320,7 +320,7 @@ on openStack
       put revTargetStack() into tStackName
       
       if char 1 to 3 of tStackName is "rev" or char 1 to 3 of tStackName is "copy of rev" or tStackName is "Message box" and the mode of stack tStackName is 4 and the visible of stack tStackName is false then
-         send "menuPick" && quote & "Palettes" & quote to btn "View" of stack "revMenuBar"
+         revIDETogglePaletteView
          if the bottom of stack tStackName > item 4 of the screenRect or the right of stack tStackName > item 3 of the screenRect then
             set the bottomRight of stack tStackName to item 3 to 4 of the windowBoundingRect
          end if
@@ -582,9 +582,11 @@ end revCloseUpdate
 -- **Bookmark Entry** Editing Handlers
 
 on revCheckToolbar
+/*
 if the topStack is empty then exit revCheckToolBar
   if the mode of the topStack is not 1 and the cREVNewObject of stack "revmenubar" is "Card"  then send "revUpdatePalette" to cd 1 of stack "revMenuBar"
   else if the mode of the topStack is 1 and the cREVNewObject of stack "revmenubar" is "Stack" then send "revUpdatePalette" to cd 1 of stack "revMenubar"
+  */	
 end revCheckToolbar
 
 on mouseDown pWhich
@@ -821,7 +823,7 @@ on revShowpopupmenu pTarget
       put the long id of the target into tTarget
    end if
    	
-	dispatch "revMenubarPopupContextualMenu" to stack "revMenubarUI" with tTarget
+	revIDEPopupContextualMenu tTarget
 end revShowpopupmenu
 
 function revOKTarget pWhich
@@ -870,8 +872,8 @@ end revUpdateScriptEdit
 
 on moveStack pLeft, pTop
   if the platform is "MacOS" then -- prevent stack getting stuck under menu bar
-    if pTop < the bottom of stack "revMenuBar" and the right of stack revTargetStack() < the right of stack "revMenuBar" + 5 then
-      set the top of stack revTargetStack() to the bottom of stack "revMenuBar" + 20
+    if pTop < the bottom of stack revIDEPaletteToStackName("menubar") and the right of stack revTargetStack() < the right of stack revIDEPaletteToStackName("menubar") + 5 then
+      set the top of stack revTargetStack() to the bottom of stack revIDEPaletteToStackName("menubar") + 20
     end if
   end if
   

@@ -357,9 +357,9 @@ on updateMenubarPreference
    end repeat 
    
    if the platform is "macos" then
-      show stack "revMenuBar"
+      show me
       if tShowIcons is false and tShowText is false then
-         hide stack "revMenuBar"
+         hide me
       else if tShowIcons is false then
          set the height of me to 19
       else if tShowText is false then
@@ -1300,13 +1300,15 @@ end buildViewMenu
 ################################################################################
 
 private function buildDevelopmentMenu pContext
-   global gREVSuppressErrors, gREVSuppressMessages, gREVPluginNames
+   global gREVSuppressErrors, gREVSuppressMessages
+   
+   revIDEUpdatePlugins
    
    local tDevelopment
    put "Object Library" & return after tDevelopment
    put "Image Library" & return after tDevelopment
    put "Plugins" & return after tDevelopment
-   put gREVPluginNames & return after tDevelopment
+   put revIDEPluginNames() & return after tDevelopment
    put tab & "-" & return after tDevelopment
    put tab & "Plugin Settings" & return after tDevelopment
    put "-" & return after tDevelopment
@@ -3764,7 +3766,7 @@ on revMenubarDevelopmentMenuPick pWhich
                set the wholeMatches to true
                
                local tLine
-               put lineOffset(tab & item 2 of pWhich, the text of me)-3 into tLine
+               put lineOffset(tab & item 2 of pWhich, the text of menu "Development")-3 into tLine
                set the wholeMatches to false
                
                local tStackPath
@@ -3927,41 +3929,8 @@ on revMenubarViewMenuPick pWhich
          end if
          break
       case "Palettes"
-         put the openStacks into tOpenStacks
-         lock screen
-         if gREVPalettes is empty then
-            repeat for each line tStack in tOpenStacks
-               if tStack is "revMenubar" or char 1 to 3 of tStack is not "rev" and tStack is not "Message box" then next repeat
-               if the mode of stack tStack is 4 and the visible of stack tStack then
-                  hide stack tStack
-                  put tStack & comma & lineOffset(tStack, tOpenStacks) & return after gREVPalettes
-               end if
-            end repeat
-            delete last char of gREVPalettes
-            --unhilite menuItem 10 of me
-            set the icon of button "toggle palettes" to 201316
-            set the rect of button "Palettes Inverted" to the rect of button "Toggle Palettes"
-         else
-            sort lines of gREVPalettes descending by item 2 of each
-            lock messages
-            repeat for each line tPaletteName in gREVPalettes
-               local tPalette
-               put item 1 of tPaletteName into tPalette
-               if the mode of stack tPalette is 4 and not the visible of stack tPalette then 
-                  show stack tPalette
-               else if the platform is not in "MacOS,Win32" and the mode of stack tPalette is 0 then
-                  show stack tPalette
-                  palette tPalette
-                  lock messages
-               end if
-            end repeat
-            --hilite menuItem 10 of me
-            put empty into gREVPalettes
-            set the icon of button "toggle palettes" to 200874
-            set the loc of button "Palettes Inverted" to -100,-100
-         end if
-         unlock screen
-         exit switch
+         revIDETogglePaletteView
+         break
       case "Backdrop"
          if the backDrop is "none" then
             if the cBackDropColor of stack "revPreferences" is empty then 

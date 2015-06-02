@@ -1871,18 +1871,7 @@ local lSelectionTimerID, lSelectionObject
 
 
 on selectionChanged
-  --  
-  --  put (the target) into lSelectionObject
-  --  if "revUpdateSelectionChanged" is not in the pendingMessages then
-  --    send "revUpdateSelectionChanged" to me in 400 milliseconds
-  --    put the result into lSelectionTimerID
-  --  else
-  --    cancel lSelectionTimerID
-  --    send "revUpdateSelectionChanged" to me in 400 milliseconds
-  --    
-  --    put the result into lSelectionTimerID
-  --  end if
-  --if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass selectionChanged
+
 end selectionChanged
 
 
@@ -1902,27 +1891,8 @@ end openField
 
 
 on revUpdateSelectionChanged
-  global gREVChunkStore
-  
-  --temporary disable
-  --  if word 1 lSelectionObject is not "field" or the selectedField is empty then
-  --    
-  --    put empty into gREVChunkStore
-  --    
-  --    exit revUpdateSelectionChanged
-  --  end if
-  --  
-  --  put word 1 to 4 of (the selectedChunk) && the long id of the selectedField into gREVChunkStore
-  --  
-  
-  
-  --  --  if the mode of stack "revMenubar" is not 0 then
-  --  --    lock screen
-  --  --    send "revUpdatePalette" to cd 1 of stack "revMenuBar"
-  --  --    unlock screen
-  --  --  end if
-end revUpdateSelectionChanged
 
+end revUpdateSelectionChanged
 
 on exitField
   selectionChanged
@@ -2292,6 +2262,7 @@ on errorDialog pWhatError, pWhatError2
    end if
    set the errorObject of stack "revErrorDisplay" to tObject
    if the mode of stack "revErrorDisplay" is not 0 then
+      send "openStack" to stack "revErrorDisplay"
       send "preOpenCard" to cd 1 of stack "revErrorDisplay"
       send "opencard" to cd 1 of stack "revErrorDisplay"
    else
