@@ -1,0 +1,1 @@
+# Behavior property inspector control should have way to edit behavior script or open stack/card that has behavior

@@ -92,6 +92,7 @@ The following editors are built-in, and available to use for widget properties w
 * com.livecode.pi.array - a Tree View widget
 * com.livecode.pi.boolean - a check box
 * com.livecode.pi.color - a color swatch and dialog
+* com.livecode.pi.colorwithalpha - a color swatch and dialog, and alpha value slider
 * com.livecode.pi.enum - an option menu
 * com.livecode.pi.file - a file selector
 * com.livecode.pi.number - a single-line field with increment/decrement twiddle

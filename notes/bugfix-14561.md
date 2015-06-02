@@ -1,0 +1,1 @@
+# Widgets are not ordered in the tools palette or extension manager

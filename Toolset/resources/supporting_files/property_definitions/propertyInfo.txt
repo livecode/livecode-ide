@@ -11,7 +11,7 @@ backgroundBehavior	Behave like a background	Basic	com.livecode.pi.boolean	true	f
 backgroundColor	Fill Color	Colors	com.livecode.pi.color	true	false	Background Fill			
 backgroundPattern	Fill Pattern	Colors	com.livecode.pi.pattern	true	false	Background Fill		
 basicTableObject	Basic table object	Table	com.livecode.pi.boolean	true	false			
-behavior	Behavior	Basic	com.livecode.pi.string	true	false			
+behavior	Behavior	Basic	com.livecode.pi.script	true	false			
 blendLevel	Blend Level	Colors	com.livecode.pi.number	true	false			
 borderColor	Border/Grid Color	Colors	com.livecode.pi.color	true	false	Border Fill		
 borderPattern	Border/Grid Pattern	Colors	com.livecode.pi.pattern	true	false	Border Fill		

@@ -1,0 +1,1 @@
+# IDE: Infinite loop when resolving load order

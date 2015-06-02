@@ -1147,7 +1147,7 @@ function revFixPath pPath
    else if the platform is "Win32" then
       put "\/:*?<>|" & quote & tab into tRemoveChars
    else
-      put " :?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
+      put ":?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
       -- SN-2015-03-09: [[ Bug 14712 ]] Do not put the lower case version
       -- of the name
       -- put tolower(pPath) into tReturnPath

@@ -1304,14 +1304,6 @@ function seMatchingDefinitions pText, pObject, pHandler
          next repeat
       end if
       
-      # If gREVDevelopment is not true, filter out IDE handlers
-      global gREVDevelopment
-      if not gREVDevelopment then
-         if revOkTarget(tObject) then
-            next repeat
-         end if
-      end if
-      
       put "handler," into tResult
       
       local tIsPrivate, tType
