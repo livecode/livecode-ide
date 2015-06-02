@@ -1,4 +1,4 @@
-﻿script "revMenubarUI"
+﻿script "revMenuBar"
 local sMenuTarget
 on preOpenStack
    global gREVDontLoadMenus
@@ -20,6 +20,7 @@ on preOpenStack
    generateMenu
    updateMenubarPreference
    layoutMenu
+   revMenubarBuildMenus
 end preOpenStack
 
 on openStack
@@ -630,15 +631,15 @@ command revMenubarBuildMenus
    
    lock menus
    repeat for each item tMenu in revMenubarMenus()
-      set the text of menu tMenu to buildMenu(tMenu, tContext)
+      set the text of menu tMenu to revMenubarBuildMenu(tMenu, tContext)
    end repeat
    unlock menus
 end revMenubarBuildMenus
 
-function buildMenu pMenu, pContext
+function revMenubarBuildMenu pMenu, pContext
    switch pMenu
       case "File"
-         return buildFileMenu(pContext)
+         return revMenubarFileMenu(pContext)
       case "Edit"
          return buildEditMenu(pContext)
       case "Tools"
@@ -660,7 +661,7 @@ function buildMenu pMenu, pContext
    end switch
    
    return empty
-end buildMenu
+end revMenubarBuildMenu
 
 # Returns an array containing the context needed to build the menus. This is stuff like which images / objects / text is selected etc.
 function buildMenuContext
@@ -754,7 +755,7 @@ end buildMenuContext
 
 ################################################################################
 
-private function buildFileMenu pContext
+private function revMenubarFileMenu pContext
    local tIsUserTarget
    put the mode of the topStack is 1 into tIsUserTarget
    
@@ -765,7 +766,13 @@ private function buildFileMenu pContext
    end if
    
    local tFile
-   put "&New Mainstack" & return after tFile
+   put "&New Stack" & return after tFile
+   put tab & "Default" & return after tFile
+   put tab & "iPhone (375x667)" & return after tFile
+   put tab & "iPad//Tablet (768x1024)" & return after tFile
+   put tab & "-" & return after tFile
+   put tab & "Script only" & return after tFile
+   
    if tIsUserTarget then
       put "&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
    else
@@ -779,30 +786,31 @@ private function buildFileMenu pContext
    put "-" & return after tFile
    
    put enableMenuItem("Import As Control", tIsUserTarget) & return after tFile
-   put tab & "Image File.../>" & return after tFile
-   put tab & "Audio File..." & return after tFile
-   put tab & "Video File..." & return after tFile
-   put tab & "Text File..." & return after tFile
+   put tab & "Image File.../>|image" & return after tFile
+   put tab & "Audio File.../|audio" & return after tFile
+   put tab & "Video File.../|video" & return after tFile
+   put tab & "Text File.../|text" & return after tFile
+   put tab & "-" & return after tFile
    put tab & "Snapshot of Screen" & return after tFile
    put tab & enableMenuItem("Snapshot of Selected Object",  pContext["objectsSelected"]) & return after tFile
    put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
-   put tab & "All Audio Files in Folder..." & return after tFile
+   put tab & "All Images in Folder.../|image folder" & return after tFile
+   put tab & "All Audio Files in Folder.../|audio folder" & return after tFile
+   put tab & "All Video Files in Folder.../|video folder" & return after tFile
+   put tab & "All Text Files in Folder.../|text folder" & return after tFile
    
    put enableMenuItem("New Referenced Control", tIsUserTarget) & return after tFile
-   put tab & "Image File..." & return after tFile
-   put tab & enableMenuItem("Quicktime-Supported File...", the platform is not "Linux") & return after tFile
+   put tab & "Image File.../|image" & return after tFile
+   put tab & enableMenuItem("Video File.../|video", the platform is not "Linux") & return after tFile
    put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
+   put tab & "All Images in Folder.../|image folder" & return after tFile
+   put tab & enableMenuItem("All Video Files in Folder.../|video folder", the platform is not "Linux") & return after tFile
    put "-" & return after tFile
    
    put enableMenuItem("&Save/S", tCanSaveStack) & return after tFile
    put enableMenuItem("Save &As...", tCanSaveStack) & return after tFile
    put enableMenuItem("Move S&ubstack to File...", tIsUserTarget and the short name of the topStack is not the mainStack of the topStack) & return after tFile
    put enableMenuItem("&Revert to Saved...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
-   put "-" & return after tFile
-   
-   put enableMenuItem("Share This Stack...", tIsUserTarget) & return after tFile
    put "-" & return after tFile
    
    put enableMenuItem("Standalone Application Settings...", tIsUserTarget) & return after tFile
@@ -822,7 +830,7 @@ private function buildFileMenu pContext
       put "E&xit" & return after tFile
    end if
    return modifyMenu("File", tFile)
-end buildFileMenu
+end revMenubarFileMenu
 
 ################################################################################
 
@@ -1836,13 +1844,7 @@ on revMenubarContextMenuPick pWhich
          revIDEEditScriptOfObject sMenuTarget
          break
       case "Property Inspector"
-         local tToolState
-         put tool into tToolState
-         if tToolState is "browse tool" then
-            revBuildLinkedPalette sMenuTarget
-         else
-            revIDEOpenInspectorForObjects sMenuTarget
-         end if    
+         revIDEOpenInspectorForObjects sMenuTarget
          break
       case "Cut"
          cut pTarget
@@ -1949,482 +1951,102 @@ on revMenubarContextMenuPick pWhich
    end switch
 end revMenubarContextMenuPick
 
+######## FILE MENU ##########
 on revMenubarFileMenuPick pWhich
-   global gRevStackName
    switch pWhich
-      ######## FILE MENU ##########
       case "New Substack"
-         local tCurrentStack
-         put the short name of the topStack into tCurrentStack
-         if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
-         send "menuPick" && quote & "New Mainstack" & quote to button "file"
-         set the mainStack of the topStack to tCurrentStack
+         revIDENewSubstack the long id of the topStack
          break
-      case "New Card"
-         set the defaultStack to the topStack
-         create card
-         break
-      case "New mainStack"
-         local tNumber
-         put 1 into tNumber
-         repeat
-            if there is a stack ("Untitled" && tNumber) then  add 1 to tNumber
-            else exit repeat
-         end repeat
-         set the name of the templateStack to "Untitled" && tNumber
-         # TH-2008-06-24 :: Bug 6518, apparently property is obsolete
-         --set the alwaysBuffer of the templateStack to true
-         if the cDestroyStack of stack "revPreferences" then
-            set the destroyStack of the templateStack to true
-            set the destroyWindow of the templateStack to true
-         end if
-         set the visible of the templateStack to false
-         set the width of the templateStack to 400
-         set the height of the templateStack to 400
-         
-         local tLeft
-         if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
-         else put item 1 of the windowBoundingRect + 20 into tLeft
-         set the topLeft of the templateStack to tLeft,(the bottom of stack "revMenuBar" + 40)
-         create stack
-         show stack it
-         reset the templateStack
-         send "revUpdatePalette" to card 1 of stack "revMenuBar"
-         break
-         
       case "Open Stack..."
-         revOpenStacks
-         # OK-2007-07-31 : Bug 4619
-         send "revUpdatePalette" to card 1 of stack "revMenuBar"
+         revIDEActionOpenStack
          break
-          
       case "Close"
-         if the short name of the topStack is "revMenuBar" then exit revMenubarFileMenuPick
-         if the mode of the topStack is not among the items of "1,2,3" then
-            exit revMenubarFileMenuPick
-         end if
-         
-         local tStackList
-         put the windows into tStackList
-         repeat for each line l in tStackList
-            if l is "revMenuBar" then next repeat
-            if the mode of stack l is among the items of "1,2,3" then
-               exit repeat
-            end if
-         end repeat
-         set the defaultStack to l
-         if word 1 of the short name of this stack is "revScriptEditor" then 
-            send "revCheckScriptSaved" to this cd
-            close this stack
-            exit revMenubarFileMenuPick
-         end if
-         
-         # OK-2007-06-29: Bug 4958
-         if the short name of this stack is "revApplicationOverview" then
-            send "revAppBrowserFinalise" to this stack
-            close this stack
-            exit revMenubarFileMenuPick
-         end if
-         
-         local tCheck
-         put revSaveCheck(l) into tCheck
-         if tCheck is not false then close stack l
+         revIDECloseStack the long id of the topStack, false
          break
       case "Close and Remove From Memory"
-         if the mode of the topStack is not 1 then exit revMenubarFileMenuPick
-         put revBeforeRemovingStackFromMemory(the short name of the topStack) into tCheck
-         if tCheck is not empty then
-            answer error "Before Revolution can remove this stack from memory please:" & cr & cr & tCheck as sheet
-            exit revMenubarFileMenuPick
-         end if
-         
-         set the defaultStack to the topStack
-         
-         local tStackPath, tStackID
-         put the effective fileName of this stack into tStackPath
-         if tStackPath is empty then put the mainStack of this stack into tStackpath
-         
-         local tMainstack
-         put the mainStack of stack tStackPath into tMainstack
-         
-         local tSubstacks
-         put the subStacks of stack tStackPath into tSubstacks
-         
-         local tStacks
-         put tMainStack & cr & tSubstacks into tStacks
-         answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
-         if it is "Cancel" then 
-            exit revMenubarFileMenuPick
-         end if
-         
-         put  the long id of stack tMainStack into tStackID
-         
-         # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
-         revIDEHandleObjectDeleted the long id of stack tMainStack
-         
-         lock messages -- prevent user stack saving during the close, erasing substacks
-         repeat for each line tSubStack in tSubstacks
-            close stack tSubStack
-         end repeat
-         delete stack tMainStack
-         unlock messages
-         
-         if the mode of stack "revApplicationOverview" is not 0 then
-            send "revRefreshTree" to stack "revApplicationOverview"
-         end if
-         # AL-2015-05-21: [[ Bug 14873 ]] Project browser stack is now called revIDEProjectBrowser
-         send "refreshBrowser" to stack "revIDEProjectBrowser" in 0 milliseconds
+         revIDECloseStack the long id of the topStack, true
          break
       case "Save"
-         # OK-2007-11-29 : Bug 5597, abstracted previous functionality into a backscript handler
-         # to enable it to be called elsewhere.
-         revIDESaveRequest
+         revIDESaveStack the long id of the topStack
          break
       case "Save As..."
-         revSaveAs the short name of the topStack,false
+         revIDESaveStackAs the long id of the topStack
          break
-         
       case "Save As Standalone Application..."
-         # KM-2009-07-16 : Reworded for media
-      case "Save as Web Application..."
-         # LG-2008-01-16 : Bug 5111
-         # Don't want the build process to be interruptable.
-         set the allowInterrupts to false 
-         --ideMessagesSupressSet "true"
-         --try
-         --send "revSaveAsStandalone"&&quote&the short name of the topStack&quote to stack "revSaveAsStandalone" of stack "revStandaloneSettings"
-         revSaveAsStandalone the short name of the topStack
-         --finally
-         # Bug 5111: Standalone has been built, process should now be interruptable.
-         set the allowInterrupts to true
-         --ideMessagesSupressSet "false"
-         --end try
+         revIDESaveAsStandalone the long id of the topStack
          break
       case "Standalone Application Settings..."
-      case "Web Application Settings..."
-         send "revStandaloneSettings"&&quote&the short name of the topStack&quote to stack "revStandaloneSettings"
+         revIDEOpenPalette "standalone settings"
          break
       case "Move substack to file..."
-         revSaveAs the short name of the topStack,true
+         revIDEMoveSubstackToFile the long id of the topStack
          break
       case "Revert To Saved..."
-         set the defaultStack to the topStack
-         answer warning "Are you sure you want to revert to the last version saved?  All changes to stack" && the topStack && "will be lost."  with "No" or "Yes"
-         if it is "Yes" then
-            revert
-         end if
+         revIDEActionRevertToSavedStack the long id of the topStack
          break
       case "Page Setup..."
-         answer page setup
+         revIDEPrintPageSetup
          break
       case "Print Card..."
-         # OK-2007-11-14 : Bug 5528
-         local tResult
-         set the defaultStack to the topstack
-         answer printer
-         put the result into tResult
-         if tResult is not "cancel" then
-            open printing
-            print this card
-            close printing
-         end if
+         revIDEPrintCard this card
          break
       case "Print Field..."
-         -- LG-2008-03-11 Bug 5737
-         -- Set the printTitle to the name of the stack which contains the field.
-         local tStackName, tLabel
-         put revTargetStack(the long name of the selObj) into tStackName
-         put the label of stack tStackName into tLabel
-         if tLabel is not empty then
-            set the printTitle to tLabel
-         else
-            set the printTitle to tStackName
-         end if
-         
-         revShowPrintDialog false,true
-         revPrintField line 1 of (the selObj)
-         break
-      case "Print Documentation Entry..."
-         revShowPrintDialog false, true
-         
-         local tID
-         put the long ID of fld ID (the cRevPrintField of stack "revDocs") of stack "revDocs" into tID
-         revPrintField tID
-         break
-      case "Build Distribution..."
-         modeless "revDistributionBuilder"
+         revIDEPrintField line 1 of (the selObj)
          break
       case "Quit"
       case "Exit"
-         global gREVSuppressMessages
-         if not gREVSuppressMessages and "shutDown" is among the lines of the cREVGeneral["handlerList"] of this cd of the topStack then send "shutDown" to this cd of the topStack
-         quit
+         revIDEQuit
          break
       default
-         --must be a recent stack, a script library, or object library
-         --switch over the first part of which to find out which
          set the itemDel to "|"
-         switch item 1 of pWhich
-            case "Open Recent File"
-               # OK-2007-11-29 : Bug 5548
-               # Instead of making the assumption that the file will have the same line number in the result of revIDEGetRecentPaths()
-               #  just get the stack file path from the menuPick message
-               local tFilePath
-               put revIDEResolveRecentPathMenuItem(item 2 of pWhich) into tFilePath
-               
-               if there is a file tFilePath then 
-                  // IM-2013-08-12: [[ Bugfix 10846 ]] Use revIDEOpenStack so dialog is displayed on error
-                  revIDEOpenStack tFilePath
+         local tType
+         switch item 1 of pWhich      
+            case "New Stack"
+               local tStackType
+               put item 2 of pWhich into tStackType
+               if tStackType is "Script only" then
+                  revIDEActionNewScriptOnlyStack
                else
-                  beep
-                  answer error "Stack no longer exists in this location."
-                  # OK-2007-07-06 : Reworked recent paths system
-                  revMenuBarUpdateRecentPaths
-                  exit revMenubarFileMenuPick
+                  revIDEActionNewMainstack tStackType
                end if
-               
-               # OK-2007-07-31 : Bug 4619.
-               send "revUpdatePalette" to card 1 of stack "revMenuBar"
+               break
+            case "Open Recent File"
+               revIDEActionOpenRecent item 2 of pWhich
                break
             case "Import As Control"
-               
-               local tCommand
-               put item 2 of pWhich into tCommand
-               set the itemDel to comma
-               set the defaultStack to the topStack
-               switch tCommand
-                  case "Image File..."
-                     revImportImageFile
-                     exit revMenubarFileMenuPick
-                     break
+               put item 2 of pWhich into tType
+               switch tType
+                  case "image"
+                  case "audio"
+                  case "video"
+                  case "text"
+                     revIDEActionImportAsControl tType
+                     break 
                   case "Snapshot of Screen"
-                     local tNum
-                     put the number of images into tNum
-                     if the optionKey is not down then
-                        
-                        local tList
-                        put the openStacks into tList
-                        repeat for each line tStack in tList
-                           if the visible of stack tStack then
-                              local tRestore
-                              put tStack & return before tRestore
-                              hide stack tStack
-                           end if
-                        end repeat
-                        delete last char of tRestore
-                     end if
-                     import snapshot
-                     repeat for each line l in tRestore
-                        show stack l
-                     end repeat
-                     if the number of images is tNum + 1 then select last image
-                     break
-                  case "Audio File..."
-                     get revAnswerFile("audio")
-                     if it is not empty then
-                        import AudioClip from file it
-                        if the mode of stack "revApplicationOverview" is not 0 then
-                           if the short name of this cd of stack "revApplicationOverview" is "AudioClips" \
-                                 and the short name of the topStack is gREVStackName then
-                              send "revRefreshAudio true" to this cd of stack "revApplicationOverview"
-                           end if
-                        end if
-                     end if
-                     break
-                  case "Video File..."
-                     get revAnswerFile("video")
-                     if it is not empty then
-                        import videoClip from file it
-                        if the mode of stack "revApplicationOverview" is not 0 then
-                           if the short name of this cd of stack "revApplicationOverview" is "videoClips" \
-                                 and the short name of the topStack is gREVStackName then
-                              send "revRefreshvideo true" to this cd of stack "revApplicationOverview"
-                           end if
-                        end if
-                        
-                        # OK-2008-03-20 : Bug 6158
-                        revSetEdited (the short name of the topStack)
-                        
-                     end if
-                     break
-                  case "Text File..."
-                     get revAnswerFile("text")
-                     put it into tFilePath
-                     if it is not empty then
-                        send "menuPick" && quote & "New Field|Scrolling field" & quote to btn "object" of stack "revMenuBar"
-                        put URL ("file:"&tFilePath) into last fld
-                     end if
+                     revIDEImportSnapshotOfScreen
                      break
                   case "Snapshot of Selected Object"
-                     if (the selobj) is empty then exit revMenubarFileMenuPick
-                     if word 1 of (the selObj) is "stack" then 
-                        local tRect
-                        put the rect of the selobj into tRect
-                        import snapshot from rect tRect
-                     else
-                        import snapshot from the selObj
-                     end if
-                     select last image
+                     revIDEImportSnapshotOfObject the selobj
                      break
-                  case "All Images in Folder..."
-                     answer folder "Select a folder to import from:"
-                     if it is not empty then
-                        local tRestoreDirectory
-                        put the directory into tRestoreDirectory
-                        set the directory to it
-                        put the files into tList
-                        
-                        local tPictFile
-                        put empty into tPictFile
-                        repeat for each line l in tList
-                           try
-                              import paint from file l
-                              
-                              local tPICTWarning
-                              if revIsPICT(l) then put true into tPICTWarning
-                              put the number of last image & cr after tPictFile
-                              set the loc of last image to (item 1 of the loc of last image + 10,item 2 of the loc of last image + 10)
-                           end try
-                        end repeat
-                        delete last char of tPictFile
-                        if tPICTWarning and not the cNOPICTWarning of stack "revPreferences" then
-                           if the platform is "MacOS" then answer warning "Some of the files imported were in Macintosh PICT format.  We recommend you use another image format such as GIF, JPEG or PNG.  This format can only be displayed on MacOS systems and does not support all image features.  Would you like to convert these images to PNG?" with "Don't Show Again" or "No" or "Yes"
-                           else answer warning "Some of the files imported were in Macintosh PICT format.  This format can only be displayed on MacOS systems and does not support all image features." with "Don't Show Again" or "Continue"
-                           if it is "Don't Show Again" then set the cNOPICTWarning of stack "revPreferences" to true
-                           if it is "yes" or it is "don't show again" then
-                              --convert picts in the variable tPictfile
-                              lock screen
-                              lock messages
-                              repeat for each line l in tPictFile
-                                 import snapshot from image l
-                                 set the name of last image to the short name of image l
-                              end repeat
-                              repeat with i = the number of lines in tPictFile down to 1
-                                 delete image (line i of tPictFile)
-                              end repeat
-                              unlock screen  
-                              unlock messages
-                           end if
-                        end if
-                        set the directory to tRestoreDirectory
-                     end if
-                     break
-                  case "All Audio Files in Folder..."
-                     answer folder "Select a folder to import from:"
-                     if it is not empty then
-                        put the directory into tRestoreDirectory
-                        set the directory to it
-                        put the files into tList
-                        repeat for each line l in tList
-                           try
-                              import audioClip from file l
-                              set the loc of last image to (item 1 of the loc of last image + 10,item 2 of the loc of last image + 10)
-                           end try
-                        end repeat
-                        if the mode of stack "revApplicationOverview" is not 0 then
-                           if the short name of this cd of stack "revApplicationOverview" is "AudioClips" \
-                                 and the short name of the topStack is gREVStackName then
-                              send "revRefreshAudio true" to this cd of stack "revApplicationOverview"
-                           end if
-                        end if
-                        set the directory to tRestoreDirectory
-                     end if
+                  case "image folder"
+                  case "audio folder"
+                  case "video folder"
+                  case "text folder"
+                     revIDEActionImportAsControlFromFolder word 1 of tType
                      break
                end switch
-               break
-            case "Share this stack..."
-               # Upload stack to RevOnline
-               revOnlinePrefLoad
-               put the effective filename of the topStack into tStackPath
-               if tStackPath is empty then
-                  # Stack must be saved to be uploaded to revonline
-                  revSaveAs the short name of the topStack,false
-               end if
-               put the effective filename of the topStack into tStackPath
-               if tStackPath is not empty then
-                  # Check remember username and password prefs
-                  --                  if revOnlinePrefGet("rememberEmail") and revOnlinePrefGet("rememberPassword") then
-                  --                     # In this case just launch revOnline which will log the user in automatically
-                  --                     revGoOnline
-                  --                     send "rvoShareThisStack tStackPath" to stack "revonline" in 0 milliseconds
-                  --                  else
-                  if revOnlineSession() is empty then
-                     # No session so need to login
-                     revOnlineShowLoginDialog
-                  end if
-                  # If login was successful
-                  if revOnlineSession() is not empty then
-                     revGoOnline
-                     send "rvoShareThisStack tStackPath" to stack "revonline"
-                  end if
-               end if
-               --end if
-               break
             case "New Referenced Control"
-               put item 2 of pWhich into tCommand
-               set the itemDel to comma
-               set the defaultStack to the topStack
-               switch tCommand
-                  case "Image File..."
-                     get revAnswerFile("image","Select an image file to reference:")
-                     if it is "cancel" then exit revMenubarFileMenuPick
-                     put it into tFilePath
-                     if tFilePath is empty then exit revMenubarFileMenuPick
-                     if revIsPICT(tFilePath) and not (the cNOPICTWarning of stack "revPreferences") then
-                        answer warning "Some of the files imported were in Macintosh PICT format.  We recommend you use another image format such as GIF, JPEG or PNG.  This format can only be displayed on MacOS systems and does not support all image features." with "Don't Show Again" or "Cancel" or "Continue"
-                        if it is "Cancel" then exit revMenubarFileMenuPick
-                        if it is "Don't Show Again" then set the cNOPICTWarning of stack "revPreferences" to true
-                     end if
-                     if tFilePath is not empty then
-                        create image
-                        if the cImageFileRelative of stack "revPreferences" is not false then
-                           
-                           local tStackFileName
-                           put the effective filename of this stack into tStackFileName
-                           if tStackFileName is not empty then
-                              set the itemDel to slash
-                              put item 1 to -2 of tStackFileName into tStackFileName
-                              set the itemDel to comma
-                              put revCalculateRelativePath(tStackFileName,tFilePath) into tFilePath
-                           end if
-                        end if
-                        set the fileName of last image to tFilePath
-                        set the loc of last image to the loc of this cd
-                     end if
+               put item 2 of pWhich into tType
+               switch tType
+                  case "image"
+                  case "video"
+                     revIDEActionReferencedControl tType
                      break
-                  case "Quicktime-Supported File..."
-                     get revAnswerFile("quicktime","Select a QuickTime file to reference:")
-                     if it is not empty then
-                        put it into tFilePath
-                        create player
-                        set the fileName of last player to tFilePath
-                     end if
-                     break
-                  case "All Images in Folder..."
-                     answer folder "Select a folder to import from:"
-                     if it is not empty then
-                        put the directory into tRestoreDirectory
-                        set the directory to it
-                        put the files into tList
-                        repeat for each line l in tList
-                           try
-                              create image
-                              set the fileName of last image to the directory & "/" & l
-                              if revIsPICT(l) then put true into tPICTWarning
-                           catch tJunk
-                              local tWorkAround
-                              put empty into tWorkAround
-                           end try
-                        end repeat
-                        if tPICTWarning and not the cNOPICTWarning of stack "revPreferences" then
-                           answer warning "Some of the files imported were in Macintosh PICT format.  We recommend you use another image format such as GIF, JPEG or PNG.  This format can only be displayed on MacOS systems and does not support all image features." with "Don't Show Again" or "OK"
-                           if it is "Don't Show Again" then set the cNOPICTWarning of stack "revPreferences" to true
-                        end if
-                        set the directory to tRestoreDirectory
-                     end if
+                  case "image folder"
+                  case "video folder"
+                     revIDEActionReferencedControlFromFolder word 1 of tType
                      break
                end switch
-               break
          end switch
    end switch
 end revMenubarFileMenuPick

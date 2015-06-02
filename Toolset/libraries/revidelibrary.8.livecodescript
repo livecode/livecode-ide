@@ -4240,7 +4240,7 @@ end revIDEPopupContextualMenu
 function revIDEPaletteToStackName pPalette
    switch pPalette
       case "menubar"
-         return "revMenubarUI"
+         return "revMenuBar"
       case "tools"
          return "revTools"
       case "inspector"
