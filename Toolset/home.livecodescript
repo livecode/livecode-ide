@@ -1382,23 +1382,26 @@ command revInternal__InitialiseMenus
    revInternal__Log "message", "Trying to get the platform"
    revInternal__Log "message", the platform
    
+   local tMenuBar
+   put revIDEPaletteToStackName("menubar") into tMenuBar
+   
    if the platform is "MacOS" then
       lock messages
-      palette "revMenuBarUI"
-      show stack "revMenuBarUI"
+      palette stack tMenuBar
+      show stack tMenuBar
       unlock messages
    else
-      toplevel "revMenuBarUI"
-      show stack "revMenuBarUI"
+      toplevel stack tMenuBar
+      show stack stack tMenuBar
    end if
-   set the defaultMenuBar to the long id of group "revMenuBar" of stack "revMenubarUI"
+   set the defaultMenuBar to the long id of group "revMenuBar" of stack tMenuBar
    
-   revInternal__ConstrainStack "revMenuBarUI"
+   revInternal__ConstrainStack tMenuBar
    
    local tWindowRect
-   put line (the screen of stack "revMenuBarUI") of the working screenRects into tWindowRect
+   put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
    if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
-   put the bottom of stack "revMenuBarUI" + 5 into item 2 of tWindowRect
+   put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
    set the windowBoundingRect to tWindowRect
    
    revInternal__Log "Leave", "Menus Initialisation"
