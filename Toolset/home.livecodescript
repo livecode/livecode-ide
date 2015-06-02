@@ -1342,13 +1342,8 @@ end revInternal__InitialiseScriptEditor
 command revInternal__InitialiseErrors
   revInternal__Log "Enter", "Errors Initialisation"
   
-  put empty into fld "error" of stack "revErrorDisplay"
-  set the cCurrentObject of cd 1 of stack "revErrorDisplay" to empty
-  set the cLastError of cd 1 of stack "revErrorDisplay" to empty
-  set the customKeys of stack "revErrorDisplay" to empty
-  
-  set the cErrorsList of card 1 of stack "revErrorDisplay" to the scriptExecutionErrors
-  set the cScriptErrors of card 1 of stack "revErrorDisplay" to the scriptParsingErrors
+  set the cErrorsList of stack "revErrorDisplay" to the scriptExecutionErrors
+  set the cScriptErrors of stack "revErrorDisplay" to the scriptParsingErrors
   
   revInternal__Log "Leave", "Errors Initialisation"
   
