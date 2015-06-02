@@ -14,6 +14,7 @@ on preOpenStack
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:cToolbarIcons"
    revIDESubscribe "idePreferenceChanged:cToolbarText"
+   revIDESubscribe "ideToolChanged"
    
    setMenuProperties
    generateMenu

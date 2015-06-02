@@ -3112,7 +3112,7 @@ on revSEShowPalettes
 end revSEShowPalettes
 
 on revSEDelayShowPalettes
-   if the iconic of stack "revMenuBar" then exit revSEDelayShowPalettes
+   if the iconic of stack "revMenuBarUI" then exit revSEDelayShowPalettes
    
    local tObject
    put the focusedObject into tObject
