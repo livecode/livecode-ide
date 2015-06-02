@@ -46,16 +46,17 @@ installer LiveCode
 		set TargetArchitecture to i386
 		include Runtime
 		include Externals
-	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-64 do
-		set TargetPlatform to Linux
-		set TargetArchitecture to x86_64
-		include Runtime
-		include Externals
-	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/armv6-hf do
-		set TargetPlatform to Linux
-		set TargetArchitecture to armv6-hf
-		include Runtime
-		include Externals
+	ifnot ProductBranch is 6.7 then
+		with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-64 do
+			set TargetPlatform to Linux
+			set TargetArchitecture to x86_64
+			include Runtime
+			include Externals
+//	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/armv6-hf do
+//		set TargetPlatform to Linux
+//		set TargetArchitecture to armv6-hf
+//		include Runtime
+//		include Externals
 	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
 		set TargetPlatform to MacOSX
 		set TargetArchitectures to i386
@@ -567,13 +568,13 @@ component Toolchain.Linux
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux:[[TargetArchitecture]]/release/engine[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
-		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
-		executable linux:[[TargetArchitecture]]/release/revsecurity.so
+		executable linux-[[TargetArchitecture]]:livecode[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
 
 component Mobile.Linux
 	into "[[ToolsFolder]]/Externals" place
-		executable linux:[[TargetArchitecture]]/release/revandroid.so
+		executable linux-[[TargetArchitecture]]:revandroid.so
 
 //////////
 
@@ -581,7 +582,7 @@ component Engine.Windows
 	into [[TargetFolder]] place
 		executable windows:engine[[EditionTagLower]].exe as [[ProductName]].exe
 		executable windows:revpdfprinter.dll
-		executable prebuilt:lib/revsecurity.dll
+		executable windows:revsecurity.dll
 
 component Mobile.Windows
 	into "[[ToolsFolder]]/Externals" place
@@ -617,19 +618,19 @@ component Engine.MacOSX
 	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
 	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
 	into "[[TargetFolder]]/Contents/Frameworks/" place
-		executable macosx:revbrowser-cefprocess.app
-		executable "macosx:revbrowser-cefprocess EH.app"
-		executable "macosx:revbrowser-cefprocess NP.app"
-		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
+		executable macosx:Frameworks/revbrowser-cefprocess.app
+		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
+		rfolder "macosx:Frameworks/Chromium Embedded Framework.framework"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux:[[TargetArchitecture]]/release/standalone[[EditionTagLower]] as Standalone
+		executable linux-[[TargetArchitecture]]:standalone[[EditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
-		executable linux:[[TargetArchitecture]]/release/revpdfprinter.so
-		executable linux:[[TargetArchitecture]]/release/revsecurity.so
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
 
 //////////
 
@@ -641,7 +642,7 @@ component Runtime.Windows
 		file "windows:w32-manifest-template-trustinfo.xml"
 	into [[TargetFolder]]/Support place
 		executable windows:revpdfprinter.dll
-		executable prebuilt:lib/revsecurity.dll
+		executable windows:revsecurity.dll
 	into "[[TargetFolder]]/Support/Sample Icons" place
 		file "ide:Resources/Sample Icons/genericapp.ico"
 		file "ide:Resources/Sample Icons/genericdoc.ico"
@@ -675,126 +676,126 @@ component Runtime.Android
 
 component Runtime.iOS
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
-		executable ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone
-		executable ios:iphonesimulator5.1/Release/revsecurity.dylib as RevSecurity
-		executable ios:iphonesimulator5.1/Release/revpdfprinter.dylib as RevPdfPrinter
-		executable ios:iphonesimulator5.1/Release/revzip.dylib as RevZip
-		executable ios:iphonesimulator5.1/Release/revxml.dylib as RevXml
-		executable ios:iphonesimulator5.1/Release/revdb.dylib as RevDb
-		executable ios:iphonesimulator5.1/Release/dbsqlite.dylib as DbSqlite
-		executable ios:iphonesimulator5.1/Release/dbmysql.dylib as DbMysql
-		file ios:iphonesimulator5.1/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator5.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator5.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator5.1/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator5.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator5.1/Release/fontmap as "fontmap"
+		executable ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone
+		executable ios:iphonesimulator5.1/revsecurity.ios-extension as RevSecurity
+		executable ios:iphonesimulator5.1/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphonesimulator5.1/revzip.ios-extension as RevZip
+		executable ios:iphonesimulator5.1/revxml.ios-extension as RevXml
+		executable ios:iphonesimulator5.1/revdb.ios-extension as RevDb
+		executable ios:iphonesimulator5.1/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphonesimulator5.1/dbmysql.ios-extension as DbMysql
+		file ios:iphonesimulator5.1/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator5.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator5.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator5.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator5.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator5.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
-		executable ios:iphonesimulator6.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator6.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.1/Release/revsecurity.dylib
-		executable ios:iphonesimulator6.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.1/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator6.1/Release/revzip.dylib as RevZip base ios:iphonesimulator5.1/Release/revzip.dylib
-		executable ios:iphonesimulator6.1/Release/revxml.dylib as RevXml base ios:iphonesimulator5.1/Release/revxml.dylib
-		executable ios:iphonesimulator6.1/Release/revdb.dylib as RevDb base ios:iphonesimulator5.1/Release/revdb.dylib
-		executable ios:iphonesimulator6.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.1/Release/dbsqlite.dylib
-		executable ios:iphonesimulator6.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.1/Release/dbmysql.dylib
-		file ios:iphonesimulator6.1/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator6.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator6.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator6.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator6.1/Release/fontmap as "fontmap"
+		executable ios:iphonesimulator6.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator6.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
+		executable ios:iphonesimulator6.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
+		executable ios:iphonesimulator6.1/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
+		executable ios:iphonesimulator6.1/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
+		executable ios:iphonesimulator6.1/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
+		executable ios:iphonesimulator6.1/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
+		executable ios:iphonesimulator6.1/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
+		file ios:iphonesimulator6.1/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator6.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator6.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator6.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
-		executable ios:iphonesimulator7.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator7.1/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.1/Release/revsecurity.dylib
-		executable ios:iphonesimulator7.1/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.1/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator7.1/Release/revzip.dylib as RevZip base ios:iphonesimulator5.1/Release/revzip.dylib
-		executable ios:iphonesimulator7.1/Release/revxml.dylib as RevXml base ios:iphonesimulator5.1/Release/revxml.dylib
-		executable ios:iphonesimulator7.1/Release/revdb.dylib as RevDb base ios:iphonesimulator5.1/Release/revdb.dylib
-		executable ios:iphonesimulator7.1/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.1/Release/dbsqlite.dylib
-		executable ios:iphonesimulator7.1/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.1/Release/dbmysql.dylib
-		file ios:iphonesimulator7.1/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator7.1/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator7.1/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator7.1/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator7.1/Release/fontmap as "fontmap"
+		executable ios:iphonesimulator7.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator7.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
+		executable ios:iphonesimulator7.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
+		executable ios:iphonesimulator7.1/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
+		executable ios:iphonesimulator7.1/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
+		executable ios:iphonesimulator7.1/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
+		executable ios:iphonesimulator7.1/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
+		executable ios:iphonesimulator7.1/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
+		file ios:iphonesimulator7.1/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator7.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator7.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator7.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
-		executable ios:iphonesimulator8.2/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator8.2/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.1/Release/revsecurity.dylib
-		executable ios:iphonesimulator8.2/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.1/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator8.2/Release/revzip.dylib as RevZip base ios:iphonesimulator5.1/Release/revzip.dylib
-		executable ios:iphonesimulator8.2/Release/revxml.dylib as RevXml base ios:iphonesimulator5.1/Release/revxml.dylib
-		executable ios:iphonesimulator8.2/Release/revdb.dylib as RevDb base ios:iphonesimulator5.1/Release/revdb.dylib
-		executable ios:iphonesimulator8.2/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.1/Release/dbsqlite.dylib
-		executable ios:iphonesimulator8.2/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.1/Release/dbmysql.dylib
-		file ios:iphonesimulator8.2/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator8.2/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator8.2/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator8.2/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator8.2/Release/fontmap as "fontmap"
+		executable ios:iphonesimulator8.2/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
+		executable ios:iphonesimulator8.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
+		executable ios:iphonesimulator8.2/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
+		executable ios:iphonesimulator8.2/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
+		executable ios:iphonesimulator8.2/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
+		executable ios:iphonesimulator8.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
+		executable ios:iphonesimulator8.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
+		file ios:iphonesimulator8.2/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_3" place
-		executable ios:iphonesimulator8.3/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]] as Standalone base ios:iphonesimulator5.1/Release/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator8.3/Release/revsecurity.dylib as RevSecurity base ios:iphonesimulator5.1/Release/revsecurity.dylib
-		executable ios:iphonesimulator8.3/Release/revpdfprinter.dylib as RevPdfPrinter base ios:iphonesimulator5.1/Release/revpdfprinter.dylib
-		executable ios:iphonesimulator8.3/Release/revzip.dylib as RevZip base ios:iphonesimulator5.1/Release/revzip.dylib
-		executable ios:iphonesimulator8.3/Release/revxml.dylib as RevXml base ios:iphonesimulator5.1/Release/revxml.dylib
-		executable ios:iphonesimulator8.3/Release/revdb.dylib as RevDb base ios:iphonesimulator5.1/Release/revdb.dylib
-		executable ios:iphonesimulator8.3/Release/dbsqlite.dylib as DbSqlite base ios:iphonesimulator5.1/Release/dbsqlite.dylib
-		executable ios:iphonesimulator8.3/Release/dbmysql.dylib as DbMysql base ios:iphonesimulator5.1/Release/dbmysql.dylib
-		file ios:iphonesimulator8.3/Release/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator8.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator8.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator8.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator8.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator8.3/Release/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
-		executable ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone
-		executable ios:iphoneos8.2/Release/revsecurity.lcext as RevSecurity
-		executable ios:iphoneos8.2/Release/revpdfprinter.lcext as RevPdfPrinter
-		executable ios:iphoneos8.2/Release/revzip.lcext as RevZip
-		executable ios:iphoneos8.2/Release/revxml.lcext as RevXml
-		executable ios:iphoneos8.2/Release/revdb.lcext as RevDb
-		executable ios:iphoneos8.2/Release/dbsqlite.lcext as DbSqlite
-		executable ios:iphoneos8.2/Release/dbmysql.lcext as DbMysql
-		file ios:iphoneos8.2/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos8.2/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos8.2/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos8.2/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos8.2/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos8.2/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphoneos8.2/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos8.2/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos8.2/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphoneos8.2/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos8.2/Release/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8_3" place
-		executable ios:iphoneos8.3/Release/standalone-mobile-lib[[EditionTagLower]].lcext as Standalone base ios:iphoneos8.2/Release/standalone-mobile-lib[[EditionTagLower]].lcext
-		executable ios:iphoneos8.3/Release/revsecurity.lcext as RevSecurity base ios:iphoneos8.2/Release/revsecurity.lcext
-		executable ios:iphoneos8.3/Release/revpdfprinter.lcext as RevPdfPrinter base ios:iphoneos8.2/Release/revpdfprinter.lcext
-		executable ios:iphoneos8.3/Release/revzip.lcext as RevZip base ios:iphoneos8.2/Release/revzip.lcext
-		executable ios:iphoneos8.3/Release/revxml.lcext as RevXml base ios:iphoneos8.2/Release/revxml.lcext
-		executable ios:iphoneos8.3/Release/revdb.lcext as RevDb base ios:iphoneos8.2/Release/revdb.lcext
-		executable ios:iphoneos8.3/Release/dbsqlite.lcext as DbSqlite base ios:iphoneos8.2/Release/dbsqlite.lcext
-		executable ios:iphoneos8.3/Release/dbmysql.lcext as DbMysql base ios:iphoneos8.2/Release/dbmysql.lcext
-		file ios:iphoneos8.3/Release/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos8.3/Release/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos8.3/Release/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos8.3/Release/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos8.3/Release/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos8.3/Release/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphoneos8.3/Release/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos8.3/Release/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos8.3/Release/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphoneos8.3/Release/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos8.3/Release/fontmap as "fontmap"
+		executable ios:iphonesimulator8.3/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
+		executable ios:iphonesimulator8.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
+		executable ios:iphonesimulator8.3/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
+		executable ios:iphonesimulator8.3/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
+		executable ios:iphonesimulator8.3/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
+		executable ios:iphonesimulator8.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
+		executable ios:iphonesimulator8.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
+		file ios:iphonesimulator8.3/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8.2" place
+		executable ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].ios-engine as Standalone
+		executable ios:iphoneos8.2/revsecurity.ios-extension as RevSecurity
+		executable ios:iphoneos8.2/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphoneos8.2/revzip.ios-extension as RevZip
+		executable ios:iphoneos8.2/revxml.ios-extension as RevXml
+		executable ios:iphoneos8.2/revdb.ios-extension as RevDb
+		executable ios:iphoneos8.2/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphoneos8.2/dbmysql.ios-extension as DbMysql
+		file ios:iphoneos8.2/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos8.2/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos8.2/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos8.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8.3" place
+		executable ios:iphoneos8.3/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].lcext
+		executable ios:iphoneos8.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
+		executable ios:iphoneos8.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
+		executable ios:iphoneos8.3/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
+		executable ios:iphoneos8.3/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
+		executable ios:iphoneos8.3/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
+		executable ios:iphoneos8.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
+		executable ios:iphoneos8.3/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
+		file ios:iphoneos8.3/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos8.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos8.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos8.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos8.3/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos8.3/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos8.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos8.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos8.3/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos8.3/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 component Externals.Linux
 	into [[TargetFolder]]/Externals place
-		executable linux:[[TargetArchitecture]]/release/revxml.so
-		executable linux:[[TargetArchitecture]]/release/revzip.so
-		executable linux:[[TargetArchitecture]]/release/revbrowser.so
+		executable linux-[[TargetArchitecture]]:revxml.so
+		executable linux-[[TargetArchitecture]]:revzip.so
+		executable linux-[[TargetArchitecture]]:revbrowser.so
 	declare external "XML" using revxml.so
 	declare external "Revolution Zip" using revzip.so
 	declare external "Browser" using revbrowser.so
@@ -860,7 +861,7 @@ component Externals.CEF.Windows
 		executable prebuilt:lib/libcef/win32/libEGL.dll
 		executable prebuilt:lib/libcef/win32/libGLESv2.dll
 		executable prebuilt:lib/libcef/win32/pdf.dll
-		rfolder prebuilt:lib/libcef/win32/locales
+		file prebuilt:lib/libcef/win32/locales/en-US.pak
 		file prebuilt:lib/libcef/win32/cef.pak
 		file prebuilt:lib/libcef/win32/cef_100_percent.pak
 		file prebuilt:lib/libcef/win32/cef_200_percent.pak
@@ -868,21 +869,21 @@ component Externals.CEF.Windows
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
-		executable macosx:revbrowser-cefprocess.app
-		executable "macosx:revbrowser-cefprocess EH.app"
-		executable "macosx:revbrowser-cefprocess NP.app"
-		rfolder "prebuilt:lib/libcef/mac/Chromium Embedded Framework.framework"
+		executable macosx:Frameworks/revbrowser-cefprocess.app
+		executable "macosx:Frameworks/revbrowser-cefprocess EH.app"
+		executable "macosx:Frameworks/revbrowser-cefprocess NP.app"
+		rfolder "macosx:Frameworks/Chromium Embedded Framework.framework"
 		
 ////////////////////////////////////////////////////////////////////////////////
 
 component Databases.Linux
 	into "[[TargetFolder]]/Externals" place
-		executable linux:[[TargetArchitecture]]/release/revdb.so
+		executable linux-[[TargetArchitecture]]:revdb.so
 	into "[[TargetFolder]]/Externals/Database Drivers" place
-		executable linux:[[TargetArchitecture]]/release/dbmysql.so
-		executable linux:[[TargetArchitecture]]/release/dbodbc.so
-		executable linux:[[TargetArchitecture]]/release/dbpostgresql.so
-		executable linux:[[TargetArchitecture]]/release/dbsqlite.so
+		executable linux-[[TargetArchitecture]]:dbmysql.so
+		executable linux-[[TargetArchitecture]]:dbodbc.so
+		executable linux-[[TargetArchitecture]]:dbpostgresql.so
+		executable linux-[[TargetArchitecture]]:dbsqlite.so
 	declare external "Database" using revdb.so
 	declare dbdriver "MySQL" using dbmysql.so
 	declare dbdriver "ODBC" using dbodbc.so
