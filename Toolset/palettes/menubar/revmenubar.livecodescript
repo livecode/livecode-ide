@@ -518,7 +518,6 @@ on mouseUp
 end mouseUp
 
 on mouseDown
-   put the owner of the target
    if the owner of the target is "revMenuBar" then
       revMenubarBuildMenus
    end if
@@ -1383,63 +1382,139 @@ end buildWindowMenu
 
 ################################################################################
 
-function revBuildContextSensitiveMenu pExtraText, pTarget
-   global gREVLanguageNames
+function revMenubarSendContextMenu pObject, pIndent
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tHandlerList, tText
+   put revListMenuHandlers(pObject, the cSort of stack "revPreferences", pIndent + 1) into tHandlerList
+   put tIndent & enableMenuItem("Send Message", tHandlerList is not tIndent & tab) after tText
+   if tHandlerList is not tIndent & tab then
+      put return & tHandlerList after tText
+   end if
+   return tText
+end revMenubarSendContextMenu
+
+function revMenubarStackContextMenu pStack, pIndent
+   global gRevLanguageNames
+   
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tText
+   put tIndent & "Edit Script" & return after tText
+   put tIndent & "Property Inspector" & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "Stack Mode" & return after tText
+   if gREVLanguageNames then
+      put tIndent & tab & markMenuItem("topLevel", the mode of stack pStack < 3) & return after tText
+      put tIndent & tab & markMenuItem("modeless", the mode of stack pStack is 3) & return after tText
+      put tIndent & tab & markMenuItem("palette", the mode of stack pStack is 4) & return after tText
+      put tIndent & tab & markMenuItem("modal", the mode of stack pStack is 5) & return after tText
+   else
+      put tIndent & tab & markMenuItem("TopLevel", the mode of stack pStack < 3) & return after tText
+      put tIndent & tab & markMenuItem("Modeless", the mode of stack pStack is 3) & return after tText
+      put tIndent & tab & markMenuItem("Palette", the mode of stack pStack is 4) & return after tText
+      put tIndent & tab & markMenuItem("Modal", the mode of stack pStack is 5) & return after tText
+   end if
+   put tIndent & "-" & return after tText
+   put tIndent & "New Substack" & return after tText
+   put tIndent & enableMenuItem("Delete Substack", the mainstack of pStack is not the short name of pStack) & return after tText
+   put tIndent & "Close and Remove From Memory" & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "Save" & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "Standalone Application Settings..." & return after tText
+   put tIndent & "Save As Standalone Application..." & return after tText
+   put tIndent & "-" & return after tText
+   
+   put revMenubarSendContextMenu(pStack, pIndent) after tText
+   
+   return tText
+end revMenubarStackContextMenu
+
+function revMenuBarCardContextMenu pCard, pIndent
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tTargetStack
+   put revIDEStackOfObject(pCard) into tTargetStack
+   
+   local tText
+   put revMenuBarStandardContextMenu(pIndent) & return into tText
+   put tIndent & "-" & return after tText
+   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
+   put tIndent & "-" & return after tText
+   
+   put revMenubarSendContextMenu(pCard, pIndent) after tText
+   return tText
+end revMenuBarCardContextMenu
+
+function revMenuBarObjectContextMenu pExtraText, pObject, pIndent
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tText
+   put revMenuBarStandardContextMenu(pIndent) & return into tText
+   repeat for each line tLine in pExtraText
+      put tIndent & tLine & return after tText
+   end repeat
+   put tIndent & "-" & return after tText
+   put revMenubarSendContextMenu(pObject, pIndent) after tText
+   return tText
+end revMenuBarObjectContextMenu
+
+function revMenuBarStandardContextMenu pIndent
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tText
+   put tIndent & "Edit Script" & return after tText
+   put tIndent & "Property Inspector" & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "Cut" & return after tText
+   put tIndent & "Copy" after tText
+   return tText
+end revMenuBarStandardContextMenu
+
+function revBuildContextSensitiveMenu pExtraText, pTarget, pType
+   if word 1 of pTarget is "stack" then
+      return revMenuBarStackContextMenu(pTarget, 0)
+   end if
    
    local tTargetStack
    put revIDEStackOfObject(pTarget) into tTargetStack
    
    local tText
-   if word 1 of pTarget is not "card" then
-      put "Edit Script" & return after tText
-      put "Property Inspector" & return after tText
-      put "-" & return after tText
-      put "Cut" & return after tText
-      put "Copy" & return after tText
-      put pExtraText after tText
-      put "-" & return after tText
-      
-      local tSendMessageList
-      put revListMenuHandlers(pTarget, the cSort of stack "revPreferences", 1) into tSendMessageList
-      put enableMenuItem("Send Message", tSendMessageList is not tab) & return after tText
-      put tSendMessageList & return after tText
-      
-      put "Card && Stack" & return after tText
+   if word 1 of pTarget is "card" then
+      put revMenuBarCardContextMenu(pTarget,0) into tText
+      put return & "-" after tText
+      put return & "Stack" after tText
+      put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
+      return tText
    end if
    
-   put tab & "Edit Card Script" & return after tText
-   put tab & "Card Property Inspector" & return after tText
-   put tab & "New Card" & return after tText
-   put tab & "-" & return after tText
-   put tab & "Edit Stack Script" & return after tText
-   put tab & "Stack Property Inspector" & return after tText
-   put tab & "Stack Mode" & return after tText
-   if gREVLanguageNames then
-      put markMenuItem(tab & tab & "topLevel", the mode of stack tTargetStack < 3) & return after tText
-      put markMenuItem(tab & tab & "modeless", the mode of stack tTargetStack is 3) & return after tText
-      put markMenuItem(tab & tab & "palette", the mode of stack tTargetStack is 4) & return after tText
-      put markMenuItem(tab & tab & "modal", the mode of stack tTargetStack is 5) & return after tText
-   else
-      put markMenuItem(tab & tab & "TopLevel", the mode of stack tTargetStack < 3) & return after tText
-      put markMenuItem(tab & tab & "Modeless", the mode of stack tTargetStack is 3) & return after tText
-      put markMenuItem(tab & tab & "Palette", the mode of stack tTargetStack is 4) & return after tText
-      put markMenuItem(tab & tab & "Modal", the mode of stack tTargetStack is 5) & return after tText
-   end if
-   put tab & "Save" & return after tText
-   put tab & "-" & return after tText
-   put tab & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
-   put tab & "-" & return after tText
-   
-   local tSendCardMessageList
-   put revListMenuHandlers(the long id of this card of stack tTargetStack, the cSort of stack "revPreferences", 2) into tSendCardMessageList
-   put tab & enableMenuItem("Send Card Message", tSendCardMessageList is not tab & tab) & return after tText
-   put tSendCardMessageList & return after tText
-   
-   local tSendStackMessageList
-   put revListMenuHandlers(the long id of stack tTargetStack, the cSort of stack "revPreferences", 2) into tSendStackMessageList
-   put tab & enableMenuItem("Send Stack Message", tSendStackMessageList is not tab & tab) & return after tText
-   put tSendStackMessageList & return after tText
-   
+   put revMenuBarObjectContextMenu(pExtraText, pTarget,0) into tText
+   put return & "-" after tText
+   put return & "Clear" after tText
+   put return & "-" after tText
+   put return & "Card" after tText
+   put return & revMenuBarCardContextMenu(the long id of this card of tTargetStack, 1) after tText
+   put return & "-" after tText
+   put return & "Stack" after tText
+   put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
    return tText
 end revBuildContextSensitiveMenu
 
@@ -1447,6 +1522,9 @@ function revMenubarContextMenu pType, pTarget
    local tText
    switch pType
       case "card"
+         put revBuildContextSensitiveMenu("", pTarget) into tText
+         break
+      case "stack"
          put revBuildContextSensitiveMenu("", pTarget) into tText
          replace tab&tab with "#####REVDOUBLETAB#####" in tText
          replace tab with empty in tText
@@ -1459,7 +1537,7 @@ function revMenubarContextMenu pType, pTarget
          put "Ungroup" & return after tText
          put "-" & return after tText
          put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "image"
          put "-" & return after tText
@@ -1470,12 +1548,12 @@ function revMenubarContextMenu pType, pTarget
          put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
          put enableMenuItem("Make Original Size", the formattedWidth of pTarget is not the width of pTarget \
                or the formattedHeight of pTarget is not the height of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "polygon"
          put "-" & return after tText
          put "Reshape Polygon" & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "multiple"
          put "-" & return after tText
@@ -1488,29 +1566,29 @@ function revMenubarContextMenu pType, pTarget
          put tab & "Make Widths Equal" & return after tText
          put tab & "Make Heights Equal" & return after tText
          put "Group" & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "field"
          put enableMenuItem("Paste Text", the clipboard is "text") & return after tText
          put "-" & return after tText
          put toggleMenuItem("Lock Text", the lockText of pTarget) & return after tText
          put toggleMenuItem("Can Receive Keyboard Focus", the traversalOn of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "player"
          put "-" & return after tText
          put enableMenuItem("Play", word 1 of the tool is "browse") & return after tText
          put enableMenuItem("Stop", word 1 of the tool is "browse") & return after tText
          put enableMenuItem("Pause", word 1 of the tool is "browse") & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "menu"
          put enableMenuItem("TopLevel Panel Stack", the menuName of pTarget is not empty) & return after tText
-         put revBuildContextSensitiveMenu(tText) into tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "standard"
       default
-         put revBuildContextSensitiveMenu() into tText
+         put revBuildContextSensitiveMenu("", pTarget) into tText
          break
    end switch
    return modifyMenu(pType, tText)
@@ -1525,10 +1603,10 @@ on revMenubarSetContextMenu pType, pTarget
    end if
 end revMenubarSetContextMenu
 
-on revMenubarPopupContextualMenu pTarget
+on revMenubarPopupContextualMenu pTargets
    local tTarget
-   if pTarget is not empty then
-      put the long id of pTarget into tTarget
+   if pTargets is not empty then
+      put the long id of (line 1 of pTargets) into tTarget
    else
       put the long id of the target into tTarget
    end if
@@ -1536,8 +1614,16 @@ on revMenubarPopupContextualMenu pTarget
    local tTargetStack
    put revTargetStack(tTarget) into tTargetStack
    
-   put the long id of tTarget into sMenuTarget
-   if the number of lines in (the selObj) > 1 and the long id of tTarget is among the lines of (the selObj) then
+   put empty into sMenuTarget
+   repeat for each line tLine in pTargets
+      if sMenuTarget is empty then
+         put tLine into sMenuTarget
+      else
+         put return & tLine after sMenuTarget
+      end if
+   end repeat
+   
+   if the number of lines in sMenuTarget > 1 then
       revMenubarSetContextMenu "multiple", tTarget
    else
       local tType
@@ -1868,7 +1954,23 @@ on revMenubarContextMenuPick pWhich
          lock screen
          start editing sMenuTarget
          send "revStopEditingGroupAfterPasting" to me in 500 milliseconds
-         
+         break
+      case "Clear"
+         local tNames, tWarning
+         put empty into tNames
+         repeat for each line l in sMenuTarget
+            put the name of l & cr after tNames
+         end repeat
+         delete last char of tNames
+         put "Are you sure you want to delete the following controls?" & cr & cr & tNames into tWarning
+         answer warning tWarning with "No" or "Yes"
+         if it is "Yes" then 
+            lock screen
+            repeat for each line l in sMenuTarget
+               delete l
+            end repeat
+            unlock screen
+         end if
          break
          ######## IMAGE SPECIFIC #########
       case "Paint Tools"

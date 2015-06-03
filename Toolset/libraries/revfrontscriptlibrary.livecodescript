@@ -818,7 +818,7 @@ end scriptParsingError
 on revShowpopupmenu pTarget
    local tTarget
    if pTarget is not empty then
-      put the long id of pTarget into tTarget
+      put pTarget into tTarget
    else
       put the long id of the target into tTarget
    end if

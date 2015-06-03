@@ -4233,8 +4233,8 @@ on revIDETogglePaletteView
    unlock screen
 end revIDETogglePaletteView
 
-on revIDEPopupContextualMenu pTarget
-   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTarget
+on revIDEPopupContextualMenu pTargets
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
 end revIDEPopupContextualMenu
 
 function revIDEPaletteToStackName pPalette
