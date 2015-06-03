@@ -3368,6 +3368,7 @@ function revIDEPropertyInspector
 end revIDEPropertyInspector
 
 function revIDEStackIsRevStack pLongID
+   if not exists(pLongID) then return false
    local tStackID
    put revIDEStackOfObject(pLongID) into tStackID
 
@@ -4323,6 +4324,10 @@ function revIDEPluginNames
    return sPluginNames
 end revIDEPluginNames
 
+function revIDELocalise pString
+   return pString && "(Localise String)"
+end revIDELocalise
+
 ########################
 # Standard IDE Library actions
 ########################
@@ -4386,6 +4391,27 @@ on revIDENewMainstack pWidth, pHeight
    reset the templateStack
 end revIDENewMainstack
 
+on revIDEActionNewMainstack pStackType
+   if  pStackType is "default" then 
+      revIDENewMainstack
+   else if pStackType is "script only" then
+      revIDEActionNewScriptOnlyStack
+   else
+      # Parse the tag to look for size
+      set the itemdel to "("
+      delete item 1 of pStackType
+      delete the last char of pStackType
+      set the itemdel to "x"
+      
+      # Check that the width and height are valid numbers
+      if item 1 of pStackType is a number and item 2 of pStackType is a number then
+         revIDENewMainstack item 1 of pStackType, item 2 of pStackType
+      else
+         revIDENewMainstack
+      end if
+   end if
+end revIDEActionNewMainstack
+
 /*
 Creates a new script only stack in memory.
 
@@ -4400,11 +4426,26 @@ Tags: ide
 */
 on revIDENewScriptOnlyStack pName
    if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
-   if there is a stack pName then return __revIDEError("A stack with that name already exists") 
+   if there is a stack pName then return "A stack with that name already exists"
   
    create script only stack pName
    edit the script of stack pName
 end revIDENewScriptOnlyStack
+
+on revIDEActionNewScriptOnlyStack
+   # Get the name of the stack
+   ask revIDELocalise("Please enter a name for the script only stack")
+   if the result is "cancel" then exit revIDEActionNewScriptOnlyStack
+   if it is empty then exit revIDEActionNewScriptOnlyStack
+   
+   # Create script only
+   revIDENewScriptOnlyStack it
+   
+   # If an error occured, tell the use
+   if the result is not empty then 
+      answer the result
+   end if
+end revIDEActionNewScriptOnlyStack
 
 /*
 Creates a new substack.
@@ -4418,12 +4459,17 @@ revIDENewSubstack the long ID of the topstack
 
 Tags: ide
 */
-on revIDENewSubstack pParentStackID
-   if there is not a stack pParentStackID then return __revIDEError("Can only create a substack on a stack that exists")
-  
-  # Generate a unique name for the given stack
-  # Set the parent stack
-  # Create the stack
+on revIDENewSubstack
+   # Get the current stack
+   local tCurrentStack
+   put the short name of the topStack into tCurrentStack
+   if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
+   
+   # Create a new stack
+   revIDENewMainstack
+   
+   # Make the new stack a substack of the current stack
+   set the mainStack of the topStack to tCurrentStack
 end revIDENewSubstack
 
 /*
@@ -4439,10 +4485,37 @@ revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
 Tags: ide
 */
 on revIDEOpenStack pFilePath
-   # validate pFileName
-   # Open the stack
-   # 
+   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
+   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
+   
+   go stack pFilePath
 end revIDEOpenStack
+
+function revIDEIsLiveCodeStack pFilePath
+   set the itemdel to "."
+   
+   # Check the file extension
+   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then 
+      return true
+   else
+      return false
+   end if
+end revIDEIsLiveCodeStack
+
+on revIDEActionOpenStack
+   # Popup a file choose
+   revIDEAnswerFile "stack"
+   
+   # Get the path of to the file
+   local tStackFilePath
+   put the result into tStackFilePath
+   
+   # Check the stack exists
+   if there is not a file tStackFilePath then exit revIDEActionOpenStack
+      
+   # Open the stack
+   revIDEOpenStack tStackFilePath
+end revIDEActionOpenStack
 
 /*
 Closes an stack.
@@ -4576,12 +4649,31 @@ revIDEAsk "image", "", "Please choose the video you would like to load"
 
 Tags: ide
 */
-function revIDEAskFile pType, pBasePath, pInstructions
+on revIDEAskFile pType, pInstructions, pBasePath
    # validate pType, pBasePath, pInstructions
    # pop up ask dialog
    # validate response
    # return response
 end revIDEAskFile
+
+on revIDEAnswerFile pType, pInstructions, pBasePath
+   switch pType
+      case "stack"
+         if pInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into pInstructions
+         answer file pInstructions with type ("LiveCode Stacks|" & revIDELiveCodeFileExtensions()) or type "All Files|"
+         break
+   end switch
+   
+   if the result is "cancel" then 
+      return empty
+   else
+      return the result
+   end if
+end revIDEAnswerFile
+
+function revIDELiveCodeFileExtensions
+   return "livecode,rev,lc,livecodescript"
+end revIDELiveCodeFileExtensions
 
 on revIDEImportAsControl pType pFileName
    # Validate the type and filename
