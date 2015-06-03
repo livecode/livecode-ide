@@ -530,17 +530,10 @@ on revMenubarMenuButtonClicked pWhich
          revIDEOpenPalette "inspector"
          break
       case "Code"
-         # OK-2008-04-09 : New script editor changes. When in edit group mode, the selectObject actually
-         # returns incorrect long ids for objects that are inside the group being edited. To fix this problem
-         # we convert the long id to a "rugged id".
          if (the selectedObject) is empty then
-            edit script of the topStack
+            revIDEEditScriptOfObjects the topStack
          else
-            repeat for each line tObject in (the selectedObject)
-               local tRuggedObject
-               put revRuggedId(tObject) into tRuggedObject
-               edit the script of tRuggedObject
-            end repeat
+            revIDEEditScriptOfObjects the selobj
          end if
          break
       case "Message Box"
@@ -591,11 +584,11 @@ on revMenubarMenuButtonClicked pWhich
          break
       case "Messages"
          global gREVSuppressMessages
-         revMenubarDevelopmentMenuPick "Suppress Messages"
+         revIDEToggleSuppressMessages
          set the hilite of the target to gREVSuppressMessages
       case "Errors"
          global gREVSuppressErrors
-         revMenubarDevelopmentMenuPick "Suppress Errors"
+         revIDEToggleSuppressErrors
          set the hilite of me to gREVSuppressErrors
       case "Sample Stacks"
          revGoOnline
@@ -1596,11 +1589,7 @@ end revMenubarContextMenu
 
 on revMenubarSetContextMenu pType, pTarget
    set the text of button "context" of me to revMenubarContextMenu(pType, pTarget)
-   if pType is "card" then
-      set the script of button "context" of me to "on menuPick pWhich; revMenubarContextSubmenuPick pWhich; end menuPick"
-   else
-      set the script of button "context" of me to "on menuPick pWhich; revMenubarContextMenuPick pWhich; end menuPick"
-   end if
+   set the script of button "context" of me to "on menuPick pWhich; revMenubarContextMenuPick pWhich; end menuPick"
 end revMenubarSetContextMenu
 
 on revMenubarPopupContextualMenu pTargets
@@ -1877,60 +1866,22 @@ on revMenubarMenuPick pWhich
    end switch
 end revMenubarMenuPick
 
-on revMenubarContextSubmenuPick pWhich, pOwnerMenu
-   local tTargetStack
-   put revIDEStackOfObject(sMenuTarget) into tTargetStack
-   switch pWhich
-      ######## CARD AND STACK #########
-      case "Edit Card Script"
-         revIDEEditScriptOfObject the long id of this card of tTargetStack
-         break
-      case "Card Property Inspector"
-         revIDEOpenInspectorForObjects the long id of this card of tTargetStack
-         break
-      case "New Card"
-         set the defaultStack to tTargetStack
-         create card
-         break
-      case "Edit Stack Script"
-         revIDEEditScriptOfObject tTargetStack
-         break
-      case "Stack Property Inspector"
-         revIDEOpenInspectorForObjects tTargetStack
-         break
-      case "topLevel"
-      case "modeless"
-      case "palette"
-      case "modal"
-         send "revChangeMode pMenuItem, tTargetStack" to me in 200 milliseconds
-         break
-      case "Save"
-         if the effective fileName of stack tTargetStack is not empty
-         then revSave tTargetStack
-         else revSaveAs tTargetStack
-         break
-      case "Paste Objects"
-         set the defaultStack to tTargetStack
-         paste
-         break
-      default
-         --pMenuItem must be a message name
-         --either send it to the card or the stack
-         if pOwnerMenu is "Send Card Message"
-         then send "revSendMessage pMenuItem, the long id of this cd of stack tTargetStack" to me
-         else send "revSendMessage pMenuItem, the long id of stack tTargetStack" to me
-         break
-   end switch
-end revMenubarContextSubmenuPick
-
 on revMenubarContextMenuPick pWhich
-   switch pWhich
+   revMenubarContextMenuPickTarget pWhich, sMenuTarget
+end revMenubarContextMenuPick
+
+on revMenubarContextMenuPickTarget pWhich, pTarget
+   local tTargetStack
+   put revIDEStackOfObject(line 1 of pTarget) into tTargetStack
+   
+   set the itemdelimiter to "|"
+   switch item 1 of pWhich
       ######## OBJECTS #########
       case "Edit Script"
-         revIDEEditScriptOfObject sMenuTarget
+         revIDEEditScriptOfObject pTarget
          break
       case "Property Inspector"
-         revIDEOpenInspectorForObjects sMenuTarget
+         revIDEOpenInspectorForObjects pTarget
          break
       case "Cut"
          cut pTarget
@@ -1940,36 +1891,32 @@ on revMenubarContextMenuPick pWhich
          break
       case "Lock Location"
       case "lockLocation"
-         set the lockLoc of sMenuTarget to not (the lockLoc of sMenuTarget)
+         set the lockLoc of pTarget to not (the lockLoc of pTarget)
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
-         start editing sMenuTarget
+         start editing pTarget
          break
       case "Ungroup"
-         select sMenuTarget
+         select pTarget
          ungroup
          break
       case "Paste into Group"
          lock screen
-         start editing sMenuTarget
+         start editing pTarget
          send "revStopEditingGroupAfterPasting" to me in 500 milliseconds
          break
       case "Clear"
          local tNames, tWarning
          put empty into tNames
-         repeat for each line l in sMenuTarget
+         repeat for each line l in pTarget
             put the name of l & cr after tNames
          end repeat
          delete last char of tNames
          put "Are you sure you want to delete the following controls?" & cr & cr & tNames into tWarning
          answer warning tWarning with "No" or "Yes"
          if it is "Yes" then 
-            lock screen
-            repeat for each line l in sMenuTarget
-               delete l
-            end repeat
-            unlock screen
+            revIDEDeleteObjects pTarget
          end if
          break
          ######## IMAGE SPECIFIC #########
@@ -1977,81 +1924,87 @@ on revMenubarContextMenuPick pWhich
          send "menuPick Paint and Draw Tools" to btn "Tools" of cd 1 of stack "revMenubar" 
          break
       case "Launch Editor"
-         revEditImage sMenuTarget
+         revEditImage pTarget
          break
       case "Magnify"
-         set the magnify of sMenuTarget to not (the magnify of sMenuTarget)
-         if the magnify of sMenuTarget then
+         set the magnify of pTarget to not (the magnify of pTarget)
+         if the magnify of pTarget then
             if the tool is "pointer tool" or the tool is "browse tool" then 
                send "mouseUp" to btn "select" of stack "revTools"
             end if
          end if
          break 
       case "Make Original Size"
-         set the width of sMenuTarget to the formattedWidth of sMenuTarget
-         set the height of sMenuTarget to the formattedHeight of sMenuTarget
+         set the width of pTarget to the formattedWidth of pTarget
+         set the height of pTarget to the formattedHeight of pTarget
          break
          ######## FIELD SPECIFIC #########
       case "Paste Text"
          lock screen
          local tLockText, tTraversalOn
-         put the lockText of sMenuTarget into tLockText
-         put the traversalOn of sMenuTarget into tTraversalOn
-         set the lockText of sMenuTarget to false
-         set the traversalOn of sMenuTarget to true
-         if the selection is not empty and the long id of the selectedField is sMenuTarget then
+         put the lockText of pTarget into tLockText
+         put the traversalOn of pTarget into tTraversalOn
+         set the lockText of pTarget to false
+         set the traversalOn of pTarget to true
+         if the selection is not empty and the long id of the selectedField is pTarget then
             paste
          else
-            select after text of sMenuTarget
+            select after text of pTarget
             paste
          end if
-         set the lockText of sMenuTarget to tLockText
-         set the traversalOn of sMenuTarget to tTraversalOn
+         set the lockText of pTarget to tLockText
+         set the traversalOn of pTarget to tTraversalOn
          unlock screen
          break
       case "Can Receive Keyboard Focus"
       case "traversalOn"
-         set the traversalOn of sMenuTarget to not (the traversalOn of sMenuTarget)
+         set the traversalOn of pTarget to not (the traversalOn of pTarget)
          break
          ######## PLAYER SPECIFIC #########
       case "Play"
-         do "start" && sMenuTarget
+         do "start" && pTarget
          break
       case "Stop"
-         do "stop playing" && sMenuTarget
+         do "stop playing" && pTarget
          break
       case "Pause"
          --paused apparently reporting true when the player's playing
          --so always pause the player
-         set the paused of sMenuTarget to true
+         set the paused of pTarget to true
          --set the paused of gREVMenutarget to not (the paused of gREVMenuTarget)
          break
          ######## MENU SPECIFIC #########
       case "TopLevel Panel Stack"
-         toplevel the menuname of sMenuTarget
+         toplevel the menuname of pTarget
          break
+         ######## STACK SCPECIFIC ########
+      case "Save"
+         revIDESaveStack tTargetStack
+         break
+      case "Paste Objects"
+         set the defaultStack to tTargetStack
+         paste
+         break
+         ######### SUBMENUS ########
+      case "Align"
+         revIDEAlignObjects pTarget, item 2 of pWhich 
+         break     
+      case "Stack Mode"
+         revIDESetModeOfStack tTargetStack, item 2 of pWhich
+         break
+      case "Send Message"
+         local tMessage
+         put item 2 of pWhich into tMessage
+         send "revSendMessage tMessage, pTarget" to me
+         break
+      case "Card"
+         revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
+      case "Stack"
+         revMenubarContextMenuPickTarget item 2 to 3 of pWhich, tTargetStack
       default
-         set the itemDel to "|"
-         switch item 1 of pWhich
-            case "Align"
-               send "menuPick pWhich" to btn "Object" of stack "revMenuBar"     
-               break     
-            case "Send Message"
-               local tMessage
-               put item 2 of pWhich into tMessage
-               send "revSendMessage tMessage, sMenuTarget" to me
-               break
-            default
-               --Card and stack
-               local tOwnerMenu, tCardMenuItem
-               put item 2 of pWhich into tOwnerMenu
-               put the last item of pWhich into tCardMenuItem
-               set the itemDel to comma
-               revMenubarContextSubmenuPick tCardMenuItem, tOwnerMenu
-               break
-         end switch
+         break
    end switch
-end revMenubarContextMenuPick
+end revMenubarContextMenuPickTarget
 
 ######## FILE MENU ##########
 on revMenubarFileMenuPick pWhich
@@ -2157,40 +2110,7 @@ on revMenubarEditMenuPick pWhich
    global gREVChunkStore, gREVUndoList
    switch pWhich
       case "Undo"
-         if gREVUndoList is not empty then
-            if line -1 of gREVUndoList is "width" then
-               delete last line of gREVUndoList
-               
-               local tObject
-               repeat for each line tLine in gREVUndoList
-                  put item 1 to -2 of tLine into tObject
-                  if there is a tObject then
-                     set the width of tObject to item -1 of tLine
-                  end if
-                  send "revCacheGeometry true" to tObject
-               end repeat
-            else if line -1 of gREVUndoList is "height" then
-               delete last line of gREVUndoList
-               repeat for each line l in gREVUndoList
-                  put item 1 to -2 of l into tObject
-                  if there is a tObject then set the height of tObject to item -1 of l
-                  send "revCacheGeometry true" to tObject
-               end repeat
-            else if line -1 of gREVUndoList is "rect" then
-               delete last line of gREVUndoList
-               repeat for each line l in gREVUndoList
-                  put item 1 to -5 of l into tObject
-                  if there is a tObject then set the rect of tObject to item -4 to -1 of l
-                  send "revCacheGeometry true" to tObject
-               end repeat
-            end if
-            put empty into gREVUndoList
-         else
-            undo
-            repeat for each line l in the selObj
-               send "revCacheGeometry true" to l
-            end repeat
-         end if
+         revIDEUndo
          break
       case "Cut Object(s)"
       case "Cut Objects"
@@ -2198,24 +2118,7 @@ on revMenubarEditMenuPick pWhich
       case "Cut"
       case "Cut Text"
       case "Cut Image Selection"
-         if the selectedField is not empty and the lockText of the selectedField then 
-            exit to top
-         end if
-         lock screen
-         if the selectedImage is not empty then
-            if the selectedText is not empty then select empty
-            lock screen
-            set the defaultStack to revTargetStack(the long id of the selectedImage)
-            cut
-            unlock screen
-            exit revMenubarEditMenuPick
-         end if
-         if revCheckGroupDelete() then
-            cut
-         end if
-         revUpdatePalette
-         unlock screen
-         exit to top
+         revIDECut
          break
       case "Copy Objects"
       case "Copy Object(s)"
@@ -2223,15 +2126,7 @@ on revMenubarEditMenuPick pWhich
       case "Copy"
       case "Copy Text"
       case "Copy Image Selection"
-         if the selectedImage is not empty then
-            if the selectedText is not empty then select empty
-            set the defaultStack to revTargetStack(the long id of the selectedImage)
-            copy
-            exit revMenubarEditMenuPick
-         else copy
-         
-         revUpdatePalette
-         exit to top
+         revIDECopy
          break
       case "Paste"
       case "Paste Object(s)"
@@ -2239,75 +2134,7 @@ on revMenubarEditMenuPick pWhich
       case "Paste Text"
       case "Paste Image"
       case "Paste Unformatted"
-         lock screen
-         local tUnformatted
-         if pWhich is "Paste Unformatted" then 
-            put true into tUnformatted
-         end if
-         if the clipBoard is "text" and (the selectedChunk) is empty and (gREVChunkStore) is not empty then
-            try
-               select gREVChunkStore
-               if tUnformatted then
-                  put the clipBoardData["text"] into the selection
-               else
-                  paste
-               end if
-               --if pasting into the script editor, enable the Revert/Apply buttons
-               local tFocusedObject
-               put (the focusedObject) into tFocusedObject
-               
-               local tOwnercard
-               put word 5 to -1 of tFocusedObject into tOwnerCard
-               --check the Script field of the script editor is focused
-               if the name of tFocusedObject is "field " & quote & "Script" & quote and the name of tOwnerCard is "card " & quote & "revScript" & quote
-               then send "rawKeyUp" to tFocusedObject
-               exit revMenubarEditMenuPick
-            catch someError
-               beep
-            end try
-            exit revMenubarEditMenuPick
-         end if
-         lock messages
-         set the defaultStack to the topStack
-         if the clipBoard is not text and (the mode of the topStack is not 1 or the cantModify of the topStack) then
-            beep
-            exit revMenubarEditMenuPick
-         end if
-         if the clipBoard is "image" and the selectedImage is empty then
-            lock messages
-            lock screen
-            create image
-            put the clipBoardData["image"] into last image
-            unlock messages
-            unlock screen
-            local tObjects
-            put true into tObjects
-            choose pointer tool
-            select last image
-         else
-            if tUnformatted then
-               put the clipBoardData["text"] into the selection
-            else
-               -- MW-2012-02-10: [[ Bug ]] Make sure the IDE doesn't interfere with the textChanged
-               --   message.
-               unlock messages
-               paste
-               lock messages
-            end if
-         end if
-         if the clipBoard is "objects" or tObjects then
-            local tMilliseconds
-            put the milliseconds into tMilliseconds
-            repeat for each line l in the selObj
-               set the cREVGeneral["revUniqueID"] of l to tMilliseconds
-               add 1 to tMilliseconds
-            end repeat
-         end if
-         unlock messages
-         --if the clipBoard is among the items of "objects,image" or tObjects 
-         --then  "selectedObjectChanged" to button "revBackScript" of stack "revLibrary"
-         --exit to top
-         unlock screen
+         revIDEPaste
          break
       case "Clear Objects"
       case "Clear Card"
@@ -2486,24 +2313,15 @@ end revMenubarEditMenuPick
 
 on revMenubarToolsMenuPick pWhich
    switch pWhich
-      case "Database Query Builder"
-         # OK-2008-03-06 : Bug 6031. The query builder cannot be used in edit group mode
-         # so we turn this off if the user launches the stack.
-         if the editBackground of the topStack then
-            set the editBackground of the topStack to false
-         end if
-         
-         modeless "revdbquerysetup"
-         break
       case "Tools Palette"
          if the mode of stack "revTools" is 0 then palette "revTools"
          else close stack "revTools"
          break
       case "Browse Tool"
-         choose browse tool
+         revIDESetTool "browse"
          break
       case "Pointer Tool"
-         choose pointer tool
+         revIDESetTool "pointer"
          break
       case "paint and draw tools"
          local tToolsOnShow
@@ -2527,9 +2345,6 @@ on revMenubarToolsMenuPick pWhich
          # OK-2008-06-24: Bug 6575
          revIDEShowMessageBox
          break
-      case "Animation Builder"
-         palette "revAnimation"
-         break
       case "Application Browser"
          --modeless "revApplicationOverview"
          # TH-2008-02-07 :: Now opens using new mode that allows minimising
@@ -2537,9 +2352,6 @@ on revMenubarToolsMenuPick pWhich
          toplevel "revApplicationOverview"
          break
       case "Project Browser"
-         --         set the cIDEProjectBrowserOpen of stack "revPreferences" to true
-         --         revInternal__SavePreferences
-         --         modeless "revProjectBrowser"
          revIDEOpenPalette "project browser"
          break
       case "Extension Manager"
@@ -2586,33 +2398,22 @@ on revMenubarObjectMenuPick pWhich
          put "edited" into gREVStackStatus[the short name of this stack]
          break
       case "Object Inspector"
-         --send "revBuildPropertyPalette" to stack "revTemplatePalette"
-         revIDEOpenPalette "inspector"
+         revIDEOpenInspectorForObjects the selobj
          break
       case "Card Inspector"
-         select this cd of the topStack
-         --send "revBuildPropertyPalette" to stack "revTemplatePalette"
-         revIDEOpenPalette "inspector"
+         revIDEOpenInspectorForObjects the long id of this card of the topStack
          break
       case "Stack Inspector"
-         select empty
-         --send "revBuildPropertyPalette" to stack "revTemplatePalette"
-         revIDEOpenPalette "inspector"
+         revIDEOpenInspectorForObjects the topStack
          break 
       case "Object Script"
-         # OK-2008-04-09 : New script editor changes. When in edit group mode, the selectedObject returns
-         # incorrect long ids. We use the "rugged id" to get around this problem.
-         local tRuggedObject
-         repeat for each line tObject in (the selectedObject)
-            put revRuggedId(tObject) into tRuggedObject
-            edit the script of tRuggedObject
-         end repeat
+         revIDEEditScriptOfObject the selobj
          break
       case "Card Script"
-         edit script of this cd of the topStack
+         revIDEEditScriptOfObject the long id of this card of the topStack
          break
       case "Stack Script"
-         edit script of the topStack
+         revIDEEditScriptOfObject the topStack
          break
       case "Remove Group"
          set the defaultStack to the topStack
@@ -3393,13 +3194,7 @@ on revMenubarDevelopmentMenuPick pWhich
          palette "revMessageWatcher"
          break
       case "Clear all Breakpoints"
-         answer warning "Really clear all breakpoints from all open stacks?  This operation cannot be undone." with "Don't Clear" or "Clear"
-         if it is "Clear" then 
-            --            set the defaultStack to the topStack
-            --            revClearAllBreakPoints
-            # OK-2008-06-18
-            revDebuggerClearAllBreakpoints
-         end if
+         revIDEActionClearAllBreakpoints
          break
       case "Script Debug Mode"
          if revDebuggerEnabled() then
@@ -3419,59 +3214,11 @@ on revMenubarDevelopmentMenuPick pWhich
          revIDESuspendDevelopmentTools
          break
       case "Suppress Messages"
-         if not gREVSuppressMessages then
-            revInternal__LoadLibrary "revNoMessagesLibrary"
-            put true into gREVSuppressMessages
-            set the lockCursor to false
-            repeat for each line l in the pendingMessages
-               if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
-            end repeat
-            repeat for each line l in the frontScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after lRestore["front"]
-                  remove script of l from front
-               end if
-            end repeat
-            repeat for each line l in the backScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after lRestore["back"]
-                  remove script of l from back
-               end if
-            end repeat
-            repeat for each line l in the stacksInUse
-               if char 1 to 3 of l is not "rev" then
-                  put l & cr after lRestore["inUse"]
-                  stop using stack l
-               end if
-            end repeat
-         else if "revNoMessagesLibrary" is among the lines of revInternal__ListLoadedLibraries() then
-            revInternal__UnloadLibrary "revNoMessagesLibrary"
-            put false into gREVSuppressMessages
-            set the hilite of btn "suppress messages" to false
-            set the textStyle of btn "suppress messages" to "plain"
-            repeat for each line l in lRestore["front"]
-               insert script of l into front
-            end repeat
-            repeat for each line l in lRestore["back"]
-               insert script of l into back
-            end repeat
-            repeat for each line l in lRestore["inUse"]
-               start using stack l
-            end repeat
-            delete variable lRestore
-         end if
-         exit switch
+         revIDEToggleSuppressMessages
+         break
       case "Suppress Errors"
-         if not gREVSuppressErrors or gREVSuppressErrors is empty then
-            put true into gREVSuppressErrors
-            set the hilite of btn "Suppress Errors" to true
-            set the textStyle of btn "Suppress Errors" to "bold"
-         else
-            put false into gREVSuppressErrors
-            set the hilite of btn "Suppress Errors" to false
-            set the textStyle of btn "Suppress Errors" to "plain"
-         end if
-         exit switch
+         revIDEToggleSuppressErrors
+         break
       case "Simulate"
          revIDEDeployAction
          break
@@ -3678,47 +3425,21 @@ on revMenubarViewMenuPick pWhich
          exit switch
       default
          set the itemDel to "|"
-         if item 1 of pWhich is "Go to Report Page" then
-            send "revUpdateFields" to stack "revReportSetup"
-            switch item 2 of pWhich
-               case "First"
-                  send "revMoveFirstCard" to stack "revReportSetup"
-                  break
-               case "Prev"
-                  send "revMovePreviousCard" to stack "revReportSetup"
-                  break
-               case "Next"
-                  send "revMoveNextCard" to stack "revReportSetup"
-                  break
-               case "Last"
-                  send "revMoveLastCard" to stack "revReportSetup"
-                  break
-               case "Number..."
-                  ask question "Go to report page number:" titled "Report Page Number"
-                  if it is not empty then
-                     send "revMenuNavigation it" to stack "revReportSetup"
-                  end if
-                  break
-            end switch
-            
-         else
-            --Look and Feel
-            switch
-               case "Native" is in pWhich 
-                  set the lookAndFeel to "Appearance Manager"
-                  break
-               case "Mac OS" is in pWhich
-                  set the lookAndFeel to "Macintosh"
-                  break
-               case "Windows" is in pWhich
-                  set the lookAndFeel to "Windows 95"
-                  break
-               case "Motif" is in pWhich 
-                  set the lookAndFeel to "Motif"
-                  break
-            end switch
-            exit to top
-         end if
+         --Look and Feel
+         switch
+            case "Native" is in pWhich 
+               set the lookAndFeel to "Appearance Manager"
+               break
+            case "Mac OS" is in pWhich
+               set the lookAndFeel to "Macintosh"
+               break
+            case "Windows" is in pWhich
+               set the lookAndFeel to "Windows 95"
+               break
+            case "Motif" is in pWhich 
+               set the lookAndFeel to "Motif"
+               break
+         end switch
          break
    end switch
 end revMenubarViewMenuPick

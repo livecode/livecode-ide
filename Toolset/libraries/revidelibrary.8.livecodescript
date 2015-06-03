@@ -2553,10 +2553,12 @@ on revIDECloneObjectWithDefaults pLongID
 end revIDECloneObjectWithDefaults
 
 on revIDEDeleteObjects pObjectIDs
+   lock screen
    local tGroupID
    repeat for each line tControlID in pObjectIDs
       delete tControlID
    end repeat
+   unlock screen
 end revIDEDeleteObjects
 
 on revIDEGroupObjects pObjectIDs

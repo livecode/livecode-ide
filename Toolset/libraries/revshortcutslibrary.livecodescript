@@ -35,7 +35,7 @@ global gREVSuppressMessages
 
 on arrowKey pDirection, pTarget
    if pTarget is empty then
-      put the target into pTarget
+      put the long id of the target into pTarget
    end if
    
    if word 1 of the name of pTarget is "button" and the arm of pTarget then pass arrowKey
