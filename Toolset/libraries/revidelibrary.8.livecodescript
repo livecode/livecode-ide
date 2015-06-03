@@ -4332,8 +4332,8 @@ Creates a new mainstack in the default location
 
 Associations: stack
 
-pWidth (optional number): The width of the newly created stack. If left empty, the default stack width is used
-pHeight (optional number): The height of the newly created stack. If left empty, the default stack height is used
+pWidth (optional number): The width of the newly created stack. If left empty, 400 is used
+pHeight (optional number): The height of the newly created stack. If left empty, 400 is used
 
 Example:
 revIDENewMainstack
@@ -4343,9 +4343,47 @@ revIDENewMainstack 100,100
 Tags: ide
 */
 on revIDENewMainstack pWidth, pHeight
-  # Set the width and height of the template stack
-  # Generate a unique name for the stack
-  # Create the new stack
+   # Set the width and height of the template stack
+   
+   # Generate a unique name for the stack
+   local tNumber
+   put 1 into tNumber
+   repeat
+      if there is a stack ("Untitled" && tNumber) then  add 1 to tNumber
+      else exit repeat
+   end repeat
+   
+   # Setup the template stack
+   set the name of the templateStack to "Untitled" && tNumber
+   set the visible of the templateStack to false
+   if pWidth > 100 then
+      set the width of the templateStack to pWidth
+   else
+      set the width of the templateStack to 400
+   end if
+   if pHeight > 100 then
+      set the height of the templateStack to pHeight
+   else
+      set the height of the templateStack to 400
+   end if
+   if revIDEGetPreference("cDestroyStack") then
+      set the destroyStack of the templateStack to true
+      set the destroyWindow of the templateStack to true
+   end if
+   
+   local tLeft
+   if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
+   else put item 1 of the windowBoundingRect + 20 into tLeft
+   set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
+   
+   # Create the new stack
+   lock messages
+   create stack
+   show stack it
+   unlock messages
+   
+   # Final items
+   reset the templateStack
 end revIDENewMainstack
 
 /*
@@ -4361,10 +4399,12 @@ revIDENewScriptOnlyStack "MyNewScriptOnlyStack"
 Tags: ide
 */
 on revIDENewScriptOnlyStack pName
-  # Validate the name
-  # Create the new script only stack
-  # Give it a name
-  # Open the script editor for the new stack
+   if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
+   if there is a stack pName then return __revIDEError("A stack with that name already exists") 
+  
+   set the name of the templatestack to pName
+   create script only stack
+   edit the script of stack pName
 end revIDENewScriptOnlyStack
 
 /*
@@ -4405,11 +4445,34 @@ on revIDEOpenStack pFilePath
 end revIDEOpenStack
 
 /*
+Closes an stack.
+
+Associations: stack
+
+pStackID (String): The long ID of the stack to close
+pDestroy (Optional Boolean): True if the stack should be deleted from memory
+
+Example:
+# Close the stack be keep in memory
+revIDECloseStack the long ID of the topstack
+
+# Close the stack completely removing it from memory
+revIDECloseStack the long ID of the topstack, true
+
+Tags: ide
+*/
+on revIDECloseStack pStackID, pDestroy
+   # validate pStackID
+   # Close stack
+   # If pDestroy stack is true then delete stack
+end revIDECloseStack
+
+/*
 Returns a list of the recently opened stacks.
 
 Associations: stack
 
-Returns: A return and | (delimeted) list of stack title and filename
+Returns: A return and | (pipe) delimited list of stack title and filename
 
 
 Example:
@@ -4427,3 +4490,159 @@ Tags: ide
 function revIDERecentFiles
   # return list
 end revIDERecentFiles
+
+/*
+Returns a list control types that can be imported by LiveCode.
+
+Associations: controls
+
+Returns: A return delimeted list of control types that can be imported
+
+Example:
+local tImportableControls
+put revIDEImportableControls() into tImportableControls
+
+# put revIDEImportableControls
+# image
+# video
+# audio
+
+Tags: ide
+*/
+function revIDEImportableControls
+  # return list
+end revIDEImportableControls
+
+/*
+Launches the standard ask dialog and returns the users selection.
+
+pType (String): The type of file the be selected. If pType is not empty and not among the options below, it is assumed to be a custom filter in the form required by the ask command.
+- image: Launches an ask dialog filtering for the following image file types: JPEG, GIF, PNG.
+- stack: Launches an ask dialog filtering for the following stack file  types: lc, livecodescript, livecode.
+- audio: Launches an ask dialog filtering for the following audio file types: mp3, aiif, wav.
+- video: Launches an ask dialog filtering for the following audio file types: mov, mp4.
+ pBasePath (Optional String): The default path that the ask dialog should point to when opened. If pBasePath is not specified, the "defaultFolder" is used.
+ pInstructions (Optional String): The instructions to place in the title of the ask dialog. If not instructions are defined, default messages for each type are displayed.
+ 
+ References:ask,defaultfolder
+
+ Returns: The path to the selected file.
+ 
+ The result: Sets the result to "cancel" if the user cancels the ask dialog.
+
+Example:
+revIDEAsk "image"
+
+revIDEAsk "image", "/Users/xxx/Desktop/"
+
+revIDEAsk "image", "/Users/xxx/Desktop/", "Please choose the video you would like to load"
+
+revIDEAsk "image", "", "Please choose the video you would like to load"
+
+Tags: ide
+*/
+function revIDEAsk pType, pBasePath, pInstructions
+   # validate pType, pBasePath, pInstructions
+   # pop up ask dialog
+   # validate response
+   # return response
+end revIDEAsk
+
+/*
+Launches the standard ask dialog and returns the users selection.
+
+pType (String): The type of file the be selected. If pType is not empty and not among the options below, it is assumed to be a custom filter in the form required by the ask command.
+- image: Launches an ask dialog filtering for the following image file types: JPEG, GIF, PNG.
+- stack: Launches an ask dialog filtering for the following stack file  types: lc, livecodescript, livecode.
+- audio: Launches an ask dialog filtering for the following audio file types: mp3, aiif, wav.
+- video: Launches an ask dialog filtering for the following audio file types: mov, mp4.
+ pBasePath (Optional String): The default path that the ask dialog should point to when opened. If pBasePath is not specified, the "defaultFolder" is used.
+ pInstructions (Optional String): The instructions to place in the title of the ask dialog. If not instructions are defined, default messages for each type are displayed.
+ 
+ References:ask,defaultfolder
+
+ Returns: The path to the selected file.
+ 
+ The result: Sets the result to "cancel" if the user cancels the ask dialog.
+
+Example:
+revIDEAsk "image"
+
+revIDEAsk "image", "/Users/xxx/Desktop/"
+
+revIDEAsk "image", "/Users/xxx/Desktop/", "Please choose the video you would like to load"
+
+revIDEAsk "image", "", "Please choose the video you would like to load"
+
+Tags: ide
+*/
+function revIDEAskFile pType, pBasePath, pInstructions
+   # validate pType, pBasePath, pInstructions
+   # pop up ask dialog
+   # validate response
+   # return response
+end revIDEAskFile
+
+on revIDEImportAsControl pType pFileName
+   # Validate the type and filename
+   # Create the control
+   # set the filename
+end revIDEImportAsControl
+
+function revIDESnapshotScreenImageData
+   # Take a snapshot of the screen
+   # Return the image data
+end revIDESnapshotScreenImageData
+
+on revIDESnapshopScreen
+   # get screen image data
+   # create image
+   # set data of image
+end revIDESnapshopScreen
+
+function revIDESnapshotSelectedObjectsImageData
+   # Take a snapshot of the selected objects
+   # Return the image data
+end revIDESnapshotSelectedObjectsImageData
+
+on revIDESnapshotSelectedObjects
+   # get image data for selected objects
+   # create image
+   # set data of image
+end revIDESnapshotSelectedObjects
+
+on revIDESaveStack pStackID
+   # validate pStackID (exists and that it has a filename)
+   # save the stack
+end revIDESaveStack
+
+on revIDEActionSaveStack pStackID
+   # validate pStackID (exists)
+   # validate stack has filename -> revIDESaveStack
+   # Ask for a file to save to -> revIDEAskFile "stack"
+   # Save stack -> revIDESaveStack
+end revIDEActionSaveStack
+
+on revIDESaveStackAs pStackID
+   # validate pStackID (exists)
+   # Ask for a file to save to -> revIDEAskFile "stack"
+   # Save stack -> revIDESaveStack
+end revIDESaveStackAs
+
+on revIDEMoveSubstackToFile pStackID
+   # Validate stack exists
+   # Validate stack has a parent
+   # Ask for the file to move it for
+   # Set filename of stack / remove parent link
+end revIDEMoveSubstackToFile
+
+on revIDERevertToSavedStack pStackID
+   # validate stack exists
+   # revert stack
+end revIDERevertToSavedStack
+
+on revIDESaveAsStandalone pStackID
+   # validate stack exists
+   # attempt to save as standalone
+end revIDESaveAsStandalone
+
