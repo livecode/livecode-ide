@@ -4402,8 +4402,7 @@ on revIDENewScriptOnlyStack pName
    if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
    if there is a stack pName then return __revIDEError("A stack with that name already exists") 
   
-   set the name of the templatestack to pName
-   create script only stack
+   create script only stack pName
    edit the script of stack pName
 end revIDENewScriptOnlyStack
 
@@ -4420,7 +4419,8 @@ revIDENewSubstack the long ID of the topstack
 Tags: ide
 */
 on revIDENewSubstack pParentStackID
-  # Validate that pParentStack exists
+   if there is not a stack pParentStackID then return __revIDEError("Can only create a substack on a stack that exists")
+  
   # Generate a unique name for the given stack
   # Set the parent stack
   # Create the stack
@@ -4646,3 +4646,254 @@ on revIDESaveAsStandalone pStackID
    # attempt to save as standalone
 end revIDESaveAsStandalone
 
+on revIDEUndo
+   # Undo
+end revIDEUndo
+
+on revIDECut
+   
+end revIDECut
+
+on revIDECutText pTextChunk
+   
+end revIDECutText
+
+on revIDECutObjects pObjectList
+   
+end revIDECutObjects
+
+on revIDECopy
+   
+end revIDECopy
+
+on revIDECopyText pTextChunk
+   
+end revIDECopyText
+
+on revIDECopyObjects pObjectList
+   
+end revIDECopyObjects
+
+on revIDEPaste
+   
+end revIDEPaste
+
+on revIDEPasteObjects
+   
+end revIDEPasteObjects
+
+on revIDEMakePlainText pText
+   
+end revIDEMakePlainText
+
+on revIDEActionPasteUnformatted
+   
+end revIDEActionPasteUnformatted
+
+on revIDECloneObjects pObjectList
+   
+end revIDECloneObjects
+
+on revIDESelectAllObjects
+   
+end revIDESelectAllObjects
+
+on revIDEDeselectAllObjects
+   
+end revIDEDeselectAllObjects
+
+on revIDESelectAllText
+   
+end revIDESelectAllText
+
+on revIDEDeselectAllText
+   
+end revIDEDeselectAllText
+
+on reviDEInvertObjectSelection
+   
+end reviDEInvertObjectSelection
+
+on revIDEToggleSelectGroupedControl
+   
+end revIDEToggleSelectGroupedControl
+
+on revIDEToggleIntersectedSelection
+   
+end revIDEToggleIntersectedSelection
+
+on revIDEChooseBrowseTool
+   
+end revIDEChooseBrowseTool
+
+on revIDEChoosePointerTool
+   
+end revIDEChoosePointerTool
+
+on revIDEStyleTextPlain
+   
+end revIDEStyleTextPlain
+
+on revIDEStyleTextBold
+   
+end revIDEStyleTextBold
+
+on revIDEStyleTextItalic
+   
+end revIDEStyleTextItalic
+
+on revIDEStyleTextUnderline
+   
+end revIDEStyleTextUnderline
+
+on revIDEStyleTextStrikeOut
+   
+end revIDEStyleTextStrikeOut
+
+on revIDEStyleTextBox
+   
+end revIDEStyleTextBox
+
+on revIDEStyleText3DBox
+   
+end revIDEStyleText3DBox
+
+on revIDEStyleTextLink
+   
+end revIDEStyleTextLink
+
+on revIDEStyleTextSubscript
+   
+end revIDEStyleTextSubscript
+
+on revIDEStyleTextSuperscript
+   
+end revIDEStyleTextSuperscript
+
+on revIDESetTextFont pFont
+   
+end revIDESetTextFont
+
+on revIDESetTextSize pSize
+   
+end revIDESetTextSize
+
+on revIDESetTextColor pColor
+   
+end revIDESetTextColor
+
+on revIDESetTextAlign pAlign
+   
+end revIDESetTextAlign
+
+function revIDETestTargets
+   
+end revIDETestTargets
+
+on revIDESetTestTarget pTarget
+   
+end revIDESetTestTarget
+
+on revIDEDeployStack pStackID
+   
+end revIDEDeployStack
+
+on revIDEToggle pProperty
+   # Script debug mode
+   # Suppress messages
+   # Suppress errors
+   # Devlopment tools
+   # Show palettes
+   # Invisible objects
+   # Ruler
+   # Grid
+   # Backdrop
+   # IDE Stacks (in lists)
+end revIDEToggle
+
+on revIDETogglePalette pPaletteName
+   # show/hide palette
+end revIDETogglePalette
+
+function revIDEAvailablePalettes
+   # return palette & visibility
+end revIDEAvailablePalettes
+
+function revIDEOpenWindows
+   
+end revIDEOpenWindows
+
+on revIDESendWindowToBack
+   
+end revIDESendWindowToBack
+
+on revIDEDocumentationLoad pSection, pItem, pExtra
+   
+end revIDEDocumentationLoad
+
+on revIDELaunchResource pName
+   switch pName
+      case "Buy"
+         launch url "http://www.runrev.com/links/livecode/tools-buy"
+         break
+      case "Support"
+         launch url "http://www.runrev.com/links/livecode/tools-help"
+         break
+      case "License Agreement"
+         launch document (revEnvironmentToolsPath() & slash & "License Agreement.txt")
+         break
+      case "Release Notes"
+         launch document (revEnvironmentToolsPath() & slash & "Release Notes.pdf")
+         break
+      case "iOS Release Notes"
+         launch document (revEnvironmentToolsPath() & slash & "iOS Release Notes.pdf")
+         break
+      case "Android Release Notes"
+         launch document (revEnvironmentToolsPath() & slash & "Android Release Notes.pdf")
+         break
+      case "Resources"
+         launch document revEnvironmentToolsPath() & slash & "Resources"
+         break
+      case "Template Projects"
+         
+         break
+      case "Sample Stacks"
+         launch url "http://livecode.com/links/livecode/revonline"
+         break
+      case "Sample Scripts"
+         launch url "http://lessons.runrev.com/m/2592"
+         break
+      case "Beginners Guide"
+         launch url "http://livecode.com/links/livecode/beginners-course"
+         break
+      case "Tutorials"
+         launch url "http://livecode.com/links/livecode/tutorials"
+         break
+      case "All Guides"
+         launch url "http://livecode.com/links/livecode/guides"
+         break
+      case "API"
+         launch url "http://livecode.com/links/livecode/api"
+         break
+      case "Forums"
+         launch url "http://livecode.com/links/livecode/forum"
+         break
+      case "Technical Questions"
+         launch url "http://livecode.com/links/stackoverflow"
+         break
+      case "Use List"
+         launch url "http://livecode.com/links/lists"
+         break
+      case "Newsletters"
+         launch url "http://livecode.com/links/livecode/newsletters"
+         break
+   end switch
+end revIDELaunchResource
+
+on revIDEActionRelicense
+   
+end revIDEActionRelicense
+
+on revIDERelicense
+   
+end revIDERelicense
