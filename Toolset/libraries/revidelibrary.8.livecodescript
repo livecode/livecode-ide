@@ -4779,25 +4779,6 @@ on revIDESaveStack pStackID
    delete last char of tSubTabbed
    put tSubTabbed into tSubStacks
    
-   local tOutput
-   put revIDELocalise("Saving...") & return & "stack:" & tab & tStackName & return into tOutput
-   put "mainStack:" & tab & tMainStack & return after tOutput
-   put "subStacks:" & tSubStacks & return after tOutput
-   put revIDELocalise("file name:") & tab & the effective fileName of stack tStackName after tOutput
-   put tOutput into field 1 of stack "revSaving"
-   
-   set the width of field 1 to the formattedWidth of field 1 + 8
-   set the height of field 1 to the formattedHeight of field 1
-   set the topleft of field 1 to 0,0
-   set the width of this stack to the right of field 1
-   set the height of this stack to the height of field 1
-   set the loc of this stack to the loc of stack tStackName
-   set the loc of stack "revSaving" to the loc of stack pWhichStack
-   palette "revSaving"
-   
-   local tPrompt
-   put revIDELocalise("Save complete - click to continue") into tPrompt
-   
    local tStacksList
    local tFinal
    put pWhichStack into tFinal
@@ -4805,10 +4786,10 @@ on revIDESaveStack pStackID
    
    local tResultLog
    
+   set the visible of stack "revSaving" to false
+   palette "revSaving"
    set the cSavingStack of card 1 of stack "revSaving" to pWhichStack
-   
-   wait 50 milliseconds
-   set the cursor to watch
+   show stack "revSaving"
    
    local tSelectedList
    put (the selObj) into tSelectedList
@@ -4919,7 +4900,7 @@ on revIDESaveStack pStackID
    end repeat
    
    delete last char of tResultLog
-   put "Save complete - click to continue" into line -1 of field 1 of stack "revSaving"
+   put revIDELocalise("Save complete - click to continue") into line -1 of field 1 of stack "revSaving"
    
    -- MW-2012-09-17: [[ Bug 10388 ]] Flush events to stop bunching.
    get flushEvents("all")
@@ -4934,6 +4915,7 @@ on revIDESaveStack pStackID
    
    close stack "revSaving"
    set the defaultStack to pWhichStack
+   
    return tResultLog
 end revIDESaveStack
 
