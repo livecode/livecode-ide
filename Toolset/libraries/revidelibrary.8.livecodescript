@@ -1232,12 +1232,14 @@ end __revIDEAddSubscription
 
 on revIDESubscribe pMessage, pObjectList
    # Validate input
-   //if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
-
+   if not revIDEMessageIsValid(pMessage) then 
+      return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
+   end if
+   
    # Get the log ID of the calling object
    local tCallingObjectID
    put the long ID of the target into tCallingObjectID
-
+   
    # Special case propertyChanged where we have to register for listeners for obejcts
    if pMessage is "idePropertyChanged" then
       repeat for each line tObject in pObjectList
@@ -1247,7 +1249,7 @@ on revIDESubscribe pMessage, pObjectList
    else
       __revIDEAddSubscription pMessage, tCallingObjectID
    end if
-
+   
    if the result is not empty then
       return the result
    end if
@@ -1330,8 +1332,10 @@ returns (string): Return delimited list of object ID's, 1 per line.
 */
 function revIDESubscribedObjects pMessage
    # Validate input
-   if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" then return __revIDEError("The message ("&pMessage&") you are enquiring about is not valid. Please check the documentation for which messages you can subscribe to.")
-
+   if not revIDEMessageIsValid(pMessage) then 
+      return __revIDEError("The message ("&pMessage&") you are enquiring about is not valid. Please check the documentation for which messages you can subscribe to.")
+   end if
+   
    return sSubscriptions[pMessage]["callback targets"]
 end revIDESubscribedObjects
 
@@ -1346,21 +1350,26 @@ function revIDEMessages
    return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
 end revIDEMessages
 
+function revIDEMessageIsValid pMessage
+   return (pMessage is among the items of revIDEMessages() \
+         or pMessage begins with "idePreferenceChanged" \
+         or pMessage begins with "ideInspectObjects" \
+         or pMessage begins with "ideToggleChanged")
+end revIDEMessageIsValid
+
 # System function telling the IDE to send
 on revIDEMessageSend pMessage, pEffectedTarget
    lock screen
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
-   //if the tool is "browse tool" and pMessage is not "ideToolChanged" then exit revIDEMessageSend
-
+   
    # Validate input
-   --put the milliseconds && pMessage & return & line 1 to 20 of msg into msg
-
-   //
-   if pMessage is not among the items of revIDEMessages() and not pMessage begins with "idePreferenceChanged" and not pMessage begins with "ideInspectObjects" then return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.")
-   //if pMessage is "ideExtensionStatusChanged" then breakpoint
+   if not revIDEMessageIsValid(pMessage) then 
+      return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.")
+   end if
+   
    # If in run mode don't send any updates
    //if the tool is not "pointer tool" then exit revIDEMessageSend
-
+   
    local tSubscriptionList
    if pMessage is "idePropertyChanged" then
       local tTargetsA, tSubscription
@@ -1374,14 +1383,14 @@ on revIDEMessageSend pMessage, pEffectedTarget
    else
       put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
    end if
-
+   
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-
+      
       # If the stack isn't visible on screen, don't send a message
       local tStackID
       set the itemdel to "stack"
@@ -1390,15 +1399,16 @@ on revIDEMessageSend pMessage, pEffectedTarget
       if tStackID begins with "tack" then delete char 1 to 4 of tStackID
       put "stack" before tStackID
       if the mode of tStackID is 0 or the visible of tStackID is false then next repeat
-
+      
       # Send the message!
       set the itemdel to ":"
       local tMessage
       put item 1 of pMessage into tMessage
-
-      switch  tMessage
+      
+      switch tMessage
          case "idePreferenceChanged"
-            dispatch "idePreferenceChanged" to tObjectID with item 2 of pMessage
+         case "ideToggleChanged"
+            dispatch tMessage to tObjectID with item 2 of pMessage
             break
          case "ideFindMoreWidgets"
             dispatch pMessage to tObjectID with pEffectedTarget
@@ -1416,7 +1426,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
             dispatch pMessage to tObjectID with pEffectedTarget
             break
       end switch
-
+      
       --put "SENT" && the milliseconds && pMessage && "sent to" && tObjectID & return & line 1 to 20 of msg into msg
    end repeat
    unlock screen
@@ -3287,6 +3297,10 @@ function revIDEPaletteToStackName pPalette
          return "revStartCenter"
       case "welcome"
          return "revWelcome"
+      case "search"
+         return "revSearch"
+      case "preferences"
+         return "revPreferencesGUI"
    end switch
 end revIDEPaletteToStackName
 
@@ -3321,6 +3335,8 @@ command revIDEOpenPalette pPaletteName
       case "message box"
          palette stack tStackName
          break
+      case "search"
+      case "preferences"
       case "project browser"
       case "extension manager"
          modeless stack tStackName
@@ -5293,6 +5309,29 @@ on revIDEActionPasteUnformatted
    put the clipBoardData["text"] into the selection
 end revIDEActionPasteUnformatted
 
+on revIDEActionClear
+   lock screen
+   # Clear the selection in image selection context
+   if the selectedImage is not empty then
+      set the defaultStack to revTargetStack(the long id of the selectedImage)
+      delete
+      exit revIDEActionClear
+   end if
+   
+   # Can't clear locked text
+   if the selectedField is not empty and the lockText of the selectedField then 
+      exit revIDEActionClear
+   end if
+   
+   # Otherwise delete objects or text
+   set the defaultStack to the topStack
+   if revCheckGroupDelete() then 
+      delete
+   end if
+   revIDEMessageSend "ideSelectedObjectChanged"
+   unlock screen
+end revIDEActionClear
+
 on revIDEActionDuplicate
    lock screen
    if the selObj is not empty then
@@ -5333,11 +5372,15 @@ on revIDEActionDuplicate
    unlock screen
 end revIDEActionDuplicate
 
-on revIDESelectAllObjects
-   # Can't select all objects on IDE stacks. 
+on revIDEDuplicateCard
+   clone this card
+end revIDEDuplicateCard
+
+on revIDESelectAll
+   # Can't select all objects on IDE stacks, but can in theory select text
    if the mode of the topStack is not 1 and the selectedField is empty then
       beep
-      exit revIDESelectAllObjects
+      exit revIDESelectAll
    end if
    
    # In image selection context, select all creates a selection around the entire rect of the image
@@ -5349,10 +5392,10 @@ on revIDESelectAllObjects
       choose select tool
       drag from item 1 to 2 of tRect to item 3 to 4 of tRect
       unlock screen
-      exit revIDESelectAllObjects
+      exit revIDESelectAll
    end if
    
-   # In field selection context, ensure the focu
+   # In text selection context, ensure the target field is the focused one
    if the selectedField is not empty \
          and revTargetStack(the focusedObject) is revTargetStack(the long id of the selectedField) then
       if the lockText of the selectedField then exit to top
@@ -5364,8 +5407,10 @@ on revIDESelectAllObjects
       end if
       if the tool is not "pointer tool" then 
          beep
-         exit revIDESelectAllObjects
+         exit revIDESelectAll
       end if
+      
+      # Select all objects that can be selected
       lock screen
       lock messages
       set the defaultStack to the topStack
@@ -5387,41 +5432,45 @@ on revIDESelectAllObjects
       end repeat
       unlock screen
       unlock messages
-      send "selectedObjectChanged" to stack "revBackScriptLibrary"
+      revIDEMessageSend "ideSelectedObjectChanged"
    end if
-   
-   // EJB Added to update new Project Browser
-   //send "refreshBrowser" to stack "revProjectBrowser"
-   
-   break
-end revIDESelectAllObjects
+end revIDESelectAll
 
-on revIDEDeselectAllObjects
-   
-end revIDEDeselectAllObjects
+on revIDEDeselectAll
+   select empty
+   revIDEMessageSend "ideSelectedObjectChanged"
+end revIDEDeselectAll
 
-on revIDESelectAllText
-   
-end revIDESelectAllText
-
-on revIDEDeselectAllText
-   
-end revIDEDeselectAllText
-
-on reviDEInvertObjectSelection
-   
-end reviDEInvertObjectSelection
+on revIDEInvertObjectSelection
+   # Can't select objects on IDE stacks
+   if the mode of the topStack is not 1 then
+      beep
+      exit reviDEInvertObjectSelection
+   end if
+   lock screen
+   lock messages 
+   set the defaultStack to the topStack
+   repeat with i = 1 to the number of controls
+      if (the visible of control i or the showInvisibles) and (not the selectGroupedControls or (the selectGroupedControls and word 1 of the name of control i is not "group")) then
+         set the selected of control i to not the selected of control i
+      end if
+      if not the selectGroupedControls then add the number of layers in control i to i
+   end repeat
+   unlock screen
+   unlock messages
+   revIDEMessageSend "ideSelectedObjectChanged"
+end revIDEInvertObjectSelection
 
 on revIDEChooseBrowseTool
-   
+   revIDESetTool "browse"
 end revIDEChooseBrowseTool
 
 on revIDEChoosePointerTool
-   
+   revIDESetTool "pointer"
 end revIDEChoosePointerTool
 
 on revIDEStyleTextPlain
-   
+
 end revIDEStyleTextPlain
 
 on revIDEStyleTextBold
@@ -5488,8 +5537,56 @@ on revIDEDeployStack pStackID
    
 end revIDEDeployStack
 
+local sRestoreState
 on revIDEToggle pProperty
+   local tToggleMessage
    switch pProperty
+      case "Suppress Messages"
+         global gRevSuppressMessages
+         put "suppressMessages" into tToggleMessage
+         if not gREVSuppressMessages then
+            put true into gREVSuppressMessages
+            # Send the suppress messages toggle message before actually suppressing messages
+            revIDEMessageSend "ideToggleChanged:" & tToggleMessage
+            set the lockCursor to false
+            repeat for each line l in the pendingMessages
+               if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
+            end repeat
+            repeat for each line l in the frontScripts
+               if char 1 to 3 of the short name of l is not "rev" then
+                  put l & cr after sRestoreState["front"]
+                  remove script of l from front
+               end if
+            end repeat
+            repeat for each line l in the backScripts
+               if char 1 to 3 of the short name of l is not "rev" then
+                  put l & cr after sRestoreState["back"]
+                  remove script of l from back
+               end if
+            end repeat
+            repeat for each line l in the stacksInUse
+               if char 1 to 3 of l is not "rev" then
+                  put l & cr after sRestoreState["inUse"]
+                  stop using stack l
+               end if
+            end repeat
+            revInternal__LoadLibrary "revNoMessagesLibrary"
+            exit revIDEToggle
+         else
+            revInternal__UnloadLibrary "revNoMessagesLibrary"
+            put false into gREVSuppressMessages
+            repeat for each line l in sRestoreState["front"]
+               insert script of l into front
+            end repeat
+            repeat for each line l in sRestoreState["back"]
+               insert script of l into back
+            end repeat
+            repeat for each line l in sRestoreState["inUse"]
+               start using stack l
+            end repeat
+            delete variable sRestoreState
+         end if
+         break
       case "Suppress Errors"
          global gRevSuppressErrors
          if not gREVSuppressErrors or gREVSuppressErrors is empty then
@@ -5497,6 +5594,24 @@ on revIDEToggle pProperty
          else
             put false into gREVSuppressErrors
          end if
+         put "suppressErrors" into tToggleMessage
+         break
+      case "Select Grouped Controls"
+         set the selectGroupedControls to not (the selectGroupedControls)
+         if the selectGroupedControls and word 1 of (the selObj) is "group" then 
+            select empty
+            revIDEMessageSend "ideSelectedObjectChanged"
+         end if
+         put "selectGrouped" into tToggleMessage
+         break
+      case "Intersected Selections"
+         if the selectionMode is "intersect" then
+            set the selectionMode to "surround"
+         else
+            set the selectionMode to "intersect"
+         end if
+         put "selectionMode" into tToggleMessage
+         break
    end switch
    # Script debug mode
    # Suppress messages
@@ -5508,6 +5623,7 @@ on revIDEToggle pProperty
    # Grid
    # Backdrop
    # IDE Stacks (in lists)
+   revIDEMessageSend "ideToggleChanged:" & tToggleMessage
 end revIDEToggle
 
 on revIDETogglePalette pPaletteName

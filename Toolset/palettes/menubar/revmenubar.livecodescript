@@ -16,6 +16,11 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:cToolbarText"
    revIDESubscribe "ideToolChanged"
    
+   revIDESubscribe "ideToggleChanged:suppressMessages"
+   revIDESubscribe "ideToggleChanged:suppressErrors"
+   revIDESubscribe "ideToggleChanged:selectGrouped"
+   revIDESubscribe "ideToggleChanged:selectionMode"
+   
    setMenuProperties
    generateMenu
    updateMenubarPreference
@@ -150,6 +155,10 @@ on idePreferenceChanged pPreference
          break
    end switch
 end idePreferenceChanged
+
+on ideToggleChanged pToggle
+   updateButtonState
+end ideToggleChanged
 
 on generateMenu
    generateMenubarUI
@@ -385,26 +394,34 @@ on updateMenubarPreference
    set the topleft of me to tTopLeft
 end updateMenubarPreference
 
+on setButtonHilite pLongId, pValue
+   if pValue then
+      set the hilite of pLongID to true
+      set the textStyle of pLongID to "bold"
+   else
+      set the hilite of pLongID to false
+      set the textStyle of pLongID to "plain"
+   end if
+end setButtonHilite
+
 on updateButtonState
    local tState
    put ((the selectedField) is empty) & comma & ((the selObj) is empty) & comma & (the mode of the topStack is 1) into tState
    
    if the editBg of the topStack and word 1 of (the selObj) is not "group" then
-      set the hilite of button "edit group" of group "menu" of me to true
-      set the textStyle of button "edit group" of group "menu" of me to "bold"
+      setButtonHilite the long id of button "edit group" of group "menu" of me, true
       enable button "edit group" of group "menu" of me 
    else
-      set the hilite of button "edit group" of group "menu" of me to false
-      set the textStyle of button "edit group" of group "menu" of me to "plain"
+      setButtonHilite the long id of button "edit group" of group "menu" of me, false
       enable button "edit group" of group "menu" of me
    end if
+   
    if (the selObj) is not empty and word 1 of (the selObj) is "group" and the number of lines in (the selObj) is 1 then
-      set the hilite of button "Group" of group "menu" of me to true
+      setButtonHilite the long id of button "Group" of group "menu" of me, true
       set the textStyle of button "Group" of group "menu" of me to "bold"
       set the label of button "Group" of group "menu" of me to "Ungroup"
    else
-      set the hilite of button "Group" of group "menu" of me to false
-      set the textStyle of button "Group" of group "menu" of me to "plain"
+      setButtonHilite the long id of button "Group" of group "menu" of me, false
       set the label of button "Group" of group "menu" of me to "Group"
       if not the editBg of the topStack then 
          disable button "edit group" of group "menu" of me 
@@ -440,6 +457,12 @@ on updateButtonState
          disable button "Inspector"of group "menu" of me
       end if
    end if
+   
+   global gRevSuppressErrors, gRevSuppressMessages
+   setButtonHilite the long id of button "Errors" of group "menu" of me, gRevSuppressErrors
+   setButtonHilite the long id of button "Messages" of group "menu" of me, gRevSuppressMessages
+   setButtonHilite the long id of button "Select Grouped" of group "menu" of me, the selectGroupedControls
+   
 end updateButtonState
 
 on revTextbar
@@ -544,25 +567,21 @@ on revMenubarMenuButtonClicked pWhich
          end if
          break
       case "Select Grouped"
-         set the selectGroupedControls to not (the selectGroupedControls)
-         if the selectGroupedControls then set the textStyle of the target to "bold"
-         else set the textStyle of the target to "plain"
-         set the hilite of the target to the selectGroupedControls
-         if the selectGroupedControls and word 1 of (the selObj) is "group" then 
-            send "revRestoreHilite" to the target in 100 milliseconds
-            select empty
-         end if
+         lock screen
+         set the hilite of the target to true
+         revIDEToggle "Select Grouped Controls"
+         unlock screen
          break
       case "Messages"
-         global gREVSuppressMessages
+         lock screen
+         set the hilite of the target to true
          revIDEToggle "Suppress Messages"
-         set the hilite of the target to gREVSuppressMessages
+         unlock screen
          break
       case "Errors"
          lock screen
-         global gRevSuppressErrors
+         set the hilite of the target to true
          revIDEToggle "Suppress Errors"
-         set the hilite of the target to gRevSuppressErrors
          unlock screen
          break
       case "Sample Stacks"
@@ -2123,26 +2142,24 @@ on revMenubarEditMenuPick pWhich
          revIDEActionClear
          break
       case "Deselect All"
-         revIDEDeselectAllObjects
+         revIDEDeselectAll
          break
       case "Select All"
-         revIDEActionSelectAll
+         revIDESelectAll
          break
       case "Invert Selection"
-         revIDEActionInvertSelection
+         revIDEInvertObjectSelection
          break
       case "Duplicate"
       case "Duplicate Objects"
          revIDEActionDuplicate
          break
       case "Duplicate Card"
-         revIDEActionDuplicateCard
+         revIDEDuplicateCard
          break
       case "Select Grouped Controls"
-         revIDEToggleSelectGroupedControls
-         break
       case "Intersected Selections"
-         revIDEToggleIntersectedSelection
+         revIDEToggle pWhich
          break
       case "Preferences"
          revIDEOpenPalette "preferences"
