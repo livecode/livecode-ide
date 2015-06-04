@@ -4769,16 +4769,15 @@ on revIDESaveStack pStackID
    local tDefaultStack
    put the defaultStack into tDefaultStack
    
-   put the short name of pStackID into pWhichStack
+   local tStackName
+   put the short name of pStackID into tStackName
    
    # Old style message handling. Queue of stacks to save are being notified to save
    global gREVMessageDispatch
    repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
       send "revSaveStackRequest" to this card of stack tStack
    end repeat
-   
-   local tStackName
-   put pWhichStack into tStackName
+    
    set the defaultStack to "revSaving"
    
    local tMainStack
@@ -4796,39 +4795,39 @@ on revIDESaveStack pStackID
    
    local tStacksList
    local tFinal
-   put pWhichStack into tFinal
-   put the mainstack of stack pWhichStack into tStacksList
+   put tStackName into tFinal
+   put the mainstack of stack tStackName into tStacksList
    
    local tResultLog
    
    set the visible of stack "revSaving" to false
    palette "revSaving"
-   set the cSavingStack of card 1 of stack "revSaving" to pWhichStack
+   set the cSavingStack of card 1 of stack "revSaving" to tStackName
    show stack "revSaving"
    
    local tSelectedList
    put (the selObj) into tSelectedList
    select empty
-   compact stack pWhichStack
+   compact stack tStackName
    
    -- Dispatch the pre-save hook, just before we lock messages and do the save.
-   dispatch "revHookPreSaveStack" to me with the long id of stack pWhichStack
+   dispatch "revHookPreSaveStack" to me with pStackID
    
    lock messages
    
    local tOldStackFileVersion
    put the stackFileVersion into tOldStackFileVersion
    
-   if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack pWhichStack is not empty then
+   if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack tStackName is not empty then
       try
-         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack pWhichStack
+         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack tStackName
       catch tError
          --
       end try
    end if
    
-   if the scaleFactor of stack pWhichStack is a number then
-      set the cREVGeneral["scalefactor"] of stack pWhichStack to the scalefactor of stack pWhichStack
+   if the scaleFactor of stack tStackName is a number then
+      set the cREVGeneral["scalefactor"] of stack tStackName to the scalefactor of stack tStackName
    end if
    
    local tOldStackFileType
@@ -4838,7 +4837,7 @@ on revIDESaveStack pStackID
       put the folder into tOldFolder
       
       local tStackFilename
-      put the filename of stack pWhichStack into tStackFilename
+      put the filename of stack tStackName into tStackFilename
       if there is a file tStackFilename then
          set the itemDelimiter to "/"
          set the folder to item 1 to -2 of tStackFilename
@@ -4853,7 +4852,7 @@ on revIDESaveStack pStackID
          if char 1 to 4 of it is not "????" then
             set the stackFileType to char 1 to 4 of it & "RSTK"
          end if
-      end if
+      end if 
       
       set the folder to tOldFolder
    end if
@@ -4870,12 +4869,12 @@ on revIDESaveStack pStackID
       global gREVAllowSaveStackRequest
       put true into gREVAllowSaveStackRequest
       
-      set the defaultStack to pWhichStack
-      send "saveStackRequest" to this card of stack pWhichStack
+      set the defaultStack to tStackName
+      send "saveStackRequest" to this card of stack tStackName
       set the defaultStack to tDefaultStack
    end try
    
-   save stack pWhichStack
+   save stack tStackName
    put the result into tSaveResult
    
    
@@ -4891,23 +4890,23 @@ on revIDESaveStack pStackID
       put tSaveResult & return after tResultLog
       if "backup" is in tSaveResult then put tSaveResult & return & "Check the file path, and make sure you have sufficient permissions." into tResult
       else put tSaveResult into tResult
-      answer "Can't save stack" && pWhichStack && "due to an error:" & return & tResult
+      answer "Can't save stack" && tStackName && "due to an error:" & return & tResult
       close stack "revSaving"
    else
       -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
-      dispatch "revHookPostSaveStack" to me with the long id of stack pWhichStack
+      dispatch "revHookPostSaveStack" to me with pStackID
       
-      put tPrompt into line -1 of fld 1 of stack "revSaving"
-      put empty into gREVStackStatus[pWhichStack]
+      global gRevStackStatus
+      put empty into gREVStackStatus[tStackName]
       
       local tMainStackList
-      put the mainStack of stack pWhichStack into tMainStackList
-      put return & the substacks of stack pWhichStack after tMainStackList
+      put the mainStack of stack tStackName into tMainStackList
+      put return & the substacks of stack tStackName after tMainStackList
       repeat for each line tStack in tMainStackList
          if tStack is empty then next repeat
          put empty into gREVStackStatus[tStack]
       end repeat
-      revUpdateRecentFiles pWhichStack
+      revUpdateRecentFiles tStackName
    end if
    
    repeat for each line tSelectedObject in tSelectedList
@@ -4922,14 +4921,14 @@ on revIDESaveStack pStackID
    
    -- improve speed KM oct 07 4932
    local tTime
-   put the milliseconds into tTime
+   put the milliseconds into tTime 
    repeat
       if the milliseconds - tTime > 400 then exit repeat
       if the mouseClick then exit repeat
    end repeat
    
    close stack "revSaving"
-   set the defaultStack to pWhichStack
+   set the defaultStack to tStackName
    
    return tResultLog
 end revIDESaveStack
@@ -4947,13 +4946,16 @@ on revIDESaveStackAs pStackID, pFileName
    
    save pStackID as pFileName
    
+   local tShortName
+   put the short name of stack pStackID
    if the result is not empty then
       local tLocaliseSubstitutions
-      put short name of stack pStackID into tLocaliseSubstitutions[1]
+      put tShortName into tLocaliseSubstitutions[1]
       answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & the result
       close stack "revSaving"
    else
-      put empty into gREVStackStatus[pShortName]
+      global gRevStackStatus
+      put empty into gREVStackStatus[tShortName]
       
       local tMainStackList
       put the mainStack of pStackID into tMainStackList
@@ -4969,9 +4971,8 @@ end revIDESaveStackAs
 on revIDEActionSaveStackAs pStackID, pSubstackOnly
    if not exists(pStackID) then __revIDEError("Target stack does not exist")
    
-   local tMakeMainStack, tMainStackName, tStackName
-   put the short name of pStackID into pShortName
-   put pShortName into tShortNameBackup
+   local tMakeMainStack, tMainStackName, tStackName, tShortName
+   put the short name of pStackID into tShortName
    
    global gREVMessageDispatch
    repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
@@ -4983,25 +4984,25 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    
    # Saving if a substack 
    put true into tMakeMainStack
-   put the mainStack of stack pShortName into tMainStackName
-   if tMainStackName is not pShortName and tMainStackName is not "Home" then
+   put the mainStack of stack tShortName into tMainStackName
+   if tMainStackName is not tShortName and tMainStackName is not "Home" then
       if not pSubStackOnly then
          put false into tMakeMainStack
-         put tMainStackName into pShortName
+         put tMainStackName into tShortName
       end if
    end if
    
-   put revFixPath(pShortName) into tStackName
+   put revFixPath(tShortName) into tStackName
    
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
    local tType
    
    local tStackFileType
-   if there is a file the filename of stack pShortName then put revStackFileVersion(the filename of stack pShortName) into tStackFileType
+   if there is a file the filename of stack tShortName then put revStackFileVersion(the filename of stack tShortName) into tStackFileType
    
    # Prepare substitutions for localisation
    local tSubstitutions
-   put pShortName into tSubstitutions[1]
+   put tShortName into tSubstitutions[1]
    
    switch tStackFileType
       case 5.5
@@ -5035,11 +5036,12 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
    end switch
    
+   global gRevStackStatus
    # User cancelled the the ask dialog
    if it is empty then
-      put "edited" into gREVStackStatus["pShortName"]
+      put "edited" into gREVStackStatus[tShortName]
       return "Cancelled"
-   end if
+   end if 
    
    # MacOS Auotmatically appends the filetype to the filename
    local tFilePath
@@ -5052,7 +5054,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    if tType < 7 then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[pShortName]
+         put "edited" into gREVStackStatus[tShortName]
          return "Cancelled"
       end if
    end if
@@ -5070,15 +5072,15 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    # When making a substack a mainstack, it must clone default colors set on mainstack to substack
    # so that inherited values are preserved.
    local tStackColors, tHomeColors
-   if tMakeMainStack and pShortName is not tMainStackName then
-      put the colors of stack pShortName into tStackColors
+   if tMakeMainStack and tShortName is not tMainStackName then
+      put the colors of stack tShortName into tStackColors
       put the colors of stack "Home" into tHomeColors
       repeat with i = 1 to 8
          if line i of tStackColors is empty
          then put line i of tHomeColors into line i of tStackColors
       end repeat
-      set the colors of stack pShortName to tStackColors
-      set mainStack stack pShortName to pShortName
+      set the colors of stack tShortName to tStackColors
+      set mainStack stack tShortName to tShortName
       set the cursor to watch
       -- remove revOnline fingerprint
       revRemoveRevOnlineKey "fingerprint",tMainStackName
@@ -5091,7 +5093,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    
    # RevOnline fingerprint enables the revOnline uploader automatically overwrite the stack if already uploaded.
    # Because you're saving as a new stack, this fingerprint should be removed.
-   revRemoveRevOnlineKey "fingerprint",pShortname
+   revRemoveRevOnlineKey "fingerprint",tShortName
    
    # Store the current stack file version before setting it to the value for this save
    # It will be reset after the save was made
@@ -5109,12 +5111,12 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       global gREVAllowSaveStackRequest
       put true into gREVAllowSaveStackRequest
       
-      set the defaultStack to pShortName
-      send "saveStackRequest" to this card of stack pShortName
+      set the defaultStack to tShortName
+      send "saveStackRequest" to this card of stack tShortName
       set the defaultStack to tDefaultStackBackup
    end try
    
-   revIDESaveStackAs the long id of stack pShortName, tFilePath
+   revIDESaveStackAs the long id of stack tShortName, tFilePath
    
    set the stackFileVersion to tOldStackFileVersion
    unlock messages
@@ -5140,8 +5142,10 @@ on revIDESaveAsStandalone pStackID
 end revIDESaveAsStandalone
 
 on revIDEUndo
+   # Check the IDE undo list (cached object rects)
    global gRevUndoList
    if gREVUndoList is not empty then
+      # If it is not empty, restore all the objects' rects
       if line -1 of gREVUndoList is "width" then
          delete last line of gREVUndoList
          
@@ -5170,20 +5174,26 @@ on revIDEUndo
       end if
       put empty into gREVUndoList
    else
+      # Otherwise just use engine undo, and cache all the selected object rects
       undo
       repeat for each line l in the selObj
          send "revCacheGeometry true" to l
       end repeat
    end if
    
+   # The selected object may change after undo
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDEUndo
 
 on revIDECut
+   # Don't try and cut from a field with lockText true
    if the selectedField is not empty and the lockText of the selectedField then 
       exit revIDECut
    end if
+   
    if the selectedImage is not empty then
+      # If the there is a selection in an image using the image selection tool
+      # Then make sure no text is selected before doing the cut
       if the selectedText is not empty then select empty
       lock screen
       set the defaultStack to revTargetStack(the long id of the selectedImage)
@@ -5191,6 +5201,8 @@ on revIDECut
       unlock screen
       exit revIDECut
    end if
+   
+   # Ensure the user is aware of the consequences of the cut wrt groups
    if revCheckGroupDelete() then
       cut
    end if
@@ -5209,6 +5221,8 @@ on revIDECutObjects pObjectList
 end revIDECutObjects
 
 on revIDECopy
+   # If the there is a selection in an image using the image selection tool
+   # Then make sure no text is selected before doing the copy
    if the selectedImage is not empty then
       if the selectedText is not empty then 
          select empty
@@ -5219,31 +5233,167 @@ on revIDECopy
 end revIDECopy
 
 on revIDECopyText pTextChunk
-   
+   select pTextChunk
+   revIDECopy
 end revIDECopyText
 
 on revIDECopyObjects pObjectList
-   
+   revIDESelectObjects pObjectList
+   revIDECopy
 end revIDECopyObjects
 
 on revIDEPaste
+   lock messages
+   set the defaultStack to the topStack
+   # Can't paste onto an IDE stack or a stack with cantModify set to true
+   if the clipBoard is not text and (the mode of the topStack is not 1 or the cantModify of the topStack) then
+      beep
+      exit revIDEPaste
+   end if
    
+   # If we have image data in the clipboard but there is no image selection
+   # the create a new image object and set the imageData
+   if the clipBoard is "image" and the selectedImage is empty then
+      lock messages
+      lock screen
+      create image
+      put the clipBoardData["image"] into last image
+      unlock messages
+      unlock screen
+      local tObjects
+      put true into tObjects
+      choose pointer tool
+      select last image
+   else
+      -- MW-2012-02-10: [[ Bug ]] Make sure the IDE doesn't interfere with the textChanged
+      --   message.
+      unlock messages
+      paste
+      lock messages
+   end if
+   
+   # If objects have been pasted, assign them IDs for geometry caching
+   if the clipBoard is "objects" or tObjects then
+      local tMilliseconds
+      put the milliseconds into tMilliseconds
+      repeat for each line l in the selObj
+         set the cREVGeneral["revUniqueID"] of l to tMilliseconds
+         add 1 to tMilliseconds
+      end repeat
+   end if
+   unlock messages
+   
+   # Pasting an object will cause the selection to change
+   if the clipboard is "objects" or tObjects then
+      revIDEMessageSend "ideSelectedObjectChanged"
+   end if
 end revIDEPaste
 
-on revIDEPasteObjects
-   
-end revIDEPasteObjects
-
 on revIDEActionPasteUnformatted
-   
+   put the clipBoardData["text"] into the selection
 end revIDEActionPasteUnformatted
 
-on revIDECloneObjects pObjectList
-   
-end revIDECloneObjects
+on revIDEActionDuplicate
+   lock screen
+   if the selObj is not empty then
+      set the defaultStack to revIDEStackOfObject(line 1 of (the selobj))
+      
+      # OK-2007-07-31 : Bug 4917. Instead of assuming that the duplicated controls will have the highest layer
+      # numbers, we make certain that we select the correct objects by saving a list of each newly created control
+      local tCreatedObjects, tID
+      put the milliseconds into tID
+      repeat for each line tObject in the selObj
+         clone tObject
+         put the long id of it & return after tCreatedObjects
+         
+         if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then 
+            set the topLeft of the last control to 10, 10
+         end if
+         if word 1 of the name of tObject is not "group" then
+            set the cREVGeneral["revUniqueID"] of last control to tID
+            add 1 to tID
+         else
+            set the cREVGeneral["revUniqueID"] of last control to tID
+            add 1 to tID
+            
+            repeat with tGroupedControl = 1 to the number of controls of the last group
+               set the cREVGeneral["revUniqueID"] of control tGroupedControl of the last group to tID
+               add 1 to tID
+            end repeat
+         end if
+      end repeat
+      select empty
+      
+      repeat for each line tCreatedObject in tCreatedObjects
+         set the selected of tCreatedObject to true
+      end repeat
+      
+      revIDEMessageSend "ideSelectedObjectChanged"
+   end if
+   unlock screen
+end revIDEActionDuplicate
 
 on revIDESelectAllObjects
+   # Can't select all objects on IDE stacks. 
+   if the mode of the topStack is not 1 and the selectedField is empty then
+      beep
+      exit revIDESelectAllObjects
+   end if
    
+   # In image selection context, select all creates a selection around the entire rect of the image
+   if the selectedImage is not empty then
+      lock screen
+      set the defaultStack to revTargetStack(the long id of the selectedImage)
+      local tRect
+      put the rect of the selectedImage into tRect
+      choose select tool
+      drag from item 1 to 2 of tRect to item 3 to 4 of tRect
+      unlock screen
+      exit revIDESelectAllObjects
+   end if
+   
+   # In field selection context, ensure the focu
+   if the selectedField is not empty \
+         and revTargetStack(the focusedObject) is revTargetStack(the long id of the selectedField) then
+      if the lockText of the selectedField then exit to top
+      select text of the selectedField
+   else
+      if the cantModify of the topStack then
+         answer "This stack can't be modified"
+         exit to top
+      end if
+      if the tool is not "pointer tool" then 
+         beep
+         exit revIDESelectAllObjects
+      end if
+      lock screen
+      lock messages
+      set the defaultStack to the topStack
+      repeat with i = 1 to the number of layers
+         if the visible of control i or the showInvisibles then
+            if not the cantSelect of control i then
+               if the selectGroupedControls and (word 1 of the name of control i is "group" and the selectGroupedControls of control i is true) then
+                  if word 1 of the name of control i is not "group" then
+                     set the selected of control i to true
+                  end if
+               else
+                  set the selected of control i to true
+                  add the number of layers in control i to i
+               end if
+            else
+               add the number of layers in control i to i
+            end if
+         end if
+      end repeat
+      unlock screen
+      unlock messages
+      send "selectedObjectChanged" to stack "revBackScriptLibrary"
+   end if
+   
+   // EJB Added to update new Project Browser
+   //send "refreshBrowser" to stack "revProjectBrowser"
+   
+   break
 end revIDESelectAllObjects
 
 on revIDEDeselectAllObjects
