@@ -1343,7 +1343,11 @@ related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDE
 returns (string): Return delimited list of message names, 1 per line.
 */
 function revIDEMessages
-   return "ideAnswerDialogClosed,ideEditScript,ideInspectedObjectsChanged,ideExtensionLog,idePropertyChanged,ideExtensionStatusChanged,idePreferenceChanged,ideSelectedObjectChanged,ideObjectSelectionStarted,ideNewCard,ideNewStack,ideNewControl,ideControlDeleted,ideStackDeleted,ideCardDeleted,ideToolChanged,ideLibraryStack,ideReleaseStack,ideFindMoreWidgets,revIDENameChanged"
+   return ( \
+         "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
+         & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted," \
+         & "idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged" \
+         )
 end revIDEMessages
 
 # System function telling the IDE to send

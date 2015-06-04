@@ -20,7 +20,6 @@ on preOpenStack
    generateMenu
    updateMenubarPreference
    layoutMenu
-   revMenubarBuildMenus
 end preOpenStack
 
 on openStack
