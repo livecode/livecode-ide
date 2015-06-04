@@ -730,399 +730,16 @@ end revHandleAppleEventQuit
 
 # OK-2007-11-27 : Tidied up
 on revSave pWhichStack
-   local tDefaultStack
-   put the defaultStack into tDefaultStack
-   
-   put the short name of stack pWhichStack into pWhichStack
-   
-   unlock screen
-   global gREVMessageDispatch
-   repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
-      send "revSaveStackRequest" to this card of stack tStack
-   end repeat
-   
-   if "id 1230" is in the frontScripts and "revTools" is in the frontScripts then
-      select empty
-      send "revSetMarkers true" to button "revReshape" of stack "revTools"
-      remove script of button "revReshape" of stack "revTools" from front
-   end if
-   
-   
-   
-   local tStackName
-   put pWhichStack into tStackName
-   set the defaultStack to "revSaving"
-   
-   local tMainStack
-   put the mainStack of stack tStackName into tMainStack
-   
-   local tSubStacks
-   put the substacks of stack tMainStack into tSubStacks
-   
-   local tSubTabbed
-   repeat for each line tStack in tSubStacks
-      put tab & tStack & return after tSubTabbed
-   end repeat
-   delete last char of tSubTabbed
-   put tSubTabbed into tSubStacks
-   
-   local tOutput
-   put "Saving..." & return & "stack:" & tab & tStackName & return into tOutput
-   put "mainStack:" & tab & tMainStack & return after tOutput
-   put "subStacks:" & tSubStacks & return after tOutput
-   put "file name:" & tab & the effective fileName of stack tStackName after tOutput
-   put tOutput into field 1 of stack "revSaving"
-   
-   set the width of field 1 to the formattedWidth of field 1 + 8
-   set the height of field 1 to the formattedHeight of field 1
-   set the left of field 1 to 0
-   set the top of field 1 to 0
-   set the width of this stack to the right of field 1
-   set the height of this stack to the height of field 1
-   set the loc of this stack to the loc of stack tStackName
-   set the loc of stack "revSaving" to the loc of stack pWhichStack
-   palette "revSaving"
-   
-   local tPrompt
-   put "Save complete - click to continue" into tPrompt
-   
-   local tStacksList
-   local tFinal
-   put pWhichStack into tFinal
-   put the mainstack of stack pWhichStack into tStacksList
-   
-   local tResultLog
-   
-   set the cSavingStack of card 1 of stack "revSaving" to pWhichStack
-   
-   wait 50 milliseconds
-   set the cursor to watch
-   
-   local tSelectedList
-   put (the selObj) into tSelectedList
-   select empty
-   compact stack pWhichStack
-   
-   -- Dispatch the pre-save hook, just before we lock messages and do the save.
-   dispatch "revHookPreSaveStack" to me with the long id of stack pWhichStack
-   
-   lock messages
-   
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
-   
-   if the buildnumber < 10000 then
-      if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack pWhichStack is not empty then
-         try
-            set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack pWhichStack
-         catch tError
-            --
-         end try
-      end if
-   else
-      // SN-2014-10-07: [[ Bug 13593 ]] Substacks are always saved in 2.4 format
-      set the stackFileVersion to revStackFileVersion(the filename of stack (the mainstack of stack pWhichStack))
-   end if
-   
-   
-   if the scaleFactor of stack pWhichStack is a number then
-      set the cREVGeneral["scalefactor"] of stack pWhichStack to the scalefactor of stack pWhichStack
-   end if
-   
-   local tOldStackFileType
-   put the stackFileType into tOldStackFileType
-   if the cPreserveStackCreator of stack "revPreferences" is true then
-      local tOldFolder
-      put the folder into tOldFolder
-      
-      local tStackFilename
-      put the filename of stack pWhichStack into tStackFilename
-      if there is a file tStackFilename then
-         set the itemDelimiter to "/"
-         set the folder to item 1 to -2 of tStackFilename
-         
-         local tStackFileDetails
-         put the detailed files into tStackFileDetails
-         
-         local tStackFileLeaf
-         put the urlEncode of the last item of tStackFilename into tStackFileLeaf
-         set the itemDelimiter to comma
-         get item 11 of line lineOffset(tStackFileLeaf, tStackFileDetails) of tStackFileDetails
-         if char 1 to 4 of it is not "????" then
-            set the stackFileType to char 1 to 4 of it & "RSTK"
-         end if
-      end if
-      
-      set the folder to tOldFolder
-   end if
-   
-   local tSaveResult
-   
-   # TH - 27/11/07 : Bug 5569, savestack request not sent to the users stack because messages are locked at this point
-   try
-      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
-      # execution of the revSave command terminates after the sending of saveStackRequest
-      # to the target stack. This is because revFrontScript handles the message and passes
-      # to metaCard, which prevents further execution. This bug is worked round with a nasty
-      # hack involving a global...
-      global gREVAllowSaveStackRequest
-      put true into gREVAllowSaveStackRequest
-      
-      set the defaultStack to pWhichStack
-      send "saveStackRequest" to this card of stack pWhichStack
-      set the defaultStack to tDefaultStack
-   end try
-   
-   save stack pWhichStack
-   put the result into tSaveResult
-   
-   
-   ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
-   ## Hence the introduction of the above variable.
-   set the stackFileType to tOldStackFileType
-   set the stackFileVersion to tOldStackFileVersion
-   
-   unlock messages
-   
-   local tResult
-   if tSaveResult is not empty then
-      put tSaveResult & return after tResultLog
-      if "backup" is in tSaveResult then put tSaveResult & return & "Check the file path, and make sure you have sufficient permissions." into tResult
-      else put tSaveResult into tResult
-      answer "Can't save stack" && pWhichStack && "due to an error:" & return & tResult
-      close stack "revSaving"
-   else
-      -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
-      dispatch "revHookPostSaveStack" to me with the long id of stack pWhichStack
-      
-      put tPrompt into line -1 of fld 1 of stack "revSaving"
-      put empty into gREVStackStatus[pWhichStack]
-      
-      local tMainStackList
-      put the mainStack of stack pWhichStack into tMainStackList
-      put return & the substacks of stack pWhichStack after tMainStackList
-      repeat for each line tStack in tMainStackList
-         if tStack is empty then next repeat
-         put empty into gREVStackStatus[tStack]
-      end repeat
-      revUpdateRecentFiles pWhichStack
-   end if
-   
-   repeat for each line tSelectedObject in tSelectedList
-      set the selected of tSelectedObject to true
-   end repeat
-   
-   delete last char of tResultLog
-   put "Save complete - click to continue" into line -1 of field 1 of stack "revSaving"
-   
-   -- MW-2012-09-17: [[ Bug 10388 ]] Flush events to stop bunching.
-   get flushEvents("all")
-   
-   -- improve speed KM oct 07 4932
-   local tTime
-   put the milliseconds into tTime
-   repeat
-      if the milliseconds - tTime > 400 then exit repeat
-      if the mouseClick then exit repeat
-   end repeat
-   
-   close stack "revSaving"
-   set the defaultStack to pWhichStack
-   return tResultLog
+   revIDESaveStack the long ID of stack pWhichStack
 end revSave
 
 # OK-2007-09-26 : Modified to return a value in the result if the stack is not saved
 on revSaveAs pShortName, pSubstackOnly
-   local tMakeMainStack, tMainStackName, tStackName
-   put the short name of stack pShortName into pShortName
-   
-   global gREVMessageDispatch
-   repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
-      send "revSaveStackRequest" to this cd of stack tStack
-   end repeat
-   
-   if "id 1230" is in the frontScripts and "revTools" is in the frontScripts then
-      select empty
-      send "revSetMarkers true" to btn "revReshape" of stack "revTools"
-      remove script of btn "revReshape" of stack "revTools" from front
-   end if
-   
-   local tDefaultStackBackup
-   put the defaultStack into tDefaultStackBackup
-   
-   local tShortNameBackup
-   put pShortName into tShortNameBackup
-   
-   set the defaultStack to tDefaultStackBackup
-   
-   put true into tMakeMainStack
-   put the mainStack of stack pShortName into tMainStackName
-   if tMainStackName is not pShortName and tMainStackName is not "Home" then
-      if not pSubStackOnly then
-         put false into tMakeMainStack
-         put tMainStackName into pShortName
-      end if
-   end if
-   
-   put revFixPath(pShortName) into tStackName
-   
-   // MM-2012-03-09: Added new 5.5 stack file format to drop down.
-   local tType
-   if the buildnumber > 10000 then
-      local tStackFileType
-      if there is a file the filename of stack pShortName then put revStackFileVersion(the filename of stack pShortName) into tStackFileType
-      
-      switch tStackFileType
-         case 5.5
-            ask file "Save stack" && pShortName && "as:" with tStackName with type "Legacy LiveCode Stack (5.5)|livecode,rev|RSTK" or type "LiveCode Stack|livecode,rev|RSTK" or  type "Legacy LiveCode Stack (2.7)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.4)|livecode,rev|RSTK"
-            break
-         case 2.7
-            ask file "Save stack" && pShortName && "as:" with tStackName with type "Legacy LiveCode Stack (2.7)|livecode,rev|RSTK" or type "LiveCode Stack|livecode,rev|RSTK" or type "Legacy LiveCode Stack (5.5)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.4)|livecode,rev|RSTK"
-            break
-         case 2.4
-            ask file "Save stack" && pShortName && "as:" with tStackName with type "Legacy LiveCode Stack (2.4)|livecode,rev|RSTK" or type "LiveCode Stack|livecode,rev|RSTK" or type "Legacy LiveCode Stack (5.5)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.7)|livecode,rev|RSTK"
-            break
-         default
-            ask file "Save stack" && pShortName && "as:" with tStackName with type "LiveCode Stack|livecode,rev|RSTK" or type "Legacy LiveCode Stack (5.5)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.7)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.4)|livecode,rev|RSTK"
-            break
-      end switch
-      
-      put the result into tType
-      
-      switch tType
-         case "Legacy LiveCode Stack (5.5)"
-            put 5.5 into tType
-            break
-         case "Legacy LiveCode Stack (2.7)"
-            put 2.7 into tType
-            break
-         case "Legacy LiveCode Stack (2.4)"
-            put 2.4 into tType
-            break
-         default
-            put 7.0 into tType
-            break
-      end switch
-   else
-      # BB:2014/02/20
-      # Once LiveCode 7.0 is the main line, this build number check should be removed and the > 10000 variant used
-      ask file "Save stack" && pShortName && "as:" with tStackName with type "LiveCode Stack|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.7)|livecode,rev|RSTK" or type "Legacy LiveCode Stack (2.4)|livecode,rev|RSTK"
-      put the result into tType
-      
-      switch tType
-         case "Legacy LiveCode Stack (2.7)"
-            put 2.7 into tType
-            break
-         case "Legacy LiveCode Stack (2.4)"
-            put 2.4 into tType
-            break
-         default
-            put 5.5 into tType
-            break
-      end switch
-   end if
-   
-   if it is empty then
-      put "edited" into gREVStackStatus["pShortName"]
-      return "Cancelled"
-   end if
-   
-   local tFilePath
-   if the platform is not "MacOS" and not (it ends with ".rev" or it ends with ".livecode") then
-      put ".livecode" after it
-   end if
-   put it into tFilePath
-   
-   # Display warning if user has not selected the latest file format
-   if (the buildnumber > 10000 and tType < 7) or (the buildnumber < 10000 and tType < 5.5) then
-      answer "Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?" with "No" and "Yes"
-      if it is not "Yes" then
-         put "edited" into gREVStackStatus[pShortName]
-         return "Cancelled"
-      end if
-   end if
-   
-   if the platform is not in "Win32,MacOS" and there is a file tFilePath then
-      answer warning "File exists.  Overwrite?" with "Cancel" or "OK"
-      if it is "Cancel" then
-         return "Cancelled"
-      else 
-         delete file tFilePath
-      end if
-   end if
-   
-   local tStackColors, tHomeColors
-   if tMakeMainStack and pShortName is not tMainStackName then
-      put the colors of stack pShortName into tStackColors
-      put the colors of stack "Home" into tHomeColors
-      repeat with i = 1 to 8
-         if line i of tStackColors is empty
-         then put line i of tHomeColors into line i of tStackColors
-      end repeat
-      set the colors of stack pShortName to tStackColors
-      set mainStack stack pShortName to pShortName
-      set the cursor to watch
-      -- remove revOnline fingerprint
-      revRemoveRevOnlineKey "fingerprint",tMainStackName
-      save stack tMainStackName
-   end if
-   set the cursor to watch
-   lock messages
-   revRemoveRevOnlineKey "fingerprint",pShortname
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
-   set the stackFileVersion to tType
-   
-   # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
-   try
-      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
-      # execution of the revSave command terminates after the sending of saveStackRequest
-      # to the target stack. This is because revFrontScript handles the message and passes
-      # to metaCard, which prevents further execution. This bug is worked round with a nasty
-      # hack involving a global...
-      global gREVAllowSaveStackRequest
-      put true into gREVAllowSaveStackRequest
-      
-      set the defaultStack to pShortName
-      send "saveStackRequest" to this card of stack pShortName
-      set the defaultStack to tDefaultStackBackup
-   end try
-   
-   save stack pShortName as tFilePath
-   if the result is not empty then
-      answer "Can't save stack" && pShortName && "with error:" & return & the result
-      close stack "revSaving"
-   else
-      put empty into gREVStackStatus[pShortName]
-      
-      local tMainStackList
-      put the mainStack of stack pShortName into tMainStackList
-      put return & the substacks of stack pShortName after tMainStackList
-      repeat for each line xy in tMainStackList
-         if xy is empty then next repeat
-         put empty into gREVStackStatus[xy]
-      end repeat
-      revUpdateRecentFiles pShortName
-      revKillAllLinkedPalettes
-      
-      set the cREVGeneral["stackfileversion"] of stack pShortName to the stackFileVersion
-      
-   end if
-   set the stackFileVersion to tOldStackFileVersion
-   unlock messages
-   
-   return empty
+   revIDESaveStackAs the long id of stack pShortName, pSubstackOnly
 end revSaveAs
 
 function revStackFileVersion pStackFile
-      open file pStackFile for binary read
-      read from file pStackFile for 8
-      close file pStackFile
-      if it begins with "REVO" then
-         return (byte 5 of it & "." & byte 6 of it)
-      else
-         return "2.4"
-      end if
+      return revIDEStackFileVersion(pStackFile)
 end revStackFileVersion
 
 on revRemoveRevOnlineKey pKey, pStack
@@ -2247,7 +1864,27 @@ on errorDialog pWhatError, pWhatError2
       exit errorDialog
    end if
    if the number of lines in pWhatError is 0 then exit errorDialog -- bogus error
-   revIDEErrorDialog pWhatError, pWhatError2
+   set the executionError of stack "revErrorDisplay" to pWhatError
+   set the scriptError of stack "revErrorDisplay" to pWhatError2
+   local tObject
+   put empty into tObject
+   repeat for each line l in pWhatError
+      if item 1 of l is 353 then
+         put item -1 of l into tObject
+         exit repeat
+      end if
+   end repeat
+   if tObject is empty then
+      put the long id of the target into tObject
+   end if
+   set the errorObject of stack "revErrorDisplay" to tObject
+   if the mode of stack "revErrorDisplay" is not 0 then
+      send "openStack" to stack "revErrorDisplay"
+      send "preOpenCard" to cd 1 of stack "revErrorDisplay"
+      send "opencard" to cd 1 of stack "revErrorDisplay"
+   else
+      modeless "revErrorDisplay"
+   end if
 end errorDialog
 
 

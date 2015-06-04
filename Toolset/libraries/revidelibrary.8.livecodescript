@@ -2553,12 +2553,10 @@ on revIDECloneObjectWithDefaults pLongID
 end revIDECloneObjectWithDefaults
 
 on revIDEDeleteObjects pObjectIDs
-   lock screen
    local tGroupID
    repeat for each line tControlID in pObjectIDs
       delete tControlID
    end repeat
-   unlock screen
 end revIDEDeleteObjects
 
 on revIDEGroupObjects pObjectIDs
@@ -3269,27 +3267,6 @@ on revIDEResizeImageInBounds tImageID, tDesiredWidth,tDesiredHeight
    unlock screen
 end revIDEResizeImageInBounds
 
-function revIDEPaletteToStackName pPalette
-   switch pPalette
-      case "menubar"
-         return "revMenuBar"
-      case "tools"
-         return "revTools"
-      case "inspector"
-         return "revInspector"
-      case "message box"
-         return "Message Box"
-      case "project browser"
-         return "revIDEProjectBrowser"
-      case "extension manager"
-         return "revIDEExtensionManager"
-      case "start center"
-         return "revStartCenter"
-      case "welcome"
-         return "revWelcome"
-   end switch
-end revIDEPaletteToStackName
-
 /*
 Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
 
@@ -3298,36 +3275,33 @@ example: revIDEOpenPalette "inspector"
 */
 command revIDEOpenPalette pPaletteName
    local tExistingPalette, tPalette, tPaletteID
-   
-   local tStackName
-   put revIDEPaletteToStackName(pPaletteName) into tStackName
-   
+
    switch pPaletteName
       case "Start Center"
-         show stack tStackName
-         set the cMode of stack tStackName to "run"
-         modeless stack tStackName
+         show stack "revStartCenter"
+         set the cMode of stack "revStartCenter" to "run"
+         modeless stack "revStartCenter"
          break
       case "Welcome"
-         local tStartCenter
-         put revIDEPaletteToStackName("start center") into tStartCenter
-         if the visible of stack tStartCenter is true then
-            close stack tStartCenter
+         if the visible of stack "revStartCenter" is true then
+            close stack "revStartCenter"
          end if
-         modeless stack tStackName
+         modeless stack "revwelcome"
          break
       case "inspector"
-      case "standalone settings"
-      case "message box"
-         palette stack tStackName
+         palette stack "revInspector"
          break
       case "project browser"
-      case "extension manager"
-         modeless stack tStackName
+         modeless stack "revIDEProjectBrowser"
          break
-      default
+      case "extension manager"
+         modeless stack "revIDEExtensionManager"
+         break
+      case "message box"
+         palette stack "Message Box"
+         break
       case "search engine"
-         throw "no such palette"
+         go stack "revSearchEngine"
          break
    end switch
 end revIDEOpenPalette
@@ -4264,6 +4238,17 @@ on revIDEPopupContextualMenu pTargets
    dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
 end revIDEPopupContextualMenu
 
+function revIDEPaletteToStackName pPalette
+   switch pPalette
+      case "menubar"
+         return "revMenuBar"
+      case "tools"
+         return "revTools"
+      case "inspector"
+         return "revInspector"
+   end switch
+end revIDEPaletteToStackName
+
 local sPluginNames
 on revIDEUpdatePlugins
    global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
@@ -4339,8 +4324,11 @@ function revIDEPluginNames
    return sPluginNames
 end revIDEPluginNames
 
-function revIDELocalise pString
-   return pString && "(Localise String)"
+function revIDELocalise pString, pSubstitutions
+   repeat for each key tKey in pSubstitutions
+      replace ("%" & tKey) with pSubstitutions[tKey] in pString
+   end repeat
+   return pString && "(Localised String)"
 end revIDELocalise
 
 ########################
@@ -4550,11 +4538,15 @@ revIDECloseStack the long ID of the topstack, true
 Tags: ide
 */
 on revIDECloseStack pStackID, pDestroy
-  
+   if not exists(pStackID) then return revIDELocalise("Cannot close stack, it doesn't exist")
    
-   # validate pStackID
-   # Close stack
-   # If pDestroy stack is true then delete stack
+   if revSaveCheck(pStackID) is not false then
+      if pStackID is true then
+         delete stack pStackID
+      else  
+         close stack pStackID
+      end if
+   end if
 end revIDECloseStack
 
 on revIDEActionCloseStack
@@ -4566,32 +4558,22 @@ on revIDEActionCloseStack
       exit revIDEActionCloseStack
    end if
    
-   
    local tStackList
    put the windows into tStackList
-   repeat for each line l in tStackList
-      if l is "revMenuBar" then next repeat
-      if the mode of stack l is among the items of "1,2,3" then
+   repeat for each line tStack in tStackList
+      if tStack is "revMenuBar" then next repeat
+      if the mode of stack tStack is among the items of "1,2,3" then
          exit repeat
       end if
    end repeat
-   set the defaultStack to l
+   set the defaultStack to tStack
    if word 1 of the short name of this stack is "revScriptEditor" then 
       send "revCheckScriptSaved" to this cd
       close this stack
       exit revIDEActionCloseStack
    end if
    
-   # OK-2007-06-29: Bug 4958
-   if the short name of this stack is "revApplicationOverview" then
-      send "revAppBrowserFinalise" to this stack
-      close this stack
-      exit revIDEActionCloseStack
-   end if
-   
-   local tCheck
-   put revSaveCheck(l) into tCheck
-   if tCheck is not false then close stack l
+   revIDECloseStack the long ID of stack tStack, false
 end revIDEActionCloseStack
 
 /*
@@ -4757,9 +4739,202 @@ on revIDESnapshotSelectedObjects
    # set data of image
 end revIDESnapshotSelectedObjects
 
+function revIDEStackFileVersion pStackFile
+      open file pStackFile for binary read
+      read from file pStackFile for 8
+      close file pStackFile
+      if it begins with "REVO" then
+         return (byte 5 of it & "." & byte 6 of it)
+      else
+         return "2.4"
+      end if
+end revIDEStackFileVersion
+
 on revIDESaveStack pStackID
-   # validate pStackID (exists and that it has a filename)
-   # save the stack
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   
+   put the short name of pStackID into pWhichStack
+   
+   # Old style message handling. Queue of stacks to save are being notified to save
+   global gREVMessageDispatch
+   repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
+      send "revSaveStackRequest" to this card of stack tStack
+   end repeat
+   
+   local tStackName
+   put pWhichStack into tStackName
+   set the defaultStack to "revSaving"
+   
+   local tMainStack
+   put the mainStack of stack tStackName into tMainStack
+   
+   local tSubStacks
+   put the substacks of stack tMainStack into tSubStacks
+   
+   local tSubTabbed
+   repeat for each line tStack in tSubStacks
+      put tab & tStack & return after tSubTabbed
+   end repeat
+   delete last char of tSubTabbed
+   put tSubTabbed into tSubStacks
+   
+   local tOutput
+   put revIDELocalise("Saving...") & return & "stack:" & tab & tStackName & return into tOutput
+   put "mainStack:" & tab & tMainStack & return after tOutput
+   put "subStacks:" & tSubStacks & return after tOutput
+   put revIDELocalise("file name:") & tab & the effective fileName of stack tStackName after tOutput
+   put tOutput into field 1 of stack "revSaving"
+   
+   set the width of field 1 to the formattedWidth of field 1 + 8
+   set the height of field 1 to the formattedHeight of field 1
+   set the topleft of field 1 to 0,0
+   set the width of this stack to the right of field 1
+   set the height of this stack to the height of field 1
+   set the loc of this stack to the loc of stack tStackName
+   set the loc of stack "revSaving" to the loc of stack pWhichStack
+   palette "revSaving"
+   
+   local tPrompt
+   put revIDELocalise("Save complete - click to continue") into tPrompt
+   
+   local tStacksList
+   local tFinal
+   put pWhichStack into tFinal
+   put the mainstack of stack pWhichStack into tStacksList
+   
+   local tResultLog
+   
+   set the cSavingStack of card 1 of stack "revSaving" to pWhichStack
+   
+   wait 50 milliseconds
+   set the cursor to watch
+   
+   local tSelectedList
+   put (the selObj) into tSelectedList
+   select empty
+   compact stack pWhichStack
+   
+   -- Dispatch the pre-save hook, just before we lock messages and do the save.
+   dispatch "revHookPreSaveStack" to me with the long id of stack pWhichStack
+   
+   lock messages
+   
+   local tOldStackFileVersion
+   put the stackFileVersion into tOldStackFileVersion
+   
+   if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack pWhichStack is not empty then
+      try
+         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack pWhichStack
+      catch tError
+         --
+      end try
+   end if
+   
+   if the scaleFactor of stack pWhichStack is a number then
+      set the cREVGeneral["scalefactor"] of stack pWhichStack to the scalefactor of stack pWhichStack
+   end if
+   
+   local tOldStackFileType
+   put the stackFileType into tOldStackFileType
+   if the cPreserveStackCreator of stack "revPreferences" is true then
+      local tOldFolder
+      put the folder into tOldFolder
+      
+      local tStackFilename
+      put the filename of stack pWhichStack into tStackFilename
+      if there is a file tStackFilename then
+         set the itemDelimiter to "/"
+         set the folder to item 1 to -2 of tStackFilename
+         
+         local tStackFileDetails
+         put the detailed files into tStackFileDetails
+         
+         local tStackFileLeaf
+         put the urlEncode of the last item of tStackFilename into tStackFileLeaf
+         set the itemDelimiter to comma
+         get item 11 of line lineOffset(tStackFileLeaf, tStackFileDetails) of tStackFileDetails
+         if char 1 to 4 of it is not "????" then
+            set the stackFileType to char 1 to 4 of it & "RSTK"
+         end if
+      end if
+      
+      set the folder to tOldFolder
+   end if
+   
+   local tSaveResult
+   
+   # TH - 27/11/07 : Bug 5569, savestack request not sent to the users stack because messages are locked at this point
+   try
+      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
+      # execution of the revSave command terminates after the sending of saveStackRequest
+      # to the target stack. This is because revFrontScript handles the message and passes
+      # to metaCard, which prevents further execution. This bug is worked round with a nasty
+      # hack involving a global...
+      global gREVAllowSaveStackRequest
+      put true into gREVAllowSaveStackRequest
+      
+      set the defaultStack to pWhichStack
+      send "saveStackRequest" to this card of stack pWhichStack
+      set the defaultStack to tDefaultStack
+   end try
+   
+   save stack pWhichStack
+   put the result into tSaveResult
+   
+   
+   ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
+   ## Hence the introduction of the above variable.
+   set the stackFileType to tOldStackFileType
+   set the stackFileVersion to tOldStackFileVersion
+   
+   unlock messages
+   
+   local tResult
+   if tSaveResult is not empty then
+      put tSaveResult & return after tResultLog
+      if "backup" is in tSaveResult then put tSaveResult & return & "Check the file path, and make sure you have sufficient permissions." into tResult
+      else put tSaveResult into tResult
+      answer "Can't save stack" && pWhichStack && "due to an error:" & return & tResult
+      close stack "revSaving"
+   else
+      -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
+      dispatch "revHookPostSaveStack" to me with the long id of stack pWhichStack
+      
+      put tPrompt into line -1 of fld 1 of stack "revSaving"
+      put empty into gREVStackStatus[pWhichStack]
+      
+      local tMainStackList
+      put the mainStack of stack pWhichStack into tMainStackList
+      put return & the substacks of stack pWhichStack after tMainStackList
+      repeat for each line tStack in tMainStackList
+         if tStack is empty then next repeat
+         put empty into gREVStackStatus[tStack]
+      end repeat
+      revUpdateRecentFiles pWhichStack
+   end if
+   
+   repeat for each line tSelectedObject in tSelectedList
+      set the selected of tSelectedObject to true
+   end repeat
+   
+   delete last char of tResultLog
+   put "Save complete - click to continue" into line -1 of field 1 of stack "revSaving"
+   
+   -- MW-2012-09-17: [[ Bug 10388 ]] Flush events to stop bunching.
+   get flushEvents("all")
+   
+   -- improve speed KM oct 07 4932
+   local tTime
+   put the milliseconds into tTime
+   repeat
+      if the milliseconds - tTime > 400 then exit repeat
+      if the mouseClick then exit repeat
+   end repeat
+   
+   close stack "revSaving"
+   set the defaultStack to pWhichStack
+   return tResultLog
 end revIDESaveStack
 
 on revIDEActionSaveStack pStackID
@@ -4769,11 +4944,186 @@ on revIDEActionSaveStack pStackID
    # Save stack -> revIDESaveStack
 end revIDEActionSaveStack
 
-on revIDESaveStackAs pStackID
-   # validate pStackID (exists)
-   # Ask for a file to save to -> revIDEAskFile "stack"
-   # Save stack -> revIDESaveStack
+on revIDESaveStackAs pStackID, pFileName
+   if not exists (pStackID) then return __revIDEError("Target stack does not exist")
+   if pFileName is empty then return __revIDEError("No path provided to save to")
+   
+   save pStackID as pFileName
+   
+   if the result is not empty then
+      local tLocaliseSubstitutions
+      put short name of stack pStackID into tLocaliseSubstitutions[1]
+      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & the result
+      close stack "revSaving"
+   else
+      put empty into gREVStackStatus[pShortName]
+      
+      local tMainStackList
+      put the mainStack of pStackID into tMainStackList
+      put return & the substacks of pStackID after tMainStackList
+      repeat for each line tStack in tMainStackList
+         if tStack is empty then next repeat
+         put empty into gREVStackStatus[tStack]
+      end repeat
+      revUpdateRecentFiles the short name of pStackID 
+   end if
 end revIDESaveStackAs
+
+on revIDEActionSaveStackAs pStackID, pSubstackOnly
+   if not exists(pStackID) then __revIDEError("Target stack does not exist")
+   
+   local tMakeMainStack, tMainStackName, tStackName
+   put the short name of pStackID into pShortName
+   put pShortName into tShortNameBackup
+   
+   global gREVMessageDispatch
+   repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
+      send "revSaveStackRequest" to this cd of stack tStack
+   end repeat
+   
+   local tDefaultStackBackup
+   put the defaultStack into tDefaultStackBackup
+   
+   # Saving if a substack 
+   put true into tMakeMainStack
+   put the mainStack of stack pShortName into tMainStackName
+   if tMainStackName is not pShortName and tMainStackName is not "Home" then
+      if not pSubStackOnly then
+         put false into tMakeMainStack
+         put tMainStackName into pShortName
+      end if
+   end if
+   
+   put revFixPath(pShortName) into tStackName
+   
+   // MM-2012-03-09: Added new 5.5 stack file format to drop down.
+   local tType
+   
+   local tStackFileType
+   if there is a file the filename of stack pShortName then put revStackFileVersion(the filename of stack pShortName) into tStackFileType
+   
+   # Prepare substitutions for localisation
+   local tSubstitutions
+   put pShortName into tSubstitutions[1]
+   
+   switch tStackFileType
+      case 5.5
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         break
+      case 2.7
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         break
+      case 2.4
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK")
+         break
+      default
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         break
+   end switch
+   
+   put the result into tType
+   
+   switch tType
+      case "Legacy LiveCode Stack (5.5)"
+         put 5.5 into tType
+         break
+      case "Legacy LiveCode Stack (2.7)"
+         put 2.7 into tType
+         break
+      case "Legacy LiveCode Stack (2.4)"
+         put 2.4 into tType
+         break
+      default
+         put 7.0 into tType
+         break
+   end switch
+   
+   # User cancelled the the ask dialog
+   if it is empty then
+      put "edited" into gREVStackStatus["pShortName"]
+      return "Cancelled"
+   end if
+   
+   # MacOS Auotmatically appends the filetype to the filename
+   local tFilePath
+   if the platform is not "MacOS" and not (it ends with ".rev" or it ends with ".livecode") then
+      put ".livecode" after it
+   end if
+   put it into tFilePath
+   
+   # Display warning if user has not selected the latest file format
+   if tType < 7 then
+      answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
+      if it is not revIDELocalise("Yes") then
+         put "edited" into gREVStackStatus[pShortName]
+         return "Cancelled"
+      end if
+   end if
+   
+   # Window and Mac automatically present overwrite dialog
+   if the platform is not in "Win32,MacOS" and there is a file tFilePath then
+      answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
+      if it is revIDELocalise("Cancel") then
+         return "Cancelled"
+      else 
+         delete file tFilePath
+      end if
+   end if
+   
+   # When making a substack a mainstack, it must clone default colors set on mainstack to substack
+   # so that inherited values are preserved.
+   local tStackColors, tHomeColors
+   if tMakeMainStack and pShortName is not tMainStackName then
+      put the colors of stack pShortName into tStackColors
+      put the colors of stack "Home" into tHomeColors
+      repeat with i = 1 to 8
+         if line i of tStackColors is empty
+         then put line i of tHomeColors into line i of tStackColors
+      end repeat
+      set the colors of stack pShortName to tStackColors
+      set mainStack stack pShortName to pShortName
+      set the cursor to watch
+      -- remove revOnline fingerprint
+      revRemoveRevOnlineKey "fingerprint",tMainStackName
+      save stack tMainStackName
+   end if
+   
+   
+   set the cursor to watch
+   lock messages
+   
+   # RevOnline fingerprint enables the revOnline uploader automatically overwrite the stack if already uploaded.
+   # Because you're saving as a new stack, this fingerprint should be removed.
+   revRemoveRevOnlineKey "fingerprint",pShortname
+   
+   # Store the current stack file version before setting it to the value for this save
+   # It will be reset after the save was made
+   local tOldStackFileVersion
+   put the stackFileVersion into tOldStackFileVersion
+   set the stackFileVersion to tType
+   
+   # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
+   try
+      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
+      # execution of the revSave command terminates after the sending of saveStackRequest
+      # to the target stack. This is because revFrontScript handles the message and passes
+      # to metaCard, which prevents further execution. This bug is worked round with a nasty
+      # hack involving a global...
+      global gREVAllowSaveStackRequest
+      put true into gREVAllowSaveStackRequest
+      
+      set the defaultStack to pShortName
+      send "saveStackRequest" to this card of stack pShortName
+      set the defaultStack to tDefaultStackBackup
+   end try
+   
+   revIDESaveStackAs the long id of stack pShortName, tFilePath
+   
+   set the stackFileVersion to tOldStackFileVersion
+   unlock messages
+   
+   return empty
+end revIDEActionSaveStackAs
 
 on revIDEMoveSubstackToFile pStackID
    # Validate stack exists
@@ -4793,82 +5143,23 @@ on revIDESaveAsStandalone pStackID
 end revIDESaveAsStandalone
 
 on revIDEUndo
-   global gRevUndoList
-   if gREVUndoList is not empty then
-      if line -1 of gREVUndoList is "width" then
-         delete last line of gREVUndoList
-         
-         local tObject
-         repeat for each line tLine in gREVUndoList
-            put item 1 to -2 of tLine into tObject
-            if there is a tObject then
-               set the width of tObject to item -1 of tLine
-            end if
-            send "revCacheGeometry true" to tObject
-         end repeat
-      else if line -1 of gREVUndoList is "height" then
-         delete last line of gREVUndoList
-         repeat for each line l in gREVUndoList
-            put item 1 to -2 of l into tObject
-            if there is a tObject then set the height of tObject to item -1 of l
-            send "revCacheGeometry true" to tObject
-         end repeat
-      else if line -1 of gREVUndoList is "rect" then
-         delete last line of gREVUndoList
-         repeat for each line l in gREVUndoList
-            put item 1 to -5 of l into tObject
-            if there is a tObject then set the rect of tObject to item -4 to -1 of l
-            send "revCacheGeometry true" to tObject
-         end repeat
-      end if
-      put empty into gREVUndoList
-   else
-      undo
-      repeat for each line l in the selObj
-         send "revCacheGeometry true" to l
-      end repeat
-   end if
-   
-   revIDEMessageSend "ideSelectedObjectChanged"
+   # Undo
 end revIDEUndo
 
 on revIDECut
-   if the selectedField is not empty and the lockText of the selectedField then 
-      exit revIDECut
-   end if
-   if the selectedImage is not empty then
-      if the selectedText is not empty then select empty
-      lock screen
-      set the defaultStack to revTargetStack(the long id of the selectedImage)
-      cut
-      unlock screen
-      exit revIDECut
-   end if
-   if revCheckGroupDelete() then
-      cut
-   end if
    
-   revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
 on revIDECutText pTextChunk
-   select pTextChunk
-   revIDECut
+   
 end revIDECutText
 
 on revIDECutObjects pObjectList
-   revIDESelectObjects pObjectList
-   revIDECut
+   
 end revIDECutObjects
 
 on revIDECopy
-   if the selectedImage is not empty then
-      if the selectedText is not empty then 
-         select empty
-      end if
-      set the defaultStack to revTargetStack(the long id of the selectedImage)
-   end if
-   copy
+   
 end revIDECopy
 
 on revIDECopyText pTextChunk
@@ -4886,6 +5177,10 @@ end revIDEPaste
 on revIDEPasteObjects
    
 end revIDEPasteObjects
+
+on revIDEMakePlainText pText
+   
+end revIDEMakePlainText
 
 on revIDEActionPasteUnformatted
    
@@ -4914,6 +5209,14 @@ end revIDEDeselectAllText
 on reviDEInvertObjectSelection
    
 end reviDEInvertObjectSelection
+
+on revIDEToggleSelectGroupedControl
+   
+end revIDEToggleSelectGroupedControl
+
+on revIDEToggleIntersectedSelection
+   
+end revIDEToggleIntersectedSelection
 
 on revIDEChooseBrowseTool
    
@@ -4992,15 +5295,6 @@ on revIDEDeployStack pStackID
 end revIDEDeployStack
 
 on revIDEToggle pProperty
-   switch pProperty
-      case "Suppress Errors"
-         global gRevSuppressErrors
-         if not gREVSuppressErrors or gREVSuppressErrors is empty then
-            put true into gREVSuppressErrors
-         else
-            put false into gREVSuppressErrors
-         end if
-   end switch
    # Script debug mode
    # Suppress messages
    # Suppress errors
@@ -5100,26 +5394,6 @@ on revIDERelicense
    
 end revIDERelicense
 
-on revIDEErrorDialog pExecutionError, pScriptError
-   set the executionError of stack "revErrorDisplay" to pExecutionError
-   set the scriptError of stack "revErrorDisplay" to pScriptError
-   local tObject
-   put empty into tObject
-   repeat for each line l in pExecutionError
-      if item 1 of l is 353 then
-         put item -1 of l into tObject
-         exit repeat
-      end if
-   end repeat
-   if tObject is empty then
-      put the long id of the target into tObject
-   end if
-   set the errorObject of stack "revErrorDisplay" to tObject
-   if the mode of stack "revErrorDisplay" is not 0 then
-      send "openStack" to stack "revErrorDisplay"
-      send "preOpenCard" to stack "revErrorDisplay"
-      send "opencard" to stack "revErrorDisplay"
-   else
-      modeless "revErrorDisplay"
-   end if
-end revIDEErrorDialog
+on revIDEQuit
+   quit
+end revIDEQuit
