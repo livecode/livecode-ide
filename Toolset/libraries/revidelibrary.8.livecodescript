@@ -4550,10 +4550,49 @@ revIDECloseStack the long ID of the topstack, true
 Tags: ide
 */
 on revIDECloseStack pStackID, pDestroy
+  
+   
    # validate pStackID
    # Close stack
    # If pDestroy stack is true then delete stack
 end revIDECloseStack
+
+on revIDEActionCloseStack
+   # Can't close revMenuBar
+   if the short name of the topStack is "revMenuBar" then exit revIDEActionCloseStack
+   
+   # Validate the stack you are closing
+   if the mode of the topStack is not among the items of "1,2,3" then
+      exit revIDEActionCloseStack
+   end if
+   
+   
+   local tStackList
+   put the windows into tStackList
+   repeat for each line l in tStackList
+      if l is "revMenuBar" then next repeat
+      if the mode of stack l is among the items of "1,2,3" then
+         exit repeat
+      end if
+   end repeat
+   set the defaultStack to l
+   if word 1 of the short name of this stack is "revScriptEditor" then 
+      send "revCheckScriptSaved" to this cd
+      close this stack
+      exit revIDEActionCloseStack
+   end if
+   
+   # OK-2007-06-29: Bug 4958
+   if the short name of this stack is "revApplicationOverview" then
+      send "revAppBrowserFinalise" to this stack
+      close this stack
+      exit revIDEActionCloseStack
+   end if
+   
+   local tCheck
+   put revSaveCheck(l) into tCheck
+   if tCheck is not false then close stack l
+end revIDEActionCloseStack
 
 /*
 Returns a list of the recently opened stacks.
