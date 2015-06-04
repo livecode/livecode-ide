@@ -734,11 +734,16 @@ private function revMenubarFileMenu pContext
    
    local tFile
    put "&New Stack" & return after tFile
-   put tab & "Default" & return after tFile
-   put tab & "iPhone (375x667)" & return after tFile
-   put tab & "iPad//Tablet (768x1024)" & return after tFile
+   put tab & "Default Size" & return after tFile
    put tab & "-" & return after tFile
-   put tab & "Script only" & return after tFile
+   put tab & "iPhone 4 (320x480)" & return after tFile
+   put tab & "iPhone 5 (320x568)" & return after tFile
+   put tab & "iPhone 6 (375x667)" & return after tFile
+   put tab & "iPhone 6 Plus (540x960)" & return after tFile
+   put tab & "iPad//Tablet Portrait (768x1024)" & return after tFile
+   put tab & "iPad//Tablet Landscape (1024x768)" & return after tFile
+   put tab & "-" & return after tFile
+   put tab & "Script only Stack" & return after tFile
    
    if tIsUserTarget then
       put "&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
@@ -2015,10 +2020,10 @@ on revMenubarFileMenuPick pWhich
          revIDEPrintPageSetup
          break
       case "Print Card..."
-         revIDEPrintCard this card
+         revIDEPrintCurrentCard
          break
       case "Print Field..."
-         revIDEPrintField line 1 of (the selObj)
+         revIDEPrintField the long ID of the selectedobject
          break
       case "Quit"
       case "Exit"
@@ -2031,7 +2036,7 @@ on revMenubarFileMenuPick pWhich
             case "New Stack"
                local tStackType
                put item 2 of pWhich into tStackType
-               if tStackType is "Script only" then
+               if tStackType is "Script Only Stack" then
                   revIDEActionNewScriptOnlyStack
                else
                   revIDEActionNewMainstack tStackType
