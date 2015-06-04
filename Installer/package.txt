@@ -41,7 +41,7 @@ installer LiveCode
 		include Externals
 	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-32 do
 		set TargetPlatform to Linux
-		set TargetArchitecture to i386
+		set TargetArchitecture to x86
 		include Runtime
 		include Externals
 	ifnot ProductBranch is 6.7 then
