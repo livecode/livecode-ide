@@ -472,35 +472,6 @@ function revMenubarButtonNameToIconPath pName, pStyle
    return tIcon & ".png"
 end revMenubarButtonNameToIconPath
 
-function revMenubarButtonNameToOldButtonName pName
-   switch pName
-      case "Inspector"
-         return "Object Properties"
-      case "Code"
-         return "Edit Script"
-      case "Group"
-         return "Group Controls"
-      case "Select Grouped"
-         return "Select Grouped Controls"
-      case "Messages"
-         return "Suppress Messages"
-      case "Errors"
-         return "Suppress Errors"
-      case "Sample Stacks"
-         return "Rev Online"
-      case "Resources"
-         return "ResourceCenter"
-      case "Dictionary"
-         return "help1"
-      case "Test"
-         return "Deploy"
-      case "Edit Group"
-      case "Tutorials"
-      default
-         return pName 
-   end switch
-end revMenubarButtonNameToOldButtonName
-
 function revIDELocalizeMenuItem pItem
    return pItem
 end revIDELocalizeMenuItem
@@ -584,12 +555,16 @@ on revMenubarMenuButtonClicked pWhich
          break
       case "Messages"
          global gREVSuppressMessages
-         revIDEToggleSuppressMessages
+         revIDEToggle "Suppress Messages"
          set the hilite of the target to gREVSuppressMessages
+         break
       case "Errors"
-         global gREVSuppressErrors
-         revIDEToggleSuppressErrors
-         set the hilite of me to gREVSuppressErrors
+         lock screen
+         global gRevSuppressErrors
+         revIDEToggle "Suppress Errors"
+         set the hilite of the target to gRevSuppressErrors
+         unlock screen
+         break
       case "Sample Stacks"
          revGoOnline
          break
@@ -633,7 +608,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "File"
          return revMenubarFileMenu(pContext)
       case "Edit"
-         return buildEditMenu(pContext)
+         return revMenubarEditMenu(pContext)
       case "Tools"
          return buildToolsMenu(pContext)
       case "Object"
@@ -826,10 +801,8 @@ end revMenubarFileMenu
 
 ################################################################################
 
-private function buildEditMenu pContext
+private function revMenubarEditMenu pContext
    local tEdit
-   --put the text of button "Edit" into tEdit --only set the text once   
-   
    local tObjectsLabel
    if pContext["objectsSelected"] then
       if word 1 of the selObj is "card" then
@@ -883,7 +856,6 @@ private function buildEditMenu pContext
    put enableMenuItem("Clea&r" && tSelectionLabel, tSelectionLabel is not empty) & return after tEdit
    put "-" & return after tEdit
    put enableMenuItem("&Duplicate" && tObjectsLabel &"/D", tObjectsLabel is not empty) & return after tEdit
-   put enableMenuItem("&Replicate...", tObjectsLabel is "Objects") & return after tEdit
    put "-" & return after tEdit
    put "Select All/A" & return after tEdit
    put "Deselect All" & return after tEdit
@@ -896,7 +868,7 @@ private function buildEditMenu pContext
    put "Pre&ferences" after tEdit
    
    return modifyMenu("Edit", tEdit)
-end buildEditMenu
+end revMenubarEditMenu
 
 ################################################################################
 
@@ -2133,180 +2105,45 @@ on revMenubarEditMenuPick pWhich
       case "Paste Objects"
       case "Paste Text"
       case "Paste Image"
-      case "Paste Unformatted"
          revIDEPaste
+         break
+      case "Paste Unformatted"
+         revIDEActionPasteUnformatted
          break
       case "Clear Objects"
       case "Clear Card"
       case "Clear"
       case "Clear Text"
       case "Clear Image Selection"
-         if the selectedImage is not empty then
-            set the defaultStack to revTargetStack(the long id of the selectedImage)
-            delete
-            exit revMenubarEditMenuPick
-         end if
-         set the defaultStack to the topStack
-         if the selectedField is not empty then if the lockText of the selectedField then exit to MetaCard
-         if revCheckGroupDelete() then delete
+         revIDEActionClear
          break
       case "Deselect All"
-         select empty
+         revIDEDeselectAllObjects
          break
       case "Select All"
-         if the mode of the topStack is not 1 and the selectedField is empty then
-            beep
-            exit revMenubarEditMenuPick
-         end if
-         if the selectedImage is not empty then
-            lock screen
-            set the defaultStack to revTargetStack(the long id of the selectedImage)
-            local tRect
-            put the rect of the selectedImage into tRect
-            choose select tool
-            drag from item 1 to 2 of tRect to item 3 to 4 of tRect
-            unlock screen
-            exit revMenubarEditMenuPick
-         end if
-         if the selectedField is not empty \
-               and revTargetStack(the focusedObject) is revTargetStack(the long id of the selectedField) then
-            if the lockText of the selectedField then exit to top
-            select text of the selectedField
-         else
-            if the cantModify of the topStack then
-               answer "This stack can't be modified"
-               exit to top
-            end if
-            if the tool is not "pointer tool" then 
-               beep
-               exit revMenubarEditMenuPick
-            end if
-            lock screen
-            lock messages
-            set the defaultStack to the topStack
-            repeat with i = 1 to the number of layers
-               if the visible of control i or the showInvisibles then
-                  if not the cantSelect of control i then
-                     if the selectGroupedControls and (word 1 of the name of control i is "group" and the selectGroupedControls of control i is true) then
-                        if word 1 of the name of control i is not "group" then
-                           set the selected of control i to true
-                        end if
-                     else
-                        set the selected of control i to true
-                        add the number of layers in control i to i
-                     end if
-                  else
-                     add the number of layers in control i to i
-                  end if
-               end if
-            end repeat
-            unlock screen
-            unlock messages
-            send "selectedObjectChanged" to stack "revBackScriptLibrary"
-         end if
-         
-         // EJB Added to update new Project Browser
-         //send "refreshBrowser" to stack "revProjectBrowser"
-         
+         revIDEActionSelectAll
          break
       case "Invert Selection"
-         if the mode of the topStack is not 1 and the selectedField is empty then
-            beep
-            exit revMenubarEditMenuPick
-         end if
-         lock screen
-         lock messages
-         set the defaultStack to the topStack
-         repeat with i = 1 to the number of controls
-            if (the visible of control i or the showInvisibles) and (not the selectGroupedControls or (the selectGroupedControls and word 1 of the name of control i is not "group")) then
-               set the selected of control i to not the selected of control i
-            end if
-            if not the selectGroupedControls then add the number of layers in control i to i
-         end repeat
-         unlock screen
-         unlock messages
-         send "selectedObjectChanged" to stack "revBackScriptLibrary"
-         
-         // EJB Added to update new Project Browser
-         send "refreshBrowser" to stack "revProjectBrowser"
+         revIDEActionInvertSelection
          break
       case "Duplicate"
       case "Duplicate Objects"
-         # MW-2010-10-15: [[ Bug 9070 ]] Add 'Duplicate Objects' to the switch statement to handle
-         #    case where item name has been customized.
-         set the defaultStack to revTargetStack(line 1 of (the selobj))
-         if the selObj is not empty then
-            lock screen
-            
-            ## EJB 14-07-20414
-            ## [[ Bug 11240 ]] lock screen removed so duplicated controls reveive messages
-            --lock messages
-            
-            # OK-2007-07-31 : Bug 4917. Instead of assuming that the duplicated controls will have the highest layer
-            # numbers, we make certain that we select the correct objects by saving a list of each newly created control
-            local tCreatedObjects
-            
-            put the milliseconds into i
-            repeat for each line tObject in the selObj
-               clone tObject
-               put the long id of it & return after tCreatedObjects
-               
-               if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then 
-                  set the topLeft of the last control to 10, 10
-               end if
-               if word 1 of the name of tObject is not "group" then
-                  set the cREVGeneral["revUniqueID"] of last control to i
-                  add 1 to i
-               else
-                  set the cREVGeneral["revUniqueID"] of last control to i
-                  add 1 to i
-                  
-                  repeat with tGroupedControl = 1 to the number of controls of the last group
-                     set the cREVGeneral["revUniqueID"] of control tGroupedControl of the last group to i
-                     add 1 to i
-                  end repeat
-               end if
-            end repeat
-            select empty
-            
-            repeat for each line tCreatedObject in tCreatedObjects
-               set the selected of tCreatedObject to true
-            end repeat
-            
-            --unlock messages
-            unlock screen
-            send "selectedObjectChanged" to stack "revBackScriptLibrary"
-            revUpdateAOControls (line 1 of the selObj)
-            
-            // EJB Added to update new Project Browser
-            if there is a stack "revProjectBrowser" then
-               send "refreshBrowser" to stack "revProjectBrowser"
-            end if
-         end if
+         revIDEActionDuplicate
          break
       case "Duplicate Card"
-         set the defaultStack to revTargetStack(line 1 of (the selobj))
-         clone the selobj
-         break
-      case "Replicate..."
-         modal "revReplicate"
+         revIDEActionDuplicateCard
          break
       case "Select Grouped Controls"
-         set the selectGroupedControls to not (the selectGroupedControls)
-         if the selectGroupedControls and word 1 of (the selObj) is "group" then select empty
+         revIDEToggleSelectGroupedControls
          break
       case "Intersected Selections"
-         if the selectionMode is "intersect" then
-            set the selectionMode to "surround"
-         else
-            set the selectionMode to "intersect"
-         end if
+         revIDEToggleIntersectedSelection
          break
       case "Preferences"
-         modeless "revPreferencesGUI"
+         revIDEOpenPalette "preferences"
          break
       case "Find and Replace..."
-         modeless "revSearch"
+         revIDEOpenPalette "search"
          break
    end switch
 end revMenubarEditMenuPick

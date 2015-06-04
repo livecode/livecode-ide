@@ -3269,6 +3269,27 @@ on revIDEResizeImageInBounds tImageID, tDesiredWidth,tDesiredHeight
    unlock screen
 end revIDEResizeImageInBounds
 
+function revIDEPaletteToStackName pPalette
+   switch pPalette
+      case "menubar"
+         return "revMenuBar"
+      case "tools"
+         return "revTools"
+      case "inspector"
+         return "revInspector"
+      case "message box"
+         return "Message Box"
+      case "project browser"
+         return "revIDEProjectBrowser"
+      case "extension manager"
+         return "revIDEExtensionManager"
+      case "start center"
+         return "revStartCenter"
+      case "welcome"
+         return "revWelcome"
+   end switch
+end revIDEPaletteToStackName
+
 /*
 Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
 
@@ -3277,33 +3298,36 @@ example: revIDEOpenPalette "inspector"
 */
 command revIDEOpenPalette pPaletteName
    local tExistingPalette, tPalette, tPaletteID
-
+   
+   local tStackName
+   put revIDEPaletteToStackName(pPaletteName) into tStackName
+   
    switch pPaletteName
       case "Start Center"
-         show stack "revStartCenter"
-         set the cMode of stack "revStartCenter" to "run"
-         modeless stack "revStartCenter"
+         show stack tStackName
+         set the cMode of stack tStackName to "run"
+         modeless stack tStackName
          break
       case "Welcome"
-         if the visible of stack "revStartCenter" is true then
-            close stack "revStartCenter"
+         local tStartCenter
+         put revIDEPaletteToStackName("start center") into tStartCenter
+         if the visible of stack tStartCenter is true then
+            close stack tStartCenter
          end if
-         modeless stack "revwelcome"
+         modeless stack tStackName
          break
       case "inspector"
-         palette stack "revInspector"
+      case "standalone settings"
+      case "message box"
+         palette stack tStackName
          break
       case "project browser"
-         modeless stack "revIDEProjectBrowser"
-         break
       case "extension manager"
-         modeless stack "revIDEExtensionManager"
+         modeless stack tStackName
          break
-      case "message box"
-         palette stack "Message Box"
-         break
+      default
       case "search engine"
-         go stack "revSearchEngine"
+         throw "no such palette"
          break
    end switch
 end revIDEOpenPalette
@@ -4240,17 +4264,6 @@ on revIDEPopupContextualMenu pTargets
    dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
 end revIDEPopupContextualMenu
 
-function revIDEPaletteToStackName pPalette
-   switch pPalette
-      case "menubar"
-         return "revMenuBar"
-      case "tools"
-         return "revTools"
-      case "inspector"
-         return "revInspector"
-   end switch
-end revIDEPaletteToStackName
-
 local sPluginNames
 on revIDEUpdatePlugins
    global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
@@ -4741,23 +4754,82 @@ on revIDESaveAsStandalone pStackID
 end revIDESaveAsStandalone
 
 on revIDEUndo
-   # Undo
+   global gRevUndoList
+   if gREVUndoList is not empty then
+      if line -1 of gREVUndoList is "width" then
+         delete last line of gREVUndoList
+         
+         local tObject
+         repeat for each line tLine in gREVUndoList
+            put item 1 to -2 of tLine into tObject
+            if there is a tObject then
+               set the width of tObject to item -1 of tLine
+            end if
+            send "revCacheGeometry true" to tObject
+         end repeat
+      else if line -1 of gREVUndoList is "height" then
+         delete last line of gREVUndoList
+         repeat for each line l in gREVUndoList
+            put item 1 to -2 of l into tObject
+            if there is a tObject then set the height of tObject to item -1 of l
+            send "revCacheGeometry true" to tObject
+         end repeat
+      else if line -1 of gREVUndoList is "rect" then
+         delete last line of gREVUndoList
+         repeat for each line l in gREVUndoList
+            put item 1 to -5 of l into tObject
+            if there is a tObject then set the rect of tObject to item -4 to -1 of l
+            send "revCacheGeometry true" to tObject
+         end repeat
+      end if
+      put empty into gREVUndoList
+   else
+      undo
+      repeat for each line l in the selObj
+         send "revCacheGeometry true" to l
+      end repeat
+   end if
+   
+   revIDEMessageSend "ideSelectedObjectChanged"
 end revIDEUndo
 
 on revIDECut
+   if the selectedField is not empty and the lockText of the selectedField then 
+      exit revIDECut
+   end if
+   if the selectedImage is not empty then
+      if the selectedText is not empty then select empty
+      lock screen
+      set the defaultStack to revTargetStack(the long id of the selectedImage)
+      cut
+      unlock screen
+      exit revIDECut
+   end if
+   if revCheckGroupDelete() then
+      cut
+   end if
    
+   revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
 on revIDECutText pTextChunk
-   
+   select pTextChunk
+   revIDECut
 end revIDECutText
 
 on revIDECutObjects pObjectList
-   
+   revIDESelectObjects pObjectList
+   revIDECut
 end revIDECutObjects
 
 on revIDECopy
-   
+   if the selectedImage is not empty then
+      if the selectedText is not empty then 
+         select empty
+      end if
+      set the defaultStack to revTargetStack(the long id of the selectedImage)
+   end if
+   copy
 end revIDECopy
 
 on revIDECopyText pTextChunk
@@ -4775,10 +4847,6 @@ end revIDEPaste
 on revIDEPasteObjects
    
 end revIDEPasteObjects
-
-on revIDEMakePlainText pText
-   
-end revIDEMakePlainText
 
 on revIDEActionPasteUnformatted
    
@@ -4807,14 +4875,6 @@ end revIDEDeselectAllText
 on reviDEInvertObjectSelection
    
 end reviDEInvertObjectSelection
-
-on revIDEToggleSelectGroupedControl
-   
-end revIDEToggleSelectGroupedControl
-
-on revIDEToggleIntersectedSelection
-   
-end revIDEToggleIntersectedSelection
 
 on revIDEChooseBrowseTool
    
@@ -4893,6 +4953,15 @@ on revIDEDeployStack pStackID
 end revIDEDeployStack
 
 on revIDEToggle pProperty
+   switch pProperty
+      case "Suppress Errors"
+         global gRevSuppressErrors
+         if not gREVSuppressErrors or gREVSuppressErrors is empty then
+            put true into gREVSuppressErrors
+         else
+            put false into gREVSuppressErrors
+         end if
+   end switch
    # Script debug mode
    # Suppress messages
    # Suppress errors
@@ -4991,3 +5060,27 @@ end revIDEActionRelicense
 on revIDERelicense
    
 end revIDERelicense
+
+on revIDEErrorDialog pExecutionError, pScriptError
+   set the executionError of stack "revErrorDisplay" to pExecutionError
+   set the scriptError of stack "revErrorDisplay" to pScriptError
+   local tObject
+   put empty into tObject
+   repeat for each line l in pExecutionError
+      if item 1 of l is 353 then
+         put item -1 of l into tObject
+         exit repeat
+      end if
+   end repeat
+   if tObject is empty then
+      put the long id of the target into tObject
+   end if
+   set the errorObject of stack "revErrorDisplay" to tObject
+   if the mode of stack "revErrorDisplay" is not 0 then
+      send "openStack" to stack "revErrorDisplay"
+      send "preOpenCard" to stack "revErrorDisplay"
+      send "opencard" to stack "revErrorDisplay"
+   else
+      modeless "revErrorDisplay"
+   end if
+end revIDEErrorDialog

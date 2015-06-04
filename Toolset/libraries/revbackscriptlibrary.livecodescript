@@ -2247,27 +2247,7 @@ on errorDialog pWhatError, pWhatError2
       exit errorDialog
    end if
    if the number of lines in pWhatError is 0 then exit errorDialog -- bogus error
-   set the executionError of stack "revErrorDisplay" to pWhatError
-   set the scriptError of stack "revErrorDisplay" to pWhatError2
-   local tObject
-   put empty into tObject
-   repeat for each line l in pWhatError
-      if item 1 of l is 353 then
-         put item -1 of l into tObject
-         exit repeat
-      end if
-   end repeat
-   if tObject is empty then
-      put the long id of the target into tObject
-   end if
-   set the errorObject of stack "revErrorDisplay" to tObject
-   if the mode of stack "revErrorDisplay" is not 0 then
-      send "openStack" to stack "revErrorDisplay"
-      send "preOpenCard" to cd 1 of stack "revErrorDisplay"
-      send "opencard" to cd 1 of stack "revErrorDisplay"
-   else
-      modeless "revErrorDisplay"
-   end if
+   revIDEErrorDialog pWhatError, pWhatError2
 end errorDialog
 
 
