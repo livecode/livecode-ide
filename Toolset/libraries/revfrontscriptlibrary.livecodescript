@@ -797,15 +797,7 @@ on scriptParsingError pWhich
    put MD5Digest(pWhich) into tDigest
    if tDigest is among the lines of lSeenErrors then exit scriptParsingError
    else put tDigest into line (the number of lines in lSeenErrors)+1 of lSeenErrors
-   set the executionError of stack "revErrorDisplay" to empty
-   set the scriptError of stack "revErrorDisplay" to pWhich
-   set the errorObject of stack "revErrorDisplay" to the long id of the target
-   if the mode of stack "revErrorDisplay" is not 0 then
-      send "preOpenCard" to cd 1 of stack "revErrorDisplay"
-      send "opencard" to cd 1 of stack "revErrorDisplay"
-   else
-      modeless "revErrorDisplay"
-   end if
+	revIDEErrorDialog "", pWhich
 end scriptParsingError
 
 # OK-2008-03-27 : Bug where right-click context menus don't work with messages suppressed
