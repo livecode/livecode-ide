@@ -11,16 +11,7 @@ on preOpenStack
    # OK-2007-07-06 : Reworked recent files list code.
    //revMenuBarUpdateRecentPaths
    
-   revIDESubscribe "ideSelectedObjectChanged"
-   revIDESubscribe "idePreferenceChanged:cToolbarIcons"
-   revIDESubscribe "idePreferenceChanged:cToolbarText"
-   revIDESubscribe "ideToolChanged"
-   
-   revIDESubscribe "ideToggleChanged:suppressMessages"
-   revIDESubscribe "ideToggleChanged:suppressErrors"
-   revIDESubscribe "ideToggleChanged:selectGrouped"
-   revIDESubscribe "ideToggleChanged:selectionMode"
-   
+   subscribeMessages
    setDefaultText
    setMenuProperties
    generateMenu
@@ -31,10 +22,39 @@ end preOpenStack
 on openStack
 end openStack
 
-local sTextMenuDisabledText, sTextMenuText
+on subscribeMessages
+   revIDESubscribe "ideSelectedObjectChanged"
+   revIDESubscribe "idePreferenceChanged:cToolbarIcons"
+   revIDESubscribe "idePreferenceChanged:cToolbarText"
+   revIDESubscribe "ideToolChanged"
+   
+   revIDESubscribe "ideToggleChanged:suppressMessages"
+   revIDESubscribe "ideToggleChanged:suppressErrors"
+   revIDESubscribe "ideToggleChanged:selectGrouped"
+   revIDESubscribe "ideToggleChanged:selectionMode"
+   
+   revIDESubscribe "idePluginsChanged"
+end subscribeMessages
+
+local sTextMenuDisabledText, sTextMenuText, sPluginMenuText
 on setDefaultText
    setupTextMenu
 end setDefaultText
+
+private on setupDevelopmentMenu
+   local tPlugins
+   put the keys of revIDEPlugins() into tPlugins
+   sort tPlugins
+   local tPluginMenuText
+   repeat for each line tPlugin in tPlugins
+      if tPluginMenuText is empty then
+         put tab & tPlugin into tPluginMenuText
+      else
+         put return & tab & tPlugin after tPluginMenuText
+      end if
+   end repeat
+   put tPluginMenuText into sPluginMenuText
+end setupDevelopmentMenu
 
 private on setupTextMenu
    local tText
@@ -232,6 +252,10 @@ end idePreferenceChanged
 on ideToggleChanged pToggle
    updateButtonState
 end ideToggleChanged
+
+on idePluginsChanged
+   setupDevelopmentMenu
+end idePluginsChanged
 
 on generateMenu
    generateMenubarUI
@@ -708,7 +732,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Text"
          return revMenubarTextMenu(pContext)
       case "Development"         
-         return buildDevelopmentMenu(pContext)
+         return revMenubarDevelopmentMenu(pContext)
       case "View"
          return buildViewMenu(pContext)
       case "Window"
@@ -1366,20 +1390,17 @@ end buildViewMenu
 
 ################################################################################
 
-private function buildDevelopmentMenu pContext
+private function revMenubarDevelopmentMenu pContext
    global gREVSuppressErrors, gREVSuppressMessages
-   
-   revIDEUpdatePlugins
-   
    local tDevelopment
-   put "Object Library" & return after tDevelopment
-   put "Image Library" & return after tDevelopment
    put "Plugins" & return after tDevelopment
-   put revIDEPluginNames() & return after tDevelopment
+   if sPluginMenuText is not empty then
+      put sPluginMenuText & return after tDevelopment
+   end if
    put tab & "-" & return after tDevelopment
    put tab & "Plugin Settings" & return after tDevelopment
    put "-" & return after tDevelopment
-   put buildSimulatorSubmenu() after tDevelopment
+   put revMenubarSimulatorSubmenu() after tDevelopment
    put "-" & return after tDevelopment   
    put toggleMenuItem("Script Debug Mode", revDebuggerEnabled()) & return after tDevelopment
    put"Clear All Breakpoints" & return after tDevelopment
@@ -1391,25 +1412,25 @@ private function buildDevelopmentMenu pContext
    put "Suspend Development Tools" & return after tDevelopment
    
    return modifyMenu("Development", tDevelopment)
-end buildDevelopmentMenu
+end revMenubarDevelopmentMenu
 
-private function buildSimulatorSubmenu
+private function revMenubarSimulatorSubmenu
    local tSimulators
-   put revIDEDeployListTargets() into tSimulators
+   put revIDETestTargets() into tSimulators
    
    if tSimulators is not an array then
       return "(Test/|Simulate" & return & "(Test Target" & return & tab & "(No targets configured" & return
    end if
    
    local tCurrentTarget
-   put revIDEDeployGetTarget() into tCurrentTarget
+   put revIDETestTarget() into tCurrentTarget
    
    local tMenu
    put enableMenuItem("Test/|Simulate", tCurrentTarget is not empty) & return after tMenu
    put "Test Target/|Simulator Version" & return after tMenu
    repeat for each key tPlatform in tSimulators
       local tCanDeploy
-      put revIDEDeployIsPossible(tPlatform) into tCanDeploy
+      put revIDETestCanDeployToTarget(tPlatform) into tCanDeploy
       repeat for each line tTarget in tSimulators[tPlatform]
          put tab & enableMenuItem(toggleMenuItem(tTarget, tTarget is tCurrentTarget), tCanDeploy) & return after tMenu
       end repeat
@@ -1418,7 +1439,7 @@ private function buildSimulatorSubmenu
    delete char -3 to -1 of tMenu
    
    return tMenu
-end buildSimulatorSubmenu
+end revMenubarSimulatorSubmenu
 
 ################################################################################
 
@@ -3015,92 +3036,44 @@ local lRestore
 on revMenubarDevelopmentMenuPick pWhich
    global gREVSuppressErrors, gREVSuppressMessages, gREVRestore, gREVOldScriptDebugMode
    
-   local tMainWhich
+   local tWhich
    set the itemDelimiter to "|"
-   put item 1 of pWhich into tMainWhich
-   set the itemDelimiter to comma
+   put item 1 of pWhich into tWhich
    
-   switch tMainWhich
+   switch tWhich
       case "Message Watcher"
-         palette "revMessageWatcher"
+         revIDEOpenPalette "message watcher"
          break
       case "Clear all Breakpoints"
          revIDEActionClearAllBreakpoints
          break
       case "Script Debug Mode"
-         if revDebuggerEnabled() then
-            revDebuggerDisable
-         else
-            revDebuggerEnable
-         end if
-         
-         # OK-2010-01-18: Update any open script editors so that the breakpoints are shown correctly,
-         # they should all be grey when script debug mode is off, otherwise their color depends on their
-         # exact circumstances.
-         local tPrefsChanged
-         put false into tPrefsChanged
-         send "revSEUpdateEditors tPrefsChanged" to revScriptEditorMain()
+      case "Suppress Messages"
+      case "Suppress Errors"
+         revIDEToggle tWhich
          break
       case "Suspend Development Tools"
          revIDESuspendDevelopmentTools
          break
-      case "Suppress Messages"
-         revIDEToggleSuppressMessages
-         break
-      case "Suppress Errors"
-         revIDEToggleSuppressErrors
-         break
       case "Simulate"
-         revIDEDeployAction
+         revIDEActionTest
          break
       case "Simulator Version"
-         set the itemDel to "|"
-         revIDEDeploySetTarget item 2 of pWhich
+         revIDESetTestTarget item 2 of pWhich
          break
       case "Plugins"
+         local tPicked
          set the itemDel to "|"
-         switch item 2 of pWhich
+         put item 2 of pWhich into tPicked
+         switch tPicked
             case "Plugin Settings"
-               set the defaultStack to the topStack
-               modeless "revPlugInEditor"
+               revIDEOpenPalette "plugin preferences"
                break
+               # A plugin has been selected
             default
-               set the wholeMatches to true
-               
-               local tLine
-               put lineOffset(tab & item 2 of pWhich, the text of menu "Development")-3 into tLine
-               set the wholeMatches to false
-               
-               local tStackPath
-               put (line tLine of the cMenuList of btn "list" of stack "revplugineditor") into tStackPath
-               
-               local tMode
-               if the cREVLoadInfo["mode"] of stack tStackPath is not empty then 
-                  put the cREVLoadInfo["mode"] of stack tStackPath into tMode
-               else 
-                  put "palette" into tMode
-               end if
-               
-               if tMode is "invisible" then
-                  go invisible stack tStackPath
-               else 
-                  do "go stack" && quote &  tStackPath & quote && "as" && tMode
-               end if
+               revIDEOpenPlugin tPicked
                break
          end switch
-         break
-      case "Image Library"
-         go cd 2 of stack "revImageLibrary" as modeless
-         lock messages
-         set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 2
-         break
-      case "Object Library"
-         go cd 1 of stack "revImageLibrary" as modeless
-         lock messages
-         set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 1
-         break
-      case "Rev Online"
-         revGoOnline
          break
    end switch
 end revMenubarDevelopmentMenuPick
