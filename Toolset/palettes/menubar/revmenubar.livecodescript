@@ -609,7 +609,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Edit"
          return revMenubarEditMenu(pContext)
       case "Tools"
-         return buildToolsMenu(pContext)
+         return revMenubarToolsMenu(pContext)
       case "Object"
          return buildObjectMenu(pContext)
       case "Text"
@@ -876,27 +876,25 @@ end revMenubarEditMenu
 
 ################################################################################
 
-private function buildToolsMenu pContext
+private function revMenubarToolsMenu pContext
    local tTools
    
    put markMenuItem("&Browse Tool/9", the tool is "browse tool") & return after tTools
    put markMenuItem("&Pointer Tool/0", the tool is "pointer tool") & return after tTools
    put "-" & return after tTools
-   put toggleMenuItem("&Tools Palette/T", the mode of stack "revTools" is not 0) & return after tTools
+   put toggleMenuItem("&Tools Palette/T", revIDEPaletteIsVisible("tools")) & return after tTools
    put toggleMenuItem("&Paint and Draw Tools", "paint" is among the items of revIDEGetPreference("revTools_show")) & return after tTools
    put "-" & return after tTools
-   put "Application Browser" & return after tTools
-   put "Project Browser" & return after tTools
-   put "&Message Box/M" & return after tTools
-   put "Extension Manager" & return after tTools
+   
+   put toggleMenuItem("Project Browser", revIDEPaletteIsVisible("project browser")) & return after tTools
+   put toggleMenuItem("&Message Box/M", revIDEPaletteIsVisible("message box")) & return after tTools
+   put toggleMenuItem("Extension Manager", revIDEPaletteIsVisible("extension manager")) & return after tTools
+   put toggleMenuItem("Extension Builder", revIDEPaletteIsVisible("extension builder")) & return after tTools
    put "-" & return after tTools
-   put enableMenuItem("Menu Builder", the mode of the topStack is 1) & return after tTools
-   if revIDEPrefGet("Unsupported,EnableDBQueryBuilder") then
-      put enableMenuItem("Database Query Builder", the mode of the topStack is 1) & return after tTools
-   end if
+   put toggleMenuItem(enableMenuItem("Menu Builder", the mode of the topStack is 1), revIDEPaletteIsVisible("menu builder")) & return after tTools
    
    return modifyMenu("Tools", tTools)
-end buildToolsMenu
+end revMenubarToolsMenu
 
 ################################################################################
 
@@ -2155,51 +2153,23 @@ end revMenubarEditMenuPick
 on revMenubarToolsMenuPick pWhich
    switch pWhich
       case "Tools Palette"
-         if the mode of stack "revTools" is 0 then palette "revTools"
-         else close stack "revTools"
+         revIDETogglePalette "tools"
          break
       case "Browse Tool"
-         revIDESetTool "browse"
+         revIDEChooseBrowseTool
          break
       case "Pointer Tool"
-         revIDESetTool "pointer"
+         revIDEChoosePointerTool
          break
       case "paint and draw tools"
-         local tToolsOnShow
-         put revIDEGetPreference("revTools_show") into tToolsOnShow
-         if "paint" is among the items of tToolsOnShow then
-            delete item itemoffset("paint", tToolsOnShow) of tToolsOnShow
-         else
-            if tToolsOnShow is empty then
-               put "paint" into tToolsOnShow
-            else
-               put comma & "paint" after tToolsOnShow
-            end if
-         end if
-         revIDESetPreference "revTools_show", tToolsOnShow
-         
+         revIDETogglePaintAndDrawTools
          break
       case "Menu Builder"
-         modeless "revMenuManager"
-         break
       case "Message Box"
-         # OK-2008-06-24: Bug 6575
-         revIDEShowMessageBox
-         break
-      case "Application Browser"
-         --modeless "revApplicationOverview"
-         # TH-2008-02-07 :: Now opens using new mode that allows minimising
-         set the _ideoverride of stack "revApplicationOverview" to true
-         toplevel "revApplicationOverview"
-         break
       case "Project Browser"
-         revIDEOpenPalette "project browser"
-         break
       case "Extension Manager"
-         revIDEOpenPalette "extension manager"
-         break
-      case "Report Builder"
-         modeless "revReportSetup"
+      case "Extension Builder"
+         revIDETogglePalette pWhich
          break
    end switch
 end revMenubarToolsMenuPick

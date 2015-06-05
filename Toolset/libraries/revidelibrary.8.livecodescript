@@ -3273,7 +3273,18 @@ on revIDEResizeImageInBounds tImageID, tDesiredWidth,tDesiredHeight
    unlock screen
 end revIDEResizeImageInBounds
 
+/*
+Returns a list of all the display names of stacks recognised by the IDE as a palette.
+*/
+function revIDEAvailablePalettes
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder"
+end revIDEAvailablePalettes
+
 function revIDEPaletteToStackName pPalette
+   if pPalette is not among the items of revIDEAvailablePalettes() then
+      return __revIDEError("No available palette with name" && pPalette)
+   end if
+   
    switch pPalette
       case "menubar"
          return "revMenuBar"
@@ -3291,6 +3302,10 @@ function revIDEPaletteToStackName pPalette
          return "revStartCenter"
       case "welcome"
          return "revWelcome"
+      case "menu builder"
+         return "revMenuManager"
+      case "extension builder"
+         return "revExtensionBuilder"
    end switch
 end revIDEPaletteToStackName
 
@@ -3327,14 +3342,21 @@ command revIDEOpenPalette pPaletteName
          break
       case "project browser"
       case "extension manager"
+      case "menu builder"
+      case "extension builder"
          modeless stack tStackName
          break
       default
       case "search engine"
-         throw "no such palette"
-         break
+         return __revIDEError("No such palette:" && pPaletteName)
    end switch
 end revIDEOpenPalette
+
+function revIDEPaletteIsVisible pPaletteName
+   local tStackName
+   put revIDEPaletteToStackName(pPaletteName) into tStackName
+   return the mode of stack tStackName is not 0 and the visible of stack tStackName
+end revIDEPaletteIsVisible
 
 on revIDEOpenInspectorForObjects pObjects
    lock screen
@@ -5515,12 +5537,43 @@ on revIDEToggle pProperty
 end revIDEToggle
 
 on revIDETogglePalette pPaletteName
-   # show/hide palette
+   local tStackName
+   put revIDEPaletteToStackName(pPaletteName) into tStackName
+   
+   if the mode of stack tStackName is 0 then
+      revIDEOpenPalette pPaletteName
+   else
+      close stack tStackName
+   end if
 end revIDETogglePalette
 
-function revIDEAvailablePalettes
-   # return palette & visibility
-end revIDEAvailablePalettes
+on revIDETogglePaintAndDrawTools
+   local tToolsOnShow
+   put revIDEGetPreference("revTools_show") into tToolsOnShow
+   if "paint" is among the items of tToolsOnShow then
+      delete item itemoffset("paint", tToolsOnShow) of tToolsOnShow
+   else
+      if tToolsOnShow is empty then
+         put "paint" into tToolsOnShow
+      else
+         put comma & "paint" after tToolsOnShow
+      end if
+   end if
+   revIDESetPreference "revTools_show", tToolsOnShow
+end revIDETogglePaintAndDrawTools
+
+function revIDEAvailablePaletteState
+   # return palette name & visibility
+   local tState
+   repeat for each item tPalette in revIDEAvailablePalettes()
+      if tState is empty then
+         put tPalette & comma & revIDEPaletteIsVisible(tPalette) into tState
+      else
+         put return & tPalette & comma & revIDEPaletteIsVisible(tPalette) after tState
+      end if
+   end repeat
+   return tState
+end revIDEAvailablePaletteState
 
 function revIDEOpenWindows
    
