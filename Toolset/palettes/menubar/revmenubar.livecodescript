@@ -16,6 +16,7 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:cToolbarText"
    revIDESubscribe "ideToolChanged"
    
+   setDefaultText
    setMenuProperties
    generateMenu
    updateMenubarPreference
@@ -24,6 +25,80 @@ end preOpenStack
 
 on openStack
 end openStack
+
+local sTextMenuDisabledText, sTextMenuText
+on setDefaultText
+   setupTextMenu
+end setDefaultText
+
+private on setupTextMenu
+   local tText
+   put toggleMenuItem("Plain/;", false) & return after tText
+   put toggleMenuItem("&Bold/B", false) & return after tText
+   put toggleMenuItem("&Italic/I", false) & return after tText
+   put toggleMenuItem("&Underline/U", false) & return after tText
+   put toggleMenuItem("Strikeout", false) & return after tText
+   put toggleMenuItem("Box", false) & return after tText
+   put toggleMenuItem("3D Box", false) & return after tText
+   put "-" & return after tText
+   put toggleMenuItem("Link", false) & return after tText
+   put "-" & return after tText
+   put toggleMenuItem("Subscript", false) & return after tText
+   put toggleMenuItem("Superscript", false) & return after tText
+   put "-" & return after tText
+   put "Font" & return after tText
+   
+   local tFontNames
+   put the fontNames into tFontNames
+   replace "/" with "\" in tFontNames
+   sort lines of tFontNames
+   put "Use Owner's Font" & return & "-" & return before tFontNames
+   
+   local fontnum
+   put 1 into fontnum
+   repeat for each line tFontName in tFontNames
+      if tFontName is "-" then 
+         put tab & tFontName & return after tText
+      else
+         put "!u" & tab & tFontName & return after tText
+      end if
+   end repeat
+   put "Size" & return after tText
+   
+   local tFontSizes
+   put format("Use Owner's Size\n-\n8\n9\n10\n12\n14\n18\n24\n36\n48\n-\nOther...") into tFontSizes
+   repeat for each line l in tFontSizes
+      if l is "-" then put tab & l & cr after tText
+      else put "!u" & tab & l & cr after tText
+   end repeat
+   put "Color" & cr after tText
+   
+   local tColors
+   put format("Use Owner's Color\n-\nBlack\nWhite\nRed\nGreen\nBlue\nYellow\n-\nPen Color") into tColors
+   repeat for each line tColor in tColors
+      if tColor is "-" then
+         put tab & tColor & return after tText
+      else 
+         put "!u" & tab & tColor & return after tText
+      end if
+   end repeat
+   put  "-" & return & "&Align" & return & "!u"  & tab & "Left" & return & "!u" & tab & "Center" & return & "!u" & tab & "Right" after tText
+   
+   # Cache the text menu text in non-disabled state
+   put tText into sTextMenuText
+   repeat for each line tLine in tText
+      if the platform is "MacOS" and tab is in tLine then
+         replace tab with empty in tLine
+         local tDisabledText
+         put tab & "(" & tLine & return after tDisabledText
+      else
+         put "(" & tLine & return after tDisabledText
+      end if
+   end repeat
+   delete last char of tDisabledText
+   # Cache the disabled text menu text
+   put tDisabledText into sTextMenuDisabledText
+end setupTextMenu
 
 on setMenuProperties
    set the height of me to 47
@@ -123,7 +198,6 @@ on preOpenStack
    put tOn&"Default Appearance Manager"&tOff&"Mac OS Platinum Emulated"&tOff&"Windows Emulated"&tOff&"Motif Emulated" after tView
    put cr&"-"&cr&"!nShow &Invisible Objects" after tView
    put tView into button "View"
-   revSetupText
    revUpdatePalette
    
    --LG-2007-12-18
@@ -613,7 +687,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Object"
          return buildObjectMenu(pContext)
       case "Text"
-         return buildTextMenu(pContext)
+         return revMenubarTextMenu(pContext)
       case "Development"         
          return buildDevelopmentMenu(pContext)
       case "View"
@@ -900,15 +974,15 @@ end buildToolsMenu
 
 ################################################################################
 
-private function buildTextMenu pContext
+private function revMenubarTextMenu pContext
    global gREVDisabledText, gREVTextMenu
    
    local tText,tFont,tSize,tAlign,tStyle,tColor
    
    if not pContext["enableText"] then
-      put gREVDisabledText into tText
+      put sTextMenuDisabledText into tText
    else   
-      put gREVTextMenu into tText   
+      put sTextMenuText into tText   
       if pContext["textMenuSelection"] is "objects" then   
          --selected object   
          put "(!nSubscript" & return & "(!nSuperscript" into line 11 to 12 of tText   
@@ -994,7 +1068,7 @@ private function buildTextMenu pContext
    end if
    
    return modifyMenu("Text", tText)
-end buildTextMenu
+end revMenubarTextMenu
 
 ################################################################################
 
@@ -2893,132 +2967,61 @@ on revMenubarObjectMenuPick pWhich
 end revMenubarObjectMenuPick
 
 on revMenubarTextMenuPick pWhich
-   local tSelectedObject,tTargetObject, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition, tPickedItem, tPickedParams, tSelectedChunk
-   
-   if the selectedChunk is empty and the selectedObject is empty then exit to top
-   
-   if the selectedfield is not empty then 
-      put word -2 to -1 of the long ID of the selectedfield into tTargetStack
-      put the long ID of the selectedfield into tTargetObject
-      put the long ID of the selectedfield into tSelectedObject
-      put the vScroll of the selectedfield into tFieldVScrollPosition
-      put the hScroll of the selectedfield into tFieldHScrollPosition
-      if the selectedChunk is not empty then 
-         put the selectedChunk into tSelectedChunk
-         put word 1 to 4 of tSelectedChunk & " " before tSelectedObject
-      end if
-   else 
-      put the long ID of the selectedObject into tSelectedObject
-      put the long ID of the selectedObject into tTargetObject
-      put word -2 to -1 of the long ID of the selectedObject into tTargetStack
-   end if
-   
-   // We need to ignore actions that are performed on LiveCode palettes unless specifically allowed
-   if revOKTarget(tTargetStack) then 
-      // Add IDE Exception here that are allowed to have their text manipulated
-      if the short name of tTargetObject is not among the words of "htmltext" then
-         exit to top
-      end if
-   end if
+   local tPickedItem, tPickedParams
    
    // tPickedItem could have parameters
    set the itemdel to "|"
    if the number of items of pWhich > 1 then
       put toLower(item 2 to -1 of pWhich) into tPickedParams
       put toLower(item 1 of pWhich) into tPickedItem
+   else 
+      put pWhich into tPickedItem
    end if
-   set the itemdel to comma
-   
-   // Some of the text labels in the text menu don't relate directly to style properties
-   // So processing them here to turn them into actual property name
-   if tPickedItem is "3d box" then put "threeDbox" into tPickedItem
-   
+
    switch tPickedItem
       case "plain"
-         //put return & "Action: set the textStyle of" && tSelectedObject & " to empty" after msg
-         set the textStyle of tSelectedObject to empty
+         revIDEStyleTextPlain
          break
       case "bold"
-      case "italic"
-      case "underline"
-      case "strikeout"
-      case "box"
-      case "link"
-      case "condensed"
-      case "expanded"
-      case "threeDbox"
-         //put return & "Action: set the textStyle['"&tPickedItem&"'] of" && tSelectedObject & " to true" after msg
-         if the textStyle[tPickedItem] of tSelectedObject is true then
-            set the textStyle[tPickedItem] of tSelectedObject to false
-         else
-            set the textStyle[tPickedItem] of tSelectedObject to true
-         end if
+         revIDEStyleTextBold
          break
-         
+      case "italic"
+         revIDEStyleTextItalic
+         break
+      case "underline"
+         revIDEStyleTextUnderline
+         break
+      case "strikeout"
+         revIDEStyleTextStrikeout
+         break
+      case "box"
+         revIDEStyleTextBox
+         break
+      case "link"
+         revIDEStyleTextLink
+         break
+      case "3d box"
+         revIDEStyleText3DBox
+         break
       case "subscript"
+         revIDEStyleTextSubscript
+         break
       case "superscript"
-         local tTextShiftAmount
-         
-         if tPickedItem is "superscript" then put -4 into tTextShiftAmount
-         else put 4 into tTextShiftAmount
-         if the textShift of tSelectedObject is a number then put 0 into tTextShiftAmount
-         
-         set the textShift of tSelectedObject to tTextShiftAmount
+         revIDEStyleTextSuperscript
          break
       case "font"
-         if tPickedParams is "Use Owner's Font" then set the textFont of tSelectedObject to empty
-         else set the textFont of tSelectedObject to tPickedParams
+         revIDESetTextFont tPickedParams
          break
       case "size"
-         if tPickedParams is "Use Owner's Size" then 
-            set the textSize of tSelectedObject to empty
-         else if tPickedParams is a number then
-            set textSize of tSelectedObject to tPickedParams
-         else if tPickedParams is "Other..." then
-            ask "Choose the text size"
-            if it is empty then 
-               exit revMenubarTextMenuPick
-            else
-               set textSize of tSelectedObject to it
-            end if
-         end if
+         revIDESetTextSize tPickedParams
          break
       case "color"
-         if tPickedParams is "Use Owner's Color" then set the textColor of tSelectedObject to empty
-         else if tPickedParams is "Pen Color" then set textColor of tSelectedObject to the penColor
-         else set textColor of tSelectedObject to tPickedParams
+         revIDESetTextColor tPickedParams
          break
       case "align"
-         // If there is a selection we want to sent the alignment of the paragraph(s) in question 
-         if the selectedChunk is not empty then
-            local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
-            put word 2 of the selectedChunk into tStartChar
-            put word 4 of the selectedChunk into tEndChar
-            put return & "Start / End: " & tStartChar && tEndChar after msg
-            
-            put tStartChar && tEndChar
-            put the lineIndex of char tStartChar of tTargetObject into tStartPara
-            put the lineIndex of char tEndChar of tTargetObject into tEndPara
-            put return & "Paras: " & tStartPara & " to " & tEndPara after msg
-            
-            repeat with x = tStartPara to tEndPara
-               put the charindex of line x of tTargetObject into tParaFirstChar
-               put the charindex of line x of tTargetObject + the length of line x of tTargetObject - 1 into tParaLastChar
-               set the textAlign of char tParaFirstChar to tParaLastChar of tTargetObject to tPickedParams
-               put return & "Para "&x&": char " & tParaFirstChar & " to " & tParaLastChar after msg
-            end repeat
-            
-            
-         else
-            set textAlign of tTargetObject to tPickedParams
-         end if
+         revIDESetTextAlign tPickedParams
          break
    end switch
-   
-   if the selectedfield is not empty then 
-      set the vScroll of the selectedfield to tFieldVScrollPosition
-      set the hScroll of the selectedfield to tFieldHScrollPosition
-   end if
 end revMenubarTextMenuPick
 
 local lRestore

@@ -5424,60 +5424,173 @@ on revIDEChoosePointerTool
    
 end revIDEChoosePointerTool
 
-on revIDEStyleTextPlain
+on revIDEStyleText pWhich, pValue
+   local tSelectedObject, tSelectedChunk, tTarget, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition,
    
+   if the selectedChunk is empty and the selectedObject is empty then 
+      exit revIDEStyleText
+   end if
+    
+   if the selectedfield is not empty then 
+      put the long ID of the selectedField into tSelectedObject
+      put the vScroll of the selectedfield into tFieldVScrollPosition
+      put the hScroll of the selectedfield into tFieldHScrollPosition
+      if the selectedChunk is not empty then 
+         put the selectedChunk into tSelectedChunk
+         put word 1 to 4 of tSelectedChunk & " " & tSelectedObject into tTarget
+      end if
+   else 
+      put the long ID of the selectedObject into tSelectedObject
+      put tSelectedObject into tTarget
+   end if
+   put revIDEStackOfObject(tSelectedObject) into tTargetStack
+   // We need to ignore actions that are performed on LiveCode palettes unless specifically allowed
+   if revOKTarget(tTargetStack) then 
+      // Add IDE Exception here that are allowed to have their text manipulated
+      if the short name of tSelectedObject is not among the words of "htmltext" then
+         exit revIDEStyleText
+      end if
+   end if
+   
+   switch pWhich
+      case "plain"
+         set the textStyle of tTarget to empty
+         break
+      case "bold"
+      case "italic"
+      case "underline"
+      case "strikeout"
+      case "box"
+      case "link"
+      case "condensed"
+      case "expanded"
+      case "threeDbox"
+         if the textStyle[pWhich] of tTarget is true then
+            set the textStyle[pWhich] of tTarget to false
+         else
+            set the textStyle[pWhich] of tTarget to true
+         end if
+         break
+         
+      case "subscript"
+      case "superscript"
+         local tTextShiftAmount
+         
+         if pWhich is "superscript" then put -4 into tTextShiftAmount
+         else put 4 into tTextShiftAmount
+         if the textShift of tTarget is a number then put 0 into tTextShiftAmount
+         
+         set the textShift of tTarget to tTextShiftAmount
+         break
+      case "font"
+         if pValue is "Use Owner's Font" then set the textFont of tTarget to empty
+         else set the textFont of tTarget to pValue
+         break
+      case "size"
+         if pValue is "Use Owner's Size" then 
+            set the textSize of tTarget to empty
+         else if pValue is a number then
+            set textSize of tTarget to pValue
+         else if pValue is "Other..." then
+            ask "Choose the text size"
+            if it is empty then 
+               exit revIDEStyleText
+            else
+               set textSize of tTarget to it
+            end if
+         end if
+         break
+      case "color"
+         if pValue is "Use Owner's Color" then set the textColor of tTarget to empty
+         else if pValue is "Pen Color" then set textColor of tTarget to the penColor
+         else set textColor of tTarget to pValue
+         break
+      case "align"
+         // If there is a selection we want to sent the alignment of the paragraph(s) in question 
+         if the selectedChunk is not empty then
+            local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
+            put word 2 of the selectedChunk into tStartChar
+            put word 4 of the selectedChunk into tEndChar
+            put return & "Start / End: " & tStartChar && tEndChar after msg
+            
+            put tStartChar && tEndChar
+            put the lineIndex of char tStartChar of tTarget into tStartPara
+            put the lineIndex of char tEndChar of tTarget into tEndPara
+            put return & "Paras: " & tStartPara & " to " & tEndPara after msg
+            
+            repeat with x = tStartPara to tEndPara
+               put the charindex of line x of tTarget into tParaFirstChar
+               put the charindex of line x of tTarget + the length of line x of tTarget - 1 into tParaLastChar
+               set the textAlign of char tParaFirstChar to tParaLastChar of tTarget to pValue
+               put return & "Para "&x&": char " & tParaFirstChar & " to " & tParaLastChar after msg
+            end repeat
+            
+         else
+            set textAlign of tTarget to pValue
+         end if
+         break
+   end switch
+   
+   if the selectedfield is not empty then 
+      set the vScroll of the selectedfield to tFieldVScrollPosition
+      set the hScroll of the selectedfield to tFieldHScrollPosition
+   end if
+end revIDEStyleText
+
+on revIDEStyleTextPlain
+   revIDEStyleText "plain"
 end revIDEStyleTextPlain
 
 on revIDEStyleTextBold
-   
+      revIDEStyleText "bold"
 end revIDEStyleTextBold
 
 on revIDEStyleTextItalic
-   
+      revIDEStyleText "italic"
 end revIDEStyleTextItalic
 
 on revIDEStyleTextUnderline
-   
+      revIDEStyleText "underline"
 end revIDEStyleTextUnderline
 
 on revIDEStyleTextStrikeOut
-   
+      revIDEStyleText "strikeout"
 end revIDEStyleTextStrikeOut
 
 on revIDEStyleTextBox
-   
+      revIDEStyleText "box"
 end revIDEStyleTextBox
 
 on revIDEStyleText3DBox
-   
+      revIDEStyleText "threedbox"
 end revIDEStyleText3DBox
 
 on revIDEStyleTextLink
-   
+      revIDEStyleText "link"
 end revIDEStyleTextLink
 
 on revIDEStyleTextSubscript
-   
+      revIDEStyleText "subscript"
 end revIDEStyleTextSubscript
 
 on revIDEStyleTextSuperscript
-   
+      revIDEStyleText "superscript"
 end revIDEStyleTextSuperscript
 
 on revIDESetTextFont pFont
-   
+      revIDEStyleText "font", pFont
 end revIDESetTextFont
 
 on revIDESetTextSize pSize
-   
+      revIDEStyleText "size", pSize
 end revIDESetTextSize
 
 on revIDESetTextColor pColor
-   
+      revIDEStyleText "color", pColor
 end revIDESetTextColor
 
 on revIDESetTextAlign pAlign
-   
+      revIDEStyleText "align", pAlign
 end revIDESetTextAlign
 
 function revIDETestTargets
