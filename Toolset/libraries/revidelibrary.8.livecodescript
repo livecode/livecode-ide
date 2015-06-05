@@ -5777,6 +5777,29 @@ on revIDEToggle pProperty
             unlock messages
          end if
          break
+      case "Backdrop"
+         if the backDrop is "none" then
+            if revIDGetPreference("cBackDropColor") is empty then 
+               revIDESetPreference "cBackDropColor", "black"
+            end if
+            set the backDrop to revIDGetPreference("cBackDropColor")
+            revIDESetPreference "cBackDrop", the backDrop
+         else
+            set the backDrop to "none"
+            revIDESetPreference "cBackDrop", "none"
+         end if
+         # No need to send toggle message as idePreferenceChanged will be sent
+         exit revIDEToggle
+      case "Grid"
+         if the grid is false then
+            set the grid to true
+            revIDESetPreference "cGrid", true
+         else
+            set the grid to false
+            revIDESetPreference "cGrid", false
+         end if
+         # No need to send toggle message as idePreferenceChanged will be sent
+         exit revIDEToggle
    end switch
    # Script debug mode
    # Suppress messages
@@ -5785,9 +5808,6 @@ on revIDEToggle pProperty
    # Show palettes
    # Invisible objects
    # Ruler
-   # Grid
-   # Backdrop
-   # IDE Stacks (in lists)
    revIDEMessageSend "ideToggleChanged:" & tToggleMessage
 end revIDEToggle
 

@@ -3116,6 +3116,8 @@ on revMenubarViewMenuPick pWhich
       case "Show IDE Stacks In Lists"
       case "Show Invisible Objects"
       case "Rulers"
+      case "Backdrop"
+      case "Grid"
          revIDEToggle pWhich
          break
       case "Go First"
@@ -3139,45 +3141,6 @@ on revMenubarViewMenuPick pWhich
          break
       case "Palettes"
          revIDETogglePaletteView
-         break
-      case "Backdrop"
-         if the backDrop is "none" then
-            if the cBackDropColor of stack "revPreferences" is empty then 
-               set the cBackDropColor of stack "revPreferences" to "black"
-            end if
-            set the backDrop to the cBackDropColor of stack "revPreferences"
-            set the cBackDrop of stack "revPreferences" to the backDrop
-         else
-            set the backDrop to "none"
-            set the cBackDrop of stack "revPreferences" to "none"
-         end if
-         exit switch
-      case "Grid"
-         if the grid is false then
-            set the grid to true
-            set the cGrid of stack "revPreferences" to true
-         else
-            set the grid to false
-            set the cGrid of stack "revPreferences" to false
-         end if
-         exit switch
-      default
-         set the itemDel to "|"
-         --Look and Feel
-         switch
-            case "Native" is in pWhich 
-               set the lookAndFeel to "Appearance Manager"
-               break
-            case "Mac OS" is in pWhich
-               set the lookAndFeel to "Macintosh"
-               break
-            case "Windows" is in pWhich
-               set the lookAndFeel to "Windows 95"
-               break
-            case "Motif" is in pWhich 
-               set the lookAndFeel to "Motif"
-               break
-         end switch
          break
    end switch
 end revMenubarViewMenuPick
