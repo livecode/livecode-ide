@@ -3347,7 +3347,6 @@ command revIDEOpenPalette pPaletteName
          modeless stack tStackName
          break
       default
-      case "search engine"
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
 end revIDEOpenPalette
