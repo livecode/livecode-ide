@@ -658,16 +658,12 @@ on revMenubarMenuButtonClicked pWhich
          unlock screen
          break
       case "Sample Stacks"
-         revGoOnline
-         break
       case "Tutorials"
-         launch url "http://lessons.runrev.com"
-         break
       case "Resources"
-         revIDEShowResourceCenter
+         revIDELaunchResource pWhich
          break
       case "Dictionary"
-         revIDEShowDictionary
+         revIDEDocumentationLoad "API", "LiveCode Script"
          break
       case "Test"
          revIDEDeployAction
@@ -714,7 +710,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Window"
          return buildWindowMenu(pContext)
       case "Help"
-         return buildHelpMenu(pContext)
+         return revMenubarHelpMenu(pContext)
       default
          break
    end switch
@@ -1286,12 +1282,11 @@ end buildGroupSubmenu
 
 ################################################################################
 
-private function buildHelpMenu pContext
+private function revMenubarHelpMenu pContext
    local tHelp
-   put "Welcome Screen/|Welcome Screen" & return after tHelp
+   put "Welcome Screen/|Welcome" & return after tHelp
    put "Start Center/|Start Center" & return after tHelp
    put "Dictionary (API)/|Dictionary" & return after tHelp
-   --put "Resource Center/|Resource Center" & return after tHelp
    
    put "-" & return  after tHelp
    
@@ -1308,13 +1303,7 @@ private function buildHelpMenu pContext
    put "Use List" & return after tHelp
    put "Newsletters" & return after tHelp
    put "-" & return after tHelp
-   
-   --put "Example Stacks and Resources/|Resources" & return after tHelp 
-   --put "-" & return after tHelp
-   --put "User Guide/|User Guide" & return after tHelp
    put "Release Notes/|Release Notes" & return after tHelp
-   --put "iOS Release Notes/|iOS Release Notes" & return after tHelp
-   --put "Android Release Notes/|Android Release Notes" & return after tHelp
    put "License Agreement/|License Agreement" & return after tHelp
    put "-" & return after tHelp
    put "&Buy a License.../|Buy" & return after tHelp
@@ -1327,7 +1316,7 @@ private function buildHelpMenu pContext
    put "About LiveCode/|About" after tHelp
    
    return modifyMenu("Help", tHelp)
-end buildHelpMenu
+end revMenubarHelpMenu
 
 ################################################################################
 
@@ -3295,88 +3284,35 @@ end revMenubarWIndowMenuPick
 
 on revMenubarHelpMenuPick pWhich
    set the itemDel to "|"
-   switch item 1 of pWhich
+   local tPick
+   put item 1 of pWhich into tPick
+   switch tPick
       case "Dictionary"
-         revIDEShowDictionary
-         break
-      case "Resource Center"
-         revIDEShowResourceCenter
+         revIDEDocumentationLoad "API", "LiveCode Script"
          break
       case "Start Center"
-         revIDEOpenPalette "Start Center"
-         break
-      case "Welcome Screen"
-         revIDEOpenPalette "Welcome"
-         break
-      case "Search"
-         revIDEShowSearchEngine
+      case "Welcome"
+      case "About"
+         revIDEOpenPalette tPick
          break
       case "Buy"
-         launch url "http://www.runrev.com/links/livecode/tools-buy"
-         break
-      case "About"
-      case "About LiveCode"
-         modeless "revAbout"
-         break
       case "Support"
-         launch url "http://www.runrev.com/links/livecode/tools-help"
+      case "User Guide"
+      case "License Agreement"
+      case "Release Notes"
+      case "Sample Stacks"
+      case "Sample Scripts"
+      case "Beginners Guide"
+      case "Tutorials"
+      case "All Guides"
+      case "Forums"
+      case "Technical Questions"
+      case "Use List"
+      case "Newsletters"
+         revIDELaunchResource tPick
          break
       case "Relicense"
-         answer question "Are you sure you want to re-license? Clicking " & quote & "Ok" & quote & " will restart LiveCode and you will be asked re-activate." with "Cancel" or "OK"
-         if it is "OK" then
-            revReLicense
-         end if
-         break
-      case "User Guide"
-         revDocumentationLaunchUserGuide
-         break
-      case "License Agreement"
-         launch document (revEnvironmentToolsPath() & slash & "License Agreement.txt")
-         break
-      case "Release Notes"
-         launch document (revEnvironmentToolsPath() & slash & "Release Notes.pdf")
-         break
-      case "iOS Release Notes"
-         launch document (revEnvironmentToolsPath() & slash & "iOS Release Notes.pdf")
-         break
-      case "Android Release Notes"
-         launch document (revEnvironmentToolsPath() & slash & "Android Release Notes.pdf")
-         break
-      case "Resources"
-         launch document revEnvironmentToolsPath() & slash & "Resources"
-         break
-      case "Template Projects"
-         
-         break
-      case "Sample Stacks"
-         launch url "http://livecode.com/links/livecode/revonline"
-         break
-      case "Sample Scripts"
-         launch url "http://lessons.runrev.com/m/2592"
-         break
-      case "Beginners Guide"
-         launch url "http://livecode.com/links/livecode/beginners-course"
-         break
-      case "Tutorials"
-         launch url "http://livecode.com/links/livecode/tutorials"
-         break
-      case "All Guides"
-         launch url "http://livecode.com/links/livecode/guides"
-         break
-      case "API"
-         launch url "http://livecode.com/links/livecode/api"
-         break
-      case "Forums"
-         launch url "http://livecode.com/links/livecode/forum"
-         break
-      case "Technical Questions"
-         launch url "http://livecode.com/links/stackoverflow"
-         break
-      case "Use List"
-         launch url "http://livecode.com/links/lists"
-         break
-      case "Newsletters"
-         launch url "http://livecode.com/links/livecode/newsletters"
+         revIDEActionRelicense
          break
       case "Update"
          revIDECheckForUpdates
