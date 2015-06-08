@@ -3287,7 +3287,7 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,About"
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,About,Dictionary,Resource Center"
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3322,6 +3322,10 @@ function revIDEPaletteToStackName pPalette
          return "revExtensionBuilder"
       case "about"
          return "revAbout"
+      case "dictionary"
+         return "revDictionary"
+      case "resource center"
+         return "revResourceCenter"
    end switch
 end revIDEPaletteToStackName
 
@@ -3363,7 +3367,11 @@ command revIDEOpenPalette pPaletteName
       case "menu builder"
       case "extension builder"
       case "about"
+      case "resource center"
          modeless stack tStackName
+         break
+      case "dictionary"
+         toplevel stack tStackName
          break
       default
          return __revIDEError("No such palette:" && pPaletteName)

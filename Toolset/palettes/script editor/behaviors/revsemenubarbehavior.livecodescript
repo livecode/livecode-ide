@@ -469,19 +469,14 @@ private command handleHelpMenuPick pItemName
          sePaneShow "Documentation"
          break
       case "Dictionary"
-         revIDEShowDictionary
-         break
       case "Resource Center"
-         revIDEShowResourceCenter
-         break
       case "Start Center"
-         revIDEShowStartCenter
-         break
+         revIDEOpenPalette pItemName
       case "User Guide"
-         revDocumentationLaunchUserGuide
+         revIDELaunchResource pItemName
          break
       case "About LiveCode"
-         modeless "revAbout"
+         revIDEOpenPalette "About"
          break
    end switch
 end handleHelpMenuPick

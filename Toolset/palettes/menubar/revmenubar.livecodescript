@@ -659,8 +659,10 @@ on revMenubarMenuButtonClicked pWhich
          break
       case "Sample Stacks"
       case "Tutorials"
-      case "Resources"
          revIDELaunchResource pWhich
+         break
+      case "Resources"
+         revIDEOpenPalette "Resource Center"
          break
       case "Dictionary"
          revIDEDocumentationLoad "API", "LiveCode Script"
