@@ -1232,14 +1232,14 @@ end __revIDEAddSubscription
 
 on revIDESubscribe pMessage, pObjectList
    # Validate input
-   if not revIDEMessageIsValid(pMessage) then 
+   if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
    end if
-   
+
    # Get the log ID of the calling object
    local tCallingObjectID
    put the long ID of the target into tCallingObjectID
-   
+
    # Special case propertyChanged where we have to register for listeners for obejcts
    if pMessage is "idePropertyChanged" then
       repeat for each line tObject in pObjectList
@@ -1249,7 +1249,7 @@ on revIDESubscribe pMessage, pObjectList
    else
       __revIDEAddSubscription pMessage, tCallingObjectID
    end if
-   
+
    if the result is not empty then
       return the result
    end if
@@ -1332,10 +1332,10 @@ returns (string): Return delimited list of object ID's, 1 per line.
 */
 function revIDESubscribedObjects pMessage
    # Validate input
-   if not revIDEMessageIsValid(pMessage) then 
+   if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") you are enquiring about is not valid. Please check the documentation for which messages you can subscribe to.")
    end if
-   
+
    return sSubscriptions[pMessage]["callback targets"]
 end revIDESubscribedObjects
 
@@ -1355,6 +1355,7 @@ function revIDEMessages
 end revIDEMessages
 
 function revIDEMessageIsValid pMessage
+   return true
    return (pMessage is among the items of revIDEMessages() \
          or pMessage begins with "idePreferenceChanged" \
          or pMessage begins with "ideInspectObjects" \
@@ -1365,15 +1366,15 @@ end revIDEMessageIsValid
 on revIDEMessageSend pMessage, pEffectedTarget
    lock screen
    --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
-   
+
    # Validate input
-   if not revIDEMessageIsValid(pMessage) then 
+   if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.")
    end if
-   
+
    # If in run mode don't send any updates
    //if the tool is not "pointer tool" then exit revIDEMessageSend
-   
+
    local tSubscriptionList
    if pMessage is "idePropertyChanged" then
       local tTargetsA, tSubscription
@@ -1387,14 +1388,14 @@ on revIDEMessageSend pMessage, pEffectedTarget
    else
       put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
    end if
-   
+
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-      
+
       # If the stack isn't visible on screen, don't send a message
       local tStackID
       set the itemdel to "stack"
@@ -1403,12 +1404,12 @@ on revIDEMessageSend pMessage, pEffectedTarget
       if tStackID begins with "tack" then delete char 1 to 4 of tStackID
       put "stack" before tStackID
       if the mode of tStackID is 0 or the visible of tStackID is false then next repeat
-      
+
       # Send the message!
       set the itemdel to ":"
       local tMessage
       put item 1 of pMessage into tMessage
-      
+
       switch tMessage
          case "idePreferenceChanged"
          case "ideToggleChanged"
@@ -1430,7 +1431,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
             dispatch pMessage to tObjectID with pEffectedTarget
             break
       end switch
-      
+
       --put "SENT" && the milliseconds && pMessage && "sent to" && tObjectID & return & line 1 to 20 of msg into msg
    end repeat
    unlock screen
@@ -3287,10 +3288,13 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder"
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Standalone Settings"
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
+   # This abstraction is here because other aspects of the IDE need to know the avaiable palettes.
+   # For example, the view menu listing all the available palettes and their state. Leaving this check 
+   # in, rather than having a default in the switch forces developers to add any new palettes to revIDEAvailablePalettes()
    if pPalette is not among the items of revIDEAvailablePalettes() then
       return __revIDEError("No available palette with name" && pPalette)
    end if
@@ -3320,6 +3324,8 @@ function revIDEPaletteToStackName pPalette
          return "revMenuManager"
       case "extension builder"
          return "revExtensionBuilder"
+      case "standalone settings"
+         return "revStandaloneSettings"
    end switch
 end revIDEPaletteToStackName
 
@@ -3350,8 +3356,8 @@ command revIDEOpenPalette pPaletteName
          modeless stack tStackName
          break
       case "inspector"
-      case "standalone settings"
       case "message box"
+      case "standalone settings"
          palette stack tStackName
          break
       case "search"
@@ -4258,6 +4264,10 @@ on revIDEOpenStack pStack
    end if
 end revIDEOpenStack
 
+on revIDEActionOpenRecent pStackName
+   # Plan is to refactor this like the plugin menu
+end revIDEActionOpenRecent
+
 on revIDEHelpKeyPressed
    --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
 end revIDEHelpKeyPressed
@@ -4408,7 +4418,7 @@ Tags: ide
 */
 on revIDENewMainstack pWidth, pHeight
    # Set the width and height of the template stack
-   
+
    # Generate a unique name for the stack
    local tNumber
    put 1 into tNumber
@@ -4416,7 +4426,7 @@ on revIDENewMainstack pWidth, pHeight
       if there is a stack ("Untitled" && tNumber) then  add 1 to tNumber
       else exit repeat
    end repeat
-   
+
    # Setup the template stack
    set the name of the templateStack to "Untitled" && tNumber
    set the visible of the templateStack to false
@@ -4434,24 +4444,24 @@ on revIDENewMainstack pWidth, pHeight
       set the destroyStack of the templateStack to true
       set the destroyWindow of the templateStack to true
    end if
-   
+
    local tLeft
    if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
    else put item 1 of the windowBoundingRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
-   
+
    # Create the new stack
    lock messages
    create stack
    show stack it
    unlock messages
-   
+
    # Final items
    reset the templateStack
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
-   if  pStackType is "default" then 
+   if  pStackType is "default" then
       revIDENewMainstack
    else if pStackType is "script only" then
       revIDEActionNewScriptOnlyStack
@@ -4461,7 +4471,7 @@ on revIDEActionNewMainstack pStackType
       delete item 1 of pStackType
       delete the last char of pStackType
       set the itemdel to "x"
-      
+
       # Check that the width and height are valid numbers
       if item 1 of pStackType is a number and item 2 of pStackType is a number then
          revIDENewMainstack item 1 of pStackType, item 2 of pStackType
@@ -4486,7 +4496,7 @@ Tags: ide
 on revIDENewScriptOnlyStack pName
    if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
    if there is a stack pName then return "A stack with that name already exists"
-  
+
    create script only stack pName
    edit the script of stack pName
 end revIDENewScriptOnlyStack
@@ -4496,12 +4506,12 @@ on revIDEActionNewScriptOnlyStack
    ask revIDELocalise("Please enter a name for the script only stack")
    if the result is "cancel" then exit revIDEActionNewScriptOnlyStack
    if it is empty then exit revIDEActionNewScriptOnlyStack
-   
+
    # Create script only
    revIDENewScriptOnlyStack it
-   
+
    # If an error occured, tell the use
-   if the result is not empty then 
+   if the result is not empty then
       answer the result
    end if
 end revIDEActionNewScriptOnlyStack
@@ -4523,10 +4533,10 @@ on revIDENewSubstack
    local tCurrentStack
    put the short name of the topStack into tCurrentStack
    if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
-   
+
    # Create a new stack
    revIDENewMainstack
-   
+
    # Make the new stack a substack of the current stack
    set the mainStack of the topStack to tCurrentStack
 end revIDENewSubstack
@@ -4536,7 +4546,7 @@ Opens a stack from file.
 
 Associations: stack
 
-pFilePath (String): The path to a stack on disk 
+pFilePath (String): The path to a stack on disk
 
 Example:
 revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
@@ -4546,15 +4556,15 @@ Tags: ide
 on revIDEOpenStack pFilePath
    if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
    if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-   
+
    go stack pFilePath
 end revIDEOpenStack
 
 function revIDEIsLiveCodeStack pFilePath
    set the itemdel to "."
-   
+
    # Check the file extension
-   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then 
+   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then
       return true
    else
       return false
@@ -4564,14 +4574,14 @@ end revIDEIsLiveCodeStack
 on revIDEActionOpenStack
    # Popup a file choose
    revIDEAnswerFile "stack"
-   
+
    # Get the path of to the file
    local tStackFilePath
    put the result into tStackFilePath
-   
+
    # Check the stack exists
    if there is not a file tStackFilePath then exit revIDEActionOpenStack
-      
+
    # Open the stack
    revIDEOpenStack tStackFilePath
 end revIDEActionOpenStack
@@ -4595,11 +4605,11 @@ Tags: ide
 */
 on revIDECloseStack pStackID, pDestroy
    if not exists(pStackID) then return revIDELocalise("Cannot close stack, it doesn't exist")
-   
+
    if revSaveCheck(pStackID) is not false then
       if pStackID is true then
          delete stack pStackID
-      else  
+      else
          close stack pStackID
       end if
    end if
@@ -4608,12 +4618,12 @@ end revIDECloseStack
 on revIDEActionCloseStack
    # Can't close revMenuBar
    if the short name of the topStack is "revMenuBar" then exit revIDEActionCloseStack
-   
+
    # Validate the stack you are closing
    if the mode of the topStack is not among the items of "1,2,3" then
       exit revIDEActionCloseStack
    end if
-   
+
    local tStackList
    put the windows into tStackList
    repeat for each line tStack in tStackList
@@ -4623,12 +4633,12 @@ on revIDEActionCloseStack
       end if
    end repeat
    set the defaultStack to tStack
-   if word 1 of the short name of this stack is "revScriptEditor" then 
+   if word 1 of the short name of this stack is "revScriptEditor" then
       send "revCheckScriptSaved" to this cd
       close this stack
       exit revIDEActionCloseStack
    end if
-   
+
    revIDECloseStack the long ID of stack tStack, false
 end revIDEActionCloseStack
 
@@ -4675,8 +4685,147 @@ put revIDEImportableControls() into tImportableControls
 Tags: ide
 */
 function revIDEImportableControls
-  # return list
+   return "image,video,audio,text"
 end revIDEImportableControls
+
+function revIDELiveCodeFileExtensions
+   return revIDEAcceptedTypes("livecode")
+end revIDELiveCodeFileExtensions
+
+function revIDEAcceptedTypes pType
+   switch pType
+      case "image"
+         return "jpg,jpeg,gif,png,bitmap"
+         break
+      case "video"
+         return "mp4,mpeg,mov"
+         break
+      case "audio"
+         return "mp3,wav,aiff"
+         break
+      case "livecode"
+         return "livecode,rev,lc,livecodescript"
+      case "text"
+         return "txt"
+         break
+   end switch
+end revIDEAcceptedTypes
+
+on revIDEActionImportControl pType, pReferenced
+   if pType is not among the items of revIDEImportableControls() then exit revIDEActionImportControl
+   
+   # Ask the user to pick a file of the given type
+   revIDEAnswerFile pType
+   
+   # User has not chosen a file
+   if the result is "cancel" then exit revIDEActionImportControl
+   
+   # Check the file exists
+   local tFilePath
+   put the result into tFilePath
+   if there is not a file tFilePath then exit revIDEActionImportControl
+   
+   # Import the control
+   if pReferenced is true then
+      revIDEImportControl pType, tFilePath, true
+   else
+      revIDEImportControl pType, tFilePath
+   end if
+end revIDEActionImportControl
+
+on revIDEActionImportControlFromFolder pType, pReference
+   answer folder revIDELocalise("Please select a folder to import from")
+   
+   if the result is "cancel" then exit revIDEActionImportControlFromFolder
+   local tFolderPath
+   put it into tFolderPath
+   
+   # Store the current default folder
+   local tDefaultFolder, tAcceptedTypes
+   put the defaultfolder into tDefaultFolder
+   put revIDEAcceptedTypes(pType) into tAcceptedTypes
+   replace "," with "." in tAcceptedTypes
+   
+   set the defaultfolder to tFolderPath
+   set the itemdel to "."
+   lock screen
+   lock messages
+   repeat for each line tFile in the files
+      if char 1 of tFile is "." then next repeat
+      if the last item of tFile is not among the items of tAcceptedTypes then next repeat
+      
+      revIDEImportControl pType, tFolderPath & slash & tFile, pReference
+   end repeat
+   unlock messages
+   unlock screen
+   
+   # Restore the previous defaul folder 
+   set the defaultfolder to tDefaultFolder
+end revIDEActionImportControlFromFolder
+
+on revIDEImportControl pType, pFileName, pReferenced
+   if pType is not among the items of revIDEImportableControls() then return __revIDEError("Cannot import that type of control")
+   if there is not a file pFileName then exit revIDEImportControl
+   
+   local tTargetStack, tCreatedControlLocation
+   put the long ID of the topstack into tTargetStack
+   put the loc of card 1 of the topstack into tCreatedControlLocation
+   
+   lock screen
+   lock messages
+   switch pType
+      case "image"
+         revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
+         if pReferenced is true then
+            set the filename of the last control to pFileName
+         else
+            set the text of the last image to URL ("binfile:" & pFileName)
+         end if
+         select the last control
+         break
+      case "audio"
+         import AudioClip from file pFileName
+         answer the result && pFileName
+         break
+      case "video"
+         if pReferenced is true then
+            revIDECreateObject "com.livecode.interface.classic.player", tTargetStack, tCreatedControlLocation
+            set the filename of the last control to pFileName
+         else
+            import videoclip from file pFileName
+         end if
+         break
+      case "text"
+         revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
+         put URL ("file:" & pFileName) into the last field
+         select the last control
+         break
+   end switch
+   
+   unlock messages
+   unlock screen
+end revIDEImportControl
+
+on revIDEImportSnapshot pScope, pObjectID
+   if pScope is not among the items of "screen,object" then put "screen" into pScope
+   
+   set the defaultstack to the topstack
+   switch pScope
+      case "screen"
+         import snapshot
+         break
+      case "object"
+         if pObjectID is empty then exit revIDEImportSnapshot
+         
+         if word 1 of pObjectID is "stack" then 
+            import snapshot from rect (the rect of pObjectID)
+         else
+            import snapshot from the selObj
+         end if
+         select the last image
+         break
+   end switch 
+end revIDEImportSnapshot
 
 /*
 Launches the standard ask dialog and returns the users selection.
@@ -4688,11 +4837,11 @@ pType (String): The type of file the be selected. If pType is not empty and not 
 - video: Launches an ask dialog filtering for the following audio file types: mov, mp4.
  pBasePath (Optional String): The default path that the ask dialog should point to when opened. If pBasePath is not specified, the "defaultFolder" is used.
  pInstructions (Optional String): The instructions to place in the title of the ask dialog. If not instructions are defined, default messages for each type are displayed.
- 
+
  References:ask,defaultfolder
 
  Returns: The path to the selected file.
- 
+
  The result: Sets the result to "cancel" if the user cancels the ask dialog.
 
 Example:
@@ -4723,11 +4872,11 @@ pType (String): The type of file the be selected. If pType is not empty and not 
 - video: Launches an ask dialog filtering for the following audio file types: mov, mp4.
  pBasePath (Optional String): The default path that the ask dialog should point to when opened. If pBasePath is not specified, the "defaultFolder" is used.
  pInstructions (Optional String): The instructions to place in the title of the ask dialog. If not instructions are defined, default messages for each type are displayed.
- 
+
  References:ask,defaultfolder
 
  Returns: The path to the selected file.
- 
+
  The result: Sets the result to "cancel" if the user cancels the ask dialog.
 
 Example:
@@ -4752,26 +4901,32 @@ on revIDEAnswerFile pType, pInstructions, pBasePath
    switch pType
       case "stack"
          if pInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into pInstructions
-         answer file pInstructions with type ("LiveCode Stacks|" & revIDELiveCodeFileExtensions()) or type "All Files|"
+         answer file pInstructions with type ("LiveCode Stacks|" & revIDEAcceptedTypes("livecode")) or type "All Files|"
+         break
+      case "image"
+         if pInstructions is empty then put revIDELocalise("Please select an image") into pInstructions
+         answer file pInstructions with type ("Images|" & revIDEAcceptedTypes(pType))
+         break
+      case "video"
+         if pInstructions is empty then put revIDELocalise("Please select a video") into pInstructions
+         answer file pInstructions with type ("Videos|" & revIDEAcceptedTypes(pType))
+         break
+      case "text"
+         if pInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into pInstructions
+         answer file pInstructions with type ("Text Files|" & revIDEAcceptedTypes(pType))
+         break
+      case "audio"
+         if pInstructions is empty then put revIDELocalise("Please select an audio file") into pInstructions
+         answer file pInstructions with type ("Audio Files|" & revIDEAcceptedTypes(pType))
          break
    end switch
    
-   if the result is "cancel" then 
-      return empty
+   if the result is "cancel" then
+      return "cancel"
    else
-      return the result
+      return it
    end if
 end revIDEAnswerFile
-
-function revIDELiveCodeFileExtensions
-   return "livecode,rev,lc,livecodescript"
-end revIDELiveCodeFileExtensions
-
-on revIDEImportAsControl pType pFileName
-   # Validate the type and filename
-   # Create the control
-   # set the filename
-end revIDEImportAsControl
 
 function revIDESnapshotScreenImageData
    # Take a snapshot of the screen
@@ -4818,7 +4973,13 @@ on revIDESaveStack pStackID
    repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
       send "revSaveStackRequest" to this card of stack tStack
    end repeat
-    
+   
+   # Check if the stack has a filename. IF not, redirect to save as
+   if the filename of stack tStackName is empty then
+      revIDEActionSaveStackAs the long ID of stack tStackName
+      exit revIDESaveStack
+   end if
+   
    set the defaultStack to "revSaving"
    
    local tMainStack
@@ -4893,7 +5054,7 @@ on revIDESaveStack pStackID
          if char 1 to 4 of it is not "????" then
             set the stackFileType to char 1 to 4 of it & "RSTK"
          end if
-      end if 
+      end if
       
       set the folder to tOldFolder
    end if
@@ -4962,7 +5123,7 @@ on revIDESaveStack pStackID
    
    -- improve speed KM oct 07 4932
    local tTime
-   put the milliseconds into tTime 
+   put the milliseconds into tTime
    repeat
       if the milliseconds - tTime > 400 then exit repeat
       if the mouseClick then exit repeat
@@ -4973,6 +5134,17 @@ on revIDESaveStack pStackID
    
    return tResultLog
 end revIDESaveStack
+
+on revIDERevertToSavedStack pStackID
+   set the defaultStack to pStackID
+   
+   local tLocalData
+   put the topStack into tLocalData[1]
+   answer warning revIDELocalise("Are you sure you want to revert to the last version saved?  All changes to stack %1 will be lost.", tLocalData)  with revIdeLocalise("No") or revIdeLocalise("Yes")
+   if it is revIdeLocalise("Yes") then
+      revert
+   end if
+end revIDERevertToSavedStack
 
 on revIDEActionSaveStack pStackID
    # validate pStackID (exists)
@@ -5005,25 +5177,25 @@ on revIDESaveStackAs pStackID, pFileName
          if tStack is empty then next repeat
          put empty into gREVStackStatus[tStack]
       end repeat
-      revUpdateRecentFiles the short name of pStackID 
+      revUpdateRecentFiles the short name of pStackID
    end if
 end revIDESaveStackAs
 
 on revIDEActionSaveStackAs pStackID, pSubstackOnly
    if not exists(pStackID) then __revIDEError("Target stack does not exist")
-   
+
    local tMakeMainStack, tMainStackName, tStackName, tShortName
    put the short name of pStackID into tShortName
-   
+
    global gREVMessageDispatch
    repeat for each line tStack in gREVMessageDispatch["revSaveStackRequest"]
       send "revSaveStackRequest" to this cd of stack tStack
    end repeat
-   
+
    local tDefaultStackBackup
    put the defaultStack into tDefaultStackBackup
-   
-   # Saving if a substack 
+
+   # Saving if a substack
    put true into tMakeMainStack
    put the mainStack of stack tShortName into tMainStackName
    if tMainStackName is not tShortName and tMainStackName is not "Home" then
@@ -5032,19 +5204,19 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          put tMainStackName into tShortName
       end if
    end if
-   
+
    put revFixPath(tShortName) into tStackName
-   
+
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
    local tType
-   
+
    local tStackFileType
    if there is a file the filename of stack tShortName then put revStackFileVersion(the filename of stack tShortName) into tStackFileType
-   
+
    # Prepare substitutions for localisation
    local tSubstitutions
    put tShortName into tSubstitutions[1]
-   
+
    switch tStackFileType
       case 5.5
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
@@ -5059,9 +5231,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
    end switch
-   
+
    put the result into tType
-   
+
    switch tType
       case "Legacy LiveCode Stack (5.5)"
          put 5.5 into tType
@@ -5076,21 +5248,21 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          put 7.0 into tType
          break
    end switch
-   
+
    global gRevStackStatus
    # User cancelled the the ask dialog
    if it is empty then
       put "edited" into gREVStackStatus[tShortName]
       return "Cancelled"
-   end if 
-   
+   end if
+
    # MacOS Auotmatically appends the filetype to the filename
    local tFilePath
    if the platform is not "MacOS" and not (it ends with ".rev" or it ends with ".livecode") then
       put ".livecode" after it
    end if
    put it into tFilePath
-   
+
    # Display warning if user has not selected the latest file format
    if tType < 7 then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
@@ -5099,17 +5271,17 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          return "Cancelled"
       end if
    end if
-   
+
    # Window and Mac automatically present overwrite dialog
    if the platform is not in "Win32,MacOS" and there is a file tFilePath then
       answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
       if it is revIDELocalise("Cancel") then
          return "Cancelled"
-      else 
+      else
          delete file tFilePath
       end if
    end if
-   
+
    # When making a substack a mainstack, it must clone default colors set on mainstack to substack
    # so that inherited values are preserved.
    local tStackColors, tHomeColors
@@ -5127,21 +5299,21 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       revRemoveRevOnlineKey "fingerprint",tMainStackName
       save stack tMainStackName
    end if
-   
-   
+
+
    set the cursor to watch
    lock messages
-   
+
    # RevOnline fingerprint enables the revOnline uploader automatically overwrite the stack if already uploaded.
    # Because you're saving as a new stack, this fingerprint should be removed.
    revRemoveRevOnlineKey "fingerprint",tShortName
-   
+
    # Store the current stack file version before setting it to the value for this save
    # It will be reset after the save was made
    local tOldStackFileVersion
    put the stackFileVersion into tOldStackFileVersion
    set the stackFileVersion to tType
-   
+
    # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
    try
       # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
@@ -5151,17 +5323,17 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       # hack involving a global...
       global gREVAllowSaveStackRequest
       put true into gREVAllowSaveStackRequest
-      
+
       set the defaultStack to tShortName
       send "saveStackRequest" to this card of stack tShortName
       set the defaultStack to tDefaultStackBackup
    end try
-   
+
    revIDESaveStackAs the long id of stack tShortName, tFilePath
-   
+
    set the stackFileVersion to tOldStackFileVersion
    unlock messages
-   
+
    return empty
 end revIDEActionSaveStackAs
 
@@ -5172,15 +5344,49 @@ on revIDEMoveSubstackToFile pStackID
    # Set filename of stack / remove parent link
 end revIDEMoveSubstackToFile
 
-on revIDERevertToSavedStack pStackID
-   # validate stack exists
-   # revert stack
-end revIDERevertToSavedStack
-
-on revIDESaveAsStandalone pStackID
-   # validate stack exists
-   # attempt to save as standalone
+on revIDESaveAsStandalone
+   # Don't want the build process to be interruptable.
+   set the allowInterrupts to false
+   //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in revIDEMessageSend
+   try
+      revSaveAsStandalone
+      finally
+      # Bug 5111: Standalone has been built, process should now be interruptable.
+      set the allowInterrupts to true
+      //ideMessagesSupressSet "false"
+   end try
 end revIDESaveAsStandalone
+
+on revIDEPrintPageSetup
+   answer page setup
+end revIDEPrintPageSetup
+
+on revIDEPrintCurrentCard
+   local tResult
+   set the defaultStack to the topstack
+   answer printer
+   put the result into tResult
+   if tResult is not "cancel" then
+      open printing
+      print this card
+      close printing
+   end if
+end revIDEPrintCurrentCard
+
+on revIDEPrintField pFieldID
+   if not exists(pFieldID) then exit revIDEPrintField
+   local tStackName, tLabel
+   put revIDEStackOfObject(pFieldID) into tStackName
+   put the label of stack tStackName into tLabel
+   if tLabel is not empty then
+      set the printTitle to tLabel
+   else
+      set the printTitle to tStackName
+   end if
+   
+   revShowPrintDialog false,true
+   revPrintField line 1 of pFieldID
+end revIDEPrintField
 
 on revIDEUndo
    # Check the IDE undo list (cached object rects)
@@ -5189,7 +5395,7 @@ on revIDEUndo
       # If it is not empty, restore all the objects' rects
       if line -1 of gREVUndoList is "width" then
          delete last line of gREVUndoList
-         
+
          local tObject
          repeat for each line tLine in gREVUndoList
             put item 1 to -2 of tLine into tObject
@@ -5221,17 +5427,17 @@ on revIDEUndo
          send "revCacheGeometry true" to l
       end repeat
    end if
-   
+
    # The selected object may change after undo
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDEUndo
 
 on revIDECut
    # Don't try and cut from a field with lockText true
-   if the selectedField is not empty and the lockText of the selectedField then 
+   if the selectedField is not empty and the lockText of the selectedField then
       exit revIDECut
    end if
-   
+
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
@@ -5242,12 +5448,12 @@ on revIDECut
       unlock screen
       exit revIDECut
    end if
-   
+
    # Ensure the user is aware of the consequences of the cut wrt groups
    if revCheckGroupDelete() then
       cut
    end if
-   
+
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
@@ -5265,7 +5471,7 @@ on revIDECopy
    # If the there is a selection in an image using the image selection tool
    # Then make sure no text is selected before doing the copy
    if the selectedImage is not empty then
-      if the selectedText is not empty then 
+      if the selectedText is not empty then
          select empty
       end if
       set the defaultStack to revTargetStack(the long id of the selectedImage)
@@ -5291,7 +5497,7 @@ on revIDEPaste
       beep
       exit revIDEPaste
    end if
-   
+
    # If we have image data in the clipboard but there is no image selection
    # the create a new image object and set the imageData
    if the clipBoard is "image" and the selectedImage is empty then
@@ -5312,7 +5518,7 @@ on revIDEPaste
       paste
       lock messages
    end if
-   
+
    # If objects have been pasted, assign them IDs for geometry caching
    if the clipBoard is "objects" or tObjects then
       local tMilliseconds
@@ -5323,7 +5529,7 @@ on revIDEPaste
       end repeat
    end if
    unlock messages
-   
+
    # Pasting an object will cause the selection to change
    if the clipboard is "objects" or tObjects then
       revIDEMessageSend "ideSelectedObjectChanged"
@@ -5342,15 +5548,15 @@ on revIDEActionClear
       delete
       exit revIDEActionClear
    end if
-   
+
    # Can't clear locked text
-   if the selectedField is not empty and the lockText of the selectedField then 
+   if the selectedField is not empty and the lockText of the selectedField then
       exit revIDEActionClear
    end if
-   
+
    # Otherwise delete objects or text
    set the defaultStack to the topStack
-   if revCheckGroupDelete() then 
+   if revCheckGroupDelete() then
       delete
    end if
    revIDEMessageSend "ideSelectedObjectChanged"
@@ -5361,7 +5567,7 @@ on revIDEActionDuplicate
    lock screen
    if the selObj is not empty then
       set the defaultStack to revIDEStackOfObject(line 1 of (the selobj))
-      
+
       # OK-2007-07-31 : Bug 4917. Instead of assuming that the duplicated controls will have the highest layer
       # numbers, we make certain that we select the correct objects by saving a list of each newly created control
       local tCreatedObjects, tID
@@ -5369,8 +5575,8 @@ on revIDEActionDuplicate
       repeat for each line tObject in the selObj
          clone tObject
          put the long id of it & return after tCreatedObjects
-         
-         if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then 
+
+         if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then
             set the topLeft of the last control to 10, 10
          end if
          if word 1 of the name of tObject is not "group" then
@@ -5379,7 +5585,7 @@ on revIDEActionDuplicate
          else
             set the cREVGeneral["revUniqueID"] of last control to tID
             add 1 to tID
-            
+
             repeat with tGroupedControl = 1 to the number of controls of the last group
                set the cREVGeneral["revUniqueID"] of control tGroupedControl of the last group to tID
                add 1 to tID
@@ -5387,11 +5593,11 @@ on revIDEActionDuplicate
          end if
       end repeat
       select empty
-      
+
       repeat for each line tCreatedObject in tCreatedObjects
          set the selected of tCreatedObject to true
       end repeat
-      
+
       revIDEMessageSend "ideSelectedObjectChanged"
    end if
    unlock screen
@@ -5407,7 +5613,7 @@ on revIDESelectAll
       beep
       exit revIDESelectAll
    end if
-   
+
    # In image selection context, select all creates a selection around the entire rect of the image
    if the selectedImage is not empty then
       lock screen
@@ -5419,7 +5625,7 @@ on revIDESelectAll
       unlock screen
       exit revIDESelectAll
    end if
-   
+
    # In text selection context, ensure the target field is the focused one
    if the selectedField is not empty \
          and revTargetStack(the focusedObject) is revTargetStack(the long id of the selectedField) then
@@ -5430,11 +5636,11 @@ on revIDESelectAll
          answer "This stack can't be modified"
          exit to top
       end if
-      if the tool is not "pointer tool" then 
+      if the tool is not "pointer tool" then
          beep
          exit revIDESelectAll
       end if
-      
+
       # Select all objects that can be selected
       lock screen
       lock messages
@@ -5473,7 +5679,7 @@ on revIDEInvertObjectSelection
       exit reviDEInvertObjectSelection
    end if
    lock screen
-   lock messages 
+   lock messages
    set the defaultStack to the topStack
    repeat with i = 1 to the number of controls
       if (the visible of control i or the showInvisibles) and (not the selectGroupedControls or (the selectGroupedControls and word 1 of the name of control i is not "group")) then
@@ -5497,32 +5703,32 @@ end revIDEChoosePointerTool
 <<<<<<< HEAD
 on revIDEStyleText pWhich, pValue
    local tSelectedObject, tSelectedChunk, tTarget, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition,
-   
-   if the selectedChunk is empty and the selectedObject is empty then 
+
+   if the selectedChunk is empty and the selectedObject is empty then
       exit revIDEStyleText
    end if
-    
-   if the selectedfield is not empty then 
+
+   if the selectedfield is not empty then
       put the long ID of the selectedField into tSelectedObject
       put the vScroll of the selectedfield into tFieldVScrollPosition
       put the hScroll of the selectedfield into tFieldHScrollPosition
-      if the selectedChunk is not empty then 
+      if the selectedChunk is not empty then
          put the selectedChunk into tSelectedChunk
          put word 1 to 4 of tSelectedChunk & " " & tSelectedObject into tTarget
       end if
-   else 
+   else
       put the long ID of the selectedObject into tSelectedObject
       put tSelectedObject into tTarget
    end if
    put revIDEStackOfObject(tSelectedObject) into tTargetStack
    // We need to ignore actions that are performed on LiveCode palettes unless specifically allowed
-   if revOKTarget(tTargetStack) then 
+   if revOKTarget(tTargetStack) then
       // Add IDE Exception here that are allowed to have their text manipulated
       if the short name of tSelectedObject is not among the words of "htmltext" then
          exit revIDEStyleText
       end if
    end if
-   
+
    switch pWhich
       case "plain"
          set the textStyle of tTarget to empty
@@ -5542,15 +5748,15 @@ on revIDEStyleText pWhich, pValue
             set the textStyle[pWhich] of tTarget to true
          end if
          break
-         
+
       case "subscript"
       case "superscript"
          local tTextShiftAmount
-         
+
          if pWhich is "superscript" then put -4 into tTextShiftAmount
          else put 4 into tTextShiftAmount
          if the textShift of tTarget is a number then put 0 into tTextShiftAmount
-         
+
          set the textShift of tTarget to tTextShiftAmount
          break
       case "font"
@@ -5558,13 +5764,13 @@ on revIDEStyleText pWhich, pValue
          else set the textFont of tTarget to pValue
          break
       case "size"
-         if pValue is "Use Owner's Size" then 
+         if pValue is "Use Owner's Size" then
             set the textSize of tTarget to empty
          else if pValue is a number then
             set textSize of tTarget to pValue
          else if pValue is "Other..." then
             ask "Choose the text size"
-            if it is empty then 
+            if it is empty then
                exit revIDEStyleText
             else
                set textSize of tTarget to it
@@ -5577,32 +5783,32 @@ on revIDEStyleText pWhich, pValue
          else set textColor of tTarget to pValue
          break
       case "align"
-         // If there is a selection we want to sent the alignment of the paragraph(s) in question 
+         // If there is a selection we want to sent the alignment of the paragraph(s) in question
          if the selectedChunk is not empty then
             local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
             put word 2 of the selectedChunk into tStartChar
             put word 4 of the selectedChunk into tEndChar
             put return & "Start / End: " & tStartChar && tEndChar after msg
-            
+
             put tStartChar && tEndChar
             put the lineIndex of char tStartChar of tTarget into tStartPara
             put the lineIndex of char tEndChar of tTarget into tEndPara
             put return & "Paras: " & tStartPara & " to " & tEndPara after msg
-            
+
             repeat with x = tStartPara to tEndPara
                put the charindex of line x of tTarget into tParaFirstChar
                put the charindex of line x of tTarget + the length of line x of tTarget - 1 into tParaLastChar
                set the textAlign of char tParaFirstChar to tParaLastChar of tTarget to pValue
                put return & "Para "&x&": char " & tParaFirstChar & " to " & tParaLastChar after msg
             end repeat
-            
+
          else
             set textAlign of tTarget to pValue
          end if
          break
    end switch
-   
-   if the selectedfield is not empty then 
+
+   if the selectedfield is not empty then
       set the vScroll of the selectedfield to tFieldVScrollPosition
       set the hScroll of the selectedfield to tFieldHScrollPosition
    end if
@@ -5665,15 +5871,15 @@ on revIDESetTextAlign pAlign
 end revIDESetTextAlign
 
 function revIDETestTargets
-   
+
 end revIDETestTargets
 
 on revIDESetTestTarget pTarget
-   
+
 end revIDESetTestTarget
 
 on revIDEDeployStack pStackID
-   
+
 end revIDEDeployStack
 
 local sRestoreState
@@ -5737,7 +5943,7 @@ on revIDEToggle pProperty
          break
       case "Select Grouped Controls"
          set the selectGroupedControls to not (the selectGroupedControls)
-         if the selectGroupedControls and word 1 of (the selObj) is "group" then 
+         if the selectGroupedControls and word 1 of (the selObj) is "group" then
             select empty
             revIDEMessageSend "ideSelectedObjectChanged"
          end if
@@ -5768,7 +5974,7 @@ end revIDEToggle
 on revIDETogglePalette pPaletteName
    local tStackName
    put revIDEPaletteToStackName(pPaletteName) into tStackName
-   
+
    if the mode of stack tStackName is 0 then
       revIDEOpenPalette pPaletteName
    else
@@ -5805,15 +6011,15 @@ function revIDEAvailablePaletteState
 end revIDEAvailablePaletteState
 
 function revIDEOpenWindows
-   
+
 end revIDEOpenWindows
 
 on revIDESendWindowToBack
-   
+
 end revIDESendWindowToBack
 
 on revIDEDocumentationLoad pSection, pItem, pExtra
-   
+
 end revIDEDocumentationLoad
 
 on revIDELaunchResource pName
@@ -5840,7 +6046,7 @@ on revIDELaunchResource pName
          launch document revEnvironmentToolsPath() & slash & "Resources"
          break
       case "Template Projects"
-         
+
          break
       case "Sample Stacks"
          launch url "http://livecode.com/links/livecode/revonline"
@@ -5876,11 +6082,13 @@ on revIDELaunchResource pName
 end revIDELaunchResource
 
 on revIDEActionRelicense
-   
+
 end revIDEActionRelicense
 
+
+
 on revIDERelicense
-   
+
 end revIDERelicense
 
 on revIDEQuit
@@ -5910,4 +6118,3 @@ on revIDEErrorDialog pExecutionError, pScriptError
       modeless "revErrorDisplay"
    end if
 end revIDEErrorDialog
-

@@ -132,7 +132,7 @@ on setMenuProperties
       
       if item 3 of the screenRect is 800 then
          set the topLeft of me to item 1 to 2 of the windowBoundingRect
-      else
+      else 
          --screen rect > 800 by 600
          if the cREVMenuBarTopLeft of stack "revPreferences" is empty
          then set the loc of me to item 1 of the screenLoc, 54
@@ -2104,7 +2104,7 @@ on revMenubarFileMenuPick pWhich
          revIDEMoveSubstackToFile the long id of the topStack
          break
       case "Revert To Saved..."
-         revIDEActionRevertToSavedStack the long id of the topStack
+         revIDERevertToSavedStack the long id of the topStack
          break
       case "Page Setup..."
          revIDEPrintPageSetup
@@ -2142,31 +2142,32 @@ on revMenubarFileMenuPick pWhich
                   case "audio"
                   case "video"
                   case "text"
-                     revIDEActionImportAsControl tType
+                     revIDEActionImportControl tType
                      break 
                   case "Snapshot of Screen"
-                     revIDEImportSnapshotOfScreen
+                     revIDEImportSnapshot "screen"
                      break
                   case "Snapshot of Selected Object"
-                     revIDEImportSnapshotOfObject the selobj
+                     revIDEImportSnapshot "object", the selobj
                      break
                   case "image folder"
                   case "audio folder"
                   case "video folder"
                   case "text folder"
-                     revIDEActionImportAsControlFromFolder word 1 of tType
+                     revIDEActionImportControlFromFolder word 1 of tType
                      break
                end switch
+               break
             case "New Referenced Control"
                put item 2 of pWhich into tType
                switch tType
                   case "image"
                   case "video"
-                     revIDEActionReferencedControl tType
+                     revIDEActionImportControl tType, true
                      break
                   case "image folder"
                   case "video folder"
-                     revIDEActionReferencedControlFromFolder word 1 of tType
+                     revIDEActionImportControlFromFolder word 1 of tType, true
                      break
                end switch
          end switch
