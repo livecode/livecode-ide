@@ -234,7 +234,6 @@ on stackLayout
       end if
       put WINDOW_MARGIN into tLeft
       
-      put sHoverAppNumber
       repeat with x = 1 to sAppCount
          set the topleft of image ("app" & x) to tLeft, tTop
          if x is sSelectedAppNumber then

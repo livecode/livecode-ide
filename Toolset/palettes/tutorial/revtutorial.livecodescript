@@ -1109,7 +1109,7 @@ function revTutorialCheckWaitCondition pActionData
             end if
          else if pActionData["state"] is "scripted" then
             # If the script hasn't changed then don't do anything.
-            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+            if sWait["current script"] is empty or revTutorialScriptIs(the script of tObject, sWait["current script"]) then
                break
             end if
             if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then

@@ -26,7 +26,7 @@ step "Set Mainstack Rect"
     Start by resizing your stack. You can drag the edges to change the width
     and height.
     
-    Make this stack approximately the shape of a mobile device, as shown.
+    Make this stack approximately the shape of a mobile device, as shown by the dotted line.
 action
     -- Add a guide to the previously captured stack. Guides are local to a step, and can't be
     -- interacted with by the user.
@@ -61,8 +61,17 @@ step "Set Header Graphic Properties"
 action
     highlight graphic "Header Graphic"
     wait until there is a property inspector for graphic "Header Graphic"
-    go to step "Set Header Graphic Line Size"
+	go to step "Property Inspector Interlude"
 end step
+
+step "Property Inspector Interlude"
+	The Property Inspector is a window that allows you to control the appearance, location and behavior of the objects in your app.
+	Properties of objects are grouped into sections. You can hover over the icons at the top of the 
+	inspector to see what each section is called.
+action
+	interlude
+    go to step "Set Header Graphic Line Size"
+end step	
 
 step "Set Header Graphic Line Size"
     Remove the outline of the graphic by setting the line thickness to 0.
@@ -146,7 +155,9 @@ action
 end step
 
 step "Set Send Button Label"
-    We're going to set the properties of the button to make it similar to the messages app.
+    We're going to set the properties of the button to make it similar to the equivalent 
+    button in the messages app.
+    
     First set the label of the button to "Send"
 action
     highlight property "Label" of section "Basic"
@@ -155,7 +166,7 @@ action
 end step
 
 step "Set Send Button Style"
-    Set the button style to transparent by selecting "Transparent Button" from the style 
+    Set the button style to transparent by selecting "transparent" from the style 
     dropdown menu. This will clear everything except the text from the button.
 action
     highlight property "Style" of section "Basic"
@@ -178,11 +189,22 @@ step "Open Send Button Script"
 action
     highlight button "Send Button"
     wait until there is a script editor for button "Send Button"
-    go to step "Set Send Button Script"
+	go to step "Script Editor Interlude"
 end step
 
+step "Script Editor Interlude"
+	The Script Editor is a window that allows you to make parts of you app responsive to user actions. 
+	This is achieved by adding blocks of script which tell LiveCode what to do when a given user action has occurred.
+action
+	interlude
+    go to step "Set Send Button Script"
+end step	
+
 step "Set Send Button Script"
-    Set the script of the button to the following, and click apply:
+	The mouseUp message is sent to a button when the user clicks on it. We are going to make a dialog
+	box pop up when the user clicks on the 'Send' button, by using LiveCode's 'answer' command in response 
+	to the mouseUp message.
+    Set the script of the button to the following, and click the Apply button (in the top left corner of the script editor):
 script
     on mouseUp
     	answer "Hello World"
@@ -198,7 +220,15 @@ step "Set Tool To Run"
 action 
     highlight tool "Run Mode"
     wait until the tool is run
-    go to step "Click Send Button"
+	go to step "Run Mode Interlude"
+end step
+
+step "Run Mode Interlude"
+	In Run Mode, you can test your app. Clicking on a button will trigger the mouseUp message, as opposed to
+	Edit Mode which will just select the button.
+action
+	interlude
+	go to step "Click Send Button"
 end step
 
 step "Click Send Button"
@@ -210,7 +240,7 @@ action
 end step
 
 step "Set Tool To Edit"
-    Now switch back to edit mode to make some more changes to the app.
+    Now switch back to Edit Mode to make some more changes to the app.
 action 
     highlight tool "Edit Mode"
     wait until the tool is edit
@@ -258,7 +288,7 @@ action
 end step
 
 step "Set Tool To Run 2"
-    Now test this new code. First, switch to run mode by clicking on the run mode tool in 
+    Now test this new code. First, switch to Run Mode by clicking on the Run Mode tool in 
     the Tools palette.
 action 
     highlight tool "Run Mode"
@@ -268,8 +298,8 @@ end step
 
 step "Enter Message Field"
     Click on the field to enter text into it.
-    Notice that in edit mode, clicking on the field selects it and allows you to drag it 
-    around and change the size, whereas in run mode you can enter text.
+    Notice that in Edit Mode, clicking on the field selects it and allows you to drag it 
+    around and change the size, whereas in Run Mode you can enter text.
 action
     highlight field "Message Field"
     wait until field "Message Field" is focused
@@ -302,7 +332,7 @@ end step
 step "Set Tool To Edit 2"
     The iPhone app puts the message you send in a bubble. It's easier than you would think.
     
-    We just need to add a couple more controls to the stack. Switch back to edit mode to 
+    We just need to add a couple more controls to the stack. Switch back to Edit Mode to 
     make some more changes to the app.
 action
     highlight tool "Edit Mode"
@@ -409,7 +439,7 @@ action
 end step
 
 step "Set Tool To Run 3"
-    Switch to run mode again to test your code.
+    Switch to Run Mode again to test your code.
 action 
     highlight tool "Run Mode"
     wait until the tool is run
