@@ -18,6 +18,7 @@ on preOpenStack
    generateMenu
    updateMenubarPreference
    layoutMenu
+   revMenubarBuildMenus
 end preOpenStack
 
 on openStack
@@ -756,7 +757,7 @@ command revMenubarBuildMenus
    
    lock menus
    repeat for each item tMenu in revMenubarMenus()
-      set the text of menu tMenu to revMenubarBuildMenu(tMenu, tContext)
+      set the text of button tMenu of group "revMenuBar" of me to revMenubarBuildMenu(tMenu, tContext)
    end repeat
    unlock menus
 end revMenubarBuildMenus
@@ -886,7 +887,7 @@ private function revMenubarFileMenu pContext
    
    local tCanSaveStack
    put false into tCanSaveStack
-   if not revOKTarget(the topStack) or the mode of the topStack is 1 then
+   if not revIDEStackIsRevStack(the topStack) or the mode of the topStack is 1 then
       put true into tCanSaveStack
    end if
    
