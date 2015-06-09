@@ -339,24 +339,27 @@ end __organisePropertyInfo
 local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
 private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    local tObjectData
-
+   
    # Get the data from the file
    put URL ("file:" & pFile) into tObjectData
-
+   
    # Parse the file into a structure array
    local tObjectPropertiesA, tPropertyName, tCountsA, tGroupCountsA, tSection
    set the itemdel to tab
-
+   
    local tDataStart, tDataA
    put false into tDataStart
    repeat for each line tLine in tObjectData
       if tLine is empty then next repeat
-
+      
       put item 1 of tLine into tPropertyName
-
+      
       if tPropertyName is "type" then
          put item 2 of tLine into sClassicObjectProperties[pObjectType]["type"]
          next repeat
+         # Allow 'display title' of classic controls to be specified in property definition file
+      else if tPropertyName is "title" and not tDataStart then
+         put item 2 of tLine into sClassicObjectProperties[pObjectType]["title"]
       else if tPropertyName begins with "-----" then
          put true into tDataStart
          next repeat
@@ -365,23 +368,23 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       else
          put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
          put pPropInfoA[tPropertyName]["section"] into tSection
-
+         
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["group"] into tGroupLabel
          end if
-
+         
          # The groups are ordered by their appearance in the spec file
          if tGroupCountsA[tSection][tGroupLabel] is empty then
             add 1 to tCountsA[tSection]["count"]
             put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
          end if
          put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
-
+         
          add 1 to tCountsA[tSection][tGroupLabel]["count"]
          put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
-
+         
          # Get the per-object default value of this property
          local tDefault
          put __unescapeString(item 2 of tLine) into tDefault
@@ -392,7 +395,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             put tDefault into pPropInfoA[tPropertyName]["default"]
          end if
          put pPropInfoA[tPropertyName]["default"] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
-
+         
          # If this is an enum property, there are per-object options
          local tOptions
          put item 3 of tLine into tOptions
@@ -400,18 +403,18 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
             replace comma with return in tOptions
             put tOptions into pPropInfoA[tPropertyName]["options"]
          end if
-
+         
          # Read any per-object 'read-only' data
          local tReadOnly
          put item 5 of tLine into tReadOnly
          if tReadOnly is not empty then
             put tReadOnly into pPropInfoA[tPropertyName]["read_only"]
          end if
-
+         
          put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
       end if
    end repeat
-
+   
    put __organisePropertyInfo(tObjectPropertiesA) into sClassicObjectPropertiesInfo[pObjectType]
 end __setPropertyDataOfObjectFromFile
 
@@ -2418,6 +2421,10 @@ on revIDEFindMoreWidgets
    unlock screen
 end revIDEFindMoreWidgets
 
+on revIDEActionCreateObject pObjectTypeID
+   revIDECreateObject pObjectTypeID, the topStack, the loc of this card of the topStack
+end revIDEActionCreateObject
+
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if not exists(pTarget) then return __revIDEError("Cannot create object. Target does not exist: " && pTarget)
    if sClassicObjectProperties is empty then __objectPropertiesRead
@@ -2576,6 +2583,10 @@ on revIDEDeleteObjects pObjectIDs
    unlock screen
 end revIDEDeleteObjects
 
+on revIDEActionGroupObjects
+   revIDEGroupObjects the selobj
+end revIDEActionGroupObjects
+
 on revIDEGroupObjects pObjectIDs
    local tName, tLayer, tGroupID,tList
    put the long name of (line 1 of pObjectIDs) into tName
@@ -2598,6 +2609,17 @@ on revIDEGroupObjects pObjectIDs
    return tGroupID
 end revIDEGroupObjects
 
+on revIDEActionUngroup
+   revIDEUngroup the selobj
+end revIDEActionUngroup
+
+on revIDEUngroup pGroup
+   if word 1 of pGroup is not "group" then
+      exit revIDEUngroup
+   end if
+   revIDESelectObjects pGroup
+   ungroup
+end revIDEUngroup
 
 /*
 Sets the tool.
@@ -2683,6 +2705,12 @@ end revIDEStopEditingScriptOfObjects
 function revIDEScriptEditingObjects
    return the keys of sScriptEditingObjects
 end revIDEScriptEditingObjects
+
+on revIDEEditScriptOfObjects pObjectList
+   repeat for each line tObject in pObjectList
+      revIDEEditScriptOfObject tObject
+   end repeat
+end revIDEEditScriptOfObjects
 
 on revIDEEditScriptOfObject pObject
    # First obtain a correct object reference. The reason for this is edit group mode
@@ -2830,9 +2858,9 @@ end revIDERefreshProjectBrowser
 
 on revIDEAlignControls pControls, pPosition
    local tInitialControl, tInitialValue
-
+   
    put line 1 of pControls into tInitialControl
-
+   
    if pPosition is "left" then
       put the left of tInitialControl into tInitialValue
    else if pPosition is "top" then
@@ -2841,8 +2869,12 @@ on revIDEAlignControls pControls, pPosition
       put the right of tInitialControl into tInitialValue
    else if pPosition is "bottom" then
       put the bottom of tInitialControl into tInitialValue
+   else if pPosition is "height" then
+      put the height of tInitialControl into tInitialValue
+   else if pPosition is "width" then
+      put the width of tInitialControl into tInitialValue
    end if
-
+   
    repeat with x = 2 to the number of lines in pControls
       revIDESetPropertyOfObject line x of pControls, pPosition, tInitialValue
    end repeat
@@ -4481,6 +4513,27 @@ on revIDEActionNewMainstack pStackType
    end if
 end revIDEActionNewMainstack
 
+on revIDEActionNewCard
+   global gRevStackStatus
+   local tFilterStack
+   put the short name of the topStack into tFilterStack
+   if revFilterStacksList(tFilterStack) is empty then 
+      revIDEActionNewMainstack "default"
+   end if
+   set the defaultStack to the topStack 
+   create card
+   put "edited" into gREVStackStatus[the short name of this stack]
+end revIDEActionNewCard
+
+on revIDEActionDeleteCard
+   global gRevStackStatus
+   set the defaultStack to the topStack
+   answer error "Are you sure you want to delete this card?" with "Yes" or "No"
+   if it is not "yes" then exit revIDEActionDeleteCard
+   delete this card
+   put "edited" into gREVStackStatus[the short name of this stack] 
+end revIDEActionDeleteCard
+
 /*
 Creates a new script only stack in memory.
 
@@ -5536,9 +5589,62 @@ on revIDEPaste
    end if
 end revIDEPaste
 
+on revIDEPasteOntoStack pStack
+   if not pStack begins with "stack" then
+      exit revIDEPasteOntoStack
+   end if
+   set the defaultStack to pStack
+   paste
+end revIDEPasteOntoStack
+
 on revIDEActionPasteUnformatted
    put the clipBoardData["text"] into the selection
 end revIDEActionPasteUnformatted
+
+on revIDEActionClearObjects pObjects
+   revIDESelectObjects pObjects
+   revIDEActionClear
+end revIDEActionClearObjects
+
+function revIDECheckClear pObjectList
+   local tNames, tWarning
+   put empty into tNames
+   repeat for each line tControl in pObjectList
+      if word 1 of tControl is "group" and the number of lines in the cardNames of tControl > 1 then
+         answer warning "This group is placed on multiple cards," & cr & "really delete it?" with "Yes" or "No"
+         if it is "No" then return false
+      end if
+      if word 1 of tControl is "group" and the dgProps["control type"] of tControl is "Data Grid" then
+         answer warning "Would you like to delete the record template associated with this data grid? This action cannot be undone." with "Yes" or "No"
+         if it is "Yes" then 
+            local tTemplate
+            put the dgProps["row template"] of tControl into tTemplate
+            
+            local tCardWord
+            put wordoffset("card",tTemplate) into tCardWord
+            
+            local tTemplateCard
+            put word tCardWord to -1 of tTemplate into tTemplateCard
+            
+            local tStackWord
+            put wordoffset("stack",tTemplate) into tStackWord
+            
+            local tTemplateStack
+            put word tStackWord to -1 of tTemplate into tTemplateStack
+            if the number of cards in stack tTemplateStack is 2 then delete stack tTemplateStack
+            else 
+               delete tTemplateCard
+            end if
+         end if
+      end if
+      
+      put the name of tControl & cr after tNames
+   end repeat
+   delete last char of tNames
+   put "Are you sure you want to delete the following controls?" & cr & cr & tNames into tWarning
+   answer warning tWarning with "No" or "Yes"
+   return the result is "Yes"
+end revIDECheckClear
 
 on revIDEActionClear
    lock screen
@@ -5556,7 +5662,7 @@ on revIDEActionClear
 
    # Otherwise delete objects or text
    set the defaultStack to the topStack
-   if revCheckGroupDelete() then
+   if revCheckClear(the selobj) then 
       delete
    end if
    revIDEMessageSend "ideSelectedObjectChanged"
@@ -6118,3 +6224,555 @@ on revIDEErrorDialog pExecutionError, pScriptError
       modeless "revErrorDisplay"
    end if
 end revIDEErrorDialog
+
+on revIDEToggleLockLocationOfObjects pObjects
+   repeat for each line tObject in pObjects
+      set the lockLoc of tObject to not (the lockLoc of tObject)
+   end repeat
+end revIDEToggleLockLocationOfObjects
+
+on revIDEActionEditGroup
+   revIDEEditGroup the selobj
+end revIDEActionEditGroup
+
+on revIDEEditGroup pGroup
+   if word 1 of pGroup is "group" then
+      if revMenuManagerGroup(pGroup) then
+         answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
+         exit revIDEEditGroup
+      end if
+      start editing pGroup
+   else if the editBg then
+      set the editBg to false
+   end if
+end revIDEEditGroup
+
+on revIDEStopEditingGroup
+   stop editing
+end revIDEStopEditingGroup
+
+on revIDEPasteIntoGroup pGroup
+   lock screen
+   start editing pGroup
+   choose pointer tool
+   set the defaultStack to the topStack
+   paste
+   stop editing
+   unlock screen
+end revIDEPasteIntoGroup
+
+on revIDEEditImage pImages
+   # Make sure we have an image
+   if word 1 of pImages is not "image" then
+      exit revIDEEditImage
+   end if
+   local tImageEditor
+   put revIDEGetPreference("cEditorPath") into tImageEditor
+   
+   local tAppExists
+   put false into tAppExists
+   if there is a file tImageEditor then
+      put true into tAppExists
+   else if the platform is "macos" and there is a folder tImageEditor then
+      put true into tAppExists
+   end if
+   
+   if tImageEditor is empty or not tAppExists then
+      answer warning "You haven't selected an external image editor application, or I couldn't find the editor selected.  Would you like to select one?  (Note the editor you select must be able to handle PNG format images.)" with "Cancel" or "Select now"
+      if it is "Cancel" then exit revIDEEditImage
+      if it is "select now" then
+         if the platform is "MacOS"
+         then answer file "Select an image editor:" with filter "APPL"
+         else answer file "Select an image editor:"
+         if it is empty then exit revIDEEditImage
+         put it into tImageEditor
+         revIDESetPreference "cEditorPath", tImageEditor
+      end if
+   end if
+   
+   set the defaultStack to the topStack
+   
+   local tNumber, tImagePath
+   repeat for each line tImage in pImages
+      put the number of tImage into tNumber
+      if the fileName of image tNumber is not empty then
+         put the fileName of image tNumber into tImagePath
+         local tEditFileName
+         put true into tEditFileName
+      else
+         local tReturn 
+         put the fileType into tReturn
+         set the fileType to "PNGf????"
+         try
+            export image tNumber to file "temp" & tNumber & ".png" as png
+         catch tError
+            answer error line (item 1 of line 1 of tError) of the cErrorsList \
+                  of cd 1 of stack "revErrorDisplay"
+            exit revIDEEditImage
+         end try
+         set the fileType to tReturn
+         put the directory & "/" & ("temp" & tNumber & ".png") into tImagePath
+      end if
+      
+      if tImageEditor is among the lines of the openProcesses then 
+         kill process tImageEditor
+      end if
+      launch tImagePath with tImageEditor
+      if the result is not empty then
+         answer error "There was a problem launching the editor." & cr & the result with "Cancel"
+         exit revIDEEditImage
+      end if
+   end repeat
+   
+   if tEditFileName then  
+      answer "Now launching image editor.  Use the editor to make changes to the image, then save the image and close the editor."
+      else 
+         answer "Now launching image editor.  Use the editor to make changes to the image, then save the image and close the editor.  Then click Update to update the image." with "Cancel" or "Update"
+      end if
+      
+      if it is "OK" then
+         repeat for each line tImage in pImages
+            put the number of tImage into tNumber
+            
+            local tFileName
+            put the fileName of image tNumber into tFileName
+            set the fileName of image tNumber to empty
+            set the fileName of image tNumber to tFileName
+         end repeat
+         exit revIDEEditImage
+      end if
+      if it is "cancel" then
+         repeat for each line tImage in pImages
+            put the number of tImage into tNumber
+            delete file ("temp" & tNumber & ".png")
+         end repeat
+      else
+         repeat for each line tImage in pImages
+            put the number of tImage into tNumber
+            put URL ("binfile:" & ("temp" & tNumber & ".png")) into image tNumber
+            delete file ("temp" & tNumber & ".png")
+         end repeat
+      end if
+end revIDEEditImage
+
+on revIDEToggleMagnifyOfImage pImage
+   # Make sure we have an image
+   if word 1 of pImage is not "image" then
+      exit revIDEToggleMagnifyOfImage
+   end if
+   
+   set the magnify of pImage to not (the magnify of pImage)
+   if the magnify of pImage then
+      if the tool is "pointer tool" or the tool is "browse tool" then 
+         revIDESetTool "select tool"
+      end if
+   end if
+end revIDEToggleMagnifyOfImage
+
+on revIDEMakeImageOriginalSize pImage
+   # Make sure we have an image
+   if word 1 of pImage is not "image" then
+      exit revIDEMakeImageOriginalSize
+   end if
+   
+   set the width of pImage to the formattedWidth of pImage
+   set the height of pImage to the formattedHeight of pImage
+end revIDEMakeImageOriginalSize
+
+on revIDEActionPasteTextIntoField pField
+   # Make sure we have an field
+   if word 1 of pField is not "field" then
+      exit revIDEActionPasteTextIntoField
+   end if
+   lock screen
+   local tLockText, tTraversalOn
+   put the lockText of pField into tLockText
+   put the traversalOn of pField into tTraversalOn
+   set the lockText of pField to false
+   set the traversalOn of pField to true
+   if the selection is not empty and the long id of the selectedField is pField then
+      paste
+   else
+      select after text of pField
+      paste
+   end if
+   set the lockText of pField to tLockText
+   set the traversalOn of pField to tTraversalOn
+   unlock screen
+end revIDEActionPasteTextIntoField
+
+on revIDEToggleTraversalOnOfField pField
+   # Make sure we have an field
+   if word 1 of pField is not "field" then
+      exit revIDEToggleTraversalOnOfField
+   end if
+   
+   set the traversalOn of pField to not (the traversalOn of pField)
+end revIDEToggleTraversalOnOfField
+
+on revIDEStartPlayingPlayer pPlayer
+   # Make sure we have an player
+   if word 1 of pPlayer is not "player" then
+      exit revIDEStartPlayingPlayer
+   end if
+   
+   start playing pPlayer 
+end revIDEStartPlayingPlayer
+
+on revIDEStopPlayingPlayer pPlayer
+   # Make sure we have an player
+   if word 1 of pPlayer is not "player" then
+      exit revIDEStopPlayingPlayer
+   end if
+   
+   stop playing pPlayer 
+end revIDEStopPlayingPlayer
+
+on revIDETogglePausedOfPlayer pPlayer
+   # Make sure we have an player
+   if word 1 of pPlayer is not "player" then
+      exit revIDETogglePausedOfPlayer
+   end if
+
+   set the paused of pPlayer to not the paused of pPlayer
+end revIDETogglePausedOfPlayer
+
+on revIDESendMessageToObject pMessage, pTarget
+   # Make sure message is not handled by a frontscript
+   local tScriptsList
+   put the frontScripts into tScriptsList
+   
+   local tRemoveFrontList
+   repeat for each line tScript in tScriptsList
+      if char 1 to 3 of the short name of tScript is "rev" and the short name of tScript is not "revDebugger" then
+         if tRemoveFrontList is empty then
+            put tScript into tRemoveFrontList
+         else
+            put return & tScript after tRemoveFrontList
+         end if
+         remove script of tScript from front
+      end if
+   end repeat
+
+   send pMessage to pTarget 
+   
+   # Restore frontscripts
+   repeat for each line tScript in tRemoveFrontList
+      insert script of tScript into front
+   end repeat
+end revIDESendMessageToObject
+
+on revIDEActionInspectCard
+   revIDEOpenInspectorForObjects the long id of this card of the topStack
+end revIDEActionInspectCard
+
+on revIDEActionInspectStack
+   revIDEOpenInspectorForObjects the topStack
+end revIDEActionInspectStack
+
+on revIDEActionEditScriptOfObjects
+   revIDEEditScriptOfObjects the selobj
+end revIDEActionEditScriptOfObjects
+
+on revIDEActionEditScriptOfCard
+   revIDEEditscriptOfObject this card of the topStack
+end revIDEActionEditScriptOfCard
+
+on revIDEActionEditScriptOfStack
+   revIDEEditScriptOfObject the topStack
+end revIDEActionEditScriptOfStack
+
+/*
+Returns an array with keys the object types and values the corresponding 'kinds'
+*/
+function revIDEAvailableControls
+   local tObjectsA, tType, tTitle
+   repeat for each key tTypeID in sClassicObjectProperties
+      put sClassicObjectProperties[tTypeID]["type"] into tType
+      if tType is "card" or tType is "stack" or tType is "group" then
+         next repeat
+      end if
+      put sClassicObjectProperties[tTypeID]["title"] into tTitle
+      if tTitle is empty then
+         next repeat
+      end if
+      put tTypeID into tObjectsA[tTitle]["kind"]
+      put tType into tObjectsA[tTitle]["type"]
+   end repeat
+   return tObjectsA
+end revIDEAvailableControls
+
+function revIDEAvailableWidgets
+   local tWidgetsA, tType, tTitle, tDataA
+   put revIDEExtensions("widget", "installed") into tDataA
+   repeat for each key tTypeID in tDataA
+      put tDataA[tTypeID]["title"] into tTitle
+      if tTitle is empty then
+         next repeat
+      end if
+      put tTypeID into tWidgetsA[tTitle]["kind"]
+   end repeat 
+   return tWidgetsA
+end revIDEAvailableWidgets
+
+on revIDEToggleReshapeGraphic
+   if "revReshapeLibrary" is not among the lines of revInternal__ListLoadedLibraries() then
+      choose pointer tool
+      revInternal__LoadLibrary "revReshapeLibrary"
+      revSetMarkers
+   else
+      revSetMarkers true
+      revInternal__UnloadLibrary "revReshapeLibrary"
+   end if
+end revIDEToggleReshapeGraphic
+
+on revIDEPlaceGroupOnCard pGroup
+   # OK-2009-10-02 : Code was breaking with groups named "Background", and seemed to be overcomplicated.
+   set the defaultStack to the topStack
+   if pGroup is not empty then
+      place background id pGroup onto this card
+      if the tool is "pointer tool" then
+         do ("select background id" & quote & pGroup & quote)
+      end if
+   end if
+end revIDEPlaceGroupOnCard
+
+on revIDEActionRemoveGroupFromCard
+   set the defaultStack to the topStack
+   
+   if the editBg of this stack then
+      answer error "This group is nested and cannot be removed separately from its owner group."
+      exit revIDEActionRemoveGroupFromCard
+   end if
+   
+   repeat for each line tObject in (the selobj)
+      if word 1 of the owner of tObject is among the items of "background,group" then
+         answer error "This group is nested and cannot be removed separately from its owner group."
+         exit revIDEActionRemoveGroupFromCard
+      end if
+   end repeat
+   
+   repeat for each line tObject in (the selobj)
+      if word 1 of tObject is "group" then
+         remove tObject from this cd
+      end if
+   end repeat
+end revIDEActionRemoveGroupFromCard
+
+on revIDEActionAlign pAlignment
+   revIDEAlignControls the selobj, pAlignment
+end revIDEActionAlign
+
+on revIDERelayerObjects pObjectList, pMode
+   #maintain the layer order of the target objects
+   local tObjectArray
+   repeat for each line tObject in pObjectList
+      put tObject into tObjectArray[the layer of tObject]    
+   end repeat
+   
+   local tLayers
+   put keys(tObjectArray) into tLayers
+   
+   local tRelayerGrouped
+   put the relayerGroupedControls into tRelayerGrouped
+   
+   set the relayerGroupedControls to true
+   switch pMode
+      case "send to back"
+         sort lines of tLayers numeric descending
+         repeat for each line tLayer in tLayers
+            set the layer of tObjectArray[tLayer] to bottom
+         end repeat
+         break
+      case "bring to front"
+         sort lines of tLayers numeric ascending
+         repeat for each line tLayer in tLayers
+            set the layer of tObjectArray[tLayer] to top
+         end repeat
+         break
+      case "move forward"
+         sort lines of tLayers numeric descending
+         repeat for each line tLayer in tLayers
+            set the layer of tObjectArray[tLayer] to tLayer +1 
+         end repeat
+         break
+      case "move backward"
+         sort lines of tLayers numeric ascending
+         repeat for each line tLayer in tLayers
+            set the layer of tObjectArray[tLayer] to tLayer -1 
+         end repeat
+         break
+   end switch
+   set the relayerGroupedControls to tRelayerGrouped
+end revIDERelayerObjects
+
+on revIDEActionSendToBack
+   revIDESendToBack the selobj
+end revIDEActionSendToBack
+
+on revIDESendToBack pObjectList
+   revIDERelayerObjects pObjectList, "send to back"
+end revIDESendToBack
+
+on revIDEActionBringToFront
+   revIDEBringToFront the selobj
+end revIDEActionBringToFront
+
+on revIDEBringToFront pObjectList
+   revIDERelayerObjects pObjectList, "bring to front"
+end revIDEBringToFront
+
+on revIDEActionMoveBackward
+   revIDEMoveBackward the selobj
+end revIDEActionMoveBackward
+
+on revIDEMoveBackward pObjectList
+   revIDERelayerObjects pObjectList, "move backward"
+end revIDEMoveBackward
+
+on revIDEActionMoveForward
+   revIDEMoveForward the selobj
+end revIDEActionMoveForward
+
+on revIDEMoveForward pObjectList
+   revIDERelayerObjects pObjectList, "move forward"
+end revIDEMoveForward
+
+on revIDEActionFlipImage pOrientation
+   revIDEFlipImages the selobj, pOrientation
+end revIDEActionFlipImage
+
+on revIDEActionFlipGraphic pOrientation
+   revIDEFlipGraphics the selobj, pOrientation
+end revIDEActionFlipGraphic
+
+on revIDEFlipGraphics pGraphics, pOrientation
+   # Make sure targets are all graphics
+   if not revIDEEnsureControlsOfType(pGraphics, "graphic") then
+      exit revIDEFlipGraphics
+   end if
+   
+   repeat for each line tGraphic in pGraphics
+      local tPoints, tNewPoints
+      put the points of tGraphic into tPoints
+      
+      if pOrientation is "Horizontal" then
+         ## 2014-08-20 EJB [[Bug 13191]]
+         --flip graphic horizontally
+         local tLeft, tRight
+         put the left of tGraphic into tLeft
+         put the right of tGraphic into tRight
+         
+         repeat for each line tPoint in tPoints
+            -- added BN in case a line is empty
+            if tPoint is empty then
+               put cr after tNewPoints
+               next repeat
+            end if
+            
+            put tLeft + tRight - item 1 of tPoint, item 2 of tPoint & cr after tNewPoints
+         end repeat
+      else
+         --flip graphic vertically
+         local tTop, tBottom
+         put the top of tGraphic into tTop
+         put the bottom of tGraphic into tBottom
+         repeat for each line tPoint in tPoints
+            -- added BN in case a line is empty
+            if tPoint is empty then
+               put cr after tNewPoints
+               next repeat
+            end if
+            
+            put item 1 of tPoint, tTop + tBottom - item 2 of tPoint & cr after tNewPoints
+         end repeat
+      end if
+      set the points of tGraphic to tNewPoints
+   end repeat
+end revIDEFlipGraphics
+
+on revIDEFlipImages pImages, pOrientation
+   # Make sure targets are all images
+   if not revIDEEnsureControlsOfType(pImages, "image") then
+      exit revIDEFlipImages
+   end if
+   
+   lock screen
+   repeat for each line tImage in pImages
+      if pOrientation is "Horizontal" then
+         flip image id (the id of tImage) horizontal
+      else
+         flip image id (the id of tImage) vertical
+      end if
+   end repeat
+   unlock screen
+end revIDEFlipImages
+
+on revIDEActionRotateImageBy
+   modal "revRotate"
+   if the cRotateImage of stack "revRotate" is empty then exit revIDEActionRotateImageBy
+   
+   local tRotateImage
+   put the cRotateImage of stack "revRotate" into tRotateImage
+   
+   revIDEActionRotateImage tRotateImage
+end revIDEActionRotateImageBy
+
+on revIDEActionRotateImage pAngle
+   revIDERotateImages the selobj, pAngle
+end revIDEActionRotateImage
+
+on revIDERotateImages pImages, pAngle
+   # Make sure targets are all images
+   if not revIDEEnsureControlsOfType(pImages, "image") then
+      exit revIDERotateImages
+   end if
+   
+   lock screen
+   local tPreviousImageQualitySetting
+   repeat for each line tImage in pImages
+      put the resizeQuality of image id (the id of tImage) into tPreviousImageQualitySetting
+      set the resizeQuality of image id (the id of tImage) to "best"
+      rotate image id (the id of tImage) by pAngle
+      set the resizeQuality of image id (the id of tImage) to tPreviousImageQualitySetting
+   end repeat
+   revIDESetTool "pointer"
+   unlock screen
+end revIDERotateImages
+
+on revIDEActionRotateGraphicBy
+   modal "revRotate"
+   if the cRotateGraphic of stack "revRotate" is empty then exit revIDEActionRotateGraphicBy
+   
+   local tRotateGraphic
+   put the cRotateGraphic of stack "revRotate" into tRotateGraphic
+   
+   revIDEActionRotateGraphic tRotateGraphic
+end revIDEActionRotateGraphicBy
+
+on revIDEActionRotateGraphic pAngle
+   revIDERotateGraphics the selobj, pAngle
+end revIDEActionRotateGraphic
+
+on revIDERotateGraphics pGraphics, pAngle
+   # Make sure targets are all graphics
+   if not revIDEEnsureControlsOfType(pGraphics, "graphic") then
+      exit revIDERotateGraphics
+   end if
+   
+   lock screen
+   repeat for each line tLine in pGraphics
+      revRotatePoly tLine, pAngle
+   end repeat
+   revIDESetTool "pointer"
+   unlock screen
+end revIDERotateGraphics
+
+function revIDEEnsureControlsOfType pControls, pType
+   repeat for each line tControl in pControls
+      if word 1 of tControl is not pType then
+         return false
+      end if
+   end repeat
+   return true
+end revIDEEnsureControlsOfType
