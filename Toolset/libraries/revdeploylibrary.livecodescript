@@ -117,7 +117,6 @@ command revIDEDeploySetTarget pTarget
    put pTarget into sDeployTargets[tPlatform]
    set the cDeployPlatforms of stack "revPreferences" to sDeployPlatforms
    set the cDeployTargets of stack "revPreferences" to sDeployTargets
-   revIDEDeployUpdate
 end revIDEDeploySetTarget
 
 -- This method returns the current target of the 'Deploy' action.
@@ -146,13 +145,6 @@ function revIDEDeployIsPossible pPlatform
    put the mainStack of the topStack into tStack
    return the cRevStandaloneSettings[pPlatform] of stack tStack
 end revIDEDeployIsPossible
-
--- This method updates the enable state of the 'Test' button on the menubar based on
--- the current topStack.
-command revIDEDeployUpdate
-   -- Enable the deploy button appropriately
-   set the enabled of button "Deploy" of stack "revMenuBar" to revIDEDeployGetTarget() is not empty
-end revIDEDeployUpdate
 
 -- This method is called on startup to initialize the deployment library. This includes
 -- attempting to auto-configure any SDKs and such if necessary.
@@ -311,5 +303,23 @@ end revIDEDeployAndroidGetJDK
 command revIDEDeployAndroidInitialize
    dispatch "deployInitialize" to stack "revDeployLibraryAndroid"
 end revIDEDeployAndroidInitialize
+
+
+// SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
+//  something changeable from a script-only stack
+function revIDEDeployAndroidGetVersionsList
+   dispatch function "deployGetVersionsList" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidGetVersionsList
+
+function revIDEDeployAndroidApiFromVersion pVersion
+   dispatch function "deployGetApiFromVersion" to stack "revDeployLibraryAndroid" with pVersion
+   return the result
+end revIDEDeployAndroidApiFromVersion
+
+function revIDEDeployAndroidGetAPIsList
+   dispatch function "deployGetAPIsList" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidGetAPIsList
 
 ////////////////////////////////////////////////////////////////////////////////

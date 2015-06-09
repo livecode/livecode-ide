@@ -54,7 +54,7 @@ on relaunch
       local tStackFile
       put param(x) into tStackFile
       if there is a file tStackFile then -- open it
-         send "revOpenStack" && quote & tStackFile & quote to button "File" of stack "revMenuBar"
+         revIDEOpenStack tStackFile
       else
          next repeat
       end if
@@ -1242,12 +1242,6 @@ command revInternal__InitialiseOptions
   
   set the gridSize to the cGridSize of stack "revPreferences"
   
-  if the cGrid of stack "revPreferences" then
-    hilite menuItem 12 of button "View" of stack "revMenuBar"
-  else
-    unhilite menuItem 12 of button "View" of stack "revMenuBar"
-  end if
-  
   if the cSelectionHandleColor of stack "revPreferences" is empty then
     set the selectionHandleColor to "Gray50"
   else
@@ -1348,13 +1342,8 @@ end revInternal__InitialiseScriptEditor
 command revInternal__InitialiseErrors
   revInternal__Log "Enter", "Errors Initialisation"
   
-  put empty into fld "error" of stack "revErrorDisplay"
-  set the cCurrentObject of cd 1 of stack "revErrorDisplay" to empty
-  set the cLastError of cd 1 of stack "revErrorDisplay" to empty
-  set the customKeys of stack "revErrorDisplay" to empty
-  
-  set the cErrorsList of card 1 of stack "revErrorDisplay" to the scriptExecutionErrors
-  set the cScriptErrors of card 1 of stack "revErrorDisplay" to the scriptParsingErrors
+  set the cErrorsList of stack "revErrorDisplay" to the scriptExecutionErrors
+  set the cScriptErrors of stack "revErrorDisplay" to the scriptParsingErrors
   
   revInternal__Log "Leave", "Errors Initialisation"
   
@@ -1393,25 +1382,26 @@ command revInternal__InitialiseMenus
    revInternal__Log "message", "Trying to get the platform"
    revInternal__Log "message", the platform
    
-   open stack "revMenuBar"
-   hide stack "revMenuBar"
+   local tMenuBar
+   put revIDEPaletteToStackName("menubar") into tMenuBar
+   
    if the platform is "MacOS" then
       lock messages
-      palette "revMenuBarUI"
-      show stack "revMenuBarUI"
+      palette stack tMenuBar
+      show stack tMenuBar
       unlock messages
    else
-      toplevel "revMenuBarUI"
-      show stack "revMenuBarUI"
+      toplevel stack tMenuBar
+      show stack stack tMenuBar
    end if
-   set the defaultMenuBar to "revMenuBar"
+   set the defaultMenuBar to the long id of group "revMenuBar" of stack tMenuBar
    
-   revInternal__ConstrainStack "revMenuBarUI"
+   revInternal__ConstrainStack tMenuBar
    
    local tWindowRect
-   put line (the screen of stack "revMenuBarUI") of the working screenRects into tWindowRect
+   put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
    if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
-   put the bottom of stack "revMenuBarUI" + 5 into item 2 of tWindowRect
+   put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
    set the windowBoundingRect to tWindowRect
    
    revInternal__Log "Leave", "Menus Initialisation"
@@ -1484,6 +1474,8 @@ command revInternal__InitialisePlugIns
          end if
       end try
    end repeat
+   
+   revIDEUpdatePlugins
    
    revInternal__Log "Leave", "Plug-Ins Initialisation"
    

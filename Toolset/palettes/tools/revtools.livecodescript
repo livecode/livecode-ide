@@ -223,15 +223,22 @@ on generatePalette
    repeat for each line tView in the keys of sViewsData
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
-      # Get a list of the ordered keys
-      set the itemdel to ","
       local tOrder
       put empty into tOrder
-      repeat for each line tObjectID in the keys of sViewsData[tView]
-         put tObjectID & comma & sViewsData[tView][tObjectID]["order"] & return after tOrder
-      end repeat
-      delete the last char of tOrder
-      sort lines tOrder numeric ascending by item 2 of each
+      if tView is "widget" then
+         # AL-2015-05-26: [[ Bug 14561 ]] Order extensions alphabetically
+         local tExtensionList
+         put the keys of sViewsData[tView] into tOrder
+         sort tOrder by sViewsData[tView][each]["title"]
+      else
+         # Get a list of the ordered keys
+         set the itemdel to ","
+         repeat for each line tObjectID in the keys of sViewsData[tView]
+            put tObjectID & comma & sViewsData[tView][tObjectID]["order"] & return after tOrder
+         end repeat
+         delete the last char of tOrder
+         sort lines tOrder numeric ascending by item 2 of each
+      end if
       set the itemdel to "."
       
       # Create the group to hold the controls
