@@ -3320,7 +3320,7 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings"	
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings,About,Dictionary,Resource Center"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3362,6 +3362,12 @@ function revIDEPaletteToStackName pPalette
          return  "revMessageWatcher"
       case "plugin preferences"
          return "revPlugInEditor"
+      case "about"
+         return "revAbout"
+      case "dictionary"
+         return "revDictionary"
+      case "resource center"
+         return "revResourceCenter"
    end switch
 end revIDEPaletteToStackName
 
@@ -3404,7 +3410,12 @@ command revIDEOpenPalette pPaletteName
       case "menu builder"
       case "extension builder"
       case "plugin preferences"
+      case "about"
+      case "resource center"
          modeless stack tStackName
+         break
+      case "dictionary"
+         toplevel stack tStackName
          break
       default
          return __revIDEError("No such palette:" && pPaletteName)
@@ -6172,7 +6183,8 @@ on revIDESendWindowToBack
 end revIDESendWindowToBack
 
 on revIDEDocumentationLoad pSection, pItem, pExtra
-
+   # For now, just open the dictionary
+   revIDEOpenPalette "dictionary"
 end revIDEDocumentationLoad
 
 on revIDELaunchResource pName
@@ -6189,17 +6201,8 @@ on revIDELaunchResource pName
       case "Release Notes"
          launch document (revEnvironmentToolsPath() & slash & "Release Notes.pdf")
          break
-      case "iOS Release Notes"
-         launch document (revEnvironmentToolsPath() & slash & "iOS Release Notes.pdf")
-         break
-      case "Android Release Notes"
-         launch document (revEnvironmentToolsPath() & slash & "Android Release Notes.pdf")
-         break
-      case "Resources"
-         launch document revEnvironmentToolsPath() & slash & "Resources"
-         break
-      case "Template Projects"
-
+      case "User Guide"
+         launch document revEnvironmentDocumentationPath() & "/pdf/LiveCode User Guide.pdf"
          break
       case "Sample Stacks"
          launch url "http://livecode.com/links/livecode/revonline"
@@ -6216,9 +6219,6 @@ on revIDELaunchResource pName
       case "All Guides"
          launch url "http://livecode.com/links/livecode/guides"
          break
-      case "API"
-         launch url "http://livecode.com/links/livecode/api"
-         break
       case "Forums"
          launch url "http://livecode.com/links/livecode/forum"
          break
@@ -6231,17 +6231,21 @@ on revIDELaunchResource pName
       case "Newsletters"
          launch url "http://livecode.com/links/livecode/newsletters"
          break
+      case "Resources"
+         launch document revEnvironmentToolsPath() & slash & "Resources"
+         break
    end switch
 end revIDELaunchResource
 
 on revIDEActionRelicense
-
+   answer question "Are you sure you want to re-license? Clicking " & quote & "Ok" & quote & " will restart LiveCode and you will be asked re-activate." with "Cancel" or "OK"
+   if it is "OK" then
+      revIDERelicense
+   end if
 end revIDEActionRelicense
 
-
-
 on revIDERelicense
-
+   revReLicense
 end revIDERelicense
 
 on revIDEQuit
@@ -7023,3 +7027,27 @@ command revIDERestoreDevelopmentTools
    
    unlock messages
 end revIDERestoreDevelopmentTools
+
+command revIDECheckForUpdates
+   if line 3 of revLicenseInfo is not "evaluation" then
+      local tCommand
+      set the itemdelimiter to "/"
+      switch the platform
+         case "MacOS"
+            put item 1 to -5 of the filename of stack "home" & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
+            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
+            break
+         case "Win32"
+            put item 1 to -3 of the filename of stack "home" & "/.setup.exe" into tCommand
+            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
+            break
+         case "Linux"
+            put item 1 to -3 of the filename of stack "home" & "/.setup.x86" into tCommand
+            put tCommand && "install -foregroundupdate" into tCommand
+            break
+      end switch
+      set the itemDel to comma
+      open process tCommand for neither
+   end if   
+end revIDECheckForUpdates
+

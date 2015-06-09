@@ -864,31 +864,6 @@ end recentFileNamesListGet
 
 ////////////////////////////////////////////////////////////////////////////////
 
-command revIDECheckForUpdates
-   if line 3 of revLicenseInfo is not "evaluation" then
-      local tCommand
-      set the itemdelimiter to "/"
-      switch the platform
-         case "MacOS"
-            put item 1 to -5 of the filename of stack "home" & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
-            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
-            break
-         case "Win32"
-            put item 1 to -3 of the filename of stack "home" & "/.setup.exe" into tCommand
-            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
-            break
-         case "Linux"
-            put item 1 to -3 of the filename of stack "home" & "/.setup.x86" into tCommand
-            put tCommand && "install -foregroundupdate" into tCommand
-            break
-      end switch
-      set the itemDel to comma
-      open process tCommand for neither
-   end if   
-end revIDECheckForUpdates
-
-////////////////////////////////////////////////////////////////////////////////
-
 private command log pMessage
    put pMessage after msg
 end log
