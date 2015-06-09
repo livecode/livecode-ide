@@ -598,9 +598,9 @@ on revMenubarMenuButtonClicked pWhich
          break
       case "Code"
          if (the selectedObject) is empty then
-            revIDEEditScriptOfObjects the topStack
+            revIDEActionEditScriptOfStack
          else
-            revIDEEditScriptOfObjects the selobj
+            revIDEActionEditScriptOfObjects
          end if
          break
       case "Message Box"
@@ -609,35 +609,14 @@ on revMenubarMenuButtonClicked pWhich
       case "Group"
          lock screen
          if the number of lines in (the selObj) > 1 or word 1 of (the selObj) is not "group" then
-            revMenubarObjectMenuPick "Group selected"
-            set the hilite of the target to "true"
-            set the textStyle of the target to "bold"
-            set the label of the target to "Ungroup"
+            revIDEActionGroupObjects
          else
-            revMenubarObjectMenuPick "Ungroup selected"
-            set the hilite of the target to "false"
-            set the textStyle of the target to "plain"
-            set the label of the target to "Group"
+            revIDEActionUngroup
          end if
          unlock screen
          break
       case "Edit Group"
-         send "mouseDown" to group 1 of stack "revMenuBar"
-         set the defaultStack to the topStack
-         if word 1 of (the selObj) is "group" then
-            if revMenuManagerGroup(the selobj) then
-               answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
-               exit revMenubarMenuButtonClicked
-            end if
-            --send "deleteThumbnail" && the long id of the selobj to stack "revProjectBrowser"
-            --send "deleteParentThumbnail" && the long id of the selobj to stack "revProjectBrowser"
-            start editing the selobj
-         else if the editBg then set the editBg to false
-         revKillRedundantPalettes
-         if the mode of stack "revApplicationOverview" is not 0 \
-               and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
-            send "revRefreshControls true, false" to stack "revApplicationOverview"
-         end if
+         revIDEActionEditGroup
          break
       case "Select Grouped"
          lock screen
@@ -676,8 +655,8 @@ on revMenubarMenuButtonClicked pWhich
 end revMenubarMenuButtonClicked
 /*
 on revRestoreHilite
-  set the textStyle of me to "bold"
-  set the hilite of me to true
+   set the textStyle of me to "bold"
+   set the hilite of me to true
 end revRestoreHilite
 */
 function revMenubarMenus
@@ -704,7 +683,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Tools"
          return revMenubarToolsMenu(pContext)
       case "Object"
-         return buildObjectMenu(pContext)
+         return revMenubarObjectMenu(pContext)
       case "Text"
          return revMenubarTextMenu(pContext)
       case "Development"         
@@ -1089,7 +1068,7 @@ end revMenubarTextMenu
 
 ################################################################################
 
-private function buildObjectMenu pContext
+private function revMenubarObjectMenu pContext
    local tObject
    
    local tIsObjectTarget, tIsUserTarget
@@ -1138,7 +1117,10 @@ private function buildObjectMenu pContext
    put enableMenuItem("&New Card/N", tIsUserTarget) & return after tObject
    put enableMenuItem("Delete Card", tIsUserTarget) & return after tObject
    put enableMenuItem("New Control", the mode of the topStack is 1) & return after tObject
-   put buildNewControlSubmenu() & return after tObject
+   put revMenubarNewControlSubmenu() & return after tObject
+   put "-" & return after tObject
+   put enableMenuItem("New Widget", the mode of the topStack is 1) & return after tObject
+   put revMenubarNewWidgetSubmenu() & return after tObject
    put "-" & return after tObject
    
    local tFlipText, tRotateText, tReshapeText
@@ -1190,55 +1172,58 @@ private function buildObjectMenu pContext
    put enableMenuItem("Bring to &Front", pContext["objectsSelected"]) & return after tObject
    
    return modifyMenu("Object", tObject)
-end buildObjectMenu
+end revMenubarObjectMenu
 
-private function buildNewControlSubmenu
-   return \	
-         tab & "Standard Button" & return & \
-         tab & "Rectangle Button" & return & \
-         tab & "Shadow Button" & return & \
-         tab & "Blank Button" & return & \
-         tab & "-" & return & \
-         tab & "Check Box" & return & \
-         tab & "Radio Button" & return & \
-         tab & "-" & return & \
-         tab & "Tabbed Button" & return & \
-         tab & "-" & return & \
-         tab & "Table Field" & return & \
-         tab & "Data Grid" & return & \
-         tab & "-"  & return & \
-         tab & "Field" & return & \
-         tab & "Scrolling Field" & return & \
-         tab & "List Field" & return & \
-         tab & "Scrolling List Field" & return & \
-         tab & "Label Field" & return & \
-         tab & "-" & return & \
-         tab & "Horizontal Scrollbar" & return & \
-         tab & "Vertical Scrollbar" & return & \
-         tab & "Scale Bar" & return & \
-         tab & "Progress Bar" & return & \
-         tab & "-" & return & \
-         tab & "Pulldown menu" & return & \
-         tab & "Popup Menu" & return & \
-         tab & "Option Menu" & return & \
-         tab & "Combo Box Menu" & return & \
-         tab & "-" & return & \
-         tab & "Menu Item" & return & \
-         tab & "Cascade Menu Item" & return & \
-         tab & "Divider Button" & return & \
-         tab & "-" & return & \
-         tab & "Rectangle Graphic" & return & \
-         tab & "Oval Graphic" & return & \
-         tab & "Curve Graphic" & return & \
-         tab & "Round Rect Graphic" & return & \
-         tab & "Polygon Graphic" & return & \
-         tab & "Line Graphic" & return & \
-         tab & "Regular Polygon Graphic" & return & \
-         tab & "-" & return & \
-         tab & "Image" & return & \
-         tab & "-" & return & \
-         tab & "Player"
-end buildNewControlSubmenu
+private function revMenubarNewControlSubmenu
+   local tControlsA, tControlList
+   put revIDEAvailableControls() into tControlsA
+   
+   put the keys of tControlsA into tControlList
+   
+   # Sort alphabetically
+   sort tControlList
+   # Then group by type
+   sort lines of tControlList by tControlsA[each]["type"]
+   
+   local tControlMenu, tItem, tLastType, tType
+   put tControlsA[line 1 of tControlList]["type"] into tLastType
+   repeat for each line tLine in tControlList
+      put tControlsA[tLine]["type"] into tType
+      if tType is not tLastType then
+         put return & tab & "-" after tControlMenu
+         put tType into tLastType
+      end if
+      
+      put tab & tLine & "/|" & tControlsA[tLine]["kind"] into tItem
+      if tControlMenu is empty then
+         put tItem into tControlMenu
+      else
+         put return & tItem after tControlMenu
+      end if
+   end repeat
+   return tControlMenu
+end revMenubarNewControlSubmenu
+
+private function revMenubarNewWidgetSubmenu
+   local tWidgetsA, tWidgetList
+   put revIDEAvailableWidgets() into tWidgetsA
+   
+   put the keys of tWidgetsA into tWidgetList
+   
+   # Sort alphabetically
+   sort tWidgetList
+   
+   local tWidgetMenu, tItem
+   repeat for each line tLine in tWidgetList
+      put tab & tLine & "/|" & tWidgetsA[tLine]["kind"] into tItem
+      if tWidgetMenu is empty then
+         put tItem into tWidgetMenu
+      else
+         put return & tItem after tWidgetMenu
+      end if
+   end repeat
+   return tWidgetMenu
+end revMenubarNewWidgetSubmenu
 
 private function buildFlipSubmenu
    return \
@@ -1248,10 +1233,10 @@ end buildFlipSubmenu
 
 private function buildRotateSubmenu
    return \
-         tab & "By..." & return & \
-         tab & "90° Right" & return & \
-         tab & "90° Left" & return & \
-         tab & "180°"
+         tab & "By.../|By" & return & \
+         tab & "90° Right/|90" & return & \
+         tab & "90° Left/|270" & return & \
+         tab & "180°/|180"
 end buildRotateSubmenu
 
 # OK-2007-10-04 : Forgot this one- oops
@@ -1262,8 +1247,8 @@ private function buildAlignSubmenu
          tab & "Top" & return & \
          tab & "Bottom" & return & \
          tab & "-" & return & \
-         tab & "Make Widths E&qual" & return & \
-         tab & "Make &Heights Equal"
+         tab & "Make Widths E&qual/|Width" & return & \
+         tab & "Make &Heights Equal/|Height"
 end buildAlignSubmenu
 
 # OK-2009-11-20 : Bug 8235 - This is much faster using the engine version
@@ -1623,8 +1608,8 @@ function revMenubarContextMenu pType, pTarget
          put tab & "Top" & return after tText
          put tab & "Bottom" & return after tText
          put tab & "-" & return after tText
-         put tab & "Make Widths Equal" & return after tText
-         put tab & "Make Heights Equal" & return after tText
+         put tab & "Make Widths Equal/|Width" & return after tText
+         put tab & "Make Heights Equal/|Height" & return after tText
          put "Group" & return after tText
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
@@ -1639,7 +1624,11 @@ function revMenubarContextMenu pType, pTarget
          put "-" & return after tText
          put enableMenuItem("Play", word 1 of the tool is "browse") & return after tText
          put enableMenuItem("Stop", word 1 of the tool is "browse") & return after tText
-         put enableMenuItem("Pause", word 1 of the tool is "browse") & return after tText
+         if the paused of pTarget then
+            put enableMenuItem("Unpause", word 1 of the tool is "browse") & return after tText
+         else
+            put enableMenuItem("Pause", word 1 of the tool is "browse") & return after tText
+         end if
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "menu"
@@ -1945,100 +1934,62 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
    switch item 1 of pWhich
       ######## OBJECTS #########
       case "Edit Script"
-         revIDEEditScriptOfObject pTarget
+         revIDEEditScriptOfObjects pTarget
          break
       case "Property Inspector"
          revIDEOpenInspectorForObjects pTarget
          break
       case "Cut"
-         cut pTarget
+         revIDECutObjects pTarget
          break
       case "Copy"
-         copy pTarget
+         revIDECopyObjects pTarget
          break
       case "Lock Location"
-      case "lockLocation"
-         set the lockLoc of pTarget to not (the lockLoc of pTarget)
+         revIDELockLocationOfObjects pTarget
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
-         start editing pTarget
+         revIDEEditGroup pTarget
          break
       case "Ungroup"
-         select pTarget
-         ungroup
+         revIDEUngroup pTarget
          break
       case "Paste into Group"
-         lock screen
-         start editing pTarget
-         send "revStopEditingGroupAfterPasting" to me in 500 milliseconds
+         revIDEPasteIntoGroup pTarget
          break
       case "Clear"
-         local tNames, tWarning
-         put empty into tNames
-         repeat for each line l in pTarget
-            put the name of l & cr after tNames
-         end repeat
-         delete last char of tNames
-         put "Are you sure you want to delete the following controls?" & cr & cr & tNames into tWarning
-         answer warning tWarning with "No" or "Yes"
-         if it is "Yes" then 
-            revIDEDeleteObjects pTarget
-         end if
+         revIDEActionClearObjects pTarget
          break
          ######## IMAGE SPECIFIC #########
       case "Paint Tools"
-         send "menuPick Paint and Draw Tools" to btn "Tools" of cd 1 of stack "revMenubar" 
+         revIDETogglePaintAndDrawTools
          break
       case "Launch Editor"
-         revEditImage pTarget
+         revIDEEditImage pTarget
          break
       case "Magnify"
-         set the magnify of pTarget to not (the magnify of pTarget)
-         if the magnify of pTarget then
-            if the tool is "pointer tool" or the tool is "browse tool" then 
-               send "mouseUp" to btn "select" of stack "revTools"
-            end if
-         end if
+         revIDEToggleMagnifyOfImage pTarget
          break 
       case "Make Original Size"
-         set the width of pTarget to the formattedWidth of pTarget
-         set the height of pTarget to the formattedHeight of pTarget
+         revIDEMakeImageOriginalSize pTarget
          break
          ######## FIELD SPECIFIC #########
       case "Paste Text"
-         lock screen
-         local tLockText, tTraversalOn
-         put the lockText of pTarget into tLockText
-         put the traversalOn of pTarget into tTraversalOn
-         set the lockText of pTarget to false
-         set the traversalOn of pTarget to true
-         if the selection is not empty and the long id of the selectedField is pTarget then
-            paste
-         else
-            select after text of pTarget
-            paste
-         end if
-         set the lockText of pTarget to tLockText
-         set the traversalOn of pTarget to tTraversalOn
-         unlock screen
+         revIDEActionPasteTextIntoField pTarget
          break
       case "Can Receive Keyboard Focus"
-      case "traversalOn"
-         set the traversalOn of pTarget to not (the traversalOn of pTarget)
+         revIDEToggleTraversalOnOfField pTarget
          break
          ######## PLAYER SPECIFIC #########
       case "Play"
-         do "start" && pTarget
+         revIDEStartPlayingPlayer pTarget
          break
       case "Stop"
-         do "stop playing" && pTarget
+         revIDEStopPlayingPlayer pTarget
          break
       case "Pause"
-         --paused apparently reporting true when the player's playing
-         --so always pause the player
-         set the paused of pTarget to true
-         --set the paused of gREVMenutarget to not (the paused of gREVMenuTarget)
+         revIDETogglePauseOfPlayer
          break
          ######## MENU SPECIFIC #########
       case "TopLevel Panel Stack"
@@ -2049,21 +2000,19 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDESaveStack tTargetStack
          break
       case "Paste Objects"
-         set the defaultStack to tTargetStack
-         paste
+         revIDEPasteOntoStack tTargetStack
          break
-         ######### SUBMENUS ########
+         ######## MULTI OBJECT SPECIFIC #########
       case "Align"
-         revIDEAlignObjects pTarget, item 2 of pWhich 
+         revIDEAlignControls pTarget, item 2 of pWhich 
          break     
       case "Stack Mode"
          revIDESetModeOfStack tTargetStack, item 2 of pWhich
          break
       case "Send Message"
-         local tMessage
-         put item 2 of pWhich into tMessage
-         send "revSendMessage tMessage, pTarget" to me
+         revIDESendMessageToObject item 2 of pWhich, pTarget
          break
+         ######### SUBMENUS ########
       case "Card"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
       case "Stack"
@@ -2266,689 +2215,89 @@ on revMenubarToolsMenuPick pWhich
 end revMenubarToolsMenuPick
 
 on revMenubarObjectMenuPick pWhich
-   global gREVStacksList, gREVStackStatus, gREVObjectsList
-   
-   if pWhich is empty then exit revMenubarObjectMenuPick
-   switch pWhich
+   set the itemdelimiter to "|"
+   switch item 1 of pWhich
       case "Reshape Graphic"
-         if "revReshapeLibrary" is not among the lines of revInternal__ListLoadedLibraries() then
-            choose pointer tool
-            revInternal__LoadLibrary "revReshapeLibrary"
-            put empty into gREVObjectsList
-            revSetMarkers
-         else
-            revSetMarkers true
-            revInternal__UnloadLibrary "revReshapeLibrary"
-         end if
-         Break
+         revIDEToggleReshapeGraphic
       case "New card"
-         local tFilterStack
-         put the short name of the topStack into tFilterStack
-         if revFilterStacksList(tFilterStack) is empty then 
-            send "menuPick" && "New Mainstack" to btn "File" of stack "revMenuBar"
-            exit revMenubarObjectMenuPick
-         end if
-         set the defaultStack to the topStack
-         create card
-         put "edited" into gREVStackStatus[the short name of this stack]
+         revIDEActionNewCard
          break
       case "Delete Card"
-         set the defaultStack to the topStack
-         answer error "Are you sure you want to delete this card?" with "Yes" or "No"
-         if it is not "yes" then exit revMenubarObjectMenuPick
-         delete this card
-         put "edited" into gREVStackStatus[the short name of this stack]
+         revIDEACtionDeleteCard
          break
       case "Object Inspector"
-         revIDEOpenInspectorForObjects the selobj
+         revIDEOpenPalette "inspector"
          break
       case "Card Inspector"
-         revIDEOpenInspectorForObjects the long id of this card of the topStack
+         revIDEActionInspectCard
          break
       case "Stack Inspector"
-         revIDEOpenInspectorForObjects the topStack
+         revIDEActionInspectStack
          break 
       case "Object Script"
-         revIDEEditScriptOfObject the selobj
+         revIDEActionEditScriptOfObjects
          break
       case "Card Script"
-         revIDEEditScriptOfObject the long id of this card of the topStack
+         revIDEActionEditScriptOfCard
          break
       case "Stack Script"
-         revIDEEditScriptOfObject the topStack
+         revIDEEditScriptOfStack
          break
+      case "New Control"
+      case "New Widget"
+         revIDEActionCreateObject item 2 of pWhich
+         break
+      case "Place Group"
+         revIDEActionPlaceGroupOnCard item 2 of pWhich
       case "Remove Group"
-         set the defaultStack to the topStack
-         
-         if the editBg of this stack then
-            answer error "This group is nested and cannot be removed separately from its owner group."
-            pass revMenubarObjectMenuPick
-         end if
-         
-         repeat for each line l in (the selobj)
-            if word 5 of l is among the items of "background,group" then
-               answer error "This group is nested and cannot be removed separately from its owner group."
-               pass revMenubarObjectMenuPick
-            end if
-         end repeat
-         
-         repeat for each line l in (the selObj)
-            if word 1 of l is "group" then
-               revDeleteLinkedObject l
-               remove l from this cd
-            end if
-         end repeat
-         revUpdateAOControls the long id of this cd
+         revIDEActionRemoveGroupFromCard
          break
       case "Send to Back"
-         lock screen
-         revSendToBack the selObj
-         revUpdateSizeAndPosition
-         unlock screen
+         revIDEActionSendToBack
          break
       case "Move Backward"
-         lock screen
-         revMoveBackward the selObj
-         revUpdateSizeAndPosition
-         unlock screen
+         revIDEActionMoveBackward
          break
       case "Move forward"
-         lock screen
-         revMoveForward the selObj
-         revUpdateSizeAndPosition
-         unlock screen
+         revIDEActionMoveForward
          break
       case "Bring to Front"
-         lock screen
-         revBringToFront the selObj
-         revUpdateSizeAndPosition
-         unlock screen
+         revIDEActionBringToFront
          break
       case "Group Selected"
-         if (the selObj) is not empty then
-            if word 1 of (the selObj) is not "group" or the number of lines in (the selObj) > 1 then revCheckGroup
-            else revCheckUnGroup
-            
-            local tTarget
-            put line 1 of (the selobj) into tTarget
-            
-            local tStack
-            put revTargetStack(tTarget) into tStack
-            revUpdateAOControls the long id of this cd of stack tStack
-            
-         end if
+         revIDEActionGroup
          break
       case "Edit Group"
-         if the selobj is empty or word 1 of (the selObj) is not "group" then exit revMenubarObjectMenuPick
-         if revMenuManagerGroup(the selobj) then
-            set the defaultStack to revTargetStack(line 1 of (the selobj))
-            answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
-            exit revMenubarObjectMenuPick
-         end if
-         
-         start editing the selObj
-         revKillRedundantPalettes
-         if the mode of stack "revApplicationOverview" is not 0 \
-               and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
-            send "revRefreshControls true" to stack "revApplicationOverview"
-         end if
-         --send "refreshBrowser" to stack "revProjectBrowser"
+         revIDEActionEditGroup
          break
       case "Stop Editing Group"
-         set the defaultStack to the topStack
-         set the editBG to false
-         revKillRedundantPalettes
-         if the mode of stack "revApplicationOverview" is not 0 \
-               and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
-            send "revRefreshControls true, false" to stack "revApplicationOverview"
-         end if
-         ## EJB Bug 11043
-         ## Ungrouping was nor causing the PB to update
-         ## As only selectedObjectChanged message is sent which does not cause a redraw
-         --send "refreshBrowser" to stack "revProjectBrowser"
+         revIDEStopEditingGroup
          break
       case "Ungroup selected"
-         if (the selObj) is not empty then
-            if word 1 of (the selObj) is not "group" then revCheckGroup
-            else revCheckUnGroup
-            
-            put line 1 of (the selobj) into tTarget
-            put revTargetStack(tTarget) into tStack
-            revUpdateAOControls the long id of this cd of stack tStack
-            --send "refreshBrowser" to stack "revProjectBrowser"
-         end if
+         revIDEActionUngroup
          break
-      case "show Invisibles"
-         set the showInvisibles to not (the showInvisibles)
+      case "Flip Image"
+         revIDEActionFlipImage item 2 of pWhich
          break
-      case "Reshape Graphic"
-         if "revReshapeLibrary" is not among the lines of revInternal__ListLoadedLibraries() then
-            revInternal__LoadLibrary "revReshapeLibrary"
-            put empty into gREVObjectsList
-            revSetMarkers
+      case "Flip Graphic"
+         revIDEActionFlipGraphic item 2 of pWhich
+         break
+      case "Rotate Image"
+         if item 2 of pWhich is "By" then
+            revIDEActionRotateImageBy
          else
-            revSetMarkers true
-            revInternal__UnloadLibrary "revReshapeLibrary"
+            revIDEActionRotateImage item 2 of pWhich
          end if
          break
-      default
-         set the itemDel to "|"
-         
-         local tItem
-         put item 2 of pWhich into tItem
-         if item 1 of pWhich is "Place Group" then
-            # OK-2009-10-02 : Code was breaking with groups named "Background", and seemed to be overcomplicated.
-            set the defaultStack to the topStack
-            if tItem is not empty then
-               place background id tItem onto this card
-               if the tool is "pointer tool" then
-                  do ("select background id" & quote & tItem & quote)
-               end if
-               revUpdateAOControls the long id of this card
-            end if
-            
+      case "Rotate Graphic"
+         if item 2 of pWhich is "By" then
+            revIDEActionRotateGraphicBy
+         else
+            revIDEActionRotateGraphic item 2 of pWhich
          end if
-         if word 1 of item 1 of pWhich is "Flip" then
-            local tSelectedObject
-            put the selectedObject into tSelectedObject
-            set the defaultStack to revTargetStack(line 1 of tSelectedObject)
-            lock screen
-            if item 2 of pWhich is "Horizontal" then
-               set the itemDel to comma
-               repeat for each line l in tSelectedObject
-                  if word 1 of l is "image" then
-                     flip image id (the id of l) horizontal
-                  else
-                     ## 2014-08-20 EJB [[Bug 13191]]
-                     --flip graphic horizontally
-                     local tLeft, tRight, tPoints, tNewPoints
-                     put the left of l into tLeft
-                     put the right of l into tRight
-                     put the points of l into tPoints
-                     put empty into tNewPoints
-                     repeat for each line m in tPoints
-                        
-                        -- added BN in case a line is empty
-                        if m = "" then
-                           put cr after tNewPoints
-                           next repeat
-                        end if
-                        -- end addition BN for empty line
-                        
-                        put tLeft+tRight-(item 1 of m),item 2 of m & cr after tNewPoints
-                     end repeat
-                     set the points of l to tNewPoints
-                  end if
-               end repeat
-            else
-               ## 2014-08-20 EJB [[Bug 13191]]
-               --flip vertical
-               set the itemDel to comma
-               repeat for each line l in tSelectedObject
-                  if word 1 of l is "image" then
-                     flip image id (the id of l) vertical
-                  else
-                     --flip graphic vertically
-                     local tTop, tBottom
-                     put the top of l into tTop
-                     put the bottom of l into tBottom
-                     put the points of l into tPoints
-                     put empty into tNewPoints
-                     repeat for each line m in tPoints
-                        
-                        -- added BN in case a line is empty
-                        if m = "" then 
-                           put cr after tNewPoints
-                           next repeat
-                        end if
-                        -- end addition BN for empty line
-                        
-                        put item 1 of m,tTop+tBottom-(item 2 of m) & cr after tNewPoints
-                     end repeat
-                     set the points of l to tNewPoints
-                  end if
-               end repeat
-            end if
-            unlock screen
-            exit revMenubarObjectMenuPick
-         end if
-         if word 1 of item 1 of pWhich is "Rotate" then
-            put the selectedObject into tSelectedObject
-            set the defaultStack to revTargetStack(line 1 of tSelectedObject)
-            --note that rotate works counter clockwise
-            
-            local tPreviousImageQualitySetting
-            switch
-               case item 2 of pWhich is "By..."
-                  modal "revRotate"
-                  if the cRotateGraphic of stack "revRotate" is empty then exit revMenubarObjectMenuPick
-                  
-                  local tRotateGraphic
-                  put the cRotateGraphic of stack "revRotate" into tRotateGraphic
-                  
-                  local tRotateImage
-                  put the cRotateImage of stack "revRotate" into tRotateImage
-                  lock screen
-                  
-                  
-                  repeat for each line l in tSelectedObject
-                     if word 1 of l is "image" then
-                        put the resizeQuality of image id (the id of l) into tPreviousImageQualitySetting
-                        set the resizeQuality of image id (the id of l) to "best"
-                        rotate image id (the id of l) by tRotateImage
-                        set the resizeQuality of image id (the id of l) to tPreviousImageQualitySetting
-                     else
-                        --rotate graphic
-                        revRotatePoly l,tRotateGraphic
-                     end if
-                  end repeat
-                  choose pointer tool
-                  unlock screen
-                  break
-               case word 2 of item 2 of pWhich is "Right"
-                  lock screen
-                  repeat for each line l in tSelectedObject
-                     if word 1 of l is "image" then
-                        put the resizeQuality of image id (the id of l) into tPreviousImageQualitySetting
-                        set the resizeQuality of image id (the id of l) to "best"
-                        rotate image id (the id of l) by 270
-                        set the resizeQuality of image id (the id of l) to tPreviousImageQualitySetting
-                     else
-                        --rotate graphic 90 degrees
-                        revRotatePoly l,90
-                     end if
-                  end repeat
-                  choose pointer tool
-                  unlock screen
-                  break
-               case word 2 of item 2 of pWhich is "Left"
-                  lock screen
-                  repeat for each line l in tSelectedObject
-                     if word 1 of l is "image" then
-                        put the resizeQuality of image id (the id of l) into tPreviousImageQualitySetting
-                        set the resizeQuality of image id (the id of l) to "best"
-                        rotate image id (the id of l) by 90
-                        set the resizeQuality of image id (the id of l) to tPreviousImageQualitySetting
-                     else
-                        --rotate graphic 270 degrees
-                        revRotatePoly l,270
-                     end if
-                  end repeat
-                  choose pointer tool
-                  unlock screen
-                  break
-               case char 1 to 3 of item 2 of pWhich is "180"
-               case char 1 to 3 of item 2 of pWhich is "270"
-                  local tBy
-                  put char 1 to 3 of item 2 of pWhich into tBy
-                  lock screen
-                  repeat for each line l in tSelectedObject
-                     if word 1 of l is "image" then
-                        put the resizeQuality of image id (the id of l) into tPreviousImageQualitySetting
-                        set the resizeQuality of image id (the id of l) to "best"
-                        rotate image id (the id of l) by tBy
-                        set the resizeQuality of image id (the id of l) to tPreviousImageQualitySetting
-                     else
-                        --rotate graphic tBy degrees
-                        revRotatePoly l,tBy 
-                     end if
-                  end repeat
-                  choose pointer tool
-                  unlock screen
-                  break
-            end switch
-            exit revMenubarObjectMenuPick
-         end if
-         
-         set the defaultStack to the topStack
-         reset the templateButton
-         set the loc of the templateButton to the loc of this cd
-         revNewObjectName "button"
-         reset the templateField
-         set the loc of the templateField to the loc of this cd
-         revNewObjectName "field"
-         reset the templateGraphic
-         set the loc of the templateGraphic to the loc of this cd
-         set the opaque of the templateGraphic to true
-         revNewObjectName "graphic"
-         reset the templateScrollBar
-         set the loc of the templateScrollbar to the loc of this cd
-         revNewObjectName "scrollBar"
-         reset the templateImage
-         set the loc of the templateImage to the loc of this cd
-         revNewObjectName "image"
-         set the loc of the templatePlayer to the loc of this cd
-         revNewObjectName "player"
-         
-         choose pointer tool
-         lock messages
-         switch tItem
-            case "Standard Button"
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Round Rect Button"
-               set the style of the templateButton to "roundRect"
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Rectangle Button"
-               set the style of the templateButton to "rectangle"
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Shadow Button"
-               set the style of the templateButton to "shadow"
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Radio Button"
-               set the style of the templateButton to "radiobutton"
-               set the hiliteBorder of the templateButton to false
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Blank Button"
-               set the showName of the templateButton to false
-               set the traversalOn of the templateButton to false
-               set the hiliteBorder of the templateButton to false
-               set the sharedHilite of the templateButton to false
-               set the hiliteFill of the templateButton to false
-               set the showBorder of the templateButton to false
-               set the threeD of the templateButton to false
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               break
-            case "table field"
-               set the style of the templateField to "scrolling"
-               set the hGrid of the templateField to true
-               set the vGrid of the templateField to true
-               set the tabStops of the templateField to 75
-               set the lockText of the templateField to true
-               set the name of the templateField to "Table Field"
-               set the width of the templateField to the cFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cFieldHeight of stack "revPreferences"
-               create fld
-               set the cREVGeneral["table"] of last fld to true
-               set the cREVTable["celledit"] of last fld to true
-               exit switch
-            case "Divider Button"
-               set the height of the templateButton to 2
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               create button
-               break
-            case "Check Box"
-               set the style of the templateButton to "checkbox"
-               set the hiliteBorder of the templateButton to false
-               set the width of the templateButton to the cButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Tabbed Button"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "tabbed"
-               set the text of the templateButton to "Tab 1" & cr & "Tab 2" & cr & "Tab 3"
-               set the showName of the templateButton to false
-               if the platform is "MacOS" and char 1 of the systemVersion is "1" then
-                  set the textFont of the templateButton to "Lucida Grande"
-                  set the textSize of the templateButton to 13
-               end if
-               set the width of the templateButton to the cTabButtonWidth of stack "revPreferences"
-               set the height of the templateButton to the cTabButtonHeight of stack "revPreferences"
-               create button
-               exit switch
-            case "Field"
-               set the width of the templateField to the cLabelFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cLabelFieldHeight of stack "revPreferences"
-               create field
-               break
-            case "Scrolling Field"
-               set the width of the templateField to the cFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cFieldHeight of stack "revPreferences"
-               set the style of the templateField to "scrolling"
-               create field
-               break
-            case "List Field"
-               set the width of the templateField to the cFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cFieldHeight of stack "revPreferences"
-               set the listBehavior of the templateField to true
-               set the sharedText of the templateField to true
-               set the dontWrap of the templateField to true
-               set the lockText of the templateField to true
-               set the text of the templateField to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create field
-               break
-            case "Scrolling list field"
-               set the width of the templateField to the cFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cFieldHeight of stack "revPreferences"
-               set the style of the templateField to "scrolling"
-               set the listBehavior of the templateField to true
-               set the sharedText of the templateField to true
-               set the dontWrap of the templateField to true
-               set the lockText of the templateField to true
-               set the text of the templateField to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create field
-               break
-            case "Label Field"
-               set the width of the templateField to the cLabelFieldWidth of stack "revPreferences"
-               set the height of the templateField to the cLabelFieldHeight of stack "revPreferences"
-               set the lockText of the templateField to false
-               set the sharedText of the templateField to true
-               set the dontWrap of the templateField to true
-               set the showBorder of the templateField to false
-               set the opaque of the templateField to false
-               set the traversalOn of the templateField to false
-               set the autoHilite of the templateField to false
-               set the text of the templateField to "Label text"
-               create field
-               break
-            case "Vertical Scrollbar"
-               set the height of the templateScrollBar to the cScrollBarWidth of stack "revPreferences"
-               if the platform is "MacOS" then
-                  set the width of the templateScrollbar to the cMacOSScrollbarHeight of stack "revPreferences"
-               else
-                  set the width of the templateScrollbar to the cScrollBarHeight of stack "revPreferences"
-               end if
-               create scrollbar
-               break
-            case "Horizontal Scrollbar"
-               set the width of the templateScrollBar to the cScrollBarWidth of stack "revPreferences"
-               if the platform is "MacOS" then
-                  set the height of the templateScrollbar to the cMacOSScrollbarHeight of stack "revPreferences"
-               else
-                  set the height of the templateScrollbar to the cScrollBarHeight of stack "revPreferences"
-               end if
-               create scrollbar
-               break
-            case "Scale Bar"
-               set the style of the templateScrollBar to "scale"
-               set the width of the templateScrollbar to the cScrollbarwidth of stack "revPreferences"
-               if the platform is "MacOS" then
-                  set the height of the templateScrollbar to the cMacOSScrollbarHeight of stack "revPreferences"
-               else
-                  set the height of the templateScrollbar to the cScrollBarHeight of stack "revPreferences"
-               end if
-               create scrollbar
-               break
-            case "Progress Bar"
-               set the style of the templateScrollBar to "progress"
-               set the width of the templateScrollbar to the cScrollbarwidth of stack "revPreferences"
-               if the platform is "MacOS" then
-                  set the height of the templateScrollbar to the cMacOSProgressScrollbarHeight of stack "revPreferences"
-               else
-                  set the height of the templateScrollbar to the cScrollBarHeight of stack "revPreferences"
-               end if
-               create scrollbar
-               break
-            case "Pulldown Menu"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "pulldown"
-               set the showBorder of the templateButton to false
-               set the autoHilite of the templateButton to false
-               set the traversalOn of the templateButton to false
-               set the armBorder of the templateButton to false
-               set the textAlign of the templateButton to "left"
-               set the text of the templateButton to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create button
-               exit switch
-            case "Popup menu"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "popUp"
-               set the text of the templateButton to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create button
-               exit switch
-            case "Option menu"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "option"
-               set the autoHilite of the templateButton to false
-               set the armBorder of the templateButton to false
-               set the traversalOn of the templateButton to false
-               set the text of the templateButton to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create button
-               exit switch
-            case "Combo box menu"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "combobox"
-               set the autoHilite of the templateButton to false
-               set the armBorder of the templateButton to false
-               set the traversalOn of the templateButton to true
-               set the text of the templateButton to "Choice 1" & cr & "Choice 2" & cr & "Choice 3"
-               create button
-               exit switch
-            case "menu item"
-               set the style of the templateButton to "standard"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the showBorder of the templateButton to false
-               set the autoHilite of the templateButton to false
-               set the autoArm of the templateButton to true
-               set the textAlign of the templateButton to "left"
-               create button
-               break
-            case "Cascade Menu Item"
-               set the style of the templateButton to "menu"
-               set the menuMode of the templateButton to "cascade"
-               set the width of the templateButton to the cMenuWidth of stack "revPreferences"
-               set the height of the templateButton to the cMenuHeight of stack "revPreferences"
-               set the showBorder of the templateButton to false
-               set the autoHilite of the templateButton to false
-               set the autoArm of the templateButton to true
-               set the textAlign of the templateButton to "left"
-               create button
-               break
-            case "Rectangle Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "rectangle"
-               create graphic
-               exit switch
-            case "Oval Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "oval"
-               create graphic
-               exit switch
-            case "Curve Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "curve"
-               set the points of the templateGraphic to "43,105" & cr & "43,104" & cr & "46,102" & cr & "56,96" & cr & "70,90" & cr & "78,86" & cr & "81,85" & cr & "82,85" & cr & "85,85" & cr & "94,90" & cr & "101,99" & cr & "108,109" & cr & "111,117" & cr & "112,120" & cr & "117,121" & cr & "138,118" & cr & "157,113" & cr & "162,111" & cr & "165,108" & cr & "166,108" & cr & "167,109" & cr & "171,115" & cr & "175,124" & cr & "179,132" & cr & "180,134" & cr & "181,134" & cr & "183,134" & cr & "190,134" & cr & "198,130" & cr & "205,129" & cr & "206,128" & cr & "207,128" & cr & "207,129" & cr & "212,137" & cr & "215,142" & cr & "216,145" & cr & "217,146" & cr & "217,147" & cr & "218,148" & cr & "219,149" & cr & "220,150" & cr & "221,150"
-               set the loc of the templateGraphic to the loc of this cd
-               create graphic
-               exit switch
-            case "Round Rect Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "roundRect"
-               create graphic
-               exit switch
-            case "Polygon Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "polygon"
-               set the points of the templateGraphic to 0,0,100,100,100,50,50,100
-               set the loc of the templateGraphic to the loc of this cd
-               create graphic
-               exit switch
-            case "Regular Polygon Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "regular"
-               set the polySides of the templateGraphic to 4
-               create graphic
-               exit switch
-            case "Line Graphic"
-               set the width of the templateGraphic to the cREVGraphicWidth of stack "revPreferences"
-               set the height of the templateGraphic to the cREVGraphicHeight of stack "revPreferences"
-               set the style of the templateGraphic to "line"
-               set the points of the templateGraphic to 0,0,120,120
-               set the loc of the templateGraphic to the loc of this cd
-               create graphic
-               exit switch
-            case "Image"
-               set the width of the templateImage to the cREVImageWidth of stack "revPreferences"
-               set the height of the templateImage to the cREVImageHeight of stack "revPreferences"
-               create image
-               break
-            case "Player"
-               set the showController of the templatePlayer to true
-               set the width of the templatePlayer to the cREVPlayerWidth of stack "revPreferences"
-               set the height of the templatePlayer to the cREVPlayerHeight of stack "revPreferences"
-               create player
-               break
-            case "Data Grid"
-               # OK-2010-02-22: Bug 7992 - This should probably be refactored to the revIDE backscript 
-               # to prevent needing to use call.
-               local tGridLocation
-               put the location of this card into tGridLocation
-               
-               local tGridStack
-               put the short name of this stack into tGridStack
-               
-               local tObjectType
-               put "data grid" into tObjectType
-               
-               local tGrid
-               call "revCreateObject tObjectType, tGridStack, tGridLocation" to card 1 of stack "revTools"
-               put the result into tGrid
-               select tGrid
-               
-               break
-            default
-               revSaveLayout
-               revAlignObjects tItem
-               exit revMenubarObjectMenuPick
-               break
-         end switch
-         
-         if tItem is not "Data Grid" then
-            select last control
-         end if
-         
-         reset the templateButton
-         reset the templateField
-         reset the templateGraphic
-         reset the templateScrollBar
-         reset the templateImage
-         reset the templatePlayer
-         unlock messages
-         put "edited" into gREVStackStatus[the short name of the topStack]
-         send "selectedObjectChanged" to btn "revBackScript" of stack "revLibrary"
          break
+      case "Align Selected Controls"
+         revIDEActionAlign item 2 of pWhich
          break
    end switch
 end revMenubarObjectMenuPick
@@ -3383,63 +2732,3 @@ on revMenubarHelpMenuPick pWhich
          break
    end switch
 end revMenubarHelpMenuPick
-
-/*
-         on revStopEditingGroupAfterPasting
-            choose pointer tool
-            set the defaultStack to the topStack
-            paste
-            set the editBg to false
-end revStopEditingGroupAfterPasting
-
-on revDoCardStackMenu pMenuItem, pOwnerMenu
-   global gREVMenuTarget
-   
-   local tTargetStack
-   put revTargetStack(gREVMenuTarget) into tTargetStack
-   switch pMenuItem
-      case "Edit Card Script"
-         revMenubarEditScript the long id of this card of stack tTargetStack
-         break
-      case "Card Property Inspector"
-         select this cd of stack tTargetStack
-         --send "revBuildPropertyPalette" to stack "revTemplatePalette"
-         revIDEOpenPalette "inspector"
-         break
-      case "New Card"
-         set the defaultStack to tTargetStack
-         create card
-         break
-      case "Edit Stack Script"
-         revMenubarEditScript the long id of stack tTargetStack
-         break
-      case "Stack Property Inspector"
-         select stack tTargetStack
-         revIDEOpenPalette "inspector"
-         --send "revBuildPropertyPalette" to stack "revTemplatePalette"
-         break
-      case "topLevel"
-      case "modeless"
-      case "palette"
-      case "modal"
-         send "revChangeMode pMenuItem, tTargetStack" to me in 200 milliseconds
-         break
-      case "Save"
-         if the effective fileName of stack tTargetStack is not empty
-         then revSave tTargetStack
-         else revSaveAs tTargetStack
-         break
-      case "Paste Objects"
-         set the defaultStack to tTargetStack
-         paste
-         break
-      default
-         --pMenuItem must be a message name
-         --either send it to the card or the stack
-         if pOwnerMenu is "Send Card Message"
-         then revSendMessage pMenuItem, the long id of this cd of stack tTargetStack
-         else revSendMessage pMenuItem, the long id of stack tTargetStack
-         break
-   end switch
-end revDoCardStackMenu
-*/

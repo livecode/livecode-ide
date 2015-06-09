@@ -1,1 +1,51 @@
-type	graphicProperty	Default	Options	Group----------------------------------------------------------------------------------------------------name	Oval	tooltip		style	oval	rectangle,roundrect,line,oval,regular,line,curve,polygonopaque	true	visible	true	disabled	false	showName	false	antialiased	true	lineSize	1	dashes		startAngle	0	arcAngle	360	layerModebehaviorborderColorborderPatternbackgroundColor			backgroundPattern			fillGradient	strokeGradient		topColortopPattern		bottomColorbottomPattern		customProperties		blendLevel	0	0,100inktextFonttextSize		textStyletextAlign	centermargins	8	lockLoc	false	width	120	height	120	locationleft		top		right		bottom		layerdropShadowinnerShadow	outerGlowinnerGlowcolorOverlay	
+type	graphic
+title	Oval Graphic
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+name	Oval	
+tooltip		
+style	oval	rectangle,roundrect,line,oval,regular,line,curve,polygon
+opaque	true	
+visible	true	
+disabled	false	
+showName	false	
+antialiased	true	
+lineSize	1	
+dashes		
+startAngle	0	
+arcAngle	360	
+layerMode
+behavior
+borderColor
+borderPattern
+backgroundColor			
+backgroundPattern			
+fillGradient	
+strokeGradient		
+topColor
+topPattern		
+bottomColor
+bottomPattern		
+customProperties		
+blendLevel	0	0,100
+ink
+textFont
+textSize		
+textStyle
+textAlign	center
+margins	8	
+lockLoc	false	
+width	120	
+height	120	
+location
+left		
+top		
+right		
+bottom		
+layer
+dropShadow
+innerShadow	
+outerGlow
+innerGlow
+colorOverlay	
