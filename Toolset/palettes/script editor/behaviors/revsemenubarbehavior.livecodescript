@@ -206,21 +206,35 @@ private command buildDebugMenu pContext
 end buildDebugMenu
 
 private command buildWindowMenu pContext
-   local tMenuText
-   put revIDEWindowListAsMenu() into tMenuText
+   #   Set sWindowMenuText to a list of open Windows in suitable format for putting into a menu button.
+   #   This will be any script editors or the dictionary or resource center if they are open, and any user stacks.
+   local tWindows
+   put revIDEWindowList() into tWindows
    
-   local tStackNames
-   put revIDEWindowList() into tStackNames
-   set the cWindows of button "Window" of me to tStackNames
+   local tMenu, tMenuLine, tStackTitle
+   repeat for each line tStack in tWindows
+      put the title of stack tStack into tStackTitle
+      if tStackTitle is empty then
+         put the short name of tStack into tStackTitle
+      end if
+      
+      put "!n" & revMenubarEscapeStackNameForMenu(tStackTitle) & "/|" & tStack into tMenuLine
+      if tMenu is empty then
+         put tMenuLine into tMenu
+      else
+         put return & tMenuLine after tMenu
+      end if
+   end repeat
    
-   local tWindow
-   if tMenuText is empty then
-      put "(No Windows Open" into tWindow
+   if tMenu is empty then
+      put "(No Windows Open" into tMenu
    else
-      put tMenuText & return & "-" & return & "Send Window to Back/`" into tWindow
+      # Put a checkmark against the 'topmost' stack
+      put "!c" into char 1 to 2 of line 1 of tMenu
+      put return & "-" & return & "Send Window to Back/`" after tMenu
    end if
    
-   set the text of button "Window" of me to modifyMenu("Window", tWindow)
+   set the text of button "Window" of me to modifyMenu("Window", tMenu)
 end buildWindowMenu
 
 private command buildHelpMenu pContext
