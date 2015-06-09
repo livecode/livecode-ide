@@ -6126,14 +6126,112 @@ on revIDEToggle pProperty
          
          put "scriptDebugMode" into tToggleMessage
          break
+      case "Show IDE Stacks In Lists"
+         put "ideStacksInLists" into tToggleMessage
+         revIDEToggleShowIDEStacksInLists
+         break
+      case "Show Invisible Objects"
+         put "showInvisibles" into tToggleMessage
+         set the showInvisibles to not (the showInvisibles)
+         break
+      case "Rulers"
+         put "rulers" into tToggleMessage
+         if the mode of stack "revRulersH" is not 0 then
+            revInternal__UnloadLibrary "revRulersScript"
+            lock messages
+            close stack "revRulersH"
+            close stack "revRulersV"
+            unlock messages
+         else
+            lock messages
+            revCalculateRulers
+            if the mode of the topStack is 1 then
+               palette "revRulersH"
+               palette "revRulersV"
+            end if
+            unlock messages
+         end if
+         break
+      case "Backdrop"
+         if the backDrop is "none" then
+            if revIDGetPreference("cBackDropColor") is empty then 
+               revIDESetPreference "cBackDropColor", "black"
+            end if
+            set the backDrop to revIDGetPreference("cBackDropColor")
+            revIDESetPreference "cBackDrop", the backDrop
+         else
+            set the backDrop to "none"
+            revIDESetPreference "cBackDrop", "none"
+         end if
+         # No need to send toggle message as idePreferenceChanged will be sent
+         exit revIDEToggle
+      case "Grid"
+         if the grid is false then
+            set the grid to true
+            revIDESetPreference "cGrid", true
+         else
+            set the grid to false
+            revIDESetPreference "cGrid", false
+         end if
+         # No need to send toggle message as idePreferenceChanged will be sent
+         exit revIDEToggle
    end switch
    # Invisible objects
    # Ruler
-   # Grid
-   # Backdrop
-   # IDE Stacks (in lists)
    revIDEMessageSend "ideToggleChanged:" & tToggleMessage
 end revIDEToggle
+
+on revIDEToggleToolbar pWhich
+   local tCurrentPref
+   if pWhich is "Toolbar Text" then
+      put revIDEGetPreference("cToolbarText") is true into tCurrentPref
+      revIDESetPreference "cToolbarText", not tCurrentPref
+   else if pWhich is "Toolbar Icons" then
+      put revIDEGetPreference("cToolbarIcons") is true into tCurrentPref
+      revIDESetPreference "cToolbarIcons", not tCurrentPref
+   end if
+end revIDEToggleToolbar
+
+on revIDEToggleShowIDEStacksInLists
+   global gREvShowStacks
+   lock screen
+   set the hilite of button "show revolution stacks" of card "general" of stack "revPreferencesGUI" to not gREVShowStacks
+   
+   local tOpenStacks
+   put the openStacks into tOpenStacks
+   
+   local tFrontStack
+   put empty into tFrontStack
+   repeat for each line tStack in tOpenStacks
+      if tStack is not "revMenubar" and the mode of stack tStack is among the items of "1,2,3" then
+         put tStack into tFrontStack
+         exit repeat
+      end if
+   end repeat
+   if tFrontStack is not empty then
+      set the wholeMatches to true
+      local tBringToFront
+      if lineOffset(tFrontStack, tOpenStacks) < lineOffset("revApplicationOverview", tOpenStacks) then
+         put true into tBringToFront
+      end if
+   end if
+   send "revToggleShowStacks" to button "show revolution stacks" of card "general" of stack "revPreferencesGUI"
+   unlock screen
+   
+   if tBringToFront then
+      lock messages
+      switch the mode of stack tFrontStack
+         case 1
+         case 2
+            toplevel tFrontStack
+            break
+         case 3
+            modeless tFrontStack
+            break
+      end switch
+      unlock messages 
+   end if
+end revIDEToggleShowIDEStacksInLists
 
 on revIDETogglePalette pPaletteName
    local tStackName
@@ -6341,8 +6439,8 @@ on revIDEEditImage pImages
       end if
    end if
    
-   set the defaultStack to the topStack
-   
+   set the defaultStack to the topStack	
+
    local tNumber, tImagePath
    repeat for each line tImage in pImages
       put the number of tImage into tNumber
@@ -7051,3 +7149,21 @@ command revIDECheckForUpdates
    end if   
 end revIDECheckForUpdates
 
+# OK-2009-10-07 : Noticed that View -> Go Prev wasn't working, decided to rewrite code
+# as it depended on the state that the menubar was saved in, and was duplicated.
+local sMoveBuffers
+constant kMoveBufferSize = 20
+
+# OK-2009-10-07 : This command does "go pMoveSpecifier" with a buffering effect to prevent it
+# getting carried out more frequently than every kMoveBufferSize milliseconds
+on revIDEGoCard pMoveSpecifier
+   if the milliseconds - sMoveBuffers[pMoveSpecifier] < kMoveBufferSize then
+      exit revIDEGoCard
+   end if
+   
+   set the defaultStack to the topStack
+   local tCommand
+   put "go " & pMoveSpecifier into tCommand
+   do tCommand
+   put the milliseconds into sMoveBuffers[pMoveSpecifier]
+end revIDEGoCard

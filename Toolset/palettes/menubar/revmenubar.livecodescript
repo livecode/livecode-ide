@@ -31,7 +31,6 @@ on subscribeMessages
    revIDESubscribe "ideToggleChanged:suppressMessages"
    revIDESubscribe "ideToggleChanged:suppressErrors"
    revIDESubscribe "ideToggleChanged:selectGrouped"
-   revIDESubscribe "ideToggleChanged:selectionMode"
    
    revIDESubscribe "idePluginsChanged"
 end subscribeMessages
@@ -240,17 +239,31 @@ end ideSelectedObjectChanged
 on idePreferenceChanged pPreference
    switch pPreference
       case  "cToolbarText"
-         updateMenubarPreference
-         layoutMenu
       case "cToolbarIcons"
+         local tAlterBounding
+         if abs(item 2 of the windowBoundingRect - the bottom of me) < 10 then 
+            put true into tAlterBounding
+         end if
          updateMenubarPreference
          layoutMenu
+         if tAlterBounding then
+            set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of me + 25, item 3 to 4 of the windowBoundingRect
+         end if
          break
    end switch
 end idePreferenceChanged
 
 on ideToggleChanged pToggle
-   updateButtonState
+   switch pToggle
+      case "supressMessages"
+      case "suppressErrors"
+      case "selectGrouped"
+         updateButtonState
+         break
+      default
+         break
+   end switch
+   
 end ideToggleChanged
 
 on idePluginsChanged
@@ -711,7 +724,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "Development"         
          return revMenubarDevelopmentMenu(pContext)
       case "View"
-         return buildViewMenu(pContext)
+         return revMenubarViewMenu(pContext)
       case "Window"
          return buildWindowMenu(pContext)
       case "Help"
@@ -1331,7 +1344,7 @@ end revMenubarHelpMenu
 
 ################################################################################
 
-private function buildViewMenu pContext
+private function revMenubarViewMenu pContext
    global gREVPalettes, gREVShowStacks
    
    local tView
@@ -1344,25 +1357,17 @@ private function buildViewMenu pContext
    put toggleMenuItem("Toolbar Text", the cToolbarText of stack "revPreferences") & return after tView
    put toggleMenuItem("Toolbar Icons", the cToolbarIcons of stack "revPreferences") & return after tView
    put "-" & return after tView
-   
-   -- Bug 10729
-   -- gRevPalletes is not a boolean so changed to check for empty
    put toggleMenuItem("Palettes", gREVPalettes is empty) & return after tView
+   put "-" & return after tView
    put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
    put toggleMenuItem("LiveCode UI Elements in Lists", gREVShowStacks) & return after tView
    put "-" & return after tView
-   put "Look and Feel" & return after tView
-   put tab & markMenuItem("Native Theme", the lookAndFeel is "Appearance Manager") & return after tView
-   put tab & markMenuItem("Emulated - Mac OS Classic", the lookAndFeel is "Macintosh") & return after tView
-   put tab & markMenuItem("Emulated - Windows 95", the lookAndFeel is "Windows 95") & return after tView
-   put tab & markMenuItem("Emulated - Motif", the lookAndFeel is "Motif") & return after tView
-   put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
    return modifyMenu("View", tView)
-end buildViewMenu
+end revMenubarViewMenu
 
 ################################################################################
 
@@ -2422,169 +2427,34 @@ end revMenubarDevelopmentMenuPick
 on revMenubarViewMenuPick pWhich
    global gREVSuppressErrors, gREVSuppressMessages, gREVPalettes, gREVShowStacks
    switch pWhich
-      case "LiveCode UI Elements In Lists"
-         lock screen
-         set the hilite of button "show revolution stacks" of card "general" of stack "revPreferencesGUI" to not gREVShowStacks
-         
-         local tOpenStacks
-         put the openStacks into tOpenStacks
-         
-         local tFrontStack
-         put empty into tFrontStack
-         repeat for each line tStack in tOpenStacks
-            if tStack is not "revMenubar" and the mode of stack tStack is among the items of "1,2,3" then
-               put tStack into tFrontStack
-               exit repeat
-            end if
-         end repeat
-         if tFrontStack is not empty then
-            set the wholeMatches to true
-            local tBringToFront
-            if lineOffset(tFrontStack, tOpenStacks) < lineOffset("revApplicationOverview", tOpenStacks) then
-               put true into tBringToFront
-            end if
-         end if
-         send "revToggleShowStacks" to button "show revolution stacks" of card "general" of stack "revPreferencesGUI"
-         
-         // EJB
-         --ideShowUIElements
-         unlock screen
-         
-         if tBringToFront then
-            lock messages
-            switch the mode of stack tFrontStack
-               case 1
-               case 2
-                  toplevel tFrontStack
-                  break
-               case 3
-                  modeless tFrontStack
-                  break
-            end switch
-            unlock messages 
-         end if
-         break
+      case "Show IDE Stacks In Lists"
       case "Show Invisible Objects"
-         set the showInvisibles to not (the showInvisibles)
-         break
       case "Rulers"
-         if the mode of stack "revRulersH" is not 0 then
-            revInternal__UnloadLibrary "revRulersScript"
-            lock messages
-            close stack "revRulersH"
-            close stack "revRulersV"
-            unlock messages
-         else
-            lock messages
-            revCalculateRulers
-            if the mode of the topStack is 1 then
-               palette "revRulersH"
-               palette "revRulersV"
-            end if
-            unlock messages
-         end if
+      case "Backdrop"
+      case "Grid"
+         revIDEToggle pWhich
          break
       case "Go First"
-         bufferedMoveCard "first"
+         revIDEGoCard "first"
          break
       case "Go Prev"
-         bufferedMoveCard "prev"
+         revIDEGoCard "prev"
          break
       case "Go Next"
-         bufferedMoveCard "next"
+         revIDEGoCard "next"
          break
       case "Go Last"
-         bufferedMoveCard "last"
+         revIDEGoCard "last"
          break
       case "Go Recent"
-         bufferedMoveCard "recent"
+         revIDEGoCard "recent"
          break
       case "Toolbar Text"
-         local tAlterBounding
-         if abs(item 2 of the windowBoundingRect - the bottom of stack "revMenuBar") < 10 then 
-            put true into tAlterBounding
-         end if
-         if the cToolbarText of stack "revPreferences" then
-            if the cToolbarIcons of stack "revPreferences" then 
-               revIconsBar
-            else
-               revNoBar
-            end if
-         else
-            if the cToolbarIcons of stack "revPreferences" then
-               revFullBar
-            else 
-               revTextBar
-            end if
-         end if
-         if tAlterBounding then
-            set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of stack "revMenuBar"+25,item 3 to 4 of the windowBoundingRect
-         end if
-         break
       case "Toolbar Icons"
-         if abs(item 2 of the windowBoundingRect - the bottom of stack "revMenuBar") < 10 then 
-            put true into tAlterBounding
-         end if
-         if the cToolbarIcons of stack "revPreferences" then
-            --remove icons
-            if the cToolbarText of stack "revPreferences" then 
-               revTextBar
-            else
-               revNoBar
-            end if
-         else
-            --include icons
-            if the cToolbartext of stack "revPreferences" then
-               revFullBar
-            else 
-               revIconsBar
-            end if 
-         end if
-         if tAlterBounding then
-            set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of stack "revMenuBar"+25,item 3 to 4 of the windowBoundingRect
-         end if
+         revIDEToggleToolbar pWhich
          break
       case "Palettes"
          revIDETogglePaletteView
-         break
-      case "Backdrop"
-         if the backDrop is "none" then
-            if the cBackDropColor of stack "revPreferences" is empty then 
-               set the cBackDropColor of stack "revPreferences" to "black"
-            end if
-            set the backDrop to the cBackDropColor of stack "revPreferences"
-            set the cBackDrop of stack "revPreferences" to the backDrop
-         else
-            set the backDrop to "none"
-            set the cBackDrop of stack "revPreferences" to "none"
-         end if
-         exit switch
-      case "Grid"
-         if the grid is false then
-            set the grid to true
-            set the cGrid of stack "revPreferences" to true
-         else
-            set the grid to false
-            set the cGrid of stack "revPreferences" to false
-         end if
-         exit switch
-      default
-         set the itemDel to "|"
-         --Look and Feel
-         switch
-            case "Native" is in pWhich 
-               set the lookAndFeel to "Appearance Manager"
-               break
-            case "Mac OS" is in pWhich
-               set the lookAndFeel to "Macintosh"
-               break
-            case "Windows" is in pWhich
-               set the lookAndFeel to "Windows 95"
-               break
-            case "Motif" is in pWhich 
-               set the lookAndFeel to "Motif"
-               break
-         end switch
          break
    end switch
 end revMenubarViewMenuPick
