@@ -3332,10 +3332,10 @@ example: revIDEOpenPalette "inspector"
 */
 command revIDEOpenPalette pPaletteName
    local tExistingPalette, tPalette, tPaletteID
-
+   
    local tStackName
    put revIDEPaletteToStackName(pPaletteName) into tStackName
-
+   
    switch pPaletteName
       case "Start Center"
          show stack tStackName
@@ -3350,6 +3350,10 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
+      case "standalone settings"
+         # Assumes the topstack if none specified
+         send "revStandaloneSettings" to stack "revStandaloneSettings"
+         break
       case "inspector"
       case "message box"
          palette stack tStackName
@@ -3362,9 +3366,6 @@ command revIDEOpenPalette pPaletteName
       case "extension builder"
          modeless stack tStackName
          break
-      case "standalone settings"
-          send "revStandaloneSettings"&&quote&the short name of the topStack&quote to stack "revStandaloneSettings"
-          break
       default
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
