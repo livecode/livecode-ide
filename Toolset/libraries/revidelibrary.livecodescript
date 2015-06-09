@@ -108,42 +108,6 @@ command revIDEShowMessageBox
    end if
 end revIDEShowMessageBox
 
-# OK-2008-06-24 : Abstracted from "Window" button in menubar.
-# Description
-#   Sends the current window to the back.
-command revIDESendCurrentWindowToBack
-   lock messages
-   
-   local tWindowsList
-   put the windows into tWindowsList
-   
-   local tWindows, tWindows2
-   repeat for each line l in tWindowsList
-      if the mode of stack l is among the items of "1,2" then
-         put l & return after tWindows
-      else if the mode of stack l is "3" then
-         put l & return after tWindows2
-      end if
-   end repeat
-   if char -1 of tWindows2 is return then delete char -1 of tWindows2
-   if char -1 of tWindows is return then delete char -1 of tWindows
-   
-   local tCurrentStackName
-   put char 3 to -1 of line (lineOffset("!c",the text of me)) of the text of me into tCurrentStackName
-   delete line lineOffset(tCurrentStackName,tWindows) of tWindows
-   
-   if the num of lines in tWindows2 is not 0 
-   then put tWindows2 & return & tWindows into tWindows
-   
-   repeat for each line l in tWindows
-      -- delete char 1 to 2 of l
-      if the mode of stack l is 1 or the mode of stack l is 2 then toplevel l
-      else if the mode of stack l is 3 then modeless l
-      show stack l
-   end repeat
-   unlock messages
-end revIDESendCurrentWindowToBack
-
 --local sAddedObjects
 
 # Parameters

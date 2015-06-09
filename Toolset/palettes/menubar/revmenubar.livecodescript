@@ -12,6 +12,7 @@ on preOpenStack
    //revMenuBarUpdateRecentPaths
    
    subscribeMessages
+
    setDefaultText
    setMenuProperties
    generateMenu
@@ -33,6 +34,7 @@ on subscribeMessages
    revIDESubscribe "ideToggleChanged:selectGrouped"
    
    revIDESubscribe "idePluginsChanged"
+   revIDESubscribe "ideWindowsChanged"
 end subscribeMessages
 
 local sTextMenuDisabledText, sTextMenuText, sPluginMenuText
@@ -123,6 +125,52 @@ private on setupTextMenu
    # Cache the disabled text menu text
    put tDisabledText into sTextMenuDisabledText
 end setupTextMenu
+
+# OK-2010-02-19: Bug 8157 - Escape special characters from stack names in menus, more may 
+# need to be added here.
+private function revMenubarEscapeStackNameForMenu pName
+   replace "!" with "\!" in pName
+   if the platform is "MacOS" then 
+      replace "/" with "\/" in pName
+      replace "(" with "\(" in pName
+   else
+      replace "/" with "//" in pName
+   end if
+   return pName
+end revMenubarEscapeStackNameForMenu
+
+local sWindowMenuWindows
+private on setupWindowMenu
+   #   Set sWindowMenuText to a list of open Windows in suitable format for putting into a menu button.
+   #   This will be any script editors or the dictionary or resource center if they are open, and any user stacks.
+   local tWindows
+   put revIDEWindowList() into tWindows
+   
+   if tWindows is empty then      
+      put empty into sWindowMenuWindows
+      exit setupWindowMenu
+   end if
+   
+   local tMenu, tMenuLine, tStackTitle
+   repeat for each line tStack in tWindows
+      put the title of stack tStack into tStackTitle
+      if tStackTitle is empty then
+         put the short name of tStack into tStackTitle
+      end if
+      
+      put "!n" & revMenubarEscapeStackNameForMenu(tStackTitle) & "/|" & tStack into tMenuLine
+      if tMenu is empty then
+         put tMenuLine into tMenu
+      else
+         put return & tMenuLine after tMenu
+      end if
+   end repeat
+   
+   # Put a checkmark against the 'topmost' stack
+   put "!c" into char 1 to 2 of line 1 of tMenu
+   
+   put tMenu into sWindowMenuWindows
+end setupWindowMenu
 
 on setMenuProperties
    set the height of me to 47
@@ -269,6 +317,10 @@ end ideToggleChanged
 on idePluginsChanged
    setupDevelopmentMenu
 end idePluginsChanged
+
+on ideWindowsChanged
+   setupWindowMenu
+end ideWindowsChanged
 
 on generateMenu
    generateMenubarUI
@@ -726,7 +778,7 @@ function revMenubarBuildMenu pMenu, pContext
       case "View"
          return revMenubarViewMenu(pContext)
       case "Window"
-         return buildWindowMenu(pContext)
+         return revMenubarWindowMenu(pContext)
       case "Help"
          return revMenubarHelpMenu(pContext)
       default
@@ -1424,23 +1476,18 @@ end revMenubarSimulatorSubmenu
 
 ################################################################################
 
-private function buildWindowMenu pContext
-   local tMendgText
-   put revIDEWindowListAsMenu() into tMendgText
-   
-   local tStackNames
-   put revIDEWindowList() into tStackNames
-   set the cStacks of button "Window" of me to tStackNames
+private function revMenubarWindowMenu pContext
+   revIDEUpdateWindowList
    
    local tWindow
-   if tMendgText is empty then
+   if sWindowMenuWindows is empty then
       put "(No Windows Open" into tWindow
    else
-      put tMendgText & return & "-" & return & "Send Window to Back/`" into tWindow
+      put sWindowMenuWindows & return & "-" & return & "Send Window to Back/`" into tWindow
    end if
    
    return modifyMenu("Window", tWindow)
-end buildWindowMenu
+end revMenubarWindowMenu
 
 ################################################################################
 
@@ -2460,20 +2507,11 @@ on revMenubarViewMenuPick pWhich
 end revMenubarViewMenuPick
 
 on revMenubarWIndowMenuPick pWhich
-   set the wholeMatches to true
-   local tLineNumber
-   put the menuHistory of me into tLineNumber
-   
-   if tLineNumber > the number of lines of the cStacks of me then
-      # This means they clicked on something after the list of stacks, i.e the "send window to back" item
-      sendWindowToBack
+   set the itemdelimiter to "|"
+   if pWhich is "Send Window To Back" then
+      revIDEWindowToBack
    else
-      # This means they clicked on a stack name, we get its name from cStacks
-      local tStackName
-      put line tLineNumber of the cStacks of me into tStackName
-      
-      go tStackName
-      show tStackName
+      revIDEWindowToFront item 2 of pWhich
    end if
 end revMenubarWIndowMenuPick
 

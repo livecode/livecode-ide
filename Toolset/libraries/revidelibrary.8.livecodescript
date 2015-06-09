@@ -1353,7 +1353,7 @@ function revIDEMessages
    return ( \
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
-         & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged" \
+         & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged,ideWindowsChanged" \
          )
 end revIDEMessages
 
@@ -7167,3 +7167,104 @@ on revIDEGoCard pMoveSpecifier
    do tCommand
    put the milliseconds into sMoveBuffers[pMoveSpecifier]
 end revIDEGoCard
+
+function revIDEScriptEditorPrefix
+   return "revNewScriptEditor "
+end revIDEScriptEditorPrefix
+
+/*
+User stacks, script editors, the dictionary and resource center are considered windows 
+from the point of view of the menubar
+*/
+function revIDEStackIsWindow pStackName
+   if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" or pStackName is "revResourceCenter" then
+      return true
+   else if char 1 to 3 of pStackName is not "rev" and pStackName is not among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector" then
+      return true
+   end if
+   
+   return false
+end revIDEStackIsWindow
+
+local sWindowList
+on revIDEUpdateWindowList
+   local tOpenstacks
+   put the openStacks into tOpenstacks
+   
+   local tStacks, tName
+   repeat for each line tStackName in tOpenstacks
+      if revIDEStackIsWindow(tStackName) then
+         put the name of stack tStackName into tName
+         if tStacks is empty then 
+            put tName into tStacks
+         else
+            put return & tName after tStacks
+         end if
+      end if
+   end repeat
+   
+   if tStacks is not empty then
+      local tTopMostStack
+      put line 1 of tStacks into tTopMostStack
+      
+      local tOtherstacks
+      put line 2 to -1 of tStacks into tOtherstacks
+      sort tOtherstacks
+      
+      put tTopMostStack & return & tOtherstacks into tStacks
+   end if
+   
+   if tStacks is not sWindowList then
+      revIDEMessageSend "ideWindowsChanged"
+   end if
+   put tStacks into sWindowList
+end revIDEUpdateWindowList
+
+# Returns the list of the open stack names which should be included in a window menu. 
+function revIDEWindowList
+   return sWindowList
+end revIDEWindowList
+
+/*
+Sends the current top window to the back
+*/
+on revIDESendCurrentWindowToBack
+   lock messages
+   
+   local tWindowsList
+   put the windows into tWindowsList
+   
+   local tWindows, tWindows2
+   repeat for each line l in tWindowsList
+      if the mode of stack l is among the items of "1,2" then
+         put l & return after tWindows
+      else if the mode of stack l is "3" then
+         put l & return after tWindows2
+      end if
+   end repeat
+   if char -1 of tWindows2 is return then delete char -1 of tWindows2
+   if char -1 of tWindows is return then delete char -1 of tWindows
+   
+   local tCurrentStackName
+   put char 3 to -1 of line (lineOffset("!c",the text of me)) of the text of me into tCurrentStackName
+   delete line lineOffset(tCurrentStackName,tWindows) of tWindows
+   
+   if the num of lines in tWindows2 is not 0 
+   then put tWindows2 & return & tWindows into tWindows
+   
+   repeat for each line l in tWindows
+      -- delete char 1 to 2 of l
+      if the mode of stack l is 1 or the mode of stack l is 2 then toplevel l
+      else if the mode of stack l is 3 then modeless l
+      show stack l
+   end repeat
+   unlock messages
+end revIDESendCurrentWindowToBack
+
+/*
+Brings the specified window to the front
+*/
+on revIDESendWindowToFront pStackID
+   go pStackID
+   show pStackID
+end revIDESendWindowToFront
