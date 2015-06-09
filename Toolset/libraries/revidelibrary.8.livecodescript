@@ -3288,14 +3288,17 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder"
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Standalone Settings"
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
+   # This abstraction is here because other aspects of the IDE need to know the avaiable palettes.
+   # For example, the view menu listing all the available palettes and their state. Leaving this check 
+   # in, rather than having a default in the switch forces developers to add any new palettes to revIDEAvailablePalettes()
    if pPalette is not among the items of revIDEAvailablePalettes() then
       return __revIDEError("No available palette with name" && pPalette)
    end if
-
+   
    switch pPalette
       case "menubar"
          return "revMenuBar"
@@ -3321,6 +3324,8 @@ function revIDEPaletteToStackName pPalette
          return "revMenuManager"
       case "extension builder"
          return "revExtensionBuilder"
+      case "standalone settings"
+         return "revStandaloneSettings"
    end switch
 end revIDEPaletteToStackName
 
@@ -3350,12 +3355,9 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
-      case "standalone settings"
-         # Assumes the topstack if none specified
-         send "revStandaloneSettings" to stack "revStandaloneSettings"
-         break
       case "inspector"
       case "message box"
+      case "standalone settings"
          palette stack tStackName
          break
       case "search"
@@ -5342,9 +5344,17 @@ on revIDEMoveSubstackToFile pStackID
    # Set filename of stack / remove parent link
 end revIDEMoveSubstackToFile
 
-on revIDESaveAsStandalone pStackID
-   # validate stack exists
-   # attempt to save as standalone
+on revIDESaveAsStandalone
+   # Don't want the build process to be interruptable.
+   set the allowInterrupts to false
+   //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in revIDEMessageSend
+   try
+      revSaveAsStandalone
+      finally
+      # Bug 5111: Standalone has been built, process should now be interruptable.
+      set the allowInterrupts to true
+      //ideMessagesSupressSet "false"
+   end try
 end revIDESaveAsStandalone
 
 on revIDEPrintPageSetup
