@@ -1475,6 +1475,8 @@ command revInternal__InitialisePlugIns
       end try
    end repeat
    
+   revIDEUpdatePlugins
+   
    revInternal__Log "Leave", "Plug-Ins Initialisation"
    
    return true

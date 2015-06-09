@@ -1352,8 +1352,8 @@ returns (string): Return delimited list of message names, 1 per line.
 function revIDEMessages
    return ( \
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
-         & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted," \
-         & "idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged" \
+         & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
+         & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged" \
          )
 end revIDEMessages
 
@@ -3320,7 +3320,7 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Standalone Settings"
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3358,6 +3358,10 @@ function revIDEPaletteToStackName pPalette
          return "revExtensionBuilder"
       case "standalone settings"
          return "revStandaloneSettings"
+      case "message watcher"
+         return  "revMessageWatcher"
+      case "plugin preferences"
+         return "revPlugInEditor"
    end switch
 end revIDEPaletteToStackName
 
@@ -3390,6 +3394,7 @@ command revIDEOpenPalette pPaletteName
       case "inspector"
       case "message box"
       case "standalone settings"
+      case "message watcher"
          palette stack tStackName
          break
       case "search"
@@ -3398,6 +3403,7 @@ command revIDEOpenPalette pPaletteName
       case "extension manager"
       case "menu builder"
       case "extension builder"
+      case "plugin preferences"
          modeless stack tStackName
          break
       default
@@ -4347,34 +4353,30 @@ on revIDEPopupContextualMenu pTargets
    dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
 end revIDEPopupContextualMenu
 
-local sPluginNames
+local sPluginsA
 on revIDEUpdatePlugins
    global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
-
+   
    local tUserPlugins
    put revAbsoluteFolderListing(revEnvironmentUserPluginsPath()) into tUserPlugins
-
+   
    local tEnvironmentPlugins
    put revAbsoluteFolderListing(revEnvironmentPluginsPath()) into tEnvironmentPlugins
-
+   
    local tFinal
    put revCombineFilePaths(tUserPlugins,tEnvironmentPlugins) into tFinal
-
+   
    put empty into gREVStartupList
    put empty into gREVShutdownList
-
+   
+   local tPluginsA, tName
    lock messages
-   local tFullList, tFullStackPaths
    repeat for each line tStack in tFinal
       if there is a stack tStack then
-         put the short name of stack tStack & return after tFullList -- for popup in plug ins editor
-         put tStack & return after tFullStackPaths -- for plug ins editor
+         put the short name of stack tStack into tName
+         put tStack into tPluginsA[tName]["path"]
          if the cREVLoadInfo["load"] of stack tStack is "chosen" or the cREVLoadInfo["load"] of stack tStack is empty or the cREVLoadInfo["inMenu"] of stack tStack is true then
-            local tName
-            put tab & the short name of stack tStack into tName
-
-            local tPaths
-            put tStack into tPaths[tName] -- appears in menu
+            put true into tPluginsA[tName]["menu"] -- appears in menu
          end if
          if the cREVLoadInfo["load"] of stack tStack is "startup" then
             put tStack into line (the number of lines in gREVStartupList + 1) of gREVStartupList
@@ -4392,35 +4394,49 @@ on revIDEUpdatePlugins
          end if
       end if
    end repeat
-
-   # TH-2007-11-26: Bug 5561, removing last return character from list
-   delete the last char of tFullList
+   
    unlock messages
-
-   local tNames
-   put keys(tPaths) into tNames
-   sort tNames
-
-   local tStackPaths
-   put empty into tStackPaths
-   repeat for each line l in tNames
-      put tPaths[l] & cr after tStackPaths -- appears in menu bar
-   end repeat
-   delete last char of tStackPaths
-   set the cMenuList of button "list" of stack "revPlugInEditor" to tStackPaths -- just main menu bar
-   if tNames is empty then put tab & "(None found" into tNames
-
-   local tEnd
-   put tNames into sPluginNames
-
-   set the text of button "list" of stack "revPlugInEditor" to tFullList
-
-   set the cStacksList of button "list" of stack "revPlugInEditor" to tFullStackPaths -- all including hidden
+   
+   # Only send the plugins changed message when the details of the plugins change
+   local tPluginsChanged
+   put false into tPluginsChanged
+   if sPluginsA is empty or tPluginsA is not sPluginsA then
+      put true into tPluginsChanged
+   end if
+   
+   put tPluginsA into sPluginsA
+   
+   if tPluginsChanged then
+      revIDEMessageSend "idePluginsChanged"
+   end if
 end revIDEUpdatePlugins
 
-function revIDEPluginNames
-   return sPluginNames
-end revIDEPluginNames
+function revIDEPlugins
+   return sPluginsA
+end revIDEPlugins
+
+on revIDEOpenPlugin pName
+   local tStackPath
+   put sPluginsA[pName]["path"] into tStackPath
+   
+   if there is not a stack tStackPath then
+      delete variable sPluginsA[pName]
+      exit revIDEOpenPlugin
+   end if
+   
+   local tMode
+   if the cREVLoadInfo["mode"] of stack tStackPath is not empty then 
+      put the cREVLoadInfo["mode"] of stack tStackPath into tMode
+   else 
+      put "palette" into tMode
+   end if
+   
+   if tMode is "invisible" then
+      go invisible stack tStackPath
+   else 
+      do "go stack" && quote &  tStackPath & quote && "as" && tMode
+   end if
+end revIDEOpenPlugin
 
 function revIDELocalise pString, pSubstitutions
    repeat for each key tKey in pSubstitutions
@@ -5806,7 +5822,6 @@ on revIDEChoosePointerTool
    revIDESetTool "pointer"
 end revIDEChoosePointerTool
 
-<<<<<<< HEAD
 on revIDEStyleText pWhich, pValue
    local tSelectedObject, tSelectedChunk, tTarget, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition,
 
@@ -5976,9 +5991,24 @@ on revIDESetTextAlign pAlign
       revIDEStyleText "align", pAlign
 end revIDESetTextAlign
 
-function revIDETestTargets
+on revIDEActionClearAllBreakpoints
+   answer warning "Really clear all breakpoints from all open stacks?  This operation cannot be undone." with "Don't Clear" or "Clear"
+   if it is "Clear" then 
+      revDebuggerClearAllBreakpoints
+   end if
+end revIDEActionClearAllBreakpoints
 
+function revIDETestTargets
+   return revIDEDeployListTargets()
 end revIDETestTargets
+
+function revIDETestTarget
+   return revIDEDeployGetTarget()
+end revIDETestTarget
+
+function revIDETestCanDeployToTarget pTarget
+   return revIDEDeployIsPossible(pTarget)
+end revIDETestCanDeployToTarget
 
 on revIDESetTestTarget pTarget
 
@@ -5987,6 +6017,12 @@ end revIDESetTestTarget
 on revIDEDeployStack pStackID
 
 end revIDEDeployStack
+   revIDEDeploySetTarget pTarget
+end revIDESetTestTarget
+
+on revIDEActionTest
+   revIDEDeployAction
+end revIDEActionTest
 
 local sRestoreState
 on revIDEToggle pProperty
@@ -6063,12 +6099,23 @@ on revIDEToggle pProperty
          end if
          put "selectionMode" into tToggleMessage
          break
+      case "Script Debug Mode"
+         if revDebuggerEnabled() then
+            revDebuggerDisable
+         else
+            revDebuggerEnable
+         end if
+         
+         # OK-2010-01-18: Update any open script editors so that the breakpoints are shown correctly,
+         # they should all be grey when script debug mode is off, otherwise their color depends on their
+         # exact circumstances.
+         local tPrefsChanged
+         put false into tPrefsChanged
+         send "revSEUpdateEditors tPrefsChanged" to revScriptEditorMain()
+         
+         put "scriptDebugMode" into tToggleMessage
+         break
    end switch
-   # Script debug mode
-   # Suppress messages
-   # Suppress errors
-   # Devlopment tools
-   # Show palettes
    # Invisible objects
    # Ruler
    # Grid
@@ -6776,3 +6823,203 @@ function revIDEEnsureControlsOfType pControls, pType
    end repeat
    return true
 end revIDEEnsureControlsOfType
+
+////////////////////////////////////////////////////////////////////////////////
+
+# Parameters
+#   pModeNumber : the value of the "mode" property of an open stack
+# Returns
+#   What style that mode corresponds to.
+private function stackModeName pModeNumber
+   switch pModeNumber
+      case 1
+      case 2
+         return "toplevel"
+         break
+      case 3
+         return "modeless"
+         break
+      case 4
+         return "palette"
+         break
+      case 5
+         return "modal"
+         break
+   end switch
+end stackModeName
+
+-- Suspend Development Tools
+--   Removes all IDE related backscripts and stacks so that an application can
+--   run as if almost built as a standalone.
+--   This affects:
+--     - the frontscripts
+--     - the backscripts
+--     - the openstacks
+--     - the current tool
+--     - the windowBoundingRect
+--     - the script debug mode
+--
+--  Note at present, holding down shift will cause *all* back and front
+--  scripts to be removed including library scripts such as Table, PrintBack etc.
+--
+command revIDESuspendDevelopmentTools
+   global gREVRestore
+   
+   -- Store the old setting of scriptdebugmode and disable it
+   put the cREVScriptDebugMode of stack "revPreferences" into gREVRestore["scriptdebugmode"]
+   
+   -- As cREVScriptDebugMode is a virtual custom property handler present in the revBackScript
+   -- we need to do this before removing the backscripts!
+   revIDESetScriptDebugMode false
+   
+   # OK-2008-05-23 : Suspend any script editors.
+   send "revSESuspendEditors" to revScriptEditorMain()
+   
+   -- Remove front and back scripts that pertain to the IDE
+   -- If the shift-key is down, we remove *all* 'rev' front and back scripts, including
+   -- the library scripts.
+   local tScriptsList, tRemoveFrontList, tRemoveBackList
+   select empty
+   if the shiftKey is down then
+      put the frontScripts into tScriptsList
+      repeat for each line l in tScriptsList
+         if char 1 to 3 of the short name of l is "rev" then
+            put l & cr after tRemoveFrontList
+            remove script of l from front
+         end if
+      end repeat
+      put the backScripts into tScriptsList
+      repeat for each line l in tScriptsList
+         if char 1 to 3 of the short name of l is "rev" then
+            put l & cr after tRemoveBackList
+            remove script of l from back
+         end if
+      end repeat
+   else
+      put the frontScripts into tScriptsList
+      repeat for each line l in tScriptsList
+         if the short name of l is among the items of "revFrontScriptLibrary,revDebugger,revShortCutsLibrary" then
+            put l & cr after tRemoveFrontList
+            remove script of l from front
+         end if
+      end repeat
+      put the backScripts into tScriptsList
+      repeat for each line l in tScriptsList
+         if the short name of l is "revBackScriptLibrary,revShortCutsLibrary" then
+            put l & cr after tRemoveBackList
+            remove script of l from back
+         end if
+      end repeat
+   end if
+   delete last char of tRemoveBackList
+   delete last char of tRemoveFrontList
+   
+   -- Close all Revolution IDE stacks
+   local tList, tMode, tClosedStacksList
+   put the openStacks into tList
+   lock messages
+   repeat for each line tStack in tList
+      if char 1 to 3 of the short name of stack tStack is "rev" or the short name of stack tStack is among the items of "Message Box,Home,answer dialog,ask dialog" then
+         # OK-2008-05-23 : Compare the stack's mode to its style. If they are equal then we don't need to store the mode, as opening the 
+         # stack will result in the default mode being that which matches its style.
+         local tModeName
+         put stackModeName(the mode of stack tStack) into tModeName
+         if tModeName is the style of stack tStack then
+            put empty into tMode
+         else
+            put tModeName into tMode
+         end if
+         close stack tStack
+         put tStack,tMode & return after tClosedStacksList
+      end if
+   end repeat
+   delete last char of tClosedStacksList
+   
+   -- Switch to browser tool
+   put the tool into gREVRestore["tool"]
+   choose browse tool
+   
+   put tRemoveBackList into gREVRestore["backscripts"]
+   put tRemoveFrontList into gREVRestore["frontScripts"]
+   put tClosedStacksList into gREVRestore["stacks"]
+   
+   -- Reset the windowBoundingRect
+   put the windowBoundingRect into gREVRestore["windowBoundingRect"]
+   set the windowBoundingRect to 0,0,item 3 to 4 of the windowBoundingRect
+   
+   -- Show the restore dialog
+   lock recent
+   palette "revRestore"
+   unlock recent
+   
+   -- Setup the default menubar to one specific to this mode
+   set the defaultMenuBar to the long id of group "Restore Development Tools" of stack "revRestore"
+   
+   unlock messages
+end revIDESuspendDevelopmentTools
+
+-- Restore Development Tools
+--
+-- Reverts the IDE to the state it was before 'Suspend Development Tools' was called.
+--
+command revIDERestoreDevelopmentTools
+   global gREVRestore, gREVDontLoadMenus, gREVDontError
+   lock messages
+   repeat for each line l in gREVRestore["backscripts"]
+      insert script of l into back
+   end repeat
+   repeat for each line l in gREVRestore["frontScripts"]
+      insert script of l into front
+   end repeat
+   put true into gREVDontLoadMenus
+   put true into gREVDontError
+   
+   local tMode, tStackName
+   repeat for each line tStack in gREVRestore["stacks"]
+      put item 2 of tStack into tMode
+      put item 1 of tStack into tStackName
+      
+      --      put item tMode of "toplevel,toplevel,modeless,palette,modal" into tMode
+      --    do "go stack" && quote & (item 1 of l) & quote && "as" && tMode
+      
+      # OK-2008-08-25 : Bug 7022 - If plugins throw errors when opened, this wil fail, so we catch
+      # the errors with a try here, and disregard them.
+      try
+         
+         # OK-2008-05-23 : If tMode is empty, it means that the stack's mode matched its style at the time of closing
+         # and this means that no mode change is required.
+         lock messages
+         switch tMode
+            case "toplevel"
+               go stack tStackName as toplevel
+               break
+            case "modeless"
+               go stack tStackName as modeless
+               break
+            case "palette"
+               go stack tStackName as palette
+               break
+            case "modal"
+               go stack tStackName as modal
+               break
+            default
+               go stack tStackName
+         end switch
+         
+      end try
+   end repeat
+   close stack "revRestore"
+   set the defaultMenuBar to the long id of group "revMenuBar" of stack revIDEPaletteToStackName("menubar")
+   set the width of stack "revMenuBar" to the width of stack "revMenuBar" + 1 -- bug 1806
+   set the width of stack "revMenuBar" to the width of stack "revMenuBar" - 1
+   set the windowBoundingRect to gREVRestore["windowBoundingRect"]
+   choose gREVRestore["tool"]
+   
+   -- Restore the script debug mode
+   revIDESetScriptDebugMode gREVRestore["scriptdebugmode"]
+   
+   # OK-2008-05-23 : Restore any script editors.
+   send "revSERestoreEditors" to revScriptEditorMain()
+   
+   unlock messages
+end revIDERestoreDevelopmentTools
