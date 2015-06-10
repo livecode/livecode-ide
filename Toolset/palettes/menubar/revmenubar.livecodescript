@@ -1399,7 +1399,7 @@ private function revMenubarHelpMenu pContext
    put "-" & return after tHelp
    put "Forums" & return after tHelp
    put "Technical Questions" & return after tHelp
-   put "Use List" & return after tHelp
+   put "Discussion List" & return after tHelp
    put "Newsletters" & return after tHelp
    put "-" & return after tHelp
    put "Release Notes/|Release Notes" & return after tHelp
@@ -2563,7 +2563,7 @@ on revMenubarHelpMenuPick pWhich
       case "All Guides"
       case "Forums"
       case "Technical Questions"
-      case "Use List"
+      case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
          break
