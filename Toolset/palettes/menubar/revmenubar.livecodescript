@@ -196,9 +196,6 @@ on setMenuProperties
    set the title of me to tTitle
    
    if the platform is not "MacOS" then
-      --set the showBorder of this cd to false
-      --set the borderWidth of this cd to 0
-      
       if item 3 of the screenRect is 800 then
          set the topLeft of me to item 1 to 2 of the windowBoundingRect
       else 
@@ -216,71 +213,6 @@ on setMenuProperties
       set the decorations of me to "default"
    end if
 end setMenuProperties
-
-/*
-on preOpenStack
-   
-   local lOrigLoc, lTargetSpecs, lCurrentObject, oldStyle
-   global gREVTextMenu, gREVDisabledText
-   
-   
-   if not the selectGroupedControls then 
-      set the textFont of button "select grouped controls" to empty
-      set the hilite of button "select grouped controls" to false
-      set the textStyle of button "select grouped controls" to "plain"
-   else 
-      set the textFont of button "select grouped controls" to empty
-      set the hilite of button "select grouped controls" to true
-      set the textStyle of button "select grouped controls" to "bold"
-   end if
-   
-   local tFilePath
-   put the fileName of stack "revMenuBar" into tFilePath
-   
-   -- KM-2006-01-14: Plug ins new code for 2.7
-   revUpdatePlugins
-   
-   --degrees character in rotate submenu
-   local tObject
-   put the text of button "Object" into tObject
-   
-   local tDegreeSymbol
-   if the platform is "MacOS" then
-      put NumToChar(188) into tDegreeSymbol
-   else 
-      put NumToChar(176) into tDegreeSymbol
-   end if
-   put tab & "90" & tDegreeSymbol & " Right" & return & tab & "90" & tDegreeSymbol & " Left" & return & tab & "180" & tDegreeSymbol into line -18 to -16 of tObject
-   set the text of button "Object" to tObject
-   
-   local tView
-   put the text of button "View" into tView
-   delete line -6 to -1 of tView
-   
-   local tOn, tOff
-   switch the platform
-      case "MacOS"
-         put cr&"!c"&tab into tOn
-         put cr&"!u"&tab into tOff
-         break
-      default
-         put cr&tab&"!r" into tOn
-         put cr&tab&"!u" into tOff
-         break
-   end switch
-   
-   put tOn&"Default Appearance Manager"&tOff&"Mac OS Platinum Emulated"&tOff&"Windows Emulated"&tOff&"Motif Emulated" after tView
-   put cr&"-"&cr&"!nShow &Invisible Objects" after tView
-   put tView into button "View"
-   revUpdatePalette
-   
-   --LG-2007-12-18
-   --Bug 5668:  Moved here from revInternal_InitialiseMenus of home stack.
-   
-end preOpenStack
-*/
-on openStack
-end openStack
 
 on ideSelectedObjectChanged
    layoutMenu
@@ -426,6 +358,12 @@ on generateMenuGroup
       set the left of it to tLeft
       set the top of it to 1
       add the formattedwidth of it to tLeft
+      # Enable Alt + letter to open menu on Linux and Windows
+      if tItem is "Text" then
+         set the mnemonic of it to 3
+      else
+         set the mnemonic of it to 1
+      end if
    end repeat
    
    if the platform is not "macos" then
