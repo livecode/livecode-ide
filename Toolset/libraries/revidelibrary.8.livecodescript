@@ -4655,19 +4655,36 @@ function revIDEIsLiveCodeStack pFilePath
    end if
 end revIDEIsLiveCodeStack
 
+function revIDEStackIsScriptOnly pStackFile
+   if there is a stack pStackFile then
+      local tStackFile
+      put url ("file:" & pStackFile) into tStackFile
+      if char 1 to 6 of tStackFile is "script" then
+         return true
+      end if
+   end if
+   
+   return false
+end revIDEStackIsScriptOnly
+
 on revIDEActionOpenStack
    # Popup a file choose
    revIDEAnswerFile "stack"
-
+   
    # Get the path of to the file
    local tStackFilePath
    put the result into tStackFilePath
-
+   
    # Check the stack exists
    if there is not a file tStackFilePath then exit revIDEActionOpenStack
-
+   
    # Open the stack
    revIDEOpenStack tStackFilePath
+   
+   # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
+   if revIDEStackIsScriptOnly(tStackFilePath) then
+      revIDEEditScriptOfObject the long id of stack tStackFilePath
+   end if
 end revIDEActionOpenStack
 
 /*
