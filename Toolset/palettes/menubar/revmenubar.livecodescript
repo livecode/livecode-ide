@@ -24,6 +24,10 @@ on preOpenStack
    set the cantModify of me to true
 end preOpenStack
 
+on closeStackRequest
+   revIDEQuit
+end closeStackRequest
+
 on subscribeMessages
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:cToolbarIcons"
