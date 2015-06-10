@@ -174,6 +174,27 @@ private on setupWindowMenu
    put tMenu into sWindowMenuWindows
 end setupWindowMenu
 
+/*
+Generates the menu for the recent files
+*/
+function revMenuBarRecentFiles
+   # Get the recent file data
+   local tRecentFiles
+   put revIDERecentStacks() into tRecentFiles
+   
+   # Generate the menu
+   local tMenu
+   repeat with x = 1 to the number of elements of tRecentFiles
+      if tMenu is empty then
+         put tab & revMenubarEscapeStackNameForMenu(tRecentFiles[x]["label"]) & "/|" & tRecentFiles[x]["filename"] into tMenu
+      else
+         put return & tab & revMenubarEscapeStackNameForMenu(tRecentFiles[x]["label"]) & "/|" & tRecentFiles[x]["filename"] after tMenu
+      end if
+   end repeat
+   
+   return tMenu
+end revMenuBarRecentFiles
+
 on setMenuProperties
    set the height of me to 47
    set the resizable of me to false
@@ -850,7 +871,7 @@ private function revMenubarFileMenu pContext
    end if
    put "&Open Stack.../O" & return after tFile
    put "Open Recent File" & return after tFile
-   put revIDEGetRecentPathsAsMenu() & return after tFile
+   put revMenuBarRecentFiles() & return after tFile
    put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
@@ -1316,7 +1337,7 @@ private function revMenubarHelpMenu pContext
    put "-" & return after tHelp
    put "Forums" & return after tHelp
    put "Technical Questions" & return after tHelp
-   put "Use List" & return after tHelp
+   put "Discussion List" & return after tHelp
    put "Newsletters" & return after tHelp
    put "-" & return after tHelp
    put "Release Notes/|Release Notes" & return after tHelp
@@ -2086,7 +2107,7 @@ on revMenubarFileMenuPick pWhich
                end if
                break
             case "Open Recent File"
-               revIDEActionOpenRecent item 2 of pWhich
+               revIDEOpenStack item 2 of pWhich
                break
             case "Import As Control"
                put item 2 of pWhich into tType
@@ -2480,7 +2501,7 @@ on revMenubarHelpMenuPick pWhich
       case "All Guides"
       case "Forums"
       case "Technical Questions"
-      case "Use List"
+      case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
          break
