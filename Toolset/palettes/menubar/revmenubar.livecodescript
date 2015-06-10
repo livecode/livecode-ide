@@ -16,10 +16,9 @@ on preOpenStack
    setDefaultText
    setMenuProperties
    generateMenu
+   revMenubarBuildMenus
    updateMenubarPreference
    layoutMenu
-   revMenubarBuildMenus
-   
    # Since the menubar is topleveled on Linux and Windows, set the cantModify to true
    # to prevent users being able to alter the menubar stack.
    set the cantModify of me to true
@@ -454,6 +453,8 @@ on layoutMenu
 end layoutMenu
 
 on updateMenubarPreference
+   lock screen
+   lock messages
    local tShowIcons, tShowText
    put revIDEGetPreference("cToolbarIcons") is not false into tShowIcons
    put revIDEGetPreference("cToolbarText") is not false into tShowText
@@ -515,6 +516,8 @@ on updateMenubarPreference
    end if
    
    set the topleft of me to tTopLeft
+   unlock messages
+   unlock screen
 end updateMenubarPreference
 
 on setButtonHilite pLongId, pValue
