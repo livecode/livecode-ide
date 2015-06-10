@@ -4303,17 +4303,19 @@ function revIDEStandaloneSectionNameToIconName pName
    end switch
 end revIDEStandaloneSectionNameToIconName
 
-on revIDEOpenStack pStack
+on revIDEOpenStack pFilePath
    local tError
    put empty into tError
    set the cursor to watch
-   go stack pStack
+   go stack pFilePath
    if the result is not empty then
       put the result into tError
    end if
    if tError is not empty then
-      answer error "There was a problem opening stack:" && pStack & cr & tError
+      answer error "There was a problem opening stack:" && pFilePath & cr & tError
       set the cursor to 1
+   else
+      revIDEAddRecentStack pFilePath
    end if
 end revIDEOpenStack
 
@@ -7289,3 +7291,139 @@ on revIDESendWindowToFront pStackID
    go pStackID
    show pStackID
 end revIDESendWindowToFront
+
+/*
+Returns an array labels and filepaths to recently opened stack
+*/
+function revIDERecentStacks
+   # Get recent paths from preferences
+   local tRecentPaths
+   put revIDEGetPreference("cRecentStackPaths") into tRecentPaths
+   
+   # If users have preference to sort recent list alphabetic, sort.
+   if revIDEGetPreference("cRecentSort") is "alphabetically" then
+      set the itemdel to "/"
+      sort lines of tRecentPaths by last item of each 
+   end if
+   
+   # Split list into array
+   local tRecentPathData
+   put tRecentPaths into tRecentPathData
+   split tRecentPathData by return
+   
+   # Generate labels for the stacks. The label is the filename without the file extension
+   # If two stacks have the same filename, the minimum path is added to the label to
+   # distinguish the entries
+   repeat with x = 1 to the number of lines of the keys of tRecentPathData
+      put tRecentPathData[x] into tRecentPathData[x]["filename"]
+      put revIDEFilepathUniqueLabel(tRecentPaths,tRecentPathData[x]["filename"]) into tRecentPathData[x]["label"] 
+      
+   end repeat
+   
+   return tRecentPathData
+end revIDERecentStacks
+
+/*
+Adds an entry to the recent file paths
+*/
+on revIDEAddRecentStack pFilePath
+   # Validate parameters
+   if there is not a file pFilePath then exit revIDEAddRecentStack
+   
+   # Get recent paths preferences 
+   local tRecentPaths
+   put revIDEGetPreference("cRecentStackPaths") into tRecentPaths
+   
+   if tRecentPaths is empty then 
+      put pFilePath into tRecentPaths
+   else
+      put pFilePath & return & tRecentPaths into tRecentPaths
+      put revIDECleanRecentStackList(tRecentPaths) into tRecentPaths
+   end if
+   
+   # Ensure the list isn't longer than 15 entries
+   if the number of lines of tRecentPaths > 15 then
+      put line 1 to 15 of tRecentPaths into tRecentPaths
+   end if
+   
+   #Set the preference
+   revIDESetPreference "cRecentStackPaths", tRecentPaths
+   
+   # Notify registered stack of the change by sending an ideRecentStacksChanged message
+   -- BB needs to be implemented? Question. The general message sending in the IDE does not have "lock ide messages" option
+   -- So calling revIDEAddRecentStack is quick succession.. lets say in an "openAllStacks" handler is going to cause this message 
+   -- fire multiple times in quick succession. lock ide messages could prevent the sending of messages and stack/replace them 
+   -- and flush the queue on unlock ide messages.. resulting in just one version of the message being sent. 
+   revIDEMessageSend "ideRecentFilesChanged"
+end revIDEAddRecentStack
+
+/*
+Given a list of filenames and a filename from the list, a unique minimal lable is returned. For example:
+
+/Desktop/test1/ben.livecode
+/Desktop/test2/ben.livecode
+/Desktop/test3/myProject.livecode
+
+Calling this function for each of these inputs in turn would return
+
+test1/ben.livecode
+test2/ben.livecode
+myProject.livecode
+*/
+private function revIDEFilepathUniqueLabel pFilepaths, pFilepath
+   set the itemdel to "/"
+   local tItemIsUnique, tLabel
+   
+   # Repeat backward through the items of the filepath we're generating the label for
+   repeat with x = 1 to the number of items of pFilepath
+      put true into tItemIsUnique
+      
+      # Repeat through the list of filepaths looking for items that match
+      repeat for each line tPathInList in pFilepaths
+         # Ignore the exact filename in the list
+         if tPathInList is pFilepath then next repeat
+         if the number of items of tPathInList < x then next repeat
+         
+         if item -x of tPathInList is item -x of pFilepath then
+            put false into tItemIsUnique
+         end if
+      end repeat
+      
+      # If unique, add to the label and exit seach
+      if tLabel is empty then
+         put item -x of pFilepath into tLabel
+      else
+         put item -x of pFilepath & slash before tLabel
+      end if
+      
+      if tItemIsUnique is true then
+         exit repeat
+      end if
+   end repeat
+   
+   return tLabel
+end revIDEFilepathUniqueLabel
+
+/*
+Cleans the list of recent file paths. Removes broken links (Stacks that have been subsequently removed), 
+removed duplicates and resolves the label when two stack have the same name but stored in different paths.
+*/
+function revIDECleanRecentStackList pRecentStackList
+   local tCleanList
+   
+   repeat for each line tRecentStack in pRecentStackList
+      # Ignore broken links
+      if there is not a file tRecentStack then next repeat
+      # Ignore duplicates
+      if tRecentStack is among the lines of tCleanList then next repeat
+      
+      # Add to clean list
+      if tCleanList is empty then
+         put tRecentStack into tCleanList
+      else
+         put return & tRecentStack after tCleanList
+      end if
+   end repeat
+   
+   return tCleanList
+end revIDECleanRecentStackList
