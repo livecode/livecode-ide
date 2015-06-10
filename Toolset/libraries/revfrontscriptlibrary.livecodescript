@@ -398,61 +398,57 @@ local lPrefsSaveTime
 
 on closeStack
    global gREVTargetStack, gREVShowStacks, gREVShutDown
-   
+
    put "stack" && quote & revTargetStack() & quote into gREVTargetStack
-   
+
    send "revUpdateScriptEdit" to me in 10 milliseconds
    send "revCloseUpdate" to me in 100 milliSeconds
-   
+
    local tStack
    put revTargetStack(the long id of the target) into tStack
    put the mainStack of stack tStack into tStack
-   
+
    local tStacks
    put tStack into tStacks
    if the substacks of stack tStack is not empty
    then put cr & the substacks of stack tStack after tStacks
    send "revCheckStackOpen tStack,tStacks" to me in 1 second
-   
+
    --update recent files
    local tTargetStack
    put revTargetStack(the long id of the target) into tTargetStack
    revUpdateRecentFiles tTargetStack
-   
+
    # OK-2008-09-03 : Bug 7073 - This can cause property inspector dialogs to lock up for some reason,
    # this problem is avoided by moving this line to resumeStack in the start centre.
    --   send "updateRecentStacks" to stack "revStartCenter"
-   
-   # OK-2008-01-25 : Bug 5337. The recent files must be kept in a cleaned state in order to preserve
-   # compatibility with 2.8.1 and older versions of Revolution
-   revIDECleanRecentPaths
-   
+
    # OK-2008-08-11 : If the destroyStack property of the stack being closed is true, then the
    # stack will be removed from memory, and any script editors affected by this must be closed.
    if the destroyStack of stack tTargetStack then
       revIDEHandleObjectDeleted the long id of stack tTargetStack
    end if
-   
+
    if gREVTargetSTack is empty or (there is not a stack gREVTargetStack) then exit closeStack
-   
+
    if word 1 of gREVTargetStack is not "stack" then
       put "stack" && quote before gREVTargetStack
       put quote after gREVTargetStack
    end if
-   
+
    if the seconds - lPrefsSaveTime > 20 then -- save more frequently to keep data on unexpected exit
       -- MM-2011-03-13: [[ Bug 10073]] Make sure the stack file version is maintained at 2.7 for backwards compatability reasons
       revInternal__SavePreferences
-      
+
       put the seconds into lPrefsSaveTime
    end if
-   
+
    if not gREVShutDown then
       if there is a gREVTargetStack and not (the destroyStack of gREVTargetStack) and the short name of gREVTargetStack is among the lines of revFilterstacksList(the short name of gREVtargetStack) then
          local tStackslist
          if the cASKDestroy of stack "revPreferences" is among the items of "ask,remove" then
             put the mainStack of gREVTargetStack & cr & the substacks of stack (the mainStack of gREVTargetStack) into tStackslist
-            
+
             local tAllClosed
             put true into tAllClosed
             repeat for each line l in tStacksList
