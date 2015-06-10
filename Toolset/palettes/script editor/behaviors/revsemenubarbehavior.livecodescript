@@ -205,6 +205,19 @@ private command buildDebugMenu pContext
    set the text of button "Debug" of me to modifyMenu("Debug", tDebug)
 end buildDebugMenu
 
+# OK-2010-02-19: Bug 8157 - Escape special characters from stack names in menus, more may 
+# need to be added here.
+private function revMenubarEscapeStackNameForMenu pName
+   replace "!" with "\!" in pName
+   if the platform is "MacOS" then 
+      replace "/" with "\/" in pName
+      replace "(" with "\(" in pName
+   else
+      replace "/" with "//" in pName
+   end if
+   return pName
+end revMenubarEscapeStackNameForMenu
+
 private command buildWindowMenu pContext
    #   Set sWindowMenuText to a list of open Windows in suitable format for putting into a menu button.
    #   This will be any script editors or the dictionary or resource center if they are open, and any user stacks.

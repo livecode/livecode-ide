@@ -1392,7 +1392,7 @@ command revInternal__InitialiseMenus
       unlock messages
    else
       toplevel stack tMenuBar
-      show stack stack tMenuBar
+      show stack tMenuBar
    end if
    set the defaultMenuBar to the long id of group "revMenuBar" of stack tMenuBar
    
