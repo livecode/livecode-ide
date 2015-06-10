@@ -1,4 +1,5 @@
 type	field
+title	Scrolling Field
 
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------

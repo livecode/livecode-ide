@@ -268,11 +268,6 @@ on revSetActiveStacks
    end switch
 
    send "revUpdatePaletteStack" to stack "revBackScriptLibrary" in 100 milliseconds
-   
-   -- Update the simulate button as appropriate
-   try
-      revIDEDeployUpdate
-   end try
 end revSetActiveStacks
 
 
@@ -308,7 +303,9 @@ command revUpdateRecentFiles pStack
 end revUpdateRecentFiles
 
 on rawKeyUp pWhich
-   if pWhich is 65386 then send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
+   if pWhich is 65386 then 
+      revIDEHelpKeyPressed
+   end if
    pass rawKeyUp
 end rawKeyUp
 
@@ -323,7 +320,7 @@ on openStack
       put revTargetStack() into tStackName
       
       if char 1 to 3 of tStackName is "rev" or char 1 to 3 of tStackName is "copy of rev" or tStackName is "Message box" and the mode of stack tStackName is 4 and the visible of stack tStackName is false then
-         send "menuPick" && quote & "Palettes" & quote to btn "View" of stack "revMenuBar"
+         revIDETogglePaletteView
          if the bottom of stack tStackName > item 4 of the screenRect or the right of stack tStackName > item 3 of the screenRect then
             set the bottomRight of stack tStackName to item 3 to 4 of the windowBoundingRect
          end if
@@ -585,9 +582,11 @@ end revCloseUpdate
 -- **Bookmark Entry** Editing Handlers
 
 on revCheckToolbar
+/*
 if the topStack is empty then exit revCheckToolBar
   if the mode of the topStack is not 1 and the cREVNewObject of stack "revmenubar" is "Card"  then send "revUpdatePalette" to cd 1 of stack "revMenuBar"
   else if the mode of the topStack is 1 and the cREVNewObject of stack "revmenubar" is "Stack" then send "revUpdatePalette" to cd 1 of stack "revMenubar"
+  */	
 end revCheckToolbar
 
 on mouseDown pWhich
@@ -802,15 +801,7 @@ on scriptParsingError pWhich
    put MD5Digest(pWhich) into tDigest
    if tDigest is among the lines of lSeenErrors then exit scriptParsingError
    else put tDigest into line (the number of lines in lSeenErrors)+1 of lSeenErrors
-   set the executionError of stack "revErrorDisplay" to empty
-   set the scriptError of stack "revErrorDisplay" to pWhich
-   set the errorObject of stack "revErrorDisplay" to the long id of the target
-   if the mode of stack "revErrorDisplay" is not 0 then
-      send "preOpenCard" to cd 1 of stack "revErrorDisplay"
-      send "opencard" to cd 1 of stack "revErrorDisplay"
-   else
-      modeless "revErrorDisplay"
-   end if
+	revIDEErrorDialog "", pWhich
 end scriptParsingError
 
 # OK-2008-03-27 : Bug where right-click context menus don't work with messages suppressed
@@ -823,72 +814,12 @@ end scriptParsingError
 on revShowpopupmenu pTarget
    local tTarget
    if pTarget is not empty then
-      put the long id of pTarget into tTarget
+      put pTarget into tTarget
    else
       put the long id of the target into tTarget
    end if
-   
-   global gREVMenuTarget
-   
-   local tTargetStack
-   put revTargetStack(tTarget) into tTargetStack
-   
-   local tHCAddressing
-   put the hcAddressing of stack tTargetStack into tHCAddressing
-   set the hcAddressing of stack tTargetStack to false
-   
-   put the long id of tTarget into gREVMenuTarget
-   if the number of lines in (the selObj) > 1 and the long id of tTarget is among the lines of (the selObj) then
-      send "revRefresh" to btn "MultiSelection" of this cd of stack "revMenuBar"
-      popup button "MultiSelection" of this cd of stack "revMenubar"
-      set the hcAddressing of stack tTargetStack to tHCAddressing
-      exit revShowpopupmenu
-   end if  
-   switch word 1 of the name of tTarget
-      case "button"
-         if the menuName of tTarget is not empty then
-            send "revRefresh" to btn "menu" of this cd of stack "revMenuBar"
-            popup button "menu" of this cd of stack "revMenubar"
-         else
-            send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-            popup button "standard" of this cd of stack "revMenubar"
-         end if
-      break
-      case "field"
-         send "revRefresh" to btn "field" of this cd of stack "revMenuBar"
-         popup button "field" of this cd of stack "revMenubar"
-      break
-      case "group"
-         send "revRefresh" to btn "group" of this cd of stack "revMenuBar"
-         popup button "group" of this cd of stack "revMenubar"
-      break
-      case "image"
-         send "revRefresh" to btn "image" of this cd of stack "revMenuBar"
-         popup button "image" of this cd of stack "revMenubar"
-      break
-      case "card"
-         send "revRefresh" to btn "card" of this cd of stack "revMenuBar"
-         popup button "card" of this cd of stack "revMenubar"
-      break
-      case "player"
-         send "revRefresh" to btn "player" of this cd of stack "revMenuBar"
-         popup button "player" of this cd of stack "revMenubar"
-      break
-      case "graphic"
-         if the style of tTarget is "polygon" then
-            send "revRefresh" to btn "polygon" of this cd of stack "revMenuBar"
-            popup button "polygon" of this cd of stack "revMenubar"
-         else
-            send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-            popup button "standard" of this cd of stack "revMenubar"
-         end if
-      break
-      default
-         send "revRefresh" to btn "standard" of this cd of stack "revMenuBar"
-         popup button "standard" of this cd of stack "revMenubar"
-      break
-   end switch
-   set the hcAddressing of stack tTargetStack to tHCAddressing
+   	
+	revIDEPopupContextualMenu tTarget
 end revShowpopupmenu
 
 function revOKTarget pWhich
@@ -937,8 +868,8 @@ end revUpdateScriptEdit
 
 on moveStack pLeft, pTop
   if the platform is "MacOS" then -- prevent stack getting stuck under menu bar
-    if pTop < the bottom of stack "revMenuBar" and the right of stack revTargetStack() < the right of stack "revMenuBar" + 5 then
-      set the top of stack revTargetStack() to the bottom of stack "revMenuBar" + 20
+    if pTop < the bottom of stack revIDEPaletteToStackName("menubar") and the right of stack revTargetStack() < the right of stack revIDEPaletteToStackName("menubar") + 5 then
+      set the top of stack revTargetStack() to the bottom of stack revIDEPaletteToStackName("menubar") + 20
     end if
   end if
   
