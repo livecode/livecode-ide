@@ -3320,7 +3320,7 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings,About,Dictionary,Resource Center"	
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings,About,Dictionary,Resource Center,Preferences"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
