@@ -12,13 +12,17 @@ on preOpenStack
    //revMenuBarUpdateRecentPaths
    
    subscribeMessages
-
+   
    setDefaultText
    setMenuProperties
    generateMenu
    updateMenubarPreference
    layoutMenu
    revMenubarBuildMenus
+   
+   # Since the menubar is topleveled on Linux and Windows, set the cantModify to true
+   # to prevent users being able to alter the menubar stack.
+   set the cantModify of me to true
 end preOpenStack
 
 on subscribeMessages
