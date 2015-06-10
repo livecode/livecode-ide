@@ -4857,6 +4857,7 @@ on revIDEImportControl pType, pFileName, pReferenced
    
    lock screen
    lock messages
+   set the defaultStack to tTargetStack
    switch pType
       case "image"
          revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
@@ -4869,7 +4870,6 @@ on revIDEImportControl pType, pFileName, pReferenced
          break
       case "audio"
          import AudioClip from file pFileName
-         answer the result && pFileName
          break
       case "video"
          if pReferenced is true then
