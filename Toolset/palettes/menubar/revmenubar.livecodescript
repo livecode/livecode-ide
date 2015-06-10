@@ -802,8 +802,10 @@ end restoreMenuState
 
 on disableMenus
    put empty into sMenuHighlight
+   local tControlName
    repeat for each line tControl in the childControlIDs of this card of stack "revMenubar"
-   	if the short name of control id tControl is "tutorial" then
+      put the short name of control id tControl into tControlName
+   	if tControlName is "tutorial" or tControlName is "context" then
 	   	next repeat
 	end if
       disable control id tControl of stack "revMenubar"

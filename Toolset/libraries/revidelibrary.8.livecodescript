@@ -3330,7 +3330,8 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings,About,Dictionary,Resource Center"	
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
+   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3378,6 +3379,8 @@ function revIDEPaletteToStackName pPalette
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
+      case "create it welcome"
+         return "createitwelcome"
    end switch
 end revIDEPaletteToStackName
 
@@ -3407,15 +3410,13 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
-      case "CreateItWelcome"
-         modeless stack "createitwelcome"
-         break
       case "inspector"
       case "message box"
       case "standalone settings"
       case "message watcher"
          palette stack tStackName
          break
+      case "CreateItWelcome"
       case "search"
       case "preferences"
       case "project browser"
@@ -4076,7 +4077,7 @@ on revIDEStopTutorial
    revIDEMessageSend "ideTutorialProgressChanged"
    wait 0 millisecs with messages
    delete stack "revTutorial"
-   revIDEOpenPalette "CreateItWelcome"
+   revIDEOpenPalette "Create It Welcome"
 end revIDEStopTutorial
 
 function revIDETutorialInProgress
@@ -4576,6 +4577,9 @@ on revIDENewMainstack pWidth, pHeight
 
    # Final items
    reset the templateStack
+   
+   # Send the 'ideNewStack' message
+   revIDEMessageSend "ideNewStack", it
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType

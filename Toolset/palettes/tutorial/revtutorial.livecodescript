@@ -1023,7 +1023,7 @@ on revTutorialReturnFromInterlude
    else
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    end if
-   put empty into sWait 
+   put empty into sWait
 end revTutorialReturnFromInterlude
 
 on revTutorialDoWait pActionData
@@ -1145,7 +1145,11 @@ on revTutorialWaitUntilObjectIsFocused
 end revTutorialWaitUntilObjectIsFocused
 
 on revTutorialWaitForObject
-   revIDESubscribe "ideNewControl"
+   if sWait["object"]["type"] is "stack" then
+      revIDESubscribe "ideNewStack"
+   else
+      revIDESubscribe "ideNewControl"
+   end if
 end revTutorialWaitForObject
 
 on revTutorialWaitUntilObjectFitsGuide pObject
@@ -1393,16 +1397,16 @@ on focusIn
    pass focusIn
 end focusIn
 
-on newStack
+on ideNewStack pStack
    if "stack" is among the keys of sCaptureData then
-      put the long id of the target into sTaggedObjects["stack"][sCaptureData["stack"]]
+      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"]]
       delete variable sCaptureData["stack"]
    end if
    
    if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
       revTutorialWaitConditionSatisfied
    end if
-end newStack
+end ideNewStack
 
 on ideAnswerDialogClosed pObject
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
@@ -1480,10 +1484,6 @@ on mouseUp pWhich
    
    pass mouseUp
 end mouseUp
-
-on menuPick pWhich
-   pass menuPick
-end menuPick
 
 on mouseDoubleUp pWhich
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
