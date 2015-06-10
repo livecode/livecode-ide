@@ -12,16 +12,21 @@ on preOpenStack
    //revMenuBarUpdateRecentPaths
    
    subscribeMessages
-
+   
    setDefaultText
    setMenuProperties
    generateMenu
+   revMenubarBuildMenus
    updateMenubarPreference
    layoutMenu
+   # Since the menubar is topleveled on Linux and Windows, set the cantModify to true
+   # to prevent users being able to alter the menubar stack.
+   set the cantModify of me to true
 end preOpenStack
 
-on openStack
-end openStack
+on closeStackRequest
+   revIDEQuit
+end closeStackRequest
 
 on subscribeMessages
    revIDESubscribe "ideSelectedObjectChanged"
@@ -174,6 +179,27 @@ private on setupWindowMenu
    put tMenu into sWindowMenuWindows
 end setupWindowMenu
 
+/*
+Generates the menu for the recent files
+*/
+function revMenuBarRecentFiles
+   # Get the recent file data
+   local tRecentFiles
+   put revIDERecentStacks() into tRecentFiles
+   
+   # Generate the menu
+   local tMenu
+   repeat with x = 1 to the number of elements of tRecentFiles
+      if tMenu is empty then
+         put tab & revMenubarEscapeStackNameForMenu(tRecentFiles[x]["label"]) & "/|" & tRecentFiles[x]["filename"] into tMenu
+      else
+         put return & tab & revMenubarEscapeStackNameForMenu(tRecentFiles[x]["label"]) & "/|" & tRecentFiles[x]["filename"] after tMenu
+      end if
+   end repeat
+   
+   return tMenu
+end revMenuBarRecentFiles
+
 on setMenuProperties
    set the height of me to 47
    set the resizable of me to false
@@ -196,9 +222,6 @@ on setMenuProperties
    set the title of me to tTitle
    
    if the platform is not "MacOS" then
-      --set the showBorder of this cd to false
-      --set the borderWidth of this cd to 0
-      
       if item 3 of the screenRect is 800 then
          set the topLeft of me to item 1 to 2 of the windowBoundingRect
       else 
@@ -216,71 +239,6 @@ on setMenuProperties
       set the decorations of me to "default"
    end if
 end setMenuProperties
-
-/*
-on preOpenStack
-   
-   local lOrigLoc, lTargetSpecs, lCurrentObject, oldStyle
-   global gREVTextMenu, gREVDisabledText
-   
-   
-   if not the selectGroupedControls then 
-      set the textFont of button "select grouped controls" to empty
-      set the hilite of button "select grouped controls" to false
-      set the textStyle of button "select grouped controls" to "plain"
-   else 
-      set the textFont of button "select grouped controls" to empty
-      set the hilite of button "select grouped controls" to true
-      set the textStyle of button "select grouped controls" to "bold"
-   end if
-   
-   local tFilePath
-   put the fileName of stack "revMenuBar" into tFilePath
-   
-   -- KM-2006-01-14: Plug ins new code for 2.7
-   revUpdatePlugins
-   
-   --degrees character in rotate submenu
-   local tObject
-   put the text of button "Object" into tObject
-   
-   local tDegreeSymbol
-   if the platform is "MacOS" then
-      put NumToChar(188) into tDegreeSymbol
-   else 
-      put NumToChar(176) into tDegreeSymbol
-   end if
-   put tab & "90" & tDegreeSymbol & " Right" & return & tab & "90" & tDegreeSymbol & " Left" & return & tab & "180" & tDegreeSymbol into line -18 to -16 of tObject
-   set the text of button "Object" to tObject
-   
-   local tView
-   put the text of button "View" into tView
-   delete line -6 to -1 of tView
-   
-   local tOn, tOff
-   switch the platform
-      case "MacOS"
-         put cr&"!c"&tab into tOn
-         put cr&"!u"&tab into tOff
-         break
-      default
-         put cr&tab&"!r" into tOn
-         put cr&tab&"!u" into tOff
-         break
-   end switch
-   
-   put tOn&"Default Appearance Manager"&tOff&"Mac OS Platinum Emulated"&tOff&"Windows Emulated"&tOff&"Motif Emulated" after tView
-   put cr&"-"&cr&"!nShow &Invisible Objects" after tView
-   put tView into button "View"
-   revUpdatePalette
-   
-   --LG-2007-12-18
-   --Bug 5668:  Moved here from revInternal_InitialiseMenus of home stack.
-   
-end preOpenStack
-*/
-on openStack
-end openStack
 
 on ideSelectedObjectChanged
    layoutMenu
@@ -454,6 +412,8 @@ on generateMenuGroup
    set the style of the templatebutton to "menu"
    set the menumode of the templatebutton to "pulldown"
    set the height of the templatebutton to 22
+   # Pulldown menus with showBorder true don't receive keyboard shortcut menu picks
+   set the showborder of the templatebutton to false
    local tButtonScript
    put "on menuPick pWhich; revMenubarMenuPick pWhich; end menuPick" into tButtonScript
    set the script of the templatebutton to tButtonScript
@@ -474,6 +434,12 @@ on generateMenuGroup
       set the left of it to tLeft
       set the top of it to 1
       add the formattedwidth of it to tLeft
+      # Enable Alt + letter to open menu on Linux and Windows
+      if tItem is "Text" then
+         set the mnemonic of it to 3
+      else
+         set the mnemonic of it to 1
+      end if
    end repeat
    
    if the platform is not "macos" then
@@ -577,6 +543,8 @@ function revMenubarItems
 end revMenubarItems
 
 on updateMenubarPreference
+   lock screen
+   lock messages
    local tShowIcons, tShowText
    put revIDEGetPreference("cToolbarIcons") is not false into tShowIcons
    put revIDEGetPreference("cToolbarText") is not false into tShowText
@@ -638,6 +606,8 @@ on updateMenubarPreference
    end if
    
    set the topleft of me to tTopLeft
+   unlock messages
+   unlock screen
 end updateMenubarPreference
 
 on setButtonHilite pLongId, pValue
@@ -909,20 +879,20 @@ command revMenubarBuildMenus
    
    lock menus
    repeat for each item tMenu in revMenubarMenus()
-      set the text of menu tMenu to revMenubarBuildMenu(tMenu, tContext)
+      set the text of button tMenu of group "revMenuBar" of me to revMenubarBuildMenu(tMenu, tContext)
    end repeat
    
-    if sMenuHighlight["File"] is not empty then
+   if sMenuHighlight["File"] is not empty then
       set the wholematches to false
-      get lineoffset(sMenuHighlight["File"], menu "File")
-      enable line it of menu "File"
-    else if sMenuHighlight["Edit"] is not empty then
-      enable menu "Edit"
+      get lineoffset(sMenuHighlight["File"], button "File" of group "revMenuBar" of me)
+      enable line it of button "File" of group "revMenuBar" of me
+   else if sMenuHighlight["Edit"] is not empty then
+      enable button "Edit" of group "revMenuBar" of me
       set the wholematches to false
-      get lineoffset(sMenuHighlight["Edit"], menu "Edit")
-      enable line it of menu "Edit"
+      get lineoffset(sMenuHighlight["Edit"], button "Edit" of group "revMenuBar" of me)
+      enable line it of button "Edit" of group "revMenuBar" of me
    end if
-   enable menu "File"	
+   enable button "File" of group "revMenuBar" of me
    unlock menus
 end revMenubarBuildMenus
 
@@ -1051,7 +1021,7 @@ private function revMenubarFileMenu pContext
    
    local tCanSaveStack
    put false into tCanSaveStack
-   if not revOKTarget(the topStack) or the mode of the topStack is 1 then
+   if not revIDEStackIsRevStack(the topStack) or the mode of the topStack is 1 then
       put true into tCanSaveStack
    end if
    
@@ -1075,7 +1045,7 @@ private function revMenubarFileMenu pContext
    end if
    put "&Open Stack.../O" & return after tFile
    put "Open Recent File" & return after tFile
-   put revIDEGetRecentPathsAsMenu() & return after tFile
+   put revMenuBarRecentFiles() & return after tFile
    put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
@@ -1543,7 +1513,7 @@ private function revMenubarHelpMenu pContext
    put "-" & return after tHelp
    put "Forums" & return after tHelp
    put "Technical Questions" & return after tHelp
-   put "Use List" & return after tHelp
+   put "Discussion List" & return after tHelp
    put "Newsletters" & return after tHelp
    put "-" & return after tHelp
    put "Release Notes/|Release Notes" & return after tHelp
@@ -2313,7 +2283,7 @@ on revMenubarFileMenuPick pWhich
                end if
                break
             case "Open Recent File"
-               revIDEActionOpenRecent item 2 of pWhich
+               revIDEOpenStack item 2 of pWhich
                break
             case "Import As Control"
                put item 2 of pWhich into tType
@@ -2707,7 +2677,7 @@ on revMenubarHelpMenuPick pWhich
       case "All Guides"
       case "Forums"
       case "Technical Questions"
-      case "Use List"
+      case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
          break
