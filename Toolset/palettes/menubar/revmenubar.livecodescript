@@ -21,9 +21,6 @@ on preOpenStack
    revMenubarBuildMenus
 end preOpenStack
 
-on openStack
-end openStack
-
 on subscribeMessages
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "idePreferenceChanged:cToolbarIcons"

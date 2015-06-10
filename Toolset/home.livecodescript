@@ -1388,11 +1388,9 @@ command revInternal__InitialiseMenus
    if the platform is "MacOS" then
       lock messages
       palette stack tMenuBar
-      show stack tMenuBar
       unlock messages
    else
       toplevel stack tMenuBar
-      show stack tMenuBar
    end if
    set the defaultMenuBar to the long id of group "revMenuBar" of stack tMenuBar
    
@@ -1406,6 +1404,7 @@ command revInternal__InitialiseMenus
    
    revInternal__Log "Leave", "Menus Initialisation"
    
+   show stack tMenuBar
    return true
 end revInternal__InitialiseMenus
 

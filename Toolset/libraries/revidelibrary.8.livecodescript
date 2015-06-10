@@ -3383,9 +3383,11 @@ command revIDEOpenPalette pPaletteName
    local tStackName
    put revIDEPaletteToStackName(pPaletteName) into tStackName
    
+   if there is not a stack tStackName then return __revIDEError("No such palette:" && pPaletteName)
+   
+   hide stack tStackName
    switch pPaletteName
       case "Start Center"
-         show stack tStackName
          set the cMode of stack tStackName to "run"
          modeless stack tStackName
          break
@@ -3401,6 +3403,7 @@ command revIDEOpenPalette pPaletteName
       case "message box"
       case "standalone settings"
       case "message watcher"
+      case "tools"
          palette stack tStackName
          break
       case "search"
@@ -3420,6 +3423,7 @@ command revIDEOpenPalette pPaletteName
       default
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
+   show stack tStackName
 end revIDEOpenPalette
 
 function revIDEPaletteIsVisible pPaletteName
