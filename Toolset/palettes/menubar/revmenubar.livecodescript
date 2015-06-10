@@ -362,6 +362,8 @@ on generateMenuGroup
    set the style of the templatebutton to "menu"
    set the menumode of the templatebutton to "pulldown"
    set the height of the templatebutton to 22
+   # Pulldown menus with showBorder true don't receive keyboard shortcut menu picks
+   set the showborder of the templatebutton to false
    local tButtonScript
    put "on menuPick pWhich; revMenubarMenuPick pWhich; end menuPick" into tButtonScript
    set the script of the templatebutton to tButtonScript
