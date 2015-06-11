@@ -244,9 +244,11 @@ on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
 
+local sMenuHighlight
 on ideTutorialProgressChanged
    layoutMenu
    updateMenus
+   put empty into sMenuHighlight
 end ideTutorialProgressChanged
 
 on idePreferenceChanged pPreference
@@ -728,7 +730,6 @@ on mouseUp
    unlock screen
 end mouseUp
 
-local sMenuHighlight
 function absoluteRectOfObject pObject
    local tRect
    if there is a button pObject of group "revMenuBar" of me then
@@ -787,7 +788,7 @@ on disableMenus
    local tControlName
    repeat for each line tControl in the childControlIDs of this card of stack "revMenubar"
       put the short name of control id tControl into tControlName
-   	if tControlName is "tutorial" or tControlName is "context" then
+   	if tControlName is "tutorial" or tControlName is "context" or tControlName is "revMenuBar" then
 	   	next repeat
 	end if
       disable control id tControl of stack "revMenubar"
