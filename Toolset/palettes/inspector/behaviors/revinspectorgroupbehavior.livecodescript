@@ -89,20 +89,20 @@ end propertyDeregistor
 # Sets the text for the row label
 setprop rowLabel pLabel
    local tTopLeft
-   put the topleft of field "label" of me into tTopLeft
-   put pLabel into field "label" of me
-   set the height of field "label" of me to the formattedheight of field "label" of me
-   set the width of field "label" of me to the formattedwidth of field "label" of me
-   set the topleft of field "label" of me to tTopLeft
+   put the topleft of field "rowlabel" of me into tTopLeft
+   put pLabel into field "rowlabel" of me
+   set the height of field "rowlabel" of me to the formattedheight of field "rowlabel" of me
+   set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+   set the topleft of field "rowlabel" of me to tTopLeft
 end rowLabel
 
 getProp rowLabel
-   return field "label" of me
+   return field "rowlabel" of me
 end rowLabel
 
 getprop rowLabelWidth
-   if field "label" of me is not empty then
-      return the formattedwidth of field "label" of me
+   if field "rowlabel" of me is not empty then
+      return the formattedwidth of field "rowlabel" of me
    else
       return 0
    end if
@@ -131,7 +131,7 @@ end mutuallyExclusive
 
 # Sets the row tooltip text
 setProp rowTooltip pTooltipText
-   set the tooltip of field "label" of me to pTooltipText
+   set the tooltip of field "rowlabel" of me to pTooltipText
 end rowTooltip
 
 on rowResize
@@ -149,10 +149,10 @@ on rowResize
     # Position the label
    lock messages
     # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
-   set the width of field "label" of me to the formattedwidth of field "label" of me
-   set the height of field "label" of me to the formattedheight of field "label" of me
-   set the top of field "label" of me to tTop
-   set the right of field "label" of me to tGroupLeft+tLabelWidth
+   set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+   set the height of field "rowlabel" of me to the formattedheight of field "rowlabel" of me
+   set the top of field "rowlabel" of me to tTop
+   set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
    	
    
@@ -314,5 +314,5 @@ setProp rowEnabled pValue
       end if
       set the editorEnabled of group tElement["property"] of me to pValue
    end repeat
-   set the enabled of field "label" of me to pValue
+   set the enabled of field "rowlabel" of me to pValue
 end rowEnabled
