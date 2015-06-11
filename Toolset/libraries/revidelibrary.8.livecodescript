@@ -5722,23 +5722,25 @@ on revIDECut
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDECut
    end if
-
+   
+   lock screen
+   lock messages
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
       if the selectedText is not empty then select empty
-      lock screen
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       cut
-      unlock screen
       exit revIDECut
    end if
-
+   
    # Ensure the user is aware of the consequences of the cut wrt groups
    if revCheckGroupDelete() then
       cut
    end if
-
+   unlock messages
+   unlock screen
+   
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
@@ -5782,7 +5784,8 @@ on revIDEPaste
       beep
       exit revIDEPaste
    end if
-
+   
+   
    # If we have image data in the clipboard but there is no image selection
    # the create a new image object and set the imageData
    if the clipBoard is "image" and the selectedImage is empty then
@@ -5803,7 +5806,7 @@ on revIDEPaste
       paste
       lock messages
    end if
-
+   
    # If objects have been pasted, assign them IDs for geometry caching
    if the clipBoard is "objects" or tObjects then
       local tMilliseconds
@@ -5814,7 +5817,7 @@ on revIDEPaste
       end repeat
    end if
    unlock messages
-
+   
    # Pasting an object will cause the selection to change
    if the clipboard is "objects" or tObjects then
       revIDEMessageSend "ideSelectedObjectChanged"
@@ -5825,8 +5828,13 @@ on revIDEPasteOntoStack pStack
    if not pStack begins with "stack" then
       exit revIDEPasteOntoStack
    end if
+   
+   lock screen
+   lock messages
    set the defaultStack to pStack
    paste
+   unlock messages
+   unlock screen
 end revIDEPasteOntoStack
 
 on revIDEActionPasteUnformatted
@@ -6739,6 +6747,7 @@ on revIDEActionPasteTextIntoField pField
       exit revIDEActionPasteTextIntoField
    end if
    lock screen
+   lock messages
    local tLockText, tTraversalOn
    put the lockText of pField into tLockText
    put the traversalOn of pField into tTraversalOn
@@ -6752,6 +6761,7 @@ on revIDEActionPasteTextIntoField pField
    end if
    set the lockText of pField to tLockText
    set the traversalOn of pField to tTraversalOn
+   unlock messages
    unlock screen
 end revIDEActionPasteTextIntoField
 
