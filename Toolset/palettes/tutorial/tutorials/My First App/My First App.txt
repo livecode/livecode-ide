@@ -206,14 +206,28 @@ step "Script Editor Interlude"
 	This is achieved by adding blocks of script which tell LiveCode what to do when a given user action has occurred.
 action
 	interlude
-    go to step "Set Send Button Script"
+	go to step "Apply Button Interlude"	
 end step	
 
-step "Set Send Button Script"
+step "Apply Button Interlude"
+	The script entered into the script editor does not become live until you click on the Apply button.
+	When this is clicked, you will get feedback about whether the script you have written is correct.
+action
+	highlight script editor "Apply" of button "Send Button"
+	interlude
+	go to step "Send Button Script"	
+end step
+
+step "Send Button Script"
 	The mouseUp message is sent to a button when the user clicks on it. We are going to make a dialog
 	box pop up when the user clicks on the 'Send' button, by using LiveCode's 'answer' command in response 
 	to the mouseUp message.
-	
+action
+	interlude
+	go to step "Set Send Button Script"	
+end step
+
+step "Set Send Button Script"
     Set the script of the button to the following, and click the Apply button (in the top left corner of the script editor):
 script
     on mouseUp

@@ -351,6 +351,14 @@ on revTutorialParseHighlight pTokens, @rData
             put tData[1] into rData["guide"]
          end if
          break
+      case "script"
+         revTutorialParseSubexpression "highlight script editor <token> of <object>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "script editor" into rData["highlight type"]
+            put tData[1] into rData["item"]
+            put tData[2] into rData["object"]
+         end if
+         break
       default
          revTutorialParseSubexpression "highlight <object>", pTokens, tFirstToken, tData
          if the result is empty then
@@ -1167,6 +1175,9 @@ on revTutorialDoHighlight pActionData
          case "guide"
             revTutorialHighlightGuide pActionData["guide"]
             break
+         case "script editor"
+            revTutorialHighlightScriptEditorItem pActionData["item"], pActionData["object"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
@@ -1226,6 +1237,19 @@ on revTutorialHighlightInspector pSection, pGroup
    put pGroup into sHighlight["group"]
    revTutorialPositionStackForHighlight
 end revTutorialHighlightInspector
+
+on revTutorialHighlightScriptEditorItem pItem, pObject
+   local tSEData, tObject
+   put sTaggedObjects[pObject["type"]][pObject["tag"]] into tObject
+   put tObject into tSEData["object"]
+   put pItem into tSEData["item"]
+   revIDEHighlightObject "script editor", tSEData
+   revIDESubscribe "ideMoveStack", the name of stack revScriptEditor(tObject)
+   put "script editor" into sHighlight["type"]
+   put pItem into sHighlight["item"]
+   put tObject into sHighlight["object"]
+   revTutorialPositionStackForHighlight
+end revTutorialHighlightScriptEditorItem
 
 local sDisabled
 on revTutorialHighlightMenuItem pMenu, pItem
@@ -1517,6 +1541,8 @@ function revTutorialObjectIsHighlighted pObject
          return pObject is the name of stack revIDEPaletteToStackName("tools")
       case "object"
          return pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"])
+      case "script editor"
+         return pObject is the name of stack revScriptEditor(sHighlight["object"])
    end switch
    return false
 end revTutorialObjectIsHighlighted
@@ -1541,6 +1567,9 @@ on revTutorialPositionStackForHighlight
          break
       case "object"  
          revTutorialPositionStack "", sHighlight["object"], true
+         break
+      case "script editor"
+         revTutorialPositionStack "script editor", sHighlight, true
          break
    end switch
    unlock screen
