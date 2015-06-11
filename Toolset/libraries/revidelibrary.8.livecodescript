@@ -3465,15 +3465,11 @@ function __isRect pRect
    if the number of items of pRect is not 4 then return false
    
    # Check all the items are numbers
-   local tAllNumbers
-   put true into tAllNumbers
    repeat for each item tNumber in pRect
       if tNumber is not a number then
-         put false into tAllNumbers
-         exit repeat
+         return false
       end if
    end repeat
-   if tAllNumbers is false then return false
    
    # Check the rect has width
    if item 3 of pRect - item 1 of pRect < 0 then return false
