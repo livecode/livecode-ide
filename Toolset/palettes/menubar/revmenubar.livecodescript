@@ -268,7 +268,7 @@ end idePreferenceChanged
 
 on ideToggleChanged pToggle
    switch pToggle
-      case "supressMessages"
+      case "suppressMessages"
       case "suppressErrors"
       case "selectGrouped"
          updateButtonState
@@ -314,7 +314,6 @@ on generateMenubarUI
    set the blendlevel of the templatebutton to 0
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
-   
 
    # Setup the default image
    set the resizequality of the templateimage to "best"
@@ -400,6 +399,11 @@ on generateMenubarUI
    reset the templatebutton
    reset the templateimage
    reset the templatefield
+   
+   # Quick hack to stop flicker of buttons that toggle. 
+   set the autohilite of button "messages" to false
+   set the autohilite of button "select grouped" to false
+   set the autohilite of button "errors" to false
    unlock messages
 end generateMenubarUI
 
@@ -621,6 +625,8 @@ on setButtonHilite pLongId, pValue
 end setButtonHilite
 
 on updateButtonState
+   lock screen
+   lock messages
    local tState
    put ((the selectedField) is empty) & comma & ((the selObj) is empty) & comma & (the mode of the topStack is 1) into tState
    
@@ -679,6 +685,8 @@ on updateButtonState
    setButtonHilite the long id of button "Messages" of group "menu" of me, gRevSuppressMessages
    setButtonHilite the long id of button "Select Grouped" of group "menu" of me, the selectGroupedControls
    
+   unlock messages
+   unlock screen
 end updateButtonState
 
 on revTextbar
@@ -721,8 +729,6 @@ on mouseUp
          if it is "OK" then
             revIDEStopTutorial
          end if
-      else
-         revMenubarMenuButtonClicked tTarget
       end if
    end if
    unlock screen
@@ -808,8 +814,13 @@ on updateMenus
 end updateMenus
    
 on mouseDown
-   if the owner of the target is "revMenuBar" then
+   //answer the short name of the owner of the target
+   //answer the target
+   
+   if the short name of the owner of the target is "revMenuBar" then
       revMenubarBuildMenus
+   else if the short name of the owner of the target is "menu" and the target begins with "button" then
+      revMenubarMenuButtonClicked the short name of the target
    end if
    pass mouseDown
 end mouseDown
@@ -830,34 +841,23 @@ on revMenubarMenuButtonClicked pWhich
          revIDEShowMessageBox
          break
       case "Group"
-         lock screen
          if the number of lines in (the selObj) > 1 or word 1 of (the selObj) is not "group" then
             revIDEActionGroupObjects
          else
             revIDEActionUngroup
          end if
-         unlock screen
          break
       case "Edit Group"
          revIDEActionEditGroup
          break
       case "Select Grouped"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Select Grouped Controls"
-         unlock screen
          break
       case "Messages"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Suppress Messages"
-         unlock screen
          break
       case "Errors"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Suppress Errors"
-         unlock screen
          break
       case "Sample Stacks"
       case "Tutorials"

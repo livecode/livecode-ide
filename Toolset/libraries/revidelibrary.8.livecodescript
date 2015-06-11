@@ -2611,6 +2611,12 @@ end revIDEDeleteObjects
 
 on revIDEActionGroupObjects
    revIDEGroupObjects the selobj
+   
+   local tNewGroup
+   put the result into tNewGroup
+   if exists(tNewGroup) then
+      select tNewGroup
+   end if
 end revIDEActionGroupObjects
 
 on revIDEGroupObjects pObjectIDs
