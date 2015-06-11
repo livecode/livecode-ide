@@ -8,6 +8,15 @@ prologue
 	tools palette.
 end prologue
 
+step "Tutorials Intro"
+	You can keep track of how much of the tutorial you have completed with this progress bar, and 
+	exit the tutorial at any time by clicking on the x button.
+action
+	highlight toolbar "tutorial"
+	interlude
+	go to step "Create Mainstack"
+end step
+
 step "Create Mainstack"
 	Click on the File menu, and select New Stack > Default Size
 action

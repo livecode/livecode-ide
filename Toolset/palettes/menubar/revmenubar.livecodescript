@@ -731,10 +731,19 @@ end mouseUp
 local sMenuHighlight
 function absoluteRectOfObject pObject
    local tRect
-   put the rect of menu pObject into tRect
-   if the platform is "macos" then
-      put item 1 of tRect + 140 into item 1 of tRect
-      put item 3 of tRect + 140 into item 3 of tRect
+   if there is a button pObject of group "revMenuBar" of me then
+      put the rect of button pObject into tRect
+      if the platform is "macos" then
+         put item 1 of tRect + 140 into item 1 of tRect
+         put item 3 of tRect + 140 into item 3 of tRect
+      end if
+   else 
+      if there is a button pObject of group "menu" of me then
+         put the rect of button pObject of group "menu" of me into tRect
+      else if pObject is "tutorial" then
+         put the rect of group "tutorial" of me into tRect
+      end if
+      put revIDERelativeRectToAbsolute(tRect, me) into tRect
    end if
    return tRect
 end absoluteRectOfObject
@@ -745,6 +754,8 @@ on highlightObject pObject
       revMenubarBuildMenus
    else if there is a button pObject of stack "revMenubar" then
       enable button pObject of stack "revMenubar"
+   else if pObject is "tutorial" then
+      // HIghlight tutorial progress group
    end if
    layoutMenu
 end highlightObject
