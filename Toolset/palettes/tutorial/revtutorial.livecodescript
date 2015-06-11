@@ -1056,12 +1056,12 @@ function revTutorialCheckWaitCondition pActionData
             end if
          else if pActionData["state"] is "scripted" then
             # If the script hasn't changed then don't do anything.
-            if sWait["current script"] is empty or revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
                break
             end if
             if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
                return true
-            else
+            else if sWait["current script"] is not empty then
                add 1 to sWait["incorrect attempts"]
                put the script of tObject into sWait["current script"]
                # Show the current script and the target script in the tip stack

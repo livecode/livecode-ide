@@ -213,6 +213,7 @@ step "Set Send Button Script"
 	The mouseUp message is sent to a button when the user clicks on it. We are going to make a dialog
 	box pop up when the user clicks on the 'Send' button, by using LiveCode's 'answer' command in response 
 	to the mouseUp message.
+	
     Set the script of the button to the following, and click the Apply button (in the top left corner of the script editor):
 script
     on mouseUp
