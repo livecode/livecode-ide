@@ -244,11 +244,9 @@ on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
 
-local sMenuHighlight
 on ideTutorialProgressChanged
-   layoutMenu
+   highlightObject empty
    updateMenus
-   put empty into sMenuHighlight
 end ideTutorialProgressChanged
 
 on idePreferenceChanged pPreference
@@ -750,6 +748,7 @@ function absoluteRectOfObject pObject
    return tRect
 end absoluteRectOfObject
 
+local sMenuHighlight
 on highlightObject pObject
    if pObject is empty or pObject is an array then
       put pObject into sMenuHighlight
@@ -890,9 +889,12 @@ command revMenubarBuildMenus
    local tContext
    put buildMenuContext() into tContext
    
+   lock screen
+   lock messages
    lock menus
    repeat for each item tMenu in revMenubarMenus()
       set the text of button tMenu of group "revMenuBar" of me to revMenubarBuildMenu(tMenu, tContext)
+      enable button tMenu of group "revMenuBar"
    end repeat
    
    if sMenuHighlight is not empty then
@@ -918,6 +920,8 @@ command revMenubarBuildMenus
       end repeat
    end if
    unlock menus
+   unlock messages
+   unlock screen
 end revMenubarBuildMenus
 
 function revMenubarBuildMenu pMenu, pContext
