@@ -519,7 +519,7 @@ on layoutMenu
       set the loc of group "progress" of me to the loc of field "label" of me
       set the top of group "progress" of me to 35
       
-      set the topleft of group "tutorial" of me to tLeft, 0
+      set the topleft of group "tutorial" of me to tLeft, tTop
       add the formattedWidth of group "tutorial" of me + 10 to tLeft
    else
       hide tLastDivide
@@ -736,6 +736,7 @@ function absoluteRectOfObject pObject
       if the platform is "macos" then
          put item 1 of tRect + 140 into item 1 of tRect
          put item 3 of tRect + 140 into item 3 of tRect
+         return tRect
       end if
    else 
       if there is a button pObject of group "menu" of me then
@@ -743,8 +744,8 @@ function absoluteRectOfObject pObject
       else if pObject is "tutorial" then
          put the rect of group "tutorial" of me into tRect
       end if
-      put revIDERelativeRectToAbsolute(tRect, me) into tRect
    end if
+   put revIDERelativeRectToAbsolute(tRect, me) into tRect
    return tRect
 end absoluteRectOfObject
 
