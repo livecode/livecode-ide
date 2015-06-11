@@ -731,10 +731,19 @@ end mouseUp
 local sMenuHighlight
 function absoluteRectOfObject pObject
    local tRect
-   put the rect of menu pObject into tRect
-   if the platform is "macos" then
-      put item 1 of tRect + 140 into item 1 of tRect
-      put item 3 of tRect + 140 into item 3 of tRect
+   if there is a button pObject of group "revMenuBar" of me then
+      put the rect of button pObject into tRect
+      if the platform is "macos" then
+         put item 1 of tRect + 140 into item 1 of tRect
+         put item 3 of tRect + 140 into item 3 of tRect
+      end if
+   else 
+      if there is a button pObject of group "menu" of me then
+         put the rect of button pObject of group "menu" of me into tRect
+      else if pObject is "tutorial" then
+         put the rect of group "tutorial" of me into tRect
+      end if
+      put revIDERelativeRectToAbsolute(tRect, me) into tRect
    end if
    return tRect
 end absoluteRectOfObject
@@ -745,6 +754,8 @@ on highlightObject pObject
       revMenubarBuildMenus
    else if there is a button pObject of stack "revMenubar" then
       enable button pObject of stack "revMenubar"
+   else if pObject is "tutorial" then
+      // HIghlight tutorial progress group
    end if
    layoutMenu
 end highlightObject
@@ -882,17 +893,28 @@ command revMenubarBuildMenus
       set the text of button tMenu of group "revMenuBar" of me to revMenubarBuildMenu(tMenu, tContext)
    end repeat
    
-   if sMenuHighlight["File"] is not empty then
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["File"], button "File" of group "revMenuBar" of me)
-      enable line it of button "File" of group "revMenuBar" of me
-   else if sMenuHighlight["Edit"] is not empty then
-      enable button "Edit" of group "revMenuBar" of me
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["Edit"], button "Edit" of group "revMenuBar" of me)
-      enable line it of button "Edit" of group "revMenuBar" of me
+   if sMenuHighlight is not empty then
+      repeat for each item tMenu in revMenubarMenus()
+         disable button tMenu of group "revMenuBar" of me
+      end repeat
+      
+      repeat for each key tMenu in sMenuHighlight
+         enable button tMenu of group "revMenuBar" of me
+         local tMenuText
+         put the text of button tMenu of group "revMenuBar" of me into tMenuText
+         local tLineNumber
+         repeat for each line tLine in tMenuText
+            add 1 to tLineNumber
+            if tLine contains sMenuHighlight[tMenu] then
+               enable line tLineNumber of button tMenu of group "revMenuBar" of me
+            else if tLine begins with tab then
+               next repeat
+            else
+               disable line tLineNumber of button tMenu of group "revMenuBar" of me
+            end if
+         end repeat
+      end repeat
    end if
-   enable button "File" of group "revMenuBar" of me
    unlock menus
 end revMenubarBuildMenus
 

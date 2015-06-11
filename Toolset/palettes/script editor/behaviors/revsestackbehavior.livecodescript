@@ -2838,3 +2838,21 @@ function buildDebugEntryMessage pObject, pHandler, pParameters
    
    return tCommandString
 end buildDebugEntryMessage
+
+////////////////////////////////////////////////////////////////////////////////
+
+# Used by the tutorial system to interact with elements of the script editor
+function absoluteRectOfObject pObject
+   local tRect
+   if pObject is "Apply" then
+      put the rect of button "Compile" of me into tRect
+   else if there is a button pObject of me then
+      put the rect of button pObject of me into tRect
+   end if
+   put revIDERelativeRectToAbsolute(tRect, me) into tRect
+   return tRect
+end absoluteRectOfObject
+
+on highlightObject pObject
+   
+end highlightObject

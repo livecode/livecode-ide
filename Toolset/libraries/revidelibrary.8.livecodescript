@@ -3832,17 +3832,13 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
-on moveStack
-   revIDEMessageSend "ideMoveStack", the owner of the target
-end moveStack
-
-on propertyChanged pObject
+on revIDEPropertyChanged pObject
    if sLockUpdates is true then
-      exit propertyChanged
+      exit revIDEPropertyChanged
    end if
 
    revIDEMessageSend "idePropertyChanged", pObject
-end propertyChanged
+end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
 
@@ -4217,22 +4213,30 @@ function revIDEPaletteToStackName pPalette
    return empty
 end revIDEPaletteToStackName
 
-function revIDEAbsoluteRectOfObject pPalette, pObjectTag
-   dispatch function "absoluteRectOfObject" to stack revIDEPaletteToStackName(pPalette) with pObjectTag
+function revIDEAbsoluteRectOfObject pPalette, pObjectData
+   if pPalette is "script editor" then
+      dispatch function "absoluteRectOfObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
+   else
+      dispatch function "absoluteRectOfObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+   end if
    return the result
 end revIDEAbsoluteRectOfObject
 
 function revIDERelativeRectToAbsolute pRect, pStack
-   put item 1 of pRect + the left of pStack into item 1 of pRect
-   put item 3 of pRect + the left of pStack into item 3 of pRect
+   put item 1 of pRect + the effective left of pStack into item 1 of pRect
+   put item 3 of pRect + the effective left of pStack into item 3 of pRect
    
-   put item 2 of pRect + the top of pStack into item 2 of pRect
-   put item 4 of pRect + the top of pStack into item 4 of pRect
+   put item 2 of pRect + the effective top of pStack into item 2 of pRect
+   put item 4 of pRect + the effective top of pStack into item 4 of pRect
    return pRect
 end revIDERelativeRectToAbsolute
 
 on revIDEHighlightObject pPalette, pObjectData
-   dispatch "highlightObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+   if pPalette is "script editor" then
+      dispatch "highlightObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
+   else
+      dispatch "highlightObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+   end if
 end revIDEHighlightObject
 
 #############

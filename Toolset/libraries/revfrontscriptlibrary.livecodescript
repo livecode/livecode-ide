@@ -877,9 +877,16 @@ on moveStack pLeft, pTop
       send "revUpdatePalette" to this card of stack tPropertyInspector
     end if
   end repeat
-
+  
+  # IDE to notify any objects subscribed to the ideMoveStack Message
+  revIDEMessageSend "ideMoveStack", the owner of the target
+  
   pass moveStack
 end moveStack
+
+on propertyChanged pObject
+	revIDEPropertyChanged pObject
+end propertyChanged
 
 # OK-2008-03-27 : Bug 6229. Added ability to specify a target
 on revCheckStackCollision pStack
