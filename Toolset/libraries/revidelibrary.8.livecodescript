@@ -1918,6 +1918,22 @@ function revIDEGetPreference pPreferenceName
    return the pPreferenceName of stack "revpreferences"
 end revIDEGetPreference
 
+function revIDEPreferences
+   return the customproperties of stack "revpreferences"
+end revIDEPreferences
+
+function revIDEPreferenceNames
+   local tPreferenceNames
+   repeat for each line tKey in the keys of (the customproperties of stack "revpreferences")
+      if tPreferenceNames is empty then
+         put tKey into tPreferenceNames
+      else
+         put return & tKey after tPreferenceNames
+      end if
+   end repeat
+   return tPreferenceNames
+end revIDEPreferenceNames
+
 /*
 The IDE has a repository of icon images which are used for ui elements in the IDE. The revIDEIconID function converts a "name-size" tag into a LiveCode ID suitable for direct use.
 
@@ -3383,6 +3399,105 @@ function revIDEPaletteToStackName pPalette
          return "createitwelcome"
    end switch
 end revIDEPaletteToStackName
+
+/*
+Positions the palette.
+
+If the user has set a previous moved a palette, the palette is returned to that position. 
+If the palette is being opened for the first time, it is placed in a predetermined position
+*/
+on revIDEPositionPalette pStackName
+   if there is not a stack pStackName then exit revIDEPositionPalette
+   
+   local tRect
+   //put revIDEGetPreference("palette_rect_" & pStackName) into tRect
+   
+   if __isRect(tRect) then
+      # A previous stored rect was found for the stack. Restore is position if possible.
+      switch pStackName
+         case "revMenuBar"
+         case "revTools"
+            set the topleft of stack pStackName to item 1 of tRect, item 2 of tRect
+            break
+         case "message box"
+            set the rect of stack pStackName to tRect
+            break
+         default 
+            # If no sizing information can be found position the stack in the center of the 
+            # default screen
+            set the loc of stack pStackName to the screenloc
+            break
+      end switch
+   else
+      # No previous rect was found for stack to calculate the appropriate position for the stack
+      local tScreenHeight, tScreenWidth
+      put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
+      put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+      
+      switch pStackName
+         case "revMenuBar"
+            set the topleft of stack pStackName to 0,0
+            break
+         case "revTools"
+            set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+            break
+         case "message box"
+            set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+            break
+         case "revInspector"
+            if revIDEStackIsRevStack(the long ID of the topstack) then
+               set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+            else
+               set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
+            end if
+            break
+         default 
+            # If no sizing information can be found position the stack in the center of the 
+            # default screen
+            set the loc of stack pStackName to the screenloc
+            break
+      end switch
+   end if
+end revIDEPositionPalette
+
+function __isRect pRect
+   # Check it has 4 items
+   if the number of items of pRect is not 4 then return false
+   
+   # Check all the items are numbers
+   repeat for each item tNumber in pRect
+      if tNumber is not a number then
+         return false
+      end if
+   end repeat
+   
+   # Check the rect has width
+   if item 3 of pRect - item 1 of pRect < 0 then return false
+   
+   # Check the rect has height
+   if item 4 of pRect - item 2 of pRect < 0 then return false
+   
+   # Passed all the tests
+   return true
+end __isRect
+
+on revIDEStorePaletteRect pStackName
+   revIDESetPreference ("palette_rect_" & pStackName), the rect of stack pStackName
+end revIDEStorePaletteRect
+
+on revIDEClearPaletteRects
+   local tPreferenceNames
+   put revIDEPreferenceNames() into tPreferenceNames
+   repeat for each line tPreference in tPreferenceNames
+      if tPreference begins with "palette_rect_" then
+         revIDESetPreference tPreference, "0" 
+      end if
+   end repeat
+end revIDEClearPaletteRects
+
+private function revIDEPaletteBarHeight pStackID
+   return the effective height of pStackID - the height of pStackID
+end revIDEPaletteBarHeight
 
 /*
 Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
@@ -5616,23 +5731,25 @@ on revIDECut
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDECut
    end if
-
+   
+   lock screen
+   lock messages
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
       if the selectedText is not empty then select empty
-      lock screen
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       cut
-      unlock screen
       exit revIDECut
    end if
-
+   
    # Ensure the user is aware of the consequences of the cut wrt groups
    if revCheckGroupDelete() then
       cut
    end if
-
+   unlock messages
+   unlock screen
+   
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
@@ -5676,7 +5793,8 @@ on revIDEPaste
       beep
       exit revIDEPaste
    end if
-
+   
+   
    # If we have image data in the clipboard but there is no image selection
    # the create a new image object and set the imageData
    if the clipBoard is "image" and the selectedImage is empty then
@@ -5694,10 +5812,12 @@ on revIDEPaste
       -- MW-2012-02-10: [[ Bug ]] Make sure the IDE doesn't interfere with the textChanged
       --   message.
       unlock messages
+      lock screen
       paste
+      unlock screen
       lock messages
    end if
-
+   
    # If objects have been pasted, assign them IDs for geometry caching
    if the clipBoard is "objects" or tObjects then
       local tMilliseconds
@@ -5708,7 +5828,7 @@ on revIDEPaste
       end repeat
    end if
    unlock messages
-
+   
    # Pasting an object will cause the selection to change
    if the clipboard is "objects" or tObjects then
       revIDEMessageSend "ideSelectedObjectChanged"
@@ -5719,8 +5839,13 @@ on revIDEPasteOntoStack pStack
    if not pStack begins with "stack" then
       exit revIDEPasteOntoStack
    end if
+   
+   lock screen
+   lock messages
    set the defaultStack to pStack
    paste
+   unlock messages
+   unlock screen
 end revIDEPasteOntoStack
 
 on revIDEActionPasteUnformatted
@@ -5774,23 +5899,24 @@ end revIDECheckClear
 
 on revIDEActionClear
    lock screen
+   lock messages
    # Clear the selection in image selection context
    if the selectedImage is not empty then
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       delete
       exit revIDEActionClear
    end if
-
+   
    # Can't clear locked text
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDEActionClear
    end if
-
+   
    # Otherwise delete objects or text
    set the defaultStack to the topStack
-   if revCheckClear(the selobj) then 
-      delete
-   end if
+   delete
+   
+   unlock messages
    revIDEMessageSend "ideSelectedObjectChanged"
    unlock screen
 end revIDEActionClear
@@ -6633,6 +6759,7 @@ on revIDEActionPasteTextIntoField pField
       exit revIDEActionPasteTextIntoField
    end if
    lock screen
+   lock messages
    local tLockText, tTraversalOn
    put the lockText of pField into tLockText
    put the traversalOn of pField into tTraversalOn
@@ -6646,6 +6773,7 @@ on revIDEActionPasteTextIntoField pField
    end if
    set the lockText of pField to tLockText
    set the traversalOn of pField to tTraversalOn
+   unlock messages
    unlock screen
 end revIDEActionPasteTextIntoField
 

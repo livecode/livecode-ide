@@ -527,6 +527,9 @@ on mouseDown
    put the long ID of this stack into tToolsStackID
    
    # Generate the drag stack
+   lock screen
+   lock messages
+   
    reset the templatestack
    set the name of the templateStack to "revDragControl"
    set the visible of the templateStack to false
@@ -535,6 +538,7 @@ on mouseDown
    set the style of the templateStack to "palette"
    set the blendLevel of the templateStack to 25
    set the loc of the templatestack to -500,-500
+   
    create invisible stack
    reset the templatestack
    set the defaultStack to "revDragControl"
@@ -555,6 +559,9 @@ on mouseDown
    
    set the windowshape of this stack to the ID of image 1
    set the rect of this stack to the rect of image 1
+   
+   unlock messages
+   unlock screen
    
    # AL-2015-03-26: [[ Bug 14892 ]] Simply set the visible of the revDragControl stack to true
    show this stack
