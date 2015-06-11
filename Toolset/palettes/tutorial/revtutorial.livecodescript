@@ -740,6 +740,7 @@ on revTutorialSetInterludeAppearance pText
    reset the templateGraphic
    
    import snapshot from rect (the rect of tGraphic) of tGraphic
+   set the id of the last image to the id of stack "revIcons"
    put the long id of the last image into tWindowShape
    set the backColor of stack "revTutorial" to revTutorialInterludeColor()
    delete tGraphic
