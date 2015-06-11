@@ -21,7 +21,7 @@ step "Create Mainstack"
 	Click on the File menu, and select New Stack > Default Size
 action
     -- Give the user a visual hint of where they should be clicking
-    highlight menu item "New Mainstack" of menu "File"
+    highlight menu item "New Stack" of menu "File"
     -- The tutorial scripts only act on 'captured' object - this will cause the next created stack
     -- to be internally tagged as 'Mainstack' so it can be referenced in the rest of the tutorial
     capture the next new stack as "Mainstack"
