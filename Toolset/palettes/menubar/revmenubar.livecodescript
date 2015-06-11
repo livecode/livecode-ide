@@ -268,7 +268,7 @@ end idePreferenceChanged
 
 on ideToggleChanged pToggle
    switch pToggle
-      case "supressMessages"
+      case "suppressMessages"
       case "suppressErrors"
       case "selectGrouped"
          updateButtonState
@@ -678,7 +678,6 @@ on updateButtonState
    setButtonHilite the long id of button "Errors" of group "menu" of me, gRevSuppressErrors
    setButtonHilite the long id of button "Messages" of group "menu" of me, gRevSuppressMessages
    setButtonHilite the long id of button "Select Grouped" of group "menu" of me, the selectGroupedControls
-   
 end updateButtonState
 
 on revTextbar
