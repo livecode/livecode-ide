@@ -429,6 +429,12 @@ after openCard
    send "resizeStack" to this stack
 end openCard
 
+before preOpenStack
+   if the visible of me is true then
+      hide me
+   end if
+end preOpenStack
+
 after preOpenStack
    put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
    put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
@@ -436,7 +442,20 @@ after preOpenStack
    revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
    generateFrame
    layoutFrame
+   
+   # set the default position of the stack. revIDEPaletteRect will return either a rect or a topLeft position for the stack
+   revIDEPositionPalette the short name of me
 end preOpenStack
+
+after openStack
+   if the visible of me is false then
+      show me
+   end if
+end openStack
+
+after closeStack
+   revIDEStorePaletteRect the short name of me
+end closeStack
 
 before idePreferenceChanged
    generateFrame
