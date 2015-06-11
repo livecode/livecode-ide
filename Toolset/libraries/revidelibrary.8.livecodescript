@@ -5803,7 +5803,9 @@ on revIDEPaste
       -- MW-2012-02-10: [[ Bug ]] Make sure the IDE doesn't interfere with the textChanged
       --   message.
       unlock messages
+      lock screen
       paste
+      unlock screen
       lock messages
    end if
    
@@ -5888,23 +5890,24 @@ end revIDECheckClear
 
 on revIDEActionClear
    lock screen
+   lock messages
    # Clear the selection in image selection context
    if the selectedImage is not empty then
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       delete
       exit revIDEActionClear
    end if
-
+   
    # Can't clear locked text
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDEActionClear
    end if
-
+   
    # Otherwise delete objects or text
    set the defaultStack to the topStack
-   if revCheckClear(the selobj) then 
-      delete
-   end if
+   delete
+   
+   unlock messages
    revIDEMessageSend "ideSelectedObjectChanged"
    unlock screen
 end revIDEActionClear
