@@ -4224,7 +4224,7 @@ end revIDEAbsoluteRectOfObject
 
 function revIDERelativeRectToAbsolute pRect, pStack
    
-   if the short name of pStack begins with revScriptEditorPrefix() then
+   if the short name of pStack begins with revIDEScriptEditorPrefix() then
       put item 1 of pRect + the effective left of pStack into item 1 of pRect
       put item 3 of pRect + the effective left of pStack into item 3 of pRect
       
