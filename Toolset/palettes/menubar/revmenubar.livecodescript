@@ -795,7 +795,7 @@ on mouseDown
    
    if the short name of the owner of the target is "revMenuBar" then
       revMenubarBuildMenus
-   else if the short name of the owner of the target is "menu" and the target begins with "button" then
+   else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
       revMenubarMenuButtonClicked the short name of the target
    end if
    pass mouseDown
@@ -814,7 +814,7 @@ on revMenubarMenuButtonClicked pWhich
          end if
          break
       case "Message Box"
-         revIDEShowMessageBox
+         revIDETogglePalette "message box"
          break
       case "Group"
          if the number of lines in (the selObj) > 1 or word 1 of (the selObj) is not "group" then
