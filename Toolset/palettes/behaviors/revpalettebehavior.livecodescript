@@ -418,6 +418,8 @@ on revIDEFrameSizeChanged pName, pValue
 end revIDEFrameSizeChanged
 
 after resizeStack
+   addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+   generateFrame
    layoutFrame
 end resizeStack
 
