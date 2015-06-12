@@ -1,1 +1,52 @@
-type	ScrollbarProperty	Default	Options	Group----------------------------------------------------------------------------------------------------name	Scrollbar	style	scrollbar	progress,scale,scrollbarvisible	true	disabled	false	traversalOn	true	focusBorder		orientationstartValue		endValue	65535	thumbPosition	0	thumbSize	8192	lineInc	512	pageInc	8192	layerModebehaviorbackgroundColor		backgroundPattern		borderColor		borderPattern		topColor		topPattern		bottomColor		bottomPattern		shadowColor		shadowPattern		customProperties		blendLevel	0	0,100ink	textFonttextSize		textStyle	textAlign	margins	4	lockLoc	false	width	200	height	20	locationleft		top		right		bottom		layer	dropShadowinnerShadow	outerGlowinnerGlowcolorOverlay
+type	Scrollbar
+title	Scrollbar
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+name	Scrollbar	
+style	scrollbar	progress,scale,scrollbar
+visible	true	
+disabled	false	
+traversalOn	true	
+focusBorder		
+orientation
+startValue		
+endValue	65535	
+thumbPosition	0	
+thumbSize	8192	
+lineInc	512	
+pageInc	8192	
+layerMode
+behavior
+backgroundColor		
+backgroundPattern		
+borderColor		
+borderPattern		
+topColor		
+topPattern		
+bottomColor		
+bottomPattern		
+shadowColor		
+shadowPattern		
+customProperties		
+blendLevel	0	0,100
+ink	
+textFont
+textSize		
+textStyle	
+textAlign	
+margins	4	
+lockLoc	false	
+width	200	
+height	20	
+location
+left		
+top		
+right		
+bottom		
+layer	
+dropShadow
+innerShadow	
+outerGlow
+innerGlow
+colorOverlay

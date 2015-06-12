@@ -205,22 +205,49 @@ private command buildDebugMenu pContext
    set the text of button "Debug" of me to modifyMenu("Debug", tDebug)
 end buildDebugMenu
 
-private command buildWindowMenu pContext
-   local tMenuText
-   put revIDEWindowListAsMenu() into tMenuText
-   
-   local tStackNames
-   put revIDEWindowList() into tStackNames
-   set the cWindows of button "Window" of me to tStackNames
-   
-   local tWindow
-   if tMenuText is empty then
-      put "(No Windows Open" into tWindow
+# OK-2010-02-19: Bug 8157 - Escape special characters from stack names in menus, more may 
+# need to be added here.
+private function revMenubarEscapeStackNameForMenu pName
+   replace "!" with "\!" in pName
+   if the platform is "MacOS" then 
+      replace "/" with "\/" in pName
+      replace "(" with "\(" in pName
    else
-      put tMenuText & return & "-" & return & "Send Window to Back/`" into tWindow
+      replace "/" with "//" in pName
+   end if
+   return pName
+end revMenubarEscapeStackNameForMenu
+
+private command buildWindowMenu pContext
+   #   Set sWindowMenuText to a list of open Windows in suitable format for putting into a menu button.
+   #   This will be any script editors or the dictionary or resource center if they are open, and any user stacks.
+   local tWindows
+   put revIDEWindowList() into tWindows
+   
+   local tMenu, tMenuLine, tStackTitle
+   repeat for each line tStack in tWindows
+      put the title of stack tStack into tStackTitle
+      if tStackTitle is empty then
+         put the short name of tStack into tStackTitle
+      end if
+      
+      put "!n" & revMenubarEscapeStackNameForMenu(tStackTitle) & "/|" & tStack into tMenuLine
+      if tMenu is empty then
+         put tMenuLine into tMenu
+      else
+         put return & tMenuLine after tMenu
+      end if
+   end repeat
+   
+   if tMenu is empty then
+      put "(No Windows Open" into tMenu
+   else
+      # Put a checkmark against the 'topmost' stack
+      put "!c" into char 1 to 2 of line 1 of tMenu
+      put return & "-" & return & "Send Window to Back/`" after tMenu
    end if
    
-   set the text of button "Window" of me to modifyMenu("Window", tWindow)
+   set the text of button "Window" of me to modifyMenu("Window", tMenu)
 end buildWindowMenu
 
 private command buildHelpMenu pContext
@@ -469,19 +496,14 @@ private command handleHelpMenuPick pItemName
          sePaneShow "Documentation"
          break
       case "Dictionary"
-         revIDEShowDictionary
-         break
       case "Resource Center"
-         revIDEShowResourceCenter
-         break
       case "Start Center"
-         revIDEShowStartCenter
-         break
+         revIDEOpenPalette pItemName
       case "User Guide"
-         revDocumentationLaunchUserGuide
+         revIDELaunchResource pItemName
          break
       case "About LiveCode"
-         modeless "revAbout"
+         revIDEOpenPalette "About"
          break
    end switch
 end handleHelpMenuPick
