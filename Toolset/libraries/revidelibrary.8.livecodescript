@@ -4229,11 +4229,20 @@ function revIDEAbsoluteRectOfObject pPalette, pObjectData
 end revIDEAbsoluteRectOfObject
 
 function revIDERelativeRectToAbsolute pRect, pStack
-   put item 1 of pRect + the effective left of pStack into item 1 of pRect
-   put item 3 of pRect + the effective left of pStack into item 3 of pRect
    
-   put item 2 of pRect + the effective top of pStack into item 2 of pRect
-   put item 4 of pRect + the effective top of pStack into item 4 of pRect
+   if the short name of pStack begins with revIDEScriptEditorPrefix() and the platform is "macos" then
+      put item 1 of pRect + the effective left of pStack into item 1 of pRect
+      put item 3 of pRect + the effective left of pStack into item 3 of pRect
+      
+      put item 2 of pRect + the effective top of pStack into item 2 of pRect
+      put item 4 of pRect + the effective top of pStack into item 4 of pRect
+   else
+      put item 1 of pRect + the left of pStack into item 1 of pRect
+      put item 3 of pRect + the left of pStack into item 3 of pRect
+      
+      put item 2 of pRect + the top of pStack into item 2 of pRect
+      put item 4 of pRect + the top of pStack into item 4 of pRect
+   end if
    return pRect
 end revIDERelativeRectToAbsolute
 

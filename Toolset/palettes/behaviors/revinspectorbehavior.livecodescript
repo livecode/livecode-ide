@@ -242,8 +242,8 @@ private on inspectorGenerate
    lock messages
    if there is not a group "template" then
       create group "template"
-      create field "label" in group "template"
-      set the topleft of field "label" of group "template" to the topleft of group "template"
+      create field "rowlabel" in group "template"
+      set the topleft of field "rowlabel" of group "template" to the topleft of group "template"
    end if
    unlock messages
    
@@ -425,7 +425,7 @@ private function rowLabelWidthCalculate
    local tMaxWidth, tLabelWidth, tChildren
    put the childControlNames of this card of me into tChildren
    repeat for each line tControl in tChildren
-      if there is a field "label" of group tControl of me then
+      if there is a field "rowlabel" of group tControl of me then
          put the rowLabelWidth of group tControl of me into tLabelWidth
       end if
       if tLabelWidth > tMaxWidth then
