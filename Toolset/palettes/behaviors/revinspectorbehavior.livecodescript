@@ -82,16 +82,22 @@ on inspectorLayout
    
    # Work out what the final width of the inspector will be
    # Repeat throught he groups we are laying out. 
-   local tMinRowWidth, tRowWidth
+   local tMinRowWidth, tMinEditorsWidth, tRowWidth, tMinLabelWidth
    repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
       if there is not a group tElement["label"] of me then next repeat
-      local tRowReportedWidth
-      put the rowMinWidth of group tElement["label"] of me into tRowReportedWidth
-      if tRowReportedWidth > tMinRowWidth then
-         put tRowReportedWidth into tMinRowWidth
+      local tEditorsReportedWidth, tLabelReportedWidth
+      put the rowMinWidth of group tElement["label"] of me into tEditorsReportedWidth
+      put the rowLabelWidth of group tElement["label"] of me into tLabelReportedWidth
+      
+      if tEditorsReportedWidth > tMinEditorsWidth then
+         put tEditorsReportedWidth into tMinEditorsWidth
+      end if
+      if tLabelReportedWidth > tMinLabelWidth then
+         put tLabelReportedWidth into tMinLabelWidth
       end if
    end repeat
-   put tMinRowWidth into tRowWidth 
+   put tMinEditorsWidth + tMinLabelWidth  into tMinRowWidth 
+   put tMinRowWidth into tRowWidth
    
    # Next, check the width of the stack as it stands.
    if the width of me - (tMargin * 2) > tRowWidth then
@@ -102,6 +108,8 @@ on inspectorLayout
    if tMinRowWidth + (tMargin * 2) < 220 then
       put 220 - (tMargin * 2) into tMinRowWidth
    end if
+   
+   put tMinRowWidth
    
    # Get the stored width for the inspector to update calculated width. If stored width is larger,
    # used stored width as width of editor
