@@ -5,8 +5,7 @@ Property	Default	Options	Group
 name	Widget	
 kind
 tooltip		
-visible	
-traversalOn	false	
+visible		
 behavior
 layerMode
 customProperties		
