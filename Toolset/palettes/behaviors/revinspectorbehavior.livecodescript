@@ -165,6 +165,15 @@ function inspectorSectionGetName
    end if
 end inspectorSectionGetName
 
+private function inspectorNoEditors pGroup
+   repeat for each element tProperty in pGroup["proplist"]
+      if tProperty["editor"] is not empty then
+         return false
+      end if
+   end repeat
+   return true
+end inspectorNoEditors
+
 # Generate inspector
 private on inspectorGenerate
    lock screen
@@ -206,6 +215,11 @@ private on inspectorGenerate
       put tPropertyData["grouplist"][x] into tElement
       if tElement["label"] is empty then next repeat
       
+      # If none of the properties has any editors, then skip this group
+      if inspectorNoEditors(tElement) then
+         next repeat
+      end if
+      
       if tSubsections and tElement["subsection"] is not empty then
          if there is not a group ("Subsection_" & tElement["subsection"]) of me then
             create group "Subsection_" & tElement["subsection"]
@@ -232,6 +246,7 @@ private on inspectorGenerate
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
+            if tProperty["editor"] is empty then next repeat
             dispatch "propertyRegister" to group tElement["label"] of me with tProperty
             
             # Build the list of properties to display in the tooltip for the row
