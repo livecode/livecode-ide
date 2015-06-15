@@ -99,22 +99,16 @@ on inspectorLayout
       put the width of me - (tMargin * 2) into tRowWidth
    end if
    
-   
+   # Don't let the inspector get any smaller than 220
+   if tMinRowWidth + (tMargin * 2) < 220 then
+      put 220 - (tMargin * 2) into tMinRowWidth
+   end if
    
    # Get the stored width for the inspector to update calculated width. If stored width is larger,
    # used stored width as width of editor
-   local tInspectorStoredWidth, tInspectorStoredRect
-   put revIDEGetPreference("palette_rect_revinspector") into tInspectorStoredRect
-   put item 3 of tInspectorStoredRect - item 1 of tInspectorStoredRect into tInspectorStoredWidth
    
-   # Work out what the final width of the editor will be
-   local tInspectorWidthWithMargins, 
-   if tInspectorStoredWidth > 0 and tInspectorStoredWidth > tRowWidth then
-      put tInspectorStoredWidth into tRowWidth
-      put tRowWidth + (tMargin  * 2) into tInspectorWidthWithMargins
-   else
-      put tRowWidth + (tMargin  * 2) into tInspectorWidthWithMargins
-   end if
+   local tInspectorWidthWithMargins
+   put tRowWidth + (tMargin  * 2) into tInspectorWidthWithMargins
    
    local tSubsections, tCurSection, tNewSubsection
    # Check if this inspector wants to show subsections
@@ -172,6 +166,8 @@ on inspectorLayout
    local tStackTop, tStackLeft
    put the top of me into tStackTop
    put the left of me into tStackLeft
+   
+   put tMinRowWidth & return before msg
    
    lock messages
    set the minWidth of me to tMinRowWidth + (tMargin*2)
