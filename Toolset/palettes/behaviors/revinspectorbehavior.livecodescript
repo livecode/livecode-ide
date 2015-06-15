@@ -416,3 +416,18 @@ on highlightObject pObjectData
    dispatch "hiliteFrameItem" to me with pObjectData["section"]
    dispatch "navSelected" to me with pObjectData["section"]
 end highlightObject
+
+function inspectorPropertyOfInspectedObject pProp
+   local tValue
+   try
+      put revIDEPropertiesOfObjects(the inspectedObjects of me, pProp) into tValue
+   catch tError
+      return empty
+   end try
+
+   # Work around the fact that property may be returned as a list
+   if the number of lines of tValue[pProp] is 1 then
+      replace comma with return in tValue[pProp]
+   end if
+   return tValue[pProp]
+end inspectorPropertyOfInspectedObject

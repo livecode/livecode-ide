@@ -382,3 +382,7 @@ end inspectorSectionIcon
 on inspectorAddActions
    addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
 end inspectorAddActions
+
+getProp inspectedObjects
+   return sSelectedObjects
+end inspectedObjects
