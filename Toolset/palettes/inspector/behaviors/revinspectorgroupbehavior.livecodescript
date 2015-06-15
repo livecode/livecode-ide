@@ -91,7 +91,6 @@ setprop rowLabel pLabel
    local tTopLeft
    put the topleft of field "rowlabel" of me into tTopLeft
    put pLabel into field "rowlabel" of me
-   set the height of field "rowlabel" of me to the formattedheight of field "rowlabel" of me
    set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
    set the topleft of field "rowlabel" of me to tTopLeft
 end rowLabel
@@ -145,18 +144,14 @@ on rowResize
    put the width of me into tWidth
    put rowLabelWidth() into tLabelWidth
 
-   
     # Position the label
    lock messages
     # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
    set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
-   set the height of field "rowlabel" of me to the formattedheight of field "rowlabel" of me
    set the top of field "rowlabel" of me to tTop
    set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
    	
-   
-   
    # Position the controllers
    local tEditorSpace, tEditorCount
    put the number of elements of sProperties into tEditorCount
