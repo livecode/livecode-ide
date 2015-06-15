@@ -64,7 +64,7 @@ on inspectorLayout
    local tTop, tLeft, tWidth, tHeight, tContentRect, tMargin, tPadding, tEditorPadding
    put the contentRect of me into tContentRect
    put the palettePadding of me into tMargin
-   put the palettePadding of me into tPadding
+   put the palettePadding of me + 2 into tPadding
    put tPadding / 2 into tEditorPadding
    
    put item 1 of tContentRect + tMargin into tLeft
@@ -85,21 +85,25 @@ on inspectorLayout
       if tSubsections and tElement["subsection"] is not empty then
          # If we have a new subsection, create the subsection header
          if tElement["subsection"] is not tCurSection then
+            lock messages
             set the width of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
             set the width of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
             set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
+            unlock messages
             add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
             put tElement["subsection"] into tCurSection
          end if
       end if
       
       if there is a group tElement["label"] of me then
+         # set the width and topleft of the editor
          lock messages
          set the topleft of group tElement["label"] of me to tLeft,tTop
          set the lockloc of  group tElement["label"] of me to true
          set the width of group tElement["label"] of me to tWidth
-         set the height of group tElement["label"] of me to tHeight
          unlock messages
+         
+         # Tell the row to resize
          dispatch "rowResize" to group tElement["label"] of me
          
          local tRowWidth, tEditorHeight
@@ -110,6 +114,7 @@ on inspectorLayout
          if not tEditorHeight > 0 then
             put the formattedheight of group tElement["label"] of me into tEditorHeight
          end if
+         put tEditorHeight & comma after msg
          put rowLabelWidth() + the rowMinWidth of group tElement["label"] of me into tRowWidth
          
          lock messages
@@ -195,7 +200,7 @@ private on inspectorGenerate
    set the showfocusborder of the templatefield to false
    set the textalign of the templatefield to right
    set the opaque of the templatefield to false
-   set the height of the templatefield to 21
+   set the height of the templatefield to 22
    set the locktext of the templatefield to true
    set the width of the templatefield to kMaxLabelSize
    
