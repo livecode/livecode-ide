@@ -4061,7 +4061,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4098,7 +4098,10 @@ function revIDEPropertySectionNameToIconName pName
          return "table"
          break
       case "data grid"
-         return "f00b"
+         return "list alt"
+         break
+      case "advanced"
+         return "cogs"
          break
       default
          return "remove"
