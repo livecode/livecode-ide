@@ -167,8 +167,6 @@ on inspectorLayout
    put the top of me into tStackTop
    put the left of me into tStackLeft
    
-   put tMinRowWidth & return before msg
-   
    lock messages
    set the minWidth of me to tMinRowWidth + (tMargin*2)
    set the width of me to tInspectorWidthWithMargins
