@@ -4003,17 +4003,17 @@ private function __revIDEPropertiesOfObjectsWithList pObjectList, pPropertiesLis
    # Generate a list of the properties we want to retreive
    local tResultA, tNewList
    repeat for each line tLine in pPropertiesList
-      if pSharedProperties[tLine] is not empty then
+      if tLine is among the lines of pSharedProperties then
          put tLine & CR after tNewList
       end if
    end repeat
    delete the last char of tNewList
-
+   
    local tPropertyValues
    repeat for each line tObject in pObjectList
       dispatch function "__readPropertiesOfControl" to tObject with tNewList, tPropertyValues
    end repeat
-
+   
    return tPropertyValues
 end __revIDEPropertiesOfObjectsWithList
 
@@ -4027,14 +4027,7 @@ private function __revIDEPropertiesOfObjectsInSection pObjectList, pSectionInfoA
 end __revIDEPropertiesOfObjectsInSection
 
 function revIDEPropertiesOfObjects pObjectList, pPropertyList
-   local tSharedProperties
-   put revIDEPropertiesInfo(pObjectList) into tSharedProperties
-   # Error if we didn't get an array back
-   if tSharedProperties is not an array then
-      return tSharedProperties
-   end if
-
-   return __revIDEPropertiesOfObjectsWithList(pObjectList, pPropertyList, tSharedProperties)
+   return __revIDEPropertiesOfObjectsWithList(pObjectList, pPropertyList, pPropertyList)
 end revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfSection pObjectList, pSection

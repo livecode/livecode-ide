@@ -288,3 +288,7 @@ private function menuitemEscape pItem, pFirst
    replace "(" with "((" in pItem
    return pItem
 end menuitemEscape
+
+getProp inspectedObjects
+   return sSelectedStack
+end inspectedObjects

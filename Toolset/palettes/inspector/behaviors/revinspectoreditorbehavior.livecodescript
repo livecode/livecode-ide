@@ -18,6 +18,10 @@ getProp editorOptions
       set the itemdelimiter to ":"
       do item 2 of tOptions
       return it
+   else if tOptions begins with "property" then
+      set the itemdelimiter to ":"
+      dispatch function "inspectorPropertyOfInspectedObject" to revIDEStackOfObject(the long id of me) with item 2 of tOptions
+      return the result
    end if
    return tOptions
 end editorOptions
