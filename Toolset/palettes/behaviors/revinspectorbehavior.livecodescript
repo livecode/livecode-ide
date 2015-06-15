@@ -40,8 +40,10 @@ before openStack
 end openStack
 
 on resizeInspector
+   lock screen
    inspectorNavigationGenerate
    inspectorLayout
+   unlock screen
 end resizeInspector
 
 on inspectorOpenEditor pEditor
@@ -60,49 +62,86 @@ end inspectorOpenEditor
 
 # Layout inspector
 on inspectorLayout
+   //put "layout inspector" & return after msg
    lock screen
-   local tTop, tLeft, tWidth, tHeight, tContentRect, tMargin, tPadding, tEditorPadding
-   put the contentRect of me into tContentRect
-   put the palettePadding of me into tMargin
+   
+   # Get the margin, padding
+   local tMargin, tPadding
+   put the paletteMargin of me into tMargin
    put the palettePadding of me into tPadding
-   put tPadding / 2 into tEditorPadding
    
+   # Get layout key points
+   local tTop, tLeft, tContentRect
+   put the contentRect of me into tContentRect
    put item 1 of tContentRect + tMargin into tLeft
-   put item 2 of tContentRect + (tMargin * 2) into tTop
-   put (item 3 of tContentRect - item 1 of tContentRect) - (2* tMargin)  into tWidth
-   put (item 4 of tContentRect - item 2 of tContentRect) - (3* tMargin) into tHeight
+   put item 2 of tContentRect + tMargin into tTop
    
+   
+   # Get the section of the PI we should be laying out
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
+   
+   # Work out what the final width of the inspector will be
+   # Repeat throught he groups we are laying out. 
+   local tMinRowWidth, tRowWidth
+   repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
+      if there is not a group tElement["label"] of me then next repeat
+      local tRowReportedWidth
+      put the rowMinWidth of group tElement["label"] of me into tRowReportedWidth
+      if tRowReportedWidth > tMinRowWidth then
+         put tRowReportedWidth into tMinRowWidth
+      end if
+   end repeat
+   put tMinRowWidth into tRowWidth 
+   
+   # Next, check the width of the stack as it stands.
+   if the width of me - (tMargin * 2) > tRowWidth then
+      put the width of me - (tMargin * 2) into tRowWidth
+   end if
+   
+   # Don't let the inspector get any smaller than 220
+   if tMinRowWidth + (tMargin * 2) < 220 then
+      put 220 - (tMargin * 2) into tMinRowWidth
+   end if
+   
+   # Get the stored width for the inspector to update calculated width. If stored width is larger,
+   # used stored width as width of editor
+   
+   local tInspectorWidthWithMargins
+   put tRowWidth + (tMargin  * 2) into tInspectorWidthWithMargins
    
    local tSubsections, tCurSection, tNewSubsection
    # Check if this inspector wants to show subsections
    put the showSubSections of me into tSubsections
    
-   local tInspectorWidth, tInspectorHeight, tColumnNumber, tColumnTop
+   local tMaxRowWidth, tInspectorHeight, tColumnNumber, tColumnTop
    put 1 into tColumnNumber
    repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
       if tSubsections and tElement["subsection"] is not empty then
          # If we have a new subsection, create the subsection header
          if tElement["subsection"] is not tCurSection then
+            lock messages
             set the width of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
             set the width of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
             set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
+            unlock messages
             add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
             put tElement["subsection"] into tCurSection
          end if
       end if
       
       if there is a group tElement["label"] of me then
+         # set the width and topleft of the editor
          lock messages
          set the topleft of group tElement["label"] of me to tLeft,tTop
          set the lockloc of  group tElement["label"] of me to true
-         set the width of group tElement["label"] of me to tWidth
-         set the height of group tElement["label"] of me to tHeight
+         set the width of group tElement["label"] of me to tRowWidth
          unlock messages
+         
+         # Tell the row to resize
          dispatch "rowResize" to group tElement["label"] of me
          
-         local tRowWidth, tEditorHeight
+         local tEditorHeight
          # If the editor does not report its own height, use the formatted height
          # This tends to report slightly strange values, otherwise we could just use it
          # all the time.
@@ -110,18 +149,16 @@ on inspectorLayout
          if not tEditorHeight > 0 then
             put the formattedheight of group tElement["label"] of me into tEditorHeight
          end if
-         put rowLabelWidth() + the rowMinWidth of group tElement["label"] of me into tRowWidth
          
          lock messages
-         add tEditorHeight + tEditorPadding to tTop
+         add tEditorHeight + tPadding to tTop
          
-         if tRowWidth > tInspectorWidth then
-            put tRowWidth into tInspectorWidth
+         if tRowWidth > tMaxRowWidth then
+            put tRowWidth into tMaxRowWidth
          end if
          if tTop > tInspectorHeight then
             put tTop into tInspectorHeight
          end if
-         
          unlock messages
       end if
    end repeat
@@ -131,13 +168,15 @@ on inspectorLayout
    put the left of me into tStackLeft
    
    lock messages
-   set the minWidth of me to (tInspectorWidth + tMargin * 2)
-   set the width of me to tWidth +  tMargin * 2
+   set the minWidth of me to tMinRowWidth + (tMargin*2)
+   set the width of me to tInspectorWidthWithMargins
    set the left of me to tStackLeft
    
-   set the minheight of me to tInspectorHeight + (tMargin * 2)
-   set the maxheight of me to tInspectorHeight + (tMargin * 2)
-   set the height of me to tInspectorHeight + (tMargin * 2)
+   local tStackHeight
+   put tInspectorHeight + tMargin into tStackHeight
+   set the minheight of me to tStackHeight
+   set the maxheight of me to tStackHeight
+   set the height of me to tStackHeight
    set the top of me to tStackTop
    unlock messages
    unlock screen
@@ -195,7 +234,7 @@ private on inspectorGenerate
    set the showfocusborder of the templatefield to false
    set the textalign of the templatefield to right
    set the opaque of the templatefield to false
-   set the height of the templatefield to 21
+   set the height of the templatefield to 22
    set the locktext of the templatefield to true
    set the width of the templatefield to kMaxLabelSize
    
@@ -296,9 +335,6 @@ on inspectorChanged
    
    # Set values for all editors
    inspectorFill
-   
-   # Layout again as values will not doubt have effected teh size of some elements
-   inspectorLayout
    
    # Layout
    dispatch "resizeStack" to me
