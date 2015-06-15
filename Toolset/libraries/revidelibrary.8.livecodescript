@@ -5085,6 +5085,7 @@ on revIDEImportControl pType, pFileName, pReferenced
          else
             set the text of the last image to URL ("binfile:" & pFileName)
          end if
+         set the borderWidth of the last image to 0
          select the last control
          break
       case "audio"
