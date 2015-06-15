@@ -733,13 +733,17 @@ function revCheckDelete
 end revCheckDelete
 
 on backspaceKey
-  if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass backspaceKey
-  else pass backSpaceKey to metaCard
+   lock screen
+   if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass backspaceKey
+   else pass backSpaceKey to metaCard
+   unlock screen
 end backspaceKey
 
 on deleteKey
-  if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass deleteKey
-  else pass deleteKey to metaCard
+   lock screen
+   if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass deleteKey
+   else pass deleteKey to metaCard
+   unlock screen
 end deleteKey
 
 local lSeenErrors, lEmptyFile
