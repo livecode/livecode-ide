@@ -1,0 +1,1 @@
+# PI doesn't show foregroundColor for legacy graphic control

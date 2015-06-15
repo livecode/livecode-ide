@@ -322,6 +322,8 @@ private on inspectorNavigationGenerate
       addFrameItem tSection["label"],"header", "navigation", tSection["label"], tIcon, tIcon, "inspectorSectionChanged", the long id of me, tSection["label"]
    end repeat
    
+   dispatch "inspectorAddActions" to me
+   
    unlock screen
 end inspectorNavigationGenerate
 
