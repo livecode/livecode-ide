@@ -80,8 +80,8 @@ on inspectorLayout
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
    
-   # Work out what the final width of the inspector will be
-   # Repeat throught he groups we are laying out. 
+   # Loop through the editors and get the minimum width of the labels and editors
+   # To work out an initial row width
    local tMinRowWidth, tMinEditorsWidth, tRowWidth, tMinLabelWidth
    repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
       if there is not a group tElement["label"] of me then next repeat
@@ -108,8 +108,6 @@ on inspectorLayout
    if tMinRowWidth + (tMargin * 2) < 220 then
       put 220 - (tMargin * 2) into tMinRowWidth
    end if
-   
-   put tMinRowWidth
    
    # Get the stored width for the inspector to update calculated width. If stored width is larger,
    # used stored width as width of editor
