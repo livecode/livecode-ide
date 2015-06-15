@@ -297,7 +297,7 @@ getProp rowMinWidth
       put sProperties[tProperty] into tElement
       add the editorMinWidth of group tElement["property"] of me to tMinWidth
    end repeat
-   return tMinWidth
+   return tMinWidth + the width of field "rowlabel"
 end rowMinWidth
 
 setProp rowEnabled pValue

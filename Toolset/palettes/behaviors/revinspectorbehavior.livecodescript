@@ -76,7 +76,6 @@ on inspectorLayout
    put item 1 of tContentRect + tMargin into tLeft
    put item 2 of tContentRect + tMargin into tTop
    
-   
    # Get the section of the PI we should be laying out
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
