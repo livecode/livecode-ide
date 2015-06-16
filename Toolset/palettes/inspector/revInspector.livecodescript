@@ -198,6 +198,7 @@ end inspectorTreeMenuDisplay
 on menuPick pWhich
    global gREVTemplateMasterName, gREVStacksList
    
+   local tFocusedObject, tObjects, tStack
    put the focusedObject into tFocusedObject
    if word 1 of tFocusedObject is "field" \
          and revTargetStack(tFocusedObject) is the short name of this stack
@@ -213,6 +214,7 @@ on menuPick pWhich
          
          switch item 2 of pWhich
             case "Card"
+               local tNum
                put char 2 to -2 of word -1 of item -1 of pWhich into tNum
                try
                   if the mode of stack tStack is 0 \
@@ -224,6 +226,7 @@ on menuPick pWhich
                end try
                break
             case "Stack"
+               local tNewStack
                put word 1 to -1 of item -1 of pWhich into tNewStack
                try
                   ideInspectObjects the long id of stack tNewStack
@@ -382,3 +385,7 @@ end inspectorSectionIcon
 on inspectorAddActions
    addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
 end inspectorAddActions
+
+getProp showMultiPropLabels
+   return false
+end showMultiPropLabels
