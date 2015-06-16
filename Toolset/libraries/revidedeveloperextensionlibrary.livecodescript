@@ -704,10 +704,18 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    # The target .lcb file
    put shellFormat(pFile) after tShellCommand
    
-   local tShellOutput
-   put shell(tShellCommand) into tShellOutput
+   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
+   local tHideConsoleWindows
+   put the hideConsoleWindows into tHideConsoleWindows
+   set the hideConsoleWindows to true
    
-   if the result is not 0 then
+   local tShellOutput, tShellResult
+   put shell(tShellCommand) into tShellOutput
+   put the result into tShellResult
+   
+   set the hideConsoleWindows to tHideConsoleWindows
+   
+   if tShellResult is not 0 then
       __revIDEDeveloperCompilationError tShellOutput
       return "failed to compile module"
    end if
