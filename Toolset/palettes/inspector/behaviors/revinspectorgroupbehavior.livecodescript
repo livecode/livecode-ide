@@ -27,7 +27,7 @@ on propertyRegister pPropertyInfo
       set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript")
       set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
       
-      if pPropertyInfo["label"] is not empty then
+      if pPropertyInfo["label"] is not empty and the showMultiPropLabels of this stack then
          create invisible field tPropName in me
          set the topleft of field tPropName of me to the topleft of me
          put pPropertyInfo["label"] into field tPropName of me
@@ -133,6 +133,113 @@ setProp rowTooltip pTooltipText
    set the tooltip of field "rowlabel" of me to pTooltipText
 end rowTooltip
 
+# Takes a list of properties and returns an array describing how to lay out the editors
+function calculateLayout pProps
+   local tWidth, tLabelWidth
+   put the width of me into tWidth
+   put rowLabelWidth() into tLabelWidth
+   
+   local tAvailableSpace
+   put tWidth - tLabelWidth into tAvailableSpace
+   
+   local tPropLabelWidth
+   put propLabelWidth() into tPropLabelWidth
+   
+   local tMultiPropLabels
+   put the showMultiPropLabels of this stack into tMultiPropLabels
+   
+   local tLayoutA
+   local tMinMaxA, tElement, tGroupLongID, tIndex, tMinTotal
+   repeat for each line tProperty in pProps
+      add 1 to tIndex
+      put sProperties[tProperty] into tElement
+      put the long id of group tElement["property"] of me into tGroupLongID
+      put the editorMinWidth of tGroupLongID into tMinMaxA[tIndex]["min"]
+      put the editorMaxWidth of tGroupLongID into tMinMaxA[tIndex]["max"]
+      
+      add tMinMaxA[tIndex]["min"] to tMinTotal
+      # If we are showing labels, add this to the amount of space taken up by editors
+      if tMultiPropLabels then
+         add tPropLabelWidth to tMinTotal
+      end if
+      
+      # Work out how much each editor can expand by
+      if tMinMaxA[tIndex]["max"] is not 0 then
+         put tMinMaxA[tIndex]["max"] - tMinMaxA[tIndex]["min"] into tMinMaxA[tIndex]["difference"]
+      else
+         put tAvailableSpace into tMinMaxA[tIndex]["difference"]
+      end if
+      
+      # If the min total > the available space, we need to go on to multiple lines
+      # So try and work out where the split should occur and recursively calculate layout
+      if tMinTotal > tAvailableSpace then
+         local tOver, tNumOver
+         put calculateLayout(line 1 to tIndex - 1 of pProps) into tLayoutA
+         put the number of elements in tLayoutA into tNumOver
+         put calculateLayout(line 1 to tIndex - 1 of pProps) into tOver
+         repeat with x = 1 to the number of elements in tOver
+            put tOver[x] into tLayoutA[x + tNumOver]
+         end repeat
+         return tLayoutA
+      end if
+   end repeat
+   
+   # Calculate the amount of extra space beyond the min widths of all the editors
+   subtract tMinTotal from tAvailableSpace
+   put expandedToFit(tMinMaxA, tAvailableSpace) into tLayoutA[1]
+   return tLayoutA
+end calculateLayout
+
+function expandedToFit pMinMaxA, pSpace
+   local tKeys
+   put the keys of pMinMaxA into tKeys
+   
+   # Order the keys by how much each editor can expand by
+   sort lines of tKeys numeric ascending by pMinMaxA[each]["difference"]
+   
+   local tWidthsA, tDifferencesA
+   repeat for each key tKey in pMinMaxA
+      put pMinMaxA[tKey]["min"] into tWidthsA[tKey]
+      put pMinMaxA[tKey]["difference"] into tDifferencesA[tKey]
+   end repeat
+   
+   local tFixedA, tCopy
+   put false into tCopy
+   
+   local tMaxIncrement
+   local tSpaceLeft
+   put pSpace into tSpaceLeft
+   repeat for each line tLine in tKeys
+      # Update the maximum possible increment for all the remaining editors
+      put tSpaceLeft / (the number of elements in tDifferencesA) into tMaxIncrement
+      
+      if not tCopy then
+         if tLine is among the keys of tDifferencesA and pMinMaxA[tLine]["max"] is not 0 and tDifferencesA[tLine] < tMaxIncrement then
+            # If this editor has a max width and there is space to expand all the remaining editors by this amount, then do so
+            add tDifferencesA[tLine] to tWidthsA
+            # Adjust the remaining differences
+            subtract tDifferencesA[tLine] from tDifferencesA
+            # Adjust the space left
+            subtract tDifferencesA[tLine] * the number of elements in tWidthsA from tSpaceLeft
+            # Remove this editor from the list of things to adjust (as it has reached its max width)
+            delete variable tDifferencesA[tLine]
+            # Copy the calculated with to the final array
+            put tWidthsA[tLine] into tFixedA[tLine]
+         else
+            # Otherwise, just expand all remaining editors by the maximum increment
+            # And copy all the values across to the final array
+            add tMaxIncrement to tWidthsA
+            put true into tCopy
+         end if
+      end if
+      if tCopy then
+         put tWidthsA[tLine] into tFixedA[tLine]
+      end if
+   end repeat
+   
+   return tFixedA
+end expandedToFit
+
 on rowResize
    lock screen
    set the lockloc of me to true
@@ -144,71 +251,51 @@ on rowResize
    put the width of me into tWidth
    put rowLabelWidth() into tLabelWidth
 
-    # Position the label
+   # Position the label
    lock messages
-    # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
+   # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
    set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
    set the top of field "rowlabel" of me to tTop
    set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
-   	
+
+   # Calculate layout
+   local tWidthsA
+   put calculateLayout(sOrder) into tWidthsA
+   
+   
    # Position the controllers
    local tEditorSpace, tEditorCount
    put the number of elements of sProperties into tEditorCount
-   put tWidth - tLabelWidth into tEditorSpace
    
-   local tEditorWidth, x, tMinWidth, tMaxWidth
-   put 0 into x
    put tGroupLeft + tLabelWidth into tLeft
-   local tElement
-   
-   local tPropCount, tPropDivisor
-   put the number of lines in sOrder into tPropCount
-   put kMaxPropsPerLine into tPropDivisor
    
    local tPropLabelWidth
    put propLabelWidth() into tPropLabelWidth
    
-   repeat forever
-      if tPropDivisor is 1 then
-         exit repeat
-      end if
-      if tPropCount mod tPropDivisor is 0 and tEditorSpace / tPropDivisor > tPropLabelWidth + 50 then
-         exit repeat
-      end if
-      subtract 1 from tPropDivisor
-   end repeat
-   
-   divide tEditorSpace by tPropDivisor 
-   
    local tSubsections
    put the showSubSections of this stack into tSubsections
    
-   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tLabelPrecede, tCount
+   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tCount
+   local tElement, tPropNumber, tLineNumber
+   put 1 into tLineNumber
    repeat for each line tProperty in sOrder
-      add 1 to x
+      add 1 to tPropNumber
       put sProperties[tProperty] into tElement
       put the long id of group tElement["property"] of me into tGroupLongID
-      put tEditorSpace into tEditorWidth
       
-      if tPropCount > 1 and there is a field tElement["property"] of me then
+      # If there is no width specified for this line, then the editors didn't all fit,
+      # So start positioning editors on the next line
+      if tWidthsA[tLineNumber][tPropNumber] is empty then
+         add 1 to tLineNumber
+         put 1 into tPropNumber
+         add tHeightOfRow to tTop
+         put 0 into tHeightOfRow
+      end if
+      
+      if tEditorCount > 1 and there is a field tElement["property"] of me then
          show field tElement["property"] of me
          set the width of field tElement["property"] of me to tPropLabelWidth
-         subtract tPropLabelWidth from tEditorWidth
-      end if
-      
-      put the editorMinWidth of tGroupLongID into tMinWidth
-      put the editorMaxWidth of tGroupLongID into tMaxWidth
-      if tMinWidth > 0 and tMinWidth > tEditorWidth then
-         put tMinWidth into tEditorWidth
-         if tWidth - tLabelWidth - tPropLabelWidth < tMinWidth then
-            put true into tLabelPrecede
-         end if
-      else if tMaxWidth > 0 and tMaxWidth < tEditorWidth then
-         put tMaxWidth into tEditorWidth
-      end if
-      
-      if tPropCount > 1 and there is a field tElement["property"] of me then
          if tSubsections then
             set the topleft of field tElement["property"] of me to tLeft,tTop
             add tPropLabelWidth to tLeft
@@ -216,38 +303,22 @@ on rowResize
       end if
       
       set the lockloc of tGroupLongID to true
-      set the width of tGroupLongID to tEditorWidth
+      set the width of tGroupLongID to tWidthsA[tLineNumber][tPropNumber]
       unlock messages
       dispatch "editorResize" to tGroupLongID
       
       lock messages
       # If the editor does not fit where we tried to put it, put it on the next line
       set the topleft of tGroupLongID to tLeft,tTop
-      
-      if tLabelPrecede or (tPropCount > 1 and tLeft + tEditorWidth > tRight) then
-         if tLastGroupLongID is not empty then
-            put tGroupLeft + tLabelWidth into tLeft
-            add the formattedHeight of tLastGroupLongID to tTop
-            if there is a field tElement["property"] of me then
-               set the topleft of field tElement["property"] of me to tLeft,tTop
-               add tPropLabelWidth to tLeft
-            end if
-            set the topLeft of tGroupLongID to tLeft,tTop
-            put 0 into x
-         end if
-      end if
       unlock messages
       
       local tEditorHeight
       put the editorHeight of tGroupLongID into tEditorHeight
-      put the editorWidth of tGroupLongID into tEditorWidth
       
       lock messages
-      if not tSubsections and not tLabelPrecede and tPropCount > 1 and there is a field tElement["property"] of me then
-         set the topleft of field tElement["property"] of me to tLeft + tEditorWidth,tTop
-         put tGroupLeft + tLabelWidth + x * tEditorSpace into tLeft
-      else
-         
+      if not tSubsections and there is a field tElement["property"] of me then
+         set the topleft of field tElement["property"] of me to tLeft + tWidthsA[tLineNumber][tPropNumber],tTop
+         put tGroupLeft + tLabelWidth + tWidthsA[tLineNumber][tPropNumber] into tLeft
       end if
       
       if tEditorHeight is 0 then
@@ -261,14 +332,7 @@ on rowResize
          put tEditorHeight into tHeightOfRow
       end if
       
-      if tPropCount is 1 or x mod tPropDivisor is 0 then
-         put  tGroupLeft + tLabelWidth into tLeft
-         add tHeightOfRow to tTop
-         put 0 into tHeightOfRow
-         put 0 into x
-      else
-         put tGroupLeft + tLabelWidth + x * tEditorSpace into tLeft
-      end if
+      add tWidthsA[tLineNumber][tPropNumber] + the palettePadding of this stack to tLeft
       put tGroupLongID into tLastGroupLongID
       unlock messages
    end repeat
