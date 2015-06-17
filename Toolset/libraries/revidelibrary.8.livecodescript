@@ -313,6 +313,12 @@ private function __propertyDataFromInfoFile pFileName
       put tOptions into tDataA[tPropName]["options"]
 
       put item 10 of tLine into tDataA[tPropName]["subsection"]
+      
+      put item 11 of tLine into tDataA[tPropName]["min"]
+      put item 12 of tLine into tDataA[tPropName]["max"]
+      put item 13 of tLine into tDataA[tPropName]["step"]
+      
+      
    end repeat
    return tDataA
 end __propertyDataFromInfoFile

@@ -7,8 +7,12 @@ setProp editorPropertyInfo pPropertyInfo
    end if
 end editorPropertyInfo
 
-getProp editorProperty
-   return sPropertyInfo["property_name"]
+function editorPropertyGet pProperty
+   return sPropertyInfo[pProperty]
+end editorPropertyGet
+
+getProp editorProperty pProperty
+   return sPropertyInfo[pProperty]
 end editorProperty
 
 getProp editorOptions
