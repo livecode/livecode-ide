@@ -7642,26 +7642,32 @@ function revIDECleanRecentStackList pRecentStackList
    return tCleanList
 end revIDECleanRecentStackList
 
-// Keep track of the transient text fields that are active
-local sTransientTextFields
+// Keep track of the current transient text field
+local sTransientTextField
 
 /*
 Adds a text field (usually to the property inspector) at a specified rect pRect, which, when its text is changed, dispatches 
 a callback pCallback to the specified target and deletes the text field. pCallbackParams is sent to the callback target as a parameter
 */
-on revIDEAddTransientTextField pRect, pCallback, pCallbackParams
+on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentText
+   if sTransientTextField is not empty then
+      revIDERemoveTransientTextField
+   end if
+   
    lock screen
    lock messages
    local tLongID
    create field
    put the long id of it into tLongID
-   put pCallbackParams into sTransientTextFields[tLongID]["callback_params"]
-   put pCallback into sTransientTextFields[tLongID]["callback"]
+   put tLongID into sTransientTextField["id"]
+   put pCallbackParams into sTransientTextField["callback_params"]
+   put pCallback into sTransientTextField["callback"]
    set the rect of tLongID to pRect
    set the script of tLongID to "on closeField;revIDETransientTextChanged;end closeField;on returnInField; revIDETransientTextChanged;end returnInField"
+   set the text of tLongID to pCurrentText
    local tTargetLongID
    put the long id of the target into tTargetLongID
-   put tTargetLongID into sTransientTextFields[tLongID]["callback_target"]
+   put tTargetLongID into sTransientTextField["callback_target"]
    get the textAlign of tTargetLongID 
    if it is not empty then
       set the textAlign of tLongID to it
@@ -7669,17 +7675,20 @@ on revIDEAddTransientTextField pRect, pCallback, pCallbackParams
    focus on tLongID
    unlock messages
    unlock screen
-end revIDEAddTransientTextField
+end revIDECreateTransientTextField
 
 /*
-Deletes the transient text field and remove from the stored list
+Deletes the transient text field
 */
 on revIDERemoveTransientTextField pTarget
-   if pTarget is not among the keys of sTransientTextFields then
+   lock screen
+   lock messages
+   if pTarget is empty then
       exit revIDERemoveTransientTextField
    end if
-   delete variable sTransientTextFields[pTarget]
    delete pTarget
+   unlock messages
+   unlock screen
 end revIDERemoveTransientTextField
 
 /*
@@ -7687,14 +7696,22 @@ Sends the callback with params as specified by prior call to revIDEAddTransientT
 Called by transient text fields on closeField or returnInField. 
 */
 on revIDETransientTextChanged
-   local tTransientTextField
-   put the long id of the target into tTransientTextField
-   if tTransientTextField is not among the keys of sTransientTextFields then
+   lock screen
+   lock messages
+   if sTransientTextField is empty then
       exit revIDETransientTextChanged
    end if
-   local tCallbackInfo, tValue
-   put the text of tTransientTextField into tValue
-   put sTransientTextFields[tTransientTextField] into tCallbackInfo
-   send "revIDERemoveTransientTextField tTransientTextField" to me in 0 millisecs
+   local tCallbackInfo, tValue, tField
+   put sTransientTextField["id"] into tField
+   put the text of tField into tValue
+   put sTransientTextField into tCallbackInfo
+   put empty into sTransientTextField
+   unlock messages
+   send "revIDERemoveTransientTextField tField" to me in 0 millisecs
    dispatch tCallbackInfo["callback"] to tCallbackInfo["callback_target"] with tValue, tCallbackInfo["callback_params"]
+   unlock screen
 end revIDETransientTextChanged
+
+on revIDEAllTransientsChanged
+   
+end revIDEAllTransientsChanged
