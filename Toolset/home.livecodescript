@@ -54,7 +54,7 @@ on relaunch
       local tStackFile
       put param(x) into tStackFile
       if there is a file tStackFile then -- open it
-         send "revOpenStack" && quote & tStackFile & quote to button "File" of stack "revMenuBar"
+         revIDEOpenStack tStackFile
       else
          next repeat
       end if
@@ -137,7 +137,7 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-      	 revInternal__setSplashStatus "Loading theme data..."
+         revInternal__setSplashStatus "Loading theme data..."
          revInternal__InitialiseIcons
          put the result into tSuccess	
       end if	
@@ -168,17 +168,15 @@ on revInternal__openStack
          put the result into tSuccess
       end if
       
-      
-      
       if tSuccess then
-         revInternal__setSplashStatus "Loading Tools..."
-         revInternal__InitialiseTools
+         revInternal__setSplashStatus "Loading Menu Bar..."
+         revInternal__InitialiseMenus
          put the result into tSuccess
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Menu Bar..."
-         revInternal__InitialiseMenus
+         revInternal__setSplashStatus "Loading Tools..."
+         revInternal__InitialiseTools
          put the result into tSuccess
       end if
       
@@ -242,10 +240,10 @@ on revInternal__openStack
       revIDEOpenPalette "Start Center"
    end if
    
-    try 	 	
-	     revIDEOpenPropertyInspectorControllerStacks 	 	
-	end try 
-
+   try 	 	
+      revIDEOpenPropertyInspectorControllerStacks 	 	
+   end try 
+   
    -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
    -- Luanch the installer in update mode to begin update process.
    --
@@ -274,7 +272,7 @@ on revInternal__openStack
       put tOldPath into $PATH
    end if
    
-    close stack "revSplash"
+   close stack "revSplash"
    
    revInternal__Log "Leave", "revInternal__openStack"
    revInternal__Log "End"
@@ -1242,12 +1240,6 @@ command revInternal__InitialiseOptions
   
   set the gridSize to the cGridSize of stack "revPreferences"
   
-  if the cGrid of stack "revPreferences" then
-    hilite menuItem 12 of button "View" of stack "revMenuBar"
-  else
-    unhilite menuItem 12 of button "View" of stack "revMenuBar"
-  end if
-  
   if the cSelectionHandleColor of stack "revPreferences" is empty then
     set the selectionHandleColor to "Gray50"
   else
@@ -1348,13 +1340,8 @@ end revInternal__InitialiseScriptEditor
 command revInternal__InitialiseErrors
   revInternal__Log "Enter", "Errors Initialisation"
   
-  put empty into fld "error" of stack "revErrorDisplay"
-  set the cCurrentObject of cd 1 of stack "revErrorDisplay" to empty
-  set the cLastError of cd 1 of stack "revErrorDisplay" to empty
-  set the customKeys of stack "revErrorDisplay" to empty
-  
-  set the cErrorsList of card 1 of stack "revErrorDisplay" to the scriptExecutionErrors
-  set the cScriptErrors of card 1 of stack "revErrorDisplay" to the scriptParsingErrors
+  set the cErrorsList of stack "revErrorDisplay" to the scriptExecutionErrors
+  set the cScriptErrors of stack "revErrorDisplay" to the scriptParsingErrors
   
   revInternal__Log "Leave", "Errors Initialisation"
   
@@ -1388,39 +1375,35 @@ command revInternal__InitialiseIcons
 end revInternal__InitialiseIcons
 
 command revInternal__InitialiseMenus
-  revInternal__Log "Enter", "Menus Initialisation"
+   revInternal__Log "Enter", "Menus Initialisation"
    
-  revInternal__Log "message", "Trying to get the platform"
+   revInternal__Log "message", "Trying to get the platform"
    revInternal__Log "message", the platform
    
-  if the platform is "MacOS" then
-    hide stack "revMenubar"
-    lock messages
-    show stack "revMenuBar"
-    -- LG-2008-01-07 Bug 5706: Moved palette to after show stack so revMenuBar is not 
-    -- reset to visible.
-    palette "revMenuBar"
-    
-    unlock messages
-    set the defaultMenuBar to "revMenuBar"
-  else
-    hide stack "revMenuBar"
-    toplevel "revMenuBar"
-    show stack "revMenuBar"
-    set the defaultMenuBar to "revMenuBar"
-  end if
-  
-  revInternal__ConstrainStack "revMenuBar"
-  
-  local tWindowRect
-  put line (the screen of stack "revMenuBar") of the working screenRects into tWindowRect
-  if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
-  put the bottom of stack "revMenuBar" + 5 into item 2 of tWindowRect
-  set the windowBoundingRect to tWindowRect
+   local tMenuBar
+   put revIDEPaletteToStackName("menubar") into tMenuBar
    
-  revInternal__Log "Leave", "Menus Initialisation"
-  
-  return true
+   if the platform is "MacOS" then
+      lock messages
+      palette stack tMenuBar
+      unlock messages
+   else
+      toplevel stack tMenuBar
+   end if
+   set the defaultMenuBar to the long id of group "revMenuBar" of stack tMenuBar
+   
+   revInternal__ConstrainStack tMenuBar
+   
+   local tWindowRect
+   put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
+   if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
+   put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
+   set the windowBoundingRect to tWindowRect
+   
+   revInternal__Log "Leave", "Menus Initialisation"
+   
+   show stack tMenuBar
+   return true
 end revInternal__InitialiseMenus
 
 command revInternal__InitialiseApplicationOverview
@@ -1488,6 +1471,8 @@ command revInternal__InitialisePlugIns
          end if
       end try
    end repeat
+   
+   revIDEUpdatePlugins
    
    revInternal__Log "Leave", "Plug-Ins Initialisation"
    

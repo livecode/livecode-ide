@@ -21,7 +21,7 @@ function revTutorialParse pFile
    repeat for each line tLine in tTutorial
       add 1 to tLineNum
       get token 1 of tLine
-      
+       
       if it is empty then 
          if tSubType is "text" then 
             put return & return after tData
@@ -322,6 +322,13 @@ on revTutorialParseHighlight pTokens, @rData
             put tData[2] into rData["menu"]
          end if
          break
+      case "toolbar"
+         revTutorialParseSubexpression "highlight toolbar <token>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "toolbar" into rData["highlight type"]
+            put tData[1] into rData["item"]
+         end if
+         break
       case "tool"
          revTutorialParseSubexpression "highlight tool <token>", pTokens, tFirstToken, tData
          if the result is empty then
@@ -342,6 +349,14 @@ on revTutorialParseHighlight pTokens, @rData
          if the result is empty then
             put "guide" into rData["highlight type"]
             put tData[1] into rData["guide"]
+         end if
+         break
+      case "script"
+         revTutorialParseSubexpression "highlight script editor <token> of <object>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "script editor" into rData["highlight type"]
+            put tData[1] into rData["item"]
+            put tData[2] into rData["object"]
          end if
          break
       default
@@ -521,7 +536,7 @@ end revTutorialParseAction
 #                     STACK APPEARANCE
 #
 ##############################################################################
-
+local sIsInterlude
 function revTutorialInterludeColor
    return "209,137,50"
 end revTutorialInterludeColor
@@ -543,31 +558,31 @@ constant kMargin = 20
 constant kMessageWidth = 200
 constant kProgressHeight = 5
 
-on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
+on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
+   lock screen
    lock messages
-   
-   hide button "Got It" of stack "revTutorial"
-   show group "Progress" of stack "revTutorial"
+   if sIsInterlude then
+      show button "Got It" of stack "revTutorial"
+      put 460 into pWidthOverride
+   else
+      hide button "Got It" of stack "revTutorial"
+   end if
    
    local tScreenRect
    put the screenrect into tScreenRect
    
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
-      if pIsMenu and the platform is "macos" then
-         put the left of pObject + 140 into tLeft
-         put the right of pObject + 140 into tRight
-         put the top of pObject into tTop
-         put the bottom of pObject into tBottom
+      local tRect
+      if pStack is not empty then
+         put revIDEAbsoluteRectOfObject(pStack, pObject) into tRect
       else
-         local tStack
-         put revIDEStackOfObject(pObject) into tStack
-         
-         put the left of pObject + the left of tStack into tLeft
-         put the right of pObject + the left of tStack into tRight
-         put the top of pObject + the top of tStack into tTop
-         put the bottom of pObject + the top of tStack into tBottom
+         put revIDERelativeRectToAbsolute(the rect of pObject, revIDEStackOfObject(pObject)) into tRect
       end if
+      put item 1 of tRect into tLeft
+      put item 2 of tRect into tTop
+      put item 3 of tRect into tRight
+      put item 4 of tRect into tBottom
       
       local tPointerLeft, tPointerTop
       if tRight < (item 3 of tScreenRect / 2) then
@@ -585,11 +600,16 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 3 + kProgressHeight into tHeight
+   
+   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
+   put max(100,tHeight) into tHeight
+   set the height of field "Message" of stack "revTutorial" to tHeight - kMargin
+   
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight - kProgressHeight - 2*kMargin
+   if sIsInterlude then
+      put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
+   end if
    
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
@@ -662,89 +682,40 @@ on revTutorialPositionStack pObject, pToSide, pIsMenu, pWidthOverride
    reset the templateGraphic
    
    import snapshot from rect (the rect of tGroup) of tGroup
+   set the id of the last image to the id of stack "revIcons"
    put the long id of the last image into tWindowShape
-   set the backColor of stack "revTutorial" to revTutorialMessageColor()
+   if sIsInterlude then
+      set the backColor of stack "revTutorial" to revTutorialInterludeColor()
+   else
+      set the backColor of stack "revTutorial" to revTutorialMessageColor()
+   end if
    delete tGroup
    
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
-   set the rect of graphic "Trough" of group "Progress" of stack "revTutorial" to 0, 0, tWidth - kMargin * 2, kProgressHeight
-   set the rect of graphic "Bar" of group "Progress" of stack "revTutorial" to 0, 0, revTutorialDoneRatio() * (tWidth - kMargin * 4), kProgressHeight
-   
    if pObject is not empty then
       if pToSide and tPointerLeft then
          set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
-         set the topleft of group "Progress" of stack "revTutorial" to kMargin + 20, tHeight - kMargin - kProgressHeight
       else if not pToSide and tPointerTop then
          set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
-         set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight + 20
       else
          set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
-         set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight
       end if
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
+      if sIsInterlude then
+         set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
+      end if
+      
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
-      set the topleft of group "Progress" of stack "revTutorial" to kMargin, tHeight - kMargin - kProgressHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   unlock messages
-end revTutorialPositionStack
-
-on revTutorialSetInterludeAppearance pText
-   lock screen
    
-   show button "Got It" of stack "revTutorial"
-   hide group "Progress" of stack "revTutorial"
-   
-   set the windowShape of stack "revTutorial" to 0
-   lock messages
-   put pText into field "Message" of stack "revTutorial"
-   
-   local tScreenRect
-   put the screenrect into tScreenRect
-   
-   local tWidth, tHeight
-   set the width of field "Message"of stack "revTutorial" to 460
-   set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
-   put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
-   
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight - 2 * kMargin
-   
-   put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
-   
-   local tGraphic, tWindowShape
-   set the lineSize of the templateGraphic to 0
-   set the backColor of the templateGraphic to "black"
-   set the opaque of the templateGraphic to true
-   
-   create graphic "Shape"
-   put it into tGraphic
-   set the style of it to "rectangle"
-   set the width of it to tWidth
-   set the height of it to tHeight
-   
-   reset the templateGraphic
-   
-   import snapshot from rect (the rect of tGraphic) of tGraphic
-   put the long id of the last image into tWindowShape
-   set the backColor of stack "revTutorial" to revTutorialInterludeColor()
-   delete tGraphic
-   
-   set the windowshape of stack "revTutorial" to the id of tWindowShape
-   delete tWindowShape
-   
-   set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
-   set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
-   set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
-   set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
    unlock messages
    unlock screen
-end revTutorialSetInterludeAppearance
+end revTutorialPositionStack
 
 ##############################################################################
 #
@@ -757,8 +728,8 @@ local sWaiting
 on revInitialiseTutorial pSteps
    lock screen
    lock messages
-   
    put false into sWaiting
+   put false into sIsInterlude
    put pSteps into sSteps
    
    local tStep, tNumSteps
@@ -797,18 +768,9 @@ on revInitialiseTutorial pSteps
    set the threeD of it to false
    set the visible of it to false
    
-   create group "Progress"
-   set the margins of it to 0
-   set the opaque of the templateGraphic to true
-   set the style of the templateGraphic to "rectangle"
-   set the lineSize of the templateGraphic to 0
-   create graphic "Trough" in group "Progress"
-   set the backcolor of it to revTutorialMessageAltColor()
-   create graphic "Bar" in group "Progress"
-   set the backcolor of it to "white"
-   
    insert the script of stack "revTutorial" into front
    go invisible stack "revTutorial" as palette
+   
    unlock messages
    unlock screen
 end revInitialiseTutorial
@@ -822,13 +784,12 @@ on revFinaliseTutorial
       delete button "Exit"
    end if
    enableToolsPalette
-   enableStack "revMenuBar"
    
    remove script of stack "revTutorial" from front
    put empty into sSteps
    put empty into sActionNumber
    put empty into sStepName
-   
+   revIDEUnsubscribeAll
    unlock screen
 end revFinaliseTutorial
 
@@ -860,7 +821,8 @@ end revTutorialDoneRatio
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
-      revTutorialDoInterlude sSteps["prologue"]["text"], false
+      revTutorialDoInterlude false
+      revTutorialSetText "prologue"
    else
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    end if
@@ -868,7 +830,8 @@ end revTutorialPrologue
 
 on revTutorialEpilogue
    if sSteps["epilogue"] is not empty then
-      revTutorialDoInterlude sSteps["epilogue"]["text"], true
+      revTutorialDoInterlude true
+      revTutorialSetText "epilogue"
    else
       send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
    end if
@@ -890,31 +853,30 @@ on revTutorialContinue
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      
+      revIDEMessageSend "ideTutorialProgressChanged"
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
             next repeat
          end if
       end if
+      // Do text, highlight and guide actions under lock screen, to remove 'flicker'
       lock screen
-      if sSteps[sStepName]["actions"]["interlude"] is empty then
-         // Do text, highlight and guide actions under lock screen, to remove 'flicker'
-         // Text
-         revTutorialSetText sStepName
-         // Guide
-         revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
-         // Highlight
-         revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
-         unlock screen
-         show stack "revTutorial"
-         revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
-         revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
-      else
-         revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
-         unlock screen
-         show stack "revTutorial"
-      end if
+      // Interlude
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
+      // Text
+      revTutorialSetText sStepName
+      // Guide
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
+      // Highlight
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
+      unlock screen
+      show stack "revTutorial"
+      // Capture
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
+      // Wait
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
+      
       if sWaiting then
          exit repeat
       end if
@@ -934,7 +896,7 @@ on revTutorialExecuteAction pActionData
          revTutorialDoCapture pActionData["object type"], pActionData["tag"]
          break
       case "interlude"
-         revTutorialDoInterlude pActionData["text"], false
+         revTutorialDoInterlude false
          break
       case "add guide"
          revTutorialDoAddGuide pActionData["guide"], pActionData["rect"], pActionData["object"]["type"], pActionData["object"]["tag"]
@@ -949,18 +911,30 @@ on revTutorialExecuteAction pActionData
 end revTutorialExecuteAction
 
 on revTutorialSetText pStep
+   revTutorialSetTextOfMessage  sSteps[pStep]["text"], sSteps[pStep]["script"]
+end revTutorialSetText
+
+on revTutorialSetTextOfMessage pText, pScript
    local tWidthOverride
    put 0 into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
    put empty into field "Message" of stack "revTutorial"
-   if sSteps[pStep]["script"] is not empty then
-      put return & return & sSteps[pStep]["script"] into field "Message" of stack "revTutorial"
-      put the formattedWidth of field "Message" into tWidthOverride
+   if pScript is not empty then
+      put return & return & pScript into field "Message" of stack "revTutorial"
+      put the formattedWidth of field "Message" of stack "revTutorial" into tWidthOverride
    end if
-   put sSteps[pStep]["text"] before field "Message" of stack "revTutorial"
+   put pText before field "Message" of stack "revTutorial"
+   revTutorialPositionStack "", "", true, tWidthOverride, false
+end revTutorialSetTextOfMessage
 
-   revTutorialPositionStack "", true, false, tWidthOverride
-end revTutorialSetText
+function revTutorialScriptRetry pCurrent
+   local tText
+   put "Your script is not quite right. You have:" & return & return after tText
+   put pCurrent after tText
+   put return & return after tText
+   put "Set the script to the following and click the apply button:" after tText
+   return tText
+end revTutorialScriptRetry
 
 ##############################################################################
 #
@@ -974,14 +948,9 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   if there is a button "Got It" of stack "revTutorial" then
-      hide button "Got It" of stack "revTutorial"
-      show group "Progress" of stack "revTutorial"
-   end if
-   disableMenuBar
    disableToolsPalette
-   buildMenus
    put false into sWaiting
+   put false into sIsInterlude
 end revTutorialDoGoToStep
 
 local sCaptureData, sTaggedObjects
@@ -990,8 +959,8 @@ on revTutorialDoCapture pType, pTag
    put pTag into sCaptureData[pType]
 end revTutorialDoCapture
 
-on revTutorialDoInterlude pText, pIsEpilogue
-   revTutorialSetInterludeAppearance pText
+on revTutorialDoInterlude pIsEpilogue
+   put true into sIsInterlude
    revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
 end revTutorialDoInterlude
 
@@ -1009,7 +978,7 @@ on revTutorialReturnFromInterlude
    else
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    end if
-   put empty into sWait 
+   put empty into sWait
 end revTutorialReturnFromInterlude
 
 on revTutorialDoWait pActionData
@@ -1079,6 +1048,7 @@ function revTutorialCheckWaitCondition pActionData
          break
       case "fits"
          if revTutorialObjectFitsGuide(tObject, pActionData["guide"], pActionData["tolerance"]) then
+            revTutorialSnapObjectToGuide tObject, pActionData["guide"]
             return true
          end if
          break
@@ -1093,8 +1063,17 @@ function revTutorialCheckWaitCondition pActionData
                return true
             end if
          else if pActionData["state"] is "scripted" then
+            # If the script hasn't changed then don't do anything.
+            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+               break
+            end if
             if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
                return true
+            else if sWait["current script"] is not empty then
+               add 1 to sWait["incorrect attempts"]
+               put the script of tObject into sWait["current script"]
+               # Show the current script and the target script in the tip stack
+               revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
             end if
          end if
          break
@@ -1107,6 +1086,8 @@ on revTutorialWaitUntilObjectIsSelected
 end revTutorialWaitUntilObjectIsSelected
 
 on revTutorialWaitUntilObjectIsScripted pObject
+   put the script of pObject into sWait["current script"]
+   put 0 into sWait["incorrect attempts"]
    revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectIsScripted
 
@@ -1119,7 +1100,11 @@ on revTutorialWaitUntilObjectIsFocused
 end revTutorialWaitUntilObjectIsFocused
 
 on revTutorialWaitForObject
-   revIDESubscribe "ideNewControl"
+   if sWait["object"]["type"] is "stack" then
+      revIDESubscribe "ideNewStack"
+   else
+      revIDESubscribe "ideNewControl"
+   end if
 end revTutorialWaitForObject
 
 on revTutorialWaitUntilObjectFitsGuide pObject
@@ -1133,7 +1118,7 @@ on revTutorialWaitUntilThereIsAPaletteForObject pPalette
    if pPalette is "property inspector" then
       revIDESubscribe "ideInspectObjects"
    else if pPalette is "script editor" then
-      enable button "standard" of this card of stack "revMenuBar"
+      revIDEHighlightObject "menubar", "standard"
       revIDESubscribe "ideEditScript"
    end if
 end revTutorialWaitUntilThereIsAPaletteForObject
@@ -1168,6 +1153,7 @@ end revTutorialWaitConditionSatisfied
 #
 ##############################################################################
 
+local sHighlight
 on revTutorialDoHighlight pActionData
    try
       switch pActionData["highlight type"]
@@ -1176,6 +1162,9 @@ on revTutorialDoHighlight pActionData
             break
          case "menu"
             revTutorialHighlightMenuItem pActionData["menu"], pActionData["item"]
+            break
+         case "toolbar"
+            revTutorialHighlightToolbarItem pActionData["item"]
             break
          case "property"
             revTutorialHighlightInspector pActionData["section"], pActionData["property"]
@@ -1186,16 +1175,17 @@ on revTutorialDoHighlight pActionData
          case "guide"
             revTutorialHighlightGuide pActionData["guide"]
             break
+         case "script editor"
+            revTutorialHighlightScriptEditorItem pActionData["item"], pActionData["object"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
    end try
+   # Subscribe to the resumestack message so that we can respond when
+   #  the wrong palette receives focus
+   revIDESubscribe "ideResumeStack"
 end revTutorialDoHighlight
-
-on revTutorialClearHighlights
-   revTutorialClearMenuHighlight
-   revTutorialClearObjectHighlight
-end revTutorialClearHighlights
 
 local sObjectState
 on revTutorialHighlightObject pObjType, pTag
@@ -1210,10 +1200,15 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   revTutorialPositionStack tObject, true
+   put "object" into sHighlight["type"]
+   put tObject into sHighlight["object"]
+   revIDESubscribe "ideMoveStack", revIDEStackOfObject(tObject)
+   revIDESubscribe "idePropertyChanged", tObject
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightObject
 
 on revTutorialClearObjectHighlight
+   /*
    repeat for each key tType in sObjectState
       repeat for each key tTag in sObjectState[tType]
          set the borderwidth of sTaggedObjects[tType][tTag] to sObjectState[tType][tTag]["borderwidth"]
@@ -1221,124 +1216,59 @@ on revTutorialClearObjectHighlight
       end repeat
    end repeat
    put empty into sObjectState
+   */
 end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
-   local tTool
-   switch pTool
-      case "Run Mode"
-         put "com.livecode.tool.Browse" into tTool
-         break
-      case "Edit Mode"
-         put "com.livecode.tool.Pointer" into tTool
-         break
-      case "Create Data Grid"
-         put "com.livecode.interface.classic.DataGrid" into tTool
-         break
-      case "Create Label Field"
-         put "com.livecode.interface.classic.LabelField" into tTool
-         break
-      case "Create Button"
-         put "com.livecode.interface.classic.Button" into tTool
-         break
-      case "Create Text Area"
-         put "com.livecode.interface.classic.TextArea" into tTool
-         break
-      case "Create Field"
-         put "com.livecode.interface.classic.Field" into tTool
-         break
-      case "Create Combo Box"
-         put "com.livecode.interface.classic.ComboBox" into tTool
-         break
-      case "Create Option Menu"
-         put "com.livecode.interface.classic.OptionMenu" into tTool
-         break
-      case "Create Popup Menu"
-         put "com.livecode.interface.classic.Image" into tTool
-         break
-      case "Create Radio Button"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-      case "Create Image"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-      case "Create Rectangle Button"
-         put "com.livecode.interface.classic.RectangleButton" into tTool
-         break
-      case "Create Slider"
-         put "com.livecode.interface.classic.Slider" into tTool
-         break
-      case "Create Default Button"
-         put "com.livecode.interface.classic.DefaultButton" into tTool
-         break
-      case "Create Scrollbar"
-         put "com.livecode.interface.classic.Scrollbar" into tTool
-         break
-      case "Create Little Arrows"
-         put "com.livecode.interface.classic.LittleArrows" into tTool
-         break
-      case "Create Tab Panel"
-         put "com.livecode.interface.classic.TabPanel" into tTool
-         break
-      case "Create Checkbox"
-         put "com.livecode.interface.classic.Checkbox" into tTool
-         break
-      case "Create Pulldown Menu"
-         put "com.livecode.interface.classic.PulldownMenu" into tTool
-         break
-      case "Create Player"
-         put "com.livecode.interface.classic.Player" into tTool
-         break
-      case "Create Table Field"
-         put "com.livecode.interface.classic.TableField" into tTool
-         break
-      case "Create List Field"
-         put "com.livecode.interface.classic.ListField" into tTool
-         break
-      case "Create Progress Bar"
-         put "com.livecode.interface.classic.ProgressBar" into tTool
-         break
-      case "Create Regular Graphic"
-         put "com.livecode.interface.classic.RegularGraphic" into tTool
-         break
-      case "Create Oval Graphic"
-         put "com.livecode.interface.classic.OvalGraphic" into tTool
-         break
-      case "Create Round Rect Graphic"
-         put "com.livecode.interface.classic.RoundRectGraphic" into tTool
-         break
-      case "Create Rectangle Graphic"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
-         break
-   end switch
-   
-   dispatch "isolateTool" to stack "revTools" with tTool
-   revTutorialPositionStack the long id of button tTool of stack "revTools", true
+   revIDEHighlightObject "tools", pTool
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+   put "tool" into sHighlight["type"]
+   put pTool into sHighlight["tool"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
 on revTutorialHighlightInspector pSection, pGroup
-   dispatch "hiliteFrameItem" to stack "revInspector" with pSection
-   dispatch "navSelected" to stack "revInspector" with pSection
-   revTutorialPositionStack the long id of group pGroup of stack "revInspector", true
+   local tObjectData
+   put pSection into tObjectData["section"]
+   put pGroup into tObjectData["group"]
+   revIDEHighlightObject "inspector", tObjectData
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+   put "property" into sHighlight["type"]
+   put pGroup into sHighlight["group"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightInspector
 
-local sMenuHighlight
+on revTutorialHighlightScriptEditorItem pItem, pObject
+   local tSEData, tObject
+   put sTaggedObjects[pObject["type"]][pObject["tag"]] into tObject
+   put tObject into tSEData["object"]
+   put pItem into tSEData["item"]
+   revIDEHighlightObject "script editor", tSEData
+   revIDESubscribe "ideMoveStack", the name of stack revScriptEditor(tObject)
+   put "script editor" into sHighlight["type"]
+   put pItem into sHighlight["item"]
+   put tObject into sHighlight["object"]
+   revTutorialPositionStackForHighlight
+end revTutorialHighlightScriptEditorItem
+
+local sDisabled
 on revTutorialHighlightMenuItem pMenu, pItem
-   revTutorialPositionStack the long id of menu pMenu, false, true
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
-   put tMenuHighlight into sMenuHighlight
-   buildMenus
+   revIDEHighlightObject "menubar", tMenuHighlight
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   put "menu" into sHighlight["type"]
+   put pMenu into sHighlight["menu"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightMenuItem
 
-on revTutorialClearMenuHighlight
-   put empty into sMenuHighlight
-end revTutorialClearMenuHighlight
-
-on disableMenuBar
-   disableStack "revMenuBar"
-   enable menu "File"
-end disableMenuBar
+on revTutorialHighlightToolbarItem pItem
+   revIDEHighlightObject "menubar", pItem
+   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   put "toolbar" into sHighlight["type"]
+   put pItem into sHighlight["item"]
+   revTutorialPositionStackForHighlight
+end revTutorialHighlightToolbarItem
 
 on disableToolsPalette
    dispatch "disableTools" to stack "revTools"
@@ -1348,7 +1278,6 @@ on enableToolsPalette
    dispatch "enableTools" to stack "revTools"
 end enableToolsPalette
 
-local sDisabled
 on disableStack pStack
    repeat for each line tControl in the childControlIDs of this card of stack pStack
       if the enabled of control id tControl of this card of stack pStack then
@@ -1366,161 +1295,6 @@ on enableStack pStack
       put false into sDisabled[pStack][tControl]
    end repeat
 end enableStack
-
-on buildMenus
-   buildFileMenu
-   buildEditMenu
-end buildMenus
-
-command buildFileMenu
-   local tFile
-   put "(&New Mainstack" & return after tFile
-   
-   put "(&New Substack" & return after tFile
-   /*
-   if sStep is not "stack" then
-      put "(&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
-   else
-      put "(&New Substack" & return after tFile
-   end if
-   */
-   put "(&Open Stack.../O" & return after tFile
-   put "(Open Recent File" & return after tFile
-   put revIDEGetRecentPathsAsMenu() & return after tFile
-   put "(&Close/W" & return after tFile
-   put "(Close and Remove From Memor&y" & return after tFile
-   put "-" & return after tFile
-   
-   put "(Import As Control" & return after tFile
-   put tab & "Image File.../>" & return after tFile
-   put tab & "Audio File..." & return after tFile
-   put tab & "Video File..." & return after tFile
-   put tab & "Text File..." & return after tFile
-   put tab & "Snapshot of Screen" & return after tFile
-   put tab & "Snapshot of Selected Object" & return after tFile
-   put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
-   put tab & "All Audio Files in Folder..." & return after tFile
-   
-   put "(New Referenced Control" & return after tFile
-   put tab & "Image File..." & return after tFile
-   put tab & "Quicktime-Supported File..." & return after tFile
-   put tab & "-" & return after tFile
-   put tab & "All Images in Folder..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(&Save/S" & return after tFile
-   put "(Save &As..." & return after tFile
-   put "(Move S&ubstack to File..." & return after tFile
-   put "(&Revert to Saved..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(Share This Stack..." & return after tFile
-   put "-" & return after tFile
-   
-   put"(Standalone Application Settings..." & return after tFile
-   put "(Save as Standalone Application..." & return after tFile
-   put "-" & return after tFile
-   
-   put "(P&age Setup..." & return after tFile
-   put "(&Print Card.../P" & return after tFile
-   put "(Print Field..." & return after tFile
-   put "-" & return after tFile
-   
-   ## EJB 2014-08-26
-   ## [[Bug 12880]]
-   if the platform is "Linux" then
-      put "&Quit" & return after tFile
-   else
-      put "E&xit" & return after tFile
-   end if
-   
-   set the text of menu "File" to tFile
-   
-   if sMenuHighlight["File"] is not empty then
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["File"], menu "File")
-      enable line it of menu "File"
-   end if
-   enable menu "File"
-end buildFileMenu
-
-command buildEditMenu
-   local tEdit
-   
-   local tObjectsLabel
-   if word 1 of the selObj is "card" then
-      put "Card" into tObjectsLabel
-   else if word 1 of the selobj is not "stack" then
-      put "Objects" into tObjectsLabel
-   else
-      put empty into tObjectsLabel
-   end if
-   
-   local tSelectionLabel
-   if the selectedImage is not empty then
-      put "Image Selection" into tSelectionLabel
-   else if false then
-      put "Text" into tSelectionLabel
-   else if true then
-      put tObjectsLabel into tSelectionLabel
-   else
-      put empty into tSelectionLabel
-   end if
-   
-   local tClipboardLabel
-   switch the clipboard
-      case "empty"
-         put empty into tClipboardLabel
-         break
-         -- MW-2012-09-19: [[ Bug 9600 ]] Treat 'files' as 'text' clipboard type.
-      case "text"
-      case "files"
-         if the selectedField is empty then
-            put empty into tClipboardLabel
-         else
-            put "Text" into tClipboardLabel
-         end if
-         break
-      case "objects"
-         put "Objects" into tClipboardLabel
-         break
-      case "image"
-         put "Image" into tClipboardLabel
-         break
-   end switch
-   
-   put "(&Undo/Z" & return after tEdit
-   put "-" & return after tEdit
-   put "(Cu&t" && tSelectionLabel & "/X|cut" & return after tEdit
-   put "(&Copy" && tSelectionLabel & "/C|copy" & return after tEdit
-   put "(&Paste"&& tClipboardLabel & "/V|paste" & return after tEdit
-   put "(Paste &Unformatted/Cmd Shift Opt V" & return after tEdit
-   put "(Clea&r" && tSelectionLabel & return after tEdit
-   put "-" & return after tEdit
-   put "(&Duplicate" && tObjectsLabel &"/D" & return after tEdit
-   put "(&Replicate..." & return after tEdit
-   put "-" & return after tEdit
-   put "(Select All/A" & return after tEdit
-   put "(Deselect All" & return after tEdit
-   put "(In&vert Selection" & return after tEdit
-   put "(Select Grouped Controls" & return after tEdit
-   put "(Intersected Selections" & return after tEdit
-   put "-" & return after tEdit
-   put "(Find and Replace.../F" & return after tEdit
-   put "-" & return after tEdit
-   put "(Pre&ferences" after tEdit
-   
-   set the text of button "Edit" of stack "revMenuBar" to tEdit
-   
-   if sMenuHighlight["Edit"] is not empty then
-      enable menu "Edit"
-      set the wholematches to false
-      get lineoffset(sMenuHighlight["Edit"], menu "Edit")
-      enable line it of menu "Edit"
-   end if
-   
-end buildEditMenu
 
 ##############################################################################
 #
@@ -1549,7 +1323,10 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revTutorialPositionStack sGuides[pGuide], true
+   revIDESubscribe "ideMoveStack", revIDEStackOfObject(sGuides[pGuide])
+   put "guide" into sHighlight["type"]
+   put pGuide into sHighlight["guide"]
+   revTutorialPositionStackForHighlight
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
@@ -1564,6 +1341,21 @@ end revTutorialClearGuides
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
 #
 ##############################################################################
+
+on closeStackRequest
+   local tStack
+   put revIDEStackOfObject(the long id of the target) into tStack
+   repeat for each element tMainstack in sTaggedObjects["stack"]
+      if tMainstack is tStack then
+         answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
+         if it is "No" then
+            exit closeStackRequest
+         end if
+         send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+      end if
+   end repeat
+   pass closeStackRequest
+end closeStackRequest
 
 on openField
    local tObject
@@ -1587,16 +1379,16 @@ on focusIn
    pass focusIn
 end focusIn
 
-on newStack
+on ideNewStack pStack
    if "stack" is among the keys of sCaptureData then
-      put the long id of the target into sTaggedObjects["stack"][sCaptureData["stack"]]
+      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"]]
       delete variable sCaptureData["stack"]
    end if
    
    if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
       revTutorialWaitConditionSatisfied
    end if
-end newStack
+end ideNewStack
 
 on ideAnswerDialogClosed pObject
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
@@ -1624,6 +1416,11 @@ on ideNewControl pObject
 end ideNewControl
 
 on idePropertyChanged pObject
+   # If a highlighted object moved then reposition the tutorial step pointer
+   if not pObject begins with "stack" and revTutorialObjectIsHighlighted(pObject) then
+      revTutorialPositionStackForHighlight
+   end if
+   
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
       if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
          if revTutorialCheckWaitCondition(sWait) then
@@ -1634,6 +1431,23 @@ on idePropertyChanged pObject
    end if
    pass idePropertyChanged
 end idePropertyChanged
+
+on ideMoveStack pStack
+   # If the highlighted stack is moved, then reposition the tutorial step pointer
+   if revTutorialObjectIsHighlighted(pStack) then
+      revTutorialPositionStackForHighlight
+   end if
+end ideMoveStack
+
+on ideResumeStack
+   local tStack
+   put revIDEStackOfObject(the long id of the target) into tStack
+   if not revTutorialObjectIsHighlighted(tStack) then
+      # If the target stack is not highlighted then react accordingly
+   else
+      revTutorialPositionStackForHighlight
+   end if
+end ideResumeStack
 
 on mouseUp pWhich
    local tObject
@@ -1652,10 +1466,6 @@ on mouseUp pWhich
    
    pass mouseUp
 end mouseUp
-
-on menuPick pWhich
-   pass menuPick
-end menuPick
 
 on mouseDoubleUp pWhich
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
@@ -1714,6 +1524,78 @@ end newTool
 #                     UTILITIES
 #
 ##############################################################################
+
+function revTutorialObjectIsHighlighted pObject
+   if sHighlight is empty then
+      return false
+   end if
+   
+   switch sHighlight["type"]
+      case "guide"
+         return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
+      case "property"
+         return pObject is the name of stack revIDEPaletteToStackName("inspector")
+      case "menu"
+         return pObject is the name of stack revIDEPaletteToStackName("menubar")
+      case "tool"
+         return pObject is the name of stack revIDEPaletteToStackName("tools")
+      case "object"
+         return pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"])
+      case "script editor"
+         return pObject is the name of stack revScriptEditor(sHighlight["object"])
+   end switch
+   return false
+end revTutorialObjectIsHighlighted
+
+on revTutorialPositionStackForHighlight
+   lock screen
+   switch sHighlight["type"]
+      case "guide"
+         revTutorialPositionStack "", sGuides[sHighlight["guide"]], true
+         break
+      case "property"
+         revTutorialPositionStack "inspector", sHighlight["group"], true
+         break
+      case "menu"
+         revTutorialPositionStack "menubar", sHighlight["menu"], false
+         break
+      case "toolbar"
+         revTutorialPositionStack "menubar", sHighlight["item"], false
+         break
+      case "tool"
+         revTutorialPositionStack "tools", sHighlight["tool"], true
+         break
+      case "object"  
+         revTutorialPositionStack "", sHighlight["object"], true
+         break
+      case "script editor"
+         revTutorialPositionStack "script editor", sHighlight, true
+         break
+   end switch
+   unlock screen
+end revTutorialPositionStackForHighlight
+
+on revTutorialClearHighlights
+   switch sHighlight["type"]
+      case "tool"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+         break
+      case "property"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+         break
+      case "menu"
+         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+         break
+      case "object"
+         revIDEUnsubscribe "idePropertyChanged", sHighlight["object"]
+         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sHighlight["object"])
+         break
+      case "guide"
+         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sGuides[sHighlight["guide"]])
+         break
+   end switch
+   put empty into sHighlight
+end revTutorialClearHighlights
 
 function revTutorialObjectIsSelected pLongID
    return pLongID is among the lines of revIDESelectedObjects()
@@ -1775,6 +1657,18 @@ function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
    end if
    return revTutorialRectsAreApproximatelyEqual(pTolerance, tRect, the rect of sGuides[pGuide])
 end revTutorialObjectFitsGuide
+
+on revTutorialSnapObjectToGuide pObject, pGuide
+   local tRect
+   put the rect of sGuides[pGuide] into tRect
+   if pObject begins with "stack" then
+      set the resizable of pObject to false
+      set the width of pObject to item 3 of tRect + 1
+      set the height of pObject to item 4 of tRect + 1
+   else 
+      set the rect of pObject to item 1 of tRect - 1, item 2 of tRect - 1, item 3 of tRect + 1, item 4 of tRect + 1
+   end if
+end revTutorialSnapObjectToGuide
 
 // In the future we might want to add a bit more "approximity" to this.
 function revTutorialScriptIs pObjScript, pTargetScript

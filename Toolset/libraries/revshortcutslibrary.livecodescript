@@ -35,7 +35,7 @@ global gREVSuppressMessages
 
 on arrowKey pDirection, pTarget
    if pTarget is empty then
-      put the target into pTarget
+      put the long id of the target into pTarget
    end if
    
    if word 1 of the name of pTarget is "button" and the arm of pTarget then pass arrowKey
@@ -175,7 +175,7 @@ on commandKeyDown pWhich
          case "?"
          case "/"
             if the optionKey is not down then
-               send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
+               revIDEHelpKeyPressed
             end if
             --      if the optionKey is down then revDocsToggle
             --      else
@@ -252,9 +252,9 @@ on tabKey
    if the commandKey is down and the optionKey is down then
       --toggle tool
       if the tool is "pointer tool" then 
-         send "menuPick" && quote & "Browse Tool" & quote to btn "Tools" of stack "revMenuBar"
+         revIDESetTool "browse"
       else 
-         send "menuPick" && quote & "Pointer tool" & quote to btn "Tools" of stack "revMenuBar"
+         revIDESetTool "pointer"
       end if
       exit tabKey
    end if
