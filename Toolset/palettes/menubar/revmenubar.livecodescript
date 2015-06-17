@@ -40,6 +40,8 @@ on subscribeMessages
    
    revIDESubscribe "idePluginsChanged"
    revIDESubscribe "ideWindowsChanged"
+   
+   revIDESubscribe "ideTutorialProgressChanged"
 end subscribeMessages
 
 local sTextMenuDisabledText, sTextMenuText, sPluginMenuText
@@ -242,6 +244,12 @@ on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
 
+on ideTutorialProgressChanged
+   highlightObject empty
+   layoutMenu
+   revMenubarBuildMenus
+end ideTutorialProgressChanged
+
 on idePreferenceChanged pPreference
    switch pPreference
       case  "cToolbarText"
@@ -261,7 +269,7 @@ end idePreferenceChanged
 
 on ideToggleChanged pToggle
    switch pToggle
-      case "supressMessages"
+      case "suppressMessages"
       case "suppressErrors"
       case "selectGrouped"
          updateButtonState
@@ -291,12 +299,12 @@ on generateMenubarUI
       delete group "icons" of me
    end if
    
-   if there is a group "menu" of me then
-      delete group "menu" of me
+   if there is a group "toolbar" of me then
+      delete group "toolbar" of me
    end if
    
    create group "icons"
-   create group "menu"
+   create group "toolbar"
    
    lock messages
    # Setup the default button
@@ -307,8 +315,18 @@ on generateMenubarUI
    set the blendlevel of the templatebutton to 0
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
-   
+
+   # Setup the default image
    set the resizequality of the templateimage to "best"
+   
+   # Setup the default field
+   set the traversalon of the templatefield to false
+   set the threed of the templatefield to false
+   set the showborder of the templatefield to false
+   set the showfocusborder of the templatefield to false
+   set the opaque of the templatefield to false
+   set the height of the templatefield to 21
+   set the locktext of the templatefield to true
    
    local tDividerCount
    put 1 into tDividerCount
@@ -316,8 +334,8 @@ on generateMenubarUI
       if tItem is "Divide" then
          local tName
          put tItem & tDividerCount into tName
-         create image tName in group "menu"
-         set the filename of image tName of group "menu" of me to revMenubarButtonNameToIconPath(tItem)
+         create image tName in group "toolbar"of me
+         set the filename of image tName of group "toolbar" of me to revMenubarButtonNameToIconPath(tItem)
          add 1 to tDividerCount
       else
          create invisible image tItem in group "icons" of me
@@ -342,14 +360,51 @@ on generateMenubarUI
             end if
          end repeat
          
-         create button tItem in group "menu" of me
-         set the icon of button tItem of group "menu" of me to the id of image tItem of group "icons" of me
-         set the label of button tItem of group "menu" of me to revIDELocalizeMenuItem(tItem)
+         create button tItem in group "toolbar" of me
+         set the icon of button tItem of group "toolbar" of me to the id of image tItem of group "icons" of me
+         set the label of button tItem of group "toolbar" of me to revIDELocalizeMenuItem(tItem)
       end if
    end repeat
    
+   set the hilitedIcon of the templatebutton to 0
+   set the disabledIcon of the templatebutton to 0
+   
+   if there is a group "tutorial" of me then
+      delete group "tutorial" of me
+   end if
+   
+   create group "tutorial"
+   create group "progress" in group "tutorial" of me
+   set the margins of it to 0
+   set the opaque of the templateGraphic to true
+   set the style of the templateGraphic to "rectangle"
+   set the lineSize of the templateGraphic to 0
+   create graphic "Trough" in group "Progress" of group "tutorial" of me
+   create graphic "Bar" in group "Progress" of group "tutorial" of me
+   set the backcolor of it to "white"
+   
+   create field "label" in group "tutorial" of me
+   
+   set the icongravity of the templatebutton to empty
+   set the showname of the templatebutton to false
+   create button "quit" in group "tutorial" of me
+   set the width of it to 15
+   set the height of it to 21
+   create invisible image "quit" in group "icons" of me
+   set the filename of image "quit" of me to revIDEPaletteResourcePath("images/") & "quit.png"
+   set the icon of button "quit" of group "tutorial" of me to the id of image "quit" of group "icons" of me
+   
+   hide group "tutorial" of me
+   
+   reset the templategraphic
    reset the templatebutton
    reset the templateimage
+   reset the templatefield
+   
+   # Quick hack to stop flicker of buttons that toggle. 
+   set the autohilite of button "messages" to false
+   set the autohilite of button "select grouped" to false
+   set the autohilite of button "errors" to false
    unlock messages
 end generateMenubarUI
 
@@ -418,6 +473,7 @@ end generateContextMenu
 on layoutMenu
    lock screen
    lock messages
+
    local tDividerCount
    put 1 into tDividerCount
    
@@ -431,22 +487,50 @@ on layoutMenu
    end if
    local tTopLeft
    put the topleft of me into tTopLeft
+   
+   local tLastDivide
    repeat for each item tItem in revMenubarItems()
       if tItem is "Divide" then
          local tName
          put tItem & tDividerCount into tName
-         set the rect of image tName of group "menu" of me to tLeft + 4, tTop, tLeft + 6, tTop + 41
+         set the rect of image tName of group "toolbar" of me to tLeft + 4, tTop, tLeft + 6, tTop + 41
          add 1 to tDividerCount
          add 10 to tLeft
+         put the long id of image tName into tLastDivide
       else
          local tWidth, tHeight
-         set the textStyle["bold"] of button tItem of group "menu" of me to false
-         put max(the formattedWidth of button tItem of group "menu" of me, 60) into tWidth
-         set the width of button tItem of group "menu" of me to tWidth
-         set the topleft of button tItem of group "menu" of me to tLeft,tTop
+         set the textStyle["bold"] of button tItem of group "toolbar" of me to false
+         put max(the formattedWidth of button tItem of group "toolbar" of me, 60) into tWidth
+         set the width of button tItem of group "toolbar" of me to tWidth
+         set the topleft of button tItem of group "toolbar" of me to tLeft,tTop
          add tWidth to tLeft
       end if
    end repeat
+   
+   local tTutorial
+   put revIDETutorialInProgress() into tTutorial
+   if tTutorial is not empty then
+      show group "tutorial" of me
+      show tLastDivide
+      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial
+      set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
+      set the topleft of field "label" of group "tutorial" of me to 10, 10
+      
+      set the topleft of button "quit" of group "tutorial" of me to 10 + the width of field "label" of group "tutorial" of me, 10
+      
+      set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
+      set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revTutorialDoneRatio() * 100, 5
+      set the loc of group "progress" of me to the loc of field "label" of me
+      set the top of group "progress" of me to 35
+      
+      set the topleft of group "tutorial" of me to tLeft, tTop
+      add the formattedWidth of group "tutorial" of me + 10 to tLeft
+   else
+      hide tLastDivide
+      hide group "tutorial" of me
+   end if	
+   
    set the width of me to tLeft + 10
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
@@ -454,9 +538,14 @@ on layoutMenu
    set the points of graphic "Divider" of group "revMenuBar" of me to "0,24" & return & tLeft + 10 & ",24" & return
    set the topleft of me to tTopLeft
    unlock messages
+   
    updateButtonState
    unlock screen
-end layoutMenu
+end layoutMenu	
+
+function revMenubarItems
+   return "Inspector,Code,Message Box,Divide,Group,Edit Group,Select Grouped,Divide,Messages,Errors,Divide,Sample Stacks,Tutorials,Resources,Dictionary,Divide,Test,Divide"
+end revMenubarItems
 
 on updateMenubarPreference
    lock screen
@@ -469,13 +558,13 @@ on updateMenubarPreference
    put the topleft of me into tTopLeft
    
    local tButtonRef
-   repeat for each line tButton in the childControlNames of group "menu" of me
+   repeat for each line tButton in the childControlNames of group "toolbar" of me
       if tButton is "Divide" then next repeat
-      if there is not a button tButton of group "menu" of me then
+      if there is not a button tButton of group "toolbar" of me then
          next repeat
       end if
       
-      put the long id of button tButton of group "menu" into tButtonRef
+      put the long id of button tButton of group "toolbar" into tButtonRef
       if tShowIcons and tShowText then
          set the height of tButtonRef to 43
       else if tShowIcons then
@@ -508,9 +597,9 @@ on updateMenubarPreference
          set the height of me to 47
       end if
    else
-      show group "menu" of me
+      show group "toolbar" of me
       if tShowIcons is false and tShowText is false then
-         hide group "menu" of me
+         hide group "toolbar" of me
          set the height of me to 23
       else if tShowIcons is false then
          set the height of me to 44
@@ -536,65 +625,90 @@ on setButtonHilite pLongId, pValue
    end if
 end setButtonHilite
 
+private on disableToolbar
+   local tControlName
+   repeat for each line tControl in the childControlIDs of group "toolbar" of me
+      disable control id tControl of stack "revMenubar"
+   end repeat
+end disableToolbar
+
+private on enableToolbar
+   local tControlName
+   repeat for each line tControl in the childControlIDs of group "toolbar" of me
+      enable control id tControl of stack "revMenubar"
+   end repeat
+end enableToolbar
+
 on updateButtonState
+   lock screen
+   lock messages
+   
+   enableToolbar
+
    local tState
    put ((the selectedField) is empty) & comma & ((the selObj) is empty) & comma & (the mode of the topStack is 1) into tState
    
    if the editBg of the topStack and word 1 of (the selObj) is not "group" then
-      setButtonHilite the long id of button "edit group" of group "menu" of me, true
-      enable button "edit group" of group "menu" of me 
+      setButtonHilite the long id of button "edit group" of group "toolbar" of me, true
+      enable button "edit group" of group "toolbar" of me 
    else
-      setButtonHilite the long id of button "edit group" of group "menu" of me, false
-      enable button "edit group" of group "menu" of me
+      setButtonHilite the long id of button "edit group" of group "toolbar" of me, false
+      enable button "edit group" of group "toolbar" of me
    end if
    
    if (the selObj) is not empty and word 1 of (the selObj) is "group" and the number of lines in (the selObj) is 1 then
-      setButtonHilite the long id of button "Group" of group "menu" of me, true
-      set the textStyle of button "Group" of group "menu" of me to "bold"
-      set the label of button "Group" of group "menu" of me to "Ungroup"
+      setButtonHilite the long id of button "Group" of group "toolbar" of me, true
+      set the textStyle of button "Group" of group "toolbar" of me to "bold"
+      set the label of button "Group" of group "toolbar" of me to "Ungroup"
    else
-      setButtonHilite the long id of button "Group" of group "menu" of me, false
-      set the label of button "Group" of group "menu" of me to "Group"
+      setButtonHilite the long id of button "Group" of group "toolbar" of me, false
+      set the label of button "Group" of group "toolbar" of me to "Group"
       if not the editBg of the topStack then 
-         disable button "edit group" of group "menu" of me 
+         disable button "edit group" of group "toolbar" of me 
       end if
    end if
    
    if (the selObj) is empty then
       if the mode of the topStack is 1 then
-         enable button "Code" of group "menu" of me 
+         enable button "Code" of group "toolbar" of me 
       else 
-         disable button "Code" of group "menu" of me 
+         disable button "Code" of group "toolbar" of me 
       end if
-      disable button "Group" of group "menu" of me 
+      disable button "Group" of group "toolbar" of me 
    else
       if word 1 of (the selObj) is not among the items of "card,stack" then
-         enable button "Group" of group "menu" of me 
+         enable button "Group" of group "toolbar" of me 
       end if
-      enable button "Code" of group "menu" of me 
+      enable button "Code" of group "toolbar" of me 
    end if
    
-   enable button "Inspector" of group "menu" of me
+   enable button "Inspector" of group "toolbar" of me
    
    if revIDEGetPreference("cDeployPlatforms") is empty then
-      disable button "Test" of group "menu" of me
+      disable button "Test" of group "toolbar" of me
    else
-      enable button "Test" of group "menu" of me
+      enable button "Test" of group "toolbar" of me
    end if
    
    local tSelectedObject
    put the selectedObject into tSelectedObject
    if there is no tSelectedObject then
       if the mode of topStack is not 1 then
-         disable button "Inspector"of group "menu" of me
+         disable button "Inspector"of group "toolbar" of me
       end if
    end if
    
    global gRevSuppressErrors, gRevSuppressMessages
-   setButtonHilite the long id of button "Errors" of group "menu" of me, gRevSuppressErrors
-   setButtonHilite the long id of button "Messages" of group "menu" of me, gRevSuppressMessages
-   setButtonHilite the long id of button "Select Grouped" of group "menu" of me, the selectGroupedControls
+   setButtonHilite the long id of button "Errors" of group "toolbar" of me, gRevSuppressErrors
+   setButtonHilite the long id of button "Messages" of group "toolbar" of me, gRevSuppressMessages
+   setButtonHilite the long id of button "Select Grouped" of group "toolbar" of me, the selectGroupedControls
    
+   if revIDETutorialInProgress() is not empty then
+      disableToolbar
+   end if
+   
+   unlock messages
+   unlock screen
 end updateButtonState
 
 on revTextbar
@@ -611,10 +725,6 @@ on revFullBar
    revIDESetPreference "cToolbarText", true
    revIDESetPreference "cToolbarIcons", true
 end revFullBar
-
-function revMenubarItems
-   return "Inspector,Code,Message Box,Divide,Group,Edit Group,Select Grouped,Divide,Messages,Errors,Divide,Sample Stacks,Tutorials,Resources,Dictionary,Divide,Test"
-end revMenubarItems
 
 function revMenubarButtonNameToIconPath pName, pStyle
    local tPath, tIcon
@@ -633,19 +743,60 @@ end revIDELocalizeMenuItem
 
 on mouseUp
    lock screen
-   if the owner of the target is "revMenuBar" then
-   else if the target begins with "button" then
+   if the target begins with "button" then
       local tOriginButton, tTarget
       put the short name of the target into tTarget
-      revMenubarMenuButtonClicked tTarget
-      layoutMenu
+      if tTarget is "quit" then
+         answer "Are you sure you want to exit this tutorial?" with "OK" or "Cancel"
+         if it is "OK" then
+            revIDEStopTutorial
+         end if
+      end if
    end if
    unlock screen
 end mouseUp
 
-on mouseDown
-   if the owner of the target is "revMenuBar" then
+function absoluteRectOfObject pObject
+   local tRect
+   if there is a button pObject of group "revMenuBar" of me then
+      put the rect of button pObject into tRect
+      if the platform is "macos" then
+         put item 1 of tRect + 140 into item 1 of tRect
+         put item 3 of tRect + 140 into item 3 of tRect
+         return tRect
+      end if
+   else 
+      if there is a button pObject of group "toolbar" of me then
+         put the rect of button pObject of group "toolbar" of me into tRect
+      else if pObject is "tutorial" then
+         put the rect of group "tutorial" of me into tRect
+      end if
+   end if
+   put revIDERelativeRectToAbsolute(tRect, me) into tRect
+   return tRect
+end absoluteRectOfObject
+
+local sMenuHighlight
+on highlightObject pObject
+   if pObject is empty or pObject is an array then
+      put pObject into sMenuHighlight
       revMenubarBuildMenus
+   else if there is a button pObject of stack "revMenubar" then
+      enable button pObject of stack "revMenubar"
+   else if pObject is "tutorial" then
+      // HIghlight tutorial progress group
+   end if
+   layoutMenu
+end highlightObject
+   
+on mouseDown
+   //answer the short name of the owner of the target
+   //answer the target
+   
+   if the short name of the owner of the target is "revMenuBar" then
+      revMenubarBuildMenus
+   else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
+      revMenubarMenuButtonClicked the short name of the target
    end if
    pass mouseDown
 end mouseDown
@@ -663,37 +814,26 @@ on revMenubarMenuButtonClicked pWhich
          end if
          break
       case "Message Box"
-         revIDEShowMessageBox
+         revIDETogglePalette "message box"
          break
       case "Group"
-         lock screen
          if the number of lines in (the selObj) > 1 or word 1 of (the selObj) is not "group" then
             revIDEActionGroupObjects
          else
             revIDEActionUngroup
          end if
-         unlock screen
          break
       case "Edit Group"
          revIDEActionEditGroup
          break
       case "Select Grouped"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Select Grouped Controls"
-         unlock screen
          break
       case "Messages"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Suppress Messages"
-         unlock screen
          break
       case "Errors"
-         lock screen
-         set the hilite of the target to true
          revIDEToggle "Suppress Errors"
-         unlock screen
          break
       case "Sample Stacks"
       case "Tutorials"
@@ -724,11 +864,39 @@ command revMenubarBuildMenus
    local tContext
    put buildMenuContext() into tContext
    
+   lock screen
+   lock messages
    lock menus
    repeat for each item tMenu in revMenubarMenus()
       set the text of button tMenu of group "revMenuBar" of me to revMenubarBuildMenu(tMenu, tContext)
+      enable button tMenu of group "revMenuBar"
    end repeat
+   
+   if revIDETutorialInProgress() is not empty then
+      repeat for each item tMenu in revMenubarMenus()
+         disable button tMenu of group "revMenuBar" of me
+      end repeat
+      
+      repeat for each key tMenu in sMenuHighlight
+         enable button tMenu of group "revMenuBar" of me
+         local tMenuText
+         put the text of button tMenu of group "revMenuBar" of me into tMenuText
+         local tLineNumber
+         repeat for each line tLine in tMenuText
+            add 1 to tLineNumber
+            if tLine contains sMenuHighlight[tMenu] then
+               enable line tLineNumber of button tMenu of group "revMenuBar" of me
+            else if tLine begins with tab then
+               next repeat
+            else
+               disable line tLineNumber of button tMenu of group "revMenuBar" of me
+            end if
+         end repeat
+      end repeat
+   end if
    unlock menus
+   unlock messages
+   unlock screen
 end revMenubarBuildMenus
 
 function revMenubarBuildMenu pMenu, pContext
@@ -920,6 +1088,7 @@ private function revMenubarFileMenu pContext
    put "P&age Setup..." & return after tFile
    put enableMenuItem("&Print Card.../P", tIsUserTarget) & return after tFile
    put enableMenuItem("Print Field...", word 1 of (the selObj) is "field") & return after tFile
+
    put "-" & return after tFile
    
    ## EJB 2014-08-26
@@ -929,6 +1098,7 @@ private function revMenubarFileMenu pContext
    else
       put "E&xit" & return after tFile
    end if
+
    return modifyMenu("File", tFile)
 end revMenubarFileMenu
 
@@ -952,7 +1122,7 @@ private function revMenubarEditMenu pContext
       put "Image Selection" into tSelectionLabel
    else if pContext["textSelected"] then
       put "Text" into tSelectionLabel
-   else if pContext["objectsSelected"] then
+   else if pContext["objectsSelected"] then	
       put tObjectsLabel into tSelectionLabel
    else
       put empty into tSelectionLabel

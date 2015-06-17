@@ -1,0 +1,3 @@
+Email
+After building this app you’ll be able to create the UI (User interface) using LiveCode objects and make then interactive using script.\nYou’ll also learn your first coding skills: Variables and logic statements.
+http://www.bbc.co.uk

@@ -137,7 +137,7 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-      	 revInternal__setSplashStatus "Loading theme data..."
+         revInternal__setSplashStatus "Loading theme data..."
          revInternal__InitialiseIcons
          put the result into tSuccess	
       end if	
@@ -168,17 +168,15 @@ on revInternal__openStack
          put the result into tSuccess
       end if
       
-      
-      
       if tSuccess then
-         revInternal__setSplashStatus "Loading Tools..."
-         revInternal__InitialiseTools
+         revInternal__setSplashStatus "Loading Menu Bar..."
+         revInternal__InitialiseMenus
          put the result into tSuccess
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Menu Bar..."
-         revInternal__InitialiseMenus
+         revInternal__setSplashStatus "Loading Tools..."
+         revInternal__InitialiseTools
          put the result into tSuccess
       end if
       
@@ -242,10 +240,10 @@ on revInternal__openStack
       revIDEOpenPalette "Start Center"
    end if
    
-    try 	 	
-	     revIDEOpenPropertyInspectorControllerStacks 	 	
-	end try 
-
+   try 	 	
+      revIDEOpenPropertyInspectorControllerStacks 	 	
+   end try 
+   
    -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
    -- Luanch the installer in update mode to begin update process.
    --
@@ -274,7 +272,7 @@ on revInternal__openStack
       put tOldPath into $PATH
    end if
    
-    close stack "revSplash"
+   close stack "revSplash"
    
    revInternal__Log "Leave", "revInternal__openStack"
    revInternal__Log "End"

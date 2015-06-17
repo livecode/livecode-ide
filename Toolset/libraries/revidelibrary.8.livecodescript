@@ -313,6 +313,12 @@ private function __propertyDataFromInfoFile pFileName
       put tOptions into tDataA[tPropName]["options"]
 
       put item 10 of tLine into tDataA[tPropName]["subsection"]
+      
+      put item 11 of tLine into tDataA[tPropName]["min"]
+      put item 12 of tLine into tDataA[tPropName]["max"]
+      put item 13 of tLine into tDataA[tPropName]["step"]
+      
+      
    end repeat
    return tDataA
 end __propertyDataFromInfoFile
@@ -1249,6 +1255,10 @@ on revIDESubscribe pMessage, pObjectList
          revIDEPropertyRegisterListenerForObject tObject
          __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
       end repeat
+   else if pMessage is "ideMoveStack" then
+      repeat for each line tObject in pObjectList
+         __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
+      end repeat
    else
       __revIDEAddSubscription pMessage, tCallingObjectID
    end if
@@ -1278,6 +1288,10 @@ on revIDEUnsubscribe pMessage, pObject, pObjectList
          if sSubscriptions[pMessage & "," & tObject]["callback targets"] is empty then
             revIDEPropertyDeregisterListenerForObject tObject
          end if
+      end repeat
+   else if pMessage is "ideMoveStack" then
+      repeat for each line tObject in pObjectList
+         delete line lineoffset(pObject, sSubscriptions[pMessage & "," & tObject]["callback targets"]) of sSubscriptions[pMessage & "," & tObject]["callback targets"]
       end repeat
    else
       # Delete the calling object from the message: sSubscriptions[pMessage]["callback targets"]
@@ -1353,7 +1367,8 @@ function revIDEMessages
    return ( \
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
-         & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged,ideWindowsChanged" \
+         & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged," \
+         & "ideTutorialProgressChanged,ideWindowsChanged" \
          )
 end revIDEMessages
 
@@ -1379,7 +1394,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
    //if the tool is not "pointer tool" then exit revIDEMessageSend
 
    local tSubscriptionList
-   if pMessage is "idePropertyChanged" then
+   if pMessage is "idePropertyChanged" or pMessage is "ideMoveStack" then
       local tTargetsA, tSubscription
       repeat for each line tLine in pEffectedTarget
          put pMessage & "," & tLine into tSubscription
@@ -1428,6 +1443,7 @@ on revIDEMessageSend pMessage, pEffectedTarget
             end try
             break
          case "idePropertyChanged"
+         case "ideMoveStack"
             dispatch pMessage to tObjectID with pEffectedTarget
             break
          default
@@ -1907,6 +1923,22 @@ Returns (Any): The value of the preference
 function revIDEGetPreference pPreferenceName
    return the pPreferenceName of stack "revpreferences"
 end revIDEGetPreference
+
+function revIDEPreferences
+   return the customproperties of stack "revpreferences"
+end revIDEPreferences
+
+function revIDEPreferenceNames
+   local tPreferenceNames
+   repeat for each line tKey in the keys of (the customproperties of stack "revpreferences")
+      if tPreferenceNames is empty then
+         put tKey into tPreferenceNames
+      else
+         put return & tKey after tPreferenceNames
+      end if
+   end repeat
+   return tPreferenceNames
+end revIDEPreferenceNames
 
 /*
 The IDE has a repository of icon images which are used for ui elements in the IDE. The revIDEIconID function converts a "name-size" tag into a LiveCode ID suitable for direct use.
@@ -2585,6 +2617,12 @@ end revIDEDeleteObjects
 
 on revIDEActionGroupObjects
    revIDEGroupObjects the selobj
+   
+   local tNewGroup
+   put the result into tNewGroup
+   if exists(tNewGroup) then
+      select tNewGroup
+   end if
 end revIDEActionGroupObjects
 
 on revIDEGroupObjects pObjectIDs
@@ -3320,7 +3358,8 @@ end revIDEResizeImageInBounds
 Returns a list of all the display names of stacks recognised by the IDE as a palette.
 */
 function revIDEAvailablePalettes
-   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences,Standalone Settings,About,Dictionary,Resource Center,Preferences"	
+   return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
+   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome,Preferences"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3368,8 +3407,109 @@ function revIDEPaletteToStackName pPalette
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
+      case "create it welcome"
+         return "createitwelcome"
    end switch
 end revIDEPaletteToStackName
+
+/*
+Positions the palette.
+
+If the user has set a previous moved a palette, the palette is returned to that position. 
+If the palette is being opened for the first time, it is placed in a predetermined position
+*/
+on revIDEPositionPalette pStackName
+   if there is not a stack pStackName then exit revIDEPositionPalette
+   
+   local tRect
+   //put revIDEGetPreference("palette_rect_" & pStackName) into tRect
+   
+   if __isRect(tRect) then
+      # A previous stored rect was found for the stack. Restore is position if possible.
+      switch pStackName
+         case "revMenuBar"
+         case "revTools"
+            set the topleft of stack pStackName to item 1 of tRect, item 2 of tRect
+            break
+         case "message box"
+            set the rect of stack pStackName to tRect
+            break
+         default 
+            # If no sizing information can be found position the stack in the center of the 
+            # default screen
+            set the loc of stack pStackName to the screenloc
+            break
+      end switch
+   else
+      # No previous rect was found for stack to calculate the appropriate position for the stack
+      local tScreenHeight, tScreenWidth
+      put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
+      put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+      
+      switch pStackName
+         case "revMenuBar"
+            set the topleft of stack pStackName to 0,0
+            break
+         case "revTools"
+            set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+            break
+         case "message box"
+            set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+            break
+         case "revInspector"
+            if revIDEStackIsRevStack(the long ID of the topstack) then
+               set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+            else
+               set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
+            end if
+            break
+         default 
+            # If no sizing information can be found position the stack in the center of the 
+            # default screen
+            set the loc of stack pStackName to the screenloc
+            break
+      end switch
+   end if
+end revIDEPositionPalette
+
+function __isRect pRect
+   # Check it has 4 items
+   if the number of items of pRect is not 4 then return false
+   
+   # Check all the items are numbers
+   repeat for each item tNumber in pRect
+      if tNumber is not a number then
+         return false
+      end if
+   end repeat
+   
+   # Check the rect has width
+   if item 3 of pRect - item 1 of pRect < 0 then return false
+   
+   # Check the rect has height
+   if item 4 of pRect - item 2 of pRect < 0 then return false
+   
+   # Passed all the tests
+   return true
+end __isRect
+
+on revIDEStorePaletteRect pStackName
+   revIDESetPreference ("palette_rect_" & pStackName), the rect of stack pStackName
+end revIDEStorePaletteRect
+
+on revIDEClearPaletteRects
+   local tPreferenceNames
+   put revIDEPreferenceNames() into tPreferenceNames
+   repeat for each line tPreference in tPreferenceNames
+      if tPreference begins with "palette_rect_" then
+         revIDESetPreference tPreference, "0" 
+      end if
+   end repeat
+end revIDEClearPaletteRects
+
+private function revIDEPaletteBarHeight pStackID
+   return the effective height of pStackID - the height of pStackID
+end revIDEPaletteBarHeight
 
 /*
 Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
@@ -3406,6 +3546,7 @@ command revIDEOpenPalette pPaletteName
       case "tools"
          palette stack tStackName
          break
+      case "CreateItWelcome"
       case "search"
       case "preferences"
       case "project browser"
@@ -3703,13 +3844,13 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
-on propertyChanged pObject
+on revIDEPropertyChanged pObject
    if sLockUpdates is true then
-      exit propertyChanged
+      exit revIDEPropertyChanged
    end if
 
    revIDEMessageSend "idePropertyChanged", pObject
-end propertyChanged
+end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
 
@@ -3926,7 +4067,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -3963,7 +4104,10 @@ function revIDEPropertySectionNameToIconName pName
          return "table"
          break
       case "data grid"
-         return "f00b"
+         return "list alt"
+         break
+      case "advanced"
+         return "cogs"
          break
       default
          return "remove"
@@ -4048,17 +4192,76 @@ on revIDEAnswerDialogClosed
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
+local sTutorialName
 on revIDEStartTutorial pName
    dispatch "revTutorialStart" to stack "revTutorial" with pName
+   put pName into sTutorialName
+   revIDEMessageSend "ideTutorialProgressChanged"
 end revIDEStartTutorial
 
 on revIDEStopTutorial
-   if "revTutorial" is in the frontscripts then
+   if revIDETutorialInProgress() is not empty then
       revFinaliseTutorial
    end if
+   put empty into sTutorialName
+   revIDEMessageSend "ideTutorialProgressChanged"
    wait 0 millisecs with messages
    delete stack "revTutorial"
+   revIDEOpenPalette "Create It Welcome"
 end revIDEStopTutorial
+
+function revIDETutorialInProgress
+   return sTutorialName
+end revIDETutorialInProgress
+
+function revIDEPaletteToStackName pPalette
+   switch pPalette
+      case "menubar"
+         return "revMenubarUI"
+      case "tools"
+         return "revTools"
+      case "inspector"
+         return "revInspector"
+      default
+         break
+   end switch
+   return empty
+end revIDEPaletteToStackName
+
+function revIDEAbsoluteRectOfObject pPalette, pObjectData
+   if pPalette is "script editor" then
+      dispatch function "absoluteRectOfObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
+   else
+      dispatch function "absoluteRectOfObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+   end if
+   return the result
+end revIDEAbsoluteRectOfObject
+
+function revIDERelativeRectToAbsolute pRect, pStack
+   
+   if the short name of pStack begins with revIDEScriptEditorPrefix() and the platform is "macos" then
+      put item 1 of pRect + the effective left of pStack into item 1 of pRect
+      put item 3 of pRect + the effective left of pStack into item 3 of pRect
+      
+      put item 2 of pRect + the effective top of pStack into item 2 of pRect
+      put item 4 of pRect + the effective top of pStack into item 4 of pRect
+   else
+      put item 1 of pRect + the left of pStack into item 1 of pRect
+      put item 3 of pRect + the left of pStack into item 3 of pRect
+      
+      put item 2 of pRect + the top of pStack into item 2 of pRect
+      put item 4 of pRect + the top of pStack into item 4 of pRect
+   end if
+   return pRect
+end revIDERelativeRectToAbsolute
+
+on revIDEHighlightObject pPalette, pObjectData
+   if pPalette is "script editor" then
+      dispatch "highlightObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
+   else
+      dispatch "highlightObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
+   end if
+end revIDEHighlightObject
 
 #############
 # Data grid
@@ -4523,6 +4726,9 @@ on revIDENewMainstack pWidth, pHeight
 
    # Final items
    reset the templateStack
+   
+   # Send the 'ideNewStack' message
+   revIDEMessageSend "ideNewStack", it
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
@@ -4885,6 +5091,7 @@ on revIDEImportControl pType, pFileName, pReferenced
          else
             set the text of the last image to URL ("binfile:" & pFileName)
          end if
+         set the borderWidth of the last image to 0
          select the last control
          break
       case "audio"
@@ -5540,23 +5747,25 @@ on revIDECut
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDECut
    end if
-
+   
+   lock screen
+   lock messages
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
       if the selectedText is not empty then select empty
-      lock screen
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       cut
-      unlock screen
       exit revIDECut
    end if
-
+   
    # Ensure the user is aware of the consequences of the cut wrt groups
    if revCheckGroupDelete() then
       cut
    end if
-
+   unlock messages
+   unlock screen
+   
    revIDEMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
@@ -5600,7 +5809,8 @@ on revIDEPaste
       beep
       exit revIDEPaste
    end if
-
+   
+   
    # If we have image data in the clipboard but there is no image selection
    # the create a new image object and set the imageData
    if the clipBoard is "image" and the selectedImage is empty then
@@ -5618,10 +5828,12 @@ on revIDEPaste
       -- MW-2012-02-10: [[ Bug ]] Make sure the IDE doesn't interfere with the textChanged
       --   message.
       unlock messages
+      lock screen
       paste
+      unlock screen
       lock messages
    end if
-
+   
    # If objects have been pasted, assign them IDs for geometry caching
    if the clipBoard is "objects" or tObjects then
       local tMilliseconds
@@ -5632,7 +5844,7 @@ on revIDEPaste
       end repeat
    end if
    unlock messages
-
+   
    # Pasting an object will cause the selection to change
    if the clipboard is "objects" or tObjects then
       revIDEMessageSend "ideSelectedObjectChanged"
@@ -5643,8 +5855,13 @@ on revIDEPasteOntoStack pStack
    if not pStack begins with "stack" then
       exit revIDEPasteOntoStack
    end if
+   
+   lock screen
+   lock messages
    set the defaultStack to pStack
    paste
+   unlock messages
+   unlock screen
 end revIDEPasteOntoStack
 
 on revIDEActionPasteUnformatted
@@ -5698,23 +5915,24 @@ end revIDECheckClear
 
 on revIDEActionClear
    lock screen
+   lock messages
    # Clear the selection in image selection context
    if the selectedImage is not empty then
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       delete
       exit revIDEActionClear
    end if
-
+   
    # Can't clear locked text
    if the selectedField is not empty and the lockText of the selectedField then
       exit revIDEActionClear
    end if
-
+   
    # Otherwise delete objects or text
    set the defaultStack to the topStack
-   if revCheckClear(the selobj) then 
-      delete
-   end if
+   delete
+   
+   unlock messages
    revIDEMessageSend "ideSelectedObjectChanged"
    unlock screen
 end revIDEActionClear
@@ -6557,6 +6775,7 @@ on revIDEActionPasteTextIntoField pField
       exit revIDEActionPasteTextIntoField
    end if
    lock screen
+   lock messages
    local tLockText, tTraversalOn
    put the lockText of pField into tLockText
    put the traversalOn of pField into tTraversalOn
@@ -6570,6 +6789,7 @@ on revIDEActionPasteTextIntoField pField
    end if
    set the lockText of pField to tLockText
    set the traversalOn of pField to tTraversalOn
+   unlock messages
    unlock screen
 end revIDEActionPasteTextIntoField
 
@@ -7427,3 +7647,77 @@ function revIDECleanRecentStackList pRecentStackList
    
    return tCleanList
 end revIDECleanRecentStackList
+
+// Keep track of the current transient text field
+local sTransientTextField
+
+/*
+Adds a text field (usually to the property inspector) at a specified rect pRect, which, when its text is changed, dispatches 
+a callback pCallback to the specified target and deletes the text field. pCallbackParams is sent to the callback target as a parameter
+*/
+on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentText
+   if sTransientTextField is not empty then
+      revIDERemoveTransientTextField
+   end if
+   
+   lock screen
+   lock messages
+   local tLongID
+   create field
+   put the long id of it into tLongID
+   put tLongID into sTransientTextField["id"]
+   put pCallbackParams into sTransientTextField["callback_params"]
+   put pCallback into sTransientTextField["callback"]
+   set the rect of tLongID to pRect
+   set the script of tLongID to "on closeField;revIDETransientTextChanged;end closeField;on returnInField; revIDETransientTextChanged;end returnInField"
+   set the text of tLongID to pCurrentText
+   local tTargetLongID
+   put the long id of the target into tTargetLongID
+   put tTargetLongID into sTransientTextField["callback_target"]
+   get the textAlign of tTargetLongID 
+   if it is not empty then
+      set the textAlign of tLongID to it
+   end if
+   focus on tLongID
+   unlock messages
+   unlock screen
+end revIDECreateTransientTextField
+
+/*
+Deletes the transient text field
+*/
+on revIDERemoveTransientTextField pTarget
+   lock screen
+   lock messages
+   if pTarget is empty then
+      exit revIDERemoveTransientTextField
+   end if
+   delete pTarget
+   unlock messages
+   unlock screen
+end revIDERemoveTransientTextField
+
+/*
+Sends the callback with params as specified by prior call to revIDEAddTransientTextField
+Called by transient text fields on closeField or returnInField. 
+*/
+on revIDETransientTextChanged
+   lock screen
+   lock messages
+   if sTransientTextField is empty then
+      exit revIDETransientTextChanged
+   end if
+   local tCallbackInfo, tValue, tField
+   put sTransientTextField["id"] into tField
+   put the text of tField into tValue
+   put sTransientTextField into tCallbackInfo
+   put empty into sTransientTextField
+   unlock messages
+   send "revIDERemoveTransientTextField tField" to me in 0 millisecs
+   dispatch tCallbackInfo["callback"] to tCallbackInfo["callback_target"] with tValue, tCallbackInfo["callback_params"]
+   unlock screen
+end revIDETransientTextChanged
+
+on revIDEAllTransientsChanged
+   
+end revIDEAllTransientsChanged

@@ -256,6 +256,7 @@ on inspectorTreeMenuDisplay
    if gREVShowStacks then put the openStacks into tOpenStacks
    else put revFilterStacksList(the openStacks) into tOpenStacks
    put empty into tStacks
+   local tCheck
    repeat for each line l in tOpenStacks
       if the long id of stack l is sSelectedStack
       then put "!c" into tCheck
@@ -272,6 +273,7 @@ end inspectorTreeMenuDisplay
 
 on menuPick pWhich
    global gREVTemplateMasterName, gREVStacksList
+   local tNewStack
    put word 1 to -1 of item -1 of pWhich into tNewStack
    try
       ideInspectObjects the long id of stack tNewStack
@@ -288,3 +290,7 @@ private function menuitemEscape pItem, pFirst
    replace "(" with "((" in pItem
    return pItem
 end menuitemEscape
+
+getProp showMultiPropLabels
+   return true
+end showMultiPropLabels
