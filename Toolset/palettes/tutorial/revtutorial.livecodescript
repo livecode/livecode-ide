@@ -621,8 +621,8 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    create graphic "Shape" in tGroup
    put it into tGraphic
    set the style of it to "rectangle"
-   set the width of it to tWidth 
-   set the height of it to tHeight
+   set the width of it to tWidth * the screenpixelscale
+   set the height of it to tHeight * the screenpixelscale
    
    if pObject is not empty then
       create graphic "Pointer" in tGroup
