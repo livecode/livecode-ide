@@ -1451,6 +1451,7 @@ on ideNewCard pCard
    
    if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
       revIDEUnsubscribe "ideNewCard"
+      revIDEUnsubscribe "ideNewStack"
       revTutorialWaitConditionSatisfied
    end if
 end ideNewCard
