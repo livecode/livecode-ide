@@ -220,7 +220,7 @@ on menuPick pWhich
                   if the mode of stack tStack is 0 \
                         or the num of this cd of stack tStack is not tNum
                   then go cd tNum of stack tStack
-                  ideInspectObjects the long id of cd tNum of stack tStack
+                  revIDEInspectObjects the long id of cd tNum of stack tStack
                catch tError
                   answer error "There was an error selecting" && the name of cd tNum of stack tStack
                end try
@@ -229,7 +229,7 @@ on menuPick pWhich
                local tNewStack
                put word 1 to -1 of item -1 of pWhich into tNewStack
                try
-                  ideInspectObjects the long id of stack tNewStack
+                  revIDEInspectObjects the long id of stack tNewStack
                catch tError
                   answer error "There was an error selecting stack" && tNewStack
                end try
@@ -239,7 +239,7 @@ on menuPick pWhich
                try
                   if the mode of stack tStack is 0
                   then go stack tStack        
-                  ideInspectObjects the long id of control tNum of this cd of stack tStack
+                  revIDEInspectObjects the long id of control tNum of this cd of stack tStack
                catch tError
                   answer error "There was an error selecting" \
                         && the name of control tNum of this cd of stack tStack
