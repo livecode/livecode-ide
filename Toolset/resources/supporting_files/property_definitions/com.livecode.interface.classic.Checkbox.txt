@@ -31,8 +31,8 @@ threeD	true
 showBorder	true	
 hiliteBorder	true	
 borderWidth	2	
-foregroundColor			
-foregroundPattern			
+foregroundColor			Text Fill
+foregroundPattern			Text Fill			
 backgroundColor			
 backgroundPattern			
 hiliteColor		

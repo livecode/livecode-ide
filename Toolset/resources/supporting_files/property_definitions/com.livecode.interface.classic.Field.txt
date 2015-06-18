@@ -32,8 +32,8 @@ firstIndent	0
 dontSearch	false	
 layerMode
 behavior
-foregroundColor		
-foregroundPattern		
+foregroundColor			Text Fill
+foregroundPattern			Text Fill		
 backgroundColor		
 backgroundPattern		
 hiliteColor		

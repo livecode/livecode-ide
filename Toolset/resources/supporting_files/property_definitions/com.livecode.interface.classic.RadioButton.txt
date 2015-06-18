@@ -34,8 +34,8 @@ hiliteBorder	false
 borderWidth	2	
 shadow	false	
 shadowOffset	4	
-foregroundColor			Border Fill
-foregroundPattern			Border Fill			
+foregroundColor			Text Fill
+foregroundPattern			Text Fill		
 backgroundColor		
 backgroundPattern		
 hiliteColor		
