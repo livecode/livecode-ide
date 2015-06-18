@@ -372,14 +372,17 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       else if tDataStart is false then
          next repeat
       else
-         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         put pPropInfoA[tPropertyName]["section"] into tSection
-         
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+         else
+            # If group label is not empty, it overrides the target group from the property spec file
+            put tGroupLabel into pPropInfoA[tPropertyName]["group"]
          end if
+         
+         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
+         put pPropInfoA[tPropertyName]["section"] into tSection
          
          # The groups are ordered by their appearance in the spec file
          if tGroupCountsA[tSection][tGroupLabel] is empty then
