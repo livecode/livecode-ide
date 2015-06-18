@@ -119,7 +119,7 @@ pan	Pan	Quicktime	com.livecode.pi.number	true	false
 playLoudness	Volume	Basic	com.livecode.pi.integer	true	false			
 playRate	Speed	Basic	com.livecode.pi.integer	true	false			
 playSelection	Play selection only	Basic	com.livecode.pi.boolean	true	false			
-points	Points	Basic	com.livecode.pi.text	true	false		no_default		
+points	Points	Basic	com.livecode.pi.text	true	false		
 polySides	Sides	Basic	com.livecode.pi.number	true	false		8	
 profile	Property Profile	Profiles	com.livecode.pi.propertyProfile	true	false			
 radioBehavior	Hilite one radio button at a time	Basic	com.livecode.pi.boolean	true	false		true	
