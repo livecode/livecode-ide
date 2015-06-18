@@ -815,13 +815,13 @@ function toolObjectName pTool
          put "com.livecode.interface.classic.OptionMenu" into tTool
          break
       case "Create Popup Menu"
-         put "com.livecode.interface.classic.Image" into tTool
+         put "com.livecode.interface.classic.PopupMenu" into tTool
          break
       case "Create Radio Button"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.RadioButton" into tTool
          break
       case "Create Image"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.Image" into tTool
          break
       case "Create Rectangle Button"
          put "com.livecode.interface.classic.RectangleButton" into tTool
@@ -871,6 +871,20 @@ function toolObjectName pTool
       case "Create Rectangle Graphic"
          put "com.livecode.interface.classic.RectangleGraphic" into tTool
          break
+      default
+         # Try and resolve as a reference to a widget creation tool
+         if word 1 of pTool is "Create" then
+            local tTitle
+            put word 2 to -1 of pTool into tTitle
+            local tInstalledWidgets
+            put revIDEExtensions("widget","installed") into tInstalledWidgets
+            repeat for each key tTypeID in tInstalledWidgets
+               if tInstalledWidgets[tTypeID]["title"] is tTitle then
+                  put tTypeID into tTool
+                  exit repeat
+               end if
+            end repeat
+         end if
    end switch
    return tTool
 end toolObjectName
