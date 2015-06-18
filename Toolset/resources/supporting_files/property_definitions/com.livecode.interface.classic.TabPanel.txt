@@ -12,8 +12,8 @@ showName	false
 text	Tab 1\nTab 2\nTab 2	
 layerMode
 behavior
-foregroundColor		
-foregroundPattern		
+foregroundColor			Text Fill
+foregroundPattern			Text Fill	
 backgroundColor		
 backgroundPattern		
 hiliteColor		

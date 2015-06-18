@@ -19,8 +19,8 @@ endArrow	false
 points		
 layerMode	Static	Static,Dynamic,Scrolling
 behavior	empty	long id
-borderColor
-borderPattern		
+foregroundColor			Border Fill
+foregroundPattern			Border Fill		
 fillGradient		
 topColor
 topPattern		
