@@ -160,6 +160,7 @@ private on setupWindowMenu
    
    local tMenu, tMenuLine, tStackTitle
    repeat for each line tStack in tWindows
+      if there is not a stack tStack then next repeat
       put the title of stack tStack into tStackTitle
       if tStackTitle is empty then
          put the short name of tStack into tStackTitle
