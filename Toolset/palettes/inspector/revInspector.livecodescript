@@ -196,22 +196,17 @@ on inspectorTreeMenuDisplay
 end inspectorTreeMenuDisplay
 
 on menuPick pWhich
-   global gREVTemplateMasterName, gREVStacksList
-   
    local tFocusedObject, tObjects, tStack
-   put the focusedObject into tFocusedObject
+   put the long id of the focusedObject into tFocusedObject
    if word 1 of tFocusedObject is "field" \
-         and revTargetStack(tFocusedObject) is the short name of this stack
+         and revIDEStackOfObject(tFocusedObject) is the short name of this stack
    then send "closeField" to tFocusedObject
    
    put sSelectedObjects into tObjects
-   put revTargetStack(line 1 of tObjects) into tStack
+   put revIDEStackOfObject(line 1 of tObjects) into tStack
    set the itemDel to "|"
    switch item 1 of pWhich
       case "Inspect"
-         if the short name of this stack is not among the lines of gREVStacksList
-         then put cr & the short name of this stack after gREVStacksList
-         
          switch item 2 of pWhich
             case "Card"
                local tNum
@@ -220,7 +215,7 @@ on menuPick pWhich
                   if the mode of stack tStack is 0 \
                         or the num of this cd of stack tStack is not tNum
                   then go cd tNum of stack tStack
-                  ideInspectObjects the long id of cd tNum of stack tStack
+                  revIDEInspectObjects the long id of cd tNum of stack tStack
                catch tError
                   answer error "There was an error selecting" && the name of cd tNum of stack tStack
                end try
@@ -229,7 +224,7 @@ on menuPick pWhich
                local tNewStack
                put word 1 to -1 of item -1 of pWhich into tNewStack
                try
-                  ideInspectObjects the long id of stack tNewStack
+                  revIDEInspectObjects the long id of stack tNewStack
                catch tError
                   answer error "There was an error selecting stack" && tNewStack
                end try
@@ -239,7 +234,7 @@ on menuPick pWhich
                try
                   if the mode of stack tStack is 0
                   then go stack tStack        
-                  ideInspectObjects the long id of control tNum of this cd of stack tStack
+                  revIDEInspectObjects the long id of control tNum of this cd of stack tStack
                catch tError
                   answer error "There was an error selecting" \
                         && the name of control tNum of this cd of stack tStack
@@ -248,12 +243,10 @@ on menuPick pWhich
          end switch
          break
       case "Send Message"
-         send "revSendMessage item 2 of pWhich, tObjects" to cd 1 of stack "revMenuBar"
+         revIDESendMessageToObject item 2 of pWhich, tObjects
          break
       case "Edit Script"
-         repeat for each line l in tObjects
-            edit script of l
-         end repeat
+         revIDEEditScriptOfObjects tObjects 
          break
    end switch
 end menuPick

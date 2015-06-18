@@ -2718,6 +2718,7 @@ end revIDEGetInspectedObjects
 local sInspectingObjects
 command revIDEInspectObjects pObjects
    put pObjects into sInspectingObjects
+   revIDESelectObjects pObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
 end revIDEInspectObjects
 
