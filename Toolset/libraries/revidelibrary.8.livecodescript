@@ -5457,10 +5457,11 @@ on revIDERevertToSavedStack pStackID
 end revIDERevertToSavedStack
 
 on revIDEActionSaveStack pStackID
-   # validate pStackID (exists)
-   # validate stack has filename -> revIDESaveStack
-   # Ask for a file to save to -> revIDEAskFile "stack"
-   # Save stack -> revIDESaveStack
+   if there is a file the filename of pStackID then
+      revIDESaveStack pStackID
+   else
+      revIDEActionSaveStackAs pStackID
+   end if
 end revIDEActionSaveStack
 
 on revIDESaveStackAs pStackID, pFileName
