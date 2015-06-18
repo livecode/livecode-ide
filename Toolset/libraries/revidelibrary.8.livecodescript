@@ -6868,7 +6868,7 @@ on revIDEActionEditScriptOfObjects
 end revIDEActionEditScriptOfObjects
 
 on revIDEActionEditScriptOfCard
-   revIDEEditscriptOfObject this card of the topStack
+   revIDEEditscriptOfObject the long ID of this card of the topstack
 end revIDEActionEditScriptOfCard
 
 on revIDEActionEditScriptOfStack
