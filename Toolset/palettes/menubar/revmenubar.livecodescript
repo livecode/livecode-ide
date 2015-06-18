@@ -2201,7 +2201,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
          ######## STACK SCPECIFIC ########
       case "Save"
-         revIDESaveStack tTargetStack
+         revIDEActionSaveStack tTargetStack
          break
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack

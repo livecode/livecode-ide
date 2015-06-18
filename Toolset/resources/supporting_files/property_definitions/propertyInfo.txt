@@ -46,7 +46,7 @@ dropShadow	Drop Shadow	Effects	com.livecode.pi.graphicEffect	true	false
 enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true			
 endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false	
 endTime	End	Basic	com.livecode.pi.integer	true	false			
-endValue	End value	Basic	com.livecode.pi.integer	true	false			
+endValue	End value	Basic	com.livecode.pi.number	true	false							1			
 externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
 filename	Source	Basic	com.livecode.pi.file	true	false			
 fillGradient	Fill Gradient	Colors	com.livecode.pi.gradient	true	false	Background Fill		type,ramp,from,to,via,quality,repeat,mirror,wrap
@@ -151,7 +151,7 @@ startAngle	Start	Basic	com.livecode.pi.number	true	false
 startArrow	Start Arrow	Basic	com.livecode.pi.boolean	true	false			
 startTime	Start	Basic	com.livecode.pi.integer	true	false			
 startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false			
-startValue	Start value	Basic	com.livecode.pi.integer	true	false	
+startValue	Start value	Basic	com.livecode.pi.number	true	false							1	
 strokeGradient	Stroke Gradient	Colors	com.livecode.pi.gradient	true	false			type,ramp,from,to,via,quality,repeat,mirror,wrap
 style	Style	Basic	com.livecode.pi.enum	false	false			
 systemWindow	Float abve everything	Basic	com.livecode.pi.boolean	true	false		false	
@@ -164,7 +164,7 @@ textHeight	Text height	Basic	com.livecode.pi.number	true	false
 textSize	Text Size	Text	com.livecode.pi.number	true	false			
 textStyle	Text Style	Text	com.livecode.pi.textstyle	true	false
 threeD	3-D	Basic	com.livecode.pi.boolean	true	false			
-thumbPosition	Current value	Basic	com.livecode.pi.integer	true	false			
+thumbPosition	Current value	Basic	com.livecode.pi.number	true	false							1		
 thumbSize	Thumb size	Basic	com.livecode.pi.number	true	false			
 tilt	Tilt	Quicktime	com.livecode.pi.number	true	false			
 title	Title	Basic	com.livecode.pi.string	true	false			
