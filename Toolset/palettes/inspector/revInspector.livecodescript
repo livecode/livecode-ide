@@ -337,7 +337,7 @@ end ideCloseStack
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged
-   revIDEInspectObjects revIDESelectedObjects()
+   ideInspectObjects revIDESelectedObjects()
 end ideSelectedObjectChanged
 
 on idePreferenceChanged pPreference, pValue
