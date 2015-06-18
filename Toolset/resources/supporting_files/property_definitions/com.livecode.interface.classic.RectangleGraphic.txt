@@ -15,8 +15,8 @@ lineSize	1
 dashes		
 layerMode
 behavior
-borderColor
-borderPattern		
+foregroundColor			Border Fill
+foregroundPattern			Border Fill			
 backgroundColor
 backgroundPattern
 fillGradient		

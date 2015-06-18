@@ -18,10 +18,8 @@ endArrow	false
 points	Basic	
 layerMode
 behavior
-borderColor
-borderPattern	
-foregroundColor
-foregroundPattern	
+foregroundColor			Border Fill
+foregroundPattern			Border Fill	
 backgroundColor
 backgroundPattern
 fillGradient		
