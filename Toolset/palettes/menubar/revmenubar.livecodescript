@@ -2446,7 +2446,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionEditScriptOfCard
          break
       case "Stack Script"
-         revIDEEditScriptOfStack
+         revIDEEditScriptOfObjects the long ID of the topstack
          break
       case "New Control"
       case "New Widget"
