@@ -815,13 +815,13 @@ function toolObjectName pTool
          put "com.livecode.interface.classic.OptionMenu" into tTool
          break
       case "Create Popup Menu"
-         put "com.livecode.interface.classic.Image" into tTool
+         put "com.livecode.interface.classic.PopupMenu" into tTool
          break
       case "Create Radio Button"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.RadioButton" into tTool
          break
       case "Create Image"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.Image" into tTool
          break
       case "Create Rectangle Button"
          put "com.livecode.interface.classic.RectangleButton" into tTool
