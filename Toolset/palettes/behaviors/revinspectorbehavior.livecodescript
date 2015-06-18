@@ -373,8 +373,8 @@ on inspectorFill
    local tSelectedChunk
    if the focusedobject is not empty then
       if revIDEStackOfObject(the focusedobject) is the long name of me then
-         if the selectedchunk is not empty then
-            put the selectedchunk && "of stack" && quote & the short name of me & quote into tSelectedChunk
+         if the selectedfield is not empty then
+            put the selectedfield && "of stack" && quote & the short name of me & quote into tSelectedChunk
          end if
       end if
    end if
@@ -392,7 +392,7 @@ on inspectorFill
    # Restore the selected chunk if it exists
    if tSelectedChunk is not empty and exists(tSelectedChunk) then
       lock messages
-      select tSelectedChunk
+      select char 1 to -1 of tSelectedChunk
       unlock messages
    end if
    
