@@ -1555,7 +1555,7 @@ private function revMenubarViewMenu pContext
    put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
-   put toggleMenuItem("LiveCode UI Elements in Lists", gREVShowStacks) & return after tView
+   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
