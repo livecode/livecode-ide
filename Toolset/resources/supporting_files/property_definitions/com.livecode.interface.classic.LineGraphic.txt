@@ -15,7 +15,7 @@ lineSize	1
 dashes	false	
 startArrow	false	
 endArrow	false	
-points	Basic	
+points	
 layerMode
 behavior
 foregroundColor			Border Fill
