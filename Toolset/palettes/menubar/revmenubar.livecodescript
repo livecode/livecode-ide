@@ -160,6 +160,7 @@ private on setupWindowMenu
    
    local tMenu, tMenuLine, tStackTitle
    repeat for each line tStack in tWindows
+      if there is not a stack tStack then next repeat
       put the title of stack tStack into tStackTitle
       if tStackTitle is empty then
          put the short name of tStack into tStackTitle
@@ -531,7 +532,7 @@ on layoutMenu
       hide group "tutorial" of me
    end if	
    
-   set the width of me to tLeft + 10
+   set the width of me to tLeft
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
@@ -1554,7 +1555,7 @@ private function revMenubarViewMenu pContext
    put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
-   put toggleMenuItem("LiveCode UI Elements in Lists", gREVShowStacks) & return after tView
+   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
@@ -2446,7 +2447,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionEditScriptOfCard
          break
       case "Stack Script"
-         revIDEEditScriptOfStack
+         revIDEEditScriptOfObjects the long ID of the topstack
          break
       case "New Control"
       case "New Widget"

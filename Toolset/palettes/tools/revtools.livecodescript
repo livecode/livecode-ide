@@ -484,6 +484,7 @@ end mouseDoubleUp
 
 on mouseDown
    if the cType of the target is empty then exit mouseDown
+   if the target is disabled then exit mouseDown
    if the cStatus of the target is "error" then
       answer "Widget could not be created because there was an error while loading it. To resolve, please go to the extension manager." 
       exit mouseDown
@@ -761,14 +762,18 @@ on groupDisable pWhich, pDisable
 end groupDisable
 
 on toolDisable pWhich
+   if there is not a button pWhich of me then exit toolDisable
    set the coloroverlay["opacity"] of button pWhich of me to "90"
    set the coloroverlay["color"] of  button pWhich of me to "255,255,255"
    set the cDisabled of button pWhich of me to true
+   disable button pWhich of me
 end toolDisable
 
 on toolEnable pWhich
+   if there is not a button pWhich of me then exit toolEnable
    set the coloroverlay of button pWhich of me to empty
    set the cDisabled of button pWhich of me to false
+   enable button pWhich of me
 end toolEnable
 
 function absoluteRectOfObject pObject
