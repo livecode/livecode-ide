@@ -876,6 +876,9 @@ function toolObjectName pTool
       case "Create Rectangle Graphic"
          put "com.livecode.interface.classic.RectangleGraphic" into tTool
          break
+      case "Create Line Graphic"
+         put "com.livecode.interface.classic.LineGraphic" into tTool
+         break
       default
          # Try and resolve as a reference to a widget creation tool
          if word 1 of pTool is "Create" then
