@@ -871,6 +871,20 @@ function toolObjectName pTool
       case "Create Rectangle Graphic"
          put "com.livecode.interface.classic.RectangleGraphic" into tTool
          break
+      default
+         # Try and resolve as a reference to a widget creation tool
+         if word 1 of pTool is "Create" then
+            local tTitle
+            put word 2 to -1 of pTool into tTitle
+            local tInstalledWidgets
+            put revIDEExtensions("widget","installed") into tInstalledWidgets
+            repeat for each key tTypeID in tInstalledWidgets
+               if tInstalledWidgets[tTypeID]["title"] is tTitle then
+                  put tTypeID into tTool
+                  exit repeat
+               end if
+            end repeat
+         end if
    end switch
    return tTool
 end toolObjectName
