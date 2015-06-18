@@ -531,7 +531,7 @@ on layoutMenu
       hide group "tutorial" of me
    end if	
    
-   set the width of me to tLeft + 10
+   set the width of me to tLeft
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
