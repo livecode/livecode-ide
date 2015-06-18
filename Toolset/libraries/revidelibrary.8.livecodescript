@@ -4764,8 +4764,11 @@ on revIDEActionNewCard
       revIDEActionNewMainstack "default"
    end if
    set the defaultStack to the topStack 
+   local tCardID
    create card
+   put the long id of it into tCardID
    put "edited" into gREVStackStatus[the short name of this stack]
+   revIDEMessageSend "ideNewCard tCardID"
 end revIDEActionNewCard
 
 on revIDEActionDeleteCard
