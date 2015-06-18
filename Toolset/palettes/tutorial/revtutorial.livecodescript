@@ -21,7 +21,7 @@ function revTutorialParse pFile
    repeat for each line tLine in tTutorial
       add 1 to tLineNum
       get token 1 of tLine
-       
+      
       if it is empty then 
          if tSubType is "text" then 
             put return & return after tData
@@ -77,7 +77,14 @@ function revTutorialParse pFile
                else
                   add 1 to  tActionNum
                   put revTutorialParseAction(tLine, tLineNum) into tData
-                  put tData into tStepData[tCurStepName]["actions"][tData["type"]]
+                  if tData["type"] is "capture" then
+                     # Allow multiple capture actions
+                     get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]
+                     put tData into tStepData[tCurStepName]["actions"][tData["type"]][it + 1]
+                     put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
+                  else
+                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]
+                  end if
                   if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
                      put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
                   else if tData["type"] is "interlude" then
@@ -893,7 +900,10 @@ on revTutorialExecuteAction pActionData
          revTutorialDoHighlight pActionData
          break
       case "capture"
-         revTutorialDoCapture pActionData["object type"], pActionData["tag"]
+         # Multiple capture actions are allowed
+         repeat for each element tElement in pActionData
+            revTutorialDoCapture tElement["object type"], tElement["tag"], tElement["target stack"]
+         end repeat
          break
       case "interlude"
          revTutorialDoInterlude false
@@ -955,8 +965,9 @@ end revTutorialDoGoToStep
 
 local sCaptureData, sTaggedObjects
 
-on revTutorialDoCapture pType, pTag
-   put pTag into sCaptureData[pType]
+on revTutorialDoCapture pType, pTag, pTargetStack
+   put pTag into sCaptureData[pType]["tag"]
+   put pTargetStack["tag"] into sCaptureData[pType]["stack"]
 end revTutorialDoCapture
 
 on revTutorialDoInterlude pIsEpilogue
@@ -1102,6 +1113,9 @@ end revTutorialWaitUntilObjectIsFocused
 on revTutorialWaitForObject
    if sWait["object"]["type"] is "stack" then
       revIDESubscribe "ideNewStack"
+   else if sWait["object"]["type"] is "card" then
+      revIDESubscribe "ideNewStack"
+      revIDESubscribe "ideNewCard"
    else
       revIDESubscribe "ideNewControl"
    end if
@@ -1380,13 +1394,27 @@ on focusIn
 end focusIn
 
 on ideNewStack pStack
+   local tStackTag
    if "stack" is among the keys of sCaptureData then
-      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"]]
+      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"]["tag"]]
+      put sCaptureData["stack"]["tag"] into tStackTag
       delete variable sCaptureData["stack"]
    end if
    
-   if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
-      revTutorialWaitConditionSatisfied
+   if "card" is among the keys of sCaptureData and sCaptureData["card"]["stack"] is tStackTag then
+      put the long id of this card of pStack into sTaggedObjects["card"][sCaptureData["card"]["tag"]]
+      delete variable sCaptureData["card"]
+   end if
+   
+   if sWait["wait condition"] is "there is an object" then
+      if sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
+         revIDEUnsubscribe "ideNewStack"
+         revTutorialWaitConditionSatisfied
+      else if sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
+         revIDEUnsubscribe "ideNewStack"
+         revIDEUnsubscribe "ideNewCard"
+         revTutorialWaitConditionSatisfied
+      end if
    end if
 end ideNewStack
 
@@ -1403,8 +1431,8 @@ end ideAnswerDialogClosed
 on ideNewControl pObject
    local tObjType
    put word 1 of pObject into tObjType
-   if tObjType is among the keys of sCaptureData then
-      put the long id of pObject into sTaggedObjects[tObjType][sCaptureData[tObjType]]
+   if tObjType is among the keys of sCaptureData and sTaggedObjects["stack"][sCaptureData[tObjType]["stack"]] is revIDEStackOfObject(pObject) then
+      put the long id of pObject into sTaggedObjects[tObjType][sCaptureData[tObjType]["tag"]]
       delete variable sCaptureData[tObjType]
    end if
    
@@ -1414,6 +1442,18 @@ on ideNewControl pObject
    end if
    
 end ideNewControl
+
+on ideNewCard pCard
+   if "card" is among the keys of sCaptureData and sTaggedObjects["stack"][sCaptureData["card"]["stack"]] is revIDEStackOfObject(pCard) then
+      put the long id of pCard into sTaggedObjects["card"][sCaptureData["card"]["tag"]]
+      delete variable sCaptureData["card"]
+   end if
+   
+   if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
+      revIDEUnsubscribe "ideNewCard"
+      revTutorialWaitConditionSatisfied
+   end if
+end ideNewCard
 
 on idePropertyChanged pObject
    # If a highlighted object moved then reposition the tutorial step pointer
@@ -1686,6 +1726,9 @@ end revTutorialScriptIs
 
 constant kColorTolerance = 10
 function revTutorialColorIs pColor, pTarget
+   if pColor is empty and pTarget is not empty then
+      return false
+   end if
    return revTutorialNumericItemsAreApproximatelyEqual(3, kColorTolerance, pColor, pTarget)
 end revTutorialColorIs
 
