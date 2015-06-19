@@ -253,8 +253,10 @@ end ideTutorialProgressChanged
 
 on idePreferenceChanged pPreference
    switch pPreference
-      case  "cToolbarText"
+      case "cToolbarText"
       case "cToolbarIcons"
+         lock screen
+         show me
          local tAlterBounding
          if abs(item 2 of the windowBoundingRect - the bottom of me) < 10 then 
             put true into tAlterBounding
@@ -264,6 +266,7 @@ on idePreferenceChanged pPreference
          if tAlterBounding then
             set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of me + 25, item 3 to 4 of the windowBoundingRect
          end if
+         unlock screen
          break
    end switch
 end idePreferenceChanged
@@ -587,7 +590,6 @@ on updateMenubarPreference
    end repeat 
    
    if the platform is "macos" then
-      show me
       if tShowIcons is false and tShowText is false then
          hide me
       else if tShowIcons is false then

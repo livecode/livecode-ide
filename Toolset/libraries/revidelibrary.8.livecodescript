@@ -1416,16 +1416,19 @@ on revIDEMessageSend pMessage, pEffectedTarget
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-
-      # If the stack isn't visible on screen, don't send a message
+      
       local tStackID
       set the itemdel to "stack"
       put tObjectID into tStackID
       delete item 1 of tStackID
       if tStackID begins with "tack" then delete char 1 to 4 of tStackID
       put "stack" before tStackID
-      if the mode of tStackID is 0 or the visible of tStackID is false then next repeat
-
+      # If the stack isn't visible on screen, don't send a message
+      # Unless it is the menubar, which should always be able to receive messages
+      if the mode of tStackID is 0 or (tStackID is not the long name of stack revIDEPaletteToStackName("menubar") and the visible of tStackID is false) then 
+         next repeat
+      end if
+      
       # Send the message!
       set the itemdel to ":"
       local tMessage
