@@ -877,6 +877,10 @@ command revMenubarBuildMenus
    
    if revIDETutorialInProgress() is not empty then
       repeat for each item tMenu in revMenubarMenus()
+         # Don't disable the help menu during tutorials
+         if tMenu is "Help" then
+            next repeat
+         end if
          disable button tMenu of group "revMenuBar" of me
       end repeat
       
