@@ -591,6 +591,7 @@ on updateMenubarPreference
    
    if the platform is "macos" then
       if tShowIcons is false and tShowText is false then
+         set the height of me to 0
          hide me
       else if tShowIcons is false then
          set the height of me to 19

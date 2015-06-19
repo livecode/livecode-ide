@@ -1402,7 +1402,10 @@ command revInternal__InitialiseMenus
    
    revInternal__Log "Leave", "Menus Initialisation"
    
-   show stack tMenuBar
+   if the platform is not "macos" or revIDEGetPreference("cToolbarText") or revIDEGetPreference("cToolbarIcons") then
+      show stack tMenuBar
+   end if
+   
    return true
 end revInternal__InitialiseMenus
 
