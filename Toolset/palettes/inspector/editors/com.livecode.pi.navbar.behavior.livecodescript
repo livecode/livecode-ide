@@ -4,6 +4,7 @@ on editorInitialize
    set the editorMinWidth of me to 300
 end editorInitialize
 
+local sNumRows
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled
@@ -12,10 +13,15 @@ on editorUpdate
    put the editorEffective of me into tEffective
    lock messages
    set the navData of widget 1 of me to tValue
-   set the height of me to the desiredHeight of widget 1 of me
-   set the height of widget 1 of me to the height of me
    unlock messages
-   dispatch "inspectorLayout"
+   if the number of elements in tValue is not sNumRows then
+      lock messages
+      put the number of elements in tValue into sNumRows
+      set the height of me to the desiredHeight of widget 1 of me
+      set the height of widget 1 of me to the height of me
+      unlock messages
+      dispatch "inspectorLayout"
+   end if
    unlock screen
 end editorUpdate
 
@@ -25,6 +31,7 @@ on editorResize
    set the width of widget 1 of me to the width of me
    set the left of widget 1 of me to the left of me
    set the top of widget 1 of me to the top of me
+   set the height of me to the desiredHeight of widget 1 of me
    set the height of widget 1 of me to the height of me
    unlock messages
    unlock screen
