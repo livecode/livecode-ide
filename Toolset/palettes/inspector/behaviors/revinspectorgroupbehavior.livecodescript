@@ -17,15 +17,17 @@ on propertyRegister pPropertyInfo
    if there is not a stack tEditor then
       put "com.livecode.pi.string" into tEditor
    end if
+   local tEditorBehavior
+   put tEditor & ".behavior" into tEditorBehavior
    
    local tGroupLongID
-   if there is a group "template" of stack tEditor and there is a button "behavior" of stack tEditor then
+   if there is a group "template" of stack tEditor and there is a stack tEditorBehavior then
       lock messages
       copy group "template" of stack tEditor to me
       put it into tGroupLongID
       set the name of it to tPropName
-      set the behavior of button "behavior" of stack tEditor to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript")
-      set the behavior of tGroupLongID to the long ID of button "behavior" of stack tEditor
+      set the behavior of stack tEditorBehavior to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript")
+      set the behavior of tGroupLongID to the long ID of stack tEditorBehavior
       
       if pPropertyInfo["label"] is not empty and the showMultiPropLabels of this stack then
          create invisible field tPropName in me

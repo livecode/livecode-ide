@@ -51,12 +51,16 @@ on inspectorOpenEditor pEditor
    if there is a stack pEditor then exit inspectorOpenEditor
    
    # Find the file for the editor
-   local tEditorStackPath
+   local tEditorStackPath, tEditorBehaviorPath
    put revIDEPaletteResourcePath("editors/" & pEditor & ".livecode") into tEditorStackPath
-   
+   put revIDEPaletteResourcePath("editors/" & pEditor & ".behavior.livecodescript") into tEditorBehaviorPath
    # open editor stack if it exists
    if there is a file tEditorStackPath then 
       go invisible stack tEditorStackPath
+   end if
+   
+   if there is a file tEditorBehaviorPath then 
+      go invisible stack tEditorBehaviorPath
    end if
 end inspectorOpenEditor
 
