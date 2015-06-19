@@ -418,7 +418,7 @@ end revInternal__SetupLicense
    
    -- MW-2013-06-13: [[ CloneAndRun ]] Set up the binaries path.
    set the wholeMatches to true
-   if "_build" is among the items of tEnginePath and \
+   if ("_build" is among the items of tEnginePath or "build-win-x86" is among the items of tEnginePath) and \
          ("debug" is among the items of tEnginePath or "release" is among the items of tEnginePath) then
       put tEnginePath into sBinariesPath
    else
@@ -1402,7 +1402,10 @@ command revInternal__InitialiseMenus
    
    revInternal__Log "Leave", "Menus Initialisation"
    
-   show stack tMenuBar
+   if the platform is not "macos" or revIDEGetPreference("cToolbarText") or revIDEGetPreference("cToolbarIcons") then
+      show stack tMenuBar
+   end if
+   
    return true
 end revInternal__InitialiseMenus
 

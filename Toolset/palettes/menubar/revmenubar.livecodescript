@@ -160,6 +160,7 @@ private on setupWindowMenu
    
    local tMenu, tMenuLine, tStackTitle
    repeat for each line tStack in tWindows
+      if there is not a stack tStack then next repeat
       put the title of stack tStack into tStackTitle
       if tStackTitle is empty then
          put the short name of tStack into tStackTitle
@@ -252,8 +253,10 @@ end ideTutorialProgressChanged
 
 on idePreferenceChanged pPreference
    switch pPreference
-      case  "cToolbarText"
+      case "cToolbarText"
       case "cToolbarIcons"
+         lock screen
+         show me
          local tAlterBounding
          if abs(item 2 of the windowBoundingRect - the bottom of me) < 10 then 
             put true into tAlterBounding
@@ -263,6 +266,7 @@ on idePreferenceChanged pPreference
          if tAlterBounding then
             set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of me + 25, item 3 to 4 of the windowBoundingRect
          end if
+         unlock screen
          break
    end switch
 end idePreferenceChanged
@@ -531,7 +535,7 @@ on layoutMenu
       hide group "tutorial" of me
    end if	
    
-   set the width of me to tLeft + 10
+   set the width of me to tLeft
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
@@ -586,8 +590,8 @@ on updateMenubarPreference
    end repeat 
    
    if the platform is "macos" then
-      show me
       if tShowIcons is false and tShowText is false then
+         set the height of me to 0
          hide me
       else if tShowIcons is false then
          set the height of me to 19
@@ -874,6 +878,10 @@ command revMenubarBuildMenus
    
    if revIDETutorialInProgress() is not empty then
       repeat for each item tMenu in revMenubarMenus()
+         # Don't disable the help menu during tutorials
+         if tMenu is "Help" then
+            next repeat
+         end if
          disable button tMenu of group "revMenuBar" of me
       end repeat
       
@@ -1554,7 +1562,7 @@ private function revMenubarViewMenu pContext
    put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
-   put toggleMenuItem("LiveCode UI Elements in Lists", gREVShowStacks) & return after tView
+   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
@@ -2201,7 +2209,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
          ######## STACK SCPECIFIC ########
       case "Save"
-         revIDESaveStack tTargetStack
+         revIDEActionSaveStack tTargetStack
          break
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack
@@ -2446,7 +2454,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionEditScriptOfCard
          break
       case "Stack Script"
-         revIDEEditScriptOfStack
+         revIDEEditScriptOfObjects the long ID of the topstack
          break
       case "New Control"
       case "New Widget"

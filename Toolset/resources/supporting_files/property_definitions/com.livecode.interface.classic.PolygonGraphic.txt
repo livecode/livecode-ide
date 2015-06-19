@@ -23,8 +23,8 @@ markerFilled	false
 markerPoints		
 layerMode
 behavior
-borderColor
-borderPattern		
+foregroundColor			Border Fill
+foregroundPattern			Border Fill			
 backgroundColor
 backgroundPattern
 fillGradient		

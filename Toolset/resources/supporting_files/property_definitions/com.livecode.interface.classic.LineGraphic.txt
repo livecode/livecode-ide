@@ -15,13 +15,11 @@ lineSize	1
 dashes	false	
 startArrow	false	
 endArrow	false	
-points	Basic	
+points	
 layerMode
 behavior
-borderColor
-borderPattern	
-foregroundColor
-foregroundPattern	
+foregroundColor			Border Fill
+foregroundPattern			Border Fill	
 backgroundColor
 backgroundPattern
 fillGradient		

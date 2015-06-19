@@ -372,14 +372,17 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       else if tDataStart is false then
          next repeat
       else
-         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         put pPropInfoA[tPropertyName]["section"] into tSection
-         
          local tGroupLabel
          put item 4 of tLine into tGroupLabel
          if tGroupLabel is empty then
             put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+         else
+            # If group label is not empty, it overrides the target group from the property spec file
+            put tGroupLabel into pPropInfoA[tPropertyName]["group"]
          end if
+         
+         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
+         put pPropInfoA[tPropertyName]["section"] into tSection
          
          # The groups are ordered by their appearance in the spec file
          if tGroupCountsA[tSection][tGroupLabel] is empty then
@@ -1413,16 +1416,19 @@ on revIDEMessageSend pMessage, pEffectedTarget
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-
-      # If the stack isn't visible on screen, don't send a message
+      
       local tStackID
       set the itemdel to "stack"
       put tObjectID into tStackID
       delete item 1 of tStackID
       if tStackID begins with "tack" then delete char 1 to 4 of tStackID
       put "stack" before tStackID
-      if the mode of tStackID is 0 or the visible of tStackID is false then next repeat
-
+      # If the stack isn't visible on screen, don't send a message
+      # Unless it is the menubar, which should always be able to receive messages
+      if the mode of tStackID is 0 or (tStackID is not the long name of stack revIDEPaletteToStackName("menubar") and the visible of tStackID is false) then 
+         next repeat
+      end if
+      
       # Send the message!
       set the itemdel to ":"
       local tMessage
@@ -2718,6 +2724,7 @@ end revIDEGetInspectedObjects
 local sInspectingObjects
 command revIDEInspectObjects pObjects
    put pObjects into sInspectingObjects
+   revIDESelectObjects pObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
 end revIDEInspectObjects
 
@@ -3546,7 +3553,7 @@ command revIDEOpenPalette pPaletteName
       case "tools"
          palette stack tStackName
          break
-      case "CreateItWelcome"
+      case "Create It Welcome"
       case "search"
       case "preferences"
       case "project browser"
@@ -4760,8 +4767,11 @@ on revIDEActionNewCard
       revIDEActionNewMainstack "default"
    end if
    set the defaultStack to the topStack 
+   local tCardID
    create card
+   put the long id of it into tCardID
    put "edited" into gREVStackStatus[the short name of this stack]
+   revIDEMessageSend "ideNewCard tCardID"
 end revIDEActionNewCard
 
 on revIDEActionDeleteCard
@@ -5457,10 +5467,11 @@ on revIDERevertToSavedStack pStackID
 end revIDERevertToSavedStack
 
 on revIDEActionSaveStack pStackID
-   # validate pStackID (exists)
-   # validate stack has filename -> revIDESaveStack
-   # Ask for a file to save to -> revIDEAskFile "stack"
-   # Save stack -> revIDESaveStack
+   if there is a file the filename of pStackID then
+      revIDESaveStack pStackID
+   else
+      revIDEActionSaveStackAs pStackID
+   end if
 end revIDEActionSaveStack
 
 on revIDESaveStackAs pStackID, pFileName
@@ -6867,7 +6878,7 @@ on revIDEActionEditScriptOfObjects
 end revIDEActionEditScriptOfObjects
 
 on revIDEActionEditScriptOfCard
-   revIDEEditscriptOfObject this card of the topStack
+   revIDEEditscriptOfObject the long ID of this card of the topstack
 end revIDEActionEditScriptOfCard
 
 on revIDEActionEditScriptOfStack

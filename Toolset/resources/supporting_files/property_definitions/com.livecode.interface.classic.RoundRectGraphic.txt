@@ -16,8 +16,8 @@ dashes
 roundRadius	15	
 layerMode	
 behavior
-borderColor
-borderPattern		
+foregroundColor			Border Fill
+foregroundPattern			Border Fill			
 backgroundColor
 backgroundPattern
 fillGradient		

@@ -484,6 +484,7 @@ end mouseDoubleUp
 
 on mouseDown
    if the cType of the target is empty then exit mouseDown
+   if the target is disabled then exit mouseDown
    if the cStatus of the target is "error" then
       answer "Widget could not be created because there was an error while loading it. To resolve, please go to the extension manager." 
       exit mouseDown
@@ -761,14 +762,18 @@ on groupDisable pWhich, pDisable
 end groupDisable
 
 on toolDisable pWhich
+   if there is not a button pWhich of me then exit toolDisable
    set the coloroverlay["opacity"] of button pWhich of me to "90"
    set the coloroverlay["color"] of  button pWhich of me to "255,255,255"
    set the cDisabled of button pWhich of me to true
+   disable button pWhich of me
 end toolDisable
 
 on toolEnable pWhich
+   if there is not a button pWhich of me then exit toolEnable
    set the coloroverlay of button pWhich of me to empty
    set the cDisabled of button pWhich of me to false
+   enable button pWhich of me
 end toolEnable
 
 function absoluteRectOfObject pObject
@@ -815,13 +820,13 @@ function toolObjectName pTool
          put "com.livecode.interface.classic.OptionMenu" into tTool
          break
       case "Create Popup Menu"
-         put "com.livecode.interface.classic.Image" into tTool
+         put "com.livecode.interface.classic.PopupMenu" into tTool
          break
       case "Create Radio Button"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.RadioButton" into tTool
          break
       case "Create Image"
-         put "com.livecode.interface.classic.RectangleGraphic" into tTool
+         put "com.livecode.interface.classic.Image" into tTool
          break
       case "Create Rectangle Button"
          put "com.livecode.interface.classic.RectangleButton" into tTool
@@ -871,6 +876,23 @@ function toolObjectName pTool
       case "Create Rectangle Graphic"
          put "com.livecode.interface.classic.RectangleGraphic" into tTool
          break
+      case "Create Line Graphic"
+         put "com.livecode.interface.classic.LineGraphic" into tTool
+         break
+      default
+         # Try and resolve as a reference to a widget creation tool
+         if word 1 of pTool is "Create" then
+            local tTitle
+            put word 2 to -1 of pTool into tTitle
+            local tInstalledWidgets
+            put revIDEExtensions("widget","installed") into tInstalledWidgets
+            repeat for each key tTypeID in tInstalledWidgets
+               if tInstalledWidgets[tTypeID]["title"] is tTitle then
+                  put tTypeID into tTool
+                  exit repeat
+               end if
+            end repeat
+         end if
    end switch
    return tTool
 end toolObjectName

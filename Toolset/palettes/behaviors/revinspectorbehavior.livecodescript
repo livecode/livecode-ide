@@ -51,12 +51,16 @@ on inspectorOpenEditor pEditor
    if there is a stack pEditor then exit inspectorOpenEditor
    
    # Find the file for the editor
-   local tEditorStackPath
+   local tEditorStackPath, tEditorBehaviorPath
    put revIDEPaletteResourcePath("editors/" & pEditor & ".livecode") into tEditorStackPath
-   
+   put revIDEPaletteResourcePath("editors/" & pEditor & ".behavior.livecodescript") into tEditorBehaviorPath
    # open editor stack if it exists
    if there is a file tEditorStackPath then 
       go invisible stack tEditorStackPath
+   end if
+   
+   if there is a file tEditorBehaviorPath then 
+      go invisible stack tEditorBehaviorPath
    end if
 end inspectorOpenEditor
 
@@ -364,8 +368,21 @@ on inspectorSectionChanged pSection
 end inspectorSectionChanged
 
 on inspectorFill
-   # store the selected object and position
    lock screen
+   
+   # Store the selected chunk if:
+   # 1) There is a focused object
+   # 2) The focused object is on the inspector stack
+   
+   local tSelectedChunk
+   if the focusedobject is not empty then
+      if revIDEStackOfObject(the focusedobject) is the long name of me then
+         if the selectedfield is not empty then
+            put the selectedfield && "of stack" && quote & the short name of me & quote into tSelectedChunk
+         end if
+      end if
+   end if
+   
    local tProperties
    put the displayData of me into tProperties
    
@@ -375,6 +392,14 @@ on inspectorFill
          set the rowData of group tRow of me to tProperties[tRow]
       end if
    end repeat
+   
+   # Restore the selected chunk if it exists
+   if tSelectedChunk is not empty and exists(tSelectedChunk) then
+      lock messages
+      select char 1 to -1 of tSelectedChunk
+      unlock messages
+   end if
+   
    unlock screen
 end inspectorFill
 
