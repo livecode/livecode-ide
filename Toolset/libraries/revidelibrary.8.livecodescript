@@ -3553,7 +3553,7 @@ command revIDEOpenPalette pPaletteName
       case "tools"
          palette stack tStackName
          break
-      case "CreateItWelcome"
+      case "Create It Welcome"
       case "search"
       case "preferences"
       case "project browser"
