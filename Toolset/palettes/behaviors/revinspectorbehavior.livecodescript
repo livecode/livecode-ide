@@ -336,6 +336,9 @@ end inspectorNavigationGenerate
 
 on inspectorChanged
    lock screen
+   # Clear any transient text field
+   revIDEDismissTransient
+   
    # Clear the current inspector
    inspectorClear
    

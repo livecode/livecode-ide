@@ -7680,7 +7680,11 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
    put pCallbackParams into sTransientTextField["callback_params"]
    put pCallback into sTransientTextField["callback"]
    set the rect of tLongID to pRect
-   set the script of tLongID to "on closeField;revIDETransientTextChanged;end closeField;on returnInField; revIDETransientTextChanged;end returnInField"
+   local tScript
+   put "on closeField;revIDETransientTextChanged;end closeField" into tScript
+   put ";on returnInField; revIDETransientTextChanged;end returnInField" after tScript
+   put ";on exitField;revIDETransientTextChanged;end exitField" after tScript
+   set the script of tLongID to tScript
    set the text of tLongID to pCurrentText
    local tTargetLongID
    put the long id of the target into tTargetLongID
@@ -7710,7 +7714,7 @@ end revIDERemoveTransientTextField
 
 /*
 Sends the callback with params as specified by prior call to revIDEAddTransientTextField
-Called by transient text fields on closeField or returnInField. 
+Called by transient text fields on closeField, returnInField or exitField
 */
 on revIDETransientTextChanged
    lock screen
@@ -7729,6 +7733,19 @@ on revIDETransientTextChanged
    unlock screen
 end revIDETransientTextChanged
 
-on revIDEAllTransientsChanged
-   
-end revIDEAllTransientsChanged
+/*
+Simply delete the transient text field without sending the text changed callback.
+*/
+on revIDEDismissTransient
+   lock screen
+   lock messages
+   if sTransientTextField is empty then
+      exit revIDEDismissTransient
+   end if
+   local tCallbackInfo, tValue, tField
+   put sTransientTextField["id"] into tField
+   put empty into sTransientTextField
+   unlock messages
+   send "revIDERemoveTransientTextField tField" to me in 0 millisecs
+   unlock screen
+end revIDEDismissTransient
