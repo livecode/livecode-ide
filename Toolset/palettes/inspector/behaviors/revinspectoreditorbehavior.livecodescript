@@ -117,11 +117,11 @@ on updateProperty
 end updateProperty
 
 before mouseUp pButtonNumber
-   if pButtonNumber is 3 then
-      editorPopupMenu "Reset to default", the mouseloc
-   else
-      pass mouseUp
-   end if
+      if pButtonNumber is 3 and sPropertyInfo["default"] is not "no_default" then
+         editorPopupMenu "Reset to default", the mouseloc
+      else
+         pass mouseUp
+      end if
 end mouseUp
 
 on editorPopupMenu pMenuText, pLoc
