@@ -378,7 +378,6 @@ end revInternal__SetupLicense
          
          -- MW-2013-06-13: Adjust the engine path for Linux
          put item 1 to -2 of tEnginePath into tEnginePath
-         put item 1 to -5 of tEnginePath into sRepositoryPath
          break
       case "MacOS X"
          put specialFolderPath("Preferences") & "/Runtime Revolution/Revolution Enterprise" into sOldPreferencesPath
@@ -394,7 +393,6 @@ end revInternal__SetupLicense
          
          -- MW-2013-06-13: Adjust the engine path for Mac
          put item 1 to -5 of tEnginePath into tEnginePath
-         put item 1 to -4 of tEnginePath into sRepositoryPath
          break
       case "Windows"
          -- We put prefereces into the 'Roaming' AppData folder.
@@ -412,19 +410,18 @@ end revInternal__SetupLicense
          
          -- MW-2013-06-13: Adjust the engine path for Windows
          put item 1 to -2 of tEnginePath into tEnginePath
-         put item 1 to -4 of tEnginePath into sRepositoryPath
          break
    end switch
    
    -- MW-2013-06-13: [[ CloneAndRun ]] Set up the binaries path.
-   set the wholeMatches to true
-   if ("_build" is among the items of tEnginePath or "build-win-x86" is among the items of tEnginePath) and \
-         ("debug" is among the items of tEnginePath or "release" is among the items of tEnginePath) then
+   local tRepositoryPath
+   put revEnvironmentGuessRepositoryPath(tEnginePath) into tRepositoryPath
+   if tRepositoryPath is not empty then
+      put tRepositoryPath into sRepositoryPath
       put tEnginePath into sBinariesPath
    else
       put empty into sRepositoryPath
    end if
-   set the wholeMatches to false
    
    revInternal__Log "Message", "Tools Path = " & sToolsPath
    revInternal__Log "Message", "Old Preferences Path = " & sOldPreferencesPath
@@ -1784,6 +1781,56 @@ private function hookToolsPath pPath, pDefault
    end if
    return pDefault
 end hookToolsPath
+
+
+-- Works out the source repository path for the engine (if any)
+private function revEnvironmentGuessRepositoryPath pEnginePath
+   -- Build and package directories
+   local tPlatform
+   local tProcessor
+   local tBuildDir
+   local tPackageDir
+   local tAltPackageDir
+   local tRepositoryPath
+   
+   switch the platform
+      case "win32"
+         put "win" into tPlatform
+         break
+      case "macos"
+         put "mac" into tPlatform
+         break
+      default
+         put the platform into tPlatform
+         break
+   end switch
+   
+   switch the processor
+      case "i386"
+         put "x86" into tProcessor
+         break
+      default
+         put the processor into tProcessor
+         break
+   end switch
+   
+   put "build-" & tPlatform & "-" & tProcessor into tBuildDir
+   put tPlatform & "-" & tProcessor & "-bin" into tPackageDir
+   put tPlatform & "-bin" into tAltPackageDir
+   
+   set the itemDelimiter to "/"
+   if tBuildDir is among the items of pEnginePath then
+      put item 1 to (itemOffset(tBuildDir,pEnginePath) - 1) of pEnginePath into tRepositoryPath
+   else if tPackageDir is among the items of pEnginePath then
+      put item 1 to (itemOffset(tPackageDir,pEnginePath) - 1) of pEnginePath into tRepositoryPath
+   else if tAltPackageDir is among the items of pEnginePath then
+      put item 1 to (itemOffset(tAltPackageDir,pEnginePath) -1) of pEnginePath into tRepositoryPath
+   else if "_build" is among the items of pEnginePath then
+      put item 1 to (itemOffset("_build",pEnginePath) - 1) of pEnginePath into tRepositoryPath
+   end if
+   
+   return tRepositoryPath
+end revEnvironmentGuessRepositoryPath
 
 --------------------------------------------------------------------------------
 -- Global Environment Functions - General Support
