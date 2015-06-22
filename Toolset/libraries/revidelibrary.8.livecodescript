@@ -3151,6 +3151,9 @@ function revIDESpecialFolderPath pKey
          revIDEEnsurePath(tPath)
          return tPath
          break
+      case "tutorial"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
+         break
    end switch
 end revIDESpecialFolderPath
 
@@ -4221,6 +4224,15 @@ function revIDETutorialInProgress
    return sTutorialName
 end revIDETutorialInProgress
 
+function revIDETutorialResourcePath pTutorial
+   local tTutorialPath
+   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorial &  "/resources" into tTutorialPath
+   if there is a folder tTutorialPath then
+      return tTutorialPath
+   end if
+   return __revIDEError("Tutorial resource path not found") 
+end revIDETutorialResourcePath
+
 function revIDEPaletteToStackName pPalette
    switch pPalette
       case "menubar"
@@ -5217,29 +5229,60 @@ on revIDEAskFile pType, pInstructions, pBasePath
    # return response
 end revIDEAskFile
 
-on revIDEAnswerFile pType, pInstructions, pBasePath
+on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
+   local tTypesA
+   put pTypesA into tTypesA
+   
+   local tInstructions
+   put pInstructions into tInstructions
    switch pType
       case "stack"
-         if pInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into pInstructions
-         answer file pInstructions with type ("LiveCode Stacks|" & revIDEAcceptedTypes("livecode")) or type "All Files|"
+         if tInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into tInstructions
+         put "LiveCode Stacks|" & revIDEAcceptedTypes("livecode") into tTypesA[1]
+         put "All Files|" into tTypesA[2]
          break
       case "image"
-         if pInstructions is empty then put revIDELocalise("Please select an image") into pInstructions
-         answer file pInstructions with type ("Images|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select an image") into tInstructions
+         put "Images|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "video"
-         if pInstructions is empty then put revIDELocalise("Please select a video") into pInstructions
-         answer file pInstructions with type ("Videos|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select a video") into tInstructions
+         put "Videos|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "text"
-         if pInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into pInstructions
-         answer file pInstructions with type ("Text Files|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into tInstructions
+         put "Text Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "audio"
-         if pInstructions is empty then put revIDELocalise("Please select an audio file") into pInstructions
-         answer file pInstructions with type ("Audio Files|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select an audio file") into tInstructions
+         put "Audio Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
    end switch
+   
+   # Build the answer string from the various components
+   local tAnswerString
+   put "answer file pInstructions" into tAnswerString
+   
+   # If there is a tutorial in progress, open dialog browsing tutorial resource folder
+   local tTutorial
+   put revIDETutorialInProgress() into tTutorial
+   if tTutorial is not empty then
+      put " with" && quote & revIDETutorialResourcePath(tTutorial) & quote after tAnswerString
+   end if
+   
+   # Add any types defined in the type array
+   local tTypeString
+   repeat with x  = 1 to the number of elements of tTypesA
+      if tTypeString is empty then
+         put " with type" && quote & tTypesA[x] & quote into tTypeString
+      else
+         put " or type" && quote & tTypesA[x] & quote after tTypeString
+      end if
+   end repeat
+   put tTypeString after tAnswerString
+   
+   # Do the answer file
+   do tAnswerString
    
    if the result is "cancel" then
       return "cancel"
