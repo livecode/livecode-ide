@@ -22,6 +22,28 @@ on editorUpdate
    unlock screen
 end editorUpdate
 
+on openField
+   if the editorEffective of me is true then
+      put empty into field 1 of me
+   end if
+end openField
+
+on closeField
+   editorUpdate
+end closeField
+
+on returnInField
+   dispatch "valueChanged"
+end returnInField
+
+on enterInField
+   dispatch "valueChanged"
+end enterInField
+
+on closeField
+   dispatch "valueChanged"
+end closeField
+
 on editorResize
    lock screen
    lock messages
@@ -32,5 +54,6 @@ end editorResize
 
 on valueChanged
    set the editorValue of me to field 1 of me
+   set the editorEffective of me to false
    updateProperty
 end valueChanged
