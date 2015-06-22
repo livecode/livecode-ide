@@ -1,4 +1,8 @@
 ﻿script "revPaletteBehavior"
+on setAsBehavior pTarget
+   set the behavior of pTarget to the long id of this me
+end setAsBehavior
+
 local FOOTER_ACTION_MARGINS,HEADER_NAVIGATION_MARGINS,HEADER_ACTION_MARGINS
 
 local BAR_HEIGHT = 21

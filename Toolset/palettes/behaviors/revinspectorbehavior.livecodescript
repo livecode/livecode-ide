@@ -4,9 +4,10 @@ constant kMaxLabelSize = 200
 # The inspector data
 local sDataA
 
-on chainBehavior
-   set the behavior of this me to revIDEFrameBehavior()
-end chainBehavior
+on setAsBehavior pTarget
+   dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
+   set the behavior of pTarget to the long id of this me
+end setAsBehavior
 
 setProp inspectorData pDataA
    put pDataA into sDataA
@@ -18,9 +19,6 @@ getProp inspectorData
 end inspectorData
 
 before openStack
-   # Make sure the stack has inspector behavior and frame behavior
-   chainBehavior
-   
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
