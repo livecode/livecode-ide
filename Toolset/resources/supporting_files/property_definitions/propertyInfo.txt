@@ -35,7 +35,7 @@ dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
 decorations	Controls	Basic	com.livecode.pi.enum	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			
 destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
-destroyWindow	Purge windwow on closed	Basic	com.livecode.pi.boolean	true	false		false	
+destroyWindow	Purge window on close	Basic	com.livecode.pi.boolean	true	false		false	
 disabled	Disabled	Basic	com.livecode.pi.boolean	true	false		false	
 disabledIcon	Disabled Icon	Icons	com.livecode.pi.icon	true	false		0	
 customProperties["dgProps"]	Data Grid Properties	Data Grid	com.livecode.pi.datagrid	true	false		no_default
