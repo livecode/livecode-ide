@@ -8,7 +8,7 @@ on preOpenStack
    inspectorTitleUpdate
     
    # Set the inspector behaviour
-   set the behavior of me to revIDEInspectorBehavior()
+   dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of me
 end preOpenStack
 
 on openStack   

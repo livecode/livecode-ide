@@ -2,7 +2,7 @@
 constant BLOCK_SIZE = 20
 
 on preOpenStack
-   set the behavior of me to revIDEFrameBehavior()
+   dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of me
    
    ### Header
    addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
