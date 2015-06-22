@@ -476,47 +476,50 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    else
       put "proplist" into tSubKey
    end if
-
-   local tSparseOrderedA, tOrder, tWidgetProps
+   
+   local tPropKeys, tWidgetPropKeys
    repeat for each key tKey in pSectionA[tSubKey]
-      put pSectionA[tSubKey][tKey]["order"] into tOrder
-      if tOrder is "NaN" then
-         put tKey & CR after tWidgetProps
+      if pSectionA[tSubKey][tKey]["widget_prop"] then
+         if tWidgetPropKeys is empty then
+            put tKey into tWidgetPropKeys
+         else
+            put return & tKey after tWidgetPropKeys
+         end if
       else
-         put pSectionA[tSubKey][tKey] into tSparseOrderedA[tOrder]
-         put tKey into tSparseOrderedA[tOrder]["name"]
+         if tPropKeys is empty then
+            put tKey into tPropKeys
+         else
+            put return & tKey after tPropKeys
+         end if
       end if
    end repeat
-
-   local tKeys, tCount, tOrderedA
+   
+   sort lines of tPropKeys by pSectionA[tSubKey][each]["order"]
+   sort lines of tWidgetPropKeys by pSectionA[tSubKey][each]["order"]
+   
+   local tKeys, tCount
    put 1 into tCount
-   put the keys of tSparseOrderedA into tKeys
-   sort tKeys ascending numeric
-
-   repeat for each line tLine in tWidgetProps
-      put pSectionA[tSubKey][tLine] into tSparseOrderedA[tLine]
-      put tLine into tSparseOrderedA[tLine]["name"]
-   end repeat
-   if tWidgetProps is not empty then
+   put tPropKeys into tKeys
+   if tWidgetPropKeys is not empty then
       if tKeys is empty then
-         put tWidgetProps into tKeys
+         put tWidgetPropKeys into tKeys
       else
-         put return & tWidgetProps after tKeys
+         put return & tWidgetPropKeys after tKeys
       end if
    end if
-
-   repeat for each line tNumber in tKeys
+   local tOrderedA
+   repeat for each line tProp in tKeys
       if pIsGroupList then
-         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["label"]
-         put tSparseOrderedA[tNumber]["subsection"] into tOrderedA[tCount]["subsection"]
-         put __orderPropSubArray(tSparseOrderedA[tNumber], false) into tOrderedA[tCount]["proplist"]
+         put tProp into tOrderedA[tCount]["label"]
+         put pSectionA[tSubKey][tProp]["subsection"] into tOrderedA[tCount]["subsection"]
+         put __orderPropSubArray(pSectionA[tSubKey][tProp], false) into tOrderedA[tCount]["proplist"]
       else
-         put tSparseOrderedA[tNumber] into tOrderedA[tCount]
-         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["property_name"]
+         put pSectionA[tSubKey][tProp] into tOrderedA[tCount]
+         put tProp into tOrderedA[tCount]["property_name"]
       end if
       add 1 to tCount
    end repeat
-
+   
    return tOrderedA
 end __orderPropSubArray
 

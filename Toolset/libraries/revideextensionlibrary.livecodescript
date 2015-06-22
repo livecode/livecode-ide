@@ -113,7 +113,8 @@ function revIDEExtensionPropertiesInfo pTypeId
    
    repeat for each key tProp in tPropsA
       put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
-      put "NaN" into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
+      put tPropsA[tProp]["widget_prop"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["widget_prop"]
+      put tPropsA[tProp]["order"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
    end repeat
    return tPropInfoA
 end revIDEExtensionPropertiesInfo
@@ -551,7 +552,9 @@ function __extensionPropertiesFromManifest pManifestPath
    end repeat
    
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
+   local tOrder
    repeat for each line tProperty in tProperties
+      add 1 to tOrder
       local tName, tLabel, tSection
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
       put tMetadataA[tName] into tExtensionData[tName]
@@ -588,9 +591,11 @@ function __extensionPropertiesFromManifest pManifestPath
       end if
       put tReadOnly into tExtensionData[tName]["read_only"]
       
-      if tExtensionData[tName]["order"] is empty then
-         put "NaN" into tExtensionData[tName]["order"]
-      end if
+      # Keep track of the order the properties were specified and tag the property as a widget
+      # property, so we can order them correctly after the built-in props for the given section
+      put tOrder into tExtensionData[tName]["order"]
+      put true into tExtensionData[tName]["widget_prop"]
+      
       
       if tExtensionData[tName]["user_visible"] is empty then
          put true into tExtensionData[tName]["user_visible"]
