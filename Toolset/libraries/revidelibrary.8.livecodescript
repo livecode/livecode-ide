@@ -494,8 +494,8 @@ private function __orderPropSubArray pSectionA, pIsGroupList
       end if
    end repeat
    
-   sort lines of tPropKeys by pSectionA[tSubKey][each]["order"]
-   sort lines of tWidgetPropKeys by pSectionA[tSubKey][each]["order"]
+   sort lines of tPropKeys ascending numeric by pSectionA[tSubKey][each]["order"]
+   sort lines of tWidgetPropKeys ascending numeric by pSectionA[tSubKey][each]["order"]
    
    local tKeys, tCount
    put 1 into tCount
