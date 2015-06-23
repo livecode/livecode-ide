@@ -2527,6 +2527,12 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       try
          create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
+         local tSize
+         put revIDEExtensionWidgetPreferredSize(pObjectTypeID) into tSize
+         if tSize is not empty then
+            set the width of tCreatedControlID to item 1 of tSize
+            set the height of tCreatedControlID to item 2 of tSize
+         end if
       catch tError
          return false
       end try
