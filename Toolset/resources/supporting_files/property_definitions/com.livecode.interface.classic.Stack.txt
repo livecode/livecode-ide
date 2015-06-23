@@ -11,7 +11,7 @@ windowShape
 scaleFactor	1	
 metal	false	
 liveResizing	false	
-shadow	true	
+shadow	true		Basic
 visible	true	
 formatForPrinting	false	
 systemWindow	false	

@@ -35,16 +35,6 @@ on valueChanged
    updateProperty
 end valueChanged
 
-on editLabelField pRect, pNumber
-   put revIDERelativeRectToAbsolute(pRect, the long id of widget 1 of me) into pRect
-   # Work around some text alignment issues
-   put item 1 of pRect - 7 into item 1 of pRect
-   put item 2 of pRect + 3 into item 2 of pRect
-   put item 2 of pRect + 21 into item 4 of pRect
-   
-   revIDECreateTransientTextField pRect, "textEdited", pNumber, item pNumber of the navLabels of widget 1 of me
-end editLabelField
-
 on textEdited pValue, pNumber
    local tNames
    put the navLabels of widget 1 of me into tNames
@@ -53,6 +43,21 @@ on textEdited pValue, pNumber
    valueChanged
 end textEdited
 
-on dismissTransientField
-   revIDETransientTextChanged
-end dismissTransientField
+on navDataChanged
+   valueChanged
+end navDataChanged
+
+on editField pRect, pNumber
+   put revIDERelativeRectToAbsolute(pRect, the long id of widget 1 of me) into pRect
+   # Work around some text alignment issues
+   put item 1 of pRect - 7 into item 1 of pRect
+   put item 2 of pRect + 3 into item 2 of pRect
+   put item 2 of pRect + 21 into item 4 of pRect
+   
+   revIDECreateTransientTextField pRect, "textEdited", pNumber, item pNumber of the navLabels of widget 1 of me
+end editField
+
+on dismissTransient
+  revIDETransientTextChanged
+end dismissTransient
+

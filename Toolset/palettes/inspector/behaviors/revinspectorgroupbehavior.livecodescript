@@ -12,6 +12,10 @@ on propertyRegister pPropertyInfo
    # Check that the property has not already been registered
    if tPropName is among the keys of sProperties then exit propertyRegister
    
+   if tEditor is "com.livecode.pi.integer" then
+      put "com.livecode.pi.number" into tEditor
+   end if
+   
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack tEditor then
