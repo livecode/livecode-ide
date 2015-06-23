@@ -4211,37 +4211,6 @@ on revIDEAnswerDialogClosed
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
-local sTutorialName
-on revIDEStartTutorial pName
-   dispatch "revTutorialStart" to stack "revTutorial" with pName
-   put pName into sTutorialName
-   revIDEMessageSend "ideTutorialProgressChanged"
-end revIDEStartTutorial
-
-on revIDEStopTutorial
-   if revIDETutorialInProgress() is not empty then
-      revFinaliseTutorial
-   end if
-   put empty into sTutorialName
-   revIDEMessageSend "ideTutorialProgressChanged"
-   wait 0 millisecs with messages
-   delete stack "revTutorial"
-   revIDEOpenPalette "Create It Welcome"
-end revIDEStopTutorial
-
-function revIDETutorialInProgress
-   return sTutorialName
-end revIDETutorialInProgress
-
-function revIDETutorialResourcePath pTutorial
-   local tTutorialPath
-   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorial &  "/resources" into tTutorialPath
-   if there is a folder tTutorialPath then
-      return tTutorialPath
-   end if
-   return __revIDEError("Tutorial resource path not found") 
-end revIDETutorialResourcePath
-
 function revIDEPaletteToStackName pPalette
    switch pPalette
       case "menubar"
@@ -7801,3 +7770,242 @@ on revIDEDismissTransient
    send "revIDERemoveTransientTextField tField" to me in 0 millisecs
    unlock screen
 end revIDEDismissTransient
+
+function revIDEFolderListing pFolder, pListFiles
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tList
+   if pListFiles then
+      put the files into tList
+   else
+      put the folders into tList
+   end if
+   
+   filter tList without ".*"
+   set the defaultFolder to tDefaultFolder
+   return tList
+end revIDEFolderListing
+
+#############
+# Tutorial support
+#############
+
+local sTutorialInfo
+on revIDEStartTutorial pCourse, pTutorial, pLessonNumber
+   put pLessonNumber into sTutorialInfo["lesson"]
+   put pTutorial into sTutorialInfo["tutorial"]
+   put pCourse into sTutorialInfo["course"]
+   dispatch "revTutorialStart" to stack "revTutorial"
+   revIDEMessageSend "ideTutorialProgressChanged"
+end revIDEStartTutorial
+
+on revIDEStopTutorial
+   if revIDETutorialInProgress() is not empty then
+      revFinaliseTutorial
+   end if
+   put empty into sTutorialInfo
+   revIDEMessageSend "ideTutorialProgressChanged"
+   wait 0 millisecs with messages
+   delete stack "revTutorial"
+   revIDEOpenPalette "Create It Welcome"
+end revIDEStopTutorial
+
+function revIDETutorialInProgress
+   return sTutorialInfo
+end revIDETutorialInProgress
+
+function revIDETutorialResourcePath pTutorialInfo
+   local tTutorialPath
+   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorialInfo["course"] & "/" & pTutorialInfo["tutorial"] & "/resources" into tTutorialPath
+   if there is a folder tTutorialPath then
+      return tTutorialPath
+   end if
+   return __revIDEError("Tutorial resource path not found") 
+end revIDETutorialResourcePath
+
+function revIDETutorialUserStackPath
+   return (revEnvironmentCustomizationPath() & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & ".livecode")
+end revIDETutorialUserStackPath
+
+on revIDETutorialSave pMainstack, pStepName
+   if sTutorialInfo is empty then
+      return __revIDEError("No tutorial in progress")
+   end if
+   
+   # Save a copy of the current stack to the user data folder
+   local tFilename
+   put the filename of pMainstack into tFilename
+   save stack pMainstack as revIDETutorialUserStackPath()
+   set the filename of pMainstack to tFilename
+   
+   # Update the stored course data
+   local tCourseDataA
+   put revIDETutorialSavedCourseProgress(sTutorialInfo["course"]) into tCourseDataA
+   
+   local tLessonDataA
+   put tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]] into tLessonDataA
+   
+   put revIDETutorialDoneRatio() into tLessonDataA["progress"]
+   put pStepName into tLessonDataA["step"]
+   
+   put tLessonDataA into tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]]
+   
+   revIDETutorialSaveCourseProgress sTutorialInfo["course"], tCourseDataA
+end revIDETutorialSave
+
+/*
+Returns the preference name corresponding to the given course
+*/
+function revIDETutorialCoursePreferenceName pName
+   replace " " with "_" in pName
+   return "c" & pName & "Info"
+end revIDETutorialCoursePreferenceName
+
+/*
+Returns the course progress data stored in the preferences for the given course
+*/
+function revIDETutorialSavedCourseProgress pName
+   return revIDEGetPreference(revIDETutorialCoursePreferenceName(pName))
+end revIDETutorialSavedCourseProgress
+
+/*
+Stores the course progress data for the given course in the preferences
+*/
+on revIDETutorialSaveCourseProgress pCourse, pData
+   revIDESetPreference revIDETutorialCoursePreferenceName(pCourse), pData
+end revIDETutorialSaveCourseProgress
+
+/*
+Returns the percentage of the currently open tutorial lesson that is finished
+*/
+function revIDETutorialDonePercentage
+   if sTutorialInfo is empty then
+      return 0
+   end if
+   
+   return 100 * (revTutorialStepNumber() - 1) / revTutorialNumberOfSteps()
+end revIDETutorialDonePercentage
+
+/*
+Lists the courses in the IDE tutorial folder
+*/
+function revIDETutorialListCourses
+   return revIDEFolderListing(revIDESpecialFolderPath("tutorial") & "/courses", false)
+end revIDETutorialListCourses
+
+/*
+Returns the path to the folder containing the given course
+*/
+function revIDETutorialCoursePath pCourse
+   return revIDESpecialFolderPath("tutorial") & "/courses/" & pCourse
+end revIDETutorialCoursePath
+
+/*
+Returns the description of the given course
+*/
+function revIDETutorialCourseDescription pCourse
+   return textDecode(url ("binfile:" & revIDETutorialCoursePath(pCourse) & slash & "description.txt"), "utf-8")
+end revIDETutorialCourseDescription
+
+/*
+Lists the tutorials in the folder for the given course
+*/
+function revIDETutorialListTutorials pCourse
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse), false)
+end revIDETutorialListTutorials
+
+/*
+Lists the lessons in the folder for the given tutorial of the given course
+*/
+function revIDETutorialListLessons pCourse, pTutorial
+   local tFiles
+   put revIDEFolderListing(revIDETutorialCoursePath(pCourse) & slash & pTutorial, true) into tFiles
+   replace ".txt" with empty in tFiles
+   return tFiles
+end revIDETutorialListLessons
+
+/*
+Returns the content of the specified lesson
+*/
+function revIDETutorialLessonContent pCourse, pTutorial, pLesson
+   return textDecode(url("binfile:" & revIDETutorialCoursePath(pCourse) & slash & pTutorial & slash & pLesson & ".txt"), "utf-8")
+end revIDETutorialLessonContent
+
+/*
+Lists the courses that are always present in the order they should display
+*/
+function revIDETutorialFixedCourses
+   return "Getting Started,Beginners Course,General Tutorials"
+end revIDETutorialFixedCourses
+
+/*
+Returns a structured array representing the info of all of the currently available courses
+*/
+function revIDETutorialCourseInfo
+   local tCourseList
+   put revIDETutorialListCourses() into tCourseList
+   
+   local tFixedCourses
+   put revIDETutorialFixedCourses() into tFixedCourses
+   repeat for each item tItem in tFixedCourses
+      delete line lineoffset(tItem, tCourseList) of tCourseList
+   end repeat
+   
+   replace comma with return in tFixedCourses
+   if tCourseList is empty then
+      put tFixedCourses into tCourseList
+   else
+      put tFixedCourses & return before tCourseList
+   end if
+   
+   local tCourseDataA, tCount
+   repeat for each line tCourse in tCourseList
+      add 1 to tCount
+      put revIDETutorialInfo(tCourse) into tCourseDataA[tCount]["tutorials"]
+      put tCourse into tCourseDataA[tCount]["name"]
+   end repeat
+   
+   return tCourseDataA
+end revIDETutorialCourseInfo
+
+/*
+Returns a structured array representing the info of all of the currently available tutorials in the given course
+*/
+function revIDETutorialInfo pCourse
+   local tTutorialList
+   put revIDETutorialListTutorials(pCourse) into tTutorialList
+   
+   if pCourse is "Beginners Course" then
+      # Create it course is ordered numerically
+      sort tTutorialList ascending numeric
+   else
+      sort tTutorialList
+   end if
+   
+   local tTutorialDataA, tCount
+   repeat for each line tTutorial in tTutorialList
+      add 1 to tCount
+      put tTutorial into tTutorialDataA[tCount]["name"]
+      put revIDETutorialLessonInfo(pCourse, tTutorial) into tTutorialDataA[tCount]["lessons"]
+   end repeat
+   
+   return tTutorialDataA
+end revIDETutorialInfo
+
+/*
+Returns a structured array representing the info of all of the currently available lessons in the given tutorial of the given course
+*/
+function revIDETutorialLessonInfo pCourse, pTutorial
+   local tLessonList
+   put revIDETutorialListLessons(pCourse, pTutorial) into tLessonList
+   
+   local tLessonDataA, tCount
+   repeat for each line tLesson in tLessonList
+      add 1 to tCount
+      put tLesson into tLessonDataA[tCount]["name"]
+   end repeat
+   
+   return tLessonDataA
+end revIDETutorialLessonInfo

@@ -516,7 +516,7 @@ on layoutMenu
    if tTutorial is not empty then
       show group "tutorial" of me
       show tLastDivide
-      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial
+      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial["course"] && "-" && tTutorial["tutorial"] && "-" && tTutorial["lesson"] 
       set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
       set the topleft of field "label" of group "tutorial" of me to 10, 10
       
@@ -524,7 +524,7 @@ on layoutMenu
       
       set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
       set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
-      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revTutorialDoneRatio() * 100, 5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage(), 5
       set the loc of group "progress" of me to the loc of field "label" of me
       set the top of group "progress" of me to 35
       

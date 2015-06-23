@@ -5,11 +5,13 @@
 #
 ##############################################################################
 
-function revTutorialParse pFile
-   local tTutorial
-   put url("binfile:" & pFile) into tTutorial
-   put textDecode(tTutorial, "utf-8") into tTutorial
-   
+function revTutorialParseFile pFile
+   local tData
+   put url("binfile:" & pFile) into tData
+   return revTutorialParseData(textDecode(tData, "utf-8"))
+end revTutorialParseFile
+
+function revTutorialParseData pData
    local tTutorialName, tCurStepName
    local tType, tSubType
    local tLineNum, tActionNum
@@ -18,7 +20,7 @@ function revTutorialParse pFile
    
    put 0 into tLineNum
    put 0 into tActionNum
-   repeat for each line tLine in tTutorial
+   repeat for each line tLine in pData
       add 1 to tLineNum
       get token 1 of tLine
       
@@ -49,7 +51,7 @@ function revTutorialParse pFile
             case "action"
             case "script"
                // Begin a new subtype
-               if tType is not "step" then
+               if tType is not "step" and tType is not "epilogue" then
                   throw "action list not valid in" && tType && " on line" && tLineNum
                end if
                
@@ -126,7 +128,7 @@ function revTutorialParse pFile
    
    put tFirstStep into tStepData["first step"]
    return tStepData
-end revTutorialParse
+end revTutorialParseData
 
 function revTutorialIsObjectType pType
    switch pType
@@ -276,15 +278,21 @@ on revTutorialParseLine pExpected, pTokens, @rData
 end revTutorialParseLine
 
 on revTutorialParseGo pTokens, @rData
-   local tExpected, tData
-   put "go to step <token>" into tExpected
-   revTutorialParseLine tExpected, pTokens, tData
-   if the result is not empty then
-      return the result
+   local tData
+   revTutorialParseLine "go to lesson <token>", pTokens, tData
+   if the result is empty then
+      put "go to lesson" into rData["type"]
+      put tData[1] into rData["step"]
+      return empty
    end if
-   put "go" into rData["type"]
-   put tData[1] into rData["step"]
-   return empty
+   
+   revTutorialParseLine "go to step <token>", pTokens, tData
+   if the result is empty then
+      put "go" into rData["type"]
+      put tData[1] into rData["step"]
+      return empty
+   end if
+   return the result
 end revTutorialParseGo
 
 on revTutorialParseInterlude pTokens, @rData
@@ -800,12 +808,15 @@ on revFinaliseTutorial
    unlock screen
 end revFinaliseTutorial
 
-on revTutorialStart pTutorialName
-   local tTutorialFile
-   put revIDEPaletteResourcePath("tutorials/" & pTutorialName & "/" & pTutorialName & ".txt") into tTutorialFile
+on revTutorialStart
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   local tTutorialData
+   put revIDETutorialLessonContent(tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]) into tTutorialData
    
    local tData
-   put revTutorialParse(tTutorialFile) into tData
+   put revTutorialParseData(tTutorialData) into tData
    
    revInitialiseTutorial tData
    put tData["first step"] into sFirstStep
@@ -822,9 +833,13 @@ on revTutorialFinish
    show stack "revTutorial"
 end revTutorialFinish
 
-function revTutorialDoneRatio
-   return (sStepNum - 1) / sNumSteps
-end revTutorialDoneRatio
+function revTutorialStepNumber
+   return sStepNum
+end revTutorialStepNumber
+
+function revTutorialNumberOfSteps
+   return sNumSteps
+end revTutorialNumberOfSteps
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
