@@ -61,17 +61,22 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   
    lock messages
-   put tValue + 0 into field 1 of me
    set the thumbposition of scrollbar "slider" of me to tValue + 0
    set the thumbposition of scrollbar "twiddle" of me to tValue + 0
    set the enabled of field 1 of me to tEnabled
    if tEffective is true then
+      if the focusedobject is not the long ID of field 1 of me then
+         put tValue + 0 into field 1 of me
+      end if
       set the textcolor of field 1 of me to "150,150,150"
    else
       set the textcolor of field 1 of me to empty
+      put tValue + 0 into field 1 of me
    end if
    unlock messages
+   
    unlock screen
 end editorUpdate
 

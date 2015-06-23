@@ -12,14 +12,18 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   put tValue into field 1 of me
    set the enabled of field 1 of me to tEnabled
    if tEffective is true then
+      if the focusedobject is not the long ID of field 1 of me then
+         put tValue into field 1 of me
+      end if
       set the textcolor of field 1 of me to "150,150,150"
    else
+      put tValue into field 1 of me
       set the textcolor of field 1 of me to empty
    end if
    unlock messages
+   
    unlock screen
 end editorUpdate
 
