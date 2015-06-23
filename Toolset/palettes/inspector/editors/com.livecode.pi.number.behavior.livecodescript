@@ -61,17 +61,22 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   
    lock messages
-   put tValue + 0 into field 1 of me
    set the thumbposition of scrollbar "slider" of me to tValue + 0
    set the thumbposition of scrollbar "twiddle" of me to tValue + 0
    set the enabled of field 1 of me to tEnabled
    if tEffective is true then
+      if the focusedobject is not the long ID of field 1 of me then
+         put tValue + 0 into field 1 of me
+      end if
       set the textcolor of field 1 of me to "150,150,150"
    else
       set the textcolor of field 1 of me to empty
+      put tValue + 0 into field 1 of me
    end if
    unlock messages
+   
    unlock screen
 end editorUpdate
 
@@ -109,10 +114,35 @@ on editorResize
       set the topleft of scrollbar "slider" of me to tLeft,tTop
    end if
    
-   
    unlock messages
    unlock screen
 end editorResize
+
+on openField
+   if the editorEffective of me is true then
+      lock messages
+      put empty into field 1 of me
+      # Ensure that when the user types the text is the default color rather than the effective grey
+      set the textcolor of field 1 of me to empty
+      unlock messages
+   end if
+end openField
+
+on exitField
+   editorUpdate
+end exitField
+
+on returnInField
+   valueChanged
+end returnInField
+
+on enterInField
+   valueChanged
+end enterInField
+
+on closeField
+   valueChanged
+end closeField
 
 on scrollbarDrag pCurrentValue
    if the visible of scrollbar 1 of me is false or pCurrentValue is field 1 of me then
@@ -130,13 +160,12 @@ on scrollbarDrag pCurrentValue
 end scrollbarDrag
 
 on valueChanged
-   if field 1 of me is a number then
-      local tValue
-      put field 1 of me into tValue
-      set the editorValue of me to tValue
+   if field 1 of me is a number  then
       lock messages
-      set the thumbposition of scrollbar "slider" of me to tValue
+      set the thumbposition of scrollbar "slider" of me to field 1 of me
       unlock messages
-      updateProperty
    end if
+   
+   set the editorValue of me to field 1 of me
+   updateProperty
 end valueChanged

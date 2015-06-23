@@ -476,47 +476,50 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    else
       put "proplist" into tSubKey
    end if
-
-   local tSparseOrderedA, tOrder, tWidgetProps
+   
+   local tPropKeys, tWidgetPropKeys
    repeat for each key tKey in pSectionA[tSubKey]
-      put pSectionA[tSubKey][tKey]["order"] into tOrder
-      if tOrder is "NaN" then
-         put tKey & CR after tWidgetProps
+      if pSectionA[tSubKey][tKey]["widget_prop"] then
+         if tWidgetPropKeys is empty then
+            put tKey into tWidgetPropKeys
+         else
+            put return & tKey after tWidgetPropKeys
+         end if
       else
-         put pSectionA[tSubKey][tKey] into tSparseOrderedA[tOrder]
-         put tKey into tSparseOrderedA[tOrder]["name"]
+         if tPropKeys is empty then
+            put tKey into tPropKeys
+         else
+            put return & tKey after tPropKeys
+         end if
       end if
    end repeat
-
-   local tKeys, tCount, tOrderedA
+   
+   sort lines of tPropKeys ascending numeric by pSectionA[tSubKey][each]["order"]
+   sort lines of tWidgetPropKeys ascending numeric by pSectionA[tSubKey][each]["order"]
+   
+   local tKeys, tCount
    put 1 into tCount
-   put the keys of tSparseOrderedA into tKeys
-   sort tKeys ascending numeric
-
-   repeat for each line tLine in tWidgetProps
-      put pSectionA[tSubKey][tLine] into tSparseOrderedA[tLine]
-      put tLine into tSparseOrderedA[tLine]["name"]
-   end repeat
-   if tWidgetProps is not empty then
+   put tPropKeys into tKeys
+   if tWidgetPropKeys is not empty then
       if tKeys is empty then
-         put tWidgetProps into tKeys
+         put tWidgetPropKeys into tKeys
       else
-         put return & tWidgetProps after tKeys
+         put return & tWidgetPropKeys after tKeys
       end if
    end if
-
-   repeat for each line tNumber in tKeys
+   local tOrderedA
+   repeat for each line tProp in tKeys
       if pIsGroupList then
-         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["label"]
-         put tSparseOrderedA[tNumber]["subsection"] into tOrderedA[tCount]["subsection"]
-         put __orderPropSubArray(tSparseOrderedA[tNumber], false) into tOrderedA[tCount]["proplist"]
+         put tProp into tOrderedA[tCount]["label"]
+         put pSectionA[tSubKey][tProp]["subsection"] into tOrderedA[tCount]["subsection"]
+         put __orderPropSubArray(pSectionA[tSubKey][tProp], false) into tOrderedA[tCount]["proplist"]
       else
-         put tSparseOrderedA[tNumber] into tOrderedA[tCount]
-         put tSparseOrderedA[tNumber]["name"] into tOrderedA[tCount]["property_name"]
+         put pSectionA[tSubKey][tProp] into tOrderedA[tCount]
+         put tProp into tOrderedA[tCount]["property_name"]
       end if
       add 1 to tCount
    end repeat
-
+   
    return tOrderedA
 end __orderPropSubArray
 
@@ -2524,6 +2527,12 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       try
          create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
+         local tSize
+         put revIDEExtensionWidgetPreferredSize(pObjectTypeID) into tSize
+         if tSize is not empty then
+            set the width of tCreatedControlID to item 1 of tSize
+            set the height of tCreatedControlID to item 2 of tSize
+         end if
       catch tError
          return false
       end try
@@ -3150,6 +3159,9 @@ function revIDESpecialFolderPath pKey
          put  item 1 to -3 of the filename of stack "home" & "/examples" into tPath
          revIDEEnsurePath(tPath)
          return tPath
+         break
+      case "tutorial"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
          break
    end switch
 end revIDESpecialFolderPath
@@ -4221,6 +4233,15 @@ function revIDETutorialInProgress
    return sTutorialName
 end revIDETutorialInProgress
 
+function revIDETutorialResourcePath pTutorial
+   local tTutorialPath
+   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorial &  "/resources" into tTutorialPath
+   if there is a folder tTutorialPath then
+      return tTutorialPath
+   end if
+   return __revIDEError("Tutorial resource path not found") 
+end revIDETutorialResourcePath
+
 function revIDEPaletteToStackName pPalette
    switch pPalette
       case "menubar"
@@ -5217,29 +5238,60 @@ on revIDEAskFile pType, pInstructions, pBasePath
    # return response
 end revIDEAskFile
 
-on revIDEAnswerFile pType, pInstructions, pBasePath
+on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
+   local tTypesA
+   put pTypesA into tTypesA
+   
+   local tInstructions
+   put pInstructions into tInstructions
    switch pType
       case "stack"
-         if pInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into pInstructions
-         answer file pInstructions with type ("LiveCode Stacks|" & revIDEAcceptedTypes("livecode")) or type "All Files|"
+         if tInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into tInstructions
+         put "LiveCode Stacks|" & revIDEAcceptedTypes("livecode") into tTypesA[1]
+         put "All Files|" into tTypesA[2]
          break
       case "image"
-         if pInstructions is empty then put revIDELocalise("Please select an image") into pInstructions
-         answer file pInstructions with type ("Images|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select an image") into tInstructions
+         put "Images|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "video"
-         if pInstructions is empty then put revIDELocalise("Please select a video") into pInstructions
-         answer file pInstructions with type ("Videos|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select a video") into tInstructions
+         put "Videos|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "text"
-         if pInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into pInstructions
-         answer file pInstructions with type ("Text Files|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into tInstructions
+         put "Text Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
       case "audio"
-         if pInstructions is empty then put revIDELocalise("Please select an audio file") into pInstructions
-         answer file pInstructions with type ("Audio Files|" & revIDEAcceptedTypes(pType))
+         if tInstructions is empty then put revIDELocalise("Please select an audio file") into tInstructions
+         put "Audio Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
          break
    end switch
+   
+   # Build the answer string from the various components
+   local tAnswerString
+   put "answer file pInstructions" into tAnswerString
+   
+   # If there is a tutorial in progress, open dialog browsing tutorial resource folder
+   local tTutorial
+   put revIDETutorialInProgress() into tTutorial
+   if tTutorial is not empty then
+      put " with" && quote & revIDETutorialResourcePath(tTutorial) & quote after tAnswerString
+   end if
+   
+   # Add any types defined in the type array
+   local tTypeString
+   repeat with x  = 1 to the number of elements of tTypesA
+      if tTypeString is empty then
+         put " with type" && quote & tTypesA[x] & quote into tTypeString
+      else
+         put " or type" && quote & tTypesA[x] & quote after tTypeString
+      end if
+   end repeat
+   put tTypeString after tAnswerString
+   
+   # Do the answer file
+   do tAnswerString
    
    if the result is "cancel" then
       return "cancel"
@@ -7680,7 +7732,11 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
    put pCallbackParams into sTransientTextField["callback_params"]
    put pCallback into sTransientTextField["callback"]
    set the rect of tLongID to pRect
-   set the script of tLongID to "on closeField;revIDETransientTextChanged;end closeField;on returnInField; revIDETransientTextChanged;end returnInField"
+   local tScript
+   put "on closeField;revIDETransientTextChanged;end closeField" into tScript
+   put ";on returnInField; revIDETransientTextChanged;end returnInField" after tScript
+   put ";on exitField;revIDETransientTextChanged;end exitField" after tScript
+   set the script of tLongID to tScript
    set the text of tLongID to pCurrentText
    local tTargetLongID
    put the long id of the target into tTargetLongID
@@ -7710,7 +7766,7 @@ end revIDERemoveTransientTextField
 
 /*
 Sends the callback with params as specified by prior call to revIDEAddTransientTextField
-Called by transient text fields on closeField or returnInField. 
+Called by transient text fields on closeField, returnInField or exitField
 */
 on revIDETransientTextChanged
    lock screen
@@ -7729,6 +7785,19 @@ on revIDETransientTextChanged
    unlock screen
 end revIDETransientTextChanged
 
-on revIDEAllTransientsChanged
-   
-end revIDEAllTransientsChanged
+/*
+Simply delete the transient text field without sending the text changed callback.
+*/
+on revIDEDismissTransient
+   lock screen
+   lock messages
+   if sTransientTextField is empty then
+      exit revIDEDismissTransient
+   end if
+   local tCallbackInfo, tValue, tField
+   put sTransientTextField["id"] into tField
+   put empty into sTransientTextField
+   unlock messages
+   send "revIDERemoveTransientTextField tField" to me in 0 millisecs
+   unlock screen
+end revIDEDismissTransient

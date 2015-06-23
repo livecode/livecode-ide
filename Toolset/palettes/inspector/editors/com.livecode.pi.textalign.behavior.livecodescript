@@ -1,4 +1,4 @@
-﻿script "com.livecode.pi.texalign.behavior"
+﻿script "com.livecode.pi.textalign.behavior"
 on editorInitialize
    set the editorMinWidth of me to 90
    set the editorMaxWidth of me to 90

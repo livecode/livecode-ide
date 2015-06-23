@@ -113,10 +113,18 @@ function revIDEExtensionPropertiesInfo pTypeId
    
    repeat for each key tProp in tPropsA
       put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
-      put "NaN" into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
+      put tPropsA[tProp]["widget_prop"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["widget_prop"]
+      put tPropsA[tProp]["order"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
    end repeat
    return tPropInfoA
 end revIDEExtensionPropertiesInfo
+
+function revIDEExtensionWidgetPreferredSize pKind
+   local tExtensionID
+   put __extensionCacheID("name", pKind) into tExtensionID
+   
+   return __extensionPropertyGet(tExtensionID, "preferred_size")
+end revIDEExtensionWidgetPreferredSize
 
 ##############################
 # PRIVATE INSTALLATION PROCESS
@@ -551,7 +559,9 @@ function __extensionPropertiesFromManifest pManifestPath
    end repeat
    
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
+   local tOrder
    repeat for each line tProperty in tProperties
+      add 1 to tOrder
       local tName, tLabel, tSection
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
       put tMetadataA[tName] into tExtensionData[tName]
@@ -588,9 +598,11 @@ function __extensionPropertiesFromManifest pManifestPath
       end if
       put tReadOnly into tExtensionData[tName]["read_only"]
       
-      if tExtensionData[tName]["order"] is empty then
-         put "NaN" into tExtensionData[tName]["order"]
-      end if
+      # Keep track of the order the properties were specified and tag the property as a widget
+      # property, so we can order them correctly after the built-in props for the given section
+      put tOrder into tExtensionData[tName]["order"]
+      put true into tExtensionData[tName]["widget_prop"]
+      
       
       if tExtensionData[tName]["user_visible"] is empty then
          put true into tExtensionData[tName]["user_visible"]
@@ -871,6 +883,7 @@ on __extensionLoad pID, pExtensionDataA
    __extensionPropertySet tIndex, "error", tError
    __extensionPropertySet tIndex, "builtin", tToLoadA["builtin"]
    __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
+   __extensionPropertySet tIndex, "preferred_size", tToLoadA["preferredSize"] 
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
    
@@ -1038,6 +1051,20 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put empty into tTargetAuthor
    end if
    put tTargetAuthor into tDataA["author"]
+   
+   local tPreferredSize
+   local tMetadataNodes, tMetadataA, tKeys, tValue
+   put revXMLChildNames(tID, "package",return,"metadata",true) into tMetadataNodes
+   repeat for each line tMetadata in tMetadataNodes
+      if revXMLAttribute(tID,"package" & "/" & tMetadata,"key") is "preferredSize" then
+         put revXMLNodeContents(tID,"package" & "/" & tMetadata) into tPreferredSize
+         exit repeat
+      end if
+   end repeat
+   if tPreferredSize is empty or tPreferredSize begins with "xmlerr" then
+      put empty into tPreferredSize
+   end if
+   put tPreferredSize into tDataA["preferredSize"]
    
    local tRequires, tCount
    put 0 into tCount
