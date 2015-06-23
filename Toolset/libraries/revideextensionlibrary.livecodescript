@@ -119,6 +119,13 @@ function revIDEExtensionPropertiesInfo pTypeId
    return tPropInfoA
 end revIDEExtensionPropertiesInfo
 
+function revIDEExtensionWidgetPreferredSize pKind
+   local tExtensionID
+   put __extensionCacheID("name", pKind) into tExtensionID
+   
+   return __extensionPropertyGet(tExtensionID, "preferred_size")
+end revIDEExtensionWidgetPreferredSize
+
 ##############################
 # PRIVATE INSTALLATION PROCESS
 ##############################
@@ -876,6 +883,7 @@ on __extensionLoad pID, pExtensionDataA
    __extensionPropertySet tIndex, "error", tError
    __extensionPropertySet tIndex, "builtin", tToLoadA["builtin"]
    __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
+   __extensionPropertySet tIndex, "preferred_size", tToLoadA["preferredSize"] 
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
    
@@ -1043,6 +1051,20 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put empty into tTargetAuthor
    end if
    put tTargetAuthor into tDataA["author"]
+   
+   local tPreferredSize
+   local tMetadataNodes, tMetadataA, tKeys, tValue
+   put revXMLChildNames(tID, "package",return,"metadata",true) into tMetadataNodes
+   repeat for each line tMetadata in tMetadataNodes
+      if revXMLAttribute(tID,"package" & "/" & tMetadata,"key") is "preferredSize" then
+         put revXMLNodeContents(tID,"package" & "/" & tMetadata) into tPreferredSize
+         exit repeat
+      end if
+   end repeat
+   if tPreferredSize is empty or tPreferredSize begins with "xmlerr" then
+      put empty into tPreferredSize
+   end if
+   put tPreferredSize into tDataA["preferredSize"]
    
    local tRequires, tCount
    put 0 into tCount
