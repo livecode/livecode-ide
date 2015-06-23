@@ -912,9 +912,9 @@ end revIDEUpdateScriptEditorOnObjectDeletion
 #   this function will currently return empty.
 function revIDELookupError pType, pCode
    if pType is "compilation" then
-      return line pCode of the cScriptErrors of card 1 of stack "revErrorDisplay"
+      return line pCode of the cScriptErrors of stack "revErrorDisplay"
    else if pType is "execution" then
-      return line pCode of the cErrorsList of card 1 of stack "revErrorDisplay"
+      return line pCode of the cErrorsList of stack "revErrorDisplay"
    else if pType is "warning" then
       return empty
    end if
