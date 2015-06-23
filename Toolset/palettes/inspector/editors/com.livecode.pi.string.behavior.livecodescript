@@ -10,6 +10,7 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   
    lock messages
    put tValue into field 1 of me
    set the enabled of field 1 of me to tEnabled
@@ -22,6 +23,32 @@ on editorUpdate
    unlock screen
 end editorUpdate
 
+on openField
+   if the editorEffective of me is true then
+      lock messages
+      put empty into field 1 of me
+      # Ensure that when the user types the text is the default color rather than the effective grey
+      set the textcolor of field 1 of me to empty
+      unlock messages
+   end if
+end openField
+
+on exitField
+   editorUpdate
+end exitField
+
+on returnInField
+   valueChanged
+end returnInField
+
+on enterInField
+   valueChanged
+end enterInField
+
+on closeField 
+   valueChanged
+end closeField
+
 on editorResize
    lock screen
    lock messages
@@ -31,6 +58,6 @@ on editorResize
 end editorResize
 
 on valueChanged
-   set the editorValue of me to field 1 of me
+   set the editorvalue of me to field 1 of me
    updateProperty
 end valueChanged
