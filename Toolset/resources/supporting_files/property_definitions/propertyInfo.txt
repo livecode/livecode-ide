@@ -154,7 +154,7 @@ startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false
 startValue	Start value	Basic	com.livecode.pi.number	true	false							1	
 strokeGradient	Stroke Gradient	Colors	com.livecode.pi.gradient	true	false			type,ramp,from,to,via,quality,repeat,mirror,wrap
 style	Style	Basic	com.livecode.pi.enum	true	false			
-systemWindow	Float abve everything	Basic	com.livecode.pi.boolean	true	false		false	
+systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
 text	Text	Basic	com.livecode.pi.text	true	false			
