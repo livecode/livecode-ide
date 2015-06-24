@@ -11,7 +11,7 @@ to be included with the main LiveCode product package.
 
 ## Copyright headers
 
-Please include a licence header at the top of the `.lcb` file.
+Please include a license header at the top of the `.lcb` file.
 
 For the main LiveCode repository, or for any community extensions, the license
 is the [GNU General Public License v3](http://www.gnu.org/licenses) *without*
@@ -67,13 +67,13 @@ t      | handler bodies      | local variable
 In general, please use nouns to name your variables and parameters.  Make the
 names descriptive; for example:
 
-    variable tOutputPath as string  -- Good
-    variable tString as string      -- Bad
+    variable tOutputPath as String  -- Good
+    variable tString as String      -- Bad
 
-For `boolean` variables, please try to use "yes or no" names.  For example:
+For `Boolean` variables, please try to use "yes or no" names.  For example:
 
-    variable tIsVisible as boolean
-    variable tHasContents as boolean
+    variable tIsVisible as Boolean
+    variable tHasContents as Boolean
 
 ### Naming handlers
 
