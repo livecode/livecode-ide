@@ -426,9 +426,9 @@ action
 end step
 
 step "Set Label Field Color"
-    Set the foreground fill color to white. This corresponds to the text color of the label.
+    Set the text fill color of the label to white.
 action
-    highlight property "Foreground Fill" of section "Colors"
+    highlight property "Text Fill" of section "Colors"
     wait until the foreColor of field "Label Field" is "255,255,255"
     go to step "Set Label Field Align"
 end step

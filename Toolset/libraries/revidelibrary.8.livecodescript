@@ -2732,9 +2732,14 @@ end revIDEGetInspectedObjects
 */
 local sInspectingObjects
 command revIDEInspectObjects pObjects
+   lock screen
    put pObjects into sInspectingObjects
    revIDESelectObjects pObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
+   if the mode of stack revIDEPaletteToStackName("inspector") is 0 or the visible of stack revIDEPaletteToStackName("inspector") is false then
+      revIDEOpenPalette "inspector"
+   end if
+   unlock screen
 end revIDEInspectObjects
 
 on revIDEStopInspecting
@@ -7793,22 +7798,23 @@ end revIDEFolderListing
 #############
 
 local sTutorialInfo
-on revIDEStartTutorial pCourse, pTutorial, pLessonNumber
-   put pLessonNumber into sTutorialInfo["lesson"]
+on revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   put pLesson into sTutorialInfo["lesson"]
    put pTutorial into sTutorialInfo["tutorial"]
    put pCourse into sTutorialInfo["course"]
+end revIDETutorialInfoSet
+
+on revIDEStartTutorial pCourse, pTutorial, pLesson
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
    dispatch "revTutorialStart" to stack "revTutorial"
-   revIDEMessageSend "ideTutorialProgressChanged"
+   revIDETutorialProgressChanged
 end revIDEStartTutorial
 
-on revIDEStopTutorial
-   if revIDETutorialInProgress() is not empty then
-      revFinaliseTutorial
-   end if
+on revIDEStopTutorial   
+   dispatch "revTutorialStop" to stack "revTutorial"
    put empty into sTutorialInfo
-   revIDEMessageSend "ideTutorialProgressChanged"
-   wait 0 millisecs with messages
-   delete stack "revTutorial"
+   revIDETutorialProgressChanged
+   close stack "revTutorial"
    revIDEOpenPalette "Create It Welcome"
 end revIDEStopTutorial
 
@@ -7818,27 +7824,54 @@ end revIDETutorialInProgress
 
 function revIDETutorialResourcePath pTutorialInfo
    local tTutorialPath
-   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorialInfo["course"] & "/" & pTutorialInfo["tutorial"] & "/resources" into tTutorialPath
+   put revIDESpecialFolderPath("tutorial") & "/courses/" & pTutorialInfo["course"] & "/" & pTutorialInfo["tutorial"] & "/resources" into tTutorialPath
    if there is a folder tTutorialPath then
       return tTutorialPath
    end if
    return __revIDEError("Tutorial resource path not found") 
 end revIDETutorialResourcePath
 
-function revIDETutorialUserStackPath
-   return (revEnvironmentCustomizationPath() & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & ".livecode")
+function revIDETutorialUserStackPath pStackTag
+   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
 end revIDETutorialUserStackPath
 
-on revIDETutorialSave pMainstack, pStepName
+on revIDETutorialSave pTaggedObjects, pStepName
    if sTutorialInfo is empty then
       return __revIDEError("No tutorial in progress")
    end if
    
-   # Save a copy of the current stack to the user data folder
-   local tFilename
-   put the filename of pMainstack into tFilename
-   save stack pMainstack as revIDETutorialUserStackPath()
-   set the filename of pMainstack to tFilename
+   lock messages
+   # Store all the tags for tagged objects as custom properties
+   repeat for each element tTagged in pTaggedObjects
+      repeat for each key tTag in tTagged
+         set the cTutorialTag of tTagged[tTag] to tTag
+      end repeat
+   end repeat
+   
+   # Ensure there is a suitable folder to save the stacks
+   if pTaggedObjects["stack"] is not empty then
+      set the itemdelimiter to slash
+      local tUserTutorialFolder
+      put item 1 to -2 of revIDETutorialUserStackPath() into tUserTutorialFolder
+      revIDEEnsurePath tUserTutorialFolder
+   end if
+   
+   # Save a copy of the current tagged stacks to the user data folder
+   local tOldFilename, tFilename, tMainstack, tStackTags
+   repeat for each key tStackTag in pTaggedObjects["stack"]
+      put pTaggedObjects["stack"][tStackTag] into tMainstack
+      put the filename of tMainstack into tOldFilename
+      put revIDETutorialUserStackPath(tStackTag) into tFilename
+      save stack tMainstack as tFilename
+      set the filename of tMainstack to tOldFilename
+      
+      if tStackTags is empty then
+         put tStackTag into tStackTags
+      else
+         put return & tStackTag after tStackTags
+      end if
+   end repeat
+   unlock messages
    
    # Update the stored course data
    local tCourseDataA
@@ -7847,15 +7880,69 @@ on revIDETutorialSave pMainstack, pStepName
    local tLessonDataA
    put tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]] into tLessonDataA
    
-   put revIDETutorialDoneRatio() into tLessonDataA["progress"]
+   put revIDETutorialDonePercentage() into tLessonDataA["progress"]
    put pStepName into tLessonDataA["step"]
+   put tStackTags into tLessonDataA["stacks"]
    
    put tLessonDataA into tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]]
    
    revIDETutorialSaveCourseProgress sTutorialInfo["course"], tCourseDataA
 end revIDETutorialSave
 
-/*
+private function __fetchAndRemoveTags pStack
+   local tTags
+   put the name of pStack into tTags["stack"][the cTutorialTag of pStack]
+   
+   local tCardLongID
+   repeat for each line tLine in the cardIDs of pStack
+      put the long id of card id tLine of pStack into tCardLongID
+      get the cTutorialTag of tCardLongID
+      if it is not empty then
+         put tCardLongID into tTags["card"][it]
+      end if
+      union tTags with __fetchAndRemoveControlTags(tCardLongID)
+   end repeat
+   return tTags
+end __fetchAndRemoveTags
+
+private function __fetchAndRemoveControlTags pCard
+   local tControlLongID, tTags
+   repeat for each line tLine in the controlIDs of pCard
+      put the long id of control id tLine of pCard into tControlLongID
+      get the cTutorialTag of tControlLongID
+      if it is not empty then
+         put tControlLongID into tTags[word 1 of tControlLongID][it]
+      end if
+   end repeat
+   return tTags
+end __fetchAndRemoveControlTags
+
+on revIDETutorialLoad pCourse, pTutorial, pLesson
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   
+   local tCourseProgressA, tLessonDataA
+   put revIDETutorialSavedCourseProgress(pCourse) into tCourseProgressA
+   put tCourseProgressA[pTutorial][pLesson] into tLessonDataA
+   
+   # Get all the tagged mainstacks and all object tags
+   local tStackList, tTags, tStackName
+   repeat for each line tStackTag in tLessonDataA["stacks"]
+      put the name of stack revIDETutorialUserStackPath(tStackTag) into tStackName
+      go invisible stack revIDETutorialUserStackPath(tStackTag)
+      set the filename of stack tStackName to empty
+      if tStackList is empty then
+         put tStackName into tStackList
+      else
+         put return & tStackName after tStackList
+      end if
+      
+      union tTags with __fetchAndRemoveTags(tStackName)
+   end repeat
+   
+   dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]
+end revIDETutorialLoad
+
+/* 
 Returns the preference name corresponding to the given course
 */
 function revIDETutorialCoursePreferenceName pName
@@ -7960,11 +8047,18 @@ function revIDETutorialCourseInfo
       put tFixedCourses & return before tCourseList
    end if
    
-   local tCourseDataA, tCount
+   local tCourseDataA, tCount, tCourseProgress, tPercentage
    repeat for each line tCourse in tCourseList
       add 1 to tCount
       put revIDETutorialInfo(tCourse) into tCourseDataA[tCount]["tutorials"]
       put tCourse into tCourseDataA[tCount]["name"]
+      
+      put 0 into tPercentage
+      repeat for each element tTutorial in tCourseDataA[tCount]["tutorials"]
+         add tTutorial["progress"] to tPercentage
+      end repeat
+      divide tPercentage by the number of elements in tCourseDataA[tCount]["tutorials"]
+      put tPercentage into tCourseDataA[tCount]["progress"]
    end repeat
    
    return tCourseDataA
@@ -7984,11 +8078,18 @@ function revIDETutorialInfo pCourse
       sort tTutorialList
    end if
    
-   local tTutorialDataA, tCount
+   local tTutorialDataA, tCount, tPercentage
    repeat for each line tTutorial in tTutorialList
       add 1 to tCount
       put tTutorial into tTutorialDataA[tCount]["name"]
       put revIDETutorialLessonInfo(pCourse, tTutorial) into tTutorialDataA[tCount]["lessons"]
+      put 0 into tPercentage
+      
+      repeat for each element tLesson in tTutorialDataA[tCount]["lessons"]
+         add tLesson["progress"] to tPercentage
+      end repeat
+      divide tPercentage by the number of elements in tTutorialDataA[tCount]["lessons"]
+      put tPercentage into tTutorialDataA[tCount]["progress"]
    end repeat
    
    return tTutorialDataA
@@ -8001,11 +8102,28 @@ function revIDETutorialLessonInfo pCourse, pTutorial
    local tLessonList
    put revIDETutorialListLessons(pCourse, pTutorial) into tLessonList
    
+   local tProgressInfoA
+   put revIDETutorialSavedCourseProgress(pCourse) into tProgressInfoA
+   
    local tLessonDataA, tCount
    repeat for each line tLesson in tLessonList
-      add 1 to tCount
+      add 1 to tCount     
+      put tProgressInfoA[pTutorial][tLesson] into tLessonDataA[tCount]
       put tLesson into tLessonDataA[tCount]["name"]
    end repeat
    
    return tLessonDataA
 end revIDETutorialLessonInfo
+
+/*
+Called when the tutorial starts a new step
+*/
+on revIDETutorialProgressChanged
+   # Save the current progress
+   if sTutorialInfo is not empty then
+       dispatch "revTutorialSaveProgress" to stack "revTutorial"
+   end if
+   
+   # Notify any subscribed objects
+   revIDEMessageSend "ideTutorialProgressChanged"
+end revIDETutorialProgressChanged

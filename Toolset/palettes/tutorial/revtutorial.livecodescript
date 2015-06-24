@@ -739,21 +739,46 @@ end revTutorialPositionStack
 ##############################################################################
 
 local sSteps, sActionNumber, sStepName, sFirstStep, sStepNum, sNumSteps
-local sWaiting
-on revInitialiseTutorial pSteps
+local sCaptureData, sTaggedObjects, sWaiting, sGuides
+
+on revTutorialSaveProgress
+   revIDETutorialSave sTaggedObjects, sStepName
+end revTutorialSaveProgress
+
+on revTutorialResume pStacksToOpen, pTaggedObjects, pStepName
+   repeat for each line tStack in pStacksToOpen
+      show tStack
+   end repeat
+   revTutorialStartWithState pStepName, pTaggedObjects
+end revTutorialResume
+
+on revInitialiseTutorial
    lock screen
    lock messages
+   
+   # Initialise all relevant static variables
    put false into sWaiting
    put false into sIsInterlude
-   put pSteps into sSteps
+   put empty into sSteps
+   put 0 into sNumSteps 
+   put empty into sStepName
+   put empty into sTaggedObjects
+   put empty into sGuides
    
-   local tStep, tNumSteps
-   put pSteps["first step"] into tStep
-   repeat until tStep is empty
-      add 1 to tNumSteps
-      put pSteps[tStep]["actions"]["go"]["step"] into tStep
-   end repeat
-   put tNumSteps into sNumSteps 
+   # Unsubscribe all messages
+   revIDEUnsubscribeAll
+   
+   set the defaultStack to the name of stack "revTutorial"
+   
+   if there is a field "Message" of stack "revTutorial" then
+      delete field "Message" of stack "revTutorial"
+   end if
+   
+   if there is a button "Got It" of stack "revTutorial" then
+      delete button "Got It" of stack "revTutorial"
+   end if
+   
+   set the windowShape of stack "revTutorial" to empty
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
@@ -792,37 +817,76 @@ end revInitialiseTutorial
 
 on revFinaliseTutorial
    lock screen
-   if there is a field "Message" then
-      delete field "Message"
-   end if
-   if there is a button "Exit" then
-      delete button "Exit"
-   end if
    enableToolsPalette
-   
    remove script of stack "revTutorial" from front
-   put empty into sSteps
-   put empty into sActionNumber
-   put empty into sStepName
    revIDEUnsubscribeAll
    unlock screen
 end revFinaliseTutorial
 
-on revTutorialStart
-   local tTutorialInfo
-   put revIDETutorialInProgress() into tTutorialInfo
-   
+on revTutorialLoadData pCourse, pTutorial, pLesson
    local tTutorialData
-   put revIDETutorialLessonContent(tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]) into tTutorialData
+   put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
    local tData
    put revTutorialParseData(tTutorialData) into tData
    
-   revInitialiseTutorial tData
-   put tData["first step"] into sFirstStep
-   put 0 into sStepNum
-   revTutorialPrologue
-   show stack "revTutorial"
+   put tData into sSteps
+end revTutorialLoadData
+
+on revTutorialUpdateProgress pStep
+   local tStep, tNumSteps, tStepNum
+   put 0 into tStepNum
+   put sSteps["first step"] into tStep
+   repeat until tStep is empty
+      add 1 to tNumSteps
+      if tStep is pStep then
+         put tNumSteps into tStepNum
+      end if
+      put sSteps[tStep]["actions"]["go"]["step"] into tStep
+   end repeat
+   put tNumSteps into sNumSteps 
+   
+   if pStep is empty then
+      put sSteps["first step"] into sFirstStep
+   else
+      put pStep into sFirstStep
+   end if
+   put tStepNum into sStepNum
+end revTutorialUpdateProgress
+
+on revTutorialStartWithState pStep, pTaggedObjects
+   revInitialiseTutorial 
+   
+   put pTaggedObjects into sTaggedObjects
+   
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+   revTutorialUpdateProgress pStep
+   
+   if pStep is "prologue" or pStep is empty then
+      revTutorialPrologue
+      show stack "revTutorial"
+   else if pStep is "epilogue" then
+      revTutorialEpilogue
+      show stack "revTutorial"
+   else if pStep is among the keys of sSteps then
+      revTutorialEnsureState pStep
+      send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
+   else
+      throw "No such step"
+   end if
+end revTutorialStartWithState
+
+on revTutorialStop
+   revTutorialClearHighlights
+   revTutorialClearGuides
+   revTutorialSaveProgress
+   revFinaliseTutorial
+end revTutorialStop
+
+on revTutorialStart
+   revTutorialStartWithState
 end revTutorialStart
 
 on revTutorialFinish
@@ -875,7 +939,7 @@ on revTutorialContinue
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      revIDEMessageSend "ideTutorialProgressChanged"
+      revIDETutorialProgressChanged
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
@@ -961,6 +1025,35 @@ function revTutorialScriptRetry pCurrent
    return tText
 end revTutorialScriptRetry
 
+on revTutorialEnsureState pStep
+   local tWaitDataA
+   put sSteps[pStep]["actions"]["wait"] into tWaitDataA
+   # Might need to be tool dependent
+   local tTool
+   put "pointer" into tTool
+   
+   switch tWaitDataA["wait condition"]
+      case "property"
+         revIDEInspectObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
+         break
+      case "state"
+         switch tWaitDataA["state"]
+            case "scripted"
+               revIDEEditScriptOfObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
+               break
+            case "focused"
+            case "clicked"
+               put "browse" into tTool
+               break
+         end switch
+         break
+      case "pops up"
+         put "browse" into tTool
+         break
+   end switch
+   revIDESetTool tTool
+end revTutorialEnsureState
+
 ##############################################################################
 #
 #                     ACTION IMPLEMENTATIONS
@@ -977,8 +1070,6 @@ on revTutorialDoGoToStep pStep
    put false into sWaiting
    put false into sIsInterlude
 end revTutorialDoGoToStep
-
-local sCaptureData, sTaggedObjects
 
 on revTutorialDoCapture pType, pTag, pTargetStack
    put pTag into sCaptureData[pType]["tag"]
@@ -1331,7 +1422,6 @@ end enableStack
 #
 ##############################################################################
 
-local sGuides
 on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
    lock messages
    if sGuides[pTag] is empty then
