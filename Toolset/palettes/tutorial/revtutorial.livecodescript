@@ -838,10 +838,10 @@ on revTutorialUpdateProgress pStep
    put 0 into tStepNum
    put sSteps["first step"] into tStep
    repeat until tStep is empty
-      add 1 to tNumSteps
       if tStep is pStep then
          put tNumSteps into tStepNum
       end if
+      add 1 to tNumSteps
       put sSteps[tStep]["actions"]["go"]["step"] into tStep
    end repeat
    put tNumSteps into sNumSteps 
@@ -866,10 +866,8 @@ on revTutorialStartWithState pStep, pTaggedObjects
    
    if pStep is "prologue" or pStep is empty then
       revTutorialPrologue
-      show stack "revTutorial"
    else if pStep is "epilogue" then
       revTutorialEpilogue
-      show stack "revTutorial"
    else if pStep is among the keys of sSteps then
       revTutorialEnsureState pStep
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
@@ -892,9 +890,10 @@ end revTutorialStart
 on revTutorialFinish
    hide stack "revTutorial"
    lock screen
+   add 1 to sStepNum
+   revIDETutorialProgressChanged
    revTutorialEpilogue
    unlock screen
-   show stack "revTutorial"
 end revTutorialFinish
 
 function revTutorialStepNumber
@@ -909,6 +908,7 @@ on revTutorialPrologue
    if sSteps["prologue"] is not empty then
       revTutorialDoInterlude false
       revTutorialSetText "prologue"
+      show stack "revTutorial"
    else
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    end if
@@ -918,8 +918,9 @@ on revTutorialEpilogue
    if sSteps["epilogue"] is not empty then
       revTutorialDoInterlude true
       revTutorialSetText "epilogue"
+      show stack "revTutorial"
    else
-      send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+      revIDEStopTutorial
    end if
 end revTutorialEpilogue
 
