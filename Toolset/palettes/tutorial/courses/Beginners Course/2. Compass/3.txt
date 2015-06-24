@@ -1,0 +1,17 @@
+tutorial "Lesson 3"
+
+prologue
+	Compass 3
+end prologue
+
+step "Tutorials Intro"
+	You can keep track of how much of the tutorial you have completed with this progress bar, and 
+	exit the tutorial at any time by clicking on the x button.
+action
+	highlight toolbar "tutorial"
+	interlude
+end step
+
+epilogue
+    Compass 3 end
+end epilogue

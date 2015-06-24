@@ -1,0 +1,19 @@
+tutorial "Lesson 2"
+
+prologue
+	Messages 2
+end prologue
+
+step "Tutorials Intro"
+	You can keep track of how much of the tutorial you have completed with this progress bar, and 
+	exit the tutorial at any time by clicking on the x button.
+action
+	highlight toolbar "tutorial"
+	interlude
+end step
+
+epilogue
+    Messages 2 end
+action
+	go to lesson "Lesson 3"
+end epilogue
