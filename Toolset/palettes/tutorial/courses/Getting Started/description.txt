@@ -1,0 +1,1 @@
+This is the LiveCode Getting Started course. It contains tutorials to help learn how to use the LiveCode IDE.

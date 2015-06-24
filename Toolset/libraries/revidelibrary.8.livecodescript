@@ -7824,7 +7824,7 @@ end revIDETutorialInProgress
 
 function revIDETutorialResourcePath pTutorialInfo
    local tTutorialPath
-   put revIDESpecialFolderPath("tutorial") & "/courses/" & pTutorialInfo["course"] & "/" & pTutorialInfo["tutorial"] & "/resources" into tTutorialPath
+   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"]) & "/resources" into tTutorialPath
    if there is a folder tTutorialPath then
       return tTutorialPath
    end if
@@ -8000,15 +8000,29 @@ end revIDETutorialCourseDescription
 Lists the tutorials in the folder for the given course
 */
 function revIDETutorialListTutorials pCourse
-   return revIDEFolderListing(revIDETutorialCoursePath(pCourse), false)
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) & slash & "tutorials", false)
 end revIDETutorialListTutorials
+
+/*
+Returns the path to the folder containing the given tutorial
+*/
+function revIDETutorialPath pCourse, pTutorial
+   return revIDETutorialCoursePath(pCourse) & "/tutorials/" & pTutorial
+end revIDETutorialPath
+
+/*
+Returns the description of the given tutorial
+*/
+function revIDETutorialDescription pCourse, pTutorial
+   return textDecode(url ("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash & "description.txt"), "utf-8")
+end revIDETutorialDescription
 
 /*
 Lists the lessons in the folder for the given tutorial of the given course
 */
 function revIDETutorialListLessons pCourse, pTutorial
    local tFiles
-   put revIDEFolderListing(revIDETutorialCoursePath(pCourse) & slash & pTutorial, true) into tFiles
+   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) & slash & "lessons", true) into tFiles
    replace ".txt" with empty in tFiles
    return tFiles
 end revIDETutorialListLessons
@@ -8017,7 +8031,7 @@ end revIDETutorialListLessons
 Returns the content of the specified lesson
 */
 function revIDETutorialLessonContent pCourse, pTutorial, pLesson
-   return textDecode(url("binfile:" & revIDETutorialCoursePath(pCourse) & slash & pTutorial & slash & pLesson & ".txt"), "utf-8")
+   return textDecode(url("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash &"lessons" & slash & pLesson & ".txt"), "utf-8")
 end revIDETutorialLessonContent
 
 /*
@@ -8052,7 +8066,7 @@ function revIDETutorialCourseInfo
       add 1 to tCount
       put revIDETutorialInfo(tCourse) into tCourseDataA[tCount]["tutorials"]
       put tCourse into tCourseDataA[tCount]["name"]
-      
+      put revIDETutorialCourseDescription(tCourse) into tCourseDataA[tCount]["description"]
       put 0 into tPercentage
       repeat for each element tTutorial in tCourseDataA[tCount]["tutorials"]
          add tTutorial["progress"] to tPercentage
@@ -8081,14 +8095,17 @@ function revIDETutorialInfo pCourse
    local tTutorialDataA, tCount, tPercentage
    repeat for each line tTutorial in tTutorialList
       add 1 to tCount
-      put tTutorial into tTutorialDataA[tCount]["name"]
       put revIDETutorialLessonInfo(pCourse, tTutorial) into tTutorialDataA[tCount]["lessons"]
+      put tTutorial into tTutorialDataA[tCount]["name"]
+      put revIDETutorialDescription(pCourse, tTutorial) into tTutorialDataA[tCount]["description"]
       put 0 into tPercentage
       
-      repeat for each element tLesson in tTutorialDataA[tCount]["lessons"]
-         add tLesson["progress"] to tPercentage
-      end repeat
-      divide tPercentage by the number of elements in tTutorialDataA[tCount]["lessons"]
+      if tTutorialDataA[tCount]["lessons"] is not empty then
+         repeat for each element tLesson in tTutorialDataA[tCount]["lessons"]
+            add tLesson["progress"] to tPercentage
+         end repeat
+         divide tPercentage by the number of elements in tTutorialDataA[tCount]["lessons"]
+      end if
       put tPercentage into tTutorialDataA[tCount]["progress"]
    end repeat
    
@@ -8108,7 +8125,7 @@ function revIDETutorialLessonInfo pCourse, pTutorial
    local tLessonDataA, tCount
    repeat for each line tLesson in tLessonList
       add 1 to tCount     
-      put tProgressInfoA[pTutorial][tLesson] into tLessonDataA[tCount]
+      put tProgressInfoA[pTutorial][tLesson]["progress"] + 0 into tLessonDataA[tCount]["progress"]      
       put tLesson into tLessonDataA[tCount]["name"]
    end repeat
    

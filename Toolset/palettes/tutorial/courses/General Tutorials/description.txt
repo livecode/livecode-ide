@@ -1,0 +1,1 @@
+This is the LiveCode General Tutorials course. It contains tutorials on various aspects of creating apps with LiveCode.
