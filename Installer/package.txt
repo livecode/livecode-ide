@@ -560,8 +560,8 @@ component Toolchain.Windows
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
-		executable linux:[[TargetArchitecture]]/release/lc-compile as lc-compile
-		executable linux:[[TargetArchitecture]]/release/lc-run as lc-run
+		executable linux-[[TargetArchitecture]]:/release/lc-compile as lc-compile
+		executable linux-[[TargetArchitecture]]:/release/lc-run as lc-run
 		rfolder macosx:modules
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -838,7 +838,7 @@ component Externals.MacOSX
 
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
-		executable linux:[[TargetArchitecture]]/release/revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:/release/revbrowser-cefprocess
 		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libcef.so
 		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libffmpegsumo.so
 		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libpdf.so
