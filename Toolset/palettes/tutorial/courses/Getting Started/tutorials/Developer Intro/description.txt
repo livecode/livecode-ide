@@ -1,1 +1,0 @@
-This tutorial will help an experienced coder to learn how to use the LiveCode IDE.

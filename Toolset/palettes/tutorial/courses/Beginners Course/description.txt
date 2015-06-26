@@ -1,1 +1,0 @@
-This is the LiveCode Beginners Course. It contains tutorials for creating the standard iOS apps in LiveCode.

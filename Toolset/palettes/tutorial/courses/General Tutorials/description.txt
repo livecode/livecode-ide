@@ -1,1 +1,1 @@
-This is the LiveCode General Tutorials course. It contains tutorials on various aspects of creating apps with LiveCode.
+In the ‘General Tutorials’ section you’ll find one of tutorials that users have requests.

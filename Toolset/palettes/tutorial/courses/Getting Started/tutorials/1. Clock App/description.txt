@@ -1,0 +1,5 @@
+You will build the iOS world time app. You will learn:- To create user interfaces from objects
+- Change the appearance of object using properties - To make objects respond to use clicks
+
+You will also learn the following coding principles:
+- Logic. Using ‘if’ statements to decide what to display on screen

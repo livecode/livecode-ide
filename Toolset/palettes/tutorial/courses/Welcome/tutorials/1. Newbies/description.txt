@@ -1,0 +1,1 @@
+An introduction to LiveCode for complete beginners. We’ll give you a tour of LiveCode to get you familiar with all the basics before starting to teach you to make apps and ultimate learn to code!

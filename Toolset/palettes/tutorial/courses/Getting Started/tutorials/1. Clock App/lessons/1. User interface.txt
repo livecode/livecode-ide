@@ -1,0 +1,234 @@
+tutorial "My First App"
+
+prologue
+	This tutorial will show you how to re-create the iOS clock app from scratch.
+	
+	You will create the UI by dragging controls onto your stack and add code to display the time in multiple locations.
+end prologue
+
+step "Create Mainstack"
+	We are going to create the app for an iPhone 5. Click on the File menu, and select New Stack > iPhone 5
+action
+    -- Give the user a visual hint of where they should be clicking
+    highlight menu item "New Stack" of menu "File"
+    -- The tutorial scripts only act on 'captured' object - this will cause the next created stack
+    -- to be internally tagged as 'Mainstack' so it can be referenced in the rest of the tutorial
+    capture the next new stack as "Mainstack"
+    capture the next new card of stack "Mainstack" as "World Clock"
+    -- Wait until there is a captured stack with tag "Mainstack"
+    wait until there is a stack "Mainstack"
+    -- Advance to another step
+    go to step "Create Time Background Border Graphic"
+end step
+
+step "Create Time Background Border Graphic"
+    Select the line tool from the Tools palette and draw a horizontal line on your stack. Note: holding shift keeps the line horizontal as your draw.
+action
+    highlight tool "Create Line Graphic"
+    capture the next new graphic of stack "Mainstack" as "Time Background Border Graphic"
+    wait until there is a graphic "Time Background Border Graphic"
+    go to step "Set Tool To Edit"
+end step
+
+step "Set Tool To Edit"
+    After choosing a line tool you are in draw mode. Switch to edit mode by clicking on the edit mode tool in the Tools palette.
+action 
+    highlight tool "Edit Mode"
+    wait until the tool is edit
+	  go to step "Set Time Background Border Graphic Area"
+end step
+
+step "Set Time Background Border Graphic Area"
+    Resize the graphic, and position it below the white graphic as shown".
+action
+    add guide "Area" with rect "15,126,320,130" to stack "Mainstack"
+    highlight guide "Area"
+    wait until graphic "Time Background Border Graphic" fits guide "Area" with tolerance 3
+    go to step "Set Time Background Border Graphic Properties"
+end step
+
+step "Set Time Background Border Graphic Properties"
+    Double click on the graphic to open up the Property Inspector.
+action
+    highlight graphic "Time Background Border Graphic"
+    wait until there is a property inspector for graphic "Time Background Border Graphic"
+	go to step "Set Time Background Border Color"
+end step
+
+step "Set Time Background Border Color"
+    Make the graphic grey by setting its foreground color to 192,192,192, which is the light grey color in the color picker.
+action
+    highlight property "foregroundColor" of section "Colors"
+    wait until the foregroundColor of graphic "Time Background Border Graphic" is "192,192,192"
+   	go to step "Create Location Field"
+end step
+
+step "Create Location Field"
+    Drag a Label Field from the Tools palette onto your stack.
+action
+    highlight tool "Create Label Field"
+    capture the next new field of stack "Mainstack" as "Location Field"
+    wait until there is a field "Location Field"
+    go to step "Set Location Field Area"
+end step
+
+step "Set Location Field Area"
+    Resize the field, and position it on the white background".
+action
+    add guide "Area" with rect "5,52,142,84" to stack "Mainstack"
+    highlight guide "Area"
+    wait until field "Location Field" fits guide "Area" with tolerance 3
+    go to step "Set Location Field Properties"
+end step
+
+step "Set Location Field Properties"
+    Double click on the field to open up the Property Inspector.
+action
+    highlight field "Location Field"
+    wait until there is a property inspector for field "Location Field"
+	  go to step "Set Location Field Text"
+end step
+
+step "Set Location Field Text"
+    Display the name of the location by setting the contents of the field to "Edinburgh".
+action
+    highlight property "text" of section "Basic"
+    wait until the text of field "Location Field" is "Edinburgh"
+   	go to step "Set Location Field Font"
+end step
+
+step "Set Location Field Font"
+    Change the font used to display the location to "Arial".
+action
+    highlight property "textFont" of section "Text"
+    wait until the textFont of field "Location Field" is "Arial"
+   	go to step "Set Location Field Text Size"
+end step
+
+step "Set Location Field Text Size"
+    Change the size of the text to 24.
+action
+    highlight property "textSize" of section "Text"
+    wait until the textSize of field "Location Field" is "24"
+   	go to step "Set Location Field Text Align"
+end step
+
+step "Set Location Field Text Align"
+    Change the alignment of the text to left.
+action
+    highlight property "textAlign" of section "Text"
+    wait until the textAlign of field "Location Field" is "Left"
+   	go to step "Create Date Field"
+end step
+
+step "Create Date Field"
+    Drag a Label Field from the Tools palette onto your stack.
+action
+    highlight tool "Create Label Field"
+    capture the next new field of stack "Mainstack" as "Date Field"
+    wait until there is a field "Date Field"
+    go to step "Set Date Field Area"
+end step
+
+step "Set Date Field Area"
+    Resize the field, and position it below the location field".
+action
+    add guide "Area" with rect "5,87,142,111" to stack "Mainstack"
+    highlight guide "Area"
+    wait until field "Date Field" fits guide "Area" with tolerance 3
+    go to step "Set Date Field Properties"
+end step
+
+step "Set Date Field Properties"
+    Double click on the field to open up the Property Inspector.
+action
+    highlight field "Date Field"
+    wait until there is a property inspector for field "Date Field"
+	  go to step "Set Date Field Text"
+end step
+
+step "Set Date Field Text"
+    Display the date by setting the contents of the field to "Today".
+action
+    highlight property "text" of section "Basic"
+    wait until the text of field "Date Field" is "Today"
+   	go to step "Set Date Field Font"
+end step
+
+step "Set Date Field Font"
+    Change the font used to display the date to "Arial".
+action
+    highlight property "textFont" of section "Text"
+    wait until the textFont of field "Date Field" is "Arial"
+   	go to step "Set Date Field Text Size"
+end step
+
+step "Set Date Field Text Size"
+    Change the size of the text to 16.
+action
+    highlight property "textSize" of section "Text"
+    wait until the textSize of field "Date Field" is "16"
+   	go to step "Set Date Field Text Align"
+end step
+
+step "Set Date Field Text Align"
+    Change the alignment of the text to left.
+action
+    highlight property "textAlign" of section "Text"
+    wait until the textAlign of field "Date Field" is "Left"
+   	go to step "Create Time Field"
+end step
+
+step "Create Time Field"
+    Drag a Label Field from the Tools palette onto your stack.
+action
+    highlight tool "Create Label Field"
+    capture the next new field of stack "Mainstack" as "Time Field"
+    wait until there is a field "Time Field"
+    go to step "Set Time Field Area"
+end step
+
+step "Set Time Field Area"
+    Resize the field, and position it on the right of the stack".
+action
+    add guide "Area" with rect "181,39,318,87" to stack "Mainstack"
+    highlight guide "Area"
+    wait until field "Time Field" fits guide "Area" with tolerance 3
+    go to step "Set Time Field Properties"
+end step
+
+step "Set Time Field Properties"
+    Double click on the field to open up the Property Inspector.
+action
+    highlight field "Time Field"
+    wait until there is a property inspector for field "Time Field"
+	  go to step "Set Time Field Text"
+end step
+
+step "Set Time Field Text"
+    Display the time by setting the contents of the field to "10:00".
+action
+    highlight property "text" of section "Basic"
+    wait until the text of field "Time Field" is "10:10"
+   	go to step "Set Time Field Font"
+end step
+
+step "Set Time Field Font"
+    Change the font used to display the time to "Arial".
+action
+    highlight property "textFont" of section "Text"
+    wait until the textFont of field "Time Field" is "Arial"
+   	go to step "Set Time Field Text Size"
+end step
+
+step "Set Time Field Text Size"
+    Change the size of the text to 32.
+action
+    highlight property "textSize" of section "Text"
+    wait until the textSize of field "Time Field" is "32"
+   	go to step "Set Time Field Text Align"
+end step
+
+epilogue
+    Congratulations, you have just made the Clock app!
+end epilogue
