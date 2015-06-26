@@ -79,8 +79,8 @@ function revTutorialParse pFile
                   put revTutorialParseAction(tLine, tLineNum) into tData
                   if tData["type"] is "capture" then
                      # Allow multiple capture actions
-                     get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]
-                     put tData into tStepData[tCurStepName]["actions"][tData["type"]][it + 1]
+                     get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]["captures"]
+                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]["captures"][it + 1]
                      put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
                   else
                      put tData into tStepData[tCurStepName]["actions"][tData["type"]]
@@ -901,8 +901,10 @@ on revTutorialExecuteAction pActionData
          break
       case "capture"
          # Multiple capture actions are allowed
-         repeat for each element tElement in pActionData
-            revTutorialDoCapture tElement["object type"], tElement["tag"], tElement["target stack"]
+         local tCapture
+         repeat with x = 1 to the number of elements in pActionData["captures"]
+            put pActionData["captures"][x] into tCapture
+            revTutorialDoCapture tCapture["object type"], tCapture["tag"], tCapture["target stack"]
          end repeat
          break
       case "interlude"
@@ -966,8 +968,10 @@ end revTutorialDoGoToStep
 local sCaptureData, sTaggedObjects
 
 on revTutorialDoCapture pType, pTag, pTargetStack
-   put pTag into sCaptureData[pType]["tag"]
-   put pTargetStack["tag"] into sCaptureData[pType]["stack"]
+   get the number of elements of sCaptureData[pType]
+   put pTag into sCaptureData[pType][it + 1]["tag"]
+   put pTargetStack["tag"] into sCaptureData[pType][it + 1]["stack"]
+   put false into sCaptureData[pType][it + 1]["captured"]
 end revTutorialDoCapture
 
 on revTutorialDoInterlude pIsEpilogue
@@ -1393,17 +1397,37 @@ on focusIn
    pass focusIn
 end focusIn
 
-on ideNewStack pStack
-   local tStackTag
-   if "stack" is among the keys of sCaptureData then
-      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"]["tag"]]
-      put sCaptureData["stack"]["tag"] into tStackTag
-      delete variable sCaptureData["stack"]
+private function __captureNumber pType, pObject
+   if pType is not among the keys of sCaptureData then
+      return 0
    end if
    
-   if "card" is among the keys of sCaptureData and sCaptureData["card"]["stack"] is tStackTag then
-      put the long id of this card of pStack into sTaggedObjects["card"][sCaptureData["card"]["tag"]]
-      delete variable sCaptureData["card"]
+   local tCaptureNumber
+   put 1 into tCaptureNumber
+   repeat while sCaptureData[pType][tCaptureNumber]["captured"] is true or \
+         (pObject is not empty and sTaggedObjects["stack"][sCaptureData[pType][tCaptureNumber]["stack"]] is not revIDEStackOfObject(pObject))
+      add 1 to tCaptureNumber
+   end repeat
+   if sCaptureData[pType][tCaptureNumber] is not empty then
+      return tCaptureNumber
+   end if
+   return 0
+end __captureNumber
+
+on ideNewStack pStack
+   local tStackTag, tCaptureNumber
+   
+   put __captureNumber("stack") into tCaptureNumber
+   if tCaptureNumber is not 0 then
+      put the long id of pStack into sTaggedObjects["stack"][sCaptureData["stack"][tCaptureNumber]["tag"]]
+      put sCaptureData["stack"][tCaptureNumber]["tag"] into tStackTag
+      put true into sCaptureData["stack"][tCaptureNumber]["captured"]
+   end if
+   
+   put __captureNumber("card", the long id of this card of pStack) into tCaptureNumber
+   if tCaptureNumber is not 0 then
+      put the long id of this card of pStack into sTaggedObjects["card"][sCaptureData["card"][tCaptureNumber]["tag"]]
+      put true into sCaptureData["card"][tCaptureNumber]["captured"]
    end if
    
    if sWait["wait condition"] is "there is an object" then
@@ -1429,11 +1453,12 @@ on ideAnswerDialogClosed pObject
 end ideAnswerDialogClosed
 
 on ideNewControl pObject
-   local tObjType
+   local tObjType, tCaptureNumber
    put word 1 of pObject into tObjType
-   if tObjType is among the keys of sCaptureData and sTaggedObjects["stack"][sCaptureData[tObjType]["stack"]] is revIDEStackOfObject(pObject) then
-      put the long id of pObject into sTaggedObjects[tObjType][sCaptureData[tObjType]["tag"]]
-      delete variable sCaptureData[tObjType]
+   put __captureNumber(tObjType, the long id of pObject) into tCaptureNumber
+   if tCaptureNumber is not 0 then
+      put the long id of pObject into sTaggedObjects[tObjType][sCaptureData[tObjType][tCaptureNumber]["tag"]]
+      put true into sCaptureData[tObjType][tCaptureNumber]["captured"]
    end if
    
    if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is tObjType and sWait["object"]["tag"] is among the keys of sTaggedObjects[tObjType] then
@@ -1444,9 +1469,11 @@ on ideNewControl pObject
 end ideNewControl
 
 on ideNewCard pCard
-   if "card" is among the keys of sCaptureData and sTaggedObjects["stack"][sCaptureData["card"]["stack"]] is revIDEStackOfObject(pCard) then
-      put the long id of pCard into sTaggedObjects["card"][sCaptureData["card"]["tag"]]
-      delete variable sCaptureData["card"]
+   local tCaptureNumber
+   put __captureNumber("card", the long id of pCard) into tCaptureNumber
+   if tCaptureNumber is not 0 then
+      put the long id of pCard into sTaggedObjects["card"][sCaptureData["card"][tCaptureNumber]["tag"]]
+      put true into sCaptureData["card"][tCaptureNumber]["captured"]
    end if
    
    if sWait["wait condition"] is "there is an object" and sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
