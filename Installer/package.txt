@@ -138,7 +138,6 @@ component Plugins
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
 		stack "ide:Plugins/revTabRuler 1.2.rev"
-		stack "ide:Plugins/revExtensionBuilder.livecode"
 
 component Resources
 	into [[SupportFolder]]/Resources/Examples place
@@ -157,7 +156,7 @@ component Resources
 		stack "ide:Resources/Sample Projects/Simple Calculator.rev"
 		stack "ide:Resources/Sample Projects/Video Capture.rev"
 	into "[[SupportFolder]]/Resources" place
-		file ide:Resources/sample.mov
+		file ide:Resources/Sample.mov
 	into "[[SupportFolder]]/Resources/Object Libraries" place
 		stack "ide:Resources/Object Libraries/revObjectLibrary.rev"
 	into "[[SupportFolder]]/Resources/Start Center/samples/sample_1" place
@@ -325,9 +324,6 @@ component Documentation
 		file "ide:Documentation/glos.rsindex"
 		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
-		file "docs:glos.index"
-		file "docs:dict.index"
-		folder "docs:packaged_xml"
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "ide:Documentation/pdf/user_guide.pdf" as "LiveCode User Guide.pdf"
 	into [[ToolsFolder]]/Documentation/rev place
@@ -526,25 +522,25 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
@@ -838,34 +834,35 @@ component Externals.MacOSX
 
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
-		executable linux-[[TargetArchitecture]]:/release/revbrowser-cefprocess
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libcef.so
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libffmpegsumo.so
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libpdf.so
-		rfolder prebuilt:lib/libcef/linux/[[TargetArchitecture]]/locales
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_100_percent.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_200_percent.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:CEF/libcef.so
+		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
+		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
+		rfolder linux-[[TargetArchitecture]]:CEF/locales
+		file linux-[[TargetArchitecture]]:CEF/cef.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
 		executable windows:revbrowser-cefprocess.exe
-		executable prebuilt:lib/libcef/win32/libcef.dll
-		executable prebuilt:lib/libcef/win32/d3dcompiler_43.dll
-		executable prebuilt:lib/libcef/win32/d3dcompiler_46.dll
-		executable prebuilt:lib/libcef/win32/ffmpegsumo.dll
-		executable prebuilt:lib/libcef/win32/libEGL.dll
-		executable prebuilt:lib/libcef/win32/libGLESv2.dll
-		executable prebuilt:lib/libcef/win32/pdf.dll
-		file prebuilt:lib/libcef/win32/locales/en-US.pak
-		file prebuilt:lib/libcef/win32/cef.pak
-		file prebuilt:lib/libcef/win32/cef_100_percent.pak
-		file prebuilt:lib/libcef/win32/cef_200_percent.pak
-		file prebuilt:lib/libcef/win32/icudtl.dat
+		executable windows:CEF/libcef.dll
+		executable windows:CEF/d3dcompiler_43.dll
+		executable windows:CEF/d3dcompiler_46.dll
+		executable windows:CEF/d3dcompiler_47.dll
+		executable windows:CEF/ffmpegsumo.dll
+		executable windows:CEF/libEGL.dll
+		executable windows:CEF/libGLESv2.dll
+		executable windows:CEF/pdf.dll
+		file windows:CEF/locales/en-US.pak
+		file windows:CEF/cef.pak
+		file windows:CEF/cef_100_percent.pak
+		file windows:CEF/cef_200_percent.pak
+		file windows:CEF/icudtl.dat
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place
