@@ -1350,7 +1350,7 @@ on revDatabaseError pType, pError, pDataLinkedObject
          put "No records returned in the database:" && short name of pError into tErrorMessage
          break
       default
-         put "An error has occured with the database:" && short name of pError & cr & "Revdb error:" && tResult into tErrorMessage
+         put "An error has occurred with the database:" && short name of pError & cr & "Revdb error:" && tResult into tErrorMessage
    end switch
    
    answer error tErrorMessage
