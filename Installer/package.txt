@@ -556,8 +556,8 @@ component Toolchain.Windows
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
-		executable linux-[[TargetArchitecture]]:release/lc-compile as lc-compile
-		executable linux-[[TargetArchitecture]]:release/lc-run as lc-run
+		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
+		executable linux-[[TargetArchitecture]]:lc-run as lc-run
 		rfolder linux-[[TargetArchitecture]]:modules
 
 ////////////////////////////////////////////////////////////////////////////////
