@@ -7836,8 +7836,12 @@ function revIDETutorialResourcePath pTutorialInfo
 end revIDETutorialResourcePath
 
 function revIDETutorialUserStackPath pStackTag
-   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
+   return revIDETutorialUserStackPathOfLesson(sTutorialInfo["course"],sTutorialInfo["tutorial"],sTutorialInfo["lesson"])
 end revIDETutorialUserStackPath
+
+function revIDETutorialUserStackPathOfLesson pStackTag, pCourse, pTutorial, pLesson
+   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & pCourse & slash & pTutorial & slash & pLesson & "-" & pStackTag &".livecode")
+end revIDETutorialUserStackPathOfLesson
 
 on revIDETutorialSave pTaggedObjects, pStepName
    if sTutorialInfo is empty then
@@ -7932,19 +7936,28 @@ on revIDETutorialLoad pCourse, pTutorial, pLesson
    local tStackList, tTags, tStackName
    repeat for each line tStackTag in tLessonDataA["stacks"]
       put the name of stack revIDETutorialUserStackPath(tStackTag) into tStackName
-      go invisible stack revIDETutorialUserStackPath(tStackTag)
-      set the filename of stack tStackName to empty
+      revIDETutorialLoadWithTags tStackName, tTags
       if tStackList is empty then
          put tStackName into tStackList
       else
          put return & tStackName after tStackList
       end if
-      
-      union tTags with __fetchAndRemoveTags(tStackName)
    end repeat
    
    dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]
 end revIDETutorialLoad
+
+/*
+Load the stack and update xTags to contain all of the additional tags
+contained in custom properties of the target stack
+*/
+on revIDETutorialLoadWithTags pStackFile, @xTags
+   lock screen
+   go invisible pStackFile
+   set the filename of pStackFile to empty
+   union xTags with __fetchAndRemoveTags(pStackFile)
+   unlock screen
+end revIDETutorialLoadWithTags
 
 /* 
 Returns the preference name corresponding to the given course
