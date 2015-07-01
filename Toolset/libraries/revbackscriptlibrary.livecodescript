@@ -1147,7 +1147,7 @@ function revFixPath pPath
    else if the platform is "Win32" then
       put "\/:*?<>|" & quote & tab into tRemoveChars
    else
-      put " :?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
+      put ":?*<>/\()[]{}|'`" & quote & tab into tRemoveChars
       put tolower(pPath) into tReturnPath
    end if
    if revExtensionShow() then
@@ -3275,7 +3275,7 @@ on revImportImageFile pStack
       end if
     end repeat
   catch someError
-    answer "An error occured when trying to import the image file:" & cr & tFilePath & cr & someError
+    answer "An error occurred when trying to import the image file:" & cr & tFilePath & cr & someError
   end try
 end revImportImageFile
 
