@@ -1086,6 +1086,21 @@ on revTutorialDoInterlude pIsEpilogue
    revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
 end revTutorialDoInterlude
 
+# Tag a set of objects
+on revTutorialDoCreateSet pObjects, pTag
+   local tLongIDList
+   repeat for each element tObject in pObjects
+      local tLongID
+      put sTaggedObjects[tObject["type"]][tObject["tag"]] into tLongID
+      if tLongIDList is empty then
+         put tLongID into tLongIDList
+      else
+         put return & tLongID after tLongIDList
+      end if
+   end repeat
+   put tLongIDList into sTaggedObjects["set"][pTag]
+end revTutorialDoCreateSet
+
 ##############################################################################
 #
 #                     WAIT CONDITION IMPLEMENTATIONS
@@ -1181,7 +1196,7 @@ function revTutorialCheckWaitCondition pActionData
          break
       case "state"
          if pActionData["state"] is "selected" then
-            if revTutorialObjectIsSelected(tObject) then
+            if revTutorialObjectsAreSelected(tObject) then
                return true
             end if
          else if pActionData["state"] is "scripted" then
@@ -1251,7 +1266,7 @@ end revTutorialWaitUntilThereIsAPaletteForObject
 on revTutorialWaitUntilTheToolIs
    // Subscribe to newTool
 end revTutorialWaitUntilTheToolIs
-  
+
 on revTutorialWaitUntilObjectPropertyHasValue pObject
    revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectPropertyHasValue
@@ -1771,9 +1786,16 @@ on revTutorialClearHighlights
    put empty into sHighlight
 end revTutorialClearHighlights
 
-function revTutorialObjectIsSelected pLongID
-   return pLongID is among the lines of revIDESelectedObjects()
-end revTutorialObjectIsSelected
+function revTutorialObjectsAreSelected pObjects
+   local tSelected
+   put revIDESelectedObjects() into tSelected
+   repeat for each line tObject in pObjects
+      if tObject is not among the lines of tSelected then
+         return false
+      end if
+   end repeat
+   return true
+end revTutorialObjectsAreSelected
 
 function revTutorialObjectIsTaggedObject pLongID, pType, pTag
    return sTaggedObjects[pType][pTag] is pLongID
@@ -1791,31 +1813,43 @@ function revTutorialToolIs pTool
    return false
 end revTutorialToolIs
 
-function revTutorialObjectPropertyIsValue pLongID, pProperty, pValue
-   if pProperty ends with "color" then
-      return revTutorialColorIs(the pProperty of pLongID, pValue)
-   else if pProperty is "script" then
-      return revTutorialScriptIs(the script of pLongID, pValue)
-   else if pProperty is "name" then
-      return the short name of pLongID is pValue
-   end if
-   
-   if the pProperty of pLongID is pValue then
-      return true
-   end if
-   return false
+function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
+   repeat for each line tObject in pObjectIDs
+      if pProperty ends with "color" then
+         if revTutorialColorIs(the pProperty of tObject, pValue) is false then
+            return false
+         end if
+      else if pProperty is "script" then
+         if revTutorialScriptIs(the script of tObject, pValue) is false then
+            return false
+         end if
+      else if pProperty is "name" then
+         if the short name of tObject is not pValue then
+            return false
+         end if
+      else 
+         if the pProperty of tObject is not pValue then
+            return false
+         end if
+      end if
+   end repeat
+   return true
 end revTutorialObjectPropertyIsValue
 
-function revTutorialObjectHasPalette pPalette, pObject
+function revTutorialObjectHasPalette pPalette, pObjects
+   local tPaletted
    if pPalette is "property inspector" then
-      return pObject is among the lines of revIDEInspectedObjects()
+      put revIDEInspectedObjects() into tPaletted
+   else if pPalette is "script editor" then
+      put revIDEScriptEditingObjects() into tPaletted
    end if
    
-   if pPalette is "script editor" then
-      return pObject is among the lines of revIDEScriptEditingObjects()
-   end if
-   
-   return false
+   repeat for each line tObject in pObjects
+      if tObject is not among the lines of tPaletted then
+         return false
+      end if
+   end repeat
+   return true
 end revTutorialObjectHasPalette
 
 function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
