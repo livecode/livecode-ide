@@ -7777,6 +7777,10 @@ on revIDEDismissTransient
 end revIDEDismissTransient
 
 function revIDEFolderListing pFolder, pListFiles
+   if there is not a folder pFolder then
+      return empty
+   end if
+    
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    set the defaultFolder to pFolder
@@ -7832,8 +7836,12 @@ function revIDETutorialResourcePath pTutorialInfo
 end revIDETutorialResourcePath
 
 function revIDETutorialUserStackPath pStackTag
-   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
+   return revIDETutorialUserStackPathOfLesson(sTutorialInfo["course"],sTutorialInfo["tutorial"],sTutorialInfo["lesson"])
 end revIDETutorialUserStackPath
+
+function revIDETutorialUserStackPathOfLesson pStackTag, pCourse, pTutorial, pLesson
+   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & pCourse & slash & pTutorial & slash & pLesson & "-" & pStackTag &".livecode")
+end revIDETutorialUserStackPathOfLesson
 
 on revIDETutorialSave pTaggedObjects, pStepName
    if sTutorialInfo is empty then
@@ -7928,19 +7936,28 @@ on revIDETutorialLoad pCourse, pTutorial, pLesson
    local tStackList, tTags, tStackName
    repeat for each line tStackTag in tLessonDataA["stacks"]
       put the name of stack revIDETutorialUserStackPath(tStackTag) into tStackName
-      go invisible stack revIDETutorialUserStackPath(tStackTag)
-      set the filename of stack tStackName to empty
+      revIDETutorialLoadWithTags tStackName, tTags
       if tStackList is empty then
          put tStackName into tStackList
       else
          put return & tStackName after tStackList
       end if
-      
-      union tTags with __fetchAndRemoveTags(tStackName)
    end repeat
    
    dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]
 end revIDETutorialLoad
+
+/*
+Load the stack and update xTags to contain all of the additional tags
+contained in custom properties of the target stack
+*/
+on revIDETutorialLoadWithTags pStackFile, @xTags
+   lock screen
+   go invisible pStackFile
+   set the filename of pStackFile to empty
+   union xTags with __fetchAndRemoveTags(pStackFile)
+   unlock screen
+end revIDETutorialLoadWithTags
 
 /* 
 Returns the preference name corresponding to the given course
@@ -8038,7 +8055,7 @@ end revIDETutorialLessonContent
 Lists the courses that are always present in the order they should display
 */
 function revIDETutorialFixedCourses
-   return "Getting Started,Beginners Course,General Tutorials"
+   return "Welcome,Getting Started,General Tutorials"
 end revIDETutorialFixedCourses
 
 /*
@@ -8085,12 +8102,7 @@ function revIDETutorialInfo pCourse
    local tTutorialList
    put revIDETutorialListTutorials(pCourse) into tTutorialList
    
-   if pCourse is "Beginners Course" then
-      # Create it course is ordered numerically
-      sort tTutorialList ascending numeric
-   else
-      sort tTutorialList
-   end if
+   sort tTutorialList ascending numeric
    
    local tTutorialDataA, tCount, tPercentage
    repeat for each line tTutorial in tTutorialList

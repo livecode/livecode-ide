@@ -303,6 +303,18 @@ on revTutorialParseInterlude pTokens, @rData
    return empty
 end revTutorialParseInterlude
 
+on revTutorialParseLoad pTokens, @rData
+   local tData
+   revTutorialParseLine "load stack <token> from lesson <token>", pTokens, tData
+   if the result is not empty then
+      return the result
+   end if
+   put "load" into rData["type"]
+   put tData[1] into rData["tag"]
+   put tData[2] into rData["lesson"]
+   return empty
+end revTutorialParseLoad
+
 on revTutorialParseCapture pTokens, @rData
    local tData
    revTutorialParseLine "capture the next new <token> of <object> as <token>", pTokens, tData
@@ -537,6 +549,9 @@ function revTutorialParseAction pLine, pLineNum
       case "add"
          revTutorialParseAddGuide tTokens, tActionData
          break
+      case "load"
+         revTutorialParseLoad tTokens, tActionData
+         break
       default
          throw "Invalid action on line" && pLineNum & "-" && the result
    end switch
@@ -576,6 +591,9 @@ constant kProgressHeight = 5
 on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    lock screen
    lock messages
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   set the defaultstack to "revTutorial"
    if sIsInterlude then
       show button "Got It" of stack "revTutorial"
       put 460 into pWidthOverride
@@ -727,7 +745,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   
+   set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
 end revTutorialPositionStack
@@ -951,6 +969,8 @@ on revTutorialContinue
       lock screen
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
+      // Load any stack needed for this step
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["load"]
       // Text
       revTutorialSetText sStepName
       // Guide
@@ -999,11 +1019,42 @@ on revTutorialExecuteAction pActionData
       case "go"
          revTutorialDoGoToStep pActionData["step"]
          break
+      case "load"
+         revTutorialDoLoad pActionData["tag"], pActionData["lesson"]
+         break
    end switch
 end revTutorialExecuteAction
 
+on revTutorialDoLoad pTag, pLesson
+   # Check to see if the stack from the specified lesson is complete
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   local tProgressInfoA
+   put revIDETutorialSavedCourseProgress(tTutorialInfo["course"]) into tProgressInfoA
+   
+   local tStackFile
+   if tProgressInfoA[tTutorialInfo["tutorial"]][pLesson]["progress"] is 100 then
+      put revIDETutorialUserStackPathOfLesson(pTag, tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson) into tStackFile
+      if there is a stack tStackFile then
+         revIDETutorialLoadWithTags the name of stack tStackFile, sTaggedObjects
+         show stack tStackFile
+         exit revTutorialDoLoad
+      end if
+   end if
+   
+   put revIDETutorialResourcePath(tTutorialInfo) & slash & pLesson & "-" & pTag & "-complete.livecode" into tStackFile
+   if there is a file tStackFile then
+      revIDETutorialLoadWithTags the name of stack tStackFile, sTaggedObjects
+      show stack tStackFile
+      exit revTutorialDoLoad
+   end if
+   
+   throw "no stack found"
+end revTutorialDoLoad
+
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage  sSteps[pStep]["text"], sSteps[pStep]["script"]
+   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"]
 end revTutorialSetText
 
 on revTutorialSetTextOfMessage pText, pScript
