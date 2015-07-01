@@ -7777,6 +7777,10 @@ on revIDEDismissTransient
 end revIDEDismissTransient
 
 function revIDEFolderListing pFolder, pListFiles
+   if there is not a folder pFolder then
+      return empty
+   end if
+    
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    set the defaultFolder to pFolder
@@ -8038,7 +8042,7 @@ end revIDETutorialLessonContent
 Lists the courses that are always present in the order they should display
 */
 function revIDETutorialFixedCourses
-   return "Getting Started,Beginners Course,General Tutorials"
+   return "Welcome,Getting Started,General Tutorials"
 end revIDETutorialFixedCourses
 
 /*
@@ -8085,12 +8089,7 @@ function revIDETutorialInfo pCourse
    local tTutorialList
    put revIDETutorialListTutorials(pCourse) into tTutorialList
    
-   if pCourse is "Beginners Course" then
-      # Create it course is ordered numerically
-      sort tTutorialList ascending numeric
-   else
-      sort tTutorialList
-   end if
+   sort tTutorialList ascending numeric
    
    local tTutorialDataA, tCount, tPercentage
    repeat for each line tTutorial in tTutorialList
