@@ -139,6 +139,8 @@ function revTutorialIsObjectType pType
       case "image"
       case "widget"
       case "card"
+         # Add a 'set' type for multi-tagging
+      case "set"
          return true
    end switch
    return false
@@ -250,6 +252,29 @@ on revTutorialParseSubexpression pExpected, pTokens, pStart, @rData
             put tPalette into tData[tTokenCount]
             add 1 to tNextWord
             next repeat
+         case "<objlist>"
+            local tObj, tObjectsA, tResult
+            repeat forever
+               revTutorialParseObject pTokens, tNextToken, tObj
+               put the result into tResult
+               if tResult is not empty then
+                  exit repeat
+               end if
+               get the number of elements in tObjectsA
+               put tObj into tObjectsA[it + 1]
+               if pTokens[tNextToken] is not "," then
+                  exit repeat
+               end if
+               # Skip the comma
+               add 1 to tNextToken
+            end repeat
+            if tObjectsA is empty then
+               return tResult
+            end if
+            add 1 to tTokenCount
+            put tObjectsA into tData[tTokenCount]
+            add 1 to tNextWord
+            break
          default
             break
       end switch
@@ -305,6 +330,14 @@ end revTutorialParseInterlude
 
 on revTutorialParseCapture pTokens, @rData
    local tData
+   revTutorialParseLine "capture set <objlist> as <token>", pTokens, tData
+      if the result is empty then
+      put "set" into rData["type"]
+      put tData[1] into rData["objects"]
+      put tData[2] into rData["tag"]
+      return empty
+   end if
+   
    revTutorialParseLine "capture the next new <token> of <object> as <token>", pTokens, tData
    if the result is empty then
       put "capture" into rData["type"]
@@ -953,6 +986,8 @@ on revTutorialContinue
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       // Text
       revTutorialSetText sStepName
+      // Create any sets
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["set"]
       // Guide
       revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
       // Highlight
@@ -998,6 +1033,9 @@ on revTutorialExecuteAction pActionData
          break
       case "go"
          revTutorialDoGoToStep pActionData["step"]
+         break
+      case "set"
+         revTutorialDoCreateSet pActionData["objects"], pActionData["tag"]
          break
    end switch
 end revTutorialExecuteAction
@@ -1069,6 +1107,8 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
+   # For now, set captures are transient
+   delete variable sTaggedObjects["set"]
    disableToolsPalette
    put false into sWaiting
    put false into sIsInterlude
@@ -1798,7 +1838,13 @@ function revTutorialObjectsAreSelected pObjects
 end revTutorialObjectsAreSelected
 
 function revTutorialObjectIsTaggedObject pLongID, pType, pTag
-   return sTaggedObjects[pType][pTag] is pLongID
+   local tObj
+   put sTaggedObjects[pType][pTag] into tObj
+   if pType is "set" then
+      sort tObj
+      sort pLongID
+   end if
+   return tObj is pLongID
 end revTutorialObjectIsTaggedObject
 
 function revTutorialToolIs pTool
