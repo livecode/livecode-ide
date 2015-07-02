@@ -367,6 +367,8 @@ end step
 step "Create Bubble Image"
     We're going to import the bubble image. Click on the file menu, and select Import As Control > Image File...
     Find the blue-bubble.png file in the code resources folder and click open.
+file
+	blue-bubble.png
 action
     capture the next new image of stack "Mainstack" as "Bubble Image"
     highlight menu item "Import As Control" of menu "File"
