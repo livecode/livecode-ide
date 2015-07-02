@@ -139,6 +139,8 @@ function revTutorialIsObjectType pType
       case "image"
       case "widget"
       case "card"
+         # Add a 'set' type for multi-tagging
+      case "set"
          return true
    end switch
    return false
@@ -250,6 +252,29 @@ on revTutorialParseSubexpression pExpected, pTokens, pStart, @rData
             put tPalette into tData[tTokenCount]
             add 1 to tNextWord
             next repeat
+         case "<objlist>"
+            local tObj, tObjectsA, tResult
+            repeat forever
+               revTutorialParseObject pTokens, tNextToken, tObj
+               put the result into tResult
+               if tResult is not empty then
+                  exit repeat
+               end if
+               get the number of elements in tObjectsA
+               put tObj into tObjectsA[it + 1]
+               if pTokens[tNextToken] is not "," then
+                  exit repeat
+               end if
+               # Skip the comma
+               add 1 to tNextToken
+            end repeat
+            if tObjectsA is empty then
+               return tResult
+            end if
+            add 1 to tTokenCount
+            put tObjectsA into tData[tTokenCount]
+            add 1 to tNextWord
+            break
          default
             break
       end switch
@@ -305,6 +330,14 @@ end revTutorialParseInterlude
 
 on revTutorialParseCapture pTokens, @rData
    local tData
+   revTutorialParseLine "capture set <objlist> as <token>", pTokens, tData
+      if the result is empty then
+      put "set" into rData["type"]
+      put tData[1] into rData["objects"]
+      put tData[2] into rData["tag"]
+      return empty
+   end if
+   
    revTutorialParseLine "capture the next new <token> of <object> as <token>", pTokens, tData
    if the result is empty then
       put "capture" into rData["type"]
@@ -953,6 +986,8 @@ on revTutorialContinue
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       // Text
       revTutorialSetText sStepName
+      // Create any sets
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["set"]
       // Guide
       revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
       // Highlight
@@ -998,6 +1033,9 @@ on revTutorialExecuteAction pActionData
          break
       case "go"
          revTutorialDoGoToStep pActionData["step"]
+         break
+      case "set"
+         revTutorialDoCreateSet pActionData["objects"], pActionData["tag"]
          break
    end switch
 end revTutorialExecuteAction
@@ -1069,6 +1107,8 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
+   # For now, set captures are transient
+   delete variable sTaggedObjects["set"]
    disableToolsPalette
    put false into sWaiting
    put false into sIsInterlude
@@ -1085,6 +1125,21 @@ on revTutorialDoInterlude pIsEpilogue
    put true into sIsInterlude
    revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
 end revTutorialDoInterlude
+
+# Tag a set of objects
+on revTutorialDoCreateSet pObjects, pTag
+   local tLongIDList
+   repeat for each element tObject in pObjects
+      local tLongID
+      put sTaggedObjects[tObject["type"]][tObject["tag"]] into tLongID
+      if tLongIDList is empty then
+         put tLongID into tLongIDList
+      else
+         put return & tLongID after tLongIDList
+      end if
+   end repeat
+   put tLongIDList into sTaggedObjects["set"][pTag]
+end revTutorialDoCreateSet
 
 ##############################################################################
 #
@@ -1181,7 +1236,7 @@ function revTutorialCheckWaitCondition pActionData
          break
       case "state"
          if pActionData["state"] is "selected" then
-            if revTutorialObjectIsSelected(tObject) then
+            if revTutorialObjectsAreSelected(tObject) then
                return true
             end if
          else if pActionData["state"] is "scripted" then
@@ -1251,7 +1306,7 @@ end revTutorialWaitUntilThereIsAPaletteForObject
 on revTutorialWaitUntilTheToolIs
    // Subscribe to newTool
 end revTutorialWaitUntilTheToolIs
-  
+
 on revTutorialWaitUntilObjectPropertyHasValue pObject
    revIDESubscribe "idePropertyChanged", pObject
 end revTutorialWaitUntilObjectPropertyHasValue
@@ -1771,12 +1826,25 @@ on revTutorialClearHighlights
    put empty into sHighlight
 end revTutorialClearHighlights
 
-function revTutorialObjectIsSelected pLongID
-   return pLongID is among the lines of revIDESelectedObjects()
-end revTutorialObjectIsSelected
+function revTutorialObjectsAreSelected pObjects
+   local tSelected
+   put revIDESelectedObjects() into tSelected
+   repeat for each line tObject in pObjects
+      if tObject is not among the lines of tSelected then
+         return false
+      end if
+   end repeat
+   return true
+end revTutorialObjectsAreSelected
 
 function revTutorialObjectIsTaggedObject pLongID, pType, pTag
-   return sTaggedObjects[pType][pTag] is pLongID
+   local tObj
+   put sTaggedObjects[pType][pTag] into tObj
+   if pType is "set" then
+      sort tObj
+      sort pLongID
+   end if
+   return tObj is pLongID
 end revTutorialObjectIsTaggedObject
 
 function revTutorialToolIs pTool
@@ -1791,31 +1859,43 @@ function revTutorialToolIs pTool
    return false
 end revTutorialToolIs
 
-function revTutorialObjectPropertyIsValue pLongID, pProperty, pValue
-   if pProperty ends with "color" then
-      return revTutorialColorIs(the pProperty of pLongID, pValue)
-   else if pProperty is "script" then
-      return revTutorialScriptIs(the script of pLongID, pValue)
-   else if pProperty is "name" then
-      return the short name of pLongID is pValue
-   end if
-   
-   if the pProperty of pLongID is pValue then
-      return true
-   end if
-   return false
+function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
+   repeat for each line tObject in pObjectIDs
+      if pProperty ends with "color" then
+         if revTutorialColorIs(the pProperty of tObject, pValue) is false then
+            return false
+         end if
+      else if pProperty is "script" then
+         if revTutorialScriptIs(the script of tObject, pValue) is false then
+            return false
+         end if
+      else if pProperty is "name" then
+         if the short name of tObject is not pValue then
+            return false
+         end if
+      else 
+         if the pProperty of tObject is not pValue then
+            return false
+         end if
+      end if
+   end repeat
+   return true
 end revTutorialObjectPropertyIsValue
 
-function revTutorialObjectHasPalette pPalette, pObject
+function revTutorialObjectHasPalette pPalette, pObjects
+   local tPaletted
    if pPalette is "property inspector" then
-      return pObject is among the lines of revIDEInspectedObjects()
+      put revIDEInspectedObjects() into tPaletted
+   else if pPalette is "script editor" then
+      put revIDEScriptEditingObjects() into tPaletted
    end if
    
-   if pPalette is "script editor" then
-      return pObject is among the lines of revIDEScriptEditingObjects()
-   end if
-   
-   return false
+   repeat for each line tObject in pObjects
+      if tObject is not among the lines of tPaletted then
+         return false
+      end if
+   end repeat
+   return true
 end revTutorialObjectHasPalette
 
 function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
