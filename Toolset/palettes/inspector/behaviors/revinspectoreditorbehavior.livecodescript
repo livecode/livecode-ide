@@ -179,6 +179,7 @@ getProp editorWidth
 end editorWidth
 
 function editorPopup pLocation
+   lock screen
    local tDefaultStack
    put the defaultStack into tDefaultStack
    create invisible stack sPropertyInfo["property_name"]
@@ -188,6 +189,6 @@ function editorPopup pLocation
    dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
    dispatch "inspectorLayoutGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
    popup stack sPropertyInfo["property_name"] at pLocation
-   show stack sPropertyInfo["property_name"]
+   unlock screen
    return the result
 end editorPopup
