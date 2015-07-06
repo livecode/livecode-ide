@@ -336,7 +336,9 @@ end closeField
 on revUpdateTable pTable
   put the htmlText of pTable into tHtml
   put tHtml into tHtml2
-  replace "<p>" with empty in tHtml2
+  // SN-2015-06-24: [[ ImprovedTableNav ]] Paragraphs tags can have properties
+  //  so we need to use a regex
+  get replaceText(tHtml2, paragraphTagRegex(), empty)
   replace "</p>" with empty in tHtml2
   put the text of pTable into tText
   if tText is tHtml2 then set the cREVTable["currentview"] of pTable to tText
@@ -498,7 +500,7 @@ on revWriteCellField pObject
   lock screen
   lock messages
   -- if the currentview is not yet in htmlText, make sure to convert it
-  if char 1 to 3 of tCurrentView is "<p>" and char -4 to -1 of tCurrentView is "</p>"
+  if isHTML(tCurrentView)
   then set the htmltext of field tFieldName to tCurrentView
   else set the text of field tFieldName to tCurrentView
   set the itemDelimiter to tab
@@ -547,7 +549,7 @@ on revDisplayFormattedData pObject
     revDoFormatting pObject
   end if
   put the cREVTable["formattedview"] of pObject into tFormattedView
-  if char 1 to 3 of tFormattedView is "<p>" and char -4 to -1 of tFormattedView is "</p>"
+  if isHTML(tFormattedView)
   then set the htmltext of pObject to tFormattedView
   else set the text of pObject to tFormattedView
 end revDisplayFormattedData
@@ -1075,7 +1077,7 @@ on revCreateNextColumn pObject, pNumberofColumns
   lock messages
   create field
   put it into tFieldRef
-  if char 1 to 3 of tCurrentView is "<p>" and char -4 to -1 of tCurrentView is "</p>"
+  if isHTML(tCurrentView)
   then set the htmlText of the last field to tCurrentView
   else set the text of the last field to tCurrentView
   /* put empty into item (txcell + pNumberOfColumns) of line tycell of the last field */
@@ -1132,7 +1134,7 @@ on revCheckNextColumn pObject
   lock screen
   lock messages
   create field
-  if char 1 to 3 of tCurrentView is "<p>" and char -4 to -1 of tCurrentView is "</p>"
+  if isHTML(tCurrentView)
   then set the htmlText of the last field to tCurrentView
   else set the text of the last field to tCurrentView
   put the number of items in line tycell of the last field into tColumns 
@@ -1193,7 +1195,7 @@ on revCheckNextRow pObject
   lock messages
   create field
   put it into tFieldRef
-  if char 1 to 3 of tCurrentView is "<p>" and char -4 to -1 of tCurrentView is "</p>"
+  if isHTML(tCurrentView)
   then set the htmlText of the last field to tCurrentView
   else set the text of the last field to tCurrentView
   put the number of lines of tCurrentView into tMaxRows
@@ -1275,8 +1277,10 @@ on revCalculateCellLoc pObject
   put the cREVTable["cellyspacing"] of pObject into tyspacing
   put the cREVTable["numbertabstops"] of pObject into tnumbertabs
   
-  put txmouseloc + thscroll - txfieldloc into tcolumnpixel
-  put tymouseloc + tvscroll - tyfieldloc into trowpixel
+  // SN-2015-06-23: [[ Bug 15522 ]] Apply fix proposed by Bernd Niggemann
+  put txmouseloc + thscroll - txfieldloc - the leftMargin of pObject - the borderWidth  of pObject + 2  into tcolumnpixel   -- BN subracted leftMargin and borderWidth
+  put tymouseloc + tvscroll - tyfieldloc - the topMargin of pObject - the borderWidth of pObject + 2 into trowpixel   -- BN subtracted topMargin and borderWidth
+  
   put 0 into txpixel
   put 0 into typixel
   put 0 into txcount
@@ -1428,7 +1432,7 @@ on revCalculateViewableArea pObject
    lock screen
    lock messages
    create field
-   if char 1 to 3 of tcurrentview is "<p>" and char -4 to -1 of tcurrentview is "</p>"
+   if isHTML(tcurrentview)
    then set the htmltext of the last field to tcurrentview
    else set the text of the last field to tcurrentview
    put 0 into tMaxColumns
@@ -1456,6 +1460,34 @@ on revCalculateViewableArea pObject
 end revCalculateViewableArea
 --js::20040715::end
 
+// SN-2015-06-24: [[ ImprovedTable ]] Take in consideration spaceBelow,
+//  spaceAbove and padding in case a scrolling is required
+private function lineHeight pObject, pLineNumber, pLineSpacing
+   local tLineHeight
+   put pLineSpacing + 2 * the padding of line pLineNumber of pObject \
+         + the spaceAbove of line pLineNumber of pObject into tLineHeight
+   
+   if pLineNumber > 1 then
+      add the spaceBelow of line pLineNumber - 1 of pObject to tLineHeight
+   end if
+   
+   return tLineHeight
+end lineHeight
+
+// SN-2015-06-23: [[ ImproveTableNav ]] Paragraph tags can have
+//  properties such as spaceabove - that is the regex matching them
+private function paragraphTagRegex
+   return "<p( [a-zA-Z0-9]+=" & quote & "[a-zA-Z0-9]+" & quote & ")*>"
+end paragraphTagRegex
+
+//  If the text is not seen as HTML text when it is, then the text of the
+//  table field will be set to its HTMLtext (see bug 15545) 
+private function isHTML pText
+   put paragraphTagRegex() into tA   
+   put matchText(ptext, tA) and char -4 to -1 of pText is "</p>" into tResult
+   return tresult
+end isHTML
+
 on revCalculateCellRect pObject
   revUpdateScrollInfo pObject
   put the cREVTable["leftfieldloc"] of pObject into txfieldloc
@@ -1474,17 +1506,24 @@ on revCalculateCellRect pObject
   set the cREVTable["currentcellvalue"] of pObject to tcellvalue
   set the itemDelimiter to comma
   
-  put (the margins of pObject) into tfudge
+ -- SN-2015-06-23: [[ ImprovedTableNav ]] the margins can be a list of 4 items, if not all equal
+  local t_left_fudge, t_top_fudge, t_right_fudge, t_bottom_fudge
+  put the leftMargin of pObject + the borderWidth of pObject into t_left_fudge
+  put the topMargin of pObject + the borderWidth of pObject into t_top_fudge
+  put the rightMargin of pObject + the borderWidth of pObject into t_right_fudge
+  put the bottomMargin pObject + the borderWidth of pObject into t_bottom_fudge
+  
   put 0 into txpixel
   put 0 into typixel
   repeat with i = 1 to txcell
-    if i <= tnumbertabs then
-      put item i of the tabStops of pObject into txpixel 
-      put txpixel + txfieldloc into trightrect
+     if i <= tnumbertabs then
+        // We want to take into account the left fudge
+      put item i of the tabStops of pObject + txfieldloc + t_left_fudge into txpixel 
+      put txpixel into trightrect
       if i = 1 then
-        put txfieldloc into tleftrect
+        put t_left_fudge + txfieldloc into tleftrect
       else
-        put txfieldloc + (item (i - 1) of the tabStops of pObject) into tleftrect
+        put t_left_fudge + txfieldloc + (item (i - 1) of the tabStops of pObject) into tleftrect
       end if
     else
       put txpixel + txspacing into txpixel
@@ -1493,10 +1532,12 @@ on revCalculateCellRect pObject
     end if
   end repeat
   
-  repeat with i = 1 to tycell
-    put typixel + tyspacing into typixel
-    put typixel + tyfieldloc into tbottomrect
-    put tbottomrect - tyspacing into ttoprect
+  // SN-2015-06-24: [[ ImprovedTableNav ]] Refactored line height calculation
+  put t_top_fudge + tyfieldloc into ttoprect
+  put ttoprect into tBottomrect
+  repeat with i = 1 to tycell     
+     put tBottomRect into tTopRect
+     add lineHeight(pObject, i, tyspacing) to tBottomRect
   end repeat
   
   put tleftrect - thscroll into tleftrect
@@ -1504,18 +1545,21 @@ on revCalculateCellRect pObject
   put ttoprect - tvscroll into ttoprect
   put tbottomrect - tvscroll into tbottomrect
   
-  
-  if tbottomrect > (the cREVTable["bottomfieldloc"] of pObject - the cREVTable["scrollbarwidth"] of pObject - tfudge) then
+  // SN-2015-06-24: [[ ImprovedTableNav ]] Use the bottom fudge
+  if tbottomrect > (the cREVTable["bottomfieldloc"] of pObject - the cREVTable["scrollbarwidth"] of pObject - t_bottom_fudge) then
     revCheckNextRow pObject
-    put (tyspacing * 1) into tymove
+    // SN-2015-06-24: [[ ImprovedTableNav ]] Refactored line height calculation
+     put lineHeight(pObject, tycell, tyspacing) into tymove
     put tvscroll + tymove into tnewvscroll
     set the cREVTable["currentvscroll"] of pObject to tnewvscroll
     revUpdateScrollInfo pObject
     put ttoprect - tymove into ttoprect
     put tbottomrect - tymove into tbottomrect
-  end if
-  if ttoprect < the cREVTable["topfieldloc"] of pObject then
-    put (tyspacing * 1) into tymove
+ end if
+ // SN-2015-06-24: [[ ImprovedTableNav ]] Use the top fudge
+  if ttoprect < the cREVTable["topfieldloc"] of pObject + t_top_fudge then
+    // SN-2015-06-24: [[ ImprovedTableNav ]] Refactored line height calculation
+    put lineHeight(pObject, tycell, tyspacing) into tymove
     put tvscroll - tymove into tnewvscroll
     if tnewvscroll < 0 then
       set the cREVTable["currentvscroll"] of pObject to 0
@@ -1528,7 +1572,7 @@ on revCalculateCellRect pObject
     end if
     revUpdateScrollInfo pObject
   end if
-  if trightrect > (the cREVTable["rightfieldloc"] of pObject - the cREVTable["scrollbarwidth"] of pObject - tfudge) then
+  if trightrect > (the cREVTable["rightfieldloc"] of pObject - the cREVTable["scrollbarwidth"] of pObject - t_right_fudge) then
     revCheckNextColumn pObject
     if txcell <= tnumbertabs then
       if txcell = 1 then
@@ -1540,9 +1584,10 @@ on revCalculateCellRect pObject
       put (txspacing * 1) into txmove
     end if
     -- includes the case of cell fields being larger than text field width
-    put thscroll + (tleftrect - txfieldloc) into tnewhscroll
-    put txfieldloc into tleftrect
-    put txmove + txfieldloc into trightrect
+    // SN-2015-06-24: [[ ImprovedTableNav ]] Adjust the cell size with the fudges
+    put thscroll + (tleftrect - txfieldloc - t_left_fudge) into tnewhscroll
+    put txfieldloc + t_left_fudge into tleftrect
+    put tleftrect + txmove into trightrect
     if trightrect > trightfieldloc then
       put trightfieldloc - tscrollbarwidth into trightrect
     end if
@@ -1556,8 +1601,9 @@ on revCalculateCellRect pObject
       revUpdateScrollInfo pObject
       put the hscroll of pObject into tTestHScroll
     end repeat
-  end if
-  if tleftrect < the cREVTable["leftfieldloc"] of pObject then
+ end if
+ // SN-2015-06-24: [[ ImproveTableNav ]] Use left fudge
+  if tleftrect < the cREVTable["leftfieldloc"] of pObject + t_left_fudge then
     if txcell <= tnumbertabs then
       if txcell = 1 then
         put (item txcell of the tabStops of pObject) into txmove
@@ -1568,11 +1614,12 @@ on revCalculateCellRect pObject
       put (txspacing * 1) into txmove
     end if
     -- includes the case of cell fields being larger than text field width
+    // SN-2015-06-24: [[ ImprovedTableNav ]] Adjust the cell size with the fudges
     put txmove into txmoveorg
-    put txmove - (trightrect - txfieldloc) into txmove
+    put txmove - (trightrect - txfieldloc - t_left_fudge) into txmove
     put thscroll - txmove into tnewhscroll
-    put txfieldloc into tleftrect
-    put txmoveorg + txfieldloc into trightrect
+    put txfieldloc + t_left_fudge into tleftrect
+    put tleftrect + txmoveorg into trightrect
     if trightrect > trightfieldloc then
       put trightfieldloc - tscrollbarwidth into trightrect
     end if
@@ -1580,10 +1627,31 @@ on revCalculateCellRect pObject
     revUpdateScrollInfo pObject
   end if
   
-  set the cREVTable["leftcellloc"] of pObject to tleftrect + tfudge - 5
-  set the cREVTable["topcellloc"] of pObject to ttoprect + tfudge - 7
-  set the cREVTable["rightcellloc"] of pObject to trightrect + tfudge - 5
-  set the cREVTable["bottomcellloc"] of pObject to tbottomrect + tfudge
+  // SN-2015-06-23: [[ ImprovedTableNav ]] Aesthetical fudge, to have
+  //  the edition cell covering exactly the selected cell
+  subtract 3 from tleftrect
+  subtract 3 from trightrect
+  subtract 6 from ttoprect
+  subtract 5 from tbottomrect
+  
+  set the cREVTable["leftcellloc"] of pObject to tleftrect
+  set the cREVTable["topcellloc"] of pObject to ttoprect
+  set the cREVTable["rightcellloc"] of pObject to trightrect
+  set the cREVTable["bottomcellloc"] of pObject to tbottomrect
+  // SN-2015-06-24: [[ ImprovedTableNav ]] Add padding and spaceAbove property
+  //  to the selected cell field, for more consistency
+  set the cRevTable["paddingcell"] of pObject to the padding of line tycell of pObject
+  set the cRevTable["spaceabovecell"] of pObject to the spaceAbove of line tycell of pObject
+  //  There is no way to give the edition cell the influence of a previous line spaceBelow,
+  //  so we mimic that by setting its topMargin
+  local tEditionCellTopMargin
+  if tycell > 1 then
+     put the spaceBelow of line tycell -1 of pObject into tEditionCellTopMargin
+  end if
+  if tEditionCellTopMargin is empty then
+     put 0 into tEditionCellTopMargin
+     end if
+  set the cRevTable["topmargincell"] of pObject to tEditionCellTopMargin
 end revCalculateCellRect
 
 function revGetCellRect pObject
@@ -1623,7 +1691,7 @@ function revReadCellValue pObject, pColumn, pRow, pFormat
   lock messages
   create field
   put it into tFieldRef
-  if char 1 to 3 of tcurrentview is "<p>" and char -4 to -1 of tcurrentview is "</p>"
+  if isHTML(tcurrentview)
   then set the htmltext of the last field to tcurrentview
   else set the text of the last field to tcurrentview
   if pFormat is "html" then
@@ -1658,10 +1726,10 @@ on revWriteCellValue pObject, pColumn, pRow, pValue
   lock messages
   create field
   put it into tFieldRef
-  if char 1 to 3 of tcurrentview is "<p>" and char -4 to -1 of tcurrentview is "</p>"
+  if isHTML(tCurrentView)
   then set the htmltext of the last field to tcurrentview
   else set the text of the last field to tcurrentview
-  if char 1 to 3 of pValue = "<p>" and char -4 to -1 of pValue is "</p>"
+  if isHTML(pValue)
   then set the htmltext of item pColumn of line pRow of tFieldRef to pValue
   else put pValue into item pColumn of line pRow of the last field--mf::20050708 bug #2225
   put the htmltext of the last field into tcurrentview
@@ -1702,13 +1770,13 @@ end revWriteCellValue
 on revResizeTemplates pObject
   put revGetCellName(pObject) into lFieldName
   put revGetCellRect(pObject) into tRect
-  put ((item 1 of tRect) + (item 3 of tRect)) / 2 into tavlength
-  put ((item 2 of tRect) + (item 4 of tRect)) / 2 into tavheight
   put (item 3 of tRect) - (item 1 of tRect) into tLength
   put (item 4 of tRect) - (item 2 of tRect) into tHeight
-  set the location of the templatefield to (tavlength,tavheight+1)  -- added 1 KM to neaten look
-  set the height of the templatefield to tHeight - 8 -- added 8 KM
-  set the width of the templatefield to tLength - 2 -- added 2 KM
+  // SN-2015-06-24: [[ ImprovedTableNav ]] Remove use of magic numbers
+  set the height of the templatefield to tHeight
+  set the width of the templatefield to tLength
+  set the top of the templatefield to item 2 of tRect
+  set the left of the templatefield to item 1 of tRect
   set the threeD of the templatefield to true
   set the borderWidth of the templatefield to 1
   set the htmltext of the templatefield to the cREVTable["currentcellvalue"] of pObject
