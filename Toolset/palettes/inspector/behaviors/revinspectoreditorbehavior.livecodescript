@@ -8,10 +8,12 @@ setProp editorPropertyInfo pPropertyInfo
 end editorPropertyInfo
 
 function editorPropertyGet pProperty
+   if pProperty is empty then exit editorPropertyGet
    return sPropertyInfo[pProperty]
 end editorPropertyGet
 
 getProp editorProperty pProperty
+   if pProperty is empty then exit editorProperty
    return sPropertyInfo[pProperty]
 end editorProperty
 
