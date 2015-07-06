@@ -67,6 +67,14 @@ on inspectorLayout
    //put "layout inspector" & return after msg
    lock screen
    
+   # Get the section of the PI we should be laying out
+   local tSelectedGroup
+   put inspectorSectionGet() into tSelectedGroup
+   
+   inspectorLayoutGroups sDataA[tSelectedGroup]["grouplist"]
+end inspectorLayout
+
+on inspectorLayoutGroups pGroupList
    # Get the margin, padding
    local tMargin, tPadding
    put the paletteMargin of me into tMargin
@@ -78,14 +86,10 @@ on inspectorLayout
    put item 1 of tContentRect + tMargin into tLeft
    put item 2 of tContentRect + tMargin into tTop
    
-   # Get the section of the PI we should be laying out
-   local tSelectedGroup
-   put inspectorSectionGet() into tSelectedGroup
-   
    # Loop through the editors and get the minimum width of the labels and editors
    # To work out an initial row width
    local tMinRowWidth, tMinEditorsWidth, tRowWidth, tMinLabelWidth
-   repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
+   repeat for each element tElement in pGroupList
       if there is not a group tElement["label"] of me then next repeat
       local tEditorsReportedWidth, tLabelReportedWidth
       put the rowMinWidth of group tElement["label"] of me into tEditorsReportedWidth
@@ -123,7 +127,7 @@ on inspectorLayout
    
    local tMaxRowWidth, tInspectorHeight, tColumnNumber, tColumnTop
    put 1 into tColumnNumber
-   repeat for each element tElement in sDataA[tSelectedGroup]["grouplist"]
+   repeat for each element tElement in pGroupList
       if tSubsections and tElement["subsection"] is not empty then
          # If we have a new subsection, create the subsection header
          if tElement["subsection"] is not tCurSection then
@@ -187,7 +191,7 @@ on inspectorLayout
    set the top of me to tStackTop
    unlock messages
    unlock screen
-end inspectorLayout
+end inspectorLayoutGroups
 
 local sSelectedSection
 private on inspectorSectionSet pSection
@@ -222,8 +226,6 @@ end inspectorDontShowGroup
 
 # Generate inspector
 private on inspectorGenerate
-   lock screen
-   
    local tSelectedSection
    put inspectorSectionGet() into tSelectedSection
    
@@ -231,11 +233,10 @@ private on inspectorGenerate
    put sDataA[tSelectedSection] into tPropertyData
    
    inspectorGenerateGroups tPropertyData["grouplist"]
-   
-   unlock screen
 end inspectorGenerate
 
 on inspectorGenerateGroups pGroupList
+   lock screen
    set the margins of the templategroup to 0
    set the visible of the templategroup to false
    
@@ -317,6 +318,8 @@ on inspectorGenerateGroups pGroupList
    end repeat
    reset the templatefield
    reset the templategroup
+   
+   unlock screen
 end inspectorGenerateGroups
 
 private on inspectorNavigationGenerate
