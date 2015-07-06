@@ -230,6 +230,12 @@ private on inspectorGenerate
    local tPropertyData
    put sDataA[tSelectedSection] into tPropertyData
    
+   inspectorGenerateGroups tPropertyData["grouplist"]
+   
+   unlock screen
+end inspectorGenerate
+
+on inspectorGenerateGroups pGroupList
    set the margins of the templategroup to 0
    set the visible of the templategroup to false
    
@@ -257,8 +263,8 @@ private on inspectorGenerate
    put the showSubSections of me into tSubsections
    
    local tElement
-   repeat with x = 1 to the number of elements in tPropertyData["grouplist"]
-      put tPropertyData["grouplist"][x] into tElement
+   repeat with x = 1 to the number of elements in pGroupList
+      put pGroupList[x] into tElement
       if tElement["label"] is empty then next repeat
       
       # If none of the properties is user visible then skip the group
@@ -310,9 +316,7 @@ private on inspectorGenerate
    end repeat
    reset the templatefield
    reset the templategroup
-   
-   unlock screen
-end inspectorGenerate
+end inspectorGenerateGroups
 
 private on inspectorNavigationGenerate
    lock screen

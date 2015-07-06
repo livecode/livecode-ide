@@ -175,3 +175,15 @@ end editorHeight
 getProp editorWidth
    return the formattedWidth of me
 end editorWidth
+
+function editorPopup pLocation
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   create invisible stack sPropertyInfo["property_name"]
+   dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of stack sPropertyInfo["property_name"]
+   set the defaultStack to sPropertyInfo["property_name"]
+   set the script of stack sPropertyInfo["property_name"] to "on editorValueChanged pProperty, pValue, pLockUpdates; return pValue; end editorValueChanged"
+   dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
+   popup stack sPropertyInfo["property_name"] at pLocation
+   return the result
+end editorPopup
