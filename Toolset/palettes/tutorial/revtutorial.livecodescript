@@ -945,6 +945,8 @@ on revTutorialFinish
    hide stack "revTutorial"
    lock screen
    add 1 to sStepNum
+   # For now, set captures are transient
+   delete variable sTaggedObjects["set"]
    revIDETutorialProgressChanged
    revTutorialEpilogue
    unlock screen
