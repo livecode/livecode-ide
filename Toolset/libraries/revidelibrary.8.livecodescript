@@ -4183,10 +4183,11 @@ function revIDEPropertySectionNameToIconName pName
    end switch
 end revIDEPropertySectionNameToIconName
 
-function revIDEPaletteResourcePath pFilename
+function revIDEPaletteResourcePath pFilename, pTarget
+   if pTarget is empty then put the long ID of the target into pTarget
    local tPalettePath
    set the itemdel to slash
-   put item 1 to -2 of the filename of revIDEStackOfObject(the long id of the target) into tPalettePath
+   put item 1 to -2 of the filename of revIDEStackOfObject(pTarget) into tPalettePath
    if there is not a file tPalettePath & slash  & pFilename then
       return "file not found"
    end if

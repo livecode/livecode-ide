@@ -239,7 +239,8 @@ on inspectorGenerateGroups pGroupList
    set the margins of the templategroup to 0
    set the visible of the templategroup to false
    
-   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/revinspectorgroupbehavior.livecodescript")
+   local tStackPath
+   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/revinspectorgroupbehavior.livecodescript", the long ID of stack "revInspector")
    
    set the traversalon of the templatefield to false
    set the threed of the templatefield to false

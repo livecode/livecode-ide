@@ -186,6 +186,8 @@ function editorPopup pLocation
    set the defaultStack to sPropertyInfo["property_name"]
    set the script of stack sPropertyInfo["property_name"] to "on editorValueChanged pProperty, pValue, pLockUpdates; return pValue; end editorValueChanged"
    dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
+   dispatch "inspectorLayout" to stack sPropertyInfo["property_name"]
    popup stack sPropertyInfo["property_name"] at pLocation
+   show stack sPropertyInfo["property_name"]
    return the result
 end editorPopup
