@@ -2,7 +2,6 @@ type	graphic
 
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
-tool		
 name	Line	
 tooltip		
 style	line	rectangle,roundrect,line,oval,regular,line,curve,polygon
