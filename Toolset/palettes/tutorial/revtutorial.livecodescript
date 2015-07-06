@@ -50,6 +50,7 @@ function revTutorialParseData pData
                break
             case "action"
             case "script"
+            case "file"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
                   throw "action list not valid in" && tType && " on line" && tLineNum
@@ -76,6 +77,9 @@ function revTutorialParseData pData
                   end if
                else if tSubType is "script" then
                   put tLine & CR after tData
+               else if tSubType is "file" then
+                  # If there is a file for this step, record it
+                  put word 1 to -1 of tLine into tData
                else
                   add 1 to  tActionNum
                   put revTutorialParseAction(tLine, tLineNum) into tData
@@ -328,6 +332,17 @@ on revTutorialParseInterlude pTokens, @rData
    return empty
 end revTutorialParseInterlude
 
+on revTutorialParseLoad pTokens, @rData
+   local tData
+   revTutorialParseLine "load lesson <token>", pTokens, tData
+   if the result is not empty then
+      return the result
+   end if
+   put "load" into rData["type"]
+   put tData[1] into rData["lesson"]
+   return empty
+end revTutorialParseLoad
+
 on revTutorialParseCapture pTokens, @rData
    local tData
    revTutorialParseLine "capture set <objlist> as <token>", pTokens, tData
@@ -570,6 +585,9 @@ function revTutorialParseAction pLine, pLineNum
       case "add"
          revTutorialParseAddGuide tTokens, tActionData
          break
+      case "load"
+         revTutorialParseLoad tTokens, tActionData
+         break
       default
          throw "Invalid action on line" && pLineNum & "-" && the result
    end switch
@@ -609,6 +627,9 @@ constant kProgressHeight = 5
 on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    lock screen
    lock messages
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   set the defaultstack to "revTutorial"
    if sIsInterlude then
       show button "Got It" of stack "revTutorial"
       put 460 into pWidthOverride
@@ -760,7 +781,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
       set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   
+   set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
 end revTutorialPositionStack
@@ -984,6 +1005,8 @@ on revTutorialContinue
       lock screen
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
+      // Load any stack needed for this step
+      revTutorialExecuteAction sSteps[sStepName]["actions"]["load"]
       // Text
       revTutorialSetText sStepName
       // Create any sets
@@ -1037,11 +1060,23 @@ on revTutorialExecuteAction pActionData
       case "set"
          revTutorialDoCreateSet pActionData["objects"], pActionData["tag"]
          break
+      case "load"
+         revTutorialDoLoad pActionData["lesson"]
+         break
    end switch
 end revTutorialExecuteAction
 
+on revTutorialDoLoad pLesson
+   # Check to see if the stack from the specified lesson is complete
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   # Simply run the lesson that is to be loaded
+   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson
+end revTutorialDoLoad
+
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage  sSteps[pStep]["text"], sSteps[pStep]["script"]
+   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"]
 end revTutorialSetText
 
 on revTutorialSetTextOfMessage pText, pScript
@@ -1959,3 +1994,162 @@ function revTutorialNumericItemsAreApproximatelyEqual pNumItems, pTolerance, pLe
    end repeat
    return true
 end revTutorialNumericItemsAreApproximatelyEqual
+
+##############################################################################
+#
+#                     AUTORUN
+#
+##############################################################################
+
+local sRunningInfo
+on revTutorialRunTutorial pCourse, pTutorial, pLesson
+   local tTutorialData
+   put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
+   
+   local tData
+   put revTutorialParseData(tTutorialData) into tData
+   
+   put pCourse into sRunningInfo["course"]
+   put pTutorial into sRunningInfo["tutorial"]
+   put pLesson into sRunningInfo["lesson"]
+   
+   revTutorialRunSteps tData
+end revTutorialRunTutorial
+
+local sFile
+on revTutorialRunSteps pSteps
+   lock screen
+   local tStep, tStepNum
+   put 0 into tStepNum
+   put pSteps["first step"] into tStep
+   repeat until tStep is empty
+      add 1 to tStepNum
+      put pSteps[tStep]["file"] into sFile
+      revTutorialRunStep pSteps[tStep]["actions"]
+      put pSteps[tStep]["actions"]["go"]["step"] into tStep
+   end repeat
+   unlock screen
+end revTutorialRunSteps
+
+on revTutorialRunStep pStepActions
+   lock screen
+   # Run any load actions
+   revTutorialRunLoad pStepActions["load"]
+   # Execute any set creation actions
+   revTutorialExecuteAction pStepActions["set"]
+   # Run action that satisfies wait condition
+   revTutorialRunAction pStepActions
+   unlock screen
+end revTutorialRunStep
+
+on revTutorialRunLoad pLoadAction
+   # Store currently running lesson in case there are further load actions
+   local tRunningInfo
+   put sRunningInfo into tRunningInfo
+   revTutorialRunTutorial tRunningInfo["course"], tRunningInfo["tutorial"], pLoadAction["lesson"]
+   put tRunningInfo into sRunningInfo
+end revTutorialRunLoad
+
+# We don't actually need to select objects, just keep track of what is supposed to be selected
+local sSelected
+on revTutorialRunAction pActionData
+   lock messages
+   local tWaitData
+   put pActionData["wait"] into tWaitData
+   switch tWaitData["wait condition"]
+      case "there is an object"
+         revTutorialCreateAndCaptureObjects tWaitData, pActionData["capture"], pActionData["highlight"]
+         break
+      case "property"  
+         # Set the property of the objects
+         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], tWaitData["property"], tWaitData["value"]
+         break
+      case "fits" 
+         # Set the rect of the objects
+         if pActionData["add guide"] is empty then
+            throw "no guide added in wait until object fits action"
+         end if
+         if tWaitData["object"]["type"] is "stack" then
+            put revIDERelativeRectToAbsolute(pActionData["add guide"]["rect"], sTaggedObjects["stack"][tWaitData["object"]["tag"]]) into pActionData["add guide"]["rect"]
+         end if
+         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "rect", pActionData["add guide"]["rect"]
+         break
+      case "state"
+         switch tWaitData["state"]
+            case "scripted"
+               # Set the script of the objects
+               revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "script", tWaitData["script"]
+               break
+            case "selected"
+               put sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]] into sSelected
+               break
+            default
+               # No other states require action
+               break
+         end switch
+         break
+         # No other waits require action
+      default
+         break
+   end switch
+   unlock messages
+end revTutorialRunAction
+
+on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
+   local tCapture, tType
+   # Create the object and tag it
+   repeat with x = 1 to the number of elements in pCaptureData["captures"]
+      put pCaptureData["captures"][x] into tCapture
+      put tCapture["object type"] into tType
+      if tType is "stack" then
+         revIDEActionNewMainstack "default"
+         put the result into sTaggedObjects["stack"][tCapture["tag"]]
+      else if tType is "card" then
+         revIDEActionNewCard
+         put the result into sTaggedObjects["card"][tCapture["tag"]]
+      else
+         if pHighlightData["tool"] is not empty then
+            dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
+            revIDECreateObject the result, sTaggedObjects["stack"][tCapture["target stack"]["tag"]], "0,0"
+            put the result into sTaggedObjects[tType][tCapture["tag"]]
+         else if pHighlightData["item"] contains "Import" then
+            # Deal with 'import'
+            if sFile is empty then
+               throw "No file specified for import"
+            end if
+            local tImportType
+            switch tType
+               case "image"
+                  put "image" into tImportType
+                  break
+               case "audioClip"
+                  put "audio" into tImportType
+                  break
+               case "videoClip"
+                  put "video" into tImportType
+                  break
+               case "text"
+                  put "field" into tImportType
+                  break
+            end switch
+            revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
+            put the result into sTaggedObjects[tType][tCapture["tag"]]
+         else if pHighlightData["item"] contains "duplicate" then
+            revIDESelectObjects sSelected
+            revIDEActionDuplicate
+            put the result into sTaggedObjects[tType][tCapture["tag"]]
+         else
+            throw "Can't capture target" && tType
+         end if
+      end if
+   end repeat
+   local tObject
+   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
+   if not exists(tObject) then
+      throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
+   end if
+end revTutorialCreateAndCaptureObjects
+
+on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
+   revIDESetPropertyOfObject pObjects, pProp, pValue
+end revTutorialSetPropertyOfObjects

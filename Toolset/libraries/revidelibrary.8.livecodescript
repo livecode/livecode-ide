@@ -4731,6 +4731,9 @@ on revIDENewMainstack pWidth, pHeight
    
    # Send the 'ideNewStack' message
    revIDEMessageSend "ideNewStack", it
+   
+   # Return the created stack long id
+   return it
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
@@ -4752,6 +4755,9 @@ on revIDEActionNewMainstack pStackType
          revIDENewMainstack
       end if
    end if
+   
+   # Return the created stack long id
+   return the result
 end revIDEActionNewMainstack
 
 on revIDEActionNewCard
@@ -4767,6 +4773,9 @@ on revIDEActionNewCard
    put the long id of it into tCardID
    put "edited" into gREVStackStatus[the short name of this stack]
    revIDEMessageSend "ideNewCard tCardID"
+   
+   # Return the card id
+   return tCardID
 end revIDEActionNewCard
 
 on revIDEActionDeleteCard
@@ -5085,6 +5094,7 @@ on revIDEImportControl pType, pFileName, pReferenced
    put the long ID of the topstack into tTargetStack
    put the loc of card 1 of the topstack into tCreatedControlLocation
    
+   local tCreatedControlID
    lock screen
    lock messages
    set the defaultStack to tTargetStack
@@ -5092,12 +5102,14 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "image"
          revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
          if pReferenced is true then
-            set the filename of the last control to pFileName
+            put the long id of the last control into tCreatedControlID
+            set the filename of tCreatedControlID to pFileName
          else
-            set the text of the last image to URL ("binfile:" & pFileName)
+            put the long id of the last image into tCreatedControlID
+            set the text of tCreatedControlID to URL ("binfile:" & pFileName)
          end if
-         set the borderWidth of the last image to 0
-         select the last control
+         set the borderWidth of tCreatedControlID to 0
+         select tCreatedControlID
          break
       case "audio"
          import AudioClip from file pFileName
@@ -5105,20 +5117,24 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "video"
          if pReferenced is true then
             revIDECreateObject "com.livecode.interface.classic.player", tTargetStack, tCreatedControlLocation
-            set the filename of the last control to pFileName
+            put the result into tCreatedControlID
+            set the filename of tCreatedControlID to pFileName
          else
             import videoclip from file pFileName
+            put the long id of the last videoclip into tCreatedControlID
          end if
          break
       case "text"
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
-         put URL ("file:" & pFileName) into the last field
-         select the last control
+         put the result into tCreatedControlID
+         put URL ("file:" & pFileName) into tCreatedControlID
+         select tCreatedControlID
          break
    end switch
    
    unlock messages
    unlock screen
+   return tCreatedControlID
 end revIDEImportControl
 
 on revIDEImportSnapshot pScope, pObjectID
@@ -5978,15 +5994,19 @@ on revIDEActionDuplicate
    lock screen
    if the selObj is not empty then
       set the defaultStack to revIDEStackOfObject(line 1 of (the selobj))
-
+      
       # OK-2007-07-31 : Bug 4917. Instead of assuming that the duplicated controls will have the highest layer
       # numbers, we make certain that we select the correct objects by saving a list of each newly created control
       local tCreatedObjects, tID
       put the milliseconds into tID
       repeat for each line tObject in the selObj
          clone tObject
-         put the long id of it & return after tCreatedObjects
-
+         if tCreatedObjects is empty then
+            put the long id of it into tCreatedObjects
+         else
+            put the long id of it & return after tCreatedObjects
+         end if
+         
          if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then
             set the topLeft of the last control to 10, 10
          end if
@@ -6012,6 +6032,7 @@ on revIDEActionDuplicate
       revIDEMessageSend "ideSelectedObjectChanged"
    end if
    unlock screen
+   return tCreatedObjects
 end revIDEActionDuplicate
 
 on revIDEDuplicateCard
