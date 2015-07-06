@@ -12,7 +12,7 @@ disabled	false
 showName	false	
 antialiased	true	
 lineSize	1	
-dashes	false	
+dashes		
 startArrow	false	
 endArrow	false	
 points	
