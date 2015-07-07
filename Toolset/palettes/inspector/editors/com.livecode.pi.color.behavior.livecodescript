@@ -35,13 +35,12 @@ on valueChanged
 end valueChanged
 
 on mouseUp pButton
-   if pButton is empty then put 1 into pButton
    if pButton is not 1 then 
       pass mouseUp
       exit mouseUp 
    end if
    
-   answer color with the swatchcolor of control 1 of me
+   answer color with item 1 to 3 of the swatchcolor of control 1 of me
    if it is not empty then
       set the swatchcolor of control 1 of me to it
       dispatch "valueChanged"
