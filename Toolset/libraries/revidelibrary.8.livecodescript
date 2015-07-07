@@ -6925,6 +6925,10 @@ on revIDEActionInspectStack
    revIDEOpenInspectorForObjects the topStack
 end revIDEActionInspectStack
 
+on revIDEActionInspectObjects
+   revIDEOpenInspectorForObjects the selobj
+end revIDEActionInspectObjects
+
 on revIDEActionEditScriptOfObjects
    revIDEEditScriptOfObjects the selobj
 end revIDEActionEditScriptOfObjects

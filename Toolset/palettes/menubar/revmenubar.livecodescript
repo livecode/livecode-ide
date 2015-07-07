@@ -2439,7 +2439,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEACtionDeleteCard
          break
       case "Object Inspector"
-         revIDEOpenPalette "inspector"
+         revIDEActionInspectObjects
          break
       case "Card Inspector"
          revIDEActionInspectCard
