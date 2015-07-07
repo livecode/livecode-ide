@@ -3993,15 +3993,13 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
 end revIDEPropertySet
 
 local sStoredPropsA
-on revIDEPropertyStore pObjectList, pProperty
-   put revIDEProperty(pObjectList, pProperty) into sStoredPropsA[pObjectList]
+on revIDEPropertyStore pObjectList, pProperty, pValue
+   put pValue into sStoredPropsA[pObjectList][pProperty]
 end revIDEPropertyStore
 
-on revIDEPropertyRestore pObjectList, pProperty
-   if sStoredPropsA[pObjectList] is not empty then
-      revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
-   end if
-end revIDEPropertyRestore
+function revIDEPropertyRetrieveStored pObjectList, pProperty
+   return sStoredPropsA[pObjectList][pProperty]
+end revIDEPropertyRetrieveStored
 
 private function __customPropInfo pObject
    local tInfoA

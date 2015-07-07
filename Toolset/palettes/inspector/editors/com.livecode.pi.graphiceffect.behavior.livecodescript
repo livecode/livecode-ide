@@ -44,6 +44,10 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    
+   if tValue is empty then
+      put the storedValue of me into tValue
+   end if
+   
    local tPopupData, tData
    put valueWithDefaults(tValue) into tData
    put tData["color"] into tPopupData["Color"]["effectColor"]["value"]
@@ -132,6 +136,8 @@ end editorResize
 on mouseUp
    if the long id of the target is the long id of graphic 1 of me then
       editorPopup the mouseloc
+   else if the long id of the target is the long id of button 1 of me then
+      toggleStore
    end if
 end mouseUp
 
@@ -155,5 +161,18 @@ on valueChanged pProperty, pValue
    end switch
    set the editorValue of me to tValue
    editorUpdate
-   updateProperty
+   if the hilite of button 1 of me then
+      updateProperty
+   else
+      storeProperty
+   end if
 end valueChanged
+
+on toggleStore
+   if the hilite of button 1 of me then
+      set the editorValue of me to the storedValue of me
+   else
+      storeProperty
+      set the editorValue of me to empty
+   end if
+end toggleStore

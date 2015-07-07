@@ -207,3 +207,12 @@ end editorPopupData
 on popupDismissed
    delete stack sPropertyInfo["property_name"]
 end popupDismissed
+
+getProp storedValue
+   dispatch function "editorStoredValue"
+   return the result
+end storedValue
+
+on storeProperty
+   dispatch "editorStoreValue" with sPropertyInfo["property_name"], sValue
+end storeProperty
