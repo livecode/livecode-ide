@@ -690,7 +690,7 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    put shellFormat(pTargetFolder, "modulepath") after tShellCommand
    
    # The built-in module path
-   put shellFormat(tResourcePath & slash & "modules", "modulepath") after tShellCommand
+   put shellFormat(tResourcePath & slash & "modules/lci", "modulepath") after tShellCommand
    
    # Installed module path
    put shellFormat(revEnvironmentCustomizationPath() & slash & "extensions/interface", "modulepath") after tShellCommand
