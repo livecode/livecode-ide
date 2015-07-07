@@ -18,6 +18,18 @@ on editorUpdate
       put 0,0,0 into tColor
    end if
    
+   local tPopupData
+   put tColor into tPopupData["Color"]["effectColor"]["value"]
+   put 255 - tValue["opacity"] into item 4 of tPopupData["Color"]["effectColor"]["value"]
+   put  tPopupData["Color"]["effectColor"]["value"]
+   put tValue["size"] into tPopupData["Size"]["effectSize"]["value"]
+   put tValue["spread"] into tPopupData["Spread"]["effectSpread"]["value"]
+   put tValue["distance"] into tPopupData["Distance"]["effectDistance"]["value"]
+   put tValue["blendMode"] into tPopupData{"Blend Mode"]["effectBlendMode"]["value"]
+   put tValue["filter"] into tPopupData["Filter"]["effectFilter"]["value"]
+   put tValue["angle"] into tPopupData["Angle"]["effectAngle"]["value"]
+   set the editorPopupData of me to tPopupData
+   
    put tValue["distance"] into tDistance
    if tDistance > 5 then
       put 5 into tDistance
@@ -69,7 +81,6 @@ on editorUpdate
          set the colorOverlay["color"] of graphic 1 of me to tColor
          break
    end switch
-   
    unlock screen
 end editorUpdate
 
@@ -85,5 +96,30 @@ on editorResize
    unlock screen
 end editorResize
 
-on valueChanged
+on mouseUp
+   if the long id of the target is the long id of graphic 1 of me then
+      local tValue
+      put editorPopup(the mouseloc) into tValue
+   end if
+end mouseUp
+
+on valueChanged pProperty, pValue
+   local tValue
+   put the editorValue of me into tValue
+   switch pProperty
+      case "effectColor"
+         put item 1 to 3 of pValue into tValue["color"]
+         put item 4 of pValue into tValue["opacity"]
+         break
+   case "effectSize"
+   case "effectSpread"
+   case "effectDistance"
+   case "effectBlendMode"
+   case "effectFilter"
+   case "effectAngle"
+      put pValue into tValue[char 7 to -1 of pProperty]
+      break
+   end switch
+   set the editorValue of me to tValue
+   updateProperty
 end valueChanged

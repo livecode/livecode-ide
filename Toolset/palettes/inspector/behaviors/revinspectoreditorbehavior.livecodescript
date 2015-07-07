@@ -178,17 +178,28 @@ getProp editorWidth
    return the formattedWidth of me
 end editorWidth
 
+local sPopupData
 function editorPopup pLocation
-   lock screen
    local tDefaultStack
    put the defaultStack into tDefaultStack
    create invisible stack sPropertyInfo["property_name"]
-   dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of stack sPropertyInfo["property_name"]
-   set the defaultStack to sPropertyInfo["property_name"]
-   set the script of stack sPropertyInfo["property_name"] to "on editorValueChanged pProperty, pValue, pLockUpdates; return pValue; end editorValueChanged"
+   dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack sPropertyInfo["property_name"]
    dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
    dispatch "inspectorLayoutGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
-   popup stack sPropertyInfo["property_name"] at pLocation
-   unlock screen
-   return the result
+   dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
+   set the editorTarget of stack sPropertyInfo["property_name"] to the long id of me
+   modal stack sPropertyInfo["property_name"] at pLocation
 end editorPopup
+
+setProp editorPopupData pData
+   if pData is not sPopupData then
+      put pData into sPopupData
+      if there is a stack sPropertyInfo["property_name"] then
+         dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
+      end if
+   end if
+end editorPopupData
+
+on popupDismissed
+   delete stack sPropertyInfo["property_name"]
+end popupDismissed

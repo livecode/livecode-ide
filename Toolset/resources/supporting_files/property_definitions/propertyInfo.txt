@@ -45,11 +45,11 @@ dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false
 dropShadow	Drop Shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
 effectAngle	Angle	Effects	com.livecode.pi.number	true	false					0	360	1
 effectBlendMode	Blend Mode	Effects	com.livecode.pi.enum	true	false		normal	normal,multiply,colorDodge
-effectColor	Color	Effects	com.livecode.pi.colorwithalpha	true	false
-effectDistance	Distance	Effects	com.livecode.pi.number	true	false					0	359	1
+effectColor	Color	Effects	com.livecode.pi.colorwithalpha	true	false		0,0,0,255
+effectDistance	Distance	Effects	com.livecode.pi.number	true	false		3			0	359	1
 effectFilter	Filter	Effects	com.livecode.pi.enum	true	false		box3pass	gaussian,box3pass,box2pass,box1pass
-effectSize	Size	Effects	com.livecode.pi.number	true	false					0	255	1
-effectSpread	Spread	Effects	com.livecode.pi.number	true	false					0	255	1
+effectSize	Size	Effects	com.livecode.pi.number	true	false		3			0	255	1
+effectSpread	Spread	Effects	com.livecode.pi.number	true	false		0			0	255	1
 enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true			
 endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false	
 endTime	End	Basic	com.livecode.pi.integer	true	false			

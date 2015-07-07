@@ -395,12 +395,7 @@ on inspectorFill
    local tProperties
    put the displayData of me into tProperties
    
-   local tRow
-   repeat for each key tRow in tProperties
-      if there is a group tRow of me then
-         set the rowData of group tRow of me to tProperties[tRow]
-      end if
-   end repeat
+   inspectorFillGroups tProperties
    
    # Restore the selected chunk if it exists
    if tSelectedChunk is not empty and exists(tSelectedChunk) then
@@ -411,6 +406,15 @@ on inspectorFill
    
    unlock screen
 end inspectorFill
+
+on inspectorFillGroups pGroupData
+   local tRow
+   repeat for each key tRow in pGroupData
+      if there is a group tRow of me then
+         set the rowData of group tRow of me to pGroupData[tRow]
+      end if
+   end repeat
+end inspectorFillGroups
 
 private on inspectorClear
    if the number of groups of card 1 of me is 0 then
