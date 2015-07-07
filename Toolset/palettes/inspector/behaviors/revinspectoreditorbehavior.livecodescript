@@ -179,7 +179,7 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
-function editorPopup pLocation
+on editorPopup pLocation
    local tDefaultStack
    put the defaultStack into tDefaultStack
    create invisible stack sPropertyInfo["property_name"]
@@ -198,6 +198,10 @@ setProp editorPopupData pData
          dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
       end if
    end if
+end editorPopupData
+
+getProp editorPopupData
+   return sPopupData
 end editorPopupData
 
 on popupDismissed
