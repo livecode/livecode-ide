@@ -552,13 +552,13 @@ component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
 		executable windows:lc-run.exe as lc-run.exe
-		rfolder macosx:modules
+		rfolder windows:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
-		executable linux-[[TargetArchitecture]]:/release/lc-compile as lc-compile
-		executable linux-[[TargetArchitecture]]:/release/lc-run as lc-run
-		rfolder macosx:modules
+		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
+		executable linux-[[TargetArchitecture]]:lc-run as lc-run
+		rfolder linux-[[TargetArchitecture]]:modules
 
 ////////////////////////////////////////////////////////////////////////////////
 
