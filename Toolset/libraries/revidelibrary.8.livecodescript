@@ -5347,7 +5347,7 @@ on revIDESaveStack pStackID
    end repeat
    
    # Check if the stack has a filename. IF not, redirect to save as
-   if the filename of stack tStackName is empty then
+   if the effective filename of stack tStackName is empty then
       revIDEActionSaveStackAs the long ID of stack tStackName
       exit revIDESaveStack
    end if
@@ -5411,7 +5411,7 @@ on revIDESaveStack pStackID
       put the folder into tOldFolder
       
       local tStackFilename
-      put the filename of stack tStackName into tStackFilename
+      put the effective filename of stack tStackName into tStackFilename
       if there is a file tStackFilename then
          set the itemDelimiter to "/"
          set the folder to item 1 to -2 of tStackFilename
