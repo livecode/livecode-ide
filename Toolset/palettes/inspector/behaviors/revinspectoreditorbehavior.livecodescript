@@ -179,16 +179,15 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
-on editorPopup pLocation
-   local tDefaultStack
-   put the defaultStack into tDefaultStack
+on editorPopup pClickLoc
    create invisible stack sPropertyInfo["property_name"]
    dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack sPropertyInfo["property_name"]
+   set the frameHidden of stack sPropertyInfo["property_name"] to true
    dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
    dispatch "inspectorLayoutGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
    dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
    set the editorTarget of stack sPropertyInfo["property_name"] to the long id of me
-   modal stack sPropertyInfo["property_name"] at pLocation
+   modal stack sPropertyInfo["property_name"]
 end editorPopup
 
 setProp editorPopupData pData

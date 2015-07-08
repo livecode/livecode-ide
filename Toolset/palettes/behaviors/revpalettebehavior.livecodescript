@@ -19,6 +19,14 @@ CONSTANT TAB_DISABLED_COLOR = "200,200,200"
 local sNavStyle
 local sData
 
+local sHideFrame
+setProp frameHidden pValue
+   put pValue into sHideFrame
+   if pValue is false then
+      generateFrame
+   end if
+end frameHidden
+
 on addFrameItem pName, pLocation, pItemType, pLabel, pIcon, pIconSelected, pCallbackMessage, pCallbackTarget, pParameter
    if __itemExists(pName) then return empty
    
@@ -101,7 +109,7 @@ on disableFrameItem pName
 end disableFrameItem
 
 on enableFrameItem pName
-  local tIndex
+   local tIndex
    put __frameItemNameToIndex(pName) into tIndex
    if tIndex is not a number then exit enableFrameItem
    
@@ -206,6 +214,10 @@ private function preferenceAction pMenuArray
 end preferenceAction
 
 on generateFrame
+   if sHideFrame is true then
+      exit generateFrame
+   end if
+   
    lock screen
    lock messages
    
@@ -321,6 +333,10 @@ on generateFrame
 end generateFrame
 
 function barHeight pSize
+   if sHideFrame is true then
+      return 0
+   end if
+   
    switch pSize
       case "large"
          return 30
@@ -422,9 +438,11 @@ on revIDEFrameSizeChanged pName, pValue
 end revIDEFrameSizeChanged
 
 after resizeStack
-   addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
-   generateFrame
-   layoutFrame
+   if sHideFrame is not true then
+      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      generateFrame
+      layoutFrame
+   end if
 end resizeStack
 
 before openCard
@@ -442,15 +460,17 @@ before preOpenStack
 end preOpenStack
 
 after preOpenStack
-   put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
-   put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
-   addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
-   revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
-   generateFrame
-   layoutFrame
-   
-   # set the default position of the stack. revIDEPaletteRect will return either a rect or a topLeft position for the stack
-   revIDEPositionPalette the short name of me
+   if sHideFrame is not true then
+      put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
+      put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
+      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
+      generateFrame
+      layoutFrame
+      
+      # set the default position of the stack. revIDEPaletteRect will return either a rect or a topLeft position for the stack
+      revIDEPositionPalette the short name of me
+   end if
 end preOpenStack
 
 after openStack
@@ -544,6 +564,10 @@ before menupick pItem
 end menupick
 
 getProp contentRect
+   if sHideFrame is true then
+      return 0,5,the height of me, the width of me
+   end if
+   
    lock messages
    local tTop,tBottom,tBarSize
    

@@ -8,8 +8,14 @@ end setAsBehavior
 
 on preOpenStack
    create button "OK"
-   set the rect of button "OK" to 200,200,250,250
+   set the maxheight of me to the height of me + 30
+   set the height of me to the maxheight of me
+   set the rect of button "OK" to the width of me - 40,the height of me - 26,the width of me - 8,the height of me - 4
 end preOpenStack
+
+on openStack
+   set the left of me to the right of stack "revInspector" + 5
+end openStack
 
 on editorValueChanged pProperty, pValue, pLockUpdates
    dispatch "valueChanged" to sTarget with pProperty, pValue
