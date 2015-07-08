@@ -19,9 +19,11 @@ on editorInitialize
       end repeat
    end repeat
    
-   set the editorValue of me to tDefaultStore
-   storeProperty
-   set the editorValue of me to empty
+   if the storedValue of me is empty then
+      set the editorValue of me to tDefaultStore
+      storeProperty
+      set the editorValue of me to empty
+   end if
 end editorInitialize
 
 private function firstNonEmpty pLeft, pRight
