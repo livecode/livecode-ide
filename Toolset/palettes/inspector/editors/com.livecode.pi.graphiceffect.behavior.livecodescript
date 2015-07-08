@@ -5,14 +5,23 @@ on editorInitialize
    set the editorMinWidth of me to 25
    set the editorMaxWidth of me to 0
    
-   local tPopupData
+   local tPopupData, tDefaultStore
    put editorPropertyGet("popup") into tPopupData
    repeat for each element tGroup in tPopupData
       repeat for each element tProp in tGroup["proplist"]
          put tProp["default"] into sPopupDefaults[tProp["property_name"]]
+         if tProp["property_name"] is "effectcolor" then
+            put item 1 to 3 of tProp["default"] into tDefaultStore["color"]
+            put item 4 of tProp["default"] into tDefaultStore["opacity"]
+         else
+            put tProp["default"] into tDefaultStore[char 7 to -1 of tProp["property_name"]]
+         end if
       end repeat
    end repeat
    
+   set the editorValue of me to tDefaultStore
+   storeProperty
+   set the editorValue of me to empty
 end editorInitialize
 
 private function firstNonEmpty pLeft, pRight
@@ -22,21 +31,6 @@ private function firstNonEmpty pLeft, pRight
    return pLeft
 end firstNonEmpty
 
-private function valueWithDefaults pValue
-   local tData
-   put firstNonEmpty(pValue["color"], item 1 to 3 of sPopupDefaults["effectColor"]) into tData["color"]
-   put firstNonEmpty(pValue["opacity"], item 4 of sPopupDefaults["effectColor"]) into tData["opacity"]
-   
-   put firstNonEmpty(pValue["size"], sPopupDefaults["effectSize"]) into tData["size"]
-   put firstNonEmpty(pValue["spread"], sPopupDefaults["effectSpread"]) into tData["spread"]
-   put firstNonEmpty(pValue["distance"], sPopupDefaults["effectDistance"]) into tData["distance"]
-   put firstNonEmpty(pValue["blendMode"], sPopupDefaults["effectBlendMode"]) into tData["blendMode"]
-   put firstNonEmpty(pValue["filter"], sPopupDefaults["effectFilter"]) into tData["filter"]
-   put firstNonEmpty(pValue["angle"], sPopupDefaults["effectAngle"]) into tData["angle"]
-
-   return tData
-end valueWithDefaults
-
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled, tProperty
@@ -45,20 +39,22 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    if tValue is empty then
+      set the hilite of button 1 of me to false
       put the storedValue of me into tValue
+   else
+      set the hilite of button 1 of me to true
    end if
    
-   local tPopupData, tData
-   put valueWithDefaults(tValue) into tData
-   put tData["color"] into tPopupData["Color"]["effectColor"]["value"]
-   put tData["opacity"] into item 4 of tPopupData["Color"]["effectColor"]["value"]
+   local tPopupData
+   put tValue["color"] into tPopupData["Color"]["effectColor"]["value"]
+   put tValue["opacity"] into item 4 of tPopupData["Color"]["effectColor"]["value"]
    
-   put tData["size"] into tPopupData["Size"]["effectSize"]["value"]
-   put tData["spread"] into tPopupData["Spread"]["effectSpread"]["value"]
-   put tData["distance"] into tPopupData["Distance"]["effectDistance"]["value"]
-   put tData["blendMode"] into tPopupData["Blend Mode"]["effectBlendMode"]["value"]
-   put tData["filter"] into tPopupData["Filter"]["effectFilter"]["value"]
-   put tData["angle"] into tPopupData["Angle"]["effectAngle"]["value"]
+   put tValue["size"] into tPopupData["Size"]["effectSize"]["value"]
+   put tValue["spread"] into tPopupData["Spread"]["effectSpread"]["value"]
+   put tValue["distance"] into tPopupData["Distance"]["effectDistance"]["value"]
+   put tValue["blendMode"] into tPopupData["Blend Mode"]["effectBlendMode"]["value"]
+   put tValue["filter"] into tPopupData["Filter"]["effectFilter"]["value"]
+   put tValue["angle"] into tPopupData["Angle"]["effectAngle"]["value"]
    set the editorPopupData of me to tPopupData
    
    local tSize, tColor, tDistance, tOpacity, tSpread
@@ -144,7 +140,10 @@ end mouseUp
 on valueChanged pProperty, pValue
    local tValue
    put the editorValue of me into tValue
-   put valueWithDefaults(tValue) into tValue
+   if tValue is empty then
+      put the storedValue of me into tValue
+   end if
+   
    switch pProperty
       case "effectColor"
          put item 1 to 3 of pValue into tValue["color"]
@@ -175,4 +174,6 @@ on toggleStore
       storeProperty
       set the editorValue of me to empty
    end if
+   editorUpdate
+   updateProperty
 end toggleStore

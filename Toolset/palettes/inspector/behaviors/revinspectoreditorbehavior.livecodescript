@@ -209,7 +209,7 @@ on popupDismissed
 end popupDismissed
 
 getProp storedValue
-   dispatch function "editorStoredValue"
+   dispatch function "editorStoredValue" with sPropertyInfo["property_name"]
    return the result
 end storedValue
 

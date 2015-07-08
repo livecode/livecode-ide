@@ -1097,23 +1097,6 @@ private on __fetchPropertyOfControl pProp, @pData
          case "customProperties"
             put __customPropertyData(the long id of the target) into pData["customProperties"]
             break
-         case "dropShadow"
-         case "innerShadow"
-         case "outerGlow"
-         case "innerGlow"
-         case "colorOverlay"
-            put the pProp of the Target into pData[pProp]
-            if pData[pProp] is empty then
-               put empty into pData[pProp]["color"]
-               put empty into pData[pProp]["blendMode"]
-               put empty into pData[pProp]["opacity"]
-               put empty into pData[pProp]["filter"]
-               put empty into pData[pProp]["spread"]
-               put empty into pData[pProp]["size"]
-               put empty into pData[pProp]["distance"]
-               put empty into pData[pProp]["angle"]
-            end if
-            break
          default
             put the pProp of the Target into pData[pProp]
             break
