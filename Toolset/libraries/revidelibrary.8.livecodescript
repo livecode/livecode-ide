@@ -3441,7 +3441,7 @@ on revIDEPositionPalette pStackName
    if there is not a stack pStackName then exit revIDEPositionPalette
    
    local tRect
-   //put revIDEGetPreference("palette_rect_" & pStackName) into tRect
+   put revIDEGetPreference("palette_rect_" & pStackName) into tRect
    
    if __isRect(tRect) then
       # A previous stored rect was found for the stack. Restore is position if possible.
@@ -3454,42 +3454,47 @@ on revIDEPositionPalette pStackName
             set the rect of stack pStackName to tRect
             break
          default 
-            # If no sizing information can be found position the stack in the center of the 
-            # default screen
-            set the loc of stack pStackName to the screenloc
+            # If we don't restore the position for this palette then position the stack in the default location
+            revIDEPositionPaletteDefault pStackName
             break
       end switch
    else
-      # No previous rect was found for stack to calculate the appropriate position for the stack
-      local tScreenHeight, tScreenWidth
-      put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
-      put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
-      
-      switch pStackName
-         case "revMenuBar"
-            set the topleft of stack pStackName to 0,0
-            break
-         case "revTools"
-            set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
-            break
-         case "message box"
-            set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
-            break
-         case "revInspector"
-            if revIDEStackIsRevStack(the long ID of the topstack) then
-               set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
-            else
-               set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
-            end if
-            break
-         default 
-            # If no sizing information can be found position the stack in the center of the 
-            # default screen
-            set the loc of stack pStackName to the screenloc
-            break
-      end switch
+      # If no sizing information can be found then position the stack in the default location
+      revIDEPositionPaletteDefault pStackName
    end if
 end revIDEPositionPalette
+
+on revIDEPositionPaletteDefault pStackName
+   # No previous rect was found for stack to calculate the appropriate position for the stack
+   local tScreenHeight, tScreenWidth
+   put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
+   put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+   
+   switch pStackName
+      case "revMenuBar"
+         set the topleft of stack pStackName to 0,0
+         break
+      case "revTools"
+         set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+         break
+      case "message box"
+         set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+         break
+      case "revInspector"
+         if revIDEStackIsRevStack(the long ID of the topstack) then
+            set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+         else
+            set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
+         end if
+         break
+      default 
+         # If no sizing information can be found position the stack in the center of the 
+         # default screen
+         set the loc of stack pStackName to the screenloc
+         break
+   end switch
+   
+end revIDEPositionPaletteDefault
 
 function __isRect pRect
    # Check it has 4 items
