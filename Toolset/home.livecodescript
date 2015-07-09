@@ -1010,7 +1010,6 @@ command revInternal__InitialiseLibraries
    end try 	 	
    	    	 	
    try 	 	
-      revInternal__LoadLibrary "revidedocumentationlibrary"	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       insert script of stack "revidemessagehandler" into front 	 	
    catch tError 	 	

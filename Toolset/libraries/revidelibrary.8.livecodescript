@@ -1204,7 +1204,7 @@ on revIDEInitialiseIDELibrary
    revIDEInitialiseExtensions
 
    ## Regenerate dictionary data
-   revDocsRegenerateBuiltDictionaryData
+   revIDERegenerateBuiltDictionaryData
 
    ## Initialise property library
    revIDEPropertyLibraryInitialise
@@ -7801,3 +7801,159 @@ on revIDEDismissTransient
    send "revIDERemoveTransientTextField tField" to me in 0 millisecs
    unlock screen
 end revIDEDismissTransient
+
+##################################################
+#
+#          IDE DOCS FUNCTIONS
+#
+##################################################
+
+private function escape pString, pConvertLineEndings
+   replace "\" with "\\" in pString
+   replace quote with ("\" & quote) in pString
+   
+   if pConvertLineEndings is true then
+      replace (numToChar(13) & CR) with (CR & numToChar(13)) in pString
+      replace (CR & numToChar(13)) with CR in pString
+   end if
+   replace CR with "\n" in pString
+   //replace "<" with "&lt;" in pString
+   //replace ">" with "&gt;" in pString
+   replace tab with "\t" in pString
+   return (quote & pString & quote)
+end escape
+
+private function revIDEGetDocsAPIData
+   local tData
+   
+   local tAPIPath
+   put revIDESpecialFolderPath("API") into tAPIPath
+   put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
+   
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionAPI
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
+      else
+         local tLcdoc
+         dispatch function "revDocsFormatDocFileAsJSON" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         put the result into tExtensionAPI
+         put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
+      end if
+      
+      if tExtensionAPI is not empty then
+         put comma & tExtensionAPI after tData
+      end if
+   end repeat
+   
+   return tData
+end revIDEGetDocsAPIData
+
+private function revIDEGetDocsGuideData
+   local tData
+   
+   local tGuidePath
+   put revIDESpecialFolderPath("guide") into tGuidePath
+   put url ("binfile:" & tGuidePath & slash & "distributed_guide.js") into tData
+   
+   local tExtensionDocsDataA
+   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   
+   local tFolder
+   repeat for each element tExtensionData in tExtensionDocsDataA
+      local tExtensionGuide
+      put empty into tExtensionGuide
+      put tExtensionData["folder"] into tFolder
+      if there is a not file (tFolder & slash & "guide.md")  then next repeat
+      
+      # Check if the .js is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.md") into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "guide.js") into tLastGenerated
+      if tLastModified < tLastGenerated then
+         put url ("binfile:" & tFolder & slash & "guide.js") into tExtensionGuide
+      else
+         local tGuide
+         put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
+         put textDecode(tGuide, "utf-8") into tGuide
+         
+         if tGuide is not empty then
+            put "{" & CR after tExtensionGuide
+            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
+            put "}" after tExtensionGuide
+            
+            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+         end if
+      end if
+      
+      if tExtensionGuide is not empty then
+         put comma & tExtensionGuide after tData
+      end if
+   end repeat
+   
+   return tData
+end revIDEGetDocsGuideData
+
+on revIDEAddGuideAndRegenerate pGuide
+   local tData
+   
+   # Get the location of the distributed guide
+   local tGuidePath
+   put revIDESpecialFolderPath("guide") into tGuidePath
+   
+   put "var tUserGuideData =" & CR & "{" & CR & tab & quote & "guides" & quote & ":[" into tData
+   
+   put revIDEGetDocsGuideData() after tData
+   
+   if pGuide is not empty then
+      put comma & pGuide after tData
+   end if
+   
+   put CR & tab & "]" & CR & "}" after tData
+   
+   put tData into URL ("binfile:" & tGuidePath & slash & "built_guide.js")
+end revIDEAddGuideAndRegenerate
+
+on revIDEAddAPIAndRegenerate pAPI
+   local tData
+   
+   # Get the location of the distributed API
+   local tAPIPath
+   put revIDESpecialFolderPath("API") into tAPIPath
+   
+   put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
+   
+   put revIDEGetDocsAPIData() after tData
+   
+   if pAPI is not empty then
+      put comma & pAPI after tData
+   end if
+   
+   put CR & tab & "]" & CR & "}" after tData
+   put tData into URL ("binfile:" & tAPIPath & slash & "built_api.js")
+end revIDEAddAPIAndRegenerate
+
+on revIDERegenerateBuiltAPIs
+   revIDEAddAPIAndRegenerate
+end revIDERegenerateBuiltAPIs
+
+on revIDERegenerateBuiltGuides
+   revIDEAddGuideAndRegenerate
+end revIDERegenerateBuiltGuides
+
+on revIDERegenerateBuiltDictionaryData
+   revIDERegenerateBuiltAPIs
+   revIDERegenerateBuiltGuides
+end revIDERegenerateBuiltDictionaryData
