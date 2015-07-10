@@ -225,7 +225,8 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       
       # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tData, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      dispatch function "revDocsParseDocTextToLibraryArray" to stack "revDocsParser" with tData, tDetailsA["name"], tDetailsA["author"]
+      put the result into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
       put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
    end if
