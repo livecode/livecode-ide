@@ -1473,7 +1473,7 @@ function revIDEGraphics
 
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
-      if sClassicObjectProperties[tIndex]["type"] is "graphic" and sClassicObjectProperties[tIndex]["properties"]["tool"]["label"] is empty then
+      if sClassicObjectProperties[tIndex]["type"] is "graphic" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat
@@ -1485,7 +1485,7 @@ function revIDEGraphicTools
 
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
-      if sClassicObjectProperties[tIndex]["type"] is "graphic" and sClassicObjectProperties[tIndex]["properties"]["tool"]["label"] is not empty then
+      if sClassicObjectProperties[tIndex]["type"] is "graphic tool" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat
@@ -1567,7 +1567,7 @@ function revIDEClassicControls
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
-      if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group" then
+      if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group,graphic tool" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat

@@ -298,14 +298,12 @@ on generatePalette
          end if
          
          # If the object is a tool, set the key custom properties to make it behave like a tool
-         if sViewsData[tView][tControlTypeID]["tool"] is not empty or sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] is not empty then
-            local tToolName 
-            put sViewsData[tView][tControlTypeID]["tool"] into tToolName
-            if sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] is not empty then 
-               put sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] into tToolName
-            end if
+         if sViewsData[tView][tControlTypeID]["tool"] is not empty then 
             set the cTool of the templatebutton to true
-            set the cToolName of the templatebutton to tToolName
+            set the cToolName of the templatebutton to sViewsData[tView][tControlTypeID]["tool"]
+         else if sViewsData[tView][tControlTypeID]["type"] is "graphic tool" then
+            set the cTool of the templatebutton to true
+            set the cToolName of the templatebutton to "graphic tool"
          else
             if the tooltip of the templatebutton is empty then
                local tTitle
@@ -461,9 +459,6 @@ function objectTypes
    
    put "paint" into tData[6]["name"]
    put 10 into tData[6]["block size"]
-   
-   put "graphictoolcontrollers" into tData[7]["name"]
-   put 10 into tData[7]["block size"]
    
    return tData
 end objectTypes

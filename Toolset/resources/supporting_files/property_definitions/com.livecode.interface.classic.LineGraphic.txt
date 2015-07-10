@@ -1,4 +1,4 @@
-type	graphic
+type	graphic tool
 
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
