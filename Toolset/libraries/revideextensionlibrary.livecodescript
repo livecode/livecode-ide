@@ -496,7 +496,7 @@ on __extensionUninstallDocs pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 80
    
-   revDocsRegenerateBuiltDictionaryData
+   revIDERegenerateBuiltDictionaryData
    
    send "__extensionUninstallUpdateCache" && pExtensionID to me in 0 milliseconds
 end __extensionUninstallDocs
