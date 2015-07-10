@@ -3807,7 +3807,7 @@ on revIDEInstallUserGuide pGuideFolder, pExtensionName, pAuthor
    put textEncode(tGuideJSON, "utf-8") into url ("binfile:" & pGuideFolder & slash & "guide.js")
 
    # Now regenerate the built guides
-   revDocsAddGuideAndRegenerate tGuideJSON
+   dispatch "revDocsAddGuideAndRegenerate" to stack "revDocsParser" with tGuideJSON
 end revIDEInstallUserGuide
 
 /*
@@ -3820,7 +3820,8 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
 
    # Convert the new API to a JSON array to append to API data
    local tAPIJSON
-   put revDocsFormatAPIAsJSON(pExtensionName, pAuthor, tAPIFile) into tAPIJSON
+   dispatch function "revDocsFormatAPIAsJSON" to stack "revDocsParser" with pExtensionName, pAuthor, tAPIFile
+   put the result into tAPIJSON
    if tAPIJSON is empty then
       return "no documentation found"
    end if
@@ -3828,7 +3829,7 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
    put textEncode(tAPIJSON, "utf-8") into url ("binfile:" & pAPIFolder & slash & "api.js")
 
    # Now regenerate the built APIs
-   revDocsAddAPIAndRegenerate tAPIJSON
+   dispatch "revDocsAddAPIAndRegenerate" to stack "revDocsParser" with tAPIJSON
 end revIDEInstallAPI
 
 #############
