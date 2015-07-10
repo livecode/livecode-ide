@@ -997,7 +997,8 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    
    if tLastGenerated is empty or tLastModified > tLastGenerated then
       local tAPI
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
+      dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with (pFolder & slash & pExtensionSource) 
+      put the result into tAPI 
       put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
       return "updated"
    end if
