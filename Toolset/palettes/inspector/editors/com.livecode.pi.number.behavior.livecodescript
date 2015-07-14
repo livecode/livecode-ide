@@ -145,7 +145,7 @@ on closeField
 end closeField
 
 on scrollbarDrag pCurrentValue
-   if the visible of scrollbar 1 of me is false or pCurrentValue is field 1 of me then
+   if (the visible of scrollbar "slider" of me is false and the visible of scrollbar "twiddle" of me is false) or pCurrentValue is field 1 of me then
       exit scrollbarDrag
    end if
    
