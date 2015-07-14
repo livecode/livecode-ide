@@ -138,7 +138,6 @@ component Plugins
 		stack "ide:Plugins/revSmartProperties 1.2.rev"
 		stack "ide:Plugins/revSmartSave 1.1.rev"
 		stack "ide:Plugins/revTabRuler 1.2.rev"
-		stack "ide:Plugins/revExtensionBuilder.livecode"
 
 component Resources
 	into [[SupportFolder]]/Resources/Examples place
@@ -157,7 +156,7 @@ component Resources
 		stack "ide:Resources/Sample Projects/Simple Calculator.rev"
 		stack "ide:Resources/Sample Projects/Video Capture.rev"
 	into "[[SupportFolder]]/Resources" place
-		file ide:Resources/sample.mov
+		file ide:Resources/Sample.mov
 	into "[[SupportFolder]]/Resources/Object Libraries" place
 		stack "ide:Resources/Object Libraries/revObjectLibrary.rev"
 	into "[[SupportFolder]]/Resources/Start Center/samples/sample_1" place
@@ -325,9 +324,6 @@ component Documentation
 		file "ide:Documentation/glos.rsindex"
 		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
-		file "docs:glos.index"
-		file "docs:dict.index"
-		folder "docs:packaged_xml"
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "ide:Documentation/pdf/user_guide.pdf" as "LiveCode User Guide.pdf"
 	into [[ToolsFolder]]/Documentation/rev place
@@ -526,25 +522,25 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
 	into [[ToolsFolder]]/extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview.lcb
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
@@ -556,13 +552,13 @@ component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
 		executable windows:lc-run.exe as lc-run.exe
-		rfolder macosx:modules
+		rfolder windows:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
-		executable linux:[[TargetArchitecture]]/release/lc-compile as lc-compile
-		executable linux:[[TargetArchitecture]]/release/lc-run as lc-run
-		rfolder macosx:modules
+		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
+		executable linux-[[TargetArchitecture]]:lc-run as lc-run
+		rfolder linux-[[TargetArchitecture]]:modules
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -733,21 +729,21 @@ component Runtime.iOS
 		file ios:iphonesimulator8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_3" place
-		executable ios:iphonesimulator8.3/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
-		executable ios:iphonesimulator8.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
-		executable ios:iphonesimulator8.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
-		executable ios:iphonesimulator8.3/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
-		executable ios:iphonesimulator8.3/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
-		executable ios:iphonesimulator8.3/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
-		executable ios:iphonesimulator8.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
-		executable ios:iphonesimulator8.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
-		file ios:iphonesimulator8.3/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator8.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator8.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator8.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphonesimulator8.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator8.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_4" place
+		executable ios:iphonesimulator8.4/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.4/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
+		executable ios:iphonesimulator8.4/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
+		executable ios:iphonesimulator8.4/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
+		executable ios:iphonesimulator8.4/revxml.ios-extension as RevXml base ios:iphonesimulator5.1/revxml.dylib
+		executable ios:iphonesimulator8.4/revdb.ios-extension as RevDb base ios:iphonesimulator5.1/revdb.dylib
+		executable ios:iphonesimulator8.4/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator5.1/dbsqlite.dylib
+		executable ios:iphonesimulator8.4/dbmysql.ios-extension as DbMysql base ios:iphonesimulator5.1/dbmysql.dylib
+		file ios:iphonesimulator8.4/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8.2" place
 		executable ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos8.2/revsecurity.ios-extension as RevSecurity
@@ -768,26 +764,26 @@ component Runtime.iOS
 		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-8.3" place
-		executable ios:iphoneos8.3/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].lcext
-		executable ios:iphoneos8.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
-		executable ios:iphoneos8.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
-		executable ios:iphoneos8.3/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
-		executable ios:iphoneos8.3/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
-		executable ios:iphoneos8.3/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
-		executable ios:iphoneos8.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
-		executable ios:iphoneos8.3/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
-		file ios:iphoneos8.3/mobile-device-template.plist as "Settings.plist"
-		file ios:iphoneos8.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphoneos8.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos8.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
-		file ios:iphoneos8.3/template-entitlements.xcent as "Entitlements.xcent"
-		file ios:iphoneos8.3/template-store-entitlements.xcent as "StoreEntitlements.xcent"
-		file ios:iphoneos8.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
-		file ios:iphoneos8.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos8.3/template-ResourceRules.plist as "ResourceRules.plist"
-		file ios:iphoneos8.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphoneos8.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8.4" place
+		executable ios:iphoneos8.4/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].lcext
+		executable ios:iphoneos8.4/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
+		executable ios:iphoneos8.4/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
+		executable ios:iphoneos8.4/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
+		executable ios:iphoneos8.4/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
+		executable ios:iphoneos8.4/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
+		executable ios:iphoneos8.4/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
+		executable ios:iphoneos8.4/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
+		file ios:iphoneos8.4/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos8.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos8.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos8.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos8.4/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos8.4/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos8.4/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos8.4/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos8.4/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos8.4/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -838,34 +834,35 @@ component Externals.MacOSX
 
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
-		executable linux:[[TargetArchitecture]]/release/revbrowser-cefprocess
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libcef.so
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libffmpegsumo.so
-		executable prebuilt:lib/libcef/linux/[[TargetArchitecture]]/libpdf.so
-		rfolder prebuilt:lib/libcef/linux/[[TargetArchitecture]]/locales
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_100_percent.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/cef_200_percent.pak
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:CEF/libcef.so
+		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
+		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
+		rfolder linux-[[TargetArchitecture]]:CEF/locales
+		file linux-[[TargetArchitecture]]:CEF/cef.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
-		file prebuilt:lib/libcef/linux/[[TargetArchitecture]]/icudtl.dat
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
 		executable windows:revbrowser-cefprocess.exe
-		executable prebuilt:lib/libcef/win32/libcef.dll
-		executable prebuilt:lib/libcef/win32/d3dcompiler_43.dll
-		executable prebuilt:lib/libcef/win32/d3dcompiler_46.dll
-		executable prebuilt:lib/libcef/win32/ffmpegsumo.dll
-		executable prebuilt:lib/libcef/win32/libEGL.dll
-		executable prebuilt:lib/libcef/win32/libGLESv2.dll
-		executable prebuilt:lib/libcef/win32/pdf.dll
-		file prebuilt:lib/libcef/win32/locales/en-US.pak
-		file prebuilt:lib/libcef/win32/cef.pak
-		file prebuilt:lib/libcef/win32/cef_100_percent.pak
-		file prebuilt:lib/libcef/win32/cef_200_percent.pak
-		file prebuilt:lib/libcef/win32/icudtl.dat
+		executable windows:CEF/libcef.dll
+		executable windows:CEF/d3dcompiler_43.dll
+		executable windows:CEF/d3dcompiler_46.dll
+		executable windows:CEF/d3dcompiler_47.dll
+		executable windows:CEF/ffmpegsumo.dll
+		executable windows:CEF/libEGL.dll
+		executable windows:CEF/libGLESv2.dll
+		executable windows:CEF/pdf.dll
+		file windows:CEF/locales/en-US.pak
+		file windows:CEF/cef.pak
+		file windows:CEF/cef_100_percent.pak
+		file windows:CEF/cef_200_percent.pak
+		file windows:CEF/icudtl.dat
 
 component Externals.CEF.MacOSX
 	into [[TargetFolder]]/Externals/CEF place

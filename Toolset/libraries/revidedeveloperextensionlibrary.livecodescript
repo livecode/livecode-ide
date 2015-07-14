@@ -225,7 +225,8 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       
       # If either we had to generate the new docs data or get it from the file, parse to a docs library array
       local tLibraryA
-      put revDocsParseDocTextToLibraryArray(tData, tDetailsA["name"], tDetailsA["author"]) into tLibraryA
+      dispatch function "revDocsParseDocTextToLibraryArray" to stack "revDocsParser" with tData, tDetailsA["name"], tDetailsA["author"]
+      put the result into tLibraryA
       put tLibraryA["doc"] into tDetailsA["api"]
       put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
    end if
@@ -690,7 +691,7 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    put shellFormat(pTargetFolder, "modulepath") after tShellCommand
    
    # The built-in module path
-   put shellFormat(tResourcePath & slash & "modules", "modulepath") after tShellCommand
+   put shellFormat(tResourcePath & slash & "modules/lci", "modulepath") after tShellCommand
    
    # Installed module path
    put shellFormat(revEnvironmentCustomizationPath() & slash & "extensions/interface", "modulepath") after tShellCommand

@@ -11,11 +11,11 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   set the enabled of graphic 1 of me to tEnabled
+   set the enabled of control 1 of me to tEnabled
    if tEffective then
-      set the backgroundcolor of graphic 1 of me to empty
+      set the swatchcolor of control 1 of me to empty
    else
-      set the backgroundcolor of graphic 1 of me to item 1 to 3 of tValue
+      set the swatchcolor of control 1 of me to item 1 to 3 of tValue
    end if
    unlock messages
    unlock screen
@@ -24,22 +24,25 @@ end editorUpdate
 on editorResize
    lock screen
    lock messages
-   set the rect of graphic 1 of me to the rect of me
+   set the rect of control 1 of me to the rect of me
    unlock messages
    unlock screen
 end editorResize
 
 on valueChanged
-   set the editorValue of me to the backgroundcolor of graphic 1 of me
+   set the editorValue of me to item 1 to 3 of the swatchcolor of control 1 of me
    updateProperty
 end valueChanged
 
 on mouseUp pButton
-   if pButton is not 1 then exit mouseUp 
+   if pButton is not 1 then 
+      pass mouseUp
+      exit mouseUp 
+   end if
    
-   answer color with the backgroundcolor of graphic 1 of me
+   answer color with item 1 to 3 of the swatchcolor of control 1 of me
    if it is not empty then
-      set the backgroundcolor of graphic 1 of me to it
+      set the swatchcolor of control 1 of me to it
       dispatch "valueChanged"
    end if
 end mouseUp

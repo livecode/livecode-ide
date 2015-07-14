@@ -169,7 +169,6 @@ thumbSize	Thumb size	Basic	com.livecode.pi.number	true	false
 tilt	Tilt	Quicktime	com.livecode.pi.number	true	false			
 title	Title	Basic	com.livecode.pi.string	true	false			
 toggleHilites	Click to toggle	Basic	com.livecode.pi.boolean	true	false		false	
-tool	graphic tool		com.livecode.pi.	true	false			
 tooltip	Tooltip	Basic	com.livecode.pi.string	true	false
 top	Top	Position	com.livecode.pi.integer	true	false		no_default					1
 topColor	Outset Bevel Color	Colors	com.livecode.pi.color	true	false	Top Bevel Fill		

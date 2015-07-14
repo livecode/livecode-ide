@@ -496,7 +496,7 @@ on __extensionUninstallDocs pExtensionID
    # Update progress
    __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 80
    
-   revDocsRegenerateBuiltDictionaryData
+   revIDERegenerateBuiltDictionaryData
    
    send "__extensionUninstallUpdateCache" && pExtensionID to me in 0 milliseconds
 end __extensionUninstallDocs
@@ -997,7 +997,8 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    
    if tLastGenerated is empty or tLastModified > tLastGenerated then
       local tAPI
-      put revDocsGenerateDocsFileFromModularFile(pFolder & slash & pExtensionSource) into tAPI 
+      dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with (pFolder & slash & pExtensionSource) 
+      put the result into tAPI 
       put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
       return "updated"
    end if
