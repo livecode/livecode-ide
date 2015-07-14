@@ -252,14 +252,33 @@ private on __toolDefinitionsRead
    revIDERestoreDefaultFolder
 end __toolDefinitionsRead
 
+private on __resolvePopupData @xInfo, pData
+   if not xInfo["options"] begins with "popup:" then
+      exit __resolvePopupData
+   end if
+   local tOptions
+   set the itemdel to ":"
+   put item 2 to -1 of xInfo["options"] into tOptions
+   set the itemdel to ","
+   local tCount, tProp
+   repeat for each item tPopup in tOptions
+      add 1 to tCount
+      put pData[tPopup] into tProp
+      __resolvePopupData tProp, pData
+      put tProp into xInfo["popup"][tPopup]
+      put tCount into xInfo["popup"][tPopup]["group_order"]
+      put empty into xInfo["options"]
+   end repeat
+end __resolvePopupData
+
 private function __propertyDataFromInfoFile pFileName
    local tPropertyInfo
    put URL ("file:" & pFileName) into tPropertyInfo
 
    local tDataStart, tDataA, tPropName
    put false into tDataStart
-
-   local tCountsA, tGroupCountsA
+   
+   local tCountsA, tGroupCountsA, tPopupsToResolve
    set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
@@ -309,7 +328,12 @@ private function __propertyDataFromInfoFile pFileName
 
       local tOptions
       put item 9 of tLine into tOptions
-      replace comma with return in tOptions
+      # Resolve all the popup info afterwards
+      if tOptions begins with "popup:" then
+         put true into tPopupsToResolve[tPropName]
+      else
+         replace comma with return in tOptions
+      end if
       put tOptions into tDataA[tPropName]["options"]
 
       put item 10 of tLine into tDataA[tPropName]["subsection"]
@@ -320,24 +344,46 @@ private function __propertyDataFromInfoFile pFileName
       
       
    end repeat
+   
+   repeat for each key tKey in tPopupsToResolve 
+      local tPropData
+      put tDataA[tKey] into tPropData
+      __resolvePopupData tPropData, tDataA
+      put tPropData into tDataA[tKey]
+   end repeat
+   
    return tDataA
 end __propertyDataFromInfoFile
 
-private function __organisePropertyInfo pInfoA
+private function __organisePropertyInfo pInfoA, pPopup
    local tOrganisedA
    repeat for each key tKey in pInfoA
       local tSection
       put pInfoA[tKey]["section"] into tSection
-
+      
       local tGroupLabel
       put pInfoA[tKey]["group"] into tGroupLabel
-
+      
+      local tGroupData
+      put empty into tGroupData
+      
       # The groups are ordered by their appearance in the spec file
-      put pInfoA[tKey]["group_order"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["order"]
-      put pInfoA[tKey]["subsection"] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["subsection"]
-
+      put pInfoA[tKey]["group_order"] into tGroupData["order"]
+      put pInfoA[tKey]["subsection"] into tGroupData["subsection"]
+      
       # Carry over the generic prop information into the object prop info array
-      put pInfoA[tKey] into tOrganisedA[tSection]["grouplist"][tGroupLabel]["proplist"][tKey]
+      put pInfoA[tKey] into tGroupData["proplist"][tKey]
+      
+      # Organise the popup data if there is any
+      local tPopupData
+      if pInfoA[tKey]["popup"] is not empty then
+         put __organisePropertyInfo(pInfoA[tKey]["popup"], true) into tGroupData["proplist"][tKey]["popup"] 
+      end if 
+      if pPopup then
+         put tGroupData into tOrganisedA["grouplist"][tGroupLabel]
+      else
+         put tGroupData into tOrganisedA[tSection]["grouplist"][tGroupLabel]
+      end if
    end repeat
    return tOrganisedA
 end __organisePropertyInfo
@@ -514,6 +560,9 @@ private function __orderPropSubArray pSectionA, pIsGroupList
          put pSectionA[tSubKey][tProp]["subsection"] into tOrderedA[tCount]["subsection"]
          put __orderPropSubArray(pSectionA[tSubKey][tProp], false) into tOrderedA[tCount]["proplist"]
       else
+         if pSectionA[tSubKey][tProp]["popup"] is not empty then
+            put __orderPropSubArray(pSectionA[tSubKey][tProp]["popup"], true) into pSectionA[tSubKey][tProp]["popup"]
+         end if
          put pSectionA[tSubKey][tProp] into tOrderedA[tCount]
          put tProp into tOrderedA[tCount]["property_name"]
       end if
@@ -1047,23 +1096,6 @@ private on __fetchPropertyOfControl pProp, @pData
             break
          case "customProperties"
             put __customPropertyData(the long id of the target) into pData["customProperties"]
-            break
-         case "dropShadow"
-         case "innerShadow"
-         case "outerGlow"
-         case "innerGlow"
-         case "colorOverlay"
-            put the pProp of the Target into pData[pProp]
-            if pData[pProp] is empty then
-               put empty into pData[pProp]["color"]
-               put empty into pData[pProp]["blendMode"]
-               put empty into pData[pProp]["opacity"]
-               put empty into pData[pProp]["filter"]
-               put empty into pData[pProp]["spread"]
-               put empty into pData[pProp]["size"]
-               put empty into pData[pProp]["distance"]
-               put empty into pData[pProp]["angle"]
-            end if
             break
          default
             put the pProp of the Target into pData[pProp]
@@ -3950,15 +3982,13 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
 end revIDEPropertySet
 
 local sStoredPropsA
-on revIDEPropertyStore pObjectList, pProperty
-   put revIDEProperty(pObjectList, pProperty) into sStoredPropsA[pObjectList]
+on revIDEPropertyStore pObjectList, pProperty, pValue
+   put pValue into sStoredPropsA[pObjectList][pProperty]
 end revIDEPropertyStore
 
-on revIDEPropertyRestore pObjectList, pProperty
-   if sStoredPropsA[pObjectList] is not empty then
-      revIDEPropertySet pObjectList, pProperty, sStoredPropsA[pObjectList], false
-   end if
-end revIDEPropertyRestore
+function revIDEPropertyRetrieveStored pObjectList, pProperty
+   return sStoredPropsA[pObjectList][pProperty]
+end revIDEPropertyRetrieveStored
 
 private function __customPropInfo pObject
    local tInfoA
@@ -4140,10 +4170,11 @@ function revIDEPropertySectionNameToIconName pName
    end switch
 end revIDEPropertySectionNameToIconName
 
-function revIDEPaletteResourcePath pFilename
+function revIDEPaletteResourcePath pFilename, pTarget
+   if pTarget is empty then put the long ID of the target into pTarget
    local tPalettePath
    set the itemdel to slash
-   put item 1 to -2 of the filename of revIDEStackOfObject(the long id of the target) into tPalettePath
+   put item 1 to -2 of the filename of revIDEStackOfObject(pTarget) into tPalettePath
    if there is not a file tPalettePath & slash  & pFilename then
       return "file not found"
    end if
