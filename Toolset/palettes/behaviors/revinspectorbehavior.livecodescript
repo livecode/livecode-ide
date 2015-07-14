@@ -204,6 +204,11 @@ private function inspectorSectionGet
          return tIndex
       end if
    end repeat
+   # AL-2015-06-23: [[ Bug ]] If the previously selected section doesn't exist for the newly inspected object
+   #  then dispatch selection messages to me so that the frame is updated to the default section
+   put sDataA[1]["label"] into sSelectedSection
+   dispatch "hiliteFrameItem" to me with sSelectedSection
+   dispatch "navSelected" to me with sSelectedSection
    return 1
 end inspectorSectionGet
 
