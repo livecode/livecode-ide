@@ -220,7 +220,7 @@ on generatePalette
    set the itemdel to "."
    create group "images" in group "contents"
    
-   repeat for each line tView in the keys of sViewsData
+   repeat for each key tView in sViewsData
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
       local tOrder
@@ -244,6 +244,11 @@ on generatePalette
       # Create the group to hold the controls
       create group tView in group "contents" 
       repeat for each line tControlTypeID in tOrder
+         # AL-2015-09-07: Don't show objects in tools palette if specified
+         if sViewsData[tView][tControlTypeID]["userVisible"] is false then
+            next repeat
+         end if
+         
          if tControlTypeID is a number then
             
          end if
