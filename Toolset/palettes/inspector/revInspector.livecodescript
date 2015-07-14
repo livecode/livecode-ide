@@ -280,6 +280,14 @@ on editorValueChanged pProperty, pValue, pLockUpdates
    revIDEPropertySet sSelectedObjects, pProperty, pValue
 end editorValueChanged
 
+function editorStoredValue pProperty
+   return revIDEPropertyRetrieveStored(sSelectedObjects, pProperty)
+end editorStoredValue
+
+on editorStoreValue pProperty, pValue
+   revIDEPropertyStore sSelectedObjects, pProperty, pValue
+end editorStoreValue
+
 on ideNameChanged
    ideInspectObjects
 end ideNameChanged

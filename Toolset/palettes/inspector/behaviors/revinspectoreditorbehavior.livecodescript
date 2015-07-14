@@ -8,10 +8,12 @@ setProp editorPropertyInfo pPropertyInfo
 end editorPropertyInfo
 
 function editorPropertyGet pProperty
+   if pProperty is empty then exit editorPropertyGet
    return sPropertyInfo[pProperty]
 end editorPropertyGet
 
 getProp editorProperty pProperty
+   if pProperty is empty then exit editorProperty
    return sPropertyInfo[pProperty]
 end editorProperty
 
@@ -175,3 +177,41 @@ end editorHeight
 getProp editorWidth
    return the formattedWidth of me
 end editorWidth
+
+local sPopupData
+on editorPopup pClickLoc
+   create invisible stack sPropertyInfo["property_name"]
+   dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack sPropertyInfo["property_name"]
+   set the frameHidden of stack sPropertyInfo["property_name"] to true
+   dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
+   dispatch "inspectorLayoutGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
+   dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
+   set the editorTarget of stack sPropertyInfo["property_name"] to the long id of me
+   modal stack sPropertyInfo["property_name"]
+end editorPopup
+
+setProp editorPopupData pData
+   if pData is not sPopupData then
+      put pData into sPopupData
+      if there is a stack sPropertyInfo["property_name"] then
+         dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
+      end if
+   end if
+end editorPopupData
+
+getProp editorPopupData
+   return sPopupData
+end editorPopupData
+
+on popupDismissed
+   delete stack sPropertyInfo["property_name"]
+end popupDismissed
+
+getProp storedValue
+   dispatch function "editorStoredValue" with sPropertyInfo["property_name"]
+   return the result
+end storedValue
+
+on storeProperty
+   dispatch "editorStoreValue" with sPropertyInfo["property_name"], sValue
+end storeProperty

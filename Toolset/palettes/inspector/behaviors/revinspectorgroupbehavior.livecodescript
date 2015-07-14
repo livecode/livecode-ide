@@ -12,6 +12,10 @@ on propertyRegister pPropertyInfo
    # Check that the property has not already been registered
    if tPropName is among the keys of sProperties then exit propertyRegister
    
+   if tEditor is "com.livecode.pi.integer" then
+      put "com.livecode.pi.number" into tEditor
+   end if
+   
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack tEditor then
@@ -26,7 +30,7 @@ on propertyRegister pPropertyInfo
       copy group "template" of stack tEditor to me
       put it into tGroupLongID
       set the name of it to tPropName
-      set the behavior of stack tEditorBehavior to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript")
+      set the behavior of stack tEditorBehavior to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript", the long ID of stack "revInspector")
       set the behavior of tGroupLongID to the long ID of stack tEditorBehavior
       
       if pPropertyInfo["label"] is not empty and the showMultiPropLabels of this stack then

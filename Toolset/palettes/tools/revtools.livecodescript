@@ -220,7 +220,7 @@ on generatePalette
    set the itemdel to "."
    create group "images" in group "contents"
    
-   repeat for each line tView in the keys of sViewsData
+   repeat for each key tView in sViewsData
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
       local tOrder
@@ -244,6 +244,11 @@ on generatePalette
       # Create the group to hold the controls
       create group tView in group "contents" 
       repeat for each line tControlTypeID in tOrder
+         # AL-2015-09-07: Don't show objects in tools palette if specified
+         if sViewsData[tView][tControlTypeID]["userVisible"] is false then
+            next repeat
+         end if
+         
          if tControlTypeID is a number then
             
          end if
@@ -298,14 +303,12 @@ on generatePalette
          end if
          
          # If the object is a tool, set the key custom properties to make it behave like a tool
-         if sViewsData[tView][tControlTypeID]["tool"] is not empty or sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] is not empty then
-            local tToolName 
-            put sViewsData[tView][tControlTypeID]["tool"] into tToolName
-            if sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] is not empty then 
-               put sViewsData[tView][tControlTypeID]["properties"]["tool"]["label"] into tToolName
-            end if
+         if sViewsData[tView][tControlTypeID]["tool"] is not empty then 
             set the cTool of the templatebutton to true
-            set the cToolName of the templatebutton to tToolName
+            set the cToolName of the templatebutton to sViewsData[tView][tControlTypeID]["tool"]
+         else if sViewsData[tView][tControlTypeID]["type"] is "graphic tool" then
+            set the cTool of the templatebutton to true
+            set the cToolName of the templatebutton to "graphic tool"
          else
             if the tooltip of the templatebutton is empty then
                local tTitle
@@ -461,9 +464,6 @@ function objectTypes
    
    put "paint" into tData[6]["name"]
    put 10 into tData[6]["block size"]
-   
-   put "graphictoolcontrollers" into tData[7]["name"]
-   put 10 into tData[7]["block size"]
    
    return tData
 end objectTypes

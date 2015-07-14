@@ -234,51 +234,55 @@ on revInternal__openStack
       end if
    end if
    
+   # AL-2015-07-10: Temporarily disable welcome screen
+   /*
    if revIDEGetPreference("welcomeScreenShown") is not "true" then
       revIDEOpenPalette "Welcome"
    else if revIDEPrefGet("StartPageShow") is not "false" then
-      revIDEOpenPalette "Start Center"
-   end if
-   
-   try 	 	
-      revIDEOpenPropertyInspectorControllerStacks 	 	
-   end try 
-   
-   -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
-   -- Luanch the installer in update mode to begin update process.
-   --
-   if line 3 of revLicenseInfo is not "evaluation" then
-      local tCommand, tOldPath
-      put $PATH into tOldPath
-      set the itemdelimiter to "/"
-      switch the platform
-         case "MacOS"
-            put item 1 to -5 of the filename me & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
-            put quote & tCommand & quote && "install -update" into tCommand
-            break
-         case "Win32"
-            put item 1 to -3 of the filename me & "/.setup.exe" into tCommand
-            put quote & tCommand & quote && "install -update" into tCommand
-            break
-         case "Linux"
-            --put item 1 to -3 of the filename me into $PATH
-            --put ".setup.x86 install -update" into tCommand
-            put item 1 to -3 of the filename me & "/.setup.x86" into tCommand
-            put tCommand && "install -update" into tCommand
-            break
-      end switch
-      set the itemDel to comma
-      open process tCommand for neither
-      put tOldPath into $PATH
-   end if
-   
-   close stack "revSplash"
-   
-   revInternal__Log "Leave", "revInternal__openStack"
-   revInternal__Log "End"
-   
-   -- Now the home stack has loaded, we can allow interrupts..
-   set the allowInterrupts to true
+      */
+      if revIDEPrefGet("StartPageShow") is not "false" then
+         revIDEOpenPalette "Start Center"
+      end if
+      
+      try 	 	
+         revIDEOpenPropertyInspectorControllerStacks 	 	
+      end try 
+      
+      -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
+      -- Luanch the installer in update mode to begin update process.
+      --
+      if line 3 of revLicenseInfo is not "evaluation" then
+         local tCommand, tOldPath
+         put $PATH into tOldPath
+         set the itemdelimiter to "/"
+         switch the platform
+            case "MacOS"
+               put item 1 to -5 of the filename me & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
+               put quote & tCommand & quote && "install -update" into tCommand
+               break
+            case "Win32"
+               put item 1 to -3 of the filename me & "/.setup.exe" into tCommand
+               put quote & tCommand & quote && "install -update" into tCommand
+               break
+            case "Linux"
+               --put item 1 to -3 of the filename me into $PATH
+               --put ".setup.x86 install -update" into tCommand
+               put item 1 to -3 of the filename me & "/.setup.x86" into tCommand
+               put tCommand && "install -update" into tCommand
+               break
+         end switch
+         set the itemDel to comma
+         open process tCommand for neither
+         put tOldPath into $PATH
+      end if
+      
+      close stack "revSplash"
+      
+      revInternal__Log "Leave", "revInternal__openStack"
+      revInternal__Log "End"
+      
+      -- Now the home stack has loaded, we can allow interrupts..
+      set the allowInterrupts to true
 end revInternal__openStack
 
 on revInternal__setSplashStatus pMessage
@@ -1010,7 +1014,6 @@ command revInternal__InitialiseLibraries
    end try 	 	
    	    	 	
    try 	 	
-      revInternal__LoadLibrary "revidedocumentationlibrary"	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       insert script of stack "revidemessagehandler" into front 	 	
    catch tError 	 	

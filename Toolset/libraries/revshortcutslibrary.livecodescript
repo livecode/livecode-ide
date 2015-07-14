@@ -38,7 +38,8 @@ on arrowKey pDirection, pTarget
       put the long id of the target into pTarget
    end if
    
-   if word 1 of the name of pTarget is "button" and the arm of pTarget then pass arrowKey
+   // SN-2015-06-25: [[ Bug 15515 ]] <the target> is the name of the target
+   if word 1 of pTarget is "button" and the arm of pTarget then pass arrowKey
    if the commandKey is down and the optionKey is down and the number of lines in (the selObj) > 1 then
       --align
       if pDirection is "up" then put "top" into pDirection
