@@ -123,7 +123,7 @@ function revIDEExtensionWidgetPreferredSize pKind
    local tExtensionID
    put __extensionCacheID("name", pKind) into tExtensionID
    
-   return __extensionPropertyGet(tExtensionID, "preferred_size")
+   return __extensionPropertyGet(tExtensionID, "preferredSize")
 end revIDEExtensionWidgetPreferredSize
 
 ##############################
@@ -871,26 +871,17 @@ on __extensionLoad pID, pExtensionDataA
    end if
    
    # Pull key into out of manifest etc into extensions cache
-   __extensionPropertySet tIndex, "install_path", tToLoadA["install_path"]
-   
-   __extensionPropertySet tIndex, "name", tToLoadA["name"] 
-   __extensionPropertySet tIndex, "version", tToLoadA["version"] 
-   __extensionPropertySet tIndex, "title", tToLoadA["title"] 
-   __extensionPropertySet tIndex, "author", tToLoadA["author"] 
-   __extensionPropertySet tIndex, "type", tToLoadA["type"] 
+   repeat for each key tKey in tToLoadA
+      __extensionPropertySet tIndex, tKey, tToLoadA[tKey]
+   end repeat
    __extensionPropertySet tIndex, "type_id", pID  & "." & tToLoadA["version"] 
    __extensionPropertySet tIndex, "status", tStatus
    __extensionPropertySet tIndex, "error", tError
-   __extensionPropertySet tIndex, "builtin", tToLoadA["builtin"]
-   __extensionPropertySet tIndex, "copies", pExtensionDataA["copies"]
-   __extensionPropertySet tIndex, "preferred_size", tToLoadA["preferredSize"] 
    
    put __extensionProperties(pID) into sExtensionProperties[pID]
    
    # Deal with the various icon possibilities
-   if sExtensionProperties[pID]["svg_icon_path"] is not empty then
-      __extensionPropertySet tIndex, "svg_icon_path", sExtensionProperties[pID]["svg_icon_path"]
-   else if there is a file (tToLoadA["install_path"] & "/support/icon.png") then
+   if sExtensionProperties[pID]["svgIconPath"] is empty and there is a file (tToLoadA["install_path"] & "/support/icon.png") then
       __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
    end if
    
@@ -1053,20 +1044,17 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    end if
    put tTargetAuthor into tDataA["author"]
    
-   local tPreferredSize
+   local tMetadataValue, tMetadataKey
    local tMetadataNodes, tMetadataA, tKeys, tValue
    put revXMLChildNames(tID, "package",return,"metadata",true) into tMetadataNodes
    repeat for each line tMetadata in tMetadataNodes
-      if revXMLAttribute(tID,"package" & "/" & tMetadata,"key") is "preferredSize" then
-         put revXMLNodeContents(tID,"package" & "/" & tMetadata) into tPreferredSize
-         exit repeat
+      put revXMLAttribute(tID,"package" & "/" & tMetadata,"key") into tMetadataKey
+      put revXMLNodeContents(tID,"package" & "/" & tMetadata) into tMetadataValue
+      if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
+         put empty into tMetadataValue
       end if
+      put tMetadataValue into tDataA[tMetadataKey]
    end repeat
-   if tPreferredSize is empty or tPreferredSize begins with "xmlerr" then
-      put empty into tPreferredSize
-   end if
-   put tPreferredSize into tDataA["preferredSize"]
-   
    local tRequires, tCount
    put 0 into tCount
    put revXMLChildNames(tId,"package",return,"requires",true) into tRequires

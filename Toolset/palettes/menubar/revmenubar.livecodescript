@@ -1508,7 +1508,8 @@ end buildGroupSubmenu
 
 private function revMenubarHelpMenu pContext
    local tHelp
-   put "Welcome Screen/|Welcome" & return after tHelp
+   # AL-2015-07-10: Temporarily remove welcome screen option from help menu
+   //put "Welcome Screen/|Welcome" & return after tHelp
    put "Start Center/|Start Center" & return after tHelp
    put "Dictionary (API)/|Dictionary" & return after tHelp
    

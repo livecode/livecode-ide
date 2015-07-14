@@ -26,7 +26,7 @@ cantDelete	Can't delete	Basic	com.livecode.pi.boolean	true	false		false
 cantModify	Can't modify	Basic	com.livecode.pi.boolean	true	false		false	
 cellFormatting	Cell formatting	Table	com.livecode.pi.boolean	true	false	false		
 clickColor	Click Color	Colors	com.livecode.pi.color	true	false			
-colorOverlay	ColorOverlay	Effects	com.livecode.pi.graphicEffect	true	false			
+colorOverlay	ColorOverlay	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode		
 currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1			1		1	
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false			
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0			0		1
@@ -42,7 +42,14 @@ customProperties["dgProps"]	Data Grid Properties	Data Grid	com.livecode.pi.datag
 dontDither	Don't Dither	Basic	com.livecode.pi.boolean	true	false		false	
 dontSearch	Don't search	Basic	com.livecode.pi.boolean	true	false		false	
 dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false			
-dropShadow	Drop Shadow	Effects	com.livecode.pi.graphicEffect	true	false			
+dropShadow	Drop Shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
+effectAngle	Angle	Effects	com.livecode.pi.number	true	false					0	360	1
+effectBlendMode	Blend Mode	Effects	com.livecode.pi.enum	true	false		normal	normal,multiply,colorDodge
+effectColor	Color	Effects	com.livecode.pi.colorwithalpha	true	false		0,0,0,255
+effectDistance	Distance	Effects	com.livecode.pi.number	true	false		3			0	359	1
+effectFilter	Filter	Effects	com.livecode.pi.enum	true	false		box3pass	gaussian,box3pass,box2pass,box1pass
+effectSize	Size	Effects	com.livecode.pi.number	true	false		3			0	255	1
+effectSpread	Spread	Effects	com.livecode.pi.number	true	false		0			0	255	1
 enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true			
 endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false	
 endTime	End	Basic	com.livecode.pi.integer	true	false					0		1			
@@ -72,8 +79,8 @@ icon	Icon	Icons	com.livecode.pi.icon	true	false		0
 iconic	Minimized	Basic	com.livecode.pi.boolean	true	false		false	
 id	ID	Basic	com.livecode.pi.image_id	true	false			
 ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax
-innerGlow	Inner Glow	Effects	com.livecode.pi.graphicEffect	true	false			
-innerShadow	Inner Shadow	Effects	com.livecode.pi.graphicEffect	true	false			
+innerGlow	Inner Glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread
+innerShadow	Inner Shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
 kind	Kind	Basic	com.livecode.pi.string	true	true		no_default
 label	Label	Basic	com.livecode.pi.string	true	false			
 layer	Layer	Position	com.livecode.pi.integer	true	false		no_default			1		1
@@ -112,7 +119,7 @@ number	Number	Basic	com.livecode.pi.number	true	false
 numberFormat	Value format	Basic	com.livecode.pi.string	true	false			
 opaque	Opaque	Basic	com.livecode.pi.boolean	true	false			
 orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical
-outerGlow	Outer Glow	Effects	com.livecode.pi.graphicEffect	true	false			
+outerGlow	Outer Glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectSize,effectDistance
 pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false			
 palindromeFrames	Repeat in reverse	Basic	com.livecode.pi.boolean	true	false			
 pan	Pan	Quicktime	com.livecode.pi.number	true	false			
@@ -154,7 +161,7 @@ startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false
 startValue	Start value	Basic	com.livecode.pi.number	true	false							1	
 strokeGradient	Stroke Gradient	Colors	com.livecode.pi.gradient	true	false			type,ramp,from,to,via,quality,repeat,mirror,wrap
 style	Style	Basic	com.livecode.pi.enum	true	false			
-systemWindow	Float abve everything	Basic	com.livecode.pi.boolean	true	false		false	
+systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
 text	Text	Basic	com.livecode.pi.text	true	false			
