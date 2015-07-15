@@ -224,21 +224,7 @@ end revUpdatePalette
 
 function revPaletteObjects
    --if the cCurrentObject of the target is not empty then return the cCurrentObject of the target
-   local tSelobj
-   put the selobj into tSelobj
-   switch
-      case the cREVLinked of this stack is not empty
-         return the cREVLinked of this stack
-      break
-      case tSelobj is empty
-         if the mode of the topStack is 1
-         then return the long name of the topStack
-         else return empty
-      break
-      default
-         return tSelobj
-      break
-   end switch
+   return revIDESelectedObjects()
 end revPaletteObjects
 
 on revStandardUpdate
@@ -1026,12 +1012,6 @@ on newTool
       send "revNewTool" to stack "revReshapeLibrary"
    end if	
    
-   if word 1 of the tool is not in "pointerbrowseselectpencilbucketrectanglelineroundedovalbrusheraserspraypolygoncurveregulardropper" then
-      do "if there is a template" & word 1 of the tool && "then select the template"&word 1 of the tool
-      send "selectedObjectChanged" to me
-   else if (the selObj) is not empty and the id of the selObj is 0 then
-      do "set the selected of" && (line 1 of the selObj) && "to false"
-   end if
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newTool
 end newTool
 
@@ -1270,61 +1250,7 @@ on updateForSelectedObjectChanged
    if lHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
-   lock screen
-   
-   --first, determine the standard notation to describe the selection
-   if the number of lines in (the selObj) is 1 then
-      put the name of the selObj into gREVSelectionDescription
-   else
-      local tObjectTypes
-      repeat for each line l in (the selObj)
-         add 1 to tObjectTypes[revStyle(l)]
-      end repeat
-      get keys(tObjectTypes)
-      if the number of lines in it is 1 then --its a single object type
-         put "multiple" && it & "s" into gREVSelectionDescription
-      else
-         put "multiple object types" into gREVSelectionDescription
-      end if
-   end if
-   --profiles in the selection description
-   
-   if (the selObj) is empty then
-      put empty into gREVSelectionDescription
-   else if the id of the selObj is 0 then
-      put "the template" & revStyle(the selObj) & ", Master Profile" into gREVSelectionDescription
-   else
-      
-      local tProfile
-      put revReturnCurrentProfile() into tProfile
-      if tProfile is space then put ", multiple profiles" after gREVSelectionDescription
-      else put comma && tProfile && "Profile" after gREVSelectionDescription
-   end if
-   
-   --despatch property palette messages
-   
-   repeat for each line l in gREVStacksList
-      if word 1 of l is among the items of "revPropertyPalette,revAppearance" then
-         send "revUpdateTabs" to stack l
-         send "revUpdatePalette" to this cd of stack l
-      end if
-   end repeat
-   
-   --non property palette IDE stacks
-   repeat for each line l in gREVStacksList
-      if exists(stack l) then
-         if "revPropertyPalette" is not in l and not the cREVShaded of stack l then 
-            send "revUpdatePalette" to this cd of stack l
-         end if
-      end if
-   end repeat
-   
-   --plugins
-   repeat for each line l in gREVMessageDispatch["revSelectedObjectChanged"]
-      send "revSelectedObjectChanged" to this cd of stack l
-   end repeat
-   unlock screen
-   --don't pass this message or you get duplicates
+   revIDEMessageSend "ideSelectedObjectChanged"
 end updateForSelectedObjectChanged
 
 on preOpenStack
