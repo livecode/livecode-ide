@@ -7,10 +7,18 @@ on setAsBehavior pTarget
 end setAsBehavior
 
 on preOpenStack
+   set the style of the templatebutton to "standard"
+   set the width of the templatebutton to "82"
+   set the height of the templatebutton to "22"
+   set the traversalon of the templatebutton to true
+   set the default of the templatebutton to true
    create button "OK"
-   set the maxheight of me to the height of me + 30
-   set the height of me to the maxheight of me
-   set the rect of button "OK" to the width of me - 40,the height of me - 26,the width of me - 8,the height of me - 4
+   
+   set the topright of button "OK" to the width of me -  the palettemargin of me, the height of me
+   set the resizable of me to false
+   set the height of me to the height of me + the height of button "OK" of me + the palettemargin of me
+   
+   reset the templatebutton
 end preOpenStack
 
 on openStack
