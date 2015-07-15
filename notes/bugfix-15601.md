@@ -1,0 +1,1 @@
+# traversalOn property missing from widget property inspector
