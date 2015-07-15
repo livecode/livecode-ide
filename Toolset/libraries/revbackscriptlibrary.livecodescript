@@ -1027,7 +1027,6 @@ on newTool
    end if	
    
    if word 1 of the tool is not in "pointerbrowseselectpencilbucketrectanglelineroundedovalbrusheraserspraypolygoncurveregulardropper" then
-      revNewObjectName
       do "if there is a template" & word 1 of the tool && "then select the template"&word 1 of the tool
       send "selectedObjectChanged" to me
    else if (the selObj) is not empty and the id of the selObj is 0 then
@@ -1035,27 +1034,6 @@ on newTool
    end if
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newTool
 end newTool
-
-on revNewObjectName pWhichType
-   local tObjectType
-   if pWhichType is not empty then put pWhichtype into tObjectType else put word 1 of the tool into tObjectType
-   
-   local tNum
-   if tObjectType is not in "pointer,browse" then
-      set the defaultStack to the topStack
-      put 1 into tNum
-      
-      local tName
-      repeat
-         put tObjectType && quote & tObjectType && tNum & quote into tName
-         if not (there is a tName) then exit repeat
-         add 1 to tNum
-      end repeat
-      put toUpper(char 1 of tObjectType) into char 1 of tObjectType
-      if tObjectType is "Browser" then exit revNewObjectName -- engine glitch
-      do "set the name of the template" & tObjectType && "to" && quote & tObjectType && tNum & quote
-   end if
-end revNewObjectName
 
 function revCheckGroupDelete
    if the selectedField is not empty then return true
