@@ -2388,7 +2388,21 @@ end revIDERelativeStackPath
 Returns A return sepearetd list of the long ids of the selected objects
 */
 function revIDESelectedObjects
-   return revPaletteObjects()
+   local tSelobj
+   put the selobj into tSelobj
+   switch
+      case the cREVLinked of this stack is not empty
+         return the cREVLinked of this stack
+         break
+      case tSelobj is empty
+         if the mode of the topStack is 1
+         then return the long name of the topStack
+         else return empty
+         break
+      default
+         return tSelobj
+         break
+   end switch
 end revIDESelectedObjects
 
 #############

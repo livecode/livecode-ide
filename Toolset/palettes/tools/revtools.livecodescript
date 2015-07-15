@@ -269,6 +269,7 @@ on generatePalette
          set the blendlevel of the templatebutton to 0
          set the cType of the templatebutton to tView
          set the cStyle of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
+         set the cName of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
          set the cStatus of the templatebutton to sViewsData[tView][tControlTypeID]["status"]
          
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
@@ -493,9 +494,12 @@ on mouseDown
       revIDESetCursor "com.livecode.cursor.grabclose"
    end if
    if the cTool of the target is true then
+      reset the templategraphic
       if the cStyle of the target is not empty then
-         reset the templategraphic
          set the style of the templategraphic to the cStyle of the target
+      end if
+      if the cName of the target is not empty then
+         set the name of the templategraphic to the cName of the target
       end if
       revIDESetTool the cToolName of the target
       exit mouseDown

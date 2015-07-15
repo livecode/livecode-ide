@@ -3,7 +3,7 @@ title	Polygon Graphic
 
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
-name	Curve	
+name	Polygon	
 tooltip		
 style	polygon	rectangle,roundrect,line,oval,regular,line,curve,polygon
 opaque	false	
