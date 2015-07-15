@@ -1104,18 +1104,13 @@ private on __fetchPropertyOfControl pProp, @pData
       put the short name of the target into pData["name"]
    catch tError
    end try
-
-   if tError is not empty then
-      try
-         do ("put" && pProp && "of" && the target && "into pData[pProp]")
-      catch tError
-      end try
-   end if
-
+   
+   # AL-2015-07-15: Remove 'do' construction, as evaluating the target as a string
+   #  causes incorrect object references when obejcts have the same name
    if pData[pProp] is empty then
       try
          local tEffective
-         do ("put effective" && pProp && "of" && the target && "into tEffective")
+         put the effective pProp of the target into tEffective
          if tEffective is not empty then
             put tEffective into pData["effective" && pProp]
          end if
