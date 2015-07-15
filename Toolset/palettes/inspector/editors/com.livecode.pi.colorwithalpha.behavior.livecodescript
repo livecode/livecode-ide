@@ -11,21 +11,15 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   local tBlendLevel
-   put (item 4 of tValue / 2.55) into tBlendLevel
-   if the number of items of tValue is 4 then
-      set the thumbposition of scrollbar 1 of me to tBlendLevel
+   local tAlpha
+   put item 4 of tValue into tAlpha
+   if tAlpha is a number then
+      set the thumbposition of scrollbar 1 of me to tAlpha
    else
-      set the thumbposition of scrollbar 1 of me to 100
+      set the thumbposition of scrollbar 1 of me to 0
    end if
-   set the blendlevel of graphic 1 of me to 100 - tBlendLevel
    
-   set the enabled of graphic 1 of me to tEnabled
-   if tEffective then
-      set the backgroundcolor of graphic 1 of me to empty
-   else
-      set the backgroundcolor of graphic 1 of me to item 1 to 3 of tValue
-   end if
+   set the swatchcolor of widget 1 of me to tValue
    
    unlock messages
    unlock screen
@@ -35,19 +29,17 @@ on editorResize
    lock screen
    lock messages
    local tRect
+   set the topleft of widget 1 of me to the topleft of me
    put the rect of me into tRect
-   set the rect of graphic 1 of me to item 1 of tRect, item 2 of tRect, item 1 of tRect + 21, item 2 of tRect + 21
-   set the rect of scrollbar 1 of me to item 1 of tRect + 31, item 2 of tRect, item 3 of tRect, item 4 of tRect
+   set the rect of scrollbar 1 of me to item 1 of tRect + the width of widget 1 of me + 10, item 2 of tRect, item 3 of tRect, item 4 of tRect
    unlock messages
    unlock screen
 end editorResize
 
 on valueChanged
-   local tValue, tBlendLevel
-   put the backgroundcolor of graphic 1 of me into tValue
-   put 100 - the thumbposition of scrollbar 1 of me into tBlendLevel
-   set the blendlevel of graphic 1 of me to tBlendLevel
-   put tBlendLevel * 2.55 into item 4 of tValue
+   local tValue
+   put item 1 to 3 of the swatchcolor of widget 1 of me & comma & the thumbposition of scrollbar 1 of me into tValue
+   set the swatchcolor of widget 1 of me to tValue
    set the editorValue of me to tValue
    updateProperty
 end valueChanged
@@ -55,10 +47,10 @@ end valueChanged
 on mouseUp pButton
    if pButton is not 1 then exit mouseUp 
    
-   if the target begins with "graphic" then
-      answer color with the backgroundcolor of graphic 1 of me
+   if the target begins with "widget" then
+      answer color with item 1 to 3 of the swatchcolor of widget 1 of me
       if it is not empty then
-         set the backgroundcolor of graphic 1 of me to it
+         set the swatchcolor of widget 1 of me to it
          dispatch "valueChanged"
       end if
    end if

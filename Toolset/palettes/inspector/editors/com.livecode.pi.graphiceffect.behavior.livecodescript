@@ -149,7 +149,7 @@ on valueChanged pProperty, pValue
    switch pProperty
       case "effectColor"
          put item 1 to 3 of pValue into tValue["color"]
-         put 255 - item 4 of pValue into tValue["opacity"]
+         put item 4 of pValue into tValue["opacity"]
          break
       case "effectSize"
       case "effectSpread"
