@@ -336,6 +336,7 @@ on generatePalette
             set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
             set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
             set the cTool of widget tControlTypeID to false
+            set the tooltip of widget tControlTypeID to "Click and drag or double click to create object: " & tControlTypeID
          end if
          
       end repeat
@@ -659,7 +660,7 @@ on mouseEnter
    if the cDisabled of the target is true then exit mouseEnter
    if word 1 of the target is "widget" then
       revIDESetCursor "com.livecode.cursor.grab"
-      set the iconcolor of the target to "255,100,100"
+      set the iconcolor of the target to revIDEColor("edition_color")
    else if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
