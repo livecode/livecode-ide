@@ -44,13 +44,7 @@ on preOpenStack
    addFrameItem "revTools_show", "header", "preference", "Show Sections", "set","widget:Widgets Controls,classic:Classic Controls,graphic:Graphic Objects,graphictools:Graphic Tools,paint:Paint Tools", "framePreferenceSelected", the long id of me
    
    ### Properties
-   
    set the resizable of me to false
-   
-   
-   
-   ### Create
-   
 end preOpenStack
 
 on openStack
@@ -328,7 +322,21 @@ on generatePalette
             set the tooltip of the templatebutton to "There was an error while loading widget:" & return & tControlTypeID
             --set the blendlevel of the templatebutton to 50
          end if
-         create button tControlTypeID in group tView of group "contents"
+         
+         if sViewsData[tView][tControlTypeID]["svgicon"] is empty then
+            create button tControlTypeID in group tView of group "contents"
+         else
+            create widget tControlTypeID as "community.livecode.livecode.svgpath" in group tView of group "contents"
+            set the width of widget tControlTypeID to BLOCK_SIZE * 2
+            set the height of widget tControlTypeID to BLOCK_SIZE
+            set the iconcolor of widget tControlTypeID to 100,100,100
+            set the iconpath of widget tControlTypeID to sViewsData[tView][tControlTypeID]["svgicon"]
+            set the cType of widget tControlTypeID to tView
+            set the cStyle of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
+            set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
+            set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
+            set the cTool of widget tControlTypeID to false
+         end if
          
       end repeat
       
@@ -649,14 +657,17 @@ end mouseDown
 on mouseEnter
    if the cType of the target is empty then exit mouseEnter
    if the cDisabled of the target is true then exit mouseEnter
-   if the cTool of the target is false and the cStatus of the target is not "error" then 
+   if word 1 of the target is "widget" then
+      revIDESetCursor "com.livecode.cursor.grab"
+      set the iconcolor of the target to "255,100,100"
+   else if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
       set the coloroverlay["opacity"] of the target to "50"
       set the coloroverlay["color"] of the target to "0,0,0"
    else if the cStatus of the target is "error" then
       # Not working on windows.. get the egg timer so disabling for now
-       --revIDESetCursor "help"
+      --revIDESetCursor "help"
    else if the cTool of the target is true then
       # We are hovering over a tool
       set the loc of graphic "tool_hover" of group "contents" to the loc of the target
@@ -667,8 +678,12 @@ end mouseEnter
 on mouseLeave
    if the cDisabled of the target is true then exit mouseLeave
    try
-      hide graphic "tool_hover" of group "contents" 
-      set the coloroverlay of the target to empty
+      if word 1 of the target is "widget" then
+         set the iconcolor of the target to "100,100,100"
+      else
+         hide graphic "tool_hover" of group "contents" 
+         set the coloroverlay of the target to empty
+      end if
    end try
    revIDEResetCursor
 end mouseLeave
