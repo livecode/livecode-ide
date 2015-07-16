@@ -380,9 +380,9 @@ private function __organisePropertyInfo pInfoA, pPopup
          put __organisePropertyInfo(pInfoA[tKey]["popup"], true) into tGroupData["proplist"][tKey]["popup"] 
       end if 
       if pPopup then
-         put tGroupData into tOrganisedA["grouplist"][tGroupLabel]
+         union tOrganisedA["grouplist"][tGroupLabel] with tGroupData recursively
       else
-         put tGroupData into tOrganisedA[tSection]["grouplist"][tGroupLabel]
+         union tOrganisedA[tSection]["grouplist"][tGroupLabel] with tGroupData recursively
       end if
    end repeat
    return tOrganisedA
