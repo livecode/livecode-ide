@@ -269,6 +269,9 @@ on rowResize
    local tWidthsA
    put calculateLayout(sOrder) into tWidthsA
    
+   # Fetch the palette padding outside of lock messages
+   local tPadding
+   put the palettePadding of this stack into tPadding
    
    # Position the controllers
    local tEditorSpace, tEditorCount
@@ -338,7 +341,7 @@ on rowResize
          put tEditorHeight into tHeightOfRow
       end if
       
-      add tWidthsA[tLineNumber][tPropNumber] + the palettePadding of this stack to tLeft
+      add tWidthsA[tLineNumber][tPropNumber] + tPadding to tLeft
       put tGroupLongID into tLastGroupLongID
       unlock messages
    end repeat
