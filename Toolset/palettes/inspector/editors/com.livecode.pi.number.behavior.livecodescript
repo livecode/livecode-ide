@@ -144,20 +144,41 @@ on closeField
    valueChanged
 end closeField
 
-on scrollbarDrag pCurrentValue
-   if (the visible of scrollbar "slider" of me is false and the visible of scrollbar "twiddle" of me is false) or pCurrentValue is field 1 of me then
+on scrollbarDrag pValue
+   if the visible of scrollbar "slider" of me is false then
       exit scrollbarDrag
    end if
+   scrollbarValueChanged pValue
+end scrollbarDrag
+
+on scrollbarLineInc
+   if the visible of scrollbar "twiddle" of me is false then
+      exit scrollbarLineInc
+   end if
+   scrollbarValueChanged field 1 of me - 1
+end scrollbarLineInc
+
+on scrollbarLineDec
+   if the visible of scrollbar "twiddle" of me is false then
+      exit scrollbarLineDec
+   end if
+   scrollbarValueChanged field 1 of me + 1
+end scrollbarLineDec
+
+on scrollbarValueChanged pValue
+   if pValue is field 1 of me then
+      exit scrollbarValueChanged
+   end if
    
-   if sMin is a number and pCurrentValue < sMin then
+   if sMin is a number and pValue < sMin then
       put sMin into field 1 of me
-   else if sMax is a number and pCurrentValue > sMax then
+   else if sMax is a number and pValue > sMax then
       put sMax into field 1 of me
    else
-      put pCurrentValue into field 1 of me
+      put pValue into field 1 of me
    end if
    valueChanged
-end scrollbarDrag
+end scrollbarValueChanged
 
 on valueChanged
    if field 1 of me is a number  then
