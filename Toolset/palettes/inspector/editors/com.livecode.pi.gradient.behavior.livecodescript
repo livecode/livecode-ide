@@ -21,13 +21,6 @@ on editorInitialize
    end if
 end editorInitialize
 
-private function firstNonEmpty pLeft, pRight
-   if pLeft is empty then
-      return pRight
-   end if
-   return pLeft
-end firstNonEmpty
-
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled, tProperty
@@ -46,7 +39,6 @@ on editorUpdate
    put tValue["wrap"] into tPopupData["Wrap"]["gradientWrap"]["value"]
    put tValue["ramp"] into tPopupData["Ramp"]["gradientRamp"]["value"]
    
-   set the editorPopupData of me to tPopupData
    set the editorPopupData of me to tPopupData
    
    local tFillData
