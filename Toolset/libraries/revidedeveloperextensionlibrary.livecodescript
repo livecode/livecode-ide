@@ -378,6 +378,12 @@ on revIDEDeveloperExtensionTest pPath
       exit revIDEDeveloperExtensionTest
    end if
    
+   # AL-2015-07-15: [[ Bug ]] If the details of the extension doesn't include an ID, then the compile failed
+   if tDetailsA["id"] is empty then
+      __revIDEDeveloperExtensionSendError "Could not compile module" && pPath
+      exit revIDEDeveloperExtensionTest
+   end if
+   
    if there is not a file (pPath & slash & "module.lcm") then
       __revIDEDeveloperExtensionSendError "No compiled module in" && pPath
       exit revIDEDeveloperExtensionTest
