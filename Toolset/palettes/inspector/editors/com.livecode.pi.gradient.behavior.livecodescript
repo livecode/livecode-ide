@@ -38,6 +38,7 @@ on editorUpdate
    put tValue["mirror"] into tPopupData["Mirror"]["gradientMirror"]["value"]
    put tValue["wrap"] into tPopupData["Wrap"]["gradientWrap"]["value"]
    put tValue["ramp"] into tPopupData["Ramp"]["gradientRamp"]["value"]
+   put tValue["quality"] into tPopupData["Quality"]["gradientQuality"]["value"]
    
    set the editorPopupData of me to tPopupData
    
@@ -57,6 +58,7 @@ on editorUpdate
    put tValue["mirror"] into tFillData["mirror"]
    put tValue["wrap"] into tFillData["wrap"]
    put tValue["ramp"] into tFillData["ramp"]
+   put tValue["quality"] into tFillData["quality"]
    
    lock messages
    set the fillgradient of graphic 1 of me to tFillData
