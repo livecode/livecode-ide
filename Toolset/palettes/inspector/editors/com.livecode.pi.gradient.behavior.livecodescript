@@ -48,7 +48,6 @@ on editorUpdate
       put the loc of graphic 1 of me into tFillData["from"]
       put the right of graphic 1 of me,item 2 of the loc of graphic 1 of me into tFillData["to"]
       put item 1 of the loc of graphic 1 of me,the bottom of graphic 1 of me into tFillData["via"]
-      put tFillData["from"] && return && tFillData["to"] && return && tFillData["via"]
    else
       put the topleft of graphic 1 of me into tFillData["from"]
       put the topright of graphic 1 of me into tFillData["to"]
