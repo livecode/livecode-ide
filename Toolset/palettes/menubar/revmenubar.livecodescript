@@ -2215,13 +2215,25 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack
          break
+      case "Stack Mode"
+         revIDESetModeOfStack tTargetStack, item 2 of pWhich
+         break
+      case "New Substack"
+         revIDENewSubstackOfStack the short name of tTargetStack
+         break
+      case "Close And Remove From Memory"
+         revIDECloseStack tTargetStack, true
+         break
+      case "Standalone Application Settings..."
+         revIDEOpenPalette "Standalone Settings"
+         break
+      case "Save As Standalone Application..."
+         revIDESaveAsStandalone
+         break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
          revIDEAlignControls pTarget, item 2 of pWhich 
          break     
-      case "Stack Mode"
-         revIDESetModeOfStack tTargetStack, item 2 of pWhich
-         break
       case "Send Message"
          revIDESendMessageToObject item 2 of pWhich, pTarget
          break

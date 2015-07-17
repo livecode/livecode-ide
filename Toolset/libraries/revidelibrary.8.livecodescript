@@ -4901,14 +4901,18 @@ on revIDENewSubstack
    # Get the current stack
    local tCurrentStack
    put the short name of the topStack into tCurrentStack
-   if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
+   revIDENewSubstackOfStack tCurrentStack
+end revIDENewSubstack
 
+on revIDENewSubstackOfStack pStack
+   if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
+   
    # Create a new stack
    revIDENewMainstack
-
+   
    # Make the new stack a substack of the current stack
-   set the mainStack of the topStack to tCurrentStack
-end revIDENewSubstack
+   set the mainStack of the topStack to pStack
+end revIDENewSubstackOfStack
 
 /*
 Opens a stack from file.
@@ -7281,6 +7285,23 @@ function revIDEEnsureControlsOfType pControls, pType
    end repeat
    return true
 end revIDEEnsureControlsOfType
+
+on revIDESetModeOfStack pStack, pMode
+   switch pMode
+      case "modeless"
+         modeless pStack
+         break
+      case "palette"
+         palette pStack
+         break
+      case "toplevel"
+         toplevel pStack
+         break
+      case "modal"
+         modal pStack
+         break
+   end switch
+end revIDESetModeOfStack
 
 ////////////////////////////////////////////////////////////////////////////////
 
