@@ -2225,7 +2225,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDECloseStack tTargetStack, true
          break
       case "Standalone Application Settings..."
-         revIDEOpenPalette "Standalone Settings"
+         revIDEStandaloneSettingsForStack the long id of the topStack
          break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone
@@ -2272,7 +2272,7 @@ on revMenubarFileMenuPick pWhich
          revIDESaveAsStandalone the long id of the topStack
          break
       case "Standalone Application Settings..."
-         revIDEOpenPalette "standalone settings"
+         revIDEStandaloneSettingsForStack the long id of the topStack
          break
       case "Move substack to file..."
          revIDEMoveSubstackToFile the long id of the topStack

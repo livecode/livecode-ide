@@ -4521,6 +4521,10 @@ end CreateTemplateForControl
 # Standalone Settings
 #############
 
+on revIDEStandaloneSettingsForStack pStackID
+   send "revStandaloneSettings" && quote & the short name of pStackID & quote to stack "revStandaloneSettings"
+end revIDEStandaloneSettingsForStack
+
 private function __standaloneSettingsInfoFilename
    return "standaloneSettings.txt"
 end __standaloneSettingsInfoFilename
