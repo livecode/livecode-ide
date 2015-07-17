@@ -4740,7 +4740,8 @@ function revIDELocalise pString, pSubstitutions
    repeat for each key tKey in pSubstitutions
       replace ("%" & tKey) with pSubstitutions[tKey] in pString
    end repeat
-   return pString && "(Localised String)"
+   --return pString && "(Localised String)"
+   return pString
 end revIDELocalise
 
 ########################
