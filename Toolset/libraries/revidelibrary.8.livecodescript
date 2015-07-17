@@ -5036,6 +5036,21 @@ on revIDEActionCloseStack
    revIDECloseStack the long ID of stack tStack, false
 end revIDEActionCloseStack
 
+on revIDEDeleteSubstack pSubstackID
+   if the mainstack of pSubstackID is the short name of pSubstackID then
+      # Not a substack
+      exit revIDEDeleteSubstack
+   end if
+   
+   # Detach from mainstack
+   local tStackName
+   put the short name of pSubstackID into tStackName
+   set the mainstack of pSubstackID to tStackName
+   
+   # Close and remove from memory
+   revIDECloseStack the long id of stack tStackName, true
+end revIDEDeleteSubstack
+
 /*
 Returns a list of the recently opened stacks.
 

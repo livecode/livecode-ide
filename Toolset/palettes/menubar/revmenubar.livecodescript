@@ -2224,6 +2224,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Close And Remove From Memory"
          revIDECloseStack tTargetStack, true
          break
+      case "Delete Substack"
+         revIDEDeleteSubstack tTargetStack
+         break
       case "Standalone Application Settings..."
          revIDEStandaloneSettingsForStack the long id of the topStack
          break
