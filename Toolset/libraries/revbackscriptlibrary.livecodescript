@@ -629,7 +629,7 @@ end revSave
 
 # OK-2007-09-26 : Modified to return a value in the result if the stack is not saved
 on revSaveAs pShortName, pSubstackOnly
-   revIDESaveStackAs the long id of stack pShortName, pSubstackOnly
+   revIDEActionSaveStackAs the long id of stack pShortName, pSubstackOnly
 end revSaveAs
 
 function revStackFileVersion pStackFile

@@ -2215,13 +2215,28 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack
          break
+      case "Stack Mode"
+         revIDESetModeOfStack tTargetStack, item 2 of pWhich
+         break
+      case "New Substack"
+         revIDENewSubstackOfStack the short name of tTargetStack
+         break
+      case "Close And Remove From Memory"
+         revIDECloseStack tTargetStack, true
+         break
+      case "Delete Substack"
+         revIDEDeleteSubstack tTargetStack
+         break
+      case "Standalone Application Settings..."
+         revIDEStandaloneSettingsForStack the long id of the topStack
+         break
+      case "Save As Standalone Application..."
+         revIDESaveAsStandalone
+         break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
          revIDEAlignControls pTarget, item 2 of pWhich 
          break     
-      case "Stack Mode"
-         revIDESetModeOfStack tTargetStack, item 2 of pWhich
-         break
       case "Send Message"
          revIDESendMessageToObject item 2 of pWhich, pTarget
          break
@@ -2260,7 +2275,7 @@ on revMenubarFileMenuPick pWhich
          revIDESaveAsStandalone the long id of the topStack
          break
       case "Standalone Application Settings..."
-         revIDEOpenPalette "standalone settings"
+         revIDEStandaloneSettingsForStack the long id of the topStack
          break
       case "Move substack to file..."
          revIDEMoveSubstackToFile the long id of the topStack

@@ -4521,6 +4521,10 @@ end CreateTemplateForControl
 # Standalone Settings
 #############
 
+on revIDEStandaloneSettingsForStack pStackID
+   send "revStandaloneSettings" && quote & the short name of pStackID & quote to stack "revStandaloneSettings"
+end revIDEStandaloneSettingsForStack
+
 private function __standaloneSettingsInfoFilename
    return "standaloneSettings.txt"
 end __standaloneSettingsInfoFilename
@@ -4901,14 +4905,18 @@ on revIDENewSubstack
    # Get the current stack
    local tCurrentStack
    put the short name of the topStack into tCurrentStack
-   if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
+   revIDENewSubstackOfStack tCurrentStack
+end revIDENewSubstack
 
+on revIDENewSubstackOfStack pStack
+   if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
+   
    # Create a new stack
    revIDENewMainstack
-
+   
    # Make the new stack a substack of the current stack
-   set the mainStack of the topStack to tCurrentStack
-end revIDENewSubstack
+   set the mainStack of the topStack to pStack
+end revIDENewSubstackOfStack
 
 /*
 Opens a stack from file.
@@ -5027,6 +5035,21 @@ on revIDEActionCloseStack
 
    revIDECloseStack the long ID of stack tStack, false
 end revIDEActionCloseStack
+
+on revIDEDeleteSubstack pSubstackID
+   if the mainstack of pSubstackID is the short name of pSubstackID then
+      # Not a substack
+      exit revIDEDeleteSubstack
+   end if
+   
+   # Detach from mainstack
+   local tStackName
+   put the short name of pSubstackID into tStackName
+   set the mainstack of pSubstackID to tStackName
+   
+   # Close and remove from memory
+   revIDECloseStack the long id of stack tStackName, true
+end revIDEDeleteSubstack
 
 /*
 Returns a list of the recently opened stacks.
@@ -7281,6 +7304,23 @@ function revIDEEnsureControlsOfType pControls, pType
    end repeat
    return true
 end revIDEEnsureControlsOfType
+
+on revIDESetModeOfStack pStack, pMode
+   switch pMode
+      case "modeless"
+         modeless pStack
+         break
+      case "palette"
+         palette pStack
+         break
+      case "toplevel"
+         toplevel pStack
+         break
+      case "modal"
+         modal pStack
+         break
+   end switch
+end revIDESetModeOfStack
 
 ////////////////////////////////////////////////////////////////////////////////
 
