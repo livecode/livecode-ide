@@ -119,12 +119,12 @@ function revIDEExtensionPropertiesInfo pTypeId
    return tPropInfoA
 end revIDEExtensionPropertiesInfo
 
-function revIDEExtensionWidgetPreferredSize pKind
+function revIDEExtensionProperty pKind, pProperty
    local tExtensionID
    put __extensionCacheID("name", pKind) into tExtensionID
    
-   return __extensionPropertyGet(tExtensionID, "preferredSize")
-end revIDEExtensionWidgetPreferredSize
+   return __extensionPropertyGet(tExtensionID, pProperty)
+end revIDEExtensionProperty
 
 ##############################
 # PRIVATE INSTALLATION PROCESS
