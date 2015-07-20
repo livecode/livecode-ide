@@ -326,7 +326,7 @@ on generatePalette
          if sViewsData[tView][tControlTypeID]["svgicon"] is empty then
             create button tControlTypeID in group tView of group "contents"
          else
-            create widget tControlTypeID as "community.livecode.livecode.svgpath" in group tView of group "contents"
+            create widget tControlTypeID as "com.livecode.widget.svgpath" in group tView of group "contents"
             set the width of widget tControlTypeID to BLOCK_SIZE * 2
             set the height of widget tControlTypeID to BLOCK_SIZE
             set the iconcolor of widget tControlTypeID to 100,100,100
