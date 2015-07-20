@@ -522,6 +522,10 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.gradientrampeditor
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
