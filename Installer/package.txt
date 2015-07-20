@@ -538,6 +538,8 @@ component Extensions
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
 	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.svgpath		
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview
@@ -942,6 +944,7 @@ component Toolset
 		file ide-support:revsaveasstandalone.livecodescript
 		file ide-support:revsblibrary.livecodescript
 	into [[ToolsFolder]]/Toolset/libraries place
+		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
