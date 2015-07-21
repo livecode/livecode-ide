@@ -348,8 +348,8 @@
 	function displayLibraryChooser(){
 		var tHTML = ""
 		$.each(dictionary_data.docs, function(index, libraryData){
-			if(index == tState.selected_api_id) tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'" class="active">'+libraryData.library+'</a></li>';
-			else tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'">'+libraryData.library+'</a></li>';
+			if(index == tState.selected_api_id) tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'" class="active">'+libraryData["display name"]+'</a></li>';
+			else tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'">'+libraryData["display name"]+'</a></li>';
 		});
 	
 		$("#lcdoc_library_chooser_list").html(tHTML);
@@ -841,7 +841,7 @@
 	
 	function library_id_to_name(pID){
 		if(dictionary_data.docs.hasOwnProperty(pID)){
-			return dictionary_data.docs[pID].library;
+			return dictionary_data.docs[pID]["display name"];
 		}
 	}
 	
