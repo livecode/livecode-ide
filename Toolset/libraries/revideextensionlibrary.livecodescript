@@ -705,8 +705,7 @@ private on __removeFromList pNode, @xList
    end if
 end __removeFromList
 
-local sDependencies
-private on __visitNode pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
+private on __visitNode pDependencies, pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
    if pNode is among the lines of xTemporaryMarked then
       return "Error"
    end if
@@ -716,8 +715,8 @@ private on __visitNode pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
       return ""
    end if
    __addToList pNode, xTemporaryMarked
-   repeat for each key tNode in sDependencies[pNode]
-      __visitNode tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
+   repeat for each key tNode in pDependencies[pNode]
+      __visitNode pDependencies, tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
       if the result is not empty then
          return "Error"
       end if
@@ -730,11 +729,10 @@ end __visitNode
 
 private function __dependencyOrder pDependencies, pList
    local tUnmarked, tTemporaryMarked, tMarked, tOrder, tToVisit
-   put pDependencies into sDependencies
    put pList into tUnmarked
    repeat while tUnmarked is not empty
       put any line of tUnmarked into tToVisit
-      __visitNode tToVisit, tUnmarked, tMarked, tTemporaryMarked, tOrder
+      __visitNode pDependencies, tToVisit, tUnmarked, tMarked, tTemporaryMarked, tOrder
       if the result is not empty then
          throw "Circularity in dependencies starting from" && tToVisit
          return empty
@@ -742,6 +740,23 @@ private function __dependencyOrder pDependencies, pList
    end repeat
    return tOrder
 end __dependencyOrder
+
+function revIDEExtensionsOrderByDependency pExtensions
+   # Accumulate an array of dependencies
+   local tDependencies, tRequirements
+   repeat for each line tExtension in pExtensions
+      put revIDEExtensionProperty(tExtension, "requires") into tRequirements
+      repeat for each element tDependent in tRequirements
+         if __extensionIsBuiltin(tDependent) then
+            next repeat
+         end if
+         __addToDependencies tExtension, tDependent, tDependencies
+      end repeat
+   end repeat
+   
+   # Order them
+   return __dependencyOrder(tDependencies, pExtensions)
+end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
