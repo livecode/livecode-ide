@@ -2569,10 +2569,17 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
          create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
          local tSize
-         put revIDEExtensionWidgetPreferredSize(pObjectTypeID) into tSize
+         put revIDEExtensionProperty(pObjectTypeID, "preferredsize") into tSize
          if tSize is not empty then
             set the width of tCreatedControlID to item 1 of tSize
             set the height of tCreatedControlID to item 2 of tSize
+         end if
+         
+         # Set the name of the newly created widget
+         local tName
+         put revIDEExtensionProperty(pObjectTypeID, "title") into tName
+         if tName is not empty then
+            set the name of tCreatedControlID to tName
          end if
       catch tError
          return false
