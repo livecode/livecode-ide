@@ -5,7 +5,7 @@ Users should not notice much difference in terms of its appearance. Some of the 
 been changed, however:
 
 The 'New Mainstack' item now has a submenu with a range of size choices, as well as the option to
-create a script-only stack. Selecting script-only stack will prompt a choice of name, ans subsequently 
+create a script-only stack. Selecting script-only stack will prompt a choice of name, and subsequently 
 open the stack in the script editor.
 
 We have centralised the building and handling of contextual menus in the menubar script, thereby 
@@ -23,7 +23,7 @@ A number of changes have been made to property editors in the property inspector
 	twiddle if it has a step value.
 - The navbar widget now uses a version of itself as an editor for its properties (com.livecode.pi.navbar)
 - A graphic effects property editor has been added (com.livecode.pi.graphiceffect)
-- A gradient property editor has been added (com.livecode.pi.gradient)
+- A gradient property editor has been added (com.livecode.pi.gradientramp)
 - A script property editor has been added, which contains a button to edit the selected script (com.livecode.pi.script)
 - A time zone property editor has been added, which contains a drop-down list of time zones (com.livecode.pi.timezone)
 
