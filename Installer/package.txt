@@ -522,6 +522,10 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.gradientrampeditor
+	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
@@ -537,6 +541,8 @@ component Extensions
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
+	into [[ToolsFolder]]/extensions place
+		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.svgpath		
 	into [[ToolsFolder]]/extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
 	into [[ToolsFolder]]/extensions place
@@ -942,6 +948,7 @@ component Toolset
 		file ide-support:revsaveasstandalone.livecodescript
 		file ide-support:revsblibrary.livecodescript
 	into [[ToolsFolder]]/Toolset/libraries place
+		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
