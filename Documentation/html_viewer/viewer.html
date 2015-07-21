@@ -392,6 +392,7 @@
 					tHTML += '</div>';	
 					break;
 				case "parameters":
+				case "value":
 					if($.isArray(value)){
 						
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -418,20 +419,6 @@
 						tHTML += 'Malformed parameters in JSON';	
 					}
 					
-					break;
-				case "value":
-					if($.isArray(value)){
-						tHTML += '<div class="col-md-2 lcdoc_section_title">value</div><div class="col-md-10" style="margin-bottom:10px">';
-						tHTML += '<div class="table-responsive"><table class="table table-bordered">';
-						tHTML += '<thead><tr><th>Return Type</th><th>Type</th><th>Description</th></tr></thead><tbody>';
-						$.each(value, function(index2, value2) {
-							tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
-						});
-						tHTML += '</tbody></table></div>';
-						tHTML += '</div>';
-					} else {
-						tHTML += 'Malformed parameters in JSON';	
-					}
 					break;
 				case "references":
 					tHTML += '<div class="col-md-2 lcdoc_section_title">Related</div><div class="col-md-10" style="margin-bottom:10px">';
