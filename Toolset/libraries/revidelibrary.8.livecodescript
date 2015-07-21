@@ -3499,6 +3499,7 @@ on revIDEPositionPalette pStackName
             set the topleft of stack pStackName to item 1 of tRect, item 2 of tRect
             break
          case "message box"
+         case "revDictionary"
             set the rect of stack pStackName to tRect
             break
          default 
@@ -3527,6 +3528,9 @@ on revIDEPositionPaletteDefault pStackName
          break
       case "message box"
          set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+         break
+      case "revDictionary"
+         set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
          break
       case "revInspector"
          if revIDEStackIsRevStack(the long ID of the topstack) then
