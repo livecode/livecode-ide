@@ -99,5 +99,5 @@ on valueChanged pProperty, pValue
 end valueChanged
 
 private function defaultramp
-   return "0.00000,255,255,255" & return & "1.00000,0,0,0"
+   return "0,255,255,255" & return & "1,0,0,0"
 end defaultramp

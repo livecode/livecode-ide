@@ -72,8 +72,8 @@ gradientTo	To	Gradients	com.livecode.pi.number	true	false
 gradientVia	Via	Gradients	com.livecode.pi.number	true	false		
 gradientQuality	Quality	Gradients	com.livecode.pi.enum	true	false		Normal	Normal,Good
 gradientRepeat	Repeat	Gradients	com.livecode.pi.integer	true	false		0					1
-gradientMirror	Mirror	Gradients	com.livecode.pi.boolean	true	false
-gradientWrap	Wrap	Gradients	com.livecode.pi.boolean	true	false
+gradientMirror	Mirror	Gradients	com.livecode.pi.boolean	true	false		false
+gradientWrap	Wrap	Gradients	com.livecode.pi.boolean	true	false		false
 height	Height	Position	com.livecode.pi.integer	true	false					1		1
 hGrid	Horizontal grid	Table	com.livecode.pi.boolean	true	false			
 hiliteBorder	Hilite Border	Icons	com.livecode.pi.boolean	true	false			
