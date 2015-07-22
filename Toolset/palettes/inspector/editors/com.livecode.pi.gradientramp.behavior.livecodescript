@@ -40,6 +40,5 @@ on valueChanged
 end valueChanged
 
 on gradientStopsChanged
-   put "Gradient stops" & return & the gradientstops of widget 1
    valueChanged
 end gradientStopsChanged
