@@ -2,20 +2,21 @@
 local sBrowserID, sTab
 
 on preOpenStack
-   local tURL
-   put "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer/viewer.html" into tURL
-   
-   put revBrowserOpenCEF(the windowId of this stack, tUrl) into sBrowserID
-   
+   put revBrowserOpenCEF(the windowId of this stack) into sBrowserID
+   revBrowserAddJavaScriptHandler sBrowserID, "fetchData"
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
 end preOpenStack
 
 on openStack
+   lock screen
    addFrameItem "show_apis","header", "navigation", "API", "f1b3", "f1b3","showAPIs", the long id of me
    addFrameItem "show_guides","header", "navigation", "Guide", "f1b3", "f1b3","showGuides", the long id of me
    
    set the navigationDisplayStyle of me to "names"
    resizeStack
+   hiliteFrameItem "api"
+   showAPIs
+   unlock screen
 end openStack
 
 on resizeStack
@@ -23,13 +24,13 @@ on resizeStack
 end resizeStack
 
 on showAPIs
-   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
    put "api" into sTab
+   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
 end showAPIs
 
 on showGuides
-   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
    put "guide" into sTab
+   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
 end showGuides
 
 on showPreview
@@ -67,5 +68,16 @@ on closeStack
 end closeStack
 
 on browserNavigateComplete
-
+   revBrowserAddJavaScriptHandler sBrowserID, "fetchData"
 end browserNavigateComplete
+
+on fetchData
+   send "setData" to me in 0 millisecs
+end fetchData
+
+on setData
+   local tJSONDataPath
+   put revIDESpecialFolderPath("documentation cache") & slash & "built_" & sTab & ".js" into tJSONDataPath
+   get revBrowserCallScript(sBrowserID, "setData", textDecode(url("binfile:" & tJSONDataPath), "utf-8"))
+   revBrowserRemoveJavaScriptHandler sBrowserID, "fetchData"
+end setData
