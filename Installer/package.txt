@@ -119,7 +119,10 @@ component Misc
 			textfile "ide:about.txt"
 			textfile "ide:IDE License.txt"
 			textfile "ide:Engine License.txt"
-		if TargetEdition is "Commercial" then
+		if TargetEdition is "Indy" then
+			textfile "private:License Agreement.txt"
+			textfile "private:about.txt"
+		if TargetEdition is "Business" then
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
@@ -402,7 +405,7 @@ component Engine.MacOSX
 
 component Runtime.Linux
 	into [[TargetFolder]] place
-		executable linux-[[TargetArchitecture]]:standalone[[EditionTagLower]] as Standalone
+		executable linux-[[TargetArchitecture]]:standalone[[BaseEditionTagLower]] as Standalone
 	into [[TargetFolder]]/Support place
 		executable linux-[[TargetArchitecture]]:revpdfprinter.so
 		executable linux-[[TargetArchitecture]]:revsecurity.so
@@ -411,7 +414,7 @@ component Runtime.Linux
 
 component Runtime.Windows
 	into [[TargetFolder]] place
-		executable windows:standalone[[EditionTagLower]].exe as Standalone
+		executable windows:standalone[[BaseEditionTagLower]].exe as Standalone
 		file "windows:w32-manifest-template.xml"
 		file "windows:w32-manifest-template-dpiaware.xml"
 		file "windows:w32-manifest-template-trustinfo.xml"
@@ -426,7 +429,7 @@ component Runtime.Windows
 
 component Runtime.MacOSX
 	into [[TargetFolder]] place
-		executable macosx:Standalone[[EditionTagUpper]].app as Standalone.app
+		executable macosx:Standalone[[BaseEditionTagUpper]].app as Standalone.app
 	into [[TargetFolder]]/Support place
 		executable macosx:revpdfprinter.bundle
 		executable macosx:revsecurity.dylib
@@ -435,11 +438,11 @@ component Runtime.MacOSX
 
 component Runtime.Android
 	into "[[ToolsFolder]]/Runtime/Android" place
-		file android:Classes[[EditionTagUpper]] as Classes
+		file android:Classes[[BaseEditionTagUpper]] as Classes
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
-		executable android:Standalone[[EditionTagUpper]] as Standalone
+		executable android:Standalone[[BaseEditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml
 		executable android:RevDb
@@ -451,7 +454,7 @@ component Runtime.Android
 
 component Runtime.iOS
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-5_1" place
-		executable ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone
+		executable ios:iphonesimulator5.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphonesimulator5.1/revsecurity.ios-extension as RevSecurity
 		executable ios:iphonesimulator5.1/revpdfprinter.ios-extension as RevPdfPrinter
 		executable ios:iphonesimulator5.1/revzip.ios-extension as RevZip
@@ -466,7 +469,7 @@ component Runtime.iOS
 		file ios:iphonesimulator5.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator5.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
-		executable ios:iphonesimulator6.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator6.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
 		executable ios:iphonesimulator6.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
 		executable ios:iphonesimulator6.1/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
@@ -480,7 +483,7 @@ component Runtime.iOS
 		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator6.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
-		executable ios:iphonesimulator7.1/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator7.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator7.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
 		executable ios:iphonesimulator7.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
 		executable ios:iphonesimulator7.1/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
@@ -494,7 +497,7 @@ component Runtime.iOS
 		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator7.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
-		executable ios:iphonesimulator8.2/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator8.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
 		executable ios:iphonesimulator8.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
 		executable ios:iphonesimulator8.2/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
@@ -509,7 +512,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_4" place
-		executable ios:iphonesimulator8.4/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[EditionTagLower]].app/standalone-mobile[[EditionTagLower]]
+		executable ios:iphonesimulator8.4/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator5.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator8.4/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator5.1/revsecurity.dylib
 		executable ios:iphonesimulator8.4/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator5.1/revpdfprinter.dylib
 		executable ios:iphonesimulator8.4/revzip.ios-extension as RevZip base ios:iphonesimulator5.1/revzip.dylib
@@ -524,7 +527,7 @@ component Runtime.iOS
 		file ios:iphonesimulator8.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator8.4/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
-		executable ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].ios-engine as Standalone
+		executable ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos8.2/revsecurity.ios-extension as RevSecurity
 		executable ios:iphoneos8.2/revpdfprinter.ios-extension as RevPdfPrinter
 		executable ios:iphoneos8.2/revzip.ios-extension as RevZip
@@ -544,7 +547,7 @@ component Runtime.iOS
 		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-8_4" place
-		executable ios:iphoneos8.4/standalone-mobile[[EditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[EditionTagLower]].lcext
+		executable ios:iphoneos8.4/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].lcext
 		executable ios:iphoneos8.4/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
 		executable ios:iphoneos8.4/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
 		executable ios:iphoneos8.4/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
@@ -647,7 +650,7 @@ component Databases.Linux
 	declare dbdriver "ODBC" using dbodbc.so
 	declare dbdriver "PostgreSQL" using dbpostgresql.so
 	declare dbdriver "SqLite" using dbsqlite.so
-	if TargetEdition is "Commercial" then
+	ifnot TargetEdition is "Community" then
 		declare dbdriver "Oracle" using dboracle.so
 
 //////////
@@ -660,14 +663,14 @@ component Databases.Windows
 		executable windows:dbodbc.dll
 		executable windows:dbpostgresql.dll
 		executable windows:dbsqlite.dll
-		if TargetEdition is "Commercial" then
+		ifnot TargetEdition is "Community" then
 			executable private:oracle_libraries/dboracle.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
 	declare dbdriver "PostgreSQL" using dbpostgresql.dll
 	declare dbdriver "SqLite" using dbsqlite.dll
-	if TargetEdition is "Commercial" then
+	ifnot TargetEdition is "Community" then
 		declare dbdriver "Oracle" using dboracle.dll
 	
 //////////
@@ -680,14 +683,14 @@ component Databases.MacOSX
 		executable macosx:dbodbc.bundle
 		executable macosx:dbpostgresql.bundle
 		executable macosx:dbsqlite.bundle
-		if TargetEdition is "Commercial" then
+		ifnot TargetEdition is "Community" then
 			executable private:oracle_libraries/dboracle.bundle
 	declare external "Database" using revdb.bundle
 	declare dbdriver "MySQL" using dbmysql.bundle
 	declare dbdriver "ODBC" using dbodbc.bundle
 	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
 	declare dbdriver "SqLite" using dbsqlite.bundle
-	if TargetEdition is "Commercial" then
+	ifnot TargetEdition is "Community" then
 		declare dbdriver "Oracle" using dboracle.bundle
 
 ////////////////////////////////////////////////////////////////////////////////
