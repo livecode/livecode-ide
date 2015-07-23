@@ -346,7 +346,7 @@ component Documentation
 
 component Engine.Linux
 	into [[TargetFolder]] place
-		executable linux-[[TargetArchitecture]]:LiveCode[[EditionTagLower]] as [[ProductName]].[[TargetArchitecture]]
+		executable linux-[[TargetArchitecture]]:LiveCode[[EditionTagUpper]] as [[ProductName]].[[TargetArchitecture]]
 		executable linux-[[TargetArchitecture]]:revpdfprinter.so
 		executable linux-[[TargetArchitecture]]:revsecurity.so
 
@@ -358,7 +358,7 @@ component Mobile.Linux
 
 component Engine.Windows
 	into [[TargetFolder]] place
-		executable windows:LiveCode[[EditionTagLower]].exe as [[ProductName]].exe
+		executable windows:LiveCode[[EditionTagUpper]].exe as [[ProductName]].exe
 		executable windows:revpdfprinter.dll
 		executable windows:revsecurity.dll
 
