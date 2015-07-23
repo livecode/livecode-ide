@@ -3302,30 +3302,6 @@ on revUpdateAOControls pTarget
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
 
-function revColorToNumber pWhich
-   local tColorTranslation
-   put the cREVColorTranslation of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation includes synonyms
-   if pWhich is item 1 of tColorTranslation
-   then return item 2 to 4 of tColorTranslation
-   
-   local tItemNo
-   put itemOffset(cr & pWhich,tColorTranslation) into tItemNo
-   return line 1 of (item tItemNo+1 to tItemNo+3 of tColorTranslation)
-end revColorToNumber
-
-function revNumberToColor pColor
-   local tColorTranslation
-   put the cREVColorTranslation2 of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation2 doesn't include synonyms
-   --so the name returned is always in fld "Color Names"
-   if pColor is in item -3 to -1 of tColorTranslation then return word 2 of item -4 of tColorTranslation
-   
-   local tLine
-   put lineOffSet(pColor&cr,tColorTranslation) into tLine
-   return item 1 of line tLine of tColorTranslation
-end revNumberToColor
-
 function revComponentVersion pStack
    local tResult
    put empty into tResult
