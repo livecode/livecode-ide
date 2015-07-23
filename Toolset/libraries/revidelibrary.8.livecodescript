@@ -6403,12 +6403,6 @@ function revIDETestCanDeployToTarget pTarget
 end revIDETestCanDeployToTarget
 
 on revIDESetTestTarget pTarget
-
-end revIDESetTestTarget
-
-on revIDEDeployStack pStackID
-
-end revIDEDeployStack
    revIDEDeploySetTarget pTarget
 end revIDESetTestTarget
 
