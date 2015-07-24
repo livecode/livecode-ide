@@ -1353,7 +1353,7 @@ command revInternal__InitialiseTools
   
   set the topLeft of stack "revTools" to the cToolsTopLeft of stack "revPreferences"
   palette "revTools"
-  --choose pointer tool
+  choose pointer tool
   
   --revInternal__ConstrainStack "revTools"  
   
