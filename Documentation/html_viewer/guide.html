@@ -5,7 +5,6 @@
     
     <script src="js/jquery-1.11.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script charset="UTF-8" src="resources/data/guide/built_guide.js"></script>
     <script src="js/marked.js"></script>
     <!--<script src="js/remarkable.min.js"></script>-->
     
@@ -44,13 +43,122 @@
     
     <script src="js/highlight.pack.js"></script> 
     <script>	
+
+   var tUserGuideData;
    
-   $(document).ready(function(e) {
-   		console.log(tUserGuideData.guides);
-   		
-   		var navigation_chooser_html = '';
+	function loadGuide(pGuideName){
+		renderMarkdown(tUserGuideData.guides[pGuideName].data, pGuideName);
+	}
+	
+	function guideExists(pGuideName){
 		$.each(tUserGuideData.guides, function( index, value ) {
-			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.guide+'">'+value.guide+'</a></li>';
+			if(index == pGuideName) return true;
+		});
+		return false;
+	}
+	
+	function guideFirst(){
+		for (first in tUserGuideData.guides) break;
+		return first;
+	}
+	
+	function createCookie(name, value, days) {
+		var expires;
+
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+			expires = "; expires=" + date.toGMTString();
+		} else {
+			expires = "";
+		}
+		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+	}
+
+	function readCookie(name) {
+		var nameEQ = escape(name) + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
+		}
+		return null;
+	}
+
+	function eraseCookie(name) {
+		createCookie(name, "", -1);
+	}
+
+
+	function renderMarkdown(pMarkdown, pGuideIndex){
+		var renderer = new marked.Renderer();
+		var navigation_html = '<ul class="nav bs-docs-sidenav lc_docs_nav">';
+		var current_level = 1;
+	
+		renderer.heading = function (text, level) {
+		  var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+	
+			if(level < 3){
+			
+				if(level == current_level){
+					// We are on the same level so just create another li
+					navigation_html += '</li><li><a href="#'+escapedText+'">'+text+'</a>';	
+				} else if(level < current_level){
+					// we've gone up a level so just close of the sub ul and add an li
+					navigation_html += '</li></ul><li><a href="#'+escapedText+'">'+text+'</a>';
+					current_level = level;
+				} else {
+					// we've gone down a level so create a sub ul
+					navigation_html += '<ul class="nav"><li><a href="#'+escapedText+'">'+text+'</a>';
+					current_level = level;
+				}
+			}
+			return '<h' + level + ' id="' + escapedText + '">' +text + '</h' + level + '>';
+		
+		},
+	
+		// Set the core markdown
+		$("#documentation").html(marked(pMarkdown, { renderer: renderer }));
+		$("#guide_name").html(tUserGuideData.guides[pGuideIndex]["display name"]);
+		$("#nav_holder").html(navigation_html + "</ul>");
+		$("#documentation").scrollspy('refresh');
+		$("#documentation img").addClass("img-responsive");
+		
+		$('pre code').each(function(i, block) {
+		//console.log(block);
+		hljs.highlightBlock(block);
+	});	
+	}
+	
+   $(document).ready(function(e) {   		
+   		$('#guide_chooser_list').on("click","a",function(e){
+   			e.preventDefault();
+   			
+   			$("#guide_chooser_list li").removeClass("active");
+   			$(this).parent().addClass("active");
+   		
+   			loadGuide($(this).attr("guide"));
+   			$(this).html(tUserGuideData.guides[$(this).attr("guide")]["display name"]);
+		});
+   		
+    	getDictionaryData();		
+   });
+   
+	function getDictionaryData()
+	{
+		liveCode.fetchData(); 
+	}
+
+	function setData(pJSON)
+	{
+		tUserGuideData = JSON.parse(pJSON);
+		console.log("SET USER GUIDE DATA");
+		   	
+		var navigation_chooser_html = '';
+		   		
+		$.each(tUserGuideData.guides, function( index, value ) {
+			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.name+'">'+value["display name"]+'</a></li>';
 		});
 		
 		$("#guide_chooser_list").html(navigation_chooser_html);
@@ -65,104 +173,7 @@
    		}	
    		
    		loadGuide(tLastLoadedGuide);
-   		
-   		function loadGuide(pGuideName){
-   			renderMarkdown(tUserGuideData.guides[pGuideName].data, pGuideName);
-   		}
-   		
-   		function guideExists(pGuideName){
-   			$.each(tUserGuideData.guides, function( index, value ) {
-   				if(index == pGuideName) return true;
-   			});
-   			return false;
-   		}
-   		
-   		function guideFirst(){
-   			for (first in tUserGuideData.guides) break;
-   			return first;
-   		}
-   		
-   		function createCookie(name, value, days) {
-			var expires;
-
-			if (days) {
-				var date = new Date();
-				date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-				expires = "; expires=" + date.toGMTString();
-			} else {
-				expires = "";
-			}
-			document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-		}
-
-		function readCookie(name) {
-			var nameEQ = escape(name) + "=";
-			var ca = document.cookie.split(';');
-			for (var i = 0; i < ca.length; i++) {
-				var c = ca[i];
-				while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-				if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
-			}
-			return null;
-		}
-
-		function eraseCookie(name) {
-			createCookie(name, "", -1);
-		}
-   
-
-   		function renderMarkdown(pMarkdown, pGuideIndex){
-			var renderer = new marked.Renderer();
-			var navigation_html = '<ul class="nav bs-docs-sidenav lc_docs_nav">';
-			var current_level = 1;
-		
-			renderer.heading = function (text, level) {
-			  var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-		
-				if(level < 3){
-				
-					if(level == current_level){
-						// We are on the same level so just create another li
-						navigation_html += '</li><li><a href="#'+escapedText+'">'+text+'</a>';	
-					} else if(level < current_level){
-						// we've gone up a level so just close of the sub ul and add an li
-						navigation_html += '</li></ul><li><a href="#'+escapedText+'">'+text+'</a>';
-						current_level = level;
-					} else {
-						// we've gone down a level so create a sub ul
-						navigation_html += '<ul class="nav"><li><a href="#'+escapedText+'">'+text+'</a>';
-						current_level = level;
-					}
-				}
-				return '<h' + level + ' id="' + escapedText + '">' +text + '</h' + level + '>';
-			
-			},
-		
-			// Set the core markdown
-			$("#documentation").html(marked(pMarkdown, { renderer: renderer }));
-			$("#guide_name").html(tUserGuideData.guides[pGuideIndex].guide);
-			$("#nav_holder").html(navigation_html + "</ul>");
-			$("#documentation").scrollspy('refresh');
-			$("#documentation img").addClass("img-responsive");
-			
-			$('pre code').each(function(i, block) {
-			//console.log(block);
-    		hljs.highlightBlock(block);
- 		});	
-   		}
-   		
-   		$('#guide_chooser_list').on("click","a",function(e){
-   			e.preventDefault();
-   			
-   			$("#guide_chooser_list li").removeClass("active");
-   			$(this).parent().addClass("active");
-   		
-   			loadGuide($(this).attr("guide"));
-   			$(this).html($(this).attr("guide_name"));
-		});
-   		
-   		
-   });
+	}
     </script>
 </body>
 </html>
