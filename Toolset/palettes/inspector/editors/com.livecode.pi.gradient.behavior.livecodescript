@@ -74,6 +74,7 @@ on editorResize
    put the rect of me into tRect
    set the rect of graphic 1 of me to the rect of me
    unlock messages
+   editorUpdate
    unlock screen
 end editorResize
 
