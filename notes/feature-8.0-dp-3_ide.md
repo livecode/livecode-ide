@@ -46,3 +46,8 @@ to the point where they are suitable for user stacks, but are included because t
 Finally if present, the svgicon attribute will be used to display an icon for the widget in the tools palette, 
 taking precedence over the included icon resources.
 
+# Standalone Settings
+
+A field has been added to the Copy Files tab of the standalone settings which is populated with the list of currently 
+installed extensions. All selected extensions from this list are included in standalones and loaded when the standalone 
+is launched. 'Use' dependencies are automatically calculated and included along with the top-level widget.
