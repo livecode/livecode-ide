@@ -1,6 +1,6 @@
 type	widget
 
-Property	Default	Options	Group
+Property	Default	Options	Group	Read Only	Section
 ----------------------------------------------------------------------------------------------------
 name	Widget	
 kind
@@ -23,4 +23,4 @@ layer
 textFont
 textAlign
 textSize
-traversalOn
+traversalOn					Advanced

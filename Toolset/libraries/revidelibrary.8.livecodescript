@@ -428,7 +428,14 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          end if
          
          put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         put pPropInfoA[tPropertyName]["section"] into tSection
+         
+         # Override the section if necessary
+         put item 6 of tLine into tSection
+         if tSection is empty then
+            put pPropInfoA[tPropertyName]["section"] into tSection
+         else
+            put tSection into pPropInfoA[tPropertyName]["section"]
+         end if
          
          # The groups are ordered by their appearance in the spec file
          if tGroupCountsA[tSection][tGroupLabel] is empty then
