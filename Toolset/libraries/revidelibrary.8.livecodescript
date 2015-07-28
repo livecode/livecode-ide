@@ -7982,7 +7982,8 @@ private function revIDEGetDocsGuideData
          
          if tGuide is not empty then
             put "{" & CR after tExtensionGuide
-            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put tab & quote & "name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put tab & quote & "display name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             

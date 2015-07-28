@@ -50,7 +50,7 @@
    		
    		var navigation_chooser_html = '';
 		$.each(tUserGuideData.guides, function( index, value ) {
-			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.guide+'">'+value.guide+'</a></li>';
+			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.name+'">'+value["display name"]+'</a></li>';
 		});
 		
 		$("#guide_chooser_list").html(navigation_chooser_html);
@@ -140,7 +140,7 @@
 		
 			// Set the core markdown
 			$("#documentation").html(marked(pMarkdown, { renderer: renderer }));
-			$("#guide_name").html(tUserGuideData.guides[pGuideIndex].guide);
+			$("#guide_name").html(tUserGuideData.guides[pGuideIndex]["display name"]);
 			$("#nav_holder").html(navigation_html + "</ul>");
 			$("#documentation").scrollspy('refresh');
 			$("#documentation img").addClass("img-responsive");
@@ -158,7 +158,7 @@
    			$(this).parent().addClass("active");
    		
    			loadGuide($(this).attr("guide"));
-   			$(this).html($(this).attr("guide_name"));
+   			$(this).html(tUserGuideData.guides[$(this).attr("guide")]["display name"]);
 		});
    		
    		
