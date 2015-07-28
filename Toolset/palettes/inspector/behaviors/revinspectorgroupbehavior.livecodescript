@@ -192,6 +192,7 @@ function calculateLayout pProps
    
    # Calculate the amount of extra space beyond the min widths of all the editors
    subtract tMinTotal from tAvailableSpace
+   subtract (the palettePadding of this stack * (the number of elements in tMinMaxA - 1)) from tAvailableSpace
    put expandedToFit(tMinMaxA, tAvailableSpace) into tLayoutA[1]
    return tLayoutA
 end calculateLayout
