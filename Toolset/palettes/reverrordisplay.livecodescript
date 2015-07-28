@@ -3,8 +3,12 @@
 local sLCBErrorCode
 
 on resizeStack
-  revUpdateGeometry
-  updateStoredRect
+   revUpdateGeometry
+   updateStoredRect
+   set the rect of field "Error" of group "errordisplay" of me to 0,0,the width of me, the height of me - 50
+   set the loc of button "Ignore" of group "errordisplay" of me to "-50,437"
+   set the loc of button "Script" of group "errordisplay" of me to the width of me / 2, the height of me - 25
+   set the loc of button "Debug" of group "errordisplay" of me to "-50,403"
 end resizeStack
 
 # OK-2007-07-02: Bug 5203
@@ -67,23 +71,18 @@ on preOpenStack
    set the lockText of it to true
    set the dontwrap of it to true
    set the tabstops of it to "60,2000"
-   set the rect of it to "0,0,800,434"
    set the margins of it to "8,14,8,8"
    set the bordercolor of it to "220,220,220"
    set the showfocusborder of it to false
    create button "Ignore" in group "errordisplay"
-   set the loc of it to "-50,437"
    create button "Script" in group "errorDisplay"
-   set the loc of it to "402,461"
    create button "Debug" in group "errordisplay"
-   set the loc of it to "-50,403"
-   
    reset the templatebutton
-   
    unlock messages
 end preOpenStack
 
 on openStack
+   resizeStack
    show me
 end openStack
 
