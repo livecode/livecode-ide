@@ -5610,7 +5610,7 @@ on revIDESaveStackAs pStackID, pFileName
    save pStackID as pFileName
    
    local tShortName
-   put the short name of stack pStackID
+   put the short name of stack pStackID into tShortName
    if the result is not empty then
       local tLocaliseSubstitutions
       put tShortName into tLocaliseSubstitutions[1]
