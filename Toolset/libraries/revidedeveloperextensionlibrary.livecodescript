@@ -278,13 +278,13 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    put the defaultfolder into tOldDefaultFolder
    set the defaultfolder to pFolder
    local tResources, tResource, tPrefix
+   if pPrefix is not empty then
+      put pPrefix & slash into tPrefix
+   end if
+   
    # Add files to the list of resources
    repeat for each line tResource in the files
       if tResource begins with "." then next repeat
-      if pPrefix is not empty then
-         put pPrefix & slash into tPrefix
-      end if
-      
       if tResources is empty then
          put tPrefix & tResource into tResources
       else
