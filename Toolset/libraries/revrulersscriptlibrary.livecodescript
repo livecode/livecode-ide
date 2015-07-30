@@ -150,7 +150,7 @@ on mouseMove x,y
 end mouseMove
 
 on mouseDown
-  if lPaused and word 1 of the target is "card" then send "resumeStack" to me
+  if lPaused and word 1 of the target is "card" then send "resumeStack" to btn "revRulersScript" of stack "revLibrary"
   pass mouseDown
 end mouseDown
 
