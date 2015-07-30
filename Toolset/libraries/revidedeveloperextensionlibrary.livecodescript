@@ -266,18 +266,35 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tResourceFolder, tResources
    put pFolder & slash & "resources" into tResourceFolder
    if there is a folder tResourceFolder then
-      set the defaultfolder to tResourceFolder
-      local tResource
-      repeat for each line tResource in the files
-         if tResource begins with "." then next repeat
-         put tResource & CR after tResources
-      end repeat
-      delete the last char of tResources
+      put __revIDEDeveloperExtensionListResourcesRecursive(tResourceFolder, "") into tResources
       put tResources into tDetailsA["resources"]
    end if
    
-   return tDetailsA
+   return tDetailsA 
 end __revIDEDeveloperExtensionFetchFolderDetails
+
+private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
+   local tOldDefaultFolder
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultfolder to pFolder
+   local tResources, tResource, tPrefix
+   # Add files to the list of resources
+   repeat for each line tResource in the files
+      if tResource begins with "." then next repeat
+      if pPrefix is not empty then
+         put pPrefix & slash into tPrefix
+      end if
+      put tPrefix & tResource & CR after tResources
+   end repeat
+   # Add folders to the list of resources
+   repeat for each line tResourceFolder in the folders
+      if tResourceFolder begins with "." then next repeat
+      put __revIDEDeveloperExtensionListResourcesRecursive(pFolder & slash & tResourceFolder, tPrefix & tResourceFolder) & CR after tResources
+   end repeat
+   delete the last char of tResources
+   set the defaultfolder to tOldDefaultFolder
+   return tResources
+end __revIDEDeveloperExtensionListResourcesRecursive
 
 private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    local tDetailsA
@@ -296,7 +313,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    else
       # The compiled module or manifest is not up to date, so compile.
       __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
-      __revIDEDeveloperCompileModule pFile, pFolder
+      __revIDEDeveloperCompileModule pFolder & slash & pFile, pFolder
       
       if the result is not empty then
          # This may be better as a warning, and try to parse info direct from the file.
@@ -939,10 +956,9 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    
    # Add resources
    if tError is empty and pResourcesFolder is not empty then
-      set the defaultfolder to pResourcesFolder
-      local tFiles
-      put the files into tFiles
-      repeat for each line tLine in tFiles
+      local tResources
+      put __revIDEDeveloperExtensionListResourcesRecursive(pResourcesFolder, "") into tResources
+      repeat for each line tLine in tResources
          revZipAddItemWithFile pArchive, "resources/" & tLine, pResourcesFolder & slash & tLine
          
          if the result begins with "ziperr" then
