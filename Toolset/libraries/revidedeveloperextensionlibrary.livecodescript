@@ -284,14 +284,27 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
       if pPrefix is not empty then
          put pPrefix & slash into tPrefix
       end if
-      put tPrefix & tResource & CR after tResources
+      
+      if tResources is empty then
+         put tPrefix & tResource into tResources
+      else
+         put return & tPrefix & tResource after tResources
+      end if
    end repeat
+   
    # Add folders to the list of resources
    repeat for each line tResourceFolder in the folders
       if tResourceFolder begins with "." then next repeat
-      put __revIDEDeveloperExtensionListResourcesRecursive(pFolder & slash & tResourceFolder, tPrefix & tResourceFolder) & CR after tResources
+      local tRecursive
+      put __revIDEDeveloperExtensionListResourcesRecursive(pFolder & slash & tResourceFolder, tPrefix & tResourceFolder) into tRecursive
+      if tRecursive is not empty then
+         if tResources is empty then
+            put tRecursive into tResources
+         else
+            put return & tRecursive after tResources
+         end if
+      end if
    end repeat
-   delete the last char of tResources
    set the defaultfolder to tOldDefaultFolder
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
