@@ -864,7 +864,12 @@ on __extensionLoad pID, pExtensionDataA
    
    local tStatus, tError
    if tToLoadA["status"] is not "error" then
-      load extension from file (tToLoadA["install_path"] & slash & "module.lcm")
+      # If we have a resources folder then load with resource path
+      if there is a folder (tToLoadA["install_path"] & slash & "resources") then
+         load extension from file (tToLoadA["install_path"] & slash & "module.lcm") with resource path (tToLoadA["install_path"] & slash & "resources")
+      else
+         load extension from file (tToLoadA["install_path"] & slash & "module.lcm")
+      end if
       if the result is not empty then
          put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
          put "error" into tStatus
