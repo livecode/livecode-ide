@@ -1747,6 +1747,8 @@ on revCalculateRulers
 end revCalculateRulers
 
 on revPartCalculateRulers
+   -- lock/unlock screen to prevent flickering when moving the stack and rulers are enabled
+   lock screen
    lock messages
    --this can be done with flicker by altering the width first, then the topLeft
    
@@ -1780,6 +1782,7 @@ on revPartCalculateRulers
    set the cREVVSubtract of stack "revRulersV" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersV"
    set the cREVCurrentStack of stack "revRulersH" to the short name of the topStack
    unlock messages
+   unlock screen
 end revPartCalculateRulers
 
 ---------------------------------------- end of Rulers ----------------------------------------
