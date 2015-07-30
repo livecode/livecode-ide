@@ -10,8 +10,7 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
-   
-   put tValue
+
    lock messages
    set the gradientstops of widget 1 of me to tValue
    unlock messages
