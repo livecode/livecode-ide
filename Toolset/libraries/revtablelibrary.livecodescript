@@ -1527,7 +1527,8 @@ on revCalculateCellRect pObject
       end if
     else
       put txpixel + txspacing into txpixel
-      put txpixel + txfieldloc into trightrect
+      // SN-17-08-2015: [[ Bug 15522 ]] Fix by Bernd Niggemann (see bug report 15522)
+      put txpixel into trightrect
       put trightrect - txspacing into tleftrect
     end if
   end repeat
