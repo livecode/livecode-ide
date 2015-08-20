@@ -244,30 +244,14 @@ on suspendStack
 end suspendStack
 
 on newStack
-   send "revSetActiveStacks" to me in 10 milliseconds
+   revSetActiveStacks
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
       pass newStack
    end if
 end newStack
 
 on revSetActiveStacks
-   global gREVShutdown
-   --update the topmost stack the message box is operating on if applicable
-   switch
-      case the mode of stack "Message Box" is 0
-      case the cREVLockedtoStack of stack "Message Box"
-      case the cREVDebugMode of stack "Message Box"
-         --exit criteria
-         break
-      default
-         if the short name of this cd of stack "Message Box" is among the items of "Single Line,Multiple Lines" then
-            set the cREVActiveStack of stack "Message Box" to the short name of the topStack
-            send "menuPick the short name of the topStack" to btn "Open Stacks" of this cd of stack "Message Box"
-         end if
-         break
-   end switch
-
-   send "revUpdatePaletteStack" to stack "revBackScriptLibrary" in 100 milliseconds
+   revIDEMessageSend "ideActiveStacksChanged"
 end revSetActiveStacks
 
 
