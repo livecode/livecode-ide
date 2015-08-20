@@ -2989,6 +2989,104 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
+on revIDEDistributeObjects pObjects, pHorizontally, pType
+   local tNumberOfObjects
+   put the number of lines in pObjects into tNumberOfObjects
+   
+   local tSize
+   put 0 into tSize
+   
+   local tPerSpace, tOffset
+   switch pType
+      case "First to last selected"
+         if tNumberOfObjects < 3 then exit to top
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects 
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         local tFirstObj, tLastObj
+         put line 1 of pObjects into tFirstObj
+         put line tNumberOfObjects of pObjects into tLastObj
+         
+         local tStartCoord, tEndCoord
+         if pHorizontally then
+            put the right of tFirstObj into tStartCoord
+            put the left of tLastObj into tEndCoord
+         else
+            put the bottom of tFirstObj into tStartCoord
+            put the top of tLastObj into tEndCoord
+         end if 
+         put (tEndCoord - tStartCoord - tSize) / (tNumberOfObjects -1) into tPerSpace
+         put tStartCoord + tPerSpace into tOffset
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Across card"
+         if tNumberOfObjects < 1 then exit to top
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         get line 1 of pObjects
+         local tCardName, tCardSize
+         put word 5 to (the number of words in it) of it into tCardName
+         if pHorizontally then
+            put the width of tCardName into tCardSize
+         else
+            put the height of tCardName into tCardSize
+         end if
+         put (tCardSize - tSize) / (tNumberOfObjects + 1) into tPerSpace
+         put tPerSpace into tOffset
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Edge to edge"
+         if tNumberOfObjects < 2 then exit to top
+         local tPrevObj, tNextObj
+         repeat with i = 2 to tNumberOfObjects
+            put line i of pObjects into tNextObj
+            put line (i - 1) of pObjects into tPrevObj
+            if pHorizontally then
+               set the left of tNextObj to the right of tPrevObj
+            else             
+               set the top of tNextObj to the bottom of tPrevObj
+            end if
+            send "revCacheGeometry true" to tNextObj
+         end repeat
+         break
+   end switch
+end revIDEDistributeObjects
+
+on revIDEActionDistributeObjects pHorizontally, pType
+   revIDEDistributeObjects the selobj, pHorizontally, pType
+end revIDEActionDistributeObjects
+
 on revIDECenterControls pControls, pPosition
    local tInitialControl,tInitialLoc, tPositionValue, tNewLoc, tObject, tObjectLoc
 
