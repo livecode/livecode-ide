@@ -42,6 +42,7 @@ on subscribeMessages
    revIDESubscribe "ideWindowsChanged"
    
    revIDESubscribe "ideTutorialProgressChanged"
+   revIDESubscribe "ideActiveStacksChanged"
 end subscribeMessages
 
 local sTextMenuDisabledText, sTextMenuText, sPluginMenuText
@@ -244,6 +245,10 @@ end setMenuProperties
 on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
+
+on ideActiveStacksChanged
+   layoutMenu
+end ideActiveStacksChanged
 
 on ideTutorialProgressChanged
    highlightObject empty
