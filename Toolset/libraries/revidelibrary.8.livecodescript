@@ -4826,6 +4826,9 @@ on revIDENewMainstack pWidth, pHeight
    
    # Send the 'ideNewStack' message
    revIDEMessageSend "ideNewStack", it
+   
+   # Update the active stacks
+   revIDEMessageSend "ideActiveStacksChanged"
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
