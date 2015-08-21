@@ -682,7 +682,15 @@ end __fetchModuleData
 
 private function __extensionIsBuiltin pID
    set the itemdelimiter to "."
-   return the number of items in pID is 3
+   if the number of items in pID is 3 then
+      return true
+   end if
+   
+   if pID is "com.livecode.extensions.libbrowser" then
+      return true
+   end if
+   
+   return false
 end __extensionIsBuiltin
 
 private on __addToDependencies pDependee, pDependent, @xDependencies
