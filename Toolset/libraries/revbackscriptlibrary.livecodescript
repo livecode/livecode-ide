@@ -2172,11 +2172,16 @@ function revRuggedId pObject
    # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
    #    is in a different form than this expects. Thus we temporarily fetch it while hcAddressing
    #    is false.
-   if the hcAddressing of tStack then
-      set the hcAddressing of tStack to false
-      put the long id of pObject into tObject
-      set the hcAddressing of tStack to true
-   end if
+   # MDW-2015-08-21: [[ bugfix_revRuggedId ]] tStack is empty when creating a new stack
+   try
+	  if the hcAddressing of tStack then
+		 set the hcAddressing of tStack to false
+		 put the long id of pObject into tObject
+		 set the hcAddressing of tStack to true
+	  end if
+   catch e
+      -- ignore the error and carry on
+   end try
    
    local tType
    put word 1 of tObject into tType
