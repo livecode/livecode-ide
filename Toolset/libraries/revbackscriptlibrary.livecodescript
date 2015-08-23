@@ -2132,6 +2132,10 @@ function revRuggedId pObject
       put the long id of pObject into tObject
    else
       put pObject into tObject
+      # MDW-2015-08-21: [[ bugfix_revRuggedId ]] pObject is empty when creating a new object
+      if tObject is empty then
+         put the long id of the target into tObject
+      end if
    end if
    
    # Find out what the name of the stack owning the object is. We are only interested in the 
