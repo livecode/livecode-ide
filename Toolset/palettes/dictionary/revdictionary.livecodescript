@@ -2,20 +2,22 @@
 local sBrowserID, sTab
 
 on preOpenStack
+   send "openBrowser" to me in 0 millisecs
+   dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
+end preOpenStack
+
+on openBrowser
    local tURL
    put "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer/viewer.html" into tURL
    
    put revBrowserOpenCEF(the windowId of this stack, tUrl) into sBrowserID
-   
-   dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
-end preOpenStack
+end openBrowser
 
 on openStack
    addFrameItem "show_apis","header", "navigation", "API", "f1b3", "f1b3","showAPIs", the long id of me
    addFrameItem "show_guides","header", "navigation", "Guide", "f1b3", "f1b3","showGuides", the long id of me
    
    set the navigationDisplayStyle of me to "names"
-   resizeStack
    set the cantModify of me to true
 end openStack
 
@@ -68,5 +70,5 @@ on closeStack
 end closeStack
 
 on browserNavigateComplete
-
+   resizeStack
 end browserNavigateComplete
