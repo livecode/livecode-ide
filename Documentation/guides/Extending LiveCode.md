@@ -180,25 +180,29 @@ LiveCode builder contains the following modules:
 Module|Type|Description
 ---|---|---
 com.livecode.canvas|Optional|Provides the syntax and types for 2D drawing allowing developers to draw to a canvas. Required if creating a widget.
-com.livecode.Widget|Optional|Contains syntax specific to widget building such as "my width" and "the mouse position".
-com.livecode.Engine|Optional|Contains syntax for all extension building such as "dispatch" and "log".
-com.livecode.stream|Default|
-com.livecode.file|Default|
-com.livecode.mathfoundation|Default|
-com.livecode.array|Default|
-com.livecode.list|Default|
-com.livecode.arithmetic|Default|
-com.livecode.binary|Default|
-com.livecode.bitwise|Default|
-com.livecode.byte|Default|
-com.livecode.char|Default|
-com.livecode.date|Default|
-com.livecode.logic|Default|
-com.livecode.math|Default|
-com.livecode.sort|Default|
-com.livecode.string|Default|
-com.livecode.system|Default|
-com.livecode.type|Default|
+com.livecode.widget|Optional|Contains syntax specific to widget building such as "my width" and "the mouse position".
+com.livecode.engine|Optional|Contains syntax for all extension building such as "dispatch" and "log".
+com.livecode.arithmetic|Default|Contains syntax for basic mathematical operations.
+com.livecode.array|Default|Contains syntax for operations on arrays.
+com.livecode.binary|Default|Contains syntax for operations on binary data.
+com.livecode.bitwise|Default|Contains syntax for bitwise logical operators.
+com.livecode.byte|Default|Contains syntax for operations on byte chunks.
+com.livecode.char|Default|Contains syntax for operations on char chunks.
+com.livecode.codeunit|Default|Contains syntax for operations on codeunit chunks.
+com.livecode.date|Default|Contains syntax for accessing the date and time.
+com.livecode.file|Default|Contains syntax for file I/O operations.
+com.livecode.foreign|Default|Provides the type bindings for foreign types.
+com.livecode.list|Default|Contains syntax for operations on lists.
+com.livecode.logic|Default|Contains syntax for logical operators.
+com.livecode.mathfoundation|Default|Contains syntax for foundational mathematical operations.
+com.livecode.math|Default|Contains syntax for mathematical operations.
+com.livecode.sort|Default|Contains syntax for sorting operations.
+com.livecode.stream|Default|Contains syntax for stream I/O operations.
+com.livecode.string|Default|Contains syntax for operations on strings.
+com.livecode.system|Default|Contains syntax for accessing system information.
+com.livecode.type|Default|Contains syntax for general operations on types.
+com.livecode.typeconvert|Default|Contains syntax for conversions between types.
+com.livecode.unittest|Default|Contains syntax for unit testing LiveCode Builder programs.
 
 > **Warning!** Module names are subject to change.
 
@@ -225,13 +229,13 @@ There are three core handlers that any widget developer should implement:
 
 Handler|Description
 ------|------
-onPaint|The *onPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of you widget is tied primarily to this handler and should be kept as efficient as possible.
-onCreate|The *onCreate* message is sent to your widget when it is first created by LiveCode. This can be used to initialise default data and where applicable, reduce the burden for calculating constants etc in the onPaint handler.
-onGeometryChanged| The *onGeometryChanged* message is sent when the control is changed in size.
-onSave| The *onSave* message is sent when your widget is about to be destroyed and enables the widget to save data set on the widget.
-onLoad| The *onLoad* message is sent when your widget is created and enables the widget to retrieve data saved on the widget.
+OnPaint|The *OnPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of you widget is tied primarily to this handler and should be kept as efficient as possible.
+OnCreate|The *OnCreate* message is sent to your widget when it is first created by LiveCode. This can be used to initialise default data and where applicable, reduce the burden for calculating constants etc in the onPaint handler.
+OnGeometryChanged| The *OnGeometryChanged* message is sent when the control is changed in size.
+OnSave| The *OnSave* message is sent when your widget is about to be destroyed and enables the widget to save data set on the widget.
+OnLoad| The *OnLoad* message is sent when your widget is created and enables the widget to retrieve data saved on the widget.
 
-For the most basic example, only the onPaint() handler is required.
+For the most basic example, only the OnPaint() handler is required.
 
 ```
 widget community.livecode.beaumont.pinkCircle
@@ -275,12 +279,9 @@ end widget
 
 ![enter image description here](images/extensions-widget-first.png)
 
-1. Notice that I'm using textWrangler
-2. Click test
-3. Your widget should be displayed on the new stack. If you can't see it, check behind the extension plugin.
-
-> Note: There is a colorising script for textWrangler here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
-
+Click test. Your widget should be displayed on the new stack. If you can't see it, check behind the extension plugin. In this screenshot TextWrangler is being to edit LiveCode Builder scripts. 
+We recommend using the Atom text editor, available at https://atom.io/, for which there is a LiveCode package available. This will provide some colorization as well as indentation. 
+If you prefer to use TextWrangler, there is a colorising script here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
 
 ### Properties
 In order to make a widget useful to end users it is likely that you'll want to expose properties that allow them to specify how your widget should behave. 
@@ -429,6 +430,114 @@ create widget <name> as <identifier>
 e.g.
 
 create widget "myWidget" as "com.livecode.extensions.waddingham.clock" 
+```
+
+### Composed Widgets
+Widgets can either be 'host' widgets, as in the previous example, created when a widget is directly embedded in a stack, or 'child' widgets which are created when a widget is used as a child widget within another widget.
+The syntax for composed widgets is included in the com.livecode.widget module.
+
+### A simple composed widget
+This composed widget example composes the clock widget and the selector widget, to create a version of the clock widget with adjustable time zone.
+![enter image description here](images/extensions-widget-first.png)
+The label at the top of the widget reflects which portion of the widget the mouse is over.
+
+```
+widget com.livecode.extensions.example.simplecomposed
+
+use com.livecode.canvas
+use com.livecode.widget
+
+metadata title is "Simple Composed Widget"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+
+private variable mInsideChild as String
+private variable mInside as Boolean
+
+private variable mSelector as Widget
+private variable mClock as Widget
+
+public handler OnCreate()
+    put false into mInside
+    put the empty string into mInsideChild
+
+    put a new widget "com.livecode.extensions.livecode.selector" into mSelector
+    set property "numSelections" of mSelector to 6
+    set annotation "Name" of mSelector to "Selector"
+
+    put a new widget "com.livecode.extensions.livecode.clock" into mClock
+    set annotation "Name" of mClock to "Clock"
+
+    place mSelector
+    place mClock
+end handler
+```
+Notice that Widget is a variable type. This widget stores references to its child widgets in private variables.
+In the OnCreate handler, the widget objects are created, stored in the private variables and 'placed'. Child widgets can be stored as variables and manipulated without actually being drawn to a canvas if they are unplaced.
+Properties implemented by child widgets can be got and set using the ```property <propName> of <child widget>``` syntax.
+Placing a widget ensures that they are drawn, in placement order. Setting an annotation of a child widget assigns it a tag so that when an unknown child widget is returned by an operator, its annotation can be used to identify it.
+
+```
+public handler OnMouseEnter()
+    put true into mInside
+    
+    if the target is not nothing then
+        put annotation "Name" of the target into mInsideChild
+    end if
+
+    redraw all
+end handler
+
+public handler OnMouseLeave()
+    if the target is not nothing then
+        put the empty string into mInsideChild
+    end if
+
+    put false into mInside
+
+    redraw all
+end handler
+```
+
+In the *OnMouseEnter* and *OnMouseLeave* handlers, *the target* is used to obtain a reference to the child widget that triggered the *OnMouseEnter* and *OnMouseLeave* events, and the previously assigned annotation put into the mInsideChild variable, which in turn is rendered to the canvas in the *OnPaint* handler.
+
+```
+public handler OnPaint()
+    set the paint of this canvas to solid paint with color [0.75, 0.75, 0.75]
+    fill rectangle path of my bounds on this canvas
+    
+    if mInside then
+        set the paint of this canvas to solid paint with color [1.0, 0.0, 0.0]
+        set the stroke width of this canvas to 4.0
+        stroke rectangle path of my bounds on this canvas
+    end if
+    
+    if mInsideChild is not the empty string then
+        set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
+        fill text mInsideChild at top of my bounds on this canvas
+    end if
+end handler
+```
+
+The rectangle of each child widget is controlled using the following syntax:
+* ```the rectangle of <widget>``` - Enables manipulation of the rectangle property of a child widget.
+* ```the width of <widget>``` - Enables manipulation of the width property of a child widget.
+* ```the height of <widget>``` - Enables manipulation of the height property of a child widget.
+* ```the location of <widget>``` - Enables manipulation of the location property of a child widget.
+
+```
+public handler OnGeometryChanged()
+    set the rectangle of mSelector to rectangle [ 0, 20, my width, 50 ]
+    set the rectangle of mClock to rectangle [ 0, 50, my width, my height ]
+end handler
+```
+
+Finally, messages posted by child widgets can be handled in the direct parent by handling the appropriate message (prepending 'On'). For example, the selector widget posts *optionChanged* when one of its numbers is selected. This is handled by this composed widget example in an *OnOptionChanged* handler.
+
+```
+public handler OnOptionChanged(in pIndex)
+    set property "timeZone" of mClock to pIndex - 1
+end handler
 ```
 
 ## Documenting Your Extension
@@ -794,7 +903,7 @@ It is highly recommended that any time you interface with things outside LiveCod
 
 It is not, in general, possible to reliably auto-detect text encodings so please check the documentation for the programme you are communicating with to find out what it expects. If in doubt, try UTF-8.
 
-References: textDecode.function
+References: textDecode (function)
 ```
 
 #### Library example
@@ -980,6 +1089,7 @@ The section attribute controls which tab of the property inspector contains the 
 * Icons
 * Position
 * Text
+* Advanced
 
 But in the future it may be possible to specify custom sections.
 
@@ -1039,8 +1149,9 @@ The following editors are built-in, and available to use for widget properties w
 * com.livecode.pi.colorwithalpha - a color swatch and dialog, and alpha value slider
 * com.livecode.pi.enum - an option menu
 * com.livecode.pi.file - a file selector
-* com.livecode.pi.number - a single-line field with increment/decrement twiddle
+* com.livecode.pi.number - a single-line field with optional increment/decrement twiddle and slider
 * com.livecode.pi.pattern - a pattern selector
+* com.livecode.pi.script - a text field with an object reference, and an edit script button
 * com.livecode.pi.set - a field with multi-select list behavior
 * com.livecode.pi.string - a single-line field
 * com.livecode.pi.text - a multi-line field
@@ -1051,6 +1162,10 @@ There are also some bespoke editors for particular object properties:
 * com.livecode.pi.datagrid 
 * com.livecode.pi.textalign
 * com.livecode.pi.textstyle
+* com.livecode.pi.navbar
+* com.livecode.pi.graphiceffect
+* com.livecode.pi.gradient
+* com.livecode.pi.timezone
 
 It is our intention that ultimately a widget alone will be able to function as a property editor, however currently this feature is not available.
 
@@ -1109,15 +1224,15 @@ LiveCode Builder is a typed language, although typing is completely optional in 
 
 The range of core types is relatively small, comprising the following:
 
- - **undefined**: the single value *undefined*
- - **boolean**: one of *true* or *false*
- - **integer**: any integral numeric value (size limitations apply)
- - **real**: any numeric value (size and accuracy limitations apply)
- - **number**: any integer or real value
- - **string**: a sequence of UTF-16 code units
- - **data**: a sequence of bytes
- - **list**: a sequence of any values
- - **array**: a mapping from strings to values
+ - **nothing**: the single value *nothing*
+ - **Boolean**: one of *true* or *false*
+ - **Integer**: any integral numeric value (size limitations apply)
+ - **Real**: any numeric value (size and accuracy limitations apply)
+ - **Number**: any integer or real value
+ - **String**: a sequence of UTF-16 code units
+ - **Data**: a sequence of bytes
+ - **List**: a sequence of any values
+ - **Array**: a mapping from strings to values
  - **any**: a value of any type
 
 Additionally, all types can be annotated with **optional**. An optional annotation means the value may be the original type or the undefined value.
@@ -1211,16 +1326,16 @@ A type definition defines an alias, it names the given type with the given Name,
       : <Name: Identifier>
       | 'optional' <Target: Type>
       | 'any'
-      | 'boolean'
-      | 'integer'
-      | 'real'
-      | 'number'
-      | 'string'
-      | 'data'
-      | 'array'
-      | 'list'
-      | 'undefined'
-      | 'pointer'
+      | 'Boolean'
+      | 'Integer'
+      | 'Real'
+      | 'Number'
+      | 'String'
+      | 'Data'
+      | 'Array'
+      | 'List'
+      | 'nothing'
+      | 'Pointer'
 
 A type clause describes the kind of value which can be used in a variable or parameter.
 
@@ -1231,20 +1346,20 @@ An optional type means the value can be either the specified type or undefined.
 The remaining types are as follows:
 
  - **any**: any value
- - **boolean**: a boolean value, either the value *true* or *false*.
- - **integer**: any integer number value
- - **real**: any real number value
- - **number**: any number value
- - **string**: a sequence of UTF-16 code units
- - **data**: a sequence of bytes
- - **array**: a map from string to any value (i.e. an associative array, just like in LiveCode Script)
- - **list**: a sequence of any value
- - **undefined**: a single value *undefined* (this is used to describe handlers with no return value - i.e. void)
- - **pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
+ - **Boolean**: a boolean value, either the value *true* or *false*.
+ - **Integer**: any integer number value
+ - **Real**: any real number value
+ - **Number**: any number value
+ - **String**: a sequence of UTF-16 code units
+ - **Data**: a sequence of bytes
+ - **Array**: a map from string to any value (i.e. an associative array, just like in LiveCode Script)
+ - **List**: a sequence of any value
+ - **nothing**: a single value *nothing* (this is used to describe handlers with no return value - i.e. void)
+ - **Pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
 
-> **Note:** *integer* and *real* are currently the same as *number*.
+> **Note:** *Integer* and *Real* are currently the same as *Number*.
 
-> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *list of string*.
+> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *List of String*.
 
 > **Note:** In a subsequence update you will be able to define record types (named collections of values - like structs in C) and handler types (allowing dynamic handler calls through a variable - like function pointers in C).
 
@@ -1278,7 +1393,7 @@ The parameter list describes the parameters which can be passed to the handler. 
 
 An in parameter means that the value from the caller is copied to the parameter variable in the callee handler.
 
-An out parameter means that no value is copied from the caller (the parameter variable in the callee handler starts as *undefined*), and the value on exit of the callee handler is copied back to the caller on return.
+An out parameter means that no value is copied from the caller (the parameter variable in the callee handler starts as *nothing*), and the value on exit of the callee handler is copied back to the caller on return.
 
 > **Note:** It is a checked runtime error to return from a handler without ensuring all non-optional 'out' parameters have been assigned a value.
 
@@ -1316,16 +1431,16 @@ This mapping means that a foreign handler with a bool parameter say, will accept
 At present, only C binding is allowed and follow these rules:
 
  - any type passes an MCValueRef
- - boolean type passes an MCBooleanRef
- - integer type passes an MCNumberRef
- - real type passes an MCNumberRef
- - number type passes an MCNumberRef
- - string type passes an MCStringRef
- - data type passes an MCDataRef
- - array type passes an MCArrayRef
- - list type passes an MCProperListRef
- - undefined type passes an MCNullRef
- - pointer type passes a void *
+ - Boolean type passes an MCBooleanRef
+ - Integer type passes an MCNumberRef
+ - Real type passes an MCNumberRef
+ - Number type passes an MCNumberRef
+ - String type passes an MCStringRef
+ - Data type passes an MCDataRef
+ - Array type passes an MCArrayRef
+ - List type passes an MCProperListRef
+ - nothing type passes an MCNullRef
+ - Pointer type passes a void *
  - bool type passes a bool (i.e. an int - pre-C99).
  - int type passes an int
  - uint type passes an unsigned int

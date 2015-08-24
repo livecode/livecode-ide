@@ -4826,6 +4826,9 @@ on revIDENewMainstack pWidth, pHeight
    
    # Send the 'ideNewStack' message
    revIDEMessageSend "ideNewStack", it
+   
+   # Update the active stacks
+   revIDEMessageSend "ideActiveStacksChanged"
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
@@ -6981,7 +6984,8 @@ on revIDESendMessageToObject pMessage, pTarget
    
    local tRemoveFrontList
    repeat for each line tScript in tScriptsList
-      if char 1 to 3 of the short name of tScript is "rev" and the short name of tScript is not "revDebugger" then
+      # AL-2015-07-28: [[ Bug 14971 ]] Don't remove the debugger from the frontscripts when sending message
+      if char 1 to 3 of the short name of tScript is "rev" and the short name of tScript is not "revDebuggerLibrary" then
          if tRemoveFrontList is empty then
             put tScript into tRemoveFrontList
          else

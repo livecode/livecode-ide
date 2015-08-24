@@ -44,7 +44,8 @@ to the point where they are suitable for user stacks, but are included because t
 (for example the tree view widget).
 
 Finally if present, the svgicon attribute will be used to display an icon for the widget in the tools palette, 
-taking precedence over the included icon resources.
+taking precedence over the included icon resources. All of the widgets included by default in the tools palette now use
+svg icon paths.
 
 # Standalone Settings
 

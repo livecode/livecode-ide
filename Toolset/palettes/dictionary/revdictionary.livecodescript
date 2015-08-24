@@ -16,6 +16,7 @@ on openStack
    
    set the navigationDisplayStyle of me to "names"
    resizeStack
+   set the cantModify of me to true
 end openStack
 
 on resizeStack
