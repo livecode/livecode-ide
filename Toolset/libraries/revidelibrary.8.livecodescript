@@ -7935,7 +7935,7 @@ private function revIDEGetDocsAPIData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
-   put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
+   put url ("binfile:" & tAPIPath & slash & "distributed_api.js") into tData
    
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
