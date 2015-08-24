@@ -8,8 +8,6 @@ on preOpenStack
    put revBrowserOpenCEF(the windowId of this stack, tUrl) into sBrowserID
    
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
-   
-   set the cantModify of me to true
 end preOpenStack
 
 on openStack
@@ -18,6 +16,7 @@ on openStack
    
    set the navigationDisplayStyle of me to "names"
    resizeStack
+   set the cantModify of me to true
 end openStack
 
 on resizeStack
