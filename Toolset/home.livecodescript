@@ -1009,6 +1009,7 @@ command revInternal__InitialiseLibraries
       insert script of stack "revsaveasstandalone" into back
       insert script of stack "revsaveasiosstandalone" into back
       insert script of stack "revsaveasandroidstandalone" into back
+      insert script of stack "revsaveasemscriptenstandalone" into back
    catch tError 	 	
       answer "Error loading extensions library" & return & tError 	 	
    end try 	 	
