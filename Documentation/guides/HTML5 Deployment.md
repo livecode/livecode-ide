@@ -1,6 +1,8 @@
 # HTML5 Deployment
 Copyright © 2015 LiveCode Ltd.
 
+**Note: This is an experimental release of HTML5 deployment support and is not recommended for production use.**
+
 ## Introduction
 
 Almost every Internet-connected device has a web browser.  If your application can run in a browser, your app can be used anywhere and by anyone, without any need to download or install it.
@@ -12,7 +14,7 @@ With LiveCode 8's HTML5 deployment capability, you can now run applications writ
 Only a limited range of browsers are supported for HTML5 deployment in this release of LiveCode.
 
 * [Mozilla Firefox](https://www.mozilla.org/firefox/new/) 40.0 (or newer)
-* [Google Chrome](https://www.google.com/chrome/") 44 (or newer)
+* [Google Chrome](https://www.google.com/chrome/) 44 (or newer)
 * [Safari for Mac](https://support.apple.com/HT204416) (latest version)
 
 We hope to broaden the range of supported browsers in the future.
@@ -74,7 +76,7 @@ A quick and easy way to run a simple local HTTP server is to use Python.  Open a
 
     python -m SimpleHTTPServer 8080
 
-This will let you access your standalone by opening your web browser and visiting http://localhost:8080
+This will let you access your standalone by opening your web browser and visiting <http://localhost:8080>.
 
 ## Reporting bugs
 
@@ -140,7 +142,7 @@ Here's the complete skeleton web page for an HTML5 standalone:
 
 There are a number of LiveCode-specific `Module` attributes that you can modify to affect how the engine behaves:
 
-* `Module.livecodeStandalone`: the filename of the standalone archive (default `standalone.zip`
+* `Module.livecodeStandalone`: the filename of the standalone archive (default `standalone.zip`)
 * `Module.livecodeStandalonePrefixURL`: Prepended to the standalone archive filename to construct its full URL (default empty)
 * `Module.livecodeStandaloneRequest`: If you assign a network request to this attribute (before the engine runs), then it will use that request for the standalone archive instead of automatically starting a download for you. This means that you can, in your HTML, fire off a request for the standalone before the engine script actually arrives.  For this to work, the network request should be an `XMLHttpRequest` with its `responseType` set to `arraybuffer`.
 
