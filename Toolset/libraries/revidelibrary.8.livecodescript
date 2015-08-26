@@ -484,6 +484,21 @@ private function __propertyInfoFilename
    return "propertyInfo.txt"
 end __propertyInfoFilename
 
+private function __classicToolsOrderFilename
+   return "classicToolsOrder.txt"
+end __classicToolsOrderFilename 
+
+private on __orderClassicTools
+   local tToolsOrderFile
+   put revIDESpecialFolderPath("Object Property Definitions") & slash & __classicToolsOrderFilename() into tToolsOrderFile
+   
+   local tOrder
+   repeat for each line tTool in url ("file:" & tToolsOrderFile)
+      add 1 to tOrder
+      put tOrder into sClassicObjectProperties[tTool]["order"]
+   end repeat
+end __orderClassicTools
+
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
    --put "reading object properties" after msg
@@ -516,7 +531,9 @@ on __objectPropertiesRead
 
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
-
+   
+   __orderClassicTools
+   
    put tPropertiesInfo into sClassicPropertiesInfo
 
    revIDERestoreDefaultFolder
