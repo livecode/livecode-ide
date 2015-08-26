@@ -211,6 +211,12 @@ on revInternal__openStack
          set the defaultStack to "home" -- plug ins may take away default stack
       end if
       
+      if tSuccess and not revEnvironmentIsInstalled() then
+         revInternal__setSplashStatus "Building Dictionary"
+         revInternal__BuildDictionary
+         put the result into tSuccess
+      end if
+      
       if tSuccess then
          revInternal__setSplashStatus "Performing Final Steps..."
          revInternal__setSplashStatus ""
@@ -1539,6 +1545,13 @@ command  revInternal__InitialiseDebugger
    send "revDebuggerInitialize" to stack "revDebuggerLibrary"
    return true
 end  revInternal__InitialiseDebugger
+
+command revInternal__BuildDictionary
+   revInternal__Log "Enter", "Building Dictionary"
+   revIDEGenerateDistributedDocs
+   revInternal__Log "Leave", "Building Dictionary"
+   return true
+end revInternal__BuildDictionary
 
 command revInternal__ConstrainStack pStack
   local tStackTitleBarRect
