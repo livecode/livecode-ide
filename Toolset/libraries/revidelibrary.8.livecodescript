@@ -4220,6 +4220,22 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
+function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
+   local tDetailedFiles, tMax
+   set the defaultFolder to pFolder
+   put the detailed files into tDetailedFiles
+   sort tDetailedFiles descending numeric by item 5 of each
+   put item 5 of line 1 of tDetailedFiles into tMax
+   if tMax is not a number then put 0 into tMax
+   if pRecursive then
+      repeat for each line tFolder in the folders
+         if tFolder is ".." then next repeat
+         put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
+      end repeat
+   end if
+   return tMax
+end revIDELastModifiedTimeOfFilesInFolder
+
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
@@ -7935,7 +7951,7 @@ private function revIDEGetDocsAPIData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
-   put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
+   put url ("binfile:" & tAPIPath & slash & "distributed_api.js") into tData
    
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
@@ -8065,3 +8081,139 @@ on revIDERegenerateBuiltDictionaryData
    revIDERegenerateBuiltAPIs
    revIDERegenerateBuiltGuides
 end revIDERegenerateBuiltDictionaryData
+
+on revIDEGenerateDistributedDocs
+   start using stack (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
+   revIDEGenerateDistributedGuide
+   revIDEGenerateDistributedAPI
+   revIDERegenerateBuiltDictionaryData
+end revIDEGenerateDistributedDocs
+
+on revIDEGenerateDistributedGuide
+   # Set the default folder to where the guide markdown files are stored in the IDE
+   local tGuideFolder, tOldDefaultFolder
+   put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
+   
+   # Check if the distributed guide is out of date
+   local tLastModified, tLastGenerated
+   put revIDELastModifiedTimeOfFilesInFolder(tGuideFolder) into tLastModified
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
+   
+   # If we don't need to regenerate, exit
+   if tLastModified < tLastGenerated then
+      exit revIDEGenerateDistributedGuide
+   end if
+   
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultfolder to tGuideFolder
+   
+   local tGuideData, tGuideName
+   set the itemdelimiter to "."
+   repeat for each line tFile in the files
+      if tFile begins with "."  then next repeat
+      if tFile ends with "~" then next repeat
+      # The name of the guide is just the filename without extension
+      put item 1 to -2 of tFile into tGuideName
+      get url ("binfile:" & tGuideFolder & slash & tFile)
+      if it is not empty then
+         get textDecode(it, "utf-8")
+         
+         # Remove table of contents 
+         replace "[toc]" with empty in it
+         
+         # Build JSON data
+         put tab & "{" & CR after tGuideData
+         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
+         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
+         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+      end if
+   end repeat
+   delete the last char of tGuideData
+   
+   # Write out to apropriate location
+   put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
+   set the defaultFolder to tOldDefaultFolder
+end revIDEGenerateDistributedGuide
+
+command revIDEGenerateDistributedAPI
+   local tRepoPath
+   put revEnvironmentRepositoryPath() into tRepoPath
+   
+   local tDocsFolder
+   put tRepoPath & slash & "docs" into tDocsFolder
+   if there is not a folder tDocsFolder then
+      answer "No dictionary data found at" && tDocsFolder
+   end if
+   
+   # Check to see if we need to regenerate the script dictionary
+   local tLastModified, tLastGenerated
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "script.js") into tLastGenerated
+   put revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "dictionary", true) into tLastModified
+   put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "glossary", true)) into tLastModified
+   
+   # Regenerate dictionary if necessary
+   if tLastModified > tLastGenerated then
+      local tScriptA
+      put "LiveCode Script" into tScriptA["name"]
+      put "LiveCode" into tScriptA["author"]
+      put "dictionary" into tScriptA["type"]
+      # Parse the dictionary files into a structured array
+      put revDocsParseDictionaryToLibraryArray(tDocsFolder) into tScriptA["doc"]
+      
+      local tJSON
+      put revDocsFormatLibraryArrayAsJSON(tScriptA) into tJSON
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js")
+   end if
+   
+   # Check to see if we need to regenerate the builder dictionary
+   local tModuleList
+   put revDocsGetBuiltinModuleList(revEnvironmentBinariesPath() & slash & "modules" & slash & "lci", tRepoPath) into tModuleList
+   
+   set the itemdelimiter to slash
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "builder.js") into tLastGenerated
+   put 0 into tLastModified
+   repeat for each line tLine in tModuleList
+      put max(tLastModified, revIDELastModifiedTimeOfFile(item 1 to -2 of tLine, item -1 of tLine)) into tLastModified
+   end repeat
+   
+   # Regenerate dictionary if necessary
+   if tLastModified > tLastGenerated then
+      local tModularA, tModularCount, tBlocksA, tParsedA
+      put 1 into tModularCount
+      set the itemdelimiter to "."
+      repeat for each line tLine in tModuleList
+         if item -1 of tLine is "lcdoc" then
+            get url("file:" & tLine)
+         else
+            get revDocsGenerateDocsFileFromModularFile(tLine)
+         end if
+         if it is not empty then
+            put it into tModularA[tModularCount]
+            add 1 to tModularCount
+         end if
+      end repeat
+      
+      local tBuilderA
+      put 1 into tModularCount
+      repeat for each element tElement in tModularA
+         put revDocsParseDocText(tElement) into tParsedA
+         repeat for each key tEntry in tParsedA["doc"]
+            put tParsedA["doc"][tEntry] into tBuilderA["doc"][tModularCount]
+            add 1 to tModularCount
+         end repeat
+         put empty into tParsedA
+      end repeat
+      put "LiveCode Builder" into tBuilderA["name"]
+      put "LiveCode" into tBuilderA["author"]
+      put "dictionary" into tBuilderA["type"]
+      
+      put revDocsFormatLibraryArrayAsJSON(tBuilderA) into tJSON
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js")
+   end if
+   
+   local tDictionaryData
+   put textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js"), "utf-8") into tDictionaryData
+   put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js"), "utf-8") after tDictionaryData
+   
+   put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
+end revIDEGenerateDistributedAPI
