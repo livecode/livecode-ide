@@ -1,15 +1,12 @@
-# HTML5 Deployment
-Copyright © 2015 LiveCode Ltd.
+# Introduction
 
 **Note: This is an experimental release of HTML5 deployment support and is not recommended for production use.**
-
-## Introduction
 
 Almost every Internet-connected device has a web browser.  If your application can run in a browser, your app can be used anywhere and by anyone, without any need to download or install it.
 
 With LiveCode 8's HTML5 deployment capability, you can now run applications written in LiveCode in any web browser that supports JavaScript and HTML5.
 
-### Supported browsers
+## Supported browsers
 
 Only a limited range of browsers are supported for HTML5 deployment in this release of LiveCode.
 
@@ -19,7 +16,7 @@ Only a limited range of browsers are supported for HTML5 deployment in this rele
 
 We hope to broaden the range of supported browsers in the future.
 
-### HTML5 engine features
+## HTML5 engine features
 
 The HTML5 engine in this release of LiveCode has a limited range of features.  You can:
 
@@ -38,9 +35,9 @@ Several important features are not yet supported:
 
 The HTML5 engine is unlikely ever to support externals (including revdb).
 
-## How to deploy an app to HTML5
+# How to deploy an app to HTML5
 
-### Step by step
+## Step by step
 
 Deploying an app to an HTML5 standalone is straightforward:
 
@@ -58,7 +55,7 @@ Deploying an app to an HTML5 standalone is straightforward:
 
 Your application will be packaged up and placed in the selected output folder.
 
-### Contents of the HTML5 standalone
+## Contents of the HTML5 standalone
 
 The HTML5 standalone contains four files:
 
@@ -68,7 +65,7 @@ The HTML5 standalone contains four files:
 
 * A test HTML page.  This can be opened in a browser and will correctly prepare, download and start your HTML5 app in a convenient test environment.
 
-### Testing your HTML5 app with a local web server
+## Testing your HTML5 app with a local web server
 
 Some browsers, such as Google Chrome, do not permit pages to download resources from `file://` URLs.  You won't be able to test your application in these browsers unless you run a local HTTP server.
 
@@ -78,15 +75,15 @@ A quick and easy way to run a simple local HTTP server is to use Python.  Open a
 
 This will let you access your standalone by opening your web browser and visiting <http://localhost:8080>.
 
-## Reporting bugs
+# Reporting bugs
 
 Please report bugs to the [LiveCode Quality Centre](http://quality.runrev.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
 
-## Advanced: Embedding an HTML5 standalone in a web page
+# Advanced: Embedding an HTML5 standalone in a web page
 
 The default HTML5 page provided by the HTML5 standalone builder is designed for testing and debugging purposes.  However, you may want to embed the standalone engine in a more visually appealing page.  To do this, you require three elements: 1) a canvas, 2) a JavaScript `Module` object, and 3) an HTML `<script>` element that downloads the engine.
 
-### The canvas
+## The canvas
 
 The engine renders into a HTML5 `<canvas>` element.  There are three important considerations when creating the canvas:
 
@@ -100,7 +97,7 @@ The absolute minimum canvas element would look something like this:
 
     <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault();"></canvas>
 
-### The Module object
+## The Module object
 
 The top-level JavaScript `Module` object contains the parameters that control how the engine runs.  At minimum, you need only specify the `Module.canvas`, which should be your canvas element.
 
@@ -112,7 +109,7 @@ The absolute minimum `Module` object declaration would look something like:
     };
     </script>
 
-### Engine download
+## Engine download
 
 The engine is quite a large JavaScript file, so it's downloaded asynchronously in order to let the rest of the page finish loading and start being displayed.
 
@@ -122,7 +119,7 @@ Quite straightforwardly:
 
 Make sure to replace `<version>` as appropriate.
 
-### Bringing it all together
+## Bringing it all together
 
 Here's the complete skeleton web page for an HTML5 standalone:
 
@@ -138,7 +135,7 @@ Here's the complete skeleton web page for an HTML5 standalone:
     </html>
 
 
-## Advanced: Customizing the Module object
+# Advanced: Customizing the Module object
 
 There are a number of LiveCode-specific `Module` attributes that you can modify to affect how the engine behaves:
 

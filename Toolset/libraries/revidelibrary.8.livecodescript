@@ -8111,6 +8111,7 @@ on revIDEGenerateDistributedGuide
    set the itemdelimiter to "."
    repeat for each line tFile in the files
       if tFile begins with "."  then next repeat
+      if tFile ends with "~" then next repeat
       # The name of the guide is just the filename without extension
       put item 1 to -2 of tFile into tGuideName
       get url ("binfile:" & tGuideFolder & slash & tFile)
