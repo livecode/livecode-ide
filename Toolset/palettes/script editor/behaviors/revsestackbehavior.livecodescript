@@ -6,6 +6,7 @@ on setBehaviors
    set the behavior of group "Script Tabs" me to the long id of stack revIDEScriptEditorBehavior("scripttabs")
    set the behavior of group "Toolbar" of me to the long id of stack revIDEScriptEditorBehavior("toolbar")
    set the behavior of group "Handler List" of me to the long id of stack revIDEScriptEditorBehavior("handlerlist")
+   set the behavior of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("leftbar")
 end setBehaviors
 
 # Which metadata type to store the script editor data as.

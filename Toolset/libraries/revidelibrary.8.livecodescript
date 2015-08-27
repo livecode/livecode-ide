@@ -4279,6 +4279,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsescripttabsbehavior.livecodescript"
       case "toolbar"
          return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
+      case "leftbar"
+         return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
       case "stack"
       default
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
