@@ -3170,27 +3170,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/extensions" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/extensions" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/temp" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/downloading" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/uninstalled" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -3211,7 +3211,7 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
          break
       case "examples"
-         put  item 1 to -3 of the filename of stack "home" & "/examples" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
