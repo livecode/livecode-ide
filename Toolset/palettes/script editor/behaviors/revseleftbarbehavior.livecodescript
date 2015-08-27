@@ -1,14 +1,47 @@
 ﻿script "revSELeftBarBehavior"
+
+-- Resize the group, placing the filter field below the list of
+-- handlers.
 command resize
-   set the rect of group "Left Handler List" of me to the rect of me
+   local tList, tFilter, tRect, tLeft, tWidth, tHeight, tTop, tBottom
+   put the long id of group "Left Handler List" of me into tList
+   put the long id of field "Filter" of me into tFilter
+
+   -- Capture the target dimensions exactly once.  Otherwise,
+   -- rubberbanding can occur
+   put the rect of me into tRect
+   put item 1 of tRect into tLeft
+   put item 3 of tRect - tLeft into tWidth
+   put item 2 of tRect into tTop
+   put item 4 of tRect into tBottom
+   put tBottom - tTop into tHeight
+
+   -- Aim to put the filter field below the list of handlers.
+   -- FIXME What happens when the space is to short to show the filter field?
+   lock screen
+   set the width of tFilter to tWidth
+   set the bottom of tFilter to tBottom
+   set the left of tFilter to tLeft
+
+   set the top of tList to tTop
+   set the left of tList to tLeft
+   set the width of tList to tWidth
+   set the cMaxWidth of tList to tWidth
+   set the cMinWidth of tList to tWidth
+   set the height of tList to (tHeight - the height of tFilter)
+   set the cMaxHeight of tList to (tHeight - the height of tFilter)
+   set the cMinHeight of tList to (tHeight - the height of tFilter)
+
    send "resize" to group "Left Handler List" of me
+   unlock screen
 end resize
 
 command update pDontUpdateSelectedHandler
    lock screen
    
-   local tObject
+   local tObject, tFilter
    put the long id of group "Left Handler List" of me into tObject
+   put the long id of field "Filter" of me into tFilter
    
    set the cCallback of tObject to "handlerSelected"
    set the cCallbackTarget of tObject to the long id of me
@@ -29,10 +62,17 @@ command update pDontUpdateSelectedHandler
    
    set the cMaxWidth of tObject to the width of me
    set the cMinWidth of tObject to the width of me
-   set the cMaxHeight of tObject to the height of me
-   set the cMinHeight of tObject to the height of me
+   set the cMaxHeight of tObject to (the height of me - the height of tFilter)
+   set the cMinHeight of tObject to (the height of me - the height of tFilter)
    
    call "initializeWithoutGrabbingFocus" to tObject
+
+   -- Hook up the filter field to the list of handlers, and initialise it.
+   set the cCallback of tFilter to "filterChanged"
+   set the cCallbackTarget of tFilter to tObject
+
+   send "update" to tFilter
+
    unlock screen
 end update
 

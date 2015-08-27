@@ -4281,6 +4281,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
       case "leftbar"
          return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
+      case "handlerfilter"
+         return tPathToBehaviors & slash & "revsehandlerfilterbehavior.livecodescript"
       case "stack"
       default
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
