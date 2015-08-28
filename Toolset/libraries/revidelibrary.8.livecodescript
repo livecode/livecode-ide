@@ -7947,11 +7947,14 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
+   local tOldDefaultFolder
+   put the defaultfolder into tOldDefaultFolder
    set the defaultFolder to pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
    filter tSource with "*.lcb"
+   set the defaultFolder to tOldDefaultFolder
    return tSource
 end __getLCBSourceFile
 
