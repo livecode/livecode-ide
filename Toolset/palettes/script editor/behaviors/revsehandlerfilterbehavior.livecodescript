@@ -42,7 +42,7 @@ end selectAll
 -- sends the registered callback message if necessary.
 on update
    if the cFiltering of me then
-      set the textstyle of me to "normal"
+      set the textstyle of me to empty
       set the cFilterText of me to the text of me
    else
       set the text of me to "Filter..."
