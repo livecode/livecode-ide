@@ -4,6 +4,7 @@ local sBrowserID, sTab
 on preOpenStack
    send "openBrowser" to me in 0 millisecs
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
+   set the title of me to "Dictionary"
 end preOpenStack
 
 on openBrowser
