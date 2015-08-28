@@ -324,6 +324,10 @@ private command filterHandlerNames @xHandlers
 
    repeat for each line tHandler in xHandlers
       put true into tMatch
+
+      -- The first word of each line of the handler list is a tag that
+      -- describes the type of handler (e.g. "PH" for private handler,
+      -- etc.)  The second word is the handler's name.
       put word 2 of tHandler into tName
 
       -- The handler name needs to match *all* of the words in the
