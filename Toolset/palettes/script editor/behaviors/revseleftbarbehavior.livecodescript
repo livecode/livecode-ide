@@ -92,7 +92,7 @@ end updateSelectedHandler
 
 # Description
 #   Callback for the handler list object. This is called when the stack is closed
-#   which either means the user has choosen a handler, or dismissed the stack.
+#   which either means the user has chosen a handler, or dismissed the stack.
 on handlerSelected
    local tObject
    put the long id of group "Left Handler List" of me into tObject
