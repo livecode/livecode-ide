@@ -1,0 +1,1 @@
+# Tools palette has incorrect title

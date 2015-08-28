@@ -484,6 +484,21 @@ private function __propertyInfoFilename
    return "propertyInfo.txt"
 end __propertyInfoFilename
 
+private function __classicToolsOrderFilename
+   return "classicToolsOrder.txt"
+end __classicToolsOrderFilename 
+
+private on __orderClassicTools
+   local tToolsOrderFile
+   put revIDESpecialFolderPath("Object Property Definitions") & slash & __classicToolsOrderFilename() into tToolsOrderFile
+   
+   local tOrder
+   repeat for each line tTool in url ("file:" & tToolsOrderFile)
+      add 1 to tOrder
+      put tOrder into sClassicObjectProperties[tTool]["order"]
+   end repeat
+end __orderClassicTools
+
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
    --put "reading object properties" after msg
@@ -516,7 +531,9 @@ on __objectPropertiesRead
 
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
-
+   
+   __orderClassicTools
+   
    put tPropertiesInfo into sClassicPropertiesInfo
 
    revIDERestoreDefaultFolder
@@ -3170,27 +3187,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/extensions" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/extensions" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/temp" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/downloading" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/uninstalled" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -3211,7 +3228,7 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
          break
       case "examples"
-         put  item 1 to -3 of the filename of stack "home" & "/examples" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -4279,6 +4296,10 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsescripttabsbehavior.livecodescript"
       case "toolbar"
          return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
+      case "leftbar"
+         return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
+      case "handlerfilter"
+         return tPathToBehaviors & slash & "revsehandlerfilterbehavior.livecodescript"
       case "stack"
       default
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
@@ -5151,7 +5172,7 @@ function revIDEAcceptedTypes pType
          return "mp3,wav,aiff"
          break
       case "livecode"
-         return "livecode,rev,lc,livecodescript"
+         return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
          break

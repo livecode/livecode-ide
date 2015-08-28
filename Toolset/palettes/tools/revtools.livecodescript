@@ -1,8 +1,10 @@
-﻿script "revtools"
+﻿script "revTools"
 constant BLOCK_SIZE = 20
 
 on preOpenStack
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of me
+   
+   set the title of me to "Tools"
    
    ### Header
    addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
@@ -218,22 +220,14 @@ on generatePalette
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
       local tOrder
-      put empty into tOrder
+      put the keys of sViewsData[tView] into tOrder
       if tView is "widget" then
          # AL-2015-05-26: [[ Bug 14561 ]] Order extensions alphabetically
-         local tExtensionList
-         put the keys of sViewsData[tView] into tOrder
          sort tOrder by sViewsData[tView][each]["title"]
       else
          # Get a list of the ordered keys
-         set the itemdel to ","
-         repeat for each line tObjectID in the keys of sViewsData[tView]
-            put tObjectID & comma & sViewsData[tView][tObjectID]["order"] & return after tOrder
-         end repeat
-         delete the last char of tOrder
-         sort lines tOrder numeric ascending by item 2 of each
+         sort lines tOrder numeric ascending by sViewsData[tView][each]["order"]
       end if
-      set the itemdel to "."
       
       # Create the group to hold the controls
       create group tView in group "contents" 

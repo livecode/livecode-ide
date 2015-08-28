@@ -15,14 +15,14 @@ on editorUpdate
    put tValue into sValue
    
    lock messages
-   set the hilite of button "allow editing" of me to tValue["allow editing"]
-   set the hilite of button "alternate row colors" of me to tValue["alternate row colors"]
-   set the hilite of button "auto hilite" of me to tValue["auto hilite"]
-   set the hilite of button "multiple lines" of me to tValue["multiple lines"]
-   set the hilite of button "allow column resizing" of me to tValue["allow column resizing"]
+   set the hilite of button "allow editing" of me to tValue["allow editing"] is true
+   set the hilite of button "alternate row colors" of me to tValue["alternate row colors"] is true
+   set the hilite of button "auto hilite" of me to tValue["auto hilite"] is true
+   set the hilite of button "multiple lines" of me to tValue["multiple lines"] is true
+   set the hilite of button "allow column resizing" of me to tValue["allow column resizing"] is true
    //set the hilite of button "fixed control height" of me to tValue["fixed control height"]
-   set the hilite of button "cache controls" of me to tValue["cache controls"]
-   set the hilite of button "persistent data" of me to tValue["persistent data"]
+   set the hilite of button "cache controls" of me to tValue["cache controls"] is true
+   set the hilite of button "persistent data" of me to tValue["persistent data"] is true
    put tValue["row height"] into field "row height" of me
    set the label of button "style" of me to tValue["style"]
    set the label of button "show hscrollbar" of me to tValue["show hscrollbar"]

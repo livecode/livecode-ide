@@ -28,8 +28,8 @@ visitedIcon
 armedIcon
 hoverIcon
 threeD	true	
-showBorder	true	
-hiliteBorder	true	
+showBorder	false	
+hiliteBorder	false	
 borderWidth	2	
 foregroundColor			Text Fill
 foregroundPattern			Text Fill			

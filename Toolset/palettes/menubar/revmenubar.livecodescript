@@ -2453,6 +2453,7 @@ on revMenubarObjectMenuPick pWhich
    switch item 1 of pWhich
       case "Reshape Graphic"
          revIDEToggleReshapeGraphic
+         break
       case "New card"
          revIDEActionNewCard
          break
