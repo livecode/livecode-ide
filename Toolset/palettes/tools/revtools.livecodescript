@@ -1,8 +1,10 @@
-﻿script "revtools"
+﻿script "revTools"
 constant BLOCK_SIZE = 20
 
 on preOpenStack
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of me
+   
+   set the title of me to "Tools"
    
    ### Header
    addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
