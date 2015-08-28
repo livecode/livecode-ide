@@ -44,7 +44,7 @@ command updateSelectedHandler
    end repeat
    
    if tMatchingLineNumber is empty then
-      set the hilitedLines of field "Handlers" of me to 1
+      set the hilitedLines of field "Handlers" of me to empty
    else
       set the hilitedLines of field "Handlers" of me to tMatchingLineNumber
    end if
@@ -132,6 +132,8 @@ command update
    local tHandlers
    call "revSEGetHandlerList" to the cCaller of me
    put the result into tHandlers
+   
+   filterHandlerNames tHandlers
    
    if sePrefGet("editor,sortHandlerList") is "alphabetical" then
       sort tHandlers by word 2 of each
@@ -282,5 +284,65 @@ on mouseMove
    end if
 end mouseMove
 
+----------------------------------------------------------------
+-- Handler filtering support
+----------------------------------------------------------------
 
+/*
+The list of handlers can be filtered by a string, stored in the custom
+property cFilterText.  If cFilterText is non-empty, only handlers that
+match *all* the words of cFilterText are shown.
 
+The filterChanged handler updates the cFilterText custom property, and
+updates the display if necessary.
+*/
+
+-- This is called to update the filter text
+on filterChanged pFilterText
+   if pFilterText is not the cFilterText of me then
+      set the cFilterText of me to pFilterText
+      send "filterUpdate" to me in 0 millisecs
+   end if
+end filterChanged
+
+-- Update the handler list due to a change in the handler list filter
+-- string.  Make sure that the currently selected handler gets reselected,
+-- if it's not excluded by the filter.
+command filterUpdate
+   send "update" to me
+   send "updateSelectedHandler" to me
+end filterUpdate
+
+-- Process a list of handler information lines, replacing it with a list
+-- containing only the handlers where the name matches the current filter.
+private command filterHandlerNames @xHandlers
+   if the cFilterText of me is empty then
+      exit filterHandlerNames
+   end if
+
+   local tNewHandlers, tHandler, tName, tWord, tMatch
+
+   repeat for each line tHandler in xHandlers
+      put true into tMatch
+
+      -- The first word of each line of the handler list is a tag that
+      -- describes the type of handler (e.g. "PH" for private handler,
+      -- etc.)  The second word is the handler's name.
+      put word 2 of tHandler into tName
+
+      -- The handler name needs to match *all* of the words in the
+      -- filter text
+      repeat for each word tWord in the cFilterText of me
+         if not (tName contains tWord) then
+            put false into tMatch
+            exit repeat
+         end if
+      end repeat
+
+      if tMatch then
+         put tHandler & return after tNewHandlers
+      end if
+   end repeat
+
+   put tNewHandlers into xHandlers
+end filterHandlerNames
