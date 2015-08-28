@@ -5172,7 +5172,7 @@ function revIDEAcceptedTypes pType
          return "mp3,wav,aiff"
          break
       case "livecode"
-         return "livecode,rev,lc,livecodescript"
+         return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
          break
