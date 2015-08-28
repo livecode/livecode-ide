@@ -18,7 +18,7 @@ To learn more about LiveCode Builder and creating extensions, read on.
 > *Warning:* It is important to stress right at the start that ***no aspect of LiveCode Builder should considered final***. ***Every piece of syntax in LiveCode Builder is subject to change***.
 
 ## IDE
-A number of palettes have been replaced and new ones added in order to support extensions. The tools palette, message box and property inspector have been rewritten. An extension manager stack has been added to keep track of installed extensions, and a plugin added to help users create their own extensions.
+A number of palettes have been replaced and new ones added in order to support extensions. The tools palette, message box and property inspector have been rewritten. An extension manager stack has been added to keep track of installed extensions, and a stack added to help users create their own extensions.
 
 ## Installers
 
@@ -106,16 +106,16 @@ Extensions can provide an API (Dictionary) and User Guide as part of the install
 
 # Creating Extensions
 
-We have provided a new "Widget Builder" plugin to help make development and packaging of extensions as easy as possible. 
+We have provided a new "Extension Builder" stack to help make development and packaging of extensions as easy as possible. 
 
 > **Note:** LiveCode Builder is a different flavour of LiveCode so it is not possible to edit LiveCode Builder scripts in the main LiveCode Script IDE.
 
-## Widget Builder Plugin
+## Extension Builder
 
-Open the "Widget Builder" plugin for the development menu:
+Open the "Extension Builder" from the tools menu:
 
 ```
-Development > Plugins > Widget Builder
+Tools > Widget Builder
 ```
 
 ![enter image description here](images/extensions-plugin-overview.png)
@@ -136,13 +136,16 @@ Development > Plugins > Widget Builder
 A widget and a library are identical, except that a widget draws to a canvas. As a result, the authoring process is much the same for both extension types.
 
 ### Create a .lcb file
-Start by creating a plain text file and save it do disk with the extension "lcb":
+We recommend using the Atom text editor, available at https://atom.io/. A LiveCode package is available which provides some colorization as well as indentation. 
+If you prefer to use TextWrangler, there is a colorising script here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
+
+Start by creating a plain text file in a new directory and save it to disk with the extension "lcb":
 
 ```
 /Desktop/widgettest/main.lcb
 ```
 
-Now open the plugin as shown above and click on the load icon to load your freshly created ***.lcb*** file into the builder. You can now start authoring your first extension.
+> **Note:** The extension builder currently relies on there being only one ***.lcb*** file in a given directory.	
 
 ### Declare Type and Identifier
 Start by declaring the type of extension, either "widget" or "library" followed by your identifier (See "Select A Developer ID" below).
@@ -277,11 +280,11 @@ end widget
 
 ### Test the Code
 
+Now open the extension builder stack as shown above and click on the load icon to load your ***.lcb*** file into the builder.
+
 ![enter image description here](images/extensions-widget-first.png)
 
-Click test. Your widget should be displayed on the new stack. If you can't see it, check behind the extension plugin. In this screenshot TextWrangler is being to edit LiveCode Builder scripts. 
-We recommend using the Atom text editor, available at https://atom.io/, for which there is a LiveCode package available. This will provide some colorization as well as indentation. 
-If you prefer to use TextWrangler, there is a colorising script here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
+Click test. Your widget should be displayed on the new stack. If you can't see it, check behind the extension stack.
 
 ### Properties
 In order to make a widget useful to end users it is likely that you'll want to expose properties that allow them to specify how your widget should behave. 
@@ -581,10 +584,10 @@ Any extension can include a user guide. To do so, add a markdown file called *gu
 All GitHub flavoured markdown is accepted.
 
 # Packaging Extensions
-Packaging extensions is easy. Simply open the "Widget Builder" plugin:
+Packaging extensions is easy. Simply open the "Extension Builder" stack:
 
 ```
-Development > Plugins > ExtensionBuilder
+Tools > Extension Builder
 ```
 
 Load your ***.lcb*** file and click "Build Package". A new file will appears in the same directory as your main file with the extension ***.lce***. This is your final package file ready for upload to the extensions portal.

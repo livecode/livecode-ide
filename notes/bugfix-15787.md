@@ -1,0 +1,1 @@
+# "widget builder in plugins" is actually "extension builder" under "Tools"
