@@ -1358,10 +1358,16 @@ end revInternal__InitialiseErrors
 command revInternal__InitialiseTools
   revInternal__Log "Enter", "Tools Initialisation"
   
-  set the topLeft of stack "revTools" to the cToolsTopLeft of stack "revPreferences"
-  palette "revTools"
-  choose pointer tool
+  local tToolsStackName
+  put revIDEPaletteToStackName("Tools") into tToolsStackName
   
+  lock screen
+  send "preOpenStack" to stack tToolsStackName
+  set the topLeft of stack tToolsStackName to the cToolsTopLeft of stack "revPreferences"
+  palette stack tToolsStackName
+  
+  choose pointer tool
+  unlock screen
   --revInternal__ConstrainStack "revTools"  
   
   revInternal__Log "Leave", "Tools Initialisation"
