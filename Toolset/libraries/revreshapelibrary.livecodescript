@@ -198,8 +198,9 @@ on revSetMarkers pRemove
       set the borderColor of l to the accentColor
       set the markerColor of l to black
       set markerDrawn of l to true
-      set the markerPoints of l to the revMarkerPoints of stack "revReshapeLibrary"
-      --set markerPoints of l to -3,-3&cr& 3,-3&cr& 3,3&cr& -3,3&cr& -3,-3
+      set the markerPoints of l to "0,-3" & cr & "2,-2" & cr & "3,0" & cr & \
+               "2,2" & cr & "0,3" & cr & "-2,2" & cr & \
+               "-3,0" & cr & "-2,-2" & cr & "0,-3"
       put l & cr after gREVObjectsList
     end repeat
   end if
