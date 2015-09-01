@@ -1048,7 +1048,7 @@ private function revMenubarFileMenu pContext
    put tab & "iPhone 4 (320x480)" & return after tFile
    put tab & "iPhone 5 (320x568)" & return after tFile
    put tab & "iPhone 6 (375x667)" & return after tFile
-   put tab & "iPhone 6 Plus (540x960)" & return after tFile
+   put tab & "iPhone 6 Plus (414x736)" & return after tFile
    put tab & "iPad//Tablet Portrait (768x1024)" & return after tFile
    put tab & "iPad//Tablet Landscape (1024x768)" & return after tFile
    put tab & "-" & return after tFile
