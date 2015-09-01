@@ -1,0 +1,1 @@
+# typo in dialog title on opening an extension file

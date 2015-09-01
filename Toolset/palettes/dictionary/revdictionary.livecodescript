@@ -2,9 +2,9 @@
 local sBrowserID, sTab
 
 on preOpenStack
-   send "openBrowser" to me in 0 millisecs
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
    set the title of me to "Dictionary"
+   send "openBrowser" to me in 0 millisecs
 end preOpenStack
 
 on openBrowser
@@ -23,7 +23,9 @@ on openStack
 end openStack
 
 on resizeStack
-   revBrowserSet sBrowserID, "rect", the contentRect of me
+   if sBrowserID is not empty then
+      revBrowserSet sBrowserID, "rect", the contentRect of me
+   end if
 end resizeStack
 
 on showAPIs

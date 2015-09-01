@@ -1716,19 +1716,16 @@ function revIDEGlobalVariables
 end revIDEGlobalVariables
 
 function revIDEGlobalProperties
-   set the defaultfolder to revIDESpecialFolderPath("IDE")
-   return URL("file:globalProperties.txt")
+   return URL("file:" & revIDESpecialFolderPath("globals") & slash & "globalProperties.txt")
 end revIDEGlobalProperties
 
 local sRangeArray
 function revIDEGlobalPropertyRange pProperty
    if sRangeArray is empty then
       local tRangeArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:rangeArray.txt") into tRangeArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "rangeArray.txt") into tRangeArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tRangeArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sRangeArray[item 1 of tLine]
@@ -1741,11 +1738,9 @@ local sContinuousRangeArray
 function revIDEGlobalPropertyContinuousRange pProperty
    if sContinuousRangeArray is empty then
       local tContinuousArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:continuousArray.txt") into tContinuousArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "continuousArray.txt") into tContinuousArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tContinuousArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sContinuousRangeArray[item 1 of tLine]
@@ -3006,6 +3001,104 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
+on revIDEDistributeObjects pObjects, pHorizontally, pType
+   local tNumberOfObjects
+   put the number of lines in pObjects into tNumberOfObjects
+   
+   local tSize
+   put 0 into tSize
+   
+   local tPerSpace, tOffset
+   switch pType
+      case "First to last selected"
+         if tNumberOfObjects < 3 then exit to top
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects 
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         local tFirstObj, tLastObj
+         put line 1 of pObjects into tFirstObj
+         put line tNumberOfObjects of pObjects into tLastObj
+         
+         local tStartCoord, tEndCoord
+         if pHorizontally then
+            put the right of tFirstObj into tStartCoord
+            put the left of tLastObj into tEndCoord
+         else
+            put the bottom of tFirstObj into tStartCoord
+            put the top of tLastObj into tEndCoord
+         end if 
+         put (tEndCoord - tStartCoord - tSize) / (tNumberOfObjects -1) into tPerSpace
+         put tStartCoord + tPerSpace into tOffset
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Across card"
+         if tNumberOfObjects < 1 then exit to top
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         get line 1 of pObjects
+         local tCardName, tCardSize
+         put word 5 to (the number of words in it) of it into tCardName
+         if pHorizontally then
+            put the width of tCardName into tCardSize
+         else
+            put the height of tCardName into tCardSize
+         end if
+         put (tCardSize - tSize) / (tNumberOfObjects + 1) into tPerSpace
+         put tPerSpace into tOffset
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Edge to edge"
+         if tNumberOfObjects < 2 then exit to top
+         local tPrevObj, tNextObj
+         repeat with i = 2 to tNumberOfObjects
+            put line i of pObjects into tNextObj
+            put line (i - 1) of pObjects into tPrevObj
+            if pHorizontally then
+               set the left of tNextObj to the right of tPrevObj
+            else             
+               set the top of tNextObj to the bottom of tPrevObj
+            end if
+            send "revCacheGeometry true" to tNextObj
+         end repeat
+         break
+   end switch
+end revIDEDistributeObjects
+
+on revIDEActionDistributeObjects pHorizontally, pType
+   revIDEDistributeObjects the selobj, pHorizontally, pType
+end revIDEActionDistributeObjects
+
 on revIDECenterControls pControls, pPosition
    local tInitialControl,tInitialLoc, tPositionValue, tNewLoc, tObject, tObjectLoc
 
@@ -3234,6 +3327,9 @@ function revIDESpecialFolderPath pKey
          break
       case "tutorial"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
+         break
+      case "globals"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
    end switch
 end revIDESpecialFolderPath
@@ -7108,13 +7204,13 @@ on revIDEToggleReshapeGraphic
    end if
 end revIDEToggleReshapeGraphic
 
-on revIDEPlaceGroupOnCard pGroup
+on revIDEPlaceGroupOnCard pGroupID
    # OK-2009-10-02 : Code was breaking with groups named "Background", and seemed to be overcomplicated.
    set the defaultStack to the topStack
-   if pGroup is not empty then
-      place background id pGroup onto this card
+   if pGroupID is not empty then
+      place background id pGroupID onto this card
       if the tool is "pointer tool" then
-         do ("select background id" & quote & pGroup & quote)
+         do ("select background id" & quote & pGroupID & quote)
       end if
    end if
 end revIDEPlaceGroupOnCard
@@ -7967,7 +8063,19 @@ private function escape pString, pConvertLineEndings
    return (quote & pString & quote)
 end escape
 
-private function revIDEGetDocsAPIData
+private function __getLCBSourceFile pFolder
+   local tOldDefaultFolder
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultFolder to pFolder
+   # Isolate the source file
+   local tSource
+   put the files into tSource
+   filter tSource with "*.lcb"
+   set the defaultFolder to tOldDefaultFolder
+   return tSource
+end __getLCBSourceFile
+
+private function revIDEGetDocsAPIData 
    local tData
    
    local tAPIPath
@@ -7981,10 +8089,32 @@ private function revIDEGetDocsAPIData
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionAPI
       put tExtensionData["folder"] into tFolder
-      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      local tSource
+      put __getLCBSourceFile(tFolder) into tSource
+      
+      # Check if the lcdoc file is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, tSource) into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastGenerated
+      
+      # If there is no lcdoc file and no source, we can't generate the docs
+      if tLastModified is empty and tLastGenerated is empty then
+         next repeat
+      end if
+      
+      # Regenerate the lcdoc file if required
+      if tLastModified > tLastGenerated then
+         # Generate the docs text in lcdoc format 
+         local tDoc
+         dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with tFolder & slash & tSource
+         put the result into tDoc
+         
+         # Output the lcdoc file
+         put textEncode(tDoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      end if
       
       # Check if the .js is out of date
-      local tLastModified, tLastGenerated
       put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
