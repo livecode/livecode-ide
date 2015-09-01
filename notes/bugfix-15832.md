@@ -1,1 +1,0 @@
-# Single-line message box doesn't like ';'
