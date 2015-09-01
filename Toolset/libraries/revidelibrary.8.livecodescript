@@ -7990,7 +7990,8 @@ private function revIDEGetDocsAPIData
       if tLastModified > tLastGenerated then
          # Generate the docs text in lcdoc format 
          local tDoc
-         put revDocsGenerateDocsFileFromModularFile(tFolder & slash & tSource) into tDoc
+         dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with tFolder & slash & tSource
+         put the result into tDoc
          
          # Output the lcdoc file
          put textEncode(tDoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
