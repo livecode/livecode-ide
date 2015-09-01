@@ -2132,6 +2132,10 @@ function revRuggedId pObject
       put the long id of pObject into tObject
    else
       put pObject into tObject
+      # MDW-2015-08-21: [[ bugfix_revRuggedId ]] pObject is empty when creating a new object
+      if tObject is empty then
+         put the long id of the target into tObject
+      end if
    end if
    
    # Find out what the name of the stack owning the object is. We are only interested in the 
@@ -2172,11 +2176,11 @@ function revRuggedId pObject
    # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
    #    is in a different form than this expects. Thus we temporarily fetch it while hcAddressing
    #    is false.
-   if the hcAddressing of tStack then
-      set the hcAddressing of tStack to false
-      put the long id of pObject into tObject
-      set the hcAddressing of tStack to true
-   end if
+	if the hcAddressing of tStack then
+		set the hcAddressing of tStack to false
+		put the long id of pObject into tObject
+		set the hcAddressing of tStack to true
+	end if
    
    local tType
    put word 1 of tObject into tType
