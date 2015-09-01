@@ -1716,19 +1716,16 @@ function revIDEGlobalVariables
 end revIDEGlobalVariables
 
 function revIDEGlobalProperties
-   set the defaultfolder to revIDESpecialFolderPath("IDE")
-   return URL("file:globalProperties.txt")
+   return URL("file:" & revIDESpecialFolderPath("globals") & slash & "globalProperties.txt")
 end revIDEGlobalProperties
 
 local sRangeArray
 function revIDEGlobalPropertyRange pProperty
    if sRangeArray is empty then
       local tRangeArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:rangeArray.txt") into tRangeArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "rangeArray.txt") into tRangeArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tRangeArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sRangeArray[item 1 of tLine]
@@ -1741,11 +1738,9 @@ local sContinuousRangeArray
 function revIDEGlobalPropertyContinuousRange pProperty
    if sContinuousRangeArray is empty then
       local tContinuousArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:continuousArray.txt") into tContinuousArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "continuousArray.txt") into tContinuousArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tContinuousArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sContinuousRangeArray[item 1 of tLine]
@@ -3332,6 +3327,9 @@ function revIDESpecialFolderPath pKey
          break
       case "tutorial"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
+         break
+      case "globals"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
    end switch
 end revIDESpecialFolderPath
