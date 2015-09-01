@@ -1,0 +1,1 @@
+# Lock Location group property cannot be set or disabled from context menu
