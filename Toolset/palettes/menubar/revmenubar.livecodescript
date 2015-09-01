@@ -1479,16 +1479,28 @@ private function buildRotateSubmenu
          tab & "180°/|180"
 end buildRotateSubmenu
 
-# OK-2007-10-04 : Forgot this one- oops
-private function buildAlignSubmenu
+private function buildDistributeSubmenu
    return \
-         tab & "Left" & return & \
-         tab & "Right" & return & \
-         tab & "Top" & return & \
-         tab & "Bottom" & return & \
-         tab & "-" & return & \
-         tab & "Make Widths E&qual/|Width" & return & \
-         tab & "Make &Heights Equal/|Height"
+   tab & tab & "First to last selected" & return & \
+   tab & tab & "Edge to edge" & return & \
+   tab & tab & "Across card"
+end buildDistributeSubmenu
+
+private function buildAlignSubmenu
+   local tAlign
+   put tab & "Left" & return after tAlign
+   put tab & "Right" & return after tAlign
+   put tab & "Top" & return after tAlign
+   put tab & "Bottom" & return after tAlign
+   put tab & "-" & return after tAlign
+   put tab & "Make Widths E&qual/|Width" & return after tAlign
+   put tab & "Make &Heights Equal/|Height" & return after tAlign
+   put tab & "-" & return after tAlign
+   put tab & "Distribute Objects Horizontally..." & return after tAlign
+   put buildDistributeSubmenu() & return after tAlign
+   put tab & "Distribute Objects Vertically..." & return after tAlign
+   put buildDistributeSubmenu() after tAlign
+   return tAlign
 end buildAlignSubmenu
 
 # OK-2009-11-20 : Bug 8235 - This is much faster using the engine version
@@ -2533,7 +2545,11 @@ on revMenubarObjectMenuPick pWhich
          end if
          break
       case "Align Selected Controls"
-         revIDEActionAlign item 2 of pWhich
+         if item 2 of pWhich begins with "Distribute Objects" then
+            revIDEActionDistributeObjects item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
+         else
+            revIDEActionAlign item 2 of pWhich
+         end if
          break
    end switch
 end revMenubarObjectMenuPick
