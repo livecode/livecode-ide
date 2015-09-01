@@ -8063,7 +8063,19 @@ private function escape pString, pConvertLineEndings
    return (quote & pString & quote)
 end escape
 
-private function revIDEGetDocsAPIData
+private function __getLCBSourceFile pFolder
+   local tOldDefaultFolder
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultFolder to pFolder
+   # Isolate the source file
+   local tSource
+   put the files into tSource
+   filter tSource with "*.lcb"
+   set the defaultFolder to tOldDefaultFolder
+   return tSource
+end __getLCBSourceFile
+
+private function revIDEGetDocsAPIData 
    local tData
    
    local tAPIPath
@@ -8077,10 +8089,31 @@ private function revIDEGetDocsAPIData
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionAPI
       put tExtensionData["folder"] into tFolder
-      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      local tSource
+      put __getLCBSourceFile(tFolder) into tSource
+      
+      # Check if the lcdoc file is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, tSource) into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastGenerated
+      
+      # If there is no lcdoc file and no source, we can't generate the docs
+      if tLastModified is empty and tLastGenerated is empty then
+         next repeat
+      end if
+      
+      # Regenerate the lcdoc file if required
+      if tLastModified > tLastGenerated then
+         # Generate the docs text in lcdoc format 
+         local tDoc
+         put revDocsGenerateDocsFileFromModularFile(tFolder & slash & tSource) into tDoc
+         
+         # Output the lcdoc file
+         put textEncode(tDoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      end if
       
       # Check if the .js is out of date
-      local tLastModified, tLastGenerated
       put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
