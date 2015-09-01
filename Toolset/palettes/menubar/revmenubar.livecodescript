@@ -2483,7 +2483,8 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionCreateObject item 2 of pWhich
          break
       case "Place Group"
-         revIDEActionPlaceGroupOnCard item 2 of pWhich
+         revIDEPlaceGroupOnCard item 2 of pWhich
+         break
       case "Remove Group"
          revIDEActionRemoveGroupFromCard
          break

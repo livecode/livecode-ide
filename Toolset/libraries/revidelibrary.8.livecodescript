@@ -7108,13 +7108,13 @@ on revIDEToggleReshapeGraphic
    end if
 end revIDEToggleReshapeGraphic
 
-on revIDEPlaceGroupOnCard pGroup
+on revIDEPlaceGroupOnCard pGroupID
    # OK-2009-10-02 : Code was breaking with groups named "Background", and seemed to be overcomplicated.
    set the defaultStack to the topStack
-   if pGroup is not empty then
-      place background id pGroup onto this card
+   if pGroupID is not empty then
+      place background id pGroupID onto this card
       if the tool is "pointer tool" then
-         do ("select background id" & quote & pGroup & quote)
+         do ("select background id" & quote & pGroupID & quote)
       end if
    end if
 end revIDEPlaceGroupOnCard
