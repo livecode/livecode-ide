@@ -220,7 +220,7 @@ function revDebuggerGlobalNames
    local tGlobalsRaw, tGlobals
    
    # OK-2009-01-29 : Bug 7178 - The 64 bit Vista environment variables ending with (x86) cause problems 
-   # because Revolution throws an error when parsing do "global $VARIABLE(x86)" or similar. For now, we just 
+   # because LiveCode throws an error when parsing do "global $VARIABLE(x86)" or similar. For now, we just 
    # remove these until we can test on a 64 bit Vista machine to get them working.
    put revDebuggerValidGlobalNames() into tGlobalsRaw
    replace comma with return in tGlobalsRaw
@@ -413,7 +413,7 @@ function revDebuggerGetKeys pName, pContext
 end revDebuggerGetKeys
 
 # Parameters
-#   pCommand : a chunk of Revolution code to execute
+#   pCommand : a chunk of LiveCode code to execute
 #   pContext : the debug context to execute in, must be in the form returned by revDebuggerContexts
 # Description
 #   Executes the specified code in the debug context pContext,
@@ -616,7 +616,7 @@ end revDebuggerAddBreakpoint
 # Parameters
 #   pObject : reference to the object whose script the breakpoint should be put in
 #   pLine : the line number that the breakpoint should be placed on
-#   pCondition : a Revolution expression evaluating to true or false.
+#   pCondition : a LiveCode expression evaluating to true or false.
 # Description
 #   Sets a conditional breakpoint on the specified line and object. If the maximum number of
 #   breakpoints has already been reached, does nothing and returns an error string.
@@ -1172,7 +1172,7 @@ end revDebuggerParseWatch
 #   pObject : reference to the object whose script the watch should be in
 #   pHandler : the name of the handler that the watch should be placed in
 #   pVariable : the name of the variable to watch
-#   pCondition : a Revolution expression to evaluate on hitting the watch. Pass empty for no condition.
+#   pCondition : a LiveCode expression to evaluate on hitting the watch. Pass empty for no condition.
 # Description
 #   Registers a watch with the specified parameters. Does not activate the watch.
 command revDebuggerAddWatch pObject, pHandler, pVariable, pCondition
@@ -1610,7 +1610,7 @@ private function debuggerWatchoffset pWatch, pWatches
 end debuggerWatchoffset
 
 # Parameters
-#   pLine : a line of Revolution script
+#   pLine : a line of LiveCode script
 # Returns
 #   Whether or not pLine has a continuation
 private function debuggerLineHasContinuation pLine
@@ -1870,7 +1870,7 @@ end debuggerUpdateBreakpointStatus
 # Parameters
 #   pStack : reference to the stack to update
 #   pBreakpointNumber : the lineoffset of the breakpoint to edit in the breakpoints list of pStack
-#   pCondition : the breakpoint condition to set. This is a Revolution expression to be evaluated in the
+#   pCondition : the breakpoint condition to set. This is a LiveCode expression to be evaluated in the
 #                       breakpoint's context and should evaluate to true or false.
 # Description
 #   Sets a breakpoint's condition to pCondition.
@@ -1934,7 +1934,7 @@ end debuggerGetId
 
 # Returns
 #   Whether or not the debugger is enabled. This is currently determined by the "Script Debug Mode"
-#   setting in the Revolution preferences stack.
+#   setting in the LiveCode preferences stack.
 private function debuggerEnabled
    
    # OK-2009-01-07 : It seems that under certain quite specific circumstances, this line can throw an error
