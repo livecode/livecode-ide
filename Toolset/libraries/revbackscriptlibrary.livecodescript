@@ -2630,51 +2630,6 @@ private command _setScriptDebugModeNew pMode
   end if
 end _setScriptDebugModeNew
 
-
-private command _setScriptDebugModeOld pWhat
-   global gREVSavedBreakPoints
-   if pWhat is true then
-      if gREVSavedBreakPoints is not empty then 
-         set the breakPoints to gREVSavedBreakPoints
-      else
-         set the breakPoints to the long id of group 1 of stack "revLibrary",500
-      end if
-      revReloadBreakpoints
-   else
-      if the breakPoints is not empty then 
-         put the breakPoints into gREVSavedBreakPoints
-      else
-         put empty into gREVSavedBreakPoints
-      end if
-      set the breakPoints to empty
-      
-      local tReturn
-      put true into tReturn
-      if the mode of stack "revErrorDisplay" is not 0 then
-         disable btn "ignore" of stack "revErrorDisplay"
-         disable btn "debug..." of stack "revErrorDisplay"
-      end if
-   end if
-   
-   local tStacksList
-   put the openStacks into tStacksList
-   filter tStacksList with "revScriptEditor*"
-   repeat for each line l in tStacksList
-      if the cBreakPoints of cd 1 of stack l is not pWhat then set the cBreakPoints of cd 1 of stack l to pWhat
-   end repeat
-   if tReturn then
-      -- MW-2008-02-28: [[ Bug 3816 ]] A previously missing unlock messages here caused any stacks that are opened
-      --   by dragging onto the icon or double-clicking to *not* get their preOpen/open messages
-      lock messages
-      set the cREVScriptDebugMode of stack "revPreferences" to pWhat
-      unlock messages
-      send "traceDone" to btn "revFrontScript" of stack "revLibrary"
-   end if
-end _setScriptDebugModeOld
-
-
-
-
 function revAllSameType pObjects
    --first line true or false
    --second line the object type
@@ -3304,30 +3259,6 @@ on revUpdateAOControls pTarget
    end if
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
-
-function revColorToNumber pWhich
-   local tColorTranslation
-   put the cREVColorTranslation of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation includes synonyms
-   if pWhich is item 1 of tColorTranslation
-   then return item 2 to 4 of tColorTranslation
-   
-   local tItemNo
-   put itemOffset(cr & pWhich,tColorTranslation) into tItemNo
-   return line 1 of (item tItemNo+1 to tItemNo+3 of tColorTranslation)
-end revColorToNumber
-
-function revNumberToColor pColor
-   local tColorTranslation
-   put the cREVColorTranslation2 of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation2 doesn't include synonyms
-   --so the name returned is always in fld "Color Names"
-   if pColor is in item -3 to -1 of tColorTranslation then return word 2 of item -4 of tColorTranslation
-   
-   local tLine
-   put lineOffSet(pColor&cr,tColorTranslation) into tLine
-   return item 1 of line tLine of tColorTranslation
-end revNumberToColor
 
 function revComponentVersion pStack
    local tResult
