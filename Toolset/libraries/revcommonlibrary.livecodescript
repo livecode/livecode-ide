@@ -490,7 +490,7 @@ function revLoadedStacks pWhich
          break
       case "preference"
          if not gREVShowStacks
-         then put revFilterStacksList(tMainStacks) into tMainStacks --filters Revolution stacks
+         then put revFilterStacksList(tMainStacks) into tMainStacks --filters LiveCode stacks
          break
       default
          put revFilterStacksList(tMainStacks) into tMainStacks
@@ -1430,7 +1430,7 @@ command scrollRight
 end scrollRight
 
 # Parameters
-#   pObject : reference to any Revolution object that can contain text (field, button, group, card, stack)
+#   pObject : reference to any LiveCode object that can contain text (field, button, group, card, stack)
 #   pSize : The font size to use. If empty, uses default system font size
 #  pStyles : A list of styles to apply (eg bold,italic,underline). If empty, uses system default.
 # Description

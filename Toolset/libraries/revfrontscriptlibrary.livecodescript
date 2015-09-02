@@ -517,7 +517,7 @@ on closeStack
    --   send "updateRecentStacks" to stack "revStartCenter"
    
    # OK-2008-01-25 : Bug 5337. The recent files must be kept in a cleaned state in order to preserve
-   # compatibility with 2.8.1 and older versions of Revolution
+   # compatibility with 2.8.1 and older versions of LiveCode
    revIDECleanRecentPaths
    
    # OK-2008-08-11 : If the destroyStack property of the stack being closed is true, then the
@@ -1088,7 +1088,7 @@ on revCheckStackCollision pStack
       if m is among the lines of tStacks then
         if tFilePath2 is not empty then put "in file" && tFilePath2 & space into tFileInfo
         answer warning "A stack" && quote & m & quote && tFileInfo & \
-            "is already in memory.  The Revolution UI does not distinguish stacks which have identical names, so editing these stack files while both are in memory could result in data loss."
+            "is already in memory.  The LiveCode UI does not distinguish stacks which have identical names, so editing these stack files while both are in memory could result in data loss."
             exit repeat
          end if
       end repeat
