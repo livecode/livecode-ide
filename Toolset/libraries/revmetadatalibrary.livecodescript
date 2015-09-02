@@ -11,7 +11,7 @@ end revUnloadLibrary
 ################################################################################
 #
 # Metadata library, this allows the setting and getting of metadata items on 
-# Revolution objects. The metadata is divided into types, which map to the 
+# LiveCode objects. The metadata is divided into types, which map to the 
 # custom property sets cREVGeneral, cREVDatabase etc.
 #
 ################################################################################

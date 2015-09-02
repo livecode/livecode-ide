@@ -76,7 +76,7 @@ command revIDESuspendDevelopmentTools
    delete last char of tRemoveBackList
    delete last char of tRemoveFrontList
    
-   -- Close all Revolution IDE stacks
+   -- Close all LiveCode IDE stacks
    local tList, tMode, tClosedStacksList
    put the openStacks into tList
    lock messages
@@ -348,7 +348,7 @@ end revIDESendCurrentWindowToBack
 --local sAddedObjects
 
 # Parameters
-#   pRootObject : the object to list the tree for, this is a reference to any Revolution object
+#   pRootObject : the object to list the tree for, this is a reference to any LiveCode object
 #   pIncludeSubstacks : if pRootObject is a mainstack, this determines whether or not its substacks are searched. Otherwise its ignored.
 # Returns
 #   Empty if all possible objects were returned, otherwise a warning string explaining why some / all were ommited.
@@ -639,7 +639,7 @@ local sRecentFileMap
 local sRecentFileItemMap
 
 # Parameters
-#   pPath : the full path of the stack file to add to the recent files list, in Revolution format.
+#   pPath : the full path of the stack file to add to the recent files list, in LiveCode format.
 # Description
 #   Adds a stack file to the recent paths list. New stack files are added to the top of the list. If pPath is already in the 
 #   list then it is not added again, instead it is moved to the top of the list. If the list is full, then the last item is 
@@ -658,7 +658,7 @@ command revIDEAddRecentPath pPath
 end revIDEAddRecentPath
 
 # Parameters
-#   pPath : the full path of the stack file to remove from the list in Revolution format
+#   pPath : the full path of the stack file to remove from the list in LiveCode format
 # Description
 #   Removes a stack file from the recent paths list. If the file is not in the list then the list will not change
 #   and no error will be thrown.
@@ -859,7 +859,7 @@ end revIDESaveRequest
 # Parameters
 #   pName : a list of recent file names
 # Description
-#   Escapes chars that have special meanings in Revolution menus and returns the escaped version of pName
+#   Escapes chars that have special meanings in LiveCode menus and returns the escaped version of pName
 private function recentPathEscapeNameList pName
   if utilityGetPlatform() is "MacOS" then 
     replace "/" with "\/" in pName
@@ -877,7 +877,7 @@ end recentPathEscapeNameList
 
 private function recentPathListGet
   # OK-2007-09-11 : Bug 5337, when retrieving the list of stacks, we also check the old property name
-  # cRecentPaths, as old versions of Revolution using the same preferences stack might have changed it.
+  # cRecentPaths, as old versions of LiveCode using the same preferences stack might have changed it.
   # If the old one doesn't match then its been updated, so we set the new one to the old one. 
   local tOldRecentPaths
   lock messages
