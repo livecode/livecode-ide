@@ -2260,8 +2260,10 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          ######### SUBMENUS ########
       case "Card"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
+         break
       case "Stack"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, tTargetStack
+         break
       default
          break
    end switch
