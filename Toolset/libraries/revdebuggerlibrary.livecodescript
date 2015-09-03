@@ -237,12 +237,22 @@ function revDebuggerGlobalNames
 end revDebuggerGlobalNames
 
 # Returns
-#   A list of the globals with valid names.
-#
-# FIXME this function is no longer required; all globals now contain
-# valid names.
+#   A list of the globals with valid names. I.e not the ones with (x86) in them on Vista 64bit.
 function revDebuggerValidGlobalNames
-   return the globals
+   local tGlobalsRaw
+   put the globals into tGlobalsRaw
+   
+   replace comma with return in tGlobalsRaw
+   
+   # For now we just filter out the Vista 64 bit ones. Really we should remove anything that is not a valid Rev identifier
+   # according to lextable.cpp, but that can easily be added in later as this is the only place in the IDE this is done.
+   filter tGlobalsRaw without "*(x86)"
+   filter tGlobalsRaw without "*/*"
+   filter tGlobalsRaw without "*-*"
+   
+   replace return with comma in tGlobalsRaw
+   
+   return tGlobalsRaw
 end revDebuggerValidGlobalNames
 
 # Parameters
