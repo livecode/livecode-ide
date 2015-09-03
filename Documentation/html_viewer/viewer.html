@@ -409,7 +409,7 @@
 									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2),tEntryObject+'</td></tr>';
 									break;
 								default:
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
+									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+marked(replace_link_placeholders_with_links(value2.description,tEntryObject))+'</td></tr>';
 									break;
 							}
 						});
