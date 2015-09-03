@@ -6919,6 +6919,8 @@ on revIDEEditGroup pGroup
 end revIDEEditGroup
 
 on revIDEStopEditingGroup
+   # TS-2015-09-02: [[ Bug 15854 ]] Set the defaultStack before executing the "stop editing" command.
+   set the defaultStack to the topStack
    stop editing
 end revIDEStopEditingGroup
 
