@@ -1,0 +1,1 @@
+# Stop Editing Group menu item doesn't work in LC8
