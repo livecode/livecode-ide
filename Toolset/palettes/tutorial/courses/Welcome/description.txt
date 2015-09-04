@@ -1,0 +1,1 @@
+Welcome to LiveCode. There are two tours available. One for coders and the other for complete beginners. Each will get you up to speed quickly and also lead you on to the getting started options.

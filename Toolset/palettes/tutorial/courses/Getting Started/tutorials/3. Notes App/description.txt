@@ -1,0 +1,6 @@
+You will build the iOS notes app. You will learn how to:- Create and configure mobile UI
+- Create apps with multiple screens
+- Access local files
+
+You will also learn the following coding principles:
+- Files. How to read and write to files on your computer.

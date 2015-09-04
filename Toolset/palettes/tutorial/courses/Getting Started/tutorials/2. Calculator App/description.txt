@@ -1,0 +1,7 @@
+You will build the iOS calculator app. You will learn how to:- Create and customise user interfaces
+- Respond to user input from the keyboard and mouse
+- Perform calculations in script- Deploy your app
+
+You will also learn the following coding principles:
+- Messages. What they are, how you receive them and what you do with them.
+- Variables. What they are and how to use them to store data. 

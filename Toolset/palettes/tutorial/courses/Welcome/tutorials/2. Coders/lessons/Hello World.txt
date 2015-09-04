@@ -1,0 +1,103 @@
+tutorial "Hello World"
+
+prologue
+	The first thing you learn to do in an programming language is how to say "Hello World."
+	
+	In this tutorial we'll do just that.
+end prologue
+
+step "Create Mainstack"
+	Click on the File menu, and select New Stack > Default Size
+action
+    -- Give the user a visual hint of where they should be clicking
+    highlight menu item "New Stack" of menu "File"
+    -- The tutorial scripts only act on 'captured' object - this will cause the next created stack
+    -- to be internally tagged as 'Mainstack' so it can be referenced in the rest of the tutorial
+    capture the next new stack as "Mainstack"
+    -- Wait until there is a captured stack with tag "Mainstack"
+    wait until there is a stack "Mainstack"
+    -- Advance to another step
+    go to step "Create Hello Button"
+end step
+
+step "Create Hello Button"
+    Drag out a button from the Tools palette onto your stack. We will use this to respond with "Hello World" when the user clicks the button.
+action
+    highlight tool "Create Button"
+    capture the next new button of stack "Mainstack" as "Hello Button"
+    wait until there is a button "Hello Button"
+    go to step "Set Hello Button Area"
+end step
+
+step "Set Hello Button Area"  
+    Resize and position the button field at the bottom of the stack as shown.
+action
+    add guide "Area" with rect "142,180,224,203" to stack "Mainstack"
+    highlight guide "Area"
+    wait until button "Hello Button" fits guide "Area" with tolerance 5
+    go to step "Set Hello Button Properties"
+end step
+
+step "Set Hello Button Properties"
+    Double click on the button to display its properties in the property inspector.
+action
+    highlight button "Hello Button"
+    wait until there is a property inspector for button "Hello Button"
+    go to step "Set Hello Button Name"
+end step
+
+step "Set Hello Button Name"
+    We're going to set the name propety of the button to "Hello", this will dsiplay the word "Hello" on the button.
+action
+    highlight property "name" of section "Basic"
+    wait until the name of button "Hello Button" is "Hello"
+    go to step "Hello Button Script"
+end step
+
+step "Hello Button Script"
+	The mouseUp message is sent to a button when the user clicks on it. We are going to make a dialog
+	box pop up when the user clicks on the 'Hello' button, by using LiveCode's 'answer' command in response 
+	to the mouseUp message.
+action
+	go to step "Set Hello Button Script"	
+end step
+
+step "Set Hello Button Script"
+    Right click on the button and select 'Edit Script' from the menu to open the script 
+    editor.
+action
+    highlight button "Hello Button"
+    wait until there is a script editor for button "Hello Button"
+    go to step "Set Hello Button Script 2"
+end step
+
+step "Set Hello Button Script 2"
+    Set the script of the button to the following, and click the Apply button (in the top left corner of the script editor):
+script
+    on mouseUp
+    	answer "Hello World"
+    end mouseUp
+action
+    wait until button "Hello Button" is scripted
+    go to step "Set Tool To Run"
+end step
+
+step "Set Tool To Run"
+    Now test the code you have written. First, switch to run mode by clicking on the run 
+    mode tool in the Tools palette.
+action 
+    highlight tool "Run Mode"
+	  wait until the tool is run
+		go to step "Click Hello Button"
+end step
+
+step "Click Hello Button"
+    Click on the "Hello" button to see the result.
+action
+    highlight button "Hello Button"
+    wait until button "Hello Button" pops up answer dialog
+end step
+
+epilogue
+    Congratulations, you have just made your first app!
+end epilogue
