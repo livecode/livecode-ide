@@ -863,7 +863,6 @@ on revInitialiseTutorial
    set the visible of it to false
    
    insert the script of stack "revTutorial" into front
-   go invisible stack "revTutorial" as palette
    
    unlock messages
    unlock screen
@@ -917,6 +916,12 @@ on revTutorialStartWithState pStep, pTaggedObjects
    put revIDETutorialInProgress() into tTutorialInfo
    revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
    revTutorialUpdateProgress pStep
+   
+   lock screen
+   lock messages
+   go invisible stack "revTutorial" as palette
+   unlock messages
+   unlock screen
    
    if pStep is "prologue" or pStep is empty then
       revTutorialPrologue
