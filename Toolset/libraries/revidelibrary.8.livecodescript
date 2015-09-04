@@ -380,9 +380,9 @@ private function __organisePropertyInfo pInfoA, pPopup
          put __organisePropertyInfo(pInfoA[tKey]["popup"], true) into tGroupData["proplist"][tKey]["popup"] 
       end if 
       if pPopup then
-         put tGroupData into tOrganisedA["grouplist"][tGroupLabel]
+         union tOrganisedA["grouplist"][tGroupLabel] with tGroupData recursively
       else
-         put tGroupData into tOrganisedA[tSection]["grouplist"][tGroupLabel]
+         union tOrganisedA[tSection]["grouplist"][tGroupLabel] with tGroupData recursively
       end if
    end repeat
    return tOrganisedA
@@ -428,7 +428,14 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
          end if
          
          put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         put pPropInfoA[tPropertyName]["section"] into tSection
+         
+         # Override the section if necessary
+         put item 6 of tLine into tSection
+         if tSection is empty then
+            put pPropInfoA[tPropertyName]["section"] into tSection
+         else
+            put tSection into pPropInfoA[tPropertyName]["section"]
+         end if
          
          # The groups are ordered by their appearance in the spec file
          if tGroupCountsA[tSection][tGroupLabel] is empty then
@@ -477,6 +484,21 @@ private function __propertyInfoFilename
    return "propertyInfo.txt"
 end __propertyInfoFilename
 
+private function __classicToolsOrderFilename
+   return "classicToolsOrder.txt"
+end __classicToolsOrderFilename 
+
+private on __orderClassicTools
+   local tToolsOrderFile
+   put revIDESpecialFolderPath("Object Property Definitions") & slash & __classicToolsOrderFilename() into tToolsOrderFile
+   
+   local tOrder
+   repeat for each line tTool in url ("file:" & tToolsOrderFile)
+      add 1 to tOrder
+      put tOrder into sClassicObjectProperties[tTool]["order"]
+   end repeat
+end __orderClassicTools
+
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
    --put "reading object properties" after msg
@@ -509,7 +531,9 @@ on __objectPropertiesRead
 
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
-
+   
+   __orderClassicTools
+   
    put tPropertiesInfo into sClassicPropertiesInfo
 
    revIDERestoreDefaultFolder
@@ -1104,18 +1128,13 @@ private on __fetchPropertyOfControl pProp, @pData
       put the short name of the target into pData["name"]
    catch tError
    end try
-
-   if tError is not empty then
-      try
-         do ("put" && pProp && "of" && the target && "into pData[pProp]")
-      catch tError
-      end try
-   end if
-
+   
+   # AL-2015-07-15: Remove 'do' construction, as evaluating the target as a string
+   #  causes incorrect object references when obejcts have the same name
    if pData[pProp] is empty then
       try
          local tEffective
-         do ("put effective" && pProp && "of" && the target && "into tEffective")
+         put the effective pProp of the target into tEffective
          if tEffective is not empty then
             put tEffective into pData["effective" && pProp]
          end if
@@ -1697,19 +1716,16 @@ function revIDEGlobalVariables
 end revIDEGlobalVariables
 
 function revIDEGlobalProperties
-   set the defaultfolder to revIDESpecialFolderPath("IDE")
-   return URL("file:globalProperties.txt")
+   return URL("file:" & revIDESpecialFolderPath("globals") & slash & "globalProperties.txt")
 end revIDEGlobalProperties
 
 local sRangeArray
 function revIDEGlobalPropertyRange pProperty
    if sRangeArray is empty then
       local tRangeArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:rangeArray.txt") into tRangeArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "rangeArray.txt") into tRangeArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tRangeArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sRangeArray[item 1 of tLine]
@@ -1722,11 +1738,9 @@ local sContinuousRangeArray
 function revIDEGlobalPropertyContinuousRange pProperty
    if sContinuousRangeArray is empty then
       local tContinuousArray, tLine
-
-      set the defaultfolder to revIDESpecialFolderPath("IDE")
-      put URL("file:continuousArray.txt") into tContinuousArray
+      put URL("file:" & revIDESpecialFolderPath("globals") & slash & "continuousArray.txt") into tContinuousArray
       set the itemdel to tab
-
+      
       repeat for each line tLine in tContinuousArray
          replace comma with return in item 2 of tLine
          put item 2 of tLine into sContinuousRangeArray[item 1 of tLine]
@@ -2388,7 +2402,21 @@ end revIDERelativeStackPath
 Returns A return sepearetd list of the long ids of the selected objects
 */
 function revIDESelectedObjects
-   return revPaletteObjects()
+   local tSelobj
+   put the selobj into tSelobj
+   switch
+      case the cREVLinked of this stack is not empty
+         return the cREVLinked of this stack
+         break
+      case tSelobj is empty
+         if the mode of the topStack is 1
+         then return the long name of the topStack
+         else return empty
+         break
+      default
+         return tSelobj
+         break
+   end switch
 end revIDESelectedObjects
 
 #############
@@ -2560,10 +2588,17 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
          create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
          local tSize
-         put revIDEExtensionWidgetPreferredSize(pObjectTypeID) into tSize
+         put revIDEExtensionProperty(pObjectTypeID, "preferredsize") into tSize
          if tSize is not empty then
             set the width of tCreatedControlID to item 1 of tSize
             set the height of tCreatedControlID to item 2 of tSize
+         end if
+         
+         # Set the name of the newly created widget
+         local tName
+         put revIDEExtensionProperty(pObjectTypeID, "title") into tName
+         if tName is not empty then
+            set the name of tCreatedControlID to tName
          end if
       catch tError
          return false
@@ -2971,6 +3006,104 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
+on revIDEDistributeObjects pObjects, pHorizontally, pType
+   local tNumberOfObjects
+   put the number of lines in pObjects into tNumberOfObjects
+   
+   local tSize
+   put 0 into tSize
+   
+   local tPerSpace, tOffset
+   switch pType
+      case "First to last selected"
+         if tNumberOfObjects < 3 then exit to top
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects 
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         local tFirstObj, tLastObj
+         put line 1 of pObjects into tFirstObj
+         put line tNumberOfObjects of pObjects into tLastObj
+         
+         local tStartCoord, tEndCoord
+         if pHorizontally then
+            put the right of tFirstObj into tStartCoord
+            put the left of tLastObj into tEndCoord
+         else
+            put the bottom of tFirstObj into tStartCoord
+            put the top of tLastObj into tEndCoord
+         end if 
+         put (tEndCoord - tStartCoord - tSize) / (tNumberOfObjects -1) into tPerSpace
+         put tStartCoord + tPerSpace into tOffset
+         repeat with i = 2 to tNumberOfObjects -1
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Across card"
+         if tNumberOfObjects < 1 then exit to top
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               add the width of it to tSize
+            else
+               add the height of it to tSize
+            end if
+         end repeat
+         get line 1 of pObjects
+         local tCardName, tCardSize
+         put word 5 to (the number of words in it) of it into tCardName
+         if pHorizontally then
+            put the width of tCardName into tCardSize
+         else
+            put the height of tCardName into tCardSize
+         end if
+         put (tCardSize - tSize) / (tNumberOfObjects + 1) into tPerSpace
+         put tPerSpace into tOffset
+         repeat with i = 1 to tNumberOfObjects
+            get line i of pObjects
+            if pHorizontally then
+               set the left of it to round(tOffset)
+               add the width of it + tPerSpace to tOffset
+            else 
+               set the top of it to round(tOffset)
+               add the height of it + tPerSpace to tOffset
+            end if
+            send "revCacheGeometry true" to it
+         end repeat
+         break
+      case "Edge to edge"
+         if tNumberOfObjects < 2 then exit to top
+         local tPrevObj, tNextObj
+         repeat with i = 2 to tNumberOfObjects
+            put line i of pObjects into tNextObj
+            put line (i - 1) of pObjects into tPrevObj
+            if pHorizontally then
+               set the left of tNextObj to the right of tPrevObj
+            else             
+               set the top of tNextObj to the bottom of tPrevObj
+            end if
+            send "revCacheGeometry true" to tNextObj
+         end repeat
+         break
+   end switch
+end revIDEDistributeObjects
+
+on revIDEActionDistributeObjects pHorizontally, pType
+   revIDEDistributeObjects the selobj, pHorizontally, pType
+end revIDEActionDistributeObjects
+
 on revIDECenterControls pControls, pPosition
    local tInitialControl,tInitialLoc, tPositionValue, tNewLoc, tObject, tObjectLoc
 
@@ -3152,27 +3285,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/extensions" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/extensions" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/temp" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/downloading" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/extensions/uninstalled" into tPath
+         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -3193,12 +3326,15 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
          break
       case "examples"
-         put  item 1 to -3 of the filename of stack "home" & "/examples" into tPath
+         put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "tutorial"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
+         break
+      case "globals"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
    end switch
 end revIDESpecialFolderPath
@@ -3415,7 +3551,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome,Preferences"	
+   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome,Preferences,Search"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3488,6 +3624,7 @@ on revIDEPositionPalette pStackName
             set the topleft of stack pStackName to item 1 of tRect, item 2 of tRect
             break
          case "message box"
+         case "revDictionary"
             set the rect of stack pStackName to tRect
             break
          default 
@@ -3516,6 +3653,9 @@ on revIDEPositionPaletteDefault pStackName
          break
       case "message box"
          set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+         break
+      case "revDictionary"
+         set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
          break
       case "revInspector"
          if revIDEStackIsRevStack(the long ID of the topstack) then
@@ -4198,6 +4338,22 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
+function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
+   local tDetailedFiles, tMax
+   set the defaultFolder to pFolder
+   put the detailed files into tDetailedFiles
+   sort tDetailedFiles descending numeric by item 5 of each
+   put item 5 of line 1 of tDetailedFiles into tMax
+   if tMax is not a number then put 0 into tMax
+   if pRecursive then
+      repeat for each line tFolder in the folders
+         if tFolder is ".." then next repeat
+         put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
+      end repeat
+   end if
+   return tMax
+end revIDELastModifiedTimeOfFilesInFolder
+
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
@@ -4241,6 +4397,10 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsescripttabsbehavior.livecodescript"
       case "toolbar"
          return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
+      case "leftbar"
+         return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
+      case "handlerfilter"
+         return tPathToBehaviors & slash & "revsehandlerfilterbehavior.livecodescript"
       case "stack"
       default
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
@@ -4486,6 +4646,10 @@ end CreateTemplateForControl
 # Standalone Settings
 #############
 
+on revIDEStandaloneSettingsForStack pStackID
+   send "revStandaloneSettings" && quote & the short name of pStackID & quote to stack "revStandaloneSettings"
+end revIDEStandaloneSettingsForStack
+
 private function __standaloneSettingsInfoFilename
    return "standaloneSettings.txt"
 end __standaloneSettingsInfoFilename
@@ -4701,7 +4865,8 @@ function revIDELocalise pString, pSubstitutions
    repeat for each key tKey in pSubstitutions
       replace ("%" & tKey) with pSubstitutions[tKey] in pString
    end repeat
-   return pString && "(Localised String)"
+   --return pString && "(Localised String)"
+   return pString
 end revIDELocalise
 
 ########################
@@ -4768,6 +4933,9 @@ on revIDENewMainstack pWidth, pHeight
    
    # Send the 'ideNewStack' message
    revIDEMessageSend "ideNewStack", it
+   
+    # Update the active stacks
+   revIDEMessageSend "ideActiveStacksChanged"
    
    # Return the created stack long id
    return it
@@ -4875,14 +5043,18 @@ on revIDENewSubstack
    # Get the current stack
    local tCurrentStack
    put the short name of the topStack into tCurrentStack
-   if the mainStack of stack tCurrentStack is not tCurrentStack then put the mainStack of stack tCurrentStack into tCurrentStack
+   revIDENewSubstackOfStack tCurrentStack
+end revIDENewSubstack
 
+on revIDENewSubstackOfStack pStack
+   if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
+   
    # Create a new stack
    revIDENewMainstack
-
+   
    # Make the new stack a substack of the current stack
-   set the mainStack of the topStack to tCurrentStack
-end revIDENewSubstack
+   set the mainStack of the topStack to pStack
+end revIDENewSubstackOfStack
 
 /*
 Opens a stack from file.
@@ -5002,6 +5174,21 @@ on revIDEActionCloseStack
    revIDECloseStack the long ID of stack tStack, false
 end revIDEActionCloseStack
 
+on revIDEDeleteSubstack pSubstackID
+   if the mainstack of pSubstackID is the short name of pSubstackID then
+      # Not a substack
+      exit revIDEDeleteSubstack
+   end if
+   
+   # Detach from mainstack
+   local tStackName
+   put the short name of pSubstackID into tStackName
+   set the mainstack of pSubstackID to tStackName
+   
+   # Close and remove from memory
+   revIDECloseStack the long id of stack tStackName, true
+end revIDEDeleteSubstack
+
 /*
 Returns a list of the recently opened stacks.
 
@@ -5064,7 +5251,7 @@ function revIDEAcceptedTypes pType
          return "mp3,wav,aiff"
          break
       case "livecode"
-         return "livecode,rev,lc,livecodescript"
+         return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
          break
@@ -5560,7 +5747,7 @@ on revIDESaveStackAs pStackID, pFileName
    save pStackID as pFileName
    
    local tShortName
-   put the short name of stack pStackID
+   put the short name of stack pStackID into tShortName
    if the result is not empty then
       local tLocaliseSubstitutions
       put tShortName into tLocaliseSubstitutions[1]
@@ -6358,12 +6545,6 @@ function revIDETestCanDeployToTarget pTarget
 end revIDETestCanDeployToTarget
 
 on revIDESetTestTarget pTarget
-
-end revIDESetTestTarget
-
-on revIDEDeployStack pStackID
-
-end revIDEDeployStack
    revIDEDeploySetTarget pTarget
 end revIDESetTestTarget
 
@@ -6733,6 +6914,8 @@ on revIDEEditGroup pGroup
 end revIDEEditGroup
 
 on revIDEStopEditingGroup
+   # TS-2015-09-02: [[ Bug 15854 ]] Set the defaultStack before executing the "stop editing" command.
+   set the defaultStack to the topStack
    stop editing
 end revIDEStopEditingGroup
 
@@ -6931,7 +7114,8 @@ on revIDESendMessageToObject pMessage, pTarget
    
    local tRemoveFrontList
    repeat for each line tScript in tScriptsList
-      if char 1 to 3 of the short name of tScript is "rev" and the short name of tScript is not "revDebugger" then
+      # AL-2015-07-28: [[ Bug 14971 ]] Don't remove the debugger from the frontscripts when sending message
+      if char 1 to 3 of the short name of tScript is "rev" and the short name of tScript is not "revDebuggerLibrary" then
          if tRemoveFrontList is empty then
             put tScript into tRemoveFrontList
          else
@@ -7017,13 +7201,13 @@ on revIDEToggleReshapeGraphic
    end if
 end revIDEToggleReshapeGraphic
 
-on revIDEPlaceGroupOnCard pGroup
+on revIDEPlaceGroupOnCard pGroupID
    # OK-2009-10-02 : Code was breaking with groups named "Background", and seemed to be overcomplicated.
    set the defaultStack to the topStack
-   if pGroup is not empty then
-      place background id pGroup onto this card
+   if pGroupID is not empty then
+      place background id pGroupID onto this card
       if the tool is "pointer tool" then
-         do ("select background id" & quote & pGroup & quote)
+         do ("select background id" & quote & pGroupID & quote)
       end if
    end if
 end revIDEPlaceGroupOnCard
@@ -7267,6 +7451,23 @@ function revIDEEnsureControlsOfType pControls, pType
    end repeat
    return true
 end revIDEEnsureControlsOfType
+
+on revIDESetModeOfStack pStack, pMode
+   switch pMode
+      case "modeless"
+         modeless pStack
+         break
+      case "palette"
+         palette pStack
+         break
+      case "toplevel"
+         toplevel pStack
+         break
+      case "modal"
+         modal pStack
+         break
+   end switch
+end revIDESetModeOfStack
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -8227,12 +8428,24 @@ private function escape pString, pConvertLineEndings
    return (quote & pString & quote)
 end escape
 
-private function revIDEGetDocsAPIData
+private function __getLCBSourceFile pFolder
+   local tOldDefaultFolder
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultFolder to pFolder
+   # Isolate the source file
+   local tSource
+   put the files into tSource
+   filter tSource with "*.lcb"
+   set the defaultFolder to tOldDefaultFolder
+   return tSource
+end __getLCBSourceFile
+
+private function revIDEGetDocsAPIData 
    local tData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
-   put url ("binfile:" & tAPIPath & slash & "distributed_API.js") into tData
+   put url ("binfile:" & tAPIPath & slash & "distributed_api.js") into tData
    
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
@@ -8241,10 +8454,32 @@ private function revIDEGetDocsAPIData
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionAPI
       put tExtensionData["folder"] into tFolder
-      if there is a not file (tFolder & slash & "api.lcdoc")  then next repeat
+      
+      local tSource
+      put __getLCBSourceFile(tFolder) into tSource
+      
+      # Check if the lcdoc file is out of date
+      local tLastModified, tLastGenerated
+      put revIDELastModifiedTimeOfFile(tFolder, tSource) into tLastModified
+      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastGenerated
+      
+      # If there is no lcdoc file and no source, we can't generate the docs
+      if tLastModified is empty and tLastGenerated is empty then
+         next repeat
+      end if
+      
+      # Regenerate the lcdoc file if required
+      if tLastModified > tLastGenerated then
+         # Generate the docs text in lcdoc format 
+         local tDoc
+         dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with tFolder & slash & tSource
+         put the result into tDoc
+         
+         # Output the lcdoc file
+         put textEncode(tDoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+      end if
       
       # Check if the .js is out of date
-      local tLastModified, tLastGenerated
       put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
@@ -8294,7 +8529,8 @@ private function revIDEGetDocsGuideData
          
          if tGuide is not empty then
             put "{" & CR after tExtensionGuide
-            put tab & quote & "guide" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put tab & quote & "name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put tab & quote & "display name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             
@@ -8361,3 +8597,139 @@ on revIDERegenerateBuiltDictionaryData
    revIDERegenerateBuiltAPIs
    revIDERegenerateBuiltGuides
 end revIDERegenerateBuiltDictionaryData
+
+on revIDEGenerateDistributedDocs
+   start using stack (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
+   revIDEGenerateDistributedGuide
+   revIDEGenerateDistributedAPI
+   revIDERegenerateBuiltDictionaryData
+end revIDEGenerateDistributedDocs
+
+on revIDEGenerateDistributedGuide
+   # Set the default folder to where the guide markdown files are stored in the IDE
+   local tGuideFolder, tOldDefaultFolder
+   put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
+   
+   # Check if the distributed guide is out of date
+   local tLastModified, tLastGenerated
+   put revIDELastModifiedTimeOfFilesInFolder(tGuideFolder) into tLastModified
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
+   
+   # If we don't need to regenerate, exit
+   if tLastModified < tLastGenerated then
+      exit revIDEGenerateDistributedGuide
+   end if
+   
+   put the defaultfolder into tOldDefaultFolder
+   set the defaultfolder to tGuideFolder
+   
+   local tGuideData, tGuideName
+   set the itemdelimiter to "."
+   repeat for each line tFile in the files
+      if tFile begins with "."  then next repeat
+      if tFile ends with "~" then next repeat
+      # The name of the guide is just the filename without extension
+      put item 1 to -2 of tFile into tGuideName
+      get url ("binfile:" & tGuideFolder & slash & tFile)
+      if it is not empty then
+         get textDecode(it, "utf-8")
+         
+         # Remove table of contents 
+         replace "[toc]" with empty in it
+         
+         # Build JSON data
+         put tab & "{" & CR after tGuideData
+         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
+         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
+         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+      end if
+   end repeat
+   delete the last char of tGuideData
+   
+   # Write out to apropriate location
+   put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
+   set the defaultFolder to tOldDefaultFolder
+end revIDEGenerateDistributedGuide
+
+command revIDEGenerateDistributedAPI
+   local tRepoPath
+   put revEnvironmentRepositoryPath() into tRepoPath
+   
+   local tDocsFolder
+   put tRepoPath & slash & "docs" into tDocsFolder
+   if there is not a folder tDocsFolder then
+      answer "No dictionary data found at" && tDocsFolder
+   end if
+   
+   # Check to see if we need to regenerate the script dictionary
+   local tLastModified, tLastGenerated
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "script.js") into tLastGenerated
+   put revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "dictionary", true) into tLastModified
+   put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "glossary", true)) into tLastModified
+   
+   # Regenerate dictionary if necessary
+   if tLastModified > tLastGenerated then
+      local tScriptA
+      put "LiveCode Script" into tScriptA["name"]
+      put "LiveCode" into tScriptA["author"]
+      put "dictionary" into tScriptA["type"]
+      # Parse the dictionary files into a structured array
+      put revDocsParseDictionaryToLibraryArray(tDocsFolder) into tScriptA["doc"]
+      
+      local tJSON
+      put revDocsFormatLibraryArrayAsJSON(tScriptA) into tJSON
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js")
+   end if
+   
+   # Check to see if we need to regenerate the builder dictionary
+   local tModuleList
+   put revDocsGetBuiltinModuleList(revEnvironmentBinariesPath() & slash & "modules" & slash & "lci", tRepoPath) into tModuleList
+   
+   set the itemdelimiter to slash
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "builder.js") into tLastGenerated
+   put 0 into tLastModified
+   repeat for each line tLine in tModuleList
+      put max(tLastModified, revIDELastModifiedTimeOfFile(item 1 to -2 of tLine, item -1 of tLine)) into tLastModified
+   end repeat
+   
+   # Regenerate dictionary if necessary
+   if tLastModified > tLastGenerated then
+      local tModularA, tModularCount, tBlocksA, tParsedA
+      put 1 into tModularCount
+      set the itemdelimiter to "."
+      repeat for each line tLine in tModuleList
+         if item -1 of tLine is "lcdoc" then
+            get url("file:" & tLine)
+         else
+            get revDocsGenerateDocsFileFromModularFile(tLine)
+         end if
+         if it is not empty then
+            put it into tModularA[tModularCount]
+            add 1 to tModularCount
+         end if
+      end repeat
+      
+      local tBuilderA
+      put 1 into tModularCount
+      repeat for each element tElement in tModularA
+         put revDocsParseDocText(tElement) into tParsedA
+         repeat for each key tEntry in tParsedA["doc"]
+            put tParsedA["doc"][tEntry] into tBuilderA["doc"][tModularCount]
+            add 1 to tModularCount
+         end repeat
+         put empty into tParsedA
+      end repeat
+      put "LiveCode Builder" into tBuilderA["name"]
+      put "LiveCode" into tBuilderA["author"]
+      put "dictionary" into tBuilderA["type"]
+      
+      put revDocsFormatLibraryArrayAsJSON(tBuilderA) into tJSON
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js")
+   end if
+   
+   local tDictionaryData
+   put textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js"), "utf-8") into tDictionaryData
+   put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js"), "utf-8") after tDictionaryData
+   
+   put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
+end revIDEGenerateDistributedAPI

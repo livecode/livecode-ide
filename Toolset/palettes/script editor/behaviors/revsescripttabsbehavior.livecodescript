@@ -918,6 +918,14 @@ on mouseUp pButtonNumber
          revSERemoveTargetObject sTabMap[tClickedTabNumber]
       else
          # Clicking anywhere else in the tab selects it
+
+         -- It's necessary to reset the focus, because
+         -- revSESetCurrentObject blocks the messages that would
+         -- otherwise trigger focus-loss messages on fields (such as
+         -- the handler filter field in the left bar of the script
+         -- editor).
+         focus on nothing
+
          revSESetCurrentObject sTabMap[tClickedTabNumber]
       end if
    end if

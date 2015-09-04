@@ -192,6 +192,7 @@ function calculateLayout pProps
    
    # Calculate the amount of extra space beyond the min widths of all the editors
    subtract tMinTotal from tAvailableSpace
+   subtract (the palettePadding of this stack * (the number of elements in tMinMaxA - 1)) from tAvailableSpace
    put expandedToFit(tMinMaxA, tAvailableSpace) into tLayoutA[1]
    return tLayoutA
 end calculateLayout
@@ -269,6 +270,9 @@ on rowResize
    local tWidthsA
    put calculateLayout(sOrder) into tWidthsA
    
+   # Fetch the palette padding outside of lock messages
+   local tPadding
+   put the palettePadding of this stack into tPadding
    
    # Position the controllers
    local tEditorSpace, tEditorCount
@@ -338,7 +342,7 @@ on rowResize
          put tEditorHeight into tHeightOfRow
       end if
       
-      add tWidthsA[tLineNumber][tPropNumber] + the palettePadding of this stack to tLeft
+      add tWidthsA[tLineNumber][tPropNumber] + tPadding to tLeft
       put tGroupLongID into tLastGroupLongID
       unlock messages
    end repeat

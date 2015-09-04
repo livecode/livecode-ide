@@ -26,13 +26,6 @@ on editorInitialize
    end if
 end editorInitialize
 
-private function firstNonEmpty pLeft, pRight
-   if pLeft is empty then
-      return pRight
-   end if
-   return pLeft
-end firstNonEmpty
-
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled, tProperty
@@ -149,7 +142,7 @@ on valueChanged pProperty, pValue
    switch pProperty
       case "effectColor"
          put item 1 to 3 of pValue into tValue["color"]
-         put 255 - item 4 of pValue into tValue["opacity"]
+         put item 4 of pValue into tValue["opacity"]
          break
       case "effectSize"
       case "effectSpread"

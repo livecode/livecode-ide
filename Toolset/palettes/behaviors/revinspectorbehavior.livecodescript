@@ -199,6 +199,10 @@ private on inspectorSectionSet pSection
 end inspectorSectionSet
 
 private function inspectorSectionGet
+   if sSelectedSection is empty then
+      put sDataA[1]["label"] into sSelectedSection
+      return 1
+   end if
    repeat for each key tIndex in sDataA
       if sDataA[tIndex]["label"] is sSelectedSection then
          return tIndex

@@ -348,8 +348,8 @@
 	function displayLibraryChooser(){
 		var tHTML = ""
 		$.each(dictionary_data.docs, function(index, libraryData){
-			if(index == tState.selected_api_id) tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'" class="active">'+libraryData.library+'</a></li>';
-			else tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'">'+libraryData.library+'</a></li>';
+			if(index == tState.selected_api_id) tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'" class="active">'+libraryData["display name"]+'</a></li>';
+			else tHTML += '<li role="presentation"><a role="menuitem" tabindex="-1" href="#" library_id="'+index+'">'+libraryData["display name"]+'</a></li>';
 		});
 	
 		$("#lcdoc_library_chooser_list").html(tHTML);
@@ -392,6 +392,7 @@
 					tHTML += '</div>';	
 					break;
 				case "parameters":
+				case "value":
 					if($.isArray(value)){
 						
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -418,20 +419,6 @@
 						tHTML += 'Malformed parameters in JSON';	
 					}
 					
-					break;
-				case "value":
-					if($.isArray(value)){
-						tHTML += '<div class="col-md-2 lcdoc_section_title">value</div><div class="col-md-10" style="margin-bottom:10px">';
-						tHTML += '<div class="table-responsive"><table class="table table-bordered">';
-						tHTML += '<thead><tr><th>Return Type</th><th>Type</th><th>Description</th></tr></thead><tbody>';
-						$.each(value, function(index2, value2) {
-							tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+replace_link_placeholders_with_links(value2.description,tEntryObject)+'</td></tr>';
-						});
-						tHTML += '</tbody></table></div>';
-						tHTML += '</div>';
-					} else {
-						tHTML += 'Malformed parameters in JSON';	
-					}
 					break;
 				case "references":
 					tHTML += '<div class="col-md-2 lcdoc_section_title">Related</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -520,6 +507,12 @@
 				 });
 				}
 
+				if(tEntryObject.synonyms){
+				 $.each(tEntryObject.synonyms, function( index, value) {
+					 tMarkdown = tMarkdown.replace('<'+value+'>', '*'+value+'*');	
+				 });
+				}
+	
 				tMarkdown = replace_link_placeholders_with_links(tMarkdown,tEntryObject);
 		
 				tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -595,6 +588,14 @@
 						return_text =  '<span class="lcdoc_entry_name">' + pEntryObject["display name"] + '</span>';
 					}
 				}
+				
+				if(pEntryObject.hasOwnProperty("synonyms")) {
+					$.each(pEntryObject.synonyms, function( index, value) {
+						if (value == matched_text)
+						 	return_text =  '<span class="lcdoc_entry_name">' + matched_text + '</span>';
+				 	});
+				} 
+				
 				if(pEntryObject.hasOwnProperty("parameters")) {
 					$.each(pEntryObject.parameters, function(index, parameter_object) {
 						if(parameter_object.name == matched_text){
@@ -841,7 +842,7 @@
 	
 	function library_id_to_name(pID){
 		if(dictionary_data.docs.hasOwnProperty(pID)){
-			return dictionary_data.docs[pID].library;
+			return dictionary_data.docs[pID]["display name"];
 		}
 	}
 	

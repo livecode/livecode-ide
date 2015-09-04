@@ -1,8 +1,10 @@
-﻿script "revtools"
+﻿script "revTools"
 constant BLOCK_SIZE = 20
 
 on preOpenStack
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of me
+   
+   set the title of me to "Tools"
    
    ### Header
    addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
@@ -44,13 +46,7 @@ on preOpenStack
    addFrameItem "revTools_show", "header", "preference", "Show Sections", "set","widget:Widgets Controls,classic:Classic Controls,graphic:Graphic Objects,graphictools:Graphic Tools,paint:Paint Tools", "framePreferenceSelected", the long id of me
    
    ### Properties
-   
    set the resizable of me to false
-   
-   
-   
-   ### Create
-   
 end preOpenStack
 
 on openStack
@@ -224,22 +220,14 @@ on generatePalette
       if the number of elements of sViewsData[tView] is 0 then next repeat
       
       local tOrder
-      put empty into tOrder
+      put the keys of sViewsData[tView] into tOrder
       if tView is "widget" then
          # AL-2015-05-26: [[ Bug 14561 ]] Order extensions alphabetically
-         local tExtensionList
-         put the keys of sViewsData[tView] into tOrder
          sort tOrder by sViewsData[tView][each]["title"]
       else
          # Get a list of the ordered keys
-         set the itemdel to ","
-         repeat for each line tObjectID in the keys of sViewsData[tView]
-            put tObjectID & comma & sViewsData[tView][tObjectID]["order"] & return after tOrder
-         end repeat
-         delete the last char of tOrder
-         sort lines tOrder numeric ascending by item 2 of each
+         sort lines tOrder numeric ascending by sViewsData[tView][each]["order"]
       end if
-      set the itemdel to "."
       
       # Create the group to hold the controls
       create group tView in group "contents" 
@@ -269,6 +257,7 @@ on generatePalette
          set the blendlevel of the templatebutton to 0
          set the cType of the templatebutton to tView
          set the cStyle of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
+         set the cName of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
          set the cStatus of the templatebutton to sViewsData[tView][tControlTypeID]["status"]
          
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
@@ -327,7 +316,22 @@ on generatePalette
             set the tooltip of the templatebutton to "There was an error while loading widget:" & return & tControlTypeID
             --set the blendlevel of the templatebutton to 50
          end if
-         create button tControlTypeID in group tView of group "contents"
+         
+         if sViewsData[tView][tControlTypeID]["svgicon"] is empty then
+            create button tControlTypeID in group tView of group "contents"
+         else
+            create widget tControlTypeID as "com.livecode.widget.svgpath" in group tView of group "contents"
+            set the width of widget tControlTypeID to BLOCK_SIZE * 2
+            set the height of widget tControlTypeID to BLOCK_SIZE
+            set the iconcolor of widget tControlTypeID to 100,100,100
+            set the iconpath of widget tControlTypeID to sViewsData[tView][tControlTypeID]["svgicon"]
+            set the cType of widget tControlTypeID to tView
+            set the cStyle of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
+            set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
+            set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
+            set the cTool of widget tControlTypeID to false
+            set the tooltip of widget tControlTypeID to "Click and drag or double click to create object: " & tControlTypeID
+         end if
          
       end repeat
       
@@ -493,9 +497,12 @@ on mouseDown
       revIDESetCursor "com.livecode.cursor.grabclose"
    end if
    if the cTool of the target is true then
+      reset the templategraphic
       if the cStyle of the target is not empty then
-         reset the templategraphic
          set the style of the templategraphic to the cStyle of the target
+      end if
+      if the cName of the target is not empty then
+         set the name of the templategraphic to the cName of the target
       end if
       revIDESetTool the cToolName of the target
       exit mouseDown
@@ -645,14 +652,17 @@ end mouseDown
 on mouseEnter
    if the cType of the target is empty then exit mouseEnter
    if the cDisabled of the target is true then exit mouseEnter
-   if the cTool of the target is false and the cStatus of the target is not "error" then 
+   if word 1 of the target is "widget" then
+      revIDESetCursor "com.livecode.cursor.grab"
+      set the iconcolor of the target to revIDEColor("edition_color")
+   else if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
       set the coloroverlay["opacity"] of the target to "50"
       set the coloroverlay["color"] of the target to "0,0,0"
    else if the cStatus of the target is "error" then
       # Not working on windows.. get the egg timer so disabling for now
-       --revIDESetCursor "help"
+      --revIDESetCursor "help"
    else if the cTool of the target is true then
       # We are hovering over a tool
       set the loc of graphic "tool_hover" of group "contents" to the loc of the target
@@ -663,8 +673,12 @@ end mouseEnter
 on mouseLeave
    if the cDisabled of the target is true then exit mouseLeave
    try
-      hide graphic "tool_hover" of group "contents" 
-      set the coloroverlay of the target to empty
+      if word 1 of the target is "widget" then
+         set the iconcolor of the target to "100,100,100"
+      else
+         hide graphic "tool_hover" of group "contents" 
+         set the coloroverlay of the target to empty
+      end if
    end try
    revIDEResetCursor
 end mouseLeave

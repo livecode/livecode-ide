@@ -42,6 +42,7 @@ on subscribeMessages
    revIDESubscribe "ideWindowsChanged"
    
    revIDESubscribe "ideTutorialProgressChanged"
+   revIDESubscribe "ideActiveStacksChanged"
 end subscribeMessages
 
 local sTextMenuDisabledText, sTextMenuText, sPluginMenuText
@@ -244,6 +245,10 @@ end setMenuProperties
 on ideSelectedObjectChanged
    layoutMenu
 end ideSelectedObjectChanged
+
+on ideActiveStacksChanged
+   layoutMenu
+end ideActiveStacksChanged
 
 on ideTutorialProgressChanged
    highlightObject empty
@@ -1043,7 +1048,7 @@ private function revMenubarFileMenu pContext
    put tab & "iPhone 4 (320x480)" & return after tFile
    put tab & "iPhone 5 (320x568)" & return after tFile
    put tab & "iPhone 6 (375x667)" & return after tFile
-   put tab & "iPhone 6 Plus (540x960)" & return after tFile
+   put tab & "iPhone 6 Plus (414x736)" & return after tFile
    put tab & "iPad//Tablet Portrait (768x1024)" & return after tFile
    put tab & "iPad//Tablet Landscape (1024x768)" & return after tFile
    put tab & "-" & return after tFile
@@ -1474,16 +1479,28 @@ private function buildRotateSubmenu
          tab & "180°/|180"
 end buildRotateSubmenu
 
-# OK-2007-10-04 : Forgot this one- oops
-private function buildAlignSubmenu
+private function buildDistributeSubmenu
    return \
-         tab & "Left" & return & \
-         tab & "Right" & return & \
-         tab & "Top" & return & \
-         tab & "Bottom" & return & \
-         tab & "-" & return & \
-         tab & "Make Widths E&qual/|Width" & return & \
-         tab & "Make &Heights Equal/|Height"
+   tab & tab & "First to last selected" & return & \
+   tab & tab & "Edge to edge" & return & \
+   tab & tab & "Across card"
+end buildDistributeSubmenu
+
+private function buildAlignSubmenu
+   local tAlign
+   put tab & "Left" & return after tAlign
+   put tab & "Right" & return after tAlign
+   put tab & "Top" & return after tAlign
+   put tab & "Bottom" & return after tAlign
+   put tab & "-" & return after tAlign
+   put tab & "Make Widths E&qual/|Width" & return after tAlign
+   put tab & "Make &Heights Equal/|Height" & return after tAlign
+   put tab & "-" & return after tAlign
+   put tab & "Distribute Objects Horizontally..." & return after tAlign
+   put buildDistributeSubmenu() & return after tAlign
+   put tab & "Distribute Objects Vertically..." & return after tAlign
+   put buildDistributeSubmenu() after tAlign
+   return tAlign
 end buildAlignSubmenu
 
 # OK-2009-11-20 : Bug 8235 - This is much faster using the engine version
@@ -2215,21 +2232,38 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack
          break
+      case "Stack Mode"
+         revIDESetModeOfStack tTargetStack, item 2 of pWhich
+         break
+      case "New Substack"
+         revIDENewSubstackOfStack the short name of tTargetStack
+         break
+      case "Close And Remove From Memory"
+         revIDECloseStack tTargetStack, true
+         break
+      case "Delete Substack"
+         revIDEDeleteSubstack tTargetStack
+         break
+      case "Standalone Application Settings..."
+         revIDEStandaloneSettingsForStack the long id of the topStack
+         break
+      case "Save As Standalone Application..."
+         revIDESaveAsStandalone
+         break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
          revIDEAlignControls pTarget, item 2 of pWhich 
          break     
-      case "Stack Mode"
-         revIDESetModeOfStack tTargetStack, item 2 of pWhich
-         break
       case "Send Message"
          revIDESendMessageToObject item 2 of pWhich, pTarget
          break
          ######### SUBMENUS ########
       case "Card"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
+         break
       case "Stack"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, tTargetStack
+         break
       default
          break
    end switch
@@ -2260,7 +2294,7 @@ on revMenubarFileMenuPick pWhich
          revIDESaveAsStandalone the long id of the topStack
          break
       case "Standalone Application Settings..."
-         revIDEOpenPalette "standalone settings"
+         revIDEStandaloneSettingsForStack the long id of the topStack
          break
       case "Move substack to file..."
          revIDEMoveSubstackToFile the long id of the topStack
@@ -2433,6 +2467,7 @@ on revMenubarObjectMenuPick pWhich
    switch item 1 of pWhich
       case "Reshape Graphic"
          revIDEToggleReshapeGraphic
+         break
       case "New card"
          revIDEActionNewCard
          break
@@ -2462,7 +2497,8 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionCreateObject item 2 of pWhich
          break
       case "Place Group"
-         revIDEActionPlaceGroupOnCard item 2 of pWhich
+         revIDEPlaceGroupOnCard item 2 of pWhich
+         break
       case "Remove Group"
          revIDEActionRemoveGroupFromCard
          break
@@ -2511,7 +2547,11 @@ on revMenubarObjectMenuPick pWhich
          end if
          break
       case "Align Selected Controls"
-         revIDEActionAlign item 2 of pWhich
+         if item 2 of pWhich begins with "Distribute Objects" then
+            revIDEActionDistributeObjects item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
+         else
+            revIDEActionAlign item 2 of pWhich
+         end if
          break
    end switch
 end revMenubarObjectMenuPick
