@@ -1764,8 +1764,7 @@ function revIDEMainStacks
       put the mainstacks into tMainStacks
    else
       repeat for each line tMainStack in the mainstacks
-         --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackIsRevStack(the long id of stack tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+         if revIDEStackIsRevStack(the long id of stack tMainStack) then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
