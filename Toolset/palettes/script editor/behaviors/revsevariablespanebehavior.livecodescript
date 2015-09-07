@@ -210,9 +210,17 @@ end pathToVariableComponents
 local sVisualizationObjectCount = 0
 
 on actionInspect pPath
+   nodeCreateAndShowVisualizationObject
+end actionInspect
+
+on actionDoubleClick pPath
+   nodeCreateAndShowVisualizationObject
+end actionDoubleClick
+
+private on nodeCreateAndShowVisualizationObject pPath
    nodeCreateVisualizationObject pPath
    nodeShowVisualizationObject the result
-end actionInspect
+end nodeCreateAndShowVisualizationObject
 
 private function visualizationObjectTemplate
    return the long id of group "Visualizer Template" of card "Templates" of revScriptEditorTemplate()
