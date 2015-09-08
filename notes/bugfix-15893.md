@@ -1,0 +1,1 @@
+# Message box emptied when closing and opening
