@@ -1192,6 +1192,8 @@ on revCalculateRulers
 end revCalculateRulers
 
 on revPartCalculateRulers
+   -- lock/unlock screen to prevent flickering when moving the stack and rulers are enabled
+   lock screen
    lock messages
    --this can be done with flicker by altering the width first, then the topLeft
    
@@ -1225,6 +1227,7 @@ on revPartCalculateRulers
    set the cREVVSubtract of stack "revRulersV" to item 2 of the topLeft of the topStack - item 2 of the topLeft of stack "revRulersV"
    set the cREVCurrentStack of stack "revRulersH" to the short name of the topStack
    unlock messages
+   unlock screen
 end revPartCalculateRulers
 
 ---------------------------------------- end of Rulers ----------------------------------------
@@ -1672,7 +1675,7 @@ on errorDialog pWhatError, pWhatError2
    if gREVSuppressErrors then exit errorDialog
    filter pWhatError without "*,0,0"
    if (item 1 of pWhatError is not a number or item 2 of pWhatError is not a number) and the number of words in pWhatError is not 0 then
-      answer "The following user thrown error was generated and not handled, so it was intercepted by Revolution:" & cr & cr & the params
+      answer "The following user thrown error was generated and not handled, so it was intercepted by LiveCode:" & cr & cr & the params
       exit errorDialog
    end if
    if the number of lines in pWhatError is 0 then exit errorDialog -- bogus error
@@ -1936,7 +1939,7 @@ on revReloadBreakpoints
       local tList
       put the cREVGeneral["debugObjects"] of stack l into tList
       if the number of lines in tList > 250 then
-         answer error "It appears your breakPoint information has been corrupted.  Fixing this will remove all breakPoints from this stack.  If you don't fix this, Revolution may not work correctly.  Please file a bug report as this problem should not occur." with "Don't fix" or "Fix"
+         answer error "It appears your breakPoint information has been corrupted.  Fixing this will remove all breakPoints from this stack.  If you don't fix this, LiveCode may not work correctly.  Please file a bug report as this problem should not occur." with "Don't fix" or "Fix"
          if it is "fix" then
             set the cREVGeneral["debugObjects"] of stack l to empty
             put empty into tList
@@ -1980,51 +1983,6 @@ private command _setScriptDebugModeNew pMode
     revDebuggerRun
   end if
 end _setScriptDebugModeNew
-
-
-private command _setScriptDebugModeOld pWhat
-   global gREVSavedBreakPoints
-   if pWhat is true then
-      if gREVSavedBreakPoints is not empty then 
-         set the breakPoints to gREVSavedBreakPoints
-      else
-         set the breakPoints to the long id of group 1 of stack "revLibrary",500
-      end if
-      revReloadBreakpoints
-   else
-      if the breakPoints is not empty then 
-         put the breakPoints into gREVSavedBreakPoints
-      else
-         put empty into gREVSavedBreakPoints
-      end if
-      set the breakPoints to empty
-      
-      local tReturn
-      put true into tReturn
-      if the mode of stack "revErrorDisplay" is not 0 then
-         disable btn "ignore" of stack "revErrorDisplay"
-         disable btn "debug..." of stack "revErrorDisplay"
-      end if
-   end if
-   
-   local tStacksList
-   put the openStacks into tStacksList
-   filter tStacksList with "revScriptEditor*"
-   repeat for each line l in tStacksList
-      if the cBreakPoints of cd 1 of stack l is not pWhat then set the cBreakPoints of cd 1 of stack l to pWhat
-   end repeat
-   if tReturn then
-      -- MW-2008-02-28: [[ Bug 3816 ]] A previously missing unlock messages here caused any stacks that are opened
-      --   by dragging onto the icon or double-clicking to *not* get their preOpen/open messages
-      lock messages
-      set the cREVScriptDebugMode of stack "revPreferences" to pWhat
-      unlock messages
-      send "traceDone" to btn "revFrontScript" of stack "revLibrary"
-   end if
-end _setScriptDebugModeOld
-
-
-
 
 function revAllSameType pObjects
    --first line true or false
@@ -2571,8 +2529,8 @@ on revImportImageFile pStack
           put true into tConvertPICT
           if not (the cNOPICTWarning of stack "revPreferences") then
             answer warning "This file is in Macintosh PICT format, which can only be displayed on Mac OS systems.  " & \
-                "Revolution can convert the imported image to PNG format, which can be displayed cross platform. " & \
-                "Would you like Revolution to convert the imported image to PNG format?" \
+                "LiveCode can convert the imported image to PNG format, which can be displayed cross platform. " & \
+                "Would you like LiveCode to convert the imported image to PNG format?" \
                 with "Don't Show Again" or "Cancel" or "Don't Convert" or "Convert to PNG Format"
              
             if it is "Cancel" then
@@ -2659,30 +2617,6 @@ on revUpdateAOControls pTarget
    end if
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
-
-function revColorToNumber pWhich
-   local tColorTranslation
-   put the cREVColorTranslation of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation includes synonyms
-   if pWhich is item 1 of tColorTranslation
-   then return item 2 to 4 of tColorTranslation
-   
-   local tItemNo
-   put itemOffset(cr & pWhich,tColorTranslation) into tItemNo
-   return line 1 of (item tItemNo+1 to tItemNo+3 of tColorTranslation)
-end revColorToNumber
-
-function revNumberToColor pColor
-   local tColorTranslation
-   put the cREVColorTranslation2 of stack "revLibrary" into tColorTranslation
-   --cREVColorTranslation2 doesn't include synonyms
-   --so the name returned is always in fld "Color Names"
-   if pColor is in item -3 to -1 of tColorTranslation then return word 2 of item -4 of tColorTranslation
-   
-   local tLine
-   put lineOffSet(pColor&cr,tColorTranslation) into tLine
-   return item 1 of line tLine of tColorTranslation
-end revNumberToColor
 
 function revComponentVersion pStack
    local tResult
@@ -2836,7 +2770,7 @@ function revDatabaseDriverList
    if revEnvironmentIsInstalled() then
       # OK-2007-09-24 : Legacy driver support. Unfortunately the legacy driver support also includes a legacy revDB external,
       # which does not support the revGetDatabaseDriverPath function. So if legacy drivers are to be used, we need to revert to the old
-      # way of listing the drivers. Because the setting does not take place until Revolution is restarted, we can't just check it 
+      # way of listing the drivers. Because the setting does not take place until LiveCode is restarted, we can't just check it 
       # directly, so instead we simply attempt to call the function revGetDatabaseDriverPath and assume if its not there that legacy drivers
       # are in use.
       local tDriverPaths
@@ -3808,7 +3742,7 @@ command revOpenStacks
    if the systemFileSelector then
       switch the platform
          case "Win32"
-            put "Revolution Stacks" & cr & "*.rev" & cr & "MetaCard Stacks" & cr & "*.mc" & cr & "All Files" & cr & "*.*" into filterstring
+            put "LiveCode Stacks" & cr & "*.rev" & cr & "MetaCard Stacks" & cr & "*.mc" & cr & "All Files" & cr & "*.*" into filterstring
          break
          case "MacOS"
             put "MSTKSTAKTEXTRSTK" into filterstring

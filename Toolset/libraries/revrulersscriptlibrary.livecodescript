@@ -16,12 +16,14 @@ end revUnloadLibrary
 local lPaused
 
 on moveStack
+   -- PM-2015-07-30: [[ Bug 14465 ]] Rulers position not updated when moving stack
+   revPartCalculateRulers
   if lPaused then pass moveStack
   if char 1 to 9 of revTargetStack() is "revRulers" then
     pass moveStack
   end if
   if the mode of stack revTargetStack() is not 1 or the cantModify of stack revTargetStack() is true or the tool is "browse tool" then pass moveStack
-  get the topLeft of stack revTargetStack() into it
+  get the topLeft of stack revTargetStack() 
   set the topLeft of stack "revRulersH" to item 1 of it - the cREVHSubtract of stack "revRulersH",item 2 of it - the cREVVSubtract of stack "revRulersH"
   if the platform is "MacOS" then put 2 into tAdd else put 0 into tAdd
   set the topLeft of stack "revRulersV" to item 1 of it - the cREVHSubtract of stack "revRulersV",item 2 of it + the cREVVSubtract of stack "revRulersV" + tAdd
@@ -148,7 +150,7 @@ on mouseMove x,y
 end mouseMove
 
 on mouseDown
-  if lPaused and word 1 of the target is "card" then send "resumeStack" to btn "revRulersScript" of stack "revLibrary"
+  if lPaused and word 1 of the target is "card" then send "resumeStack" to me
   pass mouseDown
 end mouseDown
 
