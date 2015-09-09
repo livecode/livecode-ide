@@ -1697,13 +1697,16 @@ function revMenubarStackContextMenu pStack, pIndent
       put tIndent & tab & markMenuItem("Modal", the mode of stack pStack is 5) & return after tText
    end if
    put tIndent & "-" & return after tText
+   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "New Card" & return after tText
+   put tIndent & "Delete Card" & return after tText
+   put tIndent & "-" & return after tText
    put tIndent & "New Substack" & return after tText
    put tIndent & enableMenuItem("Delete Substack", the mainstack of pStack is not the short name of pStack) & return after tText
-   put tIndent & "Close and Remove From Memory" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Save" & return after tText
-   put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & "Close and Remove From Memory" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Standalone Application Settings..." & return after tText
    put tIndent & "Save As Standalone Application..." & return after tText
@@ -1728,7 +1731,9 @@ function revMenuBarCardContextMenu pCard, pIndent
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
    put tIndent & "-" & return after tText
-   
+   put tIndent & "New Card" & return after tText
+   put tIndent & "Delete Card" & return after tText
+   put tIndent & "-" & return after tText
    put revMenubarSendContextMenu(pCard, pIndent) after tText
    return tText
 end revMenuBarCardContextMenu
@@ -2226,6 +2231,12 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          toplevel the menuname of pTarget
          break
          ######## STACK SCPECIFIC ########
+      case "New Card"
+         revIDEActionNewCard
+         break
+      case "Delete Card"
+         revIDEActionDeleteCard
+         break
       case "Save"
          revIDEActionSaveStack tTargetStack
          break
@@ -2472,7 +2483,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionNewCard
          break
       case "Delete Card"
-         revIDEACtionDeleteCard
+         revIDEActionDeleteCard
          break
       case "Object Inspector"
          revIDEActionInspectObjects
