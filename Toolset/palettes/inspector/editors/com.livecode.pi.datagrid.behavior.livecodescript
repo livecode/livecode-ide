@@ -1,6 +1,6 @@
 ﻿script "com.livecode.pi.datagrid.behavior"
 on editorInitialize
-   set the editorMinWidth of me to 0
+   set the editorMinWidth of me to 200
    set the editorMaxWidth of me to 0
 end editorInitialize
 
