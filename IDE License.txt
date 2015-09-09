@@ -6,7 +6,7 @@ in the Commercial Edition of LiveCode.
 
 The source code for both the IDE and engine components can be found at:
 
-                https://github.com/runrev/livecode
+                https://github.com/livecode/livecode
 
 ----------------------------------------------------------------------
 

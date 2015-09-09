@@ -2,7 +2,7 @@ This license applies to all the executable files that make up LiveCode.
 
 The source code for both the IDE and engine components can be found at:
 
-                https://github.com/runrev/livecode
+                https://github.com/livecode/livecode
 
 ----------------------------------------------------------------------
 
