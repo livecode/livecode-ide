@@ -27,6 +27,14 @@ setProp frameHidden pValue
    end if
 end frameHidden
 
+local sShowPreferenceAction
+setProp showPreferenceAction pValue
+   if pValue is not sShowPreferenceAction then
+      put pValue into sShowPreferenceAction
+      resizeStack
+   end if
+end showPreferenceAction
+
 on addFrameItem pName, pLocation, pItemType, pLabel, pIcon, pIconSelected, pCallbackMessage, pCallbackTarget, pParameter
    if __itemExists(pName) then return empty
    
@@ -439,7 +447,9 @@ end revIDEFrameSizeChanged
 
 after resizeStack
    if sHideFrame is not true then
-      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      if sShowPreferenceAction is not false then
+         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      end if
       generateFrame
       layoutFrame
    end if
@@ -463,7 +473,9 @@ after preOpenStack
    if sHideFrame is not true then
       put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
       put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
-      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      if sShowPreferenceAction is not false then
+         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+      end if
       revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
       generateFrame
       layoutFrame
