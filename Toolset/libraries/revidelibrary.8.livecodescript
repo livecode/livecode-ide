@@ -3660,7 +3660,15 @@ on revIDEPositionPaletteDefault pStackName
          if revIDEStackIsRevStack(the long ID of the topstack) then
             set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
          else
-            set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
+            set the top of stack pStackName to the top of the topstack            
+            # AL-2015-09-09: [[ Bug 15745 ]] Ensure PI doesnt get placed off screen
+            if the right of the topstack + 10 + the width of stack pStackName < tScreenWidth then
+               set the left of stack pStackName to the right of the topstack + 10
+            else if the left of the topstack - 10 - the width of stack pStackName > 0 then
+               set the right of stack pStackName to the left of the topstack - 10
+            else
+               set the loc of stack pStackName to the screenloc
+            end if
          end if
          break
       default 
