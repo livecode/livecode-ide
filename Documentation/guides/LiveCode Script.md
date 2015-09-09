@@ -2566,10 +2566,12 @@ The names of variables must consist of a single word and may contain any combina
 
 Here are some examples of **legal** variable names:
 
+```
 someVariable
 picture3
 my\_new\_file
 _output
+```
 
 Here are some names that **cannot** be used as variable names:
 
