@@ -1059,6 +1059,9 @@ command revInternal__InitialiseLibraries
       insert script of stack "revCore" into back
    end try
    
+   # AL-2015-09-02: [[ Bug 15841 ]] Temporarily add project browser library to prevent preference errors
+   insert script of stack "revIDEProjectBrowserLibrary" into back
+   
    # MW-2010-10-13: [[ Bug 8600 ]] Make sure the handler lists of the rev frontscript, backscript and shortcuts script
    #    are all up to date (used by revNoMessages script).
    set the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revBackScriptLibrary")
