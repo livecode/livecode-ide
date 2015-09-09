@@ -68,6 +68,7 @@
 #lcdoc_body table{ border: 1px solid #cccccc; width:100%; margin-bottom:10px}
 #lcdoc_body table thead{ border-bottom: 2px solid #cccccc;}
 #lcdoc_body table td{ border: 1px solid #cccccc; padding:5px;}
+#lcdoc_body table td p{ margin-bottom:0px;}
 
 #lcdoc_body .lcdoc_glossary_table td{width:37%}
 #lcdoc_body .lcdoc_glossary_table td:first-of-type{width:26%}
