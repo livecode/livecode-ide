@@ -1,0 +1,1 @@
+# mainStack menu in PI only lists open stacks
