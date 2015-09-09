@@ -6445,18 +6445,15 @@ on revIDEStyleText pWhich, pValue
             local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
             put word 2 of the selectedChunk into tStartChar
             put word 4 of the selectedChunk into tEndChar
-            put return & "Start / End: " & tStartChar && tEndChar after msg
 
             put tStartChar && tEndChar
             put the lineIndex of char tStartChar of tTarget into tStartPara
             put the lineIndex of char tEndChar of tTarget into tEndPara
-            put return & "Paras: " & tStartPara & " to " & tEndPara after msg
 
             repeat with x = tStartPara to tEndPara
                put the charindex of line x of tTarget into tParaFirstChar
                put the charindex of line x of tTarget + the length of line x of tTarget - 1 into tParaLastChar
                set the textAlign of char tParaFirstChar to tParaLastChar of tTarget to pValue
-               put return & "Para "&x&": char " & tParaFirstChar & " to " & tParaLastChar after msg
             end repeat
 
          else

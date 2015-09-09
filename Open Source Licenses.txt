@@ -269,7 +269,7 @@ make it run on iOS and additions to PDF output to support links, bookmarks
 and metadata.
 
 As these source files are considered modifications to the originals they are
-included at http://runrev.com/downloads/osslicenses.zip for conformance with the
+included at http://livecode.com/downloads/osslicenses.zip for conformance with the
 MPL 1.1.
 
 /* ***** BEGIN LICENSE BLOCK *****

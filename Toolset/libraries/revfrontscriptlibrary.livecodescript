@@ -918,7 +918,7 @@ on revCheckStackCollision pStack
       if m is among the lines of tStacks then
         if tFilePath2 is not empty then put "in file" && tFilePath2 & space into tFileInfo
         answer warning "A stack" && quote & m & quote && tFileInfo & \
-            "is already in memory.  The Revolution UI does not distinguish stacks which have identical names, so editing these stack files while both are in memory could result in data loss."
+            "is already in memory.  The LiveCode UI does not distinguish stacks which have identical names, so editing these stack files while both are in memory could result in data loss."
             exit repeat
          end if
       end repeat
