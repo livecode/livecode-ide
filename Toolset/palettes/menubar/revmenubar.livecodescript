@@ -2181,7 +2181,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDECopyObjects pTarget
          break
       case "Lock Location"
-         revIDELockLocationOfObjects pTarget
+         revIDEToggleLockLocationOfObjects pTarget
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
