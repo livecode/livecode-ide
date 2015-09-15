@@ -1,9 +1,10 @@
-﻿script "revSEHandlerFilterBehavior"
+﻿script "revSEFilterFieldBehavior"
 
 /*
-The aim here is to display the text "Filter..." in italics when the
-field is not focused and there is no current filter text, and to
-display the filter text in normal font otherwise.
+The aim here is to display the text stored in the custom property
+cPlaceholderText in italics when the field is not focused and there
+is no current filter text, and to display the filter text in normal
+font otherwise.
 
 When the content is modified, a message is sent immediately.
 The following custom properties are used to configure how the
@@ -17,6 +18,20 @@ message is sent:
 ----------------------------------------------------------------
 -- Helper functions for providing the placeholder text
 ----------------------------------------------------------------
+
+local lPlaceholderText
+
+setProp cPlaceholderText pPlaceholderText
+   put pPlaceholderText into lPlaceholderText
+   if not the cFiltering of me then
+      set the text of me to lPlaceholderText
+      set the textstyle of me to "italic"
+   end if
+end cPlaceholderText
+
+getProp cPlaceholderText
+   return lPlaceholderText
+end cPlaceholderText
 
 private command startFiltering
    if not the cFiltering of me then
@@ -45,7 +60,11 @@ on update
       set the textstyle of me to empty
       set the cFilterText of me to the text of me
    else
-      set the text of me to "Filter..."
+      if lPlaceholderText is not empty then
+         set the text of me to lPlaceholderText
+      else
+         set the text of me to empty
+      end if
       set the textstyle of me to "italic"
       set the cFilterText of me to empty
    end if

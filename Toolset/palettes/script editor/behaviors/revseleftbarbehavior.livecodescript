@@ -70,6 +70,7 @@ command update pDontUpdateSelectedHandler
    -- Hook up the filter field to the list of handlers, and initialise it.
    set the cCallback of tFilter to "filterChanged"
    set the cCallbackTarget of tFilter to tObject
+   set the cPlaceholderText of tFilter to "Filter..."
 
    send "update" to tFilter
 

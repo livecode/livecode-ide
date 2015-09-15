@@ -477,4 +477,5 @@ private command setDefaultsAndCallbacks
 
    set the cCallback of tFilter to "filterChanged"
    set the cCallbackTarget of tFilter to the long id of me
+   set the cPlaceholderText of tFilter to "Search variables..."
 end setDefaultsAndCallbacks
