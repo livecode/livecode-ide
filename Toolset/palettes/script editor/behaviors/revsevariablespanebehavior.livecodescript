@@ -4,6 +4,7 @@ local sTree
 local sTimes
 
 command paneOpenControl
+   setDefaultsAndCallbacks
    refresh
    resize
 end paneOpenControl
@@ -48,7 +49,39 @@ command refresh
 end refresh
 
 command resize pDontUpdateTree
-   set the rect of widget "tree" of me to the rect of me
+   local tFilter, tWidget, tGlobals, tEnvVars, tRect, tTop, tLeft, tWidth, tHeight, tBottom
+   put the long id of field "Filter" of me into tFilter
+   put the long id of button "Show Globals" of me into tGlobals
+   put the long id of button "Show Environment Vars" of me into tEnvVars
+   put the long id of widget "tree" of me into tWidget
+
+   put the rect of me into tRect
+   put item 1 of tRect into tLeft
+   put item 3 of tRect - tLeft into tWidth
+   put item 2 of tRect into tTop
+   put item 4 of tRect into tBottom
+   put tBottom - tTop into tHeight
+
+   lock screen
+
+   set the width of tFilter to (tWidth - the width of tGlobals - the width of tEnvVars)
+   set the top of tFilter to tTop
+   set the left of tFilter to tLeft
+
+   set the height of tEnvVars to the height of tFilter
+   set the top of tEnvVars to tTop
+   set the right of tEnvVars to tLeft + tWidth
+
+   set the height of tGlobals to the height of tFilter
+   set the top of tGlobals to tTop
+   set the right of tGlobals to tLeft + tWidth - the width of tEnvVars
+
+   set the width of tWidget to tWidth
+   set the height of tWidget to (tHeight - the height of tFilter)
+   set the bottom of tWidget to tBottom
+   set the left of tWidget to tLeft
+
+   unlock screen
 end resize
 
 command reapplyPreferences
@@ -110,20 +143,32 @@ end buildTree
 
 private function buildTopNodes
    local tTopNodes
-   if sContext is not empty then
-      if sePrefGet("variables,showglobals") then
-         # When debugging with showGlobals, we show all globals and all locals
-         # OK-2009-06-22 : Bug 8109 - Postfix all globals with "global" so that we don't have to use the globalNames
-         # to determine whether each variable is global or not.
-         --put revDebuggerGlobalNames() into sTopNodes
-         put empty into tTopNodes
-         get revDebuggerGlobalNames()
+   
+   put empty into tTopNodes
+   
+   # Environment variables are included in globals, so process the globals even if we
+   # only want to display environment variables.
+   if the cShowGlobals of me is true or the cShowEnvGlobals of me is true then
+      # When debugging with showGlobals, we show all globals and all locals
+      # OK-2009-06-22 : Bug 8109 - Postfix all globals with "global" so that we don't have to use the globalNames
+      # to determine whether each variable is global or not.
+      --put revDebuggerGlobalNames() into sTopNodes
+      get revDebuggerGlobalNames()
          
-         repeat for each line tGlobal in it
+      repeat for each line tGlobal in it
+         # Filter variables based on the cShowGlobals and cShowEnvGlobals
+         if (the cShowEnvGlobals of me is true and char 1 of tGlobal is "$") or \
+               (the cShowGlobals of me is true and char 1 of tGlobal is not "$") then
             put tGlobal & ",global" & return after tTopNodes
-         end repeat
-         delete the last char of tTopNodes
-         
+         end if
+      end repeat
+      delete the last char of tTopNodes
+   end if
+   
+   # Show the remaining variables only in debugging mode.
+   if sContext is not empty then
+      if the cShowGlobals of me is true then
+         # All global variables are currently being shown, so we only need to add the local variables to the list
          get processVariableNames(revDebuggerLocalNames(sContext))
          if it is not empty then
             put return & it after tTopNodes
@@ -152,19 +197,16 @@ private function buildTopNodes
          end repeat
          delete the last char of tVariables
          
-         put tVariables into tTopNodes
+         if tTopNodes is not empty then
+            put return after tTopNodes
+         end if
+         
+         put tVariables after tTopNodes
       end if
-   else
-      # If we are not debugging, then just show the globals
-      # OK-2009-06-22 : Bug 8109 - Postfix them with "global"
-      --put revDebuggerGlobalNames() into sTopNodes
-      put empty into tTopNodes
-      get revDebuggerGlobalNames()
-      repeat for each line tGlobal in it
-         put tGlobal & ",global" & return after tTopNodes
-      end repeat
-      delete the last char of tTopNodes
    end if
+
+   filterVariableNames tTopNodes
+
    return tTopNodes
 end buildTopNodes
 
@@ -335,3 +377,105 @@ private command nodeShowVisualizationObject pObject
    palette pObject
    show pObject
 end nodeShowVisualizationObject
+
+
+----------------------------------------------------------------
+-- Variable filtering support
+----------------------------------------------------------------
+
+/*
+The list of variables can be filtered by a string, stored in the custom
+property cFilterText.  If cFilterText is non-empty, only variables that
+match *all* the words of cFilterText are shown.
+
+The filterChanged handler updates the cFilterText custom property, and
+updates the display if necessary.
+*/
+
+-- This is called to update the filter text
+on filterChanged pFilterText
+   if pFilterText is not the cFilterText of me then
+      set the cFilterText of me to pFilterText
+      send "updateVariableDisplay" to me in 0 millisecs
+   end if
+end filterChanged
+
+-- Process a list of handler information lines, replacing it with a list
+-- containing only the handlers where the name matches the current filter.
+private command filterVariableNames @xVariables
+   if the cFilterText of me is empty then
+      exit filterVariableNames
+   end if
+
+   local tNewVariables, tVariable, tName, tWord, tMatch
+
+   repeat for each line tVariable in xVariables
+      put true into tMatch
+
+      set the itemDel to comma
+      put item 1 of tVariable into tName
+
+      -- The variable name needs to match *all* of the words in the
+      -- filter text
+      repeat for each word tWord in the cFilterText of me
+         if not (tName contains tWord) then
+            put false into tMatch
+            exit repeat
+         end if
+      end repeat
+
+      if tMatch then
+         put tVariable & return after tNewVariables
+      end if
+   end repeat
+
+   put tNewVariables into xVariables
+end filterVariableNames
+
+----------------------------------------------------------------
+-- Global/Environment variable display support
+----------------------------------------------------------------
+
+on setGlobalDisplay pShowGlobals
+   set the cShowGlobals of me to pShowGlobals
+   send "updateVariableDisplay" to me in 0 millisecs
+end setGlobalDisplay
+
+on setEnvDisplay pShowEnvGlobals
+   set the cShowEnvGlobals of me to pShowEnvGlobals
+   send "updateVariableDisplay" to me in 0 millisecs
+end setEnvDisplay
+
+on updateVariableDisplay
+   update
+end updateVariableDisplay
+
+private command setDefaultsAndCallbacks
+   local tGlobals, tFilter, tEnvVars
+
+   put the long id of button "Show Globals" of me into tGlobals
+   put the long id of button "Show Environment Vars" of me into tEnvVars
+   put the long id of field "Filter" of me into tFilter
+
+   if sePrefGet("variables,showglobals") then
+      set the hilite of tGlobals to true
+      set the cShowGlobals of me to true
+      set the hilite of tEnvVars to true
+      set the cShowEnvGlobals of me to true
+   else
+      set the hilite of tGlobals to false
+      set the cShowGlobals of me to false
+      set the hilite of tEnvVars to false
+      set the cShowEnvGlobals of me to false
+   end if
+
+   set the cCallback of tGlobals to "setGlobalDisplay"
+   set the cCallbackTarget of tGlobals to the long id of me
+
+   set the cCallback of tEnvVars to "setEnvDisplay"
+   set the cCallbackTarget of tEnvVars to the long id of me
+
+   set the cCallback of tFilter to "filterChanged"
+   set the cCallbackTarget of tFilter to the long id of me
+   set the cPlaceholderText of tFilter to "Search variables..."
+end setDefaultsAndCallbacks
