@@ -3603,6 +3603,24 @@ function revIDEPaletteToStackName pPalette
    end switch
 end revIDEPaletteToStackName
 
+on revIDEEnsureOnscreen pStackName
+   local tScreenHeight, tScreenWidth
+   put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
+   put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+   
+   if the left of stack pStackName < 0 then
+      set the left of stack pStackName to 0
+   else if the right of stack pStackName > item 3 of the screenrect and the width of stack pStackName < tScreenWidth then
+      set the right of stack pStackName to item 3 of the screenrect
+   end if
+   
+   if the top of stack pStackName < 0 then
+      set the top of stack pStackName to 0
+   else if the bottom of stack pStackName > item 4 of the screenrect and the height of stack pStackName < tScreenHeight then
+      set the bottom of stack pStackName to item 4 of the screenrect
+   end if
+end revIDEEnsureOnscreen
+
 /*
 Positions the palette.
 
@@ -3635,6 +3653,10 @@ on revIDEPositionPalette pStackName
       # If no sizing information can be found then position the stack in the default location
       revIDEPositionPaletteDefault pStackName
    end if
+   
+   # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
+   revIDEEnsureOnscreen pStackName
+   
 end revIDEPositionPalette
 
 on revIDEPositionPaletteDefault pStackName
