@@ -3604,6 +3604,9 @@ function revIDEPaletteToStackName pPalette
 end revIDEPaletteToStackName
 
 on revIDEEnsureOnscreen pStackName
+   # Ensure the stack exists
+   if there is not a stack pStackName then return __revIDEError("No such stack:" && pStackName)
+   
    local tScreenHeight, tScreenWidth
    put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
    put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
