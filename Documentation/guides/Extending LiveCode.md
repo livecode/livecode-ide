@@ -1196,13 +1196,22 @@ The structure of tokens is similar to LiveCode Script, but again a little strict
  - **String**: "[^\n\r"]*"
  - **Separator**: Any whitespace containing at least one newline
 
+Strings use backslash ('\') as an escape - the following are understood:
+
+ - **\n**: LF (ASCII 10)
+ - **\r**: CR (ASCII 13)
+ - **\t**: TAB (ASCII 9)
+ - **\q**: quote '"'
+ - **\u{X...X}: character with unicode codepoint U+X...X - any number of nibbles may be specified, but any values greater than 0x10FFFF will be replaced by U+FFFD.
+ - **\\**: backslash '\'
+
 > **Note:** The presence of '.' in identifiers are used as a namespace scope delimiter.
 
-> **Note:** Eventually strings will use '\' as an escaping character allowing things such as \n for newline and \q for quote.
+> **Note:** Source files are presumed to be in UTF-8 encoding.
 
 #### Case-Sensitivity
 
-At the moment, due to the nature of the parser being used, identifiers and keywords are all case-sensitive and keywords are reserved. The result of this is that, using all lower-case identifiers for names of definitions should be avoided.
+At the moment, due to the nature of the parser being used, keywords are all case-sensitive and reserved. The result of this is that, using all lower-case identifiers for names of definitions should be avoided. However, identifiers *are* case-insensitive - so a variable with name pFoo can also be referenced as PFOO, PfOO, pfoO etc.
 
 > **Aside:** The current parser and syntax rules for LiveCode Builder are constructed at build-time of the LiveCode Builder compiler and uses *bison* (a standard parser generator tool) to build the parser. Unfortunately, this means that any keywords have to be reserved as the parser cannot distinguish the use of an identifier in context (whether it is a keyword at a particular point, or a name of a definition).
 
@@ -1219,11 +1228,11 @@ It is highly recommended that the following naming conventions be used for ident
 
 By following this convention, there will not be any ambiguity between identifiers and keywords. (All keywords are all lower-case).
 
-> **Note:** The intent is that LiveCode Builder scripts will be case-insensitive like LiveCode Script; however this will require the Open Language parser infrastructure which is being developed for the next major version of LiveCode Builder.
+> **Note:** When we have a better parsing technology we will be evaluating whether to make keywords case-insensitive as well. At the very least, at that point, we expect to be able to make all keywords unreserved.
 
 ### Typing
 
-LiveCode Builder is a typed language, although typing is completely optional in most places (the only exception being in foreign handler declarations). If a type annotation is not specified it is simply taken to be the most general type *optional any* (meaning any value, including undefined).
+LiveCode Builder is a typed language, although typing is completely optional in most places (the only exception being in foreign handler declarations). If a type annotation is not specified it is simply taken to be the most general type *optional any* (meaning any value, including nothing).
 
 The range of core types is relatively small, comprising the following:
 
@@ -1238,9 +1247,7 @@ The range of core types is relatively small, comprising the following:
  - **Array**: a mapping from strings to values
  - **any**: a value of any type
 
-Additionally, all types can be annotated with **optional**. An optional annotation means the value may be the original type or the undefined value.
-
-> **Note:** As it stands *any* does not include the undefined type and so *optional any* makes sense. There is an argument, however, that *any* should be implicitly optional as (technically) the undefined type is also a type. It is possible this aspect might be revised.
+Additionally, all types can be annotated with **optional**. An optional annotation means the value may be the original type or nothing.
 
 > **Note:** The current compiler does not do type-checking; all type-checking happens at runtime. However, this is being worked on so there will soon be a compiler which will give you type errors at compile-time.
 
@@ -1250,7 +1257,7 @@ Additionally, all types can be annotated with **optional**. An optional annotati
         : 'module' <Name: Identifier> SEPARATOR
             { Metadata SEPARATOR }
             { Import SEPARATOR }
-            { Definition SEPARATOR }
+            { ( Definition | Metadata ) SEPARATOR }
           'end' 'module'
 
 The smallest compilable unit of LiveCode Builder is the module. Each module is uniquely named using reverse DNS notation, and the names of modules are considered to live in a global namespace.
@@ -1290,11 +1297,12 @@ A module may use any other module, as long as doing so does not cause a cycle in
 
 > **Note:** The current IDE and extension installation system does not yet implement arbitrary dependencies - the only dependencies it understands are those which are builtin to the system (e.g. com.livecode.canvas). However, you can still write and test out modules with dependencies locally - they just cannot be uploaded to the extensions portal.
 
-## Definitions
+### Definitions
 
     Definition
       : ( 'public' | 'private' ) ConstantDefinition
       | ( 'public' | 'private' ) TypeDefinition
+      | ( 'public' | 'private' ) HandlerTypeDefinition
       | ( 'public' | 'private' ) VariableDefinition
       | ( 'public' | 'private' ) HandlerDefinition
       | ( 'public' | 'private' ) ForeignHandlerDefinition
@@ -1329,6 +1337,7 @@ A type definition defines an alias, it names the given type with the given Name,
       : <Name: Identifier>
       | 'optional' <Target: Type>
       | 'any'
+      | 'nothing'
       | 'Boolean'
       | 'Integer'
       | 'Real'
@@ -1337,14 +1346,13 @@ A type definition defines an alias, it names the given type with the given Name,
       | 'Data'
       | 'Array'
       | 'List'
-      | 'nothing'
       | 'Pointer'
 
 A type clause describes the kind of value which can be used in a variable or parameter.
 
 If a type is an identifier, then this is taken to be a named type defined in a type definition clause.
 
-An optional type means the value can be either the specified type or undefined.
+An optional type means the value can be either the specified type or nothing. Variables which are of optional type are automatically initialized to nothing.
 
 The remaining types are as follows:
 
@@ -1360,11 +1368,28 @@ The remaining types are as follows:
  - **nothing**: a single value *nothing* (this is used to describe handlers with no return value - i.e. void)
  - **Pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
 
-> **Note:** *Integer* and *Real* are currently the same as *Number*.
+> **Note:** *integer* and *real* are currently the same as *number*.
 
-> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *List of String*.
+> **Note:** In a subsequent update you will be able to specify lists and arrays of fixed types. For example, *list of string*.
 
 > **Note:** In a subsequence update you will be able to define record types (named collections of values - like structs in C) and handler types (allowing dynamic handler calls through a variable - like function pointers in C).
+
+#### Handler Types
+
+    HandlerTypeDefinition
+      : [ 'foreign' ] 'handler' 'type' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ]
+
+A handler type definition defines a type which can hold a handler. Variables of
+such types can hold handlers (just like function pointers in C) which allows them
+to be called dynamically.
+
+If the handler type is defined as foreign then automatic bridging to a C function
+pointer will occur when the type appears as the type of a parameter in a foreign
+handler definition.
+
+> **Note:** Passing an LCB handler to a foreign function requires creation of
+a function pointer. The lifetime of the function pointer is the same as the widget
+or module which created it.
 
 #### Variables
 
@@ -1373,18 +1398,18 @@ The remaining types are as follows:
 
 A variable definition defines a module-scope variable. In a widget module, such variables are per-widget (i.e. instance variables). In a library module, there is only a single instance (i.e. a private global variable).
 
-The type specification for the variable is optional, if it is not specified the type of the variable is *optional any* meaning that it can hold any value, including being undefined.
+The type specification for the variable is optional, if it is not specified the type of the variable is *optional any* meaning that it can hold any value, including being nothing.
 
 #### Handlers
 
     HandlerDefinition
-      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'as' <ReturnType: Type> ] SEPARATOR
+      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ] SEPARATOR
           { Statement }
         'end' 'handler'
 
 Handler definitions are used to define functions which can be called from LiveCode Builder code, invoked as a result of events triggering in a widget module, or called from LiveCode Script if public and inside a library module.
 
-There is no distinction between handlers which return a value and ones which do not, apart from the return type. Handlers can be called either in expression context, or in statement context. If a handler which returns no value (its return type is *undefined*) is called in expression context then its value is *undefined*.
+There is no distinction between handlers which return a value and ones which do not, apart from the return type. Handlers can be called either in expression context, or in statement context. If a handler which returns no value (it is specified as *returns nothing*) is called in expression context then its value is *nothing*.
 
 	ParameterList
 	  : { Parameter , ',' }
@@ -1396,11 +1421,11 @@ The parameter list describes the parameters which can be passed to the handler. 
 
 An in parameter means that the value from the caller is copied to the parameter variable in the callee handler.
 
-An out parameter means that no value is copied from the caller (the parameter variable in the callee handler starts as *nothing*), and the value on exit of the callee handler is copied back to the caller on return.
+An out parameter means that no value is copied from the caller, and the value on exit of the callee handler is copied back to the caller on return.
 
 > **Note:** It is a checked runtime error to return from a handler without ensuring all non-optional 'out' parameters have been assigned a value.
 
-An inout parameter means that the value from the caller is coped to the parameter variable in the callee handler on entry, and copied back out again on exit.
+An inout parameter means that the value from the caller is copied to the parameter variable in the callee handler on entry, and copied back out again on exit.
 
 The type of parameter is optional, if no type is specified it is taken to be *optional any* meaning it can be of any type.
 
@@ -1409,15 +1434,15 @@ The type of parameter is optional, if no type is specified it is taken to be *op
 #### Foreign Handlers
 
     ForeignHandlerDefinition
-      : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'as' <ReturnType: Type> ] 'binds' 'to' <Binding: String>
+      : 'foreign' 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ) ] 'binds' 'to' <Binding: String>
 
     ForeignType
       : Type
-      | 'bool'
-      | 'int'
-      | 'uint'
-      | 'float'
-      | 'double'
+      | 'CBool'
+      | 'CInt'
+      | 'CUInt'
+      | 'CFloat'
+      | 'CDouble'
 
 A foreign handler definition binds an identifier to a handler defined in foreign code.
 
@@ -1434,6 +1459,7 @@ This mapping means that a foreign handler with a bool parameter say, will accept
 At present, only C binding is allowed and follow these rules:
 
  - any type passes an MCValueRef
+ - nothing type passes as the null pointer
  - Boolean type passes an MCBooleanRef
  - Integer type passes an MCNumberRef
  - Real type passes an MCNumberRef
@@ -1442,13 +1468,12 @@ At present, only C binding is allowed and follow these rules:
  - Data type passes an MCDataRef
  - Array type passes an MCArrayRef
  - List type passes an MCProperListRef
- - nothing type passes an MCNullRef
  - Pointer type passes a void *
- - bool type passes a bool (i.e. an int - pre-C99).
- - int type passes an int
- - uint type passes an unsigned int
- - float type passes a float
- - double type passes a double
+ - CBool type passes a bool (i.e. an int - pre-C99).
+ - CInt type passes an int
+ - CUInt type passes an unsigned int
+ - CFloat type passes a float
+ - CDouble type passes a double
 
 Modes map as follows:
 
@@ -1461,7 +1486,7 @@ If the return type is of a Ref type, then it must be a copy.
 If an out parameter is of a Ref type, then it must be a copy (on exit)
 
 If an inout parameter is of a Ref type, then its existing value must be released, and replaced by a copy (on exit).
- 
+
 The binding string for foreign handlers has the following form:
 
     [lang:][library>][class.]function[!calling]
@@ -1531,16 +1556,16 @@ There are a number of built-in statements which define control flow, variables, 
 
     VariableStatement
       : 'variable' <Name: Identifier> [ 'as' <TypeOf: Type> ]
-      
+
 A variable statement defines a handler-scope variable. Such variables can be used after the variable statement, but not before.
 
 > **Note:** Variables are currently not block-scoped, they are defined from the point of declaration to the end of the handler - this might change in a subsequent revision.
 
-Variables are initially undefined, and if of non-optional type, must be assigned a value before they can be used.
+Variables are initially undefined and thus cannot be fetched without a runtime error occurring until a value is placed into them. If a variable has been annotated with an optional type, its initial value will be nothing.
 
 > **Note:** It is a checked runtime error to attempt to use a non-optionally typed variable before it has a value.
 
-The type specification for the variable is optional, if it is not specified the type of the variable is *optional any* meaning that it can hold any value, including being undefined.
+The type specification for the variable is optional, if it is not specified the type of the variable is *optional any* meaning that it can hold any value, including being nothing.
 
 #### If Statements
 
@@ -1630,7 +1655,7 @@ If a Value expression is specified, it is evaluated and returned as the result o
 
     PutStatement
       : 'put' <Value: Expression> into <Target: Expression>
-    
+
     SetStatement
       : 'set' <Target: Expression> 'to' <Value: Expression>
 
@@ -1666,7 +1691,7 @@ Any parameters of 'inout' type are evaluated on entry, and assigned on exit.
 
 The return value of a handler is subsequently available by using **the result** expression.
 
-> **Note:** All handlers return a value, even if it is undefined. This means that calling a handler will always change **the result**.
+> **Note:** All handlers return a value, even if it is nothing. This means that calling a handler will always change **the result**.
 
 ### Expressions
 
@@ -1682,7 +1707,7 @@ There are a number of expressions which are built-in and allow constant values, 
 #### Constant Value Expressions
 
       ConstantValueExpression
-        : 'undefined'
+        : 'nothing'
         | 'true'
         | 'false'
         | INTEGER
@@ -1691,7 +1716,7 @@ There are a number of expressions which are built-in and allow constant values, 
 
 Constant value expressions evaluate to the specified constant value.
 
-The **undefined** expression evaluates to the undefined value and can be assigned to any optional typed variable.
+The **nothing** expression evaluates to the nothing value and can be assigned to any optional typed variable.
 
 The **true** and **false** expressions evaluate to boolean values.
 
@@ -1719,7 +1744,7 @@ The result expression evaluates to the return value of the previous (executed) n
 
 Result expressions are not assignable.
 
-### List Expressions
+#### List Expressions
 
     ListExpression
       : '[' [ <Elements: ExpressionList> ] ']'
@@ -1739,4 +1764,4 @@ A call expression executes a handler.
 
 Its use is identical to a call statement, except that the return value of the handler is the value of the expression, rather than being available as **the result**.
 
-> **Note:** Handlers which return no value (i.e. have undefined as their result type) can still be used in call expressions. In this case the value of the call is **undefined**.
+> **Note:** Handlers which return no value (i.e. have nothing as their result type) can still be used in call expressions. In this case the value of the call is **nothing**.
