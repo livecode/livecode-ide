@@ -1,1 +1,1 @@
-#   graphic bug in standalone application settings window
+#  graphic bug in standalone application settings window
