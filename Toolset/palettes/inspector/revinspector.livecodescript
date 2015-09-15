@@ -13,6 +13,11 @@ end preOpenStack
 
 on openStack   
    lock screen
+   
+   if intersect(me, revIDEStackOfObject(sSelectedObjects)) then
+      revIDEPositionPaletteDefault the short name of me
+   end if
+   
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    inspectorMessagesRegister
