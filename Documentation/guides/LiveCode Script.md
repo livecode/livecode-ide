@@ -20,7 +20,7 @@ The goal of this manual is to provide the most accessible, comprehensive and use
 
 ## Where to Begin
 
-We recommend you start by taking a look at **Developers** section online at [lessons.runrev.com](http://lessons.runrev.com). There is a wide variety of introductory material there, including step-by-step examples and guides for performing common tasks.
+We recommend you start by taking a look at [our online resources](https://livecode.com/resources/). There is a wide variety of introductory material there, including step-by-step examples and guides for performing common tasks.
 
 ## System Requirements
 
@@ -155,7 +155,7 @@ The LiveCode documentation is spread across four components; the Start Center, t
 
 The Start Center is aimed at introducing you to LiveCode, and should be your first port of call if you have not used LiveCode before. The Resource Center will help you build upon any experience you have and the dictionary is a reference resource which you can refer to while implementing your projects.
 
-You can access the documentation from within LiveCode from the **Help** menu. Additional resources are available online at [www.runrev.com](http://www.runrev.com).
+You can access the documentation from within LiveCode from the **Help** menu. Additional resources are available at [www.livecode.com](http://www.livecode.com).
 
 ### Start Center
 
@@ -321,28 +321,31 @@ This Users Guide is a complete reference to LiveCode. It details what the dialog
 
 If you have a question that isn't answered in this documentation, you can find additional information to help you on our web site. You can also connect with the LiveCode developer community, which includes many experienced developers who offer their expertise for the common good to answer questions and help their fellow developers. You'll find example code, information on planned enhancements, and the latest updates. Visit:
 
-http://www.runrev.com
+http://www.livecode.com
 
 ### Developer Community
 
-The forums (section 1.6.3 above), are available for getting help from other developers, for discussing feature requests and future directions, and for receiving announcements from RunRev. To join the forums, visit:
+There are a number of ways to engage with the LiveCode community:
 
-<http://forums.runrev.com/>
+* The [forums](http://forums.livecode.com/) (section 1.6.3 above), are available for getting help from other developers, for discussing feature requests and future directions, and for receiving announcements from LiveCode.
 
-Mailing lists are also available. To join the mailing lists visit:
+* Ask a question on [stackoverflow](http://stackoverflow.com/questions/tagged/livecode).
 
-<http://support.runrev.com/lists>
+* Talk about LiveCode on [the LiveCode subreddit](https://www.reddit.com/r/livecode).
 
-> **Tip:** Tip: You can use the Google search engine to search the list archives, using
-<http://www.google.com/advanced_search?q=site:lists.runrev.com>
+* Join the [LiveCode user group](https://www.facebook.com/groups/livecodeusers) on Facebook.
+
+* Use the [LiveCode mailing list](http://lists.runrev.com/mailman/listinfo/use-livecode) is also available. 
+
+> **Tip:** Tip: You can use the Google search engine to search the list archives, using [this link](http://www.google.com/advanced_search?q=site:lists.runrev.com)
 
 ### Technical Support
 
-RunRev offers *up and running* technical support to all users to assist you in getting the development environment working on your system.
+LiveCode offers *up and running* technical support to all users to assist you in getting the development environment working on your system.
 
-Many editions include additional technical support for more *advanced* problems and questions. Where support is not included, a separate technical support contract for advanced support can be purchased. For full details of our current support policies, please see <http://support.runrev.com/>
+Many editions include additional technical support for more *advanced* problems and questions. Where support is not included, a separate technical support contract for advanced support can be purchased.
 
-You can contact us by email <support@runrev.com>
+Contact us [here](https://livecode.com/about/contact/) or at <support@livecode.com>.
 
 # Getting Started
 
@@ -1590,9 +1593,7 @@ Figure 37 – Table Field
 
 ### Data Grid Control – for presenting data
 
-Data Grids allow you to display data in both grid and form modes. You can customize a data grid to include custom layouts that include any other LiveCode object. Data grids can provide a view into a data source, allowing you to display large data sets. For full documentation on using data grids, see the online documentation at:
-
-<http://lessons.runrev.com/spaces/lessons/manuals/datagrid>
+Data Grids allow you to display data in both grid and form modes. You can customize a data grid to include custom layouts that include any other LiveCode object. Data grids can provide a view into a data source, allowing you to display large data sets. For full documentation on using data grids, see the [online documentation](http://lessons.runrev.com/spaces/lessons/manuals/datagrid)
 
 ![](images/image79.png)
 
@@ -2565,10 +2566,12 @@ The names of variables must consist of a single word and may contain any combina
 
 Here are some examples of **legal** variable names:
 
+```
 someVariable
 picture3
 my\_new\_file
 _output
+```
 
 Here are some names that **cannot** be used as variable names:
 
@@ -3398,9 +3401,7 @@ For a more in-depth look at this subject, we recommend Fourth World's Scripting 
 
 # Processing Text and Data
 
-LiveCode has first-class text and data processing capabilities. LiveCode’s unique chunk expressions – the ability to refer to text using English-like statements like "word 3 to 5 of myVariable", combined with other powerful features which include regular expressions, XML processing, associative arrays, data encoding and decoding functions and compression and encryption algorithms – make it easy and simple to process text and data of any complexity. This chapter is a reference guide, for an interactive workshop and tutorial resources please see our web site:
-
-[http://www.runrev.com/developers/exploring-LiveCode/working-with-text/](http://www.runrev.com/developers/exploring-revolution/working-with-text/)
+LiveCode has first-class text and data processing capabilities. LiveCode’s unique chunk expressions – the ability to refer to text using English-like statements like "word 3 to 5 of myVariable", combined with other powerful features which include regular expressions, XML processing, associative arrays, data encoding and decoding functions and compression and encryption algorithms – make it easy and simple to process text and data of any complexity. This chapter is a reference guide - go [here](https://livecode.com/resources/) for more resources.
 
 The section *Processing Text and Data* in the *Sample Scripts* within the product documentation contains additional code examples.
 
@@ -4201,7 +4202,7 @@ In addition to the XML library, LiveCode has a built-in script-based library for
 
 > **Tip:** To see a list of commands for working with XML-RPC, filter the LiveCode Dictionary with the term XMLRPC.
 
-An interactive stack demonstrating using the LiveCode XML library is available from <http://support.runrev.com/resources/xml.php>
+A lesson demonstrating using the LiveCode XML library is available [here](http://lessons.runrev.com/m/4071/l/7011-how-to-read-in-data-from-an-xml-file)
 
 ### The XML Library: Loading, Displaying and Unloading XML
 
@@ -6908,9 +6909,7 @@ A SQL database is a database that you access and control using SQL, a standard d
 
 LiveCode's database access is fully-featured. You can send any SQL statement to a database. You can open multiple databases (or multiple connections to the same database), maintain multiple record sets (database cursors) per connection, and send and receive binary data as well as text. You can do all this using the *Database Query Builder*, or in scripts that use the commands and functions in the *Database library*.
 
-To see a list of LiveCode terms in the Database library, open the *Dictionary*, and type "*database*" into the search filter field. You can also find a interactive workshop and tutorial materials on our web site at:
-
-<http://www.runrev.com/developers/lessons-and-tutorials/explore-livecode/databases/>
+To see a list of LiveCode terms in the Database library, open the *Dictionary*, and type "*database*" into the search filter field. 
 
 ### Why use an External Database?
 
@@ -7001,7 +7000,7 @@ Database drivers for certain database types are included in the LiveCode distrib
 
 If you have installed LiveCode, you have all the software needed to use the included database types. For other database types, you will need to obtain the appropriate database drivers before you can work with those databases.
 
-> **Important:** This section includes links to third-party web sites and contains information about third-party software. This information is provided for your convenience, but RunRev is not responsible for the software packages and sites referenced. Runtime regrets that it cannot provide any support for installation and configuration of any databasae.
+> **Important:** This section includes links to third-party web sites and contains information about third-party software. This information is provided for your convenience, but LiveCode is not responsible for the software packages and sites referenced. Runtime regrets that it cannot provide any support for installation and configuration of any databasae.
 
 ### MySQL
 
@@ -7770,36 +7769,6 @@ Figure 78 – Standalone Settings – Bug Reports
 | **Allow user to enter comments**      | Display a box for the user to give you more information. This information will be included in the report.                                                                                                                                                                                                                                                                                  |
 | **Allow user to save report to file** | Allow the user to save the report to a file. Select this option if you want users to save an error report and send it to you.                                                                                                                                                                                                                                                              |
 | **Allow user to email report**        | Allow the user to email the report. Select this option if you want the user to be able to send you or your technical support department details of the error. This option loads up the system default email client and populates the email with the contents of the error report and the user's comments. The To: field is sent to the email address specified in the email address field. |
-
-## Distributing On the Web
-
-To distribute for the web, check the Web option in the Standalone Settings dialog. This will allow you to create a revlet, which can be viewed in in popular browsers using the free, lightweight revWeb plugin. The latest version of the plugin will always be available at <http://revweb.runrev.com/> and you can direct users there to download it. Note that building for the web is the only option in revMedia.
-
-![](images/image112.png)
-
-Figure 79 – Standalone Settings – Web
-
-| &nbsp;| &nbsp;| &nbsp;|
-|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **UUID**                | A unique ID for your revlet. This is generated automatically and shouldn’t be changed.                                                                                                                                                                                                                                                                                      |
-| **Security**            | Allows you to specify the security permissions that your revlet requires. The revWeb Plug-in will request these permissions from the user before your revlet is loaded onto the page. Note that if your stack requires permissions that have not been granted, those features will not work. Auto-detect attempts to detect the required settings from the scripts you use. 
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Network: Allows access to sockets and URLs outside the domain the revlet resides on.                                                                                                                                                                                                                                                                                         
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Disk: Allows access to the user’s local disk. All file access commands require this permission.                                                                                                                                                                                                                                                                              
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Registry (Read): Allows reading the registry on Windows using queryRegistry.                                                                                                                                                                                                                                                                                                 
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Registry (Write): Allows writing to the registry on Windows using setRegistry.                                                                                                                                                                                                                                                                                               
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Privacy: Allows access to the video camera, microphone and screen capture.                                                                                                                                                                                                                                                                                                   
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Process / Shell: Allows access to the command line and the ability to launch and communicate with other processes.                                                                                                                                                                                                                                                           
-| |                                                                                                                                                                                                                                                                                                                                                                                                        
-| |                           Printing: Allows access to the printer and printer settings.                                                                                                                                                                                                                                                                                                                 |
-| **Platforms supported** | The platforms the revlet supports.                                                                                                                                                                                                                                                                                                                                          |
-| **Custom load icon**    | Allows you to specify your own custom logo for use on the loading screen.                                                                                                                                                                                                                                                                                                   |
-| **Background**          | Sets the top and bottom colors to create a gradient color for the loading screen. (Use the same colors for both to create a solid color.)                                                                                                                                                                                                                                   |
 
 # Error Handling & Debugging
 
@@ -8956,7 +8925,7 @@ The Internet library has a number of additional commands for working with web fo
 To launch the default browser with a URL, use the **launch URL** command.
 
 ```
-launch URL "http://www.runrev.com/"
+launch URL "http://www.livecode.com/"
 ```
 
 > **Note:** To render web pages within LiveCode, instead of launching an external browser, use the revBrowser. See the section on revBrowser for more information.
@@ -9096,13 +9065,7 @@ To close a browser when you finished with it, use the **revBrowserClose** comman
 
 RevBrowser supports a number of settings and messages. You can intercept a message whenever the user navigates to a link, prevent navigation, intercept clicks in the browser, requests to download files or to open a new window.
 
-To try out all these options in an interactive format, download the *Internet workshop* from:
-
-[http://www.runrev.com/developers/exploring-LiveCode/the-internet/](http://www.runrev.com/developers/exploring-revolution/the-internet/)
-
-Click on the *Render a Web Page* example, press *Run* and then explore the *revBrowser Demo Stack*.
-
-For a complete list of commands that operate on RevBrowser, press the *Show Docs* button in the *revBrowser Demo Stack*, or open the *LiveCode Dictionary* and type "*browser*" into the filter box.
+For a complete list of commands that operate on RevBrowser, open the *LiveCode Dictionary* and type "*browser*" into the filter box.
 
 ## SSL and Encryption
 
@@ -9157,10 +9120,10 @@ To open a secure socket, use the **open secure socket** variant of the command. 
 
 **Looking up a host name or IP address**
 
-You may look up an IP address from a host name with the **hostNameToAddress** function. For example, to get the IP address for the runrev.com server:
+You may look up an IP address from a host name with the **hostNameToAddress** function. For example, to get the IP address for the livecode.com server:
 
 ```
-put hostNameToAddress("www.runrev.com") into tIPAddress
+put hostNameToAddress("www.livecode.com") into tIPAddress
 ```
 
 To get the host name of the local machine, use the **hostName** function. To look up the name from an IP address, use the **hostAddressToName** function.
@@ -9258,7 +9221,7 @@ launch document "C:/My document.pdf"
 
 To open a URL in the default web browser, use the **launch URL** command.
 
-launch URL "<http://www.runrev.com/>"
+launch URL "<http://www.livecode.com/>"
 
 For more information on launching URLs see chapter 12. For details on how to render web pages within LiveCode, see the section on *revBrowser*.
 
@@ -9440,17 +9403,11 @@ We provide a developer kit for writing externals which includes documentation an
 
 The following newsletter articles will also help you get started:
 
-External Writing for the Uninitiated – Part 1
+* [External Writing for the Uninitiated – Part 1](http://newsletters.livecode.com/november/issue13/newsletter5.php)
 
-<http://www.runrev.com/developers/tutorials/advanced-externals-part-1/>
+* [External Writing for the Uninitiated – Part 2](http://newsletters.livecode.com/november/issue14/newsletter3.php)
 
-External Writing for the Uninitiated – Part 2
-
-<http://www.runrev.com/developers/tutorials/advanced-externals-part-2/>
-
-Writing Externals for Linux with 2.9 or later
-
-<http://www.runrev.com/developers/tutorials/advanced-linux-externals/>
+* [Writing Externals for Linux with 2.9 or later](http://newsletters.livecode.com/october/issue34/newsletter1.php)
 
 ## Building a Web Application
 
@@ -9840,9 +9797,7 @@ visual effect (the cEffect of this stack)
 go next card
 ```
 
-For more information on visual effects, see the **visual effect** command in the *LiveCode Dictionary*. To try out the different visual effects available in an interactive format see the *Multimedia Workshop*, available at:
-
-[http://www.runrev.com/developers/exploring-LiveCode/multimedia/](http://www.runrev.com/developers/exploring-revolution/multimedia/)
+For more information on visual effects, see the **visual effect** command in the *LiveCode Dictionary*. To try out the different visual effects available in an interactive format see the [Multimedia Workshop](http://www.runrev.com/developers/exploring-revolution/multimedia/)
 
 ## Creating Custom Skins
 
