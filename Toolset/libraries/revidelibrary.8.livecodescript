@@ -3607,20 +3607,23 @@ on revIDEEnsureOnscreen pStackName
    # Ensure the stack exists
    if there is not a stack pStackName then return __revIDEError("No such stack:" && pStackName)
    
+   local tScreenRect
+   put line (the screen of stack pStackName) of the working screenrects into tScreenRect
+   
    local tScreenHeight, tScreenWidth
-   put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
-   put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+   put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
+   put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
    
    if the left of stack pStackName < 0 then
       set the left of stack pStackName to 0
-   else if the right of stack pStackName > item 3 of the screenrect and the width of stack pStackName < tScreenWidth then
-      set the right of stack pStackName to item 3 of the screenrect
+   else if the right of stack pStackName > item 3 of tScreenRect and the width of stack pStackName < tScreenWidth then
+      set the right of stack pStackName to item 3 of tScreenRect
    end if
    
    if the top of stack pStackName < 0 then
       set the top of stack pStackName to 0
-   else if the bottom of stack pStackName > item 4 of the screenrect and the height of stack pStackName < tScreenHeight then
-      set the bottom of stack pStackName to item 4 of the screenrect
+   else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
+      set the bottom of stack pStackName to item 4 of tScreenRect
    end if
 end revIDEEnsureOnscreen
 
