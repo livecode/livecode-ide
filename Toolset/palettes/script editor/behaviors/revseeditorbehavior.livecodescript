@@ -952,35 +952,51 @@ command locateHandler pName, pProposedPosition, pType
    local tScript
    local tFilteredScript
    local tType
+   local tMatchRegex
    -- this allows us to ignore the 'private' modifier
    constant kRegex = "^(?:private\s)?"
   
    put the text of field "Script" of me into tScript
-   switch char -1 of pType -- ignore a "P" modifier if present
-   	case "M"
-   		put "(on|command)" into tType
-   		break
-   	case "F"
-   		put "function" into tType
-   		break
-   	case "G"
-   		put "getprop" into tType
-   		break
-   	case "S"
-   		put "setprop" into tType
-   		break
-   	case "B"
-   		put "before" into tType
-   		break
-   	case "A"
-   		put "after" into tType
-   		break
-   end switch
-   filter tScript with regex (kRegex & tType & "\s" & pName & "\b.*" ) into tFilteredScript
-   put lineoffset(tFilteredScript, tScript) into tResult
-   if tResult is 0 then
-   	put empty into tResult
-   end if
+	switch char -1 of pType -- ignore a "P" modifier if present
+		case "M"
+				put "(on|command)" into tType
+				break
+		case "F"
+				put "function" into tType
+				break
+		case "G"
+				put "getprop" into tType
+				break
+		case "S"
+				put "setprop" into tType
+				break
+		case "B"
+				put "before" into tType
+				break
+		case "A"
+				put "after" into tType
+				break
+	end switch
+   put kRegex & tType & "\s" & pName & "\b.*" into tMatchRegex
+   --if matchText(line pProposedPosition of tScript, tMatchRegex) then
+   	-- if the script is already compiled we will get a match
+  		--put pProposedPosition into tResult
+   --else
+   	-- otherwise we ignore pProposedPosition and find the real line number
+		-- filter down to just the line we're looking for
+		filter tScript with regex tMatchRegex into tFilteredScript
+		--put lineoffset(tFilteredScript, tScript) into tResult
+		put 1 into tResult
+		repeat for each line tLine in tScript
+			if tLine is tFilteredScript then
+				exit repeat
+			end if
+			add 1 to tResult
+		end repeat
+		if tResult is 0 then
+			put empty into tResult
+		end if
+   --end if
    return tResult
 end locateHandler
 
