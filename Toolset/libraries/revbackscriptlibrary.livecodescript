@@ -1214,8 +1214,8 @@ on revNewButton pTarget
       set the cREVReport["viewername"] of pTarget to tName
    end if
    set the cREVGeneral["revUniqueID"] of pTarget to the milliseconds
-   if the left of pTarget < 0 then set the left of pTarget to 0
-   if the top of pTarget < 0 then set the top of pTarget to 0
+   
+   // PM-2015-09-17: [[ Bug 15918 ]] Allow the new btn to appear offscreen
 end revNewButton
 
 on newField
