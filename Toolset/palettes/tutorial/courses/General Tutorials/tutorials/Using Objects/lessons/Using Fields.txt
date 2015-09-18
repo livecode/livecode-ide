@@ -1,0 +1,87 @@
+tutorial "Using fields"
+
+prologue
+	If you want to use text in your apps, for display or to allow the user to input information you'll need to use field. 
+	
+	In this tutorial we'll look at how to create and use different types of fields in LiveCode.
+end prologue
+
+step "Create Mainstack"
+	The first thing we will do is a create a new stack to work with. Click on the File menu, and select New Stack > Default Size
+action
+    highlight menu item "New Stack" of menu "File"
+    capture the next new stack as "Mainstack"
+    wait until there is a stack "Mainstack"
+    go to step "Create Entry Field"
+end step
+
+step "Create Entry Field"
+    Drag out a field from the Tools palette onto your stack. This is a text entry field which the user can type into.
+action
+    highlight tool "Create Field"
+    capture the next new field of stack "Mainstack" as "Entry field"
+    wait until there is a field "Entry Field"
+    go to step "Set Entry Field Area"
+end step
+
+step "Set Entry Field Area"  
+    Resize and position the field as shown.
+action
+    add guide "Area" with rect "112,8,392,31" to stack "Mainstack"
+    highlight guide "Area"
+    wait until field "Entry Field" fits guide "Area" with tolerance 3
+    go to step "Set Tool To Run"
+end step
+
+step "Set Tool To Run"
+    Now test typing into the field. First, switch to run mode by clicking on the run 
+    mode tool in the Tools palette.
+action 
+    highlight tool "Run Mode"
+	  wait until the tool is run
+		go to step "Type into Entry Field"
+end step
+
+step "Type into Entry Field"
+    Type "Joe Bloggs" into the entry field
+action
+	 wait until the text of field "Entry field" is "Joe Bloggs"
+	 go to step "Create Label Field"
+end step
+
+step "Create Label Field"
+    Drag out a label field from the Tools palette onto your stack. This is a label field which can be used to display text, but cannot be edited by the user.
+action
+    highlight tool "Create Label Field"
+    capture the next new field of stack "Mainstack" as "Label field"
+    wait until there is a field "Label Field"
+    go to step "Set Label Field Area"
+end step
+
+step "Set Label Field Area"  
+    Resize and position the field as shown.
+action
+    add guide "Area" with rect "5,9,109,30" to stack "Mainstack"
+    highlight guide "Area"
+    wait until field "Label Field" fits guide "Area" with tolerance 3
+    go to step "Set Label Properties"
+end step
+
+step "Set Label Properties"
+	 We will set the Text property of the label field to change what is displayed. Double click on the field to display its properties in the property inspector. 
+action
+    highlight field "Label Field"
+    wait until there is a property inspector for field "Label Field"
+    go to step "Set Label Field Name"
+end step
+
+step "Set Label Field Name"
+    Set the text of the label field to "Name:".
+action
+    highlight property "Text" of section "Basic"
+    wait until the text of field "Label Field" is "Name:"
+end step
+
+epilogue
+    Congratulations, you can type into a field.
+end epilogue

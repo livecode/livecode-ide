@@ -11,6 +11,10 @@ command revInternal__LoadLibrary pLibrary
    --  follow the lower-case naming of the library names
    put toLower(pLibrary) into pLibrary
 
+   if sLoadedLibraries[pLibrary] is not empty then
+     return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
+   end if
+
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
    if the environment is "development" then
       local tLibraryPath
@@ -28,19 +32,15 @@ command revInternal__LoadLibrary pLibrary
          
          --set the defaultStack to tDefaultStack
          
-         // Get it's name
+         // Get its name
          local tStackName
          put the name of stack tLibraryPath into tStackName
-         
-         if sLoadedLibraries[tStackName] then
-     	   return "Library" && pLibrary && "already loaded as" && tStackName
-  		 end if
          
          // Insert the script into the backscript
          send "revLoadLibrary" to stack tStackName
          
-         put true into sLoadedLibraries[pLibraryName]
-         
+         put tStackName into sLoadedLibraries[pLibrary]
+                  
          return true
       catch tError
          answer tError
@@ -49,24 +49,27 @@ command revInternal__LoadLibrary pLibrary
       
    else
       try
-         send "revLoadLibrary" to stack pLibraryName
+         send "revLoadLibrary" to stack pLibrary
+         put pLibrary into sLoadedLibraries[pLibrary]
       catch tError
-         answer "Error" && tError && "while loading stack:" && pLibraryName
+         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
       end try
    end if
 end revInternal__LoadLibrary
 
 command revInternal__UnloadLibrary pLibraryName
    // Check if the library is loaded
-   if sLoadedLibraries[pLibraryName] is not true then
+   if sLoadedLibraries[pLibraryName] is empty then
       return "Library not loaded"
    end if
    
-   if there is not a stack pLibraryName then return "library not loaded"
+   local tStackName
+   put sLoadedLibraries[pLibraryName] into tStackName
+   if there is not a stack tStackName then return "library not loaded"
    
    try
       // Request the library shuts down
-      send "revUnloadLibrary" to stack pLibraryName
+      send "revUnloadLibrary" to stack tStackName
       
       delete variable sLoadedLibraries[pLibraryName]
       

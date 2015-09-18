@@ -286,6 +286,7 @@ on generatePalette
             set the filename of the templateimage to tThemePath & slash & tControlTypeID & ".icon.png"
             create image in group "images" of group "contents"
             put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
+            revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
             set the icon of the templatebutton to the ID of tImageID
          else 
             set the icon of the templatebutton to empty

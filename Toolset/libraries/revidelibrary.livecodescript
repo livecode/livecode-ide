@@ -111,7 +111,7 @@ end revIDEShowMessageBox
 --local sAddedObjects
 
 # Parameters
-#   pRootObject : the object to list the tree for, this is a reference to any Revolution object
+#   pRootObject : the object to list the tree for, this is a reference to any LiveCode object
 #   pIncludeSubstacks : if pRootObject is a mainstack, this determines whether or not its substacks are searched. Otherwise its ignored.
 # Returns
 #   Empty if all possible objects were returned, otherwise a warning string explaining why some / all were ommited.

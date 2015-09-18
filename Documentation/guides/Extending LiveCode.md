@@ -137,7 +137,7 @@ A widget and a library are identical, except that a widget draws to a canvas. As
 
 ### Create a .lcb file
 We recommend using the Atom text editor, available at https://atom.io/. A LiveCode package is available which provides some colorization as well as indentation. 
-If you prefer to use TextWrangler, there is a colorising script here: https://github.com/runrev/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
+If you prefer to use TextWrangler, there is a colorising script here: https://github.com/livecode/livecode/tree/develop/contrib/TextWrangler. It should be placed in /Application Support/TextWrangler/Language Modules/
 
 Start by creating a plain text file in a new directory and save it to disk with the extension "lcb":
 

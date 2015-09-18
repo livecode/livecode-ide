@@ -7,7 +7,11 @@ on setBehaviors
    set the behavior of group "Toolbar" of me to the long id of stack revIDEScriptEditorBehavior("toolbar")
    set the behavior of group "Handler List" of me to the long id of stack revIDEScriptEditorBehavior("handlerlist")
    set the behavior of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("leftbar")
-   set the behavior of field "Filter" of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("handlerfilter")
+   set the behavior of field "Filter" of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
+   set the behavior of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablespane")
+   set the behavior of field "Filter" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
+   set the behavior of button "Show Globals" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
+   set the behavior of button "Show Environment Vars" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
 end setBehaviors
 
 # Which metadata type to store the script editor data as.

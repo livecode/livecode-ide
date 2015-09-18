@@ -1764,8 +1764,7 @@ function revIDEMainStacks
       put the mainstacks into tMainStacks
    else
       repeat for each line tMainStack in the mainstacks
-         --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackIsRevStack(the long id of stack tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+         if revIDEStackIsRevStack(the long id of stack tMainStack) then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -2799,9 +2798,14 @@ end revIDEGetInspectedObjects
 */
 local sInspectingObjects
 command revIDEInspectObjects pObjects
+   lock screen
    put pObjects into sInspectingObjects
    revIDESelectObjects pObjects
    send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
+   if the mode of stack revIDEPaletteToStackName("inspector") is 0 or the visible of stack revIDEPaletteToStackName("inspector") is false then
+      revIDEOpenPalette "inspector"
+   end if
+   unlock screen
 end revIDEInspectObjects
 
 on revIDEStopInspecting
@@ -3599,6 +3603,30 @@ function revIDEPaletteToStackName pPalette
    end switch
 end revIDEPaletteToStackName
 
+on revIDEEnsureOnscreen pStackName
+   # Ensure the stack exists
+   if there is not a stack pStackName then return __revIDEError("No such stack:" && pStackName)
+   
+   local tScreenRect
+   put line (the screen of stack pStackName) of the working screenrects into tScreenRect
+   
+   local tScreenHeight, tScreenWidth
+   put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
+   put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
+   
+   if the left of stack pStackName < 0 then
+      set the left of stack pStackName to 0
+   else if the right of stack pStackName > item 3 of tScreenRect and the width of stack pStackName < tScreenWidth then
+      set the right of stack pStackName to item 3 of tScreenRect
+   end if
+   
+   if the top of stack pStackName < 0 then
+      set the top of stack pStackName to 0
+   else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
+      set the bottom of stack pStackName to item 4 of tScreenRect
+   end if
+end revIDEEnsureOnscreen
+
 /*
 Positions the palette.
 
@@ -3620,6 +3648,7 @@ on revIDEPositionPalette pStackName
             break
          case "message box"
          case "revDictionary"
+         case "revInspector"
             set the rect of stack pStackName to tRect
             break
          default 
@@ -3631,6 +3660,10 @@ on revIDEPositionPalette pStackName
       # If no sizing information can be found then position the stack in the default location
       revIDEPositionPaletteDefault pStackName
    end if
+   
+   # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
+   revIDEEnsureOnscreen pStackName
+   
 end revIDEPositionPalette
 
 on revIDEPositionPaletteDefault pStackName
@@ -3656,7 +3689,15 @@ on revIDEPositionPaletteDefault pStackName
          if revIDEStackIsRevStack(the long ID of the topstack) then
             set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
          else
-            set the topleft of stack pStackName to the right of the topstack + 10,the top of the topstack
+            set the top of stack pStackName to the top of the topstack            
+            # AL-2015-09-09: [[ Bug 15745 ]] Try and place PI to left of stack if it doesn't fit on the right
+            if the right of the topstack + 10 + the width of stack pStackName < tScreenWidth then
+               set the left of stack pStackName to the right of the topstack + 10
+            else if the left of the topstack - 10 - the width of stack pStackName > 0 then
+               set the right of stack pStackName to the left of the topstack - 10
+            else
+               set the left of stack pStackName to the right of the topstack + 10
+            end if
          end if
          break
       default 
@@ -4394,11 +4435,16 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsetoolbarbehavior.livecodescript"
       case "leftbar"
          return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
-      case "handlerfilter"
-         return tPathToBehaviors & slash & "revsehandlerfilterbehavior.livecodescript"
+      case "variablespane"
+         return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
+      case "filterfield"
+         return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
+      case "variablescheckbox"
+         return tPathToBehaviors & slash & "revsevariablescheckboxbehavior.livecodescript"
       case "stack"
-      default
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+      default
+         return empty
    end switch
 end revIDEScriptEditorBehavior
 
@@ -4407,37 +4453,6 @@ on revIDEAnswerDialogClosed
    put item 1 of line 1 of the executionContexts into tPopupSource
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
-
-local sTutorialName
-on revIDEStartTutorial pName
-   dispatch "revTutorialStart" to stack "revTutorial" with pName
-   put pName into sTutorialName
-   revIDEMessageSend "ideTutorialProgressChanged"
-end revIDEStartTutorial
-
-on revIDEStopTutorial
-   if revIDETutorialInProgress() is not empty then
-      revFinaliseTutorial
-   end if
-   put empty into sTutorialName
-   revIDEMessageSend "ideTutorialProgressChanged"
-   wait 0 millisecs with messages
-   delete stack "revTutorial"
-   revIDEOpenPalette "Create It Welcome"
-end revIDEStopTutorial
-
-function revIDETutorialInProgress
-   return sTutorialName
-end revIDETutorialInProgress
-
-function revIDETutorialResourcePath pTutorial
-   local tTutorialPath
-   put revIDESpecialFolderPath("tutorial") & "/tutorials/" & pTutorial &  "/resources" into tTutorialPath
-   if there is a folder tTutorialPath then
-      return tTutorialPath
-   end if
-   return __revIDEError("Tutorial resource path not found") 
-end revIDETutorialResourcePath
 
 function revIDEPaletteToStackName pPalette
    switch pPalette
@@ -4960,8 +4975,11 @@ on revIDENewMainstack pWidth, pHeight
    # Send the 'ideNewStack' message
    revIDEMessageSend "ideNewStack", it
    
-   # Update the active stacks
+    # Update the active stacks
    revIDEMessageSend "ideActiveStacksChanged"
+   
+   # Return the created stack long id
+   return it
 end revIDENewMainstack
 
 on revIDEActionNewMainstack pStackType
@@ -4983,6 +5001,9 @@ on revIDEActionNewMainstack pStackType
          revIDENewMainstack
       end if
    end if
+   
+   # Return the created stack long id
+   return the result
 end revIDEActionNewMainstack
 
 on revIDEActionNewCard
@@ -4998,6 +5019,9 @@ on revIDEActionNewCard
    put the long id of it into tCardID
    put "edited" into gREVStackStatus[the short name of this stack]
    revIDEMessageSend "ideNewCard tCardID"
+   
+   # Return the card id
+   return tCardID
 end revIDEActionNewCard
 
 on revIDEActionDeleteCard
@@ -5335,6 +5359,7 @@ on revIDEImportControl pType, pFileName, pReferenced
    put the long ID of the topstack into tTargetStack
    put the loc of card 1 of the topstack into tCreatedControlLocation
    
+   local tCreatedControlID
    lock screen
    lock messages
    set the defaultStack to tTargetStack
@@ -5342,12 +5367,14 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "image"
          revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
          if pReferenced is true then
-            set the filename of the last control to pFileName
+            put the long id of the last control into tCreatedControlID
+            set the filename of tCreatedControlID to pFileName
          else
-            set the text of the last image to URL ("binfile:" & pFileName)
+            put the long id of the last image into tCreatedControlID
+            set the text of tCreatedControlID to URL ("binfile:" & pFileName)
          end if
-         set the borderWidth of the last image to 0
-         select the last control
+         set the borderWidth of tCreatedControlID to 0
+         select tCreatedControlID
          break
       case "audio"
          import AudioClip from file pFileName
@@ -5355,20 +5382,24 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "video"
          if pReferenced is true then
             revIDECreateObject "com.livecode.interface.classic.player", tTargetStack, tCreatedControlLocation
-            set the filename of the last control to pFileName
+            put the result into tCreatedControlID
+            set the filename of tCreatedControlID to pFileName
          else
             import videoclip from file pFileName
+            put the long id of the last videoclip into tCreatedControlID
          end if
          break
       case "text"
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
-         put URL ("file:" & pFileName) into the last field
-         select the last control
+         put the result into tCreatedControlID
+         put URL ("file:" & pFileName) into tCreatedControlID
+         select tCreatedControlID
          break
    end switch
    
    unlock messages
    unlock screen
+   return tCreatedControlID
 end revIDEImportControl
 
 on revIDEImportSnapshot pScope, pObjectID
@@ -6228,15 +6259,19 @@ on revIDEActionDuplicate
    lock screen
    if the selObj is not empty then
       set the defaultStack to revIDEStackOfObject(line 1 of (the selobj))
-
+      
       # OK-2007-07-31 : Bug 4917. Instead of assuming that the duplicated controls will have the highest layer
       # numbers, we make certain that we select the correct objects by saving a list of each newly created control
       local tCreatedObjects, tID
       put the milliseconds into tID
       repeat for each line tObject in the selObj
          clone tObject
-         put the long id of it & return after tCreatedObjects
-
+         if tCreatedObjects is empty then
+            put the long id of it into tCreatedObjects
+         else
+            put the long id of it & return after tCreatedObjects
+         end if
+         
          if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then
             set the topLeft of the last control to 10, 10
          end if
@@ -6262,6 +6297,7 @@ on revIDEActionDuplicate
       revIDEMessageSend "ideSelectedObjectChanged"
    end if
    unlock screen
+   return tCreatedObjects
 end revIDEActionDuplicate
 
 on revIDEDuplicateCard
@@ -6448,18 +6484,15 @@ on revIDEStyleText pWhich, pValue
             local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
             put word 2 of the selectedChunk into tStartChar
             put word 4 of the selectedChunk into tEndChar
-            put return & "Start / End: " & tStartChar && tEndChar after msg
 
             put tStartChar && tEndChar
             put the lineIndex of char tStartChar of tTarget into tStartPara
             put the lineIndex of char tEndChar of tTarget into tEndPara
-            put return & "Paras: " & tStartPara & " to " & tEndPara after msg
 
             repeat with x = tStartPara to tEndPara
                put the charindex of line x of tTarget into tParaFirstChar
                put the charindex of line x of tTarget + the length of line x of tTarget - 1 into tParaLastChar
                set the textAlign of char tParaFirstChar to tParaLastChar of tTarget to pValue
-               put return & "Para "&x&": char " & tParaFirstChar & " to " & tParaLastChar after msg
             end repeat
 
          else
@@ -6919,6 +6952,8 @@ on revIDEEditGroup pGroup
 end revIDEEditGroup
 
 on revIDEStopEditingGroup
+   # TS-2015-09-02: [[ Bug 15854 ]] Set the defaultStack before executing the "stop editing" command.
+   set the defaultStack to the topStack
    stop editing
 end revIDEStopEditingGroup
 
@@ -8041,6 +8076,374 @@ on revIDEDismissTransient
    send "revIDERemoveTransientTextField tField" to me in 0 millisecs
    unlock screen
 end revIDEDismissTransient
+
+function revIDEFolderListing pFolder, pListFiles
+   if there is not a folder pFolder then
+      return empty
+   end if
+    
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tList
+   if pListFiles then
+      put the files into tList
+   else
+      put the folders into tList
+   end if
+   
+   filter tList without ".*"
+   set the defaultFolder to tDefaultFolder
+   return tList
+end revIDEFolderListing
+
+#############
+# Tutorial support
+#############
+
+local sTutorialInfo
+on revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   put pLesson into sTutorialInfo["lesson"]
+   put pTutorial into sTutorialInfo["tutorial"]
+   put pCourse into sTutorialInfo["course"]
+end revIDETutorialInfoSet
+
+on revIDEStartTutorial pCourse, pTutorial, pLesson
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   dispatch "revTutorialStart" to stack "revTutorial"
+   revIDETutorialProgressChanged
+end revIDEStartTutorial
+
+on revIDEStopTutorial   
+   dispatch "revTutorialStop" to stack "revTutorial"
+   put empty into sTutorialInfo
+   revIDETutorialProgressChanged
+   close stack "revTutorial"
+   revIDEOpenPalette "Create It Welcome"
+end revIDEStopTutorial
+
+function revIDETutorialInProgress
+   return sTutorialInfo
+end revIDETutorialInProgress
+
+function revIDETutorialResourcePath pTutorialInfo
+   local tTutorialPath
+   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"]) & "/resources" into tTutorialPath
+   if there is a folder tTutorialPath then
+      return tTutorialPath
+   end if
+   return __revIDEError("Tutorial resource path not found") 
+end revIDETutorialResourcePath
+
+function revIDETutorialUserStackPath pStackTag
+   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
+end revIDETutorialUserStackPath
+
+on revIDETutorialSave pTaggedObjects, pStepName
+   if sTutorialInfo is empty then
+      return __revIDEError("No tutorial in progress")
+   end if
+   
+   lock messages
+   # Store all the tags for tagged objects as custom properties
+   repeat for each element tTagged in pTaggedObjects
+      repeat for each key tTag in tTagged
+         set the cTutorialTag of tTagged[tTag] to tTag
+      end repeat
+   end repeat
+   
+   # Ensure there is a suitable folder to save the stacks
+   if pTaggedObjects["stack"] is not empty then
+      set the itemdelimiter to slash
+      local tUserTutorialFolder
+      put item 1 to -2 of revIDETutorialUserStackPath() into tUserTutorialFolder
+      revIDEEnsurePath tUserTutorialFolder
+   end if
+   
+   # Save a copy of the current tagged stacks to the user data folder
+   local tOldFilename, tFilename, tMainstack, tStackTags
+   repeat for each key tStackTag in pTaggedObjects["stack"]
+      put pTaggedObjects["stack"][tStackTag] into tMainstack
+      put the filename of tMainstack into tOldFilename
+      put revIDETutorialUserStackPath(tStackTag) into tFilename
+      save stack tMainstack as tFilename
+      set the filename of tMainstack to tOldFilename
+      
+      if tStackTags is empty then
+         put tStackTag into tStackTags
+      else
+         put return & tStackTag after tStackTags
+      end if
+   end repeat
+   unlock messages
+   
+   # Update the stored course data
+   local tCourseDataA
+   put revIDETutorialSavedCourseProgress(sTutorialInfo["course"]) into tCourseDataA
+   
+   local tLessonDataA
+   put tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]] into tLessonDataA
+   
+   put revIDETutorialDonePercentage() into tLessonDataA["progress"]
+   put pStepName into tLessonDataA["step"]
+   put tStackTags into tLessonDataA["stacks"]
+   
+   put tLessonDataA into tCourseDataA[sTutorialInfo["tutorial"]][sTutorialInfo["lesson"]]
+   
+   revIDETutorialSaveCourseProgress sTutorialInfo["course"], tCourseDataA
+end revIDETutorialSave
+
+private function __fetchAndRemoveTags pStack
+   local tTags
+   put the name of pStack into tTags["stack"][the cTutorialTag of pStack]
+   
+   local tCardLongID
+   repeat for each line tLine in the cardIDs of pStack
+      put the long id of card id tLine of pStack into tCardLongID
+      get the cTutorialTag of tCardLongID
+      if it is not empty then
+         put tCardLongID into tTags["card"][it]
+      end if
+      union tTags with __fetchAndRemoveControlTags(tCardLongID)
+   end repeat
+   return tTags
+end __fetchAndRemoveTags
+
+private function __fetchAndRemoveControlTags pCard
+   local tControlLongID, tTags
+   repeat for each line tLine in the controlIDs of pCard
+      put the long id of control id tLine of pCard into tControlLongID
+      get the cTutorialTag of tControlLongID
+      if it is not empty then
+         put tControlLongID into tTags[word 1 of tControlLongID][it]
+      end if
+   end repeat
+   return tTags
+end __fetchAndRemoveControlTags
+
+on revIDETutorialLoad pCourse, pTutorial, pLesson
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   
+   local tCourseProgressA, tLessonDataA
+   put revIDETutorialSavedCourseProgress(pCourse) into tCourseProgressA
+   put tCourseProgressA[pTutorial][pLesson] into tLessonDataA
+   
+   # Get all the tagged mainstacks and all object tags
+   local tStackList, tTags, tStackName
+   repeat for each line tStackTag in tLessonDataA["stacks"]
+      put the name of stack revIDETutorialUserStackPath(tStackTag) into tStackName
+      go invisible stack revIDETutorialUserStackPath(tStackTag)
+      set the filename of stack tStackName to empty
+      if tStackList is empty then
+         put tStackName into tStackList
+      else
+         put return & tStackName after tStackList
+      end if
+      
+      union tTags with __fetchAndRemoveTags(tStackName)
+   end repeat
+   
+   dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]
+end revIDETutorialLoad
+
+/* 
+Returns the preference name corresponding to the given course
+*/
+function revIDETutorialCoursePreferenceName pName
+   replace " " with "_" in pName
+   return "c" & pName & "Info"
+end revIDETutorialCoursePreferenceName
+
+/*
+Returns the course progress data stored in the preferences for the given course
+*/
+function revIDETutorialSavedCourseProgress pName
+   return revIDEGetPreference(revIDETutorialCoursePreferenceName(pName))
+end revIDETutorialSavedCourseProgress
+
+/*
+Stores the course progress data for the given course in the preferences
+*/
+on revIDETutorialSaveCourseProgress pCourse, pData
+   revIDESetPreference revIDETutorialCoursePreferenceName(pCourse), pData
+end revIDETutorialSaveCourseProgress
+
+/*
+Returns the percentage of the currently open tutorial lesson that is finished
+*/
+function revIDETutorialDonePercentage
+   if sTutorialInfo is empty then
+      return 0
+   end if
+   
+   return 100 * (revTutorialStepNumber() - 1) / revTutorialNumberOfSteps()
+end revIDETutorialDonePercentage
+
+/*
+Lists the courses in the IDE tutorial folder
+*/
+function revIDETutorialListCourses
+   return revIDEFolderListing(revIDESpecialFolderPath("tutorial") & "/courses", false)
+end revIDETutorialListCourses
+
+/*
+Returns the path to the folder containing the given course
+*/
+function revIDETutorialCoursePath pCourse
+   return revIDESpecialFolderPath("tutorial") & "/courses/" & pCourse
+end revIDETutorialCoursePath
+
+/*
+Returns the description of the given course
+*/
+function revIDETutorialCourseDescription pCourse
+   return textDecode(url ("binfile:" & revIDETutorialCoursePath(pCourse) & slash & "description.txt"), "utf-8")
+end revIDETutorialCourseDescription
+
+/*
+Lists the tutorials in the folder for the given course
+*/
+function revIDETutorialListTutorials pCourse
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) & slash & "tutorials", false)
+end revIDETutorialListTutorials
+
+/*
+Returns the path to the folder containing the given tutorial
+*/
+function revIDETutorialPath pCourse, pTutorial
+   return revIDETutorialCoursePath(pCourse) & "/tutorials/" & pTutorial
+end revIDETutorialPath
+
+/*
+Returns the description of the given tutorial
+*/
+function revIDETutorialDescription pCourse, pTutorial
+   return textDecode(url ("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash & "description.txt"), "utf-8")
+end revIDETutorialDescription
+
+/*
+Lists the lessons in the folder for the given tutorial of the given course
+*/
+function revIDETutorialListLessons pCourse, pTutorial
+   local tFiles
+   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) & slash & "lessons", true) into tFiles
+   replace ".txt" with empty in tFiles
+   return tFiles
+end revIDETutorialListLessons
+
+/*
+Returns the content of the specified lesson
+*/
+function revIDETutorialLessonContent pCourse, pTutorial, pLesson
+   return textDecode(url("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash &"lessons" & slash & pLesson & ".txt"), "utf-8")
+end revIDETutorialLessonContent
+
+/*
+Lists the courses that are always present in the order they should display
+*/
+function revIDETutorialFixedCourses
+   return "Welcome,Getting Started,General Tutorials"
+end revIDETutorialFixedCourses
+
+/*
+Returns a structured array representing the info of all of the currently available courses
+*/
+function revIDETutorialCourseInfo
+   local tCourseList
+   put revIDETutorialListCourses() into tCourseList
+   
+   local tFixedCourses
+   put revIDETutorialFixedCourses() into tFixedCourses
+   repeat for each item tItem in tFixedCourses
+      delete line lineoffset(tItem, tCourseList) of tCourseList
+   end repeat
+   
+   replace comma with return in tFixedCourses
+   if tCourseList is empty then
+      put tFixedCourses into tCourseList
+   else
+      put tFixedCourses & return before tCourseList
+   end if
+   
+   local tCourseDataA, tCount, tCourseProgress, tPercentage
+   repeat for each line tCourse in tCourseList
+      add 1 to tCount
+      put revIDETutorialInfo(tCourse) into tCourseDataA[tCount]["tutorials"]
+      put tCourse into tCourseDataA[tCount]["name"]
+      put revIDETutorialCourseDescription(tCourse) into tCourseDataA[tCount]["description"]
+      put 0 into tPercentage
+      repeat for each element tTutorial in tCourseDataA[tCount]["tutorials"]
+         add tTutorial["progress"] to tPercentage
+      end repeat
+      divide tPercentage by the number of elements in tCourseDataA[tCount]["tutorials"]
+      put tPercentage into tCourseDataA[tCount]["progress"]
+   end repeat
+   
+   return tCourseDataA
+end revIDETutorialCourseInfo
+
+/*
+Returns a structured array representing the info of all of the currently available tutorials in the given course
+*/
+function revIDETutorialInfo pCourse
+   local tTutorialList
+   put revIDETutorialListTutorials(pCourse) into tTutorialList
+   
+   sort tTutorialList ascending numeric
+   
+   local tTutorialDataA, tCount, tPercentage
+   repeat for each line tTutorial in tTutorialList
+      add 1 to tCount
+      put revIDETutorialLessonInfo(pCourse, tTutorial) into tTutorialDataA[tCount]["lessons"]
+      put tTutorial into tTutorialDataA[tCount]["name"]
+      put revIDETutorialDescription(pCourse, tTutorial) into tTutorialDataA[tCount]["description"]
+      put 0 into tPercentage
+      
+      if tTutorialDataA[tCount]["lessons"] is not empty then
+         repeat for each element tLesson in tTutorialDataA[tCount]["lessons"]
+            add tLesson["progress"] to tPercentage
+         end repeat
+         divide tPercentage by the number of elements in tTutorialDataA[tCount]["lessons"]
+      end if
+      put tPercentage into tTutorialDataA[tCount]["progress"]
+   end repeat
+   
+   return tTutorialDataA
+end revIDETutorialInfo
+
+/*
+Returns a structured array representing the info of all of the currently available lessons in the given tutorial of the given course
+*/
+function revIDETutorialLessonInfo pCourse, pTutorial
+   local tLessonList
+   put revIDETutorialListLessons(pCourse, pTutorial) into tLessonList
+   
+   local tProgressInfoA
+   put revIDETutorialSavedCourseProgress(pCourse) into tProgressInfoA
+   
+   local tLessonDataA, tCount
+   repeat for each line tLesson in tLessonList
+      add 1 to tCount     
+      put tProgressInfoA[pTutorial][tLesson]["progress"] + 0 into tLessonDataA[tCount]["progress"]      
+      put tLesson into tLessonDataA[tCount]["name"]
+   end repeat
+   
+   return tLessonDataA
+end revIDETutorialLessonInfo
+
+/*
+Called when the tutorial starts a new step
+*/
+on revIDETutorialProgressChanged
+   # Save the current progress
+   if sTutorialInfo is not empty then
+       dispatch "revTutorialSaveProgress" to stack "revTutorial"
+   end if
+   
+   # Notify any subscribed objects
+   revIDEMessageSend "ideTutorialProgressChanged"
+end revIDETutorialProgressChanged
 
 ##################################################
 #

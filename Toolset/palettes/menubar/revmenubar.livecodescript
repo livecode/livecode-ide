@@ -521,7 +521,7 @@ on layoutMenu
    if tTutorial is not empty then
       show group "tutorial" of me
       show tLastDivide
-      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial
+      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial["course"] && "-" && tTutorial["tutorial"] && "-" && tTutorial["lesson"] 
       set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
       set the topleft of field "label" of group "tutorial" of me to 10, 10
       
@@ -529,7 +529,7 @@ on layoutMenu
       
       set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
       set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
-      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revTutorialDoneRatio() * 100, 5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage(), 5
       set the loc of group "progress" of me to the loc of field "label" of me
       set the top of group "progress" of me to 35
       
@@ -1048,7 +1048,7 @@ private function revMenubarFileMenu pContext
    put tab & "iPhone 4 (320x480)" & return after tFile
    put tab & "iPhone 5 (320x568)" & return after tFile
    put tab & "iPhone 6 (375x667)" & return after tFile
-   put tab & "iPhone 6 Plus (540x960)" & return after tFile
+   put tab & "iPhone 6 Plus (414x736)" & return after tFile
    put tab & "iPad//Tablet Portrait (768x1024)" & return after tFile
    put tab & "iPad//Tablet Landscape (1024x768)" & return after tFile
    put tab & "-" & return after tFile
@@ -1697,13 +1697,16 @@ function revMenubarStackContextMenu pStack, pIndent
       put tIndent & tab & markMenuItem("Modal", the mode of stack pStack is 5) & return after tText
    end if
    put tIndent & "-" & return after tText
+   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & "New Card" & return after tText
+   put tIndent & "Delete Card" & return after tText
+   put tIndent & "-" & return after tText
    put tIndent & "New Substack" & return after tText
    put tIndent & enableMenuItem("Delete Substack", the mainstack of pStack is not the short name of pStack) & return after tText
-   put tIndent & "Close and Remove From Memory" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Save" & return after tText
-   put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & "Close and Remove From Memory" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Standalone Application Settings..." & return after tText
    put tIndent & "Save As Standalone Application..." & return after tText
@@ -1728,7 +1731,9 @@ function revMenuBarCardContextMenu pCard, pIndent
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
    put tIndent & "-" & return after tText
-   
+   put tIndent & "New Card" & return after tText
+   put tIndent & "Delete Card" & return after tText
+   put tIndent & "-" & return after tText
    put revMenubarSendContextMenu(pCard, pIndent) after tText
    return tText
 end revMenuBarCardContextMenu
@@ -2176,7 +2181,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDECopyObjects pTarget
          break
       case "Lock Location"
-         revIDELockLocationOfObjects pTarget
+         revIDEToggleLockLocationOfObjects pTarget
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
@@ -2226,6 +2231,12 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          toplevel the menuname of pTarget
          break
          ######## STACK SCPECIFIC ########
+      case "New Card"
+         revIDEActionNewCard
+         break
+      case "Delete Card"
+         revIDEActionDeleteCard
+         break
       case "Save"
          revIDEActionSaveStack tTargetStack
          break
@@ -2260,8 +2271,10 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          ######### SUBMENUS ########
       case "Card"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
+         break
       case "Stack"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, tTargetStack
+         break
       default
          break
    end switch
@@ -2470,7 +2483,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionNewCard
          break
       case "Delete Card"
-         revIDEACtionDeleteCard
+         revIDEActionDeleteCard
          break
       case "Object Inspector"
          revIDEActionInspectObjects

@@ -1,0 +1,1 @@
+# Changing size of dictionary headers crashes LiveCode
