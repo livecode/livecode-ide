@@ -2706,14 +2706,13 @@ on revMenubarViewMenuPick pWhich
    end switch
 end revMenubarViewMenuPick
 
-on revMenubarWIndowMenuPick pWhich
-   set the itemdelimiter to "|"
+on revMenubarWindowMenuPick pWhich
    if pWhich is "Send Window To Back" then
-      revIDEWindowToBack
+      revIDESendCurrentWindowToBack
    else
-      revIDEWindowToFront item 2 of pWhich
+      revIDESendWindowToFront pWhich
    end if
-end revMenubarWIndowMenuPick
+end revMenubarWindowMenuPick
 
 on revMenubarHelpMenuPick pWhich
    set the itemDel to "|"
