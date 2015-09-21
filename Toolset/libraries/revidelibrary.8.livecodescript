@@ -4419,6 +4419,10 @@ function revIDEDefaultExtensionIcon pType, pRetina
    end switch
 end revIDEDefaultExtensionIcon
 
+function revIDEWidgetDefaultScript pKind
+   return revIDEExtensionProperty(pKind, "defaultScript")
+end revIDEWidgetDefaultScript
+
 function revIDEScriptEditorBehavior pWhich
    local tPathToBehaviors
    put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
