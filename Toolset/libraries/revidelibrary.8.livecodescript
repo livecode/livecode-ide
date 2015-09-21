@@ -4843,9 +4843,9 @@ on revIDEUpdatePlugins
             put true into tPluginsA[tName]["menu"] -- appears in menu
          end if
          if the cREVLoadInfo["load"] of stack tStack is "startup" then
-            put tStack into line (the number of lines in gREVStartupList + 1) of gREVStartupList
+            put true into tPluginsA[tName]["startup"]
          else if the cREVLoadInfo["load"] of stack tStack is "shutdown" then
-            put tStack into line (the number of lines in gREVShutdownList + 1) of gREVShutDownList
+            put true into tPluginsA[tName]["shutdown"]
          end if
          # See bug 2031
          # The closeStack handler in the plugin settings dialog calls this handler

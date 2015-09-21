@@ -1472,26 +1472,15 @@ end revInternal__InitialiseQuickTime
 command revInternal__InitialisePlugIns
    revInternal__Log "Enter", "Plug-Ins Initialisation"
    
-   global gREVStartupList
-   local tMode
-   repeat for each line l in gREVStartUpList
-      lock messages
-      put the cREVLoadInfo["mode"] of stack l into tMode
-      if tMode is empty then put "modeless" into tMode
-      unlock messages
-      
-      # OK-2008-08-20 : Bug 6970 - This must be in a try in case one of the plugins throws an error when loaded.
-      # For now we just ignore any errors the plugin may throw and allow it to launch anyway.
-      try
-         if tMode is "invisible" then
-            go inv stack l
-         else
-            do "go stack" && quote & l & quote && "as" && tMode
-         end if
-      end try
-   end repeat
-   
    revIDEUpdatePlugins
+   
+   local tPluginInfo
+   put revIDEPlugins() into tPluginInfo
+   repeat for each key tPlugin in revIDEPlugins()
+      if tPluginInfo[tPlugin]["startup"] is true then
+         revIDEOpenPlugin tPlugin
+      end if
+   end repeat
    
    revInternal__Log "Leave", "Plug-Ins Initialisation"
    
