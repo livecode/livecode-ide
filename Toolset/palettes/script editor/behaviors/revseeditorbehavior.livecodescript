@@ -288,19 +288,23 @@ command loadScript
          # OK-2008-07-07 : Bug 6746
          seUpdateCheckSum sObjectId, tScript
       else
-         local tStyle
-         if word 1 of the name of sObjectId is among the words of "button field stack graphic scrollbar" then
+         local tType, tStyle
+         put word 1 of the name of sObjectID into tType
+         if tType is among the items of "button,field,stack,graphic,scrollbar" then
             put the style of sObjectId into tStyle
+         else if tType is "widget" then
+            put the kind of sObjectID into tStyle
          else -- groups, cards, images and players have no style property so just pass empty
             put empty into tStyle
          end if
          
+         # AL-2015-09-21: Moved logic for default script
          local tDefaultScript
-         put seDefaultScript(word 1 of the name of sObjectId, tStyle) into tDefaultScript
+         put seDefaultScript(tType, tStyle) into tDefaultScript
          textSetScriptRaw tDefaultScript
          
          local tDefaultSelection
-         put seDefaultScriptSelection(word 1 of the name of sObjectId, tStyle) into tDefaultSelection
+         put seDefaultScriptSelection(tType, tStyle) into tDefaultSelection
          
          # OK-2008-08-19 : When a default script is put into an object, the object should be marked as modified
          # in the script editor, as the script in the field is not the same as the object's actual script.
