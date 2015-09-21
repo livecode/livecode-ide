@@ -288,6 +288,7 @@ command loadScript
          # OK-2008-07-07 : Bug 6746
          seUpdateCheckSum sObjectId, tScript
       else
+         # AL-2015-09-21: Tweaked logic for default script
          local tType, tStyle
          put word 1 of the name of sObjectID into tType
          if tType is among the items of "button,field,stack,graphic,scrollbar" then
@@ -298,7 +299,6 @@ command loadScript
             put empty into tStyle
          end if
          
-         # AL-2015-09-21: Moved logic for default script
          local tDefaultScript
          put seDefaultScript(tType, tStyle) into tDefaultScript
          textSetScriptRaw tDefaultScript
@@ -350,72 +350,6 @@ command loadScript
    # OK-2008-08-14 : In this case, do the selection update immediately, not in time.
    selectionUpdate
 end loadScript
-
-# Returns
-#   A string containg the same number of spaces as (1 * the current tab depth)
-#   Used by the seDefaultScript and seDefaultScriptSelection handlers as a convenience.
-private function getFirstIndentLevel
-  local tTabDepth
-  put sePrefGet("editor,tabdepth") into tTabDepth
-  
-  local tIndent
-  repeat tTabDepth times
-    put space after tIndent
-  end repeat
-  
-  return tIndent
-end getFirstIndentLevel
-
-# Parameters
-#   pObjectType : a Revolution object type, e.g. stack, card, button etc.
-#   pStyle : the object's style property
-# Returns
-#   The default script that the script editor should use for objects of the specified
-#   type if they have no script set. Returns empty if no default script is to be used.
-function seDefaultScript pObjectType, pStyle
-   switch pObjectType
-      case "button"
-         # AL-2015-09-21: [[ Bug 15961 ]] Add default mouseup handler to opaque button
-         local tIndent
-         put getFirstIndentLevel() into tIndent
-         if pStyle is among the items of "standard,rectangle,checkbox,radiobutton,transparent,opaque" then
-            return "on mouseUp" & return & tIndent & return & "end mouseUp"
-         else if pStyle is "menu" then
-            return "on menuPick pItemName" & return & tIndent & "switch pItemName" & return & tIndent & tIndent & return & tIndent & "end switch" & return & "end menuPick"
-         end if
-      case "widget"
-         return revIDEWidgetDefaultScript(pStyle)
-         break
-      default
-         return empty
-   end switch
-end seDefaultScript
-
-# Parameters
-#   pObjectType : a Revolution object type, e.g. stack, card, button etc.
-#   pStyle : the object's style property
-# Returns
-#   The char range (<first>,<last>) that should be selected in the default
-#   script for the specified object. Returns empty if either no default script is to be
-#   used or there is no default selection is required.
-function seDefaultScriptSelection pObjectType, pStyle
-  local tStart, tEnd
-  switch pObjectType
-  case "button"
-    if pStyle is "menu" then
-      put the number of chars of "on menuPick pItemName" + 1 + the number of chars of "switch pItemName" + 1 + (3 * the number of chars of getFirstIndentLevel()) into tStart
-      put tStart - 1 into tEnd
-    else if pStyle is among the words of "standard rectangle checkbox radiobutton" then
-      put the number of chars of "on mouseUp" + 1 + the number of chars of getFirstIndentLevel() + 1 into tStart
-      put tStart - 1 into tEnd
-    end if
-    break
-  default
-    return empty
-  end switch
-  
-  return tStart & comma & tEnd
-end seDefaultScriptSelection
 
 # Parameters
 #   pObjectId : reference to the object to set the script to. Must be one of the target objects of the script editor.

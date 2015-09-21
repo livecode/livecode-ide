@@ -4420,7 +4420,10 @@ function revIDEDefaultExtensionIcon pType, pRetina
 end revIDEDefaultExtensionIcon
 
 function revIDEWidgetDefaultScript pKind
-   return revIDEExtensionProperty(pKind, "defaultScript")
+   local tDefaultScript
+   put revIDEExtensionProperty(pKind, "defaultScript") into tDefaultScript
+   replace "\n" with return in tDefaultScript
+   return tDefaultScript
 end revIDEWidgetDefaultScript
 
 function revIDEScriptEditorBehavior pWhich
@@ -4447,6 +4450,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablescheckboxbehavior.livecodescript"
       case "stack"
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+      case "utilities"
+         return tPathToBehaviors & slash & "revseutilities.livecodescript"
       default
          return empty
    end switch

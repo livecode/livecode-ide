@@ -1330,17 +1330,7 @@ end revInternal__InitialiseUserLibraries
 command revInternal__InitialiseScriptEditor
    revInternal__Log "Enter", "Script Editor Initialisation"
    
-   # OK-2008-03-11 : Removed for now
-   --  if the platform is "MacOS" then
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to "Courier"
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to 12
-   --  else if the platform is "Win32" then
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to "Courier New"
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to 12
-   --  else
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to empty
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to empty
-   --  end if
+   set the behavior of stack revScriptEditorMain() to the long id of stack revIDEScriptEditorBehavior("utilities")
    
    revInternal__Log "Leave", "Script Editor Initialisation"
    
