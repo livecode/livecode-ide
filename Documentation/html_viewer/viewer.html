@@ -130,9 +130,16 @@
 	
 	function dataSearch(pTerm){
 		if(tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) return tState.searched.data;
-		tState.searched.term = pTerm
+		tState.searched.term = pTerm;
 		
-		var regex = new RegExp(".*"+pTerm+".*","i");
+   		var tokensOfTerm = pTerm.match(/\S+/g);
+
+    	var matchExp = "";
+    	$.each(tokensOfTerm, function(index, matchToken){
+       		matchExp += "(?=.*" + matchToken + ")"
+   		});
+
+		var regex = new RegExp(matchExp,"i");
 		
 		tState.searched.data = $.grep(tState.filtered_data, function (e) {
 			//console.log(e);
