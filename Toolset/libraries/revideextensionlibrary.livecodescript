@@ -681,8 +681,34 @@ private function __fetchModuleData pExtensionFile
 end __fetchModuleData
 
 private function __extensionIsBuiltin pID
-   set the itemdelimiter to "."
-   return the number of items in pID is 3
+   switch pID
+      case "com.livecode.widget"
+      case "com.livecode.engine"
+      case "com.livecode.canvas"
+      case "com.livecode.foreign"
+      case "com.livecode.arithmetic"
+      case "com.livecode.array"
+      case "com.livecode.binary"
+      case "com.livecode.bitwise"
+      case "com.livecode.byte"
+      case "com.livecode.char"
+      case "com.livecode.codeunit"
+      case "com.livecode.date"
+      case "com.livecode.file"
+      case "com.livecode.list"
+      case "com.livecode.logic"
+      case "com.livecode.mathfoundation"
+      case "com.livecode.math"
+      case "com.livecode.sort"
+      case "com.livecode.stream"
+      case "com.livecode.string"
+      case "com.livecode.system"
+      case "com.livecode.type"
+      case "com.livecode.typeconvert"
+         return true
+      default
+         return false
+   end switch
 end __extensionIsBuiltin
 
 private on __addToDependencies pDependee, pDependent, @xDependencies
