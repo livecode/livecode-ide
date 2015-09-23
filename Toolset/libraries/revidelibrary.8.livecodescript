@@ -3812,7 +3812,6 @@ end revIDEPaletteIsVisible
 
 on revIDEOpenInspectorForObjects pObjects
    lock screen
-   revIDEOpenPalette("inspector")
    revIDEInspectObjects pObjects
    unlock screen
 end revIDEOpenInspectorForObjects

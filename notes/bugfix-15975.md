@@ -1,0 +1,1 @@
+# In IDE field appears to have the focus but does not respond to key presses
