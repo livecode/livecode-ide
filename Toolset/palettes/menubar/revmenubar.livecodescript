@@ -1037,7 +1037,7 @@ private function revMenubarFileMenu pContext
    
    local tCanSaveStack
    put false into tCanSaveStack
-   if not revIDEStackIsRevStack(the topStack) or the mode of the topStack is 1 then
+   if not revIDEStackIsIDEStack(the topStack) or the mode of the topStack is 1 then
       put true into tCanSaveStack
    end if
    
@@ -1313,7 +1313,7 @@ private function revMenubarObjectMenu pContext
    
    local tIsObjectTarget, tIsUserTarget
    put (the selObj) is not empty and word 1 of (the selObj) is not "stack" into tIsObjectTarget
-   put char 1 to 3 of the short name of the topStack is not "rev" into tIsUserTarget
+   put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
    
    ### Initial sections
    put enableMenuItem("&Object Inspector", tIsObjectTarget) & return after tObject

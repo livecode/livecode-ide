@@ -1970,7 +1970,7 @@ private function debuggerStackAllowed pStack
    end if
    
    # AL-2015-09-24: [[ Bug 16010 ]] Use IDE function to determine if this is an IDE stack
-   if revIDEStackIsRevStack(pStack) then
+   if revIDEStackIsIDEStack(pStack) then
       return false
    else
       return true

@@ -1324,20 +1324,15 @@ end uniconifyStack
 
 # OK-2008-03-13 : Bug 6009. The target will not be correct in the case of keyboard shortcuts. Function therefore
 # extended to allow a target to be explicity passed.
-function revOKTarget pTarget
-  local tParse
-  if pTarget is not empty then
-    put the long id of pTarget into tParse
-  else
-    put the long id of the target into tParse
-  end if
-  
-  get wordOffset("stack",tParse)
-  put word (it) to (it+1) of tParse into tStackName
-  put the short name of tStackName into tStackName
-  if char 1 to 3 of tStackName is "rev" then return true
-  if tStackName is among the items of "Script Error,Execution Error,Script Errors,Home,Message Box,Script Debugger,Answer Dialog,Ask Dialog,file selector" then return true
-  return false
+function revOKTarget pWhich
+   local tTarget
+   if pWhich is not empty then 
+      put pWhich into tTarget
+   else 
+      put the long id of the target into tTarget
+   end if
+   
+   return revIDEObjectIsOnIDEStack(tTarget)
 end revOKTarget
 
 command writeError tError
