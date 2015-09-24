@@ -3877,9 +3877,9 @@ function revIDEStackIsRevStack pLongID
    put revIDEStackOfObject(pLongID) into tStackID
 
    ## Special cases of IDE stacks that don't begin with rev
-   if the short name of tStackID is among the items of "message box" then
+   if the short name of tStackID is among the items of "message box,answer dialog,ask dialog,home" then
       return true
-   else if the short name of tStackID begins with "com.runrev" then
+   else if the short name of tStackID begins with "com.livecode." then
       return true
    else
       return (the short name of tStackID begins with "rev")

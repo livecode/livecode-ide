@@ -1969,8 +1969,8 @@ private function debuggerStackAllowed pStack
       end if
    end if
    
-   # This check is flawed and needs to be sorted out...
-   if char 1 to 3 of the short name of pStack is "rev" or the short name of pStack is among the items of "Message Box,Home,Answer Dialog,Ask Dialog,File Selector" then
+   # AL-2015-09-24: [[ Bug 16010 ]] Use IDE function to determine if this is an IDE stack
+   if revIDEStackIsRevStack(pStack) then
       return false
    else
       return true
