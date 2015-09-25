@@ -62,7 +62,7 @@ on editorResize
       set the width of group x of me to tWidth
       set the topleft of  group x of me to tLeft,tTop
       send "subEditorResize" to group x of me
-      add the formattedheight of group x of me to tTop
+      add the formattedheight of group x of me + the palettePadding of stack "revInspector" to tTop
    end repeat
    
    set the lockloc of me to false
