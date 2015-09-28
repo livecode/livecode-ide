@@ -3319,10 +3319,14 @@ function revIDESpecialFolderPath pKey
          return tPath
          break
       case "api"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "guide"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "examples"
          put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
