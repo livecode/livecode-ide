@@ -39,7 +39,6 @@ end openStack
 
 on resizeInspector
    lock screen
-   inspectorNavigationGenerate
    inspectorLayout
    unlock screen
 end resizeInspector
@@ -193,28 +192,39 @@ on inspectorLayoutGroups pGroupList
    unlock screen
 end inspectorLayoutGroups
 
-local sSelectedSection
+local sSelectedSection, sSelectedSectionIndex
 private on inspectorSectionSet pSection
-   put pSection into sSelectedSection
+   local tIndex
+   put inspectorSectionIndex(pSection) into tIndex
+   
+   if tIndex is 0 then
+      # AL-2015-06-23: [[ Bug ]] If the selected section doesn't exist for the 
+      # newly inspected object then use the default (first) section
+      put sDataA[1]["label"] into pSection
+      put 1 into tIndex
+   end if
+   
+   if tIndex is not sSelectedSectionIndex or pSection is not sSelectedSection then
+      put pSection into sSelectedSection
+      put tIndex into sSelectedSectionIndex
+      dispatch "hiliteFrameItem" to me with sSelectedSection
+      dispatch "navSelected" to me with sSelectedSection
+   end if
 end inspectorSectionSet
 
 private function inspectorSectionGet
-   if sSelectedSection is empty then
-      put sDataA[1]["label"] into sSelectedSection
-      return 1
-   end if
+   return sSelectedSectionIndex
+end inspectorSectionGet
+
+private function inspectorSectionIndex pSection
    repeat for each key tIndex in sDataA
-      if sDataA[tIndex]["label"] is sSelectedSection then
+      if sDataA[tIndex]["label"] is pSection then
          return tIndex
       end if
    end repeat
-   # AL-2015-06-23: [[ Bug ]] If the previously selected section doesn't exist for the newly inspected object
-   #  then dispatch selection messages to me so that the frame is updated to the default section
-   put sDataA[1]["label"] into sSelectedSection
-   dispatch "hiliteFrameItem" to me with sSelectedSection
-   dispatch "navSelected" to me with sSelectedSection
-   return 1
-end inspectorSectionGet
+   
+   return 0
+end inspectorSectionIndex
 
 function inspectorSectionGetName
    if sSelectedSection is not empty then 
@@ -235,11 +245,16 @@ end inspectorDontShowGroup
 
 # Generate inspector
 private on inspectorGenerate
-   local tSelectedSection
-   put inspectorSectionGet() into tSelectedSection
+   inspectorNavigationGenerate
+   
+   if sSelectedSection is empty then
+      inspectorSectionSet sDataA[1]["label"]
+   else
+      inspectorSectionSet sSelectedSection
+   end if
    
    local tPropertyData
-   put sDataA[tSelectedSection] into tPropertyData
+   put sDataA[sSelectedSectionIndex] into tPropertyData
    
    inspectorGenerateGroups tPropertyData["grouplist"]
 end inspectorGenerate
@@ -345,7 +360,7 @@ private on inspectorNavigationGenerate
    end repeat
    
    dispatch "inspectorAddActions" to me
-   
+   resizeStack
    unlock screen
 end inspectorNavigationGenerate
 

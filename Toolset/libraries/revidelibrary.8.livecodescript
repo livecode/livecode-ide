@@ -3319,10 +3319,14 @@ function revIDESpecialFolderPath pKey
          return tPath
          break
       case "api"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "guide"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "examples"
          put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
@@ -3812,7 +3816,6 @@ end revIDEPaletteIsVisible
 
 on revIDEOpenInspectorForObjects pObjects
    lock screen
-   revIDEOpenPalette("inspector")
    revIDEInspectObjects pObjects
    unlock screen
 end revIDEOpenInspectorForObjects
@@ -4419,6 +4422,13 @@ function revIDEDefaultExtensionIcon pType, pRetina
    end switch
 end revIDEDefaultExtensionIcon
 
+function revIDEWidgetDefaultScript pKind
+   local tDefaultScript
+   put revIDEExtensionProperty(pKind, "defaultScript") into tDefaultScript
+   replace "\n" with return in tDefaultScript
+   return tDefaultScript
+end revIDEWidgetDefaultScript
+
 function revIDEScriptEditorBehavior pWhich
    local tPathToBehaviors
    put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
@@ -4443,6 +4453,12 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablescheckboxbehavior.livecodescript"
       case "stack"
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+      case "utilities"
+         return tPathToBehaviors & slash & "revseutilities.livecodescript"
+      case "gutter"
+         return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
+      case "interactive find"
+         return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
       default
          return empty
    end switch
@@ -7796,9 +7812,9 @@ on revIDEUpdateWindowList
    end if
    
    if tStacks is not sWindowList then
+      put tStacks into sWindowList
       revIDEMessageSend "ideWindowsChanged"
    end if
-   put tStacks into sWindowList
 end revIDEUpdateWindowList
 
 # Returns the list of the open stack names which should be included in a window menu. 

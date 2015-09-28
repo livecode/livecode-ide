@@ -689,7 +689,7 @@ end newGroup
 
 
 on newButton
-  send "revNewButton the long id of the target" to me in 50 milliseconds
+  revNewButton the long id of the target
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newButton
 end newButton

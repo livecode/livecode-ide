@@ -476,80 +476,81 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
-	local tPaletteFolder, tFolders
-	put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
-	put tPaletteFolder into tFolders
-	
-	set the defaultfolder to tPaletteFolder
-	repeat for each line tFolder in the folders
-		if char 1 of tFolder is "." then next repeat
-		put return & tPaletteFolder & slash & tFolder after tFolders
-	end repeat
-	
-	put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
-	if revEnvironmentIsInstalled() then
-		put return & revEnvironmentToolsetPath() after tFolders
-	else
-		put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
-	end if	
-
-	
-	local tStackFiles, tStackName
-	local tStackFilesA, tIDEVersion
-	set the itemdel to "."
-	
-	put item 1 of the version into tIDEVersion
-	repeat for each line tPath in tFolders
-		set the defaultfolder to tPath
-		
-		repeat for each line tFile in the files
-			if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
-			
-			put item 1 to -2 of tFile into tStackName
-			
-			local tVersion
-			put empty into tVersion
-			// AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
-			if the number of items in tFile > 2 then
-				get item -2 of tFile 
-				if it is a number then 
-					put it into tVersion
-					put item 1 to -3 of tFile into tStackName
-					if tVersion > tIDEVersion then
-						next repeat
-					end if
-				end if
-			end if
-			
-			if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
-			else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
-			else if tStackName is "revcolorchooser" then put "Color Chooser" into tStackName
-			else if tStackName is "revfileselector" then put "File Selector" into tStackName
-			else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
-			else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
-			else if tStackName is "revmessagebox" then put "Message Box" into tStackName
-			else if tStackName is "revideprojectbrowserview" then put "revIDEProjectBrowser" into tStackName
-			else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
-        	# AL-2015-03-12: [[ Bug ]] Make sure Linux stacks included in standalones have the correct name
-        	else if tStackName is "revprinterchooser" then put "Printer Chooser" into tStackName
-         	else if tStackName is "revpagesetup" then put "Page Setup" into tStackName
-         			
-			
-			// AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
-			local tExistingVersion
-			put tStackFilesA[tStackName]["version"] into tExistingVersion
-			if tExistingVersion is empty or tVersion > tExistingVersion then
-				put tPath & slash & tFile into tStackFilesA[tStackName]["file"]
-				put tVersion into tStackFilesA[tStackName]["version"]
-			end if	
-		end repeat
-	end repeat
-	
-	repeat for each key tKey in tStackFilesA
-		put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
-	end repeat
-	delete the last char of tStackFiles
-	return tStackFiles
+   local tPaletteFolder, tFolders
+   put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
+   put tPaletteFolder into tFolders
+   
+   set the defaultfolder to tPaletteFolder
+   repeat for each line tFolder in the folders
+      if char 1 of tFolder is "." then next repeat
+      put return & tPaletteFolder & slash & tFolder after tFolders
+   end repeat
+   
+   put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
+   if revEnvironmentIsInstalled() then
+      put return & revEnvironmentToolsetPath() after tFolders
+   else
+      put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
+   end if	
+   
+   
+   local tStackFiles, tStackName
+   local tStackFilesA, tIDEVersion
+   set the itemdel to "."
+   
+   put item 1 of the version into tIDEVersion
+   repeat for each line tPath in tFolders
+      set the defaultfolder to tPath
+      
+      repeat for each line tFile in the files
+         if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
+         
+         put item 1 to -2 of tFile into tStackName
+         
+         local tVersion
+         put empty into tVersion
+         // AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
+         if the number of items in tFile > 2 then
+            get item -2 of tFile 
+            if it is a number then 
+               put it into tVersion
+               put item 1 to -3 of tFile into tStackName
+               if tVersion > tIDEVersion then
+                  next repeat
+               end if
+            end if
+         end if
+         
+         if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
+         else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
+         else if tStackName is "revcolorchooser" then put "Color Chooser" into tStackName
+         else if tStackName is "revfileselector" then put "File Selector" into tStackName
+         else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
+         else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
+         else if tStackName is "revmessagebox" then put "Message Box" into tStackName
+         else if tStackName is "revideprojectbrowserview" then put "revIDEProjectBrowser" into tStackName
+         else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
+         # AL-2015-03-12: [[ Bug ]] Make sure Linux stacks included in standalones have the correct name
+         else if tStackName is "revprinterchooser" then put "Printer Chooser" into tStackName
+         else if tStackName is "revpagesetup" then put "Page Setup" into tStackName
+         # AL-2015-09-25: [[ Bug 16000 ]] Don't load stack "revPreferences" into memory - causes issues with actual prefs.
+         else if tStackName is "revpreferences" then next repeat
+         
+         // AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
+         local tExistingVersion
+         put tStackFilesA[tStackName]["version"] into tExistingVersion
+         if tExistingVersion is empty or tVersion > tExistingVersion then
+            put tPath & slash & tFile into tStackFilesA[tStackName]["file"]
+            put tVersion into tStackFilesA[tStackName]["version"]
+         end if	
+      end repeat
+   end repeat
+   
+   repeat for each key tKey in tStackFilesA
+      put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+   end repeat
+   delete the last char of tStackFiles
+   return tStackFiles
    /*
    local tStackFiles
    local tUserPath, tPath
@@ -1330,17 +1331,7 @@ end revInternal__InitialiseUserLibraries
 command revInternal__InitialiseScriptEditor
    revInternal__Log "Enter", "Script Editor Initialisation"
    
-   # OK-2008-03-11 : Removed for now
-   --  if the platform is "MacOS" then
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to "Courier"
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to 12
-   --  else if the platform is "Win32" then
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to "Courier New"
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to 12
-   --  else
-   --    set the textFont of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to empty
-   --    set the textSize of field "Script" of cd "revScript" of stack "revTemplateScriptEditor" to empty
-   --  end if
+   set the behavior of stack revScriptEditorMain() to the long id of stack revIDEScriptEditorBehavior("utilities")
    
    revInternal__Log "Leave", "Script Editor Initialisation"
    

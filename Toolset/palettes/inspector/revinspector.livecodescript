@@ -14,7 +14,7 @@ end preOpenStack
 on openStack   
    lock screen
    
-   if intersect(me, revIDEStackOfObject(sSelectedObjects)) then
+   if intersect(me, revIDEStackOfObject(line 1 of sSelectedObjects)) then
       revIDEPositionPaletteDefault the short name of me
    end if
    

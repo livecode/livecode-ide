@@ -584,7 +584,6 @@ on mouseDown
    
    # Let the user drag around
    local tValidDropStacks
-   
    local tStackList,tStackName,tStackCount
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
