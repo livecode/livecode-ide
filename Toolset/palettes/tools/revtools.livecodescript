@@ -559,16 +559,22 @@ on mouseDown
    
    local tControlLongID
    put the result into tControlLongID
+   
+   set the width of this stack to the width of tControlLongID
+   set the height of this stack to the height of tControlLongID
    set the topleft of tControlLongID to 0,0
    
-   # Create the image for the windowshape
-   set the visible of the templateimage to false
-   import snapshot from rect (the rect of tControlLongID) of tControlLongID
-   reset the templateimage
-   
-   set the windowshape of this stack to the ID of image 1
-   set the rect of this stack to the rect of image 1
-   
+   # AL-2015-09-25: [[ Bug 16025 ]] Use the actual created dg rather than snapshot
+   if tObjectTypeID is not "com.livecode.interface.classic.datagrid" then
+      put tObjectTypeID
+      # Create the image for the windowshape
+      set the visible of the templateimage to false
+      import snapshot from rect (the rect of tControlLongID) of tControlLongID
+      reset the templateimage
+      
+      set the windowshape of this stack to the ID of image 1
+      set the rect of this stack to the rect of image 1
+   end if
    unlock messages
    unlock screen
    
@@ -578,7 +584,6 @@ on mouseDown
    
    # Let the user drag around
    local tValidDropStacks
-
    local tStackList,tStackName,tStackCount
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
