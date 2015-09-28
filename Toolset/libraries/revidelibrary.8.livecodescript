@@ -7796,9 +7796,9 @@ on revIDEUpdateWindowList
    end if
    
    if tStacks is not sWindowList then
+      put tStacks into sWindowList
       revIDEMessageSend "ideWindowsChanged"
    end if
-   put tStacks into sWindowList
 end revIDEUpdateWindowList
 
 # Returns the list of the open stack names which should be included in a window menu. 
