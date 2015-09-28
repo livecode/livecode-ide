@@ -1,0 +1,1 @@
+# Error when opening inspector for multiple objects
