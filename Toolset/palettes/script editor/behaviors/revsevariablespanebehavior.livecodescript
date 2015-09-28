@@ -252,11 +252,11 @@ end pathToVariableComponents
 local sVisualizationObjectCount = 0
 
 on actionInspect pPath
-   nodeCreateAndShowVisualizationObject
+   nodeCreateAndShowVisualizationObject pPath
 end actionInspect
 
 on actionDoubleClick pPath
-   nodeCreateAndShowVisualizationObject
+   nodeCreateAndShowVisualizationObject pPath
 end actionDoubleClick
 
 private on nodeCreateAndShowVisualizationObject pPath
