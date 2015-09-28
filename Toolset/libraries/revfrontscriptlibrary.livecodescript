@@ -275,7 +275,7 @@ command revUpdateRecentFiles pStack
       exit revUpdateRecentFiles
    end if
 
-   if char 1 to 3 of pStack is "rev" or pStack is among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector,color chooser" then
+   if revIDEStackNameIsIDEStack(pStack) then
       exit revUpdateRecentFiles
    end if
 
@@ -303,7 +303,7 @@ on openStack
    if gREVPalettes is not empty then
       put revTargetStack() into tStackName
 
-      if char 1 to 3 of tStackName is "rev" or char 1 to 3 of tStackName is "copy of rev" or tStackName is "Message box" and the mode of stack tStackName is 4 and the visible of stack tStackName is false then
+      if revIDEStackNameIsIDEStack(tStackName) and the mode of stack tStackName is 4 and the visible of stack tStackName is false then
          revIDETogglePaletteView
          if the bottom of stack tStackName > item 4 of the screenRect or the right of stack tStackName > item 3 of the screenRect then
             set the bottomRight of stack tStackName to item 3 to 4 of the windowBoundingRect
@@ -353,7 +353,7 @@ on preOpenCard
 
    local tTarget
    put revTargetStack() into tTarget
-   if char 1 to 3 of tTarget is not "rev" and char 1 to 11 of tTarget is not "Copy of rev" and "cREVGeometryCache" is among the lines of the customPropertySets of the target \
+   if not revIDEStackNameIsIDEStack(tTarget) and "cREVGeometryCache" is among the lines of the customPropertySets of the target \
           and (the cREVGeometryCache["order"] of this cd is empty \
           or the cREVGeometryCache["total"] of this cd is not the number of controls \
           or the number of words in the customKeys["cREVGeometryCacheIDs"] of this cd is 0) \
@@ -542,7 +542,7 @@ on revCloseUpdate
    local tOpenList
    put the openStacks into tOpenList
    repeat for each line l in tOpenList
-      if char 1 to 3 of l is "rev" then
+      if revIDEStackNameIsIDEStack(l) then
          if the cREVGetsUpdate of stack l is true then
             put l & cr after gREVStacksList
          end if
@@ -803,18 +803,14 @@ on revShowpopupmenu pTarget
 end revShowpopupmenu
 
 function revOKTarget pWhich
-   local tParse
-   if pWhich is not empty then put pWhich into tParse
-   else put the long id of the target into tParse
-   get wordOffset("stack",tParse)
-
-   local tStackName
-   put word (it) to (it+1) of tParse into tStackName
-   put the short name of tStackName into tStackName
-   if char 1 to 3 of tStackName is "rev" then return true
-   if tStackName is among the items of "Script Error,Execution Error,Script Errors,Home,Message Box,Script Debugger,Answer Dialog,Ask Dialog,file selector,Updater Wrapper" then return true
-
-   return false
+   local tTarget
+   if pWhich is not empty then 
+      put pWhich into tTarget
+   else 
+      put the long id of the target into tTarget
+   end if
+   
+   return revIDEObjectIsOnIDEStack(tTarget)
 end revOKTarget
 
 --on colorChanged
