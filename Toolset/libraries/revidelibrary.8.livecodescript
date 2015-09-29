@@ -1764,7 +1764,7 @@ function revIDEMainStacks
       put the mainstacks into tMainStacks
    else
       repeat for each line tMainStack in the mainstacks
-         if revIDEStackIsRevStack(the long id of stack tMainStack) then next repeat
+         if revIDEStackNameIsIDEStack(tMainStack) then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -1788,7 +1788,7 @@ function revIDEStacksForDataView pIndex
    else
       repeat for each line tMainStack in the mainstacks
          --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackIsRevStack(the long id of stack tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack is not 1 then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -1814,15 +1814,17 @@ function revIDEStacks pExpandedStackList
    # Are IDE stacks required
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-
+   
    # Get list of stacks to display
    local tMainStacks
    if tShowIDEStacks then
       put the mainstacks into tMainStacks
    else
       repeat for each line tMainStack in the mainstacks
-         if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-
+         if revIDEStackNameIsIDEStack(tMainStack) then 
+            next repeat
+         end if
+         
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -1830,7 +1832,7 @@ function revIDEStacks pExpandedStackList
          end if
       end repeat
    end if
-
+   
    # Recurse through the stacks to get their data
    local tStacksData, tCount
    put 1 into tCount
@@ -2149,14 +2151,7 @@ end revIDECardOfObject
 
 function revIDEStackOfObject pLongID
    local tOffset
-   repeat for each word tWord in pLongID
-      if tWord is "stack" then
-         add 1 to tOffset
-         exit repeat
-      else
-         add 1 to tOffset
-      end if
-   end repeat
+   put wordOffset("stack",pLongID) into tOffset
    return word tOffset to -1 of pLongID
 end revIDEStackOfObject
 
@@ -2610,7 +2605,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    unlock screen
 
    ## Prevent passing of ideNewControl message for objects created on IDE stacks
-   if revIDEStackIsRevStack(tCreatedControlID) is false then
+   if revIDEObjectIsOnIDEStack(tCreatedControlID) is false then
       global gRevStackStatus
       // AL-2015-04-08: [[ Bug 14822 ]] Ensure 'edited' status of stack is set
       put "edited" into gREVStackStatus[the short name of this stack]
@@ -3319,10 +3314,14 @@ function revIDESpecialFolderPath pKey
          return tPath
          break
       case "api"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "guide"
-         return item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide"
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
+         revIDEEnsurePath(tPath)
+         return tPath
          break
       case "examples"
          put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
@@ -3686,7 +3685,7 @@ on revIDEPositionPaletteDefault pStackName
          set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
          break
       case "revInspector"
-         if revIDEStackIsRevStack(the long ID of the topstack) then
+         if revIDEStackIsIDEStack(the topstack) then
             set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
          else
             set the top of stack pStackName to the top of the topstack            
@@ -3812,7 +3811,6 @@ end revIDEPaletteIsVisible
 
 on revIDEOpenInspectorForObjects pObjects
    lock screen
-   revIDEOpenPalette("inspector")
    revIDEInspectObjects pObjects
    unlock screen
 end revIDEOpenInspectorForObjects
@@ -3871,21 +3869,26 @@ function revIDEPropertyInspector
    end if
 end revIDEPropertyInspector
 
-function revIDEStackIsRevStack pLongID
+function revIDEObjectIsOnIDEStack pLongID
    if not exists(pLongID) then return false
-   local tStackID
-   put revIDEStackOfObject(pLongID) into tStackID
+   return revIDEStackNameIsIDEStack(the short name of revIDEStackOfObject(pLongID))
+end revIDEObjectIsOnIDEStack
 
+function revIDEStackIsIDEStack pLongID
+   if not exists(pLongID) then return false
+   return revIDEStackNameIsIDEStack(the short name of pLongID)
+end revIDEStackIsIDEStack
+
+function revIDEStackNameIsIDEStack pStackName
    ## Special cases of IDE stacks that don't begin with rev
-   if the short name of tStackID is among the items of "message box" then
+   if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
       return true
-   else if the short name of tStackID begins with "com.runrev" then
+   else if pStackName begins with "com.livecode." then
       return true
    else
-      return (the short name of tStackID begins with "rev")
-   end if
-end revIDEStackIsRevStack
-
+      return pStackName begins with "rev"
+   end if   
+end revIDEStackNameIsIDEStack
 
 function revIDEItemiseArray pArray
    if (the keys of pArray) is empty then
@@ -4419,6 +4422,13 @@ function revIDEDefaultExtensionIcon pType, pRetina
    end switch
 end revIDEDefaultExtensionIcon
 
+function revIDEWidgetDefaultScript pKind
+   local tDefaultScript
+   put revIDEExtensionProperty(pKind, "defaultScript") into tDefaultScript
+   replace "\n" with return in tDefaultScript
+   return tDefaultScript
+end revIDEWidgetDefaultScript
+
 function revIDEScriptEditorBehavior pWhich
    local tPathToBehaviors
    put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
@@ -4443,6 +4453,12 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablescheckboxbehavior.livecodescript"
       case "stack"
          return tPathToBehaviors & slash & "revsestackbehavior.livecodescript"
+      case "utilities"
+         return tPathToBehaviors & slash & "revseutilities.livecodescript"
+      case "gutter"
+         return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
+      case "interactive find"
+         return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
       default
          return empty
    end switch
@@ -4781,7 +4797,7 @@ on revIDETogglePaletteView
    lock screen
    if gREVPalettes is empty then
       repeat for each line tStack in tOpenStacks
-         if tStack is revIDEPaletteToStackName("menubar") or char 1 to 3 of tStack is not "rev" and tStack is not "Message box" then next repeat
+         if tStack is revIDEPaletteToStackName("menubar") or not revIDEStackNameIsIDEStack(tStack) then next repeat
          if the mode of stack tStack is 4 and the visible of stack tStack then
             hide stack tStack
             put tStack & comma & lineOffset(tStack, tOpenStacks) & return after gREVPalettes
@@ -4843,9 +4859,9 @@ on revIDEUpdatePlugins
             put true into tPluginsA[tName]["menu"] -- appears in menu
          end if
          if the cREVLoadInfo["load"] of stack tStack is "startup" then
-            put tStack into line (the number of lines in gREVStartupList + 1) of gREVStartupList
+            put true into tPluginsA[tName]["startup"]
          else if the cREVLoadInfo["load"] of stack tStack is "shutdown" then
-            put tStack into line (the number of lines in gREVShutdownList + 1) of gREVShutDownList
+            put true into tPluginsA[tName]["shutdown"]
          end if
          # See bug 2031
          # The closeStack handler in the plugin settings dialog calls this handler
@@ -7796,9 +7812,9 @@ on revIDEUpdateWindowList
    end if
    
    if tStacks is not sWindowList then
+      put tStacks into sWindowList
       revIDEMessageSend "ideWindowsChanged"
    end if
-   put tStacks into sWindowList
 end revIDEUpdateWindowList
 
 # Returns the list of the open stack names which should be included in a window menu. 

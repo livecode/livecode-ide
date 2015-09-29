@@ -689,7 +689,7 @@ end newGroup
 
 
 on newButton
-  send "revNewButton the long id of the target" to me in 50 milliseconds
+  revNewButton the long id of the target
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newButton
 end newButton
@@ -1259,9 +1259,7 @@ end updateForSelectedObjectChanged
 on preOpenStack
    lock screen
    
-   local tTargetStack
-   put the short name of the owner of the target into tTargetStack
-   if char 1 to 3 of tTargetStack is "rev" or tTargetStack is among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector" then
+   if revIDEStackNameIsIDEStack(the short name of the owner of the target) then
       --sanity check inside screen
       if the bottom of stack tTargetStack > item 4 of the windowBoundingRect
       then set the bottom of stack tTargetStack to item 4 of the windowBoundingRect
@@ -3703,7 +3701,7 @@ command revIDEHandleNewStack pTarget
    local tOpenList
    put the openStacks into tOpenList
    repeat for each line l in tOpenList
-      if char 1 to 3 of l is "rev" then
+      if revIDEStackNameIsIDEStack(l) then
          if the cREVGetsUpdate of stack l is true then 
             put l & cr after gREVStacksList
          end if

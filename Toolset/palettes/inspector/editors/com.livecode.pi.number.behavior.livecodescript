@@ -1,5 +1,5 @@
 ﻿script "com.livecode.pi.number.behavior"
-local sFieldWidth, sMax, sMin
+local sFieldWidth, sMax, sMin, sScrollbarFactor
 
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
@@ -12,7 +12,7 @@ on editorInitialize
    put editorPropertyGet("max") into sMax
    put editorPropertyGet("min") into sMin
    put editorPropertyGet("step") into tStep
-   
+   put 1 into sScrollbarFactor
    if tStep is a number then
       set the lineinc of scrollbar "twiddle" of me to tStep
       set the visible of scrollbar "twiddle" of me to true
@@ -21,11 +21,18 @@ on editorInitialize
    end if
    
    if sMax is a number and sMin is a number and sMax > sMin then
-      put sMax into field 1 of me
+      if tStep is a number then
+         repeat while the floor of tStep is not tStep
+            multiply tStep by 10
+            multiply sScrollbarFactor by 10
+         end repeat
+      end if
+      
+      put sScrollbarFactor * sMax into field 1 of me
       put the formattedwidth of field 1 of me into sFieldWidth
       set the visible of scrollbar "slider" of me to true
-      set the endvalue of scrollbar "slider"of me to sMax
-      set the startvalue of scrollbar "slider" of me to sMin
+      set the endvalue of scrollbar "slider"of me to sScrollbarFactor * sMax
+      set the startvalue of scrollbar "slider" of me to sScrollbarFactor * sMin
    else
       set the visible of scrollbar "slider" of me to false
    end if
@@ -63,7 +70,7 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   set the thumbposition of scrollbar "slider" of me to tValue + 0
+   set the thumbposition of scrollbar "slider" of me to sScrollbarFactor * tValue
    set the thumbposition of scrollbar "twiddle" of me to tValue + 0
    set the enabled of field 1 of me to tEnabled
    if tEffective is true then
@@ -148,21 +155,21 @@ on scrollbarDrag pValue
    if the visible of scrollbar "slider" of me is false then
       exit scrollbarDrag
    end if
-   scrollbarValueChanged pValue
+   scrollbarValueChanged pValue / sScrollbarFactor
 end scrollbarDrag
 
 on scrollbarLineInc
    if the visible of scrollbar "twiddle" of me is false then
       exit scrollbarLineInc
    end if
-   scrollbarValueChanged field 1 of me - 1
+   scrollbarValueChanged field 1 of me - the lineInc of scrollbar "twiddle" of me
 end scrollbarLineInc
 
 on scrollbarLineDec
    if the visible of scrollbar "twiddle" of me is false then
       exit scrollbarLineDec
    end if
-   scrollbarValueChanged field 1 of me + 1
+   scrollbarValueChanged field 1 of me + the lineInc of scrollbar "twiddle" of me
 end scrollbarLineDec
 
 on scrollbarValueChanged pValue
@@ -183,7 +190,7 @@ end scrollbarValueChanged
 on valueChanged
    if field 1 of me is a number  then
       lock messages
-      set the thumbposition of scrollbar "slider" of me to field 1 of me
+      set the thumbposition of scrollbar "slider" of me to sScrollbarFactor * field 1 of me
       unlock messages
    end if
    

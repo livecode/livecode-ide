@@ -559,26 +559,30 @@ on mouseDown
    
    local tControlLongID
    put the result into tControlLongID
+   
+   set the width of this stack to the width of tControlLongID
+   set the height of this stack to the height of tControlLongID
    set the topleft of tControlLongID to 0,0
    
-   # Create the image for the windowshape
-   set the visible of the templateimage to false
-   import snapshot from rect (the rect of tControlLongID) of tControlLongID
-   reset the templateimage
-   
-   set the windowshape of this stack to the ID of image 1
-   set the rect of this stack to the rect of image 1
-   
+   # AL-2015-09-25: [[ Bug 16025 ]] Use the actual created dg rather than snapshot
+   if tObjectTypeID is not "com.livecode.interface.classic.datagrid" then
+      # Create the image for the windowshape
+      set the visible of the templateimage to false
+      import snapshot from rect (the rect of tControlLongID) of tControlLongID
+      reset the templateimage
+      
+      set the windowshape of this stack to the ID of image 1
+      set the rect of this stack to the rect of image 1
+   end if
    unlock messages
    unlock screen
    
    # AL-2015-03-26: [[ Bug 14892 ]] Simply set the visible of the revDragControl stack to true
+   set the loc of this stack to the screenmouseloc
    show this stack
    
    # Let the user drag around
-   local tExit, tCount, tValidDropStacks
-   put false into tExit
-   
+   local tValidDropStacks
    local tStackList,tStackName,tStackCount
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
@@ -591,28 +595,31 @@ on mouseDown
       add 1 to tStackCount
    end repeat
    
-   local tHighlightedStack
-   repeat while tExit is false
-      if tCount > 12 then
-         set the loc of this stack to the screenmouseloc
-         put 0 into tCount
-         
+   local tTargetStack, tTargetStackIndex, tScreenmouseloc
+   repeat while the mouse is down
+      put the screenmouseloc into tScreenmouseloc
+      set the loc of this stack to tScreenmouseloc
+      
+      if tTargetStack is empty then
          # Find target to drop onto
-         local tTargetStack, tStackKeys, tStackID
-         repeat with x = 1 to the number of lines of the keys of tValidDropStacks
+         local tStackKeys, tStackID
+         repeat with x = 1 to the number of elements in tValidDropStacks
             put tValidDropStacks[x]["long id"] into tStackID
-            if the screenmouseloc is within the rect of tStackID then
+            if tScreenmouseloc is within tValidDropStacks[x]["rect"] then
                put tStackID into tTargetStack
+               put x into tTargetStackIndex
+               # BB 18/2/2015 [[ Bug 14627 ]] - Part 1 - Removed the old way of highlighting the target stack
+               __hiliteAdd tTargetStack, tValidDropStacks[x]["backgroundcolor"]
                exit repeat
             end if
          end repeat
-         
-         # BB 18/2/2015 [[ Bug 14627 ]] - Part 1 - Removed the old way of highlighting the target stack
-         __hiliteAdd tTargetStack
+      else
+         if tScreenmouseloc is not within tValidDropStacks[x]["rect"] then
+            put empty into tTargetStack
+            put empty into tTargetStackIndex
+            __hiliteRemove
+         end if
       end if
-      
-      if the mouse is up then put true into tExit
-      add 1 to tCount
    end repeat
    
    # Change the cursor back
@@ -634,10 +641,10 @@ on mouseDown
    
    # Check if mouse up occured over a valid drop stack
    local tLeft, tTop, tCreateObjectID
-   repeat with x = 1 to the number of lines of the keys of tValidDropStacks
-      if tDropScreenLocation is within the rect of tValidDropStacks[x]["long id"] then
-         put item 1 of tDropScreenLocation - the left of stack tValidDropStacks[x]["long id"] into tLeft
-         put item 2 of tDropScreenLocation - the top of stack tValidDropStacks[x]["long id"] into tTop
+   repeat with x = 1 to the number of elements in tValidDropStacks
+      if tDropScreenLocation is within tValidDropStacks[x]["rect"] then
+         put item 1 of tDropScreenLocation - item 1 of tValidDropStacks[x]["rect"] into tLeft
+         put item 2 of tDropScreenLocation - item 2 of tValidDropStacks[x]["rect"] into tTop
          
          set the defaultstack to tValidDropStacks[x]["long id"]
          revIDECreateObject tObjectTypeID, tValidDropStacks[x]["long id"], tLeft & comma & tTop
@@ -692,17 +699,20 @@ on dragDrop
    revIDEInstallExtension the dragData["files"]
 end dragDrop
 
-local sHighlightedStack
-private on __hiliteAdd pStackLongID
+local sHighlightedStack, sOldBGColor
+private on __hiliteAdd pStackLongID, pOldBGColor
    if pStackLongID is sHighlightedStack then exit __hiliteAdd
    
    lock screen
    lock messages
    # Unhighlight previously hilited stack
-   __hiliteRemove
+   if sHIghlightedStack is not empty then
+      __hiliteRemove
+   end if
    
    # Store the new stack being hilited
    put pStackLongID into sHighlightedStack
+   put pOldBGColor into sOldBGColor
    set the backgroundcolor of pStackLongID to revIDEColor("edition_color")
    
    unlock messages
@@ -713,8 +723,9 @@ private on __hiliteRemove
    if not exists(sHighlightedStack) then exit __hiliteRemove
    
    lock messages
-   set the backgroundcolor of sHighlightedStack to empty
+   set the backgroundcolor of sHighlightedStack to sOldBGColor
    put empty into sHighlightedStack
+   put empty into sOldBGColor
     unlock messages
 end __hiliteRemove
 

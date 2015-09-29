@@ -2,6 +2,7 @@
 local sBrowserID, sTab
 
 on preOpenStack
+   set the minWidth of this stack to 1000
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of me
    set the showPreferenceAction of me to false
    set the title of me to "Dictionary"
@@ -19,6 +20,7 @@ on openStack
    addFrameItem "show_apis","header", "navigation", "API", "f1b3", "f1b3","showAPIs", the long id of me
    addFrameItem "show_guides","header", "navigation", "Guide", "f1b3", "f1b3","showGuides", the long id of me
    set the navigationDisplayStyle of me to "names"
+   set the width of this stack to 1000
    resizeStack
    set the cantModify of me to true
 end openStack

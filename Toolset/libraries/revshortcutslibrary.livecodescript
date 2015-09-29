@@ -198,7 +198,7 @@ on commandKeyDown pWhich
             // AL-2014-09-16: [[ Bug 13362 ]] Don't open script editor for IDE stacks unless gREVShowStacks is true
             local tTopStack
             put the topStack into tTopStack
-            if (char 1 to 3 of the short name of tTopStack is "rev") and (not gREVShowStacks) then
+            if revIDEStackIsIDEStack(tTopStack) and (not gREVShowStacks) then
                exit commandKeyDown
             end if
             

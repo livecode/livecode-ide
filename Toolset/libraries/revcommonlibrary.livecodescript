@@ -511,10 +511,7 @@ end revLoadedStacks
 function revFilterStacksList pStacks
    local tReturnValue
    repeat for each line l in pStacks
-      if l is among the items of "Message Box,Home,Answer Dialog,Ask Dialog,Script Debugger,File Selector,Color Chooser,Magnify" then
-         next repeat
-      end if
-      if char 1 to 3 of l is "rev" then
+      if revIDEStackNameIsIDEStack(l) then
          next repeat
       end if
       

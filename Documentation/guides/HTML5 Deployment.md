@@ -24,11 +24,11 @@ The HTML5 engine in this release of LiveCode has a limited range of features.  Y
 * fetch data from the server using the `get URL` syntax
 * use any of the engine's built-in controls and graphics capabilities.
 * read and write temporary files in a special virtual filesystem (which is erased when the user navigates away from the page)
+* use LiveCode Builder widgets and extensions
 
 Several important features are not yet supported:
 
 * commercial deployment
-* LiveCode Builder widgets and extensions
 * some `ask` and `answer` message boxes
 * `wait` syntax
 * networking

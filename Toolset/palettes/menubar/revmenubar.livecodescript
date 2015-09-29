@@ -1037,7 +1037,7 @@ private function revMenubarFileMenu pContext
    
    local tCanSaveStack
    put false into tCanSaveStack
-   if not revIDEStackIsRevStack(the topStack) or the mode of the topStack is 1 then
+   if not revIDEStackIsIDEStack(the topStack) or the mode of the topStack is 1 then
       put true into tCanSaveStack
    end if
    
@@ -1313,7 +1313,7 @@ private function revMenubarObjectMenu pContext
    
    local tIsObjectTarget, tIsUserTarget
    put (the selObj) is not empty and word 1 of (the selObj) is not "stack" into tIsObjectTarget
-   put char 1 to 3 of the short name of the topStack is not "rev" into tIsUserTarget
+   put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
    
    ### Initial sections
    put enableMenuItem("&Object Inspector", tIsObjectTarget) & return after tObject
@@ -2706,14 +2706,13 @@ on revMenubarViewMenuPick pWhich
    end switch
 end revMenubarViewMenuPick
 
-on revMenubarWIndowMenuPick pWhich
-   set the itemdelimiter to "|"
+on revMenubarWindowMenuPick pWhich
    if pWhich is "Send Window To Back" then
-      revIDEWindowToBack
+      revIDESendCurrentWindowToBack
    else
-      revIDEWindowToFront item 2 of pWhich
+      revIDESendWindowToFront pWhich
    end if
-end revMenubarWIndowMenuPick
+end revMenubarWindowMenuPick
 
 on revMenubarHelpMenuPick pWhich
    set the itemDel to "|"

@@ -1,0 +1,1 @@
+# IDE Property Inspector tabs not in sync with current pane
