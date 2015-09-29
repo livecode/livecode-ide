@@ -566,7 +566,6 @@ on mouseDown
    
    # AL-2015-09-25: [[ Bug 16025 ]] Use the actual created dg rather than snapshot
    if tObjectTypeID is not "com.livecode.interface.classic.datagrid" then
-      put tObjectTypeID
       # Create the image for the windowshape
       set the visible of the templateimage to false
       import snapshot from rect (the rect of tControlLongID) of tControlLongID
