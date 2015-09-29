@@ -704,3 +704,11 @@ end __listPopup
 function __textsize
    return round(BAR_HEIGHT * 0.6)
 end __textsize
+
+on actionSelected
+   pass actionSelected
+end actionSelected
+
+on navSelected
+   pass navSelected
+end navSelected
