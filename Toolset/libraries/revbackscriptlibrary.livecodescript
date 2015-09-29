@@ -1258,8 +1258,10 @@ end updateForSelectedObjectChanged
 
 on preOpenStack
    lock screen
+   local tTargetStack
+   put revIDEStackOfObject(the long id of the target) into tTargetStack
    
-   if revIDEStackNameIsIDEStack(the short name of the owner of the target) then
+   if revIDEStackIsIDEStack(tTargetStack) then
       --sanity check inside screen
       if the bottom of stack tTargetStack > item 4 of the windowBoundingRect
       then set the bottom of stack tTargetStack to item 4 of the windowBoundingRect
