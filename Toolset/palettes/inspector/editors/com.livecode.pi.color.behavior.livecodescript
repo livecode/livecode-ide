@@ -1,4 +1,6 @@
 ﻿script "com.livecode.pi.color.behavior"
+local sNamedColor
+
 on editorInitialize
    set the editorMinWidth of me to 24
    set the editorMaxWidth of me to 24
@@ -10,7 +12,15 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   
    lock messages
+   if the number of items in tValue < 3 then
+      put true into sNamedColor
+      put revIDENamedColorToRGB(tValue) into tValue
+   else
+      put false into sNamedColor
+   end if 
+   
    set the enabled of control 1 of me to tEnabled
    if tEffective then
       set the swatchcolor of control 1 of me to empty
@@ -30,7 +40,19 @@ on editorResize
 end editorResize
 
 on valueChanged
-   set the editorValue of me to item 1 to 3 of the swatchcolor of control 1 of me
+   local tColor, tNamedColor
+   put item 1 to 3 of the swatchcolor of control 1 of me into tColor
+   if sNamedColor then
+      put revIDERGBToNamedColor(tColor) into tNamedColor
+   end if
+   
+   if tNamedColor is not empty then
+      set the editorValue of me to tNamedColor
+   else
+      set the editorValue of me to tColor
+      put false into sNamedColor
+   end if
+   
    updateProperty
 end valueChanged
 
