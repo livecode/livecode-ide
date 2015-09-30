@@ -1,3 +1,5 @@
+/* This mapping comes from engine/src/rgb.cpp and should not be changed */
+
 AliceBlue,239,247,255
 AntiqueWhite,249,232,210
 AntiqueWhite1,254,237,214

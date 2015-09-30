@@ -8801,20 +8801,24 @@ private function __colorsResourcePath
    return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/colors"
 end __colorsResourcePath
 
-private on __fetchNamesToColors
-   local tMap
-   put url ("file:" & __colorsResourcePath() & slash & "namesToColors.txt") into tMap
-   repeat for each line tLine in tMap
-      put item 2 to -1 of tLine into sNamesToColorsA[item 1 of tLine]
+private function fetchMapping pFile
+   local tData, tMappingA
+   put url ("file:" & __colorsResourcePath() & slash & pFile) into tData
+   repeat for each line tLine in tData
+      if token 1 of tLine is empty then
+         next repeat
+      end if
+      put item 2 to -1 of tLine into tMappingA[item 1 of tLine]
    end repeat
+   return tMappingA
+end fetchMapping
+
+private on __fetchNamesToColors
+   put fetchMapping("namesToColors.txt") into sNamesToColorsA
 end __fetchNamesToColors
 
 private on __fetchColorsToNames
-   local tMap
-   put url ("file:" & __colorsResourcePath() & slash & "colorsToNames.txt") into tMap
-   repeat for each line tLine in tMap
-      put item 1 to 3 of tLine into sColorsToNamesA[item 4 of tLine]
-   end repeat
+   put fetchMapping("namesToColors.txt") into sColorsToNamesA
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName
