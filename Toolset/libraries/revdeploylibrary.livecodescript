@@ -309,6 +309,11 @@ end revIDEDeployIOSGetLatestSDKInstalled
 //  calls provide this in a sane manner.
 //
 
+function revIDEDeployAndroidRequiredSDK
+   dispatch function "deployRequiredSDK" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidRequiredSDK
+
 function revIDEDeployAndroidIsValidSDK pPath
    dispatch function "deployIsValidSDK" to stack "revDeployLibraryAndroid" with pPath
    return the result
