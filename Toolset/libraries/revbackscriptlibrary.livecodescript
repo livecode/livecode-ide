@@ -1216,8 +1216,8 @@ on revNewButton pTarget
       set the cREVReport["viewername"] of pTarget to tName
    end if
    set the cREVGeneral["revUniqueID"] of pTarget to the milliseconds
-   if the left of pTarget < 0 then set the left of pTarget to 0
-   if the top of pTarget < 0 then set the top of pTarget to 0
+   
+   // PM-2015-09-17: [[ Bug 15918 ]] Allow the new btn to appear offscreen
 end revNewButton
 
 on newField
@@ -1231,8 +1231,7 @@ on newField
     end if
   end if
   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  if the left of the target < 0 then set the left of the target to 0
-  if the top of the target < 0 then set the top of the target to 0
+  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new field to appear offscreen
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newField
 end newField
@@ -1253,8 +1252,7 @@ on newScrollbar
     end if
   end if
   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  if the left of the target < 0 then set the left of the target to 0
-  if the top of the target < 0 then set the top of the target to 0
+ // PM-2015-09-17: [[ Bug 13826 ]] Allow a new scrollbar to appear offscreen
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newScrollbar
 end newScrollbar
@@ -1265,8 +1263,7 @@ on newImage
     set the height of the target to the cREVImageHeight of stack "revPreferences"
   end if
   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  if the left of the target < 0 then set the left of the target to 0
-  if the top of the target < 0 then set the top of the target to 0
+  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new image to appear offscreen
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newImage
 end newImage
@@ -1280,8 +1277,7 @@ on newEPS
    set the height of the target to (the height of stack tStack / 2)
    unlock screen
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-   if the left of the target < 0 then set the left of the target to 0
-   if the top of the target < 0 then set the top of the target to 0
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new EPS to appear offscreen
    revUpdateAOControls
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newEPS
 end newEPS
@@ -1299,8 +1295,7 @@ on newGraphic
       set the loc of the target to tOrigLoc
    end if
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-   if the left of the target < 0 then set the left of the target to 0
-   if the top of the target < 0 then set the top of the target to 0
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new graphic to appear offscreen
    revUpdateAOControls
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newGraphic
 end newGraphic
@@ -1311,8 +1306,7 @@ on newPlayer
     set the height of the target to the cREVPlayerHeight of stack "revPreferences"
   end if
   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  if the left of the target < 0 then set the left of the target to 0
-  if the top of the target < 0 then set the top of the target to 0
+  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new player to appear offscreen
   revUpdateAOControls
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newPlayer
 end newPlayer
