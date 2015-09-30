@@ -8787,3 +8787,52 @@ command revIDEGenerateDistributedAPI
    
    put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
 end revIDEGenerateDistributedAPI
+
+##################################################
+#
+#          COLORS
+#
+##################################################
+
+local sNamesToColorsA, sColorsToNamesA
+
+private function __colorsResourcePath
+   set the itemdelimiter to slash
+   return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/colors"
+end __colorsResourcePath
+
+private function fetchMapping pFile
+   local tData, tMappingA
+   put url ("file:" & __colorsResourcePath() & slash & pFile) into tData
+   repeat for each line tLine in tData
+      if token 1 of tLine is empty then
+         next repeat
+      end if
+      put item 2 to -1 of tLine into tMappingA[item 1 of tLine]
+   end repeat
+   return tMappingA
+end fetchMapping
+
+private on __fetchNamesToColors
+   put fetchMapping("namesToColors.txt") into sNamesToColorsA
+end __fetchNamesToColors
+
+private on __fetchColorsToNames
+   put fetchMapping("namesToColors.txt") into sColorsToNamesA
+end __fetchColorsToNames
+
+function revIDENamedColorToRGB pName
+   if sNamesToColorsA is empty then
+      __fetchNamesToColors
+   end if
+   
+   return sNamesToColorsA[pName]
+end revIDENamedColorToRGB
+
+function revIDERGBToNamedColor pColor
+   if sColorsToNamesA is empty then
+      __fetchColorsToNames
+   end if
+   
+   return sColorsToNamesA[pColor]
+end revIDERGBToNamedColor
