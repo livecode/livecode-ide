@@ -1255,16 +1255,9 @@ on preOpenStack
    local tTargetStack
    put revIDEStackOfObject(the long id of the target) into tTargetStack
    
-   if revIDEStackIsIDEStack(tTargetStack) then
-      --sanity check inside screen
-      if the bottom of stack tTargetStack > item 4 of the windowBoundingRect
-      then set the bottom of stack tTargetStack to item 4 of the windowBoundingRect
-      if the top of stack tTargetStack < item 2 of the windowBoundingRect
-      then set the top of stack tTargetStack to item 2 of the windowBoundingRect
-      if the right of stack tTargetStack > item 3 of the windowBoundingRect
-      then set the right of stack tTargetStack to item 3 of the windowBoundingRect
-      if the left of stack tTargetStack < item 1 of the windowBoundingRect
-      then set the left of stack tTargetStack to item 1 of the windowBoundingRect
+   if revIDEStackIsIDEStack(tTargetStack) then   
+      # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
+      revIDEEnsureOnScreen the short name of tTargetStack
    end if
    unlock screen
    

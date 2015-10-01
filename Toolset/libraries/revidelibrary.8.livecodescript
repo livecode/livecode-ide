@@ -3613,14 +3613,14 @@ on revIDEEnsureOnscreen pStackName
    put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
    put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
    
-   if the left of stack pStackName < 0 then
-      set the left of stack pStackName to 0
+   if the left of stack pStackName < item 1 of tScreenRect then
+      set the left of stack pStackName to item 1 of tScreenRect
    else if the right of stack pStackName > item 3 of tScreenRect and the width of stack pStackName < tScreenWidth then
       set the right of stack pStackName to item 3 of tScreenRect
    end if
    
-   if the top of stack pStackName < 0 then
-      set the top of stack pStackName to 0
+   if the top of stack pStackName < item 2 of tScreenRect then
+      set the top of stack pStackName to item 2 of tScreenRect
    else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
       set the bottom of stack pStackName to item 4 of tScreenRect
    end if
