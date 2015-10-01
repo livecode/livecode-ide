@@ -2454,14 +2454,14 @@ end binaryEquals
 #   then sends a "resize" message to each object to allow the object to resize its controls
 #   appropriately to its new size.
 on resizeStack
-   revIDEStorePaletteRect the short name of me
    actionResizeStack
+   sePrefSet "rect", the rect of me
 end resizeStack
 
 # Description
 #    Sent when the script editor is moved. Saves the new size in the preferences.
 on moveStack
-   revIDEStorePaletteRect the short name of me
+   sePrefSet "rect", the rect of me
 end moveStack
 
 # Description
@@ -2566,6 +2566,7 @@ command revSEInitialize pDontCheckTarget
       set the backgroundColor of me to "236,236,236"
    end if
    
+   set the rect of me to sePrefGet("rect")
    actionResizeStack true
 end revSEInitialize
   
