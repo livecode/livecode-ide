@@ -2856,7 +2856,6 @@ on revIDEEditScriptOfObject pObject
    local tExistingEditor
    put revScriptEditor(tObject) into tExistingEditor
    if tExistingEditor is not empty then
-      revGoScriptEditor the long id of stack tExistingEditor
       send "revSESetCurrentObject tObject" to stack tExistingEditor
       exit revIDEEditScriptOfObject
    end if
