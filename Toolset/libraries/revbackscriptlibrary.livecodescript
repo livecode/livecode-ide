@@ -1255,16 +1255,9 @@ on preOpenStack
    local tTargetStack
    put revIDEStackOfObject(the long id of the target) into tTargetStack
    
-   if revIDEStackIsIDEStack(tTargetStack) then
-      --sanity check inside screen
-      if the bottom of stack tTargetStack > item 4 of the windowBoundingRect
-      then set the bottom of stack tTargetStack to item 4 of the windowBoundingRect
-      if the top of stack tTargetStack < item 2 of the windowBoundingRect
-      then set the top of stack tTargetStack to item 2 of the windowBoundingRect
-      if the right of stack tTargetStack > item 3 of the windowBoundingRect
-      then set the right of stack tTargetStack to item 3 of the windowBoundingRect
-      if the left of stack tTargetStack < item 1 of the windowBoundingRect
-      then set the left of stack tTargetStack to item 1 of the windowBoundingRect
+   if revIDEStackIsIDEStack(tTargetStack) then   
+      # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
+      revIDEEnsureOnScreen the short name of tTargetStack
    end if
    unlock screen
    
@@ -1486,9 +1479,6 @@ command revEditScriptInNewWindow pObject, pSpecial
    put the visible of revScriptEditorTemplate() into tTemplateVisibility
    set the visible of revScriptEditorTemplate() to false
    
-   # OK-2009-02-05 : This appears to be redundant, but have left it in for now as this command is rather fragile
-   put the rect of revScriptEditorTemplate() into tTemplateRect
-   
    # OK-2009-02-05 : This appears to be redundant
    --   local tRect, tPrefname
    --   put "rect" into tPrefname
@@ -1523,9 +1513,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    if tTemplateVisibility then
       set the visible of revScriptEditorTemplate() to true
    end if
-   
-   # OK-2009-02-05 : This appears to be redundant, but have left it in for now as this command is rather fragile
-   set the rect of revScriptEditorTemplate() to tTemplateRect
+
    unlock messages
    
    set the mainstack of tEditor to the short name of revScriptEditorMain()
@@ -1539,10 +1527,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    # OK-2008-07-24 : Note the use of call instead of send here. This is important because
    # it prevents the defaultStack changing when debugging, which can potentially break
    # user code in the debugger which would have run fine otherwise.
-   local tTrueString
-   put "true" into tTrueString
-   
-   call "revSEInitialize tTrueString" to tEditor
+   call "revSEInitialize true" to tEditor
    call "revSEAddTargetObject pObject" to tEditor
    send "revGoScriptEditor tEditor" to me in 0 milliseconds
    
@@ -1607,8 +1592,12 @@ command revGoScriptEditor pEditor
    # For now we work around this here by manually ensuring the editor is not flagged as edited.
    put empty into gREVStackStatus[the short name of pEditor]
    
+   lock screen
+   go invisible pEditor as toplevel
+   
+   revIDEPositionPalette the short name of pEditor
    set the visible of pEditor to true
-   toplevel pEditor
+   unlock screen 
    
    # OK-2008-08-18 : Bug 6935 - The script editor should be un-iconified here.
    if the iconic of pEditor then
@@ -2245,64 +2234,6 @@ private command _revShowScriptEditorNew pStack
    modeless pStack
    revSEHidePalettes
 end _revShowScriptEditorNew
-
-on revSetScriptEditorRect pScriptEditor
-   # OK-2008-03-11 : Not sure if this is needed anymore, removed for now.
-   exit revSetScriptEditorRect
-   
-   --   local tOpenStacks
-   --   put the openStacks into tOpenStacks
-   --   filter tOpenStacks with "revScriptEditor*"
-   --   delete line lineOffset(pScriptEditor,tOpenStacks) of tOpenStacks
-   
-   --   put empty into tScriptEditorTopLefts
-   --   repeat for each line l in tOpenStacks
-   --      put the topLeft of stack l & cr after tScriptEditorTopLefts
-   --   end repeat
-   --   delete last char of tScriptEditorTopLefts
-   
-   --   --tiling
-   --   put the cScriptEditorRect of stack "revPreferences" into tRect
-   --   put item 1 to 2 of (the cScriptEditorRect of stack "revPreferences") into tTopLeft
-   --   repeat
-   --      if tTopLeft is not among the lines of tScriptEditorTopLefts then exit repeat
-   --      else 
-   --         repeat with i = 1 to 4
-   --            add 23 to item i of tRect
-   --         end repeat
-   --         put item 1 to 2 of tRect into tTopLeft
-   --      end if
-   --   end repeat
-   
-   --   --sanity check
-   --   set the rect of stack pScriptEditor to tRect
-   --   put the windowBoundingRect into tWindowBoundingRect
-   --   put item 3 of tWindowBoundingRect - item 1 of tWindowBoundingRect into tMaxX
-   --   put item 4 of tWindowBoundingRect - item 2 of tWindowBoundingRect into tMaxY
-   
-   --   lock messages
-   --   if the height of stack pScriptEditor > tMaxY
-   --   then set the height of stack pScriptEditor to tMaxY
-   --   if the width of stack pScriptEditor > tMaxX
-   --   then set the width of stack pScriptEditor to tMaxX
-   
-   --   add item 1 of tWindowBoundingRect to tMaxX
-   --   add item 2 of tWindowBoundingRect to tMaxY
-   
-   --   put the right of stack pScriptEditor into tRight
-   --   put the bottom of stack pScriptEditor into tBottom
-   
-   --   if the left of stack pScriptEditor < item 1 of tWindowBoundingRect then set the left of stack pScriptEditor to item 1 of tWindowBoundingRect
-   --   if the right of stack pScriptEditor  > tMaxX then set the right of stack pScriptEditor to tMaxX
-   --   if the top of stack pScriptEditor < item 2 of tWindowBoundingRect then set the top of stack pScriptEditor to item 2 of tWindowBoundingRect
-   --   if the bottom of stack pScriptEditor > tMaxY then set the bottom of stack pScriptEditor to tMaxY
-   
-   --   if the right of stack pScriptEditor is not tRight or the bottom of stack pScriptEditor is not tBottom then
-   --      send "resizeStack" to this cd of stack pScriptEditor
-   --   end if
-   
-   --   unlock messages
-end revSetScriptEditorRect
 
 on revUpdatePaletteStack
    global gREVStacksList
