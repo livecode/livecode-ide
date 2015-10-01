@@ -460,8 +460,7 @@ on generateMenuGroup
       show group "revMenuBar" of me
    end if
    
-   create graphic "Divider" in group "revMenuBar"
-   set the style of it to "line"
+   set the menubar of me to "revMenuBar"
    
    reset the templatebutton
    unlock messages
@@ -544,7 +543,6 @@ on layoutMenu
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
-   set the points of graphic "Divider" of group "revMenuBar" of me to "0,24" & return & tLeft + 10 & ",24" & return
    set the topleft of me to tTopLeft
    unlock messages
    
