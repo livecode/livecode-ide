@@ -1607,8 +1607,15 @@ command revGoScriptEditor pEditor
    # For now we work around this here by manually ensuring the editor is not flagged as edited.
    put empty into gREVStackStatus[the short name of pEditor]
    
-   set the visible of pEditor to true
+   lock screen
    toplevel pEditor
+   
+   # AL-2015-10-01: [[ Bug 16016 ]] Ensure the palette rect is set after the go command
+   #  as otherwise the engine closes and reopens the stack, resulting in it being bound 
+   #  to the windowBoundingRect (due to some very specific properties of the script editor)
+   revIDEPositionPalette the short name of pEditor
+   set the visible of pEditor to true
+   unlock screen 
    
    # OK-2008-08-18 : Bug 6935 - The script editor should be un-iconified here.
    if the iconic of pEditor then

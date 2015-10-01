@@ -3651,6 +3651,10 @@ on revIDEPositionPalette pStackName
             set the rect of stack pStackName to tRect
             break
          default 
+            if pStackName begins with revIDEScriptEditorPrefix() then
+               set the rect of stack pStackName to tRect
+               break
+            end if
             # If we don't restore the position for this palette then position the stack in the default location
             revIDEPositionPaletteDefault pStackName
             break
