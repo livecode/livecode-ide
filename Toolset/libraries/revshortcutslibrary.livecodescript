@@ -35,7 +35,7 @@ global gREVSuppressMessages
 
 on arrowKey pDirection, pTarget
    if pTarget is empty then
-      put the target into pTarget
+      put the long id of the target into pTarget
    end if
    
    // SN-2015-06-25: [[ Bug 15515 ]] <the target> is the name of the target
@@ -176,7 +176,7 @@ on commandKeyDown pWhich
          case "?"
          case "/"
             if the optionKey is not down then
-               send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
+               revIDEHelpKeyPressed
             end if
             --      if the optionKey is down then revDocsToggle
             --      else
@@ -198,7 +198,7 @@ on commandKeyDown pWhich
             // AL-2014-09-16: [[ Bug 13362 ]] Don't open script editor for IDE stacks unless gREVShowStacks is true
             local tTopStack
             put the topStack into tTopStack
-            if (char 1 to 3 of the short name of tTopStack is "rev") and (not gREVShowStacks) then
+            if revIDEStackIsIDEStack(tTopStack) and (not gREVShowStacks) then
                exit commandKeyDown
             end if
             
@@ -253,9 +253,9 @@ on tabKey
    if the commandKey is down and the optionKey is down then
       --toggle tool
       if the tool is "pointer tool" then 
-         send "menuPick" && quote & "Browse Tool" & quote to btn "Tools" of stack "revMenuBar"
+         revIDESetTool "browse"
       else 
-         send "menuPick" && quote & "Pointer tool" & quote to btn "Tools" of stack "revMenuBar"
+         revIDESetTool "pointer"
       end if
       exit tabKey
    end if

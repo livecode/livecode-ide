@@ -1,0 +1,124 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.lcdoc_parameterValue{ font-weight:bold}
+
+#table_list {
+        width: 100%;
+    }
+
+#table_list thead, #table_list tbody, #table_list tr, #table_list td, #table_list th { display: block; }
+
+#table_list tr:after {
+    content: ' ';
+    display: block;
+    visibility: hidden;
+    clear: both;
+}
+
+#table_list thead th {
+    height: 30px;
+
+    /*text-align: left;*/
+}
+
+#table_list tbody {
+    height: 180px;
+    overflow-y: auto;
+}
+
+#table_list thead {
+    /* fallback */
+}
+
+
+#table_list tbody td, #table_list thead th {
+    
+}
+
+#table_list .active{ background-color:#00ff00}
+
+#header_panel_holder{ background-color:#00ff88}
+
+
+#lcdoc_body{
+	margin-top:270px
+}
+
+#lcdoc_list.affix{
+	width:848px;
+	z-index:100;
+}
+
+.lcdoc_section_title{ font-weight:bold; text-transform:capitalize}
+
+.lcdoc_infocus{
+	border:1px solid #ff0055
+	box-shadow:10px 10px 5px #ff0055;
+}
+
+.lcdoc_entry_name{
+	font-weight:bold;
+}
+
+.lcdoc_entry_param{
+	font-style:italic;
+}
+
+#lcdoc_body table{ border: 1px solid #cccccc; width:100%; margin-bottom:10px}
+#lcdoc_body table thead{ border-bottom: 2px solid #cccccc;}
+#lcdoc_body table td{ border: 1px solid #cccccc; padding:5px;}
+#lcdoc_body table td p{ margin-bottom:0px;}
+
+#lcdoc_body .lcdoc_glossary_table td{width:37%}
+#lcdoc_body .lcdoc_glossary_table td:first-of-type{width:26%}
+
+
+
+@media (min-width: 768px) {
+  #lcdoc_list.affix{
+	width:90%;
+	margin-left:auto;
+	margin-right:auto;
+	}
+}
+
+@media (min-width: 992px) {
+  #lcdoc_list.affix{
+	width:697px;
+	}
+}
+
+@media (min-width: 1200px) {
+ #lcdoc_list.affix{
+	width:848px;
+	}
+}
+
+.bs-sidebar.affix {
+  width: 260px;
+  top: 25px;
+  display:none;
+}
+
+@media (min-width: 768px) {
+  .bs-sidebar.affix {
+    display:none;
+  }
+}
+
+@media (min-width: 992px) {
+  .bs-sidebar.affix {
+    width: 213px;
+    position: fixed;
+    top: 25px;
+    display:block;
+  }
+}
+
+@media (min-width: 1200px) {
+  .bs-sidebar.affix {
+    width: 263px;
+    display:block;
+  }
+}

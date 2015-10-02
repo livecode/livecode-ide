@@ -1,0 +1,49 @@
+type	graphic tool
+title	Curve Graphic
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+name	Curve	
+tooltip		
+style	curve	rectangle,roundrect,line,oval,regular,line,curve,polygon
+opaque	false	
+visible	true	
+disabled	false	
+showName	false	
+antialiased	true	
+lineSize	1	
+dashes	
+startArrow	false	
+endArrow	false	
+points		
+layerMode	Static	Static,Dynamic,Scrolling
+behavior	empty	long id
+foregroundColor			Border Fill
+foregroundPattern			Border Fill		
+fillGradient		
+topColor
+topPattern		
+bottomColor
+bottomPattern		
+customProperties		
+blendLevel	0	0,100
+ink
+textFont
+textSize		
+textStyle	empty
+textAlign	empty
+margins	8	
+lockLoc	false	
+width		
+height		
+location
+left		
+top		
+right		
+bottom		
+layer		
+dropShadow
+innerShadow		
+outerGlow		
+innerGlow		
+colorOverlay		

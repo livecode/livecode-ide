@@ -1,0 +1,1 @@
+# Tools palette is reloaded after being replaced by plugin

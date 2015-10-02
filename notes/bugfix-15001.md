@@ -1,0 +1,1 @@
+# Extension Builder: need to set the hideConsoleWindows to true before executing shell commands 

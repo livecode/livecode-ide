@@ -1,0 +1,1 @@
+This section contains tutorials that introduce the various components available in LiveCode. If you want to learn how to use and what each component can do, then these tutorials are for you.

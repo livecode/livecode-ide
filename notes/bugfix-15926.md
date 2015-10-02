@@ -1,0 +1,1 @@
+# Add ability in the script editor variables pane to filter list of variables and show/hide global/environment variables

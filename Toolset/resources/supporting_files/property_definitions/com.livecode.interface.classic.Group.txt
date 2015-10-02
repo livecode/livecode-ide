@@ -1,0 +1,67 @@
+type	group
+title	Group
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+name		
+label		
+disabled	false	
+visible	true	
+showName	true	
+threeD	true	
+opaque	true	
+selectGroupedControls	true	
+showBorder	true	
+borderWidth	2	
+hScrollbar	false	
+vScrollbar	false	
+scrollbarWidth	20	
+radioBehavior	true	
+traversalOn	false	
+tabGroupBehavior	false	
+traversalOn	false	
+dontSearch	false	
+cantDelete	false	
+sharedBehavior	false	
+backgroundBehavior	false	
+boundingRect		
+layerMode
+behavior
+foregroundColor		
+foregroundPattern		
+backgroundColor		
+backgroundPattern		
+hiliteColor		
+hilitePattern		
+borderColor		
+borderPattern		
+topColor		
+topPattern		
+bottomColor		
+bottomPattern		
+shadowColor		
+shadowPattern		
+focusColor		
+focusPattern		
+customProperties		
+blendLevel	0	0,100
+ink
+textFont
+textSize		
+textStyle	empty
+textAlign	empty
+margins	8	
+lockLoc	false	
+width		
+height		
+location
+left		
+top		
+right		
+bottom		
+layer		
+dropShadow		
+innerShadow		
+outerGlow		
+innerGlow		
+colorOverlay		

@@ -1,0 +1,1 @@
+# Building a standalone with "Answer Dialog" checked in standalone settings causes error at launch

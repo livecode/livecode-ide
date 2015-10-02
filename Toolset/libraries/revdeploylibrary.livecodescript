@@ -117,7 +117,6 @@ command revIDEDeploySetTarget pTarget
    put pTarget into sDeployTargets[tPlatform]
    set the cDeployPlatforms of stack "revPreferences" to sDeployPlatforms
    set the cDeployTargets of stack "revPreferences" to sDeployTargets
-   revIDEDeployUpdate
 end revIDEDeploySetTarget
 
 -- This method returns the current target of the 'Deploy' action.
@@ -146,13 +145,6 @@ function revIDEDeployIsPossible pPlatform
    put the mainStack of the topStack into tStack
    return the cRevStandaloneSettings[pPlatform] of stack tStack
 end revIDEDeployIsPossible
-
--- This method updates the enable state of the 'Test' button on the menubar based on
--- the current topStack.
-command revIDEDeployUpdate
-   -- Enable the deploy button appropriately
-   set the enabled of button "Deploy" of stack "revMenuBar" to revIDEDeployGetTarget() is not empty
-end revIDEDeployUpdate
 
 -- This method is called on startup to initialize the deployment library. This includes
 -- attempting to auto-configure any SDKs and such if necessary.
@@ -242,11 +234,6 @@ function revIDEDeployIOSIsValidSDK pVersion, pPath
    dispatch function "deployIsValidSDK" to stack "revDeployLibraryiOS" with pVersion, pPath
    return the result
 end revIDEDeployIOSIsValidSDK
-
-function revIDEDeployIOSUsableSDKs
-   dispatch function "deployUsableIosSdk" to stack "revDeployLibraryiOS"
-   return the result
-end revIDEDeployIOSUsableSDKs
 
 function revIDEDeployIOSGetSimulatorVersions
    dispatch function "deployGetSimulatorVersions" to stack "revDeployLibraryiOS"
