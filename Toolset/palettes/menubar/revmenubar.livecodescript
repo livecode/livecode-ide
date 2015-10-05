@@ -1059,9 +1059,16 @@ private function revMenubarFileMenu pContext
    else
       put "(&New Substack" & return after tFile
    end if
+   
    put "&Open Stack.../O" & return after tFile
-   put "Open Recent File" & return after tFile
-   put revMenuBarRecentFiles() & return after tFile
+   
+   if revMenuBarRecentFiles() is not empty then
+      put "Open Recent File" & return after tFile     
+      put revMenuBarRecentFiles() & return after tFile
+   else
+      put "(Open Recent File" & return after tFile    
+   end if
+   
    put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
@@ -1101,7 +1108,7 @@ private function revMenubarFileMenu pContext
    put "P&age Setup..." & return after tFile
    put enableMenuItem("&Print Card.../P", tIsUserTarget) & return after tFile
    put enableMenuItem("Print Field...", word 1 of (the selObj) is "field") & return after tFile
-
+   
    put "-" & return after tFile
    
    ## EJB 2014-08-26
@@ -1111,7 +1118,7 @@ private function revMenubarFileMenu pContext
    else
       put "E&xit" & return after tFile
    end if
-
+   
    return modifyMenu("File", tFile)
 end revMenubarFileMenu
 
