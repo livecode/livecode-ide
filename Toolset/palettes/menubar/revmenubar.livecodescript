@@ -459,10 +459,21 @@ on generateMenuGroup
    if the platform is not "macos" then
       show group "revMenuBar" of me
    end if
+   set the menubar of me to "revMenuBar"
    
-   create graphic "Divider" in group "revMenuBar"
-   set the style of it to "line"
+   reset the templatebutton
+   set the style of the templatebutton to "rectangle"
+   set the height of the templatebutton to 2
+   set the threed of the templatebutton to true
+   set the showborder of the templatebutton to true
+   set the borderwidth of the templatebutton to 2
+   set the showname of the templatebutton to false
    
+   if the platform is "Linux" then 
+      create button "Divider" in group "revMenuBar"
+   else
+      create invisible button "Divider" in group "revMenuBar"
+   end if
    reset the templatebutton
    unlock messages
 end generateMenuGroup
@@ -544,7 +555,7 @@ on layoutMenu
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
-   set the points of graphic "Divider" of group "revMenuBar" of me to "0,24" & return & tLeft + 10 & ",24" & return
+   set the rect of button "Divider" of group "revMenuBar" of me to "0,24," & tLeft + 10 & ",26"
    set the topleft of me to tTopLeft
    unlock messages
    
