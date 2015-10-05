@@ -1,0 +1,1 @@
+# If there are no Recent Stacks the File Menu does not display correctly
