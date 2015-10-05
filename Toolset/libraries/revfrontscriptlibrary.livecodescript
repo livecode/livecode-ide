@@ -366,6 +366,18 @@ on preOpenStack
       set the scalefactor of this stack to tScaleFactor
    end if 
   
+   # CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
+
+   local tTarget
+   put the long id of the target into tTarget
+   if tTarget is not the long id of me then
+      local tStack
+      put revTargetStack(tTarget) into tStack
+      if revDebuggerEnabled() then
+         revDebuggerActivateBreakpoints the long id of stack tStack
+      end if
+   end if
+   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack
 
@@ -417,15 +429,17 @@ on openStack
    #  send "revCheckBreakPoints" to me in 500 milliseconds
    #  put the result into lMessageID
    
-   local tTarget
-   put the long id of the target into tTarget
-   if tTarget is not the long id of me then
-      local tStack
-      put revTargetStack(tTarget) into tStack
-      if revDebuggerEnabled() then
-         revDebuggerActivateBreakpoints the long id of stack tStack
-      end if
-   end if
+   # CW-2015-10-05: [[ Bug 16079 ] Move activating breakpoints to preOpenStack so they will be triggered earlier
+   
+   #  local tTarget
+   #  put the long id of the target into tTarget
+   #  if tTarget is not the long id of me then
+   #     local tStack
+   #     put revTargetStack(tTarget) into tStack
+   #     if revDebuggerEnabled() then
+   #        revDebuggerActivateBreakpoints the long id of stack tStack
+   #     end if
+   #  end if
    
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openStack
 end openStack
