@@ -467,6 +467,7 @@ on generateMenuGroup
    set the threed of the templatebutton to true
    set the showborder of the templatebutton to true
    set the borderwidth of the templatebutton to 2
+   set the showname of the templatebutton to false
    
    if the platform is "Linux" then 
       create button "Divider" in group "revMenuBar"
@@ -554,7 +555,7 @@ on layoutMenu
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
-   set the rect of button "Divider" of group "revMenuBar" of me to "0,24," & tLeft + 10 & ",25"
+   set the rect of button "Divider" of group "revMenuBar" of me to "0,24," & tLeft + 10 & ",26"
    set the topleft of me to tTopLeft
    unlock messages
    
