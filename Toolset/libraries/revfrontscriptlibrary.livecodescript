@@ -264,8 +264,20 @@ on preOpenStack
    put the cREVGeneral["scalefactor"] of this stack into tScaleFactor
    if tScaleFactor is a number and tScaleFactor is not 1 then
       set the scalefactor of this stack to tScaleFactor
-   end if
+   end if 
+  
+   # CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
 
+   local tTarget
+   put the long id of the target into tTarget
+   if tTarget is not the long id of me then
+      local tStack
+      put revTargetStack(tTarget) into tStack
+      if revDebuggerEnabled() then
+         revDebuggerActivateBreakpoints the long id of stack tStack
+      end if
+   end if
+   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack
 
