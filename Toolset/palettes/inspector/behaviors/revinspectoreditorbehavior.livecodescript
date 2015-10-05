@@ -100,6 +100,7 @@ local sAllowUpdate
 local sLastValue
 local sValue
 setProp editorValue pValue
+   set the casesensitive to true
    if sLastValue is empty or pValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
       put pValue into sValue
