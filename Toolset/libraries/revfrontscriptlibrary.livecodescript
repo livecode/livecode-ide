@@ -1,9 +1,9 @@
 ﻿script "revfrontscriptlibrary"
 
 on revLoadLibrary
-	if the target is not me then
-		pass "revLoadLibrary"
-	end if	
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if	
    insert the script of me into front
 end revLoadLibrary
 
@@ -209,13 +209,26 @@ on mainstackChanged pOldStackName, pNewStackName
    pass mainstackChanged
 end mainstackChanged
 
-on editScript pObject
+// PM-2015-10-02: [[ Bug 13588 ]] Make sure the insertion point is the correct one
+on setCursorAtLoc pAt, pEditor
+   if pAt is not empty then
+      put item 1 of pAt into tLine
+      put item 2 of pAt into tCol
+      put the currentCard of stack pEditor into tCard
+      select after char tCol of line tLine of fld "Script" of group "Editor" of card tCard of stack pEditor
+   end if
+end setCursorAtLoc
+
+
+on editScript pObject, pAt
    local tResult
    _editScriptNew pObject
    put the result into tResult 
    if tResult is "pass" then
       pass editScript
    end if
+   put revScriptEditor(pObject)  into tEditor
+   send "setCursorAtLoc pAt, tEditor" to me in 0 seconds
 end editScript
 
 
@@ -786,7 +799,6 @@ on dragMove
     pass dragMove
   end if
 end dragMove
-
 
 
 function revCheckDelete
