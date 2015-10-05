@@ -1360,7 +1360,8 @@ command revInternal__InitialiseTools
   set the topLeft of stack tToolsStackName to the cToolsTopLeft of stack "revPreferences"
   palette stack tToolsStackName
   
-  choose pointer tool
+  --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
+  revIDESetTool pointer
   unlock screen
   --revInternal__ConstrainStack "revTools"  
   
