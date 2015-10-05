@@ -2526,7 +2526,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionBringToFront
          break
       case "Group Selected"
-         revIDEActionGroup
+         revIDEActionGroupObjects
          break
       case "Edit Group"
          revIDEActionEditGroup
