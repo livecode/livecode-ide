@@ -212,11 +212,8 @@ end mainstackChanged
 // PM-2015-10-02: [[ Bug 13588 ]] Make sure the insertion point is the correct one
 on setCursorAtLoc pAt, pEditor
    if pAt is not empty then
-      put the itemdel into tOldItemDel
-      set the itemdel to comma
       put item 1 of pAt into tLine
       put item 2 of pAt into tCol
-      set the itemdel to tOldItemDel
       put the currentCard of stack pEditor into tCard
       select after char tCol of line tLine of fld "Script" of group "Editor" of card tCard of stack pEditor
    end if
