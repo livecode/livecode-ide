@@ -3619,7 +3619,7 @@ on revIDEEnsureOnscreen pStackName
    end if
    
    if the effective top of stack pStackName < item 2 of tScreenRect then
-      set the top of stack pStackName to (item 2 of tScreenRect + 30)
+      set the top of stack pStackName to (item 2 of tScreenRect + abs(the top of stack pStackName - the effective top of stack pStackName))
    else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
       set the bottom of stack pStackName to item 4 of tScreenRect
    end if
