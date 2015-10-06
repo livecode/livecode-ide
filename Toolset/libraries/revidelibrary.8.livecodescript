@@ -6987,6 +6987,7 @@ on revIDEActionEditGroup
 end revIDEActionEditGroup
 
 on revIDEEditGroup pGroup
+   set the defaultStack to the topStack
    if word 1 of pGroup is "group" then
       if revMenuManagerGroup(pGroup) then
          answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
