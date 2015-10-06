@@ -4771,6 +4771,10 @@ end revIDEStandaloneSectionNameToIconName
 
 on revIDEOpenStack pFilePath
    local tError, tStackName
+   
+   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
+   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
+   
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -5116,30 +5120,15 @@ on revIDENewSubstackOfStack pStack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
 
-/*
-Opens a stack from file.
-
-Associations: stack
-
-pFilePath (String): The path to a stack on disk
-
-Example:
-revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
-
-Tags: ide
-*/
---on revIDEOpenStack pFilePath
---   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
---   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-
---   go stack pFilePath
---end revIDEOpenStack
-
 function revIDEIsLiveCodeStack pFilePath
+   local tExtension
+   
    set the itemdel to "."
-
+   put the last item of pFilePath into tExtension
+   set the itemDel to comma
+   
    # Check the file extension
-   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then
+   if tExtension is among the items of revIDELiveCodeFileExtensions() then
       return true
    else
       return false
