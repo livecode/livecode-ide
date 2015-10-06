@@ -1839,7 +1839,6 @@ function revMenubarContextMenu pType, pTarget
          break
       case "image"
          put "-" & return after tText
-         --put toggleMenuItem("Paint Tools", "Show" is not in the toolTip of btn "paint and draw" of stack "revTools") & return after tText
          put "Launch Editor" & return after tText
          put toggleMenuItem("Magnify", the magnify of pTarget) & return after tText
          put "-" & return after tText
