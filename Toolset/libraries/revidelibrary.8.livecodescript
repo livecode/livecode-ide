@@ -6756,10 +6756,10 @@ on revIDEToggle pProperty
          break
       case "Backdrop"
          if the backDrop is "none" then
-            if revIDGetPreference("cBackDropColor") is empty then 
+            if revIDEGetPreference("cBackDropColor") is empty then 
                revIDESetPreference "cBackDropColor", "black"
             end if
-            set the backDrop to revIDGetPreference("cBackDropColor")
+            set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else
             set the backDrop to "none"
