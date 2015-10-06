@@ -5199,13 +5199,41 @@ on revIDECloseStack pStackID, pDestroy
    if not exists(pStackID) then return revIDELocalise("Cannot close stack, it doesn't exist")
 
    if revSaveCheck(pStackID) is not false then
-      if pStackID is true then
-         delete stack pStackID
+      if pDestroy is true then
+         revIDERemoveFromMemory pStackID
       else
          close stack pStackID
       end if
    end if
 end revIDECloseStack
+
+on revIDERemoveFromMemory pStackID
+   local tMainstack
+   put the mainStack of stack pStackID into tMainstack
+   
+   local tSubstacks
+   put the subStacks of stack pStackID into tSubstacks
+   
+   local tStacks
+   put tMainStack & cr & tSubstacks into tStacks
+   answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
+   if it is "Cancel" then 
+      exit revIDERemoveFromMemory
+   end if
+   
+   put the long id of stack tMainStack into tStackID
+   
+   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
+   revIDEHandleObjectDeleted the long id of stack tMainStack
+   
+   lock messages -- prevent user stack saving during the close, erasing substacks
+   repeat for each line tSubStack in tSubstacks
+      close stack tSubStack
+   end repeat
+   delete stack tMainStack
+   unlock messages
+   
+end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
    # Can't close revMenuBar
