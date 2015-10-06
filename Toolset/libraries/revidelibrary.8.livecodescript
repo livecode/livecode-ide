@@ -4770,7 +4770,7 @@ function revIDEStandaloneSectionNameToIconName pName
 end revIDEStandaloneSectionNameToIconName
 
 on revIDEOpenStack pFilePath
-   local tError
+   local tError, tStackName
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -5128,12 +5128,12 @@ revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
 
 Tags: ide
 */
-on revIDEOpenStack pFilePath
-   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
-   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
+--on revIDEOpenStack pFilePath
+--   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
+--   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
 
-   go stack pFilePath
-end revIDEOpenStack
+--   go stack pFilePath
+--end revIDEOpenStack
 
 function revIDEIsLiveCodeStack pFilePath
    set the itemdel to "."
