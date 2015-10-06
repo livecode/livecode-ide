@@ -460,14 +460,13 @@ private command setDefaultsAndCallbacks
    if sePrefGet("variables,showglobals") then
       set the hilite of tGlobals to true
       set the cShowGlobals of me to true
-      set the hilite of tEnvVars to true
-      set the cShowEnvGlobals of me to true
    else
       set the hilite of tGlobals to false
       set the cShowGlobals of me to false
-      set the hilite of tEnvVars to false
-      set the cShowEnvGlobals of me to false
    end if
+
+   set the hilite of tEnvVars to false
+   set the cShowEnvGlobals of me to false
 
    set the cCallback of tGlobals to "setGlobalDisplay"
    set the cCallbackTarget of tGlobals to the long id of me

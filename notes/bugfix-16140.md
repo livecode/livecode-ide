@@ -1,0 +1,1 @@
+# Make the variables pane default to not showing environment variables
