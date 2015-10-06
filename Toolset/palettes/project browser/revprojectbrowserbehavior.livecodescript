@@ -513,13 +513,8 @@ on selectObjects pObjectList
    
    unlock messages
    
-   --   if word 1 of tObjectList is "stack" or word 1 of tObjectList is "card" then
-   --      ## Nothing
-   --   else
-   --      ## Select objects
-   revIDESelectObjects tObjectList
-   --end if
-   
+   ## Select objects
+   revIDESelectObjects tObjectList   
 end selectObjects
 
 on selectionChanged pHilitedRows, pPreviouslyHilitedRows
