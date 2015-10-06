@@ -6288,7 +6288,7 @@ on revIDEActionDuplicate
          if tCreatedObjects is empty then
             put the long id of it into tCreatedObjects
          else
-            put the long id of it & return after tCreatedObjects
+            put return & the long id of it after tCreatedObjects
          end if
          
          if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then
