@@ -6755,11 +6755,12 @@ on revIDEToggle pProperty
          end if
          break
       case "Backdrop"
+         -- PM-2015-10-06: [[ Bug 16132 ]] Fix typo that prevents backdrop from working
          if the backDrop is "none" then
-            if revIDGetPreference("cBackDropColor") is empty then 
+            if revIDEGetPreference("cBackDropColor") is empty then 
                revIDESetPreference "cBackDropColor", "black"
             end if
-            set the backDrop to revIDGetPreference("cBackDropColor")
+            set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else
             set the backDrop to "none"
