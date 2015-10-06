@@ -392,6 +392,9 @@ on inspectorSectionChanged pSection
    # Check if the section is different
    if inspectorSectionGetName() is pSection then exit inspectorSectionChanged
    
+   # Update an editor in case it has changed
+   updateFocusedEditor
+   
    # Set the section
    inspectorSectionSet pSection
    
@@ -399,6 +402,12 @@ on inspectorSectionChanged pSection
    
    //put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
 end inspectorSectionChanged
+
+on updateFocusedEditor
+   if the short name of revIDEStackOfObject(the focusedObject) is the short name of me then
+      dispatch "valueChanged" to the focusedObject
+   end if
+end updateFocusedEditor
 
 on inspectorFill
    lock screen
