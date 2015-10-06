@@ -491,6 +491,12 @@ on selectObjects pObjectList
    
    if the last char of tObjectList is return then delete the last char of tObjectList
    
+   ## If a card or stack is selected we don't want to go to the card
+   ## The user should be able to highlight or expand a card or stack without going to it
+   if word 1 of tObjectList is "stack" or word 1 of tObjectList is "card" then
+      exit selectObjects
+   end if
+   
    ## Go to correct card as required
    lock messages
    repeat for each line tObject in tObjectList      
@@ -508,13 +514,8 @@ on selectObjects pObjectList
    
    unlock messages
    
-   if word 1 of tObjectList is "stack" or word 1 of tObjectList is "card" then
-      ## Nothing
-   else
-      ## Select objects
-      revIDESelectObjects tObjectList
-   end if
-   
+   ## Select objects
+   revIDESelectObjects tObjectList   
 end selectObjects
 
 on selectionChanged pHilitedRows, pPreviouslyHilitedRows
