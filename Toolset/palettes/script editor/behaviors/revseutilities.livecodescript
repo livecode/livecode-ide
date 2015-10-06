@@ -424,30 +424,37 @@ end sePrefList
 # Description
 #   Initialises the script editor preferences system.
 command sePrefInit
-   # Get the default preferences, which are returned in an array.
-   local tPrefs
-   sePrefGetDefaults
-   put the result into tPrefs
-   
-   # Loop through the default preferences array, and for each setting,
-   # look in the Revolution preferences stack for a user defined value. 
-   # If there is one, then replace the value in the preferences array,
-   # otherwise leave the default in there.
-   repeat for each key tKey in tPrefs
-      local tPropname
-      put "cScriptEditor," & tKey into tPropname
-      
-      if the tPropname of stack "revPreferences" is not empty then
-         put the tPropname of stack "revPreferences" into tPrefs[tKey]
-      end if
-   end repeat
-   
-   # The colorization settings need to be loaded
-   seColorizationLoadScheme tPrefs["colorization,scheme"], tPrefs
-   
-   # Put the completed array into the script local sPrefs for use by the script editor.
-   put tPrefs into sPrefs
-   seColorizationInit
+# Get the default preferences, which are returned in an array.
+local tPrefs
+sePrefGetDefaults
+put the result into tPrefs
+
+# Loop through the default preferences array, and for each setting,
+# look in the Revolution preferences stack for a user defined value. 
+# If there is one, then replace the value in the preferences array,
+# otherwise leave the default in there.
+repeat for each key tKey in tPrefs
+local tPropname
+put "cScriptEditor," & tKey into tPropname
+
+if the tPropname of stack "revPreferences" is not empty then
+put the tPropname of stack "revPreferences" into tPrefs[tKey]
+end if
+end repeat
+
+
+## Check the print shortcut, the default had a typo pre v8
+## If the print shortcut has a typo replace it
+if tPrefs["shortcuts,Print"] is "command p'" then
+put "command p" into tPrefs["shortcuts,Print"]
+end if
+
+# The colorization settings need to be loaded
+seColorizationLoadScheme tPrefs["colorization,scheme"], tPrefs
+
+# Put the completed array into the script local sPrefs for use by the script editor.
+put tPrefs into sPrefs
+seColorizationInit
 end sePrefInit
 
 # Description
@@ -598,7 +605,7 @@ command sePrefGetDefaults
    put "command shift tab" into tPrefs["shortcuts,PreviousScriptTab"]
    put "command m" into tPrefs["shortcuts,LaunchMessageBox"]
    put "command '" into tPrefs["shortcuts,SendWindowToBack"]
-   put "command p'" into tPrefs["shortcuts,Print"]
+   put "command p" into tPrefs["shortcuts,Print"]
    put "command option f" into tPrefs["shortcuts,FindSelection"]
    
    # The default shortcuts need to be different on OS X due to stuff like expose etc.
@@ -618,6 +625,7 @@ command sePrefGetDefaults
       put "command \" into tPrefs["shortcuts,ToggleBreakpoint"]
       put empty into tPrefs["editor,hilitecolor"]
    else
+      put "command w" into tPrefs["shortcuts,Close"]
       put "command f4" into tPrefs["shortcuts,CloseTab"]
       put "command shift _" into tPrefs["shortcuts,Uncomment"]
       put "f3" & return & "command g" into tPrefs["shortcuts,FindNext"]
