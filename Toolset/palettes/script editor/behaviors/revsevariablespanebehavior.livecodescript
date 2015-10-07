@@ -443,6 +443,7 @@ end setGlobalDisplay
 
 on setEnvDisplay pShowEnvGlobals
    set the cShowEnvGlobals of me to pShowEnvGlobals
+   sePrefSet "variables,showenvvars", pShowEnvGlobals
    send "updateVariableDisplay" to me in 0 millisecs
 end setEnvDisplay
 
@@ -465,8 +466,13 @@ private command setDefaultsAndCallbacks
       set the cShowGlobals of me to false
    end if
 
-   set the hilite of tEnvVars to false
-   set the cShowEnvGlobals of me to false
+   if sePrefGet("variables,showenvvars") then
+      set the hilite of tEnvVars to true
+      set the cShowEnvGlobals of me to true
+   else
+      set the hilite of tEnvVars to false
+      set the cShowEnvGlobals of me to false
+   end if
 
    set the cCallback of tGlobals to "setGlobalDisplay"
    set the cCallbackTarget of tGlobals to the long id of me
