@@ -264,6 +264,11 @@ command revIDEDeployIOSUpdateSDKs
    dispatch "deployUpdateSDKs" to stack "revDeployLibraryiOS"
 end revIDEDeployIOSUpdateSDKs
 
+function revIDEDeployIOSUsableSDKs
+   dispatch function "deployUsableIosSdk" to stack "revDeployLibraryiOS"
+   return the result
+end revIDEDeployIOSUsableSDKs
+
 function revIDEDeployIOSGetDeviceSDK pVersion
    dispatch function "deployGetDeviceSDK" to stack "revDeployLibraryiOS" with pVersion
    return the result

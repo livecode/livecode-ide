@@ -1,9 +1,9 @@
 ﻿script "revfrontscriptlibrary"
 
 on revLoadLibrary
-	if the target is not me then
-		pass "revLoadLibrary"
-	end if
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if	
    insert the script of me into front
 end revLoadLibrary
 
@@ -183,6 +183,12 @@ on nameChanged pOldname, pNewName, pTarget
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
 
+--PM-2015-10-05: [[ Bug 16099 ]] choose pointer/browse tool does not update Tools palette
+on newTool pTool
+   send "ideToolChanged" to stack "revTools" in 0 seconds
+   pass newTool
+end newTool
+
 on idChanged pOldId, pNewId
    global gREVSuppressMessages
 
@@ -209,13 +215,26 @@ on mainstackChanged pOldStackName, pNewStackName
    pass mainstackChanged
 end mainstackChanged
 
-on editScript pObject
+// PM-2015-10-02: [[ Bug 13588 ]] Make sure the insertion point is the correct one
+on setCursorAtLoc pAt, pEditor
+   if pAt is not empty then
+      put item 1 of pAt into tLine
+      put item 2 of pAt into tCol
+      put the currentCard of stack pEditor into tCard
+      select after char tCol of line tLine of fld "Script" of group "Editor" of card tCard of stack pEditor
+   end if
+end setCursorAtLoc
+
+
+on editScript pObject, pAt
    local tResult
    revIDEEditScriptOfObject pObject
    put the result into tResult
    if tResult is "pass" then
       pass editScript
    end if
+   put revScriptEditor(pObject)  into tEditor
+   send "setCursorAtLoc pAt, tEditor" to me in 0 seconds
 end editScript
 
 on resumeStack
@@ -264,8 +283,20 @@ on preOpenStack
    put the cREVGeneral["scalefactor"] of this stack into tScaleFactor
    if tScaleFactor is a number and tScaleFactor is not 1 then
       set the scalefactor of this stack to tScaleFactor
-   end if
+   end if 
+  
+   # CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
 
+   local tTarget
+   put the long id of the target into tTarget
+   if tTarget is not the long id of me then
+      local tStack
+      put revTargetStack(tTarget) into tStack
+      if revDebuggerEnabled() then
+         revDebuggerActivateBreakpoints the long id of stack tStack
+      end if
+   end if
+   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack
 
@@ -663,7 +694,6 @@ on dragMove
     pass dragMove
   end if
 end dragMove
-
 
 
 function revCheckDelete

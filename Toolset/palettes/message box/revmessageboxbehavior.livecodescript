@@ -1,0 +1,899 @@
+﻿script "revMessageBoxBehavior"
+##GH created 12/11/2014
+##GH last updated 31/12/2014
+
+global msg
+local lSelectedCard, lCardHistoryPref
+constant kHistoryMax = 200
+constant kHalfMessageFieldHeight = 12.5
+constant kExternalErrorCode = 0
+
+on preOpenStack
+   dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
+   lock messages
+   --set the zoomBox of this stack to false
+   unlock messages
+   clearFrameData
+   
+   ##GH : the labels will need localising
+   #Navigation
+   --frame item: Name                     Location   Type            Label                       Icon      Icon     Callback Message  Callback Target   Parameter
+   addFrameItem "single line",             "header",  "navigation",   "Single Line",             "minus",  "minus",  "showCard",            the long id of me,  "Single Line"
+   addFrameItem "multiple lines",        "header",  "navigation",   "Multiple Lines",        "reorder",   "reorder",   "showCard",           the long id of me,  "Multiple Lines"
+   addFrameItem "global properties",   "header",  "navigation",   "Global Properties",   "file powerpoint alt",   "file powerpoint alt",  "showCard",            the long id of me,  "Global Properties"
+   addFrameItem "global variables",     "header",  "navigation",   "Global Variables",     "file excel alt",   "file excel alt",  "showCard",            the long id of me,  "Global Variables"
+   addFrameItem "pending messages", "header",  "navigation",  "Pending Messages", "envelope alt",   "envelope alt",  "showCard",            the long id of me,  "Pending Messages"
+   addFrameItem "front scripts",           "header",  "navigation",  "Front Scripts",          "file",   "file",  "showCard",            the long id of me,  "Front Scripts"
+   addFrameItem "back scripts",           "header",  "navigation",  "Back Scripts",           "paste",    "paste",  "showCard",            the long id of me,  "Back Scripts"
+   addFrameItem "stacks in use",          "header",  "navigation",  "Stacks in Use",         "files alt",    "files alt",  "showCard",            the long id of me,  "Stacks in Use"
+   
+   #Actions - footers
+   --frame item: Name                        Location   Type          Label                                  Icon         Icon     Callback Message      Callback Target
+   addFrameItem "outputSource",          "footer",     "action",      "show last output source",    "bullseye",     "bullseye",    "showOutputSource",the long id of me 
+   addFrameItem "lockDefaultStack",     "footer",     "action",      "lock the defaultStack",         "unlock alt",     "unlock alt",    "lockDefaultStack",    the long id of me  
+   addFrameItem "unlockDefaultStack", "footer",     "action",      "unlock the defaultStack",     "lock",     "lock",    "unlockDefaultStack",the long id of me 
+   addFrameItem "removeSelected",       "footer",     "action",     "remove selected variable",    "trash",    "trash",     "removeSelected",     the long id of me
+   addFrameItem "removeAll",               "footer",     "action",      "remove all",                         "trash",     "trash",    "removeAll",              the long id of me 
+   addFrameItem "newGlobalVariable",  "footer",     "action",      "new global variable",            "file alt",    "file alt",    "addGlobalVariable",  the long id of me  
+   addFrameItem "update",                    "footer",     "action",      "update pending messages", "refresh",    "refresh",    "updateMessages",     the long id of me  
+   addFrameItem "cancelAll",                 "footer",     "action",      "cancel all messages",           "remove",    "remove",    "cancelAllMessages",  the long id of me  
+   addFrameItem "addStack",                 "footer",     "action",      "add library stack",                "plus",    "plus",    "addLibraryStack",      the long id of me  
+   
+   --GH : hiding footers as every footer is not necessary on all cards; footers are shown on releveant cards
+   hideFrameItem "lockDefaultStack"
+   hideFrameItem "unlockDefaultStack" 
+   hideFrameItem "outputSource"
+   hideFrameItem "removeSelected"
+   hideFrameItem "removeAll"
+   hideFrameItem "newGlobalVariable"
+   hideFrameItem "update"
+   hideFrameItem "cancelAll"
+   hideFrameItem "addStack"
+   
+   #Preferences
+   --frame item: Name                                            Location  Type              Label                                           Value Type  Value                                         Callback Message      Callback Target
+   addFrameItem "ideMessageBox_autoupdate",           "header",  "preference",  "Auto Update Pending Messages",  "boolean",     "true,false",                                  "preferenceChanged",  the long id of this stack
+   addFrameItem "ideMessageBox_intelligenceobject", "header",  "preference",  "Select Intelligence Object",            "enum",         "selectedObject,mouseControl",   "preferenceChanged",  the long id of this stack
+   
+   --nav style can be set to names or icons
+   set the navigationDisplayStyle of me to "icons"
+   
+   hiliteFrameItem "single line"
+   showCard "Single Line"
+   
+   lock messages
+   set the revMessageBoxRedirect to the long id of me
+   set the textSize of this stack to 11
+   unlock messages
+   
+   --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
+   if the traceStack is not empty 
+   then revIDESetPreference "IDEDebugMode",true
+   else revIDESetPreference "IDEDebugMode",false
+   revIDESetActiveStack
+   
+   revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
+   revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
+   
+   revIDESubscribe "ideActiveStacksChanged"
+   
+   if revIDEGetPreference("revPaletteFrameSize") is empty then revIDESetPreference "revPaletteFrameSize", "small"
+   
+   revIDEUpdateIntelligenceObject
+   
+   lock messages
+   set the minWidth of this stack to 500
+   set the minHeight of this stack to 200
+   set the left of this stack to the cREVLeft of this stack
+   set the top of this stack to the cREVTop of this stack
+   unlock messages
+end preOpenStack
+
+on moveStack
+   --set the position of the stack as a custom property so when it is reopened/different card is selected it remains in the same location
+   set the cREVLeft of this stack to the left of this stack
+   set the cREVTop of this stack to the top of this stack
+end moveStack
+
+on closeStack
+   moveStack
+end closeStack
+
+command setUpDataView
+   --setting up a data view for cards "Pending Messages","Front Scripts", "Back Scripts" and "Pending Messages"
+   
+   lock screen
+   local theStylesA
+   
+   set the behavior of group "objectList" of me to revIDEDataViewBehavior()
+   send "ResetView" to group "objectList" of me
+   
+   put the long id of group "pendingMessagesRow" of card "templates" of me into theStylesA["pendingMessages"]
+   put the long id of group "frontScriptsRow" of card "templates" of me into theStylesA["frontScripts"]
+   put the long id of group "frontScriptsRow" of card "templates" of me into theStylesA["backScripts"]
+   put the long id of group "stacksRow" of card "templates" of me into theStylesA["stacksInUse"]
+   
+   set the viewProp["row style templates"] of group "objectList" of me to theStylesA
+   
+   set the viewProp["hilite color"] of group "objectList" of me to revIDEColor("dataView_hiliteColor")
+   set the viewProp["background color"] of group "objectList" to empty
+   set the viewProp["row color"] of group "objectList" of me to revIDEColor("dataView_rowColor")
+   set the viewProp["alternate row color"] of group "objectList" of me to revIDEColor("dataView_rowAlternateColor")
+   
+   set the viewProp["fixed row height"] of group "objectList" of me to "true"
+   set the viewProp["row height"] of group "objectList" of me to 24
+   set the viewProp["cache"] of group "objectList" of me to "none"
+   unlock screen
+end setUpDataView
+
+command showCard pCard
+   lock screen
+   put pCard into lSelectedCard
+   go to card lSelectedCard
+   ##GH : will need localising
+   --set the title of this stack to revIDELocalisedString("Message Box" && "(" & lSelectedCard & ")")
+   set the title of this stack to "Message Box" && "(" & lSelectedCard & ")"
+   
+   --get message history for Single Line and Multiple Lines
+    if pCard is among the items of "Single Line,Multiple Lines" then 
+      replace space with "" in pCard
+      put "IDE" & pCard & "MessageHistory" into lCardHistoryPref
+   end if
+   unlock screen
+end showCard
+
+command lockDefaultStack
+   --locks the default stack to the stack selected in the "Open STacks" button
+   lock screen
+   local tActiveStack
+   put revIDEGetPreference("IDEActiveStack") into tActiveStack
+   revIDESetPreference "IDELockedToStack",true
+   revIDESetPreference "IDELinkedToStack",tActiveStack
+   hideFrameItem "lockDefaultStack"
+   showFrameItem "unlockDefaultStack"
+   revIDESetActiveStack
+   unlock screen
+end lockDefaultStack
+
+command unlockDefaultStack
+   --default stack is not locked
+   lock screen
+   revIDESetPreference "IDELockedToStack",false
+   revIDESetPreference "IDELinkedToStack",empty
+   hideFrameItem "unlockDefaultStack"
+   showFrameItem "lockDefaultStack"
+   revIDESetActiveStack
+   positionOpenStacksButton
+   unlock screen
+end unlockDefaultStack
+
+command showOutputSource
+   --opens the script at the line that has put something into the message box
+   local tLastMessageSource, tEditorStack, tObject, tLineNumber
+   
+   put the revmessageboxlastobject into tLastMessageSource
+   if tLastMessageSource is empty then exit showOutputSource
+   
+   set the itemdel to comma
+   if item 4 of tLastMessageSource is not empty
+   then put item 4 of tLastMessageSource into tObject
+   else put item 1 of tLastMessageSource into tObject
+   
+   edit script of tObject
+   put revScriptEditor(tObject) into tEditorStack
+   put (item 3 of tLastMessageSource) into tLineNumber
+   
+   send "revSEGoExecutionPoint tObject, tLineNumber, true" to stack tEditorStack in 0 millisecs
+end showOutputSource
+
+on removeSelected
+   if lSelectedCard is not "Global Variables" then exit removeSelected
+   
+   local tSelectedVar, tDoString
+   put line (the hilitedLine of field "type" of card "Global Variables" of me) of field "type" of card "Global Variables" of me into tSelectedVar
+   ##will need localising
+   answer warning "Are you sure you want to delete the global variable" && tSelectedVar & "?" with "Yes" or "No"
+   if it is "Yes" then
+      lock screen
+      put "global" && tSelectedVar & cr & "delete global" && quote & tSelectedVar & quote into tDoString
+      do tDoString
+      revIDEUpdateGlobalVariables
+      disableFrameItem "removeSelected"
+      unlock screen
+   end if
+end removeSelected
+   
+command removeAll
+   lock screen
+   switch lSelectedCard
+      case "Front Scripts"
+         --remove all front scripts from the front
+         local tFrontScripts, tFrontScript
+         put the cREVFrontScripts of me into tFrontScripts
+         if revIDERequireWarning(tFrontScripts) is true then
+            ##GH : will need localising
+            --answer warning revIDELocalisedString("Are you sure you want to remove all front scripts? & cr & cr & "Some of the front scripts belong to the IDE and removing them could cause the IDE to become unstable") with \
+               --revIDELocalisedString("Yes") or revIDELocalisedString("No")
+            --if it is "No" then exit removeAll
+            answer warning "Are you sure you wish to remove all front scripts?" & cr & cr & \
+                  "Some of the front scripts belong to the IDE and removing them could cause the IDE to become unstable." with "Yes" or "No"
+            if it is "No" then exit removeAll
+         end if
+         repeat for each line tFrontScript in tFrontScripts
+            remove script of tFrontScript from front
+         end repeat
+         revIDEUpdateFrontScripts
+         break
+         
+      case "Back Scripts"
+         --remove all back scripts from the back
+         local tBackScripts, tBackScript
+         put the cREVBackScripts of me into tBackScripts
+         if revIDERequireWarning(tBackScripts) is true then
+            ##will need localising
+            --answer warning revIDELocalisedString("Are you sure you wish to remove all back scripts?" & cr & cr & "Some of the back scripts belong to the IDE and removing them could cause the IDE to become unstable.") with \
+               --revIDELocalisedString("Yes") or revIDELocalisedString("No")
+            --if it is "No" then exit removeAll
+            answer warning "Are you sure you wish to remove all back scripts?" & cr & cr & \
+                  "Some of the back scripts belong to the IDE and removing them could cause the IDE to become unstable." with "Yes" or "No"
+            if it is "No" then exit removeAll
+         end if
+         repeat for each line tBackScript in tBackScripts
+            remove script of tBackScript from back
+         end repeat
+         revIDEUpdateBackScripts
+         break
+         
+      case "Stacks in Use"
+         --stop using all stacks in use
+         local tStacksInUse, tStack
+         put the stacksInUse into tStacksInUse
+         repeat for each line tStack in tStacksInUse
+            stop using stack tStack
+         end repeat
+         revIDEUpdateStacksInUse
+         break
+   end switch
+   unlock screen
+end removeAll
+
+command scriptAction pID, pName
+   switch the short name of the target
+      case "scriptLines"
+         edit the script of pID
+         break
+      case "behaviorScriptLines"
+         edit the script of the behavior of pID
+         break
+      case "remove selected"
+         switch lSelectedCard
+            case "Front Scripts"
+               if revIDERequireWarning(pID) is true then
+                  ##GH : will need localising
+                  --answer warning revIDELocalisedConstructedString("Are you sure you want to remove the selected front script [lineOfField]?" & return & "The selected script belongs to the IDE and removing it could make the IDE unstable.",pName) with revIDELocalisedString("Yes") and revIDELocalisedString("No")
+                  answer warning "Are you sure you want to remove the selected front script" && pName & "?" & cr & cr & \
+                        "The selected back script belongs to the IDE and removing it could cause the IDE to become unstable." with "Yes" or "No"
+                  if it is "No" then break
+               end if
+               remove script of pID from front
+               revIDEUpdateFrontScripts
+               break
+            case "Back Scripts"
+               if revIDERequireWarning(pID) is true then
+                  ##GH : will need localising
+                  --answer warning revIDELocalisedConstructedString("Are you sure you want to remove the selected backscript [lineOfField]?" & return & "The selected script belongs to the IDE and removing it could make the IDE unstable.",pName) with revIDELocalisedString("Yes") and revIDELocalisedString("No")
+                  answer warning "Are you sure you want to remove the selected back script" && pName & "?" & cr & cr & \
+                        "The selected back script belongs to the IDE and removing it could cause the IDE to become unstable." with "Yes" or "No"
+                  if it is "No" then break
+               end if
+               remove script of pID from back
+               revIDEUpdateBackScripts
+               break
+         end switch
+      default
+         break
+   end switch
+end scriptAction
+
+command addGlobalVariable
+   local tNewVariable
+   if lSelectedCard is not "Global Variables" then exit addGlobalVariable
+   
+   ##GH : will need localising
+   --ask revIDELocalisedString("Enter the name of the new variable:")
+   ask "Enter the name of the new variable:"
+   put it into tNewVariable
+   if the result is "cancel" then exit addGlobalVariable
+   
+   --the new variable must not be empty or contain more than one word
+   if tNewVariable is empty then exit addGlobalVariable
+   if the number of words in tNewVariable > 1 then 
+      beep
+      ##GH : will need localising
+      --answer revIDELocalisedString("The name of the variable must be a single word only")
+      answer "The name of the variable must be a single word only"
+      addGlobalVariable "Global Variables"
+   end if
+   
+   revIDEAddGlobal tNewVariable,"Global Variables"
+end addGlobalVariable
+
+command revIDEAddGlobal pNewGlobal, pCard
+   local tDoString
+   if pCard is not "Global Variables" then exit revIDEAddGlobal
+   
+   put "global" && pNewGlobal & return & "put empty into" && pNewGlobal into tDoString
+   do tDoString
+   lock messages
+   set the hilitedLine of field "type" to lineOffset(pNewGlobal, field "type")
+   unlock messages
+   revIDEUpdateGlobalVariables
+end revIDEAddGlobal
+
+command updateMessages
+   lock screen
+   revIDEPendingMessagesRefresh
+   unlock screen
+end updateMessages
+
+command cancelAllMessages
+   local tPendingMessages, tMessage
+   if lSelectedCard is not "Pending Messages" then exit cancelAllMessages
+   
+   put the cREVPendingMessages of me into tPendingMessages
+   repeat for each line tMessage in tPendingMessages
+      cancel item 1 of tMessage
+   end repeat
+   
+   lock screen
+   revIDEPendingMessagesRefresh
+   disableFrameItem "cancelAll"
+   unlock screen
+end cancelAllMessages
+
+command addLibraryStack
+   local tNewLibStack
+   modal stack "revAddLibraryStack"
+   
+   if the cREVResult of stack "revAddLibraryStack" is not "OK" then exit addLibraryStack
+   put the cREVStack of stack "revAddLibraryStack" into tNewLibStack
+   if tNewLibStack is among the lines of stacksInUse then
+      beep
+      ##GH : will need localising
+      --answer error revIDELocalisedConsructedString("Stack [stack] has already been placed into the message path",tNewLibStack)
+      answer error "Stack" && tNewLibStack && "has already been placed into the message path."
+      exit addLibraryStack
+   end if
+   
+   lock screen
+   lock messages
+   start using stack tNewLibStack
+   go card "Stacks in Use"
+   revIDEUpdateStacksInUse
+   unlock messages
+   unlock screen
+end addLibraryStack
+
+on preferenceChanged pPreference, pValue
+   lock screen
+   switch pPreference
+      case "ideMessageBox_autoupdate"
+         local tOldValue
+         put revIDEGetPreference(pPreference) into tOldValue
+         revIDESetPreference pPreference, not(tOldValue)
+         revIDEPendingMessagesRefresh
+         break
+      case "ideMessageBox_intelligenceobject"
+         revIDESetPreference pPreference, pValue
+         revIDEUpdateIntelligenceObject
+         break
+   end switch
+   unlock screen
+end preferenceChanged 
+
+on idePreferenceChanged pPreference, pValue
+   lock screen
+   switch pPreference
+      case "cShowRevolutionStacks"
+         switch lSelectedCard
+            case "Global Variables"
+               revIDEUpdateGlobalVariables
+               break
+            case "Pending Messages"
+               revIDEPendingMessagesRefresh
+               break
+            case "Front Scripts"
+               revIDEUpdateFrontScripts
+               break
+            case "Back Scripts"
+               revIDEUpdateBackScripts
+               break
+         end switch
+         break
+      case "revPaletteFrameSize"
+         send "resizeStack" to card lSelectedCard of me
+         positionOpenStacksButton
+         break
+   end switch
+   unlock screen
+end idePreferenceChanged
+
+command positionOpenStacksButton
+   lock screen
+   
+   local tSize, tTextSize, tMargin, tLeft, tWidth, tBottom, tHeight, tXLoc, tYLoc, tPadding, tIcon
+   
+   put revIDEGetPreference("revPaletteFrameSize") into tSize
+   switch tSize
+      case "large"
+         put 12 into tTextSize
+         put 18 into tPadding
+         put 172081 into tIcon
+         break
+      case "medium"
+         put 11 into tTextSize
+         put 16 into tPadding
+         put 172080 into tIcon
+         break
+      case "small"
+         put 10 into tTextSize
+         put 14 into tPadding
+         put 172079 into tIcon
+         break
+   end switch
+   
+   lock messages
+   set the textsize of button "Open Stacks" of group "Stacks" of me to tTextSize
+   set the icon of button "Open Stacks" of group "Stacks" of me to tIcon
+   set the height of button "Open Stacks" to barHeight(tSize)
+   set the width of button "Open Stacks" of group "Stacks" of me to (the formattedWidth of button "Open Stacks" of group "Stacks" of me) + tPadding
+   put the formattedWidth of button "Open Stacks" of group "Stacks" of me into tWidth
+   set the left of button "Open Stacks" to barRight(tSize) + 5
+   set the bottom of button "Open Stacks" to barHeight(tSize)
+   set the height of graphic "pipe" to barHeight(tSize)
+   set the left of graphic "pipe" to barRight(tSize) + 5
+   set the bottom of graphic "pipe" to barHeight(tSize)
+   unlock messages
+   
+   unlock screen
+end positionOpenStacksButton
+
+on msgChanged
+   lock messages
+   lock screen
+   
+   local tField
+   if lSelectedCard is "Multiple Lines" then
+      put the long id of field "results" of card "Multiple Lines" of me into tField
+   else
+      go this stack
+      put the long id of field "results" of card "Single Line" of me into tField
+   end if
+   set the text of tField to msg
+   
+   -- PM-2015-06-26: [[ Bug 15478 ]] Make msg box to auto scroll
+   put the number of lines of the text of tField into tLines
+   put the effective textHeight of tField into tHeight
+   set the vScroll of tField to tLines * tHeight 
+   
+   unlock screen
+   unlock messages
+end msgChanged
+
+function revIDEAutoComplete pSearchTerm
+   local tMessageHistory, tNumChars, tLine, tMatchesList
+   put revIDEGetPreference("IDESingleLineMessageHistory") into tMessageHistory
+   put number of chars of pSearchTerm into tNumChars
+   put empty into tMatchesList
+   if tMessageHistory is not empty then
+      repeat for each line tLine in tMessageHistory
+         if char 1 to tNumChars of tLine is pSearchTerm then put tLine & return after tMatchesList
+      end repeat
+   end if
+   return tMatchesList
+end revIDEAutoComplete
+
+command revIDEAcceptAutoComplete
+   if lSelectedCard is not "Single Line" then exit revIDEAcceptAutoComplete
+   if field "auto complete" is empty then exit revIDEAcceptAutoComplete
+   
+   lock screen
+   lock messages
+   put field "auto complete" into field "message" of card "Single Line" of me
+   put empty into field "auto complete" of card "Single Line" of me
+   select after field "message" of card "Single Line" of me
+   unlock messages
+   unlock screen
+end revIDEAcceptAutoComplete
+
+command revIDEConsoleHistoryAdd pScript
+   local tMessageHistory, tLine, tCount, tInHistory
+   if pScript is empty then exit revIDEConsoleHistoryAdd
+   
+   put revIDEGetPreference(lCardHistoryPref) into tMessageHistory
+   
+   --check if pScript is already in the message history and remove it if it is
+   put 0 into tCount
+   repeat for each line tLine in tMessageHistory
+      add 1 to tCount
+      if tLine is pScript then 
+         put true into tInHistory
+         exit repeat
+      end if
+   end repeat
+   if tInHistory is true then delete line tCount of tMessageHistory
+   
+   --add pScript to the top of the message history
+   put pScript & return before tMessageHistory
+   if the number of lines in tMessageHistory > kHistoryMax then delete line (kHistoryMax+1) to -1 of tMessageHistory
+   revIDESetPreference lCardHistoryPref,tMessageHistory
+end revIDEConsoleHistoryAdd
+
+command revIDEExecuteScript pScript
+   set the defaultStack to revIDEGetPreference("IDEActiveStack")
+   
+   lock messages
+   if exists(card lSelectedCard of me) then 
+      put empty into field "results" of card lSelectedCard of me
+   end if
+   unlock messages
+   
+   if lSelectedCard is "Single Line" then put empty into field "auto complete" of card lSelectedCard of me
+   if pScript is empty then exit revIDEExecuteScript
+   
+   local tIntelligenceObject
+   put the cREVIntelligenceObject of me into tIntelligenceObject
+   
+   -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
+   local tScript, tScriptLine, tScriptError
+   
+   put false into tScriptError
+   try
+      put the script of tIntelligenceObject into tScript
+   catch tError
+      put true into tScriptError
+   end try
+   
+   if tScriptError is true then
+      put false into tScriptError
+      put the long id of the defaultStack into tIntelligenceObject
+      try 
+         put the script of the defaultStack into tScript
+      catch tError
+         put true into tScriptError
+      end try
+   end if
+   
+   local tDoScript
+   
+   if tScriptError is false then
+      repeat for each line tScriptLine in tScript
+         if word 1 of tScriptLine is among the items of "on,command" and word 2 of tScriptLine is word 1 of pScript then 
+            put "send" && pScript && "to" && tIntelligenceObject into tDoScript
+            exit repeat
+         else if word 1 of tScriptLine is "function" and word 1 of pScript is "put" and token 1 of word 2 of pScript is word 2 of tScriptLine then
+            # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
+            local tParams
+            if matchText(word 2 to -1 of pScript, word 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
+               exit repeat
+            end if
+            put pScript into tDoScript
+            dispatch function (word 2 of tScript) to tIntelligenceObject with tParams
+            replace word 2 of tScriptLine & "(" & tParams & ")" with the result in tDoScript 
+            exit repeat
+         end if
+      end repeat
+   end if
+   
+   if tDoScript is not empty then
+      revIDEDoMessage tDoScript
+      if the result is not empty then
+         put revIDEFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
+      end if
+      return empty
+   end if
+   
+   --deals with the put command, if the put command cannot be executed as is then:
+   --the message box will attempt to auto complete the typing of a name of an object property and the contents of that property into the results area
+   --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
+   lock screen
+   local tValidScript
+   put empty into tValidScript
+   
+   # Try executing as a function or property
+   local tTryProperty
+   
+   # Build the string so that it starts with "put the"
+   if not (pScript begins with "the ") then
+      put "the" && pScript into tTryProperty 
+   else
+      put pScript into tTryProperty
+   end if
+   if not (tTryProperty begins with "put ") then
+      put "put " before tTryProperty 
+   end if
+   
+   set the wholeMatches to true
+   local tIsProperty
+   put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
+   
+   # Try as an object property of the intelligence object
+   if tIsProperty then
+      revIDEDoMessage tTryProperty && "of" && tIntelligenceObject
+      if the result is empty then 
+         local tName
+         put the name of tIntelligenceObject into tName
+         put tTryProperty && "of" && tName into tValidScript
+      end if
+   end if
+   
+   # If it wasn't valid as an object property then
+   # try as a function or global property
+   if tValidScript is empty then
+      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
+         revIDEDoMessage tTryProperty
+         if the result is empty then
+            put tTryProperty into tValidScript
+         end if
+      end if
+   end if
+   
+   if tValidScript is empty then
+      revIDEDoMessage pScript
+      if the result is empty then 
+         put pScript into tValidScript
+      end if
+   end if
+   
+   if tValidScript is empty then
+      put the result into field "results" of card lSelectedCard of me
+   end if
+   unlock screen
+   
+   return tValidScript
+end revIDEExecuteScript
+
+on revIDECompileCheck pScript
+   local tCompileTest, tCompileResult, tCompileErrors
+   --checks to see if the message compiles
+   lock messages
+   put "on mouseUp" & cr & pScript & cr & "end mouseUp" into tCompileTest
+   set the script of button "Compile Test" of card "Single Line" of me to tCompileTest
+   put the result into tCompileResult
+   set the script of button "Compile Test" of card "Single Line" of me to empty
+   put true into tCompileErrors
+   unlock messages
+   repeat for each line l in tCompileResult
+      if item 2 of l is not 0 then put false into tCompileErrors
+   end repeat
+   
+   --if there is a compile error then this will be shown in the results field
+   if not tCompileErrors then
+      ##GH : will need localising
+      --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]", revIDELookupError("compilation", item 1 of tCompileResult)) into field "results" of card "Single Line" of me
+      return "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", item 1 of tCompileResult)
+   end if
+   return empty
+end revIDECompileCheck
+
+command revIDEDoMessage pScript
+   revIDECompileCheck pScript
+   if the result is not empty then
+      return the result
+   end if
+   
+   global gREVHandlerNames
+   do "global" && revDebuggerValidGlobalNames()
+   
+   local tDebugDo
+   put revIDEGetPreference("IDEDebugMode") into tDebugDo
+   
+   lock screen
+   local tScriptError
+   try
+      if tDebugDo then
+         # OK-2010-01-02: Remove the message box itself from the debug context. 
+         # Line 1 will be revDebugDoMessage
+         # Line 2 is revExecuteMessage (message box field)
+         # Line 3 is returnInField (message box field)
+         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
+         # Note that this code is called from both the single and multi-line fields, but luckily they both 
+         # have the same number of calls.
+         local tContext, tContextNumber
+         get revDebuggerContexts()
+         put line 4 of it into tContext
+         
+         local tResult
+         revDebuggerDo pScript, tContext
+         get the result
+         put line 1 of it into tResult
+         put line 2 to -1 of it into tScriptError
+      else
+         do pScript
+      end if
+   catch tScriptError
+      put revIDEFormatErrorForDisplay(tScriptError) into tScriptError
+   end try
+   unlock screen
+   
+   return tScriptError
+end revIDEDoMessage
+   
+function revIDEFormatErrorForDisplay pErrorTrace
+   --if there is an error, then this will be formatted and then displayed in the results field
+   ##GH : will need localising
+   local tError, tErrorDisplay, tLineNum
+   put line 1 of pErrorTrace into tError
+   if item 1 of tError is a number and item 1 of tError >= 0 then
+      if item 1 of tError is kExternalErrorCode then
+         --put revIDELocalisedConstructedString("External execution error:" & cr & "Error description: [error]",item 4 to -1 of line 1 of tError) into tErrorDisplay
+         put "External execution error:" & cr & "Error description:" && item 4 to -1 of line 1 of tError into tErrorDisplay
+      else if item 2 of tError is 0 then
+         put item 1 of line 1 of tError into tLineNum
+         --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]",revIDELookupError("compilation",tLineNum)) into tErrorDisplay
+         put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", tLineNum) into tErrorDisplay
+      else 
+         --put revIDELocalisedConstructedString("Message execution error:" & cr & "Error description: [error]" & cr & "Hint: [hint]",revIDELookupError("execution", (item 1 of line 1 of tError)),item 4 to -1 of line 1 of tError) into tErrorDisplay
+         put "Message execution error:" & cr & "Error description:" && revIDELookupError("execution", (item 1 of line 1 of tError))  & cr & \
+               "Hint:" && item 4 to -1 of line 1 of tError into tErrorDisplay
+      end if
+   else
+      put tError into tErrorDisplay
+   end if 
+   return tErrorDisplay
+end revIDEFormatErrorForDisplay
+
+command revIDEUpdateIntelligenceObject
+   set the cREVIntelligenceObject of this stack to revIDEGetPreference("ideMessageBox_intelligenceobject")
+end revIDEUpdateIntelligenceObject
+
+#   Updates the message box mode to reflect whether or not we are debugging something.
+command revMessageBoxUpdateMode
+   if the traceStack is not empty 
+   then revIDESetPreference "IDEDebugMode", true
+   else revIDESetPreference "IDEDebugMode", false
+end revMessageBoxUpdateMode
+
+on ideActiveStacksChanged
+   local tCard
+   put the short name of this card of me into tCard
+   if tCard is "Single Line" or tCard is "Multiple Lines" then
+      revIDESetActiveStack
+   end if
+end ideActiveStacksChanged
+
+command revIDESetActiveStack
+   local tMode, tTraceStack, tLock, tLink, tTopStack
+   
+   lock screen
+   put revIDEGetPreference("IDEDebugMode") into tMode
+   if tMode is true then
+      put the short name of the traceStack into tTraceStack
+      revIDESetPreference "IDEActiveStack",tTraceStack
+      disableFrameItem "lockDefaultStack"
+      disableFrameItem "unlockDefaultStack"
+      lock messages
+      set the label of button "Open Stacks" of group "Stacks" of me to tTraceStack
+      disable button "Open Stacks" of group "Stacks" of me 
+      unlock messages
+   else
+      put revIDEGetPreference("IDELockedToStack") into tLock
+      put revIDEGetPreference("IDELinkedToStack") into tLink
+      enableFrameItem "lockDefaultStack"
+      enableFrameItem "unlockDefaultStack"
+      
+      if tLock is true and there is a stack tLink then 
+         revIDESetPreference "IDEActiveStack",tLink
+         lock messages
+         set the label of button "Open Stacks" of group "Stacks" of me to tLink
+         enable button "Open Stacks" of group "Stacks" of me
+         unlock messages
+      else
+         put the short name of the topStack into tTopStack
+         revIDESetPreference "IDEActiveStack",tTopStack
+         preferenceChanged "ideMessageBox_lockdefaultstack", true
+         lock messages
+         set the label of button "Open Stacks" of group "Stacks" of me to tTopStack
+         unlock messages
+         enable button "Open Stacks" of group "Stacks" of me
+      end if
+   end if
+   unlock screen
+end revIDESetActiveStack
+
+command revUpdateActiveStack pOldName, pNewName
+   if revIDEGetPreference("IDELockedToStack") is false then
+      send "revSetActiveStacks" to stack "revfrontscriptlibrary"
+      exit revUpdateActiveStack
+   end if
+   
+   if revIDEGetPreference("IDELinkedToStack") is pOldName then
+      lock screen
+      local tDefaultStack
+      lock messages
+      put the defaultStack into tDefaultStack
+      set the defaultStack to "message"
+      unlock messages
+      revIDESetPreference "IDELinkedToStack",pNewName
+      revIDESetPreference "IDEActiveStack",pNewName
+      lock messages
+      set the label of button "Open Stacks" of group "Stacks" to pNewName
+      set the defaultStack to tDefaultStack
+      unlock messages
+      unlock screen
+   end if
+end revUpdateActiveStack
+
+command revIDEUpdateGlobalVariables
+   local tVariableNames, tShow, tFilteredVariables
+   
+   put revIDEGlobalVariables() into tVariableNames
+   replace comma with return in tVariableNames
+   sort tVariableNames
+   put revIDEGetPreference("cShowRevolutionStacks") into tShow
+   
+   if tShow is false then
+      repeat for each line tLine in tVariableNames
+         if char 1 to 4 of tLine is "gREV" then next repeat
+         else put tLine & return after tFilteredVariables
+      end repeat
+      delete last char of tFilteredVariables
+   else put tVariableNames into tFilteredVariables
+   
+   lock screen
+   put tFilteredVariables into field "type" of card "Global Variables" of me
+   put empty into field "contents" of card "Global Variables" of me
+   set the cREVFullText of field "type" of card "Global Variables" of me to tFilteredVariables
+   unlock screen
+end revIDEUpdateGlobalVariables
+
+command revIDEPendingMessagesRefresh
+   lock screen
+   send "getDataArray" to card "Pending Messages" of me
+   send "renderView" to group "objectList" of card "Pending Messages" of me
+   send "revAutoRefresh" to card "Pending Messages" of me
+   unlock screen
+end revIDEPendingMessagesRefresh
+
+command revIDEUpdateFrontScripts
+   lock screen
+   send "getDataArray" to card "Front Scripts" of me
+   send "renderView" to group "objectList" of card "Front Scripts" of me
+   unlock screen
+end revIDEUpdateFrontScripts
+
+command revIDEUpdateBackScripts
+   lock screen
+   send "getDataArray" to card "Back Scripts" of me
+   send "renderView" to group "objectList" of card "Back Scripts" of me
+   unlock screen
+end revIDEUpdateBackScripts
+
+command revIDEUpdateStacksInUse
+   lock screen
+   send "getDataArray" to card "Stacks In Use" of me
+   send "renderView" to group "objectList" of card "Stacks In Use" of me
+   unlock screen
+end revIDEUpdateStacksInUse
+
+function revIDERequireWarning pObjects
+   --returns true if the object is part of the IDE and false otherwise
+   local tObject
+   repeat for each line tObject in pObjects
+      if char 1 to 3 of the short name of tObject is "rev" then
+         return true
+      end if
+   end repeat
+   return false
+end revIDERequireWarning
+
+on rawKeyDown pKey
+   if word 1 of the target is not "field" then pass rawKeyDown
+   if pKey is 65308 then scrollUp 
+   else if pKey is 65309 then scrollDown
+   else if pKey is 65310 then scrollLeft
+   else if pKey is 65311 then scrollRight
+   else 
+      pass rawKeyDown
+   end if
+end rawKeyDown

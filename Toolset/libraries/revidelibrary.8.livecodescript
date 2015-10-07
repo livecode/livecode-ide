@@ -2856,7 +2856,6 @@ on revIDEEditScriptOfObject pObject
    local tExistingEditor
    put revScriptEditor(tObject) into tExistingEditor
    if tExistingEditor is not empty then
-      revGoScriptEditor the long id of stack tExistingEditor
       send "revSESetCurrentObject tObject" to stack tExistingEditor
       exit revIDEEditScriptOfObject
    end if
@@ -3613,14 +3612,14 @@ on revIDEEnsureOnscreen pStackName
    put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
    put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
    
-   if the left of stack pStackName < 0 then
-      set the left of stack pStackName to 0
+   if the left of stack pStackName < item 1 of tScreenRect then
+      set the left of stack pStackName to item 1 of tScreenRect
    else if the right of stack pStackName > item 3 of tScreenRect and the width of stack pStackName < tScreenWidth then
       set the right of stack pStackName to item 3 of tScreenRect
    end if
    
-   if the top of stack pStackName < 0 then
-      set the top of stack pStackName to 0
+   if the effective top of stack pStackName < item 2 of tScreenRect then
+      set the top of stack pStackName to (item 2 of tScreenRect + abs(the top of stack pStackName - the effective top of stack pStackName))
    else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
       set the bottom of stack pStackName to item 4 of tScreenRect
    end if
@@ -3651,6 +3650,10 @@ on revIDEPositionPalette pStackName
             set the rect of stack pStackName to tRect
             break
          default 
+            if pStackName begins with revIDEScriptEditorPrefix() then
+               set the rect of stack pStackName to tRect
+               break
+            end if
             # If we don't restore the position for this palette then position the stack in the default location
             revIDEPositionPaletteDefault pStackName
             break
@@ -4767,7 +4770,11 @@ function revIDEStandaloneSectionNameToIconName pName
 end revIDEStandaloneSectionNameToIconName
 
 on revIDEOpenStack pFilePath
-   local tError
+   local tError, tStackName
+   
+   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
+   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
+   
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -5113,30 +5120,15 @@ on revIDENewSubstackOfStack pStack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
 
-/*
-Opens a stack from file.
-
-Associations: stack
-
-pFilePath (String): The path to a stack on disk
-
-Example:
-revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
-
-Tags: ide
-*/
-on revIDEOpenStack pFilePath
-   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
-   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-
-   go stack pFilePath
-end revIDEOpenStack
-
 function revIDEIsLiveCodeStack pFilePath
+   local tExtension
+   
    set the itemdel to "."
-
+   put the last item of pFilePath into tExtension
+   set the itemDel to comma
+   
    # Check the file extension
-   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then
+   if tExtension is among the items of revIDELiveCodeFileExtensions() then
       return true
    else
       return false
@@ -5196,13 +5188,41 @@ on revIDECloseStack pStackID, pDestroy
    if not exists(pStackID) then return revIDELocalise("Cannot close stack, it doesn't exist")
 
    if revSaveCheck(pStackID) is not false then
-      if pStackID is true then
-         delete stack pStackID
+      if pDestroy is true then
+         revIDERemoveFromMemory pStackID
       else
          close stack pStackID
       end if
    end if
 end revIDECloseStack
+
+on revIDERemoveFromMemory pStackID
+   local tMainstack
+   put the mainStack of stack pStackID into tMainstack
+   
+   local tSubstacks
+   put the subStacks of stack pStackID into tSubstacks
+   
+   local tStacks
+   put tMainStack & cr & tSubstacks into tStacks
+   answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
+   if it is "Cancel" then 
+      exit revIDERemoveFromMemory
+   end if
+   
+   put the long id of stack tMainStack into tStackID
+   
+   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
+   revIDEHandleObjectDeleted the long id of stack tMainStack
+   
+   lock messages -- prevent user stack saving during the close, erasing substacks
+   repeat for each line tSubStack in tSubstacks
+      close stack tSubStack
+   end repeat
+   delete stack tMainStack
+   unlock messages
+   
+end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
    # Can't close revMenuBar
@@ -6285,7 +6305,7 @@ on revIDEActionDuplicate
          if tCreatedObjects is empty then
             put the long id of it into tCreatedObjects
          else
-            put the long id of it & return after tCreatedObjects
+            put return & the long id of it after tCreatedObjects
          end if
          
          if the right of last control > the right of this cd or the bottom of last control > the bottom of this cd then
@@ -6725,10 +6745,10 @@ on revIDEToggle pProperty
          break
       case "Backdrop"
          if the backDrop is "none" then
-            if revIDGetPreference("cBackDropColor") is empty then 
+            if revIDEGetPreference("cBackDropColor") is empty then 
                revIDESetPreference "cBackDropColor", "black"
             end if
-            set the backDrop to revIDGetPreference("cBackDropColor")
+            set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else
             set the backDrop to "none"
@@ -6956,6 +6976,7 @@ on revIDEActionEditGroup
 end revIDEActionEditGroup
 
 on revIDEEditGroup pGroup
+   set the defaultStack to the topStack
    if word 1 of pGroup is "group" then
       if revMenuManagerGroup(pGroup) then
          answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
