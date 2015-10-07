@@ -544,6 +544,7 @@ command sePrefGetDefaults
    # Variable watcher preferences
    put seGetIcon("variablesBackground") into tPrefs["variables,background"]
    put "false" into tPrefs["variables,showglobals"]
+   put "false" into tPrefs["variables,showenvvars"]
    
    # Documentation pane preferences
    put empty into tPrefs["documentation,lastLoadedDoc"]
