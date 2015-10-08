@@ -27,7 +27,8 @@ hiliteIcon
 disabledIcon	
 visitedIcon	
 armedIcon		
-hoverIcon		
+hoverIcon	
+iconGravity	
 threeD	true	
 showBorder	true	
 hiliteBorder	true	
