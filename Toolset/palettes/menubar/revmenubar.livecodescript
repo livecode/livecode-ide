@@ -459,10 +459,21 @@ on generateMenuGroup
    if the platform is not "macos" then
       show group "revMenuBar" of me
    end if
+   set the menubar of me to "revMenuBar"
    
-   create graphic "Divider" in group "revMenuBar"
-   set the style of it to "line"
+   reset the templatebutton
+   set the style of the templatebutton to "rectangle"
+   set the height of the templatebutton to 2
+   set the threed of the templatebutton to true
+   set the showborder of the templatebutton to true
+   set the borderwidth of the templatebutton to 2
+   set the showname of the templatebutton to false
    
+   if the platform is "Linux" then 
+      create button "Divider" in group "revMenuBar"
+   else
+      create invisible button "Divider" in group "revMenuBar"
+   end if
    reset the templatebutton
    unlock messages
 end generateMenuGroup
@@ -544,7 +555,7 @@ on layoutMenu
    set the height of group "revMenuBar" of me to 26
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
-   set the points of graphic "Divider" of group "revMenuBar" of me to "0,24" & return & tLeft + 10 & ",24" & return
+   set the rect of button "Divider" of group "revMenuBar" of me to "0,24," & tLeft + 10 & ",26"
    set the topleft of me to tTopLeft
    unlock messages
    
@@ -1059,9 +1070,16 @@ private function revMenubarFileMenu pContext
    else
       put "(&New Substack" & return after tFile
    end if
+   
    put "&Open Stack.../O" & return after tFile
-   put "Open Recent File" & return after tFile
-   put revMenuBarRecentFiles() & return after tFile
+   
+   if revMenuBarRecentFiles() is not empty then
+      put "Open Recent File" & return after tFile     
+      put revMenuBarRecentFiles() & return after tFile
+   else
+      put "(Open Recent File" & return after tFile    
+   end if
+   
    put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
@@ -1101,7 +1119,7 @@ private function revMenubarFileMenu pContext
    put "P&age Setup..." & return after tFile
    put enableMenuItem("&Print Card.../P", tIsUserTarget) & return after tFile
    put enableMenuItem("Print Field...", word 1 of (the selObj) is "field") & return after tFile
-
+   
    put "-" & return after tFile
    
    ## EJB 2014-08-26
@@ -1111,7 +1129,7 @@ private function revMenubarFileMenu pContext
    else
       put "E&xit" & return after tFile
    end if
-
+   
    return modifyMenu("File", tFile)
 end revMenubarFileMenu
 
@@ -1821,7 +1839,6 @@ function revMenubarContextMenu pType, pTarget
          break
       case "image"
          put "-" & return after tText
-         put toggleMenuItem("Paint Tools", "Show" is not in the toolTip of btn "paint and draw" of stack "revTools") & return after tText
          put "Launch Editor" & return after tText
          put toggleMenuItem("Magnify", the magnify of pTarget) & return after tText
          put "-" & return after tText
@@ -2526,7 +2543,7 @@ on revMenubarObjectMenuPick pWhich
          revIDEActionBringToFront
          break
       case "Group Selected"
-         revIDEActionGroup
+         revIDEActionGroupObjects
          break
       case "Edit Group"
          revIDEActionEditGroup

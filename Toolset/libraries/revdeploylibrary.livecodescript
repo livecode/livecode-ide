@@ -264,6 +264,11 @@ command revIDEDeployIOSUpdateSDKs
    dispatch "deployUpdateSDKs" to stack "revDeployLibraryiOS"
 end revIDEDeployIOSUpdateSDKs
 
+function revIDEDeployIOSUsableSDKs
+   dispatch function "deployUsableIosSdk" to stack "revDeployLibraryiOS"
+   return the result
+end revIDEDeployIOSUsableSDKs
+
 function revIDEDeployIOSGetDeviceSDK pVersion
    dispatch function "deployGetDeviceSDK" to stack "revDeployLibraryiOS" with pVersion
    return the result
@@ -295,6 +300,11 @@ end revIDEDeployIOSGetLatestSDKInstalled
 //  Preferences require access to various specific aspects of deployment config, so these
 //  calls provide this in a sane manner.
 //
+
+function revIDEDeployAndroidRequiredSDK
+   dispatch function "deployRequiredSDK" to stack "revDeployLibraryAndroid"
+   return the result
+end revIDEDeployAndroidRequiredSDK
 
 function revIDEDeployAndroidIsValidSDK pPath
    dispatch function "deployIsValidSDK" to stack "revDeployLibraryAndroid" with pPath

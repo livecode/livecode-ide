@@ -1,0 +1,1 @@
+# Script editor doesn't remember where it was placed
