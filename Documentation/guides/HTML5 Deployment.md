@@ -28,7 +28,6 @@ The HTML5 engine in this release of LiveCode has a limited range of features.  Y
 
 Several important features are not yet supported:
 
-* commercial deployment
 * some `ask` and `answer` message boxes
 * `wait` syntax
 * networking
@@ -47,7 +46,7 @@ Deploying an app to an HTML5 standalone is straightforward:
 
 3) Browse to the **HTML5** tab of the standalone settings window
 
-4) Make sure that the **Deploy to HTML5** checkbox is enabled
+4) Make sure that the **Build for HTML5** checkbox is enabled
 
 5) Close the standalone settings window
 
