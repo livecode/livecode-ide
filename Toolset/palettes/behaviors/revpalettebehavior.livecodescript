@@ -153,26 +153,15 @@ private on appendMenuItem pNavItem, @xMenuArray
    
    put pNavItem["label"] into tMenuItemA["label"]
    put pNavItem["name"] into tMenuItemA["name"]
+   
    switch pNavItem["value_type"]
       case "enum"
-         if tPreferenceValue is empty then put item 1 of pNavItem["value"] into tPreferenceValue
-         local tItemCount
-         repeat for each item tItem in pNavItem["value"]
-            add 1 to tItemCount
-            put tItem into tMenuItemA["menu"][tItemCount]["label"]
-            if tItem is tPreferenceValue then
-               put true into tMenuItemA["menu"][tItemCount]["checked"]
-            else
-               put false into tMenuItemA["menu"][tItemCount]["checked"]
-            end if
-         end repeat
-         break
       case "set"
+         local tValue, tLabel, tItemCount
          repeat for each item tItem in pNavItem["value"]
             add 1 to tItemCount
             # Parse out the value and label from the item
             set the itemdel to ":"
-            local tValue, tLabel
             if the number of items of tItem > 1 then
                put item 1 of tItem into tValue
                put item 2 of tItem into tLabel
@@ -180,13 +169,24 @@ private on appendMenuItem pNavItem, @xMenuArray
                put tItem into tLabel
                put tItem into tValue
             end if
+            set the itemdel to comma
+            
+            # Enums can't be empty so use the first value by default
+            if tPreferenceValue is empty and pNavItem["value_type"] is "enum" then 
+               put tValue into tPreferenceValue
+            end if
             
             put tLabel into tMenuItemA["menu"][tItemCount]["label"]
             put tValue into tMenuItemA["menu"][tItemCount]["name"]
             
-            # Check whether the set item is in the preference value
-            set the itemdel to comma
-            if tValue is among the items of tPreferenceValue then
+            local tChecked
+            if pNavItem["value_type"] is "enum" then
+               put tValue is tPreferenceValue into tChecked
+            else
+        	   put tValue is among the items of tPreferenceValue into tChecked
+            end if
+
+            if tChecked then
                put true into tMenuItemA["menu"][tItemCount]["checked"]
             else
                put false into tMenuItemA["menu"][tItemCount]["checked"]
