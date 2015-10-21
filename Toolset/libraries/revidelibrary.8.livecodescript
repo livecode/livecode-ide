@@ -2785,14 +2785,15 @@ function revIDEGetInspectedObjects
 end revIDEGetInspectedObjects
 */
 local sInspectingObjects
+
 command revIDEInspectObjects pObjects
    lock screen
    put pObjects into sInspectingObjects
    revIDESelectObjects pObjects
-   send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
-   if the mode of stack revIDEPaletteToStackName("inspector") is 0 or the visible of stack revIDEPaletteToStackName("inspector") is false then
-      revIDEOpenPalette "inspector"
-   end if
+   
+   revIDEOpenPalette "inspector"
+
+   revIDEMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
 
@@ -3744,7 +3745,10 @@ private function revIDEPaletteBarHeight pStackID
 end revIDEPaletteBarHeight
 
 /*
-Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
+Opens an IDE stack as a palette. In the future this should be changed so that
+palettes can decide what mode they ought to be opened in, i.e. this logic should
+be removed from the IDE library and be specific to the stack rather than the 
+palette name.
 
 pPaletteName (String):The readable name of the palette to be opened
 example: revIDEOpenPalette "inspector"
@@ -3771,7 +3775,6 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
-      case "inspector"
       case "message box"
       case "standalone settings"
       case "message watcher"
@@ -3793,6 +3796,11 @@ command revIDEOpenPalette pPaletteName
       case "dictionary"
          toplevel stack tStackName
          break
+      case "inspector"
+         # The inspector stack is now a manager for property inspectors, 
+         # and does not need to be visible.
+         go invisible stack tStackName
+         return empty
       default
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
