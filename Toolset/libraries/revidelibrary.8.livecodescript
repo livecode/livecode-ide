@@ -1776,19 +1776,19 @@ function revIDEMainStacks
 end revIDEMainStacks
 
 function revIDEStacksForDataView pIndex
-   --pExpandedStructure
    # Are IDE stacks required
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-
+   
    # Get list of stacks to display
-   local tMainStacks
+   local tMainStacks, tAllMainStacks
    if tShowIDEStacks then
       put the mainstacks into tMainStacks
    else
-      repeat for each line tMainStack in the mainstacks
-         --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+      put the mainstacks into tAllMainStacks
+      filter tAllMainStacks without "rev*"
+      repeat for each line tMainStack in tAllMainStacks
+         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -1796,7 +1796,7 @@ function revIDEStacksForDataView pIndex
          end if
       end repeat
    end if
-
+   
    # Recurse through the stacks to get their data
    local tStacksData, tCount
    repeat for each line tStack in tMainStacks
@@ -5222,6 +5222,8 @@ on revIDERemoveFromMemory pStackID
    delete stack tMainStack
    unlock messages
    
+   # Send the 'ideDestroyStack' message
+   revIDEMessageSend "ideDestroyStack", tStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
