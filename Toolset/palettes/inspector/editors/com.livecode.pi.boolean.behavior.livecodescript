@@ -1,7 +1,8 @@
 ﻿script "com.livecode.pi.boolean.behavior"
 on editorInitialize
    set the editorMinWidth of me to 20
-   set the editorMaxWidth of me to 20
+   set the label of button "checkbox" of me to the rowLabel of me
+   set the rowShowLabel of me to false
 end editorInitialize
 
 on editorUpdate
@@ -25,7 +26,7 @@ on editorResize
    lock screen
    lock messages
    set the width of button "checkbox" of me to the width of me
-   set the width of button "checkbox" of me to 20
+   set the width of button "checkbox" of me to the formattedwidth of button "checkbox" of me
    set the top of button "checkbox" of me to the top of me
    set the left of button "checkbox" of me to the left of me
    unlock messages

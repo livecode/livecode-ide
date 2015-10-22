@@ -105,6 +105,14 @@ getProp rowLabel
    return field "rowlabel" of me
 end rowLabel
 
+setProp rowShowLabel pValue
+   if pValue then
+      set the width of field "rowlabel" of me to the rowLabelWidth of me
+   else
+      put empty into field "rowlabel" of me
+   end if
+end rowShowLabel
+
 getprop rowLabelWidth
    if field "rowlabel" of me is not empty then
       return the formattedwidth of field "rowlabel" of me
