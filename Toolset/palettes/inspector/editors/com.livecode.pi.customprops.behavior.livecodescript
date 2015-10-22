@@ -68,8 +68,10 @@ end editorUpdate
 
 constant kControlGap = 5
 constant kKeyFieldHeight = 21
+constant kLabelFieldHeight = 21
 constant kValueFieldHeight = 63
 constant kLabelSize = 50
+constant kSetButtonsHeight = 30
 
 on editorResize
    lock screen
@@ -78,18 +80,22 @@ on editorResize
    put the rect of me into tRect
    
    set the width of field "rowlabel" of me to the width of me
-   set the height of field "rowlabel" of me to kKeyFieldHeight
+   set the height of field "rowlabel" of me to kLabelFieldHeight
    set the left of field "rowlabel" of me to the left of me
    
    set the width of group "Set buttons" of me to the width of me
-   set the height of group "Set buttons" of me to 30
-   set the top of group "Set buttons" of me to the top of me + kControlGap + kKeyFieldHeight
+   set the height of group "Set buttons" of me to kSetButtonsHeight
+   set the top of group "Set buttons" of me to the top of me + kControlGap + kLabelFieldHeight
    set the left of group "Set buttons" of me to the left of me
    set the lockLoc of group "Set buttons" of me to true
    send "groupResize kLabelSize, kControlGap" to group "Set buttons" of me
    
-   put item 4 of tRect - (4 * kControlGap + 2 * kKeyFieldHeight + kValueFieldHeight + 30) into item 4 of tRect 
-   set the rect of widget 1 of me to tRect
+   # Use all space not taken by other elements for main array display
+   local tWidgetHeight
+   put the height of me - (4 * kControlGap + kLabelFieldHeight + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight) into tWidgetHeight
+   set the height of widget 1 of me to tWidgetHeight
+   set the width of widget 1 of me to the width of me
+   set the left of widget 1 of me to the left of me
    set the top of widget 1 of me to the bottom of group "Set buttons" of me + kControlGap
    
    set the width of field "key label" of me to kLabelSize

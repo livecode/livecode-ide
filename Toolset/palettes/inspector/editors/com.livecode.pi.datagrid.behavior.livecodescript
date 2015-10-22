@@ -50,6 +50,7 @@ on editorUpdate
    unlock screen
 end editorUpdate
 
+constant kLabelFieldHeight = 21
 on editorResize
    lock screen
    set the lockloc of me to true
@@ -61,7 +62,7 @@ on editorResize
    
    set the width of field "rowlabel" of me  to the width of me
    set the left of field "rowlabel" of me to the left of me
-   set the height of field "rowlabel" of me to 21
+   set the height of field "rowlabel" of me to kLabelFieldHeight
    add the height of field "rowlabel" of me + the palettePadding of stack "revInspector" to tTop
    repeat with x = 1 to the number of groups of me
       set the lockloc of group x of me to true 
