@@ -183,12 +183,6 @@ on nameChanged pOldname, pNewName, pTarget
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
 
---PM-2015-10-05: [[ Bug 16099 ]] choose pointer/browse tool does not update Tools palette
-on newTool pTool
-   send "ideToolChanged" to stack "revTools" in 0 seconds
-   pass newTool
-end newTool
-
 on idChanged pOldId, pNewId
    global gREVSuppressMessages
 

@@ -1022,7 +1022,7 @@ command revInternal__InitialiseLibraries
    	    	 	
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
-      insert script of stack "revidemessagehandler" into front 	 	
+      revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
    end try 
