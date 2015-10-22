@@ -19,7 +19,7 @@ getProp inspectorData
 end inspectorData
 
 before openStack
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
@@ -39,7 +39,7 @@ before openStack
    
    # Add the preference to use icons / names
    addFrameItem (the short name of me) & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end openStack
 
 # Sent when the preference changes

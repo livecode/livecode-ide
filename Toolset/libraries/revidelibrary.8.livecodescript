@@ -24,7 +24,7 @@ private on __loadExtensions
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
 
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
 
    ## Load installed extensions
    set the folder to revIDESpecialFolderPath("extensions")
@@ -33,7 +33,7 @@ private on __loadExtensions
       __loadExtension tFile
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    dispatch "ideExtensionsChanged"
 end __loadExtensions
 
@@ -210,7 +210,7 @@ end __trimZippedData
 # Reads in all the tool data
 local sToolDefinition
 private on __toolDefinitionsRead
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
 
    put empty into sToolDefinition
 
@@ -249,7 +249,7 @@ private on __toolDefinitionsRead
       end repeat
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __toolDefinitionsRead
 
 private on __resolvePopupData @xInfo, pData
@@ -502,7 +502,7 @@ end __orderClassicTools
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
    --put "reading object properties" after msg
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
 
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
@@ -536,7 +536,7 @@ on __objectPropertiesRead
    
    put tPropertiesInfo into sClassicPropertiesInfo
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __objectPropertiesRead
 
 private function __orderPropSubArray pSectionA, pIsGroupList
@@ -1217,7 +1217,7 @@ end __unescapeString
 
 on revIDEOpenPropertyInspectorControllerStacks
    lock screen
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
 
    local tControllersFolder
    put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
@@ -1234,7 +1234,7 @@ on revIDEOpenPropertyInspectorControllerStacks
       end if
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    unlock screen
 end revIDEOpenPropertyInspectorControllerStacks
 
@@ -2016,7 +2016,7 @@ function revIDEThemePath
    put revIDEPlatformVersion() into tSystemVersion
 
    # Find nearest theme version for the given platform
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to revIDESpecialFolderPath("themes")
 
    local tClosestThemeNumber, tHighestThemeNumber
@@ -2053,7 +2053,7 @@ function revIDEThemePath
       put "com.livecode.theme." & tPlatformName & "." & tClosestThemeNumber into tThemeName
    end if
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 
    return revIDESpecialFolderPath("themes") & slash & tThemeName
 end revIDEThemePath
@@ -3453,47 +3453,47 @@ local sDefaultFolderList
 /**
 Stores the current default folder.
 
-Related: revIDERestoreDefaultFolder
+Related: revIDEPopDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
 
 Description:
 Pushes the current defaultFolder onto a list of defaultFolders.
-revIDERestoreDefaultFolder then pops the list and sets the 
+revIDEPopDefaultFolder then pops the list and sets the 
 default folder to the popped value.
 **/
-on revIDEStoreDefaultFolder
+on revIDEPushDefaultFolder
    put the defaultfolder into sDefaultFolderList[the number of elements in sDefaultFolderList + 1]
-end revIDEStoreDefaultFolder
+end revIDEPushDefaultFolder
 
 /**
 Restores the default folder to the last saved path.
 
-Related: revIDEStoreDefaultFolder
+Related: revIDEPushDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
 
 Description:
 Pops the last stored defaultFolder and sets the 
 default folder to the popped value.
    **/
-on revIDERestoreDefaultFolder
+on revIDEPopDefaultFolder
    local tToPop
    put the number of elements in sDefaultFolderList into tToPop
    if tToPop is 0 then return __revIDEError("Mismatched default folder store / restore")
@@ -3505,7 +3505,7 @@ on revIDERestoreDefaultFolder
    end if
    delete variable sDefaultFolderList[tToPop]
    return tError  
-end revIDERestoreDefaultFolder
+end revIDEPopDefaultFolder
 
 /*
 summary: Outputs a flat version of an array to the messagebox.
@@ -4394,15 +4394,15 @@ end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultFolder to pFolder
    put the detailed files into tDetailedFiles
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    local tDetailedFiles, tMax
    set the defaultFolder to pFolder
    put the detailed files into tDetailedFiles
@@ -4415,7 +4415,7 @@ function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
          put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
       end repeat
    end if
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    return tMax
 end revIDELastModifiedTimeOfFilesInFolder
 
@@ -5391,7 +5391,7 @@ on revIDEActionImportControlFromFolder pType, pReference
    put it into tFolderPath
    
    # Store the current default folder
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    local tAcceptedTypes
    put revIDEAcceptedTypes(pType) into tAcceptedTypes
    replace "," with "." in tAcceptedTypes
@@ -5410,7 +5410,7 @@ on revIDEActionImportControlFromFolder pType, pReference
    unlock screen
    
    # Restore the previous defaul folder 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEActionImportControlFromFolder
 
 on revIDEImportControl pType, pFileName, pReferenced
@@ -8145,7 +8145,7 @@ function revIDEFolderListing pFolder, pListFiles
       return empty
    end if
    
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultFolder to pFolder
    
    local tList
@@ -8156,7 +8156,7 @@ function revIDEFolderListing pFolder, pListFiles
    end if
    
    filter tList without ".*"
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    return tList
 end revIDEFolderListing
 
@@ -8529,13 +8529,13 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultFolder to pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
    filter tSource with "*.lcb"
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    return tSource
 end __getLCBSourceFile
 
@@ -8719,7 +8719,7 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to tGuideFolder
    
    local tGuideData, tGuideName
@@ -8747,7 +8747,7 @@ on revIDEGenerateDistributedGuide
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEGenerateDistributedGuide
 
 command revIDEGenerateDistributedAPI

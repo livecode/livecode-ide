@@ -787,7 +787,7 @@ end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
@@ -853,7 +853,7 @@ on __extensionsLoad
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
    
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -1022,14 +1022,14 @@ end revIDEExtensionDocsData
 
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
-      revIDEStoreDefaultFolder
+      revIDEPushDefaultFolder
       local tFiles
       set the defaultfolder to pFolder
       put the files into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI
       put line 1 of tFiles into pExtensionSource
-      revIDERestoreDefaultFolder
+      revIDEPopDefaultFolder
    end if
    
    # Check timestamps to see if API  is out of date.

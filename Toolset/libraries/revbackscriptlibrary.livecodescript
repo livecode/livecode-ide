@@ -3030,11 +3030,11 @@ private function revDirectoryWalking pFolder
 end revDirectoryWalking
 
 function revDirWalker pFolder
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    
    local tList
    put revDirectoryWalking(pFolder) into tList
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    return tList
 end revDirWalker
 
@@ -3687,7 +3687,7 @@ end revOpenStack
 
 # Returns the *actual* path of the file specified by pPath. Returns empty if the file doesnt exist
 private function utilityCanonicalizePath pPath
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    
    set the itemDelimiter to slash
    
@@ -3715,7 +3715,7 @@ private function utilityCanonicalizePath pPath
    
    local tCanonicalFolder
    put the defaultFolder into tCanonicalFolder
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    
    if tExists then
       return tCanonicalFolder & slash & line tLineNumber of tFiles

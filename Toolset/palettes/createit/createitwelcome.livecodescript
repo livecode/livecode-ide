@@ -106,7 +106,7 @@ on stackGenerate
    # Repeat through the course contents directory to generate the images and text 
    # for the accordion.
    
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    
    local tCourseAppFolder
    set the itemdel to "/"
@@ -170,7 +170,7 @@ on stackGenerate
       if tCourseAppNumber > sAppCount then put tCourseAppNumber into sAppCount
    end repeat
    
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    
    # Reset all the templates we've used as they are global
    reset the templatefield
