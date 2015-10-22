@@ -335,9 +335,6 @@ on inspectorGenerateGroups pGroupList
       local tName
       put the short name of group tElement["label"] of me into tName
       if exists(group tElement["label"] of me) then
-         if tElement["label"] is not tElement["subsection"] then
-            set the rowLabel of group tElement["label"] of me to tElement["label"]
-         end if
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
@@ -352,8 +349,21 @@ on inspectorGenerateGroups pGroupList
             end if
          end repeat
          
-         # Set the tooltip for the row
-         set the rowTooltip of group tElement["label"] of me to tPropList
+         # Set the tooltip and label for the row according to 'language names' pref
+         global gRevLanguageNames
+         local tTooltip, tLabel
+         if gRevLanguageNames then
+            put tPropList into tLabel
+            put tElement["label"] into tTooltip
+         else
+            put tPropList into tTooltip
+            put tElement["label"] into tLabel
+         end if
+         
+         set the rowTooltip of group tElement["label"] of me to tTooltip
+         if tElement["label"] is not tElement["subsection"] then
+            set the rowLabel of group tElement["label"] of me to tLabel
+         end if
       end if
       put empty into tPropList
    end repeat
