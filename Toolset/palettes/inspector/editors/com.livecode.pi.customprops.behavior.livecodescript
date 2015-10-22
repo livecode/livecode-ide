@@ -3,6 +3,8 @@ local sPropSet
 
 on editorInitialize
    put empty into sPropSet
+   put the rowLabel of me into field "rowlabel" of me
+   set the rowShowLabel of me to false
    set the label of button "customPropertySet" of group "Set buttons" of me to "customKeys"
    set the editorMinWidth of me to 250
    set the editorMaxWidth of me to 0
@@ -75,14 +77,18 @@ on editorResize
    local tRect
    put the rect of me into tRect
    
+   set the width of field "rowlabel" of me to the width of me
+   set the height of field "rowlabel" of me to kKeyFieldHeight
+   set the left of field "rowlabel" of me to the left of me
+   
    set the width of group "Set buttons" of me to the width of me
    set the height of group "Set buttons" of me to 30
-   set the top of group "Set buttons" of me to the top of me
+   set the top of group "Set buttons" of me to the top of me + kControlGap + kKeyFieldHeight
    set the left of group "Set buttons" of me to the left of me
    set the lockLoc of group "Set buttons" of me to true
    send "groupResize kLabelSize, kControlGap" to group "Set buttons" of me
    
-   put item 4 of tRect - (3 * kControlGap + kKeyFieldHeight + kValueFieldHeight + 30) into item 4 of tRect 
+   put item 4 of tRect - (4 * kControlGap + 2 * kKeyFieldHeight + kValueFieldHeight + 30) into item 4 of tRect 
    set the rect of widget 1 of me to tRect
    set the top of widget 1 of me to the bottom of group "Set buttons" of me + kControlGap
    
