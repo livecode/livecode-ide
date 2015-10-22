@@ -186,7 +186,7 @@ function calculateLayout pProps
       
       # If the min total > the available space, we need to go on to multiple lines
       # So try and work out where the split should occur and recursively calculate layout
-      if tMinTotal > tAvailableSpace then
+      if tMinTotal > tAvailableSpace and the number of lines in pProps > 1 then
          local tOver, tNumOver
          put calculateLayout(line 1 to tIndex - 1 of pProps) into tLayoutA
          put the number of elements in tLayoutA into tNumOver
