@@ -852,6 +852,8 @@ on __extensionsLoad
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
+   
+   revIDERestoreDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -1020,12 +1022,14 @@ end revIDEExtensionDocsData
 
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
+      revIDEStoreDefaultFolder
       local tFiles
       set the defaultfolder to pFolder
       put the files into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI
       put line 1 of tFiles into pExtensionSource
+      revIDERestoreDefaultFolder
    end if
    
    # Check timestamps to see if API  is out of date.

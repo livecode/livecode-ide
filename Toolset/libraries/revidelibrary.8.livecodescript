@@ -3449,11 +3449,11 @@ on revIDEHideLoading
    unlock cursor
 end revIDEHideLoading
 
-local sDefaultFolder
-/*
+local sDefaultFolderList
+/**
 Stores the current default folder.
 
-Related: on revIDERestoreDefaultFolder
+Related: revIDERestoreDefaultFolder
 
 Example:
 on myHandler
@@ -3464,15 +3464,20 @@ on myHandler
    end repeat
    revIDERestoreDefaultFolder
 end myHandler
-*/
+
+Description:
+Pushes the current defaultFolder onto a list of defaultFolders.
+revIDERestoreDefaultFolder then pops the list and sets the 
+default folder to the popped value.
+**/
 on revIDEStoreDefaultFolder
-   put the defaultfolder into sDefaultFolder
+   put the defaultfolder into sDefaultFolderList[the number of elements in sDefaultFolderList + 1]
 end revIDEStoreDefaultFolder
 
-/*
+/**
 Restores the default folder to the last saved path.
 
-Related: on revIDEStoreDefaultFolder
+Related: revIDEStoreDefaultFolder
 
 Example:
 on myHandler
@@ -3483,16 +3488,30 @@ on myHandler
    end repeat
    revIDERestoreDefaultFolder
 end myHandler
-*/
+
+Description:
+Pops the last stored defaultFolder and sets the 
+default folder to the popped value.
+   **/
 on revIDERestoreDefaultFolder
-   set the defaultfolder to sDefaultFolder
+   local tToPop
+   put the number of elements in sDefaultFolderList into tToPop
+   if tToPop is 0 then return __revIDEError("Mismatched default folder store / restore")
+   
+   set the defaultfolder to sDefaultFolderList[tToPop]
+   local tError
+   if the result is not empty then
+      put __revIDEError("Folder to restore no longer exists") into tError
+   end if
+   delete variable sDefaultFolderList[tToPop]
+   return tError  
 end revIDERestoreDefaultFolder
 
 /*
 summary: Outputs a flat version of an array to the messagebox.
 pArray (Array): The array you which to convert
 returns (String): A text representation of the array with indented with the tab character for readability
-*/
+*/  
 on revPutArray pArray
    if the number of elements of pArray is 0 then
       put "not an array"
@@ -4375,12 +4394,15 @@ end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
+   revIDEStoreDefaultFolder
    set the defaultFolder to pFolder
    put the detailed files into tDetailedFiles
+   revIDERestoreDefaultFolder
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
+   revIDEStoreDefaultFolder
    local tDetailedFiles, tMax
    set the defaultFolder to pFolder
    put the detailed files into tDetailedFiles
@@ -4393,6 +4415,7 @@ function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
          put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
       end repeat
    end if
+   revIDERestoreDefaultFolder
    return tMax
 end revIDELastModifiedTimeOfFilesInFolder
 
@@ -5205,11 +5228,12 @@ on revIDERemoveFromMemory pStackID
    
    local tStacks
    put tMainStack & cr & tSubstacks into tStacks
-   answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
+   answer warning "Really remove the stack file" && pStackID && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
    
+   local tStackID
    put the long id of stack tMainStack into tStackID
    
    # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
@@ -5367,8 +5391,8 @@ on revIDEActionImportControlFromFolder pType, pReference
    put it into tFolderPath
    
    # Store the current default folder
-   local tDefaultFolder, tAcceptedTypes
-   put the defaultfolder into tDefaultFolder
+   revIDEStoreDefaultFolder
+   local tAcceptedTypes
    put revIDEAcceptedTypes(pType) into tAcceptedTypes
    replace "," with "." in tAcceptedTypes
    
@@ -5386,7 +5410,7 @@ on revIDEActionImportControlFromFolder pType, pReference
    unlock screen
    
    # Restore the previous defaul folder 
-   set the defaultfolder to tDefaultFolder
+   revIDERestoreDefaultFolder
 end revIDEActionImportControlFromFolder
 
 on revIDEImportControl pType, pFileName, pReferenced
@@ -8120,9 +8144,8 @@ function revIDEFolderListing pFolder, pListFiles
    if there is not a folder pFolder then
       return empty
    end if
-    
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
+   
+   revIDEStoreDefaultFolder
    set the defaultFolder to pFolder
    
    local tList
@@ -8133,7 +8156,7 @@ function revIDEFolderListing pFolder, pListFiles
    end if
    
    filter tList without ".*"
-   set the defaultFolder to tDefaultFolder
+   revIDERestoreDefaultFolder
    return tList
 end revIDEFolderListing
 
@@ -8506,14 +8529,13 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
-   local tOldDefaultFolder
-   put the defaultfolder into tOldDefaultFolder
+   revIDEStoreDefaultFolder
    set the defaultFolder to pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
    filter tSource with "*.lcb"
-   set the defaultFolder to tOldDefaultFolder
+   revIDERestoreDefaultFolder
    return tSource
 end __getLCBSourceFile
 
@@ -8684,7 +8706,7 @@ end revIDEGenerateDistributedDocs
 
 on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolder, tOldDefaultFolder
+   local tGuideFolder
    put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
    
    # Check if the distributed guide is out of date
@@ -8697,7 +8719,7 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   put the defaultfolder into tOldDefaultFolder
+   revIDEStoreDefaultFolder
    set the defaultfolder to tGuideFolder
    
    local tGuideData, tGuideName
@@ -8725,7 +8747,7 @@ on revIDEGenerateDistributedGuide
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   set the defaultFolder to tOldDefaultFolder
+   revIDERestoreDefaultFolder
 end revIDEGenerateDistributedGuide
 
 command revIDEGenerateDistributedAPI

@@ -3004,7 +3004,7 @@ end revExternalPath
 
 --
 
-function revDirectoryWalking pFolder
+private function revDirectoryWalking pFolder
    if there is not a folder pFolder then
       if there is a file pFolder then
          return pFolder
@@ -3015,7 +3015,6 @@ function revDirectoryWalking pFolder
       set the defaultFolder to pFolder
       local tList
       put the detailed files into tList
-      
       local tFilesList
       repeat for each line i in tList
          put pFolder & "/" & i & cr after tFilesList
@@ -3031,12 +3030,11 @@ function revDirectoryWalking pFolder
 end revDirectoryWalking
 
 function revDirWalker pFolder
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
+   revIDEStoreDefaultFolder
    
    local tList
    put revDirectoryWalking(pFolder) into tList
-   set the defaultFolder to tDefaultFolder
+   revIDERestoreDefaultFolder
    return tList
 end revDirWalker
 
@@ -3689,42 +3687,41 @@ end revOpenStack
 
 # Returns the *actual* path of the file specified by pPath. Returns empty if the file doesnt exist
 private function utilityCanonicalizePath pPath
-  local tDefaultFolder
-  put the defaultFolder into tDefaultFolder
-  
-  set the itemDelimiter to slash
+   revIDEStoreDefaultFolder
    
-  local tFolder, tFilename
-  put item 1 to -2 of pPath into tFolder
-  put item -1 of pPath into tFilename
-  
-  set the defaultFolder to tFolder
+   set the itemDelimiter to slash
    
-  set the caseSensitive to utilityPathIsCaseSensitive(pPath)
+   local tFolder, tFilename
+   put item 1 to -2 of pPath into tFolder
+   put item -1 of pPath into tFilename
    
-  local tFiles
-  put the files into tFiles
+   set the defaultFolder to tFolder
    
-  local tLineNumber
-  set the wholeMatches to true
-  put lineOffset(tFilename, tFiles) into tLineNumber
-  
-  local tExists
-  if tLineNumber = 0 then
-    put false into tExists
-  else
-    put true into tExists
-  end if
-  
-  local tCanonicalFolder
-  put the defaultFolder into tCanonicalFolder
-  set the defaultFolder to tDefaultFolder
-  
-  if tExists then
-    return tCanonicalFolder & slash & line tLineNumber of tFiles
-  else
-    return empty
-  end if
+   set the caseSensitive to utilityPathIsCaseSensitive(pPath)
+   
+   local tFiles
+   put the files into tFiles
+   
+   local tLineNumber
+   set the wholeMatches to true
+   put lineOffset(tFilename, tFiles) into tLineNumber
+   
+   local tExists
+   if tLineNumber = 0 then
+      put false into tExists
+   else
+      put true into tExists
+   end if
+   
+   local tCanonicalFolder
+   put the defaultFolder into tCanonicalFolder
+   revIDERestoreDefaultFolder
+   
+   if tExists then
+      return tCanonicalFolder & slash & line tLineNumber of tFiles
+   else
+      return empty
+   end if
 end utilityCanonicalizePath
 
 # Returns whether the path pPath is case sensitive. pPath must point to a file.

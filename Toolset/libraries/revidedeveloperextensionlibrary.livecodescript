@@ -101,6 +101,7 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
+   revIDEStoreDefaultFolder
    local tExtensionDetailsA
    
    local tFolders
@@ -150,15 +151,20 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
+   revIDERestoreDefaultFolder
+   
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
+   revIDEStoreDefaultFolder
    set the defaultfolder to pFolder
    
    local tFiles
    put the files into tFiles
    filter tFiles with "*.lcb"
+   
+   revIDERestoreDefaultFolder
    
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
@@ -274,8 +280,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
 end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
-   local tOldDefaultFolder
-   put the defaultfolder into tOldDefaultFolder
+   revIDEStoreDefaultFolder
    set the defaultfolder to pFolder
    local tResources, tResource, tPrefix
    if pPrefix is not empty then
@@ -305,7 +310,7 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
          end if
       end if
    end repeat
-   set the defaultfolder to tOldDefaultFolder
+   revIDERestoreDefaultFolder
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
