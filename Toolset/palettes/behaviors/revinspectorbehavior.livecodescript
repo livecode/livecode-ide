@@ -508,7 +508,7 @@ function rowlabelWidth
    if sRowLabelWidth <= 0 then
       put rowLabelWidthCalculate() into sRowLabelWidth
       if sRowLabelWidth is not a number then
-         rowLabelWidthSet 100
+         rowLabelWidthSet 10
       end if
    end if
    return sRowLabelWidth
