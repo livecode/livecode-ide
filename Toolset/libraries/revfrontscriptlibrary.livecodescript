@@ -47,10 +47,10 @@ on saveStackRequest
    revCheckScriptSaved tStackName
 
    put empty into gREVStackStatus[revTargetStack(the target)]
-   if "id 1230" is in the frontScripts and "revTools" is in the frontScripts then
+   if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
       select empty
-      send "revSetMarkers true" to btn "revReshape" of stack "revTools"
-      remove script of btn "revReshape" of stack "revTools" from front
+      send "revSetMarkers true" to stack "revReshapeLibrary"
+      revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 
    # OK-2008-03-14 : Bug 5890. Added global variable to work around the problem that
