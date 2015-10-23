@@ -331,6 +331,7 @@ on inspectorGenerateGroups pGroupList
       set the name of it to tElement["label"]
       show group tElement["label"] of me
       unlock messages
+      set the rowShowLabel of group tElement["label"] of me to true
       
       local tName
       put the short name of group tElement["label"] of me into tName

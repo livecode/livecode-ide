@@ -1,6 +1,6 @@
 ﻿script "com.livecode.pi.datagrid.behavior"
 on editorInitialize
-   put the rowLabel of me into field "rowlabel" of me
+   put the editorLabel of me into field "rowlabel" of me
    set the rowShowLabel of me to false
    set the editorMinWidth of me to 200
    set the editorMaxWidth of me to 0
