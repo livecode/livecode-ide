@@ -4496,20 +4496,6 @@ on revIDEAnswerDialogClosed
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
-function revIDEPaletteToStackName pPalette
-   switch pPalette
-      case "menubar"
-         return "revMenubarUI"
-      case "tools"
-         return "revTools"
-      case "inspector"
-         return "revInspector"
-      default
-         break
-   end switch
-   return empty
-end revIDEPaletteToStackName
-
 function revIDEAbsoluteRectOfObject pPalette, pObjectData
    if pPalette is "script editor" then
       dispatch function "absoluteRectOfObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]

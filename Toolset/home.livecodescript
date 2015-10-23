@@ -1004,7 +1004,7 @@ command revInternal__InitialiseLibraries
    	    	 	
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
-      insert script of stack "revidemessagehandler" into front 	 	
+      revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
    end try 
@@ -1343,8 +1343,7 @@ command revInternal__InitialiseTools
   
   --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
   revIDESetTool "pointer"
-  unlock screen
-  --revInternal__ConstrainStack "revTools"  
+  unlock screen 
   
   revInternal__Log "Leave", "Tools Initialisation"
   
