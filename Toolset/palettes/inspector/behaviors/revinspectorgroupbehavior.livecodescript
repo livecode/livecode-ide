@@ -93,11 +93,13 @@ on propertyDeregistor pProperty
 end propertyDeregistor
 
 # Sets the text for the row label
+constant kLabelHeight = 21
 setprop rowLabel pLabel
    local tTopLeft
    put the topleft of field "rowlabel" of me into tTopLeft
    put pLabel into field "rowlabel" of me
    set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+   set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
    set the topleft of field "rowlabel" of me to tTopLeft
 end rowLabel
 
