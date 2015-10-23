@@ -306,10 +306,10 @@ on editorStoreValue pProperty, pValue
    revIDEPropertyStore sSelectedObjects, pProperty, pValue
 end editorStoreValue
 
-on idePreferenceChanged pPreference, pValue
+on idePreferenceChanged pPreference
    switch pPreference
       case "idePropertyInspector_labels"
-         
+         inspectorChanged
          break
    end switch
 end idePreferenceChanged
