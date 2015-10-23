@@ -237,6 +237,14 @@ private on deleteInspector pInspectorNumber
 end deleteInspector
 
 on ideInspectObjects pObjects
+   # Get the selected objects
+   local tSelectedObjects
+   if pObjects is not empty then
+      put pObjects into tSelectedObjects
+   else
+      put revIDESelectedObjects() into tSelectedObjects
+   end if
+   
    local tStackName, tTargetInspector, tKeys
    put the keys of inspectorList() into tKeys
    sort tKeys ascending numeric
@@ -265,18 +273,13 @@ on ideInspectObjects pObjects
       addInspectorToList sInspectorMax + 1
    end if
    
-   # Get the selected objects
-   local tSelectedObjects
-   if pObjects is not empty then
-      put pObjects into tSelectedObjects
-   else
-      put revIDESelectedObjects() into tSelectedObjects
-   end if
-   
    unlock messages
    unlock screen
-   set the cSelectedObjects of stack tTargetInspector to revIDESelectedObjects()
+   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
+   
+   lock messages
    palette stack tTargetInspector
+   unlock messages
 end ideInspectObjects
 
 on ideResumeStack
