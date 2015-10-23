@@ -1360,9 +1360,8 @@ command revInternal__InitialiseTools
   palette stack tToolsStackName
   
   --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
-  revIDESetTool pointer
-  unlock screen
-  --revInternal__ConstrainStack "revTools"  
+  revIDESetTool "pointer"
+  unlock screen 
   
   revInternal__Log "Leave", "Tools Initialisation"
   
