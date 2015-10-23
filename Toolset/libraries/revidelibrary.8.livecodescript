@@ -4967,8 +4967,11 @@ on revIDENewMainstack pWidth, pHeight
       set the destroyWindow of the templateStack to true
    end if
 
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tLeft
-   if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
+   if tToolsRight < (item 3 of the screenRect / 2) then put tToolsRight + 20 into tLeft
    else put item 1 of the windowBoundingRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
 

@@ -1400,9 +1400,12 @@ command revInternal__InitialiseMenus
    
    revInternal__ConstrainStack tMenuBar
    
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tWindowRect
    put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
-   if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
+   if tToolsRight < 100 then put tToolsRight + 5 into item 1 of tWindowRect
    put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
    set the windowBoundingRect to tWindowRect
    
