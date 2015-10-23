@@ -3799,7 +3799,7 @@ command revIDEOpenPalette pPaletteName
       case "inspector"
          # The inspector stack is now a manager for property inspectors, 
          # and does not need to be visible.
-         go invisible stack tStackName
+         go invisible stack tStackName as palette
          return empty
       default
          return __revIDEError("No such palette:" && pPaletteName)
