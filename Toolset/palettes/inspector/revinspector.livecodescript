@@ -38,9 +38,9 @@ on inspectorTreeMenuDisplay
    local tCurrentProfile, tProfiles2, tHandlers, tSendMessageList, tLockInspector, tFocusedObject
    
    global gREVShowStacks
-   revSetGeometryObject sSelectedObjects
-   
+
    put the cSelectedObjects of me into tObjects
+   revSetGeometryObject tObjects
    put revTargetStack(line 1 of tObjects) into tStack
    put the defaultStack into tDefaultStack
    
