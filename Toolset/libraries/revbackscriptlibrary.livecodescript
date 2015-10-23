@@ -3687,15 +3687,13 @@ end revOpenStack
 
 # Returns the *actual* path of the file specified by pPath. Returns empty if the file doesnt exist
 private function utilityCanonicalizePath pPath
-   revIDEPushDefaultFolder
-   
    set the itemDelimiter to slash
    
    local tFolder, tFilename
    put item 1 to -2 of pPath into tFolder
    put item -1 of pPath into tFilename
    
-   set the defaultFolder to tFolder
+   revIDEPushDefaultFolder tFolder
    
    set the caseSensitive to utilityPathIsCaseSensitive(pPath)
    

@@ -157,9 +157,8 @@ function revIDEDeveloperExtensions
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
-   revIDEPushDefaultFolder
-   set the defaultfolder to pFolder
-   
+   revIDEPushDefaultFolder pFolder
+
    local tFiles
    put the files into tFiles
    filter tFiles with "*.lcb"
@@ -280,8 +279,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
 end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
-   revIDEPushDefaultFolder
-   set the defaultfolder to pFolder
+   revIDEPushDefaultFolder pFolder
    local tResources, tResource, tPrefix
    if pPrefix is not empty then
       put pPrefix & slash into tPrefix

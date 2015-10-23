@@ -1022,9 +1022,8 @@ end revIDEExtensionDocsData
 
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
-      revIDEPushDefaultFolder
       local tFiles
-      set the defaultfolder to pFolder
+      revIDEPushDefaultFolder pFolder
       put the files into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI

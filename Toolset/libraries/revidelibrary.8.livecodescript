@@ -23,11 +23,9 @@ private on __loadExtensions
 
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
-
-   revIDEPushDefaultFolder
-
+   
    ## Load installed extensions
-   set the folder to revIDESpecialFolderPath("extensions")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("extensions")
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
       __loadExtension tFile
@@ -210,15 +208,13 @@ end __trimZippedData
 # Reads in all the tool data
 local sToolDefinition
 private on __toolDefinitionsRead
-   revIDEPushDefaultFolder
-
    put empty into sToolDefinition
-
+   
    # Set to folder to the path where the object definition files for classic controls are stored
    local tToolDefinitionPath
    put revIDESpecialFolderPath("Tool Definitions") into tToolDefinitionPath
-   set the defaultfolder to tToolDefinitionPath
-
+   revIDEPushDefaultFolder tToolDefinitionPath
+   
    # Read in each file and build an array
    local tDefinitionData, tToolSection
    repeat for each line tFile in the files
@@ -501,9 +497,6 @@ end __orderClassicTools
 
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
-   --put "reading object properties" after msg
-   revIDEPushDefaultFolder
-
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
@@ -514,8 +507,8 @@ on __objectPropertiesRead
 
    local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
-   set the defaultfolder to tObjectDefinitionsPath
-
+   revIDEPushDefaultFolder tObjectDefinitionsPath
+   
    # Read in each file and build an array
    local tObjectType
 
@@ -1217,12 +1210,10 @@ end __unescapeString
 
 on revIDEOpenPropertyInspectorControllerStacks
    lock screen
-   revIDEPushDefaultFolder
-
    local tControllersFolder
    put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
-   set the defaultfolder to tControllersFolder
-
+   revIDEPushDefaultFolder tControllersFolder
+   
    repeat for each line tControllerStackFile in the files
       if char 1 of tControllerStackFile is "." then next repeat
       --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
@@ -2016,8 +2007,7 @@ function revIDEThemePath
    put revIDEPlatformVersion() into tSystemVersion
 
    # Find nearest theme version for the given platform
-   revIDEPushDefaultFolder
-   set the defaultfolder to revIDESpecialFolderPath("themes")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("themes")
 
    local tClosestThemeNumber, tHighestThemeNumber
    repeat for each line tThemeFolder in the folders
@@ -3453,12 +3443,14 @@ local sDefaultFolderList
 /**
 Stores the current default folder.
 
+Parameters:
+pFolder (optional string): The new defaultFolder
+
 Related: revIDEPopDefaultFolder
 
 Example:
 on myHandler
-   revIDEPushDefaultFolder
-   set the defaultfolder to "/"
+   revIDEPushDefaultFolder "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
@@ -3467,11 +3459,23 @@ end myHandler
 
 Description:
 Pushes the current defaultFolder onto a list of defaultFolders.
+If <pFolder> is specified, then the defaultFolder is set to <pFolder>.
 revIDEPopDefaultFolder then pops the list and sets the 
 default folder to the popped value.
 **/
-on revIDEPushDefaultFolder
+on revIDEPushDefaultFolder pFolder
    put the defaultfolder into sDefaultFolderList[the number of elements in sDefaultFolderList + 1]
+   
+   local tError
+   if pFolder is not empty then
+      set the defaultFolder to pFolder
+      
+      if the result is not empty then
+         put __revIDEError("Invalid default folder:" && pFolder) into tError
+      end if
+   end if
+   
+   return tError
 end revIDEPushDefaultFolder
 
 /**
@@ -4394,17 +4398,15 @@ end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
-   revIDEPushDefaultFolder
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    revIDEPopDefaultFolder
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
-   revIDEPushDefaultFolder
    local tDetailedFiles, tMax
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    sort tDetailedFiles descending numeric by item 5 of each
    put item 5 of line 1 of tDetailedFiles into tMax
@@ -5376,13 +5378,12 @@ on revIDEActionImportControlFromFolder pType, pReference
    local tFolderPath
    put it into tFolderPath
    
-   # Store the current default folder
-   revIDEPushDefaultFolder
    local tAcceptedTypes
    put revIDEAcceptedTypes(pType) into tAcceptedTypes
    replace "," with "." in tAcceptedTypes
    
-   set the defaultfolder to tFolderPath
+   # Store the current default folder
+   revIDEPushDefaultFolder tFolderPath
    set the itemdel to "."
    lock screen
    lock messages
@@ -8131,8 +8132,7 @@ function revIDEFolderListing pFolder, pListFiles
       return empty
    end if
    
-   revIDEPushDefaultFolder
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    
    local tList
    if pListFiles then
@@ -8515,8 +8515,7 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
-   revIDEPushDefaultFolder
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
@@ -8705,8 +8704,7 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   revIDEPushDefaultFolder
-   set the defaultfolder to tGuideFolder
+   revIDEPushDefaultFolder tGuideFolder
    
    local tGuideData, tGuideName
    set the itemdelimiter to "."

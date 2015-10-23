@@ -19,12 +19,11 @@ getProp inspectorData
 end inspectorData
 
 before openStack
-   revIDEPushDefaultFolder
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
    put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
-   set the defaultfolder to tEditorsFolder
+   revIDEPushDefaultFolder tEditorsFolder
    set the itemdel to "."
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
