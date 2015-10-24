@@ -4759,8 +4759,7 @@ on revIDEOpenStack pFilePath
    local tError, tStackName
    
    if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
-   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-   
+
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -5108,21 +5107,6 @@ on revIDENewSubstackOfStack pStack
    # Make the new stack a substack of the current stack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
-
-function revIDEIsLiveCodeStack pFilePath
-   local tExtension
-   
-   set the itemdel to "."
-   put the last item of pFilePath into tExtension
-   set the itemDel to comma
-   
-   # Check the file extension
-   if tExtension is among the items of revIDELiveCodeFileExtensions() then
-      return true
-   else
-      return false
-   end if
-end revIDEIsLiveCodeStack
 
 function revIDEStackIsScriptOnly pStackFile
    if there is a stack pStackFile then
