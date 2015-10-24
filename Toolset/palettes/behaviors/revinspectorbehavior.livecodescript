@@ -332,6 +332,7 @@ on inspectorGenerateGroups pGroupList
       set the name of it to tElement["label"]
       show group tElement["label"] of me
       unlock messages
+      set the rowShowLabel of group tElement["label"] of me to true
       
       local tName
       put the short name of group tElement["label"] of me into tName
@@ -518,9 +519,6 @@ local sRowLabelWidth
 function rowlabelWidth
    if sRowLabelWidth <= 0 then
       put rowLabelWidthCalculate() into sRowLabelWidth
-      if sRowLabelWidth is not a number then
-         rowLabelWidthSet 100
-      end if
    end if
    return sRowLabelWidth
 end rowlabelWidth
@@ -531,6 +529,8 @@ end rowLabelWidthSet
 
 private function rowLabelWidthCalculate
    local tMaxWidth, tLabelWidth, tChildren
+   put 0 into tMaxWidth
+   
    put the childControlNames of this card of me into tChildren
    repeat for each line tControl in tChildren
       if there is a field "rowlabel" of group tControl of me then

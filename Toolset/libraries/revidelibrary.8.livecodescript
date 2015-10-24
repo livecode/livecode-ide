@@ -4992,8 +4992,11 @@ on revIDENewMainstack pWidth, pHeight
       set the destroyWindow of the templateStack to true
    end if
 
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tLeft
-   if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
+   if tToolsRight < (item 3 of the screenRect / 2) then put tToolsRight + 20 into tLeft
    else put item 1 of the windowBoundingRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
 
@@ -5214,13 +5217,13 @@ on revIDERemoveFromMemory pStackID
    local tSubstacks
    put the subStacks of stack pStackID into tSubstacks
    
-   local tStacks
+   local tStacks 
    put tMainStack & cr & tSubstacks into tStacks
    answer warning "Really remove the stack file" && pStackID && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
-   
+
    local tStackID
    put the long id of stack tMainStack into tStackID
    
@@ -8865,3 +8868,7 @@ function revIDERGBToNamedColor pColor
    
    return sColorsToNamesA[pColor]
 end revIDERGBToNamedColor
+
+on ideCorePropertyInspectorRefreshPropertyLabels
+   revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
+end ideCorePropertyInspectorRefreshPropertyLabels
