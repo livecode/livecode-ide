@@ -45,6 +45,7 @@ on preOpenStack
    revIDESubscribe "ideNewStack"
    revIDESubscribe "ideOpenStack"
    revIDESubscribe "ideResumeStack"
+   revIDESubscribe "ideDestroyStack"
    
    revIDESubscribe "ideControlDeleted"
    revIDESubscribe "ideCardDeleted"
@@ -131,7 +132,6 @@ on ideNewStack pTarget
 end ideNewStack
 
 on ideControlDeleted pTarget
-   
    deleteControlFromProjectBrowser pTarget
 end ideControlDeleted
 
@@ -166,6 +166,10 @@ on ideOpenStack pTarget
       addSubStackToProjectBrowser tStack
    end if
 end ideOpenStack
+
+on ideDestroyStack pTarget
+   deleteStackFromProjectBrowser pTarget
+end ideDestroyStack
 
 on ideResumeStack pTarget
    --   local tObject
@@ -303,7 +307,6 @@ command buildProjectView pRememberExpansion
    if "Stacks" is among the items of tSections then
       put revIDEStacksForDataView(tIndex) into tStacks
    end if
-   
    
    if "Back Scripts" is among the items of tSections then
       put revIDEBackScripts() into tBackScripts

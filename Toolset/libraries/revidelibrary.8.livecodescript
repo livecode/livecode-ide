@@ -23,17 +23,15 @@ private on __loadExtensions
 
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
-
-   revIDEStoreDefaultFolder
-
+   
    ## Load installed extensions
-   set the folder to revIDESpecialFolderPath("extensions")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("extensions")
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
       __loadExtension tFile
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    dispatch "ideExtensionsChanged"
 end __loadExtensions
 
@@ -210,15 +208,13 @@ end __trimZippedData
 # Reads in all the tool data
 local sToolDefinition
 private on __toolDefinitionsRead
-   revIDEStoreDefaultFolder
-
    put empty into sToolDefinition
-
+   
    # Set to folder to the path where the object definition files for classic controls are stored
    local tToolDefinitionPath
    put revIDESpecialFolderPath("Tool Definitions") into tToolDefinitionPath
-   set the defaultfolder to tToolDefinitionPath
-
+   revIDEPushDefaultFolder tToolDefinitionPath
+   
    # Read in each file and build an array
    local tDefinitionData, tToolSection
    repeat for each line tFile in the files
@@ -249,7 +245,7 @@ private on __toolDefinitionsRead
       end repeat
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __toolDefinitionsRead
 
 private on __resolvePopupData @xInfo, pData
@@ -501,9 +497,6 @@ end __orderClassicTools
 
 # Reads in the basic property data for classic controls
 on __objectPropertiesRead
-   --put "reading object properties" after msg
-   revIDEStoreDefaultFolder
-
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
@@ -514,8 +507,8 @@ on __objectPropertiesRead
 
    local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
-   set the defaultfolder to tObjectDefinitionsPath
-
+   revIDEPushDefaultFolder tObjectDefinitionsPath
+   
    # Read in each file and build an array
    local tObjectType
 
@@ -536,7 +529,7 @@ on __objectPropertiesRead
    
    put tPropertiesInfo into sClassicPropertiesInfo
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __objectPropertiesRead
 
 private function __orderPropSubArray pSectionA, pIsGroupList
@@ -1217,12 +1210,10 @@ end __unescapeString
 
 on revIDEOpenPropertyInspectorControllerStacks
    lock screen
-   revIDEStoreDefaultFolder
-
    local tControllersFolder
    put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
-   set the defaultfolder to tControllersFolder
-
+   revIDEPushDefaultFolder tControllersFolder
+   
    repeat for each line tControllerStackFile in the files
       if char 1 of tControllerStackFile is "." then next repeat
       --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
@@ -1234,7 +1225,7 @@ on revIDEOpenPropertyInspectorControllerStacks
       end if
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    unlock screen
 end revIDEOpenPropertyInspectorControllerStacks
 
@@ -1776,19 +1767,19 @@ function revIDEMainStacks
 end revIDEMainStacks
 
 function revIDEStacksForDataView pIndex
-   --pExpandedStructure
    # Are IDE stacks required
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-
+   
    # Get list of stacks to display
-   local tMainStacks
+   local tMainStacks, tAllMainStacks
    if tShowIDEStacks then
       put the mainstacks into tMainStacks
    else
-      repeat for each line tMainStack in the mainstacks
-         --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack is not 1 then next repeat
+      put the mainstacks into tAllMainStacks
+      filter tAllMainStacks without "rev*"
+      repeat for each line tMainStack in tAllMainStacks
+         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
          if tMainStacks is empty then
             put tMainStack into tMainStacks
          else
@@ -1796,7 +1787,7 @@ function revIDEStacksForDataView pIndex
          end if
       end repeat
    end if
-
+   
    # Recurse through the stacks to get their data
    local tStacksData, tCount
    repeat for each line tStack in tMainStacks
@@ -2016,8 +2007,7 @@ function revIDEThemePath
    put revIDEPlatformVersion() into tSystemVersion
 
    # Find nearest theme version for the given platform
-   revIDEStoreDefaultFolder
-   set the defaultfolder to revIDESpecialFolderPath("themes")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("themes")
 
    local tClosestThemeNumber, tHighestThemeNumber
    repeat for each line tThemeFolder in the folders
@@ -2053,7 +2043,7 @@ function revIDEThemePath
       put "com.livecode.theme." & tPlatformName & "." & tClosestThemeNumber into tThemeName
    end if
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 
    return revIDESpecialFolderPath("themes") & slash & tThemeName
 end revIDEThemePath
@@ -3449,50 +3439,83 @@ on revIDEHideLoading
    unlock cursor
 end revIDEHideLoading
 
-local sDefaultFolder
-/*
+local sDefaultFolderList
+/**
 Stores the current default folder.
 
-Related: on revIDERestoreDefaultFolder
+Parameters:
+pFolder (optional string): The new defaultFolder
+
+Related: revIDEPopDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
-   set the defaultfolder to "/"
+   revIDEPushDefaultFolder "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
-*/
-on revIDEStoreDefaultFolder
-   put the defaultfolder into sDefaultFolder
-end revIDEStoreDefaultFolder
 
-/*
+Description:
+Pushes the current defaultFolder onto a list of defaultFolders.
+If <pFolder> is specified, then the defaultFolder is set to <pFolder>.
+revIDEPopDefaultFolder then pops the list and sets the 
+default folder to the popped value.
+**/
+on revIDEPushDefaultFolder pFolder
+   put the defaultfolder into sDefaultFolderList[the number of elements in sDefaultFolderList + 1]
+   
+   local tError
+   if pFolder is not empty then
+      set the defaultFolder to pFolder
+      
+      if the result is not empty then
+         put __revIDEError("Invalid default folder:" && pFolder) into tError
+      end if
+   end if
+   
+   return tError
+end revIDEPushDefaultFolder
+
+/**
 Restores the default folder to the last saved path.
 
-Related: on revIDEStoreDefaultFolder
+Related: revIDEPushDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
-*/
-on revIDERestoreDefaultFolder
-   set the defaultfolder to sDefaultFolder
-end revIDERestoreDefaultFolder
+
+Description:
+Pops the last stored defaultFolder and sets the 
+default folder to the popped value.
+   **/
+on revIDEPopDefaultFolder
+   local tToPop
+   put the number of elements in sDefaultFolderList into tToPop
+   if tToPop is 0 then return __revIDEError("Mismatched default folder store / restore")
+   
+   set the defaultfolder to sDefaultFolderList[tToPop]
+   local tError
+   if the result is not empty then
+      put __revIDEError("Folder to restore no longer exists") into tError
+   end if
+   delete variable sDefaultFolderList[tToPop]
+   return tError  
+end revIDEPopDefaultFolder
 
 /*
 summary: Outputs a flat version of an array to the messagebox.
 pArray (Array): The array you which to convert
 returns (String): A text representation of the array with indented with the tab character for readability
-*/
+*/  
 on revPutArray pArray
    if the number of elements of pArray is 0 then
       put "not an array"
@@ -4375,14 +4398,15 @@ end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
+   revIDEPopDefaultFolder
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
    local tDetailedFiles, tMax
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    sort tDetailedFiles descending numeric by item 5 of each
    put item 5 of line 1 of tDetailedFiles into tMax
@@ -4393,6 +4417,7 @@ function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
          put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
       end repeat
    end if
+   revIDEPopDefaultFolder
    return tMax
 end revIDELastModifiedTimeOfFilesInFolder
 
@@ -4472,20 +4497,6 @@ on revIDEAnswerDialogClosed
    put item 1 of line 1 of the executionContexts into tPopupSource
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
-
-function revIDEPaletteToStackName pPalette
-   switch pPalette
-      case "menubar"
-         return "revMenubarUI"
-      case "tools"
-         return "revTools"
-      case "inspector"
-         return "revInspector"
-      default
-         break
-   end switch
-   return empty
-end revIDEPaletteToStackName
 
 function revIDEAbsoluteRectOfObject pPalette, pObjectData
    if pPalette is "script editor" then
@@ -4773,8 +4784,7 @@ on revIDEOpenStack pFilePath
    local tError, tStackName
    
    if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
-   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-   
+
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -4981,8 +4991,11 @@ on revIDENewMainstack pWidth, pHeight
       set the destroyWindow of the templateStack to true
    end if
 
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tLeft
-   if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
+   if tToolsRight < (item 3 of the screenRect / 2) then put tToolsRight + 20 into tLeft
    else put item 1 of the windowBoundingRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
 
@@ -5120,21 +5133,6 @@ on revIDENewSubstackOfStack pStack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
 
-function revIDEIsLiveCodeStack pFilePath
-   local tExtension
-   
-   set the itemdel to "."
-   put the last item of pFilePath into tExtension
-   set the itemDel to comma
-   
-   # Check the file extension
-   if tExtension is among the items of revIDELiveCodeFileExtensions() then
-      return true
-   else
-      return false
-   end if
-end revIDEIsLiveCodeStack
-
 function revIDEStackIsScriptOnly pStackFile
    if there is a stack pStackFile then
       local tStackFile
@@ -5203,13 +5201,14 @@ on revIDERemoveFromMemory pStackID
    local tSubstacks
    put the subStacks of stack pStackID into tSubstacks
    
-   local tStacks
+   local tStacks 
    put tMainStack & cr & tSubstacks into tStacks
-   answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
+   answer warning "Really remove the stack file" && pStackID && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
-   
+
+   local tStackID
    put the long id of stack tMainStack into tStackID
    
    # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
@@ -5222,6 +5221,8 @@ on revIDERemoveFromMemory pStackID
    delete stack tMainStack
    unlock messages
    
+   # Send the 'ideDestroyStack' message
+   revIDEMessageSend "ideDestroyStack", tStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
@@ -5364,13 +5365,12 @@ on revIDEActionImportControlFromFolder pType, pReference
    local tFolderPath
    put it into tFolderPath
    
-   # Store the current default folder
-   local tDefaultFolder, tAcceptedTypes
-   put the defaultfolder into tDefaultFolder
+   local tAcceptedTypes
    put revIDEAcceptedTypes(pType) into tAcceptedTypes
    replace "," with "." in tAcceptedTypes
    
-   set the defaultfolder to tFolderPath
+   # Store the current default folder
+   revIDEPushDefaultFolder tFolderPath
    set the itemdel to "."
    lock screen
    lock messages
@@ -5384,7 +5384,7 @@ on revIDEActionImportControlFromFolder pType, pReference
    unlock screen
    
    # Restore the previous defaul folder 
-   set the defaultfolder to tDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEActionImportControlFromFolder
 
 on revIDEImportControl pType, pFileName, pReferenced
@@ -8118,10 +8118,8 @@ function revIDEFolderListing pFolder, pListFiles
    if there is not a folder pFolder then
       return empty
    end if
-    
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to pFolder
+   
+   revIDEPushDefaultFolder pFolder
    
    local tList
    if pListFiles then
@@ -8131,7 +8129,7 @@ function revIDEFolderListing pFolder, pListFiles
    end if
    
    filter tList without ".*"
-   set the defaultFolder to tDefaultFolder
+   revIDEPopDefaultFolder
    return tList
 end revIDEFolderListing
 
@@ -8504,14 +8502,12 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
-   local tOldDefaultFolder
-   put the defaultfolder into tOldDefaultFolder
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
    filter tSource with "*.lcb"
-   set the defaultFolder to tOldDefaultFolder
+   revIDEPopDefaultFolder
    return tSource
 end __getLCBSourceFile
 
@@ -8682,7 +8678,7 @@ end revIDEGenerateDistributedDocs
 
 on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolder, tOldDefaultFolder
+   local tGuideFolder
    put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
    
    # Check if the distributed guide is out of date
@@ -8695,8 +8691,7 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   put the defaultfolder into tOldDefaultFolder
-   set the defaultfolder to tGuideFolder
+   revIDEPushDefaultFolder tGuideFolder
    
    local tGuideData, tGuideName
    set the itemdelimiter to "."
@@ -8723,7 +8718,7 @@ on revIDEGenerateDistributedGuide
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   set the defaultFolder to tOldDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEGenerateDistributedGuide
 
 command revIDEGenerateDistributedAPI
@@ -8857,3 +8852,7 @@ function revIDERGBToNamedColor pColor
    
    return sColorsToNamesA[pColor]
 end revIDERGBToNamedColor
+
+on ideCorePropertyInspectorRefreshPropertyLabels
+   revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
+end ideCorePropertyInspectorRefreshPropertyLabels

@@ -153,26 +153,15 @@ private on appendMenuItem pNavItem, @xMenuArray
    
    put pNavItem["label"] into tMenuItemA["label"]
    put pNavItem["name"] into tMenuItemA["name"]
+   
    switch pNavItem["value_type"]
       case "enum"
-         if tPreferenceValue is empty then put item 1 of pNavItem["value"] into tPreferenceValue
-         local tItemCount
-         repeat for each item tItem in pNavItem["value"]
-            add 1 to tItemCount
-            put tItem into tMenuItemA["menu"][tItemCount]["label"]
-            if tItem is tPreferenceValue then
-               put true into tMenuItemA["menu"][tItemCount]["checked"]
-            else
-               put false into tMenuItemA["menu"][tItemCount]["checked"]
-            end if
-         end repeat
-         break
       case "set"
+         local tValue, tLabel, tItemCount
          repeat for each item tItem in pNavItem["value"]
             add 1 to tItemCount
             # Parse out the value and label from the item
             set the itemdel to ":"
-            local tValue, tLabel
             if the number of items of tItem > 1 then
                put item 1 of tItem into tValue
                put item 2 of tItem into tLabel
@@ -180,13 +169,24 @@ private on appendMenuItem pNavItem, @xMenuArray
                put tItem into tLabel
                put tItem into tValue
             end if
+            set the itemdel to comma
+            
+            # Enums can't be empty so use the first value by default
+            if tPreferenceValue is empty and pNavItem["value_type"] is "enum" then 
+               put tValue into tPreferenceValue
+            end if
             
             put tLabel into tMenuItemA["menu"][tItemCount]["label"]
             put tValue into tMenuItemA["menu"][tItemCount]["name"]
             
-            # Check whether the set item is in the preference value
-            set the itemdel to comma
-            if tValue is among the items of tPreferenceValue then
+            local tChecked
+            if pNavItem["value_type"] is "enum" then
+               put tValue is tPreferenceValue into tChecked
+            else
+        	   put tValue is among the items of tPreferenceValue into tChecked
+            end if
+
+            if tChecked then
                put true into tMenuItemA["menu"][tItemCount]["checked"]
             else
                put false into tMenuItemA["menu"][tItemCount]["checked"]
@@ -346,14 +346,15 @@ function barHeight pSize
    end if
    
    switch pSize
-      case "large"
-         return 30
-         break
+      case "small"
+         return 21
       case "medium"
          return 25
-         break
+      case "largest"
+         return 35
+      case "large"
       default
-         return 21
+         return 30
    end switch
 end barHeight
 
@@ -389,18 +390,18 @@ on layoutFrame
    # Setup the size everything should be
    local tIconTextSize, tTextSize
    switch revIDEGetPreference("revPaletteFrameSize")
-      case "large"
-         put barHeight("large") into BAR_HEIGHT
-         put 10 into ITEM_SPACING
+      case "small"
+         put barHeight("small") into BAR_HEIGHT
+         put 7 into ITEM_SPACING
          put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 1,5,1,0 into HEADER_ACTION_MARGINS
+         put 3,3,3,0 into HEADER_ACTION_MARGINS
          put round(BAR_HEIGHT * 0.6) into tIconTextSize
          if sNavStyle is "names" then
             put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
          else
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
          end if
-         put 14 into tTextSize
+         put 10 into tTextSize
          break
       case "medium"
          put barHeight("medium")  into BAR_HEIGHT
@@ -415,18 +416,32 @@ on layoutFrame
          end if
          put 12 into tTextSize
          break
-      default
-         put barHeight("small") into BAR_HEIGHT
-         put 7 into ITEM_SPACING
+      case "largest"
+         put barHeight("largest") into BAR_HEIGHT
+         put 12 into ITEM_SPACING
          put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 3,3,3,0 into HEADER_ACTION_MARGINS
+         put 1,5,1,0 into HEADER_ACTION_MARGINS
          put round(BAR_HEIGHT * 0.6) into tIconTextSize
          if sNavStyle is "names" then
             put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
          else
-            put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
+            put 12,13,12,0 into HEADER_NAVIGATION_MARGINS
          end if
-         put 10 into tTextSize
+         put 16 into tTextSize
+         break
+      case "large"
+      default
+         put barHeight("large") into BAR_HEIGHT
+         put 10 into ITEM_SPACING
+         put 1,10,1,0 into FOOTER_ACTION_MARGINS
+         put 1,5,1,0 into HEADER_ACTION_MARGINS
+         put round(BAR_HEIGHT * 0.6) into tIconTextSize
+         if sNavStyle is "names" then
+            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+         else
+            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+         end if
+         put 14 into tTextSize
          break
    end switch
    
@@ -474,7 +489,7 @@ after preOpenStack
       put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
       put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
       if sShowPreferenceAction is not false then
-         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
+         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large,largest", "revIDEFrameSizeChanged", the long id of me
       end if
       revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
       generateFrame

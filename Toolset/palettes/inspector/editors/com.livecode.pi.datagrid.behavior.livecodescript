@@ -1,5 +1,7 @@
 ﻿script "com.livecode.pi.datagrid.behavior"
 on editorInitialize
+   put the editorLabel of me into field "rowlabel" of me
+   set the rowShowLabel of me to false
    set the editorMinWidth of me to 200
    set the editorMaxWidth of me to 0
 end editorInitialize
@@ -48,6 +50,7 @@ on editorUpdate
    unlock screen
 end editorUpdate
 
+constant kLabelFieldHeight = 21
 on editorResize
    lock screen
    set the lockloc of me to true
@@ -57,6 +60,10 @@ on editorResize
    put the left of me into tLeft
    put the width of me into tWidth
    
+   set the width of field "rowlabel" of me  to the width of me
+   set the left of field "rowlabel" of me to the left of me
+   set the height of field "rowlabel" of me to kLabelFieldHeight
+   add the height of field "rowlabel" of me + the palettePadding of stack "revInspector" to tTop
    repeat with x = 1 to the number of groups of me
       set the lockloc of group x of me to true 
       set the width of group x of me to tWidth
