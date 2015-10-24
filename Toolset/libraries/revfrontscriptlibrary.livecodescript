@@ -47,10 +47,10 @@ on saveStackRequest
    revCheckScriptSaved tStackName
 
    put empty into gREVStackStatus[revTargetStack(the target)]
-   if "id 1230" is in the frontScripts and "revTools" is in the frontScripts then
+   if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
       select empty
-      send "revSetMarkers true" to btn "revReshape" of stack "revTools"
-      remove script of btn "revReshape" of stack "revTools" from front
+      send "revSetMarkers true" to stack "revReshapeLibrary"
+      revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 
    # OK-2008-03-14 : Bug 5890. Added global variable to work around the problem that
@@ -182,12 +182,6 @@ on nameChanged pOldname, pNewName, pTarget
    unlock screen
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
-
---PM-2015-10-05: [[ Bug 16099 ]] choose pointer/browse tool does not update Tools palette
-on newTool pTool
-   send "ideToolChanged" to stack "revTools" in 0 seconds
-   pass newTool
-end newTool
 
 on idChanged pOldId, pNewId
    global gREVSuppressMessages

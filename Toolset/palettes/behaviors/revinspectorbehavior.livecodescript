@@ -22,8 +22,8 @@ before openStack
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
-   put item 1 to -3 of the filename of this me & "/inspector/editors/" into tEditorsFolder
-   set the defaultfolder to tEditorsFolder
+   put item 1 to -3 of the filename of this me & "/inspector/editors/" into tEditorsFolder	
+   revIDEPushDefaultFolder tEditorsFolder
    set the itemdel to "."
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
@@ -38,6 +38,7 @@ before openStack
    
    # Add the preference to use icons / names
    addFrameItem (the short name of me) & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
+   revIDEPopDefaultFolder
 end openStack
 
 # Sent when the preference changes
@@ -331,13 +332,11 @@ on inspectorGenerateGroups pGroupList
       set the name of it to tElement["label"]
       show group tElement["label"] of me
       unlock messages
+      set the rowShowLabel of group tElement["label"] of me to true
       
       local tName
       put the short name of group tElement["label"] of me into tName
       if exists(group tElement["label"] of me) then
-         if tElement["label"] is not tElement["subsection"] then
-            set the rowLabel of group tElement["label"] of me to tElement["label"]
-         end if
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
@@ -352,8 +351,21 @@ on inspectorGenerateGroups pGroupList
             end if
          end repeat
          
-         # Set the tooltip for the row
-         set the rowTooltip of group tElement["label"] of me to tPropList
+         # Set the tooltip and label for the row according to 'language names' pref
+         global gRevLanguageNames
+         local tTooltip, tLabel
+         if gRevLanguageNames then
+            put tPropList into tLabel
+            put tElement["label"] into tTooltip
+         else
+            put tPropList into tTooltip
+            put tElement["label"] into tLabel
+         end if
+         
+         set the rowTooltip of group tElement["label"] of me to tTooltip
+         if tElement["label"] is not tElement["subsection"] then
+            set the rowLabel of group tElement["label"] of me to tLabel
+         end if
       end if
       put empty into tPropList
    end repeat
@@ -507,9 +519,6 @@ local sRowLabelWidth
 function rowlabelWidth
    if sRowLabelWidth <= 0 then
       put rowLabelWidthCalculate() into sRowLabelWidth
-      if sRowLabelWidth is not a number then
-         rowLabelWidthSet 100
-      end if
    end if
    return sRowLabelWidth
 end rowlabelWidth
@@ -520,6 +529,8 @@ end rowLabelWidthSet
 
 private function rowLabelWidthCalculate
    local tMaxWidth, tLabelWidth, tChildren
+   put 0 into tMaxWidth
+   
    put the childControlNames of this card of me into tChildren
    repeat for each line tControl in tChildren
       if there is a field "rowlabel" of group tControl of me then

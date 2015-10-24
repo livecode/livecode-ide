@@ -1394,7 +1394,7 @@ private function revMenubarObjectMenu pContext
       else if pContext["allGraphics"] then
          put "Flip Graphic" into tFlipText
          put "Rotate Graphic" into tRotateText
-         if the long id of stack "revReshapeLibrary" is among the lines of the frontScripts then
+         if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
             put "!cReshape Graphic" into tReshapeText
          else 
             put "Reshape Graphic" into tReshapeText
