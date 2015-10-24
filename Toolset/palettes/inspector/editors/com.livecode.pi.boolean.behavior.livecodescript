@@ -1,7 +1,7 @@
 ﻿script "com.livecode.pi.boolean.behavior"
 on editorInitialize
    set the editorMinWidth of me to 20
-   set the label of button "checkbox" of me to the rowLabel of me
+   set the label of button "checkbox" of me to the editorLabel of me
    set the rowShowLabel of me to false
 end editorInitialize
 

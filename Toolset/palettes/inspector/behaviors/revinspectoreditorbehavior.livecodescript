@@ -216,3 +216,12 @@ end storedValue
 on storeProperty
    dispatch "editorStoreValue" with sPropertyInfo["property_name"], sValue
 end storeProperty
+
+getProp editorLabel
+   global gRevLanguageNames
+   if gRevLanguageNames then
+      return sPropertyInfo["property_name"]
+   else
+      return sPropertyInfo["label"]
+   end if
+end editorLabel

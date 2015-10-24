@@ -94,13 +94,16 @@ end propertyDeregistor
 
 # Sets the text for the row label
 constant kLabelHeight = 21
+local sShowLabel
 setprop rowLabel pLabel
-   local tTopLeft
-   put the topleft of field "rowlabel" of me into tTopLeft
    put pLabel into field "rowlabel" of me
-   set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
-   set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
-   set the topleft of field "rowlabel" of me to tTopLeft
+   if sShowLabel is true then
+      local tTopLeft
+      put the topleft of field "rowlabel" of me into tTopLeft
+      set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+      set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
+      set the topleft of field "rowlabel" of me to tTopLeft
+   end if
 end rowLabel
 
 getProp rowLabel
@@ -108,15 +111,16 @@ getProp rowLabel
 end rowLabel
 
 setProp rowShowLabel pValue
+   put pValue into sShowLabel
    if pValue then
-      set the width of field "rowlabel" of me to the rowLabelWidth of me
+      show field "rowlabel" of me
    else
-      put empty into field "rowlabel" of me
+      hide field "rowlabel" of me
    end if
 end rowShowLabel
 
 getprop rowLabelWidth
-   if field "rowlabel" of me is not empty then
+   if sShowLabel is true then
       return the formattedwidth of field "rowlabel" of me
    else
       return 0
