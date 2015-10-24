@@ -476,6 +476,9 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   
    local tPaletteFolder, tFolders
    put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
    put tPaletteFolder into tFolders
@@ -545,34 +548,13 @@ function revInternal__StackFiles
       end repeat
    end repeat
    
+   set the defaultFolder to tDefaultFolder
+   
    repeat for each key tKey in tStackFilesA
       put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
    end repeat
    delete the last char of tStackFiles
    return tStackFiles
-   /*
-   local tStackFiles
-   local tUserPath, tPath
-   put revEnvironmentToolsPath() into tPath
-   put revEnvironmentUserToolsetPath() into tUserPath
-   
-   local tItem
-   set the itemDelimiter to tab
-   repeat for each line tItem in field "Toolset" of card "Data" of stack "Home"
-      if item 2 of tItem is "Resources" then
-         put item 1 of tItem, tPath & slash & item 3 of tItem & return after tStackFiles
-      else if item 2 of tItem is "Unsupported" then
-         put item 1 of tItem, tPath & "/Unsupported/" & item 3 of tItem & return after tStackFiles
-      else if there is a file (tUserPath & "/" & item 3 of tItem) then
-         put item 1 of tItem, tUserPath & "/" & item 3 of tItem & return after tStackFiles
-      else if not revEnvironmentIsInstalled() and (item 3 of tItem ends with ".livecodescript") then
-         put item 1 of tItem, (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & item 3 of tItem) & return after tStackfiles
-      else
-         put item 1 of tItem, tPath & "/Toolset/" & item 3 of tItem & return after tStackFiles
-      end if
-   end repeat
-   return tStackFiles
-   */
 end revInternal__StackFiles
 
 private command revInternal__SetupPreferences

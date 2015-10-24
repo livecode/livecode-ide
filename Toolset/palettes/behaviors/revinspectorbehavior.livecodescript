@@ -23,7 +23,7 @@ before openStack
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
    put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
-   set the defaultfolder to tEditorsFolder
+   revIDEPushDefaultFolder tEditorsFolder
    set the itemdel to "."
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
@@ -38,6 +38,7 @@ before openStack
    
    # Add the preference to use icons / names
    addFrameItem (the short name of me) & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
+   revIDEPopDefaultFolder
 end openStack
 
 # Sent when the preference changes
