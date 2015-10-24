@@ -1208,27 +1208,6 @@ function __unescapeString pString
    return pString
 end __unescapeString
 
-on revIDEOpenPropertyInspectorControllerStacks
-   lock screen
-   local tControllersFolder
-   put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
-   revIDEPushDefaultFolder tControllersFolder
-   
-   repeat for each line tControllerStackFile in the files
-      if char 1 of tControllerStackFile is "." then next repeat
-      --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
-      --      if there is a stack (char 1 to -5 of tControllerStack) then next repeat
-      if there is a file (tControllersFolder & slash & tControllerStackFile) then
-         lock messages
-         go invisible stack (tControllersFolder & slash & tControllerStackFile)
-         unlock messages
-      end if
-   end repeat
-
-   revIDEPopDefaultFolder
-   unlock screen
-end revIDEOpenPropertyInspectorControllerStacks
-
 on revIDEInitialiseIDELibrary
    # Load fonts
    start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
@@ -1238,9 +1217,6 @@ on revIDEInitialiseIDELibrary
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" into sControlPropertiesToRead
    put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
    put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
-
-   ## Load property inspector controller stacks
-   --revIDEOpenPropertyInspectorControllerStacks
 
    ## Load Extensions
    revIDEInitialiseExtensions

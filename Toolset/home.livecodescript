@@ -249,11 +249,7 @@ on revInternal__openStack
       if revIDEPrefGet("StartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
-      
-      try 	 	
-         revIDEOpenPropertyInspectorControllerStacks 	 	
-      end try 
-      
+
       -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
       -- Luanch the installer in update mode to begin update process.
       --
