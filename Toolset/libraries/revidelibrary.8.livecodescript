@@ -1776,30 +1776,35 @@ function revIDEMainStacks
 end revIDEMainStacks
 
 function revIDEStacksForDataView pIndex
-   --pExpandedStructure
    # Are IDE stacks required
-   local tShowIDEStacks
+   local tShowIDEStacks, tOrder
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-
+   put revIDEGetPreference("ideProjectBrowser_order") into tOrder
+   if tOrder is empty then put "name" into tOrder
+   
    # Get list of stacks to display
-   local tMainStacks
+   local tMainStacks, tFilteredStacks
+   
+   put the mainstacks into tMainStacks
+   if tOrder is "name" then
+      sort lines of tMainStacks ascending
+   end if
    if tShowIDEStacks then
-      put the mainstacks into tMainStacks
+      put tMainStacks into tFilteredStacks
    else
-      repeat for each line tMainStack in the mainstacks
-         --if tMainStack begins with "rev" or the mode of stack tMainStack is not 1 then next repeat
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack is not 1 then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
+      repeat for each line tMainStack in tMainStacks
+         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 1 then next repeat
+         if tFilteredStacks is empty then
+            put tMainStack into tFilteredStacks
          else
-            put return & tMainStack after tMainStacks
+            put return & tMainStack after tFilteredStacks
          end if
       end repeat
    end if
-
+   
    # Recurse through the stacks to get their data
    local tStacksData, tCount
-   repeat for each line tStack in tMainStacks
+   repeat for each line tStack in tFilteredStacks
       dispatch function "__readStructureOfStackForDataView" to stack tStack with tStacksData,, 1,pIndex
    end repeat
    return tStacksData
