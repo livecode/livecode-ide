@@ -15,7 +15,7 @@ behavior	Behavior	Advanced	com.livecode.pi.script	true	false
 blendLevel	Blend Level	Colors	com.livecode.pi.number	true	false					0	100	1			
 borderColor	Border/Grid Color	Colors	com.livecode.pi.color	true	false	Border Fill		
 borderPattern	Border/Grid Pattern	Colors	com.livecode.pi.pattern	true	false	Border Fill		
-borderWidth	Border Width	Basic	com.livecode.pi.integer	true	false					1		1			
+borderWidth	Border Width	Basic	com.livecode.pi.integer	true	false					0		1			
 bottom	Bottom	Position	com.livecode.pi.integer	true	false		no_default					1
 bottomColor	Inset Bevel Color	Colors	com.livecode.pi.color	true	false	Bottom Bevel Fill		
 bottomPattern	Inset Bevel Pattern	Colors	com.livecode.pi.pattern	true	false	Bottom Bevel Fill		
