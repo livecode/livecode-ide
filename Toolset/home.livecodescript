@@ -1149,8 +1149,10 @@ command revInternal__InitialiseDefaults
          revInternal__Log "message", "Trying to set the default text of stack home"
          if item 2 of the systemVersion < 10 then
             set the textFont of stack "Home" to "Lucida Grande"
-         else
+         else if item 2 of the systemVersion < 11 then
             set the textFont of stack "Home" to "Helvetica Neue"
+         else
+         	set the textFont of stack "Home" to "San Francisco"
          end if
          
          set the textSize of stack "Home" to 11
