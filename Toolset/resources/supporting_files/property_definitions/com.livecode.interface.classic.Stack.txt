@@ -1,7 +1,7 @@
 type	stack
 title Stack
 
-Property	Default	Options	Group
+Property	Default	Options	Group	Read-Only	Section
 ----------------------------------------------------------------------------------------------------
 name		
 title		
@@ -11,7 +11,7 @@ windowShape
 scaleFactor	1	
 metal	false	
 liveResizing	false	
-shadow	true		Basic
+shadow	true				Basic
 visible	true	
 formatForPrinting	false	
 systemWindow	false	

@@ -1,0 +1,1 @@
+# Stack shadow property appears in icons pane of PI
