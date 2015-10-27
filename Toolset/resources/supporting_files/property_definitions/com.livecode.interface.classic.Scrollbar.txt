@@ -4,6 +4,7 @@ title	Scrollbar
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
 name	Scrollbar	
+tooltip
 style	scrollbar	progress,scale,scrollbar
 visible	true	
 disabled	false	
