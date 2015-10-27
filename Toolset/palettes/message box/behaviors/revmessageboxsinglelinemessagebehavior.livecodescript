@@ -72,6 +72,7 @@ command revDisplayAutoComplete pString
       put the number of lines in lMatchingHistory into lNumMatching
       put 1 into lMatchingIndex
       put field "message" & char (the number of chars of field "message" +1) to (the number of chars of line 1 of lMatchingHistory) of  line 1 of lMatchingHistory into field "auto complete"
+      set the hscroll of field "auto complete" to the hscroll of field "message"
    else 
       put empty into field "auto complete"
    end if
