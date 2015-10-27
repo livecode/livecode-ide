@@ -1,36 +1,101 @@
-﻿script "revInspector"
-constant kPropertyInspectorPrefix = "revPropertyInspector"
+﻿script "revInspectorTemplate"
+local sSelectedObjects
+local sInspectorLock
 on preOpenStack
-   inspectorMessagesRegister
+   put false into sInspectorLock
+   put revIDESelectedObjects() into sSelectedObjects
+   revIDESubscribe "idePropertyChanged",sSelectedObjects
+   inspectorTitleUpdate
+    
+   # Set the inspector behaviour
+   dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of me
 end preOpenStack
 
-on inspectorMessagesRegister
-   revIDESubscribe "ideSelectedObjectChanged"
-   revIDESubscribe "ideResumeStack"
-   revIDESubscribe "ideNewStack"
-   revIDESubscribe "ideInspectObjects"
-   revIDESubscribe "ideCloseStack"
-   revIDESubscribe "ideNameChanged"
-end inspectorMessagesRegister
+on openStack   
+   lock screen
+   
+   if intersect(me, revIDEStackOfObject(line 1 of sSelectedObjects)) then
+      revIDEPositionPaletteDefault the short name of me
+   end if
+   
+   # Register of IDE messages
+   revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
+   
+   //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
+   set the navigationDisplayStyle of me to "icons"
+   
+   # Get a list of the properties and groups we'll be displaying
+   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   
+   set the visible of me to true
+   unlock screen
+end openStack
 
-on inspectorMessagesDeRegister
-   revIDEUnsubscribe "ideSelectedObjectChanged"
-   revIDEUnsubscribe "ideResumeStack"
-   revIDEUnsubscribe "ideInspectObjects"
-   revIDEUnsubscribe "ideNewStack"
-   revIDEUnsubscribe "ideCloseStack"
-   revIDEUnsubscribe "ideNameChanged"
-end inspectorMessagesDeRegister 
+on closeStack
+   ## Unsubscribe from all messages
+   revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
+end closeStack
 
-on inspectorCloseAll
-   ## Unsubscribe from all messges
-   inspectorMessagesDeRegister
-   revIDEStopInspecting
-end inspectorCloseAll
+on resizeStack
+   resizeInspector
+end resizeStack
+
+#####################
+#### PI PROPERTIES #####
+#####################
+
+setProp cSelectedObjects pSelectedObjects
+   if pSelectedObjects is sSelectedObjects then exit cSelectedObjects
+   
+   # Unsubscribe the the objects previously 
+   revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
+   
+   if pSelectedObjects is empty then 
+      inspectorClear
+      exit cSelectedObjects
+   end if
+   
+   lock screen
+   revIDESubscribe "idePropertyChanged", pSelectedObjects
+   put pSelectedObjects into sSelectedObjects
+   
+   # Get a list of the properties and groups we'll be displaying
+   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   inspectorTitleUpdate
+   unlock screen
+end cSelectedObjects
+
+getProp cSelectedObjects
+   return sSelectedObjects
+end cSelectedObjects
+
+setProp cLocked pState
+   if pState is false then
+      put false into sInspectorLock
+      send "ideSelectedObjectChanged" to stack "revInspector" in 0 millisecs
+   else
+      put true into sInspectorLock
+   end if
+end cLocked
+
+getProp cLocked
+   return sInspectorLock
+end cLocked
 
 #####################
 #### PI FUNCTIONS #####
 #####################
+
+on inspectorLock pState
+   set the cLocked of me to pState
+end inspectorLock
+
+on idePropertyChanged
+   lock screen
+   inspectorFill
+   inspectorTitleUpdate
+   unlock screen
+end idePropertyChanged
 
 on inspectorTreeMenuDisplay
    local tObjects, tStack, tDefaultStack, tControls, tNumControls, tCheck
@@ -38,9 +103,9 @@ on inspectorTreeMenuDisplay
    local tCurrentProfile, tProfiles2, tHandlers, tSendMessageList, tLockInspector, tFocusedObject
    
    global gREVShowStacks
-
-   put the cSelectedObjects of me into tObjects
-   revSetGeometryObject tObjects
+   revSetGeometryObject sSelectedObjects
+   
+   put sSelectedObjects into tObjects
    put revTargetStack(line 1 of tObjects) into tStack
    put the defaultStack into tDefaultStack
    
@@ -96,7 +161,7 @@ on inspectorTreeMenuDisplay
    end repeat
    delete last char of tCards
    sort lines of tCards by item 2 of each
-   
+
    put tab & "Card" & cr before tCards
    
    set the defaultStack to tDefaultStack
@@ -129,11 +194,9 @@ on inspectorTreeMenuDisplay
       end if
    else put "(Send Message" into tSendMessageList
    
-   if the cLocked of me is true then
-      put "!cLock Inspector" into tLockInspector
-   else 
-      put "!nLock Inspector" into tLockInspector
-   end if
+   if the cREVLinked of this stack is not empty
+   then put "!cLock Inspector" into tLockInspector
+   else put "!nLock Inspector" into tLockInspector
    
    if the number of lines in tControls > 20 then 
       replace cr with cr & tab & tab in tCards
@@ -157,7 +220,7 @@ on menuPick pWhich
          and revIDEStackOfObject(tFocusedObject) is the short name of this stack
    then send "closeField" to tFocusedObject
    
-   put the cSelectedObjects of me into tObjects
+   put sSelectedObjects into tObjects
    put revIDEStackOfObject(line 1 of tObjects) into tStack
    set the itemDel to "|"
    switch item 1 of pWhich
@@ -214,99 +277,75 @@ private function menuitemEscape pItem, pFirst
    return pItem
 end menuitemEscape
 
-local sInspectorsA, sInspectorMax
-private function inspectorList
-   return sInspectorsA
-end inspectorList
-
-private on addInspectorToList pInspectorNumber
-   put pInspectorNumber into sInspectorsA[pInspectorNumber]
-   put max(pInspectorNumber, sInspectorMax) into sInspectorMax
-end addInspectorToList
-
-private on removeInspectorFromList pInspectorNumber
-   delete variable sInspectorsA[pInspectorNumber]
-   if pInspectorNumber is sInspectorMax then
-      put max(sInspectorsA) into sInspectorMax
-   end if
-end removeInspectorFromList
-
-private on deleteInspector pInspectorNumber
-   delete stack (kPropertyInspectorPrefix && pInspectorNumber)
-   removeInspectorFromList pInspectorNumber
-end deleteInspector
-
-on ideInspectObjects pObjects
-   # Get the selected objects
-   local tSelectedObjects
-   if pObjects is not empty then
-      put pObjects into tSelectedObjects
+private on inspectorTitleUpdate
+   if sSelectedObjects is empty then 
+      set the title of me to "No object selected"
+   else if the number of lines of sSelectedObjects is 1 then
+      if exists(sSelectedObjects) then
+         set the title of me to the name of sSelectedObjects && "(id"&& the id of sSelectedObjects&")"
+      end if
    else
-      put revIDESelectedObjects() into tSelectedObjects
+      set the title of me to "Multiple objects"
    end if
-   
-   local tStackName, tTargetInspector, tKeys
-   put the keys of inspectorList() into tKeys
-   sort tKeys ascending numeric
-   repeat for each line tKey in tKeys
-      put kPropertyInspectorPrefix && tKey into tStackName
-      if the cLocked of stack tStackName is true then next repeat
-      
-      if tTargetInspector is empty then
-         put tStackName into tTargetInspector
-      else
-         # Delete any unlocked inspectors other than the target
-         deleteInspector tKey
-      end if
-   end repeat
-   
-   lock screen 
-   lock messages
-   # If all the inspectors are locked, or there aren't any, create a new one.
-   if tTargetInspector is empty then
-      local tNewInspectorName
-      put kPropertyInspectorPrefix && sInspectorMax + 1 into tNewInspectorName
-      clone invisible stack "revInspectorTemplate"
-      set the name of it to tNewInspectorName
-      set the behavior of stack tNewInspectorName to the long id of this me
-      put tNewInspectorName into tTargetInspector
-      addInspectorToList sInspectorMax + 1
-   end if
-   
-   unlock messages
-   unlock screen
-   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
-   
-   lock messages
-   palette stack tTargetInspector
-   unlock messages
-end ideInspectObjects
+end inspectorTitleUpdate
 
-on ideResumeStack
-   ideSelectedObjectChanged
-end ideResumeStack
+#####################
+##### MESSAGES #####
+#####################
 
-on ideNewStack
-   ideSelectedObjectChanged
-end ideNewStack
+# Sent by an editor when a property value is being changed
+on editorValueChanged pProperty, pValue, pLockUpdates
+   revIDEPropertySet sSelectedObjects, pProperty, pValue
+end editorValueChanged
 
-on ideCloseStack
-   ideSelectedObjectChanged
-end ideCloseStack
+function editorStoredValue pProperty
+   return revIDEPropertyRetrieveStored(sSelectedObjects, pProperty)
+end editorStoredValue
 
-on ideNameChanged
-   ideSelectedObjectChanged
-end ideNameChanged
+on editorStoreValue pProperty, pValue
+   revIDEPropertyStore sSelectedObjects, pProperty, pValue
+end editorStoreValue
 
-# Sent by the IDE when the selection changed
-on ideSelectedObjectChanged
-   local tStackName
-   repeat for each key tKey in inspectorList()
-      put kPropertyInspectorPrefix && tKey into tStackName
-      if the cLocked of stack tStackName is false and the mode of stack tStackName is not 0 then
-         ideInspectObjects revIDESelectedObjects()
-         exit repeat
-      end if
-   end repeat
-end ideSelectedObjectChanged
+on idePreferenceChanged pPreference
+   switch pPreference
+      case "idePropertyInspector_labels"
+         inspectorChanged
+         break
+   end switch
+end idePreferenceChanged
    
+
+# Sent by the IDE when a property has changed
+on revIDEPropertyChanged
+   # Get values for properties in given group
+   
+   # Set values for all editors
+   
+   # Layout
+end revIDEPropertyChanged
+
+getProp displayData
+   return revIDEPropertiesOfSection(sSelectedObjects, inspectorSectionGetName())
+end displayData
+
+getProp viewColumns [pSection]
+   return 1
+end viewColumns
+
+getProp showSubSections [pSection]
+   return false
+end showSubSections
+
+function inspectorSectionIcon pSection
+   return revIDEPropertySectionNameToIconName(pSection)
+end inspectorSectionIcon
+
+# Add to header actions/preferences
+on inspectorAddActions
+   addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
+   addFrameItem "inspectorLock","header", "toggle", "Lock Inspector", "unlock alt", "lock","inspectorLock", the long id of me
+end inspectorAddActions
+
+getProp showMultiPropLabels
+   return false
+end showMultiPropLabels

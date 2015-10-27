@@ -824,7 +824,7 @@ end mouseDown
 on revMenubarMenuButtonClicked pWhich
    switch pWhich
       case "Inspector"
-         revIDEOpenPalette "inspector"
+         revIDEActionInspectObjects
          break
       case "Code"
          if (the selectedObject) is empty then

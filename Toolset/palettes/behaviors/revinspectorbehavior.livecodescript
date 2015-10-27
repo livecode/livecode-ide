@@ -22,7 +22,7 @@ before openStack
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
-   put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
+   put item 1 to -3 of the filename of this me & "/inspector/editors/" into tEditorsFolder	
    revIDEPushDefaultFolder tEditorsFolder
    set the itemdel to "."
    repeat for each line tFile in the files
@@ -389,7 +389,7 @@ private on inspectorNavigationGenerate
    end repeat
    
    dispatch "inspectorAddActions" to me
-   resizeStack
+   dispatch "resizeStack" to me
    unlock screen
 end inspectorNavigationGenerate
 

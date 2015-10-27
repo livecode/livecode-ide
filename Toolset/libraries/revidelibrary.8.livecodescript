@@ -1208,27 +1208,6 @@ function __unescapeString pString
    return pString
 end __unescapeString
 
-on revIDEOpenPropertyInspectorControllerStacks
-   lock screen
-   local tControllersFolder
-   put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
-   revIDEPushDefaultFolder tControllersFolder
-   
-   repeat for each line tControllerStackFile in the files
-      if char 1 of tControllerStackFile is "." then next repeat
-      --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
-      --      if there is a stack (char 1 to -5 of tControllerStack) then next repeat
-      if there is a file (tControllersFolder & slash & tControllerStackFile) then
-         lock messages
-         go invisible stack (tControllersFolder & slash & tControllerStackFile)
-         unlock messages
-      end if
-   end repeat
-
-   revIDEPopDefaultFolder
-   unlock screen
-end revIDEOpenPropertyInspectorControllerStacks
-
 on revIDEInitialiseIDELibrary
    # Load fonts
    start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
@@ -1238,9 +1217,6 @@ on revIDEInitialiseIDELibrary
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" into sControlPropertiesToRead
    put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
    put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
-
-   ## Load property inspector controller stacks
-   --revIDEOpenPropertyInspectorControllerStacks
 
    ## Load Extensions
    revIDEInitialiseExtensions
@@ -1462,15 +1438,8 @@ on revIDEMessageSend pMessage, pEffectedTarget
          next repeat
       end if
       
-      local tStackID
-      set the itemdel to "stack"
-      put tObjectID into tStackID
-      delete item 1 of tStackID
-      if tStackID begins with "tack" then delete char 1 to 4 of tStackID
-      put "stack" before tStackID
-      # If the stack isn't visible on screen, don't send a message
-      # Unless it is the menubar, which should always be able to receive messages
-      if the mode of tStackID is 0 or (tStackID is not the long name of stack revIDEPaletteToStackName("menubar") and the visible of tStackID is false) then 
+      # If the stack isn't open, don't send a message
+      if the mode of revIDEStackOfObject(tObjectID) is 0 then 
          next repeat
       end if
       
@@ -2782,14 +2751,15 @@ function revIDEGetInspectedObjects
 end revIDEGetInspectedObjects
 */
 local sInspectingObjects
+
 command revIDEInspectObjects pObjects
    lock screen
    put pObjects into sInspectingObjects
    revIDESelectObjects pObjects
-   send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
-   if the mode of stack revIDEPaletteToStackName("inspector") is 0 or the visible of stack revIDEPaletteToStackName("inspector") is false then
-      revIDEOpenPalette "inspector"
-   end if
+   
+   revIDEOpenPalette "inspector"
+
+   revIDEMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
 
@@ -3774,7 +3744,10 @@ private function revIDEPaletteBarHeight pStackID
 end revIDEPaletteBarHeight
 
 /*
-Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
+Opens an IDE stack as a palette. In the future this should be changed so that
+palettes can decide what mode they ought to be opened in, i.e. this logic should
+be removed from the IDE library and be specific to the stack rather than the 
+palette name.
 
 pPaletteName (String):The readable name of the palette to be opened
 example: revIDEOpenPalette "inspector"
@@ -3801,7 +3774,6 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
-      case "inspector"
       case "message box"
       case "standalone settings"
       case "message watcher"
@@ -3823,6 +3795,11 @@ command revIDEOpenPalette pPaletteName
       case "dictionary"
          toplevel stack tStackName
          break
+      case "inspector"
+         # The inspector stack is now a manager for property inspectors, 
+         # and does not need to be visible.
+         go invisible stack tStackName as palette
+         return empty
       default
          return __revIDEError("No such palette:" && pPaletteName)
    end switch

@@ -284,8 +284,12 @@ on generateFrame
                put tNavItem["name"] into tSelected
             end if
             break
+         case "toggle"
          case "action"
             put tNavItem["enabled"] into tDataA["enabled"]
+            if tNavItem["selected"] then
+               put tNavItem["icon_selected"] into tDataA["icon"]
+            end if
             if tNavItem["location"] is "header" then
                add 1 to tHeaderActionCount
                put tDataA into tHeaderActionDataA[tHeaderActionCount]
@@ -518,25 +522,29 @@ after idePreferenceChanged
    dispatch "resizeStack" to this card
 end idePreferenceChanged
 
-private on __doCallback pDataItem
+private on __doCallback pDataIndex
+   local tData
+   put sData[pDataIndex] into tData
+   
    # Get callback info
    local tMessage, tTarget, tParameter
-   put pDataItem["message"] into tMessage
-   put pDataItem["target"] into tTarget
-   put pDataItem["parameter"] into tParameter   
+   put tData["message"] into tMessage
+   put tData["target"] into tTarget
+   put tData["parameter"] into tParameter   
    
    # Set highlight
-   switch pDataItem["type"] 
+   switch tData["type"] 
       case "navigation" 
          __unhiliteFrameNavigation
          dispatch tMessage to tTarget with tParameter
+         put true into sData[pDataIndex]["selected"]
          break
       case "toggle"
-         if pDataItem["selected"] is true then
-            dispatch tMessage to tTarget with false
-         else
-            dispatch tMessage to tTarget with true
-         end if
+         local tNewValue
+         put not tData["selected"] into tNewValue
+         dispatch tMessage to tTarget with tNewValue
+         put tNewValue into sData[pDataIndex]["selected"]
+         generateFrame
          break
       default
          dispatch tMessage to tTarget with tParameter
@@ -549,7 +557,7 @@ before actionSelected pActionName
    # Get index
    local tIndex
    put __frameItemNameToIndex(pActionName) into tIndex
-   __doCallback sData[tIndex]
+   __doCallback tIndex
    unlock screen
 end actionSelected
 
@@ -558,8 +566,7 @@ before navSelected pNavName
    # Get index
    local tIndex
    put __frameItemNameToIndex(pNavName) into tIndex
-   __doCallback sData[tIndex]
-   put true into sData[tIndex]["selected"]
+   __doCallback tIndex
    unlock screen
 end navSelected
 
