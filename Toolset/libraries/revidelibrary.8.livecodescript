@@ -4477,6 +4477,10 @@ function revIDEMessageBoxBehavior pWhich
          return tPathToBehaviors & slash & "revmessageboxsinglelinemessagebehavior.livecodescript"
       case "single line card"
          return tPathToBehaviors & slash & "revmessageboxsinglelinecardbehavior.livecodescript"
+      case "multiple lines message"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinesmessagebehavior.livecodescript"
+      case "multiple lines card"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinescardbehavior.livecodescript"
       default
          return empty  
    end switch
