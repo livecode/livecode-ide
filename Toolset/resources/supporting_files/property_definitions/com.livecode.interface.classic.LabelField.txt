@@ -7,16 +7,16 @@ name	Label Field
 text	Label:	
 tooltip		
 disabled	false	
-traversalOn	false	
 visible	true	
+dontWrap	true	
+lockText	true	
+opaque	false	
+traversalOn	false	
 showFocusBorder	true	
 sharedText	true	
 autoTab	true	
-dontWrap	true	
 threeD	true	
-lockText	true	
 showBorder	false	
-opaque	false	
 borderWidth	2	
 hScrollbar	false	
 vScrollbar	false	
