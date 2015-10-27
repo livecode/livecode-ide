@@ -598,10 +598,9 @@ on appleEvent p1, p2, p3
          if not tExists then answer error "Unable to open stack:" && the result
          else go stack tCanonical
       end repeat
-      -------------------------------------------------------
-      --LG 2008-02-28
-      send "revUpdatePalette" to card 1 of stack "revMenuBar"
-      -------------------------------------------------------
+      
+      revIDEMessageSend "ideOpenStack"
+      
       exit appleEvent
    end if
    pass appleEvent
