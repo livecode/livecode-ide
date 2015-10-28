@@ -7,16 +7,16 @@ name	Label Field
 text	Label:	
 tooltip		
 disabled	false	
-traversalOn	false	
 visible	true	
+dontWrap	true	
+lockText	true	
+opaque	false	
+traversalOn	false	
 showFocusBorder	true	
 sharedText	true	
 autoTab	true	
-dontWrap	true	
 threeD	true	
-lockText	true	
 showBorder	false	
-opaque	false	
 borderWidth	2	
 hScrollbar	false	
 vScrollbar	false	
@@ -31,6 +31,13 @@ firstIndent	0
 dontSearch	false	
 layerMode
 behavior
+basicTableObject	false	
+maxEditableColumns		
+cellFormatting	false	
+showLines	false	
+hGrid	false	
+vGrid	false	
+tabStops		
 foregroundColor			Text Fill
 foregroundPattern			Text Fill		
 backgroundColor		
