@@ -41,11 +41,15 @@ on commandKeyDown pKey
       put empty into field "auto complete"
       exit commandKeyDown
    end if
-   if pKey is "V" then get clipboardData["text"] 
+   if pKey is "V" then 
+      revDisplayAutoComplete clipboardData["text"] 
+   end if
    pass commandKeyDown
 end commandKeyDown
 
 command revInitialise
+   set the textStyle of me to empty
+   
    local tLine, tInHistory
    
    put revIDEGetPreference("IDESingleLineMessageHistory") into lHistory
@@ -67,8 +71,12 @@ end revInitialise
 
 command revDisplayAutoComplete pString
    set the textColor of field "auto complete" to "gray70"
-   if pString is not empty then 
-      put  revIDEAutoComplete(pString) into lMatchingHistory
+   
+   local tString
+   put revIDEAutoComplete(pString) into tString
+   
+   if tString is not empty then 
+      put tString into lMatchingHistory
       put the number of lines in lMatchingHistory into lNumMatching
       put 1 into lMatchingIndex
       put field "message" & char (the number of chars of field "message" +1) to (the number of chars of line 1 of lMatchingHistory) of  line 1 of lMatchingHistory into field "auto complete"
