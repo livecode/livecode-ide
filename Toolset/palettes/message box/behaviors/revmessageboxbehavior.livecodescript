@@ -8,8 +8,16 @@ constant kHistoryMax = 200
 constant kHalfMessageFieldHeight = 12.5
 constant kExternalErrorCode = 0
 
-on preOpenStack
+on setAsBehavior pTarget
+   set the behavior of pTarget to the long id of this me
+   setBehaviors
+end setAsBehavior
+
+on setBehaviors
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
+end setBehaviors
+
+on openStack   
    lock messages
    --set the zoomBox of this stack to false
    unlock messages
@@ -87,7 +95,7 @@ on preOpenStack
    set the left of this stack to the cREVLeft of this stack
    set the top of this stack to the cREVTop of this stack
    unlock messages
-end preOpenStack
+end openStack
 
 on moveStack
    --set the position of the stack as a custom property so when it is reopened/different card is selected it remains in the same location
@@ -472,6 +480,7 @@ on msgChanged
    set the text of tField to msg
    
    -- PM-2015-06-26: [[ Bug 15478 ]] Make msg box to auto scroll
+   local tLines, tHeight
    put the number of lines of the text of tField into tLines
    put the effective textHeight of tField into tHeight
    set the vScroll of tField to tLines * tHeight 
@@ -799,7 +808,7 @@ command revIDESetActiveStack
       end if
    end if
    unlock screen
-end revIDESetActiveStack
+end revIDESetActiveStack 
 
 command revUpdateActiveStack pOldName, pNewName
    if revIDEGetPreference("IDELockedToStack") is false then

@@ -4469,6 +4469,23 @@ function revIDEScriptEditorBehavior pWhich
    end switch
 end revIDEScriptEditorBehavior
 
+function revIDEMessageBoxBehavior pWhich
+   local tPathToBehaviors
+   put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "message box" & slash & "behaviors" into tPathToBehaviors
+   switch pWhich
+      case "single line message"
+         return tPathToBehaviors & slash & "revmessageboxsinglelinemessagebehavior.livecodescript"
+      case "single line card"
+         return tPathToBehaviors & slash & "revmessageboxsinglelinecardbehavior.livecodescript"
+      case "multiple lines message"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinesmessagebehavior.livecodescript"
+      case "multiple lines card"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinescardbehavior.livecodescript"
+      default
+         return empty  
+   end switch
+end revIDEMessageBoxBehavior
+
 on revIDEAnswerDialogClosed
    local tPopupSource
    put item 1 of line 1 of the executionContexts into tPopupSource
