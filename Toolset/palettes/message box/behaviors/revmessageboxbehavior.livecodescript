@@ -550,6 +550,14 @@ command revIDEExecuteScript pScript
    if lSelectedCard is "Single Line" then put empty into field "auto complete" of card lSelectedCard of me
    if pScript is empty then exit revIDEExecuteScript
    
+   # Try executing as a command first
+   if word 1 of pScript is among the lines of the commandNames then
+      revIDEDoMessage pScript
+      if the result is empty then
+         return pScript
+      end if
+   end if
+   
    local tIntelligenceObject
    put the cREVIntelligenceObject of me into tIntelligenceObject
    
