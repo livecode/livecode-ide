@@ -39,6 +39,26 @@ on TestBug16281
 	TestAssert "hilite command in msg box", the hilite of tButton
 end TestBug16281
 
+on TestBug15832
+	local tStack
+	create stack
+	put the short name of it into tStack
+	
+	-- Create button and field on the stack
+	set the defaultStack to tStack
+	create button
+	create field
+	
+	-- Change the defaultStack
+	create stack
+	set the defaultStack to the short name of it
+	
+	local tValidScript
+	ideExecuteScript "put the name of button 1; put the name of control 2;", tStack, empty, false, tValidScript
+
+	TestAssert "; in single line message box", word 1 of msg is "field"
+end TestBug15832
+
 on TestGlobalPropertyCompleted
 	local tValidScript
 	ideExecuteScript "backdrop", empty, empty, false, tValidScript
