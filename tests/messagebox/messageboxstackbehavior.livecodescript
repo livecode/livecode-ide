@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
    local tMBoxStackBehavior
-   put IDERepositoryPath() & "/Toolset/palettes/message box/behaviors/revmessageboxbehavior.livecodescript" into tMBoxStackBehavior
+   put TestGetIDERepositoryPath() & "/Toolset/palettes/message box/behaviors/revmessageboxbehavior.livecodescript" into tMBoxStackBehavior
    start using stack tMBoxStackBehavior
 end TestSetup
 
