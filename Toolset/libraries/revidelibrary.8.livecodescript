@@ -1848,20 +1848,47 @@ function revIDEGlobalPropertyContinuousRange pProperty
    return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
-/*
-Gets a list of the mainstacks, taking into account the Show IDE Stacks preference.
-
-returns : An list of main stacks, one per line
-*/
 function revIDEMainStacks
+   return ideMainStacks()
+end revIDEMainStacks
+
+/**
+A list of the current mainstacks
+
+Returns: A list of the names of the mainstacks currently in memory, one per line
+
+Description:
+Use the <ideMainStacks> function to retrieve a list of the names of the mainstacks
+in memory, taking into account the Show IDE Stacks preference.
+**/
+function ideMainStacks
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
 
-   # Get list of stacks to display
-   local tMainStacks
    if tShowIDEStacks then
-      put the mainstacks into tMainStacks
+      return the mainstacks
    else
+      return ideUserMainStacks()
+   end if
+   return tMainStacks
+end ideMainStacks
+
+/**
+A list of the current user mainstacks
+
+Returns: A list of the names of the user mainstacks currently in memory, one per line
+
+Description:
+Use the <ideUserMainStacks> function to retrieve a list of the names of the mainstacks
+in memory, excluding those which are part of the IDE.
+
+See the <revIDEStackNameIsIDEStack> function for details of when a stack is considered
+part of the IDE.
+
+References: revIDEStackNameIsIDEStack (function)
+**/
+function ideUserMainStacks
+   local tMainStack, tMainStacks
       repeat for each line tMainStack in the mainstacks
          if revIDEStackNameIsIDEStack(tMainStack) then next repeat
          if tMainStacks is empty then
@@ -1870,9 +1897,8 @@ function revIDEMainStacks
             put return & tMainStack after tMainStacks
          end if
       end repeat
-   end if
-   return tMainStacks
-end revIDEMainStacks
+   return tMainstacks
+end ideUserMainStacks
 
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
@@ -2247,10 +2273,48 @@ function revIDECardOfObject pLongID
    return word tOffset to -1 of pLongID
 end revIDECardOfObject
 
-function revIDEStackOfObject pLongID
+/**
+The parent stack of an object
+
+pLongID: The long id of an object
+Returns: the long id of the parent stack of <pLongID>
+
+Description:
+Returns the long id of the (immediate) parent stack of the object with long id <pLongID>.
+To retrieve the mainstack of an object, use the <ideMainStackOfObject> function.
+
+References: ideMainStackOfObject (function)
+**/
+function ideStackOfObject pLongID
    local tOffset
    put wordOffset("stack",pLongID) into tOffset
    return word tOffset to -1 of pLongID
+end ideStackOfObject
+
+/**
+The mainstack containing an object
+
+pLongID: The long id of an object
+Returns: the long id of the mainstack containing <pLongID>
+
+Description:
+Returns the long id of the mainstack of the object with long id <pLongID>.
+To retrieve the immediate parent stack of an object which may be a substack, 
+use the <ideStackOfObject> function.
+
+References: ideStackOfObject (function)
+**/
+function ideMainStackOfObject pLongID
+   local tStack
+   put ideStackOfObject(pLongID) into tStack
+   if word 4 of tStack is "stack" then
+      put ideMainStackOfObject(word 4 to -1 of tStack) into tStack
+   end if
+   return tStack
+end ideMainStackOfObject
+
+function revIDEStackOfObject pLongID
+   return ideMainStackOfObject(pLongID)
 end revIDEStackOfObject
 
 on revIDEMoveControl pControl, pNewCard, pLayerNumber
@@ -3979,54 +4043,64 @@ function revIDEOpenPalettes pType
    return __revIDEError("Not a valid palette type")
 end revIDEOpenPalettes
 
-/*
-Returns the next numeic ID for a property inspector
-*/
-function revIDENextPropertyInspectorID
-   local tPIList
-   put revIDEOpenPalettes("inspector") into tPIList
+/**
+Determines whether an object is considered part of the IDE
 
-   if tPIList is empty then
-      return 1
-   else
-      set the itemDel to "_"
-      sort lines of tPIList descending numeric by item 2 of each
-      return item 2 of line 1 of tPIList + 1
-   end if
-end revIDENextPropertyInspectorID
+pLongID: The long id of the object.
+Returns (boolean):
 
-/*
-Returns the name of the first unlocked Property Inspector
-*/
-function revIDEPropertyInspector
-   local tPIList
-   put revIDEOpenPalettes("inspector") into tPIList
+Description:
+Use the <revIDEObjectIsOnIDEStack> function to determine whether an object is
+considered part of the IDE, that is if it is on a stack whose mainstack is part
+of the IDE, according to the <revIDEStackIsIDEStack> function.
 
-   if tPIList is empty then
-      return empty
-   else
-      set the itemDel to "_"
-      sort lines of tPIList ascending numeric by item 2 of each
-
-      repeat for each line tInspector in tPIList
-         if the cLocked of stack tInspector is not true then
-            return tInspector
-         end if
-      end repeat
-      return empty
-   end if
-end revIDEPropertyInspector
-
+References: revIDEStackIsIDEStack (function)
+**/
 function revIDEObjectIsOnIDEStack pLongID
    if not exists(pLongID) then return false
    return revIDEStackNameIsIDEStack(the short name of revIDEStackOfObject(pLongID))
 end revIDEObjectIsOnIDEStack
 
+/**
+Determines whether a stack is considered part of the IDE
+
+pLongID: The long id of the stack.
+Returns (boolean):
+
+Description:
+Use the <revIDEStackIsIDEStack> function to determine whether a stack is
+considered part of the IDE.
+
+A stack is considered part of the IDE if it exists, and
+* Its name begins with "rev"
+* Its name begins with "com.livecode."
+* Its name is "message box, answer dialog, ask dialog, or home"
+
+>*Note:* If the name of the stack is already available, it is more efficient to
+use the <revIDEStackNameIsIDEStack> function.
+
+References: revIDEStackNameIsIDEStack (function)
+**/
 function revIDEStackIsIDEStack pLongID
    if not exists(pLongID) then return false
    return revIDEStackNameIsIDEStack(the short name of pLongID)
 end revIDEStackIsIDEStack
 
+/**
+Determines whether a stack is considered part of the IDE
+
+pStackName: The short name of the stack
+Returns (boolean):
+
+Description:
+Use the <revIDEStackNameIsIDEStack> function to determine whether a stack is
+considered part of the IDE, according to the name of the stack.
+
+A stack is considered part of the IDE if any of the following are satisfied:
+* Its name begins with "rev"
+* Its name begins with "com.livecode."
+* Its name is "message box, answer dialog, ask dialog, or home"
+**/
 function revIDEStackNameIsIDEStack pStackName
    ## Special cases of IDE stacks that don't begin with rev
    if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
@@ -5243,18 +5317,6 @@ on revIDEActionNewScriptOnlyStack
    end if
 end revIDEActionNewScriptOnlyStack
 
-/*
-Creates a new substack.
-
-Associations: stack
-
-pParentStackID (String): The long ID of the stack to attach the substack to.
-
-Example:
-revIDENewSubstack the long ID of the topstack
-
-Tags: ide
-*/
 on revIDENewSubstack
    # Get the current stack
    local tCurrentStack
@@ -5262,6 +5324,18 @@ on revIDENewSubstack
    revIDENewSubstackOfStack tCurrentStack
 end revIDENewSubstack
 
+/*
+Creates a new substack.
+
+Associations: stack
+
+pStack (String): The long ID of the stack to attach the substack to.
+
+Example:
+revIDENewSubstackOfStack the long ID of the topstack
+
+Tags: ide
+*/
 on revIDENewSubstackOfStack pStack
    if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
    
