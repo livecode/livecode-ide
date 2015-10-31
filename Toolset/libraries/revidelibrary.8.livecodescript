@@ -1606,6 +1606,15 @@ end revIDEMessageSend
 #############
 # Data
 #############
+
+/**
+Returns information about the predefined graphic objects.
+
+Returns: an array, keyed by the predefined graphic object types that
+appear in the Tools palette, of properties associated with each of those
+graphic objects.
+
+**/
 function revIDEGraphics
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
@@ -1618,6 +1627,14 @@ function revIDEGraphics
    return tReturnData
 end revIDEGraphics
 
+/**
+Returns information about the graphic creation tools.
+
+Returns: an array, keyed by the graphic creation tool types that appear
+in the Tools palette, of properties associated with the objects created
+by each of those graphic creation tools.
+
+**/
 function revIDEGraphicTools
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
@@ -1630,6 +1647,14 @@ function revIDEGraphicTools
    return tReturnData
 end revIDEGraphicTools
 
+/**
+Returns information about the paint tools.
+
+Returns: an array, keyed by the paint tool types that appear
+in the Tools palette, of properties associated with each of
+those paint tools.
+
+**/
 function revIDEPaintTools
    local tReturnData
    put "tool" into tReturnData["com.livecode.tool.Select"]["type"]
@@ -1684,6 +1709,13 @@ function revIDEPaintToolControllers
    return tReturnData
 end revIDEPaintToolControllers
 
+/**
+Returns information about the run and edit tools.
+
+Returns: an array, keyed by the run and edit tool type IDs, 
+of properties associated with each of those tools.
+
+**/
 function revIDERunEditTools
    local tReturnData
    put "tool" into tReturnData["com.livecode.tool.Browse"]["type"]
@@ -1699,6 +1731,14 @@ function revIDERunEditTools
    return tReturnData
 end revIDERunEditTools
 
+/**
+Returns information about the classic control tools.
+
+Returns: an array, keyed by the classic control tool types that appear
+in the Tools palette, of properties associated with each of those classic 
+control tools.
+
+**/
 function revIDEClassicControls
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
