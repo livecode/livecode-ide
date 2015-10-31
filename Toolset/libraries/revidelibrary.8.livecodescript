@@ -496,7 +496,7 @@ private on __orderClassicTools
 end __orderClassicTools
 
 # Reads in the basic property data for classic controls
-on __objectPropertiesRead
+private on __objectPropertiesRead
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
@@ -652,27 +652,154 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
    end if
 end __objectPropertiesShared
 
+/**
+Information pertaining to the property <pPropName>.
+
+Parameters:
+pPropName (string): One of the IDE canonical object property names.
+
+Returns (array): An array of information pertaining to the given property.
+
+Description:
+This function returns the information pertaining to the object property <pPropName>,
+parsed from the file Toolset/resources/supporting_files/property_definitions.
+
+Information about synonyms is not returned by this function. For a list of the canonical
+property names which are valid inputs to this function, see the <idePropertyNames>
+function.
+
+References: idePropertyNames (function)
+
+**/
 function revIDEPropertyInfo pPropName
+   if sClassicPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
    return sClassicPropertiesInfo[pPropName]
 end revIDEPropertyInfo
 
+/**
+A list of the object property names considered canonical by the IDE
+
+Parameters:
+pObjectType (optional string): One of the IDE's object type IDs
+
+Returns (string): A list of the object property names, one per line.
+
+Description:
+This function returns a list of the object property names considered canonical by
+the IDE, as parsed from the file Toolset/resources/supporting_files/property_definitions.txt.
+
+If the <pObjectType> parameter is used, this returns a list of the properties specific to
+that object type, as parsed from the files in Toolset/resources/supporting_files/.
+
+For a list of the object type IDs which are valid inputs to this function, see the <ideObjectTypes>
+function.
+
+References: ideObjectTypes (function)
+**/
+function idePropertyNames pObjectType
+   if sClassicPropertiesInfo is empty or sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
+
+   local tProps
+   if pObjectType is empty then
+      put the keys of sClassicPropertiesInfo into tProps
+   else
+      put the keys of sClassicObjectPropertiesInfo[pObjectType] into tProps
+   end if
+   sort tProps
+   return tProps
+end idePropertyNames
+
+/**
+A list of the object types, in 'type ID' form
+
+Returns (string): A list of the object types, one per line.
+
+Description:
+This function returns a list of the object types in the form used by the IDE.
+**/
+function ideObjectTypes
+   if sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
+
+   local tTypes
+   put the keys of sClassicObjectPropertiesInfo into tTypes
+   sort tTypes
+   return tTypes
+end ideObjectTypes
+
+/**
+Information pertaining to the property <pPropName> in the context of <pObjectType>.
+
+Parameters:
+pPropName (string): One of the IDE canonical object property names.
+pObjectType (string): One of the IDE's object types.
+
+Returns (array): An array of information pertaining to the given property.
+
+Description:
+This function returns the information pertaining to the object property <pPropName>,
+parsed from the files in Toolset/resources/supporting_files/. In some cases an individual
+property's data can be overridden for a particular object type.
+
+For a list of the canonical property names which are valid inputs to this function, see the
+<idePropertyNames> function. For a list of the object type IDs which are valid inputs
+to this function, see the <ideObjectTypes> function.
+
+References: idePropertyNames (function), ideObjectTypes (function)
+
+**/
 function revIDEObjectPropertyInfo pObjectType, pPropName
+   if sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
    return sClassicObjectPropertiesInfo[pObjectType][pPropName]
 end revIDEObjectPropertyInfo
 
-private function __objectTypes pObjectIDs
+/**
+A list of the IDE object types corresponding to the list of objects given
+
+Parameters:
+pObjectIDs: A list, one per line, of object IDs
+
+Returns: A list, one per line, of the IDE object types associated with
+the objects in <pObjectIDs>
+**/
+function ideObjectTypesFromObjectList pObjectIDs
    local tObjectTypeList, tObjectType
    repeat for each line tObjectID in pObjectIDs
-      put __objectType(tObjectID) into tObjectType
+      put ideObjectTypeFromObject(tObjectID) into tObjectType
       if tObjectType is not among the lines of tObjectTypeList then
          put tObjectType & return after tObjectTypeList
       end if
    end repeat
    delete the last char of tObjectTypeList
    return tObjectTypeList
-end __objectTypes
+end ideObjectTypesFromObjectList
 
-private function __objectType pObjectID
+/**
+The IDE object type corresponding to the given object
+
+Parameters:
+pObjectID: An object ID
+
+Returns: The IDE object type associated with the objects <pObjectID>
+
+Example:
+create field
+put ideObjectTypeFromObject(it)  -- outputs com.livecode.interface.classic.Field
+set the listBehavior of it to true
+put ideObjectTypeFromObject(it)  -- outputs com.livecode.interface.classic.ListField
+
+Description:
+>*Note:* The type returned by <ideObjectTypeFromObject> can depend
+on the values of the object's properties.
+**/
+function ideObjectTypeFromObject pObjectID
    switch word 1 of the name of pObjectID
       case "stack"
          return "com.livecode.interface.classic.Stack"
@@ -686,7 +813,7 @@ private function __objectType pObjectID
          end if
          break
       case "field"
-         if the tabStops of pObjectID is not empty then
+         if the basicTableObject of pObjectID then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
@@ -786,7 +913,7 @@ private function __objectType pObjectID
          end switch
          break
    end switch
-end __objectType
+end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
    local tOrderedKeys
@@ -1585,18 +1712,30 @@ function revIDEClassicControls
    return tReturnData
 end revIDEClassicControls
 
-/*
-For a given list of object, returns a structured array of properties, values and other meta data.
-pObjects (string list): A list of ID's of the objects you wish the properties for.
-related: alksdfklasdf
-example: revIDEGetPropertiesOfObjects button 1
-pObjects (String List): A list of object ID's you wish the common properties for.
-Return (Array): An array keyed by the names of the properties
+/**
+For a given list of objects, returns a structured array of properties, values and other meta data.
+
+pObjects (string list): A list of IDs of the objects to obtain the properties for.
+
+Return (Array): An array of data about the objects' properties.
+
+Example:
+local tPropsArray
+create button
+put revIDEGetPropertiesOfObjects(it) into tPropsArray
+
+# Get a list of the sections needed to display this object's property inspector
+local tSections
+put the keys of tPropsArray into tSections
+
 Description:
-# jkldsafgjlkasd
-This is a new section
-## This is a subsection
-*/
+<revIDEGetPropertiesOfObjects> returns an array of data about the given objects'
+shared properties, in a form used by the property inspector. The array has a sub-array
+for each section of the inspector in which one of the shared properties falls. Each of
+these sub-arrays has a sub-array for each group within the section in which one of the
+shared properties falls, each of which in turn has a sub-array for each property,
+containing the values and metadata associated with it.
+**/
 function revIDEGetPropertiesOfObjects pObjects
    # Validation that all the objects in the list exist
    repeat for each line tObject in pObjects
@@ -1605,7 +1744,7 @@ function revIDEGetPropertiesOfObjects pObjects
 
    # Work out the type of the selected objects
    local tObjectTypeList
-   put __objectTypes(pObjects) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjects) into  tObjectTypeList
 
    # Get this list of all the properties to read for the given type list
    local tSharedProperties
@@ -2480,9 +2619,15 @@ on revIDEActionCreateObject pObjectTypeID
 end revIDEActionCreateObject
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
+   if pObjectTypeID is "com.livecode.interface.classic.card" or \
+      pObjectTypeID is "com.livecode.interface.classic.stack" then
+      return __revIDEError("Object must be a control")
+   end if
+
    if not exists(pTarget) then return __revIDEError("Cannot create object. Target does not exist: " && pTarget)
+   if not pObjectTypeID begins with "com.livecode" then return __revIDEError("No such object type ID: " && pTarget)
+
    if sClassicObjectProperties is empty then __objectPropertiesRead
-   if not pObjectTypeID begins with "com.livecode" then __revIDEError("There us notobject type ID: " && pTarget)
    # Set the default stack to the target we're creating the object on
    set the defaultstack to revIDEStackOfObject(pTarget)
 
@@ -2612,7 +2757,7 @@ on revIDECloneObjectWithDefaults pLongID
    if not exists(tTarget) then return __revIDEError("Cannot create object. Target does not exist:" && tTarget)
 
    local tOriginalObjectType
-   put __objectType(pLongID) into  tOriginalObjectType
+   put ideObjectTypeFromObject(pLongID) into  tOriginalObjectType
    # Get the engine control type
    local tObjectType
    put sClassicObjectProperties[tOriginalObjectType]["type"] into tObjectType
@@ -2707,9 +2852,9 @@ on revIDESetTool pTool
 end revIDESetTool
 
 /*
-Sets the property of an object to the value specified
+Sets the property of each object in the list to the value specified
 
-pObject (String): The long ID of the target object
+pObjects (String): A list, one per line, of the long IDs of the target objects
 pProperty (String): The name of the property to set
 pValue (Any): The value to set the property to
 
@@ -4115,7 +4260,7 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
 
    # Work out the type of the selected objects
    local tObjectTypeList
-   put __objectTypes(pObjectList) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjectList) into  tObjectTypeList
 
    # Return this list of all the properties to read for the given type list
    return __objectPropertiesShared(tObjectTypeList, pSection)
