@@ -19,6 +19,10 @@ end openBrowser
 on openStack
    addFrameItem "show_apis","header", "navigation", "API", "f1b3", "f1b3","showAPIs", the long id of me
    addFrameItem "show_guides","header", "navigation", "Guide", "f1b3", "f1b3","showGuides", the long id of me
+   global gRevDevelopment
+   if gRevDevelopment is true then
+      addFrameItem "show_ide_library","header", "navigation", "IDE", "f1b3", "f1b3","showIDELibrary", the long id of me
+   end if
    set the navigationDisplayStyle of me to "names"
    set the width of this stack to 1000
    resizeStack
@@ -41,9 +45,9 @@ on showGuides
    put "guide" into sTab
 end showGuides
 
-on showPreview
-   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer_temp.html"
-end showPreview
+on showIDELibrary
+   setUrl "file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "ide_temp.html"
+end showIDELibrary
 
 on previewDocs
    lock screen
