@@ -160,24 +160,6 @@ on nameChanged pOldname, pNewName, pTarget
    if word 1 of tTarget is "stack" then
       -- OK-2007-06-28: Bug 5040
       send "revUpdateActiveStack pOldName, pNewName" to stack "Message Box"
-
-      --    --update active stack in Message Box
-      --    if the cREVLockedToStack of stack "Message Box" then
-      --      if the cREVLinkedStack of stack "Message Box" is pOldName then
-      --        put the defaultStack into tDefaultStack
-      --        set the defaultStack to "Message Box"
-      --        set the cREVLinkedStack of stack "Message Box" to pNewName
-      --        set the cREVActiveStack of stack "Message Box" to pNewName
-      --        if the short name of this cd is among the items of "Single Line,Multiple Lines" then
-      --
-      --          set the label of btn "Open Stacks" to pNewName
-      --          send "revSetLabelSize" to stack "Message Box"
-      --        end if
-      --        set the defaultStack to tDefaultStack
-      --      end if
-      --    else
-      --      revSetActiveStacks
-      --    end if
    end if
    unlock screen
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
@@ -264,7 +246,7 @@ on newStack
 end newStack
 
 on revSetActiveStacks
-   revIDEMessageSend "ideActiveStacksChanged"
+   ideMessageSend "ideActiveStacksChanged"
 end revSetActiveStacks
 
 
@@ -887,7 +869,9 @@ on moveStack pLeft, pTop
   end repeat
   
   # IDE to notify any objects subscribed to the ideMoveStack Message
-  revIDEMessageSend "ideMoveStack", the owner of the target
+  local tLongID
+  put the long id of the owner of the target into tLongID
+  ideMessageSend "ideMoveStack", tLongID
   
   pass moveStack
 end moveStack

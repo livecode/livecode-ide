@@ -595,11 +595,13 @@ on appleEvent p1, p2, p3
          put (there is a stack tCanonical) into tExists
          unlock messages
          // AL-2014-10-27: [[ Bug 12558 ]] Stack opened in apple event should report correct error
-         if not tExists then answer error "Unable to open stack:" && the result
-         else go stack tCanonical
+         if not tExists then 
+            answer error "Unable to open stack:" && the result
+         else 
+            go stack tCanonical
+            ideMessageSend "ideOpenStack", the long id of stack tCanonical
+         end if
       end repeat
-      
-      revIDEMessageSend "ideOpenStack"
       
       exit appleEvent
    end if
@@ -1246,7 +1248,7 @@ on updateForSelectedObjectChanged
    if lHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end updateForSelectedObjectChanged
 
 on preOpenStack

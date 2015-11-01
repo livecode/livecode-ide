@@ -1,5 +1,25 @@
 ﻿script "revidelibrary"
+/**
+Main IDE library providing functionality for palettes and other IDE add-ons.
 
+Name: ideNewControl
+Type: message
+Syntax: on ideNewControl
+Summary: Sent when a control is created in the IDE
+
+Description:
+Handle the <ideNewControl> message to respond to the creation of controls using one of the
+IDE palettes, or the create command.
+
+>*Note:* The <ideNewControl> message is only sent to objects which have subscribed to it.
+See the <revIDESubscribe> command for more details.
+
+References: revIDESubscribe (command)
+**/
+
+/**
+Called when loading the IDE library
+**/
 on revLoadLibrary
    insert the script of me into back
    revIDEInitialiseIDELibrary
@@ -1235,25 +1255,8 @@ end revIDEInitialiseIDELibrary
 # Stores subscriptions in the following format
 # sSubscriptions[message][callback targets] = List of object ID's
 local sSubscriptions
-/*
-Subscribes the calling object to receive the specified IDE message
 
-pMessage (enum): The message to subscribe to:
-- ideSelectedObjectsChanged: Sent when the selected object(s) changes. When a user clicks and drags to select objects, this message is NOT sent. Instead, it waits until the drag action ends.
-- ideObjectSelectionStarted: Sent when a user starts to selected items in edit mode using a click and drag.
-
-pOptional (string): If subscribing to a message that takes a parameter, specifiy the parameter as a string. For example, when subscribing for idePreferenceChanged, pass the name of the preference you wish to know about
-
-Example:
-on preOpenStack
-   revIDESubscribe "ideSelectedObjectsChanged"
-end preOpenStack
-
-on ideSelectedObjectsChanged
-   # Handle the notification
-end ideSelectedObjectsChanged
-*/
-on __revIDEAddSubscription pMessage, pCallingObject
+private on __ideAddSubscription pMessage, pCallingObject
    if sSubscriptions[pMessage]["callback targets"] is empty then
       put pCallingObject into sSubscriptions[pMessage]["callback targets"]
    else if pCallingObject is not among the lines of sSubscriptions[pMessage]["callback targets"] then
@@ -1261,43 +1264,77 @@ on __revIDEAddSubscription pMessage, pCallingObject
    else
       return "Already subscribed"
    end if
-end __revIDEAddSubscription
+end __ideAddSubscription
 
-on revIDESubscribe pMessage, pObjectList
+/**
+Subscribes the calling object to receive the specified IDE message
+
+pMessage (string): The message to subscribe to.
+
+pObjectList (optional string): 
+A list of objects, one per line, determining which calling objects the message should be restricted to.
+
+Example:
+on preOpenStack
+   ideSubscribe "ideSelectedObjectsChanged"
+end preOpenStack
+
+on ideSelectedObjectsChanged
+   # Handle the notification
+end ideSelectedObjectsChanged
+
+Example:
+-- When the selection changes, subscribe to the idePropertyChanged message for the newly selected objects
+on ideSelectedObjectsChanged
+   ideSubscribe "idePropertyChanged", revIDESelectedObjects()
+end ideSelectedObjectsChanged
+
+Description:
+Subscribe to messages to have a notification sent for particular IDE actions.
+
+**/
+on ideSubscribe pMessage, pObjectList
    # Validate input
    if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") that you are trying to subscribe to is not valid. Please check the documentation for which messages you can subscribe to.")
    end if
-
+   
    # Get the log ID of the calling object
    local tCallingObjectID
    put the long ID of the target into tCallingObjectID
-
+   
    # Special case propertyChanged where we have to register for listeners for obejcts
    if pMessage is "idePropertyChanged" then
       repeat for each line tObject in pObjectList
          revIDEPropertyRegisterListenerForObject tObject
-         __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
+         __ideAddSubscription pMessage & "," & tObject, tCallingObjectID
       end repeat
-   else if pMessage is "ideMoveStack" then
+   else if pObjectList is not empty then
       repeat for each line tObject in pObjectList
-         __revIDEAddSubscription pMessage & "," & tObject, tCallingObjectID
+         __ideAddSubscription pMessage & "," & tObject, tCallingObjectID
       end repeat
    else
-      __revIDEAddSubscription pMessage, tCallingObjectID
+      __ideAddSubscription pMessage, tCallingObjectID
    end if
-
+   
    if the result is not empty then
       return the result
    end if
+   
+   return empty
+end ideSubscribe
+
+on revIDESubscribe pMessage, pObjectList
+   ideSubscribe pMessage, pObjectList
 end revIDESubscribe
 
-/*
+/**
 Unsubscribes the calling object from the given message
 
-pMessage (enum): The message to unsubscribe from. Must be a valid message as described in [revIDESubscribe].
+pMessage (enum): The message to unsubscribe from. 
 pObject (String): The long ID of the object you wish to unsubscribe from the message. This is an optional parameter, if not specified, the calling object will be used.
-*/
+pObjectList (optional string): A list of objects, one per line.
+**/
 on revIDEUnsubscribe pMessage, pObject, pObjectList
    # If not object is specified, get the long ID of the calling object
    if pObject is empty then
@@ -1325,11 +1362,11 @@ on revIDEUnsubscribe pMessage, pObject, pObjectList
    end if
 end revIDEUnsubscribe
 
-/*
+/**
 Unsubscribes the object from all messages
 
 pObject (String): The long ID of the object you wish to unsubscribe from all message. This is an optional parameter, if not specified, the calling object will be used.
-*/
+**/
 on revIDEUnsubscribeAll pObject
    # If not object is specified, get the long ID of the calling object
    if pObject is empty then
@@ -1342,11 +1379,11 @@ on revIDEUnsubscribeAll pObject
    end repeat
 end revIDEUnsubscribeAll
 
-/*
+/**
 Use to find out which messages the calling object is subscribed to.
 
 returns (string): Return delimited list of messages, 1 per line.
-*/
+**/
 function revIDESubscriptions
    # Get the log ID of the calling object
    local tCallingObjectID
@@ -1364,13 +1401,13 @@ function revIDESubscriptions
    return tSubscriptions
 end revIDESubscriptions
 
-/*
+/**
 Use to find out which objects are subscribed to a given message
 
 pMessage (String): The name of the message.
 
 returns (string): Return delimited list of object ID's, 1 per line.
-*/
+**/
 function revIDESubscribedObjects pMessage
    # Validate input
    if not revIDEMessageIsValid(pMessage) then
@@ -1380,13 +1417,13 @@ function revIDESubscribedObjects pMessage
    return sSubscriptions[pMessage]["callback targets"]
 end revIDESubscribedObjects
 
-/*
+/**
 Use to get a list of all the messages that the IDE allows subscriptions for
 
-related: revIDESubscribedObjects, revIDESubscriptions, revIDEUnsubscribe, revIDESubscribe
-
 returns (string): Return delimited list of message names, 1 per line.
-*/
+
+references: revIDESubscribedObjects (function), revIDESubscriptions (function), revIDEUnsubscribe (command), revIDESubscribe (command)
+**/
 function revIDEMessages
    return ( \
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
@@ -1396,7 +1433,7 @@ function revIDEMessages
          )
 end revIDEMessages
 
-function revIDEMessageIsValid pMessage
+private function revIDEMessageIsValid pMessage
    return true
    return (pMessage is among the items of revIDEMessages() \
          or pMessage begins with "idePreferenceChanged" \
@@ -1404,33 +1441,53 @@ function revIDEMessageIsValid pMessage
          or pMessage begins with "ideToggleChanged")
 end revIDEMessageIsValid
 
-# System function telling the IDE to send
-on revIDEMessageSend pMessage, pEffectedTarget
-   lock screen
-   --put the milliseconds & pMessage, pEffectedTarget & return & line 1 to 50 of msg into msg
+/**
+Sends the given message to all subscribed objects.
 
+Parameters:
+pMessage (string): The message to send
+
+pTriggeringObjects (optional string):
+A list, one per line, of the long ids of the objects triggering the message.
+This is used for example with the <idePropertyChanged> message to
+convey which objects had properties changed.
+
+pParamsArray (array): 
+A numerically keyed aray (starting at 1) of the parameters to pass along with the message.
+
+Description:
+Sends <pMessage> to all objects which have subscribed to it using
+<revIDESubscribe>.
+
+References: ideSubscribe (command), idePropertyChanged (message)
+**/
+on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
+   lock screen
+   
    # Validate input
    if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.")
    end if
-
+   
    # If in run mode don't send any updates
-   //if the tool is not "pointer tool" then exit revIDEMessageSend
-
-   local tSubscriptionList
-   if pMessage is "idePropertyChanged" or pMessage is "ideMoveStack" then
-      local tTargetsA, tSubscription
-      repeat for each line tLine in pEffectedTarget
-         put pMessage & "," & tLine into tSubscription
-         repeat for each line tTarget in sSubscriptions[tSubscription]["callback targets"]
-            put true into tTargetsA[tTarget]
-         end repeat
+   //if the tool is not "pointer tool" then exit ideMessageSendWithParameters
+   
+   local tSubscriptionList, tTargetsA, tSubscription
+   # Add all universal subscribers to the subscription list
+   put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
+   
+   # Add any per-object subscriptions
+   repeat for each line tLine in pTriggeringObjects
+      put pMessage & "," & tLine into tSubscription
+      repeat for each line tTarget in sSubscriptions[tSubscription]["callback targets"]
+         if tSubscriptionList is empty then
+            put tTarget into tSubscriptionList
+         else
+            put return & tTarget after tSubscriptionList
+         end if
       end repeat
-      put the keys of tTargetsA into tSubscriptionList
-   else
-      put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
-   end if
-
+   end repeat
+   
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
@@ -1447,33 +1504,58 @@ on revIDEMessageSend pMessage, pEffectedTarget
       set the itemdel to ":"
       local tMessage
       put item 1 of pMessage into tMessage
-
-      switch tMessage
-         case "idePreferenceChanged"
-         case "ideToggleChanged"
-            dispatch tMessage to tObjectID with item 2 of pMessage
-            break
-         case "ideFindMoreWidgets"
-            dispatch pMessage to tObjectID with pEffectedTarget
-            break
-         case "ideNewStack"
-            try
-               send pMessage && pEffectedTarget to tObjectID in 10 milliseconds
-            catch tError
-            end try
-            break
-         case "idePropertyChanged"
-         case "ideMoveStack"
-            dispatch pMessage to tObjectID with pEffectedTarget
-            break
-         default
-            dispatch pMessage to tObjectID with pEffectedTarget
-            break
-      end switch
-
-      --put "SENT" && the milliseconds && pMessage && "sent to" && tObjectID & return & line 1 to 20 of msg into msg
+      
+      # Construct a dispatch command with all the desired parameters
+      local tDoString, tParams, tErrors
+      put "dispatch pMessage to tObjectID" into tDoString
+      
+      # If this is a parameterised message, add the parameter as the first arg
+      if the number of items of pMessage > 1 then
+         put " with item 2 of pMessage" into tParams
+      end if
+      
+      repeat with tParam = 1 to the number of elements in pParamsArray
+         if tParams is empty then
+            put " with pParamsArray[" & tParam & "]" into tParams
+         else
+            put ", pParamsArray[" & tParam & "]" after tParams
+         end if
+      end repeat
+      put tParams after tDoString
+      
+      # Ensure any error doesn't prevent subsequent subscribers from receiving messages
+      try
+         do tDoString
+      catch tError
+         if tErrors is empty then
+            put tError into tErrors
+         else
+            put return & tError after tErrors
+         end if
+      end try
    end repeat
    unlock screen
+   
+   if tErrors is not empty then
+      return __revIDEError("Error when sending message" && pMessage & ":" & return & tErrors)
+   end if
+   
+   return empty
+end ideMessageSendWithParameters
+
+-- 0 or 1 param special case
+on ideMessageSend pMessage, pParam
+   local tParam
+   if pParam is not empty then
+      put pParam into tParam[1]
+   end if
+   ideMessageSendWithParameters pMessage, the long id of the target, tParam
+end ideMessageSend
+
+on revIDEMessageSend pMessage, pTriggeringObjects
+   local tParamsArray
+   put pTriggeringObjects into tParamsArray[1]
+   ideMessageSendWithParameters pMessage, pTriggeringObjects, tParamsArray
 end revIDEMessageSend
 
 #############
@@ -1634,11 +1716,11 @@ function revIDEGetPropertyOfObject pObject, pProperty
    return the pProperty of pObject
 end revIDEGetPropertyOfObject
 
-/*
+/**
 Use to get a complete list of all editable stacks in the IDE.
 
 returns (String): A return delimited list of stack names
-*/
+**/
 function revIDEEditableStacks
    local tEditableStacks
    repeat for each line tStack in the openstacks
@@ -1653,11 +1735,11 @@ function revIDEEditableStacks
    return tEditableStacks
 end revIDEEditableStacks
 
-/*
+/**
 Use to get a list of of all the global variables.
 
 returns (list): A comma delimited list of global variable names
-*/
+**/
 function revIDEGlobalVariables
    if revIDEGetPreference("cShowRevolutionStacks") is true then return the globals
 
@@ -1925,7 +2007,7 @@ Returns (Any): The value of the preference
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue
    save stack "revpreferences"
-   revIDEMessageSend "idePreferenceChanged:" & pPreferenceName
+   ideMessageSend "idePreferenceChanged:" & pPreferenceName
 end revIDESetPreference
 
 /*
@@ -2471,7 +2553,7 @@ end revIDEDownloadFinished
 on revIDEFindMoreWidgets
    lock screen
    revIDEOpenPalette "extension manager"
-   revIDEMessageSend "ideFindMoreWidgets"
+   ideMessageSend "ideFindMoreWidgets"
    unlock screen
 end revIDEFindMoreWidgets
 
@@ -2568,7 +2650,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       global gRevStackStatus
       // AL-2015-04-08: [[ Bug 14822 ]] Ensure 'edited' status of stack is set
       put "edited" into gREVStackStatus[the short name of this stack]
-      revIDEMessageSend "ideNewControl", tCreatedControlID
+      ideMessageSend "ideNewControl", tCreatedControlID
    end if
 
    return tCreatedControlID
@@ -2703,7 +2785,7 @@ browse - Sets the tool to "browse" mode allowing you to select object
 */
 on revIDESetTool pTool
    do "choose" && pTool
-   revIDEMessageSend "ideToolChanged"
+   ideMessageSend "ideToolChanged"
 end revIDESetTool
 
 /*
@@ -2737,21 +2819,7 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
-/*
-local sInspectedObjects
-on revIDESetInspectedObjects pObjectList
-   if pObjectList is not sInspectedObjects then
-      put pObjectList into sInspectedObjects
-      revIDEMessageSend "ideInspectedObjectsChanged", pObjectList
-   end if
-end revIDESetInspectedObjects
-
-function revIDEGetInspectedObjects
-   return sInspectedObjects
-end revIDEGetInspectedObjects
-*/
 local sInspectingObjects
-
 command revIDEInspectObjects pObjects
    lock screen
    put pObjects into sInspectingObjects
@@ -2759,7 +2827,7 @@ command revIDEInspectObjects pObjects
    
    revIDEOpenPalette "inspector"
 
-   revIDEMessageSend "ideInspectObjects", pObjects
+   ideMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
 
@@ -2798,7 +2866,7 @@ on revIDEEditScriptOfObject pObject
    put revRuggedId(pObject) into tObject
 
    # Send the ideEditScript message
-   send "revIDEMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
 
    # Update the currently editing objects
    revIDEStartEditingScript pObject
@@ -4093,7 +4161,7 @@ on revIDEPropertyChanged pObject
       exit revIDEPropertyChanged
    end if
 
-   revIDEMessageSend "idePropertyChanged", pObject
+   ideMessageSendWithParameters "idePropertyChanged", pObject
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
@@ -4162,7 +4230,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    end repeat
 
    if sLockUpdates then
-      revIDEMessageSend "idePropertyChanged", pObjectList
+      ideMessageSendWithParameters "idePropertyChanged", pObjectList
       put false into sLockUpdates
    end if
 
@@ -4370,7 +4438,7 @@ function revIDEPaletteResourcePath pFilename, pTarget
 end revIDEPaletteResourcePath
 
 on logChanged pLog
-   revIDEMessageSend "ideExtensionLog", pLog
+   ideMessageSend "ideExtensionLog", pLog
 end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
@@ -4489,7 +4557,7 @@ end revIDEMessageBoxBehavior
 on revIDEAnswerDialogClosed
    local tPopupSource
    put item 1 of line 1 of the executionContexts into tPopupSource
-   revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
+   ideMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
 function revIDEAbsoluteRectOfObject pPalette, pObjectData
@@ -4898,7 +4966,7 @@ on revIDEUpdatePlugins
    put tPluginsA into sPluginsA
    
    if tPluginsChanged then
-      revIDEMessageSend "idePluginsChanged"
+      ideMessageSend "idePluginsChanged"
    end if
 end revIDEUpdatePlugins
 
@@ -5003,10 +5071,10 @@ on revIDENewMainstack pWidth, pHeight
    reset the templateStack
    
    # Send the 'ideNewStack' message
-   revIDEMessageSend "ideNewStack", it
+   ideMessageSend "ideNewStack", it
    
     # Update the active stacks
-   revIDEMessageSend "ideActiveStacksChanged"
+   ideMessageSend "ideActiveStacksChanged"
    
    # Return the created stack long id
    return it
@@ -5048,7 +5116,7 @@ on revIDEActionNewCard
    create card
    put the long id of it into tCardID
    put "edited" into gREVStackStatus[the short name of this stack]
-   revIDEMessageSend "ideNewCard tCardID"
+   ideMessageSend "ideNewCard tCardID"
    
    # Return the card id
    return tCardID
@@ -5216,7 +5284,7 @@ on revIDERemoveFromMemory pStackID
    unlock messages
    
    # Send the 'ideDestroyStack' message
-   revIDEMessageSend "ideDestroyStack", tStackID
+   ideMessageSend "ideDestroyStack", tStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
@@ -6005,7 +6073,7 @@ end revIDEMoveSubstackToFile
 on revIDESaveAsStandalone
    # Don't want the build process to be interruptable.
    set the allowInterrupts to false
-   //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in revIDEMessageSend
+   //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in ideMessageSend
    try
       revSaveAsStandalone
       finally
@@ -6087,7 +6155,7 @@ on revIDEUndo
    end if
 
    # The selected object may change after undo
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end revIDEUndo
 
 on revIDECut
@@ -6114,7 +6182,7 @@ on revIDECut
    unlock messages
    unlock screen
    
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end revIDECut
 
 on revIDECutText pTextChunk
@@ -6195,7 +6263,7 @@ on revIDEPaste
    
    # Pasting an object will cause the selection to change
    if the clipboard is "objects" or tObjects then
-      revIDEMessageSend "ideSelectedObjectChanged"
+      ideMessageSend "ideSelectedObjectChanged"
    end if
 end revIDEPaste
 
@@ -6281,7 +6349,7 @@ on revIDEActionClear
    delete
    
    unlock messages
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
    unlock screen
 end revIDEActionClear
 
@@ -6324,7 +6392,7 @@ on revIDEActionDuplicate
          set the selected of tCreatedObject to true
       end repeat
 
-      revIDEMessageSend "ideSelectedObjectChanged"
+      ideMessageSend "ideSelectedObjectChanged"
    end if
    unlock screen
    return tCreatedObjects
@@ -6390,13 +6458,13 @@ on revIDESelectAll
       end repeat
       unlock screen
       unlock messages
-      revIDEMessageSend "ideSelectedObjectChanged"
+      ideMessageSend "ideSelectedObjectChanged"
    end if
 end revIDESelectAll
 
 on revIDEDeselectAll
    select empty
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end revIDEDeselectAll
 
 on revIDEInvertObjectSelection
@@ -6416,7 +6484,7 @@ on revIDEInvertObjectSelection
    end repeat
    unlock screen
    unlock messages
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end revIDEInvertObjectSelection
 
 on revIDEChooseBrowseTool
@@ -6630,7 +6698,7 @@ on revIDEToggle pProperty
          if not gREVSuppressMessages then
             put true into gREVSuppressMessages
             # Send the suppress messages toggle message before actually suppressing messages
-            revIDEMessageSend "ideToggleChanged:" & tToggleMessage
+            ideMessageSend "ideToggleChanged:" & tToggleMessage
             set the lockCursor to false
             repeat for each line l in the pendingMessages
                if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
@@ -6683,7 +6751,7 @@ on revIDEToggle pProperty
          set the selectGroupedControls to not (the selectGroupedControls)
          if the selectGroupedControls and word 1 of (the selObj) is "group" then
             select empty
-            revIDEMessageSend "ideSelectedObjectChanged"
+            ideMessageSend "ideSelectedObjectChanged"
          end if
          put "selectGrouped" into tToggleMessage
          break
@@ -6763,7 +6831,7 @@ on revIDEToggle pProperty
    end switch
    # Invisible objects
    # Ruler
-   revIDEMessageSend "ideToggleChanged:" & tToggleMessage
+   ideMessageSend "ideToggleChanged:" & tToggleMessage
 end revIDEToggle
 
 on revIDEToggleToolbar pWhich
@@ -7828,7 +7896,7 @@ on revIDEUpdateWindowList
    
    if tStacks is not sWindowList then
       put tStacks into sWindowList
-      revIDEMessageSend "ideWindowsChanged"
+      ideMessageSend "ideWindowsChanged"
    end if
 end revIDEUpdateWindowList
 
@@ -7943,7 +8011,7 @@ on revIDEAddRecentStack pFilePath
    -- So calling revIDEAddRecentStack is quick succession.. lets say in an "openAllStacks" handler is going to cause this message 
    -- fire multiple times in quick succession. lock ide messages could prevent the sending of messages and stack/replace them 
    -- and flush the queue on unlock ide messages.. resulting in just one version of the message being sent. 
-   revIDEMessageSend "ideRecentFilesChanged"
+   ideMessageSend "ideRecentFilesChanged"
 end revIDEAddRecentStack
 
 /*
@@ -8471,7 +8539,7 @@ on revIDETutorialProgressChanged
    end if
    
    # Notify any subscribed objects
-   revIDEMessageSend "ideTutorialProgressChanged"
+   ideMessageSend "ideTutorialProgressChanged"
 end revIDETutorialProgressChanged
 
 ##################################################
@@ -8848,5 +8916,5 @@ function revIDERGBToNamedColor pColor
 end revIDERGBToNamedColor
 
 on ideCorePropertyInspectorRefreshPropertyLabels
-   revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
+   ideMessageSend "idePreferenceChanged:idePropertyInspector_labels"
 end ideCorePropertyInspectorRefreshPropertyLabels
