@@ -78,6 +78,24 @@ This will let you access your standalone by opening your web browser and visitin
 
 Please report bugs to the [LiveCode Quality Centre](http://quality.runrev.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
 
+# Advanced: HTML5 standalone filesystem
+
+JavaScript applications running in a browser don't have access to the host system's filesystem.  Instead, the filesystem-related features of LiveCode, such as `open file`, use a virtual filesystem (VFS) that exists only in memory.  This filesystem is initialised before the engine starts, and is reset and its content discarded when the engine stops (when the user closes the browser view or navigates to a different page).
+
+During engine startup, the VFS is populated from the contents of the `standalone.zip` file that's created by the HTML5 deployment process.  All of the initial files are stored in `/boot/` in the VFS.
+
+There are several special files & directories in the `/boot/` directory:
+
+* `/boot/__startup.livecode`: a stack that performs loading & initialisation operations during engine startup.
+* `/boot/auxiliary_stackfiles/`: during startup, each file in this directory is loaded and is receives the `revLoadLibrary` message
+* `/boot/fonts/basefont.ttf`: the font used by the engine
+* `/boot/standalone/__boot.livecode`: this is the initial stack of the application, which is the main stack that receives the `startup` message when the engine has been initialized
+* `/boot/standalone/`: the `defaultFolder` when the engine starts, and the location where additional assets selected using the "Copy files" page of the standalone builder are placed
+* `/boot/extensions/extensions.txt`: list of extensions included in the standalone, in the order in which they should be autoloaded
+* `/boot/extensions/`: the directory where all autoloaded extensions are stored
+
+In general, if you wish to add new files or directories to the `standalone.zip` archive, it is best to add them outside the `/boot/` directory tree.
+
 # Advanced: Embedding an HTML5 standalone in a web page
 
 The default HTML5 page provided by the HTML5 standalone builder is designed for testing and debugging purposes.  However, you may want to embed the standalone engine in a more visually appealing page.  To do this, you require three elements: 1) a canvas, 2) a JavaScript `Module` object, and 3) an HTML `<script>` element that downloads the engine.
