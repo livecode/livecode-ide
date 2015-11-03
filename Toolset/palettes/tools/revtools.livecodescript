@@ -544,7 +544,6 @@ on mouseDown
    set the visible of the templateStack to false
    set the backGroundColor of the templateStack to the hiliteColor
    set the decorations of the templateStack to "noShadow"
-   set the style of the templateStack to "palette"
    set the blendLevel of the templateStack to 25
    set the loc of the templatestack to -500,-500
    
@@ -587,8 +586,8 @@ on mouseDown
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
    repeat for each line tStackName in tStackList
-      if tStackName is "ideTools" then next repeat
       if tStackName begins with  "DataViewControl" then next repeat
+      if tStackName is "revDragControl" then next repeat
       put the long ID of stack tStackName into tValidDropStacks[tStackCount]["long id"]
       put the rect of stack tStackName into tValidDropStacks[tStackCount]["rect"]
       put the backgroundcolor of stack tStackName into tValidDropStacks[tStackCount]["backgroundcolor"]

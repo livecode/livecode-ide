@@ -1,0 +1,1 @@
+# Browser Widget: When dragging out from tools palette it is slow and nothing is seen
