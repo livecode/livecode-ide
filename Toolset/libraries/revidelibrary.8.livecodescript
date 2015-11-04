@@ -291,6 +291,20 @@ private function __propertyDataFromInfoFile pFileName
       end if
 
       put item 1 of tLine into tPropName
+      
+      # Properties can use setters other than revIDESetPropertyOfObject
+      set the itemdelimiter to ":" 
+      local tSetter, tGetter
+      put item 2 of tPropName into tGetter
+      if tGetter is not empty then
+         get __revIDEError("Custom getter not yet supported:" && tPropName)
+      end if
+      put item 3 of tPropName into tSetter
+      put item 1 of tPropName into tPropName
+      put tGetter into tDataA[tPropName]["getter"]
+      put tSetter into tDataA[tPropName]["setter"]
+      set the itemdelimiter to tab
+      
       put item 2 of tLine into tDataA[tPropName]["label"]
 
       local tSection
