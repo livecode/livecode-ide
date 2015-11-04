@@ -1,4 +1,4 @@
-type	button
+type	data grid
 title	Data Grid
 
 Property	Default	Options	Group

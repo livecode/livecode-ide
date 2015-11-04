@@ -527,7 +527,7 @@ on __objectPropertiesRead
    local tObjectType
 
    repeat for each line tFile in the files
-      if tFile is __propertyInfoFilename() then next repeat
+      if not (tFile begins with "com.livecode.interface") then next repeat
       if char 1 of tFile is "." then next repeat
 
       put tFile into tObjectType
@@ -1592,7 +1592,7 @@ function revIDEClassicControls
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
-      if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group,graphic tool" then
+      if sClassicObjectProperties[tIndex]["type"] is among the items of "button,field,scrollbar,player,image,data grid" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat
@@ -4081,13 +4081,24 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
    repeat for each line tObject in pObjectList
       if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
    end repeat
-
+   
    # Work out the type of the selected objects
    local tObjectTypeList
    put __objectTypes(pObjectList) into  tObjectTypeList
-
+   
    # Return this list of all the properties to read for the given type list
-   return __objectPropertiesShared(tObjectTypeList, pSection)
+   local tProperties
+   put __objectPropertiesShared(tObjectTypeList, pSection) into tProperties
+   
+   # Include multiple object properties if required
+   if the number of lines in pObjectList > 1 then
+      if pSection is empty then
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"] recursively
+      else
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"][pSection] recursively
+      end if
+   end if
+   return tProperties
 end __revIDEPropertiesInfoOfSection
 
 function revIDEPropertiesInfoOfSection pObjectList, pSection

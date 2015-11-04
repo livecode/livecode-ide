@@ -1,0 +1,11 @@
+type	multiple
+title	Multiple Objects
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+equalize
+align
+alignCenter
+distribute
+nudge
+relayer
