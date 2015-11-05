@@ -1115,6 +1115,11 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put tName into tDataA["requires"][tCount]
    end repeat
    
+   # User visible should default to true
+   if tDataA["uservisible"] is empty then
+      put true into tDataA["uservisible"]
+   end if
+   
    put tDataA into rDataA
    return empty
 end revIDEExtensionFetchMetadata
