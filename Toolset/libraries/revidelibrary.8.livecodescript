@@ -4571,7 +4571,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls,Geometry Manager"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4615,6 +4615,8 @@ function revIDEPropertySectionNameToIconName pName
          break
       case "align controls"
          return "object align left"
+      case "geometry manager"
+         return "object justify both"
       default
          return "remove"
          break
