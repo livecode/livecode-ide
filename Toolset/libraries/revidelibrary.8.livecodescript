@@ -9114,3 +9114,25 @@ end revIDERGBToNamedColor
 on ideCorePropertyInspectorRefreshPropertyLabels
    revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
 end ideCorePropertyInspectorRefreshPropertyLabels
+
+##################################################
+#
+#          GEOMETRY
+#
+##################################################
+
+on revIDESetGeometry pObjectList, pGeometryArray
+   revSetGeometryObject pObjectList
+   repeat for each key tKey in pGeometryArray["geometry"]
+      revSetGeometry tKey, pGeometryArray["geometry"][tKey]
+   end repeat
+end revIDESetGeometry
+
+function revIDEGetGeometry pObjectList
+   local tValue
+
+   revSetGeometryObject pObjectList
+   put line 1 of pObjectList into tValue["object"]
+   put revGetGeometry() into tValue["geometry"]
+   return tValue
+end revIDEGetGeometry
