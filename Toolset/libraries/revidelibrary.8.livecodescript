@@ -292,13 +292,12 @@ private function __propertyDataFromInfoFile pFileName
 
       put item 1 of tLine into tPropName
       
-      # Properties can use setters other than revIDESetPropertyOfObject
+      # Properties can use custom getters and setters.
+      # Default getter is revIDEPropertyOfObject
+      # Default setter is revIDESetPropertyOfObject
       set the itemdelimiter to ":" 
       local tSetter, tGetter
       put item 2 of tPropName into tGetter
-      if tGetter is not empty then
-         get __revIDEError("Custom getter not yet supported:" && tPropName)
-      end if
       put item 3 of tPropName into tSetter
       put item 1 of tPropName into tPropName
       put tGetter into tDataA[tPropName]["getter"]
@@ -1203,22 +1202,28 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
    local tPropMappingA, tProp
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
-         put tGroup into tPropMappingA[tProp]
+         put tGroup into tPropMappingA[tProp]["group"]
+         put pGroupsA[tGroup]["proplist"][tProp]["getter"] into tPropMappingA[tProp]["getter"]
       end repeat
    end repeat
-
+   
    local tDataA
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      if tPropMappingA[tKey]["getter"] is empty then
+         __fetchPropertyOfControl tKey, tDataA
+      else
+         dispatch function tPropMappingA[tKey]["getter"] with the long id of the target
+         put the result into tDataA[tKey]
+      end if
    end repeat
-
+   
    local tValue, tEffective
    set the itemdelimiter to ":"
    repeat for each key tKey in tDataA
       if tKey begins with "effective" then next repeat
       put false into tEffective
       put tDataA[tKey] into tValue
-      put tPropMappingA[tKey] into tGroup
+      put tPropMappingA[tKey]["group"] into tGroup
       if tValue is empty and tDataA["effective" && tKey] is not empty then
          put tDataA["effective" && tKey] into tValue
          put true into tEffective
