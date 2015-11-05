@@ -1,0 +1,6 @@
+type	control
+title	Control Properties
+
+Property	Default	Options	Group
+----------------------------------------------------------------------------------------------------
+geometry
