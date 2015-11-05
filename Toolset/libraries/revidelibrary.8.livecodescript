@@ -617,22 +617,33 @@ private function __orderPropArray pPropsA, pSections
 end __orderPropArray
 
 private function __objectPropertiesShared pObjectTypeList, pOptionalSection
-   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps
+   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
    put 1 into x
+   put true into tAllControls
+   set the itemdelimiter to "."
    repeat for each line tObjectType in pObjectTypeList
+      get item -1 of tObjectType
+      if it is "Card" or it is "Stack" then
+         put false into tAllControls  
+      end if
+      
       if tObjectType begins with "com.livecode.interface.classic" then
          # Classic control
          if x is 1 then
             put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray
             # Restrict to group, if present
             if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
+               if tPropertiesArray[pOptionalSection] is not empty then
+                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+                  put tSectionProps into tPropertiesArray
+               else
+                  put empty into tPropertiesArray
+               end if
             end if
-
+            
          else
             put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray2
-
+            
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       else
@@ -640,24 +651,31 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          if x is 1 then
             put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
-
+            
             union tPropertiesArray with tPropertiesArray2 recursively
-
+            
             # Restrict to group, if present
-            if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
-            end if
+               if tPropertiesArray[pOptionalSection] is not empty then
+                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+                  put tSectionProps into tPropertiesArray
+               else
+                  put empty into tPropertiesArray
+               end if
          else
             put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray2
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3 recursively
-
+            
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       end if
       add 1 to x
    end repeat
+   
+   if tAllControls then
+      union tPropertiesArray with sClassicObjectPropertiesInfo["com.livecode.interface.Control"] recursively
+   end if
+   
    if pOptionalSection is not empty then
       return tPropertiesArray[pOptionalSection]
    else
