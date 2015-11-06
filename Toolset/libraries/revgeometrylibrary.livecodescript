@@ -923,12 +923,15 @@ function revCalculateMoveDistance pWhichSide
 end revCalculateMoveDistance
 
 on revCheckGeoDefaultStack
-  local tDefaultStack
-  put revTargetStack() into tDefaultStack
-  if word 1 of tDefaultStack is "revPropertyPalette" and char 1 to 11 of the short name of this cd is "revGeometry" then
-    if revPaletteObjects() is not empty then set the defaultStack to revTargetStack(line 1 of (revPaletteObjects()))
-    else set the defaultStack to the topStack
-  end if
+   local tDefaultStack
+   put revTargetStack() into tDefaultStack
+   if word 1 of tDefaultStack is "revPropertyInspector" then
+      if the cSelectedObjects of stack tDefaultStack is not empty then 
+         set the defaultStack to revIDEStackOfObject(line 1 of the cSelectedObjects of stack tDefaultStack)
+      else 
+         set the defaultStack to the topStack
+      end if
+   end if
 end revCheckGeoDefaultStack
 
 function revCalculateScaleDistance pWhichside
