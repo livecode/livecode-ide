@@ -76,7 +76,7 @@ This will let you access your standalone by opening your web browser and visitin
 
 # Reporting bugs
 
-Please report bugs to the [LiveCode Quality Centre](http://quality.runrev.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
+Please report bugs to the [LiveCode Quality Centre](http://quality.livecode.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
 
 # Advanced: HTML5 standalone filesystem
 
