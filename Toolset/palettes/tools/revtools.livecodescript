@@ -6,9 +6,6 @@ on preOpenStack
    
    set the title of me to "Tools"
    
-   ### Header
-   addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
-   
    # Preferences
    if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", 2
    addFrameItem "revTools_columns", "header", "preference", "View Columns", "enum","2,3,4", "framePreferenceSelected", the long id of me
@@ -71,12 +68,6 @@ on ideExtensionsChanged
    layoutPalette
    unlock screen
 end ideExtensionsChanged
-
-on findMoreWidgets
-   lock screen
-   revIDEFindMoreWidgets
-   unlock screen
-end findMoreWidgets
 
 on idePreferenceChanged pPreference
    switch pPreference
