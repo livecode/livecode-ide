@@ -101,6 +101,7 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
+   revIDEPushDefaultFolder
    local tExtensionDetailsA
    
    local tFolders
@@ -150,15 +151,19 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
+   revIDEPopDefaultFolder
+   
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
-   set the defaultfolder to pFolder
-   
+   revIDEPushDefaultFolder pFolder
+
    local tFiles
    put the files into tFiles
    filter tFiles with "*.lcb"
+   
+   revIDEPopDefaultFolder
    
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
@@ -274,9 +279,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
 end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
-   local tOldDefaultFolder
-   put the defaultfolder into tOldDefaultFolder
-   set the defaultfolder to pFolder
+   revIDEPushDefaultFolder pFolder
    local tResources, tResource, tPrefix
    if pPrefix is not empty then
       put pPrefix & slash into tPrefix
@@ -305,7 +308,7 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
          end if
       end if
    end repeat
-   set the defaultfolder to tOldDefaultFolder
+   revIDEPopDefaultFolder
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
@@ -491,6 +494,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    end if
    
    lock screen
+   lock messages
    create stack "LiveCode Extension Test Window"
    if tRectsA["rect"] is not empty then
       set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
@@ -502,6 +506,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    set the script of it to __testStackScript()
    go stack "LiveCode Extension Test Window"
    create widget as pDetailsA["id"]
+   unlock messages
    
    if there is not a widget 1 of stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]

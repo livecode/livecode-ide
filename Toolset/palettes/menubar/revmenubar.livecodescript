@@ -824,7 +824,7 @@ end mouseDown
 on revMenubarMenuButtonClicked pWhich
    switch pWhich
       case "Inspector"
-         revIDEOpenPalette "inspector"
+         revIDEActionInspectObjects
          break
       case "Code"
          if (the selectedObject) is empty then
@@ -1394,7 +1394,7 @@ private function revMenubarObjectMenu pContext
       else if pContext["allGraphics"] then
          put "Flip Graphic" into tFlipText
          put "Rotate Graphic" into tRotateText
-         if the long id of stack "revReshapeLibrary" is among the lines of the frontScripts then
+         if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
             put "!cReshape Graphic" into tReshapeText
          else 
             put "Reshape Graphic" into tReshapeText
@@ -1839,7 +1839,6 @@ function revMenubarContextMenu pType, pTarget
          break
       case "image"
          put "-" & return after tText
-         put toggleMenuItem("Paint Tools", "Show" is not in the toolTip of btn "paint and draw" of stack "revTools") & return after tText
          put "Launch Editor" & return after tText
          put toggleMenuItem("Magnify", the magnify of pTarget) & return after tText
          put "-" & return after tText

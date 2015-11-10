@@ -249,11 +249,7 @@ on revInternal__openStack
       if revIDEPrefGet("StartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
-      
-      try 	 	
-         revIDEOpenPropertyInspectorControllerStacks 	 	
-      end try 
-      
+
       -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
       -- Luanch the installer in update mode to begin update process.
       --
@@ -476,6 +472,9 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   
    local tPaletteFolder, tFolders
    put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
    put tPaletteFolder into tFolders
@@ -545,34 +544,13 @@ function revInternal__StackFiles
       end repeat
    end repeat
    
+   set the defaultFolder to tDefaultFolder
+   
    repeat for each key tKey in tStackFilesA
       put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
    end repeat
    delete the last char of tStackFiles
    return tStackFiles
-   /*
-   local tStackFiles
-   local tUserPath, tPath
-   put revEnvironmentToolsPath() into tPath
-   put revEnvironmentUserToolsetPath() into tUserPath
-   
-   local tItem
-   set the itemDelimiter to tab
-   repeat for each line tItem in field "Toolset" of card "Data" of stack "Home"
-      if item 2 of tItem is "Resources" then
-         put item 1 of tItem, tPath & slash & item 3 of tItem & return after tStackFiles
-      else if item 2 of tItem is "Unsupported" then
-         put item 1 of tItem, tPath & "/Unsupported/" & item 3 of tItem & return after tStackFiles
-      else if there is a file (tUserPath & "/" & item 3 of tItem) then
-         put item 1 of tItem, tUserPath & "/" & item 3 of tItem & return after tStackFiles
-      else if not revEnvironmentIsInstalled() and (item 3 of tItem ends with ".livecodescript") then
-         put item 1 of tItem, (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & item 3 of tItem) & return after tStackfiles
-      else
-         put item 1 of tItem, tPath & "/Toolset/" & item 3 of tItem & return after tStackFiles
-      end if
-   end repeat
-   return tStackFiles
-   */
 end revInternal__StackFiles
 
 private command revInternal__SetupPreferences
@@ -1022,7 +1000,7 @@ command revInternal__InitialiseLibraries
    	    	 	
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
-      insert script of stack "revidemessagehandler" into front 	 	
+      revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
    end try 
@@ -1167,8 +1145,10 @@ command revInternal__InitialiseDefaults
          revInternal__Log "message", "Trying to set the default text of stack home"
          if item 2 of the systemVersion < 10 then
             set the textFont of stack "Home" to "Lucida Grande"
-         else
+         else if item 2 of the systemVersion < 11 then
             set the textFont of stack "Home" to "Helvetica Neue"
+         else
+         	set the textFont of stack "Home" to "San Francisco"
          end if
          
          set the textSize of stack "Home" to 11
@@ -1360,9 +1340,8 @@ command revInternal__InitialiseTools
   palette stack tToolsStackName
   
   --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
-  revIDESetTool pointer
-  unlock screen
-  --revInternal__ConstrainStack "revTools"  
+  revIDESetTool "pointer"
+  unlock screen 
   
   revInternal__Log "Leave", "Tools Initialisation"
   
@@ -1401,9 +1380,12 @@ command revInternal__InitialiseMenus
    
    revInternal__ConstrainStack tMenuBar
    
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tWindowRect
    put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
-   if the right of stack "revTools" < 100 then put the right of stack "revTools" + 5 into item 1 of tWindowRect
+   if tToolsRight < 100 then put tToolsRight + 5 into item 1 of tWindowRect
    put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
    set the windowBoundingRect to tWindowRect
    

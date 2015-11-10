@@ -1,0 +1,1 @@
+# PI text fields lose newly entered text if pane is switched before tabbing 

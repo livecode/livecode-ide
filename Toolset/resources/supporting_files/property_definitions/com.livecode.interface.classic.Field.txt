@@ -7,16 +7,16 @@ name	Field
 text		
 tooltip		
 disabled	false	
-traversalOn	true	
 visible	true	
-showFocusBorder	true	
 sharedText	false	
-autoTab	false	
 dontWrap	false	
-threeD	true	
 lockText	false	
-showBorder	true	
 opaque	true	
+traversalOn	true	
+showFocusBorder	true	
+autoTab	false	
+threeD	true	
+showBorder	true	
 borderWidth	2	
 hScrollbar	false	
 vScrollbar	false	
@@ -32,6 +32,13 @@ firstIndent	0
 dontSearch	false	
 layerMode
 behavior
+basicTableObject	false	
+maxEditableColumns		
+cellFormatting	false	
+showLines	false	
+hGrid	false	
+vGrid	false	
+tabStops		
 foregroundColor			Text Fill
 foregroundPattern			Text Fill		
 backgroundColor		

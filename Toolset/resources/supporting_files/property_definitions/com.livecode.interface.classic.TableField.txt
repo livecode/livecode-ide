@@ -7,16 +7,16 @@ name	Table Field
 text		
 tooltip		
 disabled	false	
-traversalOn	true	
 visible	true	
-showFocusBorder	true	
 sharedText	false	
-autoTab	false	
 dontWrap	true	
 lockText	true	
+opaque	true	
+traversalOn	true	
+showFocusBorder	true	
+autoTab	false	
 threeD	true	
 showBorder	true	
-opaque	true	
 borderWidth	2	
 hScrollbar	false	
 vScrollbar	true	
