@@ -705,6 +705,7 @@ private function __extensionIsBuiltin pID
       case "com.livecode.system"
       case "com.livecode.type"
       case "com.livecode.typeconvert"
+      case "com.livecode.extensions.libbrowser"
          return true
       default
          return false
@@ -786,7 +787,7 @@ end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
@@ -851,6 +852,8 @@ on __extensionsLoad
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
+   
+   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -1020,11 +1023,12 @@ end revIDEExtensionDocsData
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
       local tFiles
-      set the defaultfolder to pFolder
+      revIDEPushDefaultFolder pFolder
       put the files into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI
       put line 1 of tFiles into pExtensionSource
+      revIDEPopDefaultFolder
    end if
    
    # Check timestamps to see if API  is out of date.
@@ -1110,6 +1114,11 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put revXMLAttribute(tId,"package" & "/" & tDependency,"name") into tName
       put tName into tDataA["requires"][tCount]
    end repeat
+   
+   # User visible should default to true
+   if tDataA["uservisible"] is empty then
+      put true into tDataA["uservisible"]
+   end if
    
    put tDataA into rDataA
    return empty

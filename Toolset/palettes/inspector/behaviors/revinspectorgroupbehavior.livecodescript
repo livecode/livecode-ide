@@ -93,20 +93,34 @@ on propertyDeregistor pProperty
 end propertyDeregistor
 
 # Sets the text for the row label
+constant kLabelHeight = 21
+local sShowLabel
 setprop rowLabel pLabel
-   local tTopLeft
-   put the topleft of field "rowlabel" of me into tTopLeft
    put pLabel into field "rowlabel" of me
-   set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
-   set the topleft of field "rowlabel" of me to tTopLeft
+   if sShowLabel is true then
+      local tTopLeft
+      put the topleft of field "rowlabel" of me into tTopLeft
+      set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+      set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
+      set the topleft of field "rowlabel" of me to tTopLeft
+   end if
 end rowLabel
 
 getProp rowLabel
    return field "rowlabel" of me
 end rowLabel
 
+setProp rowShowLabel pValue
+   put pValue into sShowLabel
+   if pValue then
+      show field "rowlabel" of me
+   else
+      hide field "rowlabel" of me
+   end if
+end rowShowLabel
+
 getprop rowLabelWidth
-   if field "rowlabel" of me is not empty then
+   if sShowLabel is true then
       return the formattedwidth of field "rowlabel" of me
    else
       return 0
@@ -178,7 +192,7 @@ function calculateLayout pProps
       
       # If the min total > the available space, we need to go on to multiple lines
       # So try and work out where the split should occur and recursively calculate layout
-      if tMinTotal > tAvailableSpace then
+      if tMinTotal > tAvailableSpace and the number of lines in pProps > 1 then
          local tOver, tNumOver
          put calculateLayout(line 1 to tIndex - 1 of pProps) into tLayoutA
          put the number of elements in tLayoutA into tNumOver

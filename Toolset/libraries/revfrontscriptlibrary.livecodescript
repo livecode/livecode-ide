@@ -47,10 +47,10 @@ on saveStackRequest
    revCheckScriptSaved tStackName
 
    put empty into gREVStackStatus[revTargetStack(the target)]
-   if "id 1230" is in the frontScripts and "revTools" is in the frontScripts then
+   if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
       select empty
-      send "revSetMarkers true" to btn "revReshape" of stack "revTools"
-      remove script of btn "revReshape" of stack "revTools" from front
+      send "revSetMarkers true" to stack "revReshapeLibrary"
+      revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 
    # OK-2008-03-14 : Bug 5890. Added global variable to work around the problem that
@@ -157,37 +157,10 @@ on nameChanged pOldname, pNewName, pTarget
    send "revNameChanged the long id of tTarget, pOldName, pNewName" to stack "revApplicationOverview"
    set the hcAddressing of stack tTargetStack to tHCAddressing
 
-   if word 1 of tTarget is "stack" then
-      -- OK-2007-06-28: Bug 5040
-      send "revUpdateActiveStack pOldName, pNewName" to stack "Message Box"
-
-      --    --update active stack in Message Box
-      --    if the cREVLockedToStack of stack "Message Box" then
-      --      if the cREVLinkedStack of stack "Message Box" is pOldName then
-      --        put the defaultStack into tDefaultStack
-      --        set the defaultStack to "Message Box"
-      --        set the cREVLinkedStack of stack "Message Box" to pNewName
-      --        set the cREVActiveStack of stack "Message Box" to pNewName
-      --        if the short name of this cd is among the items of "Single Line,Multiple Lines" then
-      --
-      --          set the label of btn "Open Stacks" to pNewName
-      --          send "revSetLabelSize" to stack "Message Box"
-      --        end if
-      --        set the defaultStack to tDefaultStack
-      --      end if
-      --    else
-      --      revSetActiveStacks
-      --    end if
-   end if
+   revSetActiveStacks
    unlock screen
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
-
---PM-2015-10-05: [[ Bug 16099 ]] choose pointer/browse tool does not update Tools palette
-on newTool pTool
-   send "ideToolChanged" to stack "revTools" in 0 seconds
-   pass newTool
-end newTool
 
 on idChanged pOldId, pNewId
    global gREVSuppressMessages

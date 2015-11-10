@@ -23,17 +23,15 @@ private on __loadExtensions
 
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
-
-   revIDEStoreDefaultFolder
-
+   
    ## Load installed extensions
-   set the folder to revIDESpecialFolderPath("extensions")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("extensions")
    repeat for each line tFile in the files
       if char 1 of tFile is "." then next repeat
       __loadExtension tFile
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
    dispatch "ideExtensionsChanged"
 end __loadExtensions
 
@@ -210,15 +208,13 @@ end __trimZippedData
 # Reads in all the tool data
 local sToolDefinition
 private on __toolDefinitionsRead
-   revIDEStoreDefaultFolder
-
    put empty into sToolDefinition
-
+   
    # Set to folder to the path where the object definition files for classic controls are stored
    local tToolDefinitionPath
    put revIDESpecialFolderPath("Tool Definitions") into tToolDefinitionPath
-   set the defaultfolder to tToolDefinitionPath
-
+   revIDEPushDefaultFolder tToolDefinitionPath
+   
    # Read in each file and build an array
    local tDefinitionData, tToolSection
    repeat for each line tFile in the files
@@ -249,7 +245,7 @@ private on __toolDefinitionsRead
       end repeat
    end repeat
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __toolDefinitionsRead
 
 private on __resolvePopupData @xInfo, pData
@@ -500,10 +496,7 @@ private on __orderClassicTools
 end __orderClassicTools
 
 # Reads in the basic property data for classic controls
-on __objectPropertiesRead
-   --put "reading object properties" after msg
-   revIDEStoreDefaultFolder
-
+private on __objectPropertiesRead
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
@@ -514,8 +507,8 @@ on __objectPropertiesRead
 
    local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
-   set the defaultfolder to tObjectDefinitionsPath
-
+   revIDEPushDefaultFolder tObjectDefinitionsPath
+   
    # Read in each file and build an array
    local tObjectType
 
@@ -536,7 +529,7 @@ on __objectPropertiesRead
    
    put tPropertiesInfo into sClassicPropertiesInfo
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end __objectPropertiesRead
 
 private function __orderPropSubArray pSectionA, pIsGroupList
@@ -659,27 +652,154 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
    end if
 end __objectPropertiesShared
 
+/**
+Information pertaining to the property <pPropName>.
+
+Parameters:
+pPropName (string): One of the IDE canonical object property names.
+
+Returns (array): An array of information pertaining to the given property.
+
+Description:
+This function returns the information pertaining to the object property <pPropName>,
+parsed from the file Toolset/resources/supporting_files/property_definitions.
+
+Information about synonyms is not returned by this function. For a list of the canonical
+property names which are valid inputs to this function, see the <idePropertyNames>
+function.
+
+References: idePropertyNames (function)
+
+**/
 function revIDEPropertyInfo pPropName
+   if sClassicPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
    return sClassicPropertiesInfo[pPropName]
 end revIDEPropertyInfo
 
+/**
+A list of the object property names considered canonical by the IDE
+
+Parameters:
+pObjectType (optional string): One of the IDE's object type IDs
+
+Returns (string): A list of the object property names, one per line.
+
+Description:
+This function returns a list of the object property names considered canonical by
+the IDE, as parsed from the file Toolset/resources/supporting_files/property_definitions.txt.
+
+If the <pObjectType> parameter is used, this returns a list of the properties specific to
+that object type, as parsed from the files in Toolset/resources/supporting_files/.
+
+For a list of the object type IDs which are valid inputs to this function, see the <ideObjectTypes>
+function.
+
+References: ideObjectTypes (function)
+**/
+function idePropertyNames pObjectType
+   if sClassicPropertiesInfo is empty or sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
+
+   local tProps
+   if pObjectType is empty then
+      put the keys of sClassicPropertiesInfo into tProps
+   else
+      put the keys of sClassicObjectPropertiesInfo[pObjectType] into tProps
+   end if
+   sort tProps
+   return tProps
+end idePropertyNames
+
+/**
+A list of the object types, in 'type ID' form
+
+Returns (string): A list of the object types, one per line.
+
+Description:
+This function returns a list of the object types in the form used by the IDE.
+**/
+function ideObjectTypes
+   if sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
+
+   local tTypes
+   put the keys of sClassicObjectPropertiesInfo into tTypes
+   sort tTypes
+   return tTypes
+end ideObjectTypes
+
+/**
+Information pertaining to the property <pPropName> in the context of <pObjectType>.
+
+Parameters:
+pPropName (string): One of the IDE canonical object property names.
+pObjectType (string): One of the IDE's object types.
+
+Returns (array): An array of information pertaining to the given property.
+
+Description:
+This function returns the information pertaining to the object property <pPropName>,
+parsed from the files in Toolset/resources/supporting_files/. In some cases an individual
+property's data can be overridden for a particular object type.
+
+For a list of the canonical property names which are valid inputs to this function, see the
+<idePropertyNames> function. For a list of the object type IDs which are valid inputs
+to this function, see the <ideObjectTypes> function.
+
+References: idePropertyNames (function), ideObjectTypes (function)
+
+**/
 function revIDEObjectPropertyInfo pObjectType, pPropName
+   if sClassicObjectPropertiesInfo is empty then
+      __objectPropertiesRead
+   end if
    return sClassicObjectPropertiesInfo[pObjectType][pPropName]
 end revIDEObjectPropertyInfo
 
-private function __objectTypes pObjectIDs
+/**
+A list of the IDE object types corresponding to the list of objects given
+
+Parameters:
+pObjectIDs: A list, one per line, of object IDs
+
+Returns: A list, one per line, of the IDE object types associated with
+the objects in <pObjectIDs>
+**/
+function ideObjectTypesFromObjectList pObjectIDs
    local tObjectTypeList, tObjectType
    repeat for each line tObjectID in pObjectIDs
-      put __objectType(tObjectID) into tObjectType
+      put ideObjectTypeFromObject(tObjectID) into tObjectType
       if tObjectType is not among the lines of tObjectTypeList then
          put tObjectType & return after tObjectTypeList
       end if
    end repeat
    delete the last char of tObjectTypeList
    return tObjectTypeList
-end __objectTypes
+end ideObjectTypesFromObjectList
 
-private function __objectType pObjectID
+/**
+The IDE object type corresponding to the given object
+
+Parameters:
+pObjectID: An object ID
+
+Returns: The IDE object type associated with the objects <pObjectID>
+
+Example:
+create field
+put ideObjectTypeFromObject(it)  -- outputs com.livecode.interface.classic.Field
+set the listBehavior of it to true
+put ideObjectTypeFromObject(it)  -- outputs com.livecode.interface.classic.ListField
+
+Description:
+>*Note:* The type returned by <ideObjectTypeFromObject> can depend
+on the values of the object's properties.
+**/
+function ideObjectTypeFromObject pObjectID
    switch word 1 of the name of pObjectID
       case "stack"
          return "com.livecode.interface.classic.Stack"
@@ -693,7 +813,7 @@ private function __objectType pObjectID
          end if
          break
       case "field"
-         if the tabStops of pObjectID is not empty then
+         if the basicTableObject of pObjectID then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
@@ -793,7 +913,7 @@ private function __objectType pObjectID
          end switch
          break
    end switch
-end __objectType
+end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
    local tOrderedKeys
@@ -1215,29 +1335,6 @@ function __unescapeString pString
    return pString
 end __unescapeString
 
-on revIDEOpenPropertyInspectorControllerStacks
-   lock screen
-   revIDEStoreDefaultFolder
-
-   local tControllersFolder
-   put revIDESpecialFolderPath("Toolset") & slash & "propertyInspectorControllers" into tControllersFolder
-   set the defaultfolder to tControllersFolder
-
-   repeat for each line tControllerStackFile in the files
-      if char 1 of tControllerStackFile is "." then next repeat
-      --      //put (tControllersFolder & slash & tControllerStackFile) & return after msg
-      --      if there is a stack (char 1 to -5 of tControllerStack) then next repeat
-      if there is a file (tControllersFolder & slash & tControllerStackFile) then
-         lock messages
-         go invisible stack (tControllersFolder & slash & tControllerStackFile)
-         unlock messages
-      end if
-   end repeat
-
-   revIDERestoreDefaultFolder
-   unlock screen
-end revIDEOpenPropertyInspectorControllerStacks
-
 on revIDEInitialiseIDELibrary
    # Load fonts
    start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
@@ -1247,9 +1344,6 @@ on revIDEInitialiseIDELibrary
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" into sControlPropertiesToRead
    put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
    put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
-
-   ## Load property inspector controller stacks
-   --revIDEOpenPropertyInspectorControllerStacks
 
    ## Load Extensions
    revIDEInitialiseExtensions
@@ -1471,15 +1565,8 @@ on revIDEMessageSend pMessage, pEffectedTarget
          next repeat
       end if
       
-      local tStackID
-      set the itemdel to "stack"
-      put tObjectID into tStackID
-      delete item 1 of tStackID
-      if tStackID begins with "tack" then delete char 1 to 4 of tStackID
-      put "stack" before tStackID
-      # If the stack isn't visible on screen, don't send a message
-      # Unless it is the menubar, which should always be able to receive messages
-      if the mode of tStackID is 0 or (tStackID is not the long name of stack revIDEPaletteToStackName("menubar") and the visible of tStackID is false) then 
+      # If the stack isn't open, don't send a message
+      if the mode of revIDEStackOfObject(tObjectID) is 0 then 
          next repeat
       end if
       
@@ -1519,6 +1606,15 @@ end revIDEMessageSend
 #############
 # Data
 #############
+
+/**
+Returns information about the predefined graphic objects.
+
+Returns: an array, keyed by the predefined graphic object types that
+appear in the Tools palette, of properties associated with each of those
+graphic objects.
+
+**/
 function revIDEGraphics
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
@@ -1531,6 +1627,14 @@ function revIDEGraphics
    return tReturnData
 end revIDEGraphics
 
+/**
+Returns information about the graphic creation tools.
+
+Returns: an array, keyed by the graphic creation tool types that appear
+in the Tools palette, of properties associated with the objects created
+by each of those graphic creation tools.
+
+**/
 function revIDEGraphicTools
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
@@ -1543,6 +1647,14 @@ function revIDEGraphicTools
    return tReturnData
 end revIDEGraphicTools
 
+/**
+Returns information about the paint tools.
+
+Returns: an array, keyed by the paint tool types that appear
+in the Tools palette, of properties associated with each of
+those paint tools.
+
+**/
 function revIDEPaintTools
    local tReturnData
    put "tool" into tReturnData["com.livecode.tool.Select"]["type"]
@@ -1597,6 +1709,13 @@ function revIDEPaintToolControllers
    return tReturnData
 end revIDEPaintToolControllers
 
+/**
+Returns information about the run and edit tools.
+
+Returns: an array, keyed by the run and edit tool type IDs, 
+of properties associated with each of those tools.
+
+**/
 function revIDERunEditTools
    local tReturnData
    put "tool" into tReturnData["com.livecode.tool.Browse"]["type"]
@@ -1612,6 +1731,14 @@ function revIDERunEditTools
    return tReturnData
 end revIDERunEditTools
 
+/**
+Returns information about the classic control tools.
+
+Returns: an array, keyed by the classic control tool types that appear
+in the Tools palette, of properties associated with each of those classic 
+control tools.
+
+**/
 function revIDEClassicControls
    if sClassicObjectProperties is empty then __objectPropertiesRead
 
@@ -1625,18 +1752,30 @@ function revIDEClassicControls
    return tReturnData
 end revIDEClassicControls
 
-/*
-For a given list of object, returns a structured array of properties, values and other meta data.
-pObjects (string list): A list of ID's of the objects you wish the properties for.
-related: alksdfklasdf
-example: revIDEGetPropertiesOfObjects button 1
-pObjects (String List): A list of object ID's you wish the common properties for.
-Return (Array): An array keyed by the names of the properties
+/**
+For a given list of objects, returns a structured array of properties, values and other meta data.
+
+pObjects (string list): A list of IDs of the objects to obtain the properties for.
+
+Return (Array): An array of data about the objects' properties.
+
+Example:
+local tPropsArray
+create button
+put revIDEGetPropertiesOfObjects(it) into tPropsArray
+
+# Get a list of the sections needed to display this object's property inspector
+local tSections
+put the keys of tPropsArray into tSections
+
 Description:
-# jkldsafgjlkasd
-This is a new section
-## This is a subsection
-*/
+<revIDEGetPropertiesOfObjects> returns an array of data about the given objects'
+shared properties, in a form used by the property inspector. The array has a sub-array
+for each section of the inspector in which one of the shared properties falls. Each of
+these sub-arrays has a sub-array for each group within the section in which one of the
+shared properties falls, each of which in turn has a sub-array for each property,
+containing the values and metadata associated with it.
+**/
 function revIDEGetPropertiesOfObjects pObjects
    # Validation that all the objects in the list exist
    repeat for each line tObject in pObjects
@@ -1645,7 +1784,7 @@ function revIDEGetPropertiesOfObjects pObjects
 
    # Work out the type of the selected objects
    local tObjectTypeList
-   put __objectTypes(pObjects) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjects) into  tObjectTypeList
 
    # Get this list of all the properties to read for the given type list
    local tSharedProperties
@@ -1749,20 +1888,47 @@ function revIDEGlobalPropertyContinuousRange pProperty
    return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
-/*
-Gets a list of the mainstacks, taking into account the Show IDE Stacks preference.
-
-returns : An list of main stacks, one per line
-*/
 function revIDEMainStacks
+   return ideMainStacks()
+end revIDEMainStacks
+
+/**
+A list of the current mainstacks
+
+Returns: A list of the names of the mainstacks currently in memory, one per line
+
+Description:
+Use the <ideMainStacks> function to retrieve a list of the names of the mainstacks
+in memory, taking into account the Show IDE Stacks preference.
+**/
+function ideMainStacks
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
 
-   # Get list of stacks to display
-   local tMainStacks
    if tShowIDEStacks then
-      put the mainstacks into tMainStacks
+      return the mainstacks
    else
+      return ideUserMainStacks()
+   end if
+   return tMainStacks
+end ideMainStacks
+
+/**
+A list of the current user mainstacks
+
+Returns: A list of the names of the user mainstacks currently in memory, one per line
+
+Description:
+Use the <ideUserMainStacks> function to retrieve a list of the names of the mainstacks
+in memory, excluding those which are part of the IDE.
+
+See the <revIDEStackNameIsIDEStack> function for details of when a stack is considered
+part of the IDE.
+
+References: revIDEStackNameIsIDEStack (function)
+**/
+function ideUserMainStacks
+   local tMainStack, tMainStacks
       repeat for each line tMainStack in the mainstacks
          if revIDEStackNameIsIDEStack(tMainStack) then next repeat
          if tMainStacks is empty then
@@ -1771,40 +1937,28 @@ function revIDEMainStacks
             put return & tMainStack after tMainStacks
          end if
       end repeat
-   end if
-   return tMainStacks
-end revIDEMainStacks
+   return tMainstacks
+end ideUserMainStacks
+
 
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
-   local tShowIDEStacks, tOrder
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   local tOrder
+   
    put revIDEGetPreference("ideProjectBrowser_order") into tOrder
    if tOrder is empty then put "name" into tOrder
    
    # Get list of stacks to display
-   local tMainStacks, tFilteredStacks
+   local tMainStacks
    
-   put the mainstacks into tMainStacks
+   put ideMainStacks() into tMainStacks
    if tOrder is "name" then
       sort lines of tMainStacks ascending
-   end if
-   if tShowIDEStacks then
-      put tMainStacks into tFilteredStacks
-   else
-      repeat for each line tMainStack in tMainStacks
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 1 then next repeat
-         if tFilteredStacks is empty then
-            put tMainStack into tFilteredStacks
-         else
-            put return & tMainStack after tFilteredStacks
-         end if
-      end repeat
    end if
    
    # Recurse through the stacks to get their data
    local tStacksData, tCount
-   repeat for each line tStack in tFilteredStacks
+   repeat for each line tStack in tMainStacks
       dispatch function "__readStructureOfStackForDataView" to stack tStack with tStacksData,, 1,pIndex
    end repeat
    return tStacksData
@@ -2021,8 +2175,7 @@ function revIDEThemePath
    put revIDEPlatformVersion() into tSystemVersion
 
    # Find nearest theme version for the given platform
-   revIDEStoreDefaultFolder
-   set the defaultfolder to revIDESpecialFolderPath("themes")
+   revIDEPushDefaultFolder revIDESpecialFolderPath("themes")
 
    local tClosestThemeNumber, tHighestThemeNumber
    repeat for each line tThemeFolder in the folders
@@ -2058,7 +2211,7 @@ function revIDEThemePath
       put "com.livecode.theme." & tPlatformName & "." & tClosestThemeNumber into tThemeName
    end if
 
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 
    return revIDESpecialFolderPath("themes") & slash & tThemeName
 end revIDEThemePath
@@ -2154,10 +2307,48 @@ function revIDECardOfObject pLongID
    return word tOffset to -1 of pLongID
 end revIDECardOfObject
 
-function revIDEStackOfObject pLongID
+/**
+The parent stack of an object
+
+pLongID: The long id of an object
+Returns: the long id of the parent stack of <pLongID>
+
+Description:
+Returns the long id of the (immediate) parent stack of the object with long id <pLongID>.
+To retrieve the mainstack of an object, use the <ideMainStackOfObject> function.
+
+References: ideMainStackOfObject (function)
+**/
+function ideStackOfObject pLongID
    local tOffset
    put wordOffset("stack",pLongID) into tOffset
    return word tOffset to -1 of pLongID
+end ideStackOfObject
+
+/**
+The mainstack containing an object
+
+pLongID: The long id of an object
+Returns: the long id of the mainstack containing <pLongID>
+
+Description:
+Returns the long id of the mainstack of the object with long id <pLongID>.
+To retrieve the immediate parent stack of an object which may be a substack, 
+use the <ideStackOfObject> function.
+
+References: ideStackOfObject (function)
+**/
+function ideMainStackOfObject pLongID
+   local tStack
+   put ideStackOfObject(pLongID) into tStack
+   if word 4 of tStack is "stack" then
+      put ideMainStackOfObject(word 4 to -1 of tStack) into tStack
+   end if
+   return tStack
+end ideMainStackOfObject
+
+function revIDEStackOfObject pLongID
+   return ideMainStackOfObject(pLongID)
 end revIDEStackOfObject
 
 on revIDEMoveControl pControl, pNewCard, pLayerNumber
@@ -2526,9 +2717,15 @@ on revIDEActionCreateObject pObjectTypeID
 end revIDEActionCreateObject
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
+   if pObjectTypeID is "com.livecode.interface.classic.card" or \
+      pObjectTypeID is "com.livecode.interface.classic.stack" then
+      return __revIDEError("Object must be a control")
+   end if
+
    if not exists(pTarget) then return __revIDEError("Cannot create object. Target does not exist: " && pTarget)
+   if not pObjectTypeID begins with "com.livecode" then return __revIDEError("No such object type ID: " && pTarget)
+
    if sClassicObjectProperties is empty then __objectPropertiesRead
-   if not pObjectTypeID begins with "com.livecode" then __revIDEError("There us notobject type ID: " && pTarget)
    # Set the default stack to the target we're creating the object on
    set the defaultstack to revIDEStackOfObject(pTarget)
 
@@ -2658,7 +2855,7 @@ on revIDECloneObjectWithDefaults pLongID
    if not exists(tTarget) then return __revIDEError("Cannot create object. Target does not exist:" && tTarget)
 
    local tOriginalObjectType
-   put __objectType(pLongID) into  tOriginalObjectType
+   put ideObjectTypeFromObject(pLongID) into  tOriginalObjectType
    # Get the engine control type
    local tObjectType
    put sClassicObjectProperties[tOriginalObjectType]["type"] into tObjectType
@@ -2753,9 +2950,9 @@ on revIDESetTool pTool
 end revIDESetTool
 
 /*
-Sets the property of an object to the value specified
+Sets the property of each object in the list to the value specified
 
-pObject (String): The long ID of the target object
+pObjects (String): A list, one per line, of the long IDs of the target objects
 pProperty (String): The name of the property to set
 pValue (Any): The value to set the property to
 
@@ -2797,14 +2994,15 @@ function revIDEGetInspectedObjects
 end revIDEGetInspectedObjects
 */
 local sInspectingObjects
+
 command revIDEInspectObjects pObjects
    lock screen
    put pObjects into sInspectingObjects
    revIDESelectObjects pObjects
-   send "revIDEMessageSend ideInspectObjects","pObjects" to stack "revIDELibrary" in 0 milliseconds
-   if the mode of stack revIDEPaletteToStackName("inspector") is 0 or the visible of stack revIDEPaletteToStackName("inspector") is false then
-      revIDEOpenPalette "inspector"
-   end if
+   
+   revIDEOpenPalette "inspector"
+
+   revIDEMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
 
@@ -3454,50 +3652,83 @@ on revIDEHideLoading
    unlock cursor
 end revIDEHideLoading
 
-local sDefaultFolder
-/*
+local sDefaultFolderList
+/**
 Stores the current default folder.
 
-Related: on revIDERestoreDefaultFolder
+Parameters:
+pFolder (optional string): The new defaultFolder
+
+Related: revIDEPopDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
-   set the defaultfolder to "/"
+   revIDEPushDefaultFolder "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
-*/
-on revIDEStoreDefaultFolder
-   put the defaultfolder into sDefaultFolder
-end revIDEStoreDefaultFolder
 
-/*
+Description:
+Pushes the current defaultFolder onto a list of defaultFolders.
+If <pFolder> is specified, then the defaultFolder is set to <pFolder>.
+revIDEPopDefaultFolder then pops the list and sets the 
+default folder to the popped value.
+**/
+on revIDEPushDefaultFolder pFolder
+   put the defaultfolder into sDefaultFolderList[the number of elements in sDefaultFolderList + 1]
+   
+   local tError
+   if pFolder is not empty then
+      set the defaultFolder to pFolder
+      
+      if the result is not empty then
+         put __revIDEError("Invalid default folder:" && pFolder) into tError
+      end if
+   end if
+   
+   return tError
+end revIDEPushDefaultFolder
+
+/**
 Restores the default folder to the last saved path.
 
-Related: on revIDEStoreDefaultFolder
+Related: revIDEPushDefaultFolder
 
 Example:
 on myHandler
-   revIDEStoreDefaultFolder
+   revIDEPushDefaultFolder
    set the defaultfolder to "/"
    repeat for each line tLine in the files
       # Do something to the files
    end repeat
-   revIDERestoreDefaultFolder
+   revIDEPopDefaultFolder
 end myHandler
-*/
-on revIDERestoreDefaultFolder
-   set the defaultfolder to sDefaultFolder
-end revIDERestoreDefaultFolder
+
+Description:
+Pops the last stored defaultFolder and sets the 
+default folder to the popped value.
+   **/
+on revIDEPopDefaultFolder
+   local tToPop
+   put the number of elements in sDefaultFolderList into tToPop
+   if tToPop is 0 then return __revIDEError("Mismatched default folder store / restore")
+   
+   set the defaultfolder to sDefaultFolderList[tToPop]
+   local tError
+   if the result is not empty then
+      put __revIDEError("Folder to restore no longer exists") into tError
+   end if
+   delete variable sDefaultFolderList[tToPop]
+   return tError  
+end revIDEPopDefaultFolder
 
 /*
 summary: Outputs a flat version of an array to the messagebox.
 pArray (Array): The array you which to convert
 returns (String): A text representation of the array with indented with the tab character for readability
-*/
+*/  
 on revPutArray pArray
    if the number of elements of pArray is 0 then
       put "not an array"
@@ -3623,8 +3854,8 @@ on revIDEEnsureOnscreen pStackName
       set the right of stack pStackName to item 3 of tScreenRect
    end if
    
-   if the top of stack pStackName < item 2 of tScreenRect then
-      set the top of stack pStackName to item 2 of tScreenRect
+   if the effective top of stack pStackName < item 2 of tScreenRect then
+      set the top of stack pStackName to (item 2 of tScreenRect + abs(the top of stack pStackName - the effective top of stack pStackName))
    else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
       set the bottom of stack pStackName to item 4 of tScreenRect
    end if
@@ -3756,7 +3987,10 @@ private function revIDEPaletteBarHeight pStackID
 end revIDEPaletteBarHeight
 
 /*
-Opens an IDE stack as a palette, any additional intelligence related to the palette is managed here, for example management of multiple Property Inspectors.
+Opens an IDE stack as a palette. In the future this should be changed so that
+palettes can decide what mode they ought to be opened in, i.e. this logic should
+be removed from the IDE library and be specific to the stack rather than the 
+palette name.
 
 pPaletteName (String):The readable name of the palette to be opened
 example: revIDEOpenPalette "inspector"
@@ -3783,7 +4017,6 @@ command revIDEOpenPalette pPaletteName
          end if
          modeless stack tStackName
          break
-      case "inspector"
       case "message box"
       case "standalone settings"
       case "message watcher"
@@ -3805,6 +4038,11 @@ command revIDEOpenPalette pPaletteName
       case "dictionary"
          toplevel stack tStackName
          break
+      case "inspector"
+         # The inspector stack is now a manager for property inspectors, 
+         # and does not need to be visible.
+         go invisible stack tStackName as palette
+         return empty
       default
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
@@ -3839,54 +4077,64 @@ function revIDEOpenPalettes pType
    return __revIDEError("Not a valid palette type")
 end revIDEOpenPalettes
 
-/*
-Returns the next numeic ID for a property inspector
-*/
-function revIDENextPropertyInspectorID
-   local tPIList
-   put revIDEOpenPalettes("inspector") into tPIList
+/**
+Determines whether an object is considered part of the IDE
 
-   if tPIList is empty then
-      return 1
-   else
-      set the itemDel to "_"
-      sort lines of tPIList descending numeric by item 2 of each
-      return item 2 of line 1 of tPIList + 1
-   end if
-end revIDENextPropertyInspectorID
+pLongID: The long id of the object.
+Returns (boolean):
 
-/*
-Returns the name of the first unlocked Property Inspector
-*/
-function revIDEPropertyInspector
-   local tPIList
-   put revIDEOpenPalettes("inspector") into tPIList
+Description:
+Use the <revIDEObjectIsOnIDEStack> function to determine whether an object is
+considered part of the IDE, that is if it is on a stack whose mainstack is part
+of the IDE, according to the <revIDEStackIsIDEStack> function.
 
-   if tPIList is empty then
-      return empty
-   else
-      set the itemDel to "_"
-      sort lines of tPIList ascending numeric by item 2 of each
-
-      repeat for each line tInspector in tPIList
-         if the cLocked of stack tInspector is not true then
-            return tInspector
-         end if
-      end repeat
-      return empty
-   end if
-end revIDEPropertyInspector
-
+References: revIDEStackIsIDEStack (function)
+**/
 function revIDEObjectIsOnIDEStack pLongID
    if not exists(pLongID) then return false
    return revIDEStackNameIsIDEStack(the short name of revIDEStackOfObject(pLongID))
 end revIDEObjectIsOnIDEStack
 
+/**
+Determines whether a stack is considered part of the IDE
+
+pLongID: The long id of the stack.
+Returns (boolean):
+
+Description:
+Use the <revIDEStackIsIDEStack> function to determine whether a stack is
+considered part of the IDE.
+
+A stack is considered part of the IDE if it exists, and
+* Its name begins with "rev"
+* Its name begins with "com.livecode."
+* Its name is "message box, answer dialog, ask dialog, or home"
+
+>*Note:* If the name of the stack is already available, it is more efficient to
+use the <revIDEStackNameIsIDEStack> function.
+
+References: revIDEStackNameIsIDEStack (function)
+**/
 function revIDEStackIsIDEStack pLongID
    if not exists(pLongID) then return false
    return revIDEStackNameIsIDEStack(the short name of pLongID)
 end revIDEStackIsIDEStack
 
+/**
+Determines whether a stack is considered part of the IDE
+
+pStackName: The short name of the stack
+Returns (boolean):
+
+Description:
+Use the <revIDEStackNameIsIDEStack> function to determine whether a stack is
+considered part of the IDE, according to the name of the stack.
+
+A stack is considered part of the IDE if any of the following are satisfied:
+* Its name begins with "rev"
+* Its name begins with "com.livecode."
+* Its name is "message box, answer dialog, ask dialog, or home"
+**/
 function revIDEStackNameIsIDEStack pStackName
    ## Special cases of IDE stacks that don't begin with rev
    if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
@@ -4120,7 +4368,7 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
 
    # Work out the type of the selected objects
    local tObjectTypeList
-   put __objectTypes(pObjectList) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjectList) into  tObjectTypeList
 
    # Return this list of all the properties to read for the given type list
    return __objectPropertiesShared(tObjectTypeList, pSection)
@@ -4380,14 +4628,15 @@ end logChanged
 
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
+   revIDEPopDefaultFolder
    return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
    local tDetailedFiles, tMax
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    sort tDetailedFiles descending numeric by item 5 of each
    put item 5 of line 1 of tDetailedFiles into tMax
@@ -4398,6 +4647,7 @@ function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
          put max(revIDELastModifiedTimeOfFilesInFolder(pFolder & slash & tFolder, pRecursive), tMax) into tMax
       end repeat
    end if
+   revIDEPopDefaultFolder
    return tMax
 end revIDELastModifiedTimeOfFilesInFolder
 
@@ -4472,25 +4722,28 @@ function revIDEScriptEditorBehavior pWhich
    end switch
 end revIDEScriptEditorBehavior
 
+function revIDEMessageBoxBehavior pWhich
+   local tPathToBehaviors
+   put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "message box" & slash & "behaviors" into tPathToBehaviors
+   switch pWhich
+      case "single line message"
+         return tPathToBehaviors & slash & "revmessageboxsinglelinemessagebehavior.livecodescript"
+      case "single line card"
+         return tPathToBehaviors & slash & "revmessageboxsinglelinecardbehavior.livecodescript"
+      case "multiple lines message"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinesmessagebehavior.livecodescript"
+      case "multiple lines card"
+         return tPathToBehaviors & slash & "revmessageboxmultiplelinescardbehavior.livecodescript"
+      default
+         return empty  
+   end switch
+end revIDEMessageBoxBehavior
+
 on revIDEAnswerDialogClosed
    local tPopupSource
    put item 1 of line 1 of the executionContexts into tPopupSource
    revIDEMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
-
-function revIDEPaletteToStackName pPalette
-   switch pPalette
-      case "menubar"
-         return "revMenubarUI"
-      case "tools"
-         return "revTools"
-      case "inspector"
-         return "revInspector"
-      default
-         break
-   end switch
-   return empty
-end revIDEPaletteToStackName
 
 function revIDEAbsoluteRectOfObject pPalette, pObjectData
    if pPalette is "script editor" then
@@ -4775,7 +5028,10 @@ function revIDEStandaloneSectionNameToIconName pName
 end revIDEStandaloneSectionNameToIconName
 
 on revIDEOpenStack pFilePath
-   local tError
+   local tError, tStackName
+   
+   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
+
    put empty into tError
    set the cursor to watch
    go stack pFilePath
@@ -4982,8 +5238,11 @@ on revIDENewMainstack pWidth, pHeight
       set the destroyWindow of the templateStack to true
    end if
 
+   local tToolsRight
+   put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
+   
    local tLeft
-   if the right of stack "revTools" < (item 3 of the screenRect / 2) then put the right of stack "revTools" + 20 into tLeft
+   if tToolsRight < (item 3 of the screenRect / 2) then put tToolsRight + 20 into tLeft
    else put item 1 of the windowBoundingRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
 
@@ -5092,18 +5351,6 @@ on revIDEActionNewScriptOnlyStack
    end if
 end revIDEActionNewScriptOnlyStack
 
-/*
-Creates a new substack.
-
-Associations: stack
-
-pParentStackID (String): The long ID of the stack to attach the substack to.
-
-Example:
-revIDENewSubstack the long ID of the topstack
-
-Tags: ide
-*/
 on revIDENewSubstack
    # Get the current stack
    local tCurrentStack
@@ -5111,6 +5358,18 @@ on revIDENewSubstack
    revIDENewSubstackOfStack tCurrentStack
 end revIDENewSubstack
 
+/*
+Creates a new substack.
+
+Associations: stack
+
+pStack (String): The long ID of the stack to attach the substack to.
+
+Example:
+revIDENewSubstackOfStack the long ID of the topstack
+
+Tags: ide
+*/
 on revIDENewSubstackOfStack pStack
    if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
    
@@ -5120,36 +5379,6 @@ on revIDENewSubstackOfStack pStack
    # Make the new stack a substack of the current stack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
-
-/*
-Opens a stack from file.
-
-Associations: stack
-
-pFilePath (String): The path to a stack on disk
-
-Example:
-revIDEOpenStack "/Users/xxxx/Desktop/stack.livecode"
-
-Tags: ide
-*/
-on revIDEOpenStack pFilePath
-   if there is not a file pFilePath then return __revIDEError("Specified file does not exist")
-   if revIDEIsLiveCodeStack(pFilePath) is not true then return __revIDEError("File is not a LiveCode stack")
-
-   go stack pFilePath
-end revIDEOpenStack
-
-function revIDEIsLiveCodeStack pFilePath
-   set the itemdel to "."
-
-   # Check the file extension
-   if the last item of pFilePath is among the items of revIDELiveCodeFileExtensions() then
-      return true
-   else
-      return false
-   end if
-end revIDEIsLiveCodeStack
 
 function revIDEStackIsScriptOnly pStackFile
    if there is a stack pStackFile then
@@ -5219,13 +5448,14 @@ on revIDERemoveFromMemory pStackID
    local tSubstacks
    put the subStacks of stack pStackID into tSubstacks
    
-   local tStacks
+   local tStacks 
    put tMainStack & cr & tSubstacks into tStacks
-   answer warning "Really remove the stack file" && tStackPath && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
+   answer warning "Really remove the stack file" && pStackID && "from memory?" & cr & "Any changes made since saving will be lost from the following stacks:" & cr & cr & tStacks with "Cancel" or "OK" as sheet
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
-   
+
+   local tStackID
    put the long id of stack tMainStack into tStackID
    
    # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
@@ -5238,6 +5468,8 @@ on revIDERemoveFromMemory pStackID
    delete stack tMainStack
    unlock messages
    
+   # Send the 'ideDestroyStack' message
+   revIDEMessageSend "ideDestroyStack", tStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
@@ -5380,13 +5612,12 @@ on revIDEActionImportControlFromFolder pType, pReference
    local tFolderPath
    put it into tFolderPath
    
-   # Store the current default folder
-   local tDefaultFolder, tAcceptedTypes
-   put the defaultfolder into tDefaultFolder
+   local tAcceptedTypes
    put revIDEAcceptedTypes(pType) into tAcceptedTypes
    replace "," with "." in tAcceptedTypes
    
-   set the defaultfolder to tFolderPath
+   # Store the current default folder
+   revIDEPushDefaultFolder tFolderPath
    set the itemdel to "."
    lock screen
    lock messages
@@ -5400,7 +5631,7 @@ on revIDEActionImportControlFromFolder pType, pReference
    unlock screen
    
    # Restore the previous defaul folder 
-   set the defaultfolder to tDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEActionImportControlFromFolder
 
 on revIDEImportControl pType, pFileName, pReferenced
@@ -6761,10 +6992,10 @@ on revIDEToggle pProperty
          break
       case "Backdrop"
          if the backDrop is "none" then
-            if revIDGetPreference("cBackDropColor") is empty then 
+            if revIDEGetPreference("cBackDropColor") is empty then 
                revIDESetPreference "cBackDropColor", "black"
             end if
-            set the backDrop to revIDGetPreference("cBackDropColor")
+            set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else
             set the backDrop to "none"
@@ -6992,6 +7223,7 @@ on revIDEActionEditGroup
 end revIDEActionEditGroup
 
 on revIDEEditGroup pGroup
+   set the defaultStack to the topStack
    if word 1 of pGroup is "group" then
       if revMenuManagerGroup(pGroup) then
          answer error "Can't edit group that is in use by the Menu Manager.  To edit this group close the Menu Manager."
@@ -8133,10 +8365,8 @@ function revIDEFolderListing pFolder, pListFiles
    if there is not a folder pFolder then
       return empty
    end if
-    
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to pFolder
+   
+   revIDEPushDefaultFolder pFolder
    
    local tList
    if pListFiles then
@@ -8146,7 +8376,7 @@ function revIDEFolderListing pFolder, pListFiles
    end if
    
    filter tList without ".*"
-   set the defaultFolder to tDefaultFolder
+   revIDEPopDefaultFolder
    return tList
 end revIDEFolderListing
 
@@ -8519,14 +8749,12 @@ private function escape pString, pConvertLineEndings
 end escape
 
 private function __getLCBSourceFile pFolder
-   local tOldDefaultFolder
-   put the defaultfolder into tOldDefaultFolder
-   set the defaultFolder to pFolder
+   revIDEPushDefaultFolder pFolder
    # Isolate the source file
    local tSource
    put the files into tSource
    filter tSource with "*.lcb"
-   set the defaultFolder to tOldDefaultFolder
+   revIDEPopDefaultFolder
    return tSource
 end __getLCBSourceFile
 
@@ -8697,7 +8925,7 @@ end revIDEGenerateDistributedDocs
 
 on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolder, tOldDefaultFolder
+   local tGuideFolder
    put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
    
    # Check if the distributed guide is out of date
@@ -8710,8 +8938,7 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   put the defaultfolder into tOldDefaultFolder
-   set the defaultfolder to tGuideFolder
+   revIDEPushDefaultFolder tGuideFolder
    
    local tGuideData, tGuideName
    set the itemdelimiter to "."
@@ -8738,7 +8965,7 @@ on revIDEGenerateDistributedGuide
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   set the defaultFolder to tOldDefaultFolder
+   revIDEPopDefaultFolder
 end revIDEGenerateDistributedGuide
 
 command revIDEGenerateDistributedAPI
@@ -8872,3 +9099,7 @@ function revIDERGBToNamedColor pColor
    
    return sColorsToNamesA[pColor]
 end revIDERGBToNamedColor
+
+on ideCorePropertyInspectorRefreshPropertyLabels
+   revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
+end ideCorePropertyInspectorRefreshPropertyLabels

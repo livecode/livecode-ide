@@ -39,8 +39,9 @@ on preOpenStack
    revIDESubscribe "ideNewControl"
    revIDESubscribe "ideNewCard"
    revIDESubscribe "ideNewStack"
-   --revIDESubscribe "ideOpenStack"
+   revIDESubscribe "ideOpenStack"
    revIDESubscribe "ideResumeStack"
+   revIDESubscribe "ideDestroyStack"
    
    revIDESubscribe "ideControlDeleted"
    revIDESubscribe "ideCardDeleted"
@@ -127,7 +128,6 @@ on ideNewStack pTarget
 end ideNewStack
 
 on ideControlDeleted pTarget
-   
    deleteControlFromProjectBrowser pTarget
 end ideControlDeleted
 
@@ -149,18 +149,23 @@ on ideReleaseStack pTarget
 end ideReleaseStack
 
 on ideOpenStack pTarget
-   --   put the name of the owner of pTarget into pTarget
+   local tStack
+   if word 1 of pTarget  is "card" then
+      put the name of the owner of pTarget into tStack
+   else if word 1 of pTarget is "stack" then
+      put pTarget into tStack
+   end if
    
-   --   if char 1 to 3 of the short name of pTarget is "rev" or the short name of pTarget is among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector" then
-   
-   --   else      
-   --      if the mainStack of pTarget is the short name of pTarget then
-   --         addStackToProjectBrowser pTarget
-   --      else
-   --         addSubStackToProjectBrowser pTarget
-   --      end if
-   --   end if
+   if the mainStack of tStack is the short name of tStack then
+      addStackToProjectBrowser tStack
+   else
+      addSubStackToProjectBrowser tStack
+   end if
 end ideOpenStack
+
+on ideDestroyStack pTarget
+   deleteStackFromProjectBrowser pTarget
+end ideDestroyStack
 
 on ideResumeStack pTarget
    --   local tObject
@@ -488,6 +493,12 @@ on selectObjects pObjectList
    
    if the last char of tObjectList is return then delete the last char of tObjectList
    
+   ## If a card or stack is selected we don't want to go to the card
+   ## The user should be able to highlight or expand a card or stack without going to it
+   if word 1 of tObjectList is "stack" or word 1 of tObjectList is "card" then
+      exit selectObjects
+   end if
+   
    ## Go to correct card as required
    lock messages
    repeat for each line tObject in tObjectList      
@@ -505,13 +516,8 @@ on selectObjects pObjectList
    
    unlock messages
    
-   if word 1 of tObjectList is "stack" or word 1 of tObjectList is "card" then
-      ## Nothing
-   else
-      ## Select objects
-      revIDESelectObjects tObjectList
-   end if
-   
+   ## Select objects
+   revIDESelectObjects tObjectList   
 end selectObjects
 
 on selectionChanged pHilitedRows, pPreviouslyHilitedRows

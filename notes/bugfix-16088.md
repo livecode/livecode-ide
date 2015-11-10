@@ -1,0 +1,1 @@
+# Project Browser does not show all stacks
