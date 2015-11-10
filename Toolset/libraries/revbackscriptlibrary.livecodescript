@@ -1521,7 +1521,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    # user code in the debugger which would have run fine otherwise.
    call "revSEInitialize true" to tEditor
    call "revSEAddTargetObject pObject" to tEditor
-   send "revGoScriptEditor tEditor" to me in 0 milliseconds
+   send "revGoScriptEditor tEditor, true" to me in 0 milliseconds
    
    # OK-2008-06-29 : Bug 6661 - This is sent last because setting the script editor's current object
    # also focuses and selects the correct point in the script field, this needs to be done after the script
@@ -1576,7 +1576,7 @@ function revScriptEditorMain
    return the long id of stack "revNewScriptEditor"
 end revScriptEditorMain
    
-command revGoScriptEditor pEditor
+command revGoScriptEditor pEditor, pPosition
    # When the user clicks on any stack, revFrontScript intercepts the resulting mouseDown
    # and among other things, attempts to detect whether or not the stack has been edited
    # as a result of the click. Unfortunately any stack clicked on in run mode is flagged as edited,
@@ -1590,7 +1590,9 @@ command revGoScriptEditor pEditor
    # AL-2015-10-01: [[ Bug 16016 ]] Ensure the palette rect is set after the go command
    #  as otherwise the engine closes and reopens the stack, resulting in it being bound 
    #  to the windowBoundingRect (due to some very specific properties of the script editor)
-   revIDEPositionPalette the short name of pEditor
+   if pPosition then
+      revIDEPositionPalette the short name of pEditor
+   end if
    set the visible of pEditor to true
    unlock screen 
    

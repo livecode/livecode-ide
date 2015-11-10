@@ -474,7 +474,6 @@ on msgChanged
    if lSelectedCard is "Multiple Lines" then
       put the long id of field "results" of card "Multiple Lines" of me into tField
    else
-      go this stack
       put the long id of field "results" of card "Single Line" of me into tField
    end if
    set the text of tField to msg
