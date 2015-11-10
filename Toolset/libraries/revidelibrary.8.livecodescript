@@ -3113,19 +3113,6 @@ on revIDEEditScriptOfObject pObject
    end if
 end revIDEEditScriptOfObject
 
-/*
-Generates API documentation for a giver object and launched it in the system browser.
-
-Example: revIDELoadAPIForScript the long id of button 1
-*/
-on revIDELoadAPIForScript pObjectID
-   revDocsPreviewObjectScriptInDocsViewer pObjectID
-end revIDELoadAPIForScript
-
---on revIDERelayerControl pControl, pLayerNumber
---   revIDESetPropertyOfObject pControl, "layer", pLayerNumber
---end revIDERelayerControl
-
 on revIDERelayerControl pControl, pLayerNumber, pCard
    local tObjectID, tName
    --put pControl && "of" && pCard into tObjectID
@@ -9056,6 +9043,32 @@ command revIDEGenerateDistributedAPI
    
    put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
 end revIDEGenerateDistributedAPI
+
+on revIDEGenerateIDEAPI pObjectID
+   local tData
+
+   put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
+
+   local tName, tText, tAuthor
+   put the short name of pObjectID into tName
+   put the script of pObjectID into tText
+   put "LiveCode" into tAuthor
+
+   local tLcdoc
+   dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with tText, pObjectID
+   put the result into tLcdoc
+
+   local tAPI
+   dispatch function "revDocsFormatDocTextAsJSON" to stack "revDocsParser" with pObjectID, tLcdoc, tName, tAuthor
+   put the result into tAPI
+
+   put tAPI after tData
+
+   put CR & tab & "]" & CR & "}" after tData
+
+   revIDEEnsurePath revIDESpecialFolderPath("documentation") & "/html_viewer/resources/data/ide"
+   put tData into URL ("binfile:" & revIDESpecialFolderPath("documentation") & "/html_viewer/resources/data/ide/built_api.js")
+end revIDEGenerateIDEAPI
 
 ##################################################
 #

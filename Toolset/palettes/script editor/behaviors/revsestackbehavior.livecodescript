@@ -2567,6 +2567,13 @@ command revSEInitialize pDontCheckTarget
    end if
    
    actionResizeStack true
+   
+   global gRevDevelopment
+   if gRevDevelopment then
+      show button "Docs" of me
+   else
+      hide button "Docs" of me
+   end if
 end revSEInitialize
   
 
