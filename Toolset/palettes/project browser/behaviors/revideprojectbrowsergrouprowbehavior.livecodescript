@@ -83,6 +83,7 @@ on LayoutControl pControlRect
    
    set the width of field "scriptLines" of me to the formattedWidth of field "scriptLines" of me 
    set the width of field "behaviorScriptLines" of me to the formattedWidth of field "behaviorScriptLines" of me 
+   set the width of field "name" of me to the formattedWidth of field "name" of me
    
    set the loc of field "type" of me to tLoc
    set the loc of field "name" of me to tLoc
@@ -122,6 +123,23 @@ on LayoutControl pControlRect
    set the right of button "visible" of me to the left of button "cantSelect" of me - the palettePadding of me   
    set the right of field "scriptLines" of me to the left of button "visible" of me  - the palettePadding of me
    set the right of field "behaviorScriptLines" of me to the left of field "scriptLines" of me  - the palettePadding of me
+   
+   ## Check the width of  the "name" field so it doesn't overrun the space
+   local tNameWidth
+   if the visible of field "behaviorScriptLines" of me then
+      put the left of field "behaviorScriptLines" of me - right of image "groupIcon" of me - the palettePadding of me into tNameWidth
+   else
+      put the left of field "scriptLines" of me - right of image "groupIcon" of me - the palettePadding of me into tNameWidth
+   end if
+   
+   if the width of field "name" of me > tNameWidth then
+      set the width of field "name" of me to tNameWidth
+      if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+         set the left of field "name" of me to the right of field "type" of me - 5
+      else
+         set the left of field "name" of me to the right of image "groupIcon" of me
+      end if
+   end if
 end LayoutControl
 
 

@@ -112,6 +112,7 @@ on LayoutControl pControlRect
    set the loc of field "behaviorScriptLines" of me to tLoc
    set the width of field "scriptLines" of me to the formattedWidth of field "scriptLines" of me
    set the width of field "behaviorScriptLines" of me to the formattedWidth of field "behaviorScriptLines" of me
+   set the width of field "name" of me to the formattedWidth of field "name" of me
    
    repeat with x = 1 to 2
       if x > tConnectorCount then
@@ -156,6 +157,23 @@ on LayoutControl pControlRect
    
    set the right of field "scriptLines" of me to item 3 of pControlRect - the palettePadding of me
    set the right of field "behaviorScriptLines" of me to the left of field "scriptLines" of me - 2
+   
+   ## Check the width of  the "name" field so it doesn't overrun the space
+   local tNameWidth
+   if the visible of field "behaviorScriptLines" of me then
+      put the left of field "behaviorScriptLines" of me - right of button "typeIcon" of me - the palettePadding of me into tNameWidth
+   else
+      put the left of field "scriptLines" of me - right of button "typeIcon" of me - the palettePadding of me into tNameWidth
+   end if
+   
+   if the width of field "name" of me > tNameWidth then
+      set the width of field "name" of me to tNameWidth
+      if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+         set the left of field "name" of me to the right of field "type" of me - 5
+      else
+         set the left of field "name" of me to the right of button "typeIcon" of me
+      end if
+   end if
 end LayoutControl
 
 
