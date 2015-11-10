@@ -249,8 +249,6 @@ on generatePalette
          set the name of the templatebutton to the last item of tControlTypeID
          set the style of the templatebutton to "transparent"
          
-         set the tooltip of the templatebutton to sViewsData[tView][tControlTypeID]["tooltip"]
-         
          set the icongravity of the templatebutton to "top"
          set the threed of the templatebutton to false
          set the borderwidth of the templatebutton to 0
@@ -300,17 +298,21 @@ on generatePalette
             set the cTool of the templatebutton to true
             set the cToolName of the templatebutton to "graphic tool"
          else
-            if the tooltip of the templatebutton is empty then
-               local tTitle
-               put sViewsData[tView][tControlTypeID]["title"] into tTitle
-               if tTitle is empty then
-                  put item -1 of tControlTypeID into tTitle
-               end if
-               
-               set the tooltip of the templatebutton to "Click and drag or double click to create object:" & return & tTitle
-            end if
             set the cTool of the templatebutton to false
          end if
+         
+         local tTooltip
+         put sViewsData[tView][tControlTypeID]["tooltip"] into tTooltip
+         
+         if tTooltip is empty then
+            put sViewsData[tView][tControlTypeID]["title"] into tTooltip
+         end if
+         
+         if tTooltip is empty then
+            put item -1 of tControlTypeID into tTooltip
+         end if
+         
+         set the tooltip of the templatebutton to tTooltip
          
          # Create the button
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
@@ -331,9 +333,8 @@ on generatePalette
             set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
             set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
             set the cTool of widget tControlTypeID to false
-            set the tooltip of widget tControlTypeID to "Click and drag or double click to create object: " & tControlTypeID
+            set the tooltip of widget tControlTypeID to tTooltip
          end if
-         
       end repeat
       
       # Create the seperator

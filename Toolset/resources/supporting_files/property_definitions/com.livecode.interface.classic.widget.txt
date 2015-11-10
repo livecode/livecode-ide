@@ -6,6 +6,7 @@ name	Widget
 kind
 tooltip		
 visible		
+disabled	false	
 behavior
 layerMode
 customProperties		

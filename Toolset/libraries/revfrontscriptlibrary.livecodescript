@@ -157,10 +157,7 @@ on nameChanged pOldname, pNewName, pTarget
    send "revNameChanged the long id of tTarget, pOldName, pNewName" to stack "revApplicationOverview"
    set the hcAddressing of stack tTargetStack to tHCAddressing
 
-   if word 1 of tTarget is "stack" then
-      -- OK-2007-06-28: Bug 5040
-      send "revUpdateActiveStack pOldName, pNewName" to stack "Message Box"
-   end if
+   revSetActiveStacks
    unlock screen
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
