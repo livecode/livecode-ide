@@ -1,0 +1,1 @@
+# add extensions locator functions to IDE
