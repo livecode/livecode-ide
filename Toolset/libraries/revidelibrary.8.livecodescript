@@ -1940,26 +1940,20 @@ function ideUserMainStacks
    return tMainstacks
 end ideUserMainStacks
 
+
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   local tOrder
+   
+   put revIDEGetPreference("ideProjectBrowser_order") into tOrder
+   if tOrder is empty then put "name" into tOrder
    
    # Get list of stacks to display
-   local tMainStacks, tAllMainStacks
-   if tShowIDEStacks then
-      put the mainstacks into tMainStacks
-   else
-      put the mainstacks into tAllMainStacks
-      filter tAllMainStacks without "rev*"
-      repeat for each line tMainStack in tAllMainStacks
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
+   local tMainStacks
+   
+   put ideMainStacks() into tMainStacks
+   if tOrder is "name" then
+      sort lines of tMainStacks ascending
    end if
    
    # Recurse through the stacks to get their data
