@@ -291,6 +291,20 @@ private function __propertyDataFromInfoFile pFileName
       end if
 
       put item 1 of tLine into tPropName
+      
+      # Properties can use setters other than revIDESetPropertyOfObject
+      set the itemdelimiter to ":" 
+      local tSetter, tGetter
+      put item 2 of tPropName into tGetter
+      if tGetter is not empty then
+         get __revIDEError("Custom getter not yet supported:" && tPropName)
+      end if
+      put item 3 of tPropName into tSetter
+      put item 1 of tPropName into tPropName
+      put tGetter into tDataA[tPropName]["getter"]
+      put tSetter into tDataA[tPropName]["setter"]
+      set the itemdelimiter to tab
+      
       put item 2 of tLine into tDataA[tPropName]["label"]
 
       local tSection
@@ -513,7 +527,7 @@ private on __objectPropertiesRead
    local tObjectType
 
    repeat for each line tFile in the files
-      if tFile is __propertyInfoFilename() then next repeat
+      if not (tFile begins with "com.livecode.interface") then next repeat
       if char 1 of tFile is "." then next repeat
 
       put tFile into tObjectType
@@ -1745,7 +1759,7 @@ function revIDEClassicControls
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
-      if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group,graphic tool" then
+      if sClassicObjectProperties[tIndex]["type"] is among the items of "button,field,scrollbar,player,image,data grid" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat
@@ -3194,7 +3208,11 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
-on revIDEDistributeObjects pObjects, pHorizontally, pType
+on revIDEDistributeControlsFromPI pObjects, pValue
+   revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
+end revIDEDistributeControlsFromPI
+
+on revIDEDistributeControls pObjects, pHorizontally, pType
    local tNumberOfObjects
    put the number of lines in pObjects into tNumberOfObjects
    
@@ -3286,11 +3304,11 @@ on revIDEDistributeObjects pObjects, pHorizontally, pType
          end repeat
          break
    end switch
-end revIDEDistributeObjects
+end revIDEDistributeControls
 
-on revIDEActionDistributeObjects pHorizontally, pType
-   revIDEDistributeObjects the selobj, pHorizontally, pType
-end revIDEActionDistributeObjects
+on revIDEActionDistributeControls pHorizontally, pType
+   revIDEDistributeControls the selobj, pHorizontally, pType
+end revIDEActionDistributeControls
 
 on revIDECenterControls pControls, pPosition
    local tInitialControl,tInitialLoc, tPositionValue, tNewLoc, tObject, tObjectLoc
@@ -3350,80 +3368,31 @@ on revIDEEqualizeControls pControls, pPosition
    end if
 end revIDEEqualizeControls
 
-command revIDEDistributeControls pControls, pPosition, pDistribution
-   local tStack, tLeft, tRight, tTop,tBottom, tTotalWidth, tTotalHeight, tSpacing
-   local tAvailableWidth, tAvailableHeight
-   local tOrderedObjectList
+on revIDENudgeControlsFromPI pObjectList, pValue
+   revIDENudgeControls pObjectList, pValue["direction"], pValue["increment"]
+end revIDENudgeControlsFromPI
 
-   put word -2 to -1 of line 1 of pControls into tStack
-   put the width of tStack into tLeft
-   put the height of tStack into tTop
-   put 0 into tRight
-   put 0 into tBottom
-   repeat with x = 1 to the number of lines in pControls
-      get line x of pControls
-      if the left of it < tLeft then put the left of it into tLeft
-      if the top of it < tTop then put the top of it into tTop
-      if the right of it > tRight then put the right of it into tRight
-      if the bottom of it > tBottom then put the bottom of it into tBottom
-      add the width of it to tTotalWidth
-      add the height of it to tTotalHeight
-
-      put it & comma & the left of it & comma & the top of it & return after tOrderedObjectList
-   end repeat
-
-   if pControls is "horizontal" then
-      put "Across Card" into pDistribution
-      switch pDistribution
-         case "First To Last selected"
-            sort lines of tOrderedObjectList by item 2 of each
-            put tRight-tLeft into tAvailableWidth
-            put ((tAvailableWidth-tTotalWidth)/(the number of lines in pControls)) div 1 into tSpacing
+on revIDENudgeControls pObjectList, pDirection, pAmount
+   local tObj, tLoc
+   repeat for each line tObj in pObjectList
+      put the loc of tObj into tLoc
+      switch pDirection
+         case "up"
+            put item 2 of tLoc - pAmount into item 2 of tLoc
             break
-         case "Edge To Edge"
-            sort lines of tOrderedObjectList by item 2 of each
-            put 0 into tSpacing
+         case "down"
+            put item 2 of tLoc + pAmount into item 2 of tLoc
             break
-         case "Across Card"
-            sort lines of tOrderedObjectList by item 2 of each
-            put the width of tStack into tAvailableWidth
-            put ((tAvailableWidth-tTotalWidth)/(the number of lines in pControls+1)) div 1 into tSpacing
-            put tSpacing into tLeft
+         case "left"
+            put item 1 of tLoc - pAmount into item 1 of tLoc
+            break
+         case "right"
+            put item 1 of tLoc + pAmount into item 1 of tLoc
             break
       end switch
-      repeat with x = 1 to the number of lines in tOrderedObjectList
-         get item 1 of line x of pControls
-         revIDESetPropertyOfObject item 1 of line x of pControls, "left", tLeft
-         --set the left of it to tLeft
-         add the width of it + tSpacing to tLeft
-      end repeat
-   else if pControls is "vertical" then
-      switch pDistribution
-         put "Across Card" into pDistribution
-      case "First To Last selected"
-         sort lines of tOrderedObjectList by item 3 of each
-         put tBottom-tTop into tAvailableHeight
-         put ((tAvailableHeight-tTotalHeight)/number of lines in tOrderedObjectList) div 1 into tSpacing
-         break
-      case "Edge To Edge"
-         sort lines of tOrderedObjectList by item 3 of each
-         put 0 into tSpacing
-         break
-      case "Across Card"
-         sort lines of tOrderedObjectList by item 3 of each
-         put the height of tStack into tAvailableHeight
-         put ((tAvailableHeight-tTotalHeight)/(the number of lines in tOrderedObjectList+1)) div 1 into tSpacing
-         put tSpacing into tTop
-         break
-   end switch
-   repeat with x = 1 to the number of lines in tOrderedObjectList
-      get item 1 of line x of tOrderedObjectList
-      revIDESetPropertyOfObject item 1 of line x of tOrderedObjectList, "top", tTop
-      --set the top of it to tTop
-      add the height of it + tSpacing to tTop
+      set the loc of tObj to tLoc
    end repeat
-end if
-end revIDEDistributeControls
+end revIDENudgeControls
 
 #############
 # Utility
@@ -4375,13 +4344,24 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
    repeat for each line tObject in pObjectList
       if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
    end repeat
-
+   
    # Work out the type of the selected objects
    local tObjectTypeList
-   put ideObjectTypesFromObjectList(pObjectList) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjectList) into tObjectTypeList
 
    # Return this list of all the properties to read for the given type list
-   return __objectPropertiesShared(tObjectTypeList, pSection)
+   local tProperties
+   put __objectPropertiesShared(tObjectTypeList, pSection) into tProperties
+   
+   # Include multiple object properties if required
+   if the number of lines in pObjectList > 1 then
+      if pSection is empty then
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"] recursively
+      else
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"][pSection] recursively
+      end if
+   end if
+   return tProperties
 end __revIDEPropertiesInfoOfSection
 
 function revIDEPropertiesInfoOfSection pObjectList, pSection
@@ -4573,7 +4553,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4615,6 +4595,8 @@ function revIDEPropertySectionNameToIconName pName
       case "advanced"
          return "cogs"
          break
+      case "align controls"
+         return "object align left"
       default
          return "remove"
          break
@@ -7567,7 +7549,7 @@ on revIDEActionAlign pAlignment
    revIDEAlignControls the selobj, pAlignment
 end revIDEActionAlign
 
-on revIDERelayerObjects pObjectList, pMode
+on revIDERelayerControls pObjectList, pMode
    #maintain the layer order of the target objects
    local tObjectArray
    repeat for each line tObject in pObjectList
@@ -7608,14 +7590,14 @@ on revIDERelayerObjects pObjectList, pMode
          break
    end switch
    set the relayerGroupedControls to tRelayerGrouped
-end revIDERelayerObjects
+end revIDERelayerControls
 
 on revIDEActionSendToBack
    revIDESendToBack the selobj
 end revIDEActionSendToBack
 
 on revIDESendToBack pObjectList
-   revIDERelayerObjects pObjectList, "send to back"
+   revIDERelayerControls pObjectList, "send to back"
 end revIDESendToBack
 
 on revIDEActionBringToFront
@@ -7623,7 +7605,7 @@ on revIDEActionBringToFront
 end revIDEActionBringToFront
 
 on revIDEBringToFront pObjectList
-   revIDERelayerObjects pObjectList, "bring to front"
+   revIDERelayerControls pObjectList, "bring to front"
 end revIDEBringToFront
 
 on revIDEActionMoveBackward
@@ -7631,7 +7613,7 @@ on revIDEActionMoveBackward
 end revIDEActionMoveBackward
 
 on revIDEMoveBackward pObjectList
-   revIDERelayerObjects pObjectList, "move backward"
+   revIDERelayerControls pObjectList, "move backward"
 end revIDEMoveBackward
 
 on revIDEActionMoveForward
@@ -7639,7 +7621,7 @@ on revIDEActionMoveForward
 end revIDEActionMoveForward
 
 on revIDEMoveForward pObjectList
-   revIDERelayerObjects pObjectList, "move forward"
+   revIDERelayerControls pObjectList, "move forward"
 end revIDEMoveForward
 
 on revIDEActionFlipImage pOrientation

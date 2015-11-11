@@ -2576,7 +2576,7 @@ on revMenubarObjectMenuPick pWhich
          break
       case "Align Selected Controls"
          if item 2 of pWhich begins with "Distribute Objects" then
-            revIDEActionDistributeObjects item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
+            revIDEActionDistributeControls item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
          else
             revIDEActionAlign item 2 of pWhich
          end if
