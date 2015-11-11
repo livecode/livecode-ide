@@ -433,8 +433,10 @@ on inspectorSectionChanged pSection
 end inspectorSectionChanged
 
 on updateFocusedEditor
-   if the short name of revIDEStackOfObject(the focusedObject) is the short name of me then
-      dispatch "valueChanged" to the focusedObject
+   if revIDEStackOfObject(the focusedObject) is the long name of me then
+      # Ensure that if the text of a field was changed, the value is set when changing sections
+      # Using focus on nothing makes sure the correct message is sent (closeField / exitField)
+      focus on nothing
    end if
 end updateFocusedEditor
 
