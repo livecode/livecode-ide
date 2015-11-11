@@ -69,6 +69,7 @@ focusPattern	Focus Pattern	Colors	com.livecode.pi.pattern	true	false	Focus Fill
 foregroundColor	Text Color	Colors	com.livecode.pi.color	true	false	Foreground Fill		
 foregroundPattern	Text Pattern	Colors	com.livecode.pi.pattern	true	false	Foreground Fill		
 formatForPrinting	Format for printing	Basic	com.livecode.pi.boolean	true	false			
+geometry:revIDEGetGeometry:revIDESetGeometry	Geometry	Geometry Manager	com.livecode.pi.geometry	true	false
 gradientType	Type	Gradients	com.livecode.pi.enum	true	false		Linear	Linear,Radial,Conical,Diamond,Spiral,XY,SqrtXY
 gradientRamp	Ramp	Gradients	com.livecode.pi.gradientramp	true	false		
 gradientFrom	From	Gradients	com.livecode.pi.number	true	false		

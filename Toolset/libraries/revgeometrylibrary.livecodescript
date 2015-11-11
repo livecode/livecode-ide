@@ -923,12 +923,15 @@ function revCalculateMoveDistance pWhichSide
 end revCalculateMoveDistance
 
 on revCheckGeoDefaultStack
-  local tDefaultStack
-  put revTargetStack() into tDefaultStack
-  if word 1 of tDefaultStack is "revPropertyPalette" and char 1 to 11 of the short name of this cd is "revGeometry" then
-    if revPaletteObjects() is not empty then set the defaultStack to revTargetStack(line 1 of (revPaletteObjects()))
-    else set the defaultStack to the topStack
-  end if
+   local tDefaultStack
+   put revTargetStack() into tDefaultStack
+   if word 1 of tDefaultStack is "revPropertyInspector" then
+      if the cSelectedObjects of stack tDefaultStack is not empty then 
+         set the defaultStack to revIDEStackOfObject(line 1 of the cSelectedObjects of stack tDefaultStack)
+      else 
+         set the defaultStack to the topStack
+      end if
+   end if
 end revCheckGeoDefaultStack
 
 function revCalculateScaleDistance pWhichside
@@ -1039,11 +1042,22 @@ on revSetGeometry pWhichProperty,pWhatValue
 end revSetGeometry
 
 function revGetGeometry pWhichValue
-  local tProfileName
-  put the cREVGeneral["profile"] of lGeometryObject into tProfileName
-  if tProfileName is empty or tProfileName is the cREVGeneral["masterName"] of lGeometryObject then put "Master" into tProfileName
-  --check that some geo has been set
-  return the cREVGeometry[tProfileName,pWhichValue] of lGeometryObject
+   local tProfileName
+   put the cREVGeneral["profile"] of lGeometryObject into tProfileName
+   if tProfileName is empty or tProfileName is the cREVGeneral["masterName"] of lGeometryObject then put "Master" into tProfileName
+   --check that some geo has been set
+   
+   if pWhichValue is empty then
+      local tKeys, tValue
+      put the customkeys["cRevGeometry"] of lGeometryObject into tKeys
+      filter tKeys with (tProfileName & ",*")
+      repeat for each line tKey in tKeys
+         put the cREVGeometry[tKey] of lGeometryObject into tValue[item 2 of tKey]
+      end repeat
+      return tValue
+   end if
+   
+   return the cREVGeometry[tProfileName,pWhichValue] of lGeometryObject
 end revGetGeometry
 
 on revCalculateGeometryCardRank

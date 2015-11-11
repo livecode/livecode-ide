@@ -292,13 +292,12 @@ private function __propertyDataFromInfoFile pFileName
 
       put item 1 of tLine into tPropName
       
-      # Properties can use setters other than revIDESetPropertyOfObject
+      # Properties can use custom getters and setters.
+      # Default getter is revIDEPropertyOfObject
+      # Default setter is revIDESetPropertyOfObject
       set the itemdelimiter to ":" 
       local tSetter, tGetter
       put item 2 of tPropName into tGetter
-      if tGetter is not empty then
-         get __revIDEError("Custom getter not yet supported:" && tPropName)
-      end if
       put item 3 of tPropName into tSetter
       put item 1 of tPropName into tPropName
       put tGetter into tDataA[tPropName]["getter"]
@@ -618,22 +617,33 @@ private function __orderPropArray pPropsA, pSections
 end __orderPropArray
 
 private function __objectPropertiesShared pObjectTypeList, pOptionalSection
-   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps
+   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
    put 1 into x
+   put true into tAllControls
+   set the itemdelimiter to "."
    repeat for each line tObjectType in pObjectTypeList
+      get item -1 of tObjectType
+      if it is "Card" or it is "Stack" then
+         put false into tAllControls  
+      end if
+      
       if tObjectType begins with "com.livecode.interface.classic" then
          # Classic control
          if x is 1 then
             put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray
             # Restrict to group, if present
             if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
+               if tPropertiesArray[pOptionalSection] is not empty then
+                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+                  put tSectionProps into tPropertiesArray
+               else
+                  put empty into tPropertiesArray
+               end if
             end if
-
+            
          else
             put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray2
-
+            
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       else
@@ -641,24 +651,31 @@ private function __objectPropertiesShared pObjectTypeList, pOptionalSection
          if x is 1 then
             put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
-
+            
             union tPropertiesArray with tPropertiesArray2 recursively
-
+            
             # Restrict to group, if present
-            if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
-            end if
+               if tPropertiesArray[pOptionalSection] is not empty then
+                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+                  put tSectionProps into tPropertiesArray
+               else
+                  put empty into tPropertiesArray
+               end if
          else
             put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray2
             put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
             union tPropertiesArray2 with tPropertiesArray3 recursively
-
+            
             intersect tPropertiesArray with tPropertiesArray2 recursively
          end if
       end if
       add 1 to x
    end repeat
+   
+   if tAllControls then
+      union tPropertiesArray with sClassicObjectPropertiesInfo["com.livecode.interface.Control"] recursively
+   end if
+   
    if pOptionalSection is not empty then
       return tPropertiesArray[pOptionalSection]
    else
@@ -1203,22 +1220,28 @@ function __readGroupedPropertiesOfControl pGroupsA, @pDataA
    local tPropMappingA, tProp
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
-         put tGroup into tPropMappingA[tProp]
+         put tGroup into tPropMappingA[tProp]["group"]
+         put pGroupsA[tGroup]["proplist"][tProp]["getter"] into tPropMappingA[tProp]["getter"]
       end repeat
    end repeat
-
+   
    local tDataA
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      if tPropMappingA[tKey]["getter"] is empty then
+         __fetchPropertyOfControl tKey, tDataA
+      else
+         dispatch function tPropMappingA[tKey]["getter"] with the long id of the target
+         put the result into tDataA[tKey]
+      end if
    end repeat
-
+   
    local tValue, tEffective
    set the itemdelimiter to ":"
    repeat for each key tKey in tDataA
       if tKey begins with "effective" then next repeat
       put false into tEffective
       put tDataA[tKey] into tValue
-      put tPropMappingA[tKey] into tGroup
+      put tPropMappingA[tKey]["group"] into tGroup
       if tValue is empty and tDataA["effective" && tKey] is not empty then
          put tDataA["effective" && tKey] into tValue
          put true into tEffective
@@ -4553,7 +4576,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls,Geometry Manager"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4597,6 +4620,8 @@ function revIDEPropertySectionNameToIconName pName
          break
       case "align controls"
          return "object align left"
+      case "geometry manager"
+         return "object justify both"
       default
          return "remove"
          break
@@ -9092,6 +9117,28 @@ end revIDERGBToNamedColor
 on ideCorePropertyInspectorRefreshPropertyLabels
    revIDEMessageSend "idePreferenceChanged:idePropertyInspector_labels"
 end ideCorePropertyInspectorRefreshPropertyLabels
+
+##################################################
+#
+#          GEOMETRY
+#
+##################################################
+
+on revIDESetGeometry pObjectList, pGeometryArray
+   revSetGeometryObject pObjectList
+   repeat for each key tKey in pGeometryArray["geometry"]
+      revSetGeometry tKey, pGeometryArray["geometry"][tKey]
+   end repeat
+end revIDESetGeometry
+
+function revIDEGetGeometry pObjectList
+   local tValue
+
+   revSetGeometryObject pObjectList
+   put line 1 of pObjectList into tValue["object"]
+   put revGetGeometry() into tValue["geometry"]
+   return tValue
+end revIDEGetGeometry
 
 ##################################################
 #

@@ -21,7 +21,7 @@ on selectedObjectChanged
    if sSelectingObjects is true then exit selectedObjectChanged
    if revIDEObjectIsOnIDEStack(the long id of the target) then pass selectedObjectChanged
    
-   revIDEMessageSend "ideSelectedObjectChanged"
+   send "revIDEMessageSend ideSelectedObjectChanged" to stack "revIDELibrary" in 0 millisecs
    pass selectedObjectChanged
 end selectedObjectChanged
 

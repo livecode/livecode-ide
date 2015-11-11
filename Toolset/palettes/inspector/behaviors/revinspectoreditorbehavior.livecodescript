@@ -99,17 +99,25 @@ end editorEnabled
 local sAllowUpdate
 local sLastValue
 local sValue
-setProp editorValue pValue
+setProp editorValue[pKey] pValue
    set the casesensitive to true
    if sLastValue is empty or pValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
-      put pValue into sValue
+      if pKey is not empty then
+         put pValue into sValue[pKey]
+      else
+         put pValue into sValue
+      end if
       put true into sAllowUpdate
    end if
 end editorValue
 
-getProp editorValue
-   return sValue
+getProp editorValue[pKey]
+   if pKey is not empty then
+      return sValue[pKey]
+   else
+      return sValue
+   end if
 end editorValue
 
 on updateProperty
