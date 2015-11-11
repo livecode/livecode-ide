@@ -616,60 +616,48 @@ private function __orderPropArray pPropsA, pSections
    return tOrderedPropsA
 end __orderPropArray
 
-private function __objectPropertiesShared pObjectTypeList, pOptionalSection
+private function __objectPropertiesInfo pObjectType, pOrganiseInSections, pOptionalSection
+   local tPropertiesArray, tClassicObjectType
+   if not (pObjectType begins with "com.livecode.interface.classic") then
+      # This is not a classic object, so fetch the 'extension' properties.
+      put revIDEExtensionPropertiesInfo(pObjectType, pOrganiseInSections) into tPropertiesArray
+      # Currently this must be a widget, so get the universal widget property info 
+      # that has been parsed from the definitions file
+      put "com.livecode.interface.classic.widget" into tClassicObjectType
+   else
+      put pObjectType into tClassicObjectType
+   end if
+   
+   if pOrganiseInSections then
+      # Add the object properties for this object type
+      union tPropertiesArray with sClassicObjectPropertiesInfo[tClassicObjectType] recursively
+      # Restrict to group, if present
+      if pOptionalSection is not empty then
+         local tSectionProps
+         put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+         put tSectionProps into tPropertiesArray
+      end if
+   else
+      union tPropertiesArray with sClassicObjectProperties[tClassicObjectType] recursively
+   end if
+   return tPropertiesArray
+end __objectPropertiesInfo
+
+private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, pOptionalSection
    local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
-   put 1 into x
    put true into tAllControls
-   set the itemdelimiter to "."
+
    repeat for each line tObjectType in pObjectTypeList
+      set the itemdelimiter to "."
       get item -1 of tObjectType
       if it is "Card" or it is "Stack" then
          put false into tAllControls  
       end if
-      
-      if tObjectType begins with "com.livecode.interface.classic" then
-         # Classic control
-         if x is 1 then
-            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray
-            # Restrict to group, if present
-            if pOptionalSection is not empty then
-               if tPropertiesArray[pOptionalSection] is not empty then
-                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-                  put tSectionProps into tPropertiesArray
-               else
-                  put empty into tPropertiesArray
-               end if
-            end if
-            
-         else
-            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray2
-            
-            intersect tPropertiesArray with tPropertiesArray2 recursively
-         end if
+      if tPropertiesArray is empty then
+         put __objectPropertiesInfo(tObjectType, pOrganiseInSections, pOptionalSection) into tPropertiesArray
       else
-         # Widget
-         if x is 1 then
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray
-            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
-            
-            union tPropertiesArray with tPropertiesArray2 recursively
-            
-            # Restrict to group, if present
-               if tPropertiesArray[pOptionalSection] is not empty then
-                  put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-                  put tSectionProps into tPropertiesArray
-               else
-                  put empty into tPropertiesArray
-               end if
-         else
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray2
-            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
-            union tPropertiesArray2 with tPropertiesArray3 recursively
-            
-            intersect tPropertiesArray with tPropertiesArray2 recursively
-         end if
+         intersect tPropertiesArray with __objectPropertiesInfo(tObjectType, pOrganiseInSections, pOptionalSection) recursively
       end if
-      add 1 to x
    end repeat
    
    if tAllControls then
@@ -1216,7 +1204,7 @@ function __readStructureOfContainer @pData
    return tControlsProcessedInContainer
 end __readStructureOfContainer
 
-function __readGroupedPropertiesOfControl pGroupsA, @pDataA
+on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    local tPropMappingA, tProp
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
@@ -1825,7 +1813,7 @@ function revIDEGetPropertiesOfObjects pObjects
 
    # Get this list of all the properties to read for the given type list
    local tSharedProperties
-   put __objectPropertiesShared(tObjectTypeList) into tSharedProperties
+   put __objectPropertiesShared(tObjectTypeList, true) into tSharedProperties
 
    # Generate a list of the properties we want to retreive
    local tPropertyValues
@@ -4374,7 +4362,7 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
 
    # Return this list of all the properties to read for the given type list
    local tProperties
-   put __objectPropertiesShared(tObjectTypeList, pSection) into tProperties
+   put __objectPropertiesShared(tObjectTypeList, true, pSection) into tProperties
    
    # Include multiple object properties if required
    if the number of lines in pObjectList > 1 then
@@ -4536,7 +4524,7 @@ private function __revIDEPropertiesOfObjectsInSection pObjectList, pSectionInfoA
    # Generate a list of the properties we want to retreive
    local tPropertyValuesA
    repeat for each line tObject in pObjectList
-      dispatch function "__readGroupedPropertiesOfControl" to tObject with pSectionInfoA, tPropertyValuesA
+      dispatch "__readGroupedPropertiesOfControl" to tObject with pSectionInfoA, tPropertyValuesA
    end repeat
    return tPropertyValuesA
 end __revIDEPropertiesOfObjectsInSection
