@@ -4454,19 +4454,20 @@ end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pValue
    repeat for each line tObject in pObjectList
+      local tOldPropertySet
+      put the custompropertyset of tObject into tOldPropertySet
       set the custompropertysets of tObject to empty
       if pValue is not empty then
          repeat for each key tKey in pValue
             set the custompropertyset of tObject to tKey
             set the customKeys of tObject to the keys of pValue[tKey]
-            repeat for each key tProp in pValue[tKey]
-               set the tProp of tObject to pValue[tKey][tProp]
-            end repeat
+            set the customProperties of tObject to pValue[tKey]
          end repeat
       else
          set the custompropertyset of tObject to empty
          set the customKeys of tObject to empty
       end if
+      set the custompropertyset of tObject to tOldPropertySet
    end repeat
 end revIDECustomPropertySet
 
