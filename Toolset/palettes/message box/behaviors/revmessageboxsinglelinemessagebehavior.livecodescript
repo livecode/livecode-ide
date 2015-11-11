@@ -2,12 +2,11 @@
 local lHistory, lHistoryIndex, lNumInHistory, lMatchingHistory, lNumMatching, lMatchingIndex
 
 on returnInField
-   revIDEExecuteScript(the text of me)
+   ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
+      revIDEConsoleHistoryAdd(the text of me)
    end if
-   
-   revIDEConsoleHistoryAdd(the text of me)
    revInitialise
    
    select the text of me

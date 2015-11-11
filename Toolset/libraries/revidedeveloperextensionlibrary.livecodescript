@@ -494,6 +494,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    end if
    
    lock screen
+   lock messages
    create stack "LiveCode Extension Test Window"
    if tRectsA["rect"] is not empty then
       set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
@@ -505,6 +506,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    set the script of it to __testStackScript()
    go stack "LiveCode Extension Test Window"
    create widget as pDetailsA["id"]
+   unlock messages
    
    if there is not a widget 1 of stack "LiveCode Extension Test Window" then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
@@ -563,7 +565,7 @@ end revIDEDeveloperExtensionUninstall
 
 on revIDEDeveloperExtensionEditScript pFolder
    local tFile
-   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   put pFolder & slash & __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
    
    # AL-2015-04-01: [[ Bug 15130 ]] First check to see if there is an existing association
    launch document tFile

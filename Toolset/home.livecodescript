@@ -1637,6 +1637,14 @@ function revEnvironmentExternalsPath
   return hookToolsPath("externals", sToolsPath & "/Externals")
 end revEnvironmentExternalsPath
 
+function revEnvironmentExtensionsPath
+   if revEnvironmentIsInstalled() then
+      return hookToolsPath("extensions", sToolsPath & "/Extensions")
+   else
+      return revEnvironmentBinariesPath() & slash & "packaged_extensions"
+   end if
+end revEnvironmentExtensionsPath
+
 function revEnvironmentRuntimePath
   return hookToolsPath("runtime", sToolsPath & "/Runtime")
 end revEnvironmentRuntimePath
@@ -1698,6 +1706,10 @@ end revEnvironmentUserPluginsPath
 function revEnvironmentUserExternalsPath
   return sCustomizationPath & "/Externals"
 end revEnvironmentUserExternalsPath
+
+function revEnvironmentUserExtensionsPath
+  return sCustomizationPath & "/Extensions"
+end revEnvironmentUserExtensionsPath
 
 function revEnvironmentUserPreferencesPath
   return sPreferencesPath

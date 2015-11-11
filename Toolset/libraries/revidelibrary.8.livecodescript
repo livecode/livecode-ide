@@ -1977,26 +1977,20 @@ function ideUserMainStacks
    return tMainstacks
 end ideUserMainStacks
 
+
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   local tOrder
+   
+   put revIDEGetPreference("ideProjectBrowser_order") into tOrder
+   if tOrder is empty then put "name" into tOrder
    
    # Get list of stacks to display
-   local tMainStacks, tAllMainStacks
-   if tShowIDEStacks then
-      put the mainstacks into tMainStacks
-   else
-      put the mainstacks into tAllMainStacks
-      filter tAllMainStacks without "rev*"
-      repeat for each line tMainStack in tAllMainStacks
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
+   local tMainStacks
+   
+   put ideMainStacks() into tMainStacks
+   if tOrder is "name" then
+      sort lines of tMainStacks ascending
    end if
    
    # Recurse through the stacks to get their data
@@ -3479,27 +3473,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
+         put  revEnvironmentExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
+         put revEnvironmentUserExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
+         put revEnvironmentUserExtensionsPath() & "/temp" into tPath
          revIDEEnsurePath(tPath)
-         return tPath
+         return tPath    
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
+         put revEnvironmentUserExtensionsPath() & "/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
+         put revEnvironmentUserExtensionsPath() & "/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -4667,11 +4661,7 @@ end revIDELastModifiedTimeOfFilesInFolder
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
-   if not revEnvironmentIsInstalled() then
-      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tFoldersA["ide"]
-   else
-      put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
-   end if
+   put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
    return tFoldersA
 end revIDEExtensionFolders
 
@@ -9138,3 +9128,217 @@ function revIDEGetGeometry pObjectList
    put revGetGeometry() into tValue["geometry"]
    return tValue
 end revIDEGetGeometry
+
+##################################################
+#
+#          Message box utilities
+#
+##################################################
+
+command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
+   local tOldDefault
+   put the defaultStack into tOldDefault
+   if pDefaultStack is not empty then
+      set the defaultStack to pDefaultStack
+   end if
+   
+   if pScript is empty then exit ideExecuteScript
+   
+   # Try executing as a command first
+   if word 1 of pScript is among the lines of the commandNames then
+      ideDoMessage pScript, pDebugMode
+      if the result is empty then
+         put pScript into rValidScript
+         return empty
+      end if
+   end if
+   
+   -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
+   local tScript, tScriptLine, tScriptError
+   
+   put false into tScriptError
+   try
+      put the script of pIntelligenceObject into tScript
+   catch tError
+      put true into tScriptError
+   end try
+   
+   if tScriptError is true then
+      put false into tScriptError
+      put the long id of the defaultStack into pIntelligenceObject
+      try 
+         put the script of the defaultStack into tScript
+      catch tError
+         put true into tScriptError
+      end try
+   end if
+   
+   local tDoScript, tValidScript
+   
+   if tScriptError is false then
+      set the itemdelimiter to ";"
+      repeat for each line tScriptLine in tScript
+         if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pScript then 
+            put "send" && item 1 of pScript && "to" && pIntelligenceObject & ";" & item 2 to -1 of pScript into tDoScript
+            put pScript into tValidScript
+            exit repeat
+         else if token 1 of tScriptLine is "function" then
+            local tTryAsFunction
+            put false into tTryAsFunction
+            if token 1 of pScript is token 2 of tScriptLine then
+               put true into tTryAsFunction
+               put "put" && pScript into tDoScript
+            else if token 1 of pScript is "put" and token 2 of pScript is token 2 of tScriptLine then
+               put true into tTryAsFunction
+               put pScript into tDoScript
+            end if
+            if tTryAsFunction then
+               local tFirstItem
+               put item 1 of tDoScript into tFirstItem
+               # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
+               local tParams
+               if matchText(token 2 to -1 of tFirstItem, token 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
+                  exit repeat
+               end if
+               put tDoScript into tValidScript
+               dispatch function (token 2 of tDoScript) to pIntelligenceObject with tParams
+               local tFunction
+               replace token 2 of tScriptLine & "(" & tParams & ")" with quote & the result & quote in tFirstItem
+               put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
+               exit repeat
+            end if
+         end if
+      end repeat
+      set the itemdelimiter to comma
+   end if  
+   
+   if tDoScript is not empty then
+      ideDoMessage tDoScript, pDebugMode
+      if the result is not empty then
+         return the result
+      end if
+      put tValidScript into rValidScript
+      return empty
+   end if
+   put empty into tValidScript
+   
+   --deals with the put command, if the put command cannot be executed as is then:
+   --the message box will attempt to auto complete the typing of a name of an object property and the contents of that property into the results area
+   --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
+   lock screen
+   
+   # Try executing as a function or property
+   local tTryProperty
+   
+   # Build the string so that it starts with "put the"
+   if not (pScript begins with "the ") then
+      put "the" && pScript into tTryProperty 
+   else
+      put pScript into tTryProperty
+   end if
+   if not (tTryProperty begins with "put ") then
+      put "put " before tTryProperty 
+   end if
+   
+   set the wholeMatches to true
+   local tIsProperty
+   put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
+   
+   # Try as an object property of the intelligence object
+   if tIsProperty then
+      ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
+      if the result is empty then 
+         local tName
+         put the name of pIntelligenceObject into tName
+         put tTryProperty && "of" && tName into tValidScript
+      end if
+   end if
+   
+   # If it wasn't valid as an object property then
+   # try as a function or global property
+   if tValidScript is empty then
+      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
+         ideDoMessage tTryProperty, pDebugMode
+         if the result is empty then
+            put tTryProperty into tValidScript
+         end if
+      end if
+   end if
+   
+   if tValidScript is empty then
+      ideDoMessage pScript, pDebugMode
+      if the result is empty then 
+         put pScript into tValidScript
+      end if
+   end if
+   
+   if tValidScript is empty then
+      return the result
+   end if
+   unlock screen
+   
+   put tValidScript into rValidScript
+   return empty
+end ideExecuteScript
+
+/** 
+Attempts to compile the target script
+
+The result: If the compilation fails, the result is set to the description of the compile error
+**/
+on ideCompileCheck pScript
+   local tCompileTest, tCompileResult
+   --checks to see if the message compiles
+   lock messages
+   create script only stack "ideCompilationTest"
+   put "on compileTest" & cr & pScript & cr & "end compileTest" into tCompileTest
+   set the script of stack "ideCompilationTest" to tCompileTest
+   put the result into tCompileResult
+   delete stack "ideCompilationTest"
+   unlock messages
+   repeat for each line tError in tCompileResult
+      if item 2 of tError is not 0 then
+         return tError
+      end if
+   end repeat
+
+   return empty
+end ideCompileCheck
+
+command ideDoMessage pScript, pDebugMode
+   ideCompileCheck pScript
+   if the result is not empty then
+      return the result
+   end if
+   
+   do "global" && the globals
+   
+   lock screen
+   local tScriptError
+   try
+      if pDebugMode then
+         # OK-2010-01-02: Remove the message box itself from the debug context. 
+         # Line 1 will be revDebugDoMessage
+         # Line 2 is revExecuteMessage (message box field)
+         # Line 3 is returnInField (message box field)
+         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
+         # Note that this code is called from both the single and multi-line fields, but luckily they both 
+         # have the same number of calls.
+         local tContext, tContextNumber
+         get revDebuggerContexts()
+         put line 4 of it into tContext
+         
+         local tResult
+         revDebuggerDo pScript, tContext
+         get the result
+         put line 1 of it into tResult
+         put line 2 to -1 of it into tScriptError
+      else
+         do pScript
+      end if
+   catch tScriptError
+   end try
+   unlock screen
+   
+   return tScriptError
+end ideDoMessage

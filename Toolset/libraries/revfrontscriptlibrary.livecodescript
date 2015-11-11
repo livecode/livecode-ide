@@ -67,20 +67,20 @@ end saveStackRequest
 
 on nameChanged pOldname, pNewName, pTarget
    global gREVSuppressMessages, gREVMessageDispatch, gREVStackName
-
+   
    if revTargetStack(the target) is "answer dialog" then pass nameChanged
-
+   
    local tTarget
    lock screen
    if pTarget is not empty then put pTarget into tTarget
    else put the long id of the target into tTarget
    if word 1 of tTarget is "stack"
    then replace comma with "_" in pNewName--engine seems to do this
-
+   
    local tPalettes
    put revPalettesList() into tPalettes
    set the wholeMatches to true
-
+   
    local tLinkedObjects
    repeat for each line l in tPalettes
       if word 1 of tTarget is "stack" and the cREVLinked of stack l is not empty then
@@ -107,12 +107,12 @@ on nameChanged pOldname, pNewName, pTarget
          delete last char of tLinkedObjects
          set the cREVLinked of stack l to tLinkedObjects
       end if
-
+      
       local tObjects
       if the cREVLinked of stack l is not empty
       then put the cREVLinked of stack l into tObjects
       else put (the selobj) into tObjects
-
+      
       # LG-2008-03-17
       # Bug 6092
       # It is possible that the object tObjects refers to may have been
@@ -122,63 +122,46 @@ on nameChanged pOldname, pNewName, pTarget
          send "revUpdatePalette" to this cd of stack l
       end if
    end repeat
-
+   
    # OK-2008-03-11 : Update the script editor so that the object's new name is displayed.
    put the long id of the target into tTarget
    send "revSEObjectNameChanged tTarget, pOldName, pNewName" to revScriptEditorMain()
-
+   
    if pNewName is empty and word 1 of tTarget is "stack" then
       lock messages
       set the name of tTarget to pOldName
       put pOldName into pNewName
       unlock messages
    end if
-
+   
    repeat for each line l in gREVMessageDispatch["revNameChanged"]
       send "revNameChanged pNewName, pOldName" to this cd of stack l
    end repeat
-
+   
    --if name is empty need to match id
    if pOldName is empty
    then put word 1 to 3 of tTarget into pOldName
-
+   
    --update Application Overview global variables/custom properties with new name
    if word 1 of tTarget is "stack" and pOldName is gREVStackName then
       --stack name has changed
       put pNewName into gREVStackName
    end if
-
+   
    local tTargetStack
    put revTargetStack(tTarget) into tTargetStack
-
+   
    local tHCAddressing
    put the hcAddressing of stack tTargetStack into tHCAddressing
    set the hcAddressing of stack tTargetStack to false
-   send "revNameChanged the long id of tTarget, pOldName, pNewName" to stack "revApplicationOverview"
-   set the hcAddressing of stack tTargetStack to tHCAddressing
-
-   if word 1 of tTarget is "stack" then
-      -- OK-2007-06-28: Bug 5040
-      send "revUpdateActiveStack pOldName, pNewName" to stack "Message Box"
-
-      --    --update active stack in Message Box
-      --    if the cREVLockedToStack of stack "Message Box" then
-      --      if the cREVLinkedStack of stack "Message Box" is pOldName then
-      --        put the defaultStack into tDefaultStack
-      --        set the defaultStack to "Message Box"
-      --        set the cREVLinkedStack of stack "Message Box" to pNewName
-      --        set the cREVActiveStack of stack "Message Box" to pNewName
-      --        if the short name of this cd is among the items of "Single Line,Multiple Lines" then
-      --
-      --          set the label of btn "Open Stacks" to pNewName
-      --          send "revSetLabelSize" to stack "Message Box"
-      --        end if
-      --        set the defaultStack to tDefaultStack
-      --      end if
-      --    else
-      --      revSetActiveStacks
-      --    end if
+   
+   if there is a stack "revApplicationOverview" then
+      send "revNameChanged the long id of tTarget, pOldName, pNewName" to stack "revApplicationOverview"
    end if
+   
+   set the hcAddressing of stack tTargetStack to tHCAddressing
+   
+   revSetActiveStacks
    unlock screen
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass nameChanged
 end nameChanged
@@ -537,8 +520,10 @@ on revDeleteStack pWhichStacks
 end revDeleteStack
 
 on revCheckStackOpen pStack, pStacks
-   if the mode of stack "revApplicationOverview" is not 0 and there is not a stack pStack
-   then send "revAODeleteStack pStack, pStacks" to stack "revApplicationOverview"
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0 and there is not a stack pStack
+      then send "revAODeleteStack pStack, pStacks" to stack "revApplicationOverview"
+   end if
 end revCheckStackOpen
 
 # TH-2008-06-18 : Bug 6217, This is now handled in revbackscript which prevents the accidental
