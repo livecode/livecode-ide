@@ -3539,6 +3539,14 @@ function revIDESpecialFolderPath pKey
    end switch
 end revIDESpecialFolderPath
 
+private function __docsHTMLFile pWhich
+   if pWhich is "dictionary" then
+      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
+   else
+      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
+   end if
+end __docsHTMLFile  
+
 on revIDEEnsurePath pPath
    if there is a folder pPath then exit revIDEEnsurePath
 
@@ -3784,7 +3792,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome,Preferences,Search"	
+   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Create It Welcome,Preferences,Search"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3829,6 +3837,7 @@ function revIDEPaletteToStackName pPalette
       case "about"
          return "revAbout"
       case "dictionary"
+      case "guide"
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
@@ -3986,6 +3995,10 @@ private function revIDEPaletteBarHeight pStackID
    return the effective height of pStackID - the height of pStackID
 end revIDEPaletteBarHeight
 
+private function __cefBrowserUnavailable
+   return the platform is "Linux" and the processor is not "x86_64"
+end __cefBrowserUnavailable
+
 /*
 Opens an IDE stack as a palette. In the future this should be changed so that
 palettes can decide what mode they ought to be opened in, i.e. this logic should
@@ -4036,7 +4049,12 @@ command revIDEOpenPalette pPaletteName
          modeless stack tStackName
          break
       case "dictionary"
-         toplevel stack tStackName
+      case "guide"
+         if __cefBrowserUnavailable() then
+            launch url ("file:" & __docsHtmlFile(pPaletteName))
+         else
+            toplevel stack tStackName
+         end if
          break
       case "inspector"
          # The inspector stack is now a manager for property inspectors, 

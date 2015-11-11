@@ -2753,12 +2753,14 @@ on revMenubarHelpMenuPick pWhich
       case "Sample Scripts"
       case "Beginners Guide"
       case "Tutorials"
-      case "All Guides"
       case "Forums"
       case "Technical Questions"
       case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
+         break
+      case "All Guides"
+         revIDEOpenPalette "guide"
          break
       case "Relicense"
          revIDEActionRelicense
