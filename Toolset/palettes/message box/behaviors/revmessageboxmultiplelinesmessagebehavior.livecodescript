@@ -2,13 +2,14 @@
 local lHistory, lHistoryIndex, lNumInHistory, lMatchingHistory, lNumMatching, lMatchingIndex
 
 on enterInField
-   revIDEExecuteScript(the text of me)
-   
-   local tMessage
-   put the text of me into tMessage
-   replace return with "\n" in tMessage
-   revIDEConsoleHistoryAdd(tMessage)
-   
+   ideMessageBoxExecuteScript(the text of me)
+   if the result is not empty then
+      put the result into me
+      local tMessage
+      put the text of me into tMessage
+      replace return with "\n" in tMessage
+      revIDEConsoleHistoryAdd(tMessage)
+   end if
    revInitialise
    select the text of me
 end enterInField
