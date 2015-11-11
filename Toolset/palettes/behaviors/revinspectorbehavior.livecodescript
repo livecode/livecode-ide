@@ -381,7 +381,10 @@ private on inspectorNavigationGenerate
    clearFrameNavigationData
    
    # Add all the navigation elements
-   repeat for each element tSection in sDataA
+   repeat with x = 1 to the number of elements in sDataA
+      local tSection
+      put sDataA[x] into tSection
+      
       local tIcon
       dispatch function "inspectorSectionIcon" to me with tSection["label"]
       put the result into tIcon
@@ -433,8 +436,10 @@ on inspectorSectionChanged pSection
 end inspectorSectionChanged
 
 on updateFocusedEditor
-   if the short name of revIDEStackOfObject(the focusedObject) is the short name of me then
-      dispatch "valueChanged" to the focusedObject
+   if revIDEStackOfObject(the focusedObject) is the long name of me then
+      # Ensure that if the text of a field was changed, the value is set when changing sections
+      # Using focus on nothing makes sure the correct message is sent (closeField / exitField)
+      focus on nothing
    end if
 end updateFocusedEditor
 

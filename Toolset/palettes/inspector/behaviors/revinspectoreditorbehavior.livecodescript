@@ -233,3 +233,12 @@ getProp editorLabel
       return sPropertyInfo["label"]
    end if
 end editorLabel
+
+local sConflicted
+setProp editorConflicted pValue
+   put pValue into sConflicted
+end editorConflicted
+   
+getprop editorConflicted
+   return sConflicted
+end editorConflicted
