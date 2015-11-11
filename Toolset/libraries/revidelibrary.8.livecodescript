@@ -1234,9 +1234,11 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
          put tDataA["effective" && tKey] into tValue
          put true into tEffective
       end if
-      put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey]
-      put tValue into pDataA[tGroup][tKey]["value"]
-      put tEffective into pDataA[tGroup][tKey]["effective"]
+      if pDataA[tGroup][tKey] is empty then
+         put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey]
+      end if
+      put tValue into pDataA[tGroup][tKey]["value"][the long id of the target]
+      put tEffective into pDataA[tGroup][tKey]["effective"][the long id of the target]
    end repeat
 end __readGroupedPropertiesOfControl
 
