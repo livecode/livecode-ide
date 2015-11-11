@@ -134,8 +134,9 @@ on clearFrameData
 end clearFrameData
 
 on clearFrameNavigationData
-   local tNewDataA, tCount
-   repeat for each element tElement in sData
+   local tNewDataA, tCount, tElement
+   repeat with x = 1 to the number of elements in sData
+      put sData[x] into tElement
       if tElement["type"] is "navigation" then
          next repeat
       end if
@@ -259,7 +260,9 @@ on generateFrame
    
    local tPreferenceMenuA, tDataA, tSelected
    # Gather the data to set on the widget(s)
-   repeat for each element tNavItem in sData
+   repeat with x = 1 to the number of elements in sData
+      local tNavItem
+      put sData[x] into tNavItem
       if tNavItem["hidden"] is true then
          next repeat
       end if

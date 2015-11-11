@@ -381,7 +381,10 @@ private on inspectorNavigationGenerate
    clearFrameNavigationData
    
    # Add all the navigation elements
-   repeat for each element tSection in sDataA
+   repeat with x = 1 to the number of elements in sDataA
+      local tSection
+      put sDataA[x] into tSection
+      
       local tIcon
       dispatch function "inspectorSectionIcon" to me with tSection["label"]
       put the result into tIcon
