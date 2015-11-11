@@ -76,7 +76,7 @@ This will let you access your standalone by opening your web browser and visitin
 
 # Reporting bugs
 
-Please report bugs to the [LiveCode Quality Centre](http://quality.runrev.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
+Please report bugs to the [LiveCode Quality Centre](http://quality.livecode.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
 
 # Advanced: HTML5 standalone filesystem
 
@@ -151,6 +151,14 @@ Here's the complete skeleton web page for an HTML5 standalone:
       </body>
     </html>
 
+# Advanced: Speeding up engine download
+
+Currently, the engine files are almost 30 MB, which is a lot to download before the engine can start.  It is possible to speed up the download by enabling deflate compression in the web server configuration.
+
+Enabling deflate compression reduces the total download size to around 6.3 MB.  It's recommended to pre-compress the engine with `gzip`, and then configure your web server to serve the pre-compressed files.
+
+* For the Apache web server, configure `mod_deflate` to serve [pre-compressed content](https://httpd.apache.org/docs/2.4/mod/mod_deflate.html#precompressed)
+* For the NGINX web server, add [`gzip_static on;`](https://www.nginx.com/resources/admin-guide/compression-and-decompression/#send) to your configuration.
 
 # Advanced: Customizing the Module object
 

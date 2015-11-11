@@ -1940,26 +1940,20 @@ function ideUserMainStacks
    return tMainstacks
 end ideUserMainStacks
 
+
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   local tOrder
+   
+   put revIDEGetPreference("ideProjectBrowser_order") into tOrder
+   if tOrder is empty then put "name" into tOrder
    
    # Get list of stacks to display
-   local tMainStacks, tAllMainStacks
-   if tShowIDEStacks then
-      put the mainstacks into tMainStacks
-   else
-      put the mainstacks into tAllMainStacks
-      filter tAllMainStacks without "rev*"
-      repeat for each line tMainStack in tAllMainStacks
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
+   local tMainStacks
+   
+   put ideMainStacks() into tMainStacks
+   if tOrder is "name" then
+      sort lines of tMainStacks ascending
    end if
    
    # Recurse through the stacks to get their data
@@ -3487,27 +3481,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
+         put  revEnvironmentExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
+         put revEnvironmentUserExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
+         put revEnvironmentUserExtensionsPath() & "/temp" into tPath
          revIDEEnsurePath(tPath)
-         return tPath
+         return tPath    
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
+         put revEnvironmentUserExtensionsPath() & "/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
+         put revEnvironmentUserExtensionsPath() & "/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -4660,11 +4654,7 @@ end revIDELastModifiedTimeOfFilesInFolder
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
-   if not revEnvironmentIsInstalled() then
-      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tFoldersA["ide"]
-   else
-      put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
-   end if
+   put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
    return tFoldersA
 end revIDEExtensionFolders
 
