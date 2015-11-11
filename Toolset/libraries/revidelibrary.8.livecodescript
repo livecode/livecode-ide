@@ -1910,7 +1910,6 @@ function ideMainStacks
    else
       return ideUserMainStacks()
    end if
-   return tMainStacks
 end ideMainStacks
 
 /**
@@ -2702,15 +2701,8 @@ on revIDEDownloadProgressUpdate pURL, pStatus
 end revIDEDownloadProgressUpdate
 
 on revIDEDownloadFinished pURL
-   __downloadNextFile
+   __downloadNextFile  
 end revIDEDownloadFinished
-
-on revIDEFindMoreWidgets
-   lock screen
-   revIDEOpenPalette "extension manager"
-   revIDEMessageSend "ideFindMoreWidgets"
-   unlock screen
-end revIDEFindMoreWidgets
 
 on revIDEActionCreateObject pObjectTypeID
    revIDECreateObject pObjectTypeID, the topStack, the loc of this card of the topStack
