@@ -1,4 +1,4 @@
-script "revbackscriptlibrary"
+ï»¿script "revbackscriptlibrary"
 
 on revLoadLibrary
    insert the script of me into back
@@ -631,9 +631,9 @@ on revSaveAs pShortName, pSubstackOnly
    revIDEActionSaveStackAs the long id of stack pShortName, pSubstackOnly
 end revSaveAs
 
-function revStackFileVersion pStackFile
+function revStackFileVersion pStackFile
    return revIDEStackFileVersion(pStackFile)
-end revStackFileVersion
+end revStackFileVersion
 
 on revRemoveRevOnlineKey pKey, pStack
    local tCustomKeys
