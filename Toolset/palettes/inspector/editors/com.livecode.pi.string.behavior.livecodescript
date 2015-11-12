@@ -1,4 +1,6 @@
 ﻿script "com.livecode.pi.string.behavior"
+constant kEffectiveTextColor = "100,100,100"
+
 on editorInitialize
    set the editorMinWidth of me to 25
    set the editorMaxWidth of me to 0
@@ -17,10 +19,12 @@ on editorUpdate
       if the focusedobject is not the long ID of field 1 of me then
          put tValue into field 1 of me
       end if
-      set the textcolor of field 1 of me to "150,150,150"
+      set the textcolor of field 1 of me to kEffectiveTextColor
+      set the textstyle["italic"] of field 1 of me to true
    else
       put tValue into field 1 of me
       set the textcolor of field 1 of me to empty
+      set the textstyle of field 1 of me to empty
    end if
    unlock messages
    
