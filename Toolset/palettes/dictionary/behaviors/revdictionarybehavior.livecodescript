@@ -3,14 +3,7 @@ local sTab
 on setAsBehavior pTarget
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of this me
    set the behavior of pTarget to the long id of this me
-   send "setFrame" to me in 0 millisecs
 end setAsBehavior
-
-on setFrame
-   set the navigationDisplayStyle of me to "names"
-   set the showPreferenceAction of me to false	
-   resizeStack
-end setFrame
 
 on openStack
    lock screen
@@ -26,7 +19,9 @@ on openStack
 end openStack
 
 on resizeStack
-   set the rect of widget "Dictionary" of me to the contentRect of me
+   if there is a widget "Dictionary" of me then
+      set the rect of widget "Dictionary" of me to the contentRect of me
+   end if
 end resizeStack
 
 on showAPIs
