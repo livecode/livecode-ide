@@ -615,7 +615,7 @@ command revIDESetActiveStack
    
    lock screen
    put revIDEGetPreference("IDEDebugMode") into tMode
-   if tMode is true then
+   if tMode is true and the traceStack is not empty then
       put the short name of the traceStack into tTraceStack
       revIDESetPreference "IDEActiveStack",tTraceStack
       disableFrameItem "lockDefaultStack"
