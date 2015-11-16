@@ -73,8 +73,27 @@ setProp rowData pData
    lock screen
    repeat for each key tProperty in pData
       if there is a group tProperty of me then
-         set the editorValue of group tProperty of me to pData[tProperty]["value"]
-         set the editorEffective of group tProperty of me to pData[tProperty]["effective"]
+         local tKeys
+         put the keys of pData[tProperty]["value"] into tKeys
+         local tConflict, tValue
+         put false into tConflict
+         repeat for each line tLine in tKeys
+            if tValue is empty then
+               put pData[tProperty]["value"][tLine] into tValue
+               next repeat
+            end if
+            if tValue is not pData[tProperty]["value"][tLine] then
+               put true into tConflict
+               exit repeat
+            end if
+         end repeat
+         if tConflict then
+            set the editorConflicted of group tProperty of me to true
+         else
+            set the editorConflicted of group tProperty of me to false
+            set the editorValue of group tProperty of me to tValue
+            set the editorEffective of group tProperty of me to pData[tProperty]["effective"][line 1 of tKeys]
+         end if
          dispatch "editorUpdate" to group tProperty of me
       end if
    end repeat

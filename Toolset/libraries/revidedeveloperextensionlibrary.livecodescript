@@ -565,7 +565,7 @@ end revIDEDeveloperExtensionUninstall
 
 on revIDEDeveloperExtensionEditScript pFolder
    local tFile
-   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   put pFolder & slash & __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
    
    # AL-2015-04-01: [[ Bug 15130 ]] First check to see if there is an existing association
    launch document tFile

@@ -107,16 +107,28 @@ function revIDEExtensionProperties pTypeID
    return sExtensionProperties[pTypeID]
 end revIDEExtensionProperties
 
-function revIDEExtensionPropertiesInfo pTypeId
-   local tPropsA, tPropInfoA
+function revIDEExtensionPropertiesInfo pTypeId, pOrganise
+   local tPropsA, tExtensionPropsInfoA
    put revIDEExtensionProperties(pTypeId) into tPropsA
    
-   repeat for each key tProp in tPropsA
-      put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
-      put tPropsA[tProp]["widget_prop"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["widget_prop"]
-      put tPropsA[tProp]["order"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
-   end repeat
-   return tPropInfoA
+   if pOrganise then
+      # If pOrganise is true, organise the property info into the structure that the property 
+      #  inspector expects, namely [<section>]["grouplist"][<group>]["proplist"][<prop>]
+      repeat for each key tProp in tPropsA
+         local tSection, tGroup, tOrder, tPropInfoA
+         put tPropsA[tProp] into tPropInfoA
+         put tPropsA[tProp]["order"] into tOrder
+         put tPropsA[tProp]["label"] into tGroup
+         put tPropsA[tProp]["section"] into tSection
+         put tPropInfoA into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["proplist"][tProp]
+         
+         put true into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["widget_prop"]
+         put tOrder into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["order"]
+      end repeat
+   else
+      put tPropsA into tExtensionPropsInfoA
+   end if
+   return tExtensionPropsInfoA
 end revIDEExtensionPropertiesInfo
 
 function revIDEExtensionProperty pKind, pProperty

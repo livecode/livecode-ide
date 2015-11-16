@@ -99,22 +99,30 @@ end editorEnabled
 local sAllowUpdate
 local sLastValue
 local sValue
-setProp editorValue pValue
+setProp editorValue[pKey] pValue
    set the casesensitive to true
    if sLastValue is empty or pValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
-      put pValue into sValue
+      if pKey is not empty then
+         put pValue into sValue[pKey]
+      else
+         put pValue into sValue
+      end if
       put true into sAllowUpdate
    end if
 end editorValue
 
-getProp editorValue
-   return sValue
+getProp editorValue[pKey]
+   if pKey is not empty then
+      return sValue[pKey]
+   else
+      return sValue
+   end if
 end editorValue
 
 on updateProperty
   if sAllowUpdate is true then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue
+     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false, sPropertyInfo["setter"]
      put false into sAllowUpdate
    end if
 end updateProperty
@@ -225,3 +233,12 @@ getProp editorLabel
       return sPropertyInfo["label"]
    end if
 end editorLabel
+
+local sConflicted
+setProp editorConflicted pValue
+   put pValue into sConflicted
+end editorConflicted
+   
+getprop editorConflicted
+   return sConflicted
+end editorConflicted

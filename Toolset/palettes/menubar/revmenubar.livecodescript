@@ -2576,7 +2576,7 @@ on revMenubarObjectMenuPick pWhich
          break
       case "Align Selected Controls"
          if item 2 of pWhich begins with "Distribute Objects" then
-            revIDEActionDistributeObjects item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
+            revIDEActionDistributeControls item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
          else
             revIDEActionAlign item 2 of pWhich
          end if
@@ -2753,12 +2753,14 @@ on revMenubarHelpMenuPick pWhich
       case "Sample Scripts"
       case "Beginners Guide"
       case "Tutorials"
-      case "All Guides"
       case "Forums"
       case "Technical Questions"
       case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
+         break
+      case "All Guides"
+         revIDEOpenPalette "guide"
          break
       case "Relicense"
          revIDEActionRelicense

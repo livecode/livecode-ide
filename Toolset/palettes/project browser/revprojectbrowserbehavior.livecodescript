@@ -1,6 +1,5 @@
 ﻿script "revProjectBrowserBehavior"
 local sDisplayArray, sLongIDToRow, sObjectToParent
---, sExpandedStacks, sLongIDToRow, sObjectToParent
 
 on preOpenStack   
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
@@ -29,15 +28,12 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   //addFrameItem "showControl","footer","action","Show/hide controls","eye open","","showControls", the long id of me
-   //addFrameItem "lockControl","footer","action","Lock/unlock controls","lock","","lockControls", the long id of me
+
    
    # Preferences
-   --addFrameItem "ideProjectBrowser_thumbnails", "header", "preference", "Show Thumbnails", "boolean","true,false", "preferenceChanged", the long id of me
-   --addFrameItem "ideProjectBrowser_groupThumbnails", "header", "preference", "Show Group Thumbnails", "boolean","true,false", "preferenceChanged", the long id of me
-   --addFrameItem "ideProjectBrowser_sortOrder", "header", "preference", "Control sort order", "enum","Bottom to top,Top to bottom", "preferenceChanged", the long id of me
    addFrameItem "ideProjectBrowser_objectType", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me
    addFrameItem "ideProjectBrowser_show", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "displayPreferenceSelected", the long id of me
+   addFrameItem "ideProjectBrowser_order","header","preference","Order by","enum","Name,Number","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideNewControl"
@@ -196,6 +192,9 @@ on preferenceChanged pPreference, pValue
       case "ideProjectBrowser_objectType"
          revIDESetPreference pPreference, pValue
          break
+      case "ideProjectBrowser_order"
+         revIDESetPreference pPreference, pValue
+         break
    end switch
    
    buildProjectView   
@@ -235,15 +234,30 @@ end displayPreferenceSelected
 ###################################
 
 command setUpProjectView
-   local theStylesA
+   local theStylesA, tBehaviorsFolder, tStackID
+   put revIDEPaletteResourcePath("behaviors") into tBehaviorsFolder
    
    set the behavior of group "objectList" of me to revIDEDataViewBehavior()
    send "ResetView" to group "objectList" of me
    put the long id of group "containerRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["container"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontainerrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["container"] to tStackID
+   
    put the long id of group "controlRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["control"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontrolrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["control"] to tStackID
+   
    put the long id of group "libraryRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["library"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowserlibraryrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["library"] to tStackID
+   
    put the long id of group "sectionRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["section"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsersectionrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["section"] to tStackID
+   
    put the long id of group "groupRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["group"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsergrouprowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["group"] to tStackID
    
    set the viewProp["row style templates"] of group "objectList" of me to theStylesA
    set the viewProp["hilite color"] of group "objectList" of me to revIDEColor("dataView_HiliteColor")

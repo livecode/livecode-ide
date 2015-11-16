@@ -311,6 +311,19 @@ private function __propertyDataFromInfoFile pFileName
       end if
 
       put item 1 of tLine into tPropName
+      
+      # Properties can use custom getters and setters.
+      # Default getter is revIDEPropertyOfObject
+      # Default setter is revIDESetPropertyOfObject
+      set the itemdelimiter to ":" 
+      local tSetter, tGetter
+      put item 2 of tPropName into tGetter
+      put item 3 of tPropName into tSetter
+      put item 1 of tPropName into tPropName
+      put tGetter into tDataA[tPropName]["getter"]
+      put tSetter into tDataA[tPropName]["setter"]
+      set the itemdelimiter to tab
+      
       put item 2 of tLine into tDataA[tPropName]["label"]
 
       local tSection
@@ -533,7 +546,7 @@ private on __objectPropertiesRead
    local tObjectType
 
    repeat for each line tFile in the files
-      if tFile is __propertyInfoFilename() then next repeat
+      if not (tFile begins with "com.livecode.interface") then next repeat
       if char 1 of tFile is "." then next repeat
 
       put tFile into tObjectType
@@ -623,48 +636,54 @@ private function __orderPropArray pPropsA, pSections
    return tOrderedPropsA
 end __orderPropArray
 
-private function __objectPropertiesShared pObjectTypeList, pOptionalSection
-   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps
-   put 1 into x
-   repeat for each line tObjectType in pObjectTypeList
-      if tObjectType begins with "com.livecode.interface.classic" then
-         # Classic control
-         if x is 1 then
-            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray
-            # Restrict to group, if present
-            if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
-            end if
-
-         else
-            put sClassicObjectPropertiesInfo[tObjectType] into tPropertiesArray2
-
-            intersect tPropertiesArray with tPropertiesArray2 recursively
-         end if
-      else
-         # Widget
-         if x is 1 then
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray
-            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray2
-
-            union tPropertiesArray with tPropertiesArray2 recursively
-
-            # Restrict to group, if present
-            if pOptionalSection is not empty then
-               put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
-               put tSectionProps into tPropertiesArray
-            end if
-         else
-            put revIDEExtensionPropertiesInfo(tObjectType) into tPropertiesArray2
-            put sClassicObjectPropertiesInfo["com.livecode.interface.classic.widget"] into tPropertiesArray3
-            union tPropertiesArray2 with tPropertiesArray3 recursively
-
-            intersect tPropertiesArray with tPropertiesArray2 recursively
-         end if
+private function __objectPropertiesInfo pObjectType, pOrganiseInSections, pOptionalSection
+   local tPropertiesArray, tClassicObjectType
+   if not (pObjectType begins with "com.livecode.interface.classic") then
+      # This is not a classic object, so fetch the 'extension' properties.
+      put revIDEExtensionPropertiesInfo(pObjectType, pOrganiseInSections) into tPropertiesArray
+      # Currently this must be a widget, so get the universal widget property info 
+      # that has been parsed from the definitions file
+      put "com.livecode.interface.classic.widget" into tClassicObjectType
+   else
+      put pObjectType into tClassicObjectType
+   end if
+   
+   if pOrganiseInSections then
+      # Add the object properties for this object type
+      union tPropertiesArray with sClassicObjectPropertiesInfo[tClassicObjectType] recursively
+      # Restrict to group, if present
+      if pOptionalSection is not empty then
+         local tSectionProps
+         put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+         put tSectionProps into tPropertiesArray
       end if
-      add 1 to x
+   else
+      union tPropertiesArray with sClassicObjectProperties[tClassicObjectType] recursively
+   end if
+   return tPropertiesArray
+end __objectPropertiesInfo
+
+private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, pOptionalSection
+   local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
+   put true into tAllControls
+
+   repeat for each line tObjectType in pObjectTypeList
+      set the itemdelimiter to "."
+      get item -1 of tObjectType
+      if it is "Card" or it is "Stack" then
+         put false into tAllControls  
+      end if
+      if tPropertiesArray is empty then
+         put __objectPropertiesInfo(tObjectType, pOrganiseInSections, pOptionalSection) into tPropertiesArray
+      else
+         intersect tPropertiesArray with __objectPropertiesInfo(tObjectType, pOrganiseInSections, pOptionalSection) recursively
+      end if
    end repeat
+   
+   if tAllControls then
+      union tPropertiesArray with sClassicObjectPropertiesInfo["com.livecode.interface.Control"] recursively
+   end if
+   
    if pOptionalSection is not empty then
       return tPropertiesArray[pOptionalSection]
    else
@@ -1205,33 +1224,41 @@ function __readStructureOfContainer @pData
    return tControlsProcessedInContainer
 end __readStructureOfContainer
 
-function __readGroupedPropertiesOfControl pGroupsA, @pDataA
+on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    local tPropMappingA, tProp
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
-         put tGroup into tPropMappingA[tProp]
+         put tGroup into tPropMappingA[tProp]["group"]
+         put pGroupsA[tGroup]["proplist"][tProp]["getter"] into tPropMappingA[tProp]["getter"]
       end repeat
    end repeat
-
+   
    local tDataA
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      if tPropMappingA[tKey]["getter"] is empty then
+         __fetchPropertyOfControl tKey, tDataA
+      else
+         dispatch function tPropMappingA[tKey]["getter"] with the long id of the target
+         put the result into tDataA[tKey]
+      end if
    end repeat
-
+   
    local tValue, tEffective
    set the itemdelimiter to ":"
    repeat for each key tKey in tDataA
       if tKey begins with "effective" then next repeat
       put false into tEffective
       put tDataA[tKey] into tValue
-      put tPropMappingA[tKey] into tGroup
+      put tPropMappingA[tKey]["group"] into tGroup
       if tValue is empty and tDataA["effective" && tKey] is not empty then
          put tDataA["effective" && tKey] into tValue
          put true into tEffective
       end if
-      put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey]
-      put tValue into pDataA[tGroup][tKey]["value"]
-      put tEffective into pDataA[tGroup][tKey]["effective"]
+      if pDataA[tGroup][tKey] is empty then
+         put pGroupsA[tGroup]["proplist"][tKey] into pDataA[tGroup][tKey]
+      end if
+      put tValue into pDataA[tGroup][tKey]["value"][the long id of the target]
+      put tEffective into pDataA[tGroup][tKey]["effective"][the long id of the target]
    end repeat
 end __readGroupedPropertiesOfControl
 
@@ -1827,7 +1854,7 @@ function revIDEClassicControls
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
-      if sClassicObjectProperties[tIndex]["type"] is not among the items of "graphic,stack,card,group,graphic tool" then
+      if sClassicObjectProperties[tIndex]["type"] is among the items of "button,field,scrollbar,player,image,data grid" then
          put sClassicObjectProperties[tIndex] into tReturnData[tIndex]
       end if
    end repeat
@@ -1870,7 +1897,7 @@ function revIDEGetPropertiesOfObjects pObjects
 
    # Get this list of all the properties to read for the given type list
    local tSharedProperties
-   put __objectPropertiesShared(tObjectTypeList) into tSharedProperties
+   put __objectPropertiesShared(tObjectTypeList, true) into tSharedProperties
 
    # Generate a list of the properties we want to retreive
    local tPropertyValues
@@ -1992,7 +2019,6 @@ function ideMainStacks
    else
       return ideUserMainStacks()
    end if
-   return tMainStacks
 end ideMainStacks
 
 /**
@@ -2022,26 +2048,20 @@ function ideUserMainStacks
    return tMainstacks
 end ideUserMainStacks
 
+
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   local tOrder
+   
+   put revIDEGetPreference("ideProjectBrowser_order") into tOrder
+   if tOrder is empty then put "name" into tOrder
    
    # Get list of stacks to display
-   local tMainStacks, tAllMainStacks
-   if tShowIDEStacks then
-      put the mainstacks into tMainStacks
-   else
-      put the mainstacks into tAllMainStacks
-      filter tAllMainStacks without "rev*"
-      repeat for each line tMainStack in tAllMainStacks
-         if revIDEStackNameIsIDEStack(tMainStack) or the mode of stack tMainStack > 2 then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
+   local tMainStacks
+   
+   put ideMainStacks() into tMainStacks
+   if tOrder is "name" then
+      sort lines of tMainStacks ascending
    end if
    
    # Recurse through the stacks to get their data
@@ -2790,15 +2810,8 @@ on revIDEDownloadProgressUpdate pURL, pStatus
 end revIDEDownloadProgressUpdate
 
 on revIDEDownloadFinished pURL
-   __downloadNextFile
+   __downloadNextFile  
 end revIDEDownloadFinished
-
-on revIDEFindMoreWidgets
-   lock screen
-   revIDEOpenPalette "extension manager"
-   ideMessageSend "ideFindMoreWidgets"
-   unlock screen
-end revIDEFindMoreWidgets
 
 on revIDEActionCreateObject pObjectTypeID
    revIDECreateObject pObjectTypeID, the topStack, the loc of this card of the topStack
@@ -3276,7 +3289,11 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
-on revIDEDistributeObjects pObjects, pHorizontally, pType
+on revIDEDistributeControlsFromPI pObjects, pValue
+   revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
+end revIDEDistributeControlsFromPI
+
+on revIDEDistributeControls pObjects, pHorizontally, pType
    local tNumberOfObjects
    put the number of lines in pObjects into tNumberOfObjects
    
@@ -3368,11 +3385,11 @@ on revIDEDistributeObjects pObjects, pHorizontally, pType
          end repeat
          break
    end switch
-end revIDEDistributeObjects
+end revIDEDistributeControls
 
-on revIDEActionDistributeObjects pHorizontally, pType
-   revIDEDistributeObjects the selobj, pHorizontally, pType
-end revIDEActionDistributeObjects
+on revIDEActionDistributeControls pHorizontally, pType
+   revIDEDistributeControls the selobj, pHorizontally, pType
+end revIDEActionDistributeControls
 
 on revIDECenterControls pControls, pPosition
    local tInitialControl,tInitialLoc, tPositionValue, tNewLoc, tObject, tObjectLoc
@@ -3432,80 +3449,31 @@ on revIDEEqualizeControls pControls, pPosition
    end if
 end revIDEEqualizeControls
 
-command revIDEDistributeControls pControls, pPosition, pDistribution
-   local tStack, tLeft, tRight, tTop,tBottom, tTotalWidth, tTotalHeight, tSpacing
-   local tAvailableWidth, tAvailableHeight
-   local tOrderedObjectList
+on revIDENudgeControlsFromPI pObjectList, pValue
+   revIDENudgeControls pObjectList, pValue["direction"], pValue["increment"]
+end revIDENudgeControlsFromPI
 
-   put word -2 to -1 of line 1 of pControls into tStack
-   put the width of tStack into tLeft
-   put the height of tStack into tTop
-   put 0 into tRight
-   put 0 into tBottom
-   repeat with x = 1 to the number of lines in pControls
-      get line x of pControls
-      if the left of it < tLeft then put the left of it into tLeft
-      if the top of it < tTop then put the top of it into tTop
-      if the right of it > tRight then put the right of it into tRight
-      if the bottom of it > tBottom then put the bottom of it into tBottom
-      add the width of it to tTotalWidth
-      add the height of it to tTotalHeight
-
-      put it & comma & the left of it & comma & the top of it & return after tOrderedObjectList
-   end repeat
-
-   if pControls is "horizontal" then
-      put "Across Card" into pDistribution
-      switch pDistribution
-         case "First To Last selected"
-            sort lines of tOrderedObjectList by item 2 of each
-            put tRight-tLeft into tAvailableWidth
-            put ((tAvailableWidth-tTotalWidth)/(the number of lines in pControls)) div 1 into tSpacing
+on revIDENudgeControls pObjectList, pDirection, pAmount
+   local tObj, tLoc
+   repeat for each line tObj in pObjectList
+      put the loc of tObj into tLoc
+      switch pDirection
+         case "up"
+            put item 2 of tLoc - pAmount into item 2 of tLoc
             break
-         case "Edge To Edge"
-            sort lines of tOrderedObjectList by item 2 of each
-            put 0 into tSpacing
+         case "down"
+            put item 2 of tLoc + pAmount into item 2 of tLoc
             break
-         case "Across Card"
-            sort lines of tOrderedObjectList by item 2 of each
-            put the width of tStack into tAvailableWidth
-            put ((tAvailableWidth-tTotalWidth)/(the number of lines in pControls+1)) div 1 into tSpacing
-            put tSpacing into tLeft
+         case "left"
+            put item 1 of tLoc - pAmount into item 1 of tLoc
+            break
+         case "right"
+            put item 1 of tLoc + pAmount into item 1 of tLoc
             break
       end switch
-      repeat with x = 1 to the number of lines in tOrderedObjectList
-         get item 1 of line x of pControls
-         revIDESetPropertyOfObject item 1 of line x of pControls, "left", tLeft
-         --set the left of it to tLeft
-         add the width of it + tSpacing to tLeft
-      end repeat
-   else if pControls is "vertical" then
-      switch pDistribution
-         put "Across Card" into pDistribution
-      case "First To Last selected"
-         sort lines of tOrderedObjectList by item 3 of each
-         put tBottom-tTop into tAvailableHeight
-         put ((tAvailableHeight-tTotalHeight)/number of lines in tOrderedObjectList) div 1 into tSpacing
-         break
-      case "Edge To Edge"
-         sort lines of tOrderedObjectList by item 3 of each
-         put 0 into tSpacing
-         break
-      case "Across Card"
-         sort lines of tOrderedObjectList by item 3 of each
-         put the height of tStack into tAvailableHeight
-         put ((tAvailableHeight-tTotalHeight)/(the number of lines in tOrderedObjectList+1)) div 1 into tSpacing
-         put tSpacing into tTop
-         break
-   end switch
-   repeat with x = 1 to the number of lines in tOrderedObjectList
-      get item 1 of line x of tOrderedObjectList
-      revIDESetPropertyOfObject item 1 of line x of tOrderedObjectList, "top", tTop
-      --set the top of it to tTop
-      add the height of it + tSpacing to tTop
+      set the loc of tObj to tLoc
    end repeat
-end if
-end revIDEDistributeControls
+end revIDENudgeControls
 
 #############
 # Utility
@@ -3555,27 +3523,27 @@ function revIDESpecialFolderPath pKey
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/images"
          break
       case "extensions"
-         put  item 1 to -3 of the filename of stack "home" & "/Extensions" into tPath
+         put  revEnvironmentExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "user extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions" into tPath
+         put revEnvironmentUserExtensionsPath() into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "temp extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/temp" into tPath
+         put revEnvironmentUserExtensionsPath() & "/temp" into tPath
          revIDEEnsurePath(tPath)
-         return tPath
+         return tPath    
          break
       case "downloading extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/downloading" into tPath
+         put revEnvironmentUserExtensionsPath() & "/downloading" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "uninstalled extensions"
-         put revEnvironmentCustomizationPath() & "/Extensions/uninstalled" into tPath
+         put revEnvironmentUserExtensionsPath() & "/uninstalled" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
@@ -3612,6 +3580,14 @@ function revIDESpecialFolderPath pKey
          break
    end switch
 end revIDESpecialFolderPath
+
+private function __docsHTMLFile pWhich
+   if pWhich is "dictionary" then
+      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
+   else
+      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
+   end if
+end __docsHTMLFile  
 
 on revIDEEnsurePath pPath
    if there is a folder pPath then exit revIDEEnsurePath
@@ -3858,7 +3834,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Resource Center,Create It Welcome,Preferences,Search"	
+   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Create It Welcome,Preferences,Search"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3903,6 +3879,7 @@ function revIDEPaletteToStackName pPalette
       case "about"
          return "revAbout"
       case "dictionary"
+      case "guide"
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
@@ -4060,6 +4037,10 @@ private function revIDEPaletteBarHeight pStackID
    return the effective height of pStackID - the height of pStackID
 end revIDEPaletteBarHeight
 
+private function __cefBrowserUnavailable
+   return the platform is "Linux" and the processor is not "x86_64"
+end __cefBrowserUnavailable
+
 /*
 Opens an IDE stack as a palette. In the future this should be changed so that
 palettes can decide what mode they ought to be opened in, i.e. this logic should
@@ -4110,7 +4091,12 @@ command revIDEOpenPalette pPaletteName
          modeless stack tStackName
          break
       case "dictionary"
-         toplevel stack tStackName
+      case "guide"
+         if __cefBrowserUnavailable() then
+            launch url ("file:" & __docsHtmlFile(pPaletteName))
+         else
+            toplevel stack tStackName
+         end if
          break
       case "inspector"
          # The inspector stack is now a manager for property inspectors, 
@@ -4439,13 +4425,24 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
    repeat for each line tObject in pObjectList
       if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
    end repeat
-
+   
    # Work out the type of the selected objects
    local tObjectTypeList
-   put ideObjectTypesFromObjectList(pObjectList) into  tObjectTypeList
+   put ideObjectTypesFromObjectList(pObjectList) into tObjectTypeList
 
    # Return this list of all the properties to read for the given type list
-   return __objectPropertiesShared(tObjectTypeList, pSection)
+   local tProperties
+   put __objectPropertiesShared(tObjectTypeList, true, pSection) into tProperties
+   
+   # Include multiple object properties if required
+   if the number of lines in pObjectList > 1 then
+      if pSection is empty then
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"] recursively
+      else
+         union tProperties with sClassicObjectPropertiesInfo["com.livecode.interface.MultipleObjects"][pSection] recursively
+      end if
+   end if
+   return tProperties
 end __revIDEPropertiesInfoOfSection
 
 function revIDEPropertiesInfoOfSection pObjectList, pSection
@@ -4528,19 +4525,20 @@ end revIDECustomPropertiesInfo
 
 on revIDECustomPropertySet pObjectList, pValue
    repeat for each line tObject in pObjectList
+      local tOldPropertySet
+      put the custompropertyset of tObject into tOldPropertySet
       set the custompropertysets of tObject to empty
       if pValue is not empty then
          repeat for each key tKey in pValue
             set the custompropertyset of tObject to tKey
             set the customKeys of tObject to the keys of pValue[tKey]
-            repeat for each key tProp in pValue[tKey]
-               set the tProp of tObject to pValue[tKey][tProp]
-            end repeat
+            set the customProperties of tObject to pValue[tKey]
          end repeat
       else
          set the custompropertyset of tObject to empty
          set the customKeys of tObject to empty
       end if
+      set the custompropertyset of tObject to tOldPropertySet
    end repeat
 end revIDECustomPropertySet
 
@@ -4596,7 +4594,7 @@ private function __revIDEPropertiesOfObjectsInSection pObjectList, pSectionInfoA
    # Generate a list of the properties we want to retreive
    local tPropertyValuesA
    repeat for each line tObject in pObjectList
-      dispatch function "__readGroupedPropertiesOfControl" to tObject with pSectionInfoA, tPropertyValuesA
+      dispatch "__readGroupedPropertiesOfControl" to tObject with pSectionInfoA, tPropertyValuesA
    end repeat
    return tPropertyValuesA
 end __revIDEPropertiesOfObjectsInSection
@@ -4636,7 +4634,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced"
+   return "Basic,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Align Controls,Geometry Manager"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4678,6 +4676,10 @@ function revIDEPropertySectionNameToIconName pName
       case "advanced"
          return "cogs"
          break
+      case "align controls"
+         return "object align left"
+      case "geometry manager"
+         return "object justify both"
       default
          return "remove"
          break
@@ -4728,11 +4730,7 @@ end revIDELastModifiedTimeOfFilesInFolder
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
-   if not revEnvironmentIsInstalled() then
-      put revEnvironmentBinariesPath() & slash & "packaged_extensions" into tFoldersA["ide"]
-   else
-      put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
-   end if
+   put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
    return tFoldersA
 end revIDEExtensionFolders
 
@@ -7634,7 +7632,7 @@ on revIDEActionAlign pAlignment
    revIDEAlignControls the selobj, pAlignment
 end revIDEActionAlign
 
-on revIDERelayerObjects pObjectList, pMode
+on revIDERelayerControls pObjectList, pMode
    #maintain the layer order of the target objects
    local tObjectArray
    repeat for each line tObject in pObjectList
@@ -7675,14 +7673,14 @@ on revIDERelayerObjects pObjectList, pMode
          break
    end switch
    set the relayerGroupedControls to tRelayerGrouped
-end revIDERelayerObjects
+end revIDERelayerControls
 
 on revIDEActionSendToBack
    revIDESendToBack the selobj
 end revIDEActionSendToBack
 
 on revIDESendToBack pObjectList
-   revIDERelayerObjects pObjectList, "send to back"
+   revIDERelayerControls pObjectList, "send to back"
 end revIDESendToBack
 
 on revIDEActionBringToFront
@@ -7690,7 +7688,7 @@ on revIDEActionBringToFront
 end revIDEActionBringToFront
 
 on revIDEBringToFront pObjectList
-   revIDERelayerObjects pObjectList, "bring to front"
+   revIDERelayerControls pObjectList, "bring to front"
 end revIDEBringToFront
 
 on revIDEActionMoveBackward
@@ -7698,7 +7696,7 @@ on revIDEActionMoveBackward
 end revIDEActionMoveBackward
 
 on revIDEMoveBackward pObjectList
-   revIDERelayerObjects pObjectList, "move backward"
+   revIDERelayerControls pObjectList, "move backward"
 end revIDEMoveBackward
 
 on revIDEActionMoveForward
@@ -7706,7 +7704,7 @@ on revIDEActionMoveForward
 end revIDEActionMoveForward
 
 on revIDEMoveForward pObjectList
-   revIDERelayerObjects pObjectList, "move forward"
+   revIDERelayerControls pObjectList, "move forward"
 end revIDEMoveForward
 
 on revIDEActionFlipImage pOrientation
@@ -9177,3 +9175,239 @@ end revIDERGBToNamedColor
 on ideCorePropertyInspectorRefreshPropertyLabels
    ideMessageSend "idePreferenceChanged:idePropertyInspector_labels"
 end ideCorePropertyInspectorRefreshPropertyLabels
+
+##################################################
+#
+#          GEOMETRY
+#
+##################################################
+
+on revIDESetGeometry pObjectList, pGeometryArray
+   revSetGeometryObject pObjectList
+   repeat for each key tKey in pGeometryArray["geometry"]
+      revSetGeometry tKey, pGeometryArray["geometry"][tKey]
+   end repeat
+end revIDESetGeometry
+
+function revIDEGetGeometry pObjectList
+   local tValue
+
+   revSetGeometryObject pObjectList
+   put line 1 of pObjectList into tValue["object"]
+   put revGetGeometry() into tValue["geometry"]
+   return tValue
+end revIDEGetGeometry
+
+##################################################
+#
+#          Message box utilities
+#
+##################################################
+
+command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
+   local tOldDefault
+   put the defaultStack into tOldDefault
+   if pDefaultStack is not empty then
+      set the defaultStack to pDefaultStack
+   end if
+   
+   if pScript is empty then exit ideExecuteScript
+   
+   # Try executing as a command first
+   if word 1 of pScript is among the lines of the commandNames then
+      ideDoMessage pScript, pDebugMode
+      if the result is empty then
+         put pScript into rValidScript
+         return empty
+      end if
+   end if
+   
+   -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
+   local tScript, tScriptLine, tScriptError
+   
+   put false into tScriptError
+   try
+      put the script of pIntelligenceObject into tScript
+   catch tError
+      put true into tScriptError
+   end try
+   
+   if tScriptError is true then
+      put false into tScriptError
+      put the long id of the defaultStack into pIntelligenceObject
+      try 
+         put the script of the defaultStack into tScript
+      catch tError
+         put true into tScriptError
+      end try
+   end if
+   
+   local tDoScript, tValidScript
+   
+   if tScriptError is false then
+      set the itemdelimiter to ";"
+      repeat for each line tScriptLine in tScript
+         if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pScript then 
+            put "send" && item 1 of pScript && "to" && pIntelligenceObject & ";" & item 2 to -1 of pScript into tDoScript
+            put pScript into tValidScript
+            exit repeat
+         else if token 1 of tScriptLine is "function" then
+            local tTryAsFunction
+            put false into tTryAsFunction
+            if token 1 of pScript is token 2 of tScriptLine then
+               put true into tTryAsFunction
+               put "put" && pScript into tDoScript
+            else if token 1 of pScript is "put" and token 2 of pScript is token 2 of tScriptLine then
+               put true into tTryAsFunction
+               put pScript into tDoScript
+            end if
+            if tTryAsFunction then
+               local tFirstItem
+               put item 1 of tDoScript into tFirstItem
+               # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
+               local tParams
+               if matchText(token 2 to -1 of tFirstItem, token 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
+                  exit repeat
+               end if
+               put tDoScript into tValidScript
+               dispatch function (token 2 of tDoScript) to pIntelligenceObject with tParams
+               local tFunction
+               replace token 2 of tScriptLine & "(" & tParams & ")" with quote & the result & quote in tFirstItem
+               put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
+               exit repeat
+            end if
+         end if
+      end repeat
+      set the itemdelimiter to comma
+   end if  
+   
+   if tDoScript is not empty then
+      ideDoMessage tDoScript, pDebugMode
+      if the result is not empty then
+         return the result
+      end if
+      put tValidScript into rValidScript
+      return empty
+   end if
+   put empty into tValidScript
+   
+   --deals with the put command, if the put command cannot be executed as is then:
+   --the message box will attempt to auto complete the typing of a name of an object property and the contents of that property into the results area
+   --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
+   lock screen
+   
+   # Try executing as a function or property
+   local tTryProperty
+   
+   # Build the string so that it starts with "put the"
+   if not (pScript begins with "the ") then
+      put "the" && pScript into tTryProperty 
+   else
+      put pScript into tTryProperty
+   end if
+   if not (tTryProperty begins with "put ") then
+      put "put " before tTryProperty 
+   end if
+   
+   set the wholeMatches to true
+   local tIsProperty
+   put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
+   
+   # Try as an object property of the intelligence object
+   if tIsProperty then
+      ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
+      if the result is empty then 
+         local tName
+         put the name of pIntelligenceObject into tName
+         put tTryProperty && "of" && tName into tValidScript
+      end if
+   end if
+   
+   # If it wasn't valid as an object property then
+   # try as a function or global property
+   if tValidScript is empty then
+      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
+         ideDoMessage tTryProperty, pDebugMode
+         if the result is empty then
+            put tTryProperty into tValidScript
+         end if
+      end if
+   end if
+   
+   if tValidScript is empty then
+      ideDoMessage pScript, pDebugMode
+      if the result is empty then 
+         put pScript into tValidScript
+      end if
+   end if
+   
+   if tValidScript is empty then
+      return the result
+   end if
+   unlock screen
+   
+   put tValidScript into rValidScript
+   return empty
+end ideExecuteScript
+
+/** 
+Attempts to compile the target script
+
+The result: If the compilation fails, the result is set to the description of the compile error
+**/
+on ideCompileCheck pScript
+   local tCompileTest, tCompileResult
+   --checks to see if the message compiles
+   lock messages
+   create script only stack "ideCompilationTest"
+   put "on compileTest" & cr & pScript & cr & "end compileTest" into tCompileTest
+   set the script of stack "ideCompilationTest" to tCompileTest
+   put the result into tCompileResult
+   delete stack "ideCompilationTest"
+   unlock messages
+   repeat for each line tError in tCompileResult
+      if item 2 of tError is not 0 then
+         return tError
+      end if
+   end repeat
+
+   return empty
+end ideCompileCheck
+
+command ideDoMessage pScript, pDebugMode
+   ideCompileCheck pScript
+   if the result is not empty then
+      return the result
+   end if
+   
+   do "global" && the globals
+   
+   lock screen
+   local tScriptError
+   try
+      if pDebugMode then
+         # OK-2010-01-02: Remove the message box itself from the debug context. 
+         # Line 1 will be revDebugDoMessage
+         # Line 2 is revExecuteMessage (message box field)
+         # Line 3 is returnInField (message box field)
+         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
+         # Note that this code is called from both the single and multi-line fields, but luckily they both 
+         # have the same number of calls.
+         local tContext, tContextNumber
+         get revDebuggerContexts()
+         put line 4 of it into tContext
+         
+         local tResult
+         revDebuggerDo pScript, tContext
+         get the result
+         put line 1 of it into tResult
+         put line 2 to -1 of it into tScriptError
+      else
+         do pScript
+      end if
+   catch tScriptError
+   end try
+   unlock screen
+   
+   return tScriptError
+end ideDoMessage
