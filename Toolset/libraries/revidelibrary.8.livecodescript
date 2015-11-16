@@ -2374,7 +2374,7 @@ function ideMainStackOfObject pLongID
 end ideMainStackOfObject
 
 function revIDEStackOfObject pLongID
-   return ideMainStackOfObject(pLongID)
+   return ideStackOfObject(pLongID)
 end revIDEStackOfObject
 
 on revIDEMoveControl pControl, pNewCard, pLayerNumber
