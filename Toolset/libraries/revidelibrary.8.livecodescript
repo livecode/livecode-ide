@@ -634,7 +634,9 @@ private function __objectPropertiesInfo pObjectType, pOrganiseInSections, pOptio
       # Restrict to group, if present
       if pOptionalSection is not empty then
          local tSectionProps
-         put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+         if tPropertiesArray[pOptionalSection] is not empty then
+            put tPropertiesArray[pOptionalSection] into tSectionProps[pOptionalSection]
+         end if
          put tSectionProps into tPropertiesArray
       end if
    else
