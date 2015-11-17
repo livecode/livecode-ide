@@ -264,15 +264,6 @@ on generateFrame
    end if
    reset the templategroup
    
-   --set the textsize of group "background" of me to __textsize()
-   
-   # Setup the template field
-   --set the height of the templatefield to BAR_HEIGHT
-   --set the textColor of the templatefield to TAB_TEXT_COLOR
-   --set the textAlign of the templatefield to "center"
-   --set the margins of the templatefield to 1,7,1,0
-   --set the bordercolor of the templatefield to TAB_DISABLED_COLOR
-   
    # Generate all the button fields 
    
    local tPreferences, tNavigation, tHeaderAction
