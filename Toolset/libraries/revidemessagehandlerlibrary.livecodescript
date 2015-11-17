@@ -21,7 +21,7 @@ on selectedObjectChanged
    if sSelectingObjects is true then exit selectedObjectChanged
    if revIDEObjectIsOnIDEStack(the long id of the target) then pass selectedObjectChanged
    
-   send "revIDEMessageSend ideSelectedObjectChanged" to stack "revIDELibrary" in 0 millisecs
+   send "ideMessageSend" &&  "ideSelectedObjectChanged" to stack "revIDELibrary" in 0 milliseconds
    pass selectedObjectChanged
 end selectedObjectChanged
 
@@ -29,7 +29,7 @@ on objectSelectionStarted
    if revIDEObjectIsOnIDEStack(the long id of the target) then pass objectSelectionStarted
    
    put true into sSelectingObjects
-   revIDEMessageSend "ideObjectSelectionStarted"
+   send "ideMessageSend" &&  "ideObjectSelectionStarted" to stack "revIDELibrary" in 0 milliseconds
    pass objectSelectionStarted
 end objectSelectionStarted
 
@@ -37,14 +37,16 @@ on objectSelectionEnded
    if revIDEObjectIsOnIDEStack(the long id of the target) then pass objectSelectionEnded
    
    put false into sSelectingObjects
-   revIDEMessageSend "ideSelectedObjectChanged"
+   send "ideMessageSend" &&  "ideSelectedObjectChanged" to stack "revIDELibrary" in 0 milliseconds
    pass objectSelectionEnded
 end objectSelectionEnded
 
 on resizeControl
-   if revIDEObjectIsOnIDEStack(the long id of the target) then pass resizeControl
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEObjectIsOnIDEStack(tTarget) then pass resizeControl
    
-   revIDEMessageSend "ideResizeControl"
+   send "ideMessageSend" &&  "ideResizeControl,tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass resizeControl
 end resizeControl
 
@@ -53,7 +55,7 @@ on resumeStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass resumeStack
    
-   send "revIDEMessageSend" &&  "ideResumeStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend" &&  "ideResumeStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass resumeStack
 end resumeStack
 
@@ -62,7 +64,7 @@ on newCard
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newCard
    
-   revIDEMessageSend "ideNewCard",tTarget
+   send "ideMessageSend" &&  "ideNewCard","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newCard
 end newCard
 
@@ -71,7 +73,7 @@ on newStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newStack
 
-   revIDEMessageSend "ideNewStack",tTarget
+   send "ideMessageSend" &&  "ideNewStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newStack
 end newStack
 
@@ -80,7 +82,7 @@ on newField
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newField
 
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newField
 end newField
 
@@ -89,7 +91,7 @@ on newGraphic
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newGraphic
    
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
 end newGraphic
 
 on newGroup
@@ -105,7 +107,7 @@ on newImage
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newImage
    
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
 end newImage
 
 on newPlayer
@@ -113,7 +115,7 @@ on newPlayer
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newPlayer
 
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
 end newPlayer
 
 on newScrollbar
@@ -121,7 +123,7 @@ on newScrollbar
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newScrollbar
 
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newScrollbar
 end newScrollbar
 
@@ -130,7 +132,7 @@ on newButton
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newButton
    
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newButton
 end newButton
 
@@ -139,7 +141,7 @@ on newWidget
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newWidget
 
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newWidget
 end newWidget
 
@@ -148,7 +150,7 @@ on newBackground
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass newBackground
 
-   revIDEMessageSend "ideNewControl",tTarget
+   send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass newBackground
 end newBackground
 
@@ -157,7 +159,7 @@ on deleteBackground
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteBackground
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
 end deleteBackground
 
 on deleteButton
@@ -165,7 +167,7 @@ on deleteButton
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteButton
 
-   send "revIDEMessageSend" && "ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend" && "ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteButton
 end deleteButton
 
@@ -174,7 +176,7 @@ on deleteCard
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteCard
    
-   send "revIDEMessageSend" &&  "ideCardDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend" &&  "ideCardDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteCard
 end deleteCard
    
@@ -183,7 +185,7 @@ on deleteEPS
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteEPS
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteEPS
 end deleteEPS
 
@@ -192,7 +194,7 @@ on deleteField
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteField
    
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds 
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds 
    pass deleteField
 end deleteField
 
@@ -201,7 +203,7 @@ on deleteGraphic
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteGraphic
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteGraphic
 end deleteGraphic
 
@@ -210,7 +212,7 @@ on deleteGroup
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteGroup
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteGroup
 end deleteGroup
 
@@ -219,7 +221,7 @@ on deleteImage
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteImage
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteImage
 end deleteImage
 
@@ -228,7 +230,7 @@ on deletePlayer
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deletePlayer
    
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deletePlayer
 end deletePlayer
 
@@ -237,7 +239,7 @@ on deleteScrollbar
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteScrollbar
 
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteScrollbar
 end deleteScrollbar
 
@@ -246,7 +248,7 @@ on deleteWidget
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteWidget
    
-   send "revIDEMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteWidget
 end deleteWidget
 
@@ -255,7 +257,7 @@ on deleteStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass deleteStack
 
-   send "revIDEMessageSend ideStackDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideStackDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass deleteStack
 end deleteStack
 
@@ -264,7 +266,7 @@ on libraryStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass libraryStack
 
-   send "revIDEMessageSend ideLibraryStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideLibraryStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass libraryStack
 end libraryStack
 
@@ -273,16 +275,20 @@ on releaseStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass releaseStack
 
-   send "revIDEMessageSend ideReleaseStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   send "ideMessageSend ideReleaseStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass releaseStack
 end releaseStack
 
-on nameChanged
+on nameChanged pOldName, pNewName
    local tTarget
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass nameChanged
-
-   send "revIDEMessageSend ideNameChanged","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   
+   local tParams
+   put pOldName into tParams[1]
+   put pNewName into tParams[2]
+   put tTarget into tParams[3]
+   send "ideMessageSendWithParameters ideNameChanged,tTarget,tParams" to stack "revIDELibrary" in 0 milliseconds
    pass nameChanged
 end nameChanged
 
@@ -291,12 +297,12 @@ on openStack
    put the long id of the target into tTarget
    if revIDEObjectIsOnIDEStack(tTarget) then pass openStack
    
-   revIDEMessageSend "ideOpenStack",tTarget
+   send "ideMessageSend" &&  "ideOpenStack","tTarget" to stack "revIDELibrary" in 0 milliseconds
    pass openStack
 end openStack
 
 --PM-2015-10-05: [[ Bug 16099 ]] choose pointer/browse tool does not update Tools palette
 on newTool pTool
-   revIDEMessageSend "ideToolChanged"
+   send "ideMessageSend" &&  "ideToolChanged" to stack "revIDELibrary" in 0 milliseconds
    pass newTool
 end newTool

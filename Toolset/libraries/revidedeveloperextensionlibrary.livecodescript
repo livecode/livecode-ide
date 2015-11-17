@@ -2,15 +2,15 @@
 local sExtensionDetailsA
 
 private on __revIDEDeveloperExtensionSendWarning pWarning
-   revIDEMessageSend "ideExtensionLog", "Warning:" && pWarning
+   ideMessageSend "ideExtensionLog", "Warning:" && pWarning
 end __revIDEDeveloperExtensionSendWarning
 
 private on __revIDEDeveloperExtensionSendError pError
-   revIDEMessageSend "ideExtensionLog", "Error:" && pError
+   ideMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperExtensionSendError
 
 private on __revIDEDeveloperExtensionLog pLog
-   revIDEMessageSend "ideExtensionLog", pLog
+   ideMessageSend "ideExtensionLog", pLog
 end __revIDEDeveloperExtensionLog
 
 private on __revIDEDeveloperCompilationError pError, pFile
@@ -23,11 +23,11 @@ private on __revIDEDeveloperCompilationError pError, pFile
          repeat while tChar is not 0 and char tChar - 1 of tLine is not " "
             subtract 1 from tChar
          end repeat
-         revIDEMessageSend "ideExtensionLog", "Error: on line" && tLineNo && "(" & tLine & ")" & ":" && char tChar + 1 to tEndChar - 1 of tLine
+         ideMessageSend "ideExtensionLog", "Error: on line" && tLineNo && "(" & tLine & ")" & ":" && char tChar + 1 to tEndChar - 1 of tLine
       end if
    end repeat
    
-   revIDEMessageSend "ideExtensionLog", "Error:" && pError
+   ideMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperCompilationError
 
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile

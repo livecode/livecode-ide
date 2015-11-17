@@ -656,7 +656,7 @@ end __extensionError
 
 # Send notication that widget has been added/removed
 on __extensionsChanged
-   revIDEMessageSend "ideExtensionsChanged"
+   ideMessageSend "ideExtensionsChanged"
 end __extensionsChanged
 
 # Sent progress update on installation of widget
@@ -668,7 +668,7 @@ on __extensionSendProgressUpdate pExtensionID, pMessage, pProgress
    local tName
    //revputarray sExtensions
    put __extensionPropertyGet(pExtensionID, "name") into tName
-   revIDEMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
+   ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
    
    //local tCallbackTarget, tCallBackHandler
    //put __extensionPropertyGet(pExtensionID, "callback_target") into tCallbackTarget
