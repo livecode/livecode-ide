@@ -181,8 +181,15 @@ on inspectorLayoutGroups pGroupList
    put the left of me into tStackLeft
    
    lock messages
-   set the minWidth of me to tMinRowWidth + (tMargin*2)
-   set the width of me to tInspectorWidthWithMargins
+   
+   if the minWidth of me < tMinRowWidth + (tMargin*2) then
+      set the minWidth of me to tMinRowWidth + (tMargin*2)
+   end if
+   
+   if the width of me < max(tInspectorWidthWithMargins, the minWidth of me) then
+      set the width of me to max(tInspectorWidthWithMargins, the minWidth of me)
+   end if
+   
    set the left of me to tStackLeft
    
    local tStackHeight
@@ -248,8 +255,6 @@ end inspectorDontShowGroup
 
 # Generate inspector
 private on inspectorGenerate
-   inspectorNavigationGenerate
-   
    if sSelectedSection is empty then
       inspectorSectionSet sDataA[1]["label"]
    else
@@ -363,7 +368,7 @@ end inspectorGenerateGroups
 private on inspectorNavigationGenerate
    lock screen
    # Clear the current frame data
-   clearFrameNavigationData
+   clearFrameData
    
    # Add all the navigation elements
    repeat with x = 1 to the number of elements in sDataA
@@ -377,7 +382,6 @@ private on inspectorNavigationGenerate
    end repeat
    
    dispatch "inspectorAddActions" to me
-   dispatch "resizeStack" to me
    unlock screen
 end inspectorNavigationGenerate
 
@@ -389,6 +393,10 @@ on inspectorChanged
    # Clear the current inspector
    inspectorClear
    
+   # Generate the frame
+   inspectorNavigationGenerate
+   generateFrame
+   
    # Generate the controls for group
    inspectorGenerate
    
@@ -396,7 +404,8 @@ on inspectorChanged
    inspectorFill
    
    # Layout
-   dispatch "resizeStack" to me
+   inspectorLayout
+   
    unlock screen
 end inspectorChanged
 
