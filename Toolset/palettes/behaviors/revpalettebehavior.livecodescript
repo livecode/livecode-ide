@@ -321,7 +321,7 @@ on generateFrame
       else
          set the showNavIcons of widget "header_background" of group "background" of me to false
       end if
-      set the selectedNavColor of widget "header_background" to revIDEColor("edition_color")
+      set the selectedNavColor of widget "header_background" of group "background" of me to revIDEColor("edition_color")
    else
       if there is a widget "header_background" of group "background" of me then 
          delete widget "header_background" of group "background" of me 
