@@ -324,6 +324,7 @@ on generateMenubarUI
    set the blendlevel of the templatebutton to 0
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
+   set the traversalOn of the templatebutton to false
 
    # Setup the default image
    set the resizequality of the templateimage to "best"
@@ -423,6 +424,7 @@ on generateMenuGroup
       delete group "revMenuBar" of me
    end if
    
+   set the traversalOn of the templatebutton to false
    set the style of the templatebutton to "menu"
    set the menumode of the templatebutton to "pulldown"
    set the height of the templatebutton to 22

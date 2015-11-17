@@ -595,11 +595,13 @@ on appleEvent p1, p2, p3
          put (there is a stack tCanonical) into tExists
          unlock messages
          // AL-2014-10-27: [[ Bug 12558 ]] Stack opened in apple event should report correct error
-         if not tExists then answer error "Unable to open stack:" && the result
-         else go stack tCanonical
+         if not tExists then 
+            answer error "Unable to open stack:" && the result
+         else 
+            go stack tCanonical
+            ideMessageSend "ideOpenStack", the long id of stack tCanonical
+         end if
       end repeat
-      
-      revIDEMessageSend "ideOpenStack"
       
       exit appleEvent
    end if
@@ -1257,7 +1259,7 @@ on updateForSelectedObjectChanged
    if lHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end updateForSelectedObjectChanged
 
 on preOpenStack
@@ -3513,15 +3515,9 @@ command revIDEHandleMouseUp pWhich, pTarget
     set the backPattern of tTarget to empty
   end if
    
-  if the platform is not "MacOS" and the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
-    revShowPopupmenu tTarget
-    return "exit"
- end if
+
  // SN-2014-09-18: [[ Bug 13475 ]] Follow the same rule as revIDEHandleMouseDown, to avoid duplicates
   if pWhich is an integer and revCheckEdit(tTarget) then
-    if the platform is not "MacOS" and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
-      revShowPopupmenu tTarget
-    end if
     return "exit"
   end if
 end revIDEHandleMouseUp
@@ -3569,7 +3565,7 @@ command revIDEHandleMouseDown pWhich, pTarget
    put the long id of pTarget into tTarget
    
    global gREVPopups, gREVScriptShortcut, gREVUIScriptShortcut, gREVPaintImage
-   if the platform is "MacOS" and the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
+   if the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
       put true into sPopupMenuUp
       revShowPopupmenu tTarget
       return "exit"
@@ -3598,7 +3594,7 @@ command revIDEHandleMouseDown pWhich, pTarget
          else
             select tTarget
          end if
-         if the platform is "MacOS" and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then 
+         if not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups) then 
             revShowPopupmenu tTarget
          end if
          send "selectedObjectChanged" to me

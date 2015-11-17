@@ -4,6 +4,7 @@ local sFieldWidth, sMax, sMin, sScrollbarFactor
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
 constant CONTROL_PADDING = 5
+constant kEffectiveTextColor = "100,100,100"
 
 on editorInitialize
    lock screen
@@ -77,13 +78,14 @@ on editorUpdate
       if the focusedobject is not the long ID of field 1 of me then
          put tValue + 0 into field 1 of me
       end if
-      set the textcolor of field 1 of me to "150,150,150"
+      set the textstyle["italic"] of field 1 of me to true
+      set the textcolor of field 1 of me to kEffectiveTextColor
    else
+      set the textstyle of field 1 of me to empty
       set the textcolor of field 1 of me to empty
       put tValue + 0 into field 1 of me
    end if
    unlock messages
-   
    unlock screen
 end editorUpdate
 

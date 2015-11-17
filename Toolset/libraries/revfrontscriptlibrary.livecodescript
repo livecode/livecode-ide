@@ -247,7 +247,7 @@ on newStack
 end newStack
 
 on revSetActiveStacks
-   revIDEMessageSend "ideActiveStacksChanged"
+   ideMessageSend "ideActiveStacksChanged"
 end revSetActiveStacks
 
 
@@ -872,7 +872,9 @@ on moveStack pLeft, pTop
   end repeat
   
   # IDE to notify any objects subscribed to the ideMoveStack Message
-  revIDEMessageSend "ideMoveStack", the owner of the target
+  local tLongID
+  put the long id of the owner of the target into tLongID
+  ideMessageSend "ideMoveStack", tLongID
   
   pass moveStack
 end moveStack
