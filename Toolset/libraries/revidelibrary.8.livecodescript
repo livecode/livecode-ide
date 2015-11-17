@@ -4153,7 +4153,7 @@ References: revIDEStackIsIDEStack (function)
 **/
 function revIDEObjectIsOnIDEStack pLongID
    if not exists(pLongID) then return false
-   return revIDEStackNameIsIDEStack(the short name of revIDEStackOfObject(pLongID))
+   return revIDEStackNameIsIDEStack(the short name of ideMainStackOfObject(pLongID))
 end revIDEObjectIsOnIDEStack
 
 /**
