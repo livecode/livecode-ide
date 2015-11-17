@@ -1,4 +1,6 @@
 ﻿script "com.livecode.pi.enum.behavior"
+constant kEffectiveTextColor = "100,100,100"
+
 on editorInitialize
    set the editorMinWidth of me to 40
    set the editorMaxWidth of me to 0
@@ -25,14 +27,16 @@ on editorUpdate
    lock messages
    if tValue is empty then
       set the label of button "pulldown" of me to " "
-      else
+   else
       set the label of button "pulldown" of me to tValue
    end if
    set the enabled of me to tEnabled
    if tEffective is true then
-      set the textcolor of button "pulldown" of me to "150,150,150"
+      set the textcolor of button "pulldown" of me to kEffectiveTextColor
+      set the textstyle["italic"] of button "pulldown" of me to true
    else
       set the textcolor of button "pulldown" of me to empty
+      set the textstyle of button "pulldown" of me to empty
    end if
    unlock messages
    unlock screen
