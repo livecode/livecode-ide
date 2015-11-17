@@ -89,9 +89,11 @@ on inspectorLayout
    put inspectorSectionGet() into tSelectedGroup
    
    inspectorLayoutGroups sDataA[tSelectedGroup]["grouplist"]
+   unlock screen
 end inspectorLayout
 
 on inspectorLayoutGroups pGroupList
+   lock screen
    # Get the margin, padding
    local tMargin, tPadding
    put the paletteMargin of me into tMargin
