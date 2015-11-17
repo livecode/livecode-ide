@@ -500,23 +500,13 @@ on __extensionUninstallDeleteFiles pExtensionID
    end if
    
    # Next step
-   send "__extensionUninstallDocs" && pExtensionID to me in 0 milliseconds
-end __extensionUninstallDeleteFiles
-
-# Remove the guide from the IDE
-on __extensionUninstallDocs pExtensionID
-   # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 80
-   
-   revIDERegenerateBuiltDictionaryData
-   
    send "__extensionUninstallUpdateCache" && pExtensionID to me in 0 milliseconds
-end __extensionUninstallDocs
+end __extensionUninstallDeleteFiles
 
 # remove from cache
 on __extensionUninstallUpdateCache pExtensionID
    # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Removing extension data", 90
+   __extensionSendProgressUpdate pExtensionID, "Removing extension data", 80
    
    local tCopies
    put __extensionPropertyGet(pExtensionID, "copies") into tCopies
@@ -526,14 +516,26 @@ on __extensionUninstallUpdateCache pExtensionID
       __extensionPropertySet pExtensionID, "status", "uninstalled"
    end if
    
+   send "__extensionUninstallDocs" && pExtensionID to me in 0 milliseconds
+end __extensionUninstallUpdateCache
+
+# Remove the guide from the IDE
+on __extensionUninstallDocs pExtensionID
+   # Update progress
+   __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 90
+   
+   revIDERegenerateBuiltDictionaryData
+   
+   send "__extensionUninstallComplete" && pExtensionID to me in 0 milliseconds
+end __extensionUninstallDocs
+
+on __extensionUninstallComplete pExtensionID
    # Notify IDE uninstallation complete
    __extensionSendProgressUpdate pExtensionID, "Complete", 100
    
    # Update the IDE
    __extensionsChanged
-end __extensionUninstallUpdateCache
-
-
+end __extensionUninstallComplete
 
 ##############################
 # PRIVATE SHARED
