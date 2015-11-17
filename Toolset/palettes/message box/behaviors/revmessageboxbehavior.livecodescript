@@ -18,6 +18,7 @@ on setBehaviors
 end setBehaviors
 
 on openStack   
+   lock screen
    lock messages
    --set the zoomBox of this stack to false
    unlock messages
@@ -95,6 +96,7 @@ on openStack
    set the left of this stack to the cREVLeft of this stack
    set the top of this stack to the cREVTop of this stack
    unlock messages
+   unlock screen
 end openStack
 
 on moveStack
@@ -465,28 +467,6 @@ command positionOpenStacksButton
    
    unlock screen
 end positionOpenStacksButton
-
-on msgChanged
-   lock messages
-   lock screen
-   
-   local tField
-   if lSelectedCard is "Multiple Lines" then
-      put the long id of field "results" of card "Multiple Lines" of me into tField
-   else
-      put the long id of field "results" of card "Single Line" of me into tField
-   end if
-   set the text of tField to msg
-   
-   -- PM-2015-06-26: [[ Bug 15478 ]] Make msg box to auto scroll
-   local tLines, tHeight
-   put the number of lines of the text of tField into tLines
-   put the effective textHeight of tField into tHeight
-   set the vScroll of tField to tLines * tHeight 
-   
-   unlock screen
-   unlock messages
-end msgChanged
 
 function revIDEAutoComplete pSearchTerm
    local tMessageHistory, tNumChars, tLine, tMatchesList
