@@ -404,6 +404,8 @@ on layoutFrame pForceRecalculate
       end repeat 
    end if
    
+   local tStackWidthChanged
+   put false into tStackWidthChanged
    if pForceRecalculate then
       # Setup the size everything should be
       local tIconTextSize, tTextSize, tHeaderHeight
@@ -484,6 +486,7 @@ on layoutFrame pForceRecalculate
          put the left of me into tStackLeft
          set the width of me to tMinWidth
          set the left of me to tStackLeft
+         put true into tStackWidthChanged
       end if
       put tHeaderHeight into sHeaderHeight
    end if
@@ -497,6 +500,10 @@ on layoutFrame pForceRecalculate
       set the bottomleft of widget "footer_background" of group "background" of me to 0,the height of me
    end if
    unlock messages
+   if tStackWidthChanged then
+	   dispatch "resizeStack" to this card of me
+	end if
+   
    unlock screen
 end layoutFrame
 
@@ -632,7 +639,6 @@ before menupick pItem
    lock screen
    dispatch tMessage to tTarget with tName,tValue
    generateFrame
-   layoutFrame
    unlock screen
 end menupick
 
