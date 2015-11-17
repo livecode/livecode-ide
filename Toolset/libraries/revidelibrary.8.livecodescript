@@ -1354,8 +1354,8 @@ private function __readControlPropertiesForDataView pList
 end __readControlPropertiesForDataView
 
 function __customPropertyData pLongID
-   local tArray, tSets, tProps
-
+   local tArray, tSets, tProps, tOldPropertySet
+   put the customPropertySet of pLongID into tOldPropertySet
    put the customPropertySets of pLongID into tSets
    if tSets is empty then
       put the customProperties of pLongID into tArray[""]--["customKeys"]
@@ -1370,9 +1370,10 @@ function __customPropertyData pLongID
       end repeat
       set the customPropertySet of pLongID to empty
    end if
+   set the customPropertySet of pLongID to tOldPropertySet
    local tDataArray
    put revIDEPropertyInfo("customProperties") into tDataArray["Custom properties"]["customProperties"]
-   put tArray into tDataArray["Custom properties"]["customProperties"]["value"]
+   put tArray into tDataArray["Custom properties"]["customProperties"]["value"][pLongID]
    return tDataArray
 end __customPropertyData
 
