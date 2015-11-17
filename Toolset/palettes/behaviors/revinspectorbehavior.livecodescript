@@ -35,25 +35,8 @@ before openStack
       end if
    end repeat
    set the stackfiles of me to tStackFiles
-   
-   # Add the preference to use icons / names
-   addFrameItem (the short name of me) & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
    revIDEPopDefaultFolder
 end openStack
-
-# Sent when the preference changes
-on displayPreferenceChanged pPreference, pValue
-   local tName
-   put the short name of me into tName
-   switch pPreference
-      case tName & "_displayStyle"
-         set the navigationDisplayStyle of me to pValue
-         revIDESetPreference tName & "_displayStyle", pValue
-         break
-      default
-         break
-   end switch
-end displayPreferenceChanged
 
 on resizeInspector
    lock screen

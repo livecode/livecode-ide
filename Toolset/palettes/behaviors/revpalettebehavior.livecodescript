@@ -222,9 +222,34 @@ private function preferenceAction pMenuArray
    return tDataA
 end preferenceAction
 
+function canonicalStackName
+   local tName
+   put the short name of me into tName
+   
+   # Workaround for inspector copies
+   if word 1 of tName is "revPropertyInspector" then
+      put "revInspector" into tName
+   end if
+   
+   replace " " with "_" in tName
+   
+   return tName
+end canonicalStackName
+
 on generateFrame
    if sHideFrame is true then
       exit generateFrame
+   end if
+   
+   if sShowPreferenceAction is not false then
+      # Add the preference of header size
+      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large,largest", "revIDEFrameSizeChanged", the long id of me
+      # Add the preference to use icons / names
+      addFrameItem canonicalStackName() & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
+      # Ensure the display style matches the saved preference
+      if sNavStyle is empty then
+         put revIDEGetPreference(canonicalStackName() & "_displayStyle") into sNavStyle
+      end if
    end if
    
    lock screen
@@ -484,16 +509,26 @@ on layoutFrame pForceRecalculate
    unlock screen
 end layoutFrame
 
+# Sent when the preference changes
+on displayPreferenceChanged pPreference, pValue
+   local tName
+   put canonicalStackName() into tName
+   switch pPreference
+      case tName & "_displayStyle"
+         set the navigationDisplayStyle of me to pValue
+         revIDESetPreference tName & "_displayStyle", pValue
+         break
+      default
+         break
+   end switch
+end displayPreferenceChanged
+
 on revIDEFrameSizeChanged pName, pValue
    revIDESetPreference "revPaletteFrameSize", pValue
 end revIDEFrameSizeChanged
 
 after resizeStack
    if sHideFrame is not true then
-      if sShowPreferenceAction is not false then
-         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
-      end if
-      generateFrame
       layoutFrame
    end if
 end resizeStack
@@ -512,12 +547,8 @@ after preOpenStack
    if sHideFrame is not true then
       put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
       put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
-      if sShowPreferenceAction is not false then
-         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large,largest", "revIDEFrameSizeChanged", the long id of me
-      end if
       revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
       generateFrame
-      layoutFrame
       
       # set the default position of the stack. revIDEPaletteRect will return either a rect or a topLeft position for the stack
       revIDEPositionPalette the short name of me
