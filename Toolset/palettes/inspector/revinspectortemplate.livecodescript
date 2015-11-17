@@ -21,9 +21,6 @@ on openStack
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    
-   //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
-   set the navigationDisplayStyle of me to "icons"
-   
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
    

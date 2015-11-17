@@ -63,9 +63,6 @@ on openStack
    addFrameItem "ideMessageBox_autoupdate",           "header",  "preference",  "Auto Update Pending Messages",  "boolean",     "true,false",                                  "preferenceChanged",  the long id of this stack
    addFrameItem "ideMessageBox_intelligenceobject", "header",  "preference",  "Select Intelligence Object",            "enum",         "selectedObject,mouseControl",   "preferenceChanged",  the long id of this stack
    
-   --nav style can be set to names or icons
-   set the navigationDisplayStyle of me to "icons"
-   
    hiliteFrameItem "single line"
    showCard "Single Line"
    
