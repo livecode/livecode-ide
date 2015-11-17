@@ -4,6 +4,7 @@ title	Table Field
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
 name	Table Field	
+styledText
 text		
 tooltip		
 disabled	false	

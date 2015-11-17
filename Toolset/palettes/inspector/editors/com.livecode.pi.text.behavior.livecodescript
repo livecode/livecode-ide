@@ -6,12 +6,19 @@ end editorInitialize
 
 on editorUpdate
    lock screen
-   local tValue, tEffective, tEnabled
+   local tValue, tEffective, tEnabled, tProp
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   put the editorProperty["property_name"] of me into tProp
+   
    lock messages
-   put tValue into field 1 of me
+   if tProp is "styledText" then
+      set the styledText of field 1 of me to tValue
+   else
+      put tValue into field 1 of me
+   end if
+   
    set the enabled of field 1 of me to tEnabled
    if tEffective is true then
       set the textcolor of field 1 of me to "150,150,150"
@@ -46,7 +53,11 @@ on editorResize
 end editorResize
 
 on valueChanged
-   set the editorValue of me to field 1 of me
+   if the editorProperty["property_name"] of me is "styledText" then
+      set the editorValue of me to the styledText of field 1 of me
+   else
+      set the editorValue of me to field 1 of me
+   end if
    updateProperty
 end valueChanged
 

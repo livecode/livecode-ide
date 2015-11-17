@@ -4,6 +4,7 @@ title	Scrolling List Field
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
 name	Scrolling List Field	
+styledText
 text	Choice 1\nChoice 2\nChoice 3	
 tooltip		
 disabled	false	

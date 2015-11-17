@@ -4,6 +4,7 @@ title	Label Field
 Property	Default	Options	Group
 ----------------------------------------------------------------------------------------------------
 name	Label Field	
+styledText
 text	Label:	
 tooltip		
 disabled	false	
