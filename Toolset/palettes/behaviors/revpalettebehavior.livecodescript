@@ -341,7 +341,7 @@ on generateFrame
       end if
    end if
    
-   layoutFrame
+   layoutFrame true
    
    unlock messages
    unlock screen
@@ -373,8 +373,9 @@ function barRight pSize
    return 0
 end barRight
 
-on layoutFrame
+on layoutFrame pForceRecalculate
    lock screen
+   lock messages
    if there is not a group "background" of me then
       # Place the background from another card
       local tCardNumber
@@ -385,80 +386,100 @@ on layoutFrame
             exit repeat
          end if
       end repeat 
-      
-      # No background found so generate one
-      if there is not a group "background" of me then
-         generateFrame 
-      end if
    end if
    
-   lock messages
-   
-   # Setup the size everything should be
-   local tIconTextSize, tTextSize
-   switch revIDEGetPreference("revPaletteFrameSize")
-      case "small"
-         put barHeight("small") into BAR_HEIGHT
-         put 7 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 3,3,3,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 10 into tTextSize
-         break
-      case "medium"
-         put barHeight("medium")  into BAR_HEIGHT
-         put 8 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 3,3,3,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 8,9,6,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 12 into tTextSize
-         break
-      case "largest"
-         put barHeight("largest") into BAR_HEIGHT
-         put 12 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 1,5,1,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 12,13,12,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 16 into tTextSize
-         break
-      case "large"
-      default
-         put barHeight("large") into BAR_HEIGHT
-         put 10 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 1,5,1,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 14 into tTextSize
-         break
-   end switch
+   if pForceRecalculate then
+      # Setup the size everything should be
+      local tIconTextSize, tTextSize, tHeaderHeight
+      put  revIDEGetPreference("revPaletteFrameSize") into tHeaderHeight
+      
+      switch tHeaderHeight
+         case "small"
+            put barHeight("small") into BAR_HEIGHT
+            put 7 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 3,3,3,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 10 into tTextSize
+            break
+         case "medium"
+            put barHeight("medium")  into BAR_HEIGHT
+            put 8 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 3,3,3,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 8,9,6,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 12 into tTextSize
+            break
+         case "largest"
+            put barHeight("largest") into BAR_HEIGHT
+            put 12 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 1,5,1,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 12,13,12,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 16 into tTextSize
+            break
+         case "large"
+         default
+            put barHeight("large") into BAR_HEIGHT
+            put 10 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 1,5,1,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 14 into tTextSize
+            break
+      end switch
+      
+      local tHeaderWidth, tFooterWidth
+      if there is a widget "header_background" of group "background" of me then
+         set the height of widget "header_background" of group "background" of me to BAR_HEIGHT
+         put the formattedWidth of widget "header_background" of group "background" of me into tHeaderWidth
+      end if
+      if there is a widget "footer_background" of group "background" of me then 
+         set the height of widget "footer_background" of group "background" of me to BAR_HEIGHT
+         put the formattedWidth of widget "footer_background" of group "background" of me into tFooterWidth 
+      end if
+      
+      local tMinWidth
+      put max(tFooterWidth, tHeaderWidth) into tMinWidth
+      
+      set the minwidth of me to tMinWidth
+      if tMinWidth > the width of me then
+         local tStackLeft
+         put the left of me into tStackLeft
+         set the width of me to tMinWidth
+         set the left of me to tStackLeft
+      end if
+      put tHeaderHeight into sHeaderHeight
+   end if
    
    if there is a widget "header_background" of group "background" of me then 
-      set the rect of widget "header_background" of group "background" of me to 0,0,the width of me,BAR_HEIGHT
+      set the width of widget "header_background" of group "background" of me to the width of me
+      set the topleft of widget "header_background" of group "background" of me to 0,0
    end if
-   if there is a widget "footer_background" of group "background" of me then 
-      set the rect of widget "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me
+   if there is a widget "footer_background" of group "background" of me then
+      set the width of widget "footer_background" of group "background" of me to the width of me
+      set the bottomleft of widget "footer_background" of group "background" of me to 0,the height of me
    end if
-   
    unlock messages
    unlock screen
 end layoutFrame
@@ -477,12 +498,8 @@ after resizeStack
    end if
 end resizeStack
 
-before openCard
-   generateFrame
-end openCard
-
 after openCard
-   send "resizeStack" to this stack
+   generateFrame
 end openCard
 
 before preOpenStack
@@ -517,12 +534,9 @@ after closeStack
    revIDEStorePaletteRect the short name of me
 end closeStack
 
-before idePreferenceChanged
-   generateFrame
-end idePreferenceChanged
-
 after idePreferenceChanged
-   dispatch "resizeStack" to this card
+   generateFrame
+   dispatch "resizeStack" to this card of me
 end idePreferenceChanged
 
 private on __doCallback pDataIndex
