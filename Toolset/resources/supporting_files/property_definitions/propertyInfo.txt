@@ -181,7 +181,7 @@ styledText	Contents	Basic	com.livecode.pi.text	true	false		no_default
 systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
-text	Text	Basic	com.livecode.pi.text	true	false			
+text	Text	Basic	com.livecode.pi.text	false	false			
 textAlign	Text Align	Text	com.livecode.pi.textalign	true	false			
 textFont	Font	Text	com.livecode.pi.enum	true	false			execute:get the fontNames; sort it
 textHeight	Text height	Basic	com.livecode.pi.integer	true	false				4		1			
