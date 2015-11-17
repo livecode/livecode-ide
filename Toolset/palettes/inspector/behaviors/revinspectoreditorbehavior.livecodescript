@@ -12,7 +12,7 @@ function editorPropertyGet pProperty
    return sPropertyInfo[pProperty]
 end editorPropertyGet
 
-getProp editorProperty pProperty
+getProp editorProperty[pProperty]
    if pProperty is empty then exit editorProperty
    return sPropertyInfo[pProperty]
 end editorProperty
