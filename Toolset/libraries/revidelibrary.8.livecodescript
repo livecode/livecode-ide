@@ -9174,7 +9174,7 @@ function revIDERGBToNamedColor pColor
 end revIDERGBToNamedColor
 
 on ideCorePropertyInspectorRefreshPropertyLabels
-   ideMessageSend "idePreferenceChanged:idePropertyInspector_labels"
+   revIDESetPreference "idePropertyInspector_labels", the cLanguageNames of cd 1 of stack "revPreferences"
 end ideCorePropertyInspectorRefreshPropertyLabels
 
 ##################################################

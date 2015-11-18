@@ -21,9 +21,6 @@ on openStack
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    
-   //addFrameItem "inspect","header", "action", "Inspect Menu", "f0e8", "f0e8","inspectorTreeMenuDisplay", the long id of me
-   set the navigationDisplayStyle of me to "icons"
-   
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
    
@@ -311,8 +308,13 @@ on editorStoreValue pProperty, pValue
 end editorStoreValue
 
 on idePreferenceChanged pPreference
+   local tValue
+   put revIDEGetPreference(pPreference) into tValue
    switch pPreference
       case "idePropertyInspector_labels"
+         global gRevLanguageNames
+         put tValue into gRevLanguageNames
+         set the cLanguageNames of cd 1 of stack "revPreferences" to tValue
          inspectorChanged
          break
    end switch
@@ -348,7 +350,12 @@ end inspectorSectionIcon
 on inspectorAddActions
    addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
    addFrameItem "inspectorLock","header", "toggle", "Lock Inspector", "unlock alt", "lock","inspectorLock", the long id of me
+   addFrameItem "idePropertyInspector_labels", "header", "preference", "Property Labels", "enum","false:Description of option,true:Name of LiveCode property", "inspectorPropLabelsPrefChanged", the long id of me
 end inspectorAddActions
+
+on inspectorPropLabelsPrefChanged pPref, pValue
+   revIDESetPreference pPref, pValue
+end inspectorPropLabelsPrefChanged
 
 getProp showMultiPropLabels
    return false

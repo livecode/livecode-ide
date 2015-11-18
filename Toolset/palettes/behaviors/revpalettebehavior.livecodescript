@@ -222,9 +222,34 @@ private function preferenceAction pMenuArray
    return tDataA
 end preferenceAction
 
+function canonicalStackName
+   local tName
+   put the short name of me into tName
+   
+   # Workaround for inspector copies
+   if word 1 of tName is "revPropertyInspector" then
+      put "revInspector" into tName
+   end if
+   
+   replace " " with "_" in tName
+   
+   return tName
+end canonicalStackName
+
 on generateFrame
    if sHideFrame is true then
       exit generateFrame
+   end if
+   
+   if sShowPreferenceAction is not false then
+      # Add the preference of header size
+      addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large,largest", "revIDEFrameSizeChanged", the long id of me
+      # Add the preference to use icons / names
+      addFrameItem canonicalStackName() & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
+      # Ensure the display style matches the saved preference
+      if sNavStyle is empty then
+         put revIDEGetPreference(canonicalStackName() & "_displayStyle") into sNavStyle
+      end if
    end if
    
    lock screen
@@ -238,15 +263,6 @@ on generateFrame
       create group "background"
    end if
    reset the templategroup
-   
-   --set the textsize of group "background" of me to __textsize()
-   
-   # Setup the template field
-   --set the height of the templatefield to BAR_HEIGHT
-   --set the textColor of the templatefield to TAB_TEXT_COLOR
-   --set the textAlign of the templatefield to "center"
-   --set the margins of the templatefield to 1,7,1,0
-   --set the bordercolor of the templatefield to TAB_DISABLED_COLOR
    
    # Generate all the button fields 
    
@@ -321,7 +337,7 @@ on generateFrame
       else
          set the showNavIcons of widget "header_background" of group "background" of me to false
       end if
-      set the selectedNavColor of widget "header_background" to revIDEColor("edition_color")
+      set the selectedNavColor of widget "header_background" of group "background" of me to revIDEColor("edition_color")
    else
       if there is a widget "header_background" of group "background" of me then 
          delete widget "header_background" of group "background" of me 
@@ -341,7 +357,7 @@ on generateFrame
       end if
    end if
    
-   layoutFrame
+   layoutFrame true
    
    unlock messages
    unlock screen
@@ -373,8 +389,9 @@ function barRight pSize
    return 0
 end barRight
 
-on layoutFrame
+on layoutFrame pForceRecalculate
    lock screen
+   lock messages
    if there is not a group "background" of me then
       # Place the background from another card
       local tCardNumber
@@ -385,83 +402,124 @@ on layoutFrame
             exit repeat
          end if
       end repeat 
-      
-      # No background found so generate one
-      if there is not a group "background" of me then
-         generateFrame 
-      end if
    end if
    
-   lock messages
-   
-   # Setup the size everything should be
-   local tIconTextSize, tTextSize
-   switch revIDEGetPreference("revPaletteFrameSize")
-      case "small"
-         put barHeight("small") into BAR_HEIGHT
-         put 7 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 3,3,3,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 10 into tTextSize
-         break
-      case "medium"
-         put barHeight("medium")  into BAR_HEIGHT
-         put 8 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 3,3,3,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 8,9,6,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 12 into tTextSize
-         break
-      case "largest"
-         put barHeight("largest") into BAR_HEIGHT
-         put 12 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 1,5,1,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 12,13,12,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 16 into tTextSize
-         break
-      case "large"
-      default
-         put barHeight("large") into BAR_HEIGHT
-         put 10 into ITEM_SPACING
-         put 1,10,1,0 into FOOTER_ACTION_MARGINS
-         put 1,5,1,0 into HEADER_ACTION_MARGINS
-         put round(BAR_HEIGHT * 0.6) into tIconTextSize
-         if sNavStyle is "names" then
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         else
-            put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
-         end if
-         put 14 into tTextSize
-         break
-   end switch
+   local tStackWidthChanged
+   put false into tStackWidthChanged
+   if pForceRecalculate then
+      # Setup the size everything should be
+      local tIconTextSize, tTextSize, tHeaderHeight
+      put  revIDEGetPreference("revPaletteFrameSize") into tHeaderHeight
+      
+      switch tHeaderHeight
+         case "small"
+            put barHeight("small") into BAR_HEIGHT
+            put 7 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 3,3,3,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 7,9,5,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 10 into tTextSize
+            break
+         case "medium"
+            put barHeight("medium")  into BAR_HEIGHT
+            put 8 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 3,3,3,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 8,9,6,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 12 into tTextSize
+            break
+         case "largest"
+            put barHeight("largest") into BAR_HEIGHT
+            put 12 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 1,5,1,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 12,13,12,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 16 into tTextSize
+            break
+         case "large"
+         default
+            put barHeight("large") into BAR_HEIGHT
+            put 10 into ITEM_SPACING
+            put 1,10,1,0 into FOOTER_ACTION_MARGINS
+            put 1,5,1,0 into HEADER_ACTION_MARGINS
+            put round(BAR_HEIGHT * 0.6) into tIconTextSize
+            if sNavStyle is "names" then
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            else
+               put 10,11,8,0 into HEADER_NAVIGATION_MARGINS
+            end if
+            put 14 into tTextSize
+            break
+      end switch
+      
+      local tHeaderWidth, tFooterWidth
+      if there is a widget "header_background" of group "background" of me then
+         set the height of widget "header_background" of group "background" of me to BAR_HEIGHT
+         put the formattedWidth of widget "header_background" of group "background" of me into tHeaderWidth
+      end if
+      if there is a widget "footer_background" of group "background" of me then 
+         set the height of widget "footer_background" of group "background" of me to BAR_HEIGHT
+         put the formattedWidth of widget "footer_background" of group "background" of me into tFooterWidth 
+      end if
+      
+      local tMinWidth
+      put max(tFooterWidth, tHeaderWidth) into tMinWidth
+      
+      set the minwidth of me to tMinWidth
+      if tMinWidth > the width of me then
+         local tStackLeft
+         put the left of me into tStackLeft
+         set the width of me to tMinWidth
+         set the left of me to tStackLeft
+         put true into tStackWidthChanged
+      end if
+      put tHeaderHeight into sHeaderHeight
+   end if
    
    if there is a widget "header_background" of group "background" of me then 
-      set the rect of widget "header_background" of group "background" of me to 0,0,the width of me,BAR_HEIGHT
+      set the width of widget "header_background" of group "background" of me to the width of me
+      set the topleft of widget "header_background" of group "background" of me to 0,0
    end if
-   if there is a widget "footer_background" of group "background" of me then 
-      set the rect of widget "footer_background" of group "background" of me to 0,the height of me - BAR_HEIGHT,the width of me,the height of me
+   if there is a widget "footer_background" of group "background" of me then
+      set the width of widget "footer_background" of group "background" of me to the width of me
+      set the bottomleft of widget "footer_background" of group "background" of me to 0,the height of me
    end if
-   
    unlock messages
+   if tStackWidthChanged then
+	   dispatch "resizeStack" to this card of me
+	end if
+   
    unlock screen
 end layoutFrame
+
+# Sent when the preference changes
+on displayPreferenceChanged pPreference, pValue
+   local tName
+   put canonicalStackName() into tName
+   switch pPreference
+      case tName & "_displayStyle"
+         set the navigationDisplayStyle of me to pValue
+         revIDESetPreference tName & "_displayStyle", pValue
+         break
+      default
+         break
+   end switch
+end displayPreferenceChanged
 
 on revIDEFrameSizeChanged pName, pValue
    revIDESetPreference "revPaletteFrameSize", pValue
@@ -469,20 +527,12 @@ end revIDEFrameSizeChanged
 
 after resizeStack
    if sHideFrame is not true then
-      if sShowPreferenceAction is not false then
-         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large", "revIDEFrameSizeChanged", the long id of me
-      end if
-      generateFrame
       layoutFrame
    end if
 end resizeStack
 
-before openCard
-   generateFrame
-end openCard
-
 after openCard
-   send "resizeStack" to this stack
+   generateFrame
 end openCard
 
 before preOpenStack
@@ -495,12 +545,8 @@ after preOpenStack
    if sHideFrame is not true then
       put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
       put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR
-      if sShowPreferenceAction is not false then
-         addFrameItem "revPaletteFrameSize", "header", "preference", "Header // Footer Size", "enum","small,medium,large,largest", "revIDEFrameSizeChanged", the long id of me
-      end if
       revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
       generateFrame
-      layoutFrame
       
       # set the default position of the stack. revIDEPaletteRect will return either a rect or a topLeft position for the stack
       revIDEPositionPalette the short name of me
@@ -517,12 +563,9 @@ after closeStack
    revIDEStorePaletteRect the short name of me
 end closeStack
 
-before idePreferenceChanged
-   generateFrame
-end idePreferenceChanged
-
 after idePreferenceChanged
-   dispatch "resizeStack" to this card
+   generateFrame
+   dispatch "resizeStack" to this card of me
 end idePreferenceChanged
 
 private on __doCallback pDataIndex
@@ -596,7 +639,6 @@ before menupick pItem
    lock screen
    dispatch tMessage to tTarget with tName,tValue
    generateFrame
-   layoutFrame
    unlock screen
 end menupick
 
