@@ -287,64 +287,21 @@ private on __resolvePopupData @xInfo, pData
    end repeat
 end __resolvePopupData
 
-constant kPropertyDataNameItem = 1
-constant kPropertyDataLabelItem = 2
-constant kPropertyDataSectionItem = 3
-constant kPropertyDataEditorItem = 4
-constant kPropertyDataUserVisibleItem = 5
-constant kPropertyDataReadOnlyItem = 6
-constant kPropertyDataGroupItem = 7
-constant kPropertyDataDefaultItem = 8
-constant kPropertyDataOptionsItem = 9
-constant kPropertyDataSubsectionItem = 10
-constant kPropertyDataMinItem = 11
-constant kPropertyDataMaxItem = 12
-constant kPropertyDataStepItem = 13
-
-private function __propertyDataNames
-   return "name,label,section,editor,user_visible,read_only,group,default,options,subsection,min,max,step"
-end __propertyDataNames
-
-# Maps the property data with the given name to its item number in the spec file
-private function __propertyDataNameToItemNumber pDataName
-   switch pDataName
-      case "name"
-         return kPropertyDataNameItem
-      case "label"
-         return kPropertyDataLabelItem
-      case "section"
-         return kPropertyDataSectionItem
-      case "editor"
-         return kPropertyDataEditorItem
-      case "user_visible"
-         return kPropertyDataUserVisibleItem
-      case "read_only"
-         return kPropertyDataReadOnlyItem
-      case "group"
-         return kPropertyDataGroupItem
-      case "default"
-         return kPropertyDataDefaultItem
-      case "options"
-         return kPropertyDataOptionsItem
-      case "subsection"
-         return kPropertyDataSubsectionItem
-      case "min"
-         return kPropertyDataMinItem
-      case "max"
-         return kPropertyDataMaxItem
-      case "step"
-         return kPropertyDataStepItem
-      default
-         return 0
-   end switch
-end __propertyDataNameToItemNumber
+private function __propertyDataMapping
+   local tMapping 
+   put "name:1,label:2,section:3,editor:4,user_visible:5,read_only:6,group:7,default:8,options:9,subsection:10,min:11,max:12,step:13" into tMapping
+   split tMapping by comma and ":"
+   return tMapping
+end __propertyDataMapping
 
 # Processes the data
 private function __propertyDataProcessLine pLine
-   local tLineDataA
-   repeat for each item tDataName in __propertyDataNames()
+   local tLineDataA, tMappingA
+   put __propertyDataMapping() into tMappingA
+   
+   repeat for each key tDataName in tMappingA
       local tItemNumber, tPreProcessed
-      put __propertyDataNameToItemNumber(tDataName) into tItemNumber
+      put tMappingA[tDataName] into tItemNumber
       set the itemdelimiter to tab
       put item tItemNumber of pLine into tPreProcessed
       set the itemdelimiter to comma
@@ -414,11 +371,7 @@ private function __propertyDataFromInfoFile pFileName
       put __propertyDataProcessLine(tLine) into tLineDataA
       
       put tLineDataA["name"] into tPropName
-      local tDataNames
-      put "getter,setter,label,section,editor,user_visible,read_only,default,subsection,min,max,step" into tDataNames
-      repeat for each item tDataName in tDataNames
-         put tLineDataA[tDataName] into tDataA[tPropName][tDataName]
-      end repeat
+      put tLineDataA into tDataA[tPropName]
       
       local tGroupName
       put tLineDataA["group"] into tGroupName
@@ -530,10 +483,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       local tPropertyName
       put tLineDataA["name"] into tPropertyName
       
-      local tOverrides
-      put "getter,setter,label,section,editor,group,user_visible,read_only,subsection,min,max,step" into tOverrides
-      set the itemdel to comma
-      repeat for each item tOverride in tOverrides
+      repeat for each key tOverride in tLineDataA
          if tLineDataA[tOverride] is not empty then
             put tLineDataA[tOverride] into pPropInfoA[tPropertyName][tOverride]
          end if
