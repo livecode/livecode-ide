@@ -414,11 +414,7 @@ private function __propertyDataFromInfoFile pFileName
       put __propertyDataProcessLine(tLine) into tLineDataA
       
       put tLineDataA["name"] into tPropName
-      local tDataNames
-      put "getter,setter,label,section,editor,user_visible,read_only,default,subsection,min,max,step" into tDataNames
-      repeat for each item tDataName in tDataNames
-         put tLineDataA[tDataName] into tDataA[tPropName][tDataName]
-      end repeat
+      put tLineDataA[tDataName] into tDataA[tPropName]
       
       local tGroupName
       put tLineDataA["group"] into tGroupName
@@ -530,10 +526,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       local tPropertyName
       put tLineDataA["name"] into tPropertyName
       
-      local tOverrides
-      put "getter,setter,label,section,editor,group,user_visible,read_only,subsection,min,max,step" into tOverrides
-      set the itemdel to comma
-      repeat for each item tOverride in tOverrides
+      repeat for each key tOverride in tLineDataA
          if tLineDataA[tOverride] is not empty then
             put tLineDataA[tOverride] into pPropInfoA[tPropertyName][tOverride]
          end if
