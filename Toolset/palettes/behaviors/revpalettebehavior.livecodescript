@@ -404,8 +404,6 @@ on layoutFrame pForceRecalculate
       end repeat 
    end if
    
-   local tStackWidthChanged
-   put false into tStackWidthChanged
    if pForceRecalculate then
       # Setup the size everything should be
       local tIconTextSize, tTextSize, tHeaderHeight
@@ -486,9 +484,7 @@ on layoutFrame pForceRecalculate
          put the left of me into tStackLeft
          set the width of me to tMinWidth
          set the left of me to tStackLeft
-         put true into tStackWidthChanged
       end if
-      put tHeaderHeight into sHeaderHeight
    end if
    
    if there is a widget "header_background" of group "background" of me then 
@@ -500,9 +496,9 @@ on layoutFrame pForceRecalculate
       set the bottomleft of widget "footer_background" of group "background" of me to 0,the height of me
    end if
    unlock messages
-   if tStackWidthChanged then
-	   dispatch "resizeStack" to this card of me
-	end if
+   if pForceRecalculate then
+      dispatch "resizeStack" to this card of me
+   end if
    
    unlock screen
 end layoutFrame
@@ -562,11 +558,6 @@ end openStack
 after closeStack
    revIDEStorePaletteRect the short name of me
 end closeStack
-
-after idePreferenceChanged
-   generateFrame
-   dispatch "resizeStack" to this card of me
-end idePreferenceChanged
 
 private on __doCallback pDataIndex
    local tData
