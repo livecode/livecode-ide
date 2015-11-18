@@ -1,72 +1,72 @@
 type	button
 title	Radio Button
-
-Property	Default	Options	Group
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-name	Radio	
-label		
-tooltip		
-style	radiobutton	standard,transparent,opaque,rectangle,roundRect,shadow,menu,checkbox,radioButton
-visible	true	
-opaque	false	
-showName	true	
-autoHilite	true	
-sharedHilite	false	
-acceleratorKey		
-acceleratorModifier	
-acceleratorText		
-traversalOn	true	
-showFocusBorder	true	
-mnemonic		
-default	false	
-disabled
-layerMode
-behavior
-icon		
-hiliteIcon	
-disabledIcon	
-visitedIcon	
-armedIcon	
-hoverIcon	
-threeD	true	
-showBorder	true	
-hiliteBorder	false	
-borderWidth	2	
-shadow	false	
-shadowOffset	4	
-foregroundColor			Text Fill
-foregroundPattern			Text Fill		
-backgroundColor		
-backgroundPattern		
-hiliteColor		
-hilitePattern			
-topColor		
-topPattern		
-bottomColor		
-bottomPattern		
-shadowColor		
-shadowPattern		
-focusColor		
-focusPattern		
-customProperties		
-blendLevel	0	0,100
-ink
-textFont
-textSize		
-textStyle
-textAlign	left
-margins	4	
-lockLoc	false	
-width	82	
-height	23	
-location
-left		
-top		
-right		
-bottom		
-layer
-dropShadow
-innerShadow	
-outerGlow
-innerGlow
-colorOverlay
+name							Radio					
+label												
+tooltip												
+style							radiobutton	standard,transparent,opaque,rectangle,roundRect,shadow,menu,checkbox,radioButton				
+visible							true					
+opaque							false					
+showName							true					
+autoHilite							true					
+sharedHilite							false					
+acceleratorKey												
+acceleratorModifier												
+acceleratorText												
+traversalOn							true					
+showFocusBorder							true					
+mnemonic												
+default							false					
+disabled												
+layerMode												
+behavior												
+icon												
+hiliteIcon												
+disabledIcon												
+visitedIcon												
+armedIcon												
+hoverIcon												
+threeD							true					
+showBorder							true					
+hiliteBorder							false					
+borderWidth							2					
+shadow							false					
+shadowOffset							4					
+foregroundColor						Text Fill						
+foregroundPattern						Text Fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+margins							4					
+lockLoc							false					
+width							82					
+height							23					
+location												
+left												
+top												
+right												
+bottom												
+layer												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

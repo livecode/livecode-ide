@@ -287,6 +287,107 @@ private on __resolvePopupData @xInfo, pData
    end repeat
 end __resolvePopupData
 
+constant kPropertyDataNameItem = 1
+constant kPropertyDataLabelItem = 2
+constant kPropertyDataSectionItem = 3
+constant kPropertyDataEditorItem = 4
+constant kPropertyDataUserVisibleItem = 5
+constant kPropertyDataReadOnlyItem = 6
+constant kPropertyDataGroupItem = 7
+constant kPropertyDataDefaultItem = 8
+constant kPropertyDataOptionsItem = 9
+constant kPropertyDataSubsectionItem = 10
+constant kPropertyDataMinItem = 11
+constant kPropertyDataMaxItem = 12
+constant kPropertyDataStepItem = 13
+
+private function __propertyDataNames
+   return "name,label,section,editor,user_visible,read_only,group,default,options,subsection,min,max,step"
+end __propertyDataNames
+
+# Maps the property data with the given name to its item number in the spec file
+private function __propertyDataNameToItemNumber pDataName
+   switch pDataName
+      case "name"
+         return kPropertyDataNameItem
+      case "label"
+         return kPropertyDataLabelItem
+      case "section"
+         return kPropertyDataSectionItem
+      case "editor"
+         return kPropertyDataEditorItem
+      case "user_visible"
+         return kPropertyDataUserVisibleItem
+      case "read_only"
+         return kPropertyDataReadOnlyItem
+      case "group"
+         return kPropertyDataGroupItem
+      case "default"
+         return kPropertyDataDefaultItem
+      case "options"
+         return kPropertyDataOptionsItem
+      case "subsection"
+         return kPropertyDataSubsectionItem
+      case "min"
+         return kPropertyDataMinItem
+      case "max"
+         return kPropertyDataMaxItem
+      case "step"
+         return kPropertyDataStepItem
+      default
+         return 0
+   end switch
+end __propertyDataNameToItemNumber
+
+# Processes the data
+private function __propertyDataProcessLine pLine
+   local tLineDataA
+   repeat for each item tDataName in __propertyDataNames()
+      local tItemNumber, tPreProcessed
+      put __propertyDataNameToItemNumber(tDataName) into tItemNumber
+      set the itemdelimiter to tab
+      put item tItemNumber of pLine into tPreProcessed
+      set the itemdelimiter to comma
+      
+      switch tDataName
+         case "name"
+            # Properties can use custom getters and setters.
+            # Default getter is revIDEPropertyOfObject
+            # Default setter is revIDESetPropertyOfObject
+            set the itemdelimiter to ":"
+            put item 1 of tPreProcessed into tLineDataA["name"]
+            put item 2 of tPreProcessed into tLineDataA["getter"]
+            put item 3 of tPreProcessed into tLineDataA["setter"]
+            set the itemdelimiter to comma
+            break
+         case "default"
+            set the itemdelimiter to ":"
+            if item 1 of tPreProcessed is "execute" then
+               do item 2 of tPreProcessed
+               put it into tPreProcessed
+            end if
+            set the itemdelimiter to comma
+            put __unescapeString(tPreProcessed) into tLineDataA["default"]
+            break
+         case "options"
+            # Get any popup info
+            set the itemdelimiter to ":" 
+            if tPreProcessed begins with "popup:" then
+               put true into tLineDataA["popup"]
+            else
+               replace comma with return in tPreProcessed
+            end if
+            set the itemdelimiter to comma
+            put tPreProcessed into tLineDataA["options"]
+            break
+         default
+            put tPreProcessed into tLineDataA[tDataName]
+            break
+      end switch
+   end repeat
+   return tLineDataA
+end __propertyDataProcessLine
+
 private function __propertyDataFromInfoFile pFileName
    local tPropertyInfo
    put URL ("file:" & pFileName) into tPropertyInfo
@@ -295,7 +396,6 @@ private function __propertyDataFromInfoFile pFileName
    put false into tDataStart
    
    local tCountsA, tGroupCountsA, tPopupsToResolve
-   set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
          put true into tDataStart
@@ -309,33 +409,19 @@ private function __propertyDataFromInfoFile pFileName
       if token 1 of tLine is empty then
          next repeat
       end if
-
-      put item 1 of tLine into tPropName
       
-      # Properties can use custom getters and setters.
-      # Default getter is revIDEPropertyOfObject
-      # Default setter is revIDESetPropertyOfObject
-      set the itemdelimiter to ":" 
-      local tSetter, tGetter
-      put item 2 of tPropName into tGetter
-      put item 3 of tPropName into tSetter
-      put item 1 of tPropName into tPropName
-      put tGetter into tDataA[tPropName]["getter"]
-      put tSetter into tDataA[tPropName]["setter"]
-      set the itemdelimiter to tab
+      local tLineDataA
+      put __propertyDataProcessLine(tLine) into tLineDataA
       
-      put item 2 of tLine into tDataA[tPropName]["label"]
-
-      local tSection
-      put item 3 of tLine into tSection
-      put tSection into tDataA[tPropName]["section"]
-
-      put item 4 of tLine into tDataA[tPropName]["editor"]
-      put item 5 of tLine into tDataA[tPropName]["user_visible"]
-      put item 6 of tLine into tDataA[tPropName]["read_only"]
-
+      put tLineDataA["name"] into tPropName
+      local tDataNames
+      put "getter,setter,label,section,editor,user_visible,read_only,default,subsection,min,max,step" into tDataNames
+      repeat for each item tDataName in tDataNames
+         put tLineDataA[tDataName] into tDataA[tPropName][tDataName]
+      end repeat
+      
       local tGroupName
-      put item 7 of tLine into tGroupName
+      put tLineDataA["group"] into tGroupName
       if tGroupName is empty then
          put tDataA[tPropName]["label"] into tGroupName
       end if
@@ -343,35 +429,21 @@ private function __propertyDataFromInfoFile pFileName
          put tPropName into tGroupName
       end if
       put tGroupName into tDataA[tPropName]["group"]
-
+      
+      local tSection
+      put tLineDataA["section"] into tSection
       if tGroupCountsA[tSection][tGroupName] is empty then
          add 1 to tCountsA[tSection]["count"]
          put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupName]
       end if
       put tGroupCountsA[tSection][tGroupName] into tDataA[tPropName]["group_order"]
-
+      
       add 1 to tCountsA[tSection][tGroupName]["count"]
       put tCountsA[tSection][tGroupName]["count"] into tDataA[tPropName]["order"]
-
-      put __unescapeString(item 8 of tLine) into tDataA[tPropName]["default"]
-
-      local tOptions
-      put item 9 of tLine into tOptions
-      # Resolve all the popup info afterwards
-      if tOptions begins with "popup:" then
+      
+      if tLineDataA["popup"] is true then
          put true into tPopupsToResolve[tPropName]
-      else
-         replace comma with return in tOptions
       end if
-      put tOptions into tDataA[tPropName]["options"]
-
-      put item 10 of tLine into tDataA[tPropName]["subsection"]
-      
-      put item 11 of tLine into tDataA[tPropName]["min"]
-      put item 12 of tLine into tDataA[tPropName]["max"]
-      put item 13 of tLine into tDataA[tPropName]["step"]
-      
-      
    end repeat
    
    repeat for each key tKey in tPopupsToResolve 
@@ -425,7 +497,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    put URL ("file:" & pFile) into tObjectData
    
    # Parse the file into a structure array
-   local tObjectPropertiesA, tPropertyName, tCountsA, tGroupCountsA, tSection
+   local tObjectPropertiesA, tCountsA, tGroupCountsA
    set the itemdel to tab
    
    local tDataStart, tDataA
@@ -433,77 +505,66 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    repeat for each line tLine in tObjectData
       if tLine is empty then next repeat
       
-      put item 1 of tLine into tPropertyName
-      
-      if tPropertyName is "type" then
-         put item 2 of tLine into sClassicObjectProperties[pObjectType]["type"]
-         next repeat
-         # Allow 'display title' of classic controls to be specified in property definition file
-      else if tPropertyName is "title" and not tDataStart then
-         put item 2 of tLine into sClassicObjectProperties[pObjectType]["title"]
-      else if tPropertyName begins with "-----" then
+      if tLine begins with "-----" then
          put true into tDataStart
          next repeat
-      else if tDataStart is false then
-         next repeat
-      else
-         local tGroupLabel
-         put item 4 of tLine into tGroupLabel
-         if tGroupLabel is empty then
-            put pPropInfoA[tPropertyName]["group"] into tGroupLabel
-         else
-            # If group label is not empty, it overrides the target group from the property spec file
-            put tGroupLabel into pPropInfoA[tPropertyName]["group"]
-         end if
-         
-         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         
-         # Override the section if necessary
-         put item 6 of tLine into tSection
-         if tSection is empty then
-            put pPropInfoA[tPropertyName]["section"] into tSection
-         else
-            put tSection into pPropInfoA[tPropertyName]["section"]
-         end if
-         
-         # The groups are ordered by their appearance in the spec file
-         if tGroupCountsA[tSection][tGroupLabel] is empty then
-            add 1 to tCountsA[tSection]["count"]
-            put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
-         end if
-         put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
-         
-         add 1 to tCountsA[tSection][tGroupLabel]["count"]
-         put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
-         
-         # Get the per-object default value of this property
-         local tDefault
-         put __unescapeString(item 2 of tLine) into tDefault
-         if tDefault is not empty then
-            if tDefault is "empty" then
-               put empty into tDefault
-            end if
-            put tDefault into pPropInfoA[tPropertyName]["default"]
-         end if
-         put pPropInfoA[tPropertyName]["default"] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
-         
-         # If this is an enum property, there are per-object options
-         local tOptions
-         put item 3 of tLine into tOptions
-         if tOptions is not empty then
-            replace comma with return in tOptions
-            put tOptions into pPropInfoA[tPropertyName]["options"]
-         end if
-         
-         # Read any per-object 'read-only' data
-         local tReadOnly
-         put item 5 of tLine into tReadOnly
-         if tReadOnly is not empty then
-            put tReadOnly into pPropInfoA[tPropertyName]["read_only"]
-         end if
-         
-         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
       end if
+      
+      local tLineDataA
+      put __propertyDataProcessLine(tLine) into tLineDataA
+      
+      if tLineDataA["name"] is "type" then
+         put tLineDataA["label"] into sClassicObjectProperties[pObjectType]["type"]
+         next repeat
+      end if
+      # Allow 'display title' of classic controls to be specified in property definition file
+      if tLineDataA["name"] is "title" and not tDataStart then
+         put tLineDataA["label"] into sClassicObjectProperties[pObjectType]["title"]
+         next repeat
+      end if
+      
+      if tDataStart is false then
+         next repeat
+      end if
+      
+      local tPropertyName
+      put tLineDataA["name"] into tPropertyName
+      
+      local tOverrides
+      put "getter,setter,label,section,editor,group,user_visible,read_only,subsection,min,max,step" into tOverrides
+      set the itemdel to comma
+      repeat for each item tOverride in tOverrides
+         if tLineDataA[tOverride] is not empty then
+            put tLineDataA[tOverride] into pPropInfoA[tPropertyName][tOverride]
+         end if
+      end repeat
+      
+      # Default can override to empty if it is the string "empty"
+      if tLineDataA["default"] is not empty then
+         if tLineDataA["default"] is "empty" then
+            put empty into tLineDataA["default"]
+         end if
+         put tLineDataA["default"] into pPropInfoA[tPropertyName]["default"]
+      end if
+      
+      local tGroupLabel
+      put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+      
+      local tSection
+      put pPropInfoA[tPropertyName]["section"] into tSection
+      
+      # The groups are ordered by their appearance in the spec file
+      if tGroupCountsA[tSection][tGroupLabel] is empty then
+         add 1 to tCountsA[tSection]["count"]
+         put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
+      end if
+      put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
+      
+      add 1 to tCountsA[tSection][tGroupLabel]["count"]
+      put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+      
+      put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
+      put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
    end repeat
    
    put __organisePropertyInfo(tObjectPropertiesA) into sClassicObjectPropertiesInfo[pObjectType]
@@ -2864,18 +2925,34 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       else
          local tObjectType
          put sClassicObjectProperties[pObjectTypeID]["type"] into tObjectType
-
+         
          if tObjectType is empty then return __revIDEError("Invalid classic control type ID: " && pTarget)
-
+         
          # A classic control
          do "create" && tObjectType
          put the long ID of the last control into tCreatedControlID
       end if
-
-      local tPropInfoA
+      
+      local tPropInfoA, tObjPropsA
       # Set all the properties to their default
-      repeat for each key tProperty in sClassicObjectProperties[pObjectTypeID]["properties"]
-         put sClassicObjectProperties[pObjectTypeID]["properties"][tProperty] into tPropInfoA
+      put sClassicObjectProperties[pObjectTypeID]["properties"] into tObjPropsA
+      
+      if tObjPropsA["properties"]["style"]["default"] is not empty then
+         revIDESetPropertyOfObject tCreatedControlID, "style", tObjPropsA["properties"]["style"]["default"] 
+      end if
+      
+      local tKeys
+      put the keys of tObjPropsA into tKeys
+      
+      # Make sure style property is set first, as some other props depend on it
+      get lineOffset("style", tKeys)
+      if it is not 0 then
+         delete line it of tKeys
+         put "style" & return before tKeys
+      end if
+      
+      repeat for each line tProperty in tKeys
+         put tObjPropsA[tProperty] into tPropInfoA
          if tPropInfoA["default"] is "no_default" then next repeat
          if tPropInfoA["read_only"] is true then next repeat
          revIDESetPropertyOfObject tCreatedControlID, tProperty, tPropInfoA["default"]

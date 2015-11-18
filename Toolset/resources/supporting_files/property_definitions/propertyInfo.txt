@@ -56,7 +56,7 @@ effectSpread	Spread	Effects	com.livecode.pi.number	true	false		0			0	255	1
 enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true			
 endArrow	End Arrow	Basic	com.livecode.pi.boolean	true	false		false	
 endTime	End	Basic	com.livecode.pi.integer	true	false					0		1			
-endValue	End value	Basic	com.livecode.pi.number	true	false							1		
+endValue	End value	Basic	com.livecode.pi.number	true	false		100					1		
 equalize::revIDEEqualizeControls	Equalize	Align Controls	com.livecode.pi.equalize	true	false		
 externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
 filename	Source	Basic	com.livecode.pi.file	true	false			
@@ -109,7 +109,7 @@ location	Location	Position	com.livecode.pi.point	true	false		no_default
 lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false			
 lockText	Lock Text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
-mainStack	Main stack	Basic	com.livecode.pi.enum	true	false		execute:get revIDEMainStacks()	
+mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainStacks()	
 margins	Margins	Text	com.livecode.pi.string	true	false			
 mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
 markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	
@@ -135,7 +135,7 @@ numberFormat	Value format	Basic	com.livecode.pi.string	true	false
 opaque	Opaque	Basic	com.livecode.pi.boolean	true	false			
 orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical
 outerGlow	Outer Glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectSize,effectDistance
-pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false			
+pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false		8192	
 palindromeFrames	Repeat in reverse	Basic	com.livecode.pi.boolean	true	false			
 pan	Pan	Quicktime	com.livecode.pi.number	true	false			
 playLoudness	Volume	Basic	com.livecode.pi.integer	true	false					0	100	1			
@@ -152,7 +152,7 @@ resizeQuality	Resize quality	Basic	com.livecode.pi.enum	true	false		normal	best,
 right	Right	Position	com.livecode.pi.integer	true	false		no_default					1
 roundRadius	Corner radius	Basic	com.livecode.pi.number	true	false			
 scaleFactor	Scale factor	Basic	com.livecode.pi.number	true	false			
-scrollbarWidth	Scrollbar Width	Basic	com.livecode.pi.enum	true	false			
+scrollbarWidth	Scrollbar Width	Basic	com.livecode.pi.enum	true	false		16	12,16,20	
 selectGroupedControls	Select grouped controls	Basic	com.livecode.pi.boolean	true	false		true	
 shadow	Shadow	Icons	com.livecode.pi.boolean	true	false			
 shadowColor	Shadow Color	Colors	com.livecode.pi.color	true	false	Shadow Fill		
@@ -168,19 +168,19 @@ showFocusBorder	Focus Border	Basic	com.livecode.pi.boolean	true	false
 showLines	Text baselines	Table	com.livecode.pi.boolean	true	false			
 showName	Show Name	Basic	com.livecode.pi.boolean	true	false			
 showSelection	Hilite selection	Basic	com.livecode.pi.boolean	true	false			
-showValue	Show Value	Basic	com.livecode.pi.boolean	true	false			
+showValue	Show Value	Basic	com.livecode.pi.boolean	true	false		false			
 stackFiles	Stack files	StackFiles	com.livecode.pi.text	true	false			
 startAngle	Start	Basic	com.livecode.pi.number	true	false			
 startArrow	Start Arrow	Basic	com.livecode.pi.boolean	true	false			
 startTime	Start	Basic	com.livecode.pi.integer	true	false					0		1			
 startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false			
-startValue	Start value	Basic	com.livecode.pi.number	true	false							1	
+startValue	Start value	Basic	com.livecode.pi.number	true	false		0					1	
 strokeGradient	Stroke Gradient	Colors	com.livecode.pi.gradient	true	false			popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap
 style	Style	Basic	com.livecode.pi.enum	true	false	
 styledText	Contents	Basic	com.livecode.pi.text	true	false		no_default			
 systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
-tabStops	Tab stops	Table	com.livecode.pi.string	true	false		75	
+tabStops	Tab stops	Table	com.livecode.pi.string	true	false			
 text	Text	Basic	com.livecode.pi.text	false	false			
 textAlign	Text Align	Text	com.livecode.pi.textalign	true	false			
 textFont	Font	Text	com.livecode.pi.enum	true	false			execute:get the fontNames; sort it
@@ -188,8 +188,8 @@ textHeight	Text height	Basic	com.livecode.pi.integer	true	false				4		1
 textSize	Text Size	Text	com.livecode.pi.integer	true	false					1		1			
 textStyle	Text Style	Text	com.livecode.pi.textstyle	true	false
 threeD	3-D	Basic	com.livecode.pi.boolean	true	false			
-thumbPosition	Current value	Basic	com.livecode.pi.number	true	false							1		
-thumbSize	Thumb size	Basic	com.livecode.pi.number	true	false			
+thumbPosition	Current value	Basic	com.livecode.pi.number	true	false		50					1		
+thumbSize	Thumb size	Basic	com.livecode.pi.number	false	false		1	
 tilt	Tilt	Quicktime	com.livecode.pi.number	true	false			
 title	Title	Basic	com.livecode.pi.string	true	false			
 toggleHilites	Click to toggle	Basic	com.livecode.pi.boolean	true	false		false	

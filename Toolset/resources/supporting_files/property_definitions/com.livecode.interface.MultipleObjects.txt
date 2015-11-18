@@ -1,11 +1,11 @@
 type	multiple
 title	Multiple Objects
-
-Property	Default	Options	Group
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-equalize
-align
-alignCenter
-distribute
-nudge
-relayer
+equalize												
+align												
+alignCenter												
+distribute												
+nudge												
+relayer												

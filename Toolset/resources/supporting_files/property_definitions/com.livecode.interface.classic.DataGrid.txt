@@ -1,21 +1,21 @@
 type	data grid
 title	Data Grid
-
-Property	Default	Options	Group
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-name	DataGrid	
+name							DataGrid					
 customProperties["dgProps"]
-label		
-tooltip		
-visible	true	
-disabled	false	
-customProperties		
-lockLoc	false	
-width	250	
-height	160
-location
-left		
-top		
-right		
-bottom		
-layer	
+label												
+tooltip												
+visible							true					
+disabled							false					
+customProperties												
+lockLoc							false					
+width							250					
+height							160					
+location												
+left												
+top												
+right												
+bottom												
+layer												
