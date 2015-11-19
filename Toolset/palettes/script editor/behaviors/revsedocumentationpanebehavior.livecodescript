@@ -122,9 +122,142 @@ end update
 
 ####################################################################
 
-private command renderDocShort
-   renderDoc
-end renderDocShort
+private function renderDocDataShort pData, pIndex
+   local tData
+   put pData[pIndex] into tData
+   
+   local tName, tSyntax, tSummary, tType
+   put tData["display name"] into tName
+   put tData["syntax"] into tSyntax
+   put tData["summary"] into tSummary
+   put tData["type"] into tType
+   
+   # Build the html to display it
+   put "<p>" & return into tResult
+   
+   # Documentation library: returns html, eg a font tag
+   put tType & return after tResult
+   
+   # Documentation library: returns html ending tags
+   put "<b><font size=" & quote & "25" & quote && "color=" & quote & "#606060" & quote & ">" after tResult
+   put tName & "</font></b>" & return after tResult
+   
+   if the number of elements in pData > 1 then
+      put " (also " & renderDocAlternatives(pData, pIndex) & ")" after tResult
+   end if
+   
+   put "</p><p />" & return after tResult
+   
+   put "<p>" & return after tResult
+   put removeAngleBrackets(tSummary) & return after tResult
+   put "</p><p />" & return after tResult
+   
+   repeat for each element tElement in tSyntax
+      repeat for each line tLine in tElement
+         put "<p>" & return after tResult
+         put removeAngleBrackets(tLine, true) & return after tResult
+         put "</p>" & return after tResult
+      end repeat
+   end repeat
+   
+   return tResult
+end renderDocDataShort
+
+# Returns
+#   The id of the image to use in the dictionary to represent this platform
+function revDocumentationPlatformImage pPlatform
+   switch pPlatform
+      case "mac"
+         return "204117"
+         break
+      case "win"
+         return "204121"
+         break
+      case "linux"
+         return "204119"
+         break
+      case "ios"
+         return "1095"
+         break
+      case "android"
+         return "1094"
+         break
+   end switch
+end revDocumentationPlatformImage
+
+private function fontTag
+   return "<font size=" & quote & "25" & quote && "color=" & quote & "#606060" & quote & ">"
+end fontTag
+
+private function renderElement pKey, pData, pIndex
+   local tData
+   put pData[pIndex] into tData
+   
+   local tHtml, tTag, tContent
+   put "<p><b>" & fontTag() into tTag
+   put pKey & "</font></b>" & return after tTag
+   switch pKey
+      case "type"
+         put removeAngleBrackets(tData[pKey]) after tContent
+         if the number of elements in pData > 1 then
+            put " (also " & renderDocAlternatives(pData, pIndex) & ")" after tContent
+         end if
+      case "os"
+         repeat for each element tItem in tData[pKey]
+            put "<img src=" & quote & revDocumentationPlatformImage(tItem) & quote & "></img>" after tContent
+         end repeat
+         break
+      case "example"
+      case "syntax"
+         repeat for each element tElement in tData[pKey]
+            put tTag after tContent
+            repeat for each line tLine in tElement
+               put "<p>" & return after tContent
+               put removeAngleBrackets(tLine, pKey is "syntax") & return after tContent
+               put "</p>" & return after tContent
+            end repeat
+            put "</p><p />" & return after tContent
+         end repeat
+         return tContent
+      case "description"
+         repeat for each line tLine in tData[pKey]
+            put "<p>" & return after tContent
+            put removeAngleBrackets(tLine, true) & return after tContent
+            put "</p>" & return after tContent
+         end repeat
+      default
+         put removeAngleBrackets(tData[pKey]) after tContent
+         break
+   end switch
+   if tContent is not empty then
+      put tTag before tContent
+      put "</p><p />" & return after tContent
+   end if
+   return tContent
+end renderElement
+
+private function docsElementsFull
+   return "display name,type,syntax,summary,example,os,description,references"
+   -- synonyms, associations, introduced, platforms, security, params, value, tags, changes
+end docsElementsFull
+
+private function docsElementsShort
+   return "display name,type,syntax,summary"
+end docsElementsShort
+
+private function renderDocData pData, pIndex, pFull
+   if not pFull then
+      return renderDocDataShort(pData, pIndex)
+   end if
+   
+   local tHtml, tElements
+   put docsElementsFull() into tElements
+
+   repeat for each item tElement in tElements
+      put renderElement(tElement, pData, pIndex) after tHTML
+   end repeat
+   return tHtml
+end renderDocData
 
 private command renderDoc pType
    if sLastFoundDoc is empty or sDoc is empty then
@@ -190,44 +323,11 @@ private function renderDocDictionary pTag, pType
 end renderDocDictionary 
 
 private function renderDocEntry pData, pIndex
-   local tData
-   put pData[pIndex] into tData
-
-   local tName, tSyntax, tSummary, tType
-   put tData["display name"] into tName
-   put tData["syntax"] into tSyntax
-   put tData["summary"] into tSummary
-   put tData["type"] into tType
-   
-   # Build the html to display it
-   put "<p>" & return into tResult
-   
-   # Documentation library: returns html, eg a font tag
-   put tType & return after tResult
-   
-   # Documentation library: returns html ending tags
-   put "<b><font size=" & quote & "25" & quote && "color=" & quote & "#606060" & quote & ">" after tResult
-   put tName & "</font></b>" & return after tResult
-   
-   if the number of elements in pData > 1 then
-      put " (also " & renderDocAlternatives(pData, pIndex) & ")" after tResult
+   if prefGet("viewMode") is "Full" then
+      return renderDocData(pData, pIndex, true)
+   else
+      return renderDocData(pData, pIndex, false)
    end if
-   
-   put "</p><p />" & return after tResult
-   
-   put "<p>" & return after tResult
-   put removeAngleBrackets(tSummary) & return after tResult
-   put "</p><p />" & return after tResult
-   
-   repeat for each element tElement in tSyntax
-      repeat for each line tLine in tElement
-         put "<p>" & return after tResult
-         put removeAngleBrackets(tLine, true) & return after tResult
-         put "</p>" & return after tResult
-      end repeat
-   end repeat
-   
-   return tResult
 end renderDocEntry
 
 function renderDocAlternatives pAlternatives, pCurIndex
