@@ -9,6 +9,7 @@ on setBehaviors
    set the behavior of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("leftbar")
    set the behavior of field "Filter" of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablespane")
+   set the behavior of group "Documentation" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("documentationpane")
    set the behavior of field "Filter" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of button "Show Globals" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
    set the behavior of button "Show Environment Vars" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
@@ -825,15 +826,10 @@ command sePanesUpdate
    # OK-2008-09-11 : Refactored to prevent direct interaction with the Documentation pane. This needs further work
    # as it will soon be possible to have multiple panes open.
    if tToken is not empty then
-      local tMatch, tMatches
-      --put revDocumentationFind(tToken) into tMatch
-      put revDocumentationLookupKeyword(tToken) into tMatches
-      put line 1 of tMatches into tMatch
-      
-      if tMatch is not empty and line 1 of tMatch is not "false" then
-         sePrefSet "documentation,lastLoadedDoc", tMatch
+      if ideDocsFetchData("livecode_script", tToken) is not empty then
+         sePrefSet "documentation,lastLoadedDoc", tToken
          sePrefSet "documentation,lastMatchingSearch", tToken
-         sePrefSet "documentation,lastLoadedAlternativeDocs", line 2 to -1 of tMatches
+         sePrefSet "documentation,lastLoadedAlternativeDocs", tToken
       end if
    end if
    send "refreshCurrentPane" to group "Panes" of me
