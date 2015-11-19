@@ -86,11 +86,11 @@ end ideDocsFetchElementOfType
 
 private function ideDocsFetchDataOfType pLibraryName, pEntryName, pType
    local tDataA
-   return __ideDocsFetchData(pLibraryName, pEntryName, pType)
+   put  __ideDocsFetchData(pLibraryName, pEntryName, pType) into tDataA
+   return tDataA[1]
 end ideDocsFetchDataOfType
 
 private function ideDocsFetchData pLibraryName, pEntryName
-   local tDataA
    return __ideDocsFetchData(pLibraryName, pEntryName)
 end ideDocsFetchData
 
