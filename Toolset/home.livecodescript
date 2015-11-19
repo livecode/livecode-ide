@@ -1017,9 +1017,6 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revDebuggerLibrary"
    revInternal__LoadLibrary "revMetadataLibrary"
    
-   # OK-2008-06-11 : Documentation library
-   insert the script of stack "revDocumentationLibrary" into back
-   
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back
    
