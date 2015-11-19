@@ -332,10 +332,10 @@ on generateFrame
       set the isHeader of widget "header_background" of group "background" of me to true
       set the navData of widget "header_background" of group "background" of me to tHeaderNavDataA
       set the actionData of widget "header_background" of group "background" of me to tHeaderActionDataA
-      if sNavStyle is "icons" then
-         set the showNavIcons of widget "header_background" of group "background" of me to true
-      else
+      if sNavStyle is "names" then
          set the showNavIcons of widget "header_background" of group "background" of me to false
+      else
+         set the showNavIcons of widget "header_background" of group "background" of me to true
       end if
       set the selectedNavColor of widget "header_background" of group "background" of me to revIDEColor("edition_color")
    else
