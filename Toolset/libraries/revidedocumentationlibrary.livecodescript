@@ -77,22 +77,34 @@ private function __ideDocsFetchData pLibraryName, pEntryName, pType
    return tData
 end __ideDocsFetchData
 
-function ideDocsFetchElementOfType pLibraryName, pEntryName, pType, pElement
+private function ideDocsFetchElementOfType pLibraryName, pEntryName, pType, pElement
    local tDataA
    put __ideDocsFetchData(pLibraryName, pEntryName, pType) into tDataA
    
    return tDataA[1][pElement]
 end ideDocsFetchElementOfType
 
-function ideDocsFetchDataOfType pLibraryName, pEntryName, pType
+private function ideDocsFetchDataOfType pLibraryName, pEntryName, pType
    local tDataA
    return __ideDocsFetchData(pLibraryName, pEntryName, pType)
 end ideDocsFetchDataOfType
 
-function ideDocsFetchData pLibraryName, pEntryName
+private function ideDocsFetchData pLibraryName, pEntryName
    local tDataA
    return __ideDocsFetchData(pLibraryName, pEntryName)
 end ideDocsFetchData
+
+function ideDocsFetchLCSData pEntryName
+   return ideDocsFetchData("livecode_script", pEntryName)
+end ideDocsFetchLCSData
+
+function ideDocsFetchLCSDataOfType pEntryName, pType
+   return ideDocsFetchDataOfType("livecode_script", pEntryName, pType)
+end ideDocsFetchLCSDataOfType
+
+function ideDocsFetchLCSElementOfType pEntryName, pType, pElement
+   return ideDocsFetchElementOfType("livecode_script", pEntryName, pType, pElement)
+end ideDocsFetchLCSElementOfType
 
 on ideDocsUpdateDatabase pLibraryA
    ideDocsInitialize

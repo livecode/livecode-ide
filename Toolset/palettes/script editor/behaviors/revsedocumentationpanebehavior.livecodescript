@@ -170,8 +170,8 @@ private function renderDocDictionary pTag, pType
    local tResult
    
    # Get the required info from the doc
-   put ideDocsFetchData("livecode_script", pTag) into tData
-   
+   put ideDocsFetchLCSData(pTag) into tData
+
    if pType is empty then
       put sTypesA[pTag] into pType
    end if
