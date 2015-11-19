@@ -998,6 +998,9 @@ command revInternal__InitialiseLibraries
       answer "Error loading extensions library" & return & tError 	 	
    end try 	 	
    	    	 	
+   # AL-2015-11-15 : New documentation library
+   revInternal__LoadLibrary "revIDEDocumentationLibrary"
+   
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
