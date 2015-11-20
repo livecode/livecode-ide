@@ -2895,6 +2895,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       put the keys of tObjPropsA into tKeys
       
       # Make sure style property is set first, as some other props depend on it
+      set the wholematches to true
       get lineOffset("style", tKeys)
       if it is not 0 then
          delete line it of tKeys
