@@ -5667,17 +5667,21 @@ on revIDEActionImportControl pType, pReferenced
    # User has not chosen a file
    if the result is "cancel" then exit revIDEActionImportControl
    
-   # Check the file exists
-   local tFilePath
-   put the result into tFilePath
-   if there is not a file tFilePath then exit revIDEActionImportControl
-   
-   # Import the control
-   if pReferenced is true then
-      revIDEImportControl pType, tFilePath, true
-   else
-      revIDEImportControl pType, tFilePath
-   end if
+   local tFiles
+   put the result into tFiles
+   lock screen
+   lock messages
+   repeat for each line tFile in tFiles
+      if there is not a file tFile then next repeat
+      # Import the control
+      if pReferenced is true then
+         revIDEImportControl pType, tFile, true
+      else
+         revIDEImportControl pType, tFile
+      end if
+   end repeat
+   unlock messages
+   unlock screen
 end revIDEActionImportControl
 
 on revIDEActionImportControlFromFolder pType, pReference
