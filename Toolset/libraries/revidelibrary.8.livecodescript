@@ -443,6 +443,30 @@ private function __organisePropertyInfo pInfoA, pPopup
 end __organisePropertyInfo
 
 local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
+-- Use this accessor instead of the array directly to ensure inherited props
+-- are also included, eg control level defined props.
+private function __classicObjectProperties pObjID
+   local tType
+   put ideObjectTypeFromObject(pObjID) into tType
+   
+   return __classicObjectPropertiesFromType(tType)
+end __classicObjectProperties
+
+private function __classicObjectPropertiesFromType pType
+   set the itemdel to "."
+   switch the last item of pType
+      case "Card"
+      case "Stack"
+      case "DataGrid"
+         return sClassicObjectProperties[pType]
+      default
+         local tPropsA
+         put sClassicObjectProperties[pType] into tPropsA
+         union tPropsA with sClassicObjectProperties["com.livecode.interface.Control"] recursively
+         return tPropsA
+   end switch
+end __classicObjectPropertiesFromType
+
 private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    local tObjectData
    
