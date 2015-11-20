@@ -499,6 +499,13 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       
       local tGroupLabel
       put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+      if tGroupLabel is empty then
+         put pPropInfoA[tPropertyName]["label"] into tGroupLabel
+      end if
+      if tGroupLabel is empty then
+         put tPropertyName into tGroupLabel
+      end if
+      put tGroupLabel into pPropInfoA[tPropertyName]["group"]
       
       local tSection
       put pPropInfoA[tPropertyName]["section"] into tSection
