@@ -514,6 +514,11 @@ on selectObjects pObjectList
       exit selectObjects
    end if
    
+   ## Don't go to card if it is part of the project browser
+   If ideStackOfObject(line 1 of tObjectList) is the long id of me then
+      exit selectObjects
+   end if
+   
    ## Go to correct card as required
    lock messages
    repeat for each line tObject in tObjectList      
