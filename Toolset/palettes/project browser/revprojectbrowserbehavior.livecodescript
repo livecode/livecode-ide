@@ -136,7 +136,6 @@ on ideCardDeleted pTarget
 end ideCardDeleted
 
 on ideStackDeleted pTarget
-   put pTarget
    deleteStackFromProjectBrowser pTarget
 end ideStackDeleted
 
@@ -232,6 +231,24 @@ end displayPreferenceSelected
 
 ######## Project View Handlers ########
 ###################################
+
+function pbSelectedObjects
+   local tHilitedRows
+   put the dvHilitedRows of group "objectList" of me into tHilitedRows
+   
+   local tObjectList, tAbsoluteRow, tObject
+   repeat for each line tLine in tHilitedRows
+      put getAbsoluteRow(tLine) into tAbsoluteRow
+      put sDisplayArray["objects"][tAbsoluteRow]["long id"] into tObject
+      
+      if tObjectList is empty then
+         put tObject into tObjectList
+      else
+         put return & tObject after tObjectList
+      end if
+   end repeat
+   return tObjectList
+end pbSelectedObjects
 
 command setUpProjectView
    local theStylesA, tBehaviorsFolder, tStackID
@@ -596,8 +613,7 @@ end goToObject
 
 command updateActions
    local tSelectedObjects
-   
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    
    lock screen
    if the number of lines in tSelectedObjects > 1 then
@@ -667,31 +683,31 @@ end updateActions
 
 on alignControls pPosition   
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEAlignControls tSelectedObjects, pPosition
 end alignControls
 
 on centerControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDECenterControls tSelectedObjects,pPosition
 end centerControls
 
 on equalizeControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEEqualizeControls tSelectedObjects,pPosition
 end equalizeControls
 
 on distributeControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEDistributeControls tSelectedObjects,pPosition, "First To Last selected"
 end distributeControls
 
 on newControls
    local tControls
-   put revIDESelectedObjects() into tControls   
+   put pbSelectedObjects() into tControls   
    
    lock screen
    repeat for each line tControlID in tControls
@@ -703,7 +719,7 @@ end newControls
 on groupControls
    local tName, tLayer, tList, tGroupID, tControlList
    
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    revIDEGroupObjects tControlList
    put the result into tGroupID
    select tGroupID
@@ -712,7 +728,7 @@ end groupControls
 
 on cloneControls
    local tClonedIDs, tControlList
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    
    lock screen
    repeat for each line tControlID in tControlList
@@ -726,7 +742,7 @@ end cloneControls
 
 on deleteControls
    local tControlID, tGroupID, tControlList
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    
    answer "Are you sure you want to delete these controls?" with "Cancel" and "OK"
    if it is "ok" then
@@ -739,7 +755,7 @@ end deleteControls
 
 on lockControls
    local tControlList, tUnlocked
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    lock screen
    
    put true into tUnlocked
@@ -755,7 +771,7 @@ end lockControls
 
 on showControls
    local tControlList, tVisible
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    lock screen
    
    put true into tVisible
