@@ -3321,9 +3321,28 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
-on revIDEDistributeControlsFromPI pObjects, pValue
-   revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
-end revIDEDistributeControlsFromPI
+on revIDEAlignControlsFromPI pObjects, pProperty, pValue
+   switch pProperty
+      case "equalize"
+         revIDEEqualizeControls pObjects, pValue
+         break
+      case "align"
+         revIDEAlignControls pObjects, pValue
+         break
+      case "alignCenter"
+         revIDECenterControls pObjects, pValue
+         break
+      case "distribute"
+         revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
+         break
+      case "nudge"
+         revIDENudgeControls pObjects, pValue["direction"], pValue["increment"]
+         break
+      case "relayer"
+         revIDERelayerControls pObjects, pValue
+         break
+   end switch
+end revIDEAlignControlsFromPI
 
 on revIDEDistributeControls pObjects, pHorizontally, pType
    local tNumberOfObjects
@@ -3480,10 +3499,6 @@ on revIDEEqualizeControls pControls, pPosition
       end repeat
    end if
 end revIDEEqualizeControls
-
-on revIDENudgeControlsFromPI pObjectList, pValue
-   revIDENudgeControls pObjectList, pValue["direction"], pValue["increment"]
-end revIDENudgeControlsFromPI
 
 on revIDENudgeControls pObjectList, pDirection, pAmount
    local tObj, tLoc
@@ -4520,9 +4535,16 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       put true into sLockUpdates
    end if
    
-   repeat for each line tObject in pObjectList
-      __setPropertyOfObject tObject, pProperty, pValue
-   end repeat
+   # Multi-object properties require the object list to be passed
+   local tMultiObjectSetter
+   put sClassicObjectProperties["com.livecode.interface.MultipleObjects"]["properties"][pProperty]["setter"] into tMultiObjectSetter
+   if tMultiObjectSetter is not empty then
+      dispatch tMultiObjectSetter with pObjectList, pProperty, pValue
+   else
+      repeat for each line tObject in pObjectList
+         __setPropertyOfObject tObject, pProperty, pValue
+      end repeat
+   end if
    
    if sLockUpdates then
       ideMessageSendWithParameters "idePropertyChanged", pObjectList
