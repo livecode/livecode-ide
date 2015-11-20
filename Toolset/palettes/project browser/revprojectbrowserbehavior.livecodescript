@@ -744,7 +744,10 @@ on deleteControls
    local tControlID, tGroupID, tControlList
    put pbSelectedObjects() into tControlList
    
-   answer "Are you sure you want to delete these controls?" with "Cancel" and "OK"
+   local tAnswerString
+   put "Are you sure you want to delete these objects?" into tAnswerString
+   put return & tControlList after tAnswerString
+   answer tAnswerString with "Cancel" and "OK"
    if it is "ok" then
        lock screen
        revIDEDeleteObjects tControlList
