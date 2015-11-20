@@ -294,12 +294,8 @@ end inspectorTitleUpdate
 #####################
 
 # Sent by an editor when a property value is being changed
-on editorValueChanged pProperty, pValue, pLockUpdates, pCallback
-   if pCallback is not empty then
-      dispatch pCallback with sSelectedObjects, pValue
-   else
-      revIDEPropertySet sSelectedObjects, pProperty, pValue
-   end if
+on editorValueChanged pProperty, pValue, pLockUpdates
+   revIDEPropertySet sSelectedObjects, pProperty, pValue
 end editorValueChanged
 
 function editorStoredValue pProperty

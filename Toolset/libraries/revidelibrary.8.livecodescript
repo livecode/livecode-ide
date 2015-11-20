@@ -1240,18 +1240,12 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
          put tGroup into tPropMappingA[tProp]["group"]
-         put pGroupsA[tGroup]["proplist"][tProp]["getter"] into tPropMappingA[tProp]["getter"]
       end repeat
    end repeat
    
    local tDataA
    repeat for each key tKey in tPropMappingA
-      if tPropMappingA[tKey]["getter"] is empty then
-         __fetchPropertyOfControl tKey, tDataA
-      else
-         dispatch function tPropMappingA[tKey]["getter"] with the long id of the target
-         put the result into tDataA[tKey]
-      end if
+      __fetchPropertyOfControl tKey, tDataA
    end repeat
    
    local tValue, tEffective
@@ -1276,6 +1270,19 @@ end __readGroupedPropertiesOfControl
 private on __fetchPropertyOfControl pProp, @pData
    local tError
    put empty into tError
+   
+   local tObjID
+   put the long id of the target into tObjID
+   
+   local tProperties
+   put __classicObjectProperties(tObjID) into tProperties
+   
+   if tProperties["properties"][pProp]["getter"] is not empty then
+      dispatch function tProperties["properties"][pProp]["getter"] with tObjID, pProp
+      put the result into pData[pProp]
+      exit __fetchPropertyOfControl
+   end if
+   
    try
       switch pProp
          case "short name"
@@ -4490,35 +4497,42 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    end if
 end revIDEPropertiesInfoOfSection
 
+private on __setPropertyOfObject pObject, pProperty, pValue
+   if pProperty is "customProperties" then
+      put true into sLockUpdates
+      revIDECustomPropertySet pObject, pValue
+   else 
+      local tProperties
+      put __classicObjectProperties(pObject) into tProperties
+      
+      if tProperties["properties"][pProperty]["setter"] is not empty then
+         dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
+      else
+         set the pProperty of pObject to pValue
+      end if
+   end if
+end __setPropertyOfObject
+
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    local tThrottlePropertyChanged
    put false into tThrottlePropertyChanged
    if the number of lines in pObjectList > 1 then
       put true into tThrottlePropertyChanged
    end if
-
+   
    if tThrottlePropertyChanged or pLockUpdates then
       put true into sLockUpdates
    end if
-
+   
    repeat for each line tObject in pObjectList
-      if pProperty is "customProperties" then
-         put true into sLockUpdates
-         revIDECustomPropertySet pObjectList, pValue
-      else if pProperty contains "dgProps" then
-         repeat for each key tKey in pValue
-            set the dgProps[tKey] of tObject to pValue[tKey]
-         end repeat
-      else
-         set the pProperty of tObject to pValue
-      end if
+      __setPropertyOfObject tObject, pProperty, pValue
    end repeat
-
+   
    if sLockUpdates then
       ideMessageSendWithParameters "idePropertyChanged", pObjectList
       put false into sLockUpdates
    end if
-
+   
 end revIDEPropertySet
 
 local sStoredPropsA

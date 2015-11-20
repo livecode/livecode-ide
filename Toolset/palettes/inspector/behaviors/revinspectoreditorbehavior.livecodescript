@@ -121,8 +121,8 @@ getProp editorValue[pKey]
 end editorValue
 
 on updateProperty
-  if sAllowUpdate is true then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false, sPropertyInfo["setter"]
+  if sAllowUpdate is true and not sPropertyInfo["read_only"] then
+     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
      put false into sAllowUpdate
    end if
 end updateProperty

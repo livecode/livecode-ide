@@ -17,8 +17,8 @@ The items are, in order:
 
 ## Property name
 The property name may also contain information about what getter and setter to use for
-the property in case it shouldn't use the default `revIDEGetPropertyOfObject` and `revIDESetPropertyOfObject`. If these are present, they should be separated from the 
-property name by colons, eg
+the property in case it shouldn't use the IDE's default method. If these are present, 
+they should be separated from the property name by colons, eg
 `propname:customGetter:customSetter`
 
 If the custom getters and setters are present, they will be used by the property inspector 
