@@ -5753,6 +5753,8 @@ on revIDEImportControl pType, pFileName, pReferenced
          break
    end switch
    
+   set the itemdel to slash
+   set the name of tCreatedControlID to the last item of pFileName
    unlock messages
    unlock screen
    return tCreatedControlID
