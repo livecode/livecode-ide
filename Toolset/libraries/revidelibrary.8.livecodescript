@@ -5851,7 +5851,7 @@ on revIDEAskFile pType, pInstructions, pBasePath
    # return response
 end revIDEAskFile
 
-on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
+on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA, pSingleFile
    local tTypesA
    put pTypesA into tTypesA
    
@@ -5883,7 +5883,11 @@ on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
    
    # Build the answer string from the various components
    local tAnswerString
-   put "answer file pInstructions" into tAnswerString
+   put "answer file" into tAnswerString
+   if not pSingleFile then
+      put "s" after tAnswerString
+   end if
+   put " pInstructions" after tAnswerString
    
    # If there is a tutorial in progress, open dialog browsing tutorial resource folder
    local tTutorial
