@@ -5470,19 +5470,21 @@ on revIDEActionOpenStack
    revIDEAnswerFile "stack"
    
    # Get the path of to the file
-   local tStackFilePath
-   put the result into tStackFilePath
+   local tStackFilePaths
+   put the result into tStackFilePaths
    
-   # Check the stack exists
-   if there is not a file tStackFilePath then exit revIDEActionOpenStack
-   
-   # Open the stack
-   revIDEOpenStack tStackFilePath
-   
-   # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
-   if revIDEStackIsScriptOnly(tStackFilePath) then
-      revIDEEditScriptOfObject the long id of stack tStackFilePath
-   end if
+   repeat for each line tStackFilePath in tStackFilePaths
+      # Check the stack exists
+      if there is not a file tStackFilePath then exit revIDEActionOpenStack
+      
+      # Open the stack
+      revIDEOpenStack tStackFilePath
+      
+      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
+      if revIDEStackIsScriptOnly(tStackFilePath) then
+         revIDEEditScriptOfObject the long id of stack tStackFilePath
+      end if
+   end repeat
 end revIDEActionOpenStack
 
 /*
