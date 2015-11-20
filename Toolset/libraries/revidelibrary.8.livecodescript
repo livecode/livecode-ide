@@ -5075,6 +5075,14 @@ command CreateTemplateForControl pStack
    return theTemplateGroup
 end CreateTemplateForControl
 
+on revIDESetDataGridProperty pObj, pProperty, pValue
+   set the dgProps[pProperty] of pObj to pValue
+end revIDESetDataGridProperty
+
+function revIDEGetDataGridProperty pObject, pProperty
+   return the dgProps[pProperty] of pObject
+end revIDEGetDataGridProperty
+
 #############
 # Standalone Settings
 #############

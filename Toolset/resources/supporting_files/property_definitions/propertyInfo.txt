@@ -41,7 +41,6 @@ destroyWindow	Purge window on close	Basic	com.livecode.pi.boolean	true	false		fa
 disabled	Disabled	Basic	com.livecode.pi.boolean	true	false		false	
 disabledIcon	Disabled Icon	Icons	com.livecode.pi.icon	true	false		0	
 distribute::revIDEDistributeControlsFromPI	Distribute	Align Controls	com.livecode.pi.distribute	true	false
-customProperties["dgProps"]	Data Grid Properties	Data Grid	com.livecode.pi.datagrid	true	false		no_default
 dontDither	Don't Dither	Basic	com.livecode.pi.boolean	true	false		false	
 dontSearch	Don't search	Basic	com.livecode.pi.boolean	true	false		false	
 dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false			
@@ -161,7 +160,7 @@ sharedBehavior	Shared Group	Basic	com.livecode.pi.boolean	true	false		false
 sharedHilite	Shared Hilite	Basic	com.livecode.pi.boolean	true	false			
 sharedText	Share Text	Basic	com.livecode.pi.boolean	true	false			
 showBadge	Controller toggel	Basic	com.livecode.pi.boolean	true	false			
-showBorder	Show Border	Basic	com.livecode.pi.boolean	true	false			
+showBorder	Show Border	Basic	com.livecode.pi.boolean	true	false		true		
 showController	Controller	Basic	com.livecode.pi.boolean	true	false			
 showFocusBorder	Focus Border	Basic	com.livecode.pi.boolean	true	false			
 showLines	Text baselines	Table	com.livecode.pi.boolean	true	false			
