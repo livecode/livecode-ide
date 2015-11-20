@@ -2901,22 +2901,11 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       # Set all the properties to their default
       put sClassicObjectProperties[pObjectTypeID]["properties"] into tObjPropsA
       
-      if tObjPropsA["properties"]["style"]["default"] is not empty then
-         revIDESetPropertyOfObject tCreatedControlID, "style", tObjPropsA["properties"]["style"]["default"] 
+      if tObjPropsA["style"]["default"] is not empty and tObjPropsA["style"]["default"] is not "no_default" then
+         revIDESetPropertyOfObject tCreatedControlID, "style", tObjPropsA["style"]["default"] 
       end if
       
-      local tKeys
-      put the keys of tObjPropsA into tKeys
-      
-      # Make sure style property is set first, as some other props depend on it
-      set the wholematches to true
-      get lineOffset("style", tKeys)
-      if it is not 0 then
-         delete line it of tKeys
-         put "style" & return before tKeys
-      end if
-      
-      repeat for each line tProperty in tKeys
+      repeat for each key tProperty in tObjPropsA
          put tObjPropsA[tProperty] into tPropInfoA
          if tPropInfoA["default"] is "no_default" then next repeat
          if tPropInfoA["read_only"] is true then next repeat
