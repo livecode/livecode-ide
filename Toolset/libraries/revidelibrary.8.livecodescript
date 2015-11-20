@@ -9246,18 +9246,18 @@ end ideCorePropertyInspectorRefreshPropertyLabels
 #
 ##################################################
 
-on revIDESetGeometry pObjectList, pGeometryArray
-   revSetGeometryObject pObjectList
+on revIDESetGeometry pObject, pProperty, pGeometryArray
+   revSetGeometryObject pObject
    repeat for each key tKey in pGeometryArray["geometry"]
       revSetGeometry tKey, pGeometryArray["geometry"][tKey]
    end repeat
 end revIDESetGeometry
 
-function revIDEGetGeometry pObjectList
+function revIDEGetGeometry pObject, pProperty
    local tValue
 
-   revSetGeometryObject pObjectList
-   put line 1 of pObjectList into tValue["object"]
+   revSetGeometryObject pObject
+   put pObject into tValue["object"]
    put revGetGeometry() into tValue["geometry"]
    return tValue
 end revIDEGetGeometry

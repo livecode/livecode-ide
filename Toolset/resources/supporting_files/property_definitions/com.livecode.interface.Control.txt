@@ -3,4 +3,4 @@ title	Control Properties
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-geometry												
+geometry:revIDEGetGeometry:revIDESetGeometry	Geometry	Geometry Manager	com.livecode.pi.geometry	true	false												
