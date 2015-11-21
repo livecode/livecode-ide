@@ -1334,9 +1334,6 @@ private on __fetchPropertyOfControl pProp, @pData
          case "type"
             put word 1 of the name of the target into pData["type"]
             break
-         case "customProperties"
-            put __customPropertyData(the long id of the target) into pData["customProperties"]
-            break
          default
             put the pProp of the Target into pData[pProp]
             break
@@ -1402,7 +1399,7 @@ private function __readControlPropertiesForDataView pList
    return tData
 end __readControlPropertiesForDataView
 
-function __customPropertyData pLongID
+function __customPropertyValue pLongID
    local tArray, tSets, tProps, tOldPropertySet
    put the customPropertySet of pLongID into tOldPropertySet
    put the customPropertySets of pLongID into tSets
@@ -1420,11 +1417,8 @@ function __customPropertyData pLongID
       set the customPropertySet of pLongID to empty
    end if
    set the customPropertySet of pLongID to tOldPropertySet
-   local tDataArray
-   put revIDEPropertyInfo("customProperties") into tDataArray["Custom properties"]["customProperties"]
-   put tArray into tDataArray["Custom properties"]["customProperties"]["value"][pLongID]
-   return tDataArray
-end __customPropertyData
+   return tArray
+end __customPropertyValue
 
 function __unescapeString pString
    --if pString contains "\n" then breakpoint
@@ -4517,10 +4511,6 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
 end __revIDEPropertiesInfoOfSection
 
 function revIDEPropertiesInfoOfSection pObjectList, pSection
-   if pSection is "Custom" then
-      return revIDECustomPropertiesInfo(pObjectList)
-   end if
-
    local tSharedPropertiesA
    put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedPropertiesA
 
@@ -4535,17 +4525,17 @@ end revIDEPropertiesInfoOfSection
 private on __setPropertyOfObject pObject, pProperty, pValue
    if pProperty is "customProperties" then
       put true into sLockUpdates
-      revIDECustomPropertySet pObject, pValue
-   else 
-      local tProperties
-      put __classicObjectProperties(pObject) into tProperties
-      
-      if tProperties["properties"][pProperty]["setter"] is not empty then
-         dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
-      else
-         set the pProperty of pObject to pValue
-      end if
    end if
+   
+   local tProperties
+   put __classicObjectProperties(pObject) into tProperties
+   
+   if tProperties["properties"][pProperty]["setter"] is not empty then
+      dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
+   else
+      set the pProperty of pObject to pValue
+   end if
+   
 end __setPropertyOfObject
 
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
@@ -4586,66 +4576,26 @@ function revIDEPropertyRetrieveStored pObjectList, pProperty
    return sStoredPropsA[pObjectList][pProperty]
 end revIDEPropertyRetrieveStored
 
-private function __customPropInfo pObject
-   local tInfoA
-   put revIDEPropertyInfo("customProperties") into tInfoA[1]["grouplist"][1]["proplist"][1]
-   put "Custom Properties" into tInfoA[1]["grouplist"][1]["Label"]
-end __customPropInfo
+function revIDECustomPropertiesGet pObjectID, pProperty
+   return __customPropertyValue(pObjectID)
+end revIDECustomPropertiesGet
 
-function revIDECustomPropertiesInfo pObjectList
-   local tFirst, tCustomPropsA, tObjectList
-   put true into tFirst
-   repeat for each line tObject in tObjectList
-      if tFirst then
-         put __customPropInfo(tObject) into tCustomPropsA
-         put false into tFirst
-         next repeat
-      end if
-
-      union tCustomPropsA with __customPropInfo(tObject) recursively
-   end repeat
-
-   return tCustomPropsA
-end revIDECustomPropertiesInfo
-
-on revIDECustomPropertySet pObjectList, pValue
-   repeat for each line tObject in pObjectList
-      local tOldPropertySet
-      put the custompropertyset of tObject into tOldPropertySet
-      set the custompropertysets of tObject to empty
-      if pValue is not empty then
-         repeat for each key tKey in pValue
-            set the custompropertyset of tObject to tKey
-            set the customKeys of tObject to the keys of pValue[tKey]
-            set the customProperties of tObject to pValue[tKey]
-         end repeat
-      else
-         set the custompropertyset of tObject to empty
-         set the customKeys of tObject to empty
-      end if
-      set the custompropertyset of tObject to tOldPropertySet
-   end repeat
-end revIDECustomPropertySet
-
-function revIDECustomProperty pObjectList, pSet, pProperty
-   return the pSet[pProperty] of line 1 of pObjectList
-end revIDECustomProperty
-
-function revIDECustomProperties pObjectList
-   local tFirst, tCustomPropsA
-   put true into tFirst
-   repeat for each line tObject in pObjectList
-      if tFirst then
-         put __customPropertyData(tObject) into tCustomPropsA
-         put false into tFirst
-         next repeat
-      end if
-
-      union tCustomPropsA with __customPropInfo(tObject) recursively
-   end repeat
-
-   return tCustomPropsA
-end revIDECustomProperties
+on revIDECustomPropertiesSet pObject, pProperty, pValue
+   local tOldPropertySet
+   put the custompropertyset of pObject into tOldPropertySet
+   set the custompropertysets of pObject to empty
+   if pValue is not empty then
+      repeat for each key tKey in pValue
+         set the custompropertyset of pObject to tKey
+         set the customKeys of pObject to the keys of pValue[tKey]
+         set the customProperties of pObject to pValue[tKey]
+      end repeat
+   else
+      set the custompropertyset of pObject to empty
+      set the customKeys of pObject to empty
+   end if
+   set the custompropertyset of pObject to tOldPropertySet
+end revIDECustomPropertiesSet
 
 private on __populatePropertyArray pObject, pPropertyValues, @xPropertiesA
    repeat for each line tPropertyName in the keys of pPropertyValues
@@ -4696,10 +4646,6 @@ function revIDEPropertiesOfObjects pObjectList, pPropertyList
 end revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfSection pObjectList, pSection
-   if pSection is "Custom" then
-      return revIDECustomProperties(pObjectList)
-   end if
-
    local tSharedProperties
    put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
    # Error if we didn't get an array back
