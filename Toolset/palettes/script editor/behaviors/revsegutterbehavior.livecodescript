@@ -510,12 +510,14 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
       local tImage
       put getBreakpointImageId(tState) into tImage
       
+      lock messages
       copy tImage to group "Mutables" of me
       
       # Breakpoints must be given random names. We can't use the line number or tBreakpoint as the name
       # because breakpoints can be moved, allowing a situation where two could have the same name.
       set the name of it to controlRandomName()
       put the long id of it into tImage
+      unlock messages 
       
       set the cMutable of tImage to true
       set the cBreakpoint of tImage to true
