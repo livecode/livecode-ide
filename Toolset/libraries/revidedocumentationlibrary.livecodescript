@@ -19,22 +19,40 @@ on ideDocsInitialize
    put tConnection into sConnection
 end ideDocsInitialize
 
-private function __fetchDocsData pLibraryName, pEntryName, pType
+private function __fetchDocsData pEntryName, pLibraryName, pType
    # Ensure we have a connection
    ideDocsInitialize
    
-   local tSql, tRecordSet, tData, tDataSet
-   
-   put "SELECT data from" && pLibraryName into tSql
-   put " WHERE name = '" & tolower(pEntryName) & "'" after tSql
-   if pType is not empty then
-      put " AND type = '" & pType & "'" after tSql
+   # Find the library id
+   local tSQL, tLibraryID, tResult
+   if pLibraryName is not empty then
+      put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+      put revDataFromQuery(comma, return, sConnection, tSQL, "pLibraryName") into tLibraryID
+      
+      put the result into tResult
+      if tResult is not a number then
+         return "error finding library id for" && pLibraryName & return & tResult
+      end if
    end if
    
+   local tRecordSet, tData, tDataSet, tParamCount
+   
+   put "SELECT entry_data from dictionary_data" into tSQL
+   put " WHERE entry_name = :1" after tSQL
+   if pType is not empty then
+      put " AND entry_type = :2" after tSQL
+   end if
+   if pLibraryName is not empty then
+      put " AND library_id = :3" after tSQL
+   end if
+   
+   local tEntryName
+   put tolower(pEntryName) into tEntryName
+   
    # Execute the query, keeping the record set ID.
-   put revQueryDatabase(sConnection, tSql) into tRecordSet
+   put revQueryDatabase(sConnection, tSql, "tEntryName", "pType", "tLibraryID") into tRecordSet
    if the result is not a number then
-      -- error - connection may have been closed, so try to reopen
+      # error - connection may have been closed, so try to reopen
       put empty into sConnection
       ideDocsInitialize
       put revQueryDatabase(sConnection, tSql) into tRecordSet
@@ -48,7 +66,7 @@ private function __fetchDocsData pLibraryName, pEntryName, pType
    put true into tMoreRecords
    repeat while tMoreRecords
       add 1 to tCount
-      get revDatabaseColumnNamed(tRecordSet, "data", "tData")
+      get revDatabaseColumnNamed(tRecordSet, "entry_data", "tData")
       put tData into tDataSet[tCount]
       revMoveToNextRecord tRecordSet
       put the result into tMoreRecords
@@ -60,10 +78,10 @@ private function __fetchDocsData pLibraryName, pEntryName, pType
    return tDataSet
 end __fetchDocsData
 
-private function __ideDocsFetchData pLibraryName, pEntryName, pType
+private function __ideDocsFetchData pEntryName, pLibraryName, pType
    # Fetch the data
    local tData
-   put __fetchDocsData(pLibraryName, pEntryName, pType) into tData
+   put __fetchDocsData(pEntryName, pLibraryName, pType) into tData
    
    if tData[1] is empty then
       return empty
@@ -77,33 +95,33 @@ private function __ideDocsFetchData pLibraryName, pEntryName, pType
    return tData
 end __ideDocsFetchData
 
-private function ideDocsFetchElementOfType pLibraryName, pEntryName, pType, pElement
+private function ideDocsFetchElementOfType pEntryName, pLibraryName, pType, pElement
    local tDataA
-   put __ideDocsFetchData(pLibraryName, pEntryName, pType) into tDataA
+   put __ideDocsFetchData(pEntryName, pLibraryName, pType) into tDataA
    
    return tDataA[1][pElement]
 end ideDocsFetchElementOfType
 
-private function ideDocsFetchDataOfType pLibraryName, pEntryName, pType
+private function ideDocsFetchDataOfType pEntryName, pLibraryName, pType
    local tDataA
-   put  __ideDocsFetchData(pLibraryName, pEntryName, pType) into tDataA
+   put  __ideDocsFetchData(pEntryName, pLibraryName, pType) into tDataA
    return tDataA[1]
 end ideDocsFetchDataOfType
 
-private function ideDocsFetchData pLibraryName, pEntryName
-   return __ideDocsFetchData(pLibraryName, pEntryName)
+private function ideDocsFetchData pEntryName, pLibraryName
+   return __ideDocsFetchData(pEntryName, pLibraryName)
 end ideDocsFetchData
 
 function ideDocsFetchLCSData pEntryName
-   return ideDocsFetchData("livecode_script", pEntryName)
+   return ideDocsFetchData(pEntryName, "livecode_script")
 end ideDocsFetchLCSData
 
 function ideDocsFetchLCSDataOfType pEntryName, pType
-   return ideDocsFetchDataOfType("livecode_script", pEntryName, pType)
+   return ideDocsFetchDataOfType(pEntryName, "livecode_script", pType)
 end ideDocsFetchLCSDataOfType
 
 function ideDocsFetchLCSElementOfType pEntryName, pType, pElement
-   return ideDocsFetchElementOfType("livecode_script", pEntryName, pType, pElement)
+   return ideDocsFetchElementOfType(pEntryName, "livecode_script", pType, pElement)
 end ideDocsFetchLCSElementOfType
 
 on ideDocsUpdateDatabase pLibraryA
