@@ -1372,6 +1372,11 @@ end levelConnectors
 #######################################
 
 on addStackToProjectBrowser pTarget
+   # If the target has already been added then don't do anything
+   if getRow(pTarget) is not empty then
+      exit addStackToProjectBrowser
+   end if
+   
    local tVisibleRows, tRow, tChildren, tChildOffset, tKeys
    local tIndex
    
