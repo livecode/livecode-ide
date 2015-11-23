@@ -23,6 +23,10 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
    # Ensure we have a connection
    ideDocsInitialize
    
+   if sConnection is not a number then
+      return empty
+   end if
+   
    # Find the library id
    local tSQL, tLibraryID, tResult
    if pLibraryName is not empty then
