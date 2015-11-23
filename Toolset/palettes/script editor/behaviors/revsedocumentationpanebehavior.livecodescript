@@ -98,22 +98,18 @@ end paneResizeControl
 #   Sent by the parent when something might have changed that could affect the documentation viewer
 #   Causes the documentation viewer to re-render whatever its last chosen document was. And resize itself.
 command update
-  paneResizeControl
-  
-  put sePrefGet("documentation,lastLoadedDoc") into sLastFoundDoc
-  put sePrefGet("documentation,lastMatchingSearch") into sDoc
-  put sePrefGet("documentation,lastLoadedAlternativeDocs") into sAlternativeDocs
-  
-  if sLastFoundDoc is empty then
-    put empty into sDoc
-    renderEmpty
- else
-    if prefGet("viewMode") is "Full" then
-      renderDocFull
-    else
-      renderDocShort
-    end if
-  end if
+   paneResizeControl
+   
+   put sePrefGet("documentation,lastLoadedDoc") into sLastFoundDoc
+   put sePrefGet("documentation,lastMatchingSearch") into sDoc
+   put sePrefGet("documentation,lastLoadedAlternativeDocs") into sAlternativeDocs
+   
+   if sLastFoundDoc is empty then
+      put empty into sDoc
+      renderEmpty
+   else
+      renderDoc
+   end if
 end update
 
 ####################################################################
@@ -132,6 +128,7 @@ private function renderDocDataShort pData, pIndex
    put tData["summary"] into tSummary
    put tData["type"] into tType
    
+   local tResult
    # Build the html to display it
    put "<p>" & return into tResult
    
@@ -259,7 +256,7 @@ private function renderDocData pData, pIndex, pFull
    return tHtml
 end renderDocData
 
-private command renderDoc pType
+private command renderDoc
    if sLastFoundDoc is empty or sDoc is empty then
       renderEmpty
       exit renderDoc
@@ -267,7 +264,7 @@ private command renderDoc pType
    
    # Documentation library: Retrieve the summary from the docs database
    local tHTML
-   put renderDocDictionary(sDoc, pType) into tHTML
+   put renderDocDictionary(sDoc) into tHTML
    set the htmlText of field "View" of me to tHTML
    
    scrollbarCheck
@@ -277,7 +274,7 @@ private function removeAngleBrackets pText, pIsSyntax
    local tRegex, tStart, tEnd
    put "\<([^\>]*)\>" into tRegex
    set the itemdelimiter to "|"
-   local tNewText
+   local tNewText, tReplacement
    repeat while matchChunk(pText, tRegex, tStart, tEnd)
       put char 1 to tStart - 2 of pText after tNewText
       if pIsSyntax then
@@ -300,7 +297,7 @@ end removeAngleBrackets
 local sTypesA
 # Returns HTML of that doc in the form required for this component
 private function renderDocDictionary pTag, pType
-   local tResult
+   local tResult, tData
    
    # Get the required info from the doc
    put ideDocsFetchLCSData(pTag) into tData
@@ -372,11 +369,7 @@ on mouseUp
    local tTag, tType, tCategory
    switch the short name of the target
       case "FullMode"
-         if prefGet("viewMode") is "Full" then
-            renderDocFull
-         else
-            renderDocShort
-         end if
+         renderDoc
          break
          
       case "LaunchDocs"
