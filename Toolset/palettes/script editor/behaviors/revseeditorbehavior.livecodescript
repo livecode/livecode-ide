@@ -3165,7 +3165,6 @@ on rawKeyDown pKey
       local tCaretChar
       get the selectedChunk
       put word 2 of it into tCaretChar
-      put tCaretChar
       try
          repeat while tCaretChar > 1 and (char (tCaretChar - 1) of tScript is space)
             subtract 1 from tCaretChar
