@@ -1662,7 +1662,7 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       
       # Construct a dispatch command with all the desired parameters
       local tDoString, tParams, tErrors
-      put "dispatch pMessage to tObjectID" into tDoString
+      put "dispatch tMessage to tObjectID" into tDoString
       
       # If this is a parameterised message, add the parameter as the first arg
       if the number of items of pMessage > 1 then
