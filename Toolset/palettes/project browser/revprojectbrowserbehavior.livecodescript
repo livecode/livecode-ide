@@ -328,7 +328,7 @@ command buildProjectView pRememberExpansion
    if pRememberExpansion then
       repeat for each line tKey in the keys of sDisplayArray["objects"]
          if sDisplayArray["objects"][tKey]["expanded"] is true then
-            if sDisplayArray["objects"][tKey]["type"] is "stack" then
+            if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
             else if  sDisplayArray["objects"][tKey]["type"] is "card" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 2 &  return after tOldExpandedControls
@@ -1011,8 +1011,8 @@ function itemise pStacks, pFrontScripts, pBackScripts, pLibraryStacks, pInitialI
    
    put the keys of  tStackObjects into tKeys
    sort lines of tKeys ascending numeric
-   put line 1 of tKeys & comma after tVisibleRows
    repeat for each line tKey in tKeys
+      put tKey & comma after tVisibleRows
       put tStackObjects[tKey] into tItemisedArray["objects"][tKey]
    end repeat
    put line -1 of tKeys into tIndex
