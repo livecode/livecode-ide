@@ -5508,19 +5508,21 @@ on revIDEActionOpenStack
    revIDEAnswerFile "stack"
    
    # Get the path of to the file
-   local tStackFilePath
-   put the result into tStackFilePath
+   local tStackFilePaths
+   put the result into tStackFilePaths
    
-   # Check the stack exists
-   if there is not a file tStackFilePath then exit revIDEActionOpenStack
-   
-   # Open the stack
-   revIDEOpenStack tStackFilePath
-   
-   # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
-   if revIDEStackIsScriptOnly(tStackFilePath) then
-      revIDEEditScriptOfObject the long id of stack tStackFilePath
-   end if
+   repeat for each line tStackFilePath in tStackFilePaths
+      # Check the stack exists
+      if there is not a file tStackFilePath then exit revIDEActionOpenStack
+      
+      # Open the stack
+      revIDEOpenStack tStackFilePath
+      
+      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
+      if revIDEStackIsScriptOnly(tStackFilePath) then
+         revIDEEditScriptOfObject the long id of stack tStackFilePath
+      end if
+   end repeat
 end revIDEActionOpenStack
 
 /*
@@ -5703,17 +5705,21 @@ on revIDEActionImportControl pType, pReferenced
    # User has not chosen a file
    if the result is "cancel" then exit revIDEActionImportControl
    
-   # Check the file exists
-   local tFilePath
-   put the result into tFilePath
-   if there is not a file tFilePath then exit revIDEActionImportControl
-   
-   # Import the control
-   if pReferenced is true then
-      revIDEImportControl pType, tFilePath, true
-   else
-      revIDEImportControl pType, tFilePath
-   end if
+   local tFiles
+   put the result into tFiles
+   lock screen
+   lock messages
+   repeat for each line tFile in tFiles
+      if there is not a file tFile then next repeat
+      # Import the control
+      if pReferenced is true then
+         revIDEImportControl pType, tFile, true
+      else
+         revIDEImportControl pType, tFile
+      end if
+   end repeat
+   unlock messages
+   unlock screen
 end revIDEActionImportControl
 
 on revIDEActionImportControlFromFolder pType, pReference
@@ -5791,6 +5797,8 @@ on revIDEImportControl pType, pFileName, pReferenced
          break
    end switch
    
+   set the itemdel to slash
+   set the name of tCreatedControlID to the last item of pFileName
    unlock messages
    unlock screen
    return tCreatedControlID
@@ -5887,7 +5895,7 @@ on revIDEAskFile pType, pInstructions, pBasePath
    # return response
 end revIDEAskFile
 
-on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
+on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA, pSingleFile
    local tTypesA
    put pTypesA into tTypesA
    
@@ -5919,7 +5927,11 @@ on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA
    
    # Build the answer string from the various components
    local tAnswerString
-   put "answer file pInstructions" into tAnswerString
+   put "answer file" into tAnswerString
+   if not pSingleFile then
+      put "s" after tAnswerString
+   end if
+   put " pInstructions" after tAnswerString
    
    # If there is a tutorial in progress, open dialog browsing tutorial resource folder
    local tTutorial
