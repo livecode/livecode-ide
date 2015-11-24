@@ -50,14 +50,6 @@ on resizeStack p1, p2, p3, p4
       end if
     end repeat
     
-    if there is a stack "message box" then
-      local tDefaultStack, tMessageBoxStack
-      put the defaultStack into tDefaultStack
-      -- PM-2015-11-24: [[ Bug 16464 ]] Send revUpdateActiveStack to the correct stack
-      put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "message box"  & slash & "behaviors" & slash & "revmessageboxbehavior.livecodescript" into tMessageBoxStack
-      send "revUpdateActiveStack tDefaultStack, tDefaultStack" to stack tMessageBoxStack
-    end if
-    
   end if
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
     pass resizeStack
