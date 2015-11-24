@@ -1600,8 +1600,9 @@ command revGoScriptEditor pEditor, pPosition
    put empty into gREVStackStatus[the short name of pEditor]
    
    lock screen
+   lock messages
    toplevel pEditor
-   
+   unlock messages
    # AL-2015-10-01: [[ Bug 16016 ]] Ensure the palette rect is set after the go command
    #  as otherwise the engine closes and reopens the stack, resulting in it being bound 
    #  to the windowBoundingRect (due to some very specific properties of the script editor)
