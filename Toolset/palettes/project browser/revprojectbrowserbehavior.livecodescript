@@ -895,15 +895,6 @@ end toggleGroup
 #######################################
 
 function getRow pLongID
-   --   if exists(pLongID) then
-   --      if word 1 of pLongID is "stack" and not(pLongID contains "of") then put the name of pLongID into pLongID
-   --   end if
-   ## Stack double check
-   if word 1 of pLongID is "stack" then
-      if pLongID is not among the keys of sLongIDToRow then
-         if not(pLongID contains "of") then put the name of pLongID into pLongID
-      end if
-   end if
    return sLongIDToRow[pLongID]
 end getRow
 
