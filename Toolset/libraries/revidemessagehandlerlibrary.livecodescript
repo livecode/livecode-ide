@@ -306,3 +306,16 @@ on newTool pTool
    send "ideMessageSend" &&  "ideToolChanged" to stack "revIDELibrary" in 0 milliseconds
    pass newTool
 end newTool
+
+on mainstackChanged pOldMainstack, pNewMainStack
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEStackIsIDEStack(tTarget) then pass mainstackChanged
+   
+   local tParams
+   put pOldMainstack into tParams[1]
+   put pNewMainStack into tParams[2]
+   put tTarget into tParams[3]
+   send "ideMessageSendWithParameters" &&  "ideMainstackChanged,tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   pass mainstackChanged
+end mainstackChanged
