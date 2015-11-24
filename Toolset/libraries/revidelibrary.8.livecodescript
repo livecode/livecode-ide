@@ -5564,6 +5564,21 @@ on revIDECloseStack pStackID, pDestroy
    end if
 end revIDECloseStack
 
+private on __ideRemoveFromMemory pStackID
+   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
+   revIDEHandleObjectDeleted pStackID
+   
+   local tSubstacks
+   put the subStacks of stack pStackID into tSubstacks
+   
+   lock messages -- prevent user stack saving during the close, erasing substacks
+   repeat for each line tSubStack in tSubstacks
+      close stack tSubStack
+   end repeat
+   delete stack tMainStack
+   unlock messages
+end __ideRemoveFromMemory
+
 on revIDERemoveFromMemory pStackID
    local tMainstack
    put the mainStack of stack pStackID into tMainstack
@@ -5577,22 +5592,11 @@ on revIDERemoveFromMemory pStackID
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
-
-   local tStackID
-   put the long id of stack tMainStack into tStackID
    
-   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
-   revIDEHandleObjectDeleted the long id of stack tMainStack
-   
-   lock messages -- prevent user stack saving during the close, erasing substacks
-   repeat for each line tSubStack in tSubstacks
-      close stack tSubStack
-   end repeat
-   delete stack tMainStack
-   unlock messages
+   __ideRemoveFromMemory the long id of tMainstack
    
    # Send the 'ideDestroyStack' message
-   ideMessageSend "ideDestroyStack", tStackID
+   ideMessageSend "ideDestroyStack", pStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
@@ -5628,13 +5632,24 @@ on revIDEDeleteSubstack pSubstackID
       exit revIDEDeleteSubstack
    end if
    
-   # Detach from mainstack
-   local tStackName
-   put the short name of pSubstackID into tStackName
-   set the mainstack of pSubstackID to tStackName
-   
-   # Close and remove from memory
-   revIDECloseStack the long id of stack tStackName, true
+   if revSaveCheck(pSubstackID) is not false then
+      answer warning "Really remove the stack file" && pSubstackID && "from memory?" & cr & "Any changes made since saving will be lost" with "Cancel" or "OK" as sheet
+      if it is "Cancel" then 
+         exit revIDEDeleteSubstack
+      end if
+      
+      # Detach from mainstack
+      local tStackName
+      lock messages
+      put the short name of pSubstackID into tStackName
+      set the mainstack of pSubstackID to tStackName
+      unlock messages
+      # Close and remove from memory
+      __ideRemoveFromMemory the long id of stack tStackName
+      
+      # Send the 'ideDestroyStack' message
+      ideMessageSend "ideDestroyStack", pSubstackID
+   end if
 end revIDEDeleteSubstack
 
 /*
