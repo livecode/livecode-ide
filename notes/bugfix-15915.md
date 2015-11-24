@@ -1,0 +1,1 @@
+# PI: No editor for stack decorations

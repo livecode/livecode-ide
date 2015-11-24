@@ -32,7 +32,7 @@ currentNode	Current node	Quicktime	com.livecode.pi.string	true	false
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0			0		1
 customProperties:revIDECustomPropertiesGet:revIDECustomPropertiesSet	Custom Properties	Custom	com.livecode.pi.customprops	true	false		no_default			
 dashes	Dashed lines	Basic	com.livecode.pi.boolean	true	false
-decorations	Controls	Basic	com.livecode.pi.enum	true	false			
+decorations	Controls	Basic	com.livecode.pi.decorations	true	false			
 default	Default button	Basic	com.livecode.pi.boolean	true	false			
 destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
 destroyWindow	Purge window on close	Basic	com.livecode.pi.boolean	true	false		false	
