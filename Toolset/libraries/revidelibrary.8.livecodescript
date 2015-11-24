@@ -2532,7 +2532,11 @@ function revIDEStackProperties pStackID, pLevel
 
    dispatch function "__readPropertiesOfControl" to pStackID with sStackPropertiesToRead, tStackArray
    --put the result into tStackArray
-   put "stack" into tStackArray["type"]
+   if word 3 of pStackID is "of" then
+      put "substack" into tStackArray["type"]
+   else
+      put "stack" into tStackArray["type"]
+   end if
    put "container" into tStackArray["style"]
    put pLevel into tStackArray["level"]
    put the number of lines in the cardIDs of pStackID into tStackArray["childCount"]
