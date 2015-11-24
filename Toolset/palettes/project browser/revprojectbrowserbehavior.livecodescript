@@ -55,6 +55,11 @@ on preOpenStack
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_thumbnails"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_groupThumbnails" 
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_objectType"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
    
    put empty into sDisplayArray
    loadImages
@@ -220,19 +225,18 @@ on preferenceChanged pPreference, pValue
          revIDESetPreference pPreference, pValue
          break
    end switch
-   
-   buildProjectView   
 end preferenceChanged
 
 on idePreferenceChanged pPreference, pValue
-   local tValue
-   
-   put revIDEGetPreference(pPreference) into tValue   
    switch pPreference
-      case "cShowRevolutionStacks"
+      case "ideProjectBrowser_thumbnails"
+      case "ideProjectBrowser_groupThumbnails" 
       case "ideProjectBrowser_sortOrder"
+      case "ideProjectBrowser_objectType"
+      case "ideProjectBrowser_order"
+      case "ideProjectBrowser_show"
+      default
          buildProjectView true
-         break
    end switch
 end idePreferenceChanged
 
@@ -349,8 +353,11 @@ command buildProjectView pRememberExpansion
    end repeat
    
    ## If all are switched off the show stacks
-   if tSections is empty then put "stacks" into tSections
-   revIDESetPreference "ideProjectBrowser_show",tSections
+   if tSections is empty then 
+      put "stacks" into tSections
+      revIDESetPreference "ideProjectBrowser_show",tSections
+      exit buildProjectView
+   end if
    
    if "Front Scripts" is among the items of tSections then
       put revIDEFrontScripts() into tFrontScripts
