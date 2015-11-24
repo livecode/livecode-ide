@@ -4,7 +4,7 @@ alwaysBuffer	Buffer	Basic	com.livecode.pi.boolean	true	false		false
 angle	Rotation	Basic	com.livecode.pi.number	true	false		0			0	359	1
 antialiased	Antialiased	Basic	com.livecode.pi.boolean	true	false			
 arcAngle	Arc	Basic	com.livecode.pi.number	true	false			
-armedIcon	Armed Icon	Icons	com.livecode.pi.icon	true	false		0	
+armedIcon	Armed Icon	Icons	com.livecode.pi.imageid	true	false		0	
 autoHilite	Auto Hilite	Basic	com.livecode.pi.boolean	true	false			
 autoTab	Tab on return	Basic	com.livecode.pi.boolean	true	false			
 backgroundBehavior	Behave like a background	Basic	com.livecode.pi.boolean	true	false		false	
@@ -37,7 +37,7 @@ default	Default button	Basic	com.livecode.pi.boolean	true	false
 destroyStack	Purge stack on close	Basic	com.livecode.pi.boolean	true	false		false	
 destroyWindow	Purge window on close	Basic	com.livecode.pi.boolean	true	false		false	
 disabled	Disabled	Basic	com.livecode.pi.boolean	true	false		false	
-disabledIcon	Disabled Icon	Icons	com.livecode.pi.icon	true	false		0	
+disabledIcon	Disabled Icon	Icons	com.livecode.pi.imageid	true	false		0	
 dontDither	Don't Dither	Basic	com.livecode.pi.boolean	true	false		false	
 dontSearch	Don't search	Basic	com.livecode.pi.boolean	true	false		false	
 dontWrap	Don't Wrap	Basic	com.livecode.pi.boolean	true	false			
@@ -77,13 +77,13 @@ height	Height	Position	com.livecode.pi.integer	true	false					1		1
 hGrid	Horizontal grid	Table	com.livecode.pi.boolean	true	false			
 hiliteBorder	Hilite Border	Icons	com.livecode.pi.boolean	true	false			
 hiliteColor	Text Hilite Color	Colors	com.livecode.pi.color	true	false	Hilite Fill		
-hiliteIcon	Hilite Icon	Icons	com.livecode.pi.icon	true	false		0	
+hiliteIcon	Hilite Icon	Icons	com.livecode.pi.imageid	true	false		0	
 hilitePattern	Text Hilite Pattern	Colors	com.livecode.pi.pattern	true	false	Hilite Fill		
 hotspot	Hotspot	Basic	com.livecode.pi.point	true	false			
 hotspots	Hotspots	Quicktime	com.livecode.pi.string	true	true			
-hoverIcon	Hover Icon	Icons	com.livecode.pi.icon	true	false		0	
+hoverIcon	Hover Icon	Icons	com.livecode.pi.imageid	true	false		0	
 hScrollbar	Horizontal scrollbar	Basic	com.livecode.pi.boolean	true	false			
-icon	Icon	Icons	com.livecode.pi.icon	true	false		0	
+icon	Icon	Icons	com.livecode.pi.imageid	true	false		0	
 iconic	Minimized	Basic	com.livecode.pi.boolean	true	false		false	
 id	ID	Basic	com.livecode.pi.image_id	true	false			
 ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax
@@ -195,7 +195,7 @@ underlineLinks	Underline Links	Colors	com.livecode.pi.boolean	true	false		true
 vGrid	Vertical grid	Table	com.livecode.pi.boolean	true	false			
 visible	Visible	Basic	com.livecode.pi.boolean	true	false		true	
 visitedColor	Visited Color	Colors	com.livecode.pi.color	true	false			
-visitedIcon	Visited Icon	Icons	com.livecode.pi.icon	true	false		0	
+visitedIcon	Visited Icon	Icons	com.livecode.pi.imageid	true	false		0	
 vScrollbar	Vertical Scrollbar	Basic	com.livecode.pi.boolean	true	false			
 width	Width	Position	com.livecode.pi.integer	true	false					1		1			
 windowShape	Shape	Basic	com.livecode.pi.imageID	true	false			
