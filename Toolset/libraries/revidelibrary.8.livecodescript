@@ -2563,7 +2563,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    repeat for each line tStackID in tSubStackIDs
       add 1 to tIndex
 
-      dispatch function "__readPropertiesOfControl" to stack tStackID with sStackPropertiesToRead, tCardArray[tIndex]
+      dispatch function "__readPropertiesOfControl" to stack tStackID of pStackID with sStackPropertiesToRead, tCardArray[tIndex]
       put "substack" into  tCardArray[tIndex]["type"]
       put "container" into  tCardArray[tIndex]["style"]
       put pLevel+1 into  tCardArray[tIndex]["level"]
