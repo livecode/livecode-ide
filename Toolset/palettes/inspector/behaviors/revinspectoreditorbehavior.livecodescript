@@ -12,7 +12,7 @@ function editorPropertyGet pProperty
    return sPropertyInfo[pProperty]
 end editorPropertyGet
 
-getProp editorProperty pProperty
+getProp editorProperty[pProperty]
    if pProperty is empty then exit editorProperty
    return sPropertyInfo[pProperty]
 end editorProperty
@@ -121,8 +121,8 @@ getProp editorValue[pKey]
 end editorValue
 
 on updateProperty
-  if sAllowUpdate is true then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false, sPropertyInfo["setter"]
+  if sAllowUpdate is true and not sPropertyInfo["read_only"] then
+     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
      put false into sAllowUpdate
    end if
 end updateProperty

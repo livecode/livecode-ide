@@ -555,3 +555,15 @@ on highlightObject pObjectData
    dispatch "hiliteFrameItem" to me with pObjectData["section"]
    dispatch "navSelected" to me with pObjectData["section"]
 end highlightObject
+
+# Allow text to be styled from the menubar if the editor allows it
+on ideStyleTextRequest pWhich, pValue, pSelectedChunk, pSelectedObject
+   if word 1 of pSelectedObject is "field" and the owner of pSelectedObject is not empty then
+      local tOwner
+      put the long id of the owner of pSelectedObject into tOwner
+      if the short name of tOwner is "styledText" then
+         ideStyleText pSelectedChunk, pSelectedObject, true, pWhich, pValue
+         dispatch "valueChanged" to tOwner
+      end if
+   end if
+end ideStyleTextRequest

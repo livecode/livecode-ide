@@ -1,79 +1,80 @@
 type	field
 title	Table Field
-
-Property	Default	Options	Group
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-name	Table Field	
-text		
-tooltip		
-disabled	false	
-visible	true	
-sharedText	false	
-dontWrap	true	
-lockText	true	
-opaque	true	
-traversalOn	true	
-showFocusBorder	true	
-autoTab	false	
-threeD	true	
-showBorder	true	
-borderWidth	2	
-hScrollbar	false	
-vScrollbar	true	
-scrollbarWidth	16	16,12
-autoHilite	true	
-listBehavior	false	
-multipleHilites	false	
-nonContiguousHilites	false	
-toggleHilites	false	
-fixedLineHeight	true	
-textHeight	16	
-firstIndent	0	
-dontSearch	false	
-layerMode
-behavior
-basicTableObject	true	
-maxEditableColumns		
-cellFormatting	false	
-showLines	true	
-hGrid	true	
-vGrid	true	
-tabStops	75	
-foregroundColor			Text Fill
-foregroundPattern			Text Fill		
-backgroundColor		
-backgroundPattern		
-hiliteColor		
-hilitePattern		
-borderColor		
-borderPattern		
-topColor		
-topPattern		
-bottomColor		
-bottomPattern		
-shadowColor		
-shadowPattern		
-focusColor		
-focusPattern		
-customProperties		
-blendLevel	0	0,100
-ink
-textFont
-textSize		
-textStyle
-textAlign	left
-margins	8	
-lockLoc	false	
-width	250	
-height	56	
-location
-left		
-top		
-right		
-bottom		
-layer
-dropShadow
-innerShadow	
-outerGlow
-innerGlow
-colorOverlay
+name							Table Field					
+styledText												
+text												
+tooltip												
+disabled							false					
+visible							true					
+sharedText							false					
+dontWrap							true					
+lockText							true					
+opaque							true					
+traversalOn							true					
+showFocusBorder							true					
+autoTab							false					
+threeD							true					
+showBorder							true					
+borderWidth							2					
+hScrollbar							false					
+vScrollbar							true					
+scrollbarWidth											
+autoHilite							true					
+listBehavior							false					
+multipleHilites							false					
+nonContiguousHilites							false					
+toggleHilites							false					
+fixedLineHeight							true					
+textHeight												
+firstIndent							0					
+dontSearch							false					
+layerMode												
+behavior												
+basicTableObject							true					
+maxEditableColumns												
+cellFormatting							false					
+showLines							false					
+hGrid							true					
+vGrid							true					
+tabStops							75					
+foregroundColor						Text Fill						
+foregroundPattern						Text Fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+margins							8					
+lockLoc							false					
+width							250					
+height							56					
+location												
+left												
+top												
+right												
+bottom												
+layer												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

@@ -287,6 +287,64 @@ private on __resolvePopupData @xInfo, pData
    end repeat
 end __resolvePopupData
 
+private function __propertyDataMapping
+   local tMapping 
+   put "name:1,label:2,section:3,editor:4,user_visible:5,read_only:6,group:7,default:8,options:9,subsection:10,min:11,max:12,step:13" into tMapping
+   split tMapping by comma and ":"
+   return tMapping
+end __propertyDataMapping
+
+# Processes the data
+private function __propertyDataProcessLine pLine
+   local tLineDataA, tMappingA
+   put __propertyDataMapping() into tMappingA
+   
+   repeat for each key tDataName in tMappingA
+      local tItemNumber, tPreProcessed
+      put tMappingA[tDataName] into tItemNumber
+      set the itemdelimiter to tab
+      put item tItemNumber of pLine into tPreProcessed
+      set the itemdelimiter to comma
+      
+      switch tDataName
+         case "name"
+            # Properties can use custom getters and setters.
+            # Default getter is revIDEPropertyOfObject
+            # Default setter is revIDESetPropertyOfObject
+            set the itemdelimiter to ":"
+            put item 1 of tPreProcessed into tLineDataA["name"]
+            put item 2 of tPreProcessed into tLineDataA["getter"]
+            put item 3 of tPreProcessed into tLineDataA["setter"]
+            set the itemdelimiter to comma
+            break
+         case "default"
+            set the itemdelimiter to ":"
+            if item 1 of tPreProcessed is "execute" then
+               do item 2 of tPreProcessed
+               put it into tPreProcessed
+            end if
+            set the itemdelimiter to comma
+            put __unescapeString(tPreProcessed) into tLineDataA["default"]
+            break
+         case "options"
+            # Get any popup info
+            set the itemdelimiter to ":" 
+            if tPreProcessed begins with "popup:" then
+               put true into tLineDataA["popup"]
+            else
+               replace comma with return in tPreProcessed
+            end if
+            set the itemdelimiter to comma
+            put tPreProcessed into tLineDataA["options"]
+            break
+         default
+            put tPreProcessed into tLineDataA[tDataName]
+            break
+      end switch
+   end repeat
+   return tLineDataA
+end __propertyDataProcessLine
+
 private function __propertyDataFromInfoFile pFileName
    local tPropertyInfo
    put URL ("file:" & pFileName) into tPropertyInfo
@@ -295,7 +353,6 @@ private function __propertyDataFromInfoFile pFileName
    put false into tDataStart
    
    local tCountsA, tGroupCountsA, tPopupsToResolve
-   set the itemdelimiter to tab
    repeat for each line tLine in tPropertyInfo
       if tLine begins with "-----" then
          put true into tDataStart
@@ -309,33 +366,15 @@ private function __propertyDataFromInfoFile pFileName
       if token 1 of tLine is empty then
          next repeat
       end if
-
-      put item 1 of tLine into tPropName
       
-      # Properties can use custom getters and setters.
-      # Default getter is revIDEPropertyOfObject
-      # Default setter is revIDESetPropertyOfObject
-      set the itemdelimiter to ":" 
-      local tSetter, tGetter
-      put item 2 of tPropName into tGetter
-      put item 3 of tPropName into tSetter
-      put item 1 of tPropName into tPropName
-      put tGetter into tDataA[tPropName]["getter"]
-      put tSetter into tDataA[tPropName]["setter"]
-      set the itemdelimiter to tab
+      local tLineDataA
+      put __propertyDataProcessLine(tLine) into tLineDataA
       
-      put item 2 of tLine into tDataA[tPropName]["label"]
-
-      local tSection
-      put item 3 of tLine into tSection
-      put tSection into tDataA[tPropName]["section"]
-
-      put item 4 of tLine into tDataA[tPropName]["editor"]
-      put item 5 of tLine into tDataA[tPropName]["user_visible"]
-      put item 6 of tLine into tDataA[tPropName]["read_only"]
-
+      put tLineDataA["name"] into tPropName
+      put tLineDataA into tDataA[tPropName]
+      
       local tGroupName
-      put item 7 of tLine into tGroupName
+      put tLineDataA["group"] into tGroupName
       if tGroupName is empty then
          put tDataA[tPropName]["label"] into tGroupName
       end if
@@ -343,35 +382,21 @@ private function __propertyDataFromInfoFile pFileName
          put tPropName into tGroupName
       end if
       put tGroupName into tDataA[tPropName]["group"]
-
+      
+      local tSection
+      put tLineDataA["section"] into tSection
       if tGroupCountsA[tSection][tGroupName] is empty then
          add 1 to tCountsA[tSection]["count"]
          put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupName]
       end if
       put tGroupCountsA[tSection][tGroupName] into tDataA[tPropName]["group_order"]
-
+      
       add 1 to tCountsA[tSection][tGroupName]["count"]
       put tCountsA[tSection][tGroupName]["count"] into tDataA[tPropName]["order"]
-
-      put __unescapeString(item 8 of tLine) into tDataA[tPropName]["default"]
-
-      local tOptions
-      put item 9 of tLine into tOptions
-      # Resolve all the popup info afterwards
-      if tOptions begins with "popup:" then
+      
+      if tLineDataA["popup"] is true then
          put true into tPopupsToResolve[tPropName]
-      else
-         replace comma with return in tOptions
       end if
-      put tOptions into tDataA[tPropName]["options"]
-
-      put item 10 of tLine into tDataA[tPropName]["subsection"]
-      
-      put item 11 of tLine into tDataA[tPropName]["min"]
-      put item 12 of tLine into tDataA[tPropName]["max"]
-      put item 13 of tLine into tDataA[tPropName]["step"]
-      
-      
    end repeat
    
    repeat for each key tKey in tPopupsToResolve 
@@ -418,6 +443,30 @@ private function __organisePropertyInfo pInfoA, pPopup
 end __organisePropertyInfo
 
 local sClassicObjectProperties, sClassicObjectPropertiesInfo, sClassicPropertiesInfo
+-- Use this accessor instead of the array directly to ensure inherited props
+-- are also included, eg control level defined props.
+private function __classicObjectProperties pObjID
+   local tType
+   put ideObjectTypeFromObject(pObjID) into tType
+   
+   return __classicObjectPropertiesFromType(tType)
+end __classicObjectProperties
+
+private function __classicObjectPropertiesFromType pType
+   set the itemdel to "."
+   switch the last item of pType
+      case "Card"
+      case "Stack"
+      case "DataGrid"
+         return sClassicObjectProperties[pType]
+      default
+         local tPropsA
+         put sClassicObjectProperties[pType] into tPropsA
+         union tPropsA with sClassicObjectProperties["com.livecode.interface.Control"] recursively
+         return tPropsA
+   end switch
+end __classicObjectPropertiesFromType
+
 private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    local tObjectData
    
@@ -425,7 +474,7 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    put URL ("file:" & pFile) into tObjectData
    
    # Parse the file into a structure array
-   local tObjectPropertiesA, tPropertyName, tCountsA, tGroupCountsA, tSection
+   local tObjectPropertiesA, tCountsA, tGroupCountsA
    set the itemdel to tab
    
    local tDataStart, tDataA
@@ -433,77 +482,70 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
    repeat for each line tLine in tObjectData
       if tLine is empty then next repeat
       
-      put item 1 of tLine into tPropertyName
-      
-      if tPropertyName is "type" then
-         put item 2 of tLine into sClassicObjectProperties[pObjectType]["type"]
-         next repeat
-         # Allow 'display title' of classic controls to be specified in property definition file
-      else if tPropertyName is "title" and not tDataStart then
-         put item 2 of tLine into sClassicObjectProperties[pObjectType]["title"]
-      else if tPropertyName begins with "-----" then
+      if tLine begins with "-----" then
          put true into tDataStart
          next repeat
-      else if tDataStart is false then
-         next repeat
-      else
-         local tGroupLabel
-         put item 4 of tLine into tGroupLabel
-         if tGroupLabel is empty then
-            put pPropInfoA[tPropertyName]["group"] into tGroupLabel
-         else
-            # If group label is not empty, it overrides the target group from the property spec file
-            put tGroupLabel into pPropInfoA[tPropertyName]["group"]
-         end if
-         
-         put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
-         
-         # Override the section if necessary
-         put item 6 of tLine into tSection
-         if tSection is empty then
-            put pPropInfoA[tPropertyName]["section"] into tSection
-         else
-            put tSection into pPropInfoA[tPropertyName]["section"]
-         end if
-         
-         # The groups are ordered by their appearance in the spec file
-         if tGroupCountsA[tSection][tGroupLabel] is empty then
-            add 1 to tCountsA[tSection]["count"]
-            put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
-         end if
-         put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
-         
-         add 1 to tCountsA[tSection][tGroupLabel]["count"]
-         put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
-         
-         # Get the per-object default value of this property
-         local tDefault
-         put __unescapeString(item 2 of tLine) into tDefault
-         if tDefault is not empty then
-            if tDefault is "empty" then
-               put empty into tDefault
-            end if
-            put tDefault into pPropInfoA[tPropertyName]["default"]
-         end if
-         put pPropInfoA[tPropertyName]["default"] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]["default"]
-         
-         # If this is an enum property, there are per-object options
-         local tOptions
-         put item 3 of tLine into tOptions
-         if tOptions is not empty then
-            replace comma with return in tOptions
-            put tOptions into pPropInfoA[tPropertyName]["options"]
-         end if
-         
-         # Read any per-object 'read-only' data
-         local tReadOnly
-         put item 5 of tLine into tReadOnly
-         if tReadOnly is not empty then
-            put tReadOnly into pPropInfoA[tPropertyName]["read_only"]
-         end if
-         
-         put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
       end if
+      
+      local tLineDataA
+      put __propertyDataProcessLine(tLine) into tLineDataA
+      
+      if tLineDataA["name"] is "type" then
+         put tLineDataA["label"] into sClassicObjectProperties[pObjectType]["type"]
+         next repeat
+      end if
+      # Allow 'display title' of classic controls to be specified in property definition file
+      if tLineDataA["name"] is "title" and not tDataStart then
+         put tLineDataA["label"] into sClassicObjectProperties[pObjectType]["title"]
+         next repeat
+      end if
+      
+      if tDataStart is false then
+         next repeat
+      end if
+      
+      local tPropertyName
+      put tLineDataA["name"] into tPropertyName
+      
+      repeat for each key tOverride in tLineDataA
+         if tLineDataA[tOverride] is not empty then
+            put tLineDataA[tOverride] into pPropInfoA[tPropertyName][tOverride]
+         end if
+      end repeat
+      
+      # Default can override to empty if it is the string "empty"
+      if tLineDataA["default"] is not empty then
+         if tLineDataA["default"] is "empty" then
+            put empty into tLineDataA["default"]
+         end if
+         put tLineDataA["default"] into pPropInfoA[tPropertyName]["default"]
+      end if
+      
+      local tGroupLabel
+      put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+      if tGroupLabel is empty then
+         put pPropInfoA[tPropertyName]["label"] into tGroupLabel
+      end if
+      if tGroupLabel is empty then
+         put tPropertyName into tGroupLabel
+      end if
+      put tGroupLabel into pPropInfoA[tPropertyName]["group"]
+      
+      local tSection
+      put pPropInfoA[tPropertyName]["section"] into tSection
+      
+      # The groups are ordered by their appearance in the spec file
+      if tGroupCountsA[tSection][tGroupLabel] is empty then
+         add 1 to tCountsA[tSection]["count"]
+         put tCountsA[tSection]["count"] into tGroupCountsA[tSection][tGroupLabel]
+      end if
+      put tGroupCountsA[tSection][tGroupLabel] into pPropInfoA[tPropertyName]["group_order"]
+      
+      add 1 to tCountsA[tSection][tGroupLabel]["count"]
+      put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+      
+      put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
+      put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
    end repeat
    
    put __organisePropertyInfo(tObjectPropertiesA) into sClassicObjectPropertiesInfo[pObjectType]
@@ -1229,18 +1271,12 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    repeat for each key tGroup in pGroupsA
       repeat for each key tProp in pGroupsA[tGroup]["proplist"]
          put tGroup into tPropMappingA[tProp]["group"]
-         put pGroupsA[tGroup]["proplist"][tProp]["getter"] into tPropMappingA[tProp]["getter"]
       end repeat
    end repeat
    
    local tDataA
    repeat for each key tKey in tPropMappingA
-      if tPropMappingA[tKey]["getter"] is empty then
-         __fetchPropertyOfControl tKey, tDataA
-      else
-         dispatch function tPropMappingA[tKey]["getter"] with the long id of the target
-         put the result into tDataA[tKey]
-      end if
+      __fetchPropertyOfControl tKey, tDataA
    end repeat
    
    local tValue, tEffective
@@ -1265,6 +1301,19 @@ end __readGroupedPropertiesOfControl
 private on __fetchPropertyOfControl pProp, @pData
    local tError
    put empty into tError
+   
+   local tObjID
+   put the long id of the target into tObjID
+   
+   local tProperties
+   put __classicObjectProperties(tObjID) into tProperties
+   
+   if tProperties["properties"][pProp]["getter"] is not empty then
+      dispatch function tProperties["properties"][pProp]["getter"] with tObjID, pProp
+      put the result into pData[pProp]
+      exit __fetchPropertyOfControl
+   end if
+   
    try
       switch pProp
          case "short name"
@@ -1284,9 +1333,6 @@ private on __fetchPropertyOfControl pProp, @pData
             break
          case "type"
             put word 1 of the name of the target into pData["type"]
-            break
-         case "customProperties"
-            put __customPropertyData(the long id of the target) into pData["customProperties"]
             break
          default
             put the pProp of the Target into pData[pProp]
@@ -1353,7 +1399,7 @@ private function __readControlPropertiesForDataView pList
    return tData
 end __readControlPropertiesForDataView
 
-function __customPropertyData pLongID
+function __customPropertyValue pLongID
    local tArray, tSets, tProps, tOldPropertySet
    put the customPropertySet of pLongID into tOldPropertySet
    put the customPropertySets of pLongID into tSets
@@ -1371,11 +1417,8 @@ function __customPropertyData pLongID
       set the customPropertySet of pLongID to empty
    end if
    set the customPropertySet of pLongID to tOldPropertySet
-   local tDataArray
-   put revIDEPropertyInfo("customProperties") into tDataArray["Custom properties"]["customProperties"]
-   put tArray into tDataArray["Custom properties"]["customProperties"]["value"][pLongID]
-   return tDataArray
-end __customPropertyData
+   return tArray
+end __customPropertyValue
 
 function __unescapeString pString
    --if pString contains "\n" then breakpoint
@@ -2864,18 +2907,24 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
       else
          local tObjectType
          put sClassicObjectProperties[pObjectTypeID]["type"] into tObjectType
-
+         
          if tObjectType is empty then return __revIDEError("Invalid classic control type ID: " && pTarget)
-
+         
          # A classic control
          do "create" && tObjectType
          put the long ID of the last control into tCreatedControlID
       end if
-
-      local tPropInfoA
+      
+      local tPropInfoA, tObjPropsA
       # Set all the properties to their default
-      repeat for each key tProperty in sClassicObjectProperties[pObjectTypeID]["properties"]
-         put sClassicObjectProperties[pObjectTypeID]["properties"][tProperty] into tPropInfoA
+      put sClassicObjectProperties[pObjectTypeID]["properties"] into tObjPropsA
+      
+      if tObjPropsA["style"]["default"] is not empty and tObjPropsA["style"]["default"] is not "no_default" then
+         revIDESetPropertyOfObject tCreatedControlID, "style", tObjPropsA["style"]["default"] 
+      end if
+      
+      repeat for each key tProperty in tObjPropsA
+         put tObjPropsA[tProperty] into tPropInfoA
          if tPropInfoA["default"] is "no_default" then next repeat
          if tPropInfoA["read_only"] is true then next repeat
          revIDESetPropertyOfObject tCreatedControlID, tProperty, tPropInfoA["default"]
@@ -3290,9 +3339,28 @@ on revIDEAlignControls pControls, pPosition
    end repeat
 end revIDEAlignControls
 
-on revIDEDistributeControlsFromPI pObjects, pValue
-   revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
-end revIDEDistributeControlsFromPI
+on revIDEAlignControlsFromPI pObjects, pProperty, pValue
+   switch pProperty
+      case "equalize"
+         revIDEEqualizeControls pObjects, pValue
+         break
+      case "align"
+         revIDEAlignControls pObjects, pValue
+         break
+      case "alignCenter"
+         revIDECenterControls pObjects, pValue
+         break
+      case "distribute"
+         revIDEDistributeControls pObjects, pValue["isHorizontal"], pValue["type"]
+         break
+      case "nudge"
+         revIDENudgeControls pObjects, pValue["direction"], pValue["increment"]
+         break
+      case "relayer"
+         revIDERelayerControls pObjects, pValue
+         break
+   end switch
+end revIDEAlignControlsFromPI
 
 on revIDEDistributeControls pObjects, pHorizontally, pType
    local tNumberOfObjects
@@ -3449,10 +3517,6 @@ on revIDEEqualizeControls pControls, pPosition
       end repeat
    end if
 end revIDEEqualizeControls
-
-on revIDENudgeControlsFromPI pObjectList, pValue
-   revIDENudgeControls pObjectList, pValue["direction"], pValue["increment"]
-end revIDENudgeControlsFromPI
 
 on revIDENudgeControls pObjectList, pDirection, pAmount
    local tObj, tLoc
@@ -4447,10 +4511,6 @@ function __revIDEPropertiesInfoOfSection pObjectList, pSection
 end __revIDEPropertiesInfoOfSection
 
 function revIDEPropertiesInfoOfSection pObjectList, pSection
-   if pSection is "Custom" then
-      return revIDECustomPropertiesInfo(pObjectList)
-   end if
-
    local tSharedPropertiesA
    put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedPropertiesA
 
@@ -4462,35 +4522,49 @@ function revIDEPropertiesInfoOfSection pObjectList, pSection
    end if
 end revIDEPropertiesInfoOfSection
 
+private on __setPropertyOfObject pObject, pProperty, pValue
+   if pProperty is "customProperties" then
+      put true into sLockUpdates
+   end if
+   
+   local tProperties
+   put __classicObjectProperties(pObject) into tProperties
+   
+   if tProperties["properties"][pProperty]["setter"] is not empty then
+      dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
+   else
+      set the pProperty of pObject to pValue
+   end if
+   
+end __setPropertyOfObject
+
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    local tThrottlePropertyChanged
    put false into tThrottlePropertyChanged
    if the number of lines in pObjectList > 1 then
       put true into tThrottlePropertyChanged
    end if
-
+   
    if tThrottlePropertyChanged or pLockUpdates then
       put true into sLockUpdates
    end if
-
-   repeat for each line tObject in pObjectList
-      if pProperty is "customProperties" then
-         put true into sLockUpdates
-         revIDECustomPropertySet pObjectList, pValue
-      else if pProperty contains "dgProps" then
-         repeat for each key tKey in pValue
-            set the dgProps[tKey] of tObject to pValue[tKey]
-         end repeat
-      else
-         set the pProperty of tObject to pValue
-      end if
-   end repeat
-
+   
+   # Multi-object properties require the object list to be passed
+   local tMultiObjectSetter
+   put sClassicObjectProperties["com.livecode.interface.MultipleObjects"]["properties"][pProperty]["setter"] into tMultiObjectSetter
+   if tMultiObjectSetter is not empty then
+      dispatch tMultiObjectSetter with pObjectList, pProperty, pValue
+   else
+      repeat for each line tObject in pObjectList
+         __setPropertyOfObject tObject, pProperty, pValue
+      end repeat
+   end if
+   
    if sLockUpdates then
       ideMessageSendWithParameters "idePropertyChanged", pObjectList
       put false into sLockUpdates
    end if
-
+   
 end revIDEPropertySet
 
 local sStoredPropsA
@@ -4502,66 +4576,26 @@ function revIDEPropertyRetrieveStored pObjectList, pProperty
    return sStoredPropsA[pObjectList][pProperty]
 end revIDEPropertyRetrieveStored
 
-private function __customPropInfo pObject
-   local tInfoA
-   put revIDEPropertyInfo("customProperties") into tInfoA[1]["grouplist"][1]["proplist"][1]
-   put "Custom Properties" into tInfoA[1]["grouplist"][1]["Label"]
-end __customPropInfo
+function revIDECustomPropertiesGet pObjectID, pProperty
+   return __customPropertyValue(pObjectID)
+end revIDECustomPropertiesGet
 
-function revIDECustomPropertiesInfo pObjectList
-   local tFirst, tCustomPropsA, tObjectList
-   put true into tFirst
-   repeat for each line tObject in tObjectList
-      if tFirst then
-         put __customPropInfo(tObject) into tCustomPropsA
-         put false into tFirst
-         next repeat
-      end if
-
-      union tCustomPropsA with __customPropInfo(tObject) recursively
-   end repeat
-
-   return tCustomPropsA
-end revIDECustomPropertiesInfo
-
-on revIDECustomPropertySet pObjectList, pValue
-   repeat for each line tObject in pObjectList
-      local tOldPropertySet
-      put the custompropertyset of tObject into tOldPropertySet
-      set the custompropertysets of tObject to empty
-      if pValue is not empty then
-         repeat for each key tKey in pValue
-            set the custompropertyset of tObject to tKey
-            set the customKeys of tObject to the keys of pValue[tKey]
-            set the customProperties of tObject to pValue[tKey]
-         end repeat
-      else
-         set the custompropertyset of tObject to empty
-         set the customKeys of tObject to empty
-      end if
-      set the custompropertyset of tObject to tOldPropertySet
-   end repeat
-end revIDECustomPropertySet
-
-function revIDECustomProperty pObjectList, pSet, pProperty
-   return the pSet[pProperty] of line 1 of pObjectList
-end revIDECustomProperty
-
-function revIDECustomProperties pObjectList
-   local tFirst, tCustomPropsA
-   put true into tFirst
-   repeat for each line tObject in pObjectList
-      if tFirst then
-         put __customPropertyData(tObject) into tCustomPropsA
-         put false into tFirst
-         next repeat
-      end if
-
-      union tCustomPropsA with __customPropInfo(tObject) recursively
-   end repeat
-
-   return tCustomPropsA
-end revIDECustomProperties
+on revIDECustomPropertiesSet pObject, pProperty, pValue
+   local tOldPropertySet
+   put the custompropertyset of pObject into tOldPropertySet
+   set the custompropertysets of pObject to empty
+   if pValue is not empty then
+      repeat for each key tKey in pValue
+         set the custompropertyset of pObject to tKey
+         set the customKeys of pObject to the keys of pValue[tKey]
+         set the customProperties of pObject to pValue[tKey]
+      end repeat
+   else
+      set the custompropertyset of pObject to empty
+      set the customKeys of pObject to empty
+   end if
+   set the custompropertyset of pObject to tOldPropertySet
+end revIDECustomPropertiesSet
 
 private on __populatePropertyArray pObject, pPropertyValues, @xPropertiesA
    repeat for each line tPropertyName in the keys of pPropertyValues
@@ -4612,10 +4646,6 @@ function revIDEPropertiesOfObjects pObjectList, pPropertyList
 end revIDEPropertiesOfObjects
 
 function revIDEPropertiesOfSection pObjectList, pSection
-   if pSection is "Custom" then
-      return revIDECustomProperties(pObjectList)
-   end if
-
    local tSharedProperties
    put __revIDEPropertiesInfoOfSection(pObjectList, pSection) into tSharedProperties
    # Error if we didn't get an array back
@@ -5032,6 +5062,14 @@ command CreateTemplateForControl pStack
 
    return theTemplateGroup
 end CreateTemplateForControl
+
+on revIDESetDataGridProperty pObj, pProperty, pValue
+   set the dgProps[pProperty] of pObj to pValue
+end revIDESetDataGridProperty
+
+function revIDEGetDataGridProperty pObject, pProperty
+   return the dgProps[pProperty] of pObject
+end revIDEGetDataGridProperty
 
 #############
 # Standalone Settings
@@ -6753,35 +6791,57 @@ on revIDEChoosePointerTool
    revIDESetTool "pointer"
 end revIDEChoosePointerTool
 
-on revIDEStyleText pWhich, pValue
-   local tSelectedObject, tSelectedChunk, tTarget, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition,
-
-   if the selectedChunk is empty and the selectedObject is empty then
-      exit revIDEStyleText
+private function ideUserCanStyleText pObject
+   if the owner of pObject is not empty then
+      if the short name of the owner of pObject is "styledText" then
+         return true
+      end if
    end if
+   
+   return false
+end ideUserCanStyleText
 
-   if the selectedfield is not empty then
-      put the long ID of the selectedField into tSelectedObject
-      put the vScroll of the selectedfield into tFieldVScrollPosition
-      put the hScroll of the selectedfield into tFieldHScrollPosition
-      if the selectedChunk is not empty then
-         put the selectedChunk into tSelectedChunk
-         put word 1 to 4 of tSelectedChunk & " " & tSelectedObject into tTarget
+on ideActionStyleText pWhich, pValue
+   local tSelectedObject, tSelectedChunk, tIsField
+   if the selectedField is not empty then
+      put the long id of the selectedField into tSelectedObject
+      put true into tIsField
+   else if the selectedObject is not empty then
+      put the long id of the selectedObject into tSelectedObject
+   end if
+   
+   put the selectedChunk into tSelectedChunk
+   
+   local tTargetStack
+   put revIDEStackOfObject(tSelectedObject) into tTargetStack
+   if revIDEStackIsIDEStack(tTargetStack) then
+      // Allow IDE stacks to handle whether user text style actions are valid on the target
+      dispatch "ideStyleTextRequest" to tTargetStack with pWhich, pValue, tSelectedChunk, tSelectedObject
+   else
+      ideStyleText tSelectedChunk, tSelectedObject, tIsField, pWhich, pValue
+   end if
+end ideActionStyleText
+
+on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
+   local tSelectedObject, tSelectedChunk, tTarget, tTargetStack, tFieldVScrollPosition, tFieldHScrollPosition,
+   
+   if pSelectedChunk is empty and pSelectedObject is empty then
+      exit ideStyleText
+   end if
+   
+   if pIsField then
+      put the vScroll of pSelectedObject into tFieldVScrollPosition
+      put the hScroll of pSelectedObject into tFieldHScrollPosition
+      if pSelectedChunk is not empty then
+         put pSelectedChunk into tSelectedChunk
+         put word 1 to 4 of tSelectedChunk & " " & pSelectedObject into tTarget
       end if
    else
-      put the long ID of the selectedObject into tSelectedObject
+      put the long ID of pSelectedObject into tSelectedObject
       put tSelectedObject into tTarget
    end if
-   put revIDEStackOfObject(tSelectedObject) into tTargetStack
-   // We need to ignore actions that are performed on LiveCode palettes unless specifically allowed
-   if revOKTarget(tTargetStack) then
-      // Add IDE Exception here that are allowed to have their text manipulated
-      if the short name of tSelectedObject is not among the words of "htmltext" then
-         exit revIDEStyleText
-      end if
-   end if
-
-   switch pWhich
+   
+   switch pWhich 
       case "plain"
          set the textStyle of tTarget to empty
          break
@@ -6823,7 +6883,7 @@ on revIDEStyleText pWhich, pValue
          else if pValue is "Other..." then
             ask "Choose the text size"
             if it is empty then
-               exit revIDEStyleText
+               exit ideStyleText
             else
                set textSize of tTarget to it
             end if
@@ -6836,75 +6896,74 @@ on revIDEStyleText pWhich, pValue
          break
       case "align"
          // If there is a selection we want to sent the alignment of the paragraph(s) in question
-         if the selectedChunk is not empty then
+         if pSelectedChunk is not empty then
             local tStartChar, tEndChar, tStartPara, tEndPara, tParaFirstChar, tParaLastChar
-            put word 2 of the selectedChunk into tStartChar
-            put word 4 of the selectedChunk into tEndChar
-
-            put tStartChar && tEndChar
+            put word 2 of pSelectedChunk into tStartChar
+            put word 4 of pSelectedChunk into tEndChar
+            
             put the lineIndex of char tStartChar of tTarget into tStartPara
             put the lineIndex of char tEndChar of tTarget into tEndPara
-
+            
             repeat with x = tStartPara to tEndPara
                put the charindex of line x of tTarget into tParaFirstChar
                put the charindex of line x of tTarget + the length of line x of tTarget - 1 into tParaLastChar
                set the textAlign of char tParaFirstChar to tParaLastChar of tTarget to pValue
             end repeat
-
+            
          else
             set textAlign of tTarget to pValue
          end if
          break
    end switch
-
-   if the selectedfield is not empty then
-      set the vScroll of the selectedfield to tFieldVScrollPosition
-      set the hScroll of the selectedfield to tFieldHScrollPosition
+   
+   if pIsField then
+      set the vScroll of pSelectedObject to tFieldVScrollPosition
+      set the hScroll of pSelectedObject to tFieldHScrollPosition
    end if
-end revIDEStyleText
+end ideStyleText
 
 on revIDEStyleTextPlain
-   revIDEStyleText "plain"
+   ideActionStyleText "plain"
 end revIDEStyleTextPlain
 
 on revIDEStyleTextBold
-      revIDEStyleText "bold"
+      ideActionStyleText "bold"
 end revIDEStyleTextBold
 
 on revIDEStyleTextItalic
-      revIDEStyleText "italic"
+      ideActionStyleText "italic"
 end revIDEStyleTextItalic
 
 on revIDEStyleTextUnderline
-      revIDEStyleText "underline"
+      ideActionStyleText "underline"
 end revIDEStyleTextUnderline
 
 on revIDEStyleTextStrikeOut
-      revIDEStyleText "strikeout"
+      ideActionStyleText "strikeout"
 end revIDEStyleTextStrikeOut
 
 on revIDEStyleTextBox
-      revIDEStyleText "box"
+      ideActionStyleText "box"
 end revIDEStyleTextBox
 
 on revIDEStyleText3DBox
-      revIDEStyleText "threedbox"
+      ideActionStyleText "threedbox"
 end revIDEStyleText3DBox
 
 on revIDEStyleTextLink
-      revIDEStyleText "link"
+      ideActionStyleText "link"
 end revIDEStyleTextLink
 
 on revIDEStyleTextSubscript
-      revIDEStyleText "subscript"
+      ideActionStyleText "subscript"
 end revIDEStyleTextSubscript
 
 on revIDEStyleTextSuperscript
-      revIDEStyleText "superscript"
+      ideActionStyleText "superscript"
 end revIDEStyleTextSuperscript
 
 on revIDESetTextFont pFont
-      revIDEStyleText "font", pFont
+      ideActionStyleText "font", pFont
 end revIDESetTextFont
 
 on revIDESetTextSize pSize
@@ -6912,11 +6971,11 @@ on revIDESetTextSize pSize
 end revIDESetTextSize
 
 on revIDESetTextColor pColor
-      revIDEStyleText "color", pColor
+      ideActionStyleText "color", pColor
 end revIDESetTextColor
 
 on revIDESetTextAlign pAlign
-      revIDEStyleText "align", pAlign
+      ideActionStyleText "align", pAlign
 end revIDESetTextAlign
 
 on revIDEActionClearAllBreakpoints
@@ -9183,18 +9242,18 @@ end ideCorePropertyInspectorRefreshPropertyLabels
 #
 ##################################################
 
-on revIDESetGeometry pObjectList, pGeometryArray
-   revSetGeometryObject pObjectList
+on revIDESetGeometry pObject, pProperty, pGeometryArray
+   revSetGeometryObject pObject
    repeat for each key tKey in pGeometryArray["geometry"]
       revSetGeometry tKey, pGeometryArray["geometry"][tKey]
    end repeat
 end revIDESetGeometry
 
-function revIDEGetGeometry pObjectList
+function revIDEGetGeometry pObject, pProperty
    local tValue
 
-   revSetGeometryObject pObjectList
-   put line 1 of pObjectList into tValue["object"]
+   revSetGeometryObject pObject
+   put pObject into tValue["object"]
    put revGetGeometry() into tValue["geometry"]
    return tValue
 end revIDEGetGeometry
