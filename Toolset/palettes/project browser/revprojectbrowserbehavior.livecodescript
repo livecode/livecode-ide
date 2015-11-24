@@ -51,6 +51,7 @@ on preOpenStack
    revIDESubscribe "ideReleaseStack"
    
    revIDESubscribe "ideNameChanged"
+   revIDESubscribe "ideMainstackChanged"
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
@@ -164,9 +165,41 @@ on ideResumeStack pTarget
    --   highlightObjects tObject
 end ideResumeStack
 
-on ideNameChanged pTarget
-   updateObjectRows pTarget, "name", the short name of pTarget
+on ideNameChanged pOldName, pNewName, pTarget
+   # if the target is a stack, we need to deal with the name change
+   # separately, as the long id is changed.
+   if word 1 of pTarget is "stack" then
+      local tOldTarget
+      put pTarget into tOldTarget
+      put quote & pOldName & quote into word 2 of tOldTarget
+      deleteStackFromProjectBrowser tOldTarget
+      addStackToProjectBrowser pTarget
+      exit ideNameChanged
+   end if
+   
+   updateObjectRows pTarget, "name", pNewName
 end ideNameChanged
+
+on ideMainstackChanged pOldName, pNewName, pTarget
+   # The long id of the target will have changed.
+   # Try and find the old stack which will have been added to the pb
+   local tOldTarget
+   # First check if the target was previously the substack of another stack
+   local tDeleted
+   put pTarget into tOldTarget
+   put quote & pOldName & quote into word 5 of tOldTarget
+   deleteStackFromProjectBrowser tOldTarget
+   put the result into tDeleted
+   
+   # Otherwise the target was previously a mainstack
+   if not tDeleted then
+      put word 1 to 2 of pTarget into tOldTarget
+      deleteStackFromProjectBrowser tOldTarget
+      put the result into tDeleted
+   end if
+   
+   addStackToProjectBrowser pTarget
+end ideMainstackChanged
 
 on preferenceChanged pPreference, pValue
    local tOldValue
