@@ -120,11 +120,7 @@ on ideNewCard pTarget
 end ideNewCard
 
 on ideNewStack pTarget
-   if the mainStack of pTarget is the short name of pTarget then
-      addStackToProjectBrowser pTarget
-   else
-      addSubStackToProjectBrowser pTarget
-   end if
+   addStackToProjectBrowser pTarget
 end ideNewStack
 
 on ideControlDeleted pTarget
@@ -150,16 +146,12 @@ end ideReleaseStack
 on ideOpenStack pTarget
    local tStack
    if word 1 of pTarget  is "card" then
-      put the name of the owner of pTarget into tStack
+      put ideStackOfObject(pTarget) into tStack
    else if word 1 of pTarget is "stack" then
       put pTarget into tStack
    end if
    
-   if the mainStack of tStack is the short name of tStack then
-      addStackToProjectBrowser tStack
-   else
-      addSubStackToProjectBrowser tStack
-   end if
+   addStackToProjectBrowser tStack
 end ideOpenStack
 
 on ideDestroyStack pTarget
@@ -1372,8 +1364,17 @@ end levelConnectors
 #######################################
 
 on addStackToProjectBrowser pTarget
+   if not exists(pTarget) then
+      exit addStackToProjectBrowser
+   end if
+   
    # If the target has already been added then don't do anything
    if getRow(pTarget) is not empty then
+      exit addStackToProjectBrowser
+   end if
+   
+   if word 3 of pTarget is "of" then
+      addSubstackToProjectBrowser pTarget
       exit addStackToProjectBrowser
    end if
    
@@ -1393,15 +1394,15 @@ on addStackToProjectBrowser pTarget
    end if
    put tVisibleRows into sDisplayArray["visible object keys"]
    
-   refreshProjectView
+   buildProjectView true
 end addStackToProjectBrowser
 
 on addSubstackToProjectBrowser pTarget
-   local tVisbleRows, tParentID, tParentRow, tIndex, tParentExpanded, tVisibleRows, tVisibleRows2
+   local tParentID, tParentRow, tIndex, tParentExpanded, tVisibleRows, tVisibleRows2
    local tChildren, tSubStackInfo, tLevelConnectors
    
    put sDisplayArray["visible object keys"] into tVisibleRows
-   put the long name of stack (the mainStack of pTarget) into tParentID
+   put ideMainStackOfObject(pTarget) into tParentID
    put getRow(tParentID) into tParentRow
    if tParentRow is empty then exit addSubstackToProjectBrowser
    put sDisplayArray["objects"][tParentRow]["expanded"] into tParentExpanded
@@ -1462,7 +1463,7 @@ on addSubstackToProjectBrowser pTarget
    if the last char of tVisibleRows2 is comma then delete the last char of tVisibleRows2
    put tVisibleRows2 into sDisplayArray["visible object keys"]
    
-   refreshProjectView
+   buildProjectView true
 end addSubstackToProjectBrowser
 
 on addCardToProjectBrowser pTarget
@@ -1760,6 +1761,10 @@ on addControlToProjectBrowser pTarget
 end addControlToProjectBrowser   
 
 on deleteStackFromProjectBrowser pTarget
+   if getRow(pTarget) is empty then
+      return false
+   end if
+   
    local tVisibleRows, tRow, tChildren, tChildOffset
    
    put sDisplayArray["visible object keys"] into tVisibleRows
@@ -1796,6 +1801,7 @@ on deleteStackFromProjectBrowser pTarget
    put tVisibleRows into sDisplayArray["visible object keys"]
    
    refreshProjectView
+   return true
 end deleteStackFromProjectBrowser
 
 on deleteCardFromProjectBrowser pTarget
