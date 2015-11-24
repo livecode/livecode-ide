@@ -181,8 +181,8 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Application Overview..."
-         revInternal__InitialiseApplicationOverview
+         revInternal__setSplashStatus "Loading Project Browser..."
+         revInternal__InitialiseProjectBrowser
          put the result into tSuccess
       end if
       
@@ -1398,14 +1398,14 @@ command revInternal__InitialiseMenus
    return true
 end revInternal__InitialiseMenus
 
-command revInternal__InitialiseApplicationOverview
-   revInternal__Log "Enter", "Application Overview Initialisation"
-   
-   if the cAppOverview of stack "revPreferences" then
+command revInternal__InitialiseProjectBrowser
+   revInternal__Log "Enter", "Project Browser Initialisation"
+
+   if the cAppOverview of stack "revPreferences" and there is a stack "revApplicationOverview" then
       set the _ideoverride of stack "revApplicationOverview" to true
       toplevel "revApplicationOverview"
    end if
-   
+
    // EJB
    if there is a stack "revProjectBrowser" then
       if the cIDEProjectBrowserOpen of stack "revPreferences" is not false then
@@ -1413,10 +1413,10 @@ command revInternal__InitialiseApplicationOverview
       end if
    end if
    
-   revInternal__Log "Leave", "Application Overview Initialisation"
+   revInternal__Log "Leave", "Project Browser Initialisation"
    
    return true
-end revInternal__InitialiseApplicationOverview
+end revInternal__InitialiseProjectBrowser
 
 command revInternal__InitialiseMessageBox
   revInternal__Log "Enter", "Message Box Initialisation"
