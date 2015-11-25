@@ -41,7 +41,7 @@ on TestBug16429
    create button
    put the long id of it into tButtonID
    
-   revIDECustomPropertySet tButtonID, tCustomPropsArray
+   revIDECustomPropertiesSet tButtonID, "", tCustomPropsArray
    
    TestAssert "custom props set", the cProp of tButtonID is "cProp-empty"
    
@@ -56,11 +56,11 @@ on TestBug16429
    set the cProp2 of tButtonID to "cProp2-empty"
    
    local tArray
-   put revIDECustomProperties(tButtonID) into tArray
+   put revIDECustomPropertiesGet(tButtonID) into tArray
    
    put "cProp2-customPropSet" into tCustomPropsArray["customPropSet"]["cProp2"]
    put "cProp2-empty" into tCustomPropsArray[""]["cProp2"]
    
-   TestAssert "custom props round trip", tArray["Custom properties"]["customProperties"]["value"][tButtonID] is tCustomPropsArray
+   TestAssert "custom props round trip", tArray is tCustomPropsArray
    
 end TestBug16429
