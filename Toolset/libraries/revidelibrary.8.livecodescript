@@ -970,6 +970,7 @@ function ideObjectTypeFromObject pObjectID
          break
       case "graphic"
          switch the style of pObjectID
+            case "text"
             case "rectangle"
                return "com.livecode.interface.classic.RectangleGraphic"
                break
@@ -979,6 +980,7 @@ function ideObjectTypeFromObject pObjectID
             case "line"
                return "com.livecode.interface.classic.LineGraphic"
                break
+            case "arc"
             case "oval"
                return "com.livecode.interface.classic.OvalGraphic"
                break
