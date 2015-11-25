@@ -997,6 +997,9 @@ function __revIDEError pMessage
    return tErrorText
 end __revIDEError
 
+on ideThrow pMessage, pResult
+   throw __revIDEError(pMessage & return & pResult)
+end ideThrow
 
 local sControlPropertiesToRead, sCardPropertiesToRead, sStackPropertiesToRead
 

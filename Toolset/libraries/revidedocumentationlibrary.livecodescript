@@ -13,19 +13,20 @@ on ideDocsInitialize
    dispatch "revDocsOpenAPIDatabase" to stack "revDocsParser" with revIDESpecialFolderPath("API")
    put the result into tConnection
    if tConnection is not a number then
-      return tConnection
+      ideThrow "unable to open database", tConnection
    end if
    
    put tConnection into sConnection
+   return empty
 end ideDocsInitialize
 
 private function __fetchDocsData pEntryName, pLibraryName, pType
    # Ensure we have a connection
-   ideDocsInitialize
-   
-   if sConnection is not a number then
-      return empty
-   end if
+   try
+      ideDocsInitialize
+   catch tError
+      return tError
+   end try
    
    # Find the library id
    local tSQL, tLibraryID, tResult
@@ -56,13 +57,7 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
    # Execute the query, keeping the record set ID.
    put revQueryDatabase(sConnection, tSql, "tEntryName", "pType", "tLibraryID") into tRecordSet
    if the result is not a number then
-      # error - connection may have been closed, so try to reopen
-      put empty into sConnection
-      ideDocsInitialize
-      put revQueryDatabase(sConnection, tSql) into tRecordSet
-      if the result is not a number then
-         return the result
-      end if
+      return "entry" && tEntryName && "not found" & return & the result
    end if
    
    # Get the docs data from the record set
