@@ -821,7 +821,7 @@ on TestTextAreaDefaultProps
    put "true" into tPropsA["opaque"]
    put empty into tPropsA["outerGlow"]
 
-   put 16 into tPropsA["scrollbarWidth"]
+   --put 16 into tPropsA["scrollbarWidth"]
    put "false" into tPropsA["shadow"]
    put empty into tPropsA["shadowColor"]
    put 4 into tPropsA["shadowOffset"]
@@ -907,7 +907,7 @@ on TestTableFieldDefaultProps
    put "true" into tPropsA["opaque"]
    put empty into tPropsA["outerGlow"]
 
-   put 16 into tPropsA["scrollbarWidth"]
+   --put 16 into tPropsA["scrollbarWidth"]
    put "false" into tPropsA["shadow"]
    put empty into tPropsA["shadowColor"]
    put 4 into tPropsA["shadowOffset"]
@@ -994,7 +994,7 @@ on TestListFieldDefaultProps
    put "true" into tPropsA["opaque"]
    put empty into tPropsA["outerGlow"]
 
-   put 16 into tPropsA["scrollbarWidth"]
+   --put 16 into tPropsA["scrollbarWidth"]
    put "false" into tPropsA["shadow"]
    put empty into tPropsA["shadowColor"]
    put 4 into tPropsA["shadowOffset"]
