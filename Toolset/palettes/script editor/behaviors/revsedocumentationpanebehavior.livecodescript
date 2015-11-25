@@ -179,6 +179,9 @@ function revDocumentationPlatformImage pPlatform
       case "android"
          return "1094"
          break
+      default
+         return empty
+         break
    end switch
 end revDocumentationPlatformImage
 
@@ -201,7 +204,12 @@ private function renderElement pKey, pData, pIndex
          end if
       case "os"
          repeat for each element tItem in tData[pKey]
-            put "<img src=" & quote & revDocumentationPlatformImage(tItem) & quote & "></img>" after tContent
+            local tImageID
+            put revDocumentationPlatformImage(tItem) into tImageID
+            # Ignore invalid platform data
+            if tImageID is not empty then
+               put "<img src=" & quote & tImageID & quote & "></img>" after tContent
+            end if
          end repeat
          break
       case "example"
