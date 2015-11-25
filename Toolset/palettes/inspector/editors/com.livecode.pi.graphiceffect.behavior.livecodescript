@@ -41,15 +41,15 @@ on editorUpdate
    end if
    
    local tPopupData
-   put tValue["color"] into tPopupData["Color"]["effectColor"]["value"]
-   put tValue["opacity"] into item 4 of tPopupData["Color"]["effectColor"]["value"]
+   put tValue["color"] into tPopupData["Color"]["effectColor"]["value"]["popup"]
+   put tValue["opacity"] into item 4 of tPopupData["Color"]["effectColor"]["value"]["popup"]
    
-   put tValue["size"] into tPopupData["Size"]["effectSize"]["value"]
-   put tValue["spread"] into tPopupData["Spread"]["effectSpread"]["value"]
-   put tValue["distance"] into tPopupData["Distance"]["effectDistance"]["value"]
-   put tValue["blendMode"] into tPopupData["Blend Mode"]["effectBlendMode"]["value"]
-   put tValue["filter"] into tPopupData["Filter"]["effectFilter"]["value"]
-   put tValue["angle"] into tPopupData["Angle"]["effectAngle"]["value"]
+   put tValue["size"] into tPopupData["Size"]["effectSize"]["value"]["popup"]
+   put tValue["spread"] into tPopupData["Spread"]["effectSpread"]["value"]["popup"]
+   put tValue["distance"] into tPopupData["Distance"]["effectDistance"]["value"]["popup"]
+   put tValue["blendMode"] into tPopupData["Blend Mode"]["effectBlendMode"]["value"]["popup"]
+   put tValue["filter"] into tPopupData["Filter"]["effectFilter"]["value"]["popup"]
+   put tValue["angle"] into tPopupData["Angle"]["effectAngle"]["value"]["popup"]
    set the editorPopupData of me to tPopupData
    
    local tSize, tColor, tDistance, tOpacity, tSpread
@@ -138,11 +138,22 @@ on valueChanged pProperty, pValue
    if tValue is empty then
       put the storedValue of me into tValue
    end if
-   
    switch pProperty
       case "effectColor"
-         put item 1 to 3 of pValue into tValue["color"]
-         put item 4 of pValue into tValue["opacity"]
+         local tColor, tOpacity, tNumItems
+         put the number of items of pValue into tNumItems
+         if tNumItems is 3 then
+            put item 1 to 3 of pValue into tColor
+            put 100 into tOpacity
+         else if tNumItems is 4 then
+            put item 1 to 3 of pValue into tColor
+            put item 4 of pValue into tOpacity
+         else if tNumItems is 2 then
+            put item 2 of pValue into tOpacity
+            put empty into tColor
+         end if
+         put tColor into tValue["color"]
+         put tOpacity into tValue["opacity"]
          break
       case "effectSize"
       case "effectSpread"

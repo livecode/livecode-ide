@@ -33,12 +33,12 @@ on editorUpdate
    end if
    
    local tPopupData
-   put tValue["type"] into tPopupData["Type"]["gradientType"]["value"]
-   put tValue["repeat"] into tPopupData["Repeat"]["gradientRepeat"]["value"]
-   put tValue["mirror"] into tPopupData["Mirror"]["gradientMirror"]["value"]
-   put tValue["wrap"] into tPopupData["Wrap"]["gradientWrap"]["value"]
-   put tValue["ramp"] into tPopupData["Ramp"]["gradientRamp"]["value"]
-   put tValue["quality"] into tPopupData["Quality"]["gradientQuality"]["value"]
+   put tValue["type"] into tPopupData["Type"]["gradientType"]["value"]["popup"]
+   put tValue["repeat"] into tPopupData["Repeat"]["gradientRepeat"]["value"]["popup"]
+   put tValue["mirror"] into tPopupData["Mirror"]["gradientMirror"]["value"]["popup"]
+   put tValue["wrap"] into tPopupData["Wrap"]["gradientWrap"]["value"]["popup"]
+   put tValue["ramp"] into tPopupData["Ramp"]["gradientRamp"]["value"]["popup"]
+   put tValue["quality"] into tPopupData["Quality"]["gradientQuality"]["value"]["popup"]
    
    set the editorPopupData of me to tPopupData
    
