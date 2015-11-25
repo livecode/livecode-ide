@@ -50,12 +50,6 @@ on resizeStack p1, p2, p3, p4
       end if
     end repeat
     
-    if there is a stack "message box" then
-      local tDefaultStack
-      put the defaultStack into tDefaultStack
-      send "revUpdateActiveStack tDefaultStack, tDefaultStack" to stack "message box"
-    end if
-    
   end if
   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
     pass resizeStack
