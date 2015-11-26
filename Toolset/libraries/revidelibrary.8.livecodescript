@@ -6195,12 +6195,13 @@ on revIDESaveStackAs pStackID, pFileName, pVersion
       save pStackID as pFileName
    end if
    
-   local tShortName
+   local tShortName, tResult
    put the short name of stack pStackID into tShortName
-   if the result is not empty then
+   put the result into tResult
+   if tResult is not empty then
       local tLocaliseSubstitutions
       put tShortName into tLocaliseSubstitutions[1]
-      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & the result
+      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & tResult
       close stack "revSaving"
    else
       global gRevStackStatus
