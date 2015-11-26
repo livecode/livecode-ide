@@ -6316,8 +6316,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
       if it is revIDELocalise("Cancel") then
          return "Cancelled"
-      else
-         delete file tFilePath
       end if
    end if
 
