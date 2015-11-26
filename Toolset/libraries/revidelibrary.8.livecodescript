@@ -6050,12 +6050,11 @@ on revIDESaveStack pStackID
    
    lock messages
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack tStackName is not empty then
       try
-         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack tStackName
+         put the cREVGeneral["stackfileversion"] of stack tStackName into tStackFileVersion
       catch tError
          --
       end try
@@ -6109,14 +6108,13 @@ on revIDESaveStack pStackID
       set the defaultStack to tDefaultStack
    end try
    
-   save stack tStackName
+   save stack tStackName with format tStackFileVersion
    put the result into tSaveResult
    
    
    ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
    ## Hence the introduction of the above variable.
    set the stackFileType to tOldStackFileType
-   set the stackFileVersion to tOldStackFileVersion
    
    unlock messages
    
@@ -6187,11 +6185,15 @@ on revIDEActionSaveStack pStackID
    end if
 end revIDEActionSaveStack
 
-on revIDESaveStackAs pStackID, pFileName
+on revIDESaveStackAs pStackID, pFileName, pVersion
    if not exists (pStackID) then return __revIDEError("Target stack does not exist")
    if pFileName is empty then return __revIDEError("No path provided to save to")
-   
-   save pStackID as pFileName
+
+   if pVersion is not empty then
+      save pStackID as pFileName with format pVersion
+   else
+      save pStackID as pFileName
+   end if
    
    local tShortName
    put the short name of stack pStackID into tShortName
@@ -6342,12 +6344,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    # Because you're saving as a new stack, this fingerprint should be removed.
    revRemoveRevOnlineKey "fingerprint",tShortName
 
-   # Store the current stack file version before setting it to the value for this save
-   # It will be reset after the save was made
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
-   set the stackFileVersion to tType
-
    # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
    try
       # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
@@ -6363,9 +6359,8 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       set the defaultStack to tDefaultStackBackup
    end try
 
-   revIDESaveStackAs the long id of stack tShortName, tFilePath
+   revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
 
-   set the stackFileVersion to tOldStackFileVersion
    unlock messages
 
    return empty
