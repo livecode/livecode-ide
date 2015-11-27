@@ -853,15 +853,28 @@ end revCheckDelete
 
 on backspaceKey
    lock screen
-   if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass backspaceKey
-   else pass backSpaceKey to metaCard
+   if revCheckDelete() then 
+      if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
+         --PM-2015-10-30: [[ Bug 16304 ]] Balance lock screen
+         unlock screen
+         pass backspaceKey
+      end if
+   else 
+      pass backSpaceKey to metaCard
+   end if
    unlock screen
 end backspaceKey
 
 on deleteKey
    lock screen
-   if revCheckDelete() then if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass deleteKey
-   else pass deleteKey to metaCard
+   if revCheckDelete() then 
+      if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
+         unlock screen
+         pass deleteKey
+      end if
+   else 
+      pass deleteKey to metaCard
+   end if
    unlock screen
 end deleteKey
 
