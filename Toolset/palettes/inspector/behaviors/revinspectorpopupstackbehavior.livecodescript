@@ -7,6 +7,9 @@ on setAsBehavior pTarget
 end setAsBehavior
 
 on preOpenStack
+   local tMargin
+   put the paletteMargin of me into tMargin
+   lock messages
    set the style of the templatebutton to "standard"
    set the width of the templatebutton to "82"
    set the height of the templatebutton to "22"
@@ -14,19 +17,29 @@ on preOpenStack
    set the default of the templatebutton to true
    create button "OK"
    
-   set the topright of button "OK" to the width of me -  the palettemargin of me, the height of me
+   set the topright of button "OK" to the width of me -  tMargin, the height of me
    set the resizable of me to false
-   set the height of me to the height of me + the height of button "OK" of me + the palettemargin of me
+   set the height of me to the height of me + the height of button "OK" of me + tMargin
    
    reset the templatebutton
+   unlock messages
 end preOpenStack
 
 on openStack
-   set the left of me to the right of stack "revInspector" + 5
+   lock screen
+   lock messages
+   set the left of me to the right of revIDEStackOfObject(sTarget) + 5
+   show me
+   unlock messages
+   unlock screen
 end openStack
 
 on editorValueChanged pProperty, pValue, pLockUpdates
-   dispatch "valueChanged" to sTarget with pProperty, pValue
+   try
+      dispatch "valueChanged" to sTarget with pProperty, pValue
+   catch tError
+      send "popupDismissed" to sTarget in 0 millisecs
+   end try
 end editorValueChanged
 
 on mouseUp
