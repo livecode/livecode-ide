@@ -998,6 +998,9 @@ command revInternal__InitialiseLibraries
       answer "Error loading extensions library" & return & tError 	 	
    end try 	 	
    	    	 	
+   # AL-2015-11-15 : New documentation library
+   revInternal__LoadLibrary "revIDEDocumentationLibrary"
+   
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
@@ -1013,9 +1016,6 @@ command revInternal__InitialiseLibraries
    # OK-2008-03-11 : New debugger and metadata library
    revInternal__LoadLibrary "revDebuggerLibrary"
    revInternal__LoadLibrary "revMetadataLibrary"
-   
-   # OK-2008-06-11 : Documentation library
-   insert the script of stack "revDocumentationLibrary" into back
    
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back

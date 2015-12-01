@@ -1039,6 +1039,9 @@ function __revIDEError pMessage
    return tErrorText
 end __revIDEError
 
+on ideThrow pMessage, pResult
+   throw __revIDEError(pMessage & return & pResult)
+end ideThrow
 
 local sControlPropertiesToRead, sCardPropertiesToRead, sStackPropertiesToRead
 
@@ -4808,6 +4811,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revseleftbarbehavior.livecodescript"
       case "variablespane"
          return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
+      case "documentationpane"
+         return tPathToBehaviors & slash & "revsedocumentationpanebehavior.livecodescript"
       case "filterfield"
          return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
       case "variablescheckbox"
@@ -8947,9 +8952,16 @@ private function revIDEGetDocsAPIData
       if tLastModified < tLastGenerated then
          put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
       else
-         local tLcdoc
-         dispatch function "revDocsFormatDocFileAsJSON" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         local tLibraryArray, Lcdoc
+         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         put the result into tLibraryArray
+         
+         dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" with tLibraryArray
          put the result into tExtensionAPI
+         
+         # Update the dictionary database
+         ideDocsUpdateDatabase tLibraryArray
+         
          put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
       end if
       
@@ -9131,11 +9143,15 @@ command revIDEGenerateDistributedAPI
    # Regenerate dictionary if necessary
    if tLastModified > tLastGenerated then
       local tScriptA
-      put "LiveCode Script" into tScriptA["name"]
+      put "LiveCode Script" into tScriptA["display name"]
+      put revDocsModifyForUrl(tScriptA["display name"]) into tScriptA["name"]
       put "LiveCode" into tScriptA["author"]
       put "dictionary" into tScriptA["type"]
       # Parse the dictionary files into a structured array
       put revDocsParseDictionaryToLibraryArray(tDocsFolder) into tScriptA["doc"]
+      
+      # Update the database
+      ideDocsUpdateDatabase tScriptA
       
       local tJSON
       put revDocsFormatLibraryArrayAsJSON(tScriptA) into tJSON
@@ -9180,9 +9196,13 @@ command revIDEGenerateDistributedAPI
          end repeat
          put empty into tParsedA
       end repeat
-      put "LiveCode Builder" into tBuilderA["name"]
+      put "LiveCode Builder" into tBuilderA["display name"]
+      put revDocsModifyForUrl(tBuilderA["display name"]) into tBuilderA["name"]
       put "LiveCode" into tBuilderA["author"]
       put "dictionary" into tBuilderA["type"]
+      
+      # Update the database
+      ideDocsUpdateDatabase tBuilderA
       
       put revDocsFormatLibraryArrayAsJSON(tBuilderA) into tJSON
       put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js")
