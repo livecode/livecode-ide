@@ -253,9 +253,6 @@ command revSESetMode pMode
    send "setCurrentTab tLastSelectedPane" to group "Pane Tabs" of me
    send "update" to group "Toolbar" of me
    
-   # OK-2008-06-24 : Fix for bug where message box does not always update when entering debugging mode
-   send "revMessageBoxUpdateMode" to stack "Message Box"
-   
    actionResizeStack
 end revSESetMode
 
