@@ -2083,18 +2083,58 @@ part of the IDE.
 References: revIDEStackNameIsIDEStack (function)
 **/
 function ideUserMainStacks
-   local tMainStack, tMainStacks
-      repeat for each line tMainStack in the mainstacks
-         if revIDEStackNameIsIDEStack(tMainStack) then next repeat
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
-   return tMainstacks
+   return __ideRemoveIDEStackNamesFromList(the mainstacks)
 end ideUserMainStacks
 
+private function __ideRemoveIDEStackNamesFromList pStackNames
+   local tFiltered
+   repeat for each line tName in pStackNames
+      if revIDEStackNameIsIDEStack(tName) then next repeat
+      if tFiltered is empty then
+         put tName into tFiltered
+      else
+         put return & tName after tFiltered
+      end if
+   end repeat
+   return tFiltered
+end __ideRemoveIDEStackNamesFromList
+
+private function __ideFilterStackNameListWithPreference pStackNames
+   # Are IDE stacks required
+   local tShowIDEStacks
+   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   
+   if tShowIDEStacks then
+      return pStackNames
+   end if
+   
+   return __ideRemoveIDEStackNamesFromList(pStackNames)
+end __ideFilterStackNameListWithPreference
+
+private function __ideRemoveIDEObjectIDsFromList pObjectList
+   local tFiltered
+   repeat for each line tID in pObjectList
+      if revIDEObjectIsOnIDEStack(tID) then next repeat
+      if tFiltered is empty then
+         put tID into tFiltered
+      else
+         put return & tID after tFiltered
+      end if
+   end repeat
+   return tFiltered
+end __ideRemoveIDEObjectIDsFromList
+
+private function __ideFilterObjectIDListWithPreference pObjectList
+   # Are IDE stacks required
+   local tShowIDEStacks
+   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
+   
+   if tShowIDEStacks then
+      return pObjectList
+   end if
+   
+   return __ideRemoveIDEObjectIDsFromList(pObjectList)
+end __ideFilterObjectIDListWithPreference
 
 function revIDEStacksForDataView pIndex
    # Are IDE stacks required
@@ -2125,38 +2165,16 @@ Gets the data associated with a stack. It recurses through the cards, containers
 returns (array): An array representing a tree structure of controls and their properties.
 */
 function revIDEStacks pExpandedStackList
-   # Are IDE stacks required
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-   
    # Get list of stacks to display
    local tMainStacks
-   if tShowIDEStacks then
-      put the mainstacks into tMainStacks
-   else
-      repeat for each line tMainStack in the mainstacks
-         if revIDEStackNameIsIDEStack(tMainStack) then 
-            next repeat
-         end if
-         
-         if tMainStacks is empty then
-            put tMainStack into tMainStacks
-         else
-            put return & tMainStack after tMainStacks
-         end if
-      end repeat
-   end if
+   put __ideFilterStackNameListWithPreference(the mainstacks) into tMainStacks
    
    # Recurse through the stacks to get their data
    local tStacksData, tCount
    put 1 into tCount
    repeat for each line tStack in tMainStacks
       put empty into tStacksData[tCount]
-      --if tStack is among the lines of pExpandedStackList then
       dispatch function "__readStructureOfStack" to stack tStack with tStacksData[tCount]
-      --else
-      --dispatch function "__readPropertiesOfControl" to stack tStack with sStackPropertiesToRead, tStacksData[tCount]
-      --end if
       add 1 to tCount
    end repeat
    return tStacksData
@@ -2169,20 +2187,14 @@ returns (array): A numerically keyed (for ordering) array with property:value pa
 */
 function revIDEFrontScripts
    # Get the list of frontscripts
+   # If IDE elements are on not showing, filter the list for rev stacks
    local tFrontScripts
-   put the frontscripts into tFrontScripts
-
-   # If ID elements are on not showing, filter the list for rev stacks
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-   if tShowIDEStacks is not true then
-      filter tFrontScripts without "*/rev*"
-   end if
-
+   put __ideFilterObjectIDListWithPreference(the frontscripts) into tFrontScripts
+   
    # Create the list of properties to retrieve
    local tProperties
    put "short name" & return & "scriptlines" & return & "long id" into tProperties
-
+   
    # Loop through the frontscripts getting the required properties
    # and build the return array
    local tCount, tData
@@ -2201,16 +2213,10 @@ Gets the data associated with all backscrips.
 returns (array): A numerically keyed (for ordering) array with property:value pairs for each key.
 */
 function revIDEBackScripts
-   # Get the list of frontscripts
+   # Get the list of backscripts
+   # If IDE elements are on not showing, filter the list for rev stacks
    local tBackScripts
-   put the backscripts into tBackScripts
-
-   # If ID elements are on not showing, filter the list for rev stacks
-   local tShowIDEStacks
-   put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-   if tShowIDEStacks is not true then
-      filter tBackScripts without "*/rev*"
-   end if
+   put __ideFilterObjectIDListWithPreference(the backscripts) into tBackScripts
 
    # Create the list of properties to retrieve
    local tProperties
@@ -2236,7 +2242,7 @@ returns (array): A numerically keyed (for ordering) array with property:value pa
 function revIDEStacksInUse
    # Get the list of frontscripts
    local tStacksInUse
-   put the stacksinuse into tStacksInUse
+   put __ideFilterStackNameListWithPreference(the stacksInUse) into tStacksInUse
 
    # Create the list of properties to retrieve
    local tProperties
@@ -2529,7 +2535,11 @@ function revIDEStackProperties pStackID, pLevel
 
    dispatch function "__readPropertiesOfControl" to pStackID with sStackPropertiesToRead, tStackArray
    --put the result into tStackArray
-   put "stack" into tStackArray["type"]
+   if word 3 of pStackID is "of" then
+      put "substack" into tStackArray["type"]
+   else
+      put "stack" into tStackArray["type"]
+   end if
    put "container" into tStackArray["style"]
    put pLevel into tStackArray["level"]
    put the number of lines in the cardIDs of pStackID into tStackArray["childCount"]
@@ -2556,7 +2566,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    repeat for each line tStackID in tSubStackIDs
       add 1 to tIndex
 
-      dispatch function "__readPropertiesOfControl" to stack tStackID with sStackPropertiesToRead, tCardArray[tIndex]
+      dispatch function "__readPropertiesOfControl" to stack tStackID of pStackID with sStackPropertiesToRead, tCardArray[tIndex]
       put "substack" into  tCardArray[tIndex]["type"]
       put "container" into  tCardArray[tIndex]["style"]
       put pLevel+1 into  tCardArray[tIndex]["level"]
@@ -5559,6 +5569,21 @@ on revIDECloseStack pStackID, pDestroy
    end if
 end revIDECloseStack
 
+private on __ideRemoveFromMemory pStackID
+   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
+   revIDEHandleObjectDeleted pStackID
+   
+   local tSubstacks
+   put the subStacks of stack pStackID into tSubstacks
+   
+   lock messages -- prevent user stack saving during the close, erasing substacks
+   repeat for each line tSubStack in tSubstacks
+      close stack tSubStack
+   end repeat
+   delete stack tMainStack
+   unlock messages
+end __ideRemoveFromMemory
+
 on revIDERemoveFromMemory pStackID
    local tMainstack
    put the mainStack of stack pStackID into tMainstack
@@ -5572,22 +5597,11 @@ on revIDERemoveFromMemory pStackID
    if it is "Cancel" then 
       exit revIDERemoveFromMemory
    end if
-
-   local tStackID
-   put the long id of stack tMainStack into tStackID
    
-   # OK-2008-08-18: Bug 6932 - Update the script editor here as messages is locked when deleting the stack
-   revIDEHandleObjectDeleted the long id of stack tMainStack
-   
-   lock messages -- prevent user stack saving during the close, erasing substacks
-   repeat for each line tSubStack in tSubstacks
-      close stack tSubStack
-   end repeat
-   delete stack tMainStack
-   unlock messages
+   __ideRemoveFromMemory the long id of tMainstack
    
    # Send the 'ideDestroyStack' message
-   ideMessageSend "ideDestroyStack", tStackID
+   ideMessageSend "ideDestroyStack", pStackID
 end revIDERemoveFromMemory
 
 on revIDEActionCloseStack
@@ -5623,13 +5637,24 @@ on revIDEDeleteSubstack pSubstackID
       exit revIDEDeleteSubstack
    end if
    
-   # Detach from mainstack
-   local tStackName
-   put the short name of pSubstackID into tStackName
-   set the mainstack of pSubstackID to tStackName
-   
-   # Close and remove from memory
-   revIDECloseStack the long id of stack tStackName, true
+   if revSaveCheck(pSubstackID) is not false then
+      answer warning "Really remove the stack file" && pSubstackID && "from memory?" & cr & "Any changes made since saving will be lost" with "Cancel" or "OK" as sheet
+      if it is "Cancel" then 
+         exit revIDEDeleteSubstack
+      end if
+      
+      # Detach from mainstack
+      local tStackName
+      lock messages
+      put the short name of pSubstackID into tStackName
+      set the mainstack of pSubstackID to tStackName
+      unlock messages
+      # Close and remove from memory
+      __ideRemoveFromMemory the long id of stack tStackName
+      
+      # Send the 'ideDestroyStack' message
+      ideMessageSend "ideDestroyStack", pSubstackID
+   end if
 end revIDEDeleteSubstack
 
 /*
