@@ -9,7 +9,7 @@ on editorUpdate
    local tValue, tEffective, tEnabled
    put the editorValue of me into tValue
    
-      -- Remove noshadow and metal from the display decorations - shouldn't be required.
+   -- Remove noshadow and metal from the display decorations - shouldn't be required.
    local tItemNumber
    put itemOffset("metal", tValue) into tItemNumber
    if tItemNumber <> 0 then
@@ -43,12 +43,17 @@ on mouseUp
    if the short name of the target is "choose" then
       local tDecorations
       put field "value" of me into tDecorations
-
-      set the cDecorations of stack "revTitleBarSelector" of stack "com.livecode.pi.decorations" to tDecorations
-      sheet stack "revTitleBarSelector" of stack "com.livecode.pi.decorations"
       
-      if the cReturnValue of stack "revTitleBarSelector" of stack "com.livecode.pi.decorations" is not empty then
-         updateValue the cReturnValue of stack "revTitleBarSelector" of stack "com.livecode.pi.decorations"
+      set the cDecorations of stack "revTitleBarSelector" of stack "com.livecode.pi.decorations" to tDecorations
+      
+      local tReturnValue
+      sheet stack "revTitleBarSelector" of stack "com.livecode.pi.decorations"
+      put the cReturnValue of stack "revTitleBarSelector" of stack "com.livecode.pi.decorations" into tReturnValue
+      if tReturnValue is not empty then
+         if tReturnValue is "empty" then
+            put empty into tReturnValue
+         end if
+         updateValue tReturnValue
       end if
    end if
 end mouseUp
