@@ -7286,14 +7286,6 @@ function revIDEAvailablePaletteState
    return tState
 end revIDEAvailablePaletteState
 
-function revIDEOpenWindows
-
-end revIDEOpenWindows
-
-on revIDESendWindowToBack
-
-end revIDESendWindowToBack
-
 on revIDEDocumentationLoad pSection, pItem, pExtra
    # For now, just open the dictionary
    revIDEOpenPalette "dictionary"
@@ -8287,7 +8279,7 @@ on revIDESendCurrentWindowToBack
    if char -1 of tWindows is return then delete char -1 of tWindows
    
    local tCurrentStackName
-   put char 3 to -1 of line (lineOffset("!c",the text of me)) of the text of me into tCurrentStackName
+   put char 3 to -1 of line (lineOffset("!c",the text of menu "Window")) of the text of menu "Window" into tCurrentStackName
    delete line lineOffset(tCurrentStackName,tWindows) of tWindows
    
    if the num of lines in tWindows2 is not 0 
