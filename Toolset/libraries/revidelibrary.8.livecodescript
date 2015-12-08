@@ -4449,6 +4449,21 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
    dispatch "revDocsAddAPIAndRegenerate" to stack "revDocsParser" with tAPIJSON
 end revIDEInstallAPI
 
+on revIDEGoToLCSDictionaryEntry pTag, pType
+   revIDEGoToDictionaryEntry "livecode_script", pTag, pType
+end revIDEGoToLCSDictionaryEntry
+
+on revIDEGoToDictionaryEntry pLibrary, pTag, pType
+   send "goToEntry pLibrary, pTag, pType" to stack revIDEPaletteToStackName("dictionary") 
+end revIDEGoToDictionaryEntry
+
+on revIDEGoToWidgetAPI pKind
+   local tLibraryName, tEntry
+   put revIDEExtensionProperty(pKind, "title") into tLibraryName
+   put tolower(pKind) into tEntry
+   send "goToEntry tLibraryName,tEntry,widget" to stack revIDEPaletteToStackName("dictionary") 
+end revIDEGoToWidgetAPI
+
 #############
 # Properties API
 #############
