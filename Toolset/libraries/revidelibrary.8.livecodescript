@@ -5582,7 +5582,7 @@ private on __ideRemoveFromMemory pStackID
    repeat for each line tSubStack in tSubstacks
       close stack tSubStack
    end repeat
-   delete stack tMainStack
+   delete stack pStackID
    unlock messages
 end __ideRemoveFromMemory
 
