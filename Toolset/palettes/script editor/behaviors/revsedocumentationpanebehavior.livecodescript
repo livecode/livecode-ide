@@ -1,6 +1,7 @@
 ﻿script "revSEDocumentationPaneBehavior"
 # String representing the last searched for doc, this is what the cDoc was last set to
 local sDoc = ""
+local sTypesA
 # String returned by the last Documentation search, this can be used to reload the last doc.
 local sLastFoundDoc = ""
 
@@ -324,6 +325,7 @@ private function renderDocDictionary pTag, pType
       end repeat
    end if
    
+   put tData[1]["type"] into sTypesA[pTag]
    return renderDocEntry(tData, 1)
 end renderDocDictionary 
 
@@ -374,26 +376,14 @@ function prefGet pTag
 end prefGet
 
 on mouseUp
-   local tTag, tType, tCategory
+   local tTag, tType
    switch the short name of the target
       case "FullMode"
          renderDoc
          break
          
       case "LaunchDocs"
-         if sLastFoundDoc is not empty then
-            put item 1 of sLastFoundDoc into tTag
-            put item 2 of sLastFoundDoc into tCategory
-            put item 3 of sLastFoundDoc into tType
-            
-            if tType is empty then
-               put "dictionary" into tType
-            end if
-            
-            send "entryGoto tTag,tCategory,tType" to revDocumentationDictionaryStack() in 0 milliseconds
-         end if
-         modeless revDocumentationDictionaryStack()
-         
+         revIDEGoToLCSDictionaryEntry sDoc, sTypesA[sDoc]
          break
    end switch
 end mouseUp

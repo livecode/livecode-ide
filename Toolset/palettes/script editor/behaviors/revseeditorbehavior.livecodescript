@@ -3271,9 +3271,12 @@ on menuPick pItemName
          break
          
       case "Find in Docs"
-         local tText
+         local tText, tData
          put getClickText() into tText
-         revDocumentationGo tText
+         put ideDocsFetchLCSData(tText) into tData
+         if tData is not empty then
+            revIDEGoToLCSDictionaryEntry tText, tData[1]["type"]
+         end if
          break
          
       case "Cut"
