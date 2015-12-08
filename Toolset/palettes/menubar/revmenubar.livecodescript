@@ -1889,6 +1889,12 @@ function revMenubarContextMenu pType, pTarget
          put enableMenuItem("TopLevel Panel Stack", the menuName of pTarget is not empty) & return after tText
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
+      case "widget"
+         put "-" & return after tText
+         put "Show API" & return after tText
+         put revBuildContextSensitiveMenu(tText, pTarget) into tText
+         put tText
+         break
       case "standard"
       default
          put revBuildContextSensitiveMenu("", pTarget) into tText
@@ -1947,6 +1953,7 @@ on revMenubarPopupContextualMenu pTargets
          case "image"
          case "field"
          case "player"
+         case "widget"
             revMenubarSetContextMenu tType, tTarget
             break
          default
@@ -2245,6 +2252,11 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Pause"
          revIDETogglePauseOfPlayer
          break
+         ######## WIDGET SPECIFIC ########
+      case "Show API"
+         revIDEGoToWidgetAPI the kind of pTarget
+         break
+         
          ######## MENU SPECIFIC #########
       case "TopLevel Panel Stack"
          toplevel the menuname of pTarget
