@@ -266,8 +266,8 @@ function pbSelectedObjects
    put the dvHilitedRows of group "objectList" of me into tHilitedRows
    
    local tObjectList, tAbsoluteRow, tObject
-   repeat for each line tLine in tHilitedRows
-      put getAbsoluteRow(tLine) into tAbsoluteRow
+   repeat for each item tRow in tHilitedRows
+      put getAbsoluteRow(tRow) into tAbsoluteRow
       put sDisplayArray["objects"][tAbsoluteRow]["long id"] into tObject
       
       if tObjectList is empty then
