@@ -29,7 +29,6 @@ The HTML5 engine in this release of LiveCode has a limited range of features.  Y
 Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
-* `wait` syntax
 * networking
 
 The HTML5 engine is unlikely ever to support externals (including revdb).
