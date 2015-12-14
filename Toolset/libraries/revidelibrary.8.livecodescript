@@ -5600,7 +5600,7 @@ on revIDERemoveFromMemory pStackID
       exit revIDERemoveFromMemory
    end if
    
-   __ideRemoveFromMemory the long id of pStackID
+   __ideRemoveFromMemory the long id of stack tMainstack
    
    # Send the 'ideDestroyStack' message
    ideMessageSend "ideDestroyStack", pStackID
