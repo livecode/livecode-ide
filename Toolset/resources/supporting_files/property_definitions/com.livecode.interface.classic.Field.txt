@@ -41,7 +41,7 @@ vGrid							false
 tabStops												
 foregroundColor						Text Fill						
 foregroundPattern						Text Fill						
-backgroundColor												
+backgroundColor							white									
 backgroundPattern												
 hiliteColor												
 hilitePattern												

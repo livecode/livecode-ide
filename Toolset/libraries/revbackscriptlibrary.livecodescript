@@ -742,6 +742,7 @@ on newField
          set the height of the target to the cFieldHeight of stack "revPreferences"
       end if
    end if
+   set the backcolor of the target to white
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
    // PM-2015-09-17: [[ Bug 13826 ]] Allow a new field to appear offscreen
    revUpdateAOControls
