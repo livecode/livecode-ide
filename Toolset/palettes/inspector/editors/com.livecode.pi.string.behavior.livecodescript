@@ -1,5 +1,6 @@
 ﻿script "com.livecode.pi.string.behavior"
 constant kEffectiveTextColor = "100,100,100"
+constant kConflictedFieldColor = "193,201,215"
 
 on editorInitialize
    set the editorMinWidth of me to 25
@@ -8,10 +9,11 @@ end editorInitialize
 
 on editorUpdate
    lock screen
-   local tValue, tEffective, tEnabled
+   local tValue, tEffective, tEnabled, tConflicted
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   put the editorConflicted of me into tConflicted
    
    lock messages
    set the enabled of field 1 of me to tEnabled
@@ -25,6 +27,12 @@ on editorUpdate
       put tValue into field 1 of me
       set the textcolor of field 1 of me to empty
       set the textstyle of field 1 of me to empty
+   end if
+   
+   if tConflicted then
+      set the backcolor of field 1 of me to kConflictedFieldColor
+   else
+      set the backcolor of field 1 of me to empty
    end if
    unlock messages
    
