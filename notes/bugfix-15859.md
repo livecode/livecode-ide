@@ -1,11 +1,4 @@
 ---
 version: 8.0.0-dp-6
 ---
-# Property Inspector svgIcon editor
-
-A new editor has been added to the property inspector:
-`com.livecode.pi.svgicon`
-
-This editor allows the selection of an icon from the icon picker, with
-the property using the editor being set to the name of the icon
-picked.
+# Add Property Inspector svgIcon editor

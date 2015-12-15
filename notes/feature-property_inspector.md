@@ -1,5 +1,5 @@
 ---
-version: 8.0.0-dp-6
+version: 8.0.0-dp-3
 ---
 # Updated Property Inspector with support for widgets
 
@@ -141,11 +141,16 @@ properties with common types:
 * **com.livecode.pi.colorwithalpha**: a color swatch and dialog, and alpha value slider
 * **com.livecode.pi.enum**: an option menu
 * **com.livecode.pi.file**: a file selector
-* **com.livecode.pi.number**: a single-line field with increment/decrement twiddle
+* **com.livecode.pi.number**: a single-line field, with a slider if the property has an associated min/max and an increment/decrement twiddle if it has a step value
 * **com.livecode.pi.pattern**: a pattern selector
 * **com.livecode.pi.set**: a field with multi-select list behavior
 * **com.livecode.pi.string**: a single-line field
 * **com.livecode.pi.text**: a multi-line field
+* **com.livecode.pi.point**: an editor for a point (e.g. the
+  **hotspot** and **loc** properties)
+* **com.livecode.pi.svgicon**: an editor for an SVG icon; the property
+  using the editor gets set to the name of the icon picked
+* **com.livecode.pi.timezone**: contains a drop-down list of time zones
 
 There are also some bespoke editors for particular object properties:
 
@@ -153,6 +158,9 @@ There are also some bespoke editors for particular object properties:
 * **com.livecode.pi.datagrid**
 * **com.livecode.pi.textalign**
 * **com.livecode.pi.textstyle**
+* **com.livecode.pi.graphiceffect**
+* **com.livecode.pi.gradientramp**
+* **com.livecode.pi.script**
 
 It is our intention that ultimately a widget alone will be able to
 function as a property editor, however currently this feature is not

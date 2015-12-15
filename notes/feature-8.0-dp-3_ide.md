@@ -24,25 +24,6 @@ property information present for each object type, and the newly added
 "Object → New Widget" submenu is generated based on the currently
 loaded widget extensions.
 
-### Property Inspector
-
-A number of changes have been made to property editors in the property inspector:
-
-* The color editors now use a color swatch widget to display the
-  chosen color
-* Numeric editors have a slider if the property has an associated
-  min/max, and an increment/decrement twiddle if it has a step value.
-* The navbar widget now uses a version of itself as an editor for its
-  properties (**com.livecode.pi.navbar**)
-* A graphic effects property editor has been added
-  (**com.livecode.pi.graphiceffect**)
-* A gradient property editor has been added
-  (***com.livecode.pi.gradientramp**)
-* A script property editor has been added, which contains a button to
-  edit the selected script (**com.livecode.pi.script**)
-* A time zone property editor has been added, which contains a
-  drop-down list of time zones (**com.livecode.pi.timezone**)
-
 ### Widget metadata and the IDE
 
 Widget metadata now controls a number of additional features with
