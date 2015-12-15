@@ -1,4 +1,7 @@
-# Make Inspector's large icons default
+---
+version: 8.0.0-dp-8
+---
+# Property Inspector tabs have large icons by default
 
-The palette header size default is now "large". Moreover, a new option "largest" has been 
-added to the palette header size options.
+The default palette header size is now "large". Moreover, a new option
+"largest" has been added to the palette header size options.
