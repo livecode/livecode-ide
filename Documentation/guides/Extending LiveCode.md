@@ -1,5 +1,3 @@
-[toc]
-
 # Introduction
 
 LiveCode 8.0 is the most exciting release in the history of the technology. It provides a simple way to extend the functionality or control set of LiveCode.
@@ -648,7 +646,167 @@ Once logged in you will be taken to your extensions account page:
 1. Click to browse to your package file.
 2. Drag your package file anywhere within the grey dashed box
 
-## IDE Changes
+## Extending the LiveCode IDE
+
+The LiveCode IDE (integrated development environment) has been written using LiveCode. All the components – the Tools Palette, Property Inspector, Script Editor, Debugger, etc., are implemented as LiveCode stacks. The IDE has a series of library frontScripts and backScripts it uses to provide functionality both for the IDE and for your application. Some of these libraries are used only by the IDE (e.g. the debugger library), others (e.g. the Internet library, libURL) are copied into your standalone by the standalone builder.
+
+This design makes it easy to extend the IDE with plug-ins. If you are an advanced LiveCode developer you can also edit the IDE itself to provide custom functionality.
+
+### Creating Plug-ins
+
+You can create a plug-in to help perform tasks that you need to do regularly in the LiveCode IDE. Plug-ins are written as LiveCode stacks. (If you need to extend LiveCode using a lower level language, see the section on *Externals*, below.)
+
+To create a plug-in, save your stack into the Plugins folder, located within the My LiveCode [Edition] folder, inside your Documents folder.
+
+You can now load your stack by choosing its name from the Development -\> Plugins submenu. By default your plug-in will be loaded as a palette. This allows you to operate the controls in the plug-in while the LiveCode IDE is in pointer tool mode. This allows you to create custom "Property Inspector" style behaviors or other object editing tools.
+
+**The Plugin Settings Screen**
+
+Open the Plugin settings screen from the Development -\> Plugins submenu. Choose the plugin you have created from the Plugin menu at the top of the screen to apply settings to it.
+
+![](images/image118.png)
+
+Figure 84 – The Plugin Settings Screen
+
+**Open plugin when:**
+
+By default your plugin will load when you chose it from the plugins menu. If you want to have your plugin load whenever you start LiveCode select the "LiveCode starts up". Use this if your plugin is used to set up your environment, for example by loading stacks that you are working on or adjusting window layout. To have your plugin load when LiveCode quits choose "LiveCode quits". Use this if your plugin performs clean up tasks that you want to have run whenever you exit.
+
+**Open as:**
+
+Choose the mode you want your plugin to open as. If you choose the invisible option, your plugin stack will be loaded invisible. Use this option to create a plugin that installs a faceless library (for example by inserting a button within it into the front or backscripts) or to perform some other automated task that does not require a visible user interface.
+
+> **Note:** Loading from your plugin will not allow you to edit the plugin itself. If you want to edit the plugin, first load it from the menu then use the Application Browser to make it toplevel by right clicking on it in the list of stacks and choosing Toplevel from the popup menu.
+
+**Send messages to plugin:**
+
+In order to have your plug-in respond as you work in the IDE you need to register it to receive messages. The IDE can send a variety of messages to the current card in your plug-in as you change selection, switch tools, open and close stacks, etc. The messages that can be sent are listed below.
+
+| Message                  | Sent when                                       |
+|--------------------------|-------------------------------------------------|
+| revCloseStack            | The user closes a stack in the IDE              |
+| revEditScript            | The user chooses "edit script"                  |
+| revIDChanged             | The ID of an object is changed                  |
+| revMouseMove             | The mouse is moved                              |
+| revMoveControl           | A control is moved with the pointer tool        |
+| revNameChanged           | The name of an object is changed                |
+| revNewTool               | A new tool is chosen                            |
+| revPreOpenCard           | A preOpenCard message is sent on changing card  |
+| revPreOpenStack          | A preOpenStack message is sent on opening stack |
+| revResizeControl         | A control is resized using the pointer tool     |
+| revResizeStack           | A stack is resized                              |
+| revResumeStack           | A stack is activated                            |
+| revSaveStackRequest      | The save command is executed                    |
+| revSelectedObjectChanged | The selection is changed with the pointer tool  |
+| revSelectionChanged      | The text selection is changed                   |
+| revShutdown              | LiveCode is quit                                |
+
+> **Tip:** Internally the IDE implements these plugin messages by intercepting system messages sent my LiveCode in the IDE frontScripts and backScripts then sending out a corresponding message to any loaded plugin. You can look up these messages in the LiveCode Dictionary by removing the "rev" in front of the messages above.
+
+For example, to have your plugin update whenever an object is selected with the pointer tool, select the `revSelectedObjectChanged`message. Then insert the following handler into your plugin card script:
+
+```
+on revSelectedObjectChanged
+	-- store the list of selected objects
+	put the selObj into tObjectsList
+	repeat for each line l in tObjectsList
+		-- insert code to operate on each object here
+	end repeat
+end revSelectedObjectChanged
+```
+
+### Editing the IDE
+
+> **Caution:** Editing the IDE can easily cause LiveCode to become unusable. We recommend that only advanced users attempt to edit the IDE. We recommend you back up the IDE prior to making any changes. We do not recommend attempting to edit the IDE while working on any mission critical project.
+
+To edit the LiveCode IDE, turn on *LiveCode UI Elements in Lists* in the *View* menu. This causes LiveCode to display its own stacks within the Application Browser and other editing screens. You can now load these stacks to edit them. To allow you to edit LiveCode IDE objects with the keyboard shortcuts, turn on the *In LiveCode UI Windows* and *Contextual menus work in LiveCode Windows*, options in the *Preferences*.
+
+The IDE uses the stack *revLibrary* to provide much of its functionality. The scripts are stored as a series of buttons and loaded into the `frontScripts`and backScripts when the IDE is started. To edit these scripts, go to the *Front Scripts* or *Back Scripts* tab within the Message Box and check the "Show LiveCode UI Scripts" checkbox.
+
+> **Caution:** If you make a mistake editing revFrontScript or revBackScript, LiveCode will become non-responsive and you will have to force-quit.
+
+The Code Editor and Property Inspector functionality is provided by two stacks, *revTemplateScriptEditor* and *revTemplatePalette*. These stacks are cloned each time you open a new Script Editor or Inspector. To make permanent changes you need to apply the changes to these stacks and save them.
+
+
+| &nbsp;| &nbsp;| &nbsp;| &nbsp;|
+|------|--------|-------|-------|
+|**The Development Environment**                                             | **Windows / Linux** | **Mac OS X** |
+| Choose run (browse) tool                       | Control-9                               | Command-9                               |
+| Choose edit (pointer) tool                     | Conttrol-0                              | Command-0                               |
+| Toogle between run and edit tools              | Control-alt-tab                         | Command-option-tab                      |
+| Hide or show palettes                          | Control-tab                             | Command-control-tab                     |
+| Display context menus when running             | Control-shift-right click               | Command-control-shift-click             |
+| Save all open stacks                           | Control-alt-s                           | Command-option-s                        |
+| Apply default button in Save dialog            | Return                                  | Return                                  |
+| Apply non-default button in save dialog        | Control-1<sup>st</sup> letter of button | Command-1<sup>st</sup> letter of button |
+
+| **Navigation** |     |    |
+|------|--------|-------|
+| Go to the first card                           | Control-1                               | Command-1                               |
+| Go to the previous card                        | Control-2                               | Command-2                               |
+| Go to the next card                            | Control-3                               | Command-3                               |
+| Go to the last card                            | Control-4                               | Command-4                               |
+| Go to the recent card                          | Control-5                               | Command-5                               |
+| Go to the top or bottom of a field             | Control-up/down arrow                   | Command-up/down arrow                   |
+
+| **Objects**  |     |    |
+|------|--------|-------|
+| Select all                                     | Control-a                               | Command-a                               |
+| Duplicate                                      | Control-d                               | Command-d                               |
+| Create card                                    | Control-n                               | Command-n                               |
+| Nudge control                                  | Arrow keys                              | Arrow keys                              |
+| Nudge control by 10 pixels                     | Shift-arrow-keys                        | Shift-arrow-keys                        |
+| Open object inspector for selection            | Return                                  | Return                                  |
+| Open stack inspector                           | Control-K                               | Command-K                               |
+| Remove styles from selected text               | Control-;                               | Command-;                               |
+| Equalize heights of selected controls          | Control-shift-=                         | Command-shift-=                         |
+| Equalize width of selected controls            | Control-=                               | Command-=                               |
+| Magnify image with paint tool                  | Control-right-click                     | Command-click                           |
+| Apply transparency with paint tool             | Control-click                           | Control-click                           |
+| Constrain paint tool selection to a square     | Shift                                   | Shift                                   |
+| Constrain object aspect ratio                  | Shift                                   | Shift                                   |
+
+| **The Code Editor**  |     |    |
+|------|--------|-------|
+| Edit script of selected object                 | Control-e                               | Command-e                               |
+| Edit card script                               | Control-shift-c                         | Command-shift-c                         |
+| Edit stack script                              | Control-shift-s                         | Command-shift-s                         |
+| Edit script of object under mouse              | Control-alt-click                       | Command-option-click                    |
+| Apply changes                                  | Enter                                   | Enter                                   |
+| Apply changes and close                        | Enter twice                             | Enter twice                             |
+| Apply changes and save stack                   | Control-s                               | Command-s                               |
+| Comment out selected lines                     | Control-hyphen                          | Command-hyphen                          |
+| Remove comments                                | Control-shift-hyphen                    | Command-shift-hyphen                    |
+| Switch to find mode                            | Control-f                               | Command-f                               |
+| Find next                                      | Control-g                               | Command-g                               |
+| Find selected text                             | Control-Option-f                        | Command-Option-f                        |
+| Format current handler                         | Tab                                     | Tab                                     |
+
+| **The Message Box** |     |    |
+|------|--------|-------|
+| Open/close message box                         | Control-m                               | Command-m                               |
+| Switch to first tab in message box             | Control-m                               | Command-m                               |
+| Clear message field                            | Control-u                               | Command-u                               |
+| Scroll through recent messages (single line)   | Up/down arrow                           | Up/down arrow                           |
+| Scroll through recent messages (multiple line) | Alt-up/down arrow                       | Option-up/down arrow                    |
+| Execute message (single line)                  | Return                                  | Return                                  |
+| Execute message (multiple line)                | Enter                                   
+| |                                                                                           
+| |                                                  Control-Return                           | Enter                                   
+| |                                                                                                                                     
+| |                                                                                            Control-Return                           |
+
+| **The Debugger** |     |    |
+|------|--------|-------|
+| Step Into                                      | F11                                     | F11                                     |
+| Step Over                                      | F10                                     | F10                                     |
+| Step Out                                       | Shift-F11                               | Shift-F11                               |
+| Run                                            | F5                                      | F5                                      |
+| Stop                                           | Shift-F5                                | Shift-F5                                |
+| Abort                                          | Control-.                               | Command-.                               |
+
+
+
 
 ### Property Inspector
 
@@ -767,3 +925,154 @@ There are also some bespoke editors for particular object properties:
 * com.livecode.pi.timezone
 
 It is our intention that ultimately a widget alone will be able to function as a property editor, however currently this feature is not available.
+
+# Other ways to extend the Built-in Capabilities
+
+There are many other ways to extend LiveCode. This section explains how to run shell commands, start other applications, read and write to processes, execute AppleScript, VBScript, send and respond to AppleEvents and communicate between multiple LiveCode-based processes. It also tells you where to get information to create external commands and functions (code written in lower level languages).
+
+## Communicating with other process and applications
+
+### Reading and writing to the command shell
+
+Use the **shell** function to run shell commands and return the result. The following example displays a directory listing on Mac OS X:
+
+```
+answer shell("ls")
+```
+
+And this example stores a directory listing in a variable on Windows:
+
+```
+put shell("dir") into tDirectory
+```
+
+On Windows systems you can prevent a terminal window from being displayed by setting the **hideConsoleWindows** global property to true.
+
+You can choose a different shell program by setting the **shellPath** global property. By default this is set to "/bin/sh" on Mac OS X and Linux and "command.com" on Windows.
+
+> **Tip:** The shell function blocks LiveCode until it is completed. If you want to run a shell command in the background, write the shell script to a text file then execute it with the `launch`command.
+
+### Launching other applications
+
+Use the **launch** command to launch other applications, documents or URLs. To launch an application, supply the full path to the application. The following example opens a text document with TextEdit on OS X:
+
+```
+launch "/Users/someuser/Desktop/text document.rtf" with "/Applications/TextEdit.app"
+```
+
+> **Tip:** To get the path to an application, use the `answer file` command to select the application then copy it into your script. Run this in the message box: `answer file "Select an application"; put it`
+
+To open a document with the application it is associated with use the **launch document** command.
+
+```
+launch document "C:/My document.pdf"
+```
+
+To open a URL in the default web browser, use the **launch URL** command.
+
+launch URL "<http://www.livecode.com/>"
+
+For more information on launching URLs see chapter 12. For details on how to render web pages within LiveCode, see the section on *revBrowser*.
+
+### Closing another application
+
+Use the **kill process** command to send a signal to another application, to close it or to force it to exit. For more details, see the LiveCode Dictionary.
+
+### Communicating with other processes
+
+Use the **open process** command to open an application or process you want to read and write data from. You can then read from the process with the **read from process** command and write to it with the **write to process** command. To close a process you have opened, use the **close process** command. The **openProcesses** returns a list of processes you have opened and the **openProcessIDs** returns the process IDs of each one. For more details see the *LiveCode Dictionary*.
+
+### Using AppleScript and VBScript (Open Scripting Architecture or Windows Scripting Host)
+
+To execute commands using AppleScript on Mac OS or VBScript on Windows, use the **do as** command. **do as** also allows you to use any other *Open Scripting Architecture* languages on Mac OS or languages installed into the *Windows Scripting Host* on Windows. To retrieve a list of the available installed languages, use the **alternateLanguages**.
+
+For example, to execute an AppleScript that brings the Finder on OS X to the front, enter the following into a field:
+
+*tell application "Finder"*
+*activate*
+*end tell*
+
+Then run:
+
+```
+do field 1 as "appleScript"
+```
+
+To retrieve a result from commands executed using `do as`, use `the result` function. Any error message will also be returned in `the result`. The following example displays `the result` of an addition performed using VBScript:
+
+```
+do "result = 1 + 1" as "vbscript"
+answer the result
+```
+
+For more information on the do as command, see the LiveCode Dictionary.
+
+### AppleEvents
+
+To send an AppleEvent, use the **send to program** command.
+
+If LiveCode receives an AppleEvent it will send an **appleEvent** message to the current card. Intercept this message to perform actions such as handling a request to quit your application or opening a document. The following example shows how you could handle a request to quit:
+
+```
+on appleEvent pClass, pID, pSender
+	if pClass & pID is "aevtquit" then
+	-- call a function that prompts the user to save changes
+	put checkSaveChanges() into tOkToQuit
+	-- returns false if the user presses "cancel"
+	if tOkToQuit is true then quit
+	else exit appleEvent
+	end if
+end appleEvent
+```
+
+To retrive additional information passed with the appleEvent use the **request appleEvent data** command. The following example shows how you could handle a request to open a stack:
+
+```
+on appleEvent pClass, pID, pSender
+	--appleEvent sent when stack is opened from the finder
+	if pClass & pID is " aevtodoc " then
+		-- get the file path(s)
+		request AppleEvent data
+		put it into tFilesList
+		repeat for each line l in tFilesList
+			go stack l
+		end repeat
+	end if
+end appleEvent
+```
+
+For more details see the *LiveCode Dictionary*.
+
+### Using Local sockets
+
+If you want to communicate between local applications a common technique that can be used without code changes on all the platforms LiveCode supports, is to open a local socket and communicate using that. You should choose a port number that is not used by a standard protocol – typically a high number.
+
+This technique is commonly used when you want to create multiple programs that run independently but communicate with each other. It is a viable technique for running background tasks and provides a straightforward way to create an application that behaves as if threaded – i.e. with benefits of multiple threads. You can design your application such that additional instances can be launched to perform processing, data transfer or other intensive activities. Modern OSes will allocate each application to an appropriate processor core. By using socket messaging to communicate with each one you can keep your main application's user interface responsive and display status information. The following example shows you how to open a socket to the local machine:
+
+```
+open socket to "127.0.0.1:10000" with message gotConnection
+```
+
+A detailed discussion of how to create a protocol using sockets can be found in chapter 12.
+
+> **Tip:** To simplify communication between multiple LiveCode programs, consider writing a simple library that sends and receives a handler name together with parameter data. To call a handler in the other LiveCode program, send the handler name and data to the library. The library will send the data over a socket. In the receiving program intercept the incoming data from the socket and use it to call the appropriate message with the parameter data received.
+
+## Externals – code written in lower level languages
+
+LiveCode provides an external interface which allows you to extend it using a lower level language (often C). For example, if you have preexisting code that performs processing in a lower level language, you can write a user interface in LiveCode and then call this library by writing a simple wrapper around it using LiveCode's externals interface. LiveCode supports transmitting data to and from externals, as well as drawing into image objects within LiveCode windows, manipulating the player object, and more.
+
+> **Note:** Some aspects of the built in functionality are supplied in the form of externals. These include the SSL library, the database library, the revBrowser library, zip library, video grabber and XML libraries. These libraries can be included in a standalone application, or excluded if they are not needed – saving disk space.
+
+### The Externals SDK
+
+We provide a developer kit for writing externals which includes documentation and examples. You may download this kit from:
+
+<http://downloads.runrev.com/resources/externals/revexternalssdk.zip>
+
+The following newsletter articles will also help you get started:
+
+* [External Writing for the Uninitiated – Part 1](http://newsletters.livecode.com/november/issue13/newsletter5.php)
+
+* [External Writing for the Uninitiated – Part 2](http://newsletters.livecode.com/november/issue14/newsletter3.php)
+
+* [Writing Externals for Linux with 2.9 or later](http://newsletters.livecode.com/october/issue34/newsletter1.php)
