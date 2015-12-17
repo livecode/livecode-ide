@@ -1,4 +1,4 @@
-script "revidelibrary"
+﻿script "revidelibrary"
 /**
 Main IDE library providing functionality for palettes and other IDE add-ons.
 
