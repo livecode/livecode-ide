@@ -32,6 +32,7 @@ on showGuides
    showTab "guide"
 end showGuides
 
+local sEntry
 function getUrl pTab
    if pTab is "guide" then
       return ("file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html")
@@ -47,5 +48,20 @@ on showTab pTab
 end showTab
 
 on browserNavigateComplete
-   resizeStack
+   do "goEntry('" & sEntry["library"] & "','" & sEntry["entry"] & "','" & sEntry["type"] & "')" in widget "Dictionary" of me
+   put empty into sEntry
+   if the mode of me is not 0 then
+      resizeStack
+   end if
 end browserNavigateComplete
+
+on navigateToEntry pLibrary, pEntry, pType
+   put pLibrary into sEntry["library"]
+   put pEntry into sEntry["entry"]
+   put pType into sEntry["type"]
+   if the mode of me is not 0 then
+      browserNavigateComplete
+   else
+      toplevel me
+   end if
+end navigateToEntry

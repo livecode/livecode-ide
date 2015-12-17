@@ -80,6 +80,7 @@
             
             <div class="panel panel-default" id="lcdoc_body">
               <div class="panel-body" id="api_entry">
+               	No entry selected
               </div>
               
             </div>
@@ -97,14 +98,14 @@
     <script src="js/dictionary_functions.js"></script>	
     <script>
 	
-	function goEntry(pLibrary, pEntryName, pEntryType)
+	$(document).ready(function(e)
 	{
 		setActions();		
 		dataFilter();		
 		displayLibraryChooser();
 		
-		goEntryName(pLibrary, pEntryName, pEntryType);
-	}
+		goEntryName('LiveCode Script', '', '');
+	});
 	</script>
 </body>
 </html>

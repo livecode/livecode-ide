@@ -3663,7 +3663,11 @@ end revIDESpecialFolderPath
 
 private function __docsHTMLFile pWhich
    if pWhich is "dictionary" then
-      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
+      if revIDEBrowserWidgetUnavailable() then
+         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer_external.html"
+      else
+         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
+      end if
    else
       return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
    end if
@@ -4117,9 +4121,9 @@ private function revIDEPaletteBarHeight pStackID
    return the effective height of pStackID - the height of pStackID
 end revIDEPaletteBarHeight
 
-private function __cefBrowserUnavailable
+function revIDEBrowserWidgetUnavailable
    return the platform is "Linux" and the processor is not "x86_64"
-end __cefBrowserUnavailable
+end revIDEBrowserWidgetUnavailable
 
 /*
 Opens an IDE stack as a palette. In the future this should be changed so that
@@ -4172,7 +4176,7 @@ command revIDEOpenPalette pPaletteName
          break
       case "dictionary"
       case "guide"
-         if __cefBrowserUnavailable() then
+         if revIDEBrowserWidgetUnavailable() then
             launch url ("file:" & __docsHtmlFile(pPaletteName))
          else
             toplevel stack tStackName
@@ -4452,6 +4456,25 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
    # Now regenerate the built APIs
    dispatch "revDocsAddAPIAndRegenerate" to stack "revDocsParser" with tAPIJSON
 end revIDEInstallAPI
+
+on revIDEGoToLCSDictionaryEntry pTag, pType
+   revIDEGoToDictionaryEntry "livecode_script", pTag, pType
+end revIDEGoToLCSDictionaryEntry
+
+on revIDEGoToDictionaryEntry pLibrary, pTag, pType
+   if revIDEBrowserWidgetUnavailable() then
+      ideThrow "Can't navigate to dictionary entry in external browser"
+   else
+      send "goToEntry pLibrary, pTag, pType" to stack revIDEPaletteToStackName("dictionary") 
+   end if
+end revIDEGoToDictionaryEntry
+
+on revIDEGoToWidgetAPI pKind
+   local tLibraryName, tEntry
+   put revIDEExtensionProperty(pKind, "title") into tLibraryName
+   put tolower(pKind) into tEntry
+   revIDEGoToDictionaryEntry tLibraryName, tEntry, "widget"
+end revIDEGoToWidgetAPI
 
 #############
 # Properties API
