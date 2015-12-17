@@ -220,6 +220,8 @@ on mouseDoubleUp
    if the short name of the target is "name" then
       set the textColor of field "name" of me to revIDEColor("text_1")
       CreateFieldEditorForField the long id of field "name" of me, "name"
+   else 
+      goToObject the cObjectLongID of me
    end if
 end mouseDoubleUp
 
