@@ -217,9 +217,8 @@ on mouseUp
          edit the script of the cBehaviorLongID of me
          break
       default
-         pass mouseUp      
-   end switch   
-   --unlock messages
+         pass mouseUp
+   end switch
 end mouseUp
 
 on mouseDoubleUp 

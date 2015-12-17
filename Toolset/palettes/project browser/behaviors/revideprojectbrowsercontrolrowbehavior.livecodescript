@@ -161,7 +161,7 @@ end dvHilite
 
 on  mouseUp
    --lock messages
-   switch 
+   switch the short name of the target
       case "scriptLines"
          edit the script of the cObjectLongID of me
          break
