@@ -6620,8 +6620,23 @@ on revIDEPasteOntoStack pStack
    lock messages
    set the defaultStack to pStack
    paste
+   
+   local tSelObj
+   put the selobj into tSelObj
+   
+   local tMessage
+   if tSelObj is empty then
+      put the long id of this card into tSelObj
+      put "ideNewCard" into tMessage
+   else
+      put "ideNewControl" into tMessage
+   end if
    unlock messages
    unlock screen
+   
+   repeat for each line tObj in tSelObj
+      revIDEMessageSend tMessage, tObj
+   end repeat
 end revIDEPasteOntoStack
 
 on revIDEActionPasteUnformatted
@@ -6690,9 +6705,16 @@ on revIDEActionClear
    
    # Otherwise delete objects or text
    set the defaultStack to the topStack
+   local tSelObj
+   put the selobj into tSelObj
+   
    delete
    
    unlock messages
+   repeat for each line tObj in tSelObj
+      revIDEMessageSend "ideControlDeleted", tObj
+   end repeat
+   
    ideMessageSend "ideSelectedObjectChanged"
    unlock screen
 end revIDEActionClear
