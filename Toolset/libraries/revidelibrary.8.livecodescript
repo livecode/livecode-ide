@@ -1,4 +1,4 @@
-﻿script "revidelibrary"
+script "revidelibrary"
 /**
 Main IDE library providing functionality for palettes and other IDE add-ons.
 
@@ -5604,7 +5604,7 @@ on revIDERemoveFromMemory pStackID
       exit revIDERemoveFromMemory
    end if
    
-   __ideRemoveFromMemory the long id of tMainstack
+   __ideRemoveFromMemory the long id of stack tMainstack
    
    # Send the 'ideDestroyStack' message
    ideMessageSend "ideDestroyStack", pStackID
