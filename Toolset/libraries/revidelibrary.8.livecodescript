@@ -4476,6 +4476,16 @@ on revIDEGoToWidgetAPI pKind
    revIDEGoToDictionaryEntry tLibraryName, tEntry, "widget"
 end revIDEGoToWidgetAPI
 
+on revIDEGoToObjectAPI pObjectID
+   local tType
+   put word 1 of pObjectID into tType
+   if tType is "widget" then
+      revIDEGoToWidgetAPI the kind of pObjectID
+   else
+      revIDEGoToDictionaryEntry "livecode_script", tType, "object"
+   end if
+end revIDEGoToObjectAPI
+
 #############
 # Properties API
 #############

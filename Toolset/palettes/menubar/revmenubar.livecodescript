@@ -1790,19 +1790,24 @@ function revMenuBarStandardContextMenu pIndent
 end revMenuBarStandardContextMenu
 
 function revBuildContextSensitiveMenu pExtraText, pTarget, pType
+   local tText
    if word 1 of pTarget is "stack" then
-      return revMenuBarStackContextMenu(pTarget, 0)
+      put revMenuBarStackContextMenu(pTarget, 0) into tText
+      put return & "-" after tText
+      put return & "Show Documentation" after tText
+      return tText
    end if
    
    local tTargetStack
    put revIDEStackOfObject(pTarget) into tTargetStack
    
-   local tText
    if word 1 of pTarget is "card" then
       put revMenuBarCardContextMenu(pTarget,0) into tText
       put return & "-" after tText
       put return & "Stack" after tText
       put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
+      put return & "-" after tText
+      put return & "Show Documentation" after tText
       return tText
    end if
    
@@ -1815,6 +1820,8 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
    put return & "-" after tText
    put return & "Stack" after tText
    put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
+   put return & "-" after tText
+   put return & "Show Documentation" after tText
    return tText
 end revBuildContextSensitiveMenu
 
@@ -1890,10 +1897,7 @@ function revMenubarContextMenu pType, pTarget
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "widget"
-         put "-" & return after tText
-         put "Show Documentation" & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
-         put tText
+         put revBuildContextSensitiveMenu("", pTarget) into tText
          break
       case "standard"
       default
@@ -2209,6 +2213,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Lock Location"
          revIDEToggleLockLocationOfObjects pTarget
          break
+      case "Show Documentation"
+         revIDEGoToObjectAPI pTarget
+         break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
          revIDEEditGroup pTarget
@@ -2251,10 +2258,6 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Pause"
          revIDETogglePauseOfPlayer
-         break
-         ######## WIDGET SPECIFIC ########
-      case "Show Documentation"
-         revIDEGoToWidgetAPI the kind of pTarget
          break
          
          ######## MENU SPECIFIC #########
