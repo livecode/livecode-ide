@@ -724,3 +724,77 @@ Figure 12 – Find and Replace
 | **Remove from List**                     | Removes the currently selected search result in the Search Results area from the list. Once removed, the object will no longer be included in any replace operation.                                                                                            |
 | **Replace With**                         | Specifies a term to use to replace the search term with.                                                                                                                                                                                                        |
 | **Replace in All**                       | Replaces the Find Field with the Replace With field in all objects currently listed in the Search Results Area.                                                                                                                                                 |
+
+## Keyboard Shortcuts
+
+| **The Development Environment**  | **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Choose run (browse) tool                       | Control-9                               | Command-9                               |
+| Choose edit (pointer) tool                     | Conttrol-0                              | Command-0                               |
+| Toogle between run and edit tools              | Control-alt-tab                         | Command-option-tab                      |
+| Hide or show palettes                          | Control-tab                             | Command-control-tab                     |
+| Display context menus when running             | Control-shift-right click               | Command-control-shift-click             |
+| Save all open stacks                           | Control-alt-s                           | Command-option-s                        |
+| Apply default button in Save dialog            | Return                                  | Return                                  |
+| Apply non-default button in save dialog        | Control-1<sup>st</sup> letter of button | Command-1<sup>st</sup> letter of button |
+
+| **Navigation** | **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Go to the first card                           | Control-1                               | Command-1                               |
+| Go to the previous card                        | Control-2                               | Command-2                               |
+| Go to the next card                            | Control-3                               | Command-3                               |
+| Go to the last card                            | Control-4                               | Command-4                               |
+| Go to the recent card                          | Control-5                               | Command-5                               |
+| Go to the top or bottom of a field             | Control-up/down arrow                   | Command-up/down arrow                   |
+
+| **Objects**  | **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Select all                                     | Control-a                               | Command-a                               |
+| Duplicate                                      | Control-d                               | Command-d                               |
+| Create card                                    | Control-n                               | Command-n                               |
+| Nudge control                                  | Arrow keys                              | Arrow keys                              |
+| Nudge control by 10 pixels                     | Shift-arrow-keys                        | Shift-arrow-keys                        |
+| Open object inspector for selection            | Return                                  | Return                                  |
+| Open stack inspector                           | Control-K                               | Command-K                               |
+| Remove styles from selected text               | Control-;                               | Command-;                               |
+| Equalize heights of selected controls          | Control-shift-=                         | Command-shift-=                         |
+| Equalize width of selected controls            | Control-=                               | Command-=                               |
+| Magnify image with paint tool                  | Control-right-click                     | Command-click                           |
+| Apply transparency with paint tool             | Control-click                           | Control-click                           |
+| Constrain paint tool selection to a square     | Shift                                   | Shift                                   |
+| Constrain object aspect ratio                  | Shift                                   | Shift                                   |
+
+| **The Code Editor**  | **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Edit script of selected object                 | Control-e                               | Command-e                               |
+| Edit card script                               | Control-shift-c                         | Command-shift-c                         |
+| Edit stack script                              | Control-shift-s                         | Command-shift-s                         |
+| Edit script of object under mouse              | Control-alt-click                       | Command-option-click                    |
+| Apply changes                                  | Enter                                   | Enter                                   |
+| Apply changes and close                        | Enter twice                             | Enter twice                             |
+| Apply changes and save stack                   | Control-s                               | Command-s                               |
+| Comment out selected lines                     | Control-hyphen                          | Command-hyphen                          |
+| Remove comments                                | Control-shift-hyphen                    | Command-shift-hyphen                    |
+| Switch to find mode                            | Control-f                               | Command-f                               |
+| Find next                                      | Control-g                               | Command-g                               |
+| Find selected text                             | Control-Option-f                        | Command-Option-f                        |
+| Format current handler                         | Tab                                     | Tab                                     |
+
+| **The Message Box** |  **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Open/close message box                         | Control-m                               | Command-m                               |
+| Switch to first tab in message box             | Control-m                               | Command-m                               |
+| Clear message field                            | Control-u                               | Command-u                               |
+| Scroll through recent messages (single line)   | Up/down arrow                           | Up/down arrow                           |
+| Scroll through recent messages (multiple line) | Alt-up/down arrow                       | Option-up/down arrow                    |
+| Execute message (single line)                  | Return                                  | Return                                  |
+| Execute message (multiple line)                | Enter<br>Control-Return                 | Enter<br>Control-Return                 |
+
+| **The Debugger** |  **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Step Into                                      | F11                                     | F11                                     |
+| Step Over                                      | F10                                     | F10                                     |
+| Step Out                                       | Shift-F11                               | Shift-F11                               |
+| Run                                            | F5                                      | F5                                      |
+| Stop                                           | Shift-F5                                | Shift-F5                                |
+| Abort                                          | Control-.                               | Command-.                               |
