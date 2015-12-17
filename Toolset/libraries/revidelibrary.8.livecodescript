@@ -7306,10 +7306,10 @@ end revIDEDocumentationLoad
 on revIDELaunchResource pName
    switch pName
       case "Buy"
-         launch url "http://www.runrev.com/links/livecode/tools-buy"
+         launch url "https://livecode.com/products/livecode-platform/pricing/"
          break
       case "Support"
-         launch url "http://www.runrev.com/links/livecode/tools-help"
+         launch url "https://livecode.com/resources/support/"
          break
       case "License Agreement"
          launch document (revEnvironmentToolsPath() & slash & "License Agreement.txt")
@@ -7327,7 +7327,7 @@ on revIDELaunchResource pName
          launch url "http://lessons.runrev.com/m/2592"
          break
       case "Beginners Guide"
-         launch url "http://livecode.com/links/livecode/beginners-course"
+         launch url "https://livecode.com/resources/guides/beginners-guide/"
          break
       case "Tutorials"
          launch url "http://livecode.com/links/livecode/tutorials"
@@ -7341,7 +7341,7 @@ on revIDELaunchResource pName
       case "Technical Questions"
          launch url "http://livecode.com/links/stackoverflow"
          break
-      case "Use List"
+      case "Discussion List"
          launch url "http://livecode.com/links/lists"
          break
       case "Newsletters"
