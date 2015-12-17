@@ -1891,7 +1891,7 @@ function revMenubarContextMenu pType, pTarget
          break
       case "widget"
          put "-" & return after tText
-         put "Show API" & return after tText
+         put "Show Documentation" & return after tText
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          put tText
          break
@@ -2253,7 +2253,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDETogglePauseOfPlayer
          break
          ######## WIDGET SPECIFIC ########
-      case "Show API"
+      case "Show Documentation"
          revIDEGoToWidgetAPI the kind of pTarget
          break
          
