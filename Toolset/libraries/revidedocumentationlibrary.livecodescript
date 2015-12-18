@@ -298,7 +298,7 @@ A numerically keyed array, each element of which is the arrayof data
 pertaining to an entry in the LiveCode builder dictionary.
 */
 function ideDocsFetchLCBEntries
-   return ideDocsLibraryEntries("livecode_builder")
+   return ideDocsFetchLibraryEntries("livecode_builder")
 end ideDocsFetchLCBEntries
 
 /* 
@@ -311,7 +311,7 @@ pertaining to an entry in the API for the given extension.
 function ideDocsFetchExtensionEntries pID
    local tLibraryName
    put revIDEExtensionProperty(pID, "title") into tLibraryName	
-   return ideDocsLibraryEntries(tLibraryName)
+   return ideDocsFetchLibraryEntries(tLibraryName)
 end ideDocsFetchExtensionEntries
 
 on ideDocsUpdateDatabase pLibraryA
