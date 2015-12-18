@@ -105,10 +105,10 @@ end closeStack
 ####### Subscribed IDE messages #######
 ###################################
 on ideSelectedObjectChanged
-   local tObject
-   put revIDESelectedObjects() into tObject
+   --   local tObject
+   --   put revIDESelectedObjects() into tObject
    
-   highlightObjects tObject
+   --   highlightObjects tObject
 end ideSelectedObjectChanged
 
 on ideNewControl pTarget
@@ -540,6 +540,9 @@ command highlightObjects pObject
 end highlightObjects
 
 on selectObjects pObjectList
+   // AL-2015-12-17: Don't select objects anymore when they are selected
+   // in the PB
+   /*
    local tSelectedRows, tObjectList, tVisibleRows
    local tCards
    
@@ -586,7 +589,8 @@ on selectObjects pObjectList
    unlock messages
    
    ## Select objects
-   revIDESelectObjects tObjectList   
+   revIDESelectObjects tObjectList  
+   */ 
 end selectObjects
 
 on selectionChanged pHilitedRows, pPreviouslyHilitedRows
@@ -633,14 +637,21 @@ on selectionChanged pHilitedRows, pPreviouslyHilitedRows
 end selectionChanged
 
 on goToObject pObjectID
-   lock messages
+   ## Don't go to object if it is part of the project browser
+   If ideStackOfObject(pObjectID) is the long id of me then
+      exit goToObject
+   end if
    
+   lock messages
    if word 1 of pObjectID is "stack"  then
       if not the visible of pObjectID then show pObjectID
       go pObjectID 
    else if word 1 of pObjectID is "card"  then
       if not the visible of the owner of pObjectID then show the owner of pObjectID
       go pObjectID
+   else
+      go ideStackOfObject(pObjectID)
+      revIDESelectObjects pObjectID
    end if
    unlock messages
 end goToObject

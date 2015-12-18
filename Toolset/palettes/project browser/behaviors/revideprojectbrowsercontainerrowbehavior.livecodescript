@@ -222,12 +222,7 @@ on mouseUp
 end mouseUp
 
 on mouseDoubleUp 
-   if the short name of the target is "name" then
-      set the textColor of field "name" of me to revIDEColor("text_1")
-      CreateFieldEditorForField the long id of field "name" of me, "name"
-   else
-      goToObject the cObjectLongID of me
-   end if
+   goToObject the cObjectLongID of me
 end mouseDoubleUp
 
 on CloseFieldEditor pFieldEditor, pRow, pKey, pClosingTriggeredBy
@@ -242,9 +237,13 @@ on ExitFieldEditor pFieldEditor, pRow, pKey, pClosingTriggeredBy
    # The text the user entered is the same as the current value of the target field.
 end ExitFieldEditor
 
-on mouseDown pButton   
+on mouseDown pButton
    if pButton is 3 then       
       revIDEPopupContextualMenu the cObjectLongID of me
+   else if the short name of the target is "name" and \
+         the dvRow of me is the dvHilitedRow of the owner of me then
+      set the textColor of field "name" of me to revIDEColor("text_1")
+      CreateFieldEditorForField the long id of field "name" of me, "name"
    else
       pass mouseDown
    end if
