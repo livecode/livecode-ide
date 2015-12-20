@@ -22,7 +22,7 @@ before openStack
    # Open all the editors
    local tEditorsFolder, tStackFiles
    set the itemdel to "/"
-   put item 1 to -2 of the filename of me & "/editors/" into tEditorsFolder
+   put item 1 to -3 of the filename of this me & "/inspector/editors/" into tEditorsFolder	
    revIDEPushDefaultFolder tEditorsFolder
    set the itemdel to "."
    repeat for each line tFile in the files
@@ -35,25 +35,8 @@ before openStack
       end if
    end repeat
    set the stackfiles of me to tStackFiles
-   
-   # Add the preference to use icons / names
-   addFrameItem (the short name of me) & "_displayStyle", "header", "preference", "Tab Display Style", "enum","icons:Icons,names:Labels", "displayPreferenceChanged", the long id of me
    revIDEPopDefaultFolder
 end openStack
-
-# Sent when the preference changes
-on displayPreferenceChanged pPreference, pValue
-   local tName
-   put the short name of me into tName
-   switch pPreference
-      case tName & "_displayStyle"
-         set the navigationDisplayStyle of me to pValue
-         revIDESetPreference tName & "_displayStyle", pValue
-         break
-      default
-         break
-   end switch
-end displayPreferenceChanged
 
 on resizeInspector
    lock screen
@@ -89,9 +72,11 @@ on inspectorLayout
    put inspectorSectionGet() into tSelectedGroup
    
    inspectorLayoutGroups sDataA[tSelectedGroup]["grouplist"]
+   unlock screen
 end inspectorLayout
 
 on inspectorLayoutGroups pGroupList
+   lock screen
    # Get the margin, padding
    local tMargin, tPadding
    put the paletteMargin of me into tMargin
@@ -196,8 +181,15 @@ on inspectorLayoutGroups pGroupList
    put the left of me into tStackLeft
    
    lock messages
-   set the minWidth of me to tMinRowWidth + (tMargin*2)
-   set the width of me to tInspectorWidthWithMargins
+   
+   if the minWidth of me < tMinRowWidth + (tMargin*2) then
+      set the minWidth of me to tMinRowWidth + (tMargin*2)
+   end if
+   
+   if the width of me < max(tInspectorWidthWithMargins, the minWidth of me) then
+      set the width of me to max(tInspectorWidthWithMargins, the minWidth of me)
+   end if
+   
    set the left of me to tStackLeft
    
    local tStackHeight
@@ -263,8 +255,6 @@ end inspectorDontShowGroup
 
 # Generate inspector
 private on inspectorGenerate
-   inspectorNavigationGenerate
-   
    if sSelectedSection is empty then
       inspectorSectionSet sDataA[1]["label"]
    else
@@ -378,10 +368,13 @@ end inspectorGenerateGroups
 private on inspectorNavigationGenerate
    lock screen
    # Clear the current frame data
-   clearFrameNavigationData
+   clearFrameData
    
    # Add all the navigation elements
-   repeat for each element tSection in sDataA
+   repeat with x = 1 to the number of elements in sDataA
+      local tSection
+      put sDataA[x] into tSection
+      
       local tIcon
       dispatch function "inspectorSectionIcon" to me with tSection["label"]
       put the result into tIcon
@@ -389,7 +382,6 @@ private on inspectorNavigationGenerate
    end repeat
    
    dispatch "inspectorAddActions" to me
-   resizeStack
    unlock screen
 end inspectorNavigationGenerate
 
@@ -401,6 +393,10 @@ on inspectorChanged
    # Clear the current inspector
    inspectorClear
    
+   # Generate the frame
+   inspectorNavigationGenerate
+   generateFrame
+   
    # Generate the controls for group
    inspectorGenerate
    
@@ -408,7 +404,8 @@ on inspectorChanged
    inspectorFill
    
    # Layout
-   dispatch "resizeStack" to me
+   inspectorLayout
+   
    unlock screen
 end inspectorChanged
 
@@ -433,8 +430,10 @@ on inspectorSectionChanged pSection
 end inspectorSectionChanged
 
 on updateFocusedEditor
-   if the short name of revIDEStackOfObject(the focusedObject) is the short name of me then
-      dispatch "valueChanged" to the focusedObject
+   if revIDEStackOfObject(the focusedObject) is the long name of me then
+      # Ensure that if the text of a field was changed, the value is set when changing sections
+      # Using focus on nothing makes sure the correct message is sent (closeField / exitField)
+      focus on nothing
    end if
 end updateFocusedEditor
 
@@ -556,3 +555,15 @@ on highlightObject pObjectData
    dispatch "hiliteFrameItem" to me with pObjectData["section"]
    dispatch "navSelected" to me with pObjectData["section"]
 end highlightObject
+
+# Allow text to be styled from the menubar if the editor allows it
+on ideStyleTextRequest pWhich, pValue, pSelectedChunk, pSelectedObject
+   if word 1 of pSelectedObject is "field" and the owner of pSelectedObject is not empty then
+      local tOwner
+      put the long id of the owner of pSelectedObject into tOwner
+      if the short name of tOwner is "styledText" then
+         ideStyleText pSelectedChunk, pSelectedObject, true, pWhich, pValue
+         dispatch "valueChanged" to tOwner
+      end if
+   end if
+end ideStyleTextRequest

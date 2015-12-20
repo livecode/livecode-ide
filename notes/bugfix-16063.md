@@ -1,0 +1,1 @@
+# Documentation TAB from script editor does not open

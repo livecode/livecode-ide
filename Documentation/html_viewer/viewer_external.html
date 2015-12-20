@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>LiveCode Dictionary</title>
+    
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/lcdoc.css" rel="stylesheet">
+    <link href="css/codestyle.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container bs-docs-container" >
+<div style="height:25px; z-index:200; background-color:#ffffff"></div>
+
+	<div class="row">
+		<div class="col-md-3">
+			<div class="affix bs-sidebar" id="lcdoc_sidebar">
+				<div class="btn-group" style="width:100%; margin-bottom:15px" id="lcdoc_library_chooser">
+				  <div class="dropdown">
+				  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+					<span id="lcdoc_library_chooser_text"></span>
+					<span class="caret"></span>
+				  </button>
+				  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
+				  </ul>
+				</div>
+				</div>
+			
+            	<div class="panel panel-default">
+					<div class="panel-heading">Filters</div>
+					<div class="panel-body" id="filters">none</div>
+				</div>
+		
+				<div class="panel panel-default">
+		  			<div class="panel-body">
+						<div id="filters_options"></div>
+		  			</div>
+				</div>
+			</div>
+    	</div>
+ 
+        <div class="col-md-9">
+        	<div id="header_panel_holder">
+				<div class="panel panel-default affix" id="lcdoc_list">
+				  <div class="panel-heading " >
+					  <div class="row">
+					  	
+						<div class="col-md-9">
+							<nav>
+							  <ul class="pagination pagination-sm" style="margin:0;padding-left:0" id="breadcrumb">
+								
+							  </ul>
+							</nav>
+						</div>
+				
+						<div class="col-md-3">
+							<div class="input-group" id="filter_box">
+								<input id="ui_filer" type="text" class="form-control input-sm">
+								<span class="input-group-btn">
+									<button class="btn btn-default btn-sm" type="button"><span class="glyphicon glyphicon-search"></span></button>
+								</span>
+							</div>
+							<span class="label label-primary">Showing <span id="entries_showing">0</span> of <span id="entries_total">0</span> entries</span>
+						</div><!-- /input-group -->
+					  </div>
+					</div>
+			  		
+					<table class="table table-hover table-condensed" id="table_list">
+						<tbody id="list">
+						</tbody>
+					</table>
+				</div>
+				
+            </div><!-- /Affix -->
+            
+            
+            <div class="panel panel-default" id="lcdoc_body">
+              <div class="panel-body" id="api_entry">
+               	No entry selected
+              </div>
+              
+            </div>
+        </div>
+   </div>
+</div>
+   
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script src="js/jquery.session.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/marked.js"></script>
+    <script src="js/highlight.pack.js"></script>	
+    <script charset="UTF-8" src="resources/data/api/built_api.js"></script>    
+    
+    <script src="js/dictionary_functions.js"></script>	
+    <script>
+	
+	$(document).ready(function(e)
+	{
+		setActions();		
+		dataFilter();		
+		displayLibraryChooser();
+		
+		goEntryName('LiveCode Script', '', '');
+	});
+	</script>
+</body>
+</html>

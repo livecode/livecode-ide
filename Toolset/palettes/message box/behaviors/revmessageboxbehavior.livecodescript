@@ -8,8 +8,17 @@ constant kHistoryMax = 200
 constant kHalfMessageFieldHeight = 12.5
 constant kExternalErrorCode = 0
 
-on preOpenStack
+on setAsBehavior pTarget
+   set the behavior of pTarget to the long id of this me
+   setBehaviors
+end setAsBehavior
+
+on setBehaviors
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
+end setBehaviors
+
+on openStack   
+   lock screen
    lock messages
    --set the zoomBox of this stack to false
    unlock messages
@@ -55,9 +64,6 @@ on preOpenStack
    addFrameItem "ideMessageBox_autoupdate",           "header",  "preference",  "Auto Update Pending Messages",  "boolean",     "true,false",                                  "preferenceChanged",  the long id of this stack
    addFrameItem "ideMessageBox_intelligenceobject", "header",  "preference",  "Select Intelligence Object",            "enum",         "selectedObject,mouseControl",   "preferenceChanged",  the long id of this stack
    
-   --nav style can be set to names or icons
-   set the navigationDisplayStyle of me to "icons"
-   
    hiliteFrameItem "single line"
    showCard "Single Line"
    
@@ -87,7 +93,8 @@ on preOpenStack
    set the left of this stack to the cREVLeft of this stack
    set the top of this stack to the cREVTop of this stack
    unlock messages
-end preOpenStack
+   unlock screen
+end openStack
 
 on moveStack
    --set the position of the stack as a custom property so when it is reopened/different card is selected it remains in the same location
@@ -458,28 +465,6 @@ command positionOpenStacksButton
    unlock screen
 end positionOpenStacksButton
 
-on msgChanged
-   lock messages
-   lock screen
-   
-   local tField
-   if lSelectedCard is "Multiple Lines" then
-      put the long id of field "results" of card "Multiple Lines" of me into tField
-   else
-      go this stack
-      put the long id of field "results" of card "Single Line" of me into tField
-   end if
-   set the text of tField to msg
-   
-   -- PM-2015-06-26: [[ Bug 15478 ]] Make msg box to auto scroll
-   put the number of lines of the text of tField into tLines
-   put the effective textHeight of tField into tHeight
-   set the vScroll of tField to tLines * tHeight 
-   
-   unlock screen
-   unlock messages
-end msgChanged
-
 function revIDEAutoComplete pSearchTerm
    local tMessageHistory, tNumChars, tLine, tMatchesList
    put revIDEGetPreference("IDESingleLineMessageHistory") into tMessageHistory
@@ -529,9 +514,7 @@ command revIDEConsoleHistoryAdd pScript
    revIDESetPreference lCardHistoryPref,tMessageHistory
 end revIDEConsoleHistoryAdd
 
-command revIDEExecuteScript pScript
-   set the defaultStack to revIDEGetPreference("IDEActiveStack")
-   
+command ideMessageBoxExecuteScript pScript
    lock messages
    if exists(card lSelectedCard of me) then 
       put empty into field "results" of card lSelectedCard of me
@@ -539,187 +522,29 @@ command revIDEExecuteScript pScript
    unlock messages
    
    if lSelectedCard is "Single Line" then put empty into field "auto complete" of card lSelectedCard of me
-   if pScript is empty then exit revIDEExecuteScript
+   if pScript is empty then exit ideMessageBoxExecuteScript
+   
+   local tDefaultStack
+   put revIDEGetPreference("IDEActiveStack") into tDefaultStack
    
    local tIntelligenceObject
    put the cREVIntelligenceObject of me into tIntelligenceObject
    
-   -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tScript, tScriptLine, tScriptError
+   local tDebugMode
+   put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
-   put false into tScriptError
-   try
-      put the script of tIntelligenceObject into tScript
-   catch tError
-      put true into tScriptError
-   end try
-   
-   if tScriptError is true then
-      put false into tScriptError
-      put the long id of the defaultStack into tIntelligenceObject
-      try 
-         put the script of the defaultStack into tScript
-      catch tError
-         put true into tScriptError
-      end try
-   end if
-   
-   local tDoScript
-   
-   if tScriptError is false then
-      repeat for each line tScriptLine in tScript
-         if word 1 of tScriptLine is among the items of "on,command" and word 2 of tScriptLine is word 1 of pScript then 
-            put "send" && pScript && "to" && tIntelligenceObject into tDoScript
-            exit repeat
-         else if word 1 of tScriptLine is "function" and word 1 of pScript is "put" and token 1 of word 2 of pScript is word 2 of tScriptLine then
-            # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-            local tParams
-            if matchText(word 2 to -1 of pScript, word 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
-               exit repeat
-            end if
-            put pScript into tDoScript
-            dispatch function (word 2 of tScript) to tIntelligenceObject with tParams
-            replace word 2 of tScriptLine & "(" & tParams & ")" with the result in tDoScript 
-            exit repeat
-         end if
-      end repeat
-   end if
-   
-   if tDoScript is not empty then
-      revIDEDoMessage tDoScript
-      if the result is not empty then
-         put revIDEFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
-      end if
-      return empty
-   end if
-   
-   --deals with the put command, if the put command cannot be executed as is then:
-   --the message box will attempt to auto complete the typing of a name of an object property and the contents of that property into the results area
-   --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
    lock screen
    local tValidScript
-   put empty into tValidScript
-   
-   # Try executing as a function or property
-   local tTryProperty
-   
-   # Build the string so that it starts with "put the"
-   if not (pScript begins with "the ") then
-      put "the" && pScript into tTryProperty 
-   else
-      put pScript into tTryProperty
-   end if
-   if not (tTryProperty begins with "put ") then
-      put "put " before tTryProperty 
-   end if
-   
-   set the wholeMatches to true
-   local tIsProperty
-   put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
-   
-   # Try as an object property of the intelligence object
-   if tIsProperty then
-      revIDEDoMessage tTryProperty && "of" && tIntelligenceObject
-      if the result is empty then 
-         local tName
-         put the name of tIntelligenceObject into tName
-         put tTryProperty && "of" && tName into tValidScript
-      end if
-   end if
-   
-   # If it wasn't valid as an object property then
-   # try as a function or global property
-   if tValidScript is empty then
-      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
-         revIDEDoMessage tTryProperty
-         if the result is empty then
-            put tTryProperty into tValidScript
-         end if
-      end if
-   end if
-   
-   if tValidScript is empty then
-      revIDEDoMessage pScript
-      if the result is empty then 
-         put pScript into tValidScript
-      end if
-   end if
-   
-   if tValidScript is empty then
-      put the result into field "results" of card lSelectedCard of me
+   ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, tDebugMode, tValidScript
+   if the result is not empty then
+      put ideMessageBoxFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
    end if
    unlock screen
    
    return tValidScript
-end revIDEExecuteScript
-
-on revIDECompileCheck pScript
-   local tCompileTest, tCompileResult, tCompileErrors
-   --checks to see if the message compiles
-   lock messages
-   put "on mouseUp" & cr & pScript & cr & "end mouseUp" into tCompileTest
-   set the script of button "Compile Test" of card "Single Line" of me to tCompileTest
-   put the result into tCompileResult
-   set the script of button "Compile Test" of card "Single Line" of me to empty
-   put true into tCompileErrors
-   unlock messages
-   repeat for each line l in tCompileResult
-      if item 2 of l is not 0 then put false into tCompileErrors
-   end repeat
+end ideMessageBoxExecuteScript 
    
-   --if there is a compile error then this will be shown in the results field
-   if not tCompileErrors then
-      ##GH : will need localising
-      --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]", revIDELookupError("compilation", item 1 of tCompileResult)) into field "results" of card "Single Line" of me
-      return "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", item 1 of tCompileResult)
-   end if
-   return empty
-end revIDECompileCheck
-
-command revIDEDoMessage pScript
-   revIDECompileCheck pScript
-   if the result is not empty then
-      return the result
-   end if
-   
-   global gREVHandlerNames
-   do "global" && revDebuggerValidGlobalNames()
-   
-   local tDebugDo
-   put revIDEGetPreference("IDEDebugMode") into tDebugDo
-   
-   lock screen
-   local tScriptError
-   try
-      if tDebugDo then
-         # OK-2010-01-02: Remove the message box itself from the debug context. 
-         # Line 1 will be revDebugDoMessage
-         # Line 2 is revExecuteMessage (message box field)
-         # Line 3 is returnInField (message box field)
-         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
-         # Note that this code is called from both the single and multi-line fields, but luckily they both 
-         # have the same number of calls.
-         local tContext, tContextNumber
-         get revDebuggerContexts()
-         put line 4 of it into tContext
-         
-         local tResult
-         revDebuggerDo pScript, tContext
-         get the result
-         put line 1 of it into tResult
-         put line 2 to -1 of it into tScriptError
-      else
-         do pScript
-      end if
-   catch tScriptError
-      put revIDEFormatErrorForDisplay(tScriptError) into tScriptError
-   end try
-   unlock screen
-   
-   return tScriptError
-end revIDEDoMessage
-   
-function revIDEFormatErrorForDisplay pErrorTrace
+function ideMessageBoxFormatErrorForDisplay pErrorTrace
    --if there is an error, then this will be formatted and then displayed in the results field
    ##GH : will need localising
    local tError, tErrorDisplay, tLineNum
@@ -741,7 +566,7 @@ function revIDEFormatErrorForDisplay pErrorTrace
       put tError into tErrorDisplay
    end if 
    return tErrorDisplay
-end revIDEFormatErrorForDisplay
+end ideMessageBoxFormatErrorForDisplay
 
 command revIDEUpdateIntelligenceObject
    set the cREVIntelligenceObject of this stack to revIDEGetPreference("ideMessageBox_intelligenceobject")
@@ -767,7 +592,7 @@ command revIDESetActiveStack
    
    lock screen
    put revIDEGetPreference("IDEDebugMode") into tMode
-   if tMode is true then
+   if tMode is true and the traceStack is not empty then
       put the short name of the traceStack into tTraceStack
       revIDESetPreference "IDEActiveStack",tTraceStack
       disableFrameItem "lockDefaultStack"
@@ -799,7 +624,7 @@ command revIDESetActiveStack
       end if
    end if
    unlock screen
-end revIDESetActiveStack
+end revIDESetActiveStack 
 
 command revUpdateActiveStack pOldName, pNewName
    if revIDEGetPreference("IDELockedToStack") is false then

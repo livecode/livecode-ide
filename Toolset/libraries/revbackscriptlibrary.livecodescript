@@ -179,14 +179,14 @@ end revCheckQuit
 
 
 on shutDownRequest
-  revCheckQuit
-  if the result is "quit" then pass shutDownRequest
+   revCheckQuit
+   if the result is "quit" then pass shutDownRequest
 end shutDownRequest
 
 on revSendDimensionsUpdate
-  if lUpdateDimensionsTimerID is not empty then cancel lUpdateDimensionsTimerID
-  send "revUpdateSizeandPosition line 1 of the selobj" to me in 500 milliseconds
-  put the result into lUpdateDimensionsTimerID
+   if lUpdateDimensionsTimerID is not empty then cancel lUpdateDimensionsTimerID
+   send "revUpdateSizeandPosition line 1 of the selobj" to me in 500 milliseconds
+   put the result into lUpdateDimensionsTimerID
 end revSendDimensionsUpdate
 
 on revUpdateSizeandPosition pTarget
@@ -208,7 +208,7 @@ function revCheckEdit pTarget
    end if
    
    if (pTarget is not empty and the effective cantSelect of pTarget) or \
-          (pTarget is empty and the effective cantSelect of the target) then
+         (pTarget is empty and the effective cantSelect of the target) then
       return false
    end if
    
@@ -425,65 +425,65 @@ end revStandardUpdate
 
 
 setProp revDisabled pBoolean
-  if word 1 of the target is "group" then
-    repeat with i = 1 to the number of controls in the target
-      set the disabled of control i of the target to pBoolean
-    end repeat
-  else
-    set the disabled of the target to pBoolean
-  end if
-  # lock messages
-  # if pBoolean is true then
-  # if not (there is a control ("revDisabled" & the id of the target)) then
-  # put the properties of the templateGraphic into tPrevTemplate
-  # reset the templateGraphic
-  # set the backColor of the templateGraphic to 124,124,124
-  # set the filled of the templateGraphic to true
-  # set the lineSize of the templateGraphic to 0
-  # set the rect of the templateGraphic to the rect of the target
-  # set the ink of the templateGraphic to "notSrcOr"
-  # set the name of the templateGraphic to "revDisabled" & the id of the target
-  # create graphic
-  # reset the templateGraphic
-  # set the properties of the templateGraphic to tPrevTemplate
-  # end if
-  # else
-  # if there is a control ("revDisabled" & the id of the target) then delete control ("revDisabled" & the id of the target)
-  # end if
-  # unlock messages
-  #old disablement routine: if inks aren't used
-  # --a standard enable/disable routine - sets different properties dependant on object type
-  # if pBoolean is true then
-  # disable the target
-  # if word 1 of the name of the target is "field" then
-  # set the backColor of the target to 220,220,220
-  # put empty into the target
-  # else if word 1 of the name of the target is "button" then
-  # set the hilite of the target to false
-  # else if word 1 of the name of the target is "scrollBar" then
-  # set the thumbPosition of the target to 0
-  # end if
-  # else
-  # enable the target
-  # if word 1 of the name of the target is "field" then set the backColor of the target to empty
-  # end if
+   if word 1 of the target is "group" then
+      repeat with i = 1 to the number of controls in the target
+         set the disabled of control i of the target to pBoolean
+      end repeat
+   else
+      set the disabled of the target to pBoolean
+   end if
+   # lock messages
+   # if pBoolean is true then
+   # if not (there is a control ("revDisabled" & the id of the target)) then
+   # put the properties of the templateGraphic into tPrevTemplate
+   # reset the templateGraphic
+   # set the backColor of the templateGraphic to 124,124,124
+   # set the filled of the templateGraphic to true
+   # set the lineSize of the templateGraphic to 0
+   # set the rect of the templateGraphic to the rect of the target
+   # set the ink of the templateGraphic to "notSrcOr"
+   # set the name of the templateGraphic to "revDisabled" & the id of the target
+   # create graphic
+   # reset the templateGraphic
+   # set the properties of the templateGraphic to tPrevTemplate
+   # end if
+   # else
+   # if there is a control ("revDisabled" & the id of the target) then delete control ("revDisabled" & the id of the target)
+   # end if
+   # unlock messages
+   #old disablement routine: if inks aren't used
+   # --a standard enable/disable routine - sets different properties dependant on object type
+   # if pBoolean is true then
+   # disable the target
+   # if word 1 of the name of the target is "field" then
+   # set the backColor of the target to 220,220,220
+   # put empty into the target
+   # else if word 1 of the name of the target is "button" then
+   # set the hilite of the target to false
+   # else if word 1 of the name of the target is "scrollBar" then
+   # set the thumbPosition of the target to 0
+   # end if
+   # else
+   # enable the target
+   # if word 1 of the name of the target is "field" then set the backColor of the target to empty
+   # end if
 end revDisabled
 
 on revBuildPalette
-  --this handler builds list of which objects to enable and disable and set properties on in each palette
-  --based on name and class of each object
-  local tControlsList
-  --start with the controls that disable when there are multiple objects selected
-  set the defaultStack to the target
-  if the revAllowMultipleList of this cd is empty then
-    repeat with i = 1 to the number of controls
-      if the revAllowMultiple of control i is false then put the name of control i & cr after tControlsList
-    end repeat
-    delete last char of tControlsList
-    set the revAllowMultipleList of this cd to tControlsList
-    answer "Palette" && the short name of the target && "rebuilt.  Save?" with "No" or "Yes"
-    if it is "Yes" then save this stack
-  end if
+   --this handler builds list of which objects to enable and disable and set properties on in each palette
+   --based on name and class of each object
+   local tControlsList
+   --start with the controls that disable when there are multiple objects selected
+   set the defaultStack to the target
+   if the revAllowMultipleList of this cd is empty then
+      repeat with i = 1 to the number of controls
+         if the revAllowMultiple of control i is false then put the name of control i & cr after tControlsList
+      end repeat
+      delete last char of tControlsList
+      set the revAllowMultipleList of this cd to tControlsList
+      answer "Palette" && the short name of the target && "rebuilt.  Save?" with "No" or "Yes"
+      if it is "Yes" then save this stack
+   end if
 end revBuildPalette
 
 on revMovePalettesForSheet
@@ -561,13 +561,13 @@ function revSaveCheck pStack, pNoWarning
                   return false
                end if
             end if
-         break
+            break
          case "Don't Save"
             put empty into gREVStackStatus[pStack]
-         break
+            break
          case "Cancel"
             return false
-         break
+            break
       end switch
    else if word 1 of pStack is "revScriptEditor" and the mode of stack pStack is not 0 then
       -- check script is saved
@@ -595,13 +595,14 @@ on appleEvent p1, p2, p3
          put (there is a stack tCanonical) into tExists
          unlock messages
          // AL-2014-10-27: [[ Bug 12558 ]] Stack opened in apple event should report correct error
-         if not tExists then answer error "Unable to open stack:" && the result
-         else go stack tCanonical
+         if not tExists then 
+            answer error "Unable to open stack:" && the result
+         else 
+            go stack tCanonical
+            ideMessageSend "ideOpenStack", the long id of stack tCanonical
+         end if
       end repeat
-      -------------------------------------------------------
-      --LG 2008-02-28
-      send "revUpdatePalette" to card 1 of stack "revMenuBar"
-      -------------------------------------------------------
+      
       exit appleEvent
    end if
    pass appleEvent
@@ -632,9 +633,9 @@ on revSaveAs pShortName, pSubstackOnly
    revIDEActionSaveStackAs the long id of stack pShortName, pSubstackOnly
 end revSaveAs
 
-function revStackFileVersion pStackFile
-      return revIDEStackFileVersion(pStackFile)
-end revStackFileVersion
+function revStackFileVersion pStackFile
+   return revIDEStackFileVersion(pStackFile)
+end revStackFileVersion
 
 on revRemoveRevOnlineKey pKey, pStack
    local tCustomKeys
@@ -689,9 +690,9 @@ end newGroup
 
 
 on newButton
-  revNewButton the long id of the target
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newButton
+   revNewButton the long id of the target
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newButton
 end newButton
 
 on revNewButton pTarget
@@ -732,51 +733,51 @@ on revNewButton pTarget
 end revNewButton
 
 on newField
-  if the width of the target < 9 and the height of the target < 9 then
-    if the text target is "label text" then
-      set the width of the target to the cLabelFieldWidth of stack "revPreferences"
-      set the height of the target to the cLabelFieldHeight of stack "revPreferences"
-    else
-      set the width of the target to the cFieldWidth of stack "revPreferences"
-      set the height of the target to the cFieldHeight of stack "revPreferences"
-    end if
-  end if
-  set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new field to appear offscreen
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newField
+   if the width of the target < 9 and the height of the target < 9 then
+      if the text target is "label text" then
+         set the width of the target to the cLabelFieldWidth of stack "revPreferences"
+         set the height of the target to the cLabelFieldHeight of stack "revPreferences"
+      else
+         set the width of the target to the cFieldWidth of stack "revPreferences"
+         set the height of the target to the cFieldHeight of stack "revPreferences"
+      end if
+   end if
+   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new field to appear offscreen
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newField
 end newField
 
 on newScrollbar
-  if the width of the target < 9 and the height of the target < 9 then
-    if the platform is "MacOS" then
-      if the style of the target is not "progress" then
-        set the width of the target to the cMacOSScrollbarWidth of stack "revPreferences"
-        set the height of the target to the cMacOSScrollbarHeight of stack "revPreferences"
+   if the width of the target < 9 and the height of the target < 9 then
+      if the platform is "MacOS" then
+         if the style of the target is not "progress" then
+            set the width of the target to the cMacOSScrollbarWidth of stack "revPreferences"
+            set the height of the target to the cMacOSScrollbarHeight of stack "revPreferences"
+         else
+            set the width of the target to the cMacOSProgressScrollbarWidth of stack "revPreferences"
+            set the height of the target to the cMacOSProgressScrollbarHeight of stack "revPreferences"
+         end if
       else
-        set the width of the target to the cMacOSProgressScrollbarWidth of stack "revPreferences"
-        set the height of the target to the cMacOSProgressScrollbarHeight of stack "revPreferences"
+         set the width of the target to the cScrollbarwidth of stack "revPreferences"
+         set the height of the target to the cScrollbarHeight of stack "revPreferences"
       end if
-    else
-      set the width of the target to the cScrollbarwidth of stack "revPreferences"
-      set the height of the target to the cScrollbarHeight of stack "revPreferences"
-    end if
-  end if
-  set the cREVGeneral["revUniqueID"] of the target to the milliseconds
- // PM-2015-09-17: [[ Bug 13826 ]] Allow a new scrollbar to appear offscreen
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newScrollbar
+   end if
+   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new scrollbar to appear offscreen
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newScrollbar
 end newScrollbar
 
 on newImage
-  if the width of the target < 9 and the height of the target < 9 then
-    set the width of the target to the cREVImageWidth of stack "revPreferences"
-    set the height of the target to the cREVImageHeight of stack "revPreferences"
-  end if
-  set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new image to appear offscreen
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newImage
+   if the width of the target < 9 and the height of the target < 9 then
+      set the width of the target to the cREVImageWidth of stack "revPreferences"
+      set the height of the target to the cREVImageHeight of stack "revPreferences"
+   end if
+   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new image to appear offscreen
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newImage
 end newImage
 
 on newEPS
@@ -812,27 +813,29 @@ on newGraphic
 end newGraphic
 
 on newPlayer
-  if the width of the target < 9 and the height of the target < 9 then
-    set the width of the target to the cREVPlayerWidth of stack "revPreferences"
-    set the height of the target to the cREVPlayerHeight of stack "revPreferences"
-  end if
-  set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  // PM-2015-09-17: [[ Bug 13826 ]] Allow a new player to appear offscreen
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newPlayer
+   if the width of the target < 9 and the height of the target < 9 then
+      set the width of the target to the cREVPlayerWidth of stack "revPreferences"
+      set the height of the target to the cREVPlayerHeight of stack "revPreferences"
+   end if
+   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
+   // PM-2015-09-17: [[ Bug 13826 ]] Allow a new player to appear offscreen
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newPlayer
 end newPlayer
 
 on newGroup
-  selectedObjectChanged
-  set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-  revUpdateAOControls
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newGroup
+   selectedObjectChanged
+   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
+   revUpdateAOControls
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newGroup
 end newGroup
 
 on newCard
-  if the mode of stack "revApplicationOverview" is not 0
-  then send "revUpdateCards revTargetStack(the long id of the target)" to stack "revApplicationOverview"
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newCard
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0
+      then send "revUpdateCards revTargetStack(the long id of the target)" to stack "revApplicationOverview"
+      if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newCard
+   end if
 end newCard
 
 on newStack
@@ -856,8 +859,10 @@ on newStack
       set the name of the target to tName
    end if
    send "revUpdatePaletteStack" to me in 100 milliseconds
-   if the mode of stack "revApplicationOverview" is not 0
-   then send "revNewStack the short name of the target" to stack "revApplicationOverview"
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0
+      then send "revNewStack the short name of the target" to stack "revApplicationOverview"
+   end if
    unlock screen
    unlock messages
    pass newStack
@@ -956,10 +961,11 @@ end deleteImage
 
 on deleteCard
    revDeleteLinkedObject
-   if the mode of stack "revApplicationOverview" is not 0 then
-      send "revUpdateCards revTargetStack(the long id of the target)" to stack "revApplicationOverview" in 500 milliseconds
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0 then
+         send "revUpdateCards revTargetStack(the long id of the target)" to stack "revApplicationOverview" in 500 milliseconds
+      end if
    end if
-   
    revIDEUpdateScriptEditorOnObjectDeletion the long id of the target
    
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
@@ -996,9 +1002,11 @@ on newTool
    if the tool is "browse tool" then
       set the defaultStack to the topStack
       if the editBg then set the editBg to false
-      if the mode of stack "revApplicationOverview" is not 0 \
-            and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
-         send "revRefreshControls true, true" to stack "revApplicationOverview"
+      if there is a stack "revApplicationOverview" then
+         if the mode of stack "revApplicationOverview" is not 0 \
+               and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
+            send "revRefreshControls true, true" to stack "revApplicationOverview"
+         end if
       end if
    end if
    
@@ -1108,16 +1116,20 @@ on reloadStack pStackName, pFileName
       go to stack pFileName
    end if
    
-   send "revNewStack the short name of stack pFileName" to stack "revApplicationOverview"
+   if there is a stack "revApplicationOverview" then
+      send "revNewStack the short name of stack pFileName" to stack "revApplicationOverview"
+   end if
 end reloadStack
 
 on revAOUpdateForDeleteStack pStackName
-   if the mode of stack "revApplicationOverview" is not 0 then
-      local tStacks
-      put pStackName into tStacks
-      if the substacks of stack pStackName is not empty
-      then put cr & the substacks of stack pStackName after tStacks
-      send "revAODeleteStack pStackName, tStacks" to stack "revApplicationOverview"
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0 then
+         local tStacks
+         put pStackName into tStacks
+         if the substacks of stack pStackName is not empty
+         then put cr & the substacks of stack pStackName after tStacks
+         send "revAODeleteStack pStackName, tStacks" to stack "revApplicationOverview"
+      end if
    end if
 end revAOUpdateForDeleteStack
 
@@ -1126,13 +1138,13 @@ on revInsertMessageBlock
 end revInsertMessageBlock
 
 function revExtensionShow
-  --returns true if windows is hiding file extensions for files registered, otherwise returns false
-  if the platform is "MacOS" then
-    return the cREVExtension of stack "revPreferences"
-  else if the platform is "Win32" then
-    return queryRegistry("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\HideFileExt") is not the cREVGeneral["cREVHideFileTypes"] of stack "Home"
-  end if
-  return true
+   --returns true if windows is hiding file extensions for files registered, otherwise returns false
+   if the platform is "MacOS" then
+      return the cREVExtension of stack "revPreferences"
+   else if the platform is "Win32" then
+      return queryRegistry("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\HideFileExt") is not the cREVGeneral["cREVHideFileTypes"] of stack "Home"
+   end if
+   return true
 end revExtensionShow
 
 ---------------------------------------- Rulers ----------------------------------------
@@ -1228,9 +1240,9 @@ end revPartCalculateRulers
 local lTimerID
 
 on selectedObjectChanged
-  if "updateForSelectedObjectChanged" is in the pendingMessages then cancel lTimerID
-  send "updateForSelectedObjectChanged" to me in 200 milliseconds
-  put the result into lTimerID
+   if "updateForSelectedObjectChanged" is in the pendingMessages then cancel lTimerID
+   send "updateForSelectedObjectChanged" to me in 200 milliseconds
+   put the result into lTimerID
 end selectedObjectChanged
 
 # OK-2008-03-20 : Moved variable declaration as it was being used before declaration
@@ -1247,7 +1259,7 @@ on updateForSelectedObjectChanged
    if lHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
-   revIDEMessageSend "ideSelectedObjectChanged"
+   ideMessageSend "ideSelectedObjectChanged"
 end updateForSelectedObjectChanged
 
 on preOpenStack
@@ -1265,81 +1277,83 @@ on preOpenStack
 end preOpenStack
 
 function revStyle pWhichString
-  constant kObjectTypes="button,field,graphic,group,scrollbar,image,player,eps"
-  switch
-  case word 1 of pWhichString is "card" and word 2 of pWhichString is among the items of kObjectTypes
-    --hcAddressing special case
-    return word 2 of pWhichString
-    break
-  case word 1 of pWhichString is "the"
-    --templateObject
-    return char 9 to -1 of word 2 of pWhichString
-    break
-  default
-    return word 1 of pWhichString
-    break
-  end switch
+   constant kObjectTypes="button,field,graphic,group,scrollbar,image,player,eps"
+   switch
+      case word 1 of pWhichString is "card" and word 2 of pWhichString is among the items of kObjectTypes
+         --hcAddressing special case
+         return word 2 of pWhichString
+         break
+      case word 1 of pWhichString is "the"
+         --templateObject
+         return char 9 to -1 of word 2 of pWhichString
+         break
+      default
+         return word 1 of pWhichString
+         break
+   end switch
 end revStyle
 
 on undoChanged
-  global gREVUndoList
-  put empty into gREVUndoList
+   global gREVUndoList
+   put empty into gREVUndoList
 end undoChanged
 
 local lSelectionTimerID, lSelectionObject
 
 
 on selectionChanged
-
+   
 end selectionChanged
 
 
 
 on openField
-  put (the target) into lSelectionObject
-  if "revUpdateSelectionChanged" is not in the pendingMessages then
-    send "revUpdateSelectionChanged" to me in 400 milliseconds
-    put the result into lSelectionTimerID
-  else
-    cancel lSelectionTimerID
-    send "revUpdateSelectionChanged" to me in 400 milliseconds
-    put the result into lSelectionTimerID
-  end if
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openField
+   put (the target) into lSelectionObject
+   if "revUpdateSelectionChanged" is not in the pendingMessages then
+      send "revUpdateSelectionChanged" to me in 400 milliseconds
+      put the result into lSelectionTimerID
+   else
+      cancel lSelectionTimerID
+      send "revUpdateSelectionChanged" to me in 400 milliseconds
+      put the result into lSelectionTimerID
+   end if
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openField
 end openField
 
 
 on revUpdateSelectionChanged
-
+   
 end revUpdateSelectionChanged
 
 on exitField
-  selectionChanged
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass exitField
+   selectionChanged
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass exitField
 end exitField
 
 on closeField
-  selectionChanged
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass closeField
+   selectionChanged
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass closeField
 end closeField
 
 on libraryStack
-  if the mode of stack "Message Box" is not 0 \
-      and the short name of this cd of stack "Message Box" is "stacksInUse"
-  then send "revUpdateLibraryStacks" to this cd of stack "Message Box"
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass libraryStack
+   if the mode of stack "Message Box" is not 0 \
+         and the short name of this cd of stack "Message Box" is "stacksInUse"
+   then send "revUpdateLibraryStacks" to this cd of stack "Message Box"
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass libraryStack
 end libraryStack
 
 on releaseStack
-  if the mode of stack "Message Box" is not 0 \
-      and the short name of this cd of stack "Message Box" is "stacksInUse"
-  then send "revUpdateLibraryStacks" to this cd of stack "Message Box"
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass releaseStack
+   if the mode of stack "Message Box" is not 0 \
+         and the short name of this cd of stack "Message Box" is "stacksInUse"
+   then send "revUpdateLibraryStacks" to this cd of stack "Message Box"
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass releaseStack
 end releaseStack
 
 on mainStackChanged
-  if the mode of stack "revApplicationOverview" is not 0
-  then send "revMainStackChanged the long id of the target" to stack "revApplicationOverview" 
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0
+      then send "revMainStackChanged the long id of the target" to stack "revApplicationOverview" 
+   end if
 end mainStackChanged
 
 function revReturnSpaces pString
@@ -1391,11 +1405,11 @@ on revKillAllLinkedPalettes
 end revKillAllLinkedPalettes
 
 on revKill
-  lock messages;quit;
+   lock messages;quit;
 end revKill
 
 function revScriptEditors pStackPath
-    return _revScriptEditorsNew(pStackPath)
+   return _revScriptEditorsNew(pStackPath)
 end revScriptEditors
 
 private function _revScriptEditorsOld pStackPath
@@ -1419,35 +1433,35 @@ private function _revScriptEditorsOld pStackPath
    delete last char of tScriptEditorCards
    return tScriptEditorCards
 end _revScriptEditorsOld
- 
+
 # Change this for now to prevent the ide interfering with the new script editor
 constant kScriptEditorPrefix = "revNewScriptEditor "
- 
+
 private function _revScriptEditorsNew pStack
-  local tStacks
-  put the mainStack of pStack into tStacks
-  put return & the substacks of pStack after tStacks
+   local tStacks
+   put the mainStack of pStack into tStacks
+   put return & the substacks of pStack after tStacks
    
-  local tScriptEditors
-  put the openStacks into tScriptEditors
-  filter tScriptEditors with kScriptEditorPrefix & "*"
+   local tScriptEditors
+   put the openStacks into tScriptEditors
+   filter tScriptEditors with kScriptEditorPrefix & "*"
    
-  local tFoundEditors
-  repeat for each line tEditor in tScriptEditors
-    local tTargetObjects
-    send "revSEGetTargetObjects" to tEditor
-    put the result into tTargetObjects
-     
-    repeat for each line tTargetObject in tTargetObjects
-      if revTargetStack(tTargetObject) is among the lines of tStacks then
-        put tEditor & return after tFoundEditors
-      end if
-    end repeat
-  end repeat
-  delete last char of tFoundEditors
-  return tFoundEditors
+   local tFoundEditors
+   repeat for each line tEditor in tScriptEditors
+      local tTargetObjects
+      send "revSEGetTargetObjects" to tEditor
+      put the result into tTargetObjects
+      
+      repeat for each line tTargetObject in tTargetObjects
+         if revTargetStack(tTargetObject) is among the lines of tStacks then
+            put tEditor & return after tFoundEditors
+         end if
+      end repeat
+   end repeat
+   delete last char of tFoundEditors
+   return tFoundEditors
 end _revScriptEditorsNew
-   
+
 # Parameters
 #   pObject : reference to the object to edit the script of
 # Description
@@ -1478,7 +1492,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    local tTemplateVisibility, tTemplateRect
    put the visible of revScriptEditorTemplate() into tTemplateVisibility
    set the visible of revScriptEditorTemplate() to false
-
+   
    local tEditor
    lock messages
    
@@ -1506,7 +1520,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    if tTemplateVisibility then
       set the visible of revScriptEditorTemplate() to true
    end if
-
+   
    unlock messages
    
    set the mainstack of tEditor to the short name of revScriptEditorMain()
@@ -1522,7 +1536,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    # user code in the debugger which would have run fine otherwise.
    call "revSEInitialize true" to tEditor
    call "revSEAddTargetObject pObject" to tEditor
-   send "revGoScriptEditor tEditor" to me in 0 milliseconds
+   send "revGoScriptEditor tEditor, true" to me in 0 milliseconds
    
    # OK-2008-06-29 : Bug 6661 - This is sent last because setting the script editor's current object
    # also focuses and selects the correct point in the script field, this needs to be done after the script
@@ -1534,7 +1548,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    set the allowInterrupts to tOldAllowInterrupts
 end revEditScriptInNewWindow
 
-   
+
 # Returns
 #   A list of the currently open script editors, ordered with topmost first.
 function revListScriptEditors
@@ -1550,34 +1564,34 @@ function revListScriptEditors
    
    return tFullStacks
 end revListScriptEditors
-   
-   # Returns
-   #   The long id of the topmost script editor, or empty if there is no script editor open.
+
+# Returns
+#   The long id of the topmost script editor, or empty if there is no script editor open.
 function revTopMostScriptEditor
-  local tEditors
-  put revListScriptEditors() into tEditors
-  if the number of lines of tEditors = 0 then
-    return empty
-  else
-    return line 1 of tEditors
-  end if
+   local tEditors
+   put revListScriptEditors() into tEditors
+   if the number of lines of tEditors = 0 then
+      return empty
+   else
+      return line 1 of tEditors
+   end if
 end revTopMostScriptEditor
-   
+
 function revScriptEditorTemplate
-  # For now instead of adding the stack properly, we just ensure it is in memory when asked for
-  get revScriptEditorMain()
+   # For now instead of adding the stack properly, we just ensure it is in memory when asked for
+   get revScriptEditorMain()
    
-  # The script editor template is a substack of the main script editor stack.
-  return the long id of stack "revSETemplate"
+   # The script editor template is a substack of the main script editor stack.
+   return the long id of stack "revSETemplate"
 end revScriptEditorTemplate
-   
+
 function revScriptEditorMain
    --return the long id of stack (revEnvironmentToolsetPath() & slash & "revscripteditor.rev")
    # OK-2008-11-04 : Cannot refer to the script editor by path because it has no path in Media.
    return the long id of stack "revNewScriptEditor"
 end revScriptEditorMain
    
-command revGoScriptEditor pEditor
+command revGoScriptEditor pEditor, pPosition
    # When the user clicks on any stack, revFrontScript intercepts the resulting mouseDown
    # and among other things, attempts to detect whether or not the stack has been edited
    # as a result of the click. Unfortunately any stack clicked on in run mode is flagged as edited,
@@ -1586,12 +1600,15 @@ command revGoScriptEditor pEditor
    put empty into gREVStackStatus[the short name of pEditor]
    
    lock screen
+   lock messages
    toplevel pEditor
-   
+   unlock messages
    # AL-2015-10-01: [[ Bug 16016 ]] Ensure the palette rect is set after the go command
    #  as otherwise the engine closes and reopens the stack, resulting in it being bound 
    #  to the windowBoundingRect (due to some very specific properties of the script editor)
-   revIDEPositionPalette the short name of pEditor
+   if pPosition then
+      revIDEPositionPalette the short name of pEditor
+   end if
    set the visible of pEditor to true
    unlock screen 
    
@@ -1618,9 +1635,9 @@ function revMenuManagerGroup pGroups
    
    local tMenuManagerBG
    if there is not a bg id (the cREVMenuID of stack "revMenuManager") \
-   of stack (the cREVDefaultStack of stack "revMenuManager") then return false
+         of stack (the cREVDefaultStack of stack "revMenuManager") then return false
    put the long id of bg id (the cREVMenuID of stack "revMenuManager") \
-   of stack (the cREVDefaultStack of stack "revMenuManager") into tMenuManagerBG
+         of stack (the cREVDefaultStack of stack "revMenuManager") into tMenuManagerBG
    repeat for each line l in pGroups
       if l is tMenuManagerBG then return true
    end repeat
@@ -1628,21 +1645,21 @@ function revMenuManagerGroup pGroups
 end revMenuManagerGroup
 
 on revCheckScriptSaved pStack
-    _revCheckScriptSavedNew pStack
+   _revCheckScriptSavedNew pStack
 end revCheckScriptSaved
-   
+
 private command _revCheckScriptSavedOld pWhichStack
-  local tEnabled
-  repeat for each line l in revScriptEditors(pWhichStack)
-    do "put the enabled of btn" && quote & "apply" & quote && "of" && l && "into tEnabled"
-    if tEnabled then
-      send "revCheckScriptSaved" to l
-    end if
-  end repeat
+   local tEnabled
+   repeat for each line l in revScriptEditors(pWhichStack)
+      do "put the enabled of btn" && quote & "apply" & quote && "of" && l && "into tEnabled"
+      if tEnabled then
+         send "revCheckScriptSaved" to l
+      end if
+   end repeat
 end _revCheckScriptSavedOld
-   
+
 private command _revCheckScriptSavedNew pStack
-  # Not required
+   # Not required
 end _revCheckScriptSavedNew
 
 
@@ -1754,7 +1771,7 @@ function revLinkedAppearancePalettesList pLinkedObjects
 end revLinkedAppearancePalettesList
 
 on revBuildLinkedPalette pObject
-  send "revBuildPropertyPalette pObject" to stack "revTemplatePalette"
+   send "revBuildPropertyPalette pObject" to stack "revTemplatePalette"
 end revBuildLinkedPalette
 
 function revPalettesList
@@ -1780,8 +1797,8 @@ function revPropertyPalettes pObjects
       repeat for each line m in tOpenStacks
          --check if stack is linked to object or is the active palette and the object is in the selection
          if (l is among the lines of the cREVLinked of stack m \
-         or (the cREVLinked of stack m is empty and l is among the lines of tObjects)) \
-         and m is not among the lines of tPalettes
+               or (the cREVLinked of stack m is empty and l is among the lines of tObjects)) \
+               and m is not among the lines of tPalettes
          then put m & cr after tPalettes
       end repeat
    end repeat
@@ -1828,7 +1845,7 @@ end revAllSameType2
 
 function revDiscernObjectType pObject
    if (the cREVGeneral["viewerobject"] of pObject) \
-          or (the cREVGeneral["viewercreator"] of pObject) then return "report"
+         or (the cREVGeneral["viewercreator"] of pObject) then return "report"
    if word 1 of pObject is not "group" and the cRevGeneral["databasequeryobject"] of pObject 
    then return "databasequery"
    
@@ -1954,13 +1971,13 @@ setProp cREVScriptDebugMode pWhat
 end cREVScriptDebugMode
 
 private command _setScriptDebugModeNew pMode
-  lock messages
-  set the cREVScriptDebugMode of stack "revPreferences" to pMode
-  unlock messages
-  
-  if pMode is not "true" then
-    revDebuggerRun
-  end if
+   lock messages
+   set the cREVScriptDebugMode of stack "revPreferences" to pMode
+   unlock messages
+   
+   if pMode is not "true" then
+      revDebuggerRun
+   end if
 end _setScriptDebugModeNew
 
 function revAllSameType pObjects
@@ -1992,20 +2009,20 @@ function revObjectTabs pObjects
       switch (line 2 of tAllSameInfo)
          case "button"
             put "Button"&cr&"Menu"&cr&"Report" into tTabs
-         break
+            break
          case "field"
             put "Field"&cr&"Behavior"&cr&"Database"&cr&"Table" into tTabs
-         break
+            break
          case "player"
             put "Player"&cr&"Interaction" into tTabs
-         break
+            break
          case "stack"
             put "Stack"&cr&"General" into tTabs
-         break
+            break
          default
             put line 2 of tAllSameInfo into tTabs
             put toUpper(char 1 of tTabs) into char 1 of tTabs
-         break
+            break
       end switch
       return "Basic"&cr&tTabs&cr&"Custom"
    else
@@ -2025,7 +2042,7 @@ function revReturnSelectionDescription pObjects
             put line 1 of pObjects into line 1 of tSelectionDescription
             put line 1 of tSelectionDescription into line 2 of tSelectionDescription
             set the cREVLabelID of btn "Selection Description" of bg "revBackdrop" to tSelectionDescription
-         break
+            break
          case the num of lines in pObjects > 1 
             # OK-2008-03-20 : This appears to have been ommited
             local tFirstObjectType
@@ -2033,11 +2050,11 @@ function revReturnSelectionDescription pObjects
             
             put "multiple" && tFirstObjectType & "s" into line 1 of tSelectionDescription
             put line 1 of tSelectionDescription into line 2 of tSelectionDescription
-         break
+            break
          default
             put the name of pObjects into line 1 of tSelectionDescription
             put pObjects into line 2 of tSelectionDescription
-         break
+            break
       end switch
    else
       --multiple object types
@@ -2113,11 +2130,11 @@ function revRuggedId pObject
    # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
    #    is in a different form than this expects. Thus we temporarily fetch it while hcAddressing
    #    is false.
-	if the hcAddressing of tStack then
-		set the hcAddressing of tStack to false
-		put the long id of pObject into tObject
-		set the hcAddressing of tStack to true
-	end if
+   if the hcAddressing of tStack then
+      set the hcAddressing of tStack to false
+      put the long id of pObject into tObject
+      set the hcAddressing of tStack to true
+   end if
    
    local tType
    put word 1 of tObject into tType
@@ -2148,7 +2165,7 @@ function revRuggedId pObject
 end revRuggedId
 
 function revScriptEditor pObject
-    return _revScriptEditorNew(the long id of pObject)
+   return _revScriptEditorNew(the long id of pObject)
 end revScriptEditor
 
 # Parameters
@@ -2157,73 +2174,73 @@ end revScriptEditor
 #   The long id of the script editor that is currently editing pObject
 #   or empty if none is.
 private function _revScriptEditorNew pObject
-  local tEditors
-  put revListScriptEditors() into tEditors
-  
-  local tFoundEditor
-  repeat for each line tEditor in tEditors
-    local tTargetObjects
-    send "revSEGetTargetObjects" to tEditor
-    put the result into tTargetObjects
-    
-    if pObject is empty or there is no pObject then
-      #log "Invalid object supplied from context:  " & return & the executionContexts
-      log "Invalid object supplied: " & pObject
-    end if
-    
-    if revRuggedId(pObject) is among the lines of tTargetObjects then
-      put the short name of tEditor into tFoundEditor
-      exit repeat
-    end if
-  end repeat
-  
-  return tFoundEditor
+   local tEditors
+   put revListScriptEditors() into tEditors
+   
+   local tFoundEditor
+   repeat for each line tEditor in tEditors
+      local tTargetObjects
+      send "revSEGetTargetObjects" to tEditor
+      put the result into tTargetObjects
+      
+      if pObject is empty or there is no pObject then
+         #log "Invalid object supplied from context:  " & return & the executionContexts
+         log "Invalid object supplied: " & pObject
+      end if
+      
+      if revRuggedId(pObject) is among the lines of tTargetObjects then
+         put the short name of tEditor into tFoundEditor
+         exit repeat
+      end if
+   end repeat
+   
+   return tFoundEditor
 end _revScriptEditorNew
 
 private function _revScriptEditorOld pObject
-  #LG 2008-01-08 - Bug 5695
-  # Added code which updates the ids of the targets of all the script editors.
-  local tScriptEditor, tScriptEditors
-  put the openStacks into tScriptEditors
-  filter tScriptEditors with "revScriptEditor*"
-  repeat for each line tScriptEditor in tScriptEditors
-    lock messages
-    #LG 2008-03-27
-    #Bug 6087
-    if there is a (the cTargetObject of card 1 of stack tScriptEditor) then
-      set the cTargetObject of card 1 of stack tScriptEditor to the long id of the cTargetObject of card 1 of stack tScriptEditor
-    end if
-    unlock messages
-  end repeat
-  if word 1 of pObject is "group" and the backGroundBehavior of pObject then 
-    local tCardName
-    put line 1 of the cardNames of pObject into tCardName
-    if word 1 to 2 of tCardName is "card id" then 
-      put word 3 of tCardName into word 7 of pObject
-    else
-      # OK-2007-09-17 : Bug 5403 (pObject was previously mistyped as tObject)
-      put the ID of card tCardName of stack revTargetStack(pObject) into word 7 of pObject
-    end if
-  end if
-  
-  repeat for each line tStack in tScriptEditors
-    --check if stack is linked to object or is the active palette and the object is in the selection
-    if pObject is among the lines of the cTargetObject of this card of stack tStack then
-      return tStack
-    end if
-  end repeat
-  return empty
+   #LG 2008-01-08 - Bug 5695
+   # Added code which updates the ids of the targets of all the script editors.
+   local tScriptEditor, tScriptEditors
+   put the openStacks into tScriptEditors
+   filter tScriptEditors with "revScriptEditor*"
+   repeat for each line tScriptEditor in tScriptEditors
+      lock messages
+      #LG 2008-03-27
+      #Bug 6087
+      if there is a (the cTargetObject of card 1 of stack tScriptEditor) then
+         set the cTargetObject of card 1 of stack tScriptEditor to the long id of the cTargetObject of card 1 of stack tScriptEditor
+      end if
+      unlock messages
+   end repeat
+   if word 1 of pObject is "group" and the backGroundBehavior of pObject then 
+      local tCardName
+      put line 1 of the cardNames of pObject into tCardName
+      if word 1 to 2 of tCardName is "card id" then 
+         put word 3 of tCardName into word 7 of pObject
+      else
+         # OK-2007-09-17 : Bug 5403 (pObject was previously mistyped as tObject)
+         put the ID of card tCardName of stack revTargetStack(pObject) into word 7 of pObject
+      end if
+   end if
+   
+   repeat for each line tStack in tScriptEditors
+      --check if stack is linked to object or is the active palette and the object is in the selection
+      if pObject is among the lines of the cTargetObject of this card of stack tStack then
+         return tStack
+      end if
+   end repeat
+   return empty
 end _revScriptEditorOld
 
 on revShowScriptEditor pStack
-    _revShowScriptEditorNew pStack
+   _revShowScriptEditorNew pStack
 end revShowScriptEditor
 
 private command _revShowScriptEditorOld pStack
-    lock messages -- unlocked messages cause editor to appear behind menu bar
-  --if menu bar has text and icons hidden, and editor loaded twice
-  show stack pStack
-  revSEHidePalettes
+   lock messages -- unlocked messages cause editor to appear behind menu bar
+   --if menu bar has text and icons hidden, and editor loaded twice
+   show stack pStack
+   revSEHidePalettes
 end _revShowScriptEditorOld
 
 private command _revShowScriptEditorNew pStack
@@ -2289,8 +2306,8 @@ Script Editor hide/show palettes
 local lShowPalettesMsgID
 
 on revInitialiseSEHidePalettes
-  put empty into lShowPalettesMsgID
-  put empty into lHiddenPalettes
+   put empty into lShowPalettesMsgID
+   put empty into lHiddenPalettes
 end revInitialiseSEHidePalettes
 
 on revSEHidePalettes
@@ -2370,8 +2387,8 @@ private function revSEStackIsScriptEditor pStackname
 end revSEStackIsScriptEditor
 
 on revSEShowPalettes
-  send "revSEDelayShowPalettes" to me in 200 milliseconds
-  put the result into lShowPalettesMsgID
+   send "revSEDelayShowPalettes" to me in 200 milliseconds
+   put the result into lShowPalettesMsgID
 end revSEShowPalettes
 
 on revSEDelayShowPalettes
@@ -2424,96 +2441,96 @@ end revSEDelayShowPalettes
 #   Prompts the user to select images, if some images are selected then
 #   imports these into pStack. If pStack is not given then imports into the defaultStack
 on revImportImageFile pStack
-  local tDefaultStack
-  put the defaultStack into tDefaultStack
-  
-  local tStack
-  if pStack is empty then
-    put the long id of the defaultStack into tStack
-  else
-    put pStack into tStack
-  end if
-  
-  try
-    local tFilePaths
-    put revAnswerFiles("image", "Select an image file to import:") into tFilePaths
-    if tFilePaths is empty then
-      exit revImportImageFile
-    end if
-    
-    repeat for each line tFilePath in tFilePaths
-      local tConvertPICT
-      put false into tConvertPICT 
-       
-      if the platform is "MacOS" then
-        if revIsPICT(tFilePath) then
-          put true into tConvertPICT
-          if not (the cNOPICTWarning of stack "revPreferences") then
-            answer warning "This file is in Macintosh PICT format, which can only be displayed on Mac OS systems.  " & \
-                "LiveCode can convert the imported image to PNG format, which can be displayed cross platform. " & \
-                "Would you like LiveCode to convert the imported image to PNG format?" \
-                with "Don't Show Again" or "Cancel" or "Don't Convert" or "Convert to PNG Format"
-             
-            if it is "Cancel" then
-              exit revImportImageFile
-            end if
-            if it is "Don't Show Again" then
-              set the cNOPICTWarning of stack "revPreferences" to true
-            end if
-            if it is "Don't Convert" then
-              put false into tConvertPICT
-            end if
-          end if
-        end if
-        if tFilePath is not empty then
-          lock screen
-          
-          # OK-2007-11-23 : Bug 5562
-          set the defaultStack to the short name of tStack
-          
-          import paint from file tFilePath
-          if tConvertPICT then
-            import snapshot from last image
-            set the name of last image to the short name of image (the number of images -1)
-            delete image (the number of images -1)
-          end if
-          set the loc of last image to the loc of this card
-          
-          set the defaultStack to tDefaultStack
-          
-          unlock screen
-        end if
-      else
-        # Windows and Unix
-        if revIsPICT(tFilePath) then
-          put true into tConvertPICT
-          if not (the cNOPICTWarning of stack "revPreferences") then
-            answer warning "This file is in Macintosh PICT format.  This format can only be displayed on Mac OS systems." with "Don't Show Again" or "Cancel" or "Continue"
-            if it is "Cancel" then
-              exit revImportImageFile
-            end if
-            if it is "Don't Show Again" then
-              set the cNOPICTWarning of stack "revPreferences" to true
-            end if
-            if it is "No" then
-              put false into tConvertPICT
-            end if
-          end if
-        end if
-        if tFilePath is not empty then
-          # OK-2007-11-23 : Bug 5562
-          set the defaultStack to the short name of tStack
-          
-          import paint from file tFilePath
-          set the loc of last image to the loc of this card
-          
-          set the defaultStack to tDefaultStack
-        end if
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   
+   local tStack
+   if pStack is empty then
+      put the long id of the defaultStack into tStack
+   else
+      put pStack into tStack
+   end if
+   
+   try
+      local tFilePaths
+      put revAnswerFiles("image", "Select an image file to import:") into tFilePaths
+      if tFilePaths is empty then
+         exit revImportImageFile
       end if
-    end repeat
-  catch someError
-    answer "An error occurred when trying to import the image file:" & cr & tFilePath & cr & someError
-  end try
+      
+      repeat for each line tFilePath in tFilePaths
+         local tConvertPICT
+         put false into tConvertPICT 
+         
+         if the platform is "MacOS" then
+            if revIsPICT(tFilePath) then
+               put true into tConvertPICT
+               if not (the cNOPICTWarning of stack "revPreferences") then
+                  answer warning "This file is in Macintosh PICT format, which can only be displayed on Mac OS systems.  " & \
+                  "LiveCode can convert the imported image to PNG format, which can be displayed cross platform. " & \
+                  "Would you like LiveCode to convert the imported image to PNG format?" \
+                        with "Don't Show Again" or "Cancel" or "Don't Convert" or "Convert to PNG Format"
+                  
+                  if it is "Cancel" then
+                     exit revImportImageFile
+                  end if
+                  if it is "Don't Show Again" then
+                     set the cNOPICTWarning of stack "revPreferences" to true
+                  end if
+                  if it is "Don't Convert" then
+                     put false into tConvertPICT
+                  end if
+               end if
+            end if
+            if tFilePath is not empty then
+               lock screen
+               
+               # OK-2007-11-23 : Bug 5562
+               set the defaultStack to the short name of tStack
+               
+               import paint from file tFilePath
+               if tConvertPICT then
+                  import snapshot from last image
+                  set the name of last image to the short name of image (the number of images -1)
+                  delete image (the number of images -1)
+               end if
+               set the loc of last image to the loc of this card
+               
+               set the defaultStack to tDefaultStack
+               
+               unlock screen
+            end if
+         else
+            # Windows and Unix
+            if revIsPICT(tFilePath) then
+               put true into tConvertPICT
+               if not (the cNOPICTWarning of stack "revPreferences") then
+                  answer warning "This file is in Macintosh PICT format.  This format can only be displayed on Mac OS systems." with "Don't Show Again" or "Cancel" or "Continue"
+                  if it is "Cancel" then
+                     exit revImportImageFile
+                  end if
+                  if it is "Don't Show Again" then
+                     set the cNOPICTWarning of stack "revPreferences" to true
+                  end if
+                  if it is "No" then
+                     put false into tConvertPICT
+                  end if
+               end if
+            end if
+            if tFilePath is not empty then
+               # OK-2007-11-23 : Bug 5562
+               set the defaultStack to the short name of tStack
+               
+               import paint from file tFilePath
+               set the loc of last image to the loc of this card
+               
+               set the defaultStack to tDefaultStack
+            end if
+         end if
+      end repeat
+   catch someError
+      answer "An error occurred when trying to import the image file:" & cr & tFilePath & cr & someError
+   end try
 end revImportImageFile
 
 on revUpdateAOControls pTarget
@@ -2527,14 +2544,16 @@ on revUpdateAOControls pTarget
    set the hcAddressing of stack tTargetStack to false
    if pTarget is empty then put the long id of the target into pTarget
    else put the long id of pTarget into pTarget -- id with HCAddressing false
-   send "revClearControlCache pTarget" to stack "revApplicationOverview"
-   if the mode of stack "revApplicationOverview" is not 0 \
-   and revTargetStack(pTarget) is gREVStackName \
-   and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
-      
-      if lUpdateAOControlsTimerID is not empty then cancel lUpdateAOControlsTimerID
-      send "revRefreshControls true, false" to cd "Cards and Controls" of stack "revApplicationOverview" in 1 second
-      put the result into lUpdateAOControlsTimerID
+   if there is a stack "revApplicationOverview" then
+      send "revClearControlCache pTarget" to stack "revApplicationOverview"
+      if the mode of stack "revApplicationOverview" is not 0 \
+            and revTargetStack(pTarget) is gREVStackName \
+            and the short name of this cd of stack "revApplicationOverview" is "Cards and Controls" then
+         
+         if lUpdateAOControlsTimerID is not empty then cancel lUpdateAOControlsTimerID
+         send "revRefreshControls true, false" to cd "Cards and Controls" of stack "revApplicationOverview" in 1 second
+         put the result into lUpdateAOControlsTimerID
+      end if
    end if
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
@@ -2595,22 +2614,22 @@ function revExternalVersion pExternal
             local tXML
             put "2.1RC1-1" into tXML
             put k & ":" && tXML & cr after tExternalVersion
-         break
+            break
          case "revdb"
             local tDB
             put "2.1RC1-1" into tDB
             put k & ":" && tDB & cr after tExternalVersion
-         break
+            break
          case "revvideograbber"
             local tVideoGrabber
             put "2.1RC1-1" into tVideoGrabber
             put k & ":" && tVideoGrabber & cr after tExternalVersion
-         break
+            break
          case "revspeech"
             local tSpeech
             put "2.1RC1-1" into tSpeech
             put k & ":" && tSpeech & cr after tExternalVersion
-         break
+            break
       end switch
       put k & "," after tExternalList
    end repeat
@@ -2634,12 +2653,14 @@ function revExternalVersion pExternal
 end revExternalVersion
 
 on revUpdateAB
-  if the mode of stack "revApplicationOverview" is not 0 then
-    lock screen
-    send "revRetainStacks" to stack "revApplicationOverview"
-    send "revInitAppBrowser" to stack "revApplicationOverview"
-    unlock screen
-  end if
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0 then
+         lock screen
+         send "revRetainStacks" to stack "revApplicationOverview"
+         send "revInitAppBrowser" to stack "revApplicationOverview"
+         unlock screen
+      end if
+   end if
 end revUpdateAB
 
 # OK-2007-08-02 : Added revGetDatabaseDriverPath to revDB external, and updated this function to use it.
@@ -3361,72 +3382,6 @@ on deskTopChanged
   put false into lExecutingDesktopChanged
 end deskTopChanged
 
-
-
-################################################################################
-#######################  Documentation Stack Backscript ########################
-################################################################################
-
--- Number of xml files per clump
-constant kFilesPerClump = 50
--- Name of clump index
-constant kIndexName = "clumps.index"
--- Number of clumps allowed to be open at once
-constant kMaxOpenClumps = 10
--- Clump name prefix
-constant kClumpNamePrefix = "revDocClump_"
-
-
-function revDocumentationRetrieve pType, pTag, pFolder
-   -- We know how many files per clump cuz of kFilesPerClump
-   -- pType is either "dictionary/" or "glossary/"
-   local tClumpNumber, tFileNumber, tPropNumber, tPropName
-   local tClumpName, tDocData, tClumpPath, tType, tOpenClumps
-   ---------
-   
-   put pType into tType
-   if the last char of tType is not slash then put slash after tType
-   
-   if pFolder is empty then
-      put revEnvironmentDocumentationPath() & slash & "packaged_xml/" & tType into tClumpPath
-   else
-      put pFolder & slash & "packaged_xml/" & tType into tClumpPath
-   end if
-   
-   set the itemDelimiter to "."
-   put item 1 of pTag into tFileNumber
-   if tFileNumber is not a number then
-      return empty
-   end if
-   put ((tFileNumber - 1) div kFilesPerClump) + 1 into tClumpNumber
-   put ((tFileNumber - 1) mod kFilesPerClump) + 1 into tPropNumber
-   
-   put "c" & tPropNumber into tPropName
-   put the mainStacks into tOpenClumps
-   filter tOpenClumps with kClumpNamePrefix & "*"
-   if the number of lines of tOpenClumps > (kMaxOpenClumps -1) then
-      local tLines, tRandomLine
-      -----
-      set the randomSeed to the seconds
-      put the number of lines of tOpenClumps into tLines
-      put the random of tLines into tRandomLine
-      if there is a stack (line tRandomLine of tOpenClumps) then
-         delete stack (line tRandomLine of tOpenClumps)
-      end if
-      delete line tRandomLine of tOpenClumps
-   end if
-   
-   put kClumpNamePrefix & tClumpNumber into tClumpName
-   
-   put the tPropName of stack (tClumpPath & tClumpName & ".rev") into tDocData
-   if tDocData is empty then
-      return empty
-   end if
-   
-   -- We've got the doc's compressed data, uncompress and return
-   return the decompress of tDocData
-end revDocumentationRetrieve
-
 function revCalculateRelativePath pRoot, pFile
   local tResult, tCount
   set the itemDel to "/"
@@ -3495,15 +3450,9 @@ command revIDEHandleMouseUp pWhich, pTarget
     set the backPattern of tTarget to empty
   end if
    
-  if the platform is not "MacOS" and the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
-    revShowPopupmenu tTarget
-    return "exit"
- end if
+
  // SN-2014-09-18: [[ Bug 13475 ]] Follow the same rule as revIDEHandleMouseDown, to avoid duplicates
   if pWhich is an integer and revCheckEdit(tTarget) then
-    if the platform is not "MacOS" and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
-      revShowPopupmenu tTarget
-    end if
     return "exit"
   end if
 end revIDEHandleMouseUp
@@ -3551,7 +3500,7 @@ command revIDEHandleMouseDown pWhich, pTarget
    put the long id of pTarget into tTarget
    
    global gREVPopups, gREVScriptShortcut, gREVUIScriptShortcut, gREVPaintImage
-   if the platform is "MacOS" and the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
+   if the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
       put true into sPopupMenuUp
       revShowPopupmenu tTarget
       return "exit"
@@ -3580,7 +3529,7 @@ command revIDEHandleMouseDown pWhich, pTarget
          else
             select tTarget
          end if
-         if the platform is "MacOS" and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then 
+         if not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups) then 
             revShowPopupmenu tTarget
          end if
          send "selectedObjectChanged" to me
@@ -3644,11 +3593,12 @@ command revIDEHandleNewStack pTarget
    revSetActiveStacks
    
    local tStack
-   if the mode of stack "revApplicationOverview" is not 0 then
-      put revTargetStack(the long id of stack tStackName) into tStack
-      send "revNewStack tStack" to stack "revApplicationOverview"
+   if there is a stack "revApplicationOverview" then
+      if the mode of stack "revApplicationOverview" is not 0 then
+         put revTargetStack(the long id of stack tStackName) into tStack
+         send "revNewStack tStack" to stack "revApplicationOverview"
+      end if
    end if
-   
    global gREVMessageDispatch
    repeat for each line l in gREVMessageDispatch["revPreOpenStack"]
       send "revPreOpenStack" to this cd of stack l

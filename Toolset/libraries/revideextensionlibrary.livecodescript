@@ -107,16 +107,28 @@ function revIDEExtensionProperties pTypeID
    return sExtensionProperties[pTypeID]
 end revIDEExtensionProperties
 
-function revIDEExtensionPropertiesInfo pTypeId
-   local tPropsA, tPropInfoA
+function revIDEExtensionPropertiesInfo pTypeId, pOrganise
+   local tPropsA, tExtensionPropsInfoA
    put revIDEExtensionProperties(pTypeId) into tPropsA
    
-   repeat for each key tProp in tPropsA
-      put tPropsA[tProp] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["proplist"][tProp]
-      put tPropsA[tProp]["widget_prop"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["widget_prop"]
-      put tPropsA[tProp]["order"] into tPropInfoA[tPropsA[tProp]["section"]]["grouplist"][tPropsA[tProp]["label"]]["order"]
-   end repeat
-   return tPropInfoA
+   if pOrganise then
+      # If pOrganise is true, organise the property info into the structure that the property 
+      #  inspector expects, namely [<section>]["grouplist"][<group>]["proplist"][<prop>]
+      repeat for each key tProp in tPropsA
+         local tSection, tGroup, tOrder, tPropInfoA
+         put tPropsA[tProp] into tPropInfoA
+         put tPropsA[tProp]["order"] into tOrder
+         put tPropsA[tProp]["label"] into tGroup
+         put tPropsA[tProp]["section"] into tSection
+         put tPropInfoA into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["proplist"][tProp]
+         
+         put true into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["widget_prop"]
+         put tOrder into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["order"]
+      end repeat
+   else
+      put tPropsA into tExtensionPropsInfoA
+   end if
+   return tExtensionPropsInfoA
 end revIDEExtensionPropertiesInfo
 
 function revIDEExtensionProperty pKind, pProperty
@@ -488,23 +500,13 @@ on __extensionUninstallDeleteFiles pExtensionID
    end if
    
    # Next step
-   send "__extensionUninstallDocs" && pExtensionID to me in 0 milliseconds
-end __extensionUninstallDeleteFiles
-
-# Remove the guide from the IDE
-on __extensionUninstallDocs pExtensionID
-   # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 80
-   
-   revIDERegenerateBuiltDictionaryData
-   
    send "__extensionUninstallUpdateCache" && pExtensionID to me in 0 milliseconds
-end __extensionUninstallDocs
+end __extensionUninstallDeleteFiles
 
 # remove from cache
 on __extensionUninstallUpdateCache pExtensionID
    # Update progress
-   __extensionSendProgressUpdate pExtensionID, "Removing extension data", 90
+   __extensionSendProgressUpdate pExtensionID, "Removing extension data", 80
    
    local tCopies
    put __extensionPropertyGet(pExtensionID, "copies") into tCopies
@@ -514,14 +516,26 @@ on __extensionUninstallUpdateCache pExtensionID
       __extensionPropertySet pExtensionID, "status", "uninstalled"
    end if
    
+   send "__extensionUninstallDocs" && pExtensionID to me in 0 milliseconds
+end __extensionUninstallUpdateCache
+
+# Remove the guide from the IDE
+on __extensionUninstallDocs pExtensionID
+   # Update progress
+   __extensionSendProgressUpdate pExtensionID, "Removing API and user guide from documentation", 90
+   
+   revIDERegenerateBuiltDictionaryData
+   
+   send "__extensionUninstallComplete" && pExtensionID to me in 0 milliseconds
+end __extensionUninstallDocs
+
+on __extensionUninstallComplete pExtensionID
    # Notify IDE uninstallation complete
    __extensionSendProgressUpdate pExtensionID, "Complete", 100
    
    # Update the IDE
    __extensionsChanged
-end __extensionUninstallUpdateCache
-
-
+end __extensionUninstallComplete
 
 ##############################
 # PRIVATE SHARED
@@ -644,7 +658,7 @@ end __extensionError
 
 # Send notication that widget has been added/removed
 on __extensionsChanged
-   revIDEMessageSend "ideExtensionsChanged"
+   ideMessageSend "ideExtensionsChanged"
 end __extensionsChanged
 
 # Sent progress update on installation of widget
@@ -656,7 +670,7 @@ on __extensionSendProgressUpdate pExtensionID, pMessage, pProgress
    local tName
    //revputarray sExtensions
    put __extensionPropertyGet(pExtensionID, "name") into tName
-   revIDEMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
+   ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
    
    //local tCallbackTarget, tCallBackHandler
    //put __extensionPropertyGet(pExtensionID, "callback_target") into tCallbackTarget
@@ -1114,6 +1128,11 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put revXMLAttribute(tId,"package" & "/" & tDependency,"name") into tName
       put tName into tDataA["requires"][tCount]
    end repeat
+   
+   # User visible should default to true
+   if tDataA["uservisible"] is empty then
+      put true into tDataA["uservisible"]
+   end if
    
    put tDataA into rDataA
    return empty

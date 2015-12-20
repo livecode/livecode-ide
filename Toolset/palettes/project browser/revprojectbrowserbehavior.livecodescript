@@ -1,6 +1,5 @@
 ﻿script "revProjectBrowserBehavior"
 local sDisplayArray, sLongIDToRow, sObjectToParent
---, sExpandedStacks, sLongIDToRow, sObjectToParent
 
 on preOpenStack   
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
@@ -29,15 +28,12 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   //addFrameItem "showControl","footer","action","Show/hide controls","eye open","","showControls", the long id of me
-   //addFrameItem "lockControl","footer","action","Lock/unlock controls","lock","","lockControls", the long id of me
+
    
    # Preferences
-   --addFrameItem "ideProjectBrowser_thumbnails", "header", "preference", "Show Thumbnails", "boolean","true,false", "preferenceChanged", the long id of me
-   --addFrameItem "ideProjectBrowser_groupThumbnails", "header", "preference", "Show Group Thumbnails", "boolean","true,false", "preferenceChanged", the long id of me
-   --addFrameItem "ideProjectBrowser_sortOrder", "header", "preference", "Control sort order", "enum","Bottom to top,Top to bottom", "preferenceChanged", the long id of me
    addFrameItem "ideProjectBrowser_objectType", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me
    addFrameItem "ideProjectBrowser_show", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "displayPreferenceSelected", the long id of me
+   addFrameItem "ideProjectBrowser_order","header","preference","Order by","enum","Name,Number","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideNewControl"
@@ -55,9 +51,15 @@ on preOpenStack
    revIDESubscribe "ideReleaseStack"
    
    revIDESubscribe "ideNameChanged"
+   revIDESubscribe "ideMainstackChanged"
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_thumbnails"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_groupThumbnails" 
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_objectType"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
    
    put empty into sDisplayArray
    loadImages
@@ -103,10 +105,10 @@ end closeStack
 ####### Subscribed IDE messages #######
 ###################################
 on ideSelectedObjectChanged
-   local tObject
-   put revIDESelectedObjects() into tObject
+   --   local tObject
+   --   put revIDESelectedObjects() into tObject
    
-   highlightObjects tObject
+   --   highlightObjects tObject
 end ideSelectedObjectChanged
 
 on ideNewControl pTarget
@@ -124,11 +126,7 @@ on ideNewCard pTarget
 end ideNewCard
 
 on ideNewStack pTarget
-   if the mainStack of pTarget is the short name of pTarget then
-      addStackToProjectBrowser pTarget
-   else
-      addSubStackToProjectBrowser pTarget
-   end if
+   addStackToProjectBrowser pTarget
 end ideNewStack
 
 on ideControlDeleted pTarget
@@ -140,7 +138,6 @@ on ideCardDeleted pTarget
 end ideCardDeleted
 
 on ideStackDeleted pTarget
-   put pTarget
    deleteStackFromProjectBrowser pTarget
 end ideStackDeleted
 
@@ -155,16 +152,12 @@ end ideReleaseStack
 on ideOpenStack pTarget
    local tStack
    if word 1 of pTarget  is "card" then
-      put the name of the owner of pTarget into tStack
+      put ideStackOfObject(pTarget) into tStack
    else if word 1 of pTarget is "stack" then
       put pTarget into tStack
    end if
    
-   if the mainStack of tStack is the short name of tStack then
-      addStackToProjectBrowser tStack
-   else
-      addSubStackToProjectBrowser tStack
-   end if
+   addStackToProjectBrowser tStack
 end ideOpenStack
 
 on ideDestroyStack pTarget
@@ -177,9 +170,41 @@ on ideResumeStack pTarget
    --   highlightObjects tObject
 end ideResumeStack
 
-on ideNameChanged pTarget
-   updateObjectRows pTarget, "name", the short name of pTarget
+on ideNameChanged pOldName, pNewName, pTarget
+   # if the target is a stack, we need to deal with the name change
+   # separately, as the long id is changed.
+   if word 1 of pTarget is "stack" then
+      local tOldTarget
+      put pTarget into tOldTarget
+      put quote & pOldName & quote into word 2 of tOldTarget
+      deleteStackFromProjectBrowser tOldTarget
+      addStackToProjectBrowser pTarget
+      exit ideNameChanged
+   end if
+   
+   updateObjectRows pTarget, "name", pNewName
 end ideNameChanged
+
+on ideMainstackChanged pOldName, pNewName, pTarget
+   # The long id of the target will have changed.
+   # Try and find the old stack which will have been added to the pb
+   local tOldTarget
+   # First check if the target was previously the substack of another stack
+   local tDeleted
+   put pTarget into tOldTarget
+   put quote & pOldName & quote into word 5 of tOldTarget
+   deleteStackFromProjectBrowser tOldTarget
+   put the result into tDeleted
+   
+   # Otherwise the target was previously a mainstack
+   if not tDeleted then
+      put word 1 to 2 of pTarget into tOldTarget
+      deleteStackFromProjectBrowser tOldTarget
+      put the result into tDeleted
+   end if
+   
+   addStackToProjectBrowser pTarget
+end ideMainstackChanged
 
 on preferenceChanged pPreference, pValue
    local tOldValue
@@ -196,20 +221,22 @@ on preferenceChanged pPreference, pValue
       case "ideProjectBrowser_objectType"
          revIDESetPreference pPreference, pValue
          break
+      case "ideProjectBrowser_order"
+         revIDESetPreference pPreference, pValue
+         break
    end switch
-   
-   buildProjectView   
 end preferenceChanged
 
 on idePreferenceChanged pPreference, pValue
-   local tValue
-   
-   put revIDEGetPreference(pPreference) into tValue   
    switch pPreference
-      case "cShowRevolutionStacks"
+      case "ideProjectBrowser_thumbnails"
+      case "ideProjectBrowser_groupThumbnails" 
       case "ideProjectBrowser_sortOrder"
+      case "ideProjectBrowser_objectType"
+      case "ideProjectBrowser_order"
+      case "ideProjectBrowser_show"
+      default
          buildProjectView true
-         break
    end switch
 end idePreferenceChanged
 
@@ -234,16 +261,49 @@ end displayPreferenceSelected
 ######## Project View Handlers ########
 ###################################
 
+function pbSelectedObjects
+   local tHilitedRows
+   put the dvHilitedRows of group "objectList" of me into tHilitedRows
+   
+   local tObjectList, tAbsoluteRow, tObject
+   repeat for each item tRow in tHilitedRows
+      put getAbsoluteRow(tRow) into tAbsoluteRow
+      put sDisplayArray["objects"][tAbsoluteRow]["long id"] into tObject
+      
+      if tObjectList is empty then
+         put tObject into tObjectList
+      else
+         put return & tObject after tObjectList
+      end if
+   end repeat
+   return tObjectList
+end pbSelectedObjects
+
 command setUpProjectView
-   local theStylesA
+   local theStylesA, tBehaviorsFolder, tStackID
+   put revIDEPaletteResourcePath("behaviors") into tBehaviorsFolder
    
    set the behavior of group "objectList" of me to revIDEDataViewBehavior()
    send "ResetView" to group "objectList" of me
    put the long id of group "containerRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["container"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontainerrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["container"] to tStackID
+   
    put the long id of group "controlRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["control"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontrolrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["control"] to tStackID
+   
    put the long id of group "libraryRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["library"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowserlibraryrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["library"] to tStackID
+   
    put the long id of group "sectionRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["section"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsersectionrowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["section"] to tStackID
+   
    put the long id of group "groupRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["group"]
+   put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsergrouprowbehavior.livecodescript") into tStackID
+   set the behavior of theStylesA["group"] to tStackID
    
    set the viewProp["row style templates"] of group "objectList" of me to theStylesA
    set the viewProp["hilite color"] of group "objectList" of me to revIDEColor("dataView_HiliteColor")
@@ -272,7 +332,7 @@ command buildProjectView pRememberExpansion
    if pRememberExpansion then
       repeat for each line tKey in the keys of sDisplayArray["objects"]
          if sDisplayArray["objects"][tKey]["expanded"] is true then
-            if sDisplayArray["objects"][tKey]["type"] is "stack" then
+            if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
             else if  sDisplayArray["objects"][tKey]["type"] is "card" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 2 &  return after tOldExpandedControls
@@ -293,8 +353,11 @@ command buildProjectView pRememberExpansion
    end repeat
    
    ## If all are switched off the show stacks
-   if tSections is empty then put "stacks" into tSections
-   revIDESetPreference "ideProjectBrowser_show",tSections
+   if tSections is empty then 
+      put "stacks" into tSections
+      revIDESetPreference "ideProjectBrowser_show",tSections
+      exit buildProjectView
+   end if
    
    if "Front Scripts" is among the items of tSections then
       put revIDEFrontScripts() into tFrontScripts
@@ -477,6 +540,9 @@ command highlightObjects pObject
 end highlightObjects
 
 on selectObjects pObjectList
+   // AL-2015-12-17: Don't select objects anymore when they are selected
+   // in the PB
+   /*
    local tSelectedRows, tObjectList, tVisibleRows
    local tCards
    
@@ -500,6 +566,11 @@ on selectObjects pObjectList
       exit selectObjects
    end if
    
+   ## Don't go to card if it is part of the project browser
+   If ideStackOfObject(line 1 of tObjectList) is the long id of me then
+      exit selectObjects
+   end if
+   
    ## Go to correct card as required
    lock messages
    repeat for each line tObject in tObjectList      
@@ -518,7 +589,8 @@ on selectObjects pObjectList
    unlock messages
    
    ## Select objects
-   revIDESelectObjects tObjectList   
+   revIDESelectObjects tObjectList  
+   */ 
 end selectObjects
 
 on selectionChanged pHilitedRows, pPreviouslyHilitedRows
@@ -565,14 +637,21 @@ on selectionChanged pHilitedRows, pPreviouslyHilitedRows
 end selectionChanged
 
 on goToObject pObjectID
-   lock messages
+   ## Don't go to object if it is part of the project browser
+   If ideStackOfObject(pObjectID) is the long id of me then
+      exit goToObject
+   end if
    
+   lock messages
    if word 1 of pObjectID is "stack"  then
       if not the visible of pObjectID then show pObjectID
       go pObjectID 
    else if word 1 of pObjectID is "card"  then
       if not the visible of the owner of pObjectID then show the owner of pObjectID
       go pObjectID
+   else
+      go ideStackOfObject(pObjectID)
+      revIDESelectObjects pObjectID
    end if
    unlock messages
 end goToObject
@@ -582,8 +661,7 @@ end goToObject
 
 command updateActions
    local tSelectedObjects
-   
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    
    lock screen
    if the number of lines in tSelectedObjects > 1 then
@@ -653,31 +731,31 @@ end updateActions
 
 on alignControls pPosition   
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEAlignControls tSelectedObjects, pPosition
 end alignControls
 
 on centerControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDECenterControls tSelectedObjects,pPosition
 end centerControls
 
 on equalizeControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEEqualizeControls tSelectedObjects,pPosition
 end equalizeControls
 
 on distributeControls pPosition
    local tSelectedObjects
-   put revIDESelectedObjects() into tSelectedObjects
+   put pbSelectedObjects() into tSelectedObjects
    revIDEDistributeControls tSelectedObjects,pPosition, "First To Last selected"
 end distributeControls
 
 on newControls
    local tControls
-   put revIDESelectedObjects() into tControls   
+   put pbSelectedObjects() into tControls   
    
    lock screen
    repeat for each line tControlID in tControls
@@ -689,7 +767,7 @@ end newControls
 on groupControls
    local tName, tLayer, tList, tGroupID, tControlList
    
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    revIDEGroupObjects tControlList
    put the result into tGroupID
    select tGroupID
@@ -698,7 +776,7 @@ end groupControls
 
 on cloneControls
    local tClonedIDs, tControlList
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    
    lock screen
    repeat for each line tControlID in tControlList
@@ -712,9 +790,12 @@ end cloneControls
 
 on deleteControls
    local tControlID, tGroupID, tControlList
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    
-   answer "Are you sure you want to delete these controls?" with "Cancel" and "OK"
+   local tAnswerString
+   put "Are you sure you want to delete these objects?" into tAnswerString
+   put return & tControlList after tAnswerString
+   answer tAnswerString with "Cancel" and "OK"
    if it is "ok" then
        lock screen
        revIDEDeleteObjects tControlList
@@ -725,7 +806,7 @@ end deleteControls
 
 on lockControls
    local tControlList, tUnlocked
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    lock screen
    
    put true into tUnlocked
@@ -741,7 +822,7 @@ end lockControls
 
 on showControls
    local tControlList, tVisible
-   put revIDESelectedObjects() into tControlList
+   put pbSelectedObjects() into tControlList
    lock screen
    
    put true into tVisible
@@ -825,15 +906,6 @@ end toggleGroup
 #######################################
 
 function getRow pLongID
-   --   if exists(pLongID) then
-   --      if word 1 of pLongID is "stack" and not(pLongID contains "of") then put the name of pLongID into pLongID
-   --   end if
-   ## Stack double check
-   if word 1 of pLongID is "stack" then
-      if pLongID is not among the keys of sLongIDToRow then
-         if not(pLongID contains "of") then put the name of pLongID into pLongID
-      end if
-   end if
    return sLongIDToRow[pLongID]
 end getRow
 
@@ -948,8 +1020,8 @@ function itemise pStacks, pFrontScripts, pBackScripts, pLibraryStacks, pInitialI
    
    put the keys of  tStackObjects into tKeys
    sort lines of tKeys ascending numeric
-   put line 1 of tKeys & comma after tVisibleRows
    repeat for each line tKey in tKeys
+      put tKey & comma after tVisibleRows
       put tStackObjects[tKey] into tItemisedArray["objects"][tKey]
    end repeat
    put line -1 of tKeys into tIndex
@@ -1334,6 +1406,20 @@ end levelConnectors
 #######################################
 
 on addStackToProjectBrowser pTarget
+   if not exists(pTarget) then
+      exit addStackToProjectBrowser
+   end if
+   
+   # If the target has already been added then don't do anything
+   if getRow(pTarget) is not empty then
+      exit addStackToProjectBrowser
+   end if
+   
+   if word 3 of pTarget is "of" then
+      addSubstackToProjectBrowser pTarget
+      exit addStackToProjectBrowser
+   end if
+   
    local tVisibleRows, tRow, tChildren, tChildOffset, tKeys
    local tIndex
    
@@ -1350,15 +1436,15 @@ on addStackToProjectBrowser pTarget
    end if
    put tVisibleRows into sDisplayArray["visible object keys"]
    
-   refreshProjectView
+   buildProjectView true
 end addStackToProjectBrowser
 
 on addSubstackToProjectBrowser pTarget
-   local tVisbleRows, tParentID, tParentRow, tIndex, tParentExpanded, tVisibleRows, tVisibleRows2
+   local tParentID, tParentRow, tIndex, tParentExpanded, tVisibleRows, tVisibleRows2
    local tChildren, tSubStackInfo, tLevelConnectors
    
    put sDisplayArray["visible object keys"] into tVisibleRows
-   put the long name of stack (the mainStack of pTarget) into tParentID
+   put ideMainStackOfObject(pTarget) into tParentID
    put getRow(tParentID) into tParentRow
    if tParentRow is empty then exit addSubstackToProjectBrowser
    put sDisplayArray["objects"][tParentRow]["expanded"] into tParentExpanded
@@ -1419,7 +1505,7 @@ on addSubstackToProjectBrowser pTarget
    if the last char of tVisibleRows2 is comma then delete the last char of tVisibleRows2
    put tVisibleRows2 into sDisplayArray["visible object keys"]
    
-   refreshProjectView
+   buildProjectView true
 end addSubstackToProjectBrowser
 
 on addCardToProjectBrowser pTarget
@@ -1717,6 +1803,10 @@ on addControlToProjectBrowser pTarget
 end addControlToProjectBrowser   
 
 on deleteStackFromProjectBrowser pTarget
+   if getRow(pTarget) is empty then
+      return false
+   end if
+   
    local tVisibleRows, tRow, tChildren, tChildOffset
    
    put sDisplayArray["visible object keys"] into tVisibleRows
@@ -1753,6 +1843,7 @@ on deleteStackFromProjectBrowser pTarget
    put tVisibleRows into sDisplayArray["visible object keys"]
    
    refreshProjectView
+   return true
 end deleteStackFromProjectBrowser
 
 on deleteCardFromProjectBrowser pTarget

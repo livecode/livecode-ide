@@ -181,8 +181,8 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Application Overview..."
-         revInternal__InitialiseApplicationOverview
+         revInternal__setSplashStatus "Loading Project Browser..."
+         revInternal__InitialiseProjectBrowser
          put the result into tSuccess
       end if
       
@@ -249,11 +249,7 @@ on revInternal__openStack
       if revIDEPrefGet("StartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
-      
-      try 	 	
-         revIDEOpenPropertyInspectorControllerStacks 	 	
-      end try 
-      
+
       -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
       -- Luanch the installer in update mode to begin update process.
       --
@@ -1002,6 +998,9 @@ command revInternal__InitialiseLibraries
       answer "Error loading extensions library" & return & tError 	 	
    end try 	 	
    	    	 	
+   # AL-2015-11-15 : New documentation library
+   revInternal__LoadLibrary "revIDEDocumentationLibrary"
+   
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
@@ -1017,9 +1016,6 @@ command revInternal__InitialiseLibraries
    # OK-2008-03-11 : New debugger and metadata library
    revInternal__LoadLibrary "revDebuggerLibrary"
    revInternal__LoadLibrary "revMetadataLibrary"
-   
-   # OK-2008-06-11 : Documentation library
-   insert the script of stack "revDocumentationLibrary" into back
    
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back
@@ -1149,8 +1145,10 @@ command revInternal__InitialiseDefaults
          revInternal__Log "message", "Trying to set the default text of stack home"
          if item 2 of the systemVersion < 10 then
             set the textFont of stack "Home" to "Lucida Grande"
-         else
+         else if item 2 of the systemVersion < 11 then
             set the textFont of stack "Home" to "Helvetica Neue"
+         else
+         	set the textFont of stack "Home" to "San Francisco"
          end if
          
          set the textSize of stack "Home" to 11
@@ -1400,14 +1398,14 @@ command revInternal__InitialiseMenus
    return true
 end revInternal__InitialiseMenus
 
-command revInternal__InitialiseApplicationOverview
-   revInternal__Log "Enter", "Application Overview Initialisation"
-   
-   if the cAppOverview of stack "revPreferences" then
+command revInternal__InitialiseProjectBrowser
+   revInternal__Log "Enter", "Project Browser Initialisation"
+
+   if the cAppOverview of stack "revPreferences" and there is a stack "revApplicationOverview" then
       set the _ideoverride of stack "revApplicationOverview" to true
       toplevel "revApplicationOverview"
    end if
-   
+
    // EJB
    if there is a stack "revProjectBrowser" then
       if the cIDEProjectBrowserOpen of stack "revPreferences" is not false then
@@ -1415,10 +1413,10 @@ command revInternal__InitialiseApplicationOverview
       end if
    end if
    
-   revInternal__Log "Leave", "Application Overview Initialisation"
+   revInternal__Log "Leave", "Project Browser Initialisation"
    
    return true
-end revInternal__InitialiseApplicationOverview
+end revInternal__InitialiseProjectBrowser
 
 command revInternal__InitialiseMessageBox
   revInternal__Log "Enter", "Message Box Initialisation"
@@ -1639,6 +1637,14 @@ function revEnvironmentExternalsPath
   return hookToolsPath("externals", sToolsPath & "/Externals")
 end revEnvironmentExternalsPath
 
+function revEnvironmentExtensionsPath
+   if revEnvironmentIsInstalled() then
+      return hookToolsPath("extensions", sToolsPath & "/Extensions")
+   else
+      return revEnvironmentBinariesPath() & slash & "packaged_extensions"
+   end if
+end revEnvironmentExtensionsPath
+
 function revEnvironmentRuntimePath
   return hookToolsPath("runtime", sToolsPath & "/Runtime")
 end revEnvironmentRuntimePath
@@ -1700,6 +1706,10 @@ end revEnvironmentUserPluginsPath
 function revEnvironmentUserExternalsPath
   return sCustomizationPath & "/Externals"
 end revEnvironmentUserExternalsPath
+
+function revEnvironmentUserExtensionsPath
+  return sCustomizationPath & "/Extensions"
+end revEnvironmentUserExtensionsPath
 
 function revEnvironmentUserPreferencesPath
   return sPreferencesPath

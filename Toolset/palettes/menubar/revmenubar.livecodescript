@@ -324,6 +324,7 @@ on generateMenubarUI
    set the blendlevel of the templatebutton to 0
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
+   set the traversalOn of the templatebutton to false
 
    # Setup the default image
    set the resizequality of the templateimage to "best"
@@ -423,6 +424,7 @@ on generateMenuGroup
       delete group "revMenuBar" of me
    end if
    
+   set the traversalOn of the templatebutton to false
    set the style of the templatebutton to "menu"
    set the menumode of the templatebutton to "pulldown"
    set the height of the templatebutton to 22
@@ -824,7 +826,7 @@ end mouseDown
 on revMenubarMenuButtonClicked pWhich
    switch pWhich
       case "Inspector"
-         revIDEOpenPalette "inspector"
+         revIDEActionInspectObjects
          break
       case "Code"
          if (the selectedObject) is empty then
@@ -1788,19 +1790,24 @@ function revMenuBarStandardContextMenu pIndent
 end revMenuBarStandardContextMenu
 
 function revBuildContextSensitiveMenu pExtraText, pTarget, pType
+   local tText
    if word 1 of pTarget is "stack" then
-      return revMenuBarStackContextMenu(pTarget, 0)
+      put revMenuBarStackContextMenu(pTarget, 0) into tText
+      put return & "-" after tText
+      put return & "Show Documentation" after tText
+      return tText
    end if
    
    local tTargetStack
    put revIDEStackOfObject(pTarget) into tTargetStack
    
-   local tText
    if word 1 of pTarget is "card" then
       put revMenuBarCardContextMenu(pTarget,0) into tText
       put return & "-" after tText
       put return & "Stack" after tText
       put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
+      put return & "-" after tText
+      put return & "Show Documentation" after tText
       return tText
    end if
    
@@ -1813,6 +1820,8 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
    put return & "-" after tText
    put return & "Stack" after tText
    put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
+   put return & "-" after tText
+   put return & "Show Documentation" after tText
    return tText
 end revBuildContextSensitiveMenu
 
@@ -1887,6 +1896,9 @@ function revMenubarContextMenu pType, pTarget
          put enableMenuItem("TopLevel Panel Stack", the menuName of pTarget is not empty) & return after tText
          put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
+      case "widget"
+         put revBuildContextSensitiveMenu("", pTarget) into tText
+         break
       case "standard"
       default
          put revBuildContextSensitiveMenu("", pTarget) into tText
@@ -1945,6 +1957,7 @@ on revMenubarPopupContextualMenu pTargets
          case "image"
          case "field"
          case "player"
+         case "widget"
             revMenubarSetContextMenu tType, tTarget
             break
          default
@@ -2200,6 +2213,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Lock Location"
          revIDEToggleLockLocationOfObjects pTarget
          break
+      case "Show Documentation"
+         revIDEGoToObjectAPI pTarget
+         break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
          revIDEEditGroup pTarget
@@ -2243,6 +2259,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Pause"
          revIDETogglePauseOfPlayer
          break
+         
          ######## MENU SPECIFIC #########
       case "TopLevel Panel Stack"
          toplevel the menuname of pTarget
@@ -2576,7 +2593,7 @@ on revMenubarObjectMenuPick pWhich
          break
       case "Align Selected Controls"
          if item 2 of pWhich begins with "Distribute Objects" then
-            revIDEActionDistributeObjects item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
+            revIDEActionDistributeControls item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
          else
             revIDEActionAlign item 2 of pWhich
          end if
@@ -2753,12 +2770,14 @@ on revMenubarHelpMenuPick pWhich
       case "Sample Scripts"
       case "Beginners Guide"
       case "Tutorials"
-      case "All Guides"
       case "Forums"
       case "Technical Questions"
       case "Discussion List"
       case "Newsletters"
          revIDELaunchResource tPick
+         break
+      case "All Guides"
+         revIDEOpenPalette "guide"
          break
       case "Relicense"
          revIDEActionRelicense
