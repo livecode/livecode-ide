@@ -62,6 +62,20 @@ on registerForMessages
    revIDESubscribe "ideExtensionsChanged"
 end registerForMessages
 
+# MDW-2015-12-20 [[ unsubscribe_revtools ]] plays well with others
+on closeStack
+	unregisterForMessages
+	pass closeStack
+end closeStack
+
+on unregisterForMessages
+ 	### Messages
+   revIDEUnSubscribe "idePreferenceChanged:revTools_columns"
+   revIDEUnSubscribe "idePreferenceChanged:revTools_show"
+   revIDEUnSubscribe "ideToolChanged"
+   revIDEUnSubscribe "ideExtensionsChanged"
+end unregisterForMessages
+
 on ideExtensionsChanged
    lock screen
    generatePalette
