@@ -307,7 +307,6 @@ private function removeAngleBrackets pText, pIsSyntax
    return tNewText
 end removeAngleBrackets
 
-local sTypesA
 # Returns HTML of that doc in the form required for this component
 private function renderDocDictionary pTag, pType
    local tResult, tData
