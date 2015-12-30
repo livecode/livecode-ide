@@ -555,6 +555,12 @@ after openStack
    end if
 end openStack
 
+# MDW-2015-12-21 [[ unsubscribe_on_closestack]] plays well with others
+on closeStack
+	revIDEUnsubscribeAll
+	pass closeStack
+end closeStack
+
 after closeStack
    revIDEStorePaletteRect the short name of me
 end closeStack
