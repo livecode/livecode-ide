@@ -87,9 +87,11 @@ on openStack
    
    revIDEUpdateIntelligenceObject
    
+   local tMinHeight
+   put 4*kHalfMessageFieldHeight + the headerHeight of me + the footerHeight of me into tMinHeight
+   
    lock messages
-   set the minWidth of this stack to 500
-   set the minHeight of this stack to 200
+   set the minHeight of this stack to tMinHeight
    set the left of this stack to the cREVLeft of this stack
    set the top of this stack to the cREVTop of this stack
    unlock messages
