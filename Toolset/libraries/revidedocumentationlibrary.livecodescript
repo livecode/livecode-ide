@@ -316,5 +316,17 @@ end ideDocsFetchExtensionEntries
 
 on ideDocsUpdateDatabase pLibraryA
    ideDocsInitialize
+   
+   local tResult
+   revExecuteSQL sConnection,"BEGIN TRANSACTION"
    dispatch "revDocsUpdateDatabase" to stack "revDocsParser" with sConnection, pLibraryA
+   put the result into tResult
+   
+   if tResult is not empty then
+      revExecuteSQL sConnection,"ROLLBACK"
+      return tResult
+   end if
+    
+   revExecuteSQL sConnection, "COMMIT"
+   return empty
 end ideDocsUpdateDatabase
