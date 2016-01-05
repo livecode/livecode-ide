@@ -71,12 +71,13 @@ end rowReset
 
 setProp rowData pData
    lock screen
+   local tConflict, tValue
    repeat for each key tProperty in pData
+      put false into tConflict
+      put empty into tValue
       if there is a group tProperty of me then
          local tKeys
          put the keys of pData[tProperty]["value"] into tKeys
-         local tConflict, tValue
-         put false into tConflict
          repeat for each line tLine in tKeys
             if tValue is empty then
                put pData[tProperty]["value"][tLine] into tValue
