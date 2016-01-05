@@ -8232,7 +8232,12 @@ command revIDECheckForUpdates
             put quote & tCommand & quote && "install -foregroundupdate" into tCommand
             break
          case "Linux"
-            put item 1 to -3 of the filename of stack "home" & "/.setup.x86" into tCommand
+            -- MDW-2015-12-19 [[fix_installer]] LC8-style setup filename
+            if the processor is "x86_64" then
+               	put item 1 to -3 of the filename me & "/setup.x86_64" into tCommand
+            else
+               	put item 1 to -3 of the filename me & "/setup.x86" into tCommand
+            end if
             put tCommand && "install -foregroundupdate" into tCommand
             break
       end switch
