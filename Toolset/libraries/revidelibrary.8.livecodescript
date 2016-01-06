@@ -3629,7 +3629,6 @@ function revIDESpecialFolderPath pKey
          break
       case "documentation"
          put item 1 to -3 of the filename of stack "home" & "/Documentation" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "documentation cache"
@@ -3639,17 +3638,14 @@ function revIDESpecialFolderPath pKey
          break
       case "api"
          put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "guide"
          put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "examples"
          put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "tutorial"
