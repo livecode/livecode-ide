@@ -13,7 +13,7 @@ on openStack
    if sTab is empty then
       put "api" into sTab
    end if
-   revIDEGenerateDictionaryHTML sTab, sEntry["library"], sEntry["name"], sEntry["type"]
+   revIDEGenerateDictionaryHTML sTab, sEntry["library"], sEntry["entry"], sEntry["type"]
    put empty into sEntry
    showTab sTab
    set the cantModify of me to true	
