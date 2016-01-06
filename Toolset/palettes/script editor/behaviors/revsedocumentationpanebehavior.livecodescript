@@ -88,10 +88,6 @@ command paneCloseControl
 end paneCloseControl
 
 command paneResizeControl
-   if revIDEBrowserWidgetUnavailable() then
-      hide button "LaunchDocs" of me
-   end if
-   
    metricsInit
   set the rect of field "View" of me to (the left of me),(the top of me),(the right of me),(the bottom of me - sMetrics["bottombarHeight"])
   set the bottomRight of button "FullMode" of me to (item 1 of the bottomRight of me + sMetrics["toggleButtonMargin"]), (item 2 of the bottomRight of me)

@@ -3661,18 +3661,6 @@ function revIDESpecialFolderPath pKey
    end switch
 end revIDESpecialFolderPath
 
-private function __docsHTMLFile pWhich
-   if pWhich is "dictionary" then
-      if revIDEBrowserWidgetUnavailable() then
-         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer_external.html"
-      else
-         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
-      end if
-   else
-      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
-   end if
-end __docsHTMLFile  
-
 on revIDEEnsurePath pPath
    if there is a folder pPath then exit revIDEEnsurePath
 
@@ -4177,7 +4165,15 @@ command revIDEOpenPalette pPaletteName
       case "dictionary"
       case "guide"
          if revIDEBrowserWidgetUnavailable() then
-            launch url ("file:" & __docsHtmlFile(pPaletteName))
+            local tWhich
+            if pPaletteName is "dictionary" then
+               put "api" into tWhich
+            else
+               put "guide" into tWhich
+            end if
+            
+            revIDEGenerateDictionaryHTML tWhich
+            launch url ("file:" & revIDEGetDictionaryUrl(tWhich))
          else
             toplevel stack tStackName
          end if
@@ -4463,7 +4459,8 @@ end revIDEGoToLCSDictionaryEntry
 
 on revIDEGoToDictionaryEntry pLibrary, pTag, pType
    if revIDEBrowserWidgetUnavailable() then
-      ideThrow "Can't navigate to dictionary entry in external browser"
+      revIDEGenerateDictionaryHTML "api", pLibrary, pTag, pType
+      launch url ("file:" & revIDEGetDictionaryUrl("api"))
    else
       send "goToEntry pLibrary, pTag, pType" to stack revIDEPaletteToStackName("dictionary") 
    end if
