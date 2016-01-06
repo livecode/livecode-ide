@@ -3654,6 +3654,12 @@ function revIDESpecialFolderPath pKey
       case "globals"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
+      case "ide guides"
+         return item 1 to -3 of the filename of stack "home" & "/Documentation/guides" into tPath
+         break
+      case "repo guides"
+         return revEnvironmentRepositoryPath() & "/docs/guides" into tPath
+         break
    end switch
 end revIDESpecialFolderPath
 
@@ -9167,14 +9173,22 @@ on revIDEGenerateDistributedDocs
    revIDERegenerateBuiltDictionaryData
 end revIDEGenerateDistributedDocs
 
-on revIDEGenerateDistributedGuide
+private on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolder
-   put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
+   local tGuideFolders
+   put "ide:" & revIDESpecialFolderPath("ide guides") into tGuideFolders
+   
+   if not revEnvironmentIsInstalled() then
+      put return & "repo:" & revIDESpecialFolderPath("repo guides") after tGuideFolders
+   end if
    
    # Check if the distributed guide is out of date
    local tLastModified, tLastGenerated
-   put revIDELastModifiedTimeOfFilesInFolder(tGuideFolder) into tLastModified
+   set the itemdelimiter to ":"
+   repeat for each line tGuideFolder in tGuideFolders
+      delete item 1 of tGuideFolder
+      put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tGuideFolder)) into tLastModified
+   end repeat
    put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
    
    # If we don't need to regenerate, exit
@@ -9182,37 +9196,45 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   revIDEPushDefaultFolder tGuideFolder
-   
-   local tGuideData, tGuideName
-   set the itemdelimiter to "."
-   repeat for each line tFile in the files
-      if tFile begins with "."  then next repeat
-      if tFile ends with "~" then next repeat
-      # The name of the guide is just the filename without extension
-      put item 1 to -2 of tFile into tGuideName
-      get url ("binfile:" & tGuideFolder & slash & tFile)
-      if it is not empty then
-         get textDecode(it, "utf-8")
-         
-         # Remove table of contents 
-         replace "[toc]" with empty in it
-         
-         # Build JSON data
-         put tab & "{" & CR after tGuideData
-         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
-         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
-         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
-      end if
+   repeat for each line tGuideFolder in tGuideFolders
+      local tGuideLocation
+      set the itemdelimiter to ":"
+      put item 1 of tGuideFolder into tGuideLocation
+      put item 2 to -1 of tGuideFolder into tGuideFolder
+      
+      revIDEPushDefaultFolder tGuideFolder
+      
+      local tGuideData, tGuideName
+      set the itemdelimiter to "."
+      repeat for each line tFile in the files
+         if tFile begins with "."  then next repeat
+         if tFile ends with "~" then next repeat
+         # The name of the guide is just the filename without extension
+         put item 1 to -2 of tFile into tGuideName
+         get url ("binfile:" & tGuideFolder & slash & tFile)
+         if it is not empty then
+            get textDecode(it, "utf-8")
+            
+            # Remove table of contents 
+            replace "[toc]" with empty in it
+            
+            # Build JSON data
+            put tab & "{" & CR after tGuideData
+            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
+            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
+            put tab & escape("location") & ":" & escape(tGuideLocation) & comma & return after tGuideData
+            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
+         end if
+      end repeat
+      revIDEPopDefaultFolder
    end repeat
    delete the last char of tGuideData
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   revIDEPopDefaultFolder
 end revIDEGenerateDistributedGuide
 
-command revIDEGenerateDistributedAPI
+private command revIDEGenerateDistributedAPI
    local tRepoPath
    put revEnvironmentRepositoryPath() into tRepoPath
    
