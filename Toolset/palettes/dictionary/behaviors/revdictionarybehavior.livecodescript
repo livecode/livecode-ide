@@ -1,5 +1,5 @@
 ﻿script "revDictionaryBehavior"
-local sTab, sEntry
+local sTab
 on setAsBehavior pTarget
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of this me
    set the behavior of pTarget to the long id of this me
@@ -13,8 +13,6 @@ on openStack
    if sTab is empty then
       put "api" into sTab
    end if
-   revIDEGenerateDictionaryHTML sTab, sEntry["library"], sEntry["name"], sEntry["type"]
-   put empty into sEntry
    showTab sTab
    set the cantModify of me to true	
    unlock screen
@@ -34,21 +32,24 @@ on showGuides
    showTab "guide"
 end showGuides
 
+local sEntry
+function getUrl pTab
+   if pTab is "guide" then
+      return ("file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html")
+   else
+      return ("file:" & revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html")
+   end if 
+end getUrl
+
 on showTab pTab
    hiliteFrameItem pTab
    put pTab into sTab
-   revIDEEnsureDictionaryUrl pTab
-   local tUrl
-   put "file://" & revIDEGetDictionaryUrl(pTab) into tUrl
-   replace " " with "%20" in tUrl
-   set the url of widget "Dictionary" of me to tUrl
+   set the url of widget "Dictionary" of me to getUrl(pTab)
 end showTab
 
 on browserNavigateComplete
-   if sEntry is not empty then
-      do "goEntryName('" & sEntry["library"] & "','" & sEntry["entry"] & "','" & sEntry["type"] & "')" in widget "Dictionary" of me
-      put empty into sEntry
-   end if
+   do "goEntry('" & sEntry["library"] & "','" & sEntry["entry"] & "','" & sEntry["type"] & "')" in widget "Dictionary" of me
+   put empty into sEntry
    if the mode of me is not 0 then
       resizeStack
    end if
