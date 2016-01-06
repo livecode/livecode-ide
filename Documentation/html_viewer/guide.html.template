@@ -1,18 +1,15 @@
 <!DOCTYPE html>
-<head>
-    <title>marked example</title>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     
+    <title>LiveCode Guides</title>
     
-    <script src="js/jquery-1.11.1.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script charset="UTF-8" src="resources/data/guide/built_guide.js"></script>
-    <script src="js/marked.js"></script>
-    <!--<script src="js/remarkable.min.js"></script>-->
-    
-    
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/userguide.css" rel="stylesheet">
-    <link href="css/codestyle.css" rel="stylesheet">
+    <link href="[[tDocsCSSFolder]]/bootstrap.min.css" rel="stylesheet">
+    <link href="[[tDocsCSSFolder]]/userguide.css" rel="stylesheet">
+    <link href="[[tDocsCSSFolder]]/codestyle.css" rel="stylesheet">
 </head>
 <body data-spy="scroll" data-target=".lc_docs_nav">
 
@@ -42,7 +39,12 @@
 </div>
 </div>
     
-    <script src="js/highlight.pack.js"></script> 
+    <script src="[[tDocsJSFolder]]/jquery-1.11.1.min.js"></script>
+    <script src="[[tDocsJSFolder]]/bootstrap.min.js"></script>
+    <script src="[[tDocsJSFolder]]/marked.js"></script>
+    <script src="[[tDocsJSFolder]]/highlight.pack.js"></script> 
+    
+    <script charset="UTF-8" src="[[tDataPath]]"></script>
     <script>	
    
    $(document).ready(function(e) {
@@ -56,12 +58,8 @@
 		$("#guide_chooser_list").html(navigation_chooser_html);
 		
    		var tLastLoadedGuide;
-   		//tLastLoadedGuide = readCookie('LiveCode_Last_Guide');
-   		//console.log("Cookie value = " + tLastLoadedGuide);
-   		//console.log("Found? = " + guideExists(tLastLoadedGuide));
    		if(guideExists(tLastLoadedGuide) == false){
    		 	tLastLoadedGuide = guideFirst();
-   		 	//console.log("First value = " + tLastLoadedGuide);
    		}	
    		
    		loadGuide(tLastLoadedGuide);
@@ -81,36 +79,7 @@
    			for (first in tUserGuideData.guides) break;
    			return first;
    		}
-   		
-   		function createCookie(name, value, days) {
-			var expires;
-
-			if (days) {
-				var date = new Date();
-				date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-				expires = "; expires=" + date.toGMTString();
-			} else {
-				expires = "";
-			}
-			document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-		}
-
-		function readCookie(name) {
-			var nameEQ = escape(name) + "=";
-			var ca = document.cookie.split(';');
-			for (var i = 0; i < ca.length; i++) {
-				var c = ca[i];
-				while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-				if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
-			}
-			return null;
-		}
-
-		function eraseCookie(name) {
-			createCookie(name, "", -1);
-		}
    
-
    		function renderMarkdown(pMarkdown, pGuideIndex){
 			var renderer = new marked.Renderer();
 			var navigation_html = '<ul class="nav bs-docs-sidenav lc_docs_nav">';
@@ -136,6 +105,16 @@
 				}
 				return '<h' + level + ' id="' + escapedText + '">' +text + '</h' + level + '>';
 			
+			},
+			
+			renderer.image = function (href, title, text) 
+			{
+				var image_parts;
+				image_parts = href.split("/");
+				var image_file;
+				image_file = image_parts[image_parts.length - 1];
+			
+				return '<img src="[[tGuidesFolder]]/images/' + image_file + '" />';
 			},
 		
 			// Set the core markdown
