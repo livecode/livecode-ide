@@ -3,14 +3,25 @@ on revLoadLibrary
    insert the script of me into back
 end revLoadLibrary
 
+private on ideDocsEnsureDatabase pLocation
+   if there is not a file (pLocation & slash & "api.sqlite") then
+      put url ("binfile:" & revIDESpecialFolderPath("API") & slash & "api.sqlite") into \
+            url ("binfile:" & pLocation & slash & "api.sqlite")
+   end if
+end ideDocsEnsureDatabase
+
 local sConnection
 on ideDocsInitialize
    if sConnection is not empty then
       exit ideDocsInitialize
    end if
    
+   local tCopyLocation
+   put revIDESpecialFolderPath("documentation cache") into tCopyLocation
+   ideDocsEnsureDatabase tCopyLocation
+   
    local tConnection
-   dispatch "revDocsOpenAPIDatabase" to stack "revDocsParser" with revIDESpecialFolderPath("API")
+   dispatch "revDocsOpenAPIDatabase" to stack "revDocsParser" with revIDESpecialFolderPath("documentation cache")
    put the result into tConnection
    if tConnection is not a number then
       ideThrow "unable to open database", tConnection
