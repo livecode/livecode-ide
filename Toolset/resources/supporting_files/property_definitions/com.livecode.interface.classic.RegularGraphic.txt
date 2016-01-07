@@ -22,6 +22,7 @@ foregroundPattern						Border Fill
 backgroundColor												
 backgroundPattern												
 fillGradient												
+strokeGradient
 topColor												
 topPattern												
 bottomColor												
