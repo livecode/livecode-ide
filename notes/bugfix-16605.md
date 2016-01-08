@@ -1,0 +1,1 @@
+# revCommonLibrary should not use IDE library functions
