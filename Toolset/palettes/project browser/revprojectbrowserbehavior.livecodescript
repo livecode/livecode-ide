@@ -398,9 +398,8 @@ command buildProjectView pRememberExpansion
       end if
    end repeat
    
-   unlock screen
-   
    refreshProjectView
+   unlock screen
 end buildProjectView
 
 on refreshProjectView
