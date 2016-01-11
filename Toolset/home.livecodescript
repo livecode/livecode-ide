@@ -718,24 +718,21 @@ end revInternal__ResetPreferences
 command revInternal__SavePreferences
    local tPreference 
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the buildnumber < 10000 then
-      set the stackFileVersion to "2.7"
+      put "2.7" into tStackFileVersion
    else
-      set the stackFileVersion to "7.0"
+      put "7.0" into tStackFileVersion
    end if
    
    lock messages
    -- MM-2014-02-22: [[ Bug 11442 ]] Saving the prefs stack when security permissions is true is not possible.
    try
-      save stack "revPreferences"
+      save stack "revPreferences" with format tStackFileVersion
    catch tError
    end try
    unlock messages
-   
-   set the stackFileVersion to tOldStackFileVersion
 end revInternal__SavePreferences
 
 private command revInternal__EnsureFolder pFolder

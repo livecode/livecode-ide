@@ -6119,12 +6119,11 @@ on revIDESaveStack pStackID
    
    lock messages
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack tStackName is not empty then
       try
-         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack tStackName
+         put the cREVGeneral["stackfileversion"] of stack tStackName into tStackFileVersion
       catch tError
          --
       end try
@@ -6178,14 +6177,13 @@ on revIDESaveStack pStackID
       set the defaultStack to tDefaultStack
    end try
    
-   save stack tStackName
+   save stack tStackName with format tStackFileVersion
    put the result into tSaveResult
    
    
    ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
    ## Hence the introduction of the above variable.
    set the stackFileType to tOldStackFileType
-   set the stackFileVersion to tOldStackFileVersion
    
    unlock messages
    
@@ -6256,18 +6254,23 @@ on revIDEActionSaveStack pStackID
    end if
 end revIDEActionSaveStack
 
-on revIDESaveStackAs pStackID, pFileName
+on revIDESaveStackAs pStackID, pFileName, pVersion
    if not exists (pStackID) then return __revIDEError("Target stack does not exist")
    if pFileName is empty then return __revIDEError("No path provided to save to")
+
+   if pVersion is not empty then
+      save pStackID as pFileName with format pVersion
+   else
+      save pStackID as pFileName
+   end if
    
-   save pStackID as pFileName
-   
-   local tShortName
+   local tShortName, tResult
    put the short name of stack pStackID into tShortName
-   if the result is not empty then
+   put the result into tResult
+   if tResult is not empty then
       local tLocaliseSubstitutions
       put tShortName into tLocaliseSubstitutions[1]
-      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & the result
+      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & tResult
       close stack "revSaving"
    else
       global gRevStackStatus
@@ -6331,13 +6334,16 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK")
          break
       default
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
    end switch
 
    put the result into tType
 
    switch tType
+      case "Legacy LiveCode Stack (7.0)"
+         put 7.0 into tType
+         break
       case "Legacy LiveCode Stack (5.5)"
          put 5.5 into tType
          break
@@ -6348,7 +6354,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          put 2.4 into tType
          break
       default
-         put 7.0 into tType
+         put 8.0 into tType
          break
    end switch
 
@@ -6367,7 +6373,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put it into tFilePath
 
    # Display warning if user has not selected the latest file format
-   if tType < 7 then
+   if tType < 8 then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tShortName]
@@ -6380,8 +6386,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
       if it is revIDELocalise("Cancel") then
          return "Cancelled"
-      else
-         delete file tFilePath
       end if
    end if
 
@@ -6411,12 +6415,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    # Because you're saving as a new stack, this fingerprint should be removed.
    revRemoveRevOnlineKey "fingerprint",tShortName
 
-   # Store the current stack file version before setting it to the value for this save
-   # It will be reset after the save was made
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
-   set the stackFileVersion to tType
-
    # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
    try
       # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
@@ -6432,9 +6430,8 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       set the defaultStack to tDefaultStackBackup
    end try
 
-   revIDESaveStackAs the long id of stack tShortName, tFilePath
+   revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
 
-   set the stackFileVersion to tOldStackFileVersion
    unlock messages
 
    return empty
