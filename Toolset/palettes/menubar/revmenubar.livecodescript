@@ -415,6 +415,9 @@ on generateMenubarUI
    set the autohilite of button "messages" to false
    set the autohilite of button "select grouped" to false
    set the autohilite of button "errors" to false
+   set the autohilite of button "group" to false
+   set the autohilite of button "edit group" to false
+   
    unlock messages
 end generateMenubarUI
 
@@ -522,7 +525,7 @@ on layoutMenu
       else
          local tWidth, tHeight
          set the textStyle["bold"] of button tItem of group "toolbar" of me to false
-         put max(the formattedWidth of button tItem of group "toolbar" of me, 60) into tWidth
+         put max(the formattedWidth of button tItem of group "toolbar" of me, 72) into tWidth
          set the width of button tItem of group "toolbar" of me to tWidth
          set the topleft of button tItem of group "toolbar" of me to tLeft,tTop
          add tWidth to tLeft
@@ -672,9 +675,11 @@ on updateButtonState
    
    if the editBg of the topStack and word 1 of (the selObj) is not "group" then
       setButtonHilite the long id of button "edit group" of group "toolbar" of me, true
+      set the label of button "edit group" of group "toolbar" of me to "Stop Editing"
       enable button "edit group" of group "toolbar" of me 
    else
       setButtonHilite the long id of button "edit group" of group "toolbar" of me, false
+      set the label of button "edit group" of group "toolbar" of me to "Edit Group"
       enable button "edit group" of group "toolbar" of me
    end if
    
