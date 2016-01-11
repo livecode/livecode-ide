@@ -507,11 +507,22 @@ function revLoadedStacks pWhich
    return tStacksInMemory
 end revLoadedStacks
 
+function revStackNameIsIDEStack pStackName
+   ## Special cases of IDE stacks that don't begin with rev
+   if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
+      return true
+   else if pStackName begins with "com.livecode." then
+      return true
+   else
+      return pStackName begins with "rev"
+   end if   
+end revStackNameIsIDEStack
+
 -- MW-2010-09-29: Slight tweak to this so that IDE stacks never appear in lists - regardless of mode.
 function revFilterStacksList pStacks
    local tReturnValue
    repeat for each line l in pStacks
-      if revIDEStackNameIsIDEStack(l) then
+      if revStackNameIsIDEStack(l) then
          next repeat
       end if
       
