@@ -2286,7 +2286,7 @@ Returns (Any): The value of the preference
 */
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue
-   save stack "revpreferences"
+   revInternal__SavePreferences
    ideMessageSend "idePreferenceChanged:" & pPreferenceName
 end revIDESetPreference
 
@@ -6176,8 +6176,12 @@ on revIDESaveStack pStackID
       send "saveStackRequest" to this card of stack tStackName
       set the defaultStack to tDefaultStack
    end try
-   
-   save stack tStackName with format tStackFileVersion
+
+   if tStackFileVersion is not empty then
+      save stack tStackName with format tStackFileVersion
+   else
+      save stack tStackName with newest format
+   end if
    put the result into tSaveResult
    
    
@@ -6261,7 +6265,7 @@ on revIDESaveStackAs pStackID, pFileName, pVersion
    if pVersion is not empty then
       save pStackID as pFileName with format pVersion
    else
-      save pStackID as pFileName
+      save pStackID as pFileName with newest format
    end if
    
    local tShortName, tResult
@@ -6404,7 +6408,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       set the cursor to watch
       -- remove revOnline fingerprint
       revRemoveRevOnlineKey "fingerprint",tMainStackName
-      save stack tMainStackName
+      revIDESaveStack tMainStackName
    end if
 
 
@@ -8678,7 +8682,7 @@ on revIDETutorialSave pTaggedObjects, pStepName
       put pTaggedObjects["stack"][tStackTag] into tMainstack
       put the filename of tMainstack into tOldFilename
       put revIDETutorialUserStackPath(tStackTag) into tFilename
-      save stack tMainstack as tFilename
+      save stack tMainstack as tFilename with newest format
       set the filename of tMainstack to tOldFilename
       
       if tStackTags is empty then
