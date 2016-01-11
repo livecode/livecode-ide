@@ -429,6 +429,7 @@ command setObject pObjectId, pDontSendCallbacks
    
    findClearResults
    
+   EditorFieldCacheSwap sObjectId, seGetRuggedId(pObjectId)
    put seGetRuggedId(pObjectId) into sObjectId
    loadScript
    resize
@@ -1517,6 +1518,8 @@ command textInitialize
    colorizationUpdate
    
    textMark "Insert"
+
+   EditorFieldCacheFlushAll
 end textInitialize
 
 on textMark pLabel
@@ -2127,7 +2130,9 @@ on textSetScriptRaw pScript
    --put empty into field "Script" of me
    local tOldText
    put the text of field "Script" of me into tOldText
-   textReplaceRaw 1, tOldText, pScript, true
+   if tOldText is not pScript then
+      textReplaceRaw 1, tOldText, pScript, true
+   end if
 end textSetScriptRaw
 
 -- Sets the script within the undo queue.
@@ -5237,3 +5242,122 @@ private function lineStripComments pLine
       return char 1 to tOffset of pLine
    end if
 end lineStripComments
+
+----------------------------------------------------------------
+-- Editor field cache
+----------------------------------------------------------------
+
+-- Setting up an editor field is very expensive, especially for
+-- particularly large scripts (1000s of lines).  In order to speed up
+-- switching between tabs, for example, the editor field itself is
+-- cached.
+
+constant kScriptEditorMaxCached = 10
+
+local sScriptEditorFieldCache
+
+/*
+Remove the editor field for pRuggedObjectId from the cache
+*/
+private command __EditorFieldCacheFlush pRuggedObjectId
+   local tField
+   put sScriptEditorFieldCache[pRuggedObjectId] into tField
+   if tField is empty then
+      exit __EditorFieldCacheFlush
+   end if
+   if the name of tField is "Script" then
+      exit __EditorFieldCacheFlush
+   end if
+
+   delete tField
+   delete variable sScriptEditorFieldCache[pRuggedObjectId]
+end __EditorFieldCacheFlush
+
+/*
+Delete all cached editing fields
+*/
+private command EditorFieldCacheFlushAll
+   local tRuggedObjectId
+   -- Mutating a collection while iterating over it...!
+   repeat for each key tRuggedObjectId in sScriptEditorFieldCache
+      __EditorFieldCacheFlush tRuggedObjectId
+   end repeat
+end EditorFieldCacheFlushAll
+
+/*
+If there are too many editor fields cached, randomly purge one of
+them.  Note that because the current editor field isn't in the cache, there
+is no danger of incorrectly deleting it.
+*/
+private command __EditorFieldCacheFlushExcess
+   local tCacheSize
+   put the number of elements in sScriptEditorFieldCache into tCacheSize
+   if tCacheSize < kScriptEditorMaxCached then
+      exit __EditorFieldCacheFlushExcess
+   end if
+
+   -- Flush a random field from the cache
+   put the random of tCacheSize into tCacheSize
+
+   local tRuggedObjectId
+   repeat for each key tRuggedObjectId in sScriptEditorFieldCache
+      if tCacheSize is 1 then
+         __EditorFieldCacheFlush tRuggedObjectId
+         exit __EditorFieldCacheFlushExcess
+      end if
+      subtract 1 from tCacheSize
+   end repeat
+end __EditorFieldCacheFlushExcess
+
+/*
+Check whether pRuggedObjectId has a cached editing field.
+*/
+private function __EditorFieldIsCached pRuggedObjectId
+   return pRuggedObjectId is among the keys of sScriptEditorFieldCache
+end __EditorFieldIsCached
+
+/*
+Switch from editing pOldRuggedObjectId to editing pNewRuggedObjectId,
+swapping or caching editor fields as required.
+*/
+private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
+   if pOldRuggedObjectId is empty or \
+      pNewRuggedObjectId is empty or \
+      pOldRuggedObjectId is pNewRuggedObjectId then
+      exit EditorFieldCacheSwap
+   end if
+
+   local tCachedName
+   put "Script for" && pOldRuggedObjectId into tCachedName
+
+   if __EditorFieldIsCached(pNewRuggedObjectId) then
+
+      -- If the script that the script editor is switching to already
+      -- has a script editing field cached, add the current field to
+      -- the cache and replace it with the new object's field.
+
+      set the name of field "Script" of me to tCachedName
+      set the visible of field tCachedName of me to false
+      put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
+
+      put sScriptEditorFieldCache[pNewRuggedObjectId] into tCachedName
+      set the visible of field tCachedName of me to true
+      set the name of field tCachedName of me to "Script"
+      delete variable sScriptEditorFieldCache[pNewRuggedObjectId]
+
+   else
+
+      -- Otherwise, just copy the current field into the cache for the
+      -- old object
+
+      clone invisible field "Script" of me
+      set the name of it to tCachedName
+      put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
+   end if
+
+   -- Make sure the number of cached fields stays reasonable.  This
+   -- helps cope with objects being deleted or their script editor
+   -- tabs being closed, without leaking memory into expensive unused
+   -- controls.
+   __EditorFieldCacheFlushExcess
+end EditorFieldCacheSwap
