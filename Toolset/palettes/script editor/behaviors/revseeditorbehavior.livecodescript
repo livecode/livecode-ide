@@ -58,45 +58,83 @@ constant kMinGutterWidth = 16
 #   Sent by the parent when the rect of this group may have changed. Resizes / positions all the controls in this group
 #   according to the group's current rect.
 command resize
-   local tFindSplit
-   if sePrefGet("editor,findvisible") then
-      put the bottom of me - the height of group "Interactive Find" of me into tFindSplit
-   else
-      # Hide the find group by using group clipping.
-      put the bottom of me into tFindSplit
-   end if
-   
-   if scriptProtected() then
-      set the loc of group "Enter Password" of me to (item 1 of the loc of me), (item 2 of the loc of group "Enter Password" of me)
-      set the top of group "Enter Password" of me to the top of me + (the height of me div 3)
-      send "openControl" to group "Enter Password" of me
-   else
-      set the right of group "Enter Password" of me to the left of me - 20
-   end if
-   
-   set the right of button "revCompileObject" of me to the left of me - 500
-   
+   local tControls
+   put the long id of group "Interactive Find" of me into tControls["find"]
+   put the long id of group "Enter Password" of me into tControls["password"]
+   put the long id of group "Gutter" of me into tControls["gutter"]
+   put the long id of field "Script" of me into tControls["script"]
+
+   local tMyRect, tMyWidth, tMyHeight
+   put the rect of me into tMyRect
+   split tMyRect by comma
+   put tMyRect[3] - tMyRect[1] into tMyWidth
+   put tMyRect[4] - tMyRect[2] into tMyHeight
+
+   local tGutterWidth
    if sePrefGet("gutter,linenumbers") then
-      set the width of group "Gutter" of me to the max(formattedWidth of field "Numbers" of group "Gutter" of me, kMinGutterWidth)
+      put max(formattedWidth of field "Numbers" of tControls["gutter"], \
+         kMinGutterWidth) into tGutterWidth
    else
-      set the width of group "Gutter" of me to kMinGutterWidth
+      put kMinGutterWidth into tGutterWidth
    end if
-   
+
+   local tFindHeight
+   if sePrefGet("editor,findvisible") then
+      put the height of tControls["find"] into tFindHeight
+   else
+      put 0 into tFindHeight
+   end if
+
+   local tNewRect, tScriptScrollSize
+
+   -- Position the main code editing field
+
+   put tMyRect[1] + tGutterWidth, tMyRect[2], \
+       tMyRect[3], tMyRect[4] - tFindHeight into tNewRect
+   if the rect of tControls["script"] is not tNewRect then
+      set the rect of tControls["script"] to tNewRect
+   end if
+
+   if the hScrollbar of tControls["script"] then
+      put the scrollBarWidth of tControls["script"] into tScriptScrollSize
+   else
+      put 0 into tScriptScrollSize
+   end if
+
+   -- Position the "find" interface
+
+   put tMyRect[1] + tGutterWidth, tMyRect[4] - tFindHeight, \
+       tMyRect[3],  tMyRect[4] into tNewRect
+   if the rect of tControls["find"] is not tNewRect then
+      set the rect of tControls["find"] to tNewRect
+   end if
+
+   -- Position the gutter
+
+   put tMyRect[1], tMyRect[2], tMyRect[1] + tGutterWidth, \
+       tMyRect[4] - tFindHeight - tScriptScrollSize into tNewRect
+   if the rect of tControls["gutter"] is not tNewRect then
+      set the rect of tControls["gutter"] to tNewRect
+      send "resize" to tControls["gutter"]
+   end if
+
+   -- If the script is encrypted, display the password layer over the
+   -- top.
+
+   if scriptProtected() then
+      set the loc of tControls["password"] to (item 1 of the loc of me), (item 2 of the loc of tControls["password"])
+      set the top of tControls["password"] to the top of me + (the height of me div 3)
+      send "openControl" to tControls["password"]
+   else
+      set the right of tControls["password"] to the left of me - 20
+   end if
+
+   -- Ensure that various bits of infrastructure that the user
+   -- shouldn't see are hidden.
+
    set the right of button "Context Menu" of me to the left of me - 500
-   
-   set the width of group "Interactive Find" of me to the width of me - the width of group "Gutter" of me
-   set the left of group "Interactive Find" of me to the left of me + the width of group "Gutter" of me
-   set the top of group "Interactive Find" of me to tFindSplit
-   
-   set the rect of field "Script" of me to (the left of me + the width of group "Gutter" of me), the top of me, the right of me, tFindSplit
-   
-   # OK-2010-03-18: Bug 8523 - Adjust gutter to take horizontal scrollbar into account
-   if the hScrollbar of field "Script" of me then
-      subtract the scrollbarWidth of field "Script" of me from tFindSplit
-   end if
-   
-   set the rect of group "Gutter" of me to the left of me, the top of me, the left of me + the width of group "Gutter" of me, tFindSplit
-   send "resize" to group "Gutter" of me
+   set the right of button "revCompileObject" of me to the left of me - 500
+
 end resize
 
 local sObjectId
