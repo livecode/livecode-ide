@@ -61,6 +61,8 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
    
+   revIDESubscribe "ideShowInProjectBrowser"
+   
    put empty into sDisplayArray
    loadImages
    setUpProjectView

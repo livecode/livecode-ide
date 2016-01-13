@@ -3259,6 +3259,15 @@ on revIDEEditScriptOfObject pObject
    end if
 end revIDEEditScriptOfObject
 
+on revIDEShowInProjectBrowser pObjects
+   lock screen
+   if the mode of stack revIDEPaletteToStackName("project browser") is 0 then
+      revIDEOpenPalette("project browser")
+   end if
+   revIDEMessageSend "ideShowInProjectBrowser", pObjects
+   unlock screen
+end revIDEShowInProjectBrowser
+
 /*
 Generates API documentation for a giver object and launched it in the system browser.
 
