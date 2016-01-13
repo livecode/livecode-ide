@@ -2302,6 +2302,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Send Message"
          revIDESendMessageToObject item 2 of pWhich, pTarget
          break
+      case "Group"
+         revIDEGroupObjects pTarget
+         break
          ######### SUBMENUS ########
       case "Card"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, the long id of this card of tTargetStack
