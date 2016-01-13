@@ -9617,7 +9617,7 @@ end ideCompileCheck
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
-      return the result
+      return "compile error" & return & the result
    end if
    
    do "global" && the globals
@@ -9649,5 +9649,8 @@ command ideDoMessage pScript, pDebugMode
    end try
    unlock screen
    
+   if tScriptError is not empty then
+      put "execution error" & return before tScriptError
+   end if
    return tScriptError
 end ideDoMessage
