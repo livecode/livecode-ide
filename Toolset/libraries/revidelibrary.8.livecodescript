@@ -9444,6 +9444,42 @@ end revIDEGetGeometry
 #
 ##################################################
 
+private function __tryToDoScriptInObject pObject, pObjectScript, pToDo, @rValidScript
+   set the itemdelimiter to ";"
+   repeat for each line tScriptLine in pObjectScript
+      if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pToDo then 
+         put "send" && item 1 of pToDo && "to" && pObject & ";" & item 2 to -1 of pToDo into tDoScript
+         put pToDo into rValidScript
+         return tDoScript
+      else if token 1 of tScriptLine is "function" then
+         local tTryAsFunction
+         put false into tTryAsFunction
+         if token 1 of pToDo is token 2 of tScriptLine then
+            put true into tTryAsFunction
+            put "put" && pToDo into tDoScript
+         else if token 1 of pToDo is "put" and token 2 of pToDo is token 2 of tScriptLine then
+            put true into tTryAsFunction
+            put pToDo into tDoScript
+         end if
+         if tTryAsFunction then
+            local tFirstItem
+            put item 1 of tDoScript into tFirstItem
+            # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
+            local tParams
+            if matchText(token 2 to -1 of tFirstItem, token 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
+               exit repeat
+            end if
+            put tDoScript into rValidScript
+            dispatch function (token 2 of tDoScript) to pObject with tParams
+            local tFunction
+            replace token 2 of tScriptLine & "(" & tParams & ")" with quote & the result & quote in tFirstItem
+            put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
+            return tDoScript
+         end if
+      end if
+   end repeat
+end __tryToDoScriptInObject
+
 command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
    local tOldDefault
    put the defaultStack into tOldDefault
@@ -9463,63 +9499,25 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tScript, tScriptLine, tScriptError
+   local tIntellgenceScript, tCardStackScript, tScriptLine, tScriptError
    
    put false into tScriptError
    try
-      put the script of pIntelligenceObject into tScript
+      put the script of pIntelligenceObject into tIntelligenceScript
    catch tError
-      put true into tScriptError
    end try
    
-   if tScriptError is true then
-      put false into tScriptError
-      put the long id of the defaultStack into pIntelligenceObject
-      try 
-         put the script of the defaultStack into tScript
-      catch tError
-         put true into tScriptError
-      end try
-   end if
+   try 
+      put the script of the defaultStack into tCardStackScript
+      put return & the script of this card of the defaultStack after tCardStackScript
+   catch tError
+   end try
    
    local tDoScript, tValidScript
-   
-   if tScriptError is false then
-      set the itemdelimiter to ";"
-      repeat for each line tScriptLine in tScript
-         if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pScript then 
-            put "send" && item 1 of pScript && "to" && pIntelligenceObject & ";" & item 2 to -1 of pScript into tDoScript
-            put pScript into tValidScript
-            exit repeat
-         else if token 1 of tScriptLine is "function" then
-            local tTryAsFunction
-            put false into tTryAsFunction
-            if token 1 of pScript is token 2 of tScriptLine then
-               put true into tTryAsFunction
-               put "put" && pScript into tDoScript
-            else if token 1 of pScript is "put" and token 2 of pScript is token 2 of tScriptLine then
-               put true into tTryAsFunction
-               put pScript into tDoScript
-            end if
-            if tTryAsFunction then
-               local tFirstItem
-               put item 1 of tDoScript into tFirstItem
-               # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-               local tParams
-               if matchText(token 2 to -1 of tFirstItem, token 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
-                  exit repeat
-               end if
-               put tDoScript into tValidScript
-               dispatch function (token 2 of tDoScript) to pIntelligenceObject with tParams
-               local tFunction
-               replace token 2 of tScriptLine & "(" & tParams & ")" with quote & the result & quote in tFirstItem
-               put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
-               exit repeat
-            end if
-         end if
-      end repeat
-      set the itemdelimiter to comma
-   end if  
+   put __tryToDoScriptInObject(pIntelligenceObject, tIntelligenceScript, pScript, tValidScript) into tDoScript
+   if tDoScript is empty then
+      put __tryToDoScriptInObject(the long id of this card of the defaultStack, tCardStackScript, pScript, tValidScript) into tDoScript
+   end if
    
    if tDoScript is not empty then
       ideDoMessage tDoScript, pDebugMode

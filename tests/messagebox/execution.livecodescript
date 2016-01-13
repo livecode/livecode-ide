@@ -131,3 +131,19 @@ on TestIntelligenceObjectMultipleCommand
 	
 	TestAssertBroken "intelligence object mutiple commands", the cValue of tStack is "value", "Bug 16318"
 end TestIntelligenceObjectMultipleCommand
+
+on TestDefaultStackCardScript
+	local tScript
+	put "on preOpenCard; set the cValue of this stack to" && quote & "value" & quote && "; end preOpenCard" into tScript
+
+	local tStack
+	create stack
+	put the long id of it into tStack
+	set the script of card 1 of tStack to tScript
+	
+	local tValidScript
+	ideExecuteScript "preOpenCard", tStack, empty, false, tValidScript
+	
+	TestAssert "intelligence object command result", the cValue of tStack is "value"
+	TestAssert "intelligence object command executed", tValidScript is "preOpenCard"
+end TestDefaultStackCardScript
