@@ -2323,3 +2323,7 @@ end loadImages
 on revUpdatePalette
    ## Do nothing
 end revUpdatePalette
+
+on pbRightClick
+   revIDEPopupContextualMenu pbSelectedObjects()
+end pbRightClick
