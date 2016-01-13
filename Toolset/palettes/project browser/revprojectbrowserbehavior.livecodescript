@@ -260,6 +260,15 @@ on displayPreferenceSelected pPreference, pValue
    unlock screen
 end displayPreferenceSelected
 
+on ideShowInProjectBrowser pTarget
+   lock screen
+   repeat for each line tObj in pTarget
+      showObjects tObj
+   end repeat
+   scrollToObject line 1 of pTarget
+   unlock screen
+end ideShowInProjectBrowser
+
 ######## Project View Handlers ########
 ###################################
 
@@ -509,6 +518,9 @@ command highlightObjects pObject
    
    set the dvHilitedRows["true"] of group "objectList" of this stack to empty
    
+## Expands stacks, cards and groups as necessary to show object
+command showObjects pObject
+   local tRow, tRows, tOwners, tOwnerRow, tVisibleRows, tVisibleRowNumber
    ### Highlight the parent trail
    put getOwners(pObject,tOwners) into tOwners
    set the cOwners of group "objectList" of me to tOwners
@@ -526,19 +538,9 @@ command highlightObjects pObject
       end if
    end repeat
    
-   put sDisplayArray["visible object keys"] into tVisibleRows
-   repeat for each line tObject in pObject      
-      put getRow(tObject) into tRow
-      if tRow is among the items of tVisibleRows then
-         put itemOffset(tRow,tVisibleRows) & comma after tRows
-      end if
-   end repeat
-   delete the last char of tRows
-   set the dvHilitedRows["true"] of group "objectList" of this stack to tRows
-   
    updateActions
    unlock screen
-end highlightObjects
+end showObjects
 
 on selectObjects pObjectList
    // AL-2015-12-17: Don't select objects anymore when they are selected
@@ -903,6 +905,13 @@ on toggleGroup pRow, pState
    dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, pRow, 0, pState   
 end toggleGroup
 
+command scrollToRow pRow
+   dispatch "ScrollRowTo" to group "objectList" of me with pRow, "top"
+end scrollToRow
+
+command scrollToObject pObjectID
+   scrollToRow getRow(pObjectID)
+end scrollToObject
 ####### Project List Array management #######
 #######################################
 
