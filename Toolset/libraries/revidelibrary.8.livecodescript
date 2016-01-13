@@ -9370,7 +9370,7 @@ on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pIni
    put revIDESpecialFolderPath("repo guides") into tRepoGuidesFolder
    
    local tTemplate
-   put textDecode(url("binfile:" & tDocsBase & slash & pWhich & ".html.template"), "utf-8") into tTemplate
+   put textDecode(url("binfile:" & revIDEGetDictionaryHTMLTemplate(pWhich)), "utf-8") into tTemplate
    put merge(tTemplate) into tTemplate
    put textEncode(tTemplate, "utf-8") into url("binfile:" & tGeneratedHTMLFile)
 end revIDEGenerateDictionaryHTML
