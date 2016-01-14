@@ -200,11 +200,11 @@ on inspectorTreeMenuDisplay
       replace cr with cr & tab & tab in tStacks
       set the text of button "inspectMenu" of this stack to tControlsList & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
+            & cr & "Edit Script" & cr & tSendMessageList
    else
       set the text of button "inspectMenu" of this stack to tControls & cr & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
+            & cr & "Edit Script" & cr & tSendMessageList
    end if
    
    popup button "inspectMenu" of this stack at the mouseloc
