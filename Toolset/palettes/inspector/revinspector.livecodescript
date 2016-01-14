@@ -300,11 +300,24 @@ end ideNameChanged
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged
+   local tObjects
+   put revIDESelectedObjects() into tObjects
+   
+   local tStack
+   put revIDEStackOfObject(line 1 of tObjects) into tStack
+   
+   # If the object is on an inspector stack, lock it
+   if the short name of tStack begins with kPropertyInspectorPrefix then
+      if the cLocked of tStack is not true then
+         dispatch "actionSelected" to tStack with "inspectorLock"
+      end if
+   end if
+   
    local tStackName
    repeat for each key tKey in inspectorList()
       put kPropertyInspectorPrefix && tKey into tStackName
       if the cLocked of stack tStackName is false and the mode of stack tStackName is not 0 then
-         ideInspectObjects revIDESelectedObjects()
+         ideInspectObjects tObjects
          exit repeat
       end if
    end repeat
