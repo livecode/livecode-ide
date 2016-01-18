@@ -1153,25 +1153,10 @@ command revInternal__InitialiseDefaults
          set the itemdelimiter to "."
          revInternal__Log "message", "Trying to set the default text of stack home"
 
-         set the backColor of stack "Home" to empty
-         
          hide stack "revMacCursors"    
          break
       case "Windows"
          set the hidePalettes to false
-         
-         if word 1 of the systemVersion is "NT" and word 2 of the systemVersion >= 6 and "Segoe UI" is among the lines of the fontNames then
-            set the textFont of stack "Home" to "Segoe UI"
-            set the textSize of stack "Home" to 12
-         else if word 1 of the systemVersion is "NT" and word 2 of the systemVersion >= 5 and "Tahoma" is among the lines of the fontNames then
-            set the textFont of stack "Home" to "Tahoma"
-            set the textSize of stack "Home" to 11
-         else
-            set the textFont of stack "Home" to "MS Sans Serif"
-            set the textSize of stack "Home" to 10
-         end if
-         set the backColor of stack "Home" to empty
-         set the textSize of cd 1 of stack "Home" to empty
          
          if word 1 of the systemVersion is "Windows" then
             set the shellCommand to "command.com"
@@ -1183,28 +1168,17 @@ command revInternal__InitialiseDefaults
          break
       case "Linux"
          set the hidePalettes to false
-         set the bottomColor of stack "Home" to empty
          
          hide stack "revLinuxCursors"
          hide stack "revCursors"
          break
       default
          set the hidePalettes to false
-         set the textFont of stack "Home" to "Helvetica"
-         set the textSize of stack "Home" to 10
-         set the bottomColor of stack "Home" to empty
-         set the textSize of cd 1 of stack "Home" to empty
          
          hide stack "revLinuxCursors"
          hide stack "revCursors"
          break
    end switch
-   
-   if the lookAndFeel is "Windows 95" then 
-      set the bottomColor of this stack to "128,128,128"
-   else
-      set the bottomColor of this stack to "172,172,172"
-   end if
    
    set the traceDelay to the cTraceDelay of stack "revPreferences"
    
