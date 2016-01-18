@@ -1,7 +1,11 @@
 ﻿script "com.livecode.pi.text.behavior"
+local sTextType
 on editorInitialize
    set the editorMinWidth of me to 25
    set the editorMaxWidth of me to 0
+   
+   set the itemdelimiter to "."
+   put item -1 of the editorProperty["editor"] of me into sTextType
 end editorInitialize
 
 on editorUpdate
@@ -10,13 +14,16 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
-   put the editorProperty["property_name"] of me into tProp
    
    lock messages
-   if tProp is "styledText" then
+   if sTextType is "styledText" then
       set the styledText of field 1 of me to tValue
    else
       put tValue into field 1 of me
+   end if
+   
+   if sTextType is "noWrapText" then
+      set the dontWrap of field 1 of me to true
    end if
    
    set the enabled of field 1 of me to tEnabled
@@ -53,7 +60,7 @@ on editorResize
 end editorResize
 
 on valueChanged
-   if the editorProperty["property_name"] of me is "styledText" then
+   if sTextType is "styledText" then
       set the editorValue of me to the styledText of field 1 of me
    else
       set the editorValue of me to field 1 of me

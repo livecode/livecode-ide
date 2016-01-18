@@ -1,5 +1,6 @@
 ﻿script "com.livecode.pi.enum.behavior"
 constant kEffectiveTextColor = "100,100,100"
+global gRevLanguageNames
 
 on editorInitialize
    set the editorMinWidth of me to 40
@@ -9,13 +10,13 @@ on editorInitialize
    put the editorOptions of me into tOptions
    set the itemdelimiter to "|"
    repeat for each line tLine in tOptions
-      if tText is empty then
-         put item 1 of tLine into tText
+      if gRevLanguageNames then
+         delete item (the number of items of tLine - 1) of tLine
       else
-         put return & item 1 of tLine after tText
+         delete item 2 of tLine
       end if
    end repeat
-   set the text of button "pulldown" of me to tText
+   set the text of button "pulldown" of me to tOptions
 end editorInitialize
 
 on editorUpdate
@@ -24,12 +25,31 @@ on editorUpdate
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   
+   local tOptions
+   put the editorOptions of me into tOptions
+   
    lock messages
-   if tValue is empty then
-      set the label of button "pulldown" of me to " "
+   local tLabel
+   
+   if gRevLanguageNames then
+      put tValue into tLabel
    else
-      set the label of button "pulldown" of me to tValue
+      set the wholematches to false
+      set the itemdelimiter to "|"
+      
+      repeat for each line tLine in tOptions
+         if the number of items of tLine is 2 and \
+               tValue is item 2 of tLine then
+            put item 1 of tLine into tLabel
+            exit repeat
+         else if tValue is tLine then
+            put tLine into tLabel
+            exit repeat
+         end if
+      end repeat
    end if
+   set the label of button "pulldown" of me to tLabel
    set the enabled of me to tEnabled
    if tEffective is true then
       set the textcolor of button "pulldown" of me to kEffectiveTextColor
@@ -57,11 +77,7 @@ on valueChanged
    set the itemdelimiter to "|"
    repeat for each line tLine in tOptions
       if item 1 of tLine is the label of button "pulldown" of me then
-         if the number of items of tLine is 2 then
-            set the editorValue of me to item 2 of tLine
-         else
-            set the editorValue of me to item 1 of tLine
-         end if
+         set the editorValue of me to the last item of tLine
          exit repeat
       end if
    end repeat

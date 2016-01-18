@@ -21,6 +21,7 @@ behavior							empty	long id
 foregroundColor						Border Fill						
 foregroundPattern						Border Fill						
 fillGradient												
+strokeGradient
 topColor												
 topPattern												
 bottomColor												

@@ -41,7 +41,7 @@ on editorInitialize
    
    local tMinWidth
    put 25 into tMinWidth
-   if the visible of scrollbar "slider"of me is true then add 25 to tMinWidth
+   if the visible of scrollbar "slider" of me is true then add 25 to tMinWidth
    
    unlock messages
    unlock screen
@@ -108,7 +108,7 @@ on editorResize
       # The field has a fixed size
       set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tTop + the height of field 1 of me
       add sFieldWidth + CONTROL_PADDING to tLeft
-   else if the visible of scrollbar "twiddle" is true then
+   else if the visible of scrollbar "twiddle" of me is true then
       # The field is full width but there is a twiddle controller at the end
       set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING,tTop + the height of field 1 of me
       add the width of field 1 of me to tLeft
@@ -120,7 +120,7 @@ on editorResize
       add the width of scrollbar "twiddle" of me + CONTROL_PADDING to tLeft
    end if
    
-   if the visible of scrollbar 1 of me is true then
+   if the visible of scrollbar "slider" of me is true then
       # The slider is visible
       local tRemainingWidth
       put the right of me - tLeft + CONTROL_PADDING into tRemainingWidth

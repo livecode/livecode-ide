@@ -22,8 +22,8 @@ on editorUpdate
    unlock screen
 end editorUpdate
 
-on mouseUp
-   if word 1 of the target is "button" then
+on mouseUp pWhich
+   if pWhich is 1 and word 1 of the target is "button" then
       set the cCurrentIcon of stack "revIconChooser" to field "value" of me
       sheet "revIconChooser"
       local tValue

@@ -166,7 +166,7 @@ private function buildTopNodes
    end if
    
    # Show the remaining variables only in debugging mode.
-   if sContext is not empty then
+   if seGetDebugContext() is not empty then
       if the cShowGlobals of me is true then
          # All global variables are currently being shown, so we only need to add the local variables to the list
          get processVariableNames(revDebuggerLocalNames(sContext))

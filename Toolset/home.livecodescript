@@ -312,6 +312,9 @@ local sCrashLogPath
 local sCachePath
 -- This is the path to the user-specified IDE customization folder
 local sCustomizationPath
+-- This is the path to the folder containing per-user dictionary data
+local sUserDocsPath
+
 
 -- This is the path to the folder containing user preferences for the IDE prior to 4.5
 local sOldPreferencesPath
@@ -353,7 +356,7 @@ private command revInternal__SetupLicense
    revInternal__Log "Leave", "License Setup"
 end revInternal__SetupLicense
 
- private command revInternal__SetupPaths
+private command revInternal__SetupPaths
    revInternal__Log "Enter", "Path Setup"
    
    local tHomePath
@@ -383,6 +386,7 @@ end revInternal__SetupLicense
          put the folder & slash & ".runrev/preferences" into sPreferencesPath
          put the folder & slash & ".runrev/cache" into sCachePath
          put the folder & slash & ".runrev/crashlogs" into sCrashLogPath
+         put the folder & slash & ".runrev/docs" into sUserDocsPath
          set the folder to tOldFolder
          
          -- MW-2013-06-13: Adjust the engine path for Linux
@@ -399,6 +403,7 @@ end revInternal__SetupLicense
          put specialFolderPath("Preferences") & "/RunRev" into sPreferencesPath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Cache" into sCachePath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Crash Logs" into sCrashLogPath
+         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Docs" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Mac
          put item 1 to -5 of tEnginePath into tEnginePath
@@ -416,6 +421,7 @@ end revInternal__SetupLicense
          -- We put everything else in the 'Local' AppData folder.
          put specialFolderPath(0x001c) & "/RunRev/Cache" into sCachePath
          put specialFolderPath(0x001c) & "/RunRev/Crash Logs" into sCrashLogPath
+         put specialFolderPath(0x001c) & "/RunRev/Docs" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Windows
          put item 1 to -2 of tEnginePath into tEnginePath
@@ -695,6 +701,9 @@ private command revInternal__SetupFolders
    revInternal__Log "Message", "Setting up Crash Log Path"
    revInternal__EnsureFolder sCrashLogPath
    
+   revInternal__Log "Message", "Setting up Docs Path"
+   revInternal__EnsureFolder sUserDocsPath
+   
    revInternal__Log "Leave", "Folders Setup"
 end revInternal__SetupFolders
 
@@ -718,24 +727,21 @@ end revInternal__ResetPreferences
 command revInternal__SavePreferences
    local tPreference 
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the buildnumber < 10000 then
-      set the stackFileVersion to "2.7"
+      put "2.7" into tStackFileVersion
    else
-      set the stackFileVersion to "7.0"
+      put "7.0" into tStackFileVersion
    end if
    
    lock messages
    -- MM-2014-02-22: [[ Bug 11442 ]] Saving the prefs stack when security permissions is true is not possible.
    try
-      save stack "revPreferences"
+      save stack "revPreferences" with format tStackFileVersion
    catch tError
    end try
    unlock messages
-   
-   set the stackFileVersion to tOldStackFileVersion
 end revInternal__SavePreferences
 
 private command revInternal__EnsureFolder pFolder
@@ -1710,6 +1716,10 @@ end revEnvironmentUserPreferencesPath
 function revEnvironmentUserCachePath
   return sCachePath
 end revEnvironmentUserCachePath
+
+function revEnvironmentUserDocsPath
+  return sUserDocsPath
+end revEnvironmentUserDocsPath
 
 function revEnvironmentIsUpdateable
   return true

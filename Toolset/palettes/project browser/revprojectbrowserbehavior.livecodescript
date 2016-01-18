@@ -398,9 +398,8 @@ command buildProjectView pRememberExpansion
       end if
    end repeat
    
-   unlock screen
-   
    refreshProjectView
+   unlock screen
 end buildProjectView
 
 on refreshProjectView
@@ -2073,7 +2072,7 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
          repeat for each item tRow in pDraggedRowList
             put getAbsoluteRow(tRow) into tAbs
             put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDERelayerControl tLongID, 1, tDraggedCard
+            revIDERelayerControl tLongID, "top", tDraggedCard
          end repeat
          
          set the relayerGroupedControls to false

@@ -291,6 +291,7 @@ on menuPick pItemName
       local tSelectedContext
       put line tNumber of tContexts into tSelectedContext
       revDebuggerSetContext tSelectedContext
+      seSetDebugContext tSelectedContext
       
       # OK-2009-06-23 : Bug 7954 - Properly parse execution context and deal with the behavior situation.
       local tArray
@@ -304,7 +305,6 @@ on menuPick pItemName
       end if
       
       revSEGoExecutionPoint tObject, tArray["line number"], true, true
-      send "refreshCurrentPane" to group "Panes" of this card
    end if
 end menuPick
 

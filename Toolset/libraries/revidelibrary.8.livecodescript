@@ -2286,7 +2286,7 @@ Returns (Any): The value of the preference
 */
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue
-   save stack "revpreferences"
+   revInternal__SavePreferences
    ideMessageSend "idePreferenceChanged:" & pPreferenceName
 end revIDESetPreference
 
@@ -3629,27 +3629,23 @@ function revIDESpecialFolderPath pKey
          break
       case "documentation"
          put item 1 to -3 of the filename of stack "home" & "/Documentation" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "documentation cache"
-         put revEnvironmentCustomizationPath() & "/Documentation" into tPath
+         put revEnvironmentUserDocsPath() & slash & "IDE" into tPath
          revIDEEnsurePath(tPath)
          return tPath
          break
       case "api"
          put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "guide"
          put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "examples"
          put  item 1 to -3 of the filename of stack "home" & "/Examples" into tPath
-         revIDEEnsurePath(tPath)
          return tPath
          break
       case "tutorial"
@@ -3658,20 +3654,14 @@ function revIDESpecialFolderPath pKey
       case "globals"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
+      case "ide guides"
+         return item 1 to -3 of the filename of stack "home" & "/Documentation/guides" into tPath
+         break
+      case "repo guides"
+         return revEnvironmentRepositoryPath() & "/docs/guides" into tPath
+         break
    end switch
 end revIDESpecialFolderPath
-
-private function __docsHTMLFile pWhich
-   if pWhich is "dictionary" then
-      if revIDEBrowserWidgetUnavailable() then
-         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer_external.html"
-      else
-         return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "viewer.html"
-      end if
-   else
-      return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & "guide.html"
-   end if
-end __docsHTMLFile  
 
 on revIDEEnsurePath pPath
    if there is a folder pPath then exit revIDEEnsurePath
@@ -4177,7 +4167,15 @@ command revIDEOpenPalette pPaletteName
       case "dictionary"
       case "guide"
          if revIDEBrowserWidgetUnavailable() then
-            launch url ("file:" & __docsHtmlFile(pPaletteName))
+            local tWhich
+            if pPaletteName is "dictionary" then
+               put "api" into tWhich
+            else
+               put "guide" into tWhich
+            end if
+            
+            revIDEGenerateDictionaryHTML tWhich
+            launch url ("file:" & revIDEGetDictionaryUrl(tWhich))
          else
             toplevel stack tStackName
          end if
@@ -4463,7 +4461,8 @@ end revIDEGoToLCSDictionaryEntry
 
 on revIDEGoToDictionaryEntry pLibrary, pTag, pType
    if revIDEBrowserWidgetUnavailable() then
-      ideThrow "Can't navigate to dictionary entry in external browser"
+      revIDEGenerateDictionaryHTML "api", pLibrary, pTag, pType
+      launch url ("file:" & revIDEGetDictionaryUrl("api"))
    else
       send "goToEntry pLibrary, pTag, pType" to stack revIDEPaletteToStackName("dictionary") 
    end if
@@ -6119,12 +6118,11 @@ on revIDESaveStack pStackID
    
    lock messages
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack tStackName is not empty then
       try
-         set the stackFileVersion to the cREVGeneral["stackfileversion"] of stack tStackName
+         put the cREVGeneral["stackfileversion"] of stack tStackName into tStackFileVersion
       catch tError
          --
       end try
@@ -6177,15 +6175,18 @@ on revIDESaveStack pStackID
       send "saveStackRequest" to this card of stack tStackName
       set the defaultStack to tDefaultStack
    end try
-   
-   save stack tStackName
+
+   if tStackFileVersion is not empty then
+      save stack tStackName with format tStackFileVersion
+   else
+      save stack tStackName with newest format
+   end if
    put the result into tSaveResult
    
    
    ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
    ## Hence the introduction of the above variable.
    set the stackFileType to tOldStackFileType
-   set the stackFileVersion to tOldStackFileVersion
    
    unlock messages
    
@@ -6256,18 +6257,23 @@ on revIDEActionSaveStack pStackID
    end if
 end revIDEActionSaveStack
 
-on revIDESaveStackAs pStackID, pFileName
+on revIDESaveStackAs pStackID, pFileName, pVersion
    if not exists (pStackID) then return __revIDEError("Target stack does not exist")
    if pFileName is empty then return __revIDEError("No path provided to save to")
+
+   if pVersion is not empty then
+      save pStackID as pFileName with format pVersion
+   else
+      save pStackID as pFileName with newest format
+   end if
    
-   save pStackID as pFileName
-   
-   local tShortName
+   local tShortName, tResult
    put the short name of stack pStackID into tShortName
-   if the result is not empty then
+   put the result into tResult
+   if tResult is not empty then
       local tLocaliseSubstitutions
       put tShortName into tLocaliseSubstitutions[1]
-      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & the result
+      answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & tResult
       close stack "revSaving"
    else
       global gRevStackStatus
@@ -6331,13 +6337,16 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK")
          break
       default
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
    end switch
 
    put the result into tType
 
    switch tType
+      case "Legacy LiveCode Stack (7.0)"
+         put 7.0 into tType
+         break
       case "Legacy LiveCode Stack (5.5)"
          put 5.5 into tType
          break
@@ -6348,7 +6357,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          put 2.4 into tType
          break
       default
-         put 7.0 into tType
+         put 8.0 into tType
          break
    end switch
 
@@ -6367,7 +6376,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put it into tFilePath
 
    # Display warning if user has not selected the latest file format
-   if tType < 7 then
+   if tType < 8 then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tShortName]
@@ -6380,8 +6389,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
       if it is revIDELocalise("Cancel") then
          return "Cancelled"
-      else
-         delete file tFilePath
       end if
    end if
 
@@ -6400,7 +6407,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       set the cursor to watch
       -- remove revOnline fingerprint
       revRemoveRevOnlineKey "fingerprint",tMainStackName
-      save stack tMainStackName
+      revIDESaveStack tMainStackName
    end if
 
 
@@ -6410,12 +6417,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    # RevOnline fingerprint enables the revOnline uploader automatically overwrite the stack if already uploaded.
    # Because you're saving as a new stack, this fingerprint should be removed.
    revRemoveRevOnlineKey "fingerprint",tShortName
-
-   # Store the current stack file version before setting it to the value for this save
-   # It will be reset after the save was made
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
-   set the stackFileVersion to tType
 
    # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
    try
@@ -6432,9 +6433,8 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       set the defaultStack to tDefaultStackBackup
    end try
 
-   revIDESaveStackAs the long id of stack tShortName, tFilePath
+   revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
 
-   set the stackFileVersion to tOldStackFileVersion
    unlock messages
 
    return empty
@@ -8681,7 +8681,7 @@ on revIDETutorialSave pTaggedObjects, pStepName
       put pTaggedObjects["stack"][tStackTag] into tMainstack
       put the filename of tMainstack into tOldFilename
       put revIDETutorialUserStackPath(tStackTag) into tFilename
-      save stack tMainstack as tFilename
+      save stack tMainstack as tFilename with newest format
       set the filename of tMainstack to tOldFilename
       
       if tStackTags is empty then
@@ -9000,7 +9000,8 @@ private function revIDEGetDocsAPIData
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
    
-   local tFolder
+   local tFolder, tCachedDataFolder
+   set the itemdelimiter to slash
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionAPI
       put tExtensionData["folder"] into tFolder
@@ -9009,9 +9010,12 @@ private function revIDEGetDocsAPIData
       put __getLCBSourceFile(tFolder) into tSource
       
       # Check if the lcdoc file is out of date
+      put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
+      revIDEEnsurePath tCachedDataFolder
+
       local tLastModified, tLastGenerated
       put revIDELastModifiedTimeOfFile(tFolder, tSource) into tLastModified
-      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastGenerated
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastGenerated
       
       # If there is no lcdoc file and no source, we can't generate the docs
       if tLastModified is empty and tLastGenerated is empty then
@@ -9026,14 +9030,14 @@ private function revIDEGetDocsAPIData
          put the result into tDoc
          
          # Output the lcdoc file
-         put textEncode(tDoc, "utf-8") into url ("binfile:" & tFolder & slash & "api.lcdoc")
+         put textEncode(tDoc, "utf-8") into url ("binfile:" & tCachedDataFolder & slash & "api.lcdoc")
       end if
       
       # Check if the .js is out of date
       put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
-      put revIDELastModifiedTimeOfFile(tFolder, "api.js") into tLastGenerated
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
-         put url ("binfile:" & tFolder & slash & "api.js") into tExtensionAPI
+         put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
       else
          local tLibraryArray, Lcdoc
          dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
@@ -9044,8 +9048,8 @@ private function revIDEGetDocsAPIData
          
          # Update the dictionary database
          ideDocsUpdateDatabase tLibraryArray
-         
-         put tExtensionAPI into url ("binfile:" & tFolder & slash & "api.js") 
+
+         put tExtensionAPI into url ("binfile:" & tCachedDataFolder & slash & "api.js") 
       end if
       
       if tExtensionAPI is not empty then
@@ -9066,19 +9070,22 @@ private function revIDEGetDocsGuideData
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
    
-   local tFolder
+   local tFolder, tCachedDataFolder
+   set the itemdelimiter to slash
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionGuide
       put empty into tExtensionGuide
       put tExtensionData["folder"] into tFolder
+      put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       if there is a not file (tFolder & slash & "guide.md")  then next repeat
+      revIDEEnsurePath tCachedDataFolder
       
       # Check if the .js is out of date
       local tLastModified, tLastGenerated
       put revIDELastModifiedTimeOfFile(tFolder, "guide.md") into tLastModified
-      put revIDELastModifiedTimeOfFile(tFolder, "guide.js") into tLastGenerated
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "guide.js") into tLastGenerated
       if tLastModified < tLastGenerated then
-         put url ("binfile:" & tFolder & slash & "guide.js") into tExtensionGuide
+         put url ("binfile:" & tCachedDataFolder & slash & "guide.js") into tExtensionGuide
       else
          local tGuide
          put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
@@ -9091,7 +9098,7 @@ private function revIDEGetDocsGuideData
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             
-            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tFolder & slash & "guide.js")
+            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tCachedDataFolder & slash & "guide.js")
          end if
       end if
       
@@ -9120,7 +9127,9 @@ on revIDEAddGuideAndRegenerate pGuide
    
    put CR & tab & "]" & CR & "}" after tData
    
-   put tData into URL ("binfile:" & tGuidePath & slash & "built_guide.js")
+   local tDocsCache
+   put revIDESpecialFolderPath("documentation cache") into tDocsCache
+   put tData into URL ("binfile:" & tDocsCache & slash & "built_guide.js")
 end revIDEAddGuideAndRegenerate
 
 on revIDEAddAPIAndRegenerate pAPI
@@ -9139,7 +9148,10 @@ on revIDEAddAPIAndRegenerate pAPI
    end if
    
    put CR & tab & "]" & CR & "}" after tData
-   put tData into URL ("binfile:" & tAPIPath & slash & "built_api.js")
+   
+   local tDocsCache
+   put revIDESpecialFolderPath("documentation cache") into tDocsCache
+   put tData into URL ("binfile:" & tDocsCache & slash & "built_api.js")
 end revIDEAddAPIAndRegenerate
 
 on revIDERegenerateBuiltAPIs
@@ -9162,14 +9174,22 @@ on revIDEGenerateDistributedDocs
    revIDERegenerateBuiltDictionaryData
 end revIDEGenerateDistributedDocs
 
-on revIDEGenerateDistributedGuide
+private on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolder
-   put revIDESpecialFolderPath("documentation") & slash & "guides" into tGuideFolder
+   local tGuideFolders
+   put "ide:" & revIDESpecialFolderPath("ide guides") into tGuideFolders
+   
+   if not revEnvironmentIsInstalled() then
+      put return & "repo:" & revIDESpecialFolderPath("repo guides") after tGuideFolders
+   end if
    
    # Check if the distributed guide is out of date
    local tLastModified, tLastGenerated
-   put revIDELastModifiedTimeOfFilesInFolder(tGuideFolder) into tLastModified
+   set the itemdelimiter to ":"
+   repeat for each line tGuideFolder in tGuideFolders
+      delete item 1 of tGuideFolder
+      put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tGuideFolder)) into tLastModified
+   end repeat
    put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
    
    # If we don't need to regenerate, exit
@@ -9177,37 +9197,45 @@ on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   revIDEPushDefaultFolder tGuideFolder
-   
-   local tGuideData, tGuideName
-   set the itemdelimiter to "."
-   repeat for each line tFile in the files
-      if tFile begins with "."  then next repeat
-      if tFile ends with "~" then next repeat
-      # The name of the guide is just the filename without extension
-      put item 1 to -2 of tFile into tGuideName
-      get url ("binfile:" & tGuideFolder & slash & tFile)
-      if it is not empty then
-         get textDecode(it, "utf-8")
-         
-         # Remove table of contents 
-         replace "[toc]" with empty in it
-         
-         # Build JSON data
-         put tab & "{" & CR after tGuideData
-         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
-         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
-         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
-      end if
+   repeat for each line tGuideFolder in tGuideFolders
+      local tGuideLocation
+      set the itemdelimiter to ":"
+      put item 1 of tGuideFolder into tGuideLocation
+      put item 2 to -1 of tGuideFolder into tGuideFolder
+      
+      revIDEPushDefaultFolder tGuideFolder
+      
+      local tGuideData, tGuideName
+      set the itemdelimiter to "."
+      repeat for each line tFile in the files
+         if tFile begins with "."  then next repeat
+         if tFile ends with "~" then next repeat
+         # The name of the guide is just the filename without extension
+         put item 1 to -2 of tFile into tGuideName
+         get url ("binfile:" & tGuideFolder & slash & tFile)
+         if it is not empty then
+            get textDecode(it, "utf-8")
+            
+            # Remove table of contents 
+            replace "[toc]" with empty in it
+            
+            # Build JSON data
+            put tab & "{" & CR after tGuideData
+            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
+            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
+            put tab & escape("location") & ":" & escape(tGuideLocation) & comma & return after tGuideData
+            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
+         end if
+      end repeat
+      revIDEPopDefaultFolder
    end repeat
    delete the last char of tGuideData
    
    # Write out to apropriate location
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
-   revIDEPopDefaultFolder
 end revIDEGenerateDistributedGuide
 
-command revIDEGenerateDistributedAPI
+private command revIDEGenerateDistributedAPI
    local tRepoPath
    put revEnvironmentRepositoryPath() into tRepoPath
    
@@ -9297,6 +9325,43 @@ command revIDEGenerateDistributedAPI
    
    put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
 end revIDEGenerateDistributedAPI
+
+on revIDEEnsureDictionaryUrl pWhich
+   if there is not a file revIDEGetDictionaryUrl(pWhich) then
+      revIDEGenerateDictionaryHTML pWhich
+   end if
+end revIDEEnsureDictionaryUrl
+
+function revIDEGetDictionaryUrl pWhich
+   return revEnvironmentUserDocsPath() & slash & pWhich & ".html"
+end revIDEGetDictionaryUrl
+
+on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pInitialEntryType
+   local tGeneratedHTMLFile
+   put revIDEGetDictionaryUrl(pWhich) into tGeneratedHTMLFile
+   
+   local tLibraryName, tEntryName, tEntryType
+   put pInitialLibrary into tLibraryName
+   put pInitialEntryName into tEntryName
+   put pInitialEntryType into tEntryType
+   
+   local tDocsBase
+   put revIDESpecialFolderPath("documentation") & slash & "html_viewer" into tDocsBase
+   
+   local tDocsCSSFolder, tDocsJSFolder, tDataPath
+   put tDocsBase & slash & "css" into tDocsCSSFolder
+   put tDocsBase & slash & "js" into tDocsJSFolder
+   put revIDESpecialFolderPath("documentation cache") & slash & "built_" & pWhich & ".js" into tDataPath
+   
+   local tIDEGuidesFolder, tRepoGuidesFolder
+   put revIDESpecialFolderPath("ide guides") into tIDEGuidesFolder
+   put revIDESpecialFolderPath("repo guides") into tRepoGuidesFolder
+   
+   local tTemplate
+   put textDecode(url("binfile:" & tDocsBase & slash & pWhich & ".html.template"), "utf-8") into tTemplate
+   put merge(tTemplate) into tTemplate
+   put textEncode(tTemplate, "utf-8") into url("binfile:" & tGeneratedHTMLFile)
+end revIDEGenerateDictionaryHTML
 
 ##################################################
 #
