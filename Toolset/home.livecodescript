@@ -1177,10 +1177,7 @@ command revInternal__InitialiseDefaults
          break
       case "Linux"
          set the hidePalettes to false
-         set the textFont of stack "Home" to "Helvetica"
-         set the textSize of stack "Home" to 12
          set the bottomColor of stack "Home" to empty
-         set the textSize of cd 1 of stack "Home" to empty
          
          hide stack "revLinuxCursors"
          hide stack "revCursors"
