@@ -73,7 +73,9 @@
 #lcdoc_body .lcdoc_glossary_table td{width:37%}
 #lcdoc_body .lcdoc_glossary_table td:first-of-type{width:26%}
 
-
+#lcdoc_body blockquote {
+    font-size: inherit;
+}
 
 @media (min-width: 768px) {
   #lcdoc_list.affix{

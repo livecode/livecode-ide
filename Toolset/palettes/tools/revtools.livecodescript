@@ -6,9 +6,6 @@ on preOpenStack
    
    set the title of me to "Tools"
    
-   ### Header
-   addFrameItem "add_widget","header", "action", "Find More Widgets", "plus sign", "plus sign","findMoreWidgets", the long id of me
-   
    # Preferences
    if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", 2
    addFrameItem "revTools_columns", "header", "preference", "View Columns", "enum","2,3,4", "framePreferenceSelected", the long id of me
@@ -71,12 +68,6 @@ on ideExtensionsChanged
    layoutPalette
    unlock screen
 end ideExtensionsChanged
-
-on findMoreWidgets
-   lock screen
-   revIDEFindMoreWidgets
-   unlock screen
-end findMoreWidgets
 
 on idePreferenceChanged pPreference
    switch pPreference
@@ -249,8 +240,6 @@ on generatePalette
          set the name of the templatebutton to the last item of tControlTypeID
          set the style of the templatebutton to "transparent"
          
-         set the tooltip of the templatebutton to sViewsData[tView][tControlTypeID]["tooltip"]
-         
          set the icongravity of the templatebutton to "top"
          set the threed of the templatebutton to false
          set the borderwidth of the templatebutton to 0
@@ -300,17 +289,21 @@ on generatePalette
             set the cTool of the templatebutton to true
             set the cToolName of the templatebutton to "graphic tool"
          else
-            if the tooltip of the templatebutton is empty then
-               local tTitle
-               put sViewsData[tView][tControlTypeID]["title"] into tTitle
-               if tTitle is empty then
-                  put item -1 of tControlTypeID into tTitle
-               end if
-               
-               set the tooltip of the templatebutton to "Click and drag or double click to create object:" & return & tTitle
-            end if
             set the cTool of the templatebutton to false
          end if
+         
+         local tTooltip
+         put sViewsData[tView][tControlTypeID]["tooltip"] into tTooltip
+         
+         if tTooltip is empty then
+            put sViewsData[tView][tControlTypeID]["title"] into tTooltip
+         end if
+         
+         if tTooltip is empty then
+            put item -1 of tControlTypeID into tTooltip
+         end if
+         
+         set the tooltip of the templatebutton to tTooltip
          
          # Create the button
          if sViewsData[tView][tControlTypeID]["status"] is "error" then
@@ -331,9 +324,8 @@ on generatePalette
             set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
             set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
             set the cTool of widget tControlTypeID to false
-            set the tooltip of widget tControlTypeID to "Click and drag or double click to create object: " & tControlTypeID
+            set the tooltip of widget tControlTypeID to tTooltip
          end if
-         
       end repeat
       
       # Create the seperator
@@ -442,7 +434,7 @@ on layoutPalette
    
    reset the templatebutton
    
-   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, the formattedheight of group "contents" of me + tHeaderHeight + the top of me
+   set the rect of me to tStackLeft, the top of me, tStackLeft+tStackWidth, tTop + the top of me
    
    ideToolChanged
    --layoutFrame
@@ -544,7 +536,6 @@ on mouseDown
    set the visible of the templateStack to false
    set the backGroundColor of the templateStack to the hiliteColor
    set the decorations of the templateStack to "noShadow"
-   set the style of the templateStack to "palette"
    set the blendLevel of the templateStack to 25
    set the loc of the templatestack to -500,-500
    
@@ -587,8 +578,8 @@ on mouseDown
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
    repeat for each line tStackName in tStackList
-      if tStackName is "ideTools" then next repeat
       if tStackName begins with  "DataViewControl" then next repeat
+      if tStackName is "revDragControl" then next repeat
       put the long ID of stack tStackName into tValidDropStacks[tStackCount]["long id"]
       put the rect of stack tStackName into tValidDropStacks[tStackCount]["rect"]
       put the backgroundcolor of stack tStackName into tValidDropStacks[tStackCount]["backgroundcolor"]

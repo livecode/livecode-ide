@@ -4,6 +4,7 @@ local sFieldWidth, sMax, sMin
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
 constant CONTROL_PADDING = 5
+constant kConflictedFieldColor = "193,201,215"
 
 on editorInitialize
    lock screen
@@ -40,10 +41,11 @@ end editorMinWidth
 
 on editorUpdate
    lock screen
-   local tValue, tEffective, tEnabled
+   local tValue, tEffective, tEnabled, tConflicted
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   put the editorConflicted of me into tConflicted
    
    lock messages
    set the thumbposition of scrollbar "twiddleX" of me to item 1 of tValue + 0
@@ -61,6 +63,15 @@ on editorUpdate
       set the textcolor of field "y" of me to empty
       put item 1 of tValue + 0 into field "x" of me
       put item 2 of tValue + 0 into field "y" of me
+   end if
+   if tConflicted then
+      set the backcolor of field "x" of me to kConflictedFieldColor
+      set the backcolor of field "y" of me to kConflictedFieldColor
+      put empty into field "x" of me
+      put empty into field "y" of me
+   else
+      set the backcolor of field "x" of me to empty
+      set the backcolor of field "y" of me to empty
    end if
    unlock messages
    

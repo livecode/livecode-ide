@@ -12,7 +12,7 @@ function editorPropertyGet pProperty
    return sPropertyInfo[pProperty]
 end editorPropertyGet
 
-getProp editorProperty pProperty
+getProp editorProperty[pProperty]
    if pProperty is empty then exit editorProperty
    return sPropertyInfo[pProperty]
 end editorProperty
@@ -99,22 +99,30 @@ end editorEnabled
 local sAllowUpdate
 local sLastValue
 local sValue
-setProp editorValue pValue
+setProp editorValue[pKey] pValue
    set the casesensitive to true
    if sLastValue is empty or pValue is not sLastValue or sEditorEffective then 
       put sValue into sLastValue
-      put pValue into sValue
+      if pKey is not empty then
+         put pValue into sValue[pKey]
+      else
+         put pValue into sValue
+      end if
       put true into sAllowUpdate
    end if
 end editorValue
 
-getProp editorValue
-   return sValue
+getProp editorValue[pKey]
+   if pKey is not empty then
+      return sValue[pKey]
+   else
+      return sValue
+   end if
 end editorValue
 
 on updateProperty
-  if sAllowUpdate is true then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue
+  if sAllowUpdate is true and not sPropertyInfo["read_only"] then
+     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
      put false into sAllowUpdate
    end if
 end updateProperty
@@ -216,3 +224,21 @@ end storedValue
 on storeProperty
    dispatch "editorStoreValue" with sPropertyInfo["property_name"], sValue
 end storeProperty
+
+getProp editorLabel
+   global gRevLanguageNames
+   if gRevLanguageNames then
+      return sPropertyInfo["property_name"]
+   else
+      return sPropertyInfo["label"]
+   end if
+end editorLabel
+
+local sConflicted
+setProp editorConflicted pValue
+   put pValue into sConflicted
+end editorConflicted
+   
+getprop editorConflicted
+   return sConflicted
+end editorConflicted

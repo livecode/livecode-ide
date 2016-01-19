@@ -1,0 +1,1 @@
+# Properties Inspector should have option to set the stroke gradient of all graphics

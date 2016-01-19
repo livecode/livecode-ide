@@ -38,7 +38,6 @@ on mouseUp pButton
    if pButton is not 1 then exit mouseUp
    sheet "revIconChooser"
    if the cReturnValue of stack "revIconChooser" is not empty then
-      put the  cReturnValue of stack "revIconChooser"
       set the backgroundpattern of graphic 1 of me to the cReturnValue of stack "revIconChooser"
       dispatch "valueChanged"
    end if

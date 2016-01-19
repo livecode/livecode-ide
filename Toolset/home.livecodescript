@@ -181,8 +181,8 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Application Overview..."
-         revInternal__InitialiseApplicationOverview
+         revInternal__setSplashStatus "Loading Project Browser..."
+         revInternal__InitialiseProjectBrowser
          put the result into tSuccess
       end if
       
@@ -249,11 +249,7 @@ on revInternal__openStack
       if revIDEPrefGet("StartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
-      
-      try 	 	
-         revIDEOpenPropertyInspectorControllerStacks 	 	
-      end try 
-      
+
       -- MM-2011-09-27: The new auto update process is handled entirely by the installer.
       -- Luanch the installer in update mode to begin update process.
       --
@@ -271,9 +267,12 @@ on revInternal__openStack
                put quote & tCommand & quote && "install -update" into tCommand
                break
             case "Linux"
-               --put item 1 to -3 of the filename me into $PATH
-               --put ".setup.x86 install -update" into tCommand
-               put item 1 to -3 of the filename me & "/.setup.x86" into tCommand
+               -- MDW-2015-12-19 [[fix_installer]] LC8-style setup filename
+               if the processor is "x86_64" then
+               		put item 1 to -3 of the filename me & "/setup.x86_64" into tCommand
+               else
+               		put item 1 to -3 of the filename me & "/setup.x86" into tCommand
+               end if
                put tCommand && "install -update" into tCommand
                break
          end switch
@@ -313,6 +312,9 @@ local sCrashLogPath
 local sCachePath
 -- This is the path to the user-specified IDE customization folder
 local sCustomizationPath
+-- This is the path to the folder containing per-user dictionary data
+local sUserDocsPath
+
 
 -- This is the path to the folder containing user preferences for the IDE prior to 4.5
 local sOldPreferencesPath
@@ -354,7 +356,7 @@ private command revInternal__SetupLicense
    revInternal__Log "Leave", "License Setup"
 end revInternal__SetupLicense
 
- private command revInternal__SetupPaths
+private command revInternal__SetupPaths
    revInternal__Log "Enter", "Path Setup"
    
    local tHomePath
@@ -384,6 +386,7 @@ end revInternal__SetupLicense
          put the folder & slash & ".runrev/preferences" into sPreferencesPath
          put the folder & slash & ".runrev/cache" into sCachePath
          put the folder & slash & ".runrev/crashlogs" into sCrashLogPath
+         put the folder & slash & ".runrev/docs" into sUserDocsPath
          set the folder to tOldFolder
          
          -- MW-2013-06-13: Adjust the engine path for Linux
@@ -400,6 +403,7 @@ end revInternal__SetupLicense
          put specialFolderPath("Preferences") & "/RunRev" into sPreferencesPath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Cache" into sCachePath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Crash Logs" into sCrashLogPath
+         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Docs" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Mac
          put item 1 to -5 of tEnginePath into tEnginePath
@@ -417,6 +421,7 @@ end revInternal__SetupLicense
          -- We put everything else in the 'Local' AppData folder.
          put specialFolderPath(0x001c) & "/RunRev/Cache" into sCachePath
          put specialFolderPath(0x001c) & "/RunRev/Crash Logs" into sCrashLogPath
+         put specialFolderPath(0x001c) & "/RunRev/Docs" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Windows
          put item 1 to -2 of tEnginePath into tEnginePath
@@ -476,6 +481,9 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   
    local tPaletteFolder, tFolders
    put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
    put tPaletteFolder into tFolders
@@ -545,34 +553,13 @@ function revInternal__StackFiles
       end repeat
    end repeat
    
+   set the defaultFolder to tDefaultFolder
+   
    repeat for each key tKey in tStackFilesA
       put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
    end repeat
    delete the last char of tStackFiles
    return tStackFiles
-   /*
-   local tStackFiles
-   local tUserPath, tPath
-   put revEnvironmentToolsPath() into tPath
-   put revEnvironmentUserToolsetPath() into tUserPath
-   
-   local tItem
-   set the itemDelimiter to tab
-   repeat for each line tItem in field "Toolset" of card "Data" of stack "Home"
-      if item 2 of tItem is "Resources" then
-         put item 1 of tItem, tPath & slash & item 3 of tItem & return after tStackFiles
-      else if item 2 of tItem is "Unsupported" then
-         put item 1 of tItem, tPath & "/Unsupported/" & item 3 of tItem & return after tStackFiles
-      else if there is a file (tUserPath & "/" & item 3 of tItem) then
-         put item 1 of tItem, tUserPath & "/" & item 3 of tItem & return after tStackFiles
-      else if not revEnvironmentIsInstalled() and (item 3 of tItem ends with ".livecodescript") then
-         put item 1 of tItem, (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & item 3 of tItem) & return after tStackfiles
-      else
-         put item 1 of tItem, tPath & "/Toolset/" & item 3 of tItem & return after tStackFiles
-      end if
-   end repeat
-   return tStackFiles
-   */
 end revInternal__StackFiles
 
 private command revInternal__SetupPreferences
@@ -714,6 +701,9 @@ private command revInternal__SetupFolders
    revInternal__Log "Message", "Setting up Crash Log Path"
    revInternal__EnsureFolder sCrashLogPath
    
+   revInternal__Log "Message", "Setting up Docs Path"
+   revInternal__EnsureFolder sUserDocsPath
+   
    revInternal__Log "Leave", "Folders Setup"
 end revInternal__SetupFolders
 
@@ -737,24 +727,21 @@ end revInternal__ResetPreferences
 command revInternal__SavePreferences
    local tPreference 
    
-   local tOldStackFileVersion
-   put the stackFileVersion into tOldStackFileVersion
+   local tStackFileVersion
    
    if the buildnumber < 10000 then
-      set the stackFileVersion to "2.7"
+      put "2.7" into tStackFileVersion
    else
-      set the stackFileVersion to "7.0"
+      put "7.0" into tStackFileVersion
    end if
    
    lock messages
    -- MM-2014-02-22: [[ Bug 11442 ]] Saving the prefs stack when security permissions is true is not possible.
    try
-      save stack "revPreferences"
+      save stack "revPreferences" with format tStackFileVersion
    catch tError
    end try
    unlock messages
-   
-   set the stackFileVersion to tOldStackFileVersion
 end revInternal__SavePreferences
 
 private command revInternal__EnsureFolder pFolder
@@ -1020,6 +1007,9 @@ command revInternal__InitialiseLibraries
       answer "Error loading extensions library" & return & tError 	 	
    end try 	 	
    	    	 	
+   # AL-2015-11-15 : New documentation library
+   revInternal__LoadLibrary "revIDEDocumentationLibrary"
+   
    try 	 	
       revInternal__LoadLibrary "revIDELibrary.8"	 
       revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
@@ -1035,9 +1025,6 @@ command revInternal__InitialiseLibraries
    # OK-2008-03-11 : New debugger and metadata library
    revInternal__LoadLibrary "revDebuggerLibrary"
    revInternal__LoadLibrary "revMetadataLibrary"
-   
-   # OK-2008-06-11 : Documentation library
-   insert the script of stack "revDocumentationLibrary" into back
    
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back
@@ -1167,8 +1154,10 @@ command revInternal__InitialiseDefaults
          revInternal__Log "message", "Trying to set the default text of stack home"
          if item 2 of the systemVersion < 10 then
             set the textFont of stack "Home" to "Lucida Grande"
-         else
+         else if item 2 of the systemVersion < 11 then
             set the textFont of stack "Home" to "Helvetica Neue"
+         else
+         	set the textFont of stack "Home" to "San Francisco"
          end if
          
          set the textSize of stack "Home" to 11
@@ -1418,14 +1407,14 @@ command revInternal__InitialiseMenus
    return true
 end revInternal__InitialiseMenus
 
-command revInternal__InitialiseApplicationOverview
-   revInternal__Log "Enter", "Application Overview Initialisation"
-   
-   if the cAppOverview of stack "revPreferences" then
+command revInternal__InitialiseProjectBrowser
+   revInternal__Log "Enter", "Project Browser Initialisation"
+
+   if the cAppOverview of stack "revPreferences" and there is a stack "revApplicationOverview" then
       set the _ideoverride of stack "revApplicationOverview" to true
       toplevel "revApplicationOverview"
    end if
-   
+
    // EJB
    if there is a stack "revProjectBrowser" then
       if the cIDEProjectBrowserOpen of stack "revPreferences" is not false then
@@ -1433,10 +1422,10 @@ command revInternal__InitialiseApplicationOverview
       end if
    end if
    
-   revInternal__Log "Leave", "Application Overview Initialisation"
+   revInternal__Log "Leave", "Project Browser Initialisation"
    
    return true
-end revInternal__InitialiseApplicationOverview
+end revInternal__InitialiseProjectBrowser
 
 command revInternal__InitialiseMessageBox
   revInternal__Log "Enter", "Message Box Initialisation"
@@ -1657,6 +1646,14 @@ function revEnvironmentExternalsPath
   return hookToolsPath("externals", sToolsPath & "/Externals")
 end revEnvironmentExternalsPath
 
+function revEnvironmentExtensionsPath
+   if revEnvironmentIsInstalled() then
+      return hookToolsPath("extensions", sToolsPath & "/Extensions")
+   else
+      return revEnvironmentBinariesPath() & slash & "packaged_extensions"
+   end if
+end revEnvironmentExtensionsPath
+
 function revEnvironmentRuntimePath
   return hookToolsPath("runtime", sToolsPath & "/Runtime")
 end revEnvironmentRuntimePath
@@ -1719,6 +1716,10 @@ function revEnvironmentUserExternalsPath
   return sCustomizationPath & "/Externals"
 end revEnvironmentUserExternalsPath
 
+function revEnvironmentUserExtensionsPath
+  return sCustomizationPath & "/Extensions"
+end revEnvironmentUserExtensionsPath
+
 function revEnvironmentUserPreferencesPath
   return sPreferencesPath
 end revEnvironmentUserPreferencesPath
@@ -1726,6 +1727,10 @@ end revEnvironmentUserPreferencesPath
 function revEnvironmentUserCachePath
   return sCachePath
 end revEnvironmentUserCachePath
+
+function revEnvironmentUserDocsPath
+  return sUserDocsPath
+end revEnvironmentUserDocsPath
 
 function revEnvironmentIsUpdateable
   return true

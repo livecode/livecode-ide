@@ -4,6 +4,8 @@ local sFieldWidth, sMax, sMin, sScrollbarFactor
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
 constant CONTROL_PADDING = 5
+constant kEffectiveTextColor = "100,100,100"
+constant kConflictedFieldColor = "193,201,215"
 
 on editorInitialize
    lock screen
@@ -39,7 +41,7 @@ on editorInitialize
    
    local tMinWidth
    put 25 into tMinWidth
-   if the visible of scrollbar "slider"of me is true then add 25 to tMinWidth
+   if the visible of scrollbar "slider" of me is true then add 25 to tMinWidth
    
    unlock messages
    unlock screen
@@ -64,10 +66,11 @@ end editorMinWidth
 
 on editorUpdate
    lock screen
-   local tValue, tEffective, tEnabled
+   local tValue, tEffective, tEnabled, tConflicted
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
+   put the editorConflicted of me into tConflicted
    
    lock messages
    set the thumbposition of scrollbar "slider" of me to sScrollbarFactor * tValue
@@ -77,13 +80,20 @@ on editorUpdate
       if the focusedobject is not the long ID of field 1 of me then
          put tValue + 0 into field 1 of me
       end if
-      set the textcolor of field 1 of me to "150,150,150"
+      set the textstyle["italic"] of field 1 of me to true
+      set the textcolor of field 1 of me to kEffectiveTextColor
    else
+      set the textstyle of field 1 of me to empty
       set the textcolor of field 1 of me to empty
       put tValue + 0 into field 1 of me
    end if
+   if tConflicted then
+      set the backcolor of field 1 of me to kConflictedFieldColor
+      put empty into field 1 of me
+   else
+      set the backcolor of field 1 of me to empty
+   end if
    unlock messages
-   
    unlock screen
 end editorUpdate
 
@@ -98,7 +108,7 @@ on editorResize
       # The field has a fixed size
       set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tTop + the height of field 1 of me
       add sFieldWidth + CONTROL_PADDING to tLeft
-   else if the visible of scrollbar "twiddle" is true then
+   else if the visible of scrollbar "twiddle" of me is true then
       # The field is full width but there is a twiddle controller at the end
       set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING,tTop + the height of field 1 of me
       add the width of field 1 of me to tLeft
@@ -110,7 +120,7 @@ on editorResize
       add the width of scrollbar "twiddle" of me + CONTROL_PADDING to tLeft
    end if
    
-   if the visible of scrollbar 1 of me is true then
+   if the visible of scrollbar "slider" of me is true then
       # The slider is visible
       local tRemainingWidth
       put the right of me - tLeft + CONTROL_PADDING into tRemainingWidth

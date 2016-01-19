@@ -9,6 +9,7 @@ on setBehaviors
    set the behavior of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("leftbar")
    set the behavior of field "Filter" of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablespane")
+   set the behavior of group "Documentation" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("documentationpane")
    set the behavior of field "Filter" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of button "Show Globals" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
    set the behavior of button "Show Environment Vars" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
@@ -252,9 +253,6 @@ command revSESetMode pMode
    
    send "setCurrentTab tLastSelectedPane" to group "Pane Tabs" of me
    send "update" to group "Toolbar" of me
-   
-   # OK-2008-06-24 : Fix for bug where message box does not always update when entering debugging mode
-   send "revMessageBoxUpdateMode" to stack "Message Box"
    
    actionResizeStack
 end revSESetMode
@@ -709,15 +707,27 @@ function seDebugContexts
 end seDebugContexts
 
 local sDebugContext
-
 function seGetDebugContext
-   if sDebugContext is not empty then
+   local tMode
+   revSEGetMode
+   put the result into tMode
+
+   if tMode is not "debug" then
+      put empty into sDebugContext
+      return empty
+   else if sDebugContext is not empty then
       return sDebugContext
    else
       return line 1 of seDebugContexts()
    end if
 end seGetDebugContext
 
+on seSetDebugContext pContext
+   lock screen
+   put pContext into sDebugContext
+   send "refreshCurrentPane" to group "Panes" of this card
+   unlock screen
+end seSetDebugContext
 
 # OK-2009-01-17 : Bug 7169 - Semantics changed slightly. Previously this command returned a list
 # of all unapplied scripts. Now it only returns unapplied scripts that were modified by the user.
@@ -825,15 +835,10 @@ command sePanesUpdate
    # OK-2008-09-11 : Refactored to prevent direct interaction with the Documentation pane. This needs further work
    # as it will soon be possible to have multiple panes open.
    if tToken is not empty then
-      local tMatch, tMatches
-      --put revDocumentationFind(tToken) into tMatch
-      put revDocumentationLookupKeyword(tToken) into tMatches
-      put line 1 of tMatches into tMatch
-      
-      if tMatch is not empty and line 1 of tMatch is not "false" then
-         sePrefSet "documentation,lastLoadedDoc", tMatch
+      if ideDocsFetchLCSData(tToken) is not empty then
+         sePrefSet "documentation,lastLoadedDoc", tToken
          sePrefSet "documentation,lastMatchingSearch", tToken
-         sePrefSet "documentation,lastLoadedAlternativeDocs", line 2 to -1 of tMatches
+         sePrefSet "documentation,lastLoadedAlternativeDocs", tToken
       end if
    end if
    send "refreshCurrentPane" to group "Panes" of me
@@ -2069,7 +2074,8 @@ end actionDebugRun
 #   Performs the debugger "Stop" function. Terminates the script being debugged.
 command actionDebugStop
    revDebuggerStop
-    revSESetMode "edit"
+   revSESetMode "edit"
+   seSetDebugContext empty
 end actionDebugStop
 
 # Description
@@ -2077,20 +2083,22 @@ end actionDebugStop
 #   if applicable. If the next statement cannot be stepped into e.g. because its an engine command
 #   then the effect is the same as "Step Over"
 command actionDebugStepInto
-  local tCurrentObject
-  revSEGetCurrentObject
-  put the result into tCurrentObject
-  revDebuggerStepInto tCurrentObject
+   local tCurrentObject
+   revSEGetCurrentObject
+   put the result into tCurrentObject
+   revDebuggerStepInto tCurrentObject
+   seSetDebugContext empty
 end actionDebugStepInto
 
 # Description
 #   Performs the debugger "Step Over" function. Executing the next statement and continuing to the one beneath it
 #   unless a breakpoint is hit or execution terminates.
 command actionDebugStepOver
-  local tCurrentObject
-  revSEGetCurrentObject
-  put the result into tCurrentObject
-  revDebuggerStepOver tCurrentObject
+   local tCurrentObject
+   revSEGetCurrentObject
+   put the result into tCurrentObject
+   revDebuggerStepOver tCurrentObject
+   seSetDebugContext empty
 end actionDebugStepOver
 
 # Description
@@ -2101,6 +2109,7 @@ command actionDebugStepOut
   revSEGetCurrentObject
   put the result into tCurrentObject
   revDebuggerStepOut tCurrentObject
+  seSetDebugContext empty
 end actionDebugStepOut
 
 # Description

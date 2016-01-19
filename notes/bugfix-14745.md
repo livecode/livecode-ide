@@ -1,0 +1,1 @@
+# PI: clashing value when multiple object is selected aren't represented

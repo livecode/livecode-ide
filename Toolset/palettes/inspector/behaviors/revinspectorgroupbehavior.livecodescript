@@ -7,15 +7,25 @@ on propertyRegister pPropertyInfo
    lock screen
    local tPropName, tEditor
    put pPropertyInfo["property_name"] into tPropName
-   put pPropertyInfo["editor"] into tEditor
    
    # Check that the property has not already been registered
    if tPropName is among the keys of sProperties then exit propertyRegister
    
-   if tEditor is "com.livecode.pi.integer" then
+   // Some editors are only slight variants of each other. In this case 
+   // we allow the editor behavior itself to configure the options
+   switch pPropertyInfo["editor"]
+   case "com.livecode.pi.integer"
       put "com.livecode.pi.number" into tEditor
-   end if
-   
+      break
+   case "com.livecode.pi.nowraptext"
+   case "com.livecode.pi.styledtext"
+      put "com.livecode.pi.text" into tEditor
+      break
+   default
+      put pPropertyInfo["editor"] into tEditor
+      break
+   end switch
+
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack tEditor then
@@ -71,10 +81,30 @@ end rowReset
 
 setProp rowData pData
    lock screen
+   local tConflict, tValue
    repeat for each key tProperty in pData
+      put false into tConflict
+      put empty into tValue
       if there is a group tProperty of me then
-         set the editorValue of group tProperty of me to pData[tProperty]["value"]
-         set the editorEffective of group tProperty of me to pData[tProperty]["effective"]
+         local tKeys
+         put the keys of pData[tProperty]["value"] into tKeys
+         repeat for each line tLine in tKeys
+            if tValue is empty then
+               put pData[tProperty]["value"][tLine] into tValue
+               next repeat
+            end if
+            if tValue is not pData[tProperty]["value"][tLine] then
+               put true into tConflict
+               exit repeat
+            end if
+         end repeat
+         if tConflict then
+            set the editorConflicted of group tProperty of me to true
+         else
+            set the editorConflicted of group tProperty of me to false
+            set the editorValue of group tProperty of me to tValue
+            set the editorEffective of group tProperty of me to pData[tProperty]["effective"][line 1 of tKeys]
+         end if
          dispatch "editorUpdate" to group tProperty of me
       end if
    end repeat
@@ -94,13 +124,16 @@ end propertyDeregistor
 
 # Sets the text for the row label
 constant kLabelHeight = 21
+local sShowLabel
 setprop rowLabel pLabel
-   local tTopLeft
-   put the topleft of field "rowlabel" of me into tTopLeft
    put pLabel into field "rowlabel" of me
-   set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
-   set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
-   set the topleft of field "rowlabel" of me to tTopLeft
+   if sShowLabel is true then
+      local tTopLeft
+      put the topleft of field "rowlabel" of me into tTopLeft
+      set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+      set the height of field "rowlabel" of me to the number of lines in pLabel * kLabelHeight
+      set the topleft of field "rowlabel" of me to tTopLeft
+   end if
 end rowLabel
 
 getProp rowLabel
@@ -108,15 +141,16 @@ getProp rowLabel
 end rowLabel
 
 setProp rowShowLabel pValue
+   put pValue into sShowLabel
    if pValue then
-      set the width of field "rowlabel" of me to the rowLabelWidth of me
+      show field "rowlabel" of me
    else
-      put empty into field "rowlabel" of me
+      hide field "rowlabel" of me
    end if
 end rowShowLabel
 
 getprop rowLabelWidth
-   if field "rowlabel" of me is not empty then
+   if sShowLabel is true then
       return the formattedwidth of field "rowlabel" of me
    else
       return 0

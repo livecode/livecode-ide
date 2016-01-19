@@ -2754,18 +2754,19 @@ private command prepareContextMenu
    
    put tMatches into sDefinitionMatches
    
-   local tText
-   if  tMatches is not empty then
-      put \
-             "Go to definition" & return & \
-             "Find in Docs" & return & \
-             "-" & return into tText
-   else
-      put \
-             "(Go to definition" & return & \
-             "Find in Docs" & return & \
-             "-" & return into tText
+   local tGoToDefinition
+   put "Go to definition" into tGoToDefinition
+   if tMatches is empty then
+      put "(" before tGoToDefinition
    end if
+
+   local tText
+   put tGoToDefinition & return into tText
+   if not revIDEBrowserWidgetUnavailable() then
+      put "Find in Docs" & return after tText
+   end if
+   
+   put "-" & return after tText
    
    put "Set Breakpoint" & return after tText
    put "-" & return after tText
@@ -3165,7 +3166,6 @@ on rawKeyDown pKey
       local tCaretChar
       get the selectedChunk
       put word 2 of it into tCaretChar
-      put tCaretChar
       try
          repeat while tCaretChar > 1 and (char (tCaretChar - 1) of tScript is space)
             subtract 1 from tCaretChar
@@ -3272,9 +3272,12 @@ on menuPick pItemName
          break
          
       case "Find in Docs"
-         local tText
+         local tText, tData
          put getClickText() into tText
-         revDocumentationGo tText
+         put ideDocsFetchLCSData(tText) into tData
+         if tData is not empty then
+            revIDEGoToLCSDictionaryEntry tText, tData[1]["type"]
+         end if
          break
          
       case "Cut"

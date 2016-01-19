@@ -1,72 +1,79 @@
 type	field
 title	Field
-
-Property	Default	Options	Group
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 ----------------------------------------------------------------------------------------------------
-name	Field	
-text		
-tooltip		
-disabled	false	
-traversalOn	true	
-visible	true	
-showFocusBorder	true	
-sharedText	false	
-autoTab	false	
-dontWrap	false	
-threeD	true	
-lockText	false	
-showBorder	true	
-opaque	true	
-borderWidth	2	
-hScrollbar	false	
-vScrollbar	false	
-scrollbarWidth	16	16,12
-autoHilite	true	
-listBehavior	false	
-multipleHilites	false	
-nonContiguousHilites	false	
-toggleHilites	false	
-fixedLineHeight	true	
-textHeight	16	
-firstIndent	0	
-dontSearch	false	
-layerMode
-behavior
-foregroundColor			Text Fill
-foregroundPattern			Text Fill		
-backgroundColor		
-backgroundPattern		
-hiliteColor		
-hilitePattern		
-borderColor		
-borderPattern		
-topColor		
-topPattern		
-bottomColor		
-bottomPattern		
-shadowColor		
-shadowPattern		
-focusColor		
-focusPattern		
-customProperties		
-blendLevel	0	0,100
-ink
-textFont
-textSize		
-textStyle
-textAlign
-margins	8	
-lockLoc	false	
-width	100	
-height	21	
-location
-left		
-top		
-right		
-bottom		
-layer	
-dropShadow		
-innerShadow		
-outerGlow		
-innerGlow		
-colorOverlay		
+name							Field					
+styledText												
+tooltip												
+disabled							false					
+visible							true					
+sharedText							false					
+dontWrap							false					
+lockText							false					
+opaque							true					
+traversalOn							true					
+showFocusBorder							true					
+autoTab							false					
+threeD							true					
+showBorder							true					
+borderWidth							2					
+hScrollbar							false					
+vScrollbar							false					
+scrollbarWidth							20				
+autoHilite							true					
+listBehavior							false					
+multipleHilites							false					
+nonContiguousHilites							false					
+toggleHilites							false					
+fixedLineHeight							true					
+textHeight												
+firstIndent							0					
+dontSearch							false					
+layerMode												
+behavior												
+basicTableObject							false					
+maxEditableColumns												
+cellFormatting							false					
+showLines							false					
+hGrid							false					
+vGrid							false					
+tabStops												
+foregroundColor						Text Fill						
+foregroundPattern						Text Fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							8					
+lockLoc							false					
+width							100					
+height							21					
+location												
+left												
+top												
+right												
+bottom												
+layer												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

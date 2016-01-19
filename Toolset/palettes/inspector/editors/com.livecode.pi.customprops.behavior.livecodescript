@@ -3,7 +3,7 @@ local sPropSet
 
 on editorInitialize
    put empty into sPropSet
-   put the rowLabel of me into field "rowlabel" of me
+   put the editorLabel of me into field "rowlabel" of me
    set the rowShowLabel of me to false
    set the label of button "customPropertySet" of group "Set buttons" of me to "customKeys"
    set the editorMinWidth of me to 250

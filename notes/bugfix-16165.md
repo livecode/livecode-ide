@@ -1,0 +1,1 @@
+# No options in the inspector for setting colors of a DataGrid
