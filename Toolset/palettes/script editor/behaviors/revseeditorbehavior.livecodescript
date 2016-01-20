@@ -403,8 +403,11 @@ end loadScript
 #   pObjectId : reference to the object to set the script to. Must be one of the target objects of the script editor.
 # Description
 #   Sets the current target object of the editor group.
-command setObject pObjectId, pDontSendCallbacks   
-   if sObjectId is not empty and seGetRuggedId(pObjectId) is sObjectId then
+command setObject pObjectId, pDontSendCallbacks
+   local tRuggedObjectId
+   put seGetRuggedId(pObjectId) into tRuggedObjectId
+
+   if sObjectId is not empty and tRuggedObjectId is sObjectId then
       if not pDontSendCallbacks then
          seSendCallbacks sObjectId, the name of stack (revTargetStack(the long id of me))
       end if
@@ -429,8 +432,8 @@ command setObject pObjectId, pDontSendCallbacks
    
    findClearResults
    
-   EditorFieldCacheSwap sObjectId, seGetRuggedId(pObjectId)
-   put seGetRuggedId(pObjectId) into sObjectId
+   EditorFieldCacheSwap sObjectId, tRuggedObjectId
+   put tRuggedObjectId into sObjectId
    loadScript
    resize
    unlock screen
