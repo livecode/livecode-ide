@@ -5269,7 +5269,10 @@ private command __EditorFieldCacheFlush pRuggedObjectId
       exit __EditorFieldCacheFlush
    end if
 
+   lock messages
    delete tField
+   unlock messages
+
    delete variable sScriptEditorFieldCache[pRuggedObjectId]
 end __EditorFieldCacheFlush
 
@@ -5336,13 +5339,20 @@ private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
       -- has a script editing field cached, add the current field to
       -- the cache and replace it with the new object's field.
 
+      lock messages
       set the name of field "Script" of me to tCachedName
       set the visible of field tCachedName of me to false
+      unlock messages
+
       put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
 
       put sScriptEditorFieldCache[pNewRuggedObjectId] into tCachedName
+
+      lock messages
       set the visible of field tCachedName of me to true
       set the name of field tCachedName of me to "Script"
+      unlock messages
+
       delete variable sScriptEditorFieldCache[pNewRuggedObjectId]
 
    else
@@ -5350,8 +5360,11 @@ private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
       -- Otherwise, just copy the current field into the cache for the
       -- old object
 
+      lock messages
       clone invisible field "Script" of me
       set the name of it to tCachedName
+      unlock messages
+
       put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
    end if
 
