@@ -58,45 +58,83 @@ constant kMinGutterWidth = 16
 #   Sent by the parent when the rect of this group may have changed. Resizes / positions all the controls in this group
 #   according to the group's current rect.
 command resize
-   local tFindSplit
-   if sePrefGet("editor,findvisible") then
-      put the bottom of me - the height of group "Interactive Find" of me into tFindSplit
-   else
-      # Hide the find group by using group clipping.
-      put the bottom of me into tFindSplit
-   end if
-   
-   if scriptProtected() then
-      set the loc of group "Enter Password" of me to (item 1 of the loc of me), (item 2 of the loc of group "Enter Password" of me)
-      set the top of group "Enter Password" of me to the top of me + (the height of me div 3)
-      send "openControl" to group "Enter Password" of me
-   else
-      set the right of group "Enter Password" of me to the left of me - 20
-   end if
-   
-   set the right of button "revCompileObject" of me to the left of me - 500
-   
+   local tControls
+   put the long id of group "Interactive Find" of me into tControls["find"]
+   put the long id of group "Enter Password" of me into tControls["password"]
+   put the long id of group "Gutter" of me into tControls["gutter"]
+   put the long id of field "Script" of me into tControls["script"]
+
+   local tMyRect, tMyWidth, tMyHeight
+   put the rect of me into tMyRect
+   split tMyRect by comma
+   put tMyRect[3] - tMyRect[1] into tMyWidth
+   put tMyRect[4] - tMyRect[2] into tMyHeight
+
+   local tGutterWidth
    if sePrefGet("gutter,linenumbers") then
-      set the width of group "Gutter" of me to the max(formattedWidth of field "Numbers" of group "Gutter" of me, kMinGutterWidth)
+      put max(formattedWidth of field "Numbers" of tControls["gutter"], \
+         kMinGutterWidth) into tGutterWidth
    else
-      set the width of group "Gutter" of me to kMinGutterWidth
+      put kMinGutterWidth into tGutterWidth
    end if
-   
+
+   local tFindHeight
+   if sePrefGet("editor,findvisible") then
+      put the height of tControls["find"] into tFindHeight
+   else
+      put 0 into tFindHeight
+   end if
+
+   local tNewRect, tScriptScrollSize
+
+   -- Position the main code editing field
+
+   put tMyRect[1] + tGutterWidth, tMyRect[2], \
+       tMyRect[3], tMyRect[4] - tFindHeight into tNewRect
+   if the rect of tControls["script"] is not tNewRect then
+      set the rect of tControls["script"] to tNewRect
+   end if
+
+   if the hScrollbar of tControls["script"] then
+      put the scrollBarWidth of tControls["script"] into tScriptScrollSize
+   else
+      put 0 into tScriptScrollSize
+   end if
+
+   -- Position the "find" interface
+
+   put tMyRect[1] + tGutterWidth, tMyRect[4] - tFindHeight, \
+       tMyRect[3],  tMyRect[4] into tNewRect
+   if the rect of tControls["find"] is not tNewRect then
+      set the rect of tControls["find"] to tNewRect
+   end if
+
+   -- Position the gutter
+
+   put tMyRect[1], tMyRect[2], tMyRect[1] + tGutterWidth, \
+       tMyRect[4] - tFindHeight - tScriptScrollSize into tNewRect
+   if the rect of tControls["gutter"] is not tNewRect then
+      set the rect of tControls["gutter"] to tNewRect
+      send "resize" to tControls["gutter"]
+   end if
+
+   -- If the script is encrypted, display the password layer over the
+   -- top.
+
+   if scriptProtected() then
+      set the loc of tControls["password"] to (item 1 of the loc of me), (item 2 of the loc of tControls["password"])
+      set the top of tControls["password"] to the top of me + (the height of me div 3)
+      send "openControl" to tControls["password"]
+   else
+      set the right of tControls["password"] to the left of me - 20
+   end if
+
+   -- Ensure that various bits of infrastructure that the user
+   -- shouldn't see are hidden.
+
    set the right of button "Context Menu" of me to the left of me - 500
-   
-   set the width of group "Interactive Find" of me to the width of me - the width of group "Gutter" of me
-   set the left of group "Interactive Find" of me to the left of me + the width of group "Gutter" of me
-   set the top of group "Interactive Find" of me to tFindSplit
-   
-   set the rect of field "Script" of me to (the left of me + the width of group "Gutter" of me), the top of me, the right of me, tFindSplit
-   
-   # OK-2010-03-18: Bug 8523 - Adjust gutter to take horizontal scrollbar into account
-   if the hScrollbar of field "Script" of me then
-      subtract the scrollbarWidth of field "Script" of me from tFindSplit
-   end if
-   
-   set the rect of group "Gutter" of me to the left of me, the top of me, the left of me + the width of group "Gutter" of me, tFindSplit
-   send "resize" to group "Gutter" of me
+   set the right of button "revCompileObject" of me to the left of me - 500
+
 end resize
 
 local sObjectId
@@ -137,22 +175,32 @@ command initialize
 end initialize
 
 private command initializeFonts
-   set the textFont of field "Script" of me to sePrefGet("editor,font")
-   set the textSize of field "Script" of me to sePrefGet("editor,fontsize")
+   local tFont, tFontSize
+   put sePrefGet("editor,font") into tFont
+   put sePrefGet("editor,fontsize") into tFontSize
+   
+   if the textFont of field "Script" of me is not tFont or \
+         the textSize of field "Script" of me is not tFontSize then
+      
+      set the textFont of field "Script" of me to tFont
+      set the textSize of field "Script" of me to tFontSize
+      # It is not possible to set the textSize and textFont of styled text that has already
+      # had its textSize / textFont set once. Therefore to allow textSize / textFont changes
+      # we have to remove all styling from the script field.  Although it seems rather weird, this
+      # does have to be done *after* the properties have been set to the value required..
+      set the text of field "Script" of me to the text of field "Script" of me
+   end if
    
    # Note that the textSize and textFont properties are set on the group overall. The gutter has a
    # numbers field and a template numbers field both of which should inherit this value. Other controls
    # must have their textFont / textSize explicitly set if they need specific values.
-   --set the textFont of group "Gutter" of me to sePrefGet("editor,font")
-   set the textSize of group "Gutter" of me to sePrefGet("editor,fontsize")
-   set the textHeight of group "Gutter" of me to the effective textHeight of field "Script" of me
+   if the textSize of group "Gutter" of me is not tFontSize or \
+         the textHeight of group "Gutter" of me is not the effective textHeight of field "Script" of me then
+      
+      set the textSize of group "Gutter" of me to tFontSize
+      set the textHeight of group "Gutter" of me to the effective textHeight of field "Script" of me
+   end if
    
-   # It is not possible to set the textSize and textFont of styled text that has already
-   # had its textSize / textFont set once. Therefore to allow textSize / textFont changes
-   # we have to remove all styling from the script field.  Although it seems rather weird, this
-   # does have to be done *after* the properties have been set to the value required.
-   set the textSize of char 1 to -1 of field "Script" of me to empty
-   set the textFont of char 1 to -1 of field "Script" of me to empty
 end initializeFonts
 
 # Description
@@ -355,8 +403,11 @@ end loadScript
 #   pObjectId : reference to the object to set the script to. Must be one of the target objects of the script editor.
 # Description
 #   Sets the current target object of the editor group.
-command setObject pObjectId, pDontSendCallbacks   
-   if sObjectId is not empty and seGetRuggedId(pObjectId) is sObjectId then
+command setObject pObjectId, pDontSendCallbacks
+   local tRuggedObjectId
+   put seGetRuggedId(pObjectId) into tRuggedObjectId
+
+   if sObjectId is not empty and tRuggedObjectId is sObjectId then
       if not pDontSendCallbacks then
          seSendCallbacks sObjectId, the name of stack (revTargetStack(the long id of me))
       end if
@@ -381,7 +432,8 @@ command setObject pObjectId, pDontSendCallbacks
    
    findClearResults
    
-   put seGetRuggedId(pObjectId) into sObjectId
+   EditorFieldCacheSwap sObjectId, tRuggedObjectId
+   put tRuggedObjectId into sObjectId
    loadScript
    resize
    unlock screen
@@ -1469,6 +1521,8 @@ command textInitialize
    colorizationUpdate
    
    textMark "Insert"
+
+   EditorFieldCacheFlushAll
 end textInitialize
 
 on textMark pLabel
@@ -2079,7 +2133,9 @@ on textSetScriptRaw pScript
    --put empty into field "Script" of me
    local tOldText
    put the text of field "Script" of me into tOldText
-   textReplaceRaw 1, tOldText, pScript, true
+   if tOldText is not pScript then
+      textReplaceRaw 1, tOldText, pScript, true
+   end if
 end textSetScriptRaw
 
 -- Sets the script within the undo queue.
@@ -5189,3 +5245,135 @@ private function lineStripComments pLine
       return char 1 to tOffset of pLine
    end if
 end lineStripComments
+
+----------------------------------------------------------------
+-- Editor field cache
+----------------------------------------------------------------
+
+-- Setting up an editor field is very expensive, especially for
+-- particularly large scripts (1000s of lines).  In order to speed up
+-- switching between tabs, for example, the editor field itself is
+-- cached.
+
+constant kScriptEditorMaxCached = 10
+
+local sScriptEditorFieldCache
+
+/*
+Remove the editor field for pRuggedObjectId from the cache
+*/
+private command __EditorFieldCacheFlush pRuggedObjectId
+   local tField
+   put sScriptEditorFieldCache[pRuggedObjectId] into tField
+   if tField is empty then
+      exit __EditorFieldCacheFlush
+   end if
+   if the name of tField is "Script" then
+      exit __EditorFieldCacheFlush
+   end if
+
+   lock messages
+   delete tField
+   unlock messages
+
+   delete variable sScriptEditorFieldCache[pRuggedObjectId]
+end __EditorFieldCacheFlush
+
+/*
+Delete all cached editing fields
+*/
+private command EditorFieldCacheFlushAll
+   local tRuggedObjectId
+   -- Mutating a collection while iterating over it...!
+   repeat for each key tRuggedObjectId in sScriptEditorFieldCache
+      __EditorFieldCacheFlush tRuggedObjectId
+   end repeat
+end EditorFieldCacheFlushAll
+
+/*
+If there are too many editor fields cached, randomly purge one of
+them.  Note that because the current editor field isn't in the cache, there
+is no danger of incorrectly deleting it.
+*/
+private command __EditorFieldCacheFlushExcess
+   local tCacheSize
+   put the number of elements in sScriptEditorFieldCache into tCacheSize
+   if tCacheSize < kScriptEditorMaxCached then
+      exit __EditorFieldCacheFlushExcess
+   end if
+
+   -- Flush a random field from the cache
+   put the random of tCacheSize into tCacheSize
+
+   local tRuggedObjectId
+   repeat for each key tRuggedObjectId in sScriptEditorFieldCache
+      if tCacheSize is 1 then
+         __EditorFieldCacheFlush tRuggedObjectId
+         exit __EditorFieldCacheFlushExcess
+      end if
+      subtract 1 from tCacheSize
+   end repeat
+end __EditorFieldCacheFlushExcess
+
+/*
+Check whether pRuggedObjectId has a cached editing field.
+*/
+private function __EditorFieldIsCached pRuggedObjectId
+   return pRuggedObjectId is among the keys of sScriptEditorFieldCache
+end __EditorFieldIsCached
+
+/*
+Switch from editing pOldRuggedObjectId to editing pNewRuggedObjectId,
+swapping or caching editor fields as required.
+*/
+private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
+   if pOldRuggedObjectId is empty or \
+      pNewRuggedObjectId is empty or \
+      pOldRuggedObjectId is pNewRuggedObjectId then
+      exit EditorFieldCacheSwap
+   end if
+
+   local tCachedName
+   put "Script for" && pOldRuggedObjectId into tCachedName
+
+   if __EditorFieldIsCached(pNewRuggedObjectId) then
+
+      -- If the script that the script editor is switching to already
+      -- has a script editing field cached, add the current field to
+      -- the cache and replace it with the new object's field.
+
+      lock messages
+      set the name of field "Script" of me to tCachedName
+      set the visible of field tCachedName of me to false
+      unlock messages
+
+      put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
+
+      put sScriptEditorFieldCache[pNewRuggedObjectId] into tCachedName
+
+      lock messages
+      set the visible of field tCachedName of me to true
+      set the name of field tCachedName of me to "Script"
+      unlock messages
+
+      delete variable sScriptEditorFieldCache[pNewRuggedObjectId]
+
+   else
+
+      -- Otherwise, just copy the current field into the cache for the
+      -- old object
+
+      lock messages
+      clone invisible field "Script" of me
+      set the name of it to tCachedName
+      unlock messages
+
+      put tCachedName into sScriptEditorFieldCache[pOldRuggedObjectId]
+   end if
+
+   -- Make sure the number of cached fields stays reasonable.  This
+   -- helps cope with objects being deleted or their script editor
+   -- tabs being closed, without leaking memory into expensive unused
+   -- controls.
+   __EditorFieldCacheFlushExcess
+end EditorFieldCacheSwap
