@@ -182,8 +182,8 @@ private command initializeFonts
    if the textFont of field "Script" of me is not tFont or \
          the textSize of field "Script" of me is not tFontSize then
       
-      set the textFont of field "Script" of me to sePrefGet("editor,font")
-      set the textSize of field "Script" of me to sePrefGet("editor,fontsize")
+      set the textFont of field "Script" of me to tFont
+      set the textSize of field "Script" of me to tFontSize
       # It is not possible to set the textSize and textFont of styled text that has already
       # had its textSize / textFont set once. Therefore to allow textSize / textFont changes
       # we have to remove all styling from the script field.  Although it seems rather weird, this
@@ -194,10 +194,10 @@ private command initializeFonts
    # Note that the textSize and textFont properties are set on the group overall. The gutter has a
    # numbers field and a template numbers field both of which should inherit this value. Other controls
    # must have their textFont / textSize explicitly set if they need specific values.
-   if the textSize of group "Gutter" of me is not tFont or \
+   if the textSize of group "Gutter" of me is not tFontSize or \
          the textHeight of group "Gutter" of me is not the effective textHeight of field "Script" of me then
       
-      set the textSize of group "Gutter" of me to sePrefGet("editor,fontsize")
+      set the textSize of group "Gutter" of me to tFontSize
       set the textHeight of group "Gutter" of me to the effective textHeight of field "Script" of me
    end if
    
