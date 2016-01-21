@@ -190,7 +190,7 @@ end mouseUp
 
 on mouseDown pButton
    if pButton is 3 then       
-      revIDEPopupContextualMenu the cObjectLongID of me
+      dispatch "pbRightClick" to stack "revIDEProjectBrowser" with the cObjectLongID of me
    else if the short name of the target is "name" and \
          the dvRow of me is the dvHilitedRow of the owner of me then
       set the textColor of field "name" of me to revIDEColor("text_1")
