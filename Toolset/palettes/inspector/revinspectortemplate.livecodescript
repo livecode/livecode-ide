@@ -14,17 +14,11 @@ end preOpenStack
 on openStack   
    lock screen
    
-   if intersect(me, revIDEStackOfObject(line 1 of sSelectedObjects)) then
-      revIDEPositionPaletteDefault the short name of me
-   end if
-   
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
-   
-   set the visible of me to true
    unlock screen
 end openStack
 
