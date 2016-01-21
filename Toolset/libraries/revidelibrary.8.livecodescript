@@ -9296,7 +9296,15 @@ private command revIDEGenerateDistributedAPI
 end revIDEGenerateDistributedAPI
 
 on revIDEEnsureDictionaryUrl pWhich
-   if there is not a file revIDEGetDictionaryUrl(pWhich) then
+   local tLastGenerated, tLastModified
+   set the itemdelimiter to slash
+   local tFile
+   put revIDEGetDictionaryHTMLTemplate(pWhich) into tFile
+   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastModified
+   put revIDEGetDictionaryUrl(pWhich) into tFile
+   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastGenerated
+   
+   if tLastModified > tLastGenerated then
       revIDEGenerateDictionaryHTML pWhich
    end if
 end revIDEEnsureDictionaryUrl
@@ -9304,6 +9312,10 @@ end revIDEEnsureDictionaryUrl
 function revIDEGetDictionaryUrl pWhich
    return revEnvironmentUserDocsPath() & slash & pWhich & ".html"
 end revIDEGetDictionaryUrl
+
+function revIDEGetDictionaryHTMLTemplate pWhich
+   return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & pWhich & ".html.template"
+end revIDEGetDictionaryHTMLTemplate
 
 on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pInitialEntryType
    local tGeneratedHTMLFile
@@ -9327,7 +9339,7 @@ on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pIni
    put revIDESpecialFolderPath("repo guides") into tRepoGuidesFolder
    
    local tTemplate
-   put textDecode(url("binfile:" & tDocsBase & slash & pWhich & ".html.template"), "utf-8") into tTemplate
+   put textDecode(url("binfile:" & revIDEGetDictionaryHTMLTemplate(pWhich)), "utf-8") into tTemplate
    put merge(tTemplate) into tTemplate
    put textEncode(tTemplate, "utf-8") into url("binfile:" & tGeneratedHTMLFile)
 end revIDEGenerateDictionaryHTML
