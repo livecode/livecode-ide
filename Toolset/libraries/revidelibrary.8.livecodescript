@@ -5197,6 +5197,11 @@ on revIDEOpenStack pFilePath
       set the cursor to 1
    else
       revIDEAddRecentStack pFilePath
+      
+      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
+      if the scriptOnly of stack pFilePath then
+         revIDEEditScriptOfObject the long id of stack pFilePath
+      end if
    end if
 end revIDEOpenStack
 
@@ -5544,11 +5549,6 @@ on revIDEActionOpenStack
       
       # Open the stack
       revIDEOpenStack tStackFilePath
-      
-      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
-      if revIDEStackIsScriptOnly(tStackFilePath) then
-         revIDEEditScriptOfObject the long id of stack tStackFilePath
-      end if
    end repeat
 end revIDEActionOpenStack
 
