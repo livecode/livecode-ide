@@ -1755,6 +1755,55 @@ function revEnvironmentBinariesPath
    return sBinariesPath
 end revEnvironmentBinariesPath
 
+// SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen for any
+//  platform, from any repository platform
+function revEnvironmentNonNativeBinariesPath pPlatform
+   local tNonNativeBinariesPath, tReleaseFolder, tDebugFolder
+   put sBinariesPath into tNonNativeBinariesPath
+   
+   set the itemDelimiter to slash
+   
+   // If the platform is Linux, there will be archs
+   if the platform is "linux" then
+      delete item -3 to -1 of tNonNativeBinariesPath
+   else
+      delete item -2 to -1 of tNonNativeBinariesPath
+   end if
+   
+   // Init to lower-case, will change if Mac platform
+   put "release" into tReleaseFolder
+   put "debug" into tDebugFolder
+   
+   switch pPlatform
+      case "Windows"
+         put slash & "windows" after tNonNativeBinariesPath
+         break
+      case "Linux"
+         put slash & "linux/i386" after tNonNativeBinariesPath
+         break
+      case "Linux x64"
+         put slash & "linux/x86_64" after tNonNativeBinariesPath
+         break
+      case "MacOS"
+      case "MacOSX PowerPC-32"
+      case "MacOSX x86-32"
+         put slash & "mac" after tNonNativeBinariesPath
+         put "Release" into tReleaseFolder
+         put "Debug" into tDebugFolder
+         break
+      default 
+         return empty
+   end switch
+   
+   if the last item of sBinariesPath is "release" then
+      put slash & tReleaseFolder after tNonNativeBinariesPath
+   else
+      put slash & tDebugFolder after tNonNativeBinariesPath
+   end if
+   
+   return tNonNativeBinariesPath
+end revEnvironmentNonNativeBinariesPath
+
 -- MW-2013-06-13: [[ CloneAndRun ]] Returns the path to the repo.
 function revEnvironmentRepositoryPath
    return sRepositoryPath
