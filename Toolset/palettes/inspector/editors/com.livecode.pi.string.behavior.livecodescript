@@ -68,7 +68,7 @@ end closeField
 on editorResize
    lock screen
    lock messages
-   set the rect of field 1 of me to the rect of me
+   set the effective rect of field 1 of me to the rect of me
    unlock messages
    unlock screen
 end editorResize
