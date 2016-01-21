@@ -4007,21 +4007,26 @@ on revIDEPositionPalette pStackName
             break
          case "message box"
          case "revDictionary"
-         case "revInspector"
+         default
             set the rect of stack pStackName to tRect
-            break
-         default 
-            if pStackName begins with revIDEScriptEditorPrefix() then
-               set the rect of stack pStackName to tRect
-               break
-            end if
-            # If we don't restore the position for this palette then position the stack in the default location
-            revIDEPositionPaletteDefault pStackName
             break
       end switch
    else
-      # If no sizing information can be found then position the stack in the default location
-      revIDEPositionPaletteDefault pStackName
+      # If no sizing information can be found then position the stack in the 
+      # default location. Only do this for specified stacks.
+      switch pStackName
+         case "revMenuBar"
+         case "revTools"
+         case "message box"
+         case "revDictionary"
+            revIDEPositionPaletteDefault pStackName
+            break
+         default
+            if pStackName begins with revIDEScriptEditorPrefix() then
+               revIDEPositionPaletteDefault pStackName
+            end if
+            break
+      end switch
    end if
    
    # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
@@ -4047,21 +4052,6 @@ on revIDEPositionPaletteDefault pStackName
          break
       case "revDictionary"
          set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
-         break
-      case "revInspector"
-         if revIDEStackIsIDEStack(the topstack) then
-            set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
-         else
-            set the top of stack pStackName to the top of the topstack            
-            # AL-2015-09-09: [[ Bug 15745 ]] Try and place PI to left of stack if it doesn't fit on the right
-            if the right of the topstack + 10 + the width of stack pStackName < tScreenWidth then
-               set the left of stack pStackName to the right of the topstack + 10
-            else if the left of the topstack - 10 - the width of stack pStackName > 0 then
-               set the right of stack pStackName to the left of the topstack - 10
-            else
-               set the left of stack pStackName to the right of the topstack + 10
-            end if
-         end if
          break
       default 
          # If no sizing information can be found position the stack in the center of the 
