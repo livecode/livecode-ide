@@ -9445,6 +9445,7 @@ end revIDEGetGeometry
 ##################################################
 
 private function __tryToDoScriptInObject pObject, pObjectScript, pToDo, @rValidScript
+   local tDoScript
    set the itemdelimiter to ";"
    repeat for each line tScriptLine in pObjectScript
       if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pToDo then 
@@ -9499,7 +9500,7 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tIntellgenceScript, tCardStackScript, tScriptLine, tScriptError
+   local tIntelligenceScript, tCardStackScript, tScriptLine, tScriptError
    
    put false into tScriptError
    try
