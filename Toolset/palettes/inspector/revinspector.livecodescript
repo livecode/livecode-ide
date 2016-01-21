@@ -245,7 +245,7 @@ on ideInspectObjects pObjects
       put revIDESelectedObjects() into tSelectedObjects
    end if
    
-   local tStackName, tTargetInspector, tKeys
+   local tStackName, tIndex, tTargetInspector, tKeys
    put the keys of inspectorList() into tKeys
    sort tKeys ascending numeric
    repeat for each line tKey in tKeys
@@ -254,6 +254,7 @@ on ideInspectObjects pObjects
       
       if tTargetInspector is empty then
          put tStackName into tTargetInspector
+         put tKey into tIndex
       else
          # Delete any unlocked inspectors other than the target
          deleteInspector tKey
@@ -265,22 +266,64 @@ on ideInspectObjects pObjects
    # If all the inspectors are locked, or there aren't any, create a new one.
    if tTargetInspector is empty then
       local tNewInspectorName
-      put kPropertyInspectorPrefix && sInspectorMax + 1 into tNewInspectorName
+      put sInspectorMax + 1 into tIndex
+      put inspectorStackName(tIndex) into tNewInspectorName
       clone invisible stack "revInspectorTemplate"
       set the name of it to tNewInspectorName
       set the behavior of stack tNewInspectorName to the long id of this me
       put tNewInspectorName into tTargetInspector
-      addInspectorToList sInspectorMax + 1
+      addInspectorToList tIndex
    end if
-   
    unlock messages
-   unlock screen
+   
    set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
    
    lock messages
+   inspectorPositionPalette tIndex, tSelectedObjects
    palette stack tTargetInspector
    unlock messages
+   unlock screen
 end ideInspectObjects
+
+function inspectorStackName pIndex
+   return kPropertyInspectorPrefix && pIndex
+end inspectorStackName
+
+constant kNewInspectorOffset = 20
+on inspectorPositionPalette pIndex, pSelObj
+   local tStackName
+   put inspectorStackName(pIndex) into tStackName
+   local tRect
+   put revIDEGetPreference("palette_rect_" & tStackName) into tRect
+   
+   if __isRect(tRect) then
+      set the rect of stack tStackName to tRect
+      exit inspectorPositionPalette
+   end if
+   
+   local tPrevInspector
+   put inspectorStackName(pIndex - 1) into tPrevInspector
+   -- if we have an open inspector, just offset the new one by 10 pixels
+   if there is a stack tPrevInspector and the mode of stack tPrevInspector is not 0 then
+      set the topleft of stack tStackName to \
+            the left of stack tPrevInspector + kNewInspectorOffset, the top of stack tPrevInspector + kNewInspectorOffset
+   else
+      set the top of stack tStackName to the top of the topstack            
+      # AL-2015-09-09: [[ Bug 15745 ]] Try and place PI to left of stack if it doesn't fit on the right
+      if the right of the topstack + kNewInspectorOffset + the width of stack tStackName < tScreenWidth then
+         set the left of stack tStackName to the right of the topstack + kNewInspectorOffset
+      else if the left of the topstack - kNewInspectorOffset - the width of stack tStackName > 0 then
+         set the right of stack tStackName to the left of the topstack - kNewInspectorOffset
+      else
+         set the left of stack tStackName to the right of the topstack + kNewInspectorOffset
+      end if
+      
+      if intersect(the long id of stack tStackName, revIDEStackOfObject(line 1 of pSelObj)) then
+         revIDEPositionPaletteDefault tStackName
+      end if
+   end if
+end inspectorPositionPalette
+
 
 on ideResumeStack
    ideSelectedObjectChanged
@@ -300,11 +343,24 @@ end ideNameChanged
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged
+   local tObjects
+   put revIDESelectedObjects() into tObjects
+   
+   local tStack
+   put revIDEStackOfObject(line 1 of tObjects) into tStack
+   
+   # If the object is on an inspector stack, lock it
+   if the short name of tStack begins with kPropertyInspectorPrefix then
+      if the cLocked of tStack is not true then
+         dispatch "actionSelected" to tStack with "inspectorLock"
+      end if
+   end if
+   
    local tStackName
    repeat for each key tKey in inspectorList()
       put kPropertyInspectorPrefix && tKey into tStackName
       if the cLocked of stack tStackName is false and the mode of stack tStackName is not 0 then
-         ideInspectObjects revIDESelectedObjects()
+         ideInspectObjects tObjects
          exit repeat
       end if
    end repeat

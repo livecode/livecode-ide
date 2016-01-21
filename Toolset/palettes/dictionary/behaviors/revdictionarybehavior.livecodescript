@@ -1,4 +1,12 @@
 ﻿script "revDictionaryBehavior"
+-- The dictionary starts to hide elements at lower than 992 pixels
+-- *TODO* Tweak the CSS to rearrange things appropriately 
+constant kDictionaryMinWidth = 992
+
+-- Some browsers have a built-in scrollbar. Add a fudge factor to 
+-- take this into account
+constant kScrollbarFudge = 18
+
 local sTab, sEntry
 on setAsBehavior pTarget
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of this me
@@ -6,9 +14,11 @@ on setAsBehavior pTarget
 end setAsBehavior
 
 on openStack
+   local tMinWidth
+   put kDictionaryMinWidth + kScrollbarFudge into tMinWidth 
    lock screen
-   set the width of me to 1000
-   set the minWidth of me to 1000
+   set the width of me to tMinWidth
+   set the minWidth of me to tMinWidth
    set the title of me to "Dictionary"
    if sTab is empty then
       put "api" into sTab

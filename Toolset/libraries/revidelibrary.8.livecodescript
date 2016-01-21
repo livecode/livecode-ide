@@ -4016,21 +4016,26 @@ on revIDEPositionPalette pStackName
             break
          case "message box"
          case "revDictionary"
-         case "revInspector"
+         default
             set the rect of stack pStackName to tRect
-            break
-         default 
-            if pStackName begins with revIDEScriptEditorPrefix() then
-               set the rect of stack pStackName to tRect
-               break
-            end if
-            # If we don't restore the position for this palette then position the stack in the default location
-            revIDEPositionPaletteDefault pStackName
             break
       end switch
    else
-      # If no sizing information can be found then position the stack in the default location
-      revIDEPositionPaletteDefault pStackName
+      # If no sizing information can be found then position the stack in the 
+      # default location. Only do this for specified stacks.
+      switch pStackName
+         case "revMenuBar"
+         case "revTools"
+         case "message box"
+         case "revDictionary"
+            revIDEPositionPaletteDefault pStackName
+            break
+         default
+            if pStackName begins with revIDEScriptEditorPrefix() then
+               revIDEPositionPaletteDefault pStackName
+            end if
+            break
+      end switch
    end if
    
    # AL-2015-09-15: [[ Bug 15745 ]] Ensure palettes don't get placed off screen
@@ -4056,21 +4061,6 @@ on revIDEPositionPaletteDefault pStackName
          break
       case "revDictionary"
          set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
-         break
-      case "revInspector"
-         if revIDEStackIsIDEStack(the topstack) then
-            set the topleft of stack pStackName to tScreenWidth*0.3,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
-         else
-            set the top of stack pStackName to the top of the topstack            
-            # AL-2015-09-09: [[ Bug 15745 ]] Try and place PI to left of stack if it doesn't fit on the right
-            if the right of the topstack + 10 + the width of stack pStackName < tScreenWidth then
-               set the left of stack pStackName to the right of the topstack + 10
-            else if the left of the topstack - 10 - the width of stack pStackName > 0 then
-               set the right of stack pStackName to the left of the topstack - 10
-            else
-               set the left of stack pStackName to the right of the topstack + 10
-            end if
-         end if
          break
       default 
          # If no sizing information can be found position the stack in the center of the 
@@ -5216,12 +5206,13 @@ on revIDEOpenStack pFilePath
       set the cursor to 1
    else
       revIDEAddRecentStack pFilePath
+      
+      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
+      if the scriptOnly of stack pFilePath then
+         revIDEEditScriptOfObject the long id of stack pFilePath
+      end if
    end if
 end revIDEOpenStack
-
-on revIDEActionOpenRecent pStackName
-   # Plan is to refactor this like the plugin menu
-end revIDEActionOpenRecent
 
 on revIDEHelpKeyPressed
    --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
@@ -5553,18 +5544,6 @@ on revIDENewSubstackOfStack pStack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
 
-function revIDEStackIsScriptOnly pStackFile
-   if there is a stack pStackFile then
-      local tStackFile
-      put url ("file:" & pStackFile) into tStackFile
-      if char 1 to 6 of tStackFile is "script" then
-         return true
-      end if
-   end if
-   
-   return false
-end revIDEStackIsScriptOnly
-
 on revIDEActionOpenStack
    # Popup a file choose
    revIDEAnswerFile "stack"
@@ -5579,11 +5558,6 @@ on revIDEActionOpenStack
       
       # Open the stack
       revIDEOpenStack tStackFilePath
-      
-      # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
-      if revIDEStackIsScriptOnly(tStackFilePath) then
-         revIDEEditScriptOfObject the long id of stack tStackFilePath
-      end if
    end repeat
 end revIDEActionOpenStack
 
@@ -5703,30 +5677,6 @@ on revIDEDeleteSubstack pSubstackID
       ideMessageSend "ideDestroyStack", pSubstackID
    end if
 end revIDEDeleteSubstack
-
-/*
-Returns a list of the recently opened stacks.
-
-Associations: stack
-
-Returns: A return and | (pipe) delimited list of stack title and filename
-
-
-Example:
-local tRecentStacks
-put revIDERecentFiles() into tRecentStacks
-
-# put tRecentStacks
-# stack title|file path
-# stack title|file path
-# stack title|file path
-# ...
-
-Tags: ide
-*/
-function revIDERecentFiles
-  # return list
-end revIDERecentFiles
 
 /*
 Returns a list control types that can be imported by LiveCode.
@@ -8376,7 +8326,26 @@ on revIDESendWindowToFront pStackID
 end revIDESendWindowToFront
 
 /*
-Returns an array labels and filepaths to recently opened stack
+Returns an array describing the recently opened stacks.
+
+Returns: A numerically keyed array of recent stack labels and filename
+
+Example:
+local tRecentStacks, tRecentList
+put revIDERecentFiles() into tRecentStacks
+local tStackInfo
+repeat with x = 1 to the number of elements in tRecentStacks
+   put tRecentStacks[x] into tStackInfo
+   put tStackInfo["label"] & "|" tStackInfo["filename"] & return after tRecentList
+end repeat
+delete the last char of tRecentList
+put tRecentList
+# stack title|file path
+# stack title|file path
+# stack title|file path
+# ...
+
+Tags: ide
 */
 function revIDERecentStacks
    # Get recent paths from preferences
@@ -9336,7 +9305,15 @@ private command revIDEGenerateDistributedAPI
 end revIDEGenerateDistributedAPI
 
 on revIDEEnsureDictionaryUrl pWhich
-   if there is not a file revIDEGetDictionaryUrl(pWhich) then
+   local tLastGenerated, tLastModified
+   set the itemdelimiter to slash
+   local tFile
+   put revIDEGetDictionaryHTMLTemplate(pWhich) into tFile
+   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastModified
+   put revIDEGetDictionaryUrl(pWhich) into tFile
+   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastGenerated
+   
+   if tLastModified > tLastGenerated then
       revIDEGenerateDictionaryHTML pWhich
    end if
 end revIDEEnsureDictionaryUrl
@@ -9344,6 +9321,10 @@ end revIDEEnsureDictionaryUrl
 function revIDEGetDictionaryUrl pWhich
    return revEnvironmentUserDocsPath() & slash & pWhich & ".html"
 end revIDEGetDictionaryUrl
+
+function revIDEGetDictionaryHTMLTemplate pWhich
+   return revIDESpecialFolderPath("documentation") & slash & "html_viewer" & slash & pWhich & ".html.template"
+end revIDEGetDictionaryHTMLTemplate
 
 on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pInitialEntryType
    local tGeneratedHTMLFile
@@ -9367,7 +9348,7 @@ on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pIni
    put revIDESpecialFolderPath("repo guides") into tRepoGuidesFolder
    
    local tTemplate
-   put textDecode(url("binfile:" & tDocsBase & slash & pWhich & ".html.template"), "utf-8") into tTemplate
+   put textDecode(url("binfile:" & revIDEGetDictionaryHTMLTemplate(pWhich)), "utf-8") into tTemplate
    put merge(tTemplate) into tTemplate
    put textEncode(tTemplate, "utf-8") into url("binfile:" & tGeneratedHTMLFile)
 end revIDEGenerateDictionaryHTML
@@ -9626,7 +9607,7 @@ end ideCompileCheck
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
-      return the result
+      return "compile error" & return & the result
    end if
    
    do "global" && the globals
@@ -9658,5 +9639,8 @@ command ideDoMessage pScript, pDebugMode
    end try
    unlock screen
    
+   if tScriptError is not empty then
+      put "execution error" & return before tScriptError
+   end if
    return tScriptError
 end ideDoMessage

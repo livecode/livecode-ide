@@ -14,17 +14,11 @@ end preOpenStack
 on openStack   
    lock screen
    
-   if intersect(me, revIDEStackOfObject(line 1 of sSelectedObjects)) then
-      revIDEPositionPaletteDefault the short name of me
-   end if
-   
    # Register of IDE messages
    revIDESubscribe "idePreferenceChanged:idePropertyInspector_labels"
    
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
-   
-   set the visible of me to true
    unlock screen
 end openStack
 
@@ -200,11 +194,11 @@ on inspectorTreeMenuDisplay
       replace cr with cr & tab & tab in tStacks
       set the text of button "inspectMenu" of this stack to tControlsList & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
+            & cr & "Edit Script" & cr & tSendMessageList
    else
       set the text of button "inspectMenu" of this stack to tControls & cr & tab & "-" & cr & tCards \
             & cr & tab & "-" & cr & tStacks & cr & "-" \
-            & cr & "-" & cr & "Edit Script" & cr & tSendMessageList
+            & cr & "Edit Script" & cr & tSendMessageList
    end if
    
    popup button "inspectMenu" of this stack at the mouseloc

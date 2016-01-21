@@ -2097,7 +2097,7 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
          repeat for each item tRow in pDraggedRowList
             put getAbsoluteRow(tRow) into tAbs
             put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDERelayerControl tLongID, 1, tDraggedCard
+            revIDERelayerControl tLongID, "top", tDraggedCard
          end repeat
          
          set the relayerGroupedControls to false
@@ -2384,3 +2384,8 @@ on updateSelection pRows
       add 1 to tCount
    end repeat
 end updateSelection
+
+on pbRightClick
+   revIDEPopupContextualMenu pbSelectedObjects()
+end pbRightClick
+

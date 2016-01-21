@@ -149,7 +149,7 @@ command update
    end if
    
    # Populate the handlers field with the formatted list of handlers
-   local tText
+   local tText, tIcon
    repeat for each line tHandler in tHandlers
       local tParseHandler
       put word 1 to 2 of tHandler into tParseHandler
@@ -162,9 +162,10 @@ command update
          put true into tIsPrivate
          delete char 1 of tParseHandler
       end if
-      
-      if getIcon(char 1 of tParseHandler, tIsPrivate) is not empty then
-         put "<img src=" & getIcon(char 1 of tParseHandler, tIsPrivate) & "></img> " after tText
+
+      put getIcon(char 1 of tParseHandler, tIsPrivate) into tIcon
+      if tIcon is not empty then
+         put merge("<sup shift=2><img src=[[tICon]]></img></sup>") after tText
       end if
       delete char 1 of tParseHandler
       
@@ -180,15 +181,6 @@ command update
    set the textFont of field "Handlers" of me to sePrefGet("editor,font")
    
    set the htmlText of field "Handlers" of me to tText
-   local tOffset
-   put 1 into tOffset
-   repeat for each line tLine in field "Handlers" of me
-      if the imageSource of char tOffset of field "Handlers" of me is not empty then
-         set the textShift of char tOffset of field "Handlers" of me to 2
-      end if
-      add the length of tLine + 1 to tOffset
-   end repeat
-   
    set the cHandlers of field "Handlers" of me to tHandlers
    
    # Shrink or grow the stack if the handlers list doesn't fit, but don't let it become bigger than its maxHeight or maxWidth.
