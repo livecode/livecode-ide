@@ -5200,10 +5200,6 @@ on revIDEOpenStack pFilePath
    end if
 end revIDEOpenStack
 
-on revIDEActionOpenRecent pStackName
-   # Plan is to refactor this like the plugin menu
-end revIDEActionOpenRecent
-
 on revIDEHelpKeyPressed
    --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
 end revIDEHelpKeyPressed
@@ -5534,18 +5530,6 @@ on revIDENewSubstackOfStack pStack
    set the mainStack of the topStack to pStack
 end revIDENewSubstackOfStack
 
-function revIDEStackIsScriptOnly pStackFile
-   if there is a stack pStackFile then
-      local tStackFile
-      put url ("file:" & pStackFile) into tStackFile
-      if char 1 to 6 of tStackFile is "script" then
-         return true
-      end if
-   end if
-   
-   return false
-end revIDEStackIsScriptOnly
-
 on revIDEActionOpenStack
    # Popup a file choose
    revIDEAnswerFile "stack"
@@ -5684,30 +5668,6 @@ on revIDEDeleteSubstack pSubstackID
       ideMessageSend "ideDestroyStack", pSubstackID
    end if
 end revIDEDeleteSubstack
-
-/*
-Returns a list of the recently opened stacks.
-
-Associations: stack
-
-Returns: A return and | (pipe) delimited list of stack title and filename
-
-
-Example:
-local tRecentStacks
-put revIDERecentFiles() into tRecentStacks
-
-# put tRecentStacks
-# stack title|file path
-# stack title|file path
-# stack title|file path
-# ...
-
-Tags: ide
-*/
-function revIDERecentFiles
-  # return list
-end revIDERecentFiles
 
 /*
 Returns a list control types that can be imported by LiveCode.
@@ -8357,7 +8317,26 @@ on revIDESendWindowToFront pStackID
 end revIDESendWindowToFront
 
 /*
-Returns an array labels and filepaths to recently opened stack
+Returns an array describing the recently opened stacks.
+
+Returns: A numerically keyed array of recent stack labels and filename
+
+Example:
+local tRecentStacks, tRecentList
+put revIDERecentFiles() into tRecentStacks
+local tStackInfo
+repeat with x = 1 to the number of elements in tRecentStacks
+   put tRecentStacks[x] into tStackInfo
+   put tStackInfo["label"] & "|" tStackInfo["filename"] & return after tRecentList
+end repeat
+delete the last char of tRecentList
+put tRecentList
+# stack title|file path
+# stack title|file path
+# stack title|file path
+# ...
+
+Tags: ide
 */
 function revIDERecentStacks
    # Get recent paths from preferences
