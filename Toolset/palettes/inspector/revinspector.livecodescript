@@ -311,6 +311,8 @@ on inspectorPositionPalette pIndex, pSelObj
       set the topleft of stack tStackName to \
             the left of stack tPrevInspector + kNewInspectorOffset, the top of stack tPrevInspector + kNewInspectorOffset
    else
+      local tScreenWidth
+      put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
       set the top of stack tStackName to the top of the topstack            
       # AL-2015-09-09: [[ Bug 15745 ]] Try and place PI to left of stack if it doesn't fit on the right
       if the right of the topstack + kNewInspectorOffset + the width of stack tStackName < tScreenWidth then
