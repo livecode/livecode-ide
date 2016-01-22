@@ -279,7 +279,10 @@ on ideInspectObjects pObjects
    set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
    
    lock messages
-   inspectorPositionPalette tIndex, tSelectedObjects
+   -- Only reposition if we are opening a new editor
+   if the mode of stack tTargetInspector is 0 then
+      inspectorPositionPalette tIndex, tSelectedObjects
+   end if
    palette stack tTargetInspector
    unlock messages
    unlock screen
