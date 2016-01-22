@@ -44,20 +44,30 @@ on LayoutControl pControlRect
    set the left of button "connector1" of me to item 1 of pControlRect
    set the left of button "connector2" of me to the right of button "connector1" of me
    
+   local tNameFieldLeft
    if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
       show field "type" of me
       hide button "typeIcon" of me
       set the left of field "type" of me to the right of  button "connector2" of me
-      set the left of field "name" of me to the right of field "type" of me -5
+      put the right of field "type" of me -5 into tNameFieldLeft
    else
       hide field "type" of me
       show button "typeIcon" of me
       set the icon of button "typeIcon" of me to the id of image (the cType of me) of card "templates" of this stack
       set the left of button "typeIcon" of me to the right of  button "connector2" of me
-      set the left of field "name" of me to the right of button "typeIcon" of me
+      put the right of button "typeIcon" of me into tNameFieldLeft
    end if
    set the width of field "scriptLines" of me to the formattedWidth of field "scriptLines" of me
    set the right of field "scriptLines" of me to item 3 of pControlRect - the palettePadding of me
+   
+   ## Check the width of  the "name" field so it doesn't overrun the space
+   local tNameWidth
+   put the left of field "scriptLines" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
+   
+   if the width of field "name" of me > tNameWidth then
+      set the width of field "name" of me to tNameWidth
+   end if
+   set the left of field "name" of me to tNameFieldLeft
 end LayoutControl
 
 getProp dvRowControl
