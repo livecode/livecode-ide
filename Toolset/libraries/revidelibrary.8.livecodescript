@@ -9434,6 +9434,91 @@ end revIDEGetGeometry
 #
 ##################################################
 
+private function __publicScriptHandlers pObject
+   local tScript, tHandlers
+   try
+      put the script of pObject into tScript
+   catch tError
+      return empty
+   end try
+   
+   repeat for each line tLine in tScript
+      if token 1 of tLine is among the items of "on,command" then
+         put "M" && token 2 of tLine & return after tHandlers
+      else if token 1 of tLine is "function" then
+         put "F" && token 2 of tLine & return after tHandlers
+      end if
+   end repeat
+   delete the last char of tHandlers
+   return tHandlers
+end __publicScriptHandlers
+
+private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
+   if pObject is empty then
+      return empty
+   end if
+   
+   local tHandlerList
+   if the environment is "development" then
+      put the effective revAvailableHandlers of pObject into tHandlerList
+   else
+      -- implementation for testing purposes
+      put __publicScriptHandlers(pObject) into tHandlerList
+   end if
+   -- revAvailableHandlers returns a list of handlers in the form
+   -- <handlerType>  <handlerName> <startLine> <endLine>
+   -- Check to see if any handler in the message path matches the executed script
+   
+   local tTargetHandler, tIsPutOrGet
+   put false into tIsPutOrGet
+   put token 1 of pToDo into tTargetHandler
+   if tTargetHandler is among the items of "put,get" then
+      put true into tIsPutOrGet
+      put token 2 of pToDo into tTargetHandler
+   end if
+   
+   local tDoScript
+   set the itemdelimiter to ";"
+   repeat for each line tLine in tHandlerList
+      local tHandlerName, tHandlerType
+      put segment 1 of tLine into tHandlerType
+      put segment 2 of tLine into tHandlerName
+      if tHandlerName is not tTargetHandler then
+         next repeat
+      end if
+      
+      if not tIsPutOrGet and tHandlerType is "M" then
+         -- If this is a command that matches, just send the message
+         put "send" && item 1 of pToDo && "to" && pObject & ";" & item 2 to -1 of pToDo into tDoScript
+         put pToDo into rValidScript
+         exit repeat
+      else if tHandlerType is "F" then
+         -- otherwise this is a function that matches
+         if tIsPutOrGet then
+            put pToDo into tDoScript
+         else
+            -- autocomplete the 'put' if necessary
+            put "put" && pToDo into tDoScript
+         end if
+         
+         local tFirstItem
+         put item 1 of tDoScript into tFirstItem
+         # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
+         local tParams
+         if matchText(token 2 to -1 of tFirstItem, tHandlerName & "\(([^\)]*)?\)", tParams) is false then 
+            exit repeat
+         end if
+         put tDoScript into rValidScript
+         dispatch function (token 2 of tDoScript) to pObject with tParams
+         replace tHandlerName & "(" & tParams & ")" with quote & the result & quote in tFirstItem
+         put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
+         exit repeat
+      end if
+   end repeat
+   
+   return tDoScript
+end __tryToDoScriptInObject
+
 command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
    local tOldDefault
    put the defaultStack into tOldDefault
@@ -9453,63 +9538,11 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tScript, tScriptLine, tScriptError
-   
-   put false into tScriptError
-   try
-      put the script of pIntelligenceObject into tScript
-   catch tError
-      put true into tScriptError
-   end try
-   
-   if tScriptError is true then
-      put false into tScriptError
-      put the long id of the defaultStack into pIntelligenceObject
-      try 
-         put the script of the defaultStack into tScript
-      catch tError
-         put true into tScriptError
-      end try
-   end if
-   
    local tDoScript, tValidScript
-   
-   if tScriptError is false then
-      set the itemdelimiter to ";"
-      repeat for each line tScriptLine in tScript
-         if token 1 of tScriptLine is among the items of "on;command" and token 2 of tScriptLine is token 1 of pScript then 
-            put "send" && item 1 of pScript && "to" && pIntelligenceObject & ";" & item 2 to -1 of pScript into tDoScript
-            put pScript into tValidScript
-            exit repeat
-         else if token 1 of tScriptLine is "function" then
-            local tTryAsFunction
-            put false into tTryAsFunction
-            if token 1 of pScript is token 2 of tScriptLine then
-               put true into tTryAsFunction
-               put "put" && pScript into tDoScript
-            else if token 1 of pScript is "put" and token 2 of pScript is token 2 of tScriptLine then
-               put true into tTryAsFunction
-               put pScript into tDoScript
-            end if
-            if tTryAsFunction then
-               local tFirstItem
-               put item 1 of tDoScript into tFirstItem
-               # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-               local tParams
-               if matchText(token 2 to -1 of tFirstItem, token 2 of tScriptLine & "\(([^\)]*)?\)", tParams) is false then 
-                  exit repeat
-               end if
-               put tDoScript into tValidScript
-               dispatch function (token 2 of tDoScript) to pIntelligenceObject with tParams
-               local tFunction
-               replace token 2 of tScriptLine & "(" & tParams & ")" with quote & the result & quote in tFirstItem
-               put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
-               exit repeat
-            end if
-         end if
-      end repeat
-      set the itemdelimiter to comma
-   end if  
+   put __tryToDoScriptInObject(pIntelligenceObject, pScript, tValidScript) into tDoScript
+   if tDoScript is empty then
+      put __tryToDoScriptInObject(the long id of this card of the defaultStack, pScript, tValidScript) into tDoScript
+   end if
    
    if tDoScript is not empty then
       ideDoMessage tDoScript, pDebugMode

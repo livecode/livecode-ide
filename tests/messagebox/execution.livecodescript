@@ -24,6 +24,7 @@ on TestSetup
    put the script of stack tIDELibrary into tScript
    replace "_internal" with "--_internal" in tScript
    replace "the revObjectListeners" with "empty" in tScript
+   replace "the effective revAvailableHandlers of pObject" with "empty" in tScript
    set the script of stack tIDELibrary to tScript
 
    insert the script of stack "revIDELibrary" into back
@@ -66,6 +67,8 @@ on TestGlobalPropertyCompleted
 	TestAssert "global prop value with 'put the' prepended", msg is "none"
 	TestAssert "global prop executed with 'put the' prepended", tValidScript is "put the backdrop"
 	
+	put empty into msg
+	
 	ideExecuteScript "the backdrop", empty, empty, false, tValidScript
 	
 	TestAssert "global prop value with 'put' prepended", msg is "none"
@@ -87,6 +90,8 @@ on TestIntelligenceObjectMultilineCommand
 	
 	TestAssert "intelligence object multiple command result", msg is "value"
 	TestAssert "intelligence object multiple command executed", tValidScript is "valueCommand; put the result"
+	
+	put empty into msg
 	
 	ideExecuteScript "put valueFunction(); put msg", empty, tStack, false, tValidScript
 	
@@ -110,6 +115,8 @@ on TestIntelligenceObject
 	TestAssert "intelligence object command result", the cValue of tStack is "value"
 	TestAssert "intelligence object command executed", tValidScript is "valueCommand"
 	
+	put empty into msg
+	
 	ideExecuteScript "valueFunction()", empty, tStack, false, tValidScript
 	
 	TestAssert "intelligence object function in msg box", msg is "value"
@@ -131,3 +138,50 @@ on TestIntelligenceObjectMultipleCommand
 	
 	TestAssertBroken "intelligence object mutiple commands", the cValue of tStack is "value", "Bug 16318"
 end TestIntelligenceObjectMultipleCommand
+
+on TestDefaultStackCardScript
+	local tScript
+	put "on preOpenCard; set the cValue of this stack to" && quote & "value" & quote && "; end preOpenCard" into tScript
+
+	local tStack
+	create stack
+	put the long id of it into tStack
+	set the script of card 1 of tStack to tScript
+	
+	local tValidScript
+	ideExecuteScript "preOpenCard", tStack, empty, false, tValidScript
+	
+	TestAssert "intelligence object command result", the cValue of tStack is "value"
+	TestAssert "intelligence object command executed", tValidScript is "preOpenCard"
+end TestDefaultStackCardScript
+
+
+on TestIntelligenceObjectPutFunction
+	local tScript
+	put "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+	ideExecuteScript "put valueFunction()", empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object put function", msg is "value"
+end TestIntelligenceObjectPutFunction
+
+on TestIntelligenceObjectGetFunction
+	local tScript
+	put "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+
+	ideExecuteScript "get valueFunction(); put it", empty, tStack, false, tValidScript
+	TestAssert "intelligence object get function result", msg is "value"
+end TestIntelligenceObjectGetFunction
