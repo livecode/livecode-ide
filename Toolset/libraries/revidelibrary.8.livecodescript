@@ -9464,6 +9464,10 @@ private function __publicScriptHandlers pObject
 end __publicScriptHandlers
 
 private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
+   if pObject is empty then
+      return empty
+   end if
+   
    local tHandlerList
    if the environment is "development" then
       put the effective revAvailableHandlers of pObject into tHandlerList
@@ -9475,11 +9479,11 @@ private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
    -- <handlerType>  <handlerName> <startLine> <endLine>
    -- Check to see if any handler in the message path matches the executed script
    
-   local tTargetHandler, tIsPut
-   put false into tIsPut
+   local tTargetHandler, tIsPutOrGet
+   put false into tIsPutOrGet
    put token 1 of pToDo into tTargetHandler
-   if tTargetHandler is "put" then
-      put true into tIsPut
+   if tTargetHandler is among the items of "put,get" then
+      put true into tIsPutOrGet
       put token 2 of pToDo into tTargetHandler
    end if
    
@@ -9493,14 +9497,14 @@ private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
          next repeat
       end if
       
-      if not tIsPut and tHandlerType is "M" then
+      if not tIsPutOrGet and tHandlerType is "M" then
          -- If this is a command that matches, just send the message
          put "send" && item 1 of pToDo && "to" && pObject & ";" & item 2 to -1 of pToDo into tDoScript
          put pToDo into rValidScript
          exit repeat
       else if tHandlerType is "F" then
          -- otherwise this is a function that matches
-         if tIsPut then
+         if tIsPutOrGet then
             put pToDo into tDoScript
          else
             -- autocomplete the 'put' if necessary

@@ -67,6 +67,8 @@ on TestGlobalPropertyCompleted
 	TestAssert "global prop value with 'put the' prepended", msg is "none"
 	TestAssert "global prop executed with 'put the' prepended", tValidScript is "put the backdrop"
 	
+	put empty into msg
+	
 	ideExecuteScript "the backdrop", empty, empty, false, tValidScript
 	
 	TestAssert "global prop value with 'put' prepended", msg is "none"
@@ -89,6 +91,8 @@ on TestIntelligenceObjectMultilineCommand
 	TestAssert "intelligence object multiple command result", msg is "value"
 	TestAssert "intelligence object multiple command executed", tValidScript is "valueCommand; put the result"
 	
+	put empty into msg
+	
 	ideExecuteScript "put valueFunction(); put msg", empty, tStack, false, tValidScript
 	
 	TestAssert "intelligence object multiple function result", msg is "value"
@@ -110,6 +114,8 @@ on TestIntelligenceObject
 	
 	TestAssert "intelligence object command result", the cValue of tStack is "value"
 	TestAssert "intelligence object command executed", tValidScript is "valueCommand"
+	
+	put empty into msg
 	
 	ideExecuteScript "valueFunction()", empty, tStack, false, tValidScript
 	
@@ -148,3 +154,34 @@ on TestDefaultStackCardScript
 	TestAssert "intelligence object command result", the cValue of tStack is "value"
 	TestAssert "intelligence object command executed", tValidScript is "preOpenCard"
 end TestDefaultStackCardScript
+
+
+on TestIntelligenceObjectPutFunction
+	local tScript
+	put "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+	ideExecuteScript "put valueFunction()", empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object put function", msg is "value"
+end TestIntelligenceObjectPutFunction
+
+on TestIntelligenceObjectGetFunction
+	local tScript
+	put "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+
+	ideExecuteScript "get valueFunction(); put it", empty, tStack, false, tValidScript
+	TestAssert "intelligence object get function result", msg is "value"
+end TestIntelligenceObjectGetFunction
