@@ -102,13 +102,14 @@ on LayoutControl pControlRect
       end if
    end repeat
    
+   local tNameFieldLeft
    if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
       set the width of field "type" of me to the formattedWidth of field "type" of me
       set the left of field "type" of me to the right of button ("connector" & tConnectorCount) of me
-      set the left of field "name" of me to the right of field "type" of me - 5
+      put the right of field "type" of me - 5 into tNameFieldLeft
    else
       set the left of button "controlIcon" of me to the right of button ("connector" & tConnectorCount) of me
-      set the left of field "name" of me to the right of button "controlIcon" of me
+      put the right of button "controlIcon" of me into tNameFieldLeft
    end if
    set the right of button "cantSelect" of me to the item 3 of pControlRect  - the palettePadding of me   
    set the right of button "visible" of me to the left of button "cantSelect" of me  - the palettePadding of me   
@@ -118,19 +119,15 @@ on LayoutControl pControlRect
    ## Check the width of  the "name" field so it doesn't overrun the space
    local tNameWidth
    if the visible of field "behaviorScriptLines" of me then
-      put the left of field "behaviorScriptLines" of me - right of button "controlIcon" of me - the palettePadding of me into tNameWidth
+      put the left of field "behaviorScriptLines" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
    else
-      put the left of field "scriptLines" of me - right of button "controlIcon" of me - the palettePadding of me into tNameWidth
+      put the left of field "scriptLines" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
    end if
    
    if the width of field "name" of me > tNameWidth then
       set the width of field "name" of me to tNameWidth
-      if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
-         set the left of field "name" of me to the right of field "type" of me - 5
-      else
-         set the left of field "name" of me to the right of button "controlIcon" of me
-      end if
    end if
+   set the left of field "name" of me to tNameFieldLeft
 end LayoutControl
 
 getProp dvRowControl

@@ -25,6 +25,9 @@ end openStack
 on closeStack
    ## Unsubscribe from all messages
    revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
+   
+   # Unlock
+   put false into sInspectorLock
 end closeStack
 
 on resizeStack

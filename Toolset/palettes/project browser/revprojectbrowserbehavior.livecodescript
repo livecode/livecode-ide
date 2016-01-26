@@ -61,6 +61,8 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
    revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
    
+   revIDESubscribe "ideShowInProjectBrowser"
+   
    put empty into sDisplayArray
    loadImages
    setUpProjectView
@@ -105,10 +107,7 @@ end closeStack
 ####### Subscribed IDE messages #######
 ###################################
 on ideSelectedObjectChanged
-   --   local tObject
-   --   put revIDESelectedObjects() into tObject
-   
-   --   highlightObjects tObject
+   highlightObjects revIDESelectedObjects()
 end ideSelectedObjectChanged
 
 on ideNewControl pTarget
@@ -165,9 +164,7 @@ on ideDestroyStack pTarget
 end ideDestroyStack
 
 on ideResumeStack pTarget
-   --   local tObject
-   --   put revIDESelectedObjects() into tObject
-   --   highlightObjects tObject
+   ideSelectedObjectChanged
 end ideResumeStack
 
 on ideNameChanged pOldName, pNewName, pTarget
@@ -257,6 +254,15 @@ on displayPreferenceSelected pPreference, pValue
    buildProjectView true
    unlock screen
 end displayPreferenceSelected
+
+on ideShowInProjectBrowser pTarget
+   lock screen
+   repeat for each line tObj in pTarget
+      showObjects tObj
+   end repeat
+   scrollToObject line 1 of pTarget
+   unlock screen
+end ideShowInProjectBrowser
 
 ######## Project View Handlers ########
 ###################################
@@ -406,10 +412,10 @@ on refreshProjectView
    updateListeners
    
    --revPutArray sDisplayArray
-   
    lock messages
    send "RenderView" to group "objectList" of me
    unlock messages
+   ideSelectedObjectChanged
 end refreshProjectView
 
 on updateListeners
@@ -500,13 +506,28 @@ end topLevelRows
 ########## Selection handlers ########## 
 ####################################
 
-## Highlights the selected objects
-## Expanding stacks, cards and groups as necessary
-command highlightObjects pObject
+# Indicate that pObjects are selected
+command highlightObjects pObjects, pForceScroll
+   local tVisibleRows,tRow,tRows
+   put sDisplayArray["visible object keys"] into tVisibleRows
+   repeat for each line tObject in pObjects      
+      put getRow(tObject) into tRow
+      if tRow is among the items of tVisibleRows then
+         put itemOffset(tRow,tVisibleRows) & comma after tRows
+      end if
+   end repeat
+   delete the last char of tRows
+   
+   if pForceScroll and pObjects is not empty then
+      scrollToRow(getRow(line 1 of pObjects))
+   end if
+   
+   updateSelection tRows
+end highlightObjects
+
+## Expands stacks, cards and groups as necessary to show object
+command showObjects pObject
    local tRow, tRows, tOwners, tOwnerRow, tVisibleRows, tVisibleRowNumber
-   
-   set the dvHilitedRows["true"] of group "objectList" of this stack to empty
-   
    ### Highlight the parent trail
    put getOwners(pObject,tOwners) into tOwners
    set the cOwners of group "objectList" of me to tOwners
@@ -524,19 +545,9 @@ command highlightObjects pObject
       end if
    end repeat
    
-   put sDisplayArray["visible object keys"] into tVisibleRows
-   repeat for each line tObject in pObject      
-      put getRow(tObject) into tRow
-      if tRow is among the items of tVisibleRows then
-         put itemOffset(tRow,tVisibleRows) & comma after tRows
-      end if
-   end repeat
-   delete the last char of tRows
-   set the dvHilitedRows["true"] of group "objectList" of this stack to tRows
-   
    updateActions
    unlock screen
-end highlightObjects
+end showObjects
 
 on selectObjects pObjectList
    // AL-2015-12-17: Don't select objects anymore when they are selected
@@ -882,6 +893,7 @@ function CacheKeyForRow pRow
 end CacheKeyForRow
 
 on toggleGroup pRow, pState
+   lock screen
    local tLongID, tLevel, tData, tAbsoluteRow, tVisibleRows
    
    put sDisplayArray["visible object keys"] into tVisibleRows
@@ -898,8 +910,22 @@ on toggleGroup pRow, pState
    end if      
    
    updateListeners
-   dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, pRow, 0, pState   
+   dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, pRow, 0, pState 
+   ideSelectedObjectChanged
+   unlock screen
 end toggleGroup
+
+command scrollToRow pRow
+   dispatch "ScrollRowTo" to group "objectList" of me with pRow, "top"
+end scrollToRow
+
+command scrollToObject pObjectID
+   scrollToRow getRow(pObjectID)
+end scrollToObject
+
+on DataViewUpdated
+   ideSelectedObjectChanged
+end DataViewUpdated
 
 ####### Project List Array management #######
 #######################################
@@ -2324,6 +2350,45 @@ on revUpdatePalette
    ## Do nothing
 end revUpdatePalette
 
+on updateSelection pRows
+   lock screen
+   lock messages
+   set the style of the templateGraphic to "rectangle"
+   set the opaque of the templateGraphic to false
+   set the dashes of the templateGraphic to 4
+   set the foreColor of the templateGraphic to "black"
+   
+   local tNumSelected
+   put the number of items in pRows into tNumSelected
+   repeat with tCount = 1 to tNumSelected
+      if there is not a graphic ("selection" && tCount) of group "selections" of me then
+         create invisible graphic ("selection" && tCount) in group "selections" of me 
+      end if
+   end repeat
+   reset the templateGraphic
+   unlock messages
+   
+   put 1 into tCount
+   local tControlOfRow
+   repeat for each item tRow in pRows
+      put the dvControlOfRow[tRow] of group "objectList" of me into tControlOfRow
+      if tControlOfRow is not empty then
+         set the rect of graphic ("selection" && tCount) of group "selections" of me to the rect of tControlOfRow
+         show graphic ("selection" && tCount) of group "selections" of me
+      else
+         hide graphic ("selection" && tCount) of group "selections" of me
+      end if
+      add 1 to tCount
+   end repeat
+   
+   repeat while there is a graphic ("selection" && tCount) of group "selections" of me
+      hide graphic ("selection" && tCount) of group "selections" of me
+      add 1 to tCount
+   end repeat
+   unlock screen
+end updateSelection
+
 on pbRightClick
    revIDEPopupContextualMenu pbSelectedObjects()
 end pbRightClick
+

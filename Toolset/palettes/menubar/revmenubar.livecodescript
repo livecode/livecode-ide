@@ -1682,6 +1682,19 @@ end revMenubarWindowMenu
 
 ################################################################################
 
+function revMenubarAdditionalContextMenu pIndent
+   local tIndent
+   repeat pIndent
+      put tab after tIndent
+   end repeat
+   
+   local tText
+   put return & tIndent & "-" after tText
+   put return & tIndent & "Show In Project Browser" after tText
+   put return & tIndent & "Show Documentation" after tText
+   return tText
+end revMenubarAdditionalContextMenu
+
 function revMenubarSendContextMenu pObject, pIndent
    local tIndent
    repeat pIndent
@@ -1736,8 +1749,8 @@ function revMenubarStackContextMenu pStack, pIndent
    put tIndent & "Standalone Application Settings..." & return after tText
    put tIndent & "Save As Standalone Application..." & return after tText
    put tIndent & "-" & return after tText
-   
    put revMenubarSendContextMenu(pStack, pIndent) after tText
+   put revMenubarAdditionalContextMenu(pIndent) after tText
    
    return tText
 end revMenubarStackContextMenu
@@ -1760,6 +1773,7 @@ function revMenuBarCardContextMenu pCard, pIndent
    put tIndent & "Delete Card" & return after tText
    put tIndent & "-" & return after tText
    put revMenubarSendContextMenu(pCard, pIndent) after tText
+   put revMenubarAdditionalContextMenu(pIndent) after tText
    return tText
 end revMenuBarCardContextMenu
 
@@ -1776,6 +1790,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent
    end repeat
    put tIndent & "-" & return after tText
    put revMenubarSendContextMenu(pObject, pIndent) after tText
+   put revMenubarAdditionalContextMenu(pIndent) after tText
    return tText
 end revMenuBarObjectContextMenu
 
@@ -1798,8 +1813,6 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
    local tText
    if word 1 of pTarget is "stack" then
       put revMenuBarStackContextMenu(pTarget, 0) into tText
-      put return & "-" after tText
-      put return & "Show Documentation" after tText
       return tText
    end if
    
@@ -1811,8 +1824,6 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
       put return & "-" after tText
       put return & "Stack" after tText
       put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
-      put return & "-" after tText
-      put return & "Show Documentation" after tText
       return tText
    end if
    
@@ -1825,8 +1836,6 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
    put return & "-" after tText
    put return & "Stack" after tText
    put return & revMenuBarStackContextMenu(tTargetStack, 1) after tText
-   put return & "-" after tText
-   put return & "Show Documentation" after tText
    return tText
 end revBuildContextSensitiveMenu
 
@@ -2220,6 +2229,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Show Documentation"
          revIDEGoToObjectAPI pTarget
+         break
+      case "Show In Project Browser"
+         revIDEShowInProjectBrowser pTarget
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"

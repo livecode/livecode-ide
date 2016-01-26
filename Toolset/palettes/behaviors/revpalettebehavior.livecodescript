@@ -562,7 +562,7 @@ on closeStack
 end closeStack
 
 after closeStack
-   revIDEStorePaletteRect the short name of me
+   revIDESetPaletteRectPreference the short name of me
 end closeStack
 
 private on __doCallback pDataIndex

@@ -2463,14 +2463,14 @@ end binaryEquals
 #   then sends a "resize" message to each object to allow the object to resize its controls
 #   appropriately to its new size.
 on resizeStack
-   revIDEStorePaletteRect the short name of me
+   revIDESetPaletteRectPreference the short name of me
    actionResizeStack
 end resizeStack
 
 # Description
 #    Sent when the script editor is moved. Saves the new size in the preferences.
 on moveStack
-   revIDEStorePaletteRect the short name of me
+   revIDESetPaletteRectPreference the short name of me
 end moveStack
 
 # Description
