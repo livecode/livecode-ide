@@ -274,15 +274,15 @@ on ideInspectObjects pObjects
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
+   -- Only reposition if we are opening a new editor
+   if the mode of stack tTargetInspector is 0 then
+      inspectorPositionPalette tIndex, tSelectedObjects
+   end if
    unlock messages
    
    set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
    
    lock messages
-   -- Only reposition if we are opening a new editor
-   if the mode of stack tTargetInspector is 0 then
-      inspectorPositionPalette tIndex, tSelectedObjects
-   end if
    palette stack tTargetInspector
    unlock messages
    unlock screen
@@ -300,7 +300,7 @@ on inspectorPositionPalette pIndex, pSelObj
    put revIDEGetPreference("palette_rect_" & tStackName) into tRect
    
    if __isRect(tRect) then
-      set the rect of stack tStackName to tRect
+      set the topleft of stack tStackName to item 1 to 2 of tRect
       exit inspectorPositionPalette
    end if
    
