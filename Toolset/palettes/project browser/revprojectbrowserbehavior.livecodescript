@@ -508,6 +508,7 @@ end topLevelRows
 
 # Indicate that pObjects are selected
 command highlightObjects pObjects, pForceScroll
+   local tVisibleRows,tRow,tRows
    put sDisplayArray["visible object keys"] into tVisibleRows
    repeat for each line tObject in pObjects      
       put getRow(tObject) into tRow
@@ -2355,8 +2356,9 @@ on updateSelection pRows
    set the style of the templateGraphic to "rectangle"
    set the opaque of the templateGraphic to false
    set the dashes of the templateGraphic to 4
-   set the foreColor of the templateGraphic to black
+   set the foreColor of the templateGraphic to "black"
    
+   local tNumSelected
    put the number of items in pRows into tNumSelected
    repeat with tCount = 1 to tNumSelected
       if there is not a graphic ("selection" && tCount) of group "selections" of me then
