@@ -4005,7 +4005,7 @@ on revIDEPositionPalette pStackName
    if there is not a stack pStackName then exit revIDEPositionPalette
    
    local tRect
-   put revIDEGetPreference("palette_rect_" & pStackName) into tRect
+   put revIDEGetPaletteRectPreference(pStackName) into tRect
    
    if __isRect(tRect) then
       # A previous stored rect was found for the stack. Restore is position if possible.
@@ -4092,9 +4092,17 @@ function __isRect pRect
    return true
 end __isRect
 
-on revIDEStorePaletteRect pStackName
-   revIDESetPreference ("palette_rect_" & pStackName), the rect of stack pStackName
-end revIDEStorePaletteRect
+on revIDESetPaletteRectPreference pStackName
+   local tRect
+   put the rect of stack pStackName into tRect
+   replace " " with "_" in pStackName
+   revIDESetPreference "palette_rect_" & pStackName, tRect
+end revIDESetPaletteRectPreference
+
+function revIDEGetPaletteRectPreference pStackName
+   replace " " with "_" in pStackName
+   return revIDEGetPreference("palette_rect_" & pStackName)
+end revIDEGetPaletteRectPreference
 
 on revIDEClearPaletteRects
    local tPreferenceNames

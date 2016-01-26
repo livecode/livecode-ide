@@ -1,0 +1,1 @@
+# Restore palette rect using preferences correctly
