@@ -651,6 +651,10 @@ private function __orderPropSubArray pSectionA, pIsGroupList
          put tProp into tOrderedA[tCount]["label"]
          put pSectionA[tSubKey][tProp]["subsection"] into tOrderedA[tCount]["subsection"]
          put __orderPropSubArray(pSectionA[tSubKey][tProp], false) into tOrderedA[tCount]["proplist"]
+         # Inherit the prop label if there is only one
+         if the number of elements in tOrderedA[tCount]["proplist"] is 1 then
+            put tOrderedA[tCount]["proplist"][1]["label"] into tOrderedA[tCount]["label"]
+         end if
       else
          if pSectionA[tSubKey][tProp]["popup"] is not empty then
             put __orderPropSubArray(pSectionA[tSubKey][tProp]["popup"], true) into pSectionA[tSubKey][tProp]["popup"]
