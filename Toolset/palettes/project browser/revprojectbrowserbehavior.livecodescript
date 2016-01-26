@@ -2383,6 +2383,7 @@ on updateSelection pRows
       hide graphic ("selection" && tCount) of group "selections" of me
       add 1 to tCount
    end repeat
+   unlock screen
 end updateSelection
 
 on pbRightClick
