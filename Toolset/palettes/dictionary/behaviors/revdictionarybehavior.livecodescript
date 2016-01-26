@@ -17,6 +17,8 @@ on openStack
    local tMinWidth
    put kDictionaryMinWidth + kScrollbarFudge into tMinWidth 
    lock screen
+   --Force the browser to actually resize
+   set the rect of widget "Dictionary" of me to 0,0,0,0
    set the width of me to tMinWidth
    set the minWidth of me to tMinWidth
    set the title of me to "Dictionary"
@@ -31,9 +33,7 @@ on openStack
 end openStack
 
 on resizeStack
-   if there is a widget "Dictionary" of me then
-      set the rect of widget "Dictionary" of me to the contentRect of me
-   end if
+   set the rect of widget "Dictionary" of me to the contentRect of me
 end resizeStack
 
 on showAPIs
