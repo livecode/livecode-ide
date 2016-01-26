@@ -49,7 +49,13 @@ on editorUpdate
          end if
       end repeat
    end if
-   set the label of button "pulldown" of me to tLabel
+   
+   if tLabel is not empty then
+      set the label of button "pulldown" of me to tLabel
+   else
+      set the label of button "pulldown" of me to tValue
+   end if
+   
    set the enabled of me to tEnabled
    if tEffective is true then
       set the textcolor of button "pulldown" of me to kEffectiveTextColor
