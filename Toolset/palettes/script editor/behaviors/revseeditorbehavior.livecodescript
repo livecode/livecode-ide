@@ -158,6 +158,10 @@ command initialize
    set the backgroundColor of field "Script" of me to sePrefGet("editor,backgroundcolor")
    set the hScrollbar of field "Script" of me to (sePrefGet("editor,hscrollbar") is "true")
    
+   -- See bug 16773. Mac likes an odd scrollbarwidth,
+   -- Windows requires a scrollbarwidth > 16
+   set the scrollbarWidth of field "Script" of me to 17
+   
    # OK-2009-03-11 : Bug 7499 - The hilite color was previously not being reset to empty on OS X.
    # At the same time as fixing this issue, I've made the hilite color a preference in case we decide
    # to allow users to configure it in the future.
