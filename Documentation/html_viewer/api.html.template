@@ -92,6 +92,7 @@
     <script src="[[tDocsJSFolder]]/bootstrap.min.js"></script>
     <script src="[[tDocsJSFolder]]/marked.js"></script>
     <script src="[[tDocsJSFolder]]/highlight.pack.js"></script>	
+    <script src="[[tDocsJSFolder]]/jquery.mousewheel.min.js"></script>	
     
     <script charset="UTF-8" src="[[tDataPath]]"></script>  
     <script src="[[tDocsJSFolder]]/dictionary_functions.js"></script>	
