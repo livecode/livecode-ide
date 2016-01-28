@@ -44,8 +44,8 @@
     	</div>
  
         <div class="col-md-9">
-        	<div id="header_panel_holder">
-				<div class="panel panel-default affix" id="lcdoc_list">
+        	<div id="header_panel_holder" class="affix_right">
+				<div class="panel panel-default affix_right" id="lcdoc_list">
 				  <div class="panel-heading " >
 					  <div class="row">
 					  	
