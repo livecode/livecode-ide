@@ -12,6 +12,7 @@ menuMouseButton
 visible							true					
 opaque							true					
 showName							true					
+traversalOn							true
 disabled							false					
 text	Menu Items			true			Choice 1\nChoice 2\nChoice 3	
 menuLines							5					
