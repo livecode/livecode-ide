@@ -525,7 +525,7 @@ on layoutMenu
       else
          local tWidth, tHeight
          set the textStyle["bold"] of button tItem of group "toolbar" of me to false
-         put max(the formattedWidth of button tItem of group "toolbar" of me, 72) into tWidth
+         put revMenubarButtonFormattedWidth(tItem) into tWidth
          set the width of button tItem of group "toolbar" of me to tWidth
          set the topleft of button tItem of group "toolbar" of me to tLeft,tTop
          add tWidth to tLeft
@@ -763,6 +763,41 @@ function revMenubarButtonNameToIconPath pName, pStyle
    end if
    return tIcon & ".png"
 end revMenubarButtonNameToIconPath
+
+function revMenubarButtonText pName, pHilited
+   if pHIlited is false then
+      return pName
+   end if
+   
+   switch pName
+      case "Group"
+         return "Ungroup"
+      case "Edit Group"
+         return "Stop Editing"
+      default
+         return pName
+   end switch
+end revMenubarButtonText
+
+function __buttonMaxFormattedWidth pName
+   lock screen
+   lock messages
+   local tWidth, tOldLabel, tNewLabel
+   put the label of button pName of group "toolbar" of me into tOldLabel
+   repeat for each item tHilite in "true,false"
+      set the label of button pName of group "toolbar" of me to revMenubarButtonText(pName, tHIlite)
+      put max(tWidth, the formattedwidth of button pName of group "toolbar" of me) into tWidth
+   end repeat
+   set the label of button pName of group "toolbar" of me to tOldLabel
+   unlock messages
+   unlock screen
+   return tWidth
+end __buttonMaxFormattedWidth
+
+constant kMinimumMenuButtonWidth = 64
+function revMenubarButtonFormattedWidth pName
+   return max(__buttonMaxFormattedWidth(pName), kMinimumMenuButtonWidth)
+end revMenubarButtonFormattedWidth
 
 function revIDELocalizeMenuItem pItem
    return pItem
