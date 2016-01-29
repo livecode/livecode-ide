@@ -5547,6 +5547,7 @@ revIDENewSubstackOfStack the long ID of the topstack
 Tags: ide
 */
 on revIDENewSubstackOfStack pStack
+   lock screen
    if the mainStack of stack pStack is not pStack then put the mainStack of stack pStack into pStack
    
    # Create a new stack
@@ -5554,6 +5555,7 @@ on revIDENewSubstackOfStack pStack
    
    # Make the new stack a substack of the current stack
    set the mainStack of the topStack to pStack
+   unlock screen
 end revIDENewSubstackOfStack
 
 on revIDEActionOpenStack
