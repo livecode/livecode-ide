@@ -1,0 +1,1 @@
+# Margins property for groups should be in Basic props pane

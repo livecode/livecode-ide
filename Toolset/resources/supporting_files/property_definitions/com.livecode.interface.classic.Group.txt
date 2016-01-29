@@ -50,7 +50,7 @@ textFont
 textSize												
 textStyle							empty					
 textAlign							empty					
-margins							8					
+margins		Basic					8					
 lockLoc							false					
 width												
 height												
