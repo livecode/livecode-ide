@@ -9689,3 +9689,120 @@ command ideDoMessage pScript, pDebugMode
    end if
    return tScriptError
 end ideDoMessage
+
+private function menuitemEscape pItem, pFirst
+   -- MW-2011-04-08: [[ Bug 9496 ]] Make sure we escape '!!' properly.
+   replace "!" with "!!" in pItem
+   replace "&" with "&&" in pItem
+   replace "(" with "((" in pItem
+   return pItem
+end menuitemEscape
+
+private function shouldShow pType, pFilter
+   if pFilter is empty then return true
+   return pType is among the items of pFilter
+end shouldShow
+
+function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
+   local tStack, tDefaultStack
+   local tStacks,tCards,tControls,tOpenStacks
+   local tNumControls, tNumCards
+   local tCheck, tControlsArray
+   local tList,tControlsList
+   
+   if pTargetObjects is not empty then
+      put ideStackOfObject(line 1 of pTargetObjects) into tStack
+   else
+      put the long id of the topStack into tStack
+   end if
+   put the defaultStack into tDefaultStack
+   
+   # Generate the inspect 
+   set the defaultStack to tStack
+   put the num of controls into tNumControls
+   if tNumControls > 1000 then 
+      put tab & "(Too many controls to display" && "[" & tNumControls & "]" after tControls
+   else
+      repeat with i = 1 to tNumControls
+         local tLongID, tType
+         put the long id control i into tLongID
+         put word 1 of tLongID into tType
+         if not shouldShow(tType, pTypeFilter) then
+            next repeat
+         end if
+         if tLongID is among the lines of pTargetObjects 
+         then put "!c" into tCheck
+         else put "!n" into tCheck
+         put tCheck & tab & menuitemEscape(the name of control i, false) && "[" & i & "]" & "/|" & tLongID & cr after tControls
+      end repeat
+      delete last char of tControls
+      set the itemDel to tab
+      sort lines of tControls numeric by item 2 of each
+      if the number of lines in tControls > 20 then
+         repeat for each line l in tControls -- sort into individual object types
+            put tab & tab & l & cr after tControlsArray[word 2 of l]
+         end repeat
+         put keys(tControlsArray) into tList
+         sort lines of tList
+         repeat for each line l in tList
+            delete last char of tControlsArray[l] -- trailing return in each element
+            put tab & l & "s" & cr & tControlsArray[l] & cr after tControlsList
+         end repeat
+      end if
+   end if
+   
+   if shouldShow("card", pTypeFilter) then
+      put empty into tCards
+      put the num of cards in this stack into tNumCards
+      repeat with i = 1 to tNumCards
+         put the long id of cd i into tLongID
+         if tLongID is among the lines of pTargetObjects
+         then put "!c" into tCheck
+         else put "!n" into tCheck
+         put tCheck & tab & tab & menuitemEscape(the short name of card i, false) && "[" & i & "]" & "/|" & tLongID & cr after tCards
+      end repeat
+      delete last char of tCards
+      sort lines of tCards by item 2 of each
+      
+      put tab & "Card" & cr before tCards
+   end if
+   set the defaultStack to tDefaultStack
+   
+   if shouldShow("stack", pTypeFilter) then
+      global gRevShowStacks
+      if gREVShowStacks then put the openStacks into tOpenStacks
+      else put revFilterStacksList(the openStacks) into tOpenStacks
+      put empty into tStacks
+      repeat for each line l in tOpenStacks
+         put the long id of stack l into tLongID
+         if tLongID is among the lines of pTargetObjects
+         then put "!c" into tCheck
+         else put "!n" into tCheck
+         put tCheck & tab & tab & menuitemEscape(l, false) & "/|" & tLongID & cr after tStacks
+      end repeat
+      delete last char of tStacks
+      sort lines of tStacks by item 2 of each
+      if tStacks is empty then put "(" & tab & "Stack" into tStacks
+      else put tab & "Stack" & cr before tStacks
+   end if
+   
+   local tMenu
+   if the number of lines in tControls > 20 then 
+      replace cr with cr & tab & tab in tCards
+      replace cr with cr & tab & tab in tStacks
+      put tControlsList into tMenu
+   else if tControls is not empty then
+      put tControls & cr into tMenu  
+   end if
+   
+   if tCards is not empty then
+      put tab & "-" & cr & tCards & cr after tMenu
+   end if
+   
+   if tStacks is not empty then
+      put tab & "-" & cr & tStacks & cr after tMenu
+   end if
+   
+   delete the last char of tMenu
+   return tMenu
+end revIDEObjectSelectionMenu
