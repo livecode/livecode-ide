@@ -7041,7 +7041,7 @@ on revIDESetTextFont pFont
 end revIDESetTextFont
 
 on revIDESetTextSize pSize
-      revIDEStyleText "size", pSize
+      ideActionStyleText "size", pSize
 end revIDESetTextSize
 
 on revIDESetTextColor pColor

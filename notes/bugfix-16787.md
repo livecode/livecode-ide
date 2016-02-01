@@ -1,0 +1,1 @@
+# Don't call non-existent IDE function from menubar's Text Size option
