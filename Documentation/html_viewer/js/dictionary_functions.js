@@ -417,7 +417,7 @@
 	
 				tMarkdown = replace_link_placeholders_with_links(tMarkdown,tEntryObject);
 		
-				tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10" style="margin-bottom:10px">';
+				tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
 						tHTML += marked(tMarkdown);
 						tHTML += '</div>';
 				}
