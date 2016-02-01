@@ -42,8 +42,13 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
    # Find the library id
    local tSQL, tLibraryID, tResult
    if pLibraryName is not empty then
+      # Get the library's escaped name
+      local tLibName
+      dispatch function "revDocsModifyForUrl" to stack "revDocsParser" with pLibraryName
+      put the result into tLibName
+      
       put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
-      put revDataFromQuery(comma, return, sConnection, tSQL, "pLibraryName") into tLibraryID
+      put revDataFromQuery(comma, return, sConnection, tSQL, "tLibName") into tLibraryID
       
       put the result into tResult
       if tResult is not a number then
@@ -147,7 +152,7 @@ A numerically keyed array, each element of which is the arrayof data
 pertaining to a  LiveCode script dictionary entry with the given name.
 */
 function ideDocsFetchLCSData pEntryName
-   return ideDocsFetchData(pEntryName, "livecode_script")
+   return ideDocsFetchData(pEntryName, "LiveCode Script")
 end ideDocsFetchLCSData
 
 /* 
@@ -159,7 +164,7 @@ An arrayof data pertaining to the unique LiveCode script dictionary entry with 
 given name and type.
 */
 function ideDocsFetchLCSDataOfType pEntryName, pType
-   return ideDocsFetchDataOfType(pEntryName, "livecode_script", pType)
+   return ideDocsFetchDataOfType(pEntryName, "LiveCode Script", pType)
 end ideDocsFetchLCSDataOfType
 
 /* 
@@ -171,7 +176,7 @@ Either a string or an arrayof data describing the element of the array of data
 pertaining to the LiveCode script dictionary entry with the given name and type.
 */
 function ideDocsFetchLCSElementOfType pEntryName, pType, pElement
-   return ideDocsFetchElementOfType(pEntryName, "livecode_script", pType, pElement)
+   return ideDocsFetchElementOfType(pEntryName, "LiveCode Script", pType, pElement)
 end ideDocsFetchLCSElementOfType
 
 /* 
@@ -182,7 +187,7 @@ A numerically keyed array, each element of which is the arrayof data
 pertaining to a LiveCode builder dictionary entry with the given name.
 */
 function ideDocsFetchLCBData pEntryName
-   return ideDocsFetchData(pEntryName, "livecode_builder")
+   return ideDocsFetchData(pEntryName, "LiveCode Builder")
 end ideDocsFetchLCBData
 
 /* 
@@ -194,7 +199,7 @@ An arrayof data pertaining to the unique LiveCode builder dictionary entry with
 given name and type.
 */
 function ideDocsFetchLCBDataOfType pEntryName, pType
-   return ideDocsFetchDataOfType(pEntryName, "livecode_builder", pType)
+   return ideDocsFetchDataOfType(pEntryName, "LiveCode Builder", pType)
 end ideDocsFetchLCBDataOfType
 
 /* 
@@ -206,7 +211,7 @@ Either a string or an arrayof data describing the element of the array of data
 pertaining to the LiveCode builder dictionary entry with the given name and type.
 */
 function ideDocsFetchLCBElementOfType pEntryName, pType, pElement
-   return ideDocsFetchElementOfType(pEntryName, "livecode_builder", pType, pElement)
+   return ideDocsFetchElementOfType(pEntryName, "LiveCode Builder", pType, pElement)
 end ideDocsFetchLCBElementOfType
 
 /* 
@@ -298,7 +303,7 @@ A numerically keyed array, each element of which is the arrayof data
 pertaining to an entry in the LiveCode script dictionary.
 */
 function ideDocsFetchLCSEntries
-   return ideDocsFetchLibraryEntries("livecode_script")
+   return ideDocsFetchLibraryEntries("LiveCode Script")
 end ideDocsFetchLCSEntries
 
 /* 
@@ -309,7 +314,7 @@ A numerically keyed array, each element of which is the arrayof data
 pertaining to an entry in the LiveCode builder dictionary.
 */
 function ideDocsFetchLCBEntries
-   return ideDocsFetchLibraryEntries("livecode_builder")
+   return ideDocsFetchLibraryEntries("LiveCode Builder")
 end ideDocsFetchLCBEntries
 
 /* 
