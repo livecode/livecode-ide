@@ -84,6 +84,10 @@ on inspectorLock pState
    set the cLocked of me to pState
 end inspectorLock
 
+on lockInspector
+      dispatch "actionSelected" to me with "inspectorLock"
+end lockInspector
+
 on idePropertyChanged
    lock screen
    inspectorFill
