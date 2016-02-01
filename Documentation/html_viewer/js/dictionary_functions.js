@@ -259,6 +259,25 @@
 		$("#lcdoc_library_chooser_list").html(tHTML);
 	}
 	
+	function formatMarkdown(pEntryObject, pContent)
+	{
+		var tMarkdown = pContent;
+		if(pEntryObject.parameters){
+			$.each(pEntryObject.parameters, function( index, value) {
+				tMarkdown = tMarkdown.replace('<'+value.name+'>', '*'+value.name+'*');	
+			});
+		}
+
+		if(pEntryObject.synonyms){
+			$.each(pEntryObject.synonyms, function( index, value) {
+				tMarkdown = tMarkdown.replace('<'+value+'>', '*'+value+'*');	
+			});
+		}
+	
+		tMarkdown = replace_link_placeholders_with_links(tMarkdown,pEntryObject);
+		return marked(tMarkdown);
+	}
+	
 	function displayEntry(pEntryID){	
 		var tEntryObject = entryData(pEntryID);
 		pEntryID = tEntryObject.id;
@@ -303,15 +322,17 @@
 						$.each(value, function(index2, value2) {
 							switch(value2.type){
 								case "array":
-									value2.description = replace_link_placeholders_with_links(value2.description,tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("array", value2),tEntryObject+'</td></tr>';
+									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
+									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("array", value2)+'</td></tr>';
 									break;
 								case "enum":
-									value2.description = replace_link_placeholders_with_links(value2.description,tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2),tEntryObject+'</td></tr>';
+									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
+									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2)+'</td></tr>';
 									break;
 								default:
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td><td>'+marked(replace_link_placeholders_with_links(value2.description,tEntryObject))+'</td></tr>';
+									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td>';
+									tHTML += '<td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td>';
+									tHTML += '<td><div class="lcdoc_description">'+ formatMarkdown(tEntryObject, value2.description)+'</div></td></tr>';
 									break;
 							}
 						});
@@ -397,32 +418,11 @@
 		
 		if(tEntryObject.description){
 			// Italicise any parameters
-			var tMarkdown = tEntryObject.description;
-			
-			//console.log("trying to display description");
-			
-			
-			if(tMarkdown){
-				if(tEntryObject.parameters){
-				 $.each(tEntryObject.parameters, function( index, value) {
-					 tMarkdown = tMarkdown.replace('<'+value.name+'>', '*'+value.name+'*');	
-				 });
-				}
-
-				if(tEntryObject.synonyms){
-				 $.each(tEntryObject.synonyms, function( index, value) {
-					 tMarkdown = tMarkdown.replace('<'+value+'>', '*'+value+'*');	
-				 });
-				}
-	
-				tMarkdown = replace_link_placeholders_with_links(tMarkdown,tEntryObject);
-		
-				tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
-						tHTML += marked(tMarkdown);
-						tHTML += '</div>';
-				}
+			tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
+			tHTML += formatMarkdown(tEntryObject, tEntryObject.description);
+			tHTML += '</div>';
 		}
-		
+
 		// Now that the entry has been displayed we need to look at the type
 		// If it is object, we need to generate a list of actions / events and properties
 		// That can be set on the object. The entry if you like should be a pointer to 
