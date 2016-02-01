@@ -38,16 +38,21 @@
 
 #table_list .active{ background-color:#00ff00}
 
-#header_panel_holder{ background-color:#00ff88}
-
+#header_panel_holder {
+	background-color: #FFFFFF;
+	top: 0;
+	padding-top: 25px;
+}
 
 #lcdoc_body{
 	margin-top:270px
 }
 
-#lcdoc_list.affix{
+.affix_right
+{
 	width:848px;
 	z-index:100;
+	position: fixed;
 }
 
 .lcdoc_section_title{ font-weight:bold; text-transform:capitalize}
@@ -78,7 +83,7 @@
 }
 
 @media (min-width: 768px) {
-  #lcdoc_list.affix{
+  .affix_right{
 	width:90%;
 	margin-left:auto;
 	margin-right:auto;
@@ -86,13 +91,13 @@
 }
 
 @media (min-width: 992px) {
-  #lcdoc_list.affix{
+ .affix_right{
 	width:697px;
 	}
 }
 
 @media (min-width: 1200px) {
- #lcdoc_list.affix{
+ .affix_right{
 	width:848px;
 	}
 }
