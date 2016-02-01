@@ -1,0 +1,1 @@
+# Property Inspector should show traversalOn checkbox for combo box
