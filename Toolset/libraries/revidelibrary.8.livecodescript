@@ -5558,7 +5558,7 @@ end revIDENewSubstackOfStack
 
 on revIDEActionOpenStack
    # Popup a file choose
-   revIDEAnswerFile "stack"
+   revIDEAnswerFileWithTypes "stack,all"
    
    # Get the path of to the file
    local tStackFilePaths
