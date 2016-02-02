@@ -5717,21 +5717,31 @@ function revIDELiveCodeFileExtensions
 end revIDELiveCodeFileExtensions
 
 function revIDEAcceptedTypes pType
+   local tTypes
    switch pType
       case "image"
-         return "jpg,jpeg,gif,png,bitmap"
-         break
+         return "jpg,jpeg,jfif,gif,png,bitmap,bmp,dib,vga,pict,pict2,pic"
       case "video"
-         return "mp4,mpeg,mov"
-         break
+         put "mp4,mpg,mpeg,mov" into tTypes 
+         if the platform is "win32" then
+            put ",wmv,avi" after tTypes
+         end if 
+         return tTypes
       case "audio"
-         return "mp3,wav,aiff"
-         break
-      case "livecode"
+         put "au,aiff,aifc,aif,wav,mp3,aac,m4a" into tTypes
+         if the platform is "win32" then
+            put ",wma" after tTypes
+         end if
+         return tTypes
+      case "media"
+         return revIDEAcceptedTypes("audio") & comma & revIDEAcceptedTypes("video")
+      case "stack"
          return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
-         break
+      case "all"
+      default
+         return ""
    end switch
 end revIDEAcceptedTypes
 
