@@ -1017,3 +1017,35 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    
    return tError
 end __revIDEDeveloperExtensionAddSpecifiedFilesToPackage
+
+on revIDEDeveloperExtensionEditDefaultScript pFolder
+   local tDefaultScript, tTargetStack
+   put pFolder & "/support/defaultscript.livecodescript" into tDefaultScript
+   
+   local tExpectedName
+   put sExtensionDetailsA[pFolder]["id"] & ".__DefaultScript" into tExpectedName
+   if there is a file tDefaultScript then
+      try
+         # If we have a valid stack, open it and edit the script
+         open stack tDefaultScript
+         put the long id of stack tDefaultScript into tTargetStack
+         revIDEEditScriptOfObject tTargetStack
+      catch tError
+         # Otherwise, try to use the contents of the file as the script of a stack
+         local tContents
+         put textDecode(url( "binfile:" & tDefaultScript), "utf-8") into tContents
+         revIDENewScriptOnlyStackWithScript tExpectedName, tContents
+         put the result into tTargetStack
+         set the filename of tTargetStack to tDefaultScript
+      end try
+   else
+      # If there is no file, create a new one.
+      revIDENewScriptOnlyStack tExpectedName
+      put the result into tTargetStack
+   end if
+   return tTargetStack
+end revIDEDeveloperExtensionEditDefaultScript
+
+function revIDEDeveloperExtensionFetchDefaultScript pFolder
+   return revIDEExtensionFetchDefaultScript(pFolder, sExtensionDetailsA[pFolder]["id"], false)
+end revIDEDeveloperExtensionFetchDefaultScript

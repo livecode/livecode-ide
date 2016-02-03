@@ -5502,12 +5502,22 @@ revIDENewScriptOnlyStack "MyNewScriptOnlyStack"
 Tags: ide
 */
 on revIDENewScriptOnlyStack pName
+   revIDENewScriptOnlyStackWithScript pName
+   return the result
+end revIDENewScriptOnlyStack
+
+on revIDENewScriptOnlyStackWithScript pName, pScript
    if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
    if there is a stack pName then return "A stack with that name already exists"
-
+   
+   local tLongID
    create script only stack pName
-   edit the script of stack pName
-end revIDENewScriptOnlyStack
+   put it into tLongID
+   
+   set the script of tLongID to pScript
+   edit the script of tLongID
+   return tLongID
+end revIDENewScriptOnlyStackWithScript
 
 on revIDEActionNewScriptOnlyStack
    # Get the name of the stack
