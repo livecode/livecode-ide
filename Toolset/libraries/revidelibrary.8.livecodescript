@@ -2608,6 +2608,9 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       else
          put "control" into tControlArray["style"]
       end if
+      
+      put tControlArray["type"] && "id" && tControlID && "of" && pCardID into tControlArray["long id"]
+      
       put pLevel+1 into tControlArray["level"]
       put tControlArray into tFullArray[tIndex]
    end repeat
@@ -2627,6 +2630,9 @@ function revIDEControlPropertiesOfGroup pGroupID, pLevel
       else
          put "control" into tControlArray[tIndex]["style"]
       end if
+      
+      put tControlArray[tIndex]["type"] && "id" && tControlID && "of" && pGroupID into tControlArray[tIndex]["long id"]
+      
       put pLevel+1 into tControlArray[tIndex]["level"]
    end repeat
    return tControlArray
