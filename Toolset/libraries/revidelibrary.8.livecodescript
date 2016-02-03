@@ -4846,10 +4846,7 @@ function revIDEDefaultExtensionIcon pType, pRetina
 end revIDEDefaultExtensionIcon
 
 function revIDEWidgetDefaultScript pKind
-   local tDefaultScript
-   put revIDEExtensionProperty(pKind, "defaultScript") into tDefaultScript
-   replace "\n" with return in tDefaultScript
-   return tDefaultScript
+   return revIDEExtensionProperty(pKind, "defaultScript")
 end revIDEWidgetDefaultScript
 
 function revIDEScriptEditorBehavior pWhich
