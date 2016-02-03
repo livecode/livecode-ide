@@ -82,18 +82,20 @@ on editorResize
    lock screen
    lock messages
    
-   local tLeft, tXTop, tYTop
+   local tLeft, tXTop, tYTop, tXBottom, tYBottom
    put the left of me into tLeft
    put the top of me into tXTop
-   put tXTop +  the height of field "x" of me + CONTROL_PADDING into tYTop
+   put tXTop +  the formattedheight of field "x" of me into tXBottom 
+   put tXBottom + CONTROL_PADDING into tYTop
+   put tYTop +  the formattedheight of field "y" of me  into tYBottom 
    
    # The field is full width but there is a twiddle controller at the end
-   set the rect of field "x" of me to tLeft,tXTop,the right of me - the width of scrollbar "twiddleX" - CONTROL_PADDING,tXTop +  the height of field "x" of me
-   set the rect of field "y" of me to tLeft,tYTop,the right of me - the width of scrollbar "twiddleY" - CONTROL_PADDING,tYTop +  the height of field "y" of me
+   set the rect of field "x" of me to tLeft,tXTop,the right of me - the width of scrollbar "twiddleX" of me - CONTROL_PADDING,tXBottom
+   set the rect of field "y" of me to tLeft,tYTop,the right of me - the width of scrollbar "twiddleY" of me - CONTROL_PADDING,tYBottom
    add the width of field "x" of me to tLeft
    
-   set the topleft of scrollbar "twiddleX" of me to tLeft,tXTop
-   set the topleft of scrollbar "twiddleY" of me to tLeft,tYTop
+   set the rect of scrollbar "twiddleX" of me to tLeft,tXTop,tLeft + the width of scrollbar "twiddleX" of me,tXBottom
+   set the rect of scrollbar "twiddleY" of me to tLeft,tYTop,tLeft + the width of scrollbar "twiddleY" of me,tYBottom
    
    unlock messages
    unlock screen

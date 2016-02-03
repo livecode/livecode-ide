@@ -55,6 +55,7 @@ on editorResize
    set the left of button "icon" of me to the left of me
    set the loc of field "value" of me to the loc of me
    set the width of field "value" of me to the width of me - the width of button "icon" of me - 5
+   set the height of field "value" of me to the formattedheight of field "value" of me
    set the left of field "value" of me to the right of button "icon" of me + 5
    unlock messages
    unlock screen

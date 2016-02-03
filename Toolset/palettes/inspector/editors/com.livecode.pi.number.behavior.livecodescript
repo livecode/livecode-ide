@@ -101,22 +101,26 @@ on editorResize
    lock screen
    lock messages
    
-   local tLeft, tTop
+   local tLeft, tTop, tBottom
    put the left of me into tLeft
    put the top of me into tTop
+   put tTop + the formattedheight of field 1 of me into tBottom
    if sFieldWidth > 0 then
       # The field has a fixed size
-      set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tTop + the height of field 1 of me
+      set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tBottom
       add sFieldWidth + CONTROL_PADDING to tLeft
    else if the visible of scrollbar "twiddle" of me is true then
       # The field is full width but there is a twiddle controller at the end
-      set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING,tTop + the height of field 1 of me
+      set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING, tBottom
       add the width of field 1 of me to tLeft
+   else
+      set the height of field 1 of me to the formattedheight of field 1 of me
+      set the topleft of field 1 of me to tLeft,tTop
    end if
    
    if the visible of scrollbar "twiddle" of me is true then
       # The twiddle control is visible
-      set the topleft of scrollbar "twiddle" of me to tLeft,tTop
+      set the rect of scrollbar "twiddle" of me to tLeft,tTop,tLeft + the width of scrollbar "twiddle" of me, tBottom
       add the width of scrollbar "twiddle" of me + CONTROL_PADDING to tLeft
    end if
    

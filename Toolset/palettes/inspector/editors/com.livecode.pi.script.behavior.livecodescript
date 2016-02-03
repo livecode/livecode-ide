@@ -36,7 +36,8 @@ on editorResize
    
    set the right of button 1 of me to the right of me 
    set the width of field 1 of me to the width of me - 5 - the width of button 1 of me
-   set the left of field 1 of me to the left of me
+   set the height of field 1 of me to the formattedheight of field 1 of me
+   set the topleft of field 1 of me to the topleft of me
    
    unlock messages
    unlock screen
