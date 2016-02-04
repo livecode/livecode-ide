@@ -19,6 +19,7 @@ traversalOn							true
 showFocusBorder							true					
 default							false					
 disabled												
+hilited
 layerMode												
 behavior												
 icon												
