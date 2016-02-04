@@ -2513,6 +2513,7 @@ private command selectionUpdateRequest
 end selectionUpdateRequest
 
 command selectionUpdate
+   lock screen
    findClearResults
    if the lockText of field "Script" of me is false then
       deSelectLastGoneToLine
@@ -2543,6 +2544,7 @@ command selectionUpdate
    # OK-2009-10-05: Some more optimization here, the update method was doing a lot of stuff that is not
    # needed, so I added a more specific method to handle this situation.
    send "updateSelectedHandler" to group "Left Bar" of stack (revTargetStack(the long id of me))
+   unlock screen
 end selectionUpdate
 
 
