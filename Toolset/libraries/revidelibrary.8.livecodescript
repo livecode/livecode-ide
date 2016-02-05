@@ -3074,8 +3074,9 @@ on revIDEActionGroupObjects
 end revIDEActionGroupObjects
 
 on revIDEGroupObjects pObjectIDs
-   local tName, tLayer, tGroupID,tList
-   put the long name of (line 1 of pObjectIDs) into tName
+   local tLayer, tGroupID, tList, tObj
+   
+   put the long id of (line 1 of pObjectIDs) into tObj
    put 1000000 into tLayer
 
    lock screen
@@ -3089,8 +3090,8 @@ on revIDEGroupObjects pObjectIDs
    put "group " before tList
 
    do tList
-
-   put the long id of the owner of (tName)  into tGroupID
+   
+   put the long id of the owner of tObj into tGroupID
    set the layer of tGroupID to tLayer
    return tGroupID
 end revIDEGroupObjects
