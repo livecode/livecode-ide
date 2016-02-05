@@ -15,6 +15,8 @@ on setBehaviors
    set the behavior of button "Show Environment Vars" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
    set the behavior of group "Gutter" of group "Editor" of me to the long id of stack revIDEScriptEditorBehavior("gutter")
    set the behavior of group "Interactive Find" of group "Editor" of me to the long id of stack revIDEScriptEditorBehavior("interactive find")
+   set the behavior of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("panes")
+   set the behavior of group "Pane Tabs" of of me to the long id of stack revIDEScriptEditorBehavior("pane tabs")
 end setBehaviors
 
 # Which metadata type to store the script editor data as.

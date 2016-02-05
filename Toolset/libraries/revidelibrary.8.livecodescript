@@ -4884,6 +4884,10 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
       case "interactive find"
          return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
+      case "panes"
+         return tPathToBehaviors & slash & "revsepanesbehavior.livecodescript"
+      case "pane tabs"
+         return tPathToBehaviors & slash & "revsepanetabsbehavior.livecodescript"
       default
          return empty
    end switch
