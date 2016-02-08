@@ -5270,12 +5270,12 @@ private command __EditorFieldCacheFlush pRuggedObjectId
    if tField is empty then
       exit __EditorFieldCacheFlush
    end if
-   if the name of tField is "Script" then
+   if the name of field tField is "Script" then
       exit __EditorFieldCacheFlush
    end if
 
    lock messages
-   delete tField
+   delete field tField
    unlock messages
 
    delete variable sScriptEditorFieldCache[pRuggedObjectId]
