@@ -3617,27 +3617,27 @@ function revIDESpecialFolderPath pKey
          break
       case "extensions"
          put  revEnvironmentExtensionsPath() into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath
          break
       case "user extensions"
          put revEnvironmentUserExtensionsPath() into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath
          break
       case "temp extensions"
          put revEnvironmentUserExtensionsPath() & "/temp" into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath    
          break
       case "downloading extensions"
          put revEnvironmentUserExtensionsPath() & "/downloading" into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath
          break
       case "uninstalled extensions"
          put revEnvironmentUserExtensionsPath() & "/uninstalled" into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath
          break
       case "documentation"
@@ -3646,15 +3646,15 @@ function revIDESpecialFolderPath pKey
          break
       case "documentation cache"
          put revEnvironmentUserDocsPath() & slash & "IDE" into tPath
-         revIDEEnsurePath(tPath)
+         revIDEEnsurePath tPath
          return tPath
          break
       case "api"
-         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/api" into tPath
-         return tPath
-         break
       case "guide"
-         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/guide" into tPath
+         put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/" & tolower(pKey) into tPath
+         if not revEnvironmentIsInstalled() then
+            revIDEEnsurePath tPath
+         end if
          return tPath
          break
       case "examples"
