@@ -5821,6 +5821,7 @@ on revIDEImportControl pType, pFileName, pReferenced
          break
       case "audio"
          import AudioClip from file pFileName
+         put the long id of the last audioclip into tCreatedControlID
          break
       case "video"
          if pReferenced is true then
