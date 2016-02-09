@@ -9582,9 +9582,15 @@ private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
          next repeat
       end if
       
+      local tParams
       if not tIsPutOrGet and tHandlerType is "M" then
          -- If this is a command that matches, just send the message
-         put "send" && item 1 of pToDo && "to" && pObject & ";" & item 2 to -1 of pToDo into tDoScript
+         put segment 2 to -1 of item 1 of pToDo into tParams
+         put "dispatch" && tHandlerName && "to" && pObject into tDoScript
+         if tParams is not empty then
+            put " with" && tParams after tDoScript
+         end if
+         put ";" & item 2 to -1 of pToDo after tDoScript
          put pToDo into rValidScript
          exit repeat
       else if tHandlerType is "F" then
@@ -9599,7 +9605,6 @@ private function __tryToDoScriptInObject pObject, pToDo, @rValidScript
          local tFirstItem
          put item 1 of tDoScript into tFirstItem
          # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-         local tParams
          if matchText(token 2 to -1 of tFirstItem, tHandlerName & "\(([^\)]*)?\)", tParams) is false then 
             exit repeat
          end if

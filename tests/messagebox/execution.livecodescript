@@ -185,3 +185,20 @@ on TestIntelligenceObjectGetFunction
 	ideExecuteScript "get valueFunction(); put it", empty, tStack, false, tValidScript
 	TestAssert "intelligence object get function result", msg is "value"
 end TestIntelligenceObjectGetFunction
+
+on TestCustomCommandWithStringLiteral
+	local tScript
+	put "on valueCommand pValue; set the cValue of me to pValue; end valueCommand" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tValidScript, tToExecute
+	put "valueCommand" && quote & "value" & quote into tToExecute
+	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	
+	TestAssert "command with string literal result", the cValue of tStack is "value"
+	TestAssert "command with string literal executed", tValidScript is tToExecute
+end TestCustomCommandWithStringLiteral
