@@ -4104,6 +4104,11 @@ function __isRect pRect
 end __isRect
 
 on revIDESetPaletteRectPreference pStackName
+   # If the stack is iconic its topleft is -32000,-32000, so don't store the rect
+   if the iconic of stack pStackName then
+      exit revIDESetPaletteRectPreference
+   end if
+   
    local tRect
    put the rect of stack pStackName into tRect
    replace " " with "_" in pStackName
@@ -4111,8 +4116,15 @@ on revIDESetPaletteRectPreference pStackName
 end revIDESetPaletteRectPreference
 
 function revIDEGetPaletteRectPreference pStackName
+   local tRect
    replace " " with "_" in pStackName
-   return revIDEGetPreference("palette_rect_" & pStackName)
+   put revIDEGetPreference("palette_rect_" & pStackName) into tRect
+   # If the palette rect was stored when it was iconic, return empty
+   if item 1 to 2 of tRect is "-32000,-32000" then
+      return empty
+   end if
+   
+   return tRect
 end revIDEGetPaletteRectPreference
 
 on revIDEClearPaletteRects
