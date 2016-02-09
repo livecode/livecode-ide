@@ -1,0 +1,1 @@
+# Ensure message box location preference is honored
