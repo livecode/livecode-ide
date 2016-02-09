@@ -12,6 +12,7 @@ showBorder							true
 opaque							true					
 threeD							true					
 borderWidth							2					
+behavior
 foregroundColor												
 foregroundPattern												
 backgroundColor												

@@ -24,6 +24,7 @@ cantModify							false
 cantAbort							false					
 stackFiles												
 externalReferences												
+behavior
 foregroundColor												
 foregroundPattern												
 backgroundColor												
@@ -59,3 +60,4 @@ minWidth							32
 minHeight							32					
 maxWidth							65535					
 maxHeight							65535					
+behavior
