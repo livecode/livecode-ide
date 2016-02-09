@@ -357,7 +357,7 @@ on ideSelectedObjectChanged
    # If the object is on an inspector stack, lock it
    if the short name of tStack begins with kPropertyInspectorPrefix then
       if the cLocked of tStack is not true then
-         dispatch "actionSelected" to tStack with "inspectorLock"
+         dispatch "lockInspector" to tStack
       end if
    end if
    
