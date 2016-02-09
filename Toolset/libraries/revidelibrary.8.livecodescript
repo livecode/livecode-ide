@@ -5562,7 +5562,7 @@ end revIDENewSubstackOfStack
 
 on revIDEActionOpenStack
    # Popup a file choose
-   revIDEAnswerFile "stack"
+   revIDEAnswerFileWithTypes "stack,all"
    
    # Get the path of to the file
    local tStackFilePaths
@@ -5721,21 +5721,31 @@ function revIDELiveCodeFileExtensions
 end revIDELiveCodeFileExtensions
 
 function revIDEAcceptedTypes pType
+   local tTypes
    switch pType
       case "image"
-         return "jpg,jpeg,gif,png,bitmap"
-         break
+         return "jpg,jpeg,jfif,gif,png,bitmap,bmp,dib,vga,pict,pict2,pic"
       case "video"
-         return "mp4,mpeg,mov"
-         break
+         put "mp4,mpg,mpeg,mov" into tTypes 
+         if the platform is "win32" then
+            put ",wmv,avi" after tTypes
+         end if 
+         return tTypes
       case "audio"
-         return "mp3,wav,aiff"
-         break
-      case "livecode"
+         put "au,aiff,aifc,aif,wav,mp3,aac,m4a" into tTypes
+         if the platform is "win32" then
+            put ",wma" after tTypes
+         end if
+         return tTypes
+      case "media"
+         return revIDEAcceptedTypes("audio") & comma & revIDEAcceptedTypes("video")
+      case "stack"
          return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
-         break
+      case "all"
+      default
+         return ""
    end switch
 end revIDEAcceptedTypes
 
@@ -5939,35 +5949,97 @@ on revIDEAskFile pType, pInstructions, pBasePath
    # return response
 end revIDEAskFile
 
-on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA, pSingleFile
+/*
+A version of revIDEAnswerFile with a higher level notion of 'type'.
+
+pTypes: a comma delimited list of types, which can be any of the following:
+- "stack": select a stackfile
+- "image": select an image file
+- "video": select a video file
+- "audio": select an audio file
+- "media": select an audio or video file
+- "text": select a text file
+- "all": select any file
+
+pInstructions (optional string): the text to use as the file selection prompt.
+pBasePath (optional string): the default path to open the dialog at.
+pSingleFile (optional boolean): whether to restrict the selection to a single file or not 
+*/
+on revIDEAnswerFileWithTypes pTypes, pInstructions, pBasePath, pSingleFile
    local tTypesA
-   put pTypesA into tTypesA
+   repeat with x = 1 to the number of items in pTypes
+      put __answerGetTypeString(item x of pTypes) into tTypesA[x]
+   end repeat
+   if pInstructions is empty then
+      put __answerGetDefaultInstructions(item 1 of pTypes) into pInstructions
+   end if
+   revIDEAnswerFile "", pInstructions, pBasePath, tTypesA, pSingleFile
+end revIDEAnswerFileWithTypes
    
-   local tInstructions
-   put pInstructions into tInstructions
+private function __answerGetTypeString pType
+   local tTagString
    switch pType
       case "stack"
-         if tInstructions is empty then put revIDELocalise("Please select a LiveCode stack to open") into tInstructions
-         put "LiveCode Stacks|" & revIDEAcceptedTypes("livecode") into tTypesA[1]
-         put "All Files|" into tTypesA[2]
+         put revIDELocalise("LiveCode Stacks") into tTagString
          break
       case "image"
-         if tInstructions is empty then put revIDELocalise("Please select an image") into tInstructions
-         put "Images|" & revIDEAcceptedTypes(pType) into tTypesA[1]
+         put revIDELocalise("Images") into tTagString
          break
       case "video"
-         if tInstructions is empty then put revIDELocalise("Please select a video") into tInstructions
-         put "Videos|" & revIDEAcceptedTypes(pType) into tTypesA[1]
+         put revIDELocalise("Videos") into tTagString
          break
       case "text"
-         if tInstructions is empty then put revIDELocalise("Please select the file containing the text to import") into tInstructions
-         put "Text Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
+         put revIDELocalise("Text Files") into tTagString
          break
       case "audio"
-         if tInstructions is empty then put revIDELocalise("Please select an audio file") into tInstructions
-         put "Audio Files|" & revIDEAcceptedTypes(pType) into tTypesA[1]
+         put revIDELocalise("Audio Files") into tTagString
+         break
+      case "media"
+         put revIDELocalise("All Media Files") into tTagString
+         break
+      case "all"
+      default
+         put revIDELocalise("All Files") into tTagString
          break
    end switch
+   
+   return tTagString & "|" & revIDEAcceptedTypes(pType) & "|"
+end __answerGetTypeString
+
+private function __answerGetDefaultInstructions pType
+   switch pType
+      case "stack"
+         return revIDELocalise("Please select a LiveCode stack") 
+      case "image"
+         return revIDELocalise("Please select an image") 
+      case "video"
+         return revIDELocalise("Please select a video")
+      case "text"
+         return revIDELocalise("Please select the file containing the text to import")
+      case "audio"
+         return revIDELocalise("Please select an audio file")
+      case "media"
+         return revIDELocalise("Please select a media file")
+      case "all"
+      default
+         return revIDELocalise("Please select a file")
+   end switch
+end __answerGetDefaultInstructions
+
+on revIDEAnswerFile pType, pInstructions, pBasePath, pTypesA, pSingleFile
+   local tInstructions
+   if pInstructions is empty then
+      put __answerGetDefaultInstructions(pType) into pInstructions
+   else
+      put pInstructions into tInstructions
+   end if
+   
+   local tTypesA
+   if pTypesA is empty then
+      put __answerGetTypeString(pType) into tTypesA[1]
+   else
+      put pTypesA into tTypesA
+   end if
    
    # Build the answer string from the various components
    local tAnswerString

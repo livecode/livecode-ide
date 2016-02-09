@@ -48,24 +48,15 @@ on mouseUp pButton
    put the editorOptions of me into tOptions
    
    if the name of the target contains "button" and pButton is 1 then
-      if tOptions is empty then
-         answer file "Please choose a file"
-      else
-         local tDoString, tTypes
-         put "answer file" && quote &"Please choose a file" & quote into tDoString
-         repeat for each line tLine in tOptions
-            if tTypes is empty then
-               put " with type" into tTypes
-            else
-               put " or type" after tTypes
+      if tOptions is not empty then
+         replace return with comma in tOptions
             end if
-            put "" && quote & tLine & quote after tTypes
-         end repeat
-         put tTypes after tDoString
-         do tDoString
-      end if
-      if there is a file it then
-         put it into field 1 of me
+      local tResult
+      revIDEAnswerFileWithTypes tOptions
+      put the result into tResult
+      
+      if there is a file tResult then
+         put tResult into field 1 of me
          valueChanged
       end if
    end if
