@@ -75,6 +75,7 @@ gradientMirror	Mirror	Gradients	com.livecode.pi.boolean	true	false		false
 gradientWrap	Wrap	Gradients	com.livecode.pi.boolean	true	false		false
 height	Height	Position	com.livecode.pi.integer	true	false					1		1
 hGrid	Horizontal grid	Table	com.livecode.pi.boolean	true	false			
+hilited	Hilited	Basic	com.livecode.pi.boolean	true	false		false
 hiliteBorder	Hilite Border	Icons	com.livecode.pi.boolean	true	false			
 hiliteColor	Text Hilite Color	Colors	com.livecode.pi.color	true	false	Hilite Fill		
 hiliteIcon	Hilite Icon	Icons	com.livecode.pi.imageid	true	false		0	
