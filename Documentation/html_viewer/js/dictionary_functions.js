@@ -466,6 +466,12 @@
 		$('pre code').each(function(i, block) {
     		hljs.highlightBlock(block);
  		});		
+ 		
+ 		// Force code not detected as LCB to be highlighted as LCS
+ 		$(".hljs:not(.livecodebuilder)").each(function(i, block) {
+ 			$(this).addClass("livecode");
+    		hljs.highlightBlock(block);
+ 		});
 		window.scrollTo(0, 0);
 	}
 	
