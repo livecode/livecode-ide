@@ -8719,6 +8719,10 @@ on revIDETutorialInfoSet pCourse, pTutorial, pLesson
    put pCourse into sTutorialInfo["course"]
 end revIDETutorialInfoSet
 
+on revIDETutorialInfoSetEmpty
+   put empty into sTutorialInfo
+end revIDETutorialInfoSetEmpty
+
 on revIDEStartTutorial pCourse, pTutorial, pLesson
    revIDETutorialInfoSet pCourse, pTutorial, pLesson
    dispatch "revTutorialStart" to stack "revTutorial"
@@ -8727,10 +8731,9 @@ end revIDEStartTutorial
 
 on revIDEStopTutorial   
    dispatch "revTutorialStop" to stack "revTutorial"
-   put empty into sTutorialInfo
    revIDETutorialProgressChanged
    close stack "revTutorial"
-   revIDEOpenPalette "Create It Welcome"
+   --revIDEOpenPalette "Create It Welcome"
 end revIDEStopTutorial
 
 function revIDETutorialInProgress

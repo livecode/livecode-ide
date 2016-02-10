@@ -873,6 +873,7 @@ on revInitialiseTutorial
    put empty into sStepName
    put empty into sTaggedObjects
    put empty into sGuides
+   put empty into sCaptureData
    
    # Unsubscribe all messages
    revIDEUnsubscribeAll
@@ -923,6 +924,7 @@ end revInitialiseTutorial
 
 on revFinaliseTutorial
    lock screen
+   revIDETutorialInfoSetEmpty
    enableToolsPalette
    revIDEUnsubscribeAll
    unlock screen
@@ -932,10 +934,8 @@ on revTutorialLoadData pCourse, pTutorial, pLesson
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
-   local tData
-   put revTutorialParseData(tTutorialData) into tData
-   
-   put tData into sSteps
+   put revTutorialParseData(tTutorialData) into sSteps
+   put the number of elements in sSteps into sNumSteps
 end revTutorialLoadData
 
 on revTutorialUpdateProgress pStep
@@ -962,11 +962,24 @@ end revTutorialUpdateProgress
 on revTutorialStartWithState pStep, pTaggedObjects
    revInitialiseTutorial 
    
-   put pTaggedObjects into sTaggedObjects
-   
    local tTutorialInfo
    put revIDETutorialInProgress() into tTutorialInfo
-   revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+   
+   try
+      revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+   catch tError
+      throw tError
+      revIDETutorialInfoSetEmpty
+      exit revTutorialStartWithState
+   end try
+   
+   if sSteps is empty then
+      throw "Selected tutorial is empty"
+      revIDETutorialInfoSetEmpty
+      exit revTutorialStartWithState
+   end if
+   
+   put pTaggedObjects into sTaggedObjects
    revTutorialUpdateProgress pStep
    
    lock screen
@@ -975,6 +988,7 @@ on revTutorialStartWithState pStep, pTaggedObjects
    unlock messages
    unlock screen
    
+   revIDESubscribe "ideActiveStacksChanged"
    if pStep is "prologue" or pStep is empty then
       revTutorialPrologue
    else if pStep is "epilogue" then
@@ -1644,6 +1658,17 @@ end revTutorialClearGuides
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
 #
 ##############################################################################
+
+on revTutorialReShow
+   -- Ensure tutorial stack is always visible if it should be
+   if the visible of me then
+      palette me
+   end if
+end revTutorialReShow
+
+on ideActiveStacksChanged
+   revTutorialReShow
+end ideActiveStacksChanged
 
 on closeStackRequest
    local tStack
