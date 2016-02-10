@@ -1,4 +1,4 @@
-tutorial "My First App"
+tutorial "Clock"
 
 prologue
 	This tutorial will show you how to re-create the iOS clock app from scratch.
@@ -10,7 +10,7 @@ step "Create Mainstack"
 	We are going to create the app for an iPhone 5. Click on the File menu, and select New Stack > iPhone 5
 action
     -- Give the user a visual hint of where they should be clicking
-    highlight menu item "New Stack" of menu "File"
+    highlight menu item "iPhone 5" of menu item "New Stack" of menu "File"
     -- The tutorial scripts only act on 'captured' object - this will cause the next created stack
     -- to be internally tagged as 'Mainstack' so it can be referenced in the rest of the tutorial
     capture the next new stack as "Mainstack"
@@ -18,13 +18,197 @@ action
     -- Wait until there is a captured stack with tag "Mainstack"
     wait until there is a stack "Mainstack"
     -- Advance to another step
+    go to step "Set stack background color interlude"
+end step
+
+step "Set stack background color interlude"
+	The clock app has a light blue/grey background. By setting the background color of the stack this will apply to all the cards in the stack.
+action
+	interlude
+	go to step "Open Stack Inspector"
+end step
+
+step  "Open Stack Inspector"
+	Open the Property Inspector for the stack by selecting Stack Inspector from the Object menu.
+action
+	highlight menu item "Stack Inspector" of menu "Object"
+    wait until there is a property inspector for stack "Mainstack"
+    go to step "Set stack background color"
+end step
+
+step "Set stack background color"
+    Set the Background Fill of stack "Mainstack" to 239,239,244
+action
+    highlight property "backgroundColor" of section "Colors"
+    wait until the backgroundColor of stack "Mainstack" is "239,239,244"
+    go to step "Create Header Widget"
+end step
+
+step "Create Header Widget"
+    Drag a header widget from the Tools palette onto your stack.
+action
+    highlight tool "Create Header"
+    capture the next new widget of stack "Mainstack" as "Header Widget"
+    wait until there is a widget "Header Widget"
+    go to step "Set Header Widget Area"
+end step
+
+step "Set Header Widget Area"
+    Resize the widget, and position it at the top of the stack as shown.
+action
+    add guide "Area" with rect "1,1,319,41" to stack "Mainstack"
+    highlight guide "Area"
+    wait until widget "Header Widget" fits guide "Area" with tolerance 3
+    go to step "Set Header Widget Properties"
+end step
+
+step "Set Header Widget Properties"
+    Double click on the widget to open up the property inspector.
+action
+    highlight widget "Header Widget"
+    wait until there is a property inspector for widget "Header Widget"
+    go to step "Set Header Widget Label"
+end step
+
+step "Set Header Widget Label"
+    Set the headerTitle of widget "Header Widget" to "World Clock"
+action
+    highlight property "headerTitle" of section "Basic"
+    wait until the headerTitle of widget "Header Widget" is "World Clock"
+	go to step "Hide Header Widget Back Icon"
+end step
+
+step "Hide Header Widget Back Icon"
+	Set the showBackIcon of the header widget to false
+action
+	highlight property "showBackIcon" of section "Basic"
+	wait until the showBackIcon of widget "Header Widget" is false
+	go to step "Set Header Widget Left Label"
+end step
+
+step "Set Header Widget Left Label"
+	Set the leftLabel of the header widget to "Edit"
+action
+	highlight property "leftLabel" of section "Basic"
+	wait until the leftLabel of widget "Header Widget" is "Edit"
+	go to step "Hide Header Widget Search Icon"	
+end step
+
+step "Hide Header Widget Search Icon"
+	Set the showSearchIcon of the header widget to false
+action
+	highlight property "showSearchIcon" of section "Basic"
+	wait until the showSearchIcon of widget "Header Widget" is false
+	go to step "Set Header Widget Action Color"
+end step
+
+step "Set Header Widget Action Color"
+	Set the header widget action color to 255,59,48
+action 
+	highlight property "showSearchIcon" of section "Basic"
+	wait until the actionColor of widget "Header Widget" is "255,59,48"
+    go to step "Create Footer Widget"
+end step
+
+step "Create Footer Widget"
+    Drag a navigation bar widget from the Tools palette onto your stack.
+action
+    highlight tool "Create Navigation Bar"
+    capture the next new widget of stack "Mainstack" as "NavBar Widget"
+    wait until there is a widget "NavBar Widget"
+    go to step "Set NavBar Widget Area"
+end step
+
+step "Set NavBar Widget Area"
+    Resize the widget, and position it at the bottom of the stack as shown.
+action
+    add guide "Area" with rect "1,528,319,568" to stack "Mainstack"
+    highlight guide "Area"
+    wait until widget "NavBar Widget" fits guide "Area" with tolerance 3
+    go to step "Set NavBar Widget Properties"
+end step
+
+step "Set NavBar Widget Properties"
+    Double click on the widget to open up the property inspector.
+action
+    highlight widget "NavBar Widget"
+    wait until there is a property inspector for widget "NavBar Widget"
+    go to step "Set NavBar Widget Labels"
+end step
+
+step "Set NavBar Widget Labels"
+    Set the labels of the navigation bar widget to "World Clock", 
+    "Alarm", "Stopwatch", and "Timer"
+action
+    highlight property "navData" of section "Basic"
+    wait until the navLabels of widget "NavBar Widget" is "World Clock,Alarm,Stopwatch,Timer"
+	go to step "Set NavBar Widget Selection Color"
+end step
+
+step "Set NavBar Widget Selection Color"
+	Set the navigation bar widget selection color to 255,59,48
+action 
+	highlight property "navHiliteColor" of section "Basic"
+	wait until the navHiliteColor of widget "NavBar Widget" is "255,59,48"
+    go to step "Create Time Background Graphic"
+end step
+
+-- Set the icons
+
+step "Create Time Background Graphic"
+    Drag a Rectangle Graphic from the Tools palette onto your stack.
+action
+    highlight tool "Create Rectangle Graphic"
+    capture the next new graphic of stack "Mainstack" as "Time Background Graphic"
+    wait until there is a graphic "Time Background Graphic"
+    go to step "Set Time Background Graphic Area"
+end step
+
+step "Set Time Background Graphic Area"
+    Resize the graphic, and position it as shown.
+action
+    add guide "Area" with rect "0,42,321,129" to stack "Mainstack"
+    highlight guide "Area"
+    wait until graphic "Time Background Graphic" fits guide "Area" with tolerance 3
+    go to step "Set Time Background Graphic Properties"
+end step
+
+step "Set Time Background Graphic Properties"
+    Double click on the graphic to open up the property inspector.
+action
+    highlight graphic "Time Background Graphic"
+    wait until there is a property inspector for graphic "Time Background Graphic"
+    go to step "Set Time Background Graphic Color"
+end step
+
+step "Set Time Background Graphic Color"
+    The times shown in the clock have a white background. Set the fill color of the graphic to white.
+action
+    highlight property "backgroundColor" of section "Colors"
+    wait until the backgroundColor of graphic "Time Background Graphic" is "255,255,255"
+    go to step "Set Time Background Graphic Border"
+end step
+
+step "Set Time Background Graphic Border"
+    The time background doesn't have a border. Set the Line Thickness of the graphic to 0.
+action
+    highlight property "lineSize" of section "basic"
+    wait until the lineSize of graphic "Time Background Graphic" is 0
     go to step "Create Time Background Border Graphic"
 end step
 
 step "Create Time Background Border Graphic"
-    Select the line tool from the Tools palette and draw a horizontal line on your stack. Note: holding shift keeps the line horizontal as your draw.
+    Select the line tool from the Tools palette.
 action
     highlight tool "Create Line Graphic"
+    wait until the tool is graphic
+    go to step "Draw Border Graphic"
+end step
+
+step "Draw Border Graphic"
+	Draw a straight horizontal line across your stack. Note: holding shift keeps the line horizontal as your draw.
+action
+	highlight card "World Clock"
     capture the next new graphic of stack "Mainstack" as "Time Background Border Graphic"
     wait until there is a graphic "Time Background Border Graphic"
     go to step "Set Tool To Edit"
@@ -35,15 +219,15 @@ step "Set Tool To Edit"
 action 
     highlight tool "Edit Mode"
     wait until the tool is edit
-	  go to step "Set Time Background Border Graphic Area"
+	go to step "Set Time Background Border Graphic Area"
 end step
 
 step "Set Time Background Border Graphic Area"
-    Resize the graphic, and position it below the white graphic as shown".
+    Resize the graphic, and position it below the white graphic as shown.
 action
-    add guide "Area" with rect "15,126,320,130" to stack "Mainstack"
+    add guide "Area" with rect "15,128,319,130" to stack "Mainstack"
     highlight guide "Area"
-    wait until graphic "Time Background Border Graphic" fits guide "Area" with tolerance 3
+    wait until graphic "Time Background Border Graphic" fits guide "Area" with tolerance 4
     go to step "Set Time Background Border Graphic Properties"
 end step
 
@@ -75,7 +259,7 @@ end step
 step "Set Location Field Area"
     Resize the field, and position it on the white background".
 action
-    add guide "Area" with rect "5,52,142,84" to stack "Mainstack"
+    add guide "Area" with rect "5,52,142,90" to stack "Mainstack"
     highlight guide "Area"
     wait until field "Location Field" fits guide "Area" with tolerance 3
     go to step "Set Location Field Properties"
@@ -92,7 +276,7 @@ end step
 step "Set Location Field Text"
     Display the name of the location by setting the contents of the field to "Edinburgh".
 action
-    highlight property "text" of section "Basic"
+    highlight property "styledText" of section "Basic"
     wait until the text of field "Location Field" is "Edinburgh"
    	go to step "Set Location Field Font"
 end step
@@ -150,7 +334,7 @@ end step
 step "Set Date Field Text"
     Display the date by setting the contents of the field to "Today".
 action
-    highlight property "text" of section "Basic"
+    highlight property "styledText" of section "Basic"
     wait until the text of field "Date Field" is "Today"
    	go to step "Set Date Field Font"
 end step
@@ -176,59 +360,26 @@ step "Set Date Field Text Align"
 action
     highlight property "textAlign" of section "Text"
     wait until the textAlign of field "Date Field" is "Left"
-   	go to step "Create Time Field"
+   	go to step "Create Clock Widget"
 end step
 
-step "Create Time Field"
-    Drag a Label Field from the Tools palette onto your stack.
+step "Create Clock Widget"
+    Drag a Clock Widget from the Tools palette onto your stack.
 action
-    highlight tool "Create Label Field"
-    capture the next new field of stack "Mainstack" as "Time Field"
-    wait until there is a field "Time Field"
-    go to step "Set Time Field Area"
+    highlight tool "Create Clock"
+    capture the next new widget of stack "Mainstack" as "Time Clock"
+    wait until there is a widget "Time Clock"
+    go to step "Set Clock Widget Area"
 end step
 
-step "Set Time Field Area"
-    Resize the field, and position it on the right of the stack".
+step "Set Clock Widget Area"
+    Resize the clock, and position it on the right of the stack".
 action
-    add guide "Area" with rect "181,39,318,87" to stack "Mainstack"
+    add guide "Area" with rect "237,46,313,122" to stack "Mainstack"
     highlight guide "Area"
-    wait until field "Time Field" fits guide "Area" with tolerance 3
-    go to step "Set Time Field Properties"
-end step
-
-step "Set Time Field Properties"
-    Double click on the field to open up the Property Inspector.
-action
-    highlight field "Time Field"
-    wait until there is a property inspector for field "Time Field"
-	  go to step "Set Time Field Text"
-end step
-
-step "Set Time Field Text"
-    Display the time by setting the contents of the field to "10:00".
-action
-    highlight property "text" of section "Basic"
-    wait until the text of field "Time Field" is "10:10"
-   	go to step "Set Time Field Font"
-end step
-
-step "Set Time Field Font"
-    Change the font used to display the time to "Arial".
-action
-    highlight property "textFont" of section "Text"
-    wait until the textFont of field "Time Field" is "Arial"
-   	go to step "Set Time Field Text Size"
-end step
-
-step "Set Time Field Text Size"
-    Change the size of the text to 32.
-action
-    highlight property "textSize" of section "Text"
-    wait until the textSize of field "Time Field" is "32"
-   	go to step "Set Time Field Text Align"
+    wait until widget "Time Clock" fits guide "Area" with tolerance 3
 end step
 
 epilogue
-    Congratulations, you have just made the Clock app!
+    Congratulations, you have just finished the Clock app user interface!
 end epilogue
