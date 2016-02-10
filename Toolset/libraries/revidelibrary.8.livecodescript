@@ -8887,7 +8887,8 @@ function revIDETutorialDonePercentage
       return 0
    end if
    
-   return 100 * (revTutorialStepNumber() - 1) / revTutorialNumberOfSteps()
+   dispatch function "revTutorialDonePercentage" to stack "revTutorial"
+   return the result
 end revIDETutorialDonePercentage
 
 /*

@@ -863,8 +863,6 @@ on revInitialiseTutorial
    set the threeD of it to false
    set the visible of it to false
    
-   insert the script of stack "revTutorial" into front
-   
    unlock messages
    unlock screen
 end revInitialiseTutorial
@@ -872,7 +870,6 @@ end revInitialiseTutorial
 on revFinaliseTutorial
    lock screen
    enableToolsPalette
-   remove script of stack "revTutorial" from front
    revIDEUnsubscribeAll
    unlock screen
 end revFinaliseTutorial
@@ -965,6 +962,10 @@ end revTutorialStepNumber
 function revTutorialNumberOfSteps
    return sNumSteps
 end revTutorialNumberOfSteps
+
+function revTutorialDonePercentage
+   return 100 * (sStepNum - 1) / sNumSteps
+end revTutorialDonePercentage
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
@@ -1664,7 +1665,6 @@ on ideAnswerDialogClosed pObject
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideAnswerDialogClosed
 end ideAnswerDialogClosed
 
 on ideNewControl pObject
@@ -1712,7 +1712,6 @@ on idePropertyChanged pObject
          end if
       end if
    end if
-   pass idePropertyChanged
 end idePropertyChanged
 
 on ideStackMoved pStack
@@ -1748,8 +1747,6 @@ on mouseUp pWhich
          revTutorialReturnFromInterlude
       end if
    end if
-   
-   pass mouseUp
 end mouseUp
 
 on mouseDoubleUp pWhich
@@ -1760,8 +1757,6 @@ on mouseDoubleUp pWhich
          revTutorialWaitConditionSatisfied
       end if
    end if
-   
-   pass mouseDoubleUp
 end mouseDoubleUp
 
 on ideSelectedObjectChanged 
@@ -1772,7 +1767,6 @@ on ideSelectedObjectChanged
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
 on ideInspectObjects pObjects
@@ -1792,7 +1786,6 @@ on ideEditScript pObject
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideEditScript
 end ideEditScript
 
 on ideToolChanged pTool

@@ -543,7 +543,8 @@ on layoutMenu
       
       set the topleft of button "quit" of group "tutorial" of me to 10 + the width of field "label" of group "tutorial" of me, 10
       
-      set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
+      dispatch function "revTutorialMessageAltColor" to stack "revTutorial"
+      set the backcolor of graphic "Trough" of group "progress" of me to the result
       set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
       set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage(), 5
       set the loc of group "progress" of me to the loc of field "label" of me
