@@ -381,17 +381,50 @@ on revTutorialParseCapture pTokens, @rData
    return empty
 end revTutorialParseCapture
 
+on revTutorialParseMenuHighlight pTokens, pStart, @rData
+   local tMenuString, tSubMenuString
+   put "menu <token>" into tMenuString
+   put "menu item <token> of" into tSubMenuString
+   
+   local tMenuSegmentCount, tSubMenuSegmentCount
+   put the number of segments in tSubmenuString into tSubMenuSegmentCount
+   put the number of segments in tMenuString into tMenuSegmentCount
+   
+   local tSubMenuTry, tSubMenuExpressionTry, tExpressionTry
+   put 0 into tSubMenuTry
+   repeat while the number of elements in pTokens > \
+         tMenuSegmentCount +  tSubMenuSegmentCount * tSubMenuTry
+      put "highlight " into tExpressionTry
+      if tSubMenuTry is not 0 then
+         put tSubMenuExpressionTry after tExpressionTry
+      end if
+      put tMenuString after tExpressionTry
+      revTutorialParseSubexpression tExpressionTry, pTokens, pStart, rData
+      if the result is empty then
+         return empty
+      end if
+      put tSubMenuString & " " after tSubMenuExpressionTry
+      add 1 to tSubMenuTry
+   end repeat
+   
+   return "Expected: highlight [menu item <token> of...] menu <token>"
+end revTutorialParseMenuHighlight
+
 on revTutorialParseHighlight pTokens, @rData
    local tData, tFirstToken
    put 1 into tFirstToken
    
    switch pTokens[2]
       case "menu"
-         revTutorialParseSubexpression "highlight menu item <token> of menu <token>", pTokens, tFirstToken, tData
+         revTutorialParseMenuHighlight pTokens, tFirstToken, tData
          if the result is empty then
             put "menu" into rData["highlight type"]
-            put tData[1] into rData["item"]
-            put tData[2] into rData["menu"]
+            local tNumElements
+            put the number of elements in tData into tNumElements
+            repeat with x = 1 to tNumElements - 1
+               put tData[x] into rData["item"][tNumElements - x]
+            end repeat
+            put tData[tNumElements] into rData["menu"]
          end if
          break
       case "toolbar"

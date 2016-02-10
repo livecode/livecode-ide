@@ -824,8 +824,8 @@ function absoluteRectOfObject pObject
    if there is a button pObject of group "revMenuBar" of me then
       put the rect of button pObject into tRect
       if the platform is "macos" then
-         put item 1 of tRect + 140 into item 1 of tRect
-         put item 3 of tRect + 140 into item 3 of tRect
+         put item 1 of tRect + 160 into item 1 of tRect
+         put item 3 of tRect + 160 into item 3 of tRect
          return tRect
       end if
    else 
@@ -923,6 +923,25 @@ function revMenubarMenus
    return "File,Edit,Tools,Object,Text,Development,View,Window,Help"
 end revMenubarMenus
 
+on highlightMenuItem pMenu, pSubMenus
+   local tMenuText
+   put the text of button pMenu of group "revMenuBar" of me into tMenuText
+   local tTabNesting, tSubMenuNum, tLineNum
+   put 1 into tSubMenuNum
+   repeat for each line tLine in tMenuText
+      add 1 to tLineNum
+      if tLine contains pSubMenus[tSubMenuNum] and \
+            (tTabNesting is empty or tLine contains tTabNesting) then
+         enable line tLineNum of button pMenu of group "revMenuBar" of me
+         put tab after tTabNesting
+         add 1 to tSubMenuNum
+      else
+         disable line tLineNum of button pMenu of group "revMenuBar" of me
+      end if
+   end repeat
+   put the text of button pMenu of group "revMenuBar" of me into tMenuText
+end highlightMenuItem
+
 command revMenubarBuildMenus
    local tContext
    put buildMenuContext() into tContext
@@ -946,19 +965,7 @@ command revMenubarBuildMenus
       
       repeat for each key tMenu in sMenuHighlight
          enable button tMenu of group "revMenuBar" of me
-         local tMenuText
-         put the text of button tMenu of group "revMenuBar" of me into tMenuText
-         local tLineNumber
-         repeat for each line tLine in tMenuText
-            add 1 to tLineNumber
-            if tLine contains sMenuHighlight[tMenu] then
-               enable line tLineNumber of button tMenu of group "revMenuBar" of me
-            else if tLine begins with tab then
-               next repeat
-            else
-               disable line tLineNumber of button tMenu of group "revMenuBar" of me
-            end if
-         end repeat
+         highlightMenuItem tMenu, sMenuHighlight[tMenu]
       end repeat
    end if
    unlock menus
