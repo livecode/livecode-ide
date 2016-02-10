@@ -4561,8 +4561,8 @@ on revIDEPropertyChanged pObject
    if sLockUpdates is true then
       exit revIDEPropertyChanged
    end if
-
-   ideMessageSendWithParameters "idePropertyChanged", pObject
+   
+   ideMessageSendWithTrigger "idePropertyChanged", pObject, pObject
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
