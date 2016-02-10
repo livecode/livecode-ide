@@ -1759,6 +1759,14 @@ on ideMessageSend pMessage, pParam
    ideMessageSendWithParameters pMessage, the long id of the target, tParam
 end ideMessageSend
 
+on ideMessageSendWithTrigger pMessage, pTriggeringObjects, pParam
+   local tParam
+   if pParam is not empty then
+      put pParam into tParam[1]
+   end if
+   ideMessageSendWithParameters pMessage, pTriggeringObjects, tParam
+end ideMessageSendWithTrigger
+
 on revIDEMessageSend pMessage, pTriggeringObjects
    local tParamsArray
    put pTriggeringObjects into tParamsArray[1]
@@ -3122,7 +3130,9 @@ pointer - Sets the tool to "pointer" mode causing the application to run as if a
 browse - Sets the tool to "browse" mode allowing you to select object
 */
 on revIDESetTool pTool
+   lock messages
    do "choose" && pTool
+   unlock messages
    ideMessageSend "ideToolChanged"
 end revIDESetTool
 
@@ -3928,7 +3938,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Create It Welcome,Preferences,Search"	
+   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Preferences,Search"	
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -3977,8 +3987,6 @@ function revIDEPaletteToStackName pPalette
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
-      case "create it welcome"
-         return "createitwelcome"
    end switch
 end revIDEPaletteToStackName
 
@@ -4182,7 +4190,6 @@ command revIDEOpenPalette pPaletteName
       case "tools"
          palette stack tStackName
          break
-      case "Create It Welcome"
       case "search"
       case "preferences"
       case "project browser"
@@ -4551,8 +4558,8 @@ on revIDEPropertyChanged pObject
    if sLockUpdates is true then
       exit revIDEPropertyChanged
    end if
-
-   ideMessageSendWithParameters "idePropertyChanged", pObject
+   
+   ideMessageSendWithTrigger "idePropertyChanged", pObject, pObject
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
@@ -8709,6 +8716,10 @@ on revIDETutorialInfoSet pCourse, pTutorial, pLesson
    put pCourse into sTutorialInfo["course"]
 end revIDETutorialInfoSet
 
+on revIDETutorialInfoSetEmpty
+   put empty into sTutorialInfo
+end revIDETutorialInfoSetEmpty
+
 on revIDEStartTutorial pCourse, pTutorial, pLesson
    revIDETutorialInfoSet pCourse, pTutorial, pLesson
    dispatch "revTutorialStart" to stack "revTutorial"
@@ -8717,10 +8728,8 @@ end revIDEStartTutorial
 
 on revIDEStopTutorial   
    dispatch "revTutorialStop" to stack "revTutorial"
-   put empty into sTutorialInfo
    revIDETutorialProgressChanged
    close stack "revTutorial"
-   revIDEOpenPalette "Create It Welcome"
 end revIDEStopTutorial
 
 function revIDETutorialInProgress
@@ -8877,7 +8886,8 @@ function revIDETutorialDonePercentage
       return 0
    end if
    
-   return 100 * (revTutorialStepNumber() - 1) / revTutorialNumberOfSteps()
+   dispatch function "revTutorialDonePercentage" to stack "revTutorial"
+   return the result
 end revIDETutorialDonePercentage
 
 /*

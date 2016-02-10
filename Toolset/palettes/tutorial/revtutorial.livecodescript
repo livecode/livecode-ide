@@ -154,6 +154,7 @@ function revTutorialIsToolType pType
    switch pType
       case "edit"
       case "run"
+      case "graphic"
          return true
    end switch
    return false
@@ -195,23 +196,31 @@ function revTutorialIsPaletteType pType
    switch pType
       case "script editor"
       case "property inspector"
+      case "tools"
+      case "menubar"
          return true
    end switch
    return false
 end revTutorialIsPaletteType
 
 on revTutorialParsePalette pTokens, @xNextToken, @rPalette
-   local tPalette, tName
-   put pTokens[xNextToken] && pTokens[xNextToken + 1] into tName
+   local tPalette, tName, tCount
+   put pTokens[xNextToken] into tName
+   put 1 into tCount
+   repeat 
+      if revTutorialIsPaletteType(tName) then
+         add tCount to xNextToken
+         put tName into rPalette
+         return empty
+      end if
+      add 1 to xNextToken
+      if pTokens[xNextToken] is empty then
+         exit repeat
+      end if
+      put " " & pTokens[xNextToken] after tName
+   end repeat
    
-   if revTutorialIsPaletteType(tName) then
-      put tName into rPalette
-      add 2 to xNextToken
-   else
-      return tName & "; expected: <palette type>"
-   end if
-   
-   return empty
+   return tName & "; expected: <palette type>"
 end revTutorialParsePalette
 
 // currently is subexpression til end
@@ -372,17 +381,50 @@ on revTutorialParseCapture pTokens, @rData
    return empty
 end revTutorialParseCapture
 
+on revTutorialParseMenuHighlight pTokens, pStart, @rData
+   local tMenuString, tSubMenuString
+   put "menu <token>" into tMenuString
+   put "menu item <token> of" into tSubMenuString
+   
+   local tMenuSegmentCount, tSubMenuSegmentCount
+   put the number of segments in tSubmenuString into tSubMenuSegmentCount
+   put the number of segments in tMenuString into tMenuSegmentCount
+   
+   local tSubMenuTry, tSubMenuExpressionTry, tExpressionTry
+   put 0 into tSubMenuTry
+   repeat while the number of elements in pTokens > \
+         tMenuSegmentCount +  tSubMenuSegmentCount * tSubMenuTry
+      put "highlight " into tExpressionTry
+      if tSubMenuTry is not 0 then
+         put tSubMenuExpressionTry after tExpressionTry
+      end if
+      put tMenuString after tExpressionTry
+      revTutorialParseSubexpression tExpressionTry, pTokens, pStart, rData
+      if the result is empty then
+         return empty
+      end if
+      put tSubMenuString & " " after tSubMenuExpressionTry
+      add 1 to tSubMenuTry
+   end repeat
+   
+   return "Expected: highlight [menu item <token> of...] menu <token>"
+end revTutorialParseMenuHighlight
+
 on revTutorialParseHighlight pTokens, @rData
    local tData, tFirstToken
    put 1 into tFirstToken
    
    switch pTokens[2]
       case "menu"
-         revTutorialParseSubexpression "highlight menu item <token> of menu <token>", pTokens, tFirstToken, tData
+         revTutorialParseMenuHighlight pTokens, tFirstToken, tData
          if the result is empty then
             put "menu" into rData["highlight type"]
-            put tData[1] into rData["item"]
-            put tData[2] into rData["menu"]
+            local tNumElements
+            put the number of elements in tData into tNumElements
+            repeat with x = 1 to tNumElements - 1
+               put tData[x] into rData["item"][tNumElements - x]
+            end repeat
+            put tData[tNumElements] into rData["menu"]
          end if
          break
       case "toolbar"
@@ -420,6 +462,13 @@ on revTutorialParseHighlight pTokens, @rData
             put "script editor" into rData["highlight type"]
             put tData[1] into rData["item"]
             put tData[2] into rData["object"]
+         end if
+         break
+      case "palette"
+         revTutorialParseSubexpression "highlight palette <palette>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "palette" into rData["highlight type"]
+            put tData[1] into rData["palette"]
          end if
          break
       default
@@ -640,14 +689,19 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    local tScreenRect
    put the screenrect into tScreenRect
    
+   local tRect
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
-      local tRect
       if pStack is not empty then
          put revIDEAbsoluteRectOfObject(pStack, pObject) into tRect
       else
          put revIDERelativeRectToAbsolute(the rect of pObject, revIDEStackOfObject(pObject)) into tRect
       end if
+   else if pStack is not empty then
+      put the rect of pStack into tRect
+   end if
+   
+   if tRect is not empty then
       put item 1 of tRect into tLeft
       put item 2 of tRect into tTop
       put item 3 of tRect into tRight
@@ -666,6 +720,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
          put true into tPointerTop
       end if
    end if
+   
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
@@ -680,6 +735,10 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
       put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
    end if
    
+   # Store templategraphic props (in case we have a graphic tool selected)
+   local tProps
+   put the properties of the templategraphic into tProps
+   
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
@@ -693,7 +752,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    set the width of it to tWidth * the screenpixelscale
    set the height of it to tHeight * the screenpixelscale
    
-   if pObject is not empty then
+   if tRect is not empty then
       create graphic "Pointer" in tGroup
       put it into tPointer
       set the style of tPointer to "regular"
@@ -749,6 +808,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    end if
    
    reset the templateGraphic
+   set the properties of the templategraphic to tProps
    
    import snapshot from rect (the rect of tGroup) of tGroup
    set the id of the last image to the id of stack "revIcons"
@@ -763,7 +823,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
-   if pObject is not empty then
+   if tRect is not empty then
       if pToSide and tPointerLeft then
          set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
       else if not pToSide and tPointerTop then
@@ -818,6 +878,7 @@ on revInitialiseTutorial
    put empty into sStepName
    put empty into sTaggedObjects
    put empty into sGuides
+   put empty into sCaptureData
    
    # Unsubscribe all messages
    revIDEUnsubscribeAll
@@ -862,16 +923,14 @@ on revInitialiseTutorial
    set the threeD of it to false
    set the visible of it to false
    
-   insert the script of stack "revTutorial" into front
-   
    unlock messages
    unlock screen
 end revInitialiseTutorial
 
 on revFinaliseTutorial
    lock screen
+   revIDETutorialInfoSetEmpty
    enableToolsPalette
-   remove script of stack "revTutorial" from front
    revIDEUnsubscribeAll
    unlock screen
 end revFinaliseTutorial
@@ -880,10 +939,8 @@ on revTutorialLoadData pCourse, pTutorial, pLesson
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
-   local tData
-   put revTutorialParseData(tTutorialData) into tData
-   
-   put tData into sSteps
+   put revTutorialParseData(tTutorialData) into sSteps
+   put the number of elements in sSteps into sNumSteps
 end revTutorialLoadData
 
 on revTutorialUpdateProgress pStep
@@ -910,11 +967,24 @@ end revTutorialUpdateProgress
 on revTutorialStartWithState pStep, pTaggedObjects
    revInitialiseTutorial 
    
-   put pTaggedObjects into sTaggedObjects
-   
    local tTutorialInfo
    put revIDETutorialInProgress() into tTutorialInfo
-   revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+   
+   try
+      revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+   catch tError
+      throw tError
+      revIDETutorialInfoSetEmpty
+      exit revTutorialStartWithState
+   end try
+   
+   if sSteps is empty then
+      throw "Selected tutorial is empty"
+      revIDETutorialInfoSetEmpty
+      exit revTutorialStartWithState
+   end if
+   
+   put pTaggedObjects into sTaggedObjects
    revTutorialUpdateProgress pStep
    
    lock screen
@@ -923,6 +993,7 @@ on revTutorialStartWithState pStep, pTaggedObjects
    unlock messages
    unlock screen
    
+   revIDESubscribe "ideActiveStacksChanged"
    if pStep is "prologue" or pStep is empty then
       revTutorialPrologue
    else if pStep is "epilogue" then
@@ -938,6 +1009,7 @@ end revTutorialStartWithState
 on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
+   revTutorialClearLastPropertyInspector
    revTutorialSaveProgress
    revFinaliseTutorial
 end revTutorialStop
@@ -964,6 +1036,10 @@ end revTutorialStepNumber
 function revTutorialNumberOfSteps
    return sNumSteps
 end revTutorialNumberOfSteps
+
+function revTutorialDonePercentage
+   return 100 * (sStepNum - 1) / sNumSteps
+end revTutorialDonePercentage
 
 on revTutorialPrologue
    if sSteps["prologue"] is not empty then
@@ -1201,6 +1277,10 @@ on revTutorialReturnFromInterlude
 end revTutorialReturnFromInterlude
 
 on revTutorialDoWait pActionData
+   if pActionData["wait condition"] is not "property" then
+      revTutorialClearLastPropertyInspector
+   end if
+   
    put empty into sWait
    // Check to see if wait condition is immediately satisfied
    if revTutorialCheckWaitCondition(pActionData) then
@@ -1346,7 +1426,7 @@ on revTutorialWaitUntilThereIsAPaletteForObject pPalette
 end revTutorialWaitUntilThereIsAPaletteForObject
 
 on revTutorialWaitUntilTheToolIs
-   // Subscribe to newTool
+   revIDESubscribe "ideToolChanged"
 end revTutorialWaitUntilTheToolIs
 
 on revTutorialWaitUntilObjectPropertyHasValue pObject
@@ -1400,6 +1480,9 @@ on revTutorialDoHighlight pActionData
          case "script editor"
             revTutorialHighlightScriptEditorItem pActionData["item"], pActionData["object"]
             break
+         case "palette"
+            revTutorialHighlightPalette pActionData["palette"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
@@ -1422,12 +1505,24 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   put "object" into sHighlight["type"]
-   put tObject into sHighlight["object"]
-   revIDESubscribe "ideMoveStack", revIDEStackOfObject(tObject)
-   revIDESubscribe "idePropertyChanged", tObject
-   revTutorialPositionStackForHighlight
+   revTutorialHighlightObjectByID tObject
 end revTutorialHighlightObject
+
+on revTutorialHighlightPalette pPaletteName
+   revTutorialHighlightObjectByID the long id of stack (revIDEPaletteToStackName(pPaletteName))
+end revTutorialHighlightPalette
+
+on revTutorialHighlightObjectByID pObjID
+   if word 1 of pObjID is "stack" then
+      put "stack" into sHighlight["type"]
+   else
+      put "object" into sHighlight["type"]
+   end if
+   put pObjID into sHighlight["object"]
+   revIDESubscribe "ideStackMoved", revIDEStackOfObject(pObjID)
+   revIDESubscribe "idePropertyChanged", pObjID
+   revTutorialPositionStackForHighlight
+end revTutorialHighlightObjectByID
 
 on revTutorialClearObjectHighlight
    /*
@@ -1443,20 +1538,42 @@ end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
    revIDEHighlightObject "tools", pTool
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
    put "tool" into sHighlight["type"]
    put pTool into sHighlight["tool"]
    revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
+local sLastInspectedObjects
+function revTutorialHighlightedInspector
+   if sLastInspectedObjects is not empty then
+      dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") \ 
+            with sLastInspectedObjects
+      return the name of stack the result
+   else
+      return empty
+   end if
+end revTutorialHighlightedInspector
+      
 on revTutorialHighlightInspector pSection, pGroup
    local tObjectData
    put pSection into tObjectData["section"]
    put pGroup into tObjectData["group"]
+   put sLastInspectedObjects into tObjectData["object"]
+   
    revIDEHighlightObject "inspector", tObjectData
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+   
+   local tInspector
+   put revTutorialHighlightedInspector() into tInspector
+   
+   revIDESubscribe "ideStackMoved", tInspector
+   
+   # Lock the inspector to prevent mishaps
+   dispatch "lockInspector" to tInspector
+   
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
+   put sLastInspectedObjects into sHighlight["object"]
    revTutorialPositionStackForHighlight
 end revTutorialHighlightInspector
 
@@ -1466,7 +1583,7 @@ on revTutorialHighlightScriptEditorItem pItem, pObject
    put tObject into tSEData["object"]
    put pItem into tSEData["item"]
    revIDEHighlightObject "script editor", tSEData
-   revIDESubscribe "ideMoveStack", the name of stack revScriptEditor(tObject)
+   revIDESubscribe "ideStackMoved", the name of stack revScriptEditor(tObject)
    put "script editor" into sHighlight["type"]
    put pItem into sHighlight["item"]
    put tObject into sHighlight["object"]
@@ -1478,7 +1595,7 @@ on revTutorialHighlightMenuItem pMenu, pItem
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    revIDEHighlightObject "menubar", tMenuHighlight
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
    put "menu" into sHighlight["type"]
    put pMenu into sHighlight["menu"]
    revTutorialPositionStackForHighlight
@@ -1486,7 +1603,7 @@ end revTutorialHighlightMenuItem
 
 on revTutorialHighlightToolbarItem pItem
    revIDEHighlightObject "menubar", pItem
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
    put "toolbar" into sHighlight["type"]
    put pItem into sHighlight["item"]
    revTutorialPositionStackForHighlight
@@ -1544,7 +1661,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revIDESubscribe "ideMoveStack", revIDEStackOfObject(sGuides[pGuide])
+   revIDESubscribe "ideStackMoved", revIDEStackOfObject(sGuides[pGuide])
    put "guide" into sHighlight["type"]
    put pGuide into sHighlight["guide"]
    revTutorialPositionStackForHighlight
@@ -1557,11 +1674,31 @@ on revTutorialClearGuides
    put empty into sGuides
 end revTutorialClearGuides
 
+on revTutorialClearLastPropertyInspector
+   local tInspector
+   put revTutorialHighlightedInspector() into tInspector
+   if tInspector is not empty then
+      close stack tInspector
+      put empty into sLastInspectedObjects
+   end if
+end revTutorialClearLastPropertyInspector
+
 ##############################################################################
 #
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
 #
 ##############################################################################
+
+on revTutorialReShow
+   -- Ensure tutorial stack is always visible if it should be
+   if the visible of me then
+      palette me
+   end if
+end revTutorialReShow
+
+on ideActiveStacksChanged
+   revTutorialReShow
+end ideActiveStacksChanged
 
 on closeStackRequest
    local tStack
@@ -1652,7 +1789,6 @@ on ideAnswerDialogClosed pObject
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideAnswerDialogClosed
 end ideAnswerDialogClosed
 
 on ideNewControl pObject
@@ -1700,19 +1836,20 @@ on idePropertyChanged pObject
          end if
       end if
    end if
-   pass idePropertyChanged
 end idePropertyChanged
 
-on ideMoveStack pStack
+on ideStackMoved pStack
+   local tStack
+   put revIDEStackOfObject(pStack) into tStack
    # If the highlighted stack is moved, then reposition the tutorial step pointer
-   if revTutorialObjectIsHighlighted(pStack) then
+   if revTutorialObjectIsHighlighted(tStack) then
       revTutorialPositionStackForHighlight
    end if
-end ideMoveStack
+end ideStackMoved
 
-on ideResumeStack
+on ideResumeStack pStack
    local tStack
-   put revIDEStackOfObject(the long id of the target) into tStack
+   put revIDEStackOfObject(pStack) into tStack
    if not revTutorialObjectIsHighlighted(tStack) then
       # If the target stack is not highlighted then react accordingly
    else
@@ -1734,8 +1871,6 @@ on mouseUp pWhich
          revTutorialReturnFromInterlude
       end if
    end if
-   
-   pass mouseUp
 end mouseUp
 
 on mouseDoubleUp pWhich
@@ -1746,8 +1881,6 @@ on mouseDoubleUp pWhich
          revTutorialWaitConditionSatisfied
       end if
    end if
-   
-   pass mouseDoubleUp
 end mouseDoubleUp
 
 on ideSelectedObjectChanged 
@@ -1758,17 +1891,16 @@ on ideSelectedObjectChanged
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
 on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette" and sWait["palette"] is "property inspector" then
       if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]["type"], sWait["object"]["tag"]) then
-         revIDEUnsubscribe "ideInspectedObjectsChanged"
+         revIDEUnsubscribe "ideInspectObjects"
+         put pObjects into sLastInspectedObjects
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideInspectObjects
 end ideInspectObjects
 
 on ideEditScript pObject
@@ -1778,17 +1910,16 @@ on ideEditScript pObject
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideEditScript
 end ideEditScript
 
-on newTool pTool
+on ideToolChanged pTool
    if sWait["wait condition"] is "tool" then
       if revTutorialToolIs(sWait["tool"]) then
+         revIDEUnsubscribe "ideToolChanged"
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass newTool
-end newTool
+end ideToolChanged
 
 ##############################################################################
 #
@@ -1805,7 +1936,9 @@ function revTutorialObjectIsHighlighted pObject
       case "guide"
          return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
       case "property"
-         return pObject is the name of stack revIDEPaletteToStackName("inspector")
+         local tInspector
+         put revTutorialHighlightedInspector() into tInspector
+         return tInspector is not empty and pObject is the name of tInspector
       case "menu"
          return pObject is the name of stack revIDEPaletteToStackName("menubar")
       case "tool"
@@ -1824,8 +1957,8 @@ on revTutorialPositionStackForHighlight
       case "guide"
          revTutorialPositionStack "", sGuides[sHighlight["guide"]], true
          break
-      case "property"
-         revTutorialPositionStack "inspector", sHighlight["group"], true
+      case "property"        
+         revTutorialPositionStack "inspector", sHighlight, true
          break
       case "menu"
          revTutorialPositionStack "menubar", sHighlight["menu"], false
@@ -1842,6 +1975,9 @@ on revTutorialPositionStackForHighlight
       case "script editor"
          revTutorialPositionStack "script editor", sHighlight, true
          break
+      case "stack"
+         revTutorialPositionStack sHighlight["object"], "", true
+         break
    end switch
    unlock screen
 end revTutorialPositionStackForHighlight
@@ -1849,20 +1985,20 @@ end revTutorialPositionStackForHighlight
 on revTutorialClearHighlights
    switch sHighlight["type"]
       case "tool"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
          break
       case "property"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("inspector")
          break
       case "menu"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
          break
       case "object"
          revIDEUnsubscribe "idePropertyChanged", sHighlight["object"]
-         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sHighlight["object"])
+         revIDEUnsubscribe "ideStackMoved", revIDEStackOfObject(sHighlight["object"])
          break
       case "guide"
-         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sGuides[sHighlight["guide"]])
+         revIDEUnsubscribe "ideStackMoved", revIDEStackOfObject(sGuides[sHighlight["guide"]])
          break
    end switch
    put empty into sHighlight
@@ -1895,6 +2031,10 @@ function revTutorialToolIs pTool
    end if
    
    if pTool is "run" and the tool is "browse tool" then
+      return true
+   end if
+   
+   if pTool is "graphic" and the tool is "graphic tool" then
       return true
    end if
    

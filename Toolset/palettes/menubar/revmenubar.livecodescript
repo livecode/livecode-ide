@@ -397,12 +397,10 @@ on generateMenubarUI
    
    set the icongravity of the templatebutton to empty
    set the showname of the templatebutton to false
-   create button "quit" in group "tutorial" of me
+   create widget "quit" as "com.livecode.widget.svgpath" in group "tutorial" of me
    set the width of it to 15
    set the height of it to 21
-   create invisible image "quit" in group "icons" of me
-   set the filename of image "quit" of me to revIDEPaletteResourcePath("images/") & "quit.png"
-   set the icon of button "quit" of group "tutorial" of me to the id of image "quit" of group "icons" of me
+   set the iconPathPreset of widget "quit" of group "tutorial" of me to "remove circle"
    
    hide group "tutorial" of me
    
@@ -498,7 +496,7 @@ end generateContextMenu
 on layoutMenu
    lock screen
    lock messages
-
+   
    local tDividerCount
    put 1 into tDividerCount
    
@@ -537,15 +535,20 @@ on layoutMenu
    if tTutorial is not empty then
       show group "tutorial" of me
       show tLastDivide
-      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial["course"] && "-" && tTutorial["tutorial"] && "-" && tTutorial["lesson"] 
-      set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
+      set the text of field "label" of group "tutorial" of me to tTutorial["lesson"] 
+      set the width of field "label" of group "tutorial" of me to 1000
+      local tLabelWidth
+      put the formattedwidth of field "label" of group "tutorial" of me into tLabelWidth
+      set the width of field "label" of group "tutorial" of me to tLabelWidth
       set the topleft of field "label" of group "tutorial" of me to 10, 10
       
-      set the topleft of button "quit" of group "tutorial" of me to 10 + the width of field "label" of group "tutorial" of me, 10
+      set the loc of widget "quit" of group "tutorial" of me to the loc of group "tutorial" of me
+      set the left of widget "quit" of group "tutorial" of me to 10 + tLabelWidth
       
-      set the backcolor of graphic "Trough" of group "progress" of me to revTutorialMessageAltColor()
-      set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
-      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage(), 5
+      set the backcolor of graphic "Trough" of group "progress" of me to "white"
+      set the backcolor of graphic "Bar" of group "progress" of me to "black"
+      set the rect of graphic "Trough" of group "progress" of me to 0,0,tLabelWidth,5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage() * tLabelWidth / 100, 5
       set the loc of group "progress" of me to the loc of field "label" of me
       set the top of group "progress" of me to 35
       
@@ -805,7 +808,7 @@ end revIDELocalizeMenuItem
 
 on mouseUp
    lock screen
-   if the target begins with "button" then
+   if the target begins with "widget" then
       local tOriginButton, tTarget
       put the short name of the target into tTarget
       if tTarget is "quit" then
@@ -823,8 +826,8 @@ function absoluteRectOfObject pObject
    if there is a button pObject of group "revMenuBar" of me then
       put the rect of button pObject into tRect
       if the platform is "macos" then
-         put item 1 of tRect + 140 into item 1 of tRect
-         put item 3 of tRect + 140 into item 3 of tRect
+         put item 1 of tRect + 160 into item 1 of tRect
+         put item 3 of tRect + 160 into item 3 of tRect
          return tRect
       end if
    else 
@@ -922,6 +925,25 @@ function revMenubarMenus
    return "File,Edit,Tools,Object,Text,Development,View,Window,Help"
 end revMenubarMenus
 
+on highlightMenuItem pMenu, pSubMenus
+   local tMenuText
+   put the text of button pMenu of group "revMenuBar" of me into tMenuText
+   local tTabNesting, tSubMenuNum, tLineNum
+   put 1 into tSubMenuNum
+   repeat for each line tLine in tMenuText
+      add 1 to tLineNum
+      if tLine contains pSubMenus[tSubMenuNum] and \
+            (tTabNesting is empty or tLine contains tTabNesting) then
+         enable line tLineNum of button pMenu of group "revMenuBar" of me
+         put tab after tTabNesting
+         add 1 to tSubMenuNum
+      else
+         disable line tLineNum of button pMenu of group "revMenuBar" of me
+      end if
+   end repeat
+   put the text of button pMenu of group "revMenuBar" of me into tMenuText
+end highlightMenuItem
+
 command revMenubarBuildMenus
    local tContext
    put buildMenuContext() into tContext
@@ -945,19 +967,7 @@ command revMenubarBuildMenus
       
       repeat for each key tMenu in sMenuHighlight
          enable button tMenu of group "revMenuBar" of me
-         local tMenuText
-         put the text of button tMenu of group "revMenuBar" of me into tMenuText
-         local tLineNumber
-         repeat for each line tLine in tMenuText
-            add 1 to tLineNumber
-            if tLine contains sMenuHighlight[tMenu] then
-               enable line tLineNumber of button tMenu of group "revMenuBar" of me
-            else if tLine begins with tab then
-               next repeat
-            else
-               disable line tLineNumber of button tMenu of group "revMenuBar" of me
-            end if
-         end repeat
+         highlightMenuItem tMenu, sMenuHighlight[tMenu]
       end repeat
    end if
    unlock menus

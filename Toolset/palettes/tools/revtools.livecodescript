@@ -47,7 +47,7 @@ on preOpenStack
 end preOpenStack
 
 on openStack
-  	lock screen
+   lock screen
    layoutpalette
    registerForMessages
    set the visible of me to true
@@ -55,7 +55,7 @@ on openStack
 end openStack
 
 on registerForMessages
- 	### Messages
+   ### Messages
    revIDESubscribe "idePreferenceChanged:revTools_columns"
    revIDESubscribe "idePreferenceChanged:revTools_show"
    revIDESubscribe "ideToolChanged"
@@ -717,7 +717,7 @@ private on __hiliteRemove
    set the backgroundcolor of sHighlightedStack to sOldBGColor
    put empty into sHighlightedStack
    put empty into sOldBGColor
-    unlock messages
+   unlock messages
 end __hiliteRemove
 
 on isolateTool pWhich
@@ -779,24 +779,54 @@ on groupDisable pWhich, pDisable
 end groupDisable
 
 on toolDisable pWhich
-   if there is not a button pWhich of me then exit toolDisable
-   set the coloroverlay["opacity"] of button pWhich of me to "90"
-   set the coloroverlay["color"] of  button pWhich of me to "255,255,255"
-   set the cDisabled of button pWhich of me to true
-   disable button pWhich of me
+   local tIsButton
+   if there is a button pWhich of me  then
+      put true into tIsButton
+   else if there is a widget pWhich of me then
+      put false into tIsButton
+   else
+      exit toolDisable
+   end if
+   
+   if tIsButton then
+      set the coloroverlay["opacity"] of button pWhich of me to "90"
+      set the coloroverlay["color"] of  button pWhich of me to "255,255,255"
+      set the cDisabled of button pWhich of me to true
+      disable button pWhich of me
+   else
+      set the cDisabled of widget pWhich of me to true
+      set the iconcolor of widget pWhich of me to 200,200,200
+   end if
 end toolDisable
 
 on toolEnable pWhich
-   if there is not a button pWhich of me then exit toolEnable
-   set the coloroverlay of button pWhich of me to empty
-   set the cDisabled of button pWhich of me to false
-   enable button pWhich of me
+   local tIsButton
+   if there is a button pWhich of me  then
+      put true into tIsButton
+   else if there is a widget pWhich of me then
+      put false into tIsButton
+   else
+      exit toolEnable
+   end if
+   if tIsButton then
+      set the coloroverlay of button pWhich of me to empty
+      set the cDisabled of button pWhich of me to false
+      enable button pWhich of me
+   else
+      set the cDisabled of widget pWhich of me to false
+      set the iconcolor of widget pWhich of me to 100,100,100
+   end if
 end toolEnable
 
 function absoluteRectOfObject pObject
    local tRect, tTool
    put toolObjectName(pObject) into tTool
-   put the rect of button tTool into tRect
+   
+   if there is a button tTool of me then
+      put the rect of button tTool into tRect
+   else if there is a widget tTool of me then
+      put the rect of widget tTool into tRect
+   end if
    return revIDERelativeRectToAbsolute(tRect, me)
 end absoluteRectOfObject
 

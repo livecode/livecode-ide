@@ -542,20 +542,6 @@ private function rowLabelWidthCalculate
    return tMaxWidth
 end rowLabelWidthCalculate
 
-function absoluteRectOfObject pObject
-   local tRect
-   put the rect of group pObject of me into tRect
-   # Work around the fact that groups are too large
-   put item 2 of tRect + 21 into item 4 of tRect
-   
-   return revIDERelativeRectToAbsolute(tRect, me)
-end absoluteRectOfObject
-
-on highlightObject pObjectData
-   dispatch "hiliteFrameItem" to me with pObjectData["section"]
-   dispatch "navSelected" to me with pObjectData["section"]
-end highlightObject
-
 # Allow text to be styled from the menubar if the editor allows it
 on ideStyleTextRequest pWhich, pValue, pSelectedChunk, pSelectedObject
    if word 1 of pSelectedObject is "field" and the owner of pSelectedObject is not empty then
