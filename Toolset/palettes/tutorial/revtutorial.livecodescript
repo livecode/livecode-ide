@@ -1009,6 +1009,7 @@ end revTutorialStartWithState
 on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
+   revTutorialClearLastPropertyInspector
    revTutorialSaveProgress
    revFinaliseTutorial
 end revTutorialStop
@@ -1276,6 +1277,10 @@ on revTutorialReturnFromInterlude
 end revTutorialReturnFromInterlude
 
 on revTutorialDoWait pActionData
+   if pActionData["wait condition"] is not "property" then
+      revTutorialClearLastPropertyInspector
+   end if
+   
    put empty into sWait
    // Check to see if wait condition is immediately satisfied
    if revTutorialCheckWaitCondition(pActionData) then
@@ -1541,9 +1546,13 @@ end revTutorialHighlightTool
 
 local sLastInspectedObjects
 function revTutorialHighlightedInspector
-   dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") \ 
-         with sLastInspectedObjects
-   return the name of stack the result
+   if sLastInspectedObjects is not empty then
+      dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") \ 
+            with sLastInspectedObjects
+      return the name of stack the result
+   else
+      return empty
+   end if
 end revTutorialHighlightedInspector
       
 on revTutorialHighlightInspector pSection, pGroup
@@ -1554,7 +1563,14 @@ on revTutorialHighlightInspector pSection, pGroup
    
    revIDEHighlightObject "inspector", tObjectData
    
-   revIDESubscribe "ideStackMoved", revTutorialHighlightedInspector()
+   local tInspector
+   put revTutorialHighlightedInspector() into tInspector
+   
+   revIDESubscribe "ideStackMoved", tInspector
+   
+   # Lock the inspector to prevent mishaps
+   dispatch "lockInspector" to tInspector
+   
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
    put sLastInspectedObjects into sHighlight["object"]
@@ -1657,6 +1673,15 @@ on revTutorialClearGuides
    end repeat
    put empty into sGuides
 end revTutorialClearGuides
+
+on revTutorialClearLastPropertyInspector
+   local tInspector
+   put revTutorialHighlightedInspector() into tInspector
+   if tInspector is not empty then
+      close stack tInspector
+      put empty into sLastInspectedObjects
+   end if
+end revTutorialClearLastPropertyInspector
 
 ##############################################################################
 #
@@ -1911,7 +1936,9 @@ function revTutorialObjectIsHighlighted pObject
       case "guide"
          return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
       case "property"
-         return pObject is the name of revTutorialHighlightedInspector()
+         local tInspector
+         put revTutorialHighlightedInspector() into tInspector
+         return tInspector is not empty and pObject is the name of tInspector
       case "menu"
          return pObject is the name of stack revIDEPaletteToStackName("menubar")
       case "tool"
