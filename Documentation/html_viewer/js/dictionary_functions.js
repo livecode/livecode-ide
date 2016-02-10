@@ -859,6 +859,18 @@
 			library_set(library_id);
 		});
 		
+		$("#lcdoc_list").bind('mousewheel', function(e, d)  {
+			var t = $("#list");
+			if (d > 0 && t.scrollTop() === 0) {
+				e.preventDefault();
+			}
+			else {
+				if (d < 0 && (t.scrollTop() == t.get(0).scrollHeight - t.innerHeight())) {
+					e.preventDefault();
+				}
+			}
+		});
+		
 		$(document).keydown(function(e) {
 		   switch(e.which) {
 			   case 37: // left
