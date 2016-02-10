@@ -1817,9 +1817,9 @@ on ideStackMoved pStack
    end if
 end ideStackMoved
 
-on ideResumeStack
+on ideResumeStack pStack
    local tStack
-   put revIDEStackOfObject(the long id of the target) into tStack
+   put revIDEStackOfObject(pStack) into tStack
    if not revTutorialObjectIsHighlighted(tStack) then
       # If the target stack is not highlighted then react accordingly
    else
