@@ -1759,6 +1759,14 @@ on ideMessageSend pMessage, pParam
    ideMessageSendWithParameters pMessage, the long id of the target, tParam
 end ideMessageSend
 
+on ideMessageSendWithTrigger pMessage, pTriggeringObjects, pParam
+   local tParam
+   if pParam is not empty then
+      put pParam into tParam[1]
+   end if
+   ideMessageSendWithParameters pMessage, pTriggeringObjects, tParam
+end ideMessageSendWithTrigger
+
 on revIDEMessageSend pMessage, pTriggeringObjects
    local tParamsArray
    put pTriggeringObjects into tParamsArray[1]

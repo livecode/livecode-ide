@@ -1443,20 +1443,31 @@ end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
    revIDEHighlightObject "tools", pTool
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
    put "tool" into sHighlight["type"]
    put pTool into sHighlight["tool"]
    revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
+local sLastInspectedObjects
+function revTutorialHighlightedInspector
+   dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") \ 
+         with sLastInspectedObjects
+   return the name of stack the result
+end revTutorialHighlightedInspector
+      
 on revTutorialHighlightInspector pSection, pGroup
    local tObjectData
    put pSection into tObjectData["section"]
    put pGroup into tObjectData["group"]
+   put sLastInspectedObjects into tObjectData["object"]
+   
    revIDEHighlightObject "inspector", tObjectData
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+   
+   revIDESubscribe "ideStackMoved", revTutorialHighlightedInspector()
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
+   put sLastInspectedObjects into sHighlight["object"]
    revTutorialPositionStackForHighlight
 end revTutorialHighlightInspector
 
@@ -1466,7 +1477,7 @@ on revTutorialHighlightScriptEditorItem pItem, pObject
    put tObject into tSEData["object"]
    put pItem into tSEData["item"]
    revIDEHighlightObject "script editor", tSEData
-   revIDESubscribe "ideMoveStack", the name of stack revScriptEditor(tObject)
+   revIDESubscribe "ideStackMoved", the name of stack revScriptEditor(tObject)
    put "script editor" into sHighlight["type"]
    put pItem into sHighlight["item"]
    put tObject into sHighlight["object"]
@@ -1478,7 +1489,7 @@ on revTutorialHighlightMenuItem pMenu, pItem
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    revIDEHighlightObject "menubar", tMenuHighlight
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
    put "menu" into sHighlight["type"]
    put pMenu into sHighlight["menu"]
    revTutorialPositionStackForHighlight
@@ -1486,7 +1497,7 @@ end revTutorialHighlightMenuItem
 
 on revTutorialHighlightToolbarItem pItem
    revIDEHighlightObject "menubar", pItem
-   revIDESubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
    put "toolbar" into sHighlight["type"]
    put pItem into sHighlight["item"]
    revTutorialPositionStackForHighlight
@@ -1544,7 +1555,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
 end revTutorialDoAddGuide
 
 on revTutorialHighlightGuide pGuide
-   revIDESubscribe "ideMoveStack", revIDEStackOfObject(sGuides[pGuide])
+   revIDESubscribe "ideStackMoved", revIDEStackOfObject(sGuides[pGuide])
    put "guide" into sHighlight["type"]
    put pGuide into sHighlight["guide"]
    revTutorialPositionStackForHighlight
@@ -1703,12 +1714,14 @@ on idePropertyChanged pObject
    pass idePropertyChanged
 end idePropertyChanged
 
-on ideMoveStack pStack
+on ideStackMoved pStack
+   local tStack
+   put revIDEStackOfObject(pStack) into tStack
    # If the highlighted stack is moved, then reposition the tutorial step pointer
-   if revTutorialObjectIsHighlighted(pStack) then
+   if revTutorialObjectIsHighlighted(tStack) then
       revTutorialPositionStackForHighlight
    end if
-end ideMoveStack
+end ideStackMoved
 
 on ideResumeStack
    local tStack
@@ -1764,11 +1777,11 @@ end ideSelectedObjectChanged
 on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette" and sWait["palette"] is "property inspector" then
       if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]["type"], sWait["object"]["tag"]) then
-         revIDEUnsubscribe "ideInspectedObjectsChanged"
+         revIDEUnsubscribe "ideInspectObjects"
+         put pObjects into sLastInspectedObjects
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass ideInspectObjects
 end ideInspectObjects
 
 on ideEditScript pObject
@@ -1805,7 +1818,7 @@ function revTutorialObjectIsHighlighted pObject
       case "guide"
          return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
       case "property"
-         return pObject is the name of stack revIDEPaletteToStackName("inspector")
+         return pObject is the name of revTutorialHighlightedInspector()
       case "menu"
          return pObject is the name of stack revIDEPaletteToStackName("menubar")
       case "tool"
@@ -1824,8 +1837,9 @@ on revTutorialPositionStackForHighlight
       case "guide"
          revTutorialPositionStack "", sGuides[sHighlight["guide"]], true
          break
-      case "property"
-         revTutorialPositionStack "inspector", sHighlight["group"], true
+      case "property"        
+         wait 1 millisecond with messages
+         revTutorialPositionStack "inspector", sHighlight, true
          break
       case "menu"
          revTutorialPositionStack "menubar", sHighlight["menu"], false
@@ -1849,20 +1863,20 @@ end revTutorialPositionStackForHighlight
 on revTutorialClearHighlights
    switch sHighlight["type"]
       case "tool"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("tools")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
          break
       case "property"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("inspector")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("inspector")
          break
       case "menu"
-         revIDEUnsubscribe "ideMoveStack", the name of stack revIDEPaletteToStackName("menubar")
+         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
          break
       case "object"
          revIDEUnsubscribe "idePropertyChanged", sHighlight["object"]
-         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sHighlight["object"])
+         revIDEUnsubscribe "ideStackMoved", revIDEStackOfObject(sHighlight["object"])
          break
       case "guide"
-         revIDEUnsubscribe "ideMoveStack", revIDEStackOfObject(sGuides[sHighlight["guide"]])
+         revIDEUnsubscribe "ideStackMoved", revIDEStackOfObject(sGuides[sHighlight["guide"]])
          break
    end switch
    put empty into sHighlight
