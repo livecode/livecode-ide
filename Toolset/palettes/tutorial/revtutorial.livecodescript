@@ -1958,7 +1958,6 @@ on revTutorialPositionStackForHighlight
          revTutorialPositionStack "", sGuides[sHighlight["guide"]], true
          break
       case "property"        
-         wait 1 millisecond with messages
          revTutorialPositionStack "inspector", sHighlight, true
          break
       case "menu"
