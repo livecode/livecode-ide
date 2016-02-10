@@ -196,23 +196,31 @@ function revTutorialIsPaletteType pType
    switch pType
       case "script editor"
       case "property inspector"
+      case "tools"
+      case "menubar"
          return true
    end switch
    return false
 end revTutorialIsPaletteType
 
 on revTutorialParsePalette pTokens, @xNextToken, @rPalette
-   local tPalette, tName
-   put pTokens[xNextToken] && pTokens[xNextToken + 1] into tName
+   local tPalette, tName, tCount
+   put pTokens[xNextToken] into tName
+   put 1 into tCount
+   repeat 
+      if revTutorialIsPaletteType(tName) then
+         add tCount to xNextToken
+         put tName into rPalette
+         return empty
+      end if
+      add 1 to xNextToken
+      if pTokens[xNextToken] is empty then
+         exit repeat
+      end if
+      put " " & pTokens[xNextToken] after tName
+   end repeat
    
-   if revTutorialIsPaletteType(tName) then
-      put tName into rPalette
-      add 2 to xNextToken
-   else
-      return tName & "; expected: <palette type>"
-   end if
-   
-   return empty
+   return tName & "; expected: <palette type>"
 end revTutorialParsePalette
 
 // currently is subexpression til end
@@ -421,6 +429,13 @@ on revTutorialParseHighlight pTokens, @rData
             put "script editor" into rData["highlight type"]
             put tData[1] into rData["item"]
             put tData[2] into rData["object"]
+         end if
+         break
+      case "palette"
+         revTutorialParseSubexpression "highlight palette <palette>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "palette" into rData["highlight type"]
+            put tData[1] into rData["palette"]
          end if
          break
       default
@@ -641,14 +656,19 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    local tScreenRect
    put the screenrect into tScreenRect
    
+   local tRect
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
-      local tRect
       if pStack is not empty then
          put revIDEAbsoluteRectOfObject(pStack, pObject) into tRect
       else
          put revIDERelativeRectToAbsolute(the rect of pObject, revIDEStackOfObject(pObject)) into tRect
       end if
+   else if pStack is not empty then
+      put the rect of pStack into tRect
+   end if
+   
+   if tRect is not empty then
       put item 1 of tRect into tLeft
       put item 2 of tRect into tTop
       put item 3 of tRect into tRight
@@ -667,6 +687,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
          put true into tPointerTop
       end if
    end if
+   
    local tWidth, tHeight
    set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
    set the height of field "Message" of stack "revTutorial" to 1000
@@ -694,7 +715,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    set the width of it to tWidth * the screenpixelscale
    set the height of it to tHeight * the screenpixelscale
    
-   if pObject is not empty then
+   if tRect is not empty then
       create graphic "Pointer" in tGroup
       put it into tPointer
       set the style of tPointer to "regular"
@@ -764,7 +785,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
-   if pObject is not empty then
+   if tRect is not empty then
       if pToSide and tPointerLeft then
          set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
       else if not pToSide and tPointerTop then
@@ -1402,6 +1423,9 @@ on revTutorialDoHighlight pActionData
          case "script editor"
             revTutorialHighlightScriptEditorItem pActionData["item"], pActionData["object"]
             break
+         case "palette"
+            revTutorialHighlightPalette pActionData["palette"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
@@ -1424,12 +1448,24 @@ on revTutorialHighlightObject pObjType, pTag
    set the borderwidth of tObject to 5
    set the bordercolor of tObject to "red"
    */
-   put "object" into sHighlight["type"]
-   put tObject into sHighlight["object"]
-   revIDESubscribe "ideMoveStack", revIDEStackOfObject(tObject)
-   revIDESubscribe "idePropertyChanged", tObject
-   revTutorialPositionStackForHighlight
+   revTutorialHighlightObjectByID tObject
 end revTutorialHighlightObject
+
+on revTutorialHighlightPalette pPaletteName
+   revTutorialHighlightObjectByID the long id of stack (revIDEPaletteToStackName(pPaletteName))
+end revTutorialHighlightPalette
+
+on revTutorialHighlightObjectByID pObjID
+   if word 1 of pObjID is "stack" then
+      put "stack" into sHighlight["type"]
+   else
+      put "object" into sHighlight["type"]
+   end if
+   put pObjID into sHighlight["object"]
+   revIDESubscribe "ideStackMoved", revIDEStackOfObject(pObjID)
+   revIDESubscribe "idePropertyChanged", pObjID
+   revTutorialPositionStackForHighlight
+end revTutorialHighlightObjectByID
 
 on revTutorialClearObjectHighlight
    /*
@@ -1849,6 +1885,9 @@ on revTutorialPositionStackForHighlight
          break
       case "script editor"
          revTutorialPositionStack "script editor", sHighlight, true
+         break
+      case "stack"
+         revTutorialPositionStack sHighlight["object"], "", true
          break
    end switch
    unlock screen
