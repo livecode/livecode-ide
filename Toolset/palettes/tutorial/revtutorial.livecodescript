@@ -735,6 +735,10 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
       put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
    end if
    
+   # Store templategraphic props (in case we have a graphic tool selected)
+   local tProps
+   put the properties of the templategraphic into tProps
+   
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
@@ -804,6 +808,7 @@ on revTutorialPositionStack pStack, pObject, pToSide, pWidthOverride
    end if
    
    reset the templateGraphic
+   set the properties of the templategraphic to tProps
    
    import snapshot from rect (the rect of tGroup) of tGroup
    set the id of the last image to the id of stack "revIcons"
