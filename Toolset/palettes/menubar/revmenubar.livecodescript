@@ -397,12 +397,10 @@ on generateMenubarUI
    
    set the icongravity of the templatebutton to empty
    set the showname of the templatebutton to false
-   create button "quit" in group "tutorial" of me
+   create widget "quit" as "com.livecode.widget.svgpath" in group "tutorial" of me
    set the width of it to 15
    set the height of it to 21
-   create invisible image "quit" in group "icons" of me
-   set the filename of image "quit" of me to revIDEPaletteResourcePath("images/") & "quit.png"
-   set the icon of button "quit" of group "tutorial" of me to the id of image "quit" of group "icons" of me
+   set the iconPathPreset of widget "quit" of group "tutorial" of me to "remove circle"
    
    hide group "tutorial" of me
    
@@ -498,7 +496,7 @@ end generateContextMenu
 on layoutMenu
    lock screen
    lock messages
-
+   
    local tDividerCount
    put 1 into tDividerCount
    
@@ -537,16 +535,20 @@ on layoutMenu
    if tTutorial is not empty then
       show group "tutorial" of me
       show tLastDivide
-      set the text of field "label" of group "tutorial" of me to "Tutorial -" && tTutorial["course"] && "-" && tTutorial["tutorial"] && "-" && tTutorial["lesson"] 
-      set the width of field "label" of group "tutorial" of me to the formattedwidth of field "label" of group "tutorial" of me
+      set the text of field "label" of group "tutorial" of me to tTutorial["lesson"] 
+      set the width of field "label" of group "tutorial" of me to 1000
+      local tLabelWidth
+      put the formattedwidth of field "label" of group "tutorial" of me into tLabelWidth
+      set the width of field "label" of group "tutorial" of me to tLabelWidth
       set the topleft of field "label" of group "tutorial" of me to 10, 10
       
-      set the topleft of button "quit" of group "tutorial" of me to 10 + the width of field "label" of group "tutorial" of me, 10
+      set the loc of widget "quit" of group "tutorial" of me to the loc of group "tutorial" of me
+      set the left of widget "quit" of group "tutorial" of me to 10 + tLabelWidth
       
-      dispatch function "revTutorialMessageAltColor" to stack "revTutorial"
-      set the backcolor of graphic "Trough" of group "progress" of me to the result
-      set the rect of graphic "Trough" of group "progress" of me to 0, 0, 100, 5
-      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage(), 5
+      set the backcolor of graphic "Trough" of group "progress" of me to "white"
+      set the backcolor of graphic "Bar" of group "progress" of me to "black"
+      set the rect of graphic "Trough" of group "progress" of me to 0,0,tLabelWidth,5
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage() * tLabelWidth / 100, 5
       set the loc of group "progress" of me to the loc of field "label" of me
       set the top of group "progress" of me to 35
       
@@ -806,7 +808,7 @@ end revIDELocalizeMenuItem
 
 on mouseUp
    lock screen
-   if the target begins with "button" then
+   if the target begins with "widget" then
       local tOriginButton, tTarget
       put the short name of the target into tTarget
       if tTarget is "quit" then
