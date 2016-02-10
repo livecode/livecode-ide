@@ -154,6 +154,7 @@ function revTutorialIsToolType pType
    switch pType
       case "edit"
       case "run"
+      case "graphic"
          return true
    end switch
    return false
@@ -1346,7 +1347,7 @@ on revTutorialWaitUntilThereIsAPaletteForObject pPalette
 end revTutorialWaitUntilThereIsAPaletteForObject
 
 on revTutorialWaitUntilTheToolIs
-   // Subscribe to newTool
+   revIDESubscribe "ideToolChanged"
 end revTutorialWaitUntilTheToolIs
 
 on revTutorialWaitUntilObjectPropertyHasValue pObject
@@ -1794,14 +1795,14 @@ on ideEditScript pObject
    pass ideEditScript
 end ideEditScript
 
-on newTool pTool
+on ideToolChanged pTool
    if sWait["wait condition"] is "tool" then
       if revTutorialToolIs(sWait["tool"]) then
+         revIDEUnsubscribe "ideToolChanged"
          revTutorialWaitConditionSatisfied
       end if
    end if
-   pass newTool
-end newTool
+end ideToolChanged
 
 ##############################################################################
 #
@@ -1909,6 +1910,10 @@ function revTutorialToolIs pTool
    end if
    
    if pTool is "run" and the tool is "browse tool" then
+      return true
+   end if
+   
+   if pTool is "graphic" and the tool is "graphic tool" then
       return true
    end if
    
