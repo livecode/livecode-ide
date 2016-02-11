@@ -578,7 +578,7 @@ on mouseDown
    put revIDEEditableStacks() into tStackList
    put 1 into tStackCount
    repeat for each line tStackName in tStackList
-      if tStackName begins with  "DataViewControl" then next repeat
+      if tStackName begins with "revDataViewControl" then next repeat
       if tStackName is "revDragControl" then next repeat
       put the long ID of stack tStackName into tValidDropStacks[tStackCount]["long id"]
       put the rect of stack tStackName into tValidDropStacks[tStackCount]["rect"]
