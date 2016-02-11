@@ -75,6 +75,7 @@ remains in the center of the screen.
 
 	Tool
 	  : [<Item: MenuItem>] "menu" <Menu: STRING>
+	  | "toolbar" <Tool: STRING>
 	  | "tool" <Name: STRING>
 
 	MenuItem

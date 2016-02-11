@@ -667,12 +667,13 @@ private on enableToolbar
    end repeat
 end enableToolbar
 
+local sToolbarHighlight
 on updateButtonState
    lock screen
    lock messages
    
    enableToolbar
-
+   
    local tState
    put ((the selectedField) is empty) & comma & ((the selObj) is empty) & comma & (the mode of the topStack is 1) into tState
    
@@ -735,6 +736,9 @@ on updateButtonState
    
    if revIDETutorialInProgress() is not empty then
       disableToolbar
+      if sToolbarHighlight is not empty then
+         enable button sToolbarHighlight of group "toolbar" of me
+      end if
    end if
    
    unlock messages
@@ -846,8 +850,8 @@ on highlightObject pObject
    if pObject is empty or pObject is an array then
       put pObject into sMenuHighlight
       revMenubarBuildMenus
-   else if there is a button pObject of stack "revMenubar" then
-      enable button pObject of stack "revMenubar"
+   else if there is a button pObject of me then
+      put pObject into sToolbarHighlight
    else if pObject is "tutorial" then
       // HIghlight tutorial progress group
    end if
