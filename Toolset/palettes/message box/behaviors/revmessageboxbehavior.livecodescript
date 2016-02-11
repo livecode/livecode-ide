@@ -526,9 +526,14 @@ command ideMessageBoxExecuteScript pScript
    local tDefaultStack
    put revIDEGetPreference("IDEActiveStack") into tDefaultStack
    
-   local tIntelligenceObject
-   put the cREVIntelligenceObject of me into tIntelligenceObject
+   local tIntelligencePref, tIntelligenceObject
+   put the cREVIntelligenceObject of me into tIntelligencePref
    
+   try
+      do "put the long id of the" && tIntelligencePref && "into tIntelligenceObject"
+   catch tError
+      put empty into tIntelligenceObject
+   end try
    local tDebugMode
    put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
