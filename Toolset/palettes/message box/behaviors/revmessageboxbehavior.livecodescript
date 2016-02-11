@@ -2,7 +2,6 @@
 ##GH created 12/11/2014
 ##GH last updated 31/12/2014
 
-global msg
 local lSelectedCard, lCardHistoryPref
 constant kHistoryMax = 200
 constant kHalfMessageFieldHeight = 12.5
