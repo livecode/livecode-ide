@@ -71,7 +71,7 @@ step "Set Label Properties"
 	 We will set the Text property of the label field to change what is displayed. Double click on the field to display its properties in the property inspector. 
 action
     highlight field "Label Field"
-    wait until there is a property inspector for field "Label Field"
+    wait until there is an inspector for field "Label Field"
     go to step "Set Label Field Name"
 end step
 

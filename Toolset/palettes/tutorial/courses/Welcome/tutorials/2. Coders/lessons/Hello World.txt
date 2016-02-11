@@ -42,7 +42,7 @@ step "Set Hello Button Properties"
     Double click on the button to display its properties in the property inspector.
 action
     highlight button "Hello Button"
-    wait until there is a property inspector for button "Hello Button"
+    wait until there is an inspector for button "Hello Button"
     go to step "Set Hello Button Name"
 end step
 
