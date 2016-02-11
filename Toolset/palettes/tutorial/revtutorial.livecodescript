@@ -1081,8 +1081,10 @@ on revTutorialStart
 end revTutorialStart
 
 on revTutorialFinish
-   hide stack "revTutorial"
    lock screen
+   lock messages
+   go invisible stack "revTutorial" as palette
+   unlock messages
    add 1 to sStepNum
    # For now, set captures are transient
    delete variable sTaggedObjects["set"]
