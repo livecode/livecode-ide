@@ -3187,6 +3187,11 @@ function revIDEInspectedObjects
    return sInspectingObjects
 end revIDEInspectedObjects
 
+function revIDEInspectorForObject pObjectId
+   dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") with pObjectID
+   return the long id of stack the result
+end revIDEInspectorForObject
+
 local sScriptEditingObjects
 on revIDEStartEditingScript pObject
    put true into sScriptEditingObjects[the long id of pObject]
@@ -4170,6 +4175,7 @@ command revIDEOpenPalette pPaletteName
    
    if there is not a stack tStackName then return __revIDEError("No such palette:" && pPaletteName)
    
+   lock messages
    hide stack tStackName
    switch pPaletteName
       case "Start Center"
@@ -4226,6 +4232,8 @@ command revIDEOpenPalette pPaletteName
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
    show stack tStackName
+   unlock messages
+   revIDEMessageSend "ideOpenPalette", pPaletteName
 end revIDEOpenPalette
 
 function revIDEPaletteIsVisible pPaletteName
@@ -4940,12 +4948,14 @@ on revIDEAnswerDialogClosed
    ideMessageSend "ideAnswerDialogClosed", tPopupSource
 end revIDEAnswerDialogClosed
 
-function revIDEAbsoluteRectOfObject pPalette, pObjectData
-   if pPalette is "script editor" then
-      dispatch function "absoluteRectOfObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
-   else
-      dispatch function "absoluteRectOfObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
-   end if
+function revIDEAbsoluteRectOfPaletteObject pPaletteName, pObjectData
+   local tPaletteID
+   put the long id of stack revIDEPaletteToStackName(pPaletteName) into tPaletteID
+   return revIDEAbsoluteRectOfObject(tPaletteID, pObjectData)
+end revIDEAbsoluteRectOfPaletteObject
+
+function revIDEAbsoluteRectOfObject pStackID, pObjectData
+   dispatch function "absoluteRectOfObject" to stack pStackID with pObjectData
    return the result
 end revIDEAbsoluteRectOfObject
 
@@ -4967,12 +4977,14 @@ function revIDERelativeRectToAbsolute pRect, pStack
    return pRect
 end revIDERelativeRectToAbsolute
 
-on revIDEHighlightObject pPalette, pObjectData
-   if pPalette is "script editor" then
-      dispatch "highlightObject" to stack revScriptEditor(pObjectData["object"]) with pObjectData["item"]
-   else
-      dispatch "highlightObject" to stack revIDEPaletteToStackName(pPalette) with pObjectData
-   end if
+on revIDEHighlightPaletteObject pPaletteName, pObjectData
+   local tPaletteID
+   put the long id of stack revIDEPaletteToStackName(pPaletteName) into tPaletteID
+   revIDEHighlightObject tPaletteID, pObjectData
+end revIDEHighlightPaletteObject
+
+on revIDEHighlightObject pStackID, pObjectData
+   dispatch "highlightObject" to pStackID with pObjectData
 end revIDEHighlightObject
 
 #############

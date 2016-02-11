@@ -38,7 +38,7 @@ step  "Open Stack Inspector"
 	Inspector from the Object menu.
 action
 	highlight menu item "Stack Inspector" of menu "Object"
-    wait until there is a property inspector for stack "Mainstack"
+    wait until there is an inspector for stack "Mainstack"
     go to step "Set Stack Background Color"
 end step
 
@@ -72,7 +72,7 @@ step "Set Header Widget Properties"
     Double click on the widget to open up the property inspector.
 action
     highlight widget "Header Widget"
-    wait until there is a property inspector for widget "Header Widget"
+    wait until there is an inspector for widget "Header Widget"
     go to step "Set Header Widget Label"
 end step
 
@@ -139,7 +139,7 @@ step "Set NavBar Widget Properties"
     Double click on the widget to open up the property inspector.
 action
     highlight widget "NavBar Widget"
-    wait until there is a property inspector for widget "NavBar Widget"
+    wait until there is an inspector for widget "NavBar Widget"
     go to step "Set NavBar Widget Labels"
 end step
 
@@ -184,7 +184,7 @@ step "Set Time Background Graphic Properties"
     Double click on the graphic to open up the property inspector.
 action
     highlight graphic "Time Background Graphic"
-    wait until there is a property inspector for graphic "Time Background Graphic"
+    wait until there is an inspector for graphic "Time Background Graphic"
     go to step "Set Time Background Graphic Color"
 end step
 
@@ -247,7 +247,7 @@ step "Set Time Background Border Graphic Properties"
     Double click on the graphic to open up the Property Inspector.
 action
     highlight graphic "Time Background Border Graphic"
-    wait until there is a property inspector for graphic "Time Background Border Graphic"
+    wait until there is an inspector for graphic "Time Background Border Graphic"
 	go to step "Set Time Background Border Color"
 end step
 
@@ -282,7 +282,7 @@ step "Set Location Field Properties"
     Double click on the field to open up the Property Inspector.
 action
     highlight field "Location Field"
-    wait until there is a property inspector for field "Location Field"
+    wait until there is an inspector for field "Location Field"
 	  go to step "Set Location Field Text"
 end step
 
@@ -341,7 +341,7 @@ step "Set Date Field Properties"
     Double click on the field to open up the Property Inspector.
 action
     highlight field "Date Field"
-    wait until there is a property inspector for field "Date Field"
+    wait until there is an inspector for field "Date Field"
 	  go to step "Set Date Field Text"
 end step
 
