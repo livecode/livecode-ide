@@ -1123,6 +1123,16 @@ on revTutorialEpilogue
    end if
 end revTutorialEpilogue
 
+# Keep an array of things to clean up. 
+# Individual highlight actions can force a palette to be kept open.
+local sDismissA
+on revTutorialCleanUp
+   if sDismissA["inspector"] is true then
+      revTutorialClearLastPropertyInspector
+   end if
+   put true into sDismissA["inspector"]
+end revTutorialCleanUp
+
 on revTutorialContinue
    repeat forever
       hide stack "revTutorial"
@@ -1166,6 +1176,8 @@ on revTutorialContinue
       revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
       // Wait
       revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
+      
+      revTutorialCleanUp
       
       if sWaiting then
          exit repeat
@@ -1339,10 +1351,6 @@ on revTutorialReturnFromInterlude
 end revTutorialReturnFromInterlude
 
 on revTutorialDoWait pActionData
-   if pActionData["wait condition"] is not "property" then
-      revTutorialClearLastPropertyInspector
-   end if
-   
    put empty into sWait
    // Check to see if wait condition is immediately satisfied
    if revTutorialCheckWaitCondition(pActionData) then
@@ -1713,6 +1721,7 @@ on revTutorialHighlightInspector pSection, pGroup
    put pGroup into sHighlight["group"]
    put sLastInspectedObjects into sHighlight["object"]
    revTutorialPositionStackForHighlight
+   put false into sDismissA["inspector"]
 end revTutorialHighlightInspector
 
 local sDisabled
