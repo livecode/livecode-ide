@@ -1001,7 +1001,16 @@ on revTutorialLoadData pCourse, pTutorial, pLesson
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
-   put revTutorialParseData(tTutorialData) into sSteps
+   try
+      put revTutorialParseData(tTutorialData) into sSteps
+   catch tError
+   end try
+   
+   if tError is not empty then 
+      throw ("Error parsing" && pCourse && "-" && pTutorial && "-" \ 
+            && pLesson & return & tError)
+      exit revTutorialLoadData
+   end if
    put the number of elements in sSteps into sNumSteps
 end revTutorialLoadData
 
@@ -2393,6 +2402,10 @@ on revTutorialRunAction pActionData
 end revTutorialRunAction
 
 on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
+   if the environment is not "development" then
+      revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
+      exit revTutorialCreateAndCaptureObjects
+   end if
    local tCapture, tType
    # Create the object and tag it
    repeat with x = 1 to the number of elements in pCaptureData["captures"]
@@ -2436,7 +2449,8 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             revIDEActionDuplicate
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else
-            throw "Can't capture target" && tType
+            do "create" && tType
+            put it into sTaggedObjects[tType][tCapture["tag"]]
          end if
       end if
    end repeat
@@ -2448,5 +2462,73 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
 end revTutorialCreateAndCaptureObjects
 
 on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
-   revIDESetPropertyOfObject pObjects, pProp, pValue
+   if the environment is "development" then
+      revIDESetPropertyOfObject pObjects, pProp, pValue
+   else
+      repeat for each line tLine in pObjects
+         set the pProp of tLine to pValue
+      end repeat
+   end if
 end revTutorialSetPropertyOfObjects
+
+on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
+   local tCapture, tType
+   # Create the object and tag it
+   repeat with x = 1 to the number of elements in pCaptureData["captures"]
+      put pCaptureData["captures"][x] into tCapture
+      put tCapture["object type"] into tType
+      if tType is "stack" then
+         create stack
+         put it into sTaggedObjects["stack"][tCapture["tag"]]
+      else if tType is "card" then
+         create card
+         put it into sTaggedObjects["card"][tCapture["tag"]]
+      else if tType is "widget" then
+         local tKind
+         put word 2 of pHighlightData["tool"] into tKind
+         create widget as tKind
+         put it into sTaggedObjects["widget"][tCapture["tag"]]
+      else
+         if pHighlightData["item"] contains "Import" then
+            # Deal with 'import'
+            if sFile is empty then
+               throw "No file specified for import"
+            end if
+            local tFile
+            put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
+            switch tType
+               case "image"
+                  create image
+                  set the filename of it to tFile
+                  put it into sTaggedObjects[tType][tCapture["tag"]]
+                  break
+               case "audioClip"
+                  import videoClip from file tFile
+                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                  break
+               case "videoClip"
+                  import videoClip from file tFile
+                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                  break
+               case "text"
+                  create field
+                  set the text of it to url ("file:" & tFile)
+                  put it into sTaggedObjects[tType][tCapture["tag"]]
+                  break
+            end switch
+         else if pHighlightData["item"] contains "duplicate" then
+            revIDESelectObjects sSelected
+            revIDEActionDuplicate
+            put the result into sTaggedObjects[tType][tCapture["tag"]]
+         else
+            do "create" && tType
+            put it into sTaggedObjects[tType][tCapture["tag"]]
+         end if
+      end if
+   end repeat
+   local tObject
+   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
+   if not exists(tObject) then
+      throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
+   end if
+end revTutorialCreateAndCaptureObjectsStandalone
