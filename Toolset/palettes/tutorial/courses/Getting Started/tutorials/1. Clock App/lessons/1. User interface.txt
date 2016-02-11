@@ -21,10 +21,10 @@ action
     -- Wait until there is a captured stack with tag "Mainstack"
     wait until there is a stack "Mainstack"
     -- Advance to another step
-    go to step "Set stack background color interlude"
+    go to step "Set Stack Background Color Interlude"
 end step
 
-step "Set stack background color interlude"
+step "Set Stack Background Color Interlude"
 	The clock app has a light blue/grey background. Setting the 
 	background color of the stack will affect all the cards in the 
 	stack.
