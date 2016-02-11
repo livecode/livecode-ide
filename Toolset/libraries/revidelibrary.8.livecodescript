@@ -3741,7 +3741,7 @@ function revIDEInspectorBehavior
 end revIDEInspectorBehavior
 
 function revIDEDataViewBehavior
-   return the long ID of button "DataView Behavior" of stack "DataViewControl" of stack "revCore"
+   return the long ID of button "DataView Behavior" of stack "revDataViewControl" of stack "revCore"
 end revIDEDataViewBehavior
 
 local sMilliseconds
