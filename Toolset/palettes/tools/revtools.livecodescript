@@ -929,16 +929,7 @@ function toolObjectName pTool
       default
          # Try and resolve as a reference to a widget creation tool
          if word 1 of pTool is "Create" then
-            local tTitle
-            put word 2 to -1 of pTool into tTitle
-            local tInstalledWidgets
-            put revIDEExtensions("widget","installed") into tInstalledWidgets
-            repeat for each key tTypeID in tInstalledWidgets
-               if tInstalledWidgets[tTypeID]["title"] is tTitle then
-                  put tTypeID into tTool
-                  exit repeat
-               end if
-            end repeat
+            return word 2 of pTool
          end if
    end switch
    return tTool
