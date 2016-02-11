@@ -859,10 +859,10 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
          
          if tPointerLeft then
             put the left of tGraphic + 40 into tX
-            put tLeft - 25 into tStackLeft
+            put tMiddle - 40 into tStackLeft
          else
             put the right of tGraphic - 40 into tX
-            put tRight - tWidth - 25 into tStackLeft
+            put tMiddle - tWidth - 40 into tStackLeft
          end if
       end if
       
