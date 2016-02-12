@@ -7,8 +7,8 @@ kind
 tooltip												
 visible												
 disabled							false					
-behavior												
 layerMode												
+behavior												
 customProperties												
 ink							srcCopy					
 blendLevel							0	0,100				
