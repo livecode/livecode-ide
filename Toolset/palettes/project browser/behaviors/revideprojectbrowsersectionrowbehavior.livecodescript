@@ -36,7 +36,7 @@ on LayoutControl pControlRect
       set the left of button "disclosure" of me to item 1 of pControlRect
    else
       show button "connector1" of me
-      set the icon of button  "connector1" of me to the id of image tLevelConnectors[1] of card "templates" of this stack
+      set the icon of button "connector1" of me to the id of image tLevelConnectors[1] of card "templates" of stack "revIDEProjectBrowser"
       set the left of button "connector1" of me to item 1 of pControlRect
       set the left of button "disclosure" of me to the right of button ("connector1") of me
    end if

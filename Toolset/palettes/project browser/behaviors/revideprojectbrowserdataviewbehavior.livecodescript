@@ -22,14 +22,6 @@ on setUpDataView
    revIDESubscribe "ideNameChanged"
    revIDESubscribe "ideMainstackChanged"
    
-   revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_thumbnails"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_groupThumbnails" 
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_objectType"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
-   
    revIDESubscribe "ideShowInProjectBrowser"
    
    put empty into sDisplayArray
@@ -153,58 +145,6 @@ on ideMainstackChanged pOldName, pNewName, pTarget
    addStackToProjectBrowser pTarget
 end ideMainstackChanged
 
-on preferenceChanged pPreference, pValue
-   local tOldValue
-   
-   switch pPreference
-      case "ideProjectBrowser_thumbnails"
-      case "ideProjectBrowser_groupThumbnails"
-         put revIDEGetPreference(pPreference) into tOldValue
-         revIDESetPreference pPreference, not(tOldValue)
-         break
-      case "ideProjectBrowser_sortOrder"
-         revIDESetPreference pPreference, pValue
-         break
-      case "ideProjectBrowser_objectType"
-         revIDESetPreference pPreference, pValue
-         break
-      case "ideProjectBrowser_order"
-         revIDESetPreference pPreference, pValue
-         break
-   end switch
-end preferenceChanged
-
-on idePreferenceChanged pPreference, pValue
-   switch pPreference
-      case "ideProjectBrowser_thumbnails"
-      case "ideProjectBrowser_groupThumbnails" 
-      case "ideProjectBrowser_sortOrder"
-      case "ideProjectBrowser_objectType"
-      case "ideProjectBrowser_order"
-      case "ideProjectBrowser_show"
-      default
-         buildProjectView true
-   end switch
-end idePreferenceChanged
-
-on displayPreferenceSelected pPreference, pValue
-   lock screen
-   if pPreference is "ideProjectBrowser_show" then
-      local tCurrentPreferenceValue, tPreferencePosition
-      put revIDEGetPreference("ideProjectBrowser_show") into tCurrentPreferenceValue
-      
-      put itemoffset(pValue, tCurrentPreferenceValue) into tPreferencePosition
-      if tPreferencePosition > 0 then
-         delete item tPreferencePosition of tCurrentPreferenceValue
-      else
-         put "," & pValue after tCurrentPreferenceValue
-      end if
-      revIDESetPreference "ideProjectBrowser_show", tCurrentPreferenceValue
-   end if
-   buildProjectView true
-   unlock screen
-end displayPreferenceSelected
-
 on ideShowInProjectBrowser pTarget
    lock screen
    repeat for each line tObj in pTarget
@@ -274,32 +214,49 @@ command setUpProjectView
    set the foregroundColor of graphic "indicator" of group "pbDragIndicator" of card "templates" of this stack to revIDEColor("edition_color")
 end setUpProjectView
 
-command buildProjectView pRememberExpansion
-   local tStacks, tFrontScripts, tBackScripts,tRow, tVisibleROws, tChildren
-   local tLibraryStacks, tOldArray,tOldExpandedControls, tOldExpandedRows
-   local tSections
-   local tIndex
-   
-   lock screen
-   
-   put revIDEGetPreference("ideProjectBrowser_show") into tSections
-   
-   if pRememberExpansion then
-      repeat for each line tKey in the keys of sDisplayArray["objects"]
-         if sDisplayArray["objects"][tKey]["expanded"] is true then
-            if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
-               put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
-            else if  sDisplayArray["objects"][tKey]["type"] is "card" then
-               put sDisplayArray["objects"][tKey]["long id"] & comma & 2 &  return after tOldExpandedControls
-            else if  sDisplayArray["objects"][tKey]["type"] is "group" then
-               put sDisplayArray["objects"][tKey]["long id"] & comma & 3 &  return after tOldExpandedControls
-            else
-               put sDisplayArray["objects"][tKey]["long id"] & comma & 4 &  return after tOldExpandedControls
-            end if
+local sTreeLeafType
+on setLeafType pType
+   put pType into sTreeLeafType
+   buildProjectView true
+   refreshProjectView
+end setLeafType
+
+# Accept or reject a node type if it is incompatible with the specified leaf type
+function pbShouldShowNode pType
+   switch pType
+      case "control"
+      case "group"
+         if sTreeLeafType is "card" then
+            return false
          end if
-      end repeat
-   end if
-   sort lines of tOldExpandedControls by item 2 of each
+      case "card"
+         if sTreeLeafType is "substack" then
+            return false
+         end if
+      case "substack"
+         if sTreeLeafType is "stack" then
+            return false
+         end if
+      case "stack"
+      default
+         break
+   end switch
+   return true
+end pbShouldShowNode
+
+local sTreeRoot
+on setTreeRoot pObjectLongID
+   put pObjectLongID into sTreeRoot
+   put empty into sDisplayArray
+   buildProjectView
+   refreshProjectView
+end setTreeRoot
+
+on initialiseStacksDisplay
+   local tStacks, tFrontScripts, tBackScripts, tLibraryStacks
+   
+   local tSections
+   put revIDEGetPreference("ideProjectBrowser_show") into tSections
    
    repeat with x  = 1 to the number of items in tSections
       if item x of tSections is not among the items of "Front Scripts,Stacks,Back Scripts,Stacks in use" then
@@ -311,9 +268,10 @@ command buildProjectView pRememberExpansion
    if tSections is empty then 
       put "stacks" into tSections
       revIDESetPreference "ideProjectBrowser_show",tSections
-      exit buildProjectView
+      exit initialiseStacksDisplay
    end if
    
+   local tIndex
    if "Front Scripts" is among the items of tSections then
       put revIDEFrontScripts() into tFrontScripts
       
@@ -335,8 +293,48 @@ command buildProjectView pRememberExpansion
    end if
    
    put itemise(tStacks,tFrontScripts,tBackScripts,tLibraryStacks) into sDisplayArray
-   put topLevelRows(sDisplayArray["objects"]) into tVisibleRows
-   put tVisibleRows into sDisplayArray["visible object keys"]
+   put topLevelStackRows(sDisplayArray["objects"]) into sDisplayArray["visible object keys"]
+end initialiseStacksDisplay
+
+on intialiseDisplay
+   local tTopType
+   put word 1 of sTreeRoot into tTopType
+   if tTopType is empty then
+      put "stack" into tTopType
+   end if
+   
+   if tTopType is "stack" then
+      initialiseStacksDisplay
+   else
+      addChildren sTreeRoot, "", true
+   end if
+end intialiseDisplay
+
+command buildProjectView pRememberExpansion
+   local tOldArray,tOldExpandedControls, tOldExpandedRows,
+   local tRow, tVisibleRows, tChildren
+   local tIndex
+   
+   lock screen
+   
+   if pRememberExpansion then
+      repeat for each line tKey in the keys of sDisplayArray["objects"]
+         if sDisplayArray["objects"][tKey]["expanded"] is true then
+            if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
+               put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
+            else if  sDisplayArray["objects"][tKey]["type"] is "card" then
+               put sDisplayArray["objects"][tKey]["long id"] & comma & 2 &  return after tOldExpandedControls
+            else if  sDisplayArray["objects"][tKey]["type"] is "group" then
+               put sDisplayArray["objects"][tKey]["long id"] & comma & 3 &  return after tOldExpandedControls
+            else
+               put sDisplayArray["objects"][tKey]["long id"] & comma & 4 &  return after tOldExpandedControls
+            end if
+         end if
+      end repeat
+   end if
+   sort lines of tOldExpandedControls by item 2 of each
+   
+   intialiseDisplay
    
    ## Expanded all previously expanded controls
    local tChildRow, tVisibleRowNumber
@@ -347,12 +345,10 @@ command buildProjectView pRememberExpansion
          put getRow(tExpandedControl) into tChildRow
          put itemOffset(tChildRow, tVisibleRows) into tVisibleRowNumber
          addChildren tExpandedControl, tChildRow, false
-         put the number of items in sDisplayArray["objects"][tChildRow]["children"] into sDisplayArray["objects"][tChildRow]["childCount"] 
          put "false" into sDisplayArray["objects"][tChildRow]["expanded"]
-         dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true
+         dispatch "TreeToggleRow" to me with sDisplayArray, tVisibleRowNumber, 0, true
       end if
    end repeat
-   
    refreshProjectView
    unlock screen
 end buildProjectView
@@ -421,15 +417,29 @@ end updateListeners
 --   unlock messages
 --end redrawProjectList
 
-## Returns the stacks and header rows
 function topLevelRows pArray
    local tTopLevelRows, tLongID
    put empty into sLongIDToRow
    put empty into sObjectToParent
    
    repeat with x = 1 to the number of lines in the keys of pArray
+      if pArray[x]["level"] is "1" then
+         put x & comma after tTopLevelRows
+      end if
+   end repeat
+   if the last char of tTopLevelRows is comma then delete the last char of tTopLevelRows
+   return tTopLevelRows
+end topLevelRows
+
+## Returns the stacks and header rows
+function topLevelStackRows pArray
+   local tTopLevelRows, tLongID
+   put empty into sLongIDToRow
+   put empty into sObjectToParent
+   
+   repeat with x = 1 to the number of lines in the keys of pArray
       ## Mainstacks
-      if pArray[x]["type"] is "stack" and pArray[x]["level"] is "1" then
+      if pArray[x]["type"] is "stack" or pArray[x]["level"] is "1" then
          put x & comma after tTopLevelRows
       end if
       
@@ -450,7 +460,21 @@ function topLevelRows pArray
    end repeat
    if the last char of tTopLevelRows is comma then delete the last char of tTopLevelRows
    return tTopLevelRows
-end topLevelRows
+end topLevelStackRows
+
+# Expand all of the rows by recursively adding children and calling toggle
+on expandAll
+   local tVisibleRow, tRow, tObject
+   put 1 into tVisibleRow
+   put item tVisibleRow of sDisplayArray["visible object keys"] into tRow
+   repeat while tRow is not empty
+      put sDisplayArray["objects"][tRow]["long id"] into tObject
+      addChildren tObject, tRow, false, true
+      dispatch "TreeToggleRow" to me with sDisplayArray, tVisibleRow, -1, true
+      add 1 to tVisibleRow
+      put item tVisibleRow of sDisplayArray["visible object keys"] into tRow
+   end repeat
+end expandAll
 
 ########## Selection handlers ########## 
 ####################################
@@ -490,7 +514,7 @@ command showObjects pObject
          put false into  sDisplayArray["objects"][tRow]["expanded"] 
          addChildren tObject, tRow
          put itemOffset(tRow, tVisibleRows) into tVisibleRowNumber
-         dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true 
+         dispatch "TreeToggleRow" to me with sDisplayArray, tVisibleRowNumber, 0, true 
       end if
    end repeat
    
@@ -592,12 +616,14 @@ on selectionChanged pHilitedRows, pPreviouslyHilitedRows
          selectObjects tObjectList
       end if
    end if
+   
+   dispatch "selectionInViewChanged" with the short name of me
    unlock screen
 end selectionChanged
 
 on goToObject pObjectID
-   ## Don't go to object if it is part of the project browser
-   If ideStackOfObject(pObjectID) is the long id of me then
+   ## Don't go to object if it is on the templates card of the pb
+   if revIDECardOfObject(pObjectID) is the long id of card "templates" of me then
       exit goToObject
    end if
    
@@ -841,7 +867,7 @@ function CacheKeyForRow pRow
    return (sDisplayArray["objects"][theId]["long id"] && sDisplayArray["objects"][theId]["type"])
 end CacheKeyForRow
 
-on toggleGroup pRow, pState
+on toggleGroup pRow, pWasContracted
    lock screen
    local tLongID, tLevel, tData, tAbsoluteRow, tVisibleRows
    
@@ -853,13 +879,13 @@ on toggleGroup pRow, pState
    if tLongID is among the items of "front_scripts_title,back_scripts_title,stacks_in_use_title" then
       ## Do nothing
    else
-      if pState is true then
+      if pWasContracted is true then
          addChildren tLongID, tAbsoluteRow
       end if
    end if      
    
    updateListeners
-   dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, pRow, 0, pState 
+   dispatch "TreeToggleRow" to me with sDisplayArray, pRow, 0, pWasContracted 
    ideSelectedObjectChanged
    unlock screen
 end toggleGroup
@@ -1085,7 +1111,7 @@ on refreshChildren pParentList, pNewControl, pExpanded
    repeat for each line pCard in pParentList
       put getRow(pCard) into tCardRow
       
-      dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tCardRow,false
+      dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tCardRow,false
       put the result into tDescendants
       
       if sDisplayArray["objects"][tCardRow]["expanded"] is true then
@@ -1100,7 +1126,7 @@ on refreshChildren pParentList, pNewControl, pExpanded
    ## Delete all descendants
    repeat for each line pCard in pParentList
       put getRow(pCard) into tCardRow
-      dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tCardRow,false
+      dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tCardRow,false
       put the result into tDescendants
       put sDisplayArray["visible object keys"] into tVisibleRows
       
@@ -1135,7 +1161,7 @@ on refreshChildren pParentList, pNewControl, pExpanded
          addChildren tExpandedChild, tChildRow, false
          put the number of items in sDisplayArray["objects"][tChildRow]["children"] into sDisplayArray["objects"][tChildRow]["childCount"] 
          put "false" into sDisplayArray["objects"][tChildRow]["expanded"]
-         dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true
+         dispatch "TreeToggleRow" to me with sDisplayArray, tVisibleRowNumber, 0, true
       end if
    end repeat
    
@@ -1147,23 +1173,25 @@ on refreshChildren pParentList, pNewControl, pExpanded
          put itemOffset(tChildRow, tVisibleRows) into tVisibleRowNumber
          addChildren pNewControl, tChildRow, false
          put false into sDisplayArray["objects"][tChildRow]["expanded"]
-         dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true
+         dispatch "TreeToggleRow" to me with sDisplayArray, tVisibleRowNumber, 0, true
       end if
    end if
    
    unlock screen
 end refreshChildren
 
-on addChildren pParentID, pParentRow, pVisible
+on addChildren pParentID, pParentRow, pVisible, pRecursive
    local tCards, theIndex, theNewChildren, tChildArray, tKeys
    local tVisibleRows
    local tOnlyChild, tParentOnlyChild
    local tLevelConnectors, tParentLevelConnectors, tPosition
    local tAudioclipTitleRow, tVideoclipTitleRow
    
-   # If children are already set then don't worry about it
-   if sDisplayArray["objects"][pParentRow]["children"] is not empty then
-      --exit addChildren
+   local tLevel
+   if pParentRow is not empty then
+      put sDisplayArray["objects"][pParentRow]["level"] into tLevel
+   else
+      put 0 into tLevel
    end if
    
    if pVisible then
@@ -1171,8 +1199,8 @@ on addChildren pParentID, pParentRow, pVisible
       put comma after tVisibleRows
    end if
    
-   if word 1 of pParentID is "stack" then
-      put cardsOfStack(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
+   if word 1 of pParentID is "stack" and pbShouldShowNode("card") then
+      put cardsOfStack(pParentID, tLevel) into tChildArray
       if the number of lines in the keys of tChildArray is 1 then
          put true into tOnlyChild
       end if
@@ -1186,7 +1214,7 @@ on addChildren pParentID, pParentRow, pVisible
          put "Audioclips" into tChildArray[tAudioclipTitleRow]["title"]
          put "section" into tChildArray[tAudioclipTitleRow]["type"]
          put "section" into tChildArray[tAudioclipTitleRow]["style"]
-         put "2" into tChildArray[tAudioclipTitleRow]["level"]
+         put tLevel + 2 into tChildArray[tAudioclipTitleRow]["level"]
          put pParentID into tChildArray[tAudioclipTitleRow]["owner"]
          put "audioclips" && pParentID into tChildArray[tAudioclipTitleRow]["long id"]
          put "audioclips" && pParentID into tChildArray[tAudioclipTitleRow]["long id"]
@@ -1209,15 +1237,15 @@ on addChildren pParentID, pParentRow, pVisible
          put "Videoclips" into tChildArray[tVideoclipTitleRow]["title"]
          put "section" into tChildArray[tVideoclipTitleRow]["type"]
          put "section" into tChildArray[tVideoclipTitleRow]["style"]
-         put "2" into tChildArray[tVideoclipTitleRow]["level"]
+         put tLevel + 2 into tChildArray[tVideoclipTitleRow]["level"]
          put pParentID into tChildArray[tVideoclipTitleRow]["owner"]
          put "Videoclips" && pParentID into tChildArray[tVideoclipTitleRow]["long id"]
          put "corner" into tChildArray[tVideoclipTitleRow]["levels"][1]
       end if
-   else if word 1 of pParentID is "card" then
-      put controlsOfCard(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
-   else if word 1 of pParentID is "group" then
-      put controlsOfGroup(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
+   else if word 1 of pParentID is "card" and pbShouldShowNode("control") then
+      put controlsOfCard(pParentID, tLevel) into tChildArray
+   else if word 1 of pParentID is "group" and pbShouldShowNode("control") then
+      put controlsOfGroup(pParentID, tLevel) into tChildArray
    else if word 1 of pParentID is "audioclips" then
       put revIDEStackAudioClips(word 2 to -1 of pParentID) into tChildArray
    else if word 1 of pParentID is "videoclips" then
@@ -1226,69 +1254,98 @@ on addChildren pParentID, pParentRow, pVisible
       
    end if
    
-   if sDisplayArray["objects"][pParentRow]["onlyChild"] is true then put true into tParentOnlyChild
+   if pParentRow is not empty then
+      put sDisplayArray["objects"][pParentRow]["onlyChild"] into tParentOnlyChild
+   end if
    
-   # Add controls to array
-   if pParentID is not empty then
-      put the keys of sDisplayArray["objects"] into tKeys
-      replace return with comma in tKeys
-      put max(tKeys) into theIndex
+   put the keys of sDisplayArray["objects"] into tKeys
+   replace return with comma in tKeys
+   put max(tKeys) into theIndex
+   
+   put the keys of tChildArray into tKeys
+   sort lines of tKeys ascending numeric
+   repeat for each line tKey in tKeys
+      put empty into tLevelConnectors
+      add 1 to theIndex
+      put tChildArray[tKey] into sDisplayArray["objects"][theIndex]
       
-      put the keys of tChildArray into tKeys
-      sort lines of tKeys ascending numeric
-      repeat for each line tKey in tKeys
-         put empty into tLevelConnectors
-         add 1 to theIndex
-         put tChildArray[tKey] into sDisplayArray["objects"][theIndex]
-         
-         ## Store the long id of the object to the row number
-         put theIndex into sLongIDToRow[tChildArray[tKey]["long id"]]
-         
-         if pVisible then put theIndex & comma after tVisibleRows
-         
-         # Set parent property
+      ## Store the long id of the object to the row number
+      put theIndex into sLongIDToRow[tChildArray[tKey]["long id"]]
+      
+      if pVisible then put theIndex & comma after tVisibleRows
+      
+      # Set parent property
+      if pParentRow is not empty then
          put pParentRow into sDisplayArray["objects"][theIndex]["parent"] 
-         
-         # Build up list of children
-         put theIndex & "," after theNewChildren
-         
-         if tOnlyChild then 
-            put "only" into tPosition
-         else if tKey is line -1 of tKeys then
-            // Last child
-            put "last" into tPosition
-         else
-            put "mid" into tPosition
-         end if
-         
-         put levelConnectors(tChildArray[tKey], pParentRow, tPosition) into tLevelConnectors
-         put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-      end repeat
-      
-      ## Tell the last child it is last
-      put "true" into sDisplayArray["objects"][theIndex]["lastChild"] 
-      
-      delete the last char of theNewChildren
-      delete the last char of tVisibleRows
-      
-      # Set the "parent" key of the row that was clicked on
-      
-      if pVisible then
-         put tVisibleRows into sDisplayArray["visible object keys"] 
       end if
       
-      put theNewChildren into sDisplayArray["objects"][pParentRow]["children"]
-   else
-      put sDisplayArray["objects"][pParentRow]["children"] after tVisibleRows
+      # Build up list of children
+      put theIndex & "," after theNewChildren
+      
+      if tOnlyChild then 
+         put "only" into tPosition
+      else if tKey is line -1 of tKeys then
+         // Last child
+         put "last" into tPosition
+      else
+         put "mid" into tPosition
+      end if
+      
+      put levelConnectors(tChildArray[tKey], pParentRow, tPosition) into tLevelConnectors
+      put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
+   end repeat
+   
+   ## Tell the last child it is last
+   put "true" into sDisplayArray["objects"][theIndex]["lastChild"] 
+   
+   delete the last char of theNewChildren
+   delete the last char of tVisibleRows
+   
+   # Set the "parent" key of the row that was clicked on
+   
+   if pVisible then
       put tVisibleRows into sDisplayArray["visible object keys"] 
+   end if
+   
+   # Add controls to array
+   if pParentRow is not empty then
+      put theNewChildren into sDisplayArray["objects"][pParentRow]["children"]
+      put the number of elements in tChildArray into sDisplayArray["objects"][pParentRow]["childCount"]
+   else
+      put topLevelRows(sDisplayArray["objects"]) into sDisplayArray["visible object keys"] 
+   end if
+   
+   if pRecursive then
+      repeat for each item tRow in theNewChildren
+         addChildren sDisplayArray["objects"][tRow]["long id"], tRow, pVisible, true
+      end repeat
    end if
 end addChildren
 
 function levelConnectors pObjectArray, pParentRow, pPosition
-   local tLevelConnectors, tParentLevelConnectors
+   if pParentRow is empty then
+      return empty
+   end if
    
-   //Level connectors
-   if pObjectArray["type"] is "substack" then
+   local tLevelConnectors, tParentLevelConnectors
+   if pObjectArray["type"] is "card" and sDisplayArray["objects"][pParentRow]["type"] is "substack" then
+      # Card of substack needs special casing
+      put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
+      if pPosition is "only" then 
+         if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
+         else put empty into tLevelConnectors[1]
+         put "corner" into tLevelConnectors[2]
+      else if pPosition is "last" then
+         // Last child
+         if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
+         else put empty into tLevelConnectors[1]
+         put "corner" into tLevelConnectors[2]
+      else
+         if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
+         else put empty into tLevelConnectors[1]
+         put "branch"  into tLevelConnectors[2] 
+      end if
+   else if pObjectArray["style"] is "container" then
       if pPosition is "only" then 
          put "corner" into tLevelConnectors[1]
       else if pPosition is "last" then
@@ -1296,33 +1353,6 @@ function levelConnectors pObjectArray, pParentRow, pPosition
          put "corner" into tLevelConnectors[1]
       else
          put "branch"  into tLevelConnectors[1] 
-      end if
-   else if pObjectArray["type"] is "card" then
-      if word 1 of pObjectArray["owner"] is "stack" AND pObjectArray["owner"] contains "of" then
-         put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
-         if pPosition is "only" then 
-            if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
-            else put empty into tLevelConnectors[1]
-            put "corner" into tLevelConnectors[2]
-         else if pPosition is "last" then
-            // Last child
-            if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
-            else put empty into tLevelConnectors[1]
-            put "corner" into tLevelConnectors[2]
-         else
-            if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
-            else put empty into tLevelConnectors[1]
-            put "branch"  into tLevelConnectors[2] 
-         end if
-      else
-         if pPosition is "only" then 
-            put "corner" into tLevelConnectors[1]
-         else if pPosition is "last" then
-            // Last child
-            put "corner" into tLevelConnectors[1]
-         else
-            put "branch"  into tLevelConnectors[1] 
-         end if
       end if
    else if pObjectArray["type"] is "group" then
       put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
@@ -1380,6 +1410,10 @@ end levelConnectors
 #######################################
 
 on addStackToProjectBrowser pTarget
+   if not pbShouldShowNode("stack") then
+      exit addStackToProjectBrowser
+   end if
+   
    if not exists(pTarget) then
       exit addStackToProjectBrowser
    end if
@@ -1401,7 +1435,10 @@ on addStackToProjectBrowser pTarget
    put nextIndex() into tIndex
    
    put tIndex into sLongIDToRow[pTarget]
-   put revIDEStackProperties(pTarget, 1) into sDisplayArray["objects"][tIndex]
+   local tCardChildren, tSubstackChildren
+   put pbShouldShowNode("card") into tCardChildren
+   put pbShouldShowNode("substack") into tSubstackChildren 
+   put revIDEStackProperties(pTarget, 1, tCardChildren, tSubstackChildren) into sDisplayArray["objects"][tIndex]
    
    if tVisibleRows is empty then
       put tIndex into tVisibleRows
@@ -1414,6 +1451,9 @@ on addStackToProjectBrowser pTarget
 end addStackToProjectBrowser
 
 on addSubstackToProjectBrowser pTarget
+   if not pbShouldShowNode("substack") then
+      exit addSubstackToProjectBrowser
+   end if
    local tParentID, tParentRow, tIndex, tParentExpanded, tVisibleRows, tVisibleRows2
    local tChildren, tSubStackInfo, tLevelConnectors
    
@@ -1428,7 +1468,10 @@ on addSubstackToProjectBrowser pTarget
    put tIndex into sLongIDToRow[pTarget]
    
    put sDisplayArray["objects"][tParentRow]["children"] into tChildren
-   put revIDEStackProperties(pTarget,2) into tSubStackInfo
+   local tCardChildren, tSubstackChildren
+   put pbShouldShowNode("card") into tCardChildren
+   put pbShouldShowNode("substack") into tSubstackChildren 
+   put revIDEStackProperties(pTarget,2, tCardChildren, tSubstackChildren) into tSubStackInfo
    put tSubStackInfo into sDisplayArray["objects"][tIndex]
    
    ## Add the children
@@ -1454,7 +1497,7 @@ on addSubstackToProjectBrowser pTarget
          ## Should go after the last child of the previous card
          ## Or - before the next card/stack would be easier to find
          
-         dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray,itemOffset(tLastChild, tVisibleRows),false
+         dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray,itemOffset(tLastChild, tVisibleRows),false
          put the result into tLastChildChildren
          
          --put itemOffset(max(tLastChildChildren),tVisibleRows) into tLastChildPos
@@ -1483,6 +1526,10 @@ on addSubstackToProjectBrowser pTarget
 end addSubstackToProjectBrowser
 
 on addCardToProjectBrowser pTarget
+   if not pbShouldShowNode("card") then
+      exit addCardToProjectBrowser
+   end if
+   
    local tParentID, tVisibleRows, tParentRow, theIndex, tChildren, tParentExpanded
    local tCardInfo, tLevelConnectors, tLastChildChild, tCardNumber, tLastCardNumber
    
@@ -1533,7 +1580,7 @@ on addCardToProjectBrowser pTarget
    end if
    
    put sDisplayArray["objects"][tLastChild]["expanded"] into tLastChildOpen
-   dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray,tLastChild,false
+   dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray,tLastChild,false
    put the result into tLastChildChildren
    
    if tParentExpanded then
@@ -1592,6 +1639,10 @@ on addCardToProjectBrowser pTarget
 end addCardToProjectBrowser
 
 on addGroupToProjectBrowser pTarget
+   if not pbShouldShowNode("group") then
+      exit addGroupToProjectBrowser
+   end if
+   
    local tParentRow, tChildren, pParentID
    local tCards, theIndex, theNewChildren, tChildArray, tKeys
    local tVisibleRows, tChildVisible, tParentExpanded
@@ -1607,7 +1658,7 @@ on addGroupToProjectBrowser pTarget
    put nextIndex() into theIndex
    put theIndex into sLongIDToRow[pTarget]
    
-   dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tParentRow,false
+   dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tParentRow,false
    put the result into tChildren
    put the last item of tChildren into tLastChild
    
@@ -1678,7 +1729,7 @@ on addGroupToProjectBrowser pTarget
    put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"]
    
    local tDescendants, tParentChildren
-   dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tParentRow,false
+   dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tParentRow,false
    put the result into tDescendants
    
    put sDisplayArray["objects"][tParentRow]["children"] into tParentChildren
@@ -1706,6 +1757,10 @@ on addGroupToProjectBrowser pTarget
 end addGroupToProjectBrowser  
 
 on addControlToProjectBrowser pTarget
+   if not pbShouldShowNode("control") then
+      exit addControlToProjectBrowser
+   end if
+   
    local tParentRow, tChildren, pParentID
    local tCards, theIndex, theNewChildren, tChildArray, tKeys
    local tVisibleRows, tChildVisible, tParentExpanded
@@ -1725,7 +1780,7 @@ on addControlToProjectBrowser pTarget
    
    put theIndex into sLongIDToRow[pTarget]
    
-   dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tParentRow,false
+   dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tParentRow,false
    put the result into tDescendants
    
    --   if tChildren is empty then
@@ -1788,7 +1843,7 @@ on deleteStackFromProjectBrowser pTarget
    ## Only update if expanded
    put getRow(pTarget) into tRow
    
-   dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tRow,false
+   dispatch function "TreeDescendantNodesOfNode" to me with sDisplayArray, tRow,false
    put the result into tChildren
    
    if tChildren is empty then
@@ -1838,7 +1893,7 @@ on deleteCardFromProjectBrowser pTarget
    
    put sDisplayArray["objects"][tParentRow]["children"] into tChildren
    
-   dispatch function "TreeDescendantNodesOfRow" to group "objectList" with sDisplayArray, tRow,false
+   dispatch function "TreeDescendantNodesOfRow" to me with sDisplayArray, tRow,false
    put the result into tCardChildren
    
    if tCardChildren is empty then
@@ -1867,7 +1922,7 @@ on deleteCardFromProjectBrowser pTarget
    
    ## Update the children of the parent
    if the number of items in tChildren is 1 then
-      dispatch function "TreeDescendantNodesOfRow" to group "objectList" with sDisplayArray, itemOffset(tChildren,tVisibleRows),false
+      dispatch function "TreeDescendantNodesOfRow" to me with sDisplayArray, itemOffset(tChildren,tVisibleRows),false
       put the result into tChildChildren 
       
       repeat for each item tDescendant in tChildChildren 
@@ -1910,7 +1965,7 @@ on deleteControlFromProjectBrowser pTarget
    
    if word 1 of pTarget is "group" then
       local tGroupChildren
-      dispatch function "TreeDescendantNodesOfRow" to group "objectList" with sDisplayArray, tRow,false
+      dispatch function "TreeDescendantNodesOfRow" to me with sDisplayArray, tRow,false
       put the result into tGroupChildren
       
       if tGroupChildren is empty then
@@ -2246,22 +2301,21 @@ end updateObjectRows
 ## Property Info
 function cardsOfStack pStackID, pLevel
    local tCardArray
-   
-   put revIDECardPropertiesOfStack(pStackID, pLevel) into tCardArray
+   put revIDECardPropertiesOfStack(pStackID, pLevel, pbShouldShowNode("control")) into tCardArray
    return tCardArray
 end cardsOfStack
 
 function controlsOfCard pCardID, pLevel
    local tControlArray, tTime
    
-   put revIDEControlPropertiesOfCard(pCardID, pLevel) into tControlArray
+   put revIDEControlPropertiesOfCard(pCardID, pLevel, pbShouldShowNode("control")) into tControlArray
    return tControlArray
 end controlsOfCard
 
 function controlsOfGroup pGroupID, pLevel
    local tControlArray, tTime
    
-   put revIDEControlPropertiesOfGroup(pGroupID, pLevel) into tControlArray
+   put revIDEControlPropertiesOfGroup(pGroupID, pLevel, pbShouldShowNode("control")) into tControlArray
    return tControlArray
 end controlsOfGroup
 
@@ -2307,14 +2361,14 @@ on updateSelection pRows
    set the dashes of the templateGraphic to 4
    set the foreColor of the templateGraphic to "black"
    
-   local tMyStack
-   put revIDEStackOfObject(the long id of me) into tMyStack
+   local tMyCard
+   put revIDECardOfObject(the long id of me) into tMyCard
    
    local tNumSelected
    put the number of items in pRows into tNumSelected
    repeat with tCount = 1 to tNumSelected
-      if there is not a graphic ("selection" && tCount) of group "selections" of tMyStack then
-         create invisible graphic ("selection" && tCount) in group "selections" of tMyStack
+      if there is not a graphic ("selection" && tCount) of group "selections" of tMyCard then
+         create invisible graphic ("selection" && tCount) in group "selections" of tMyCard
       end if
    end repeat
    reset the templateGraphic
@@ -2325,22 +2379,59 @@ on updateSelection pRows
    repeat for each item tRow in pRows
       put the dvControlOfRow[tRow] of me into tControlOfRow
       if tControlOfRow is not empty then
-         set the rect of graphic ("selection" && tCount) of group "selections" of tMyStack to the rect of tControlOfRow
-         show graphic ("selection" && tCount) of group "selections" of tMyStack
+         set the rect of graphic ("selection" && tCount) of group "selections" of tMyCard to the rect of tControlOfRow
+         show graphic ("selection" && tCount) of group "selections" of tMyCard
       else
-         hide graphic ("selection" && tCount) of group "selections" of tMyStack
+         hide graphic ("selection" && tCount) of group "selections" of tMyCard
       end if
       add 1 to tCount
    end repeat
    
-   repeat while there is a graphic ("selection" && tCount) of group "selections" of tMyStack
-      hide graphic ("selection" && tCount) of group "selections" of tMyStack
+   repeat while there is a graphic ("selection" && tCount) of group "selections" of tMyCard
+      hide graphic ("selection" && tCount) of group "selections" of tMyCard
       add 1 to tCount
    end repeat
    unlock screen
 end updateSelection
 
-on pbRightClick
+on dragStart
+   local theTargetRows, tType, tStyle, tAbsRow
+   # me is the DataView group
+   put the dvHilitedRows of me into theTargetRows
+   
+   put getAbsoluteRow(item 1 of theTargetRows) into tAbsRow
+   
+   put getRowStyle(tAbsRow) into tStyle
+   put getRowType(tAbsRow) into tType
+
+   if tStyle is not among the items of "control,group,container" then exit dragStart
+   
+   # Sets the image shown while dragging.
+   set the dvDragImageRow of me to item 1 of theTargetRows
+   
+   # This will start tracking a drag reorder operation in the data grid.
+   # There is a default group that has a group that will show the user where the drop will occur.
+   # You can override the default graphic by setting the the viewProp["drop indicator template"] of the DataView to
+   # the long id of a group. The group should handle the resizeControl message to control appearance. 
+   # The group can handle the "PositionDropIndicator" message.  Param 1 is the row that the
+   # drop will happen after. You only need to handle this message if you want to control appearance based on drop position.
+   set the dvTrackDragReorder[theTargetRows] of me to true
+   
+   # LiveCode engine needs to be dragging some data  
+   set the dragData["private"] to theTargetRows & return & tStyle & return & tType
+end dragStart
+
+# pTargetRows are the rows that were being dragged.
+# pNewStartRow is the new starting row for pTargetRows (assuming your have a flat list of rows and not a tree).
+# pDroppedAfterRow is the row that the dropp happened after. This is a number between 0 and the number of rows in the DataView.
+command DragReorderRows pTargetRows, pNewStartingRow, pDroppedAfterRow
+   reorderRows pTargetRows,pNewStartingRow,pDroppedAfterRow
+end DragReorderRows
+
+on pbEditScript pTarget
+   revIDEEditScriptOfObjects pTarget
+end pbEditScript
+
+on pbRightClick pTarget
    revIDEPopupContextualMenu pbSelectedObjects()
 end pbRightClick
-

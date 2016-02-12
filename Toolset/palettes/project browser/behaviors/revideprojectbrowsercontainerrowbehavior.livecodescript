@@ -33,7 +33,7 @@ on FillInData pDataA, pRow
    
    if pDataA["type"] is "stack" then
       hide button "connector1" of me
-      if pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
+      if not pbShouldShowNode("card") or pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
          set the disabledicon of button "disclosure" of me to the id of image "cantExpand" of card "templates" of this stack
          disable button "disclosure" of me 
       else
@@ -45,7 +45,7 @@ on FillInData pDataA, pRow
          enable button "disclosure" of me 
       end if
    else      
-      if pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
+      if not pbShouldShowNode("control") or pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
          set the disabledicon of button "disclosure" of me to the id of image "cantExpand" of card "templates" of this stack
          disable button "disclosure" of me 
       else
@@ -197,10 +197,10 @@ end dvHilite
 on mouseUp
    switch the short name of the target
       case "scriptLines"
-         edit the script of the cObjectLongID of me
+         pbEditScript the cObjectLongID of me
          break
       case "behaviorScriptLines"
-         edit the script of the cBehaviorLongID of me
+         pbEditScript the cBehaviorLongID of me
          break
       default
          pass mouseUp
@@ -225,7 +225,7 @@ end ExitFieldEditor
 
 on mouseDown pButton
    if pButton is 3 then       
-      dispatch "pbRightClick" to stack "revIDEProjectBrowser" with the cObjectLongID of me
+      pbRightClick the cObjectLongID of me
    else if the short name of the target is "name" and \
          the dvRow of me is the dvHilitedRow of the owner of me then
       set the textColor of field "name" of me to revIDEColor("text_1")

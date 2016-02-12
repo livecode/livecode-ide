@@ -32,4 +32,78 @@ on preOpenStack
    addFrameItem "ideProjectBrowser_objectType", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me
    addFrameItem "ideProjectBrowser_show", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "displayPreferenceSelected", the long id of me
    addFrameItem "ideProjectBrowser_order","header","preference","Order by","enum","Name,Number","preferenceChanged",the long id of me
+   addFrameItem "ideProjectBrowser_style","header","preference","Display style","enum","All,Card and Object","preferenceChanged",the long id of me
+   
+   revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_thumbnails"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_groupThumbnails" 
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_objectType"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
+   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_style"
+   goPreferredCard
 end preOpenStack
+
+on goPreferredCard
+   local tCardPreference
+   put revIDEGetPreference("ideProjectBrowser_style") into tCardPreference
+   if tCardPreference is "Card and Object" then
+      go card "card view"
+   else
+      go card "list"
+   end if
+end goPreferredCard
+
+on preferenceChanged pPreference, pValue
+   local tOldValue
+   
+   switch pPreference
+      case "ideProjectBrowser_thumbnails"
+      case "ideProjectBrowser_groupThumbnails"
+         put revIDEGetPreference(pPreference) into tOldValue
+         revIDESetPreference pPreference, not(tOldValue)
+         break
+      case "ideProjectBrowser_sortOrder"
+      case "ideProjectBrowser_style"
+      case "ideProjectBrowser_objectType"
+      case "ideProjectBrowser_order"
+         revIDESetPreference pPreference, pValue
+         break
+   end switch
+end preferenceChanged
+
+on idePreferenceChanged pPreference, pValue
+   lock screen
+   switch pPreference
+      case "ideProjectBrowser_style"
+         goPreferredCard
+         break
+      case "ideProjectBrowser_show"
+      case "ideProjectBrowser_thumbnails"
+      case "ideProjectBrowser_groupThumbnails" 
+      case "ideProjectBrowser_sortOrder"
+      case "ideProjectBrowser_objectType"
+      case "ideProjectBrowser_order"
+      default
+         dispatch "rebuildView" to this card of me
+   end switch
+   unlock screen
+end idePreferenceChanged
+
+on displayPreferenceSelected pPreference, pValue
+   lock screen
+   if pPreference is "ideProjectBrowser_show" then
+      local tCurrentPreferenceValue, tPreferencePosition
+      put revIDEGetPreference("ideProjectBrowser_show") into tCurrentPreferenceValue
+      
+      put itemoffset(pValue, tCurrentPreferenceValue) into tPreferencePosition
+      if tPreferencePosition > 0 then
+         delete item tPreferencePosition of tCurrentPreferenceValue
+      else
+         put "," & pValue after tCurrentPreferenceValue
+      end if
+      revIDESetPreference "ideProjectBrowser_show", tCurrentPreferenceValue
+   end if
+   unlock screen
+end displayPreferenceSelected

@@ -34,11 +34,21 @@ on FillInData pDataA, pRow
       set the disabledicon of button "disclosure" of me to the id of image "cantExpand" of card "templates" of this stack
       disable button "disclosure" of me 
    else
-      if pDataA["expanded"] is true then
-         set the icon of button "disclosure" of me to the id of image "childExpanded" of card "templates" of this stack
+      local tImageName
+      if the cLevelConnectors of me is not empty then
+         if pDataA["expanded"] is true then
+            put "childExpanded" into tImageName
+         else
+            put "childContracted" into tImageName
+         end if
       else
-         set the icon of button "disclosure" of me to the id of image "childContracted" of card "templates" of this stack
+         if pDataA["expanded"] is true then
+            put "stackExpanded" into tImageName
+         else
+            put "stackContracted" into tImageName
+         end if
       end if
+      set the icon of button "disclosure" of me to the id of image tImageName of card "templates" of this stack
       enable button "disclosure" of me 
    end if
    
@@ -108,14 +118,21 @@ on LayoutControl pControlRect
       end if
    end repeat
    
+   local tDisclosureLeft
+   if tConnectorCount = 0 then
+      put item 1 of pControlRect + (10 * (the cIndent of me)) into tDisclosureLeft
+   else
+      put the right of button ("connector" & tConnectorCount) of me into tDisclosureLeft
+   end if
+   
    local tNameFieldLeft
    if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
-      set the left of button "disclosure" of me to the right of button ("connector" & tConnectorCount) of me
+      set the left of button "disclosure" of me to tDisclosureLeft
       set the width of field "type" of me to the formattedWidth of field "type" of me
       set the left of field "type" of me to the right of button "disclosure" of me
       put the right of field "type" of me - 5 into tNameFieldLeft
    else
-      set the left of button "disclosure" of me to the right of button ("connector" & tConnectorCount) of me
+      set the left of button "disclosure" of me to tDisclosureLeft
       set the left of image "groupIcon" of me to the right of button "disclosure" of me
       put the right of image "groupIcon" of me into tNameFieldLeft
    end if
@@ -171,7 +188,8 @@ setProp dvHilite[pHiliteColor] pBoolean
    end if
 end dvHilite
 
-on mouseUp
+on  mouseUp
+   --lock messages
    switch the short name of the target
       case "scriptLines"
          edit the script of the cObjectLongID of me
@@ -180,14 +198,14 @@ on mouseUp
          edit the script of the cBehaviorLongID of me
          break
       default
-         --selectObjects    
-         pass mouseUp
-   end switch
+         pass mouseUp      
+   end switch   
+   --unlock messages
 end mouseUp
 
 on mouseDown pButton
    if pButton is 3 then       
-      dispatch "pbRightClick" to stack "revIDEProjectBrowser" with the cObjectLongID of me
+       pbRightClick the cObjectLongID of me
    else if the short name of the target is "name" and \
          the dvRow of me is the dvHilitedRow of the owner of me then
       set the textColor of field "name" of me to revIDEColor("text_1")
@@ -218,12 +236,7 @@ on toggleCantSelect
 end toggleCantSelect
 
 on mouseDoubleUp 
-   if the short name of the target is "name" then
-      set the textColor of field "name" of me to revIDEColor("text_1")
-      CreateFieldEditorForField the long id of field "name" of me, "name"
-   else 
-      goToObject the cObjectLongID of me
-   end if
+   goToObject the cObjectLongID of me
 end mouseDoubleUp
 
 on CloseFieldEditor pFieldEditor, pRow, pKey, pClosingTriggeredBy

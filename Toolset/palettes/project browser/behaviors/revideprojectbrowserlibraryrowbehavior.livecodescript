@@ -98,7 +98,7 @@ end dvHilite
 on mouseUp
    switch the short name of the target
       case "scriptLines"
-         edit the script of the cObjectLongID of me
+         pbEditScript the cObjectLongID of me
          break
    end switch
 end mouseUp

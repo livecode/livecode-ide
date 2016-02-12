@@ -102,13 +102,20 @@ on LayoutControl pControlRect
       end if
    end repeat
    
+   local tTypeLeft
+   if tConnectorCount = 0 then
+      put the right of button ("connector1") of me into tTypeLeft
+   else
+      put the right of button ("connector" & tConnectorCount) of me into tTypeLeft
+   end if
+   
    local tNameFieldLeft
    if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
       set the width of field "type" of me to the formattedWidth of field "type" of me
-      set the left of field "type" of me to the right of button ("connector" & tConnectorCount) of me
+      set the left of field "type" of me to tTypeLeft
       put the right of field "type" of me - 5 into tNameFieldLeft
    else
-      set the left of button "controlIcon" of me to the right of button ("connector" & tConnectorCount) of me
+      set the left of button "controlIcon" of me to tTypeLeft
       put the right of button "controlIcon" of me into tNameFieldLeft
    end if
    set the right of button "cantSelect" of me to the item 3 of pControlRect  - the palettePadding of me   
@@ -173,7 +180,7 @@ end mouseUp
 
 on mouseDown pButton
    if pButton is 3 then       
-      dispatch "pbRightClick" to stack "revIDEProjectBrowser" with the cObjectLongID of me
+      pbRightClick the cObjectLongID of me
    else if the short name of the target is "name" and \
          the dvRow of me is the dvHilitedRow of the owner of me then
       set the textColor of field "name" of me to revIDEColor("text_1")
