@@ -36,7 +36,7 @@ associated with the step, and actions associated with the step.
 The possible actions are as follows:
 
 	Command
-	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> | <Target: ScriptEditor> | <Target : IDEPalette> | “guide” <Guide:STRING> )
+	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> | <Target : IDEPalette> | <Target: IDEComponent> | “guide” <Guide:STRING> )
 	  | "capture" <Target: CaptureTarget>
 	  | "wait" "until" <Condition: WaitCondition>
 	  | "go" "to" "step" <Name: STRING>
@@ -63,14 +63,19 @@ remains in the center of the screen.
 	ObjList
 	: <Reference: Object> [ , <Next: ObjList> ]
 
-	Palette
-	: “property” “inspector”
+	ObjPalette
+	: “inspector”
 	| “script” “editor”
+
+	Palette
+	: "dictionary"
 	| “tools”
 	| “menubar”
+	| "message box"
 
 	Tool
 	  : [<Item: MenuItem>] "menu" <Menu: STRING>
+	  | "toolbar" <Tool: STRING>
 	  | "tool" <Name: STRING>
 
 	MenuItem
@@ -79,11 +84,12 @@ remains in the center of the screen.
 	Property
 	: “property” <Property: STRING> “of” “section” <Section: STRING>
 
-	ScriptEditor
-	: “script” “editor” <Component: STRING> of <Target: Object>
-
 	IDEPalette
-	: <Target: Palette> [ "for" <Associated: Object> ]
+	: <Target: Palette> 
+	| <Target: ObjPalette> "for" <Associated: Object>
+
+	IDEComponent
+	: <Component: STRING> of <Target: IDEPalette> 
 
 The capture action enables the tutorial to refer to an object or set of 
 objects later on in the tutorial. It can be used to tag the next object 
@@ -97,9 +103,10 @@ The wait action causes the tutorial to wait until a given condition is
 satisfied before continuing.
 
 	Condition
-	  : "there" "is" "a" <Target: Object>
+	  : "there" "is" ( "a" | "an" ) <Target: Object>
 	  | <Target: Object> "fits" "guide" <Guide: STRING> [ "with" "tolerance" <Tolerance: INTEGER> ]
-	  | "there" "is" "a" <Target: Palette> [ "for" <TargetObject: Object> ]
+	  | "there" "is" ( "a" | "an" ) <Target: Palette>
+	  | "there" "is" ( "a" | "an" ) <Target: ObjPalette> "for" <TargetObject: Object>
 	  | <Target: Object> “is” (“clicked” | “selected” | “scripted” | “focused” )
 	  | “the” “tool” “is” (“edit” | “run” | “graphic”)
 	  | “the” <Property: PROPERTY> “of” <Target: Object> “is” <Value: STRING>

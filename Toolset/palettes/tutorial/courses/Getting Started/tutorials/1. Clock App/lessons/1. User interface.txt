@@ -21,10 +21,10 @@ action
     -- Wait until there is a captured stack with tag "Mainstack"
     wait until there is a stack "Mainstack"
     -- Advance to another step
-    go to step "Set stack background color interlude"
+    go to step "Set Stack Background Color Interlude"
 end step
 
-step "Set stack background color interlude"
+step "Set Stack Background Color Interlude"
 	The clock app has a light blue/grey background. Setting the 
 	background color of the stack will affect all the cards in the 
 	stack.
@@ -38,7 +38,7 @@ step  "Open Stack Inspector"
 	Inspector from the Object menu.
 action
 	highlight menu item "Stack Inspector" of menu "Object"
-    wait until there is a property inspector for stack "Mainstack"
+    wait until there is an inspector for stack "Mainstack"
     go to step "Set Stack Background Color"
 end step
 
@@ -53,7 +53,7 @@ end step
 step "Create Header Widget"
     Drag a header widget from the Tools palette onto your stack.
 action
-    highlight tool "Create Header"
+    highlight tool "Create com.livecode.widget.headerbar"
     capture the next new widget of stack "Mainstack" as "Header Widget"
     wait until there is a widget "Header Widget"
     go to step "Set Header Widget Area"
@@ -72,7 +72,7 @@ step "Set Header Widget Properties"
     Double click on the widget to open up the property inspector.
 action
     highlight widget "Header Widget"
-    wait until there is a property inspector for widget "Header Widget"
+    wait until there is an inspector for widget "Header Widget"
     go to step "Set Header Widget Label"
 end step
 
@@ -119,7 +119,7 @@ end step
 step "Create Footer Widget"
     Drag a navigation bar widget from the Tools palette onto your stack.
 action
-    highlight tool "Create Navigation Bar"
+    highlight tool "Create com.livecode.widget.navbar"
     capture the next new widget of stack "Mainstack" as "NavBar Widget"
     wait until there is a widget "NavBar Widget"
     go to step "Set NavBar Widget Area"
@@ -139,7 +139,7 @@ step "Set NavBar Widget Properties"
     Double click on the widget to open up the property inspector.
 action
     highlight widget "NavBar Widget"
-    wait until there is a property inspector for widget "NavBar Widget"
+    wait until there is an inspector for widget "NavBar Widget"
     go to step "Set NavBar Widget Labels"
 end step
 
@@ -184,7 +184,7 @@ step "Set Time Background Graphic Properties"
     Double click on the graphic to open up the property inspector.
 action
     highlight graphic "Time Background Graphic"
-    wait until there is a property inspector for graphic "Time Background Graphic"
+    wait until there is an inspector for graphic "Time Background Graphic"
     go to step "Set Time Background Graphic Color"
 end step
 
@@ -247,7 +247,7 @@ step "Set Time Background Border Graphic Properties"
     Double click on the graphic to open up the Property Inspector.
 action
     highlight graphic "Time Background Border Graphic"
-    wait until there is a property inspector for graphic "Time Background Border Graphic"
+    wait until there is an inspector for graphic "Time Background Border Graphic"
 	go to step "Set Time Background Border Color"
 end step
 
@@ -282,7 +282,7 @@ step "Set Location Field Properties"
     Double click on the field to open up the Property Inspector.
 action
     highlight field "Location Field"
-    wait until there is a property inspector for field "Location Field"
+    wait until there is an inspector for field "Location Field"
 	  go to step "Set Location Field Text"
 end step
 
@@ -341,7 +341,7 @@ step "Set Date Field Properties"
     Double click on the field to open up the Property Inspector.
 action
     highlight field "Date Field"
-    wait until there is a property inspector for field "Date Field"
+    wait until there is an inspector for field "Date Field"
 	  go to step "Set Date Field Text"
 end step
 
@@ -380,7 +380,7 @@ end step
 step "Create Clock Widget"
     Drag a clock widget from the Tools palette onto your stack.
 action
-    highlight tool "Create Clock"
+    highlight tool "Create com.livecode.widget.clock"
     capture the next new widget of stack "Mainstack" as "Time Clock"
     wait until there is a widget "Time Clock"
     go to step "Set Clock Widget Area"
