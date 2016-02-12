@@ -948,6 +948,11 @@ on __extensionLoad pID, pExtensionDataA
       __extensionPropertySet tIndex, "icon", tToLoadA["install_path"] & "/support/icon.png"
    end if
    
+   # Load the default script if there is one
+   local tDefaultScript
+   put revIDEExtensionFetchDefaultScript(tToLoadA["install_path"] , pID, true) into tDefaultScript
+   __extensionPropertySet tIndex, "defaultScript", tDefaultScript
+   
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
    if not revEnvironmentIsInstalled() and not there is a file (tToLoadA["install_path"] & slash & "api.lcdoc") then
@@ -955,6 +960,41 @@ on __extensionLoad pID, pExtensionDataA
    end if
    
 end __extensionLoad
+
+function revIDEExtensionFetchDefaultScript pFolder, pExtensionID, pValidate
+   if there is a stack (pExtensionID& ".__DefaultScript") then
+      return the script of stack (pExtensionID& ".__DefaultScript")
+   end if
+   
+   local tDefaultScriptPath
+   put pFolder & "/support/defaultscript.livecodescript" into tDefaultScriptPath
+   
+   if there is not a file tDefaultScriptPath then
+      return empty
+   end if
+   
+   lock messages
+   try
+      open stack tDefaultScriptPath
+   catch tStackError
+      return empty
+   end try
+   
+   local tScript
+   if tStackError is empty then
+      if pValidate then
+         if there is a stack (pExtensionID& ".__DefaultScript") then
+            put the script of stack (pExtensionID & ".__DefaultScript") into tScript
+         end if
+      else
+         put the script of stack tDefaultScriptPath into tScript
+      end if
+      delete stack tDefaultScriptPath
+   end if
+   unlock messages
+   
+   return tScript
+end revIDEExtensionFetchDefaultScript
 
 function __extensionManifestValue pExtensionID, pProperty
    # Get the path to the package file
