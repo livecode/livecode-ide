@@ -1,0 +1,1 @@
+# Enable setting text fill of a slider
