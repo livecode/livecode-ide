@@ -253,8 +253,9 @@ on revTutorialParseSubexpression pExpected, pTokens, pStart, @rData
       local tNext
       put segment tNextWord of pExpected into tNext
       switch tNext
-         case  "<token>" 
-            if pTokens[tNextToken] is empty then
+         case "<token>" 
+         case "<value>"
+            if tNext is "<token>" and pTokens[tNextToken] is empty then
                return "expected: <token>"
             end if
             
@@ -597,7 +598,7 @@ on revTutorialParseWait pTokens, @rData
          return empty
       end if
       
-      revTutorialParseSubexpression "the <token> of <object> is <token>", pTokens, tToken, tCondition
+      revTutorialParseSubexpression "the <token> of <object> is <value>", pTokens, tToken, tCondition
       
       if the result is empty then
          put "property" into rData["wait condition"]
