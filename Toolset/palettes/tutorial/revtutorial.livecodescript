@@ -2407,7 +2407,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
       exit revTutorialCreateAndCaptureObjects
    end if
-   local tCapture, tType
+   local tCapture, tType, tStacksCaptured
    # Create the object and tag it
    repeat with x = 1 to the number of elements in pCaptureData["captures"]
       put pCaptureData["captures"][x] into tCapture
@@ -2415,9 +2415,19 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       if tType is "stack" then
          revIDEActionNewMainstack "default"
          put the result into sTaggedObjects["stack"][tCapture["tag"]]
+         put true into tStacksCaptured[tCapture["tag"]]
       else if tType is "card" then
-         revIDEActionNewCard
-         put the result into sTaggedObjects["card"][tCapture["tag"]]
+         local tCardID
+         # if we already captured this card's stack then we don't need to create a new card
+         if tStacksCaptured[tCapture["target stack"]["tag"]] then
+            delete variable tStacksCaptured[tCapture["target stack"]["tag"]]
+            put the long id of this card of stack sTaggedObjects["stack"][tCapture["target stack"]["tag"]] into tCardID
+         else
+            set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]]
+            revIDEActionNewCard
+            put the result into tCardID
+         end if
+         put tCardID into sTaggedObjects["card"][tCapture["tag"]]
       else
          if pHighlightData["tool"] is not empty then
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
@@ -2473,7 +2483,7 @@ on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
 end revTutorialSetPropertyOfObjects
 
 on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
-   local tCapture, tType
+   local tCapture, tType, tStacksCaptured
    # Create the object and tag it
    repeat with x = 1 to the number of elements in pCaptureData["captures"]
       put pCaptureData["captures"][x] into tCapture
@@ -2481,49 +2491,61 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
       if tType is "stack" then
          create stack
          put it into sTaggedObjects["stack"][tCapture["tag"]]
-      else if tType is "card" then
-         create card
-         put it into sTaggedObjects["card"][tCapture["tag"]]
-      else if tType is "widget" then
-         local tKind
-         put word 2 of pHighlightData["tool"] into tKind
-         create widget as tKind
-         put it into sTaggedObjects["widget"][tCapture["tag"]]
-      else
-         if pHighlightData["item"] contains "Import" then
-            # Deal with 'import'
-            if sFile is empty then
-               throw "No file specified for import"
+         put true into tStacksCaptured[tCapture["tag"]]
+      else 
+         set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]["tag"]]
+         if tType is "card" then
+            local tCardID
+            # if we already captured this card's stack then we don't need to create a new card
+            if tStacksCaptured[tCapture["target stack"]["tag"]] then
+               delete variable tStacksCaptured[tCapture["target stack"]["tag"]]
+               put the long id of this card of stack sTaggedObjects["stack"][tCapture["target stack"]["tag"]] into tCardID
+            else
+               create card
+               put it into tCardID
             end if
-            local tFile
-            put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
-            switch tType
-               case "image"
-                  create image
-                  set the filename of it to tFile
-                  put it into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "audioClip"
-                  import videoClip from file tFile
-                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "videoClip"
-                  import videoClip from file tFile
-                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "text"
-                  create field
-                  set the text of it to url ("file:" & tFile)
-                  put it into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-            end switch
-         else if pHighlightData["item"] contains "duplicate" then
-            revIDESelectObjects sSelected
-            revIDEActionDuplicate
-            put the result into sTaggedObjects[tType][tCapture["tag"]]
+            put tCardID into sTaggedObjects["card"][tCapture["tag"]]
+         else if tType is "widget" then
+            local tKind
+            put word 2 of pHighlightData["tool"] into tKind
+            create widget as tKind
+            put it into sTaggedObjects["widget"][tCapture["tag"]]
          else
-            do "create" && tType
-            put it into sTaggedObjects[tType][tCapture["tag"]]
+            if pHighlightData["item"] contains "Import" then
+               # Deal with 'import'
+               if sFile is empty then
+                  throw "No file specified for import"
+               end if
+               local tFile
+               put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
+               switch tType
+                  case "image"
+                     create image
+                     set the filename of it to tFile
+                     put it into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "audioClip"
+                     import videoClip from file tFile
+                     put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "videoClip"
+                     import videoClip from file tFile
+                     put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "text"
+                     create field
+                     set the text of it to url ("file:" & tFile)
+                     put it into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+               end switch
+            else if pHighlightData["item"] contains "duplicate" then
+               revIDESelectObjects sSelected
+               revIDEActionDuplicate
+               put the result into sTaggedObjects[tType][tCapture["tag"]]
+            else
+               do "create" && tType
+               put it into sTaggedObjects[tType][tCapture["tag"]]
+            end if
          end if
       end if
    end repeat
