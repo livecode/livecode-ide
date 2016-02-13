@@ -806,7 +806,7 @@ on toolEnable pWhich
    else if there is a widget pWhich of me then
       put false into tIsButton
    else
-      exit toolEnable
+      throw "Invalid tool type" && pWhich
    end if
    if tIsButton then
       set the coloroverlay of button pWhich of me to empty
