@@ -825,15 +825,56 @@ on mouseUp
    unlock screen
 end mouseUp
 
+private function rectOfMacMenuItem pItem
+   local tLeft, tRight
+   switch pItem
+      case "File"
+         put 140 into tLeft
+         put 162 into tRight
+         break
+      case "Edit"
+         put 182 into tLeft
+         put 202 into tRight
+         break
+      case "Tools"
+         put 222 into tLeft
+         put 260 into tRight
+         break
+      case "Object"
+         put 280 into tLeft
+         put 322 into tRight
+         break
+      case "Text"
+         put 342 into tLeft
+         put 370 into tRight
+         break
+      case "Development"
+         put 390 into tLeft
+         put 478 into tRight
+         break
+      case "View"
+         put 498 into tLeft
+         put 528 into tRight
+         break
+      case "Window"
+         put 548 into tLeft
+         put 600 into tRight
+         break
+      case "Help"
+         put 620 into tLeft
+         put 650 into tRight
+         break
+   end switch
+   return tLeft, 0, tRight, 15
+end rectOfMacMenuItem
+
 function absoluteRectOfObject pObject
    local tRect
    if there is a button pObject of group "revMenuBar" of me then
-      put the rect of button pObject into tRect
       if the platform is "macos" then
-         put item 1 of tRect + 160 into item 1 of tRect
-         put item 3 of tRect + 160 into item 3 of tRect
-         return tRect
+         return rectOfMacMenuItem(pObject)
       end if
+      put the rect of button pObject into tRect
    else 
       if there is a button pObject of group "toolbar" of me then
          put the rect of button pObject of group "toolbar" of me into tRect
