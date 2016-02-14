@@ -143,6 +143,7 @@ function revTutorialIsObjectType pType
       case "image"
       case "widget"
       case "card"
+      case "group"
          # Add a 'set' type for multi-tagging
       case "set"
          return true
@@ -167,6 +168,7 @@ function revTutorialIsStateType pType
       case "scripted"
       case "focused"
       case "edited"
+      case "grouped"
          return true
    end switch
    return false
@@ -1396,6 +1398,9 @@ on revTutorialDoWait pActionData
             case "selected"
                revTutorialWaitUntilObjectIsSelected
                break
+            case "grouped"
+               revTutorialWaitUntilObjectIsGrouped pActionData["object"]
+               break
          end switch
          break
    end switch
@@ -1476,6 +1481,11 @@ end revTutorialWaitUntilObjectIsClicked
 on revTutorialWaitUntilObjectIsFocused
    // Subscribe to control
 end revTutorialWaitUntilObjectIsFocused
+
+on revTutorialWaitUntilObjectIsGrouped pObject
+   put pObject into sWait["children"]
+   revIDESubscribe "ideNewControl"
+end revTutorialWaitUntilObjectIsGrouped
 
 on revTutorialWaitForObject
    if sWait["object"]["type"] is "stack" then
@@ -1949,6 +1959,15 @@ on ideNewControl pObject
       revTutorialWaitConditionSatisfied
    end if
    
+   if sWait["wait condition"] is "state" and sWait["state"] is "grouped" and tObjType is "group" then
+      local tChildren
+      put revTutorialResolveObjectToLongID(sWait["children"], true) into tChildren
+      
+      if revTutorialGroupContainsObjects(pObject, tChildren) then
+         revIDEUnsubscribe "ideNewControl"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
 end ideNewControl
 
 on ideNewCard pCard
@@ -2322,6 +2341,22 @@ function revTutorialNumericItemsAreApproximatelyEqual pNumItems, pTolerance, pLe
    return true
 end revTutorialNumericItemsAreApproximatelyEqual
 
+function revTutorialGroupContainsObjects pGroupID, pObjects
+   # Check the objects of the group are the target objects
+   local tChildIDs, tChildID
+   repeat for each line tId in the childControlIDs of pGroupID
+      put the long id of control id tID of pGroupID into tChildID
+      if tChildIDs is empty then
+         put tChildID into tChildIDs
+      else
+         put return & tChildID after tChildIDs
+      end if
+   end repeat
+   
+   sort tChildIDs
+   return tChildIDs is pObjects
+end revTutorialGroupContainsObjects
+
 ##############################################################################
 #
 #                     AUTORUN
@@ -2410,6 +2445,9 @@ on revTutorialRunAction pActionData
             case "selected"
                put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
                break
+            case "grouped"
+               revTutorialCreateAndCaptureObjects tWaitData, pActionData["capture"]
+               break
             default
                # No other states require action
                break
@@ -2448,6 +2486,11 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             put the result into tCardID
          end if
          put tCardID into sTaggedObjects["card"][tCapture["tag"]]
+      else if tType is "group" then
+         local tChildren
+         put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
+         revIDEGroupObjects tChildren
+         put the result into sTaggedObjects["group"][tCapture["tag"]]
       else
          if pHighlightData["tool"] is not empty then
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
@@ -2530,6 +2573,11 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
             put word 2 of pHighlightData["tool"] into tKind
             create widget as tKind
             put it into sTaggedObjects["widget"][tCapture["tag"]]
+         else if tType is "group" then
+            local tChildren
+            put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
+            revIDEGroupObjects tChildren
+            put the result into sTaggedObjects["group"][tCapture["tag"]]
          else
             if pHighlightData["item"] contains "Import" then
                # Deal with 'import'
