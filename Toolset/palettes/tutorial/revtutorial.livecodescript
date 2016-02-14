@@ -2496,7 +2496,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
             revIDECreateObject the result, sTaggedObjects["stack"][tCapture["target stack"]["tag"]], "0,0"
             put the result into sTaggedObjects[tType][tCapture["tag"]]
-         else if pHighlightData["item"] contains "Import" then
+         else if pHighlightData["item"][1] contains "Import" then
             # Deal with 'import'
             if sFile is empty then
                throw "No file specified for import"
@@ -2518,7 +2518,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             end switch
             revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
             put the result into sTaggedObjects[tType][tCapture["tag"]]
-         else if pHighlightData["item"] contains "duplicate" then
+         else if pHighlightData["item"][1] contains "duplicate" then
             revIDESelectObjects sSelected
             revIDEActionDuplicate
             put the result into sTaggedObjects[tType][tCapture["tag"]]
@@ -2579,7 +2579,7 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
             revIDEGroupObjects tChildren
             put the result into sTaggedObjects["group"][tCapture["tag"]]
          else
-            if pHighlightData["item"] contains "Import" then
+            if pHighlightData["item"][1] contains "Import" then
                # Deal with 'import'
                if sFile is empty then
                   throw "No file specified for import"
@@ -2606,7 +2606,7 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
                      put it into sTaggedObjects[tType][tCapture["tag"]]
                      break
                end switch
-            else if pHighlightData["item"] contains "duplicate" then
+            else if pHighlightData["item"][1] contains "duplicate" then
                revIDESelectObjects sSelected
                revIDEActionDuplicate
                put the result into sTaggedObjects[tType][tCapture["tag"]]
