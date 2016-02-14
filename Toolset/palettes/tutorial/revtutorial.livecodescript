@@ -11,7 +11,16 @@ function revTutorialParseFile pFile
    return revTutorialParseData(textDecode(tData, "utf-8"))
 end revTutorialParseFile
 
+private on addError pError, @xErrors
+   if xErrors is empty then
+      put pError into xErrors
+   else
+      put return & pError after xErrors
+   end if
+end addError
+
 function revTutorialParseData pData
+   local tErrors
    local tTutorialName, tCurStepName
    local tType, tSubType
    local tLineNum, tActionNum
@@ -53,11 +62,13 @@ function revTutorialParseData pData
             case "file"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
-                  throw "action list not valid in" && tType && " on line" && tLineNum
+                  addError "action list not valid in" && tType && " on line" && tLineNum, tErrors
+                  break
                end if
                
                if tSubType is "action" then
                   throw "action list not valid in" && tType && " on line" && tLineNum
+                  break
                end if
                
                if tData is not empty then
@@ -113,6 +124,9 @@ function revTutorialParseData pData
             break
          case "step"
             put token 2 of tLine into tCurStepName
+            if tCurStepName is among the keys of tStepData then
+               addError "duplicate step name" && tCurStepName && "on line" && tLineNum, tErrors
+            end if
             put it into tType
             put "text" into tSubType
             if tFirstStep is empty then
@@ -126,10 +140,15 @@ function revTutorialParseData pData
             put "text" into tSubType
             break
          default
-            throw "invalid section" && it && " on line" && tLineNum
+            addError "invalid section" && it && " on line" && tLineNum, tErrors
+            break
       end switch
    end repeat
    
+   if tErrors is not empty then
+      throw tErrors
+      return empty
+   end if
    put tFirstStep into tStepData["first step"]
    return tStepData
 end revTutorialParseData
