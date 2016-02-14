@@ -107,7 +107,8 @@ satisfied before continuing.
 	  | <Target: Object> "fits" "guide" <Guide: STRING> [ "with" "tolerance" <Tolerance: INTEGER> ]
 	  | "there" "is" ( "a" | "an" ) <Target: Palette>
 	  | "there" "is" ( "a" | "an" ) <Target: ObjPalette> "for" <TargetObject: Object>
-	  | <Target: Object> “is” (“clicked” | “selected” | “scripted” | “focused” )
+	  | <Target: Object> “is” (“clicked” | “selected” | “scripted” | “focused” | "grouped")
 	  | “the” “tool” “is” (“edit” | “run” | “graphic”)
 	  | “the” <Property: PROPERTY> “of” <Target: Object> “is” <Value: STRING>
 	  | <Target: Object> “pops” “up” “answer” “dialog”
+	  | "this" "card" "is" <Card: STRING>
