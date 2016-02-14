@@ -5762,7 +5762,7 @@ put revIDEImportableControls() into tImportableControls
 Tags: ide
 */
 function revIDEImportableControls
-   return "image,video,audio,text"
+   return "image,video,audio,text,graph"
 end revIDEImportableControls
 
 function revIDELiveCodeFileExtensions
@@ -5792,6 +5792,8 @@ function revIDEAcceptedTypes pType
          return "livecode,rev,lc,livecodescript,mc"
       case "text"
          return "txt"
+      case "graph"
+         return "csv"
       case "all"
       default
          return ""
@@ -5861,7 +5863,7 @@ on revIDEImportControl pType, pFileName, pReferenced
    put the long ID of the topstack into tTargetStack
    put the loc of card 1 of the topstack into tCreatedControlLocation
    
-   local tCreatedControlID
+   local tCreatedControlID, tFileContents
    lock screen
    lock messages
    set the defaultStack to tTargetStack
@@ -5895,7 +5897,15 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "text"
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
          put the result into tCreatedControlID
-         put URL ("file:" & pFileName) into tCreatedControlID
+         put textDecode(URL ("binfile:" & pFileName), "utf-8") into tFileContents
+         put tFileContents into tCreatedControlID
+         select tCreatedControlID
+         break
+      case "graph"
+         revIDECreateObject "com.livecode.widget.lineGraph", tTargetStack, tCreatedControlLocation
+         put the result into tCreatedControlID
+         put textDecode(URL ("binfile:" & pFileName), "utf-8") into tFileContents
+         set the graphData of tCreatedControlID to tFileContents
          select tCreatedControlID
          break
    end switch
@@ -6046,6 +6056,9 @@ private function __answerGetTypeString pType
       case "media"
          put revIDELocalise("All Media Files") into tTagString
          break
+      case "graph"
+         put revIDELocalise("All CSV Files") into tTagString
+         break
       case "all"
       default
          put revIDELocalise("All Files") into tTagString
@@ -6069,6 +6082,8 @@ private function __answerGetDefaultInstructions pType
          return revIDELocalise("Please select an audio file")
       case "media"
          return revIDELocalise("Please select a media file")
+      case "graph"
+         return revIDELocalise("Please select a csv file")
       case "all"
       default
          return revIDELocalise("Please select a file")

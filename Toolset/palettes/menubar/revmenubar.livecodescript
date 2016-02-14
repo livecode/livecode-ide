@@ -1187,6 +1187,8 @@ private function revMenubarFileMenu pContext
    put tab & "Video File.../|video" & return after tFile
    put tab & "Text File.../|text" & return after tFile
    put tab & "-" & return after tFile
+   put tab & "Graph from CSV File.../|graph" & return after tFile
+   put tab & "-" & return after tFile
    put tab & "Snapshot of Screen" & return after tFile
    put tab & enableMenuItem("Snapshot of Selected Object",  pContext["objectsSelected"]) & return after tFile
    put tab & "-" & return after tFile
@@ -2493,6 +2495,7 @@ on revMenubarFileMenuPick pWhich
                   case "audio"
                   case "video"
                   case "text"
+                  case "graph"
                      revIDEActionImportControl tType
                      break 
                   case "Snapshot of Screen"
