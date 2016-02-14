@@ -1082,6 +1082,7 @@ on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
    revTutorialClearLastPropertyInspector
+   revTutorialClearSets
    revTutorialSaveProgress
    revFinaliseTutorial
 end revTutorialStop
@@ -1096,8 +1097,6 @@ on revTutorialFinish
    go invisible stack "revTutorial" as palette
    unlock messages
    add 1 to sStepNum
-   # For now, set captures are transient
-   delete variable sTaggedObjects["set"]
    revIDETutorialProgressChanged
    revTutorialEpilogue
    unlock screen
@@ -1311,8 +1310,7 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   # For now, set captures are transient
-   delete variable sTaggedObjects["set"]
+   revTutorialClearSets
    disableToolsPalette
    put false into sWaiting
    put false into sIsInterlude
@@ -1829,6 +1827,10 @@ on revTutorialClearLastPropertyInspector
    end if
 end revTutorialClearLastPropertyInspector
 
+on revTutorialClearSets
+   # For now, set captures are transient
+   delete variable sTaggedObjects["set"]
+end revTutorialClearSets
 ##############################################################################
 #
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
