@@ -1330,17 +1330,7 @@ end revTutorialDoInterlude
 
 # Tag a set of objects
 on revTutorialDoCreateSet pObjects, pTag
-   local tLongIDList
-   repeat for each element tObject in pObjects
-      local tLongID
-      put sTaggedObjects[tObject["type"]][tObject["tag"]] into tLongID
-      if tLongIDList is empty then
-         put tLongID into tLongIDList
-      else
-         put return & tLongID after tLongIDList
-      end if
-   end repeat
-   put tLongIDList into sTaggedObjects["set"][pTag]
+   put pObjects into sTaggedObjects["set"][pTag]
 end revTutorialDoCreateSet
 
 ##############################################################################
@@ -1384,10 +1374,10 @@ on revTutorialDoWait pActionData
          revTutorialWaitUntilTheToolIs
          break
       case "property"  
-         revTutorialWaitUntilObjectPropertyHasValue sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         revTutorialWaitUntilObjectPropertyHasValue pActionData["object"]
          break
       case "fits" 
-         revTutorialWaitUntilObjectFitsGuide sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         revTutorialWaitUntilObjectFitsGuide pActionData["object"]
          break
       case "pops up" 
          revTutorialWaitUntilAnswerDialogHasPoppedUp
@@ -1398,7 +1388,7 @@ on revTutorialDoWait pActionData
                revTutorialWaitUntilObjectIsClicked
                break
             case "scripted"
-               revTutorialWaitUntilObjectIsScripted sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+               revTutorialWaitUntilObjectIsScripted pActionData["object"]
                break
             case "focused"
                revTutorialWaitUntilObjectIsFocused
@@ -1421,7 +1411,7 @@ function revTutorialCheckWaitCondition pActionData
    end switch
    
    local tObject
-   put sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]] into tObject
+   put revTutorialResolveObjectToLongID(pActionData["object"]) into tObject
    if tObject is empty then
       return false
    end if
@@ -1471,10 +1461,12 @@ on revTutorialWaitUntilObjectIsSelected
    revIDESubscribe "ideSelectedObjectChanged"
 end revTutorialWaitUntilObjectIsSelected
 
-on revTutorialWaitUntilObjectIsScripted pObject
-   put the script of pObject into sWait["current script"]
+on revTutorialWaitUntilObjectIsScripted pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   put the script of tObjID into sWait["current script"]
    put 0 into sWait["incorrect attempts"]
-   revIDESubscribe "idePropertyChanged", pObject
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectIsScripted
 
 on revTutorialWaitUntilObjectIsClicked
@@ -1496,11 +1488,13 @@ on revTutorialWaitForObject
    end if
 end revTutorialWaitForObject
 
-on revTutorialWaitUntilObjectFitsGuide pObject
+on revTutorialWaitUntilObjectFitsGuide pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
    if sWait["tolerance"] is empty then
       put 1 into sWait["tolerance"]
    end if
-   revIDESubscribe "idePropertyChanged", pObject
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectFitsGuide
 
 on revTutorialWaitUntilThereIsAPalette pPalette
@@ -1520,8 +1514,10 @@ on revTutorialWaitUntilTheToolIs
    revIDESubscribe "ideToolChanged"
 end revTutorialWaitUntilTheToolIs
 
-on revTutorialWaitUntilObjectPropertyHasValue pObject
-   revIDESubscribe "idePropertyChanged", pObject
+on revTutorialWaitUntilObjectPropertyHasValue pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectPropertyHasValue
 
 on revTutorialWaitUntilAnswerDialogHasPoppedUp
@@ -1867,7 +1863,7 @@ on openField
    local tObject
    put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1878,7 +1874,7 @@ on focusIn
    local tObject
    put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1931,7 +1927,7 @@ on ideNewStack pStack
 end ideNewStack
 
 on ideAnswerDialogClosed pObject
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
       if sWait["wait condition"] is "pops up"  then
          revIDEUnsubscribe "ideAnswerDialogClosed"
          revTutorialWaitConditionSatisfied
@@ -1976,7 +1972,7 @@ on idePropertyChanged pObject
       revTutorialPositionStackForHighlight
    end if
    
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
       if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
          if revTutorialCheckWaitCondition(sWait) then
             revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
@@ -2016,7 +2012,7 @@ on mouseUp pWhich
    local tObject
    put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2032,7 +2028,7 @@ on mouseDoubleUp pWhich
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
       local tObject
       put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2042,7 +2038,7 @@ on ideSelectedObjectChanged
    if sWait["wait condition"] is "state" and sWait["state"] is "selected" then
       local tObject
       put revIDESelectedObjects() into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2050,7 +2046,7 @@ end ideSelectedObjectChanged
 
 on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "inspector" then
-      if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]) then
          revIDEUnsubscribe "ideInspectObjects"
          put pObjects into sLastInspectedObjects
          revTutorialWaitConditionSatisfied
@@ -2060,7 +2056,7 @@ end ideInspectObjects
 
 on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "script editor" then
-      if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]) then
          revIDEUnsubscribe "ideEditScript"
          revTutorialWaitConditionSatisfied
       end if
@@ -2162,21 +2158,43 @@ end revTutorialClearHighlights
 function revTutorialObjectsAreSelected pObjects
    local tSelected
    put revIDESelectedObjects() into tSelected
-   repeat for each line tObject in pObjects
-      if tObject is not among the lines of tSelected then
-         return false
-      end if
-   end repeat
-   return true
+   sort tSelected
+   return tSelected is pObjects
 end revTutorialObjectsAreSelected
 
-function revTutorialObjectIsTaggedObject pLongID, pType, pTag
-   local tObj
-   put sTaggedObjects[pType][pTag] into tObj
-   if pType is "set" then
-      sort tObj
-      sort pLongID
+# Take a tutorial tagged object (an array with 'type' and 'tag' keys)
+# and return the corresponding long ID (or list of long IDs for 'set' types)
+function revTutorialResolveObjectToLongID pTaggedObject, pUpdate
+   local tType, tTag, tObj
+   put pTaggedObject["type"] into tType
+   put pTaggedObject["tag"] into tTag
+   put sTaggedObjects[tType][tTag] into tObj
+   
+   if tType is not "set" then
+      if pUpdate then
+         put the long id of tObj into tObj
+         put tObj into sTaggedObjects[tType][tTag]
+      end if
+      return tObj
    end if
+   
+   local tLongIDs, tLongID
+   repeat for each element tElement in tObj
+      put revTutorialResolveObjectToLongID(tElement, pUpdate) into tLongID
+      if tLongIDs is empty then
+         put tLongID into tLongIDs
+      else
+         put return & tLongID after tLongIDs
+      end if
+   end repeat
+   sort tLongIDs
+   return tLongIDs
+end revTutorialResolveObjectToLongID
+
+function revTutorialObjectIsTaggedObject pLongID, pTaggedObject
+   local tObj
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObj
+   sort pLongID
    return tObj is pLongID
 end revTutorialObjectIsTaggedObject
 
@@ -2371,7 +2389,7 @@ on revTutorialRunAction pActionData
          break
       case "property"  
          # Set the property of the objects
-         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], tWaitData["property"], tWaitData["value"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"]
          break
       case "fits" 
          # Set the rect of the objects
@@ -2381,16 +2399,16 @@ on revTutorialRunAction pActionData
          if tWaitData["object"]["type"] is "stack" then
             put revIDERelativeRectToAbsolute(pActionData["add guide"]["rect"], sTaggedObjects["stack"][tWaitData["object"]["tag"]]) into pActionData["add guide"]["rect"]
          end if
-         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "rect", pActionData["add guide"]["rect"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "rect", pActionData["add guide"]["rect"]
          break
       case "state"
          switch tWaitData["state"]
             case "scripted"
                # Set the script of the objects
-               revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "script", tWaitData["script"]
+               revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
                break
             case "selected"
-               put sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]] into sSelected
+               put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
                break
             default
                # No other states require action
@@ -2425,7 +2443,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             delete variable tStacksCaptured[tCapture["target stack"]["tag"]]
             put the long id of this card of stack sTaggedObjects["stack"][tCapture["target stack"]["tag"]] into tCardID
          else
-            set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]]
+            set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]["tag"]]
             revIDEActionNewCard
             put the result into tCardID
          end if
@@ -2468,8 +2486,8 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       end if
    end repeat
    local tObject
-   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
-   if not exists(tObject) then
+   put revTutorialResolveObjectToLongID(pWaitData["object"]) into tObject
+   if tObject is empty then
       throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
    end if
 end revTutorialCreateAndCaptureObjects
@@ -2552,8 +2570,8 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
       end if
    end repeat
    local tObject
-   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
-   if not exists(tObject) then
+   put revTutorialResolveObjectToLongID(pWaitData["object"]) into tObject
+   if tObject is empty then
       throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
    end if
 end revTutorialCreateAndCaptureObjectsStandalone
