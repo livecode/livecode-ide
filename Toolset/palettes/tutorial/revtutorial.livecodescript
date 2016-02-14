@@ -2512,9 +2512,16 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
                case "videoClip"
                   put "video" into tImportType
                   break
-               case "text"
-                  put "field" into tImportType
+               case "field"
+                  put "text" into tImportType
                   break
+               case "widget"
+                  if pHighlightData["item"][2] contains "graph" then
+                     put "graph" into tImportType
+                     break
+                  end if
+               default
+                  throw "invalid import type" && tType
             end switch
             revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
             put the result into sTaggedObjects[tType][tCapture["tag"]]
@@ -2600,11 +2607,20 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
                      import videoClip from file tFile
                      put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
                      break
-                  case "text"
+                  case "field"
                      create field
-                     set the text of it to url ("file:" & tFile)
+                     set the text of it to textDecode(url ("binfile:" & tFile), "utf-8")
                      put it into sTaggedObjects[tType][tCapture["tag"]]
                      break
+                  case "widget"
+                     if pHighlightData["item"][2] contains "graph" then
+                        create widget as "com.livecode.widget.lineGraph"
+                        set the graphData of it to textDecode(url ("binfile:" & tFile), "utf-8")
+                        put it into sTaggedObjects[tType][tCapture["tag"]]
+                        break
+                     end if
+                  default
+                     throw "invalid import type" && tType
                end switch
             else if pHighlightData["item"][1] contains "duplicate" then
                revIDESelectObjects sSelected
