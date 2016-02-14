@@ -71,7 +71,7 @@ on revIDEUninstallExtension pExtensionTypeID
 end revIDEUninstallExtension
 
 # Returns the extension data
-function revIDEExtensions pType, pStatus
+function revIDEExtensions pType, pStatus, pWithoutInvisible
    # No type passed so return all extensions
    
    # Repeat over the extension array looking for elements with matching type
@@ -90,6 +90,10 @@ function revIDEExtensions pType, pStatus
          if sExtensions[tExtensionKey]["status"] is not pStatus then 
             next repeat
          end if
+      end if
+      
+      if pWithoutInvisible and sExtensions[tExtensionKey]["uservisible"] is not true then
+         next repeat
       end if
       
       local tIconPath

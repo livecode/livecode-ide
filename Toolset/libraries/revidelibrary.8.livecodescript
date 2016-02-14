@@ -1922,6 +1922,10 @@ function revIDEClassicControls
    return tReturnData
 end revIDEClassicControls
 
+function revIDEWidgets
+   return revIDEExtensions("widget","installed", true)
+end revIDEWidgets
+
 /**
 For a given list of objects, returns a structured array of properties, values and other meta data.
 
