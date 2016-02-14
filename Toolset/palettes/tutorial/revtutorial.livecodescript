@@ -641,6 +641,15 @@ on revTutorialParseWait pTokens, @rData
       return the result
    end if
    
+   if pTokens[tToken] is "this" then
+      revTutorialParseSubexpression "this card is <token>", pTokens, tToken, tCondition
+      if the result is empty then
+         put "this card" into rData["wait condition"]
+         put tCondition[1] into rData["card"]
+      end if
+      return the result
+   end if
+   
    revTutorialParseSubexpression "<object> is <token>", pTokens, tToken, tCondition
    
    if the result is empty then
@@ -1403,6 +1412,9 @@ on revTutorialDoWait pActionData
                break
          end switch
          break
+      case "this card"
+         revTutorialWaitUntilThisCardIs pActionData["card"]
+         break
    end switch
 end revTutorialDoWait
 
@@ -1539,6 +1551,13 @@ on revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
    put "interlude" into sWait["wait condition"]
    put pIsEpilogue into sWait["epilogue"]
 end revTutorialWaitUntilInterludeIsDismissed
+
+on revTutorialWaitUntilThisCardIs pCard
+   put true into sWaiting
+   put "this card" into sWait["wait condition"]
+   put pCard into sWait["card"]
+   revIDESubscribe "ideOpenCard"
+end revTutorialWaitUntilThisCardIs
 
 on revTutorialWaitConditionSatisfied
    put false into sWaiting
@@ -2091,6 +2110,16 @@ on ideToolChanged pTool
    end if
 end ideToolChanged
 
+on ideOpenCard pTarget
+   if sWait["wait condition"] is "this card" then
+      local tCard
+      put sTaggedObjects["card"][sWait["card"]] into tCard
+      if pTarget is tCard then
+         revIDEUnsubscribe "ideOpenCard"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+end ideOpenCard
 ##############################################################################
 #
 #                     UTILITIES
@@ -2453,6 +2482,9 @@ on revTutorialRunAction pActionData
                break
          end switch
          break
+      case "this card"
+         revTutorialGoCard tWaitData["card"]
+         break
          # No other waits require action
       default
          break
@@ -2639,3 +2671,11 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
       throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
    end if
 end revTutorialCreateAndCaptureObjectsStandalone
+
+on revTutorialGoCard pCard
+   if pCard is not among the keys of sTaggedObjects["card"] then
+      throw "unsatisfiable wait condition: wait until this card is" && pCard
+      exit revTutorialGoCard
+   end if
+   go card (the short name of sTaggedObjects["card"][pCard])
+end revTutorialGoCard

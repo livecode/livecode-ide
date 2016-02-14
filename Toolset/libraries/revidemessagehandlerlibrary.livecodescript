@@ -292,6 +292,15 @@ on nameChanged pOldName, pNewName
    pass nameChanged
 end nameChanged
 
+on openCard
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEObjectIsOnIDEStack(tTarget) then pass openCard
+   
+   send "ideMessageSend" &&  "ideOpenCard","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   pass openCard
+end openCard
+
 on openStack
    local tTarget
    put the long id of the target into tTarget
