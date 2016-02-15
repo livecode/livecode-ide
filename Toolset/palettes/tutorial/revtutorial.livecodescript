@@ -773,6 +773,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       hide button "Got It" of stack "revTutorial"
    end if
    
+   local tHasScript
+   if field "Script" of stack "revTutorial" is empty then
+      put false into tHasScript
+      hide field "Script" of stack "revTutorial"
+   else
+      put true into tHasScript
+      show field "Script" of stack "revTutorial"
+   end if
+   
    local tPointVertical
    put pStack is "menubar" into tPointVertical
    
@@ -818,18 +827,40 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       end if
    end if
    
-   local tWidth, tHeight
-   set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
+   local tWidth, tHeight 
+   local tMessageHeight, tMessageWidth
+   if pWidthOverride is not empty then
+      put max(kMessageWidth, pWidthOverride) into tMessageWidth
+      set the width of field "Message" of stack "revTutorial" to tMessageWidth
+   end if
+   
    set the height of field "Message" of stack "revTutorial" to 1000
+   put the formattedHeight of field "Message" of stack "revTutorial" into tMessageHeight
    
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight - kMargin
+   if not tHasScript then
+      put max(100,tMessageHeight) into tMessageHeight
+   end if
+   set the height of field "Message" of stack "revTutorial" to tMessageHeight
    
+   put tMessageHeight + kMargin * 2 into tHeight
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
+   if tHasScript then
+      local tScriptHeight
+      if pWidthOverride is not empty then
+         set the width of field "Script" of stack "revTutorial" to pWidthOverride
+      end if
+      set the height of field "Script" of stack "revTutorial" to 1000
+      
+      put the formattedHeight of field "Script" of stack "revTutorial" into tScriptHeight
+      set the height of field "Script" of stack "revTutorial" to tScriptHeight
+      add tScriptHeight + kMargin * 2 to tHeight
+      
+      put max(tWidth, the width of field "Script" of stack "revTutorial" + kMargin * 2) into tWidth
+   end if
+   
    if sIsInterlude then
-      put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
+      add the height of button "Got It" of stack "revTutorial" + kMargin to tHeight
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -920,24 +951,27 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
+   local tMessageLeft, tMessageTop
+   put kMargin into tMessageLeft
+   put kMargin into tMessageTop
    if tRect is not empty then
       if not tPointVertical and tPointerLeft then
-         set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
+         add kPointerWidth / 2 to tMessageLeft
       else if tPointVertical and tPointerTop then
-         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
-      else
-         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+         add kPointerWidth / 2 to tMessageTop
       end if
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
          set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
       end if
-      
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
-      set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
+   set the topleft of field "Message" of stack "revTutorial" to tMessageLeft, tMessageTop
+   local tScriptTop
+   put kMargin + the bottom of field "Message" of stack "revTutorial" into tScriptTop
+   set the topleft of field "Script" of stack "revTutorial" to tMessageLeft, tScriptTop 
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
@@ -986,6 +1020,10 @@ on revInitialiseTutorial
       delete field "Message" of stack "revTutorial"
    end if
    
+   if there is a field "Script" of stack "revTutorial" then
+      delete field "Script" of stack "revTutorial"
+   end if
+   
    if there is a button "Got It" of stack "revTutorial" then
       delete button "Got It" of stack "revTutorial"
    end if
@@ -1002,7 +1040,21 @@ on revInitialiseTutorial
    set the opaque of it to false
    set the showborder of it to false
    set the showFocusBorder of it to false
-   set the width of it to 465
+   set the width of it to 1000
+   set the cantSelect of it to true
+   set the margins of it to 0
+   
+   set the left of it to 20
+   set the top of it to 60
+   
+   create field "Script"
+   set the dontWrap of it to true
+   set the lockText of it to true
+   set the opaque of it to true
+   set the backColor of it to "white"
+   set the showborder of it to false
+   set the showFocusBorder of it to false
+   set the width of it to 1000
    set the cantSelect of it to true
    set the margins of it to 0
    
@@ -1290,14 +1342,18 @@ end revTutorialSetText
 
 on revTutorialSetTextOfMessage pText, pScript
    local tWidthOverride
-   put 0 into tWidthOverride
+   put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
-   put empty into field "Message" of stack "revTutorial"
+   put pText into field "Message" of stack "revTutorial"
+   put pScript into field "Script" of stack "revTutorial"
    if pScript is not empty then
-      put return & return & pScript into field "Message" of stack "revTutorial"
-      put the formattedWidth of field "Message" of stack "revTutorial" into tWidthOverride
+      put return before field "Script" of stack "revTutorial"
+      local tLength
+      put the number of chars in field "Script" of stack "revTutorial" into tLength
+      _internal script colorize char 1 to tLength of field "Script" of stack "revTutorial"
+      put the formattedWidth of field "Script" of stack "revTutorial" + 40 into tWidthOverride
    end if
-   put pText before field "Message" of stack "revTutorial"
+   
    revTutorialPositionStack "", "", tWidthOverride, false
 end revTutorialSetTextOfMessage
 
