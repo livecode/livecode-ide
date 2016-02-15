@@ -1204,6 +1204,9 @@ function revTutorialNumberOfSteps
 end revTutorialNumberOfSteps
 
 function revTutorialDonePercentage
+   if sNumSteps is 0 then
+      return 0
+   end if
    return 100 * (sStepNum - 1) / sNumSteps
 end revTutorialDonePercentage
 
