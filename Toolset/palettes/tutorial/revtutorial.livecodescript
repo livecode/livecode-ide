@@ -2621,6 +2621,8 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
          put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
          revIDEGroupObjects tChildren
          put the result into sTaggedObjects["group"][tCapture["tag"]]
+         -- force recompute the children long ids
+         get revTutorialResolveObjectToLongID(pWaitData["object"], true)
       else
          if pHighlightData["tool"] is not empty then
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
@@ -2715,6 +2717,8 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
             put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
             revIDEGroupObjects tChildren
             put the result into sTaggedObjects["group"][tCapture["tag"]]
+            -- force recompute the children long ids
+            get revTutorialResolveObjectToLongID(pWaitData["object"], true)
          else
             if pHighlightData["item"][1] contains "Import" then
                # Deal with 'import'
