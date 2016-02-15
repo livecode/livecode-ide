@@ -756,6 +756,10 @@ constant kMargin = 20
 constant kMessageWidth = 200
 constant kProgressHeight = 5
 
+constant kPointerHeight = 30
+constant kPointerWidth = 40
+constant kPointerOffset = 5
+
 on revTutorialPositionStack pStack, pObject, pWidthOverride
    lock screen
    lock messages
@@ -854,30 +858,30 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       local tX, tY, tStackTop, tStackLeft, tMiddle
       
       if not tPointVertical then
-         set the width of tPointer to 40
-         set the height of tPointer to 30
-         set the rect of stack "revTutorial" to 0, 0, tWidth + 20, tHeight
+         set the width of tPointer to kPointerWidth
+         set the height of tPointer to kPointerHeight
+         set the rect of stack "revTutorial" to 0, 0, tWidth + kPointerWidth / 2, tHeight
          
          put (tBottom + tTop) / 2 into tMiddle
          if tPointerTop then
-            put the top of tGraphic + 40 into tY
-            put tMiddle - 40 into tStackTop
+            put the top of tGraphic + kPointerWidth into tY
+            put tMiddle - kPointerWidth into tStackTop
          else
-            put the bottom of tGraphic - 40 into tY
-            put tMiddle - tHeight + 40 into tStackTop
+            put the bottom of tGraphic - kPointerWidth into tY
+            put tMiddle - tHeight + kPointerWidth into tStackTop
          end if
          
          if tPointerLeft then
             put the left of tGraphic into tX
-            put tRight + 5 into tStackLeft
+            put tRight + kPointerOffset into tStackLeft
          else
             put the right of tGraphic into tX
-            put tLeft - tWidth - 25 into tStackLeft
+            put tLeft - tWidth - kPointerHeight + kPointerOffset into tStackLeft
          end if
       else
-         set the width of tPointer to 30
-         set the height of tPointer to 40
-         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + 20
+         set the width of tPointer to kPointerHeight
+         set the height of tPointer to kPointerWidth
+         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + kPointerWidth / 2
          
          put (tRight + tLeft) / 2 into tMiddle
          if tPointerTop then
@@ -885,15 +889,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
             put tBottom + 5 into tStackTop
          else
             put the bottom of tGraphic into tY
-            put tTop - tHeight - 25 into tStackTop
+            put tTop - tHeight - kPointerHeight + kPointerOffset into tStackTop
          end if
          
          if tPointerLeft then
-            put the left of tGraphic + 40 into tX
-            put tMiddle - 40 into tStackLeft
+            put the left of tGraphic + kPointerWidth into tX
+            put tMiddle - kPointerWidth into tStackLeft
          else
-            put the right of tGraphic - 40 into tX
-            put tMiddle - tWidth - 40 into tStackLeft
+            put the right of tGraphic - kPointerWidth into tX
+            put tMiddle - tWidth - kPointerWidth into tStackLeft
          end if
       end if
       
