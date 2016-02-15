@@ -2306,6 +2306,29 @@ function revTutorialObjectsAreSelected pObjects
    return tSelected is pObjects
 end revTutorialObjectsAreSelected
 
+function revTutorialReparentChild pObject
+   if pObject begins with "stack" then
+      return pObject
+   end if
+   
+   if pObject begins with "card" then
+      return pObject
+   end if
+   
+   if the owner of pObject begins with "card" then
+      return pObject
+   end if
+   
+   if the sharedBehavior of the owner of pObject is false then
+      return pObject
+   end if
+   
+   local tCardSegment
+   put segmentOffset("card", pObject) into tCardSegment
+   delete word tCardSegment to tCardSegment + 3 of pObject
+   return the long id of pObject
+end revTutorialReparentChild
+
 # Take a tutorial tagged object (an array with 'type' and 'tag' keys)
 # and return the corresponding long ID (or list of long IDs for 'set' types)
 function revTutorialResolveObjectToLongID pTaggedObject, pUpdate
@@ -2314,8 +2337,17 @@ function revTutorialResolveObjectToLongID pTaggedObject, pUpdate
    put pTaggedObject["tag"] into tTag
    put sTaggedObjects[tType][tTag] into tObj
    
+   if tObj is empty then
+      return tObj
+   end if
+   
    if tType is not "set" then
-      if pUpdate then
+      local tResolvedLongID, tIDChanged
+      put revTutorialReparentChild(tObj) into tResolvedLongID
+      if tResolvedLongID is not tObj then
+         put true into tIDChanged
+      end if
+      if pUpdate or tIDChanged then
          put the long id of tObj into tObj
          put tObj into sTaggedObjects[tType][tTag]
       end if
