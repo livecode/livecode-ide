@@ -1974,12 +1974,10 @@ on ideNewStack pStack
    end if
 end ideNewStack
 
-on ideAnswerDialogClosed pObject
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
-      if sWait["wait condition"] is "pops up"  then
-         revIDEUnsubscribe "ideAnswerDialogClosed"
-         revTutorialWaitConditionSatisfied
-      end if
+on ideAnswerDialogClosed
+   if sWait["wait condition"] is "pops up"  then
+      revIDEUnsubscribe "ideAnswerDialogClosed"
+      revTutorialWaitConditionSatisfied
    end if
 end ideAnswerDialogClosed
 
