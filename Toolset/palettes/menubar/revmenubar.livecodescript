@@ -914,7 +914,11 @@ end mouseDown
 on revMenubarMenuButtonClicked pWhich
    switch pWhich
       case "Inspector"
-         revIDEActionInspectObjects
+         if (the selectedObject) is empty then
+            revIDEActionInspectStack
+         else
+            revIDEActionInspectObjects
+         end if
          break
       case "Code"
          if (the selectedObject) is empty then
