@@ -3218,13 +3218,13 @@ on revIDEEditScriptOfObjects pObjectList
 end revIDEEditScriptOfObjects
 
 on revIDEEditScriptOfObject pObject
+   # Send the ideEditScript message
+   send "ideMessageSend ideEditScript","pObject" to stack "revIDELibrary" in 0 milliseconds
+
    # First obtain a correct object reference. The reason for this is edit group mode
    local tObject
    put revRuggedId(pObject) into tObject
-
-   # Send the ideEditScript message
-   send "ideMessageSend ideEditScript","tObject" to stack "revIDELibrary" in 0 milliseconds
-
+   
    # Update the currently editing objects
    revIDEStartEditingScript pObject
 
