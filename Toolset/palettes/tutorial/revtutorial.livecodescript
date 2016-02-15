@@ -1259,11 +1259,13 @@ on revTutorialContinue
       revIDETutorialProgressChanged
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
+         # Add guide in case wait is 'fits guide'
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
             next repeat
          end if
       end if
-      // Do text, highlight and guide actions under lock screen, to remove 'flicker'
+      // Do text, highlight and guide show actions under lock screen, to remove 'flicker'
       lock screen
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
@@ -1274,7 +1276,7 @@ on revTutorialContinue
       // Create any sets
       revTutorialExecuteAction sSteps[sStepName]["actions"]["set"]
       // Guide
-      revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
+      revTutorialShowGuide sSteps[sStepName]["actions"]["add guide"]["guide"]
       // Highlight
       revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
       unlock screen
@@ -1898,6 +1900,11 @@ end enableStack
 #                     GUIDE HANDLING
 #
 ##############################################################################
+on revTutorialShowGuide pTag
+   if pTag is not empty then
+      show graphic sGuides[pTag]
+   end if
+end revTutorialShowGuide
 
 on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
    lock messages
@@ -1910,7 +1917,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
       
       put the defaultStack into tDefaultStack
       set the defaultStack to sTaggedObjects[pObjType][pObjTag]
-      create graphic // To object objtype/objtag
+      create invisible graphic // To object objtype/objtag
       put it into sGuides[pTag]
       set the defaultStack to tDefaultStack
       reset the templateGraphic
