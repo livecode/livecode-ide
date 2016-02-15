@@ -1899,7 +1899,7 @@ end enableStack
 ##############################################################################
 on revTutorialShowGuide pTag
    if pTag is not empty then
-      show graphic sGuides[pTag]
+      show sGuides[pTag]
    end if
 end revTutorialShowGuide
 
