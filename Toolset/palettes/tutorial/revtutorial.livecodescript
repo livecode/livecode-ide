@@ -837,9 +837,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    set the height of field "Message" of stack "revTutorial" to 1000
    put the formattedHeight of field "Message" of stack "revTutorial" into tMessageHeight
    
-   if not tHasScript then
-      put max(100,tMessageHeight) into tMessageHeight
-   end if
    set the height of field "Message" of stack "revTutorial" to tMessageHeight
    
    put tMessageHeight + kMargin * 2 into tHeight
