@@ -1075,14 +1075,15 @@ on revTutorialStartWithState pStep, pTaggedObjects
    try
       revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
    catch tError
-      throw tError
-      revIDETutorialInfoSetEmpty
-      exit revTutorialStartWithState
    end try
    
-   if sSteps is empty then
-      throw "Selected tutorial is empty"
+   if tError is empty and sSteps is empty then
+      put "Selected tutorial is empty" into tError
+   end if
+   
+   if tError is not empty then
       revIDETutorialInfoSetEmpty
+      throw tError
       exit revTutorialStartWithState
    end if
    
@@ -1107,6 +1108,12 @@ on revTutorialStartWithState pStep, pTaggedObjects
       throw "No such step"
    end if
 end revTutorialStartWithState
+
+on revTutorialStartAtStep pCourse, pTutorial, pLesson, pStepName
+   revTutorialRunTutorial pCourse, pTutorial, pLesson, pStepName
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   revTutorialStartWithState pStepName, sTaggedObjects
+end revTutorialStartAtStep
 
 on revTutorialStop
    revTutorialClearHighlights
@@ -2410,7 +2417,7 @@ end revTutorialGroupContainsObjects
 ##############################################################################
 
 local sRunningInfo
-on revTutorialRunTutorial pCourse, pTutorial, pLesson
+on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
@@ -2421,16 +2428,20 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson
    put pTutorial into sRunningInfo["tutorial"]
    put pLesson into sRunningInfo["lesson"]
    
-   revTutorialRunSteps tData
+   revTutorialRunSteps tData, pUntilStep
 end revTutorialRunTutorial
 
 local sFile
-on revTutorialRunSteps pSteps
+on revTutorialRunSteps pSteps, pStopAtStep
    lock screen
    local tStep, tStepNum
    put 0 into tStepNum
    put pSteps["first step"] into tStep
    repeat until tStep is empty
+      if tStep is pStopAtStep then
+         exit repeat
+      end if
+      
       add 1 to tStepNum
       put pSteps[tStep]["file"] into sFile
       revTutorialRunStep pSteps[tStep]["actions"]
