@@ -1578,7 +1578,7 @@ on revTutorialWaitUntilObjectIsScripted pTaggedObject
 end revTutorialWaitUntilObjectIsScripted
 
 on revTutorialWaitUntilObjectIsClicked
-   // Subscribe to mouseUp
+   revIDESubscribe "ideMouseUp"
 end revTutorialWaitUntilObjectIsClicked
 
 on revTutorialWaitUntilObjectIsFocused
@@ -2140,14 +2140,17 @@ on ideOpenPalette pPalette
    end if
 end ideOpenPalette
 
-on mouseUp pWhich
-   local tObject
-   put the long id of the target into tObject
+on ideMouseUp pWhich, pTarget
    if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+      if revTutorialObjectIsTaggedObject(pTarget, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
+end ideMouseUp
+
+on mouseUp pWhich
+   local tObject
+   put the long id of the target into tObject
    
    if sWait["wait condition"] is "interlude" then
       if tObject is the long id of button "Got It" of stack "revTutorial" then
@@ -2156,15 +2159,13 @@ on mouseUp pWhich
    end if
 end mouseUp
 
-on mouseDoubleUp pWhich
+on ideMouseDoubleUp pWhich, pTarget
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
-      local tObject
-      put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+      if revTutorialObjectIsTaggedObject(pTarget, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
-end mouseDoubleUp
+end ideMouseDoubleUp
 
 on ideSelectedObjectChanged 
    if sWait["wait condition"] is "state" and sWait["state"] is "selected" then

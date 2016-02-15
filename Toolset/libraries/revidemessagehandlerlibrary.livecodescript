@@ -342,3 +342,42 @@ on moveStack pLeft, pTop
    send "ideMessageSendWithTrigger" &&  "ideStackMoved, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
    pass moveStack
 end moveStack
+
+on mouseDown pButton
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEStackIsIDEStack(tTarget) then pass mouseDown
+   
+   local tParams
+   put pButton into tParams[1]
+   put tTarget into tParams[2]
+   
+   send "ideMessageSendWithParameters" &&  "ideMouseDown, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   pass mouseDown
+end mouseDown
+
+on mouseUp pButton
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEStackIsIDEStack(tTarget) then pass mouseUp
+   
+   local tParams
+   put pButton into tParams[1]
+   put tTarget into tParams[2]
+   
+   send "ideMessageSendWithParameters" &&  "ideMouseUp, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   pass mouseUp
+end mouseUp
+
+on mouseDoubleUp pButton
+   local tTarget
+   put the long id of the target into tTarget
+   if revIDEStackIsIDEStack(tTarget) then pass mouseDoubleUp
+   
+   local tParams
+   put pButton into tParams[1]
+   put tTarget into tParams[2]
+   
+   send "ideMessageSendWithParameters" &&  "ideMouseDoubleUp, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   pass mouseDoubleUp
+end mouseDoubleUp
