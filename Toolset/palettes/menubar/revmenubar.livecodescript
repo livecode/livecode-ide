@@ -977,6 +977,7 @@ end revMenubarMenus
 on highlightMenuItem pMenu, pSubMenus
    local tMenuText
    put the text of button pMenu of group "revMenuBar" of me into tMenuText
+   replace "&" with empty in tMenuText
    local tTabNesting, tSubMenuNum, tLineNum
    put 1 into tSubMenuNum
    repeat for each line tLine in tMenuText
