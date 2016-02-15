@@ -8796,7 +8796,9 @@ on revIDETutorialSave pTaggedObjects, pStepName
    # Store all the tags for tagged objects as custom properties
    repeat for each element tTagged in pTaggedObjects
       repeat for each key tTag in tTagged
-         set the cTutorialTag of tTagged[tTag] to tTag
+         if exists(tTagged[tTag]) then
+            set the cTutorialTag of tTagged[tTag] to tTag
+         end if
       end repeat
    end repeat
    
