@@ -1579,24 +1579,27 @@ function revTutorialCheckWaitCondition pActionData
          end if
          break
       case "state"
-         if pActionData["state"] is "selected" then
-            if revTutorialObjectsAreSelected(tObject) then
-               return true
-            end if
-         else if pActionData["state"] is "scripted" then
-            # If the script hasn't changed then don't do anything.
-            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+         switch pActionData["state"]
+            case "selected"
+               if revTutorialObjectsAreSelected(tObject) then
+                  return true
+               end if
                break
-            end if
-            if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
-               return true
-            else if sWait["current script"] is not empty then
-               add 1 to sWait["incorrect attempts"]
-               put the script of tObject into sWait["current script"]
-               # Show the current script and the target script in the tip stack
-               revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
-            end if
-         end if
+            case "scripted"
+               # If the script hasn't changed then don't do anything.
+               if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+                  break
+               end if
+               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
+                  return true
+               else if sWait["current script"] is not empty then
+                  add 1 to sWait["incorrect attempts"]
+                  put the script of tObject into sWait["current script"]
+                  # Show the current script and the target script in the tip stack
+                  revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
+               end if
+               break
+         end switch
          break
    end switch
    return false
@@ -2142,7 +2145,7 @@ on idePropertyChanged pObject
    end if
    
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
-      if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
+      if revTutorialIsWaitForProperty(sWait) then
          if revTutorialCheckWaitCondition(sWait) then
             revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
             revTutorialWaitConditionSatisfied
@@ -2184,31 +2187,6 @@ on ideMouseUp pWhich, pTarget
       end if
    end if
 end ideMouseUp
-
-on revTutorialSetPressedState pButtonID
-   set the coloroverlay["opacity"] of pButtonID to "50"
-   set the coloroverlay["color"] of pButtonID to "0,0,0"
-end revTutorialSetPressedState
-
-on revTutorialSetUnpressedState pButtonID
-   set the coloroverlay of pButtonID to empty
-end revTutorialSetUnpressedState
-
-on revTutorialCopyScriptToClipboard
-   local tText, tCleanedScript
-   put word 1 to -1 of field "Script" of stack "revTutorial" into tText
-   repeat for each line tLine in tText
-      if char 1 of tLine is tab then
-         delete char 1 of tLine
-      end if
-      if tCleanedScript is empty then
-         put word 1 to -1 of tLine into tCleanedScript
-      else
-         put return & word 1 to -1 of tLine after tCleanedScript
-      end if
-   end repeat
-   set the clipboardData["text"] to tCleanedScript
-end revTutorialCopyScriptToClipboard
 
 on mouseDown
    local tObject
@@ -2301,11 +2279,52 @@ on ideOpenCard pTarget
       end if
    end if
 end ideOpenCard
+
 ##############################################################################
 #
 #                     UTILITIES
 #
 ##############################################################################
+
+function revTutorialIsWaitForProperty pWait
+   switch pWait["wait condition"]
+      case "property"
+      case "fits"
+         return true
+      case "state"
+         switch pWait["state"]
+            case "scripted"
+               return true
+         end switch
+         break
+   end switch
+   return false
+end revTutorialIsWaitForProperty
+
+on revTutorialSetPressedState pButtonID
+   set the coloroverlay["opacity"] of pButtonID to "50"
+   set the coloroverlay["color"] of pButtonID to "0,0,0"
+end revTutorialSetPressedState
+
+on revTutorialSetUnpressedState pButtonID
+   set the coloroverlay of pButtonID to empty
+end revTutorialSetUnpressedState
+
+on revTutorialCopyScriptToClipboard
+   local tText, tCleanedScript
+   put word 1 to -1 of field "Script" of stack "revTutorial" into tText
+   repeat for each line tLine in tText
+      if char 1 of tLine is tab then
+         delete char 1 of tLine
+      end if
+      if tCleanedScript is empty then
+         put word 1 to -1 of tLine into tCleanedScript
+      else
+         put return & word 1 to -1 of tLine after tCleanedScript
+      end if
+   end repeat
+   set the clipboardData["text"] to tCleanedScript
+end revTutorialCopyScriptToClipboard
 
 function revTutorialObjectIsHighlighted pObject
    if sHighlight is empty then
