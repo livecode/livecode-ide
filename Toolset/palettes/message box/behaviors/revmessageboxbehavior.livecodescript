@@ -2,7 +2,6 @@
 ##GH created 12/11/2014
 ##GH last updated 31/12/2014
 
-global msg
 local lSelectedCard, lCardHistoryPref
 constant kHistoryMax = 200
 constant kHalfMessageFieldHeight = 12.5
@@ -61,15 +60,14 @@ on openStack
    
    #Preferences
    --frame item: Name                                            Location  Type              Label                                           Value Type  Value                                         Callback Message      Callback Target
-   addFrameItem "ideMessageBox_autoupdate",           "header",  "preference",  "Auto Update Pending Messages",  "boolean",     "true,false",                                  "preferenceChanged",  the long id of this stack
-   addFrameItem "ideMessageBox_intelligenceobject", "header",  "preference",  "Select Intelligence Object",            "enum",         "selectedObject,mouseControl",   "preferenceChanged",  the long id of this stack
+   addFrameItem "ideMessageBox_autoupdate",           "header",  "preference",  "Auto Update Pending Messages",  "boolean",     "true,false",                                  "preferenceChanged",  the long id of me
+   addFrameItem "ideMessageBox_intelligenceobject", "header",  "preference",  "Select Intelligence Object",            "enum",         "selectedObject,mouseControl",   "preferenceChanged",  the long id of me
    
    hiliteFrameItem "single line"
    showCard "Single Line"
    
    lock messages
    set the revMessageBoxRedirect to the long id of me
-   set the textSize of this stack to 11
    unlock messages
    
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
@@ -91,17 +89,16 @@ on openStack
    put 4*kHalfMessageFieldHeight + the headerHeight of me + the footerHeight of me into tMinHeight
    
    lock messages
-   set the minHeight of this stack to tMinHeight
-   set the left of this stack to the cREVLeft of this stack
-   set the top of this stack to the cREVTop of this stack
+   set the minHeight of me to tMinHeight
+   moveStack
    unlock messages
    unlock screen
 end openStack
 
 on moveStack
    --set the position of the stack as a custom property so when it is reopened/different card is selected it remains in the same location
-   set the cREVLeft of this stack to the left of this stack
-   set the cREVTop of this stack to the top of this stack
+   set the cREVLeft of me to the left of me
+   set the cREVTop of me to the top of me
 end moveStack
 
 on closeStack
@@ -141,7 +138,7 @@ command showCard pCard
    go to card lSelectedCard
    ##GH : will need localising
    --set the title of this stack to revIDELocalisedString("Message Box" && "(" & lSelectedCard & ")")
-   set the title of this stack to "Message Box" && "(" & lSelectedCard & ")"
+   set the title of me to "Message Box" && "(" & lSelectedCard & ")"
    
    --get message history for Single Line and Multiple Lines
     if pCard is among the items of "Single Line,Multiple Lines" then 
@@ -529,9 +526,14 @@ command ideMessageBoxExecuteScript pScript
    local tDefaultStack
    put revIDEGetPreference("IDEActiveStack") into tDefaultStack
    
-   local tIntelligenceObject
-   put the cREVIntelligenceObject of me into tIntelligenceObject
+   local tIntelligencePref, tIntelligenceObject
+   put the cREVIntelligenceObject of me into tIntelligencePref
    
+   try
+      do "put the long id of the" && tIntelligencePref && "into tIntelligenceObject"
+   catch tError
+      put empty into tIntelligenceObject
+   end try
    local tDebugMode
    put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
@@ -574,7 +576,7 @@ function ideMessageBoxFormatErrorForDisplay pErrorTrace
 end ideMessageBoxFormatErrorForDisplay
 
 command revIDEUpdateIntelligenceObject
-   set the cREVIntelligenceObject of this stack to revIDEGetPreference("ideMessageBox_intelligenceobject")
+   set the cREVIntelligenceObject of me to revIDEGetPreference("ideMessageBox_intelligenceobject")
 end revIDEUpdateIntelligenceObject
 
 #   Updates the message box mode to reflect whether or not we are debugging something.

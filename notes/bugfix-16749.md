@@ -1,1 +1,1 @@
-# Restore palette rect using preferences correctly
+# Don't store iconified stack rect

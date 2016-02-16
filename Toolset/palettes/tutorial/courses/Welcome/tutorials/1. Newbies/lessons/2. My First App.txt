@@ -69,7 +69,7 @@ step "Set Header Graphic Properties"
     Double click on the graphic to open up the property inspector.
 action
     highlight graphic "Header Graphic"
-    wait until there is a property inspector for graphic "Header Graphic"
+    wait until there is an inspector for graphic "Header Graphic"
 	go to step "Property Inspector Interlude"
 end step
 
@@ -159,7 +159,7 @@ step "Set Send Button Properties"
     Double click on the button to display its properties in the property inspector.
 action
     highlight button "Send Button"
-    wait until there is a property inspector for button "Send Button"
+    wait until there is an inspector for button "Send Button"
     go to step "Set Send Button Label"
 end step
 
@@ -213,7 +213,7 @@ step "Apply Button Interlude"
 	The script entered into the script editor does not become live until you click on the Apply button.
 	When this is clicked, you will get feedback about whether the script you have written is correct.
 action
-	highlight script editor "Apply" of button "Send Button"
+	highlight "Apply" of script editor for button "Send Button"
 	interlude
 	go to step "Send Button Script"	
 end step
@@ -275,7 +275,7 @@ step "Set Message Field Properties"
     Double click on the field to open up its property inspector.
 action
     highlight field "Message Field"
-    wait until there is a property inspector for field "Message Field"
+    wait until there is an inspector for field "Message Field"
     go to step "Set Message Field Name"
 end step
 
@@ -407,7 +407,7 @@ step "Set Label Field Properties"
     Double click on the field to display its properties in the property inspector.
 action
     highlight field "Label Field"
-    wait until there is a property inspector for field "Label Field"
+    wait until there is an inspector for field "Label Field"
     go to step "Set Label Field Name"
 end step
 

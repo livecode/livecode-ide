@@ -158,6 +158,10 @@ command initialize
    set the backgroundColor of field "Script" of me to sePrefGet("editor,backgroundcolor")
    set the hScrollbar of field "Script" of me to (sePrefGet("editor,hscrollbar") is "true")
    
+   -- See bug 16773. Mac likes an odd scrollbarwidth,
+   -- Windows requires a scrollbarwidth > 16
+   set the scrollbarWidth of field "Script" of me to 17
+   
    # OK-2009-03-11 : Bug 7499 - The hilite color was previously not being reset to empty on OS X.
    # At the same time as fixing this issue, I've made the hilite color a preference in case we decide
    # to allow users to configure it in the future.
@@ -2513,6 +2517,7 @@ private command selectionUpdateRequest
 end selectionUpdateRequest
 
 command selectionUpdate
+   lock screen
    findClearResults
    if the lockText of field "Script" of me is false then
       deSelectLastGoneToLine
@@ -2543,6 +2548,7 @@ command selectionUpdate
    # OK-2009-10-05: Some more optimization here, the update method was doing a lot of stuff that is not
    # needed, so I added a more specific method to handle this situation.
    send "updateSelectedHandler" to group "Left Bar" of stack (revTargetStack(the long id of me))
+   unlock screen
 end selectionUpdate
 
 
@@ -2645,8 +2651,17 @@ command deselectLastGoneToLine
    get the selectedChunk
    -- MM-2012-06-20: [[ Bug 10027 ]] Make sure there was a last line selected - causes bugs deselects elsewhere within the IDE.
    if sLastSelectedGoneToChunk is not empty and word 2 of it is item 1 of sLastSelectedGoneToChunk and word 4 of it is item 2 of sLastSelectedGoneToChunk then
+      lock screen
+      lock messages
+      local tSelobj
+      put revIDESelectedObjects() into tSelobj
       select empty
+      if tSelobj is not the long id of field "Script" of me then
+         revIDESelectObjects tSelobj
+      end if
       set the backgroundColor of char (item 1 of sLastSelectedGoneToChunk) to (item 2 of sLastSelectedGoneToChunk) of field "Script" of me to empty
+      unlock messages
+      unlock screen
    end if
    put empty into sLastSelectedGoneToChunk
    
@@ -5268,12 +5283,12 @@ private command __EditorFieldCacheFlush pRuggedObjectId
    if tField is empty then
       exit __EditorFieldCacheFlush
    end if
-   if the name of tField is "Script" then
+   if the name of field tField is "Script" then
       exit __EditorFieldCacheFlush
    end if
 
    lock messages
-   delete tField
+   delete field tField
    unlock messages
 
    delete variable sScriptEditorFieldCache[pRuggedObjectId]

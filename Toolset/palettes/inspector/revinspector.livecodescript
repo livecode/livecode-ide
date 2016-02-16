@@ -236,6 +236,7 @@ private on deleteInspector pInspectorNumber
    removeInspectorFromList pInspectorNumber
 end deleteInspector
 
+local sInspectedObjectsA
 on ideInspectObjects pObjects
    # Get the selected objects
    local tSelectedObjects
@@ -357,7 +358,7 @@ on ideSelectedObjectChanged
    # If the object is on an inspector stack, lock it
    if the short name of tStack begins with kPropertyInspectorPrefix then
       if the cLocked of tStack is not true then
-         dispatch "actionSelected" to tStack with "inspectorLock"
+         dispatch "lockInspector" to tStack
       end if
    end if
    
@@ -370,4 +371,38 @@ on ideSelectedObjectChanged
       end if
    end repeat
 end ideSelectedObjectChanged
+
+function inspectorForObject pObject
+   local tStackName
+   repeat for each key tKey in inspectorList()
+      put kPropertyInspectorPrefix && tKey into tStackName
+      if the mode of stack tStackName is not 0 \ 
+            and pObject is among the lines of the cSelectedObjects of stack tStackName then
+         return tStackName
+      end if
+   end repeat
+   return empty
+end inspectorForObject
+
+function absoluteRectOfObject pObjectData
+   local tInspector
+   put inspectorForObject(pObjectData["object"]) into tInspector
+   local tRect
+   put the rect of group pObjectData["group"] of stack tInspector into tRect
+   # Work around the fact that groups are too large
+   put item 2 of tRect + 21 into item 4 of tRect
    
+   # Make sure left of group is left of stack
+   put 0 into item 1 of tRect
+   
+   return revIDERelativeRectToAbsolute(tRect, the long id of stack tInspector)
+end absoluteRectOfObject
+
+on highlightObject pObjectData
+   lock screen
+   local tTargetInspector
+   put the long id of stack inspectorForObject(pObjectData["object"]) into tTargetInspector
+   dispatch "hiliteFrameItem" to tTargetInspector with pObjectData["section"]
+   dispatch "navSelected" to tTargetInspector with pObjectData["section"]
+   unlock screen
+end highlightObject

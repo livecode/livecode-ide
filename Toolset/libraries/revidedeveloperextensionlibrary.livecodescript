@@ -275,6 +275,8 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put tResources into tDetailsA["resources"]
    end if
    
+   # Default script
+   put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["id"], false) into tDetailsA["defaultscript"]
    return tDetailsA 
 end __revIDEDeveloperExtensionFetchFolderDetails
 
@@ -886,8 +888,14 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put pFolder & slash & tTargetName & ".lci" into tInterfaceFile
    end if
    
+   local tDefaultScript
+   put tDetailsA["default_script"] into tDefaultScript
+   if there is not a file tDefaultScript then
+      put empty into tDefaultScript
+   end if
+   
    if tError is empty then
-      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tInterfaceFile) into tError
+      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tInterfaceFile, tDefaultScript) into tError
    end if
    
    revZipCloseArchive tArchive
@@ -907,7 +915,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    return empty
 end __revIDEDeveloperExtensionBuildPackage
 
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pInterfaceFile
+private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pInterfaceFile, pDefaultScript
    local tError
    
    set the itemdelimiter to slash
@@ -998,5 +1006,46 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
+   # Add default script
+   if tError is empty and pDefaultScript is not empty then
+      revZipAddItemWithFile pArchive, "support/defaultscript.livecodescript", pDefaultScript
+      
+      if the result begins with "ziperr" then
+         __revIDEDeveloperExtensionSendWarning "couldn't add default script" && pDefaultScript
+      end if
+   end if
+   
    return tError
 end __revIDEDeveloperExtensionAddSpecifiedFilesToPackage
+
+on revIDEDeveloperExtensionEditDefaultScript pFolder
+   local tDefaultScript, tTargetStack
+   put pFolder & "/support/defaultscript.livecodescript" into tDefaultScript
+   
+   local tExpectedName
+   put sExtensionDetailsA[pFolder]["id"] & ".__DefaultScript" into tExpectedName
+   if there is a file tDefaultScript then
+      try
+         # If we have a valid stack, open it and edit the script
+         open stack tDefaultScript
+         put the long id of stack tDefaultScript into tTargetStack
+         revIDEEditScriptOfObject tTargetStack
+      catch tError
+         # Otherwise, try to use the contents of the file as the script of a stack
+         local tContents
+         put textDecode(url( "binfile:" & tDefaultScript), "utf-8") into tContents
+         revIDENewScriptOnlyStackWithScript tExpectedName, tContents
+         put the result into tTargetStack
+         set the filename of tTargetStack to tDefaultScript
+      end try
+   else
+      # If there is no file, create a new one.
+      revIDENewScriptOnlyStack tExpectedName
+      put the result into tTargetStack
+   end if
+   return tTargetStack
+end revIDEDeveloperExtensionEditDefaultScript
+
+function revIDEDeveloperExtensionFetchDefaultScript pFolder
+   return revIDEExtensionFetchDefaultScript(pFolder, sExtensionDetailsA[pFolder]["id"], false)
+end revIDEDeveloperExtensionFetchDefaultScript

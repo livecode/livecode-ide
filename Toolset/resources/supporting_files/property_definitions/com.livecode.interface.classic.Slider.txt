@@ -20,6 +20,8 @@ pageInc							1
 lineInc				false			0
 layerMode												
 behavior												
+foregroundColor	Text Color
+foregroundPattern	Text Pattern
 backgroundColor												
 backgroundPattern												
 borderColor												

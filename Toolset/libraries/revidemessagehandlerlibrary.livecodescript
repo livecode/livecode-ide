@@ -319,3 +319,17 @@ on mainstackChanged pOldMainstack, pNewMainStack
    send "ideMessageSendWithParameters" &&  "ideMainstackChanged,tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
    pass mainstackChanged
 end mainstackChanged
+
+on moveStack pLeft, pTop
+   if the platform is "MacOS" then -- prevent stack getting stuck under menu bar
+      if pTop < the bottom of stack revIDEPaletteToStackName("menubar") and the right of stack revTargetStack() < the right of stack revIDEPaletteToStackName("menubar") + 5 then
+         set the top of stack revTargetStack() to the bottom of stack revIDEPaletteToStackName("menubar") + 20
+      end if
+   end if
+   
+   # IDE to notify any objects subscribed to the ideMoveStack Message
+   local tLongID
+   put the long id of the owner of the target into tLongID
+   send "ideMessageSendWithTrigger" &&  "ideStackMoved, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
+   pass moveStack
+end moveStack

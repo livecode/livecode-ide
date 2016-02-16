@@ -20,6 +20,7 @@ showFocusBorder							true
 mnemonic												
 default							false					
 disabled												
+hilited
 layerMode												
 behavior												
 icon												

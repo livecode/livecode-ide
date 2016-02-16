@@ -466,6 +466,12 @@
 		$('pre code').each(function(i, block) {
     		hljs.highlightBlock(block);
  		});		
+ 		
+ 		// Force code not detected as LCB to be highlighted as LCS
+ 		$(".hljs:not(.livecodebuilder)").each(function(i, block) {
+ 			$(this).addClass("livecode");
+    		hljs.highlightBlock(block);
+ 		});
 		window.scrollTo(0, 0);
 	}
 	
@@ -857,6 +863,18 @@
 			var library_id = $(this).attr("library_id");
 			var library_name = library_id_to_name(library_id);
 			library_set(library_id);
+		});
+		
+		$("#lcdoc_list").bind('mousewheel', function(e, d)  {
+			var t = $("#list");
+			if (d > 0 && t.scrollTop() === 0) {
+				e.preventDefault();
+			}
+			else {
+				if (d < 0 && (t.scrollTop() == t.get(0).scrollHeight - t.innerHeight())) {
+					e.preventDefault();
+				}
+			}
 		});
 		
 		$(document).keydown(function(e) {

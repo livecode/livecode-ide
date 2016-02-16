@@ -1,0 +1,1 @@
+# Ensure dictionary scrolling works as expected
