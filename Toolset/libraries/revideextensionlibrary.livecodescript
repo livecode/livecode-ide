@@ -599,9 +599,10 @@ function __extensionPropertiesFromManifest pManifestPath
          end if
       end if
       
-      # Process value options and defaul
+      # Process value options, default and delimiter
       replace comma with return in tExtensionData[tName]["options"]
-      replace "\n" with return in tExtensionData[tName]["default"]
+      replace "\n" with return in tExtensionData[tName]["default"]     
+      replace "\n" with return in tExtensionData[tName]["delimiter"]
       
       local tReadOnly
       get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")

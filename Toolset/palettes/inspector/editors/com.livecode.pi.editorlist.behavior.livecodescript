@@ -40,6 +40,7 @@ on editorGenerate
       delete group id tLine of me
    end repeat
    unlock messages
+   local tGroupLongID
    repeat with x = 1 to sNumChildren
       lock messages
       copy group "template" of stack tEditorType to me
@@ -89,13 +90,16 @@ on editorResize
    put the left of me into tLeft
    put the top of me into tTop
    
+   local tHeight
    repeat with x = 1 to sNumChildren
+      dispatch "editorResize" to group ("editor" & x) of me
       set the left of group ("editor" & x) of me to tLeft
       set the top of group ("editor" & x) of me to tTop
-      add the width of me / sNumChildren to tLeft
+      add the effective width of group ("editor" & x) of me to tLeft
+      put max(the effective height of group ("editor" & x) of me, tHeight) into tHeight
    end repeat
-   
    unlock messages
+   set the editorHeight of me to tHeight
    unlock screen
 end editorResize
 

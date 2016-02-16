@@ -1,9 +1,10 @@
 ﻿script "com.livecode.pi.color.behavior"
 local sNamedColor
+constant kColorEditorSize = 24
 
 on editorInitialize
-   set the editorMinWidth of me to 24
-   set the editorMaxWidth of me to 24
+   set the editorMinWidth of me to kColorEditorSize
+   set the editorMaxWidth of me to kColorEditorSize
 end editorInitialize
 
 on editorUpdate
@@ -34,7 +35,8 @@ end editorUpdate
 on editorResize
    lock screen
    lock messages
-   set the rect of control 1 of me to the rect of me
+   set the rect of control 1 of me to 0,0,kColorEditorSize,kColorEditorSize
+   set the topleft of control 1 of me to the topleft of me
    unlock messages
    unlock screen
 end editorResize
