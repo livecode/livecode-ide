@@ -92,7 +92,7 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
          end if
       end if
       
-      if pWithoutInvisible and sExtensions[tExtensionKey]["uservisible"] is not true then
+      if pWithoutInvisible and not sExtensions[tExtensionKey]["uservisible"] then
          next repeat
       end if
       

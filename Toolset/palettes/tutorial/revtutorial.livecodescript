@@ -2307,15 +2307,15 @@ function revTutorialObjectsAreSelected pObjects
 end revTutorialObjectsAreSelected
 
 function revTutorialReparentChild pObject
-   if pObject begins with "stack" then
+   if word 1 of pObject is "stack" then
       return pObject
    end if
    
-   if pObject begins with "card" then
+   if word 1 of pObject is "card" then
       return pObject
    end if
    
-   if the owner of pObject begins with "card" then
+   if word 1 of the owner of pObject is "card" then
       return pObject
    end if
    

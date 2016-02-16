@@ -825,6 +825,15 @@ on mouseUp
    unlock screen
 end mouseUp
 
+/*
+There is no way to get the real screen rects of the mac menu buttons,
+so this function has the current values hard-coded. The easiest way 
+to find these values is to use 'the left of stack "Message Box" whilst aligning
+visually.
+
+At some point we will need to sort out the conflict between this function
+and potential user locale settings.
+*/
 private function rectOfMacMenuItem pItem
    local tLeft, tRight
    switch pItem
