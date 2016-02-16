@@ -764,27 +764,36 @@ constant kPointerHeight = 30
 constant kPointerWidth = 40
 constant kPointerOffset = 5
 
+constant kMaxScriptHeight = 200
 on revTutorialPositionStack pStack, pObject, pWidthOverride
+   local tGotItButtonID, tCopyButtonID
+   local tMsgFieldID, tScriptFieldID
+   
+   put the long id of button "Got It" of stack "revTutorial" into tGotItButtonID
+   put the long id of button "Copy Script" of stack "revTutorial" into tCopyButtonID
+   put the long id of field "Message" of stack "revTutorial" into tMsgFieldID
+   put the long id of field "Script" of stack "revTutorial" into tScriptFieldID
+   
    lock screen
    lock messages
    local tDefaultStack
    put the defaultStack into tDefaultStack
    set the defaultstack to "revTutorial"
    if sIsInterlude then
-      show button "Got It" of stack "revTutorial"
+      show tGotItButtonID
       put 460 into pWidthOverride
    else
-      hide button "Got It" of stack "revTutorial"
+      hide tGotItButtonID
    end if
    
    local tHasScript
-   if field "Script" of stack "revTutorial" is empty then
+   if the text of tScriptFieldID is empty then
       put false into tHasScript
-      hide field "Script" of stack "revTutorial"
+      hide tScriptFieldID
    else
       put true into tHasScript
-      show field "Script" of stack "revTutorial"
-      show button "Copy Script" of stack "revTutorial"
+      show tScriptFieldID
+      show tCopyButtonID
    end if
    
    local tPointVertical
@@ -836,35 +845,42 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    local tMessageHeight, tMessageWidth
    if pWidthOverride is not empty then
       put max(kMessageWidth, pWidthOverride) into tMessageWidth
-      set the width of field "Message" of stack "revTutorial" to tMessageWidth
+      set the width of tMsgFieldID to tMessageWidth
    end if
    
-   set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" into tMessageHeight
+   set the height of tMsgFieldID to 1000
+   put the formattedHeight of tMsgFieldID into tMessageHeight
    
-   set the height of field "Message" of stack "revTutorial" to tMessageHeight
+   set the height of tMsgFieldID to tMessageHeight
    
    put tMessageHeight + kMargin * 2 into tHeight
-   put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
+   put the formattedWidth of tMsgFieldID + kMargin * 2 into tWidth
    
    if tHasScript then
       local tScriptHeight
       if pWidthOverride is not empty then
-         set the width of field "Script" of stack "revTutorial" to pWidthOverride
+         set the width of tScriptFieldID to pWidthOverride
       end if
-      set the height of field "Script" of stack "revTutorial" to 1000
+      set the height of tScriptFieldID to 1000
       
-      put the formattedHeight of field "Script" of stack "revTutorial" into tScriptHeight
-      set the height of field "Script" of stack "revTutorial" to tScriptHeight
+      put the formattedHeight of tScriptFieldID into tScriptHeight
+      if tScriptHeight > kMaxScriptHeight then
+         set the vscrollbar of tScriptFieldID to true
+         put kMaxScriptHeight into tScriptHeight
+      else
+         set the vscrollbar of tScriptFieldID to false
+      end if
+
+      set the height of tScriptFieldID to tScriptHeight
       add tScriptHeight + kMargin * 2 to tHeight
       
-      put max(tWidth, the width of field "Script" of stack "revTutorial" + kMargin * 2) into tWidth
+      put max(tWidth, the width of tScriptFieldID + kMargin * 2) into tWidth
    end if
    
    if sIsInterlude then
-      add the height of button "Got It" of stack "revTutorial" + kMargin to tHeight
+      add the height of tGotItButtonID + kMargin to tHeight
    else if tHasScript then
-      add the height of button "Copy Script" of stack "revTutorial" + kMargin to tHeight
+      add the height of tCopyButtonID + kMargin to tHeight
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -967,17 +983,17 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
-         set the bottomright of button "Got It" of stack "revTutorial" to tWidth - kMargin, tHeight - kMargin
+         set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
       else if tHasScript then
-         set the bottomright of button "Copy Script" of stack "revTutorial" to tWidth - kMargin, tHeight - kMargin
+         set the bottomright of tCopyButtonID to tWidth - kMargin, tHeight - kMargin
       end if
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   set the topleft of field "Message" of stack "revTutorial" to tMessageLeft, tMessageTop
+   set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
    local tScriptTop
-   put kMargin + the bottom of field "Message" of stack "revTutorial" into tScriptTop
-   set the topleft of field "Script" of stack "revTutorial" to tMessageLeft, tScriptTop 
+   put kMargin + the bottom of tMsgFieldID into tScriptTop
+   set the topleft of tScriptFieldID to tMessageLeft, tScriptTop 
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
