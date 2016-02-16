@@ -44,7 +44,7 @@ function revTutorialParseData pData
       if tType is not empty then
          # Don't interpret indented new lines of text elements as new sections
          if char 1 of tLine is tab then
-            get tSubType
+            get empty
          end if
          switch it
             case "end"
