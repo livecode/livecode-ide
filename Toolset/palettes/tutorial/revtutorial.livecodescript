@@ -784,6 +784,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    else
       put true into tHasScript
       show field "Script" of stack "revTutorial"
+      show button "Copy Script" of stack "revTutorial"
    end if
    
    local tPointVertical
@@ -862,6 +863,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    
    if sIsInterlude then
       add the height of button "Got It" of stack "revTutorial" + kMargin to tHeight
+   else if tHasScript then
+      add the height of button "Copy Script" of stack "revTutorial" + kMargin to tHeight
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -964,7 +967,9 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
-         set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
+         set the bottomright of button "Got It" of stack "revTutorial" to tWidth - kMargin, tHeight - kMargin
+      else if tHasScript then
+         set the bottomright of button "Copy Script" of stack "revTutorial" to tWidth - kMargin, tHeight - kMargin
       end if
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
@@ -1029,6 +1034,10 @@ on revInitialiseTutorial
       delete button "Got It" of stack "revTutorial"
    end if
    
+   if there is a button "Copy Script" of stack "revTutorial" then
+      delete button "Copy Script" of stack "revTutorial"
+   end if
+   
    set the windowShape of stack "revTutorial" to empty
    
    set the textStyle of stack "revTutorial" to "bold"
@@ -1067,6 +1076,17 @@ on revInitialiseTutorial
    set the height of it to 28
    set the backColor of it to revTutorialInterludeAltColor()
    set the label of it to "Got It"
+   set the borderWidth of it to 0
+   set the showFocusBorder of it to false
+   set the autoHilite of it to false
+   set the threeD of it to false
+   set the visible of it to false
+   
+   create button "Copy Script"
+   set the width of it to 96
+   set the height of it to 28
+   set the backColor of it to revTutorialMessageAltColor()
+   set the label of it to "Copy Script"
    set the borderWidth of it to 0
    set the showFocusBorder of it to false
    set the autoHilite of it to false
@@ -2149,6 +2169,47 @@ on ideMouseUp pWhich, pTarget
    end if
 end ideMouseUp
 
+on revTutorialSetPressedState pButtonID
+   set the coloroverlay["opacity"] of pButtonID to "50"
+   set the coloroverlay["color"] of pButtonID to "0,0,0"
+end revTutorialSetPressedState
+
+on revTutorialSetUnpressedState pButtonID
+   set the coloroverlay of pButtonID to empty
+end revTutorialSetUnpressedState
+
+on revTutorialCopyScriptToClipboard
+   local tText, tCleanedScript
+   put word 1 to -1 of field "Script" of stack "revTutorial" into tText
+   repeat for each line tLine in tText
+      if char 1 of tLine is tab then
+         delete char 1 of tLine
+      end if
+      if tCleanedScript is empty then
+         put word 1 to -1 of tLine into tCleanedScript
+      else
+         put return & word 1 to -1 of tLine after tCleanedScript
+      end if
+   end repeat
+   set the clipboardData["text"] to tCleanedScript
+end revTutorialCopyScriptToClipboard
+
+on mouseDown
+   local tObject
+   put the long id of the target into tObject
+   if word 1 of tObject is "button" then
+      revTutorialSetPressedState tObject
+   end if
+end mouseDown
+
+on mouseRelease
+   local tObject
+   put the long id of the target into tObject
+   if word 1 of tObject is "button" then
+      revTutorialSetUnpressedState tObject
+   end if
+end mouseRelease
+
 on mouseUp pWhich
    local tObject
    put the long id of the target into tObject
@@ -2157,6 +2218,14 @@ on mouseUp pWhich
       if tObject is the long id of button "Got It" of stack "revTutorial" then
          revTutorialReturnFromInterlude
       end if
+   end if
+   
+   if tObject is the long id of button "Copy Script" of stack "revTutorial" then
+      revTutorialCopyScriptToClipboard
+   end if
+   
+   if word 1 of tObject is "button" then
+      revTutorialSetUnpressedState tObject
    end if
 end mouseUp
 
