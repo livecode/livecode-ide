@@ -11,7 +11,16 @@ function revTutorialParseFile pFile
    return revTutorialParseData(textDecode(tData, "utf-8"))
 end revTutorialParseFile
 
+private on addError pError, @xErrors
+   if xErrors is empty then
+      put pError into xErrors
+   else
+      put return & pError after xErrors
+   end if
+end addError
+
 function revTutorialParseData pData
+   local tErrors
    local tTutorialName, tCurStepName
    local tType, tSubType
    local tLineNum, tActionNum
@@ -33,6 +42,10 @@ function revTutorialParseData pData
       
       // If we're in a type, then extract the data appropriately
       if tType is not empty then
+         # Don't interpret indented new lines of text elements as new sections
+         if char 1 of tLine is tab then
+            get empty
+         end if
          switch it
             case "end"
                // End the section
@@ -53,11 +66,13 @@ function revTutorialParseData pData
             case "file"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
-                  throw "action list not valid in" && tType && " on line" && tLineNum
+                  addError "action list not valid in" && tType && " on line" && tLineNum, tErrors
+                  break
                end if
                
                if tSubType is "action" then
                   throw "action list not valid in" && tType && " on line" && tLineNum
+                  break
                end if
                
                if tData is not empty then
@@ -113,6 +128,9 @@ function revTutorialParseData pData
             break
          case "step"
             put token 2 of tLine into tCurStepName
+            if tCurStepName is among the keys of tStepData then
+               addError "duplicate step name" && tCurStepName && "on line" && tLineNum, tErrors
+            end if
             put it into tType
             put "text" into tSubType
             if tFirstStep is empty then
@@ -126,10 +144,15 @@ function revTutorialParseData pData
             put "text" into tSubType
             break
          default
-            throw "invalid section" && it && " on line" && tLineNum
+            addError "invalid section" && it && " on line" && tLineNum, tErrors
+            break
       end switch
    end repeat
    
+   if tErrors is not empty then
+      throw tErrors
+      return empty
+   end if
    put tFirstStep into tStepData["first step"]
    return tStepData
 end revTutorialParseData
@@ -143,6 +166,7 @@ function revTutorialIsObjectType pType
       case "image"
       case "widget"
       case "card"
+      case "group"
          # Add a 'set' type for multi-tagging
       case "set"
          return true
@@ -167,6 +191,7 @@ function revTutorialIsStateType pType
       case "scripted"
       case "focused"
       case "edited"
+      case "grouped"
          return true
    end switch
    return false
@@ -253,8 +278,9 @@ on revTutorialParseSubexpression pExpected, pTokens, pStart, @rData
       local tNext
       put segment tNextWord of pExpected into tNext
       switch tNext
-         case  "<token>" 
-            if pTokens[tNextToken] is empty then
+         case "<token>" 
+         case "<value>"
+            if tNext is "<token>" and pTokens[tNextToken] is empty then
                return "expected: <token>"
             end if
             
@@ -597,7 +623,7 @@ on revTutorialParseWait pTokens, @rData
          return empty
       end if
       
-      revTutorialParseSubexpression "the <token> of <object> is <token>", pTokens, tToken, tCondition
+      revTutorialParseSubexpression "the <token> of <object> is <value>", pTokens, tToken, tCondition
       
       if the result is empty then
          put "property" into rData["wait condition"]
@@ -634,6 +660,15 @@ on revTutorialParseWait pTokens, @rData
       if the result is empty then
          put "pops up" into rData["wait condition"]
          put tCondition[1] into rData["object"]
+      end if
+      return the result
+   end if
+   
+   if pTokens[tToken] is "this" then
+      revTutorialParseSubexpression "this card is <token>", pTokens, tToken, tCondition
+      if the result is empty then
+         put "this card" into rData["wait condition"]
+         put tCondition[1] into rData["card"]
       end if
       return the result
    end if
@@ -725,6 +760,10 @@ constant kMargin = 20
 constant kMessageWidth = 200
 constant kProgressHeight = 5
 
+constant kPointerHeight = 30
+constant kPointerWidth = 40
+constant kPointerOffset = 5
+
 on revTutorialPositionStack pStack, pObject, pWidthOverride
    lock screen
    lock messages
@@ -736,6 +775,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       put 460 into pWidthOverride
    else
       hide button "Got It" of stack "revTutorial"
+   end if
+   
+   local tHasScript
+   if field "Script" of stack "revTutorial" is empty then
+      put false into tHasScript
+      hide field "Script" of stack "revTutorial"
+   else
+      put true into tHasScript
+      show field "Script" of stack "revTutorial"
    end if
    
    local tPointVertical
@@ -783,18 +831,37 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       end if
    end if
    
-   local tWidth, tHeight
-   set the width of field "Message"of stack "revTutorial" to max(kMessageWidth, pWidthOverride)
+   local tWidth, tHeight 
+   local tMessageHeight, tMessageWidth
+   if pWidthOverride is not empty then
+      put max(kMessageWidth, pWidthOverride) into tMessageWidth
+      set the width of field "Message" of stack "revTutorial" to tMessageWidth
+   end if
+   
    set the height of field "Message" of stack "revTutorial" to 1000
+   put the formattedHeight of field "Message" of stack "revTutorial" into tMessageHeight
    
-   put the formattedHeight of field "Message" of stack "revTutorial" + kMargin * 2 into tHeight
-   put max(100,tHeight) into tHeight
-   set the height of field "Message" of stack "revTutorial" to tHeight - kMargin
+   set the height of field "Message" of stack "revTutorial" to tMessageHeight
    
+   put tMessageHeight + kMargin * 2 into tHeight
    put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
    
+   if tHasScript then
+      local tScriptHeight
+      if pWidthOverride is not empty then
+         set the width of field "Script" of stack "revTutorial" to pWidthOverride
+      end if
+      set the height of field "Script" of stack "revTutorial" to 1000
+      
+      put the formattedHeight of field "Script" of stack "revTutorial" into tScriptHeight
+      set the height of field "Script" of stack "revTutorial" to tScriptHeight
+      add tScriptHeight + kMargin * 2 to tHeight
+      
+      put max(tWidth, the width of field "Script" of stack "revTutorial" + kMargin * 2) into tWidth
+   end if
+   
    if sIsInterlude then
-      put tHeight + the height of button "Got It" of stack "revTutorial" + kMargin into tHeight
+      add the height of button "Got It" of stack "revTutorial" + kMargin to tHeight
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -823,30 +890,30 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       local tX, tY, tStackTop, tStackLeft, tMiddle
       
       if not tPointVertical then
-         set the width of tPointer to 40
-         set the height of tPointer to 30
-         set the rect of stack "revTutorial" to 0, 0, tWidth + 20, tHeight
+         set the width of tPointer to kPointerWidth
+         set the height of tPointer to kPointerHeight
+         set the rect of stack "revTutorial" to 0, 0, tWidth + kPointerWidth / 2, tHeight
          
          put (tBottom + tTop) / 2 into tMiddle
          if tPointerTop then
-            put the top of tGraphic + 40 into tY
-            put tMiddle - 40 into tStackTop
+            put the top of tGraphic + kPointerWidth into tY
+            put tMiddle - kPointerWidth into tStackTop
          else
-            put the bottom of tGraphic - 40 into tY
-            put tMiddle - tHeight + 40 into tStackTop
+            put the bottom of tGraphic - kPointerWidth into tY
+            put tMiddle - tHeight + kPointerWidth into tStackTop
          end if
          
          if tPointerLeft then
             put the left of tGraphic into tX
-            put tRight + 5 into tStackLeft
+            put tRight + kPointerOffset into tStackLeft
          else
             put the right of tGraphic into tX
-            put tLeft - tWidth - 25 into tStackLeft
+            put tLeft - tWidth - kPointerHeight + kPointerOffset into tStackLeft
          end if
       else
-         set the width of tPointer to 30
-         set the height of tPointer to 40
-         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + 20
+         set the width of tPointer to kPointerHeight
+         set the height of tPointer to kPointerWidth
+         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + kPointerWidth / 2
          
          put (tRight + tLeft) / 2 into tMiddle
          if tPointerTop then
@@ -854,15 +921,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
             put tBottom + 5 into tStackTop
          else
             put the bottom of tGraphic into tY
-            put tTop - tHeight - 25 into tStackTop
+            put tTop - tHeight - kPointerHeight + kPointerOffset into tStackTop
          end if
          
          if tPointerLeft then
-            put the left of tGraphic + 40 into tX
-            put tMiddle - 40 into tStackLeft
+            put the left of tGraphic + kPointerWidth into tX
+            put tMiddle - kPointerWidth into tStackLeft
          else
-            put the right of tGraphic - 40 into tX
-            put tMiddle - tWidth - 40 into tStackLeft
+            put the right of tGraphic - kPointerWidth into tX
+            put tMiddle - tWidth - kPointerWidth into tStackLeft
          end if
       end if
       
@@ -885,24 +952,27 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
+   local tMessageLeft, tMessageTop
+   put kMargin into tMessageLeft
+   put kMargin into tMessageTop
    if tRect is not empty then
       if not tPointVertical and tPointerLeft then
-         set the topleft of field "Message" of stack "revTutorial" to kMargin + 20, kMargin
+         add kPointerWidth / 2 to tMessageLeft
       else if tPointVertical and tPointerTop then
-         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin + 20
-      else
-         set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
+         add kPointerWidth / 2 to tMessageTop
       end if
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
          set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
       end if
-      
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
-      set the topleft of field "Message" of stack "revTutorial" to kMargin, kMargin
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
+   set the topleft of field "Message" of stack "revTutorial" to tMessageLeft, tMessageTop
+   local tScriptTop
+   put kMargin + the bottom of field "Message" of stack "revTutorial" into tScriptTop
+   set the topleft of field "Script" of stack "revTutorial" to tMessageLeft, tScriptTop 
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
@@ -951,6 +1021,10 @@ on revInitialiseTutorial
       delete field "Message" of stack "revTutorial"
    end if
    
+   if there is a field "Script" of stack "revTutorial" then
+      delete field "Script" of stack "revTutorial"
+   end if
+   
    if there is a button "Got It" of stack "revTutorial" then
       delete button "Got It" of stack "revTutorial"
    end if
@@ -967,7 +1041,21 @@ on revInitialiseTutorial
    set the opaque of it to false
    set the showborder of it to false
    set the showFocusBorder of it to false
-   set the width of it to 465
+   set the width of it to 1000
+   set the cantSelect of it to true
+   set the margins of it to 0
+   
+   set the left of it to 20
+   set the top of it to 60
+   
+   create field "Script"
+   set the dontWrap of it to true
+   set the lockText of it to true
+   set the opaque of it to true
+   set the backColor of it to "white"
+   set the showborder of it to false
+   set the showFocusBorder of it to false
+   set the width of it to 1000
    set the cantSelect of it to true
    set the margins of it to 0
    
@@ -1044,14 +1132,15 @@ on revTutorialStartWithState pStep, pTaggedObjects
    try
       revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
    catch tError
-      throw tError
-      revIDETutorialInfoSetEmpty
-      exit revTutorialStartWithState
    end try
    
-   if sSteps is empty then
-      throw "Selected tutorial is empty"
+   if tError is empty and sSteps is empty then
+      put "Selected tutorial is empty" into tError
+   end if
+   
+   if tError is not empty then
       revIDETutorialInfoSetEmpty
+      throw tError
       exit revTutorialStartWithState
    end if
    
@@ -1077,10 +1166,17 @@ on revTutorialStartWithState pStep, pTaggedObjects
    end if
 end revTutorialStartWithState
 
+on revTutorialStartAtStep pCourse, pTutorial, pLesson, pStepName
+   revTutorialRunTutorial pCourse, pTutorial, pLesson, pStepName
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   revTutorialStartWithState pStepName, sTaggedObjects
+end revTutorialStartAtStep
+
 on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
    revTutorialClearLastPropertyInspector
+   revTutorialClearSets
    revTutorialSaveProgress
    revFinaliseTutorial
 end revTutorialStop
@@ -1095,8 +1191,6 @@ on revTutorialFinish
    go invisible stack "revTutorial" as palette
    unlock messages
    add 1 to sStepNum
-   # For now, set captures are transient
-   delete variable sTaggedObjects["set"]
    revIDETutorialProgressChanged
    revTutorialEpilogue
    unlock screen
@@ -1111,6 +1205,9 @@ function revTutorialNumberOfSteps
 end revTutorialNumberOfSteps
 
 function revTutorialDonePercentage
+   if sNumSteps is 0 then
+      return 0
+   end if
    return 100 * (sStepNum - 1) / sNumSteps
 end revTutorialDonePercentage
 
@@ -1163,11 +1260,13 @@ on revTutorialContinue
       revIDETutorialProgressChanged
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
+         # Add guide in case wait is 'fits guide'
+         revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
             next repeat
          end if
       end if
-      // Do text, highlight and guide actions under lock screen, to remove 'flicker'
+      // Do text, highlight and guide show actions under lock screen, to remove 'flicker'
       lock screen
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
@@ -1178,7 +1277,7 @@ on revTutorialContinue
       // Create any sets
       revTutorialExecuteAction sSteps[sStepName]["actions"]["set"]
       // Guide
-      revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
+      revTutorialShowGuide sSteps[sStepName]["actions"]["add guide"]["guide"]
       // Highlight
       revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
       unlock screen
@@ -1249,14 +1348,18 @@ end revTutorialSetText
 
 on revTutorialSetTextOfMessage pText, pScript
    local tWidthOverride
-   put 0 into tWidthOverride
+   put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
-   put empty into field "Message" of stack "revTutorial"
+   put pText into field "Message" of stack "revTutorial"
+   put pScript into field "Script" of stack "revTutorial"
    if pScript is not empty then
-      put return & return & pScript into field "Message" of stack "revTutorial"
-      put the formattedWidth of field "Message" of stack "revTutorial" into tWidthOverride
+      put return before field "Script" of stack "revTutorial"
+      local tLength
+      put the number of chars in field "Script" of stack "revTutorial" into tLength
+      _internal script colorize char 1 to tLength of field "Script" of stack "revTutorial"
+      put the formattedWidth of field "Script" of stack "revTutorial" + 40 into tWidthOverride
    end if
-   put pText before field "Message" of stack "revTutorial"
+   
    revTutorialPositionStack "", "", tWidthOverride, false
 end revTutorialSetTextOfMessage
 
@@ -1310,8 +1413,7 @@ on revTutorialDoGoToStep pStep
    put 0 into sActionNumber
    revTutorialClearHighlights
    revTutorialClearGuides
-   # For now, set captures are transient
-   delete variable sTaggedObjects["set"]
+   revTutorialClearSets
    disableToolsPalette
    put false into sWaiting
    put false into sIsInterlude
@@ -1331,17 +1433,7 @@ end revTutorialDoInterlude
 
 # Tag a set of objects
 on revTutorialDoCreateSet pObjects, pTag
-   local tLongIDList
-   repeat for each element tObject in pObjects
-      local tLongID
-      put sTaggedObjects[tObject["type"]][tObject["tag"]] into tLongID
-      if tLongIDList is empty then
-         put tLongID into tLongIDList
-      else
-         put return & tLongID after tLongIDList
-      end if
-   end repeat
-   put tLongIDList into sTaggedObjects["set"][pTag]
+   put pObjects into sTaggedObjects["set"][pTag]
 end revTutorialDoCreateSet
 
 ##############################################################################
@@ -1385,10 +1477,10 @@ on revTutorialDoWait pActionData
          revTutorialWaitUntilTheToolIs
          break
       case "property"  
-         revTutorialWaitUntilObjectPropertyHasValue sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         revTutorialWaitUntilObjectPropertyHasValue pActionData["object"]
          break
       case "fits" 
-         revTutorialWaitUntilObjectFitsGuide sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+         revTutorialWaitUntilObjectFitsGuide pActionData["object"]
          break
       case "pops up" 
          revTutorialWaitUntilAnswerDialogHasPoppedUp
@@ -1399,7 +1491,7 @@ on revTutorialDoWait pActionData
                revTutorialWaitUntilObjectIsClicked
                break
             case "scripted"
-               revTutorialWaitUntilObjectIsScripted sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]]
+               revTutorialWaitUntilObjectIsScripted pActionData["object"]
                break
             case "focused"
                revTutorialWaitUntilObjectIsFocused
@@ -1407,7 +1499,13 @@ on revTutorialDoWait pActionData
             case "selected"
                revTutorialWaitUntilObjectIsSelected
                break
+            case "grouped"
+               revTutorialWaitUntilObjectIsGrouped pActionData["object"]
+               break
          end switch
+         break
+      case "this card"
+         revTutorialWaitUntilThisCardIs pActionData["card"]
          break
    end switch
 end revTutorialDoWait
@@ -1422,7 +1520,7 @@ function revTutorialCheckWaitCondition pActionData
    end switch
    
    local tObject
-   put sTaggedObjects[pActionData["object"]["type"]][pActionData["object"]["tag"]] into tObject
+   put revTutorialResolveObjectToLongID(pActionData["object"]) into tObject
    if tObject is empty then
       return false
    end if
@@ -1472,19 +1570,26 @@ on revTutorialWaitUntilObjectIsSelected
    revIDESubscribe "ideSelectedObjectChanged"
 end revTutorialWaitUntilObjectIsSelected
 
-on revTutorialWaitUntilObjectIsScripted pObject
-   put the script of pObject into sWait["current script"]
+on revTutorialWaitUntilObjectIsScripted pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   put the script of tObjID into sWait["current script"]
    put 0 into sWait["incorrect attempts"]
-   revIDESubscribe "idePropertyChanged", pObject
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectIsScripted
 
 on revTutorialWaitUntilObjectIsClicked
-   // Subscribe to mouseUp
+   revIDESubscribe "ideMouseUp"
 end revTutorialWaitUntilObjectIsClicked
 
 on revTutorialWaitUntilObjectIsFocused
    // Subscribe to control
 end revTutorialWaitUntilObjectIsFocused
+
+on revTutorialWaitUntilObjectIsGrouped pObject
+   put pObject into sWait["children"]
+   revIDESubscribe "ideNewControl"
+end revTutorialWaitUntilObjectIsGrouped
 
 on revTutorialWaitForObject
    if sWait["object"]["type"] is "stack" then
@@ -1497,11 +1602,13 @@ on revTutorialWaitForObject
    end if
 end revTutorialWaitForObject
 
-on revTutorialWaitUntilObjectFitsGuide pObject
+on revTutorialWaitUntilObjectFitsGuide pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
    if sWait["tolerance"] is empty then
       put 1 into sWait["tolerance"]
    end if
-   revIDESubscribe "idePropertyChanged", pObject
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectFitsGuide
 
 on revTutorialWaitUntilThereIsAPalette pPalette
@@ -1521,8 +1628,10 @@ on revTutorialWaitUntilTheToolIs
    revIDESubscribe "ideToolChanged"
 end revTutorialWaitUntilTheToolIs
 
-on revTutorialWaitUntilObjectPropertyHasValue pObject
-   revIDESubscribe "idePropertyChanged", pObject
+on revTutorialWaitUntilObjectPropertyHasValue pTaggedObject
+   local tObjID
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectPropertyHasValue
 
 on revTutorialWaitUntilAnswerDialogHasPoppedUp
@@ -1534,6 +1643,13 @@ on revTutorialWaitUntilInterludeIsDismissed pIsEpilogue
    put "interlude" into sWait["wait condition"]
    put pIsEpilogue into sWait["epilogue"]
 end revTutorialWaitUntilInterludeIsDismissed
+
+on revTutorialWaitUntilThisCardIs pCard
+   put true into sWaiting
+   put "this card" into sWait["wait condition"]
+   put pCard into sWait["card"]
+   revIDESubscribe "ideOpenCard"
+end revTutorialWaitUntilThisCardIs
 
 on revTutorialWaitConditionSatisfied
    put false into sWaiting
@@ -1785,6 +1901,11 @@ end enableStack
 #                     GUIDE HANDLING
 #
 ##############################################################################
+on revTutorialShowGuide pTag
+   if pTag is not empty then
+      show sGuides[pTag]
+   end if
+end revTutorialShowGuide
 
 on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
    lock messages
@@ -1797,7 +1918,7 @@ on revTutorialDoAddGuide pTag, pRect, pObjType, pObjTag
       
       put the defaultStack into tDefaultStack
       set the defaultStack to sTaggedObjects[pObjType][pObjTag]
-      create graphic // To object objtype/objtag
+      create invisible graphic // To object objtype/objtag
       put it into sGuides[pTag]
       set the defaultStack to tDefaultStack
       reset the templateGraphic
@@ -1828,6 +1949,10 @@ on revTutorialClearLastPropertyInspector
    end if
 end revTutorialClearLastPropertyInspector
 
+on revTutorialClearSets
+   # For now, set captures are transient
+   delete variable sTaggedObjects["set"]
+end revTutorialClearSets
 ##############################################################################
 #
 #                     MESSAGES HANDLED TO CHECK WAIT CONDITIONS
@@ -1864,7 +1989,7 @@ on openField
    local tObject
    put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1875,7 +2000,7 @@ on focusIn
    local tObject
    put the long id of the target into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "focused" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -1927,12 +2052,10 @@ on ideNewStack pStack
    end if
 end ideNewStack
 
-on ideAnswerDialogClosed pObject
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
-      if sWait["wait condition"] is "pops up"  then
-         revIDEUnsubscribe "ideAnswerDialogClosed"
-         revTutorialWaitConditionSatisfied
-      end if
+on ideAnswerDialogClosed
+   if sWait["wait condition"] is "pops up"  then
+      revIDEUnsubscribe "ideAnswerDialogClosed"
+      revTutorialWaitConditionSatisfied
    end if
 end ideAnswerDialogClosed
 
@@ -1950,6 +2073,15 @@ on ideNewControl pObject
       revTutorialWaitConditionSatisfied
    end if
    
+   if sWait["wait condition"] is "state" and sWait["state"] is "grouped" and tObjType is "group" then
+      local tChildren
+      put revTutorialResolveObjectToLongID(sWait["children"], true) into tChildren
+      
+      if revTutorialGroupContainsObjects(pObject, tChildren) then
+         revIDEUnsubscribe "ideNewControl"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
 end ideNewControl
 
 on ideNewCard pCard
@@ -1973,7 +2105,7 @@ on idePropertyChanged pObject
       revTutorialPositionStackForHighlight
    end if
    
-   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
       if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
          if revTutorialCheckWaitCondition(sWait) then
             revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
@@ -2009,14 +2141,17 @@ on ideOpenPalette pPalette
    end if
 end ideOpenPalette
 
-on mouseUp pWhich
-   local tObject
-   put the long id of the target into tObject
+on ideMouseUp pWhich, pTarget
    if sWait["wait condition"] is "state" and sWait["state"] is "clicked" then
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(pTarget, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
+end ideMouseUp
+
+on mouseUp pWhich
+   local tObject
+   put the long id of the target into tObject
    
    if sWait["wait condition"] is "interlude" then
       if tObject is the long id of button "Got It" of stack "revTutorial" then
@@ -2025,21 +2160,19 @@ on mouseUp pWhich
    end if
 end mouseUp
 
-on mouseDoubleUp pWhich
+on ideMouseDoubleUp pWhich, pTarget
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
-      local tObject
-      put the long id of the target into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(pTarget, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
-end mouseDoubleUp
+end ideMouseDoubleUp
 
 on ideSelectedObjectChanged 
    if sWait["wait condition"] is "state" and sWait["state"] is "selected" then
       local tObject
       put revIDESelectedObjects() into tObject
-      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2047,7 +2180,7 @@ end ideSelectedObjectChanged
 
 on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "inspector" then
-      if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]) then
          revIDEUnsubscribe "ideInspectObjects"
          put pObjects into sLastInspectedObjects
          revTutorialWaitConditionSatisfied
@@ -2057,7 +2190,7 @@ end ideInspectObjects
 
 on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "script editor" then
-      if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]["type"], sWait["object"]["tag"]) then
+      if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]) then
          revIDEUnsubscribe "ideEditScript"
          revTutorialWaitConditionSatisfied
       end if
@@ -2073,6 +2206,16 @@ on ideToolChanged pTool
    end if
 end ideToolChanged
 
+on ideOpenCard pTarget
+   if sWait["wait condition"] is "this card" then
+      local tCard
+      put sTaggedObjects["card"][sWait["card"]] into tCard
+      if pTarget is tCard then
+         revIDEUnsubscribe "ideOpenCard"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
+end ideOpenCard
 ##############################################################################
 #
 #                     UTILITIES
@@ -2159,21 +2302,75 @@ end revTutorialClearHighlights
 function revTutorialObjectsAreSelected pObjects
    local tSelected
    put revIDESelectedObjects() into tSelected
-   repeat for each line tObject in pObjects
-      if tObject is not among the lines of tSelected then
-         return false
-      end if
-   end repeat
-   return true
+   sort tSelected
+   return tSelected is pObjects
 end revTutorialObjectsAreSelected
 
-function revTutorialObjectIsTaggedObject pLongID, pType, pTag
-   local tObj
-   put sTaggedObjects[pType][pTag] into tObj
-   if pType is "set" then
-      sort tObj
-      sort pLongID
+function revTutorialReparentChild pObject
+   if word 1 of pObject is "stack" then
+      return pObject
    end if
+   
+   if word 1 of pObject is "card" then
+      return pObject
+   end if
+   
+   if word 1 of the owner of pObject is "card" then
+      return pObject
+   end if
+   
+   if the sharedBehavior of the owner of pObject is false then
+      return pObject
+   end if
+   
+   local tCardSegment
+   put segmentOffset("card", pObject) into tCardSegment
+   delete word tCardSegment to tCardSegment + 3 of pObject
+   return the long id of pObject
+end revTutorialReparentChild
+
+# Take a tutorial tagged object (an array with 'type' and 'tag' keys)
+# and return the corresponding long ID (or list of long IDs for 'set' types)
+function revTutorialResolveObjectToLongID pTaggedObject, pUpdate
+   local tType, tTag, tObj
+   put pTaggedObject["type"] into tType
+   put pTaggedObject["tag"] into tTag
+   put sTaggedObjects[tType][tTag] into tObj
+   
+   if tObj is empty then
+      return tObj
+   end if
+   
+   if tType is not "set" then
+      local tResolvedLongID, tIDChanged
+      put revTutorialReparentChild(tObj) into tResolvedLongID
+      if tResolvedLongID is not tObj then
+         put true into tIDChanged
+      end if
+      if pUpdate or tIDChanged then
+         put the long id of tObj into tObj
+         put tObj into sTaggedObjects[tType][tTag]
+      end if
+      return tObj
+   end if
+   
+   local tLongIDs, tLongID
+   repeat for each element tElement in tObj
+      put revTutorialResolveObjectToLongID(tElement, pUpdate) into tLongID
+      if tLongIDs is empty then
+         put tLongID into tLongIDs
+      else
+         put return & tLongID after tLongIDs
+      end if
+   end repeat
+   sort tLongIDs
+   return tLongIDs
+end revTutorialResolveObjectToLongID
+
+function revTutorialObjectIsTaggedObject pLongID, pTaggedObject
+   local tObj
+   put revTutorialResolveObjectToLongID(pTaggedObject) into tObj
+   sort pLongID
    return tObj is pLongID
 end revTutorialObjectIsTaggedObject
 
@@ -2301,6 +2498,22 @@ function revTutorialNumericItemsAreApproximatelyEqual pNumItems, pTolerance, pLe
    return true
 end revTutorialNumericItemsAreApproximatelyEqual
 
+function revTutorialGroupContainsObjects pGroupID, pObjects
+   # Check the objects of the group are the target objects
+   local tChildIDs, tChildID
+   repeat for each line tId in the childControlIDs of pGroupID
+      put the long id of control id tID of pGroupID into tChildID
+      if tChildIDs is empty then
+         put tChildID into tChildIDs
+      else
+         put return & tChildID after tChildIDs
+      end if
+   end repeat
+   
+   sort tChildIDs
+   return tChildIDs is pObjects
+end revTutorialGroupContainsObjects
+
 ##############################################################################
 #
 #                     AUTORUN
@@ -2308,7 +2521,7 @@ end revTutorialNumericItemsAreApproximatelyEqual
 ##############################################################################
 
 local sRunningInfo
-on revTutorialRunTutorial pCourse, pTutorial, pLesson
+on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
@@ -2319,16 +2532,20 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson
    put pTutorial into sRunningInfo["tutorial"]
    put pLesson into sRunningInfo["lesson"]
    
-   revTutorialRunSteps tData
+   revTutorialRunSteps tData, pUntilStep
 end revTutorialRunTutorial
 
 local sFile
-on revTutorialRunSteps pSteps
+on revTutorialRunSteps pSteps, pStopAtStep
    lock screen
    local tStep, tStepNum
    put 0 into tStepNum
    put pSteps["first step"] into tStep
    repeat until tStep is empty
+      if tStep is pStopAtStep then
+         exit repeat
+      end if
+      
       add 1 to tStepNum
       put pSteps[tStep]["file"] into sFile
       revTutorialRunStep pSteps[tStep]["actions"]
@@ -2368,7 +2585,7 @@ on revTutorialRunAction pActionData
          break
       case "property"  
          # Set the property of the objects
-         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], tWaitData["property"], tWaitData["value"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"]
          break
       case "fits" 
          # Set the rect of the objects
@@ -2378,21 +2595,27 @@ on revTutorialRunAction pActionData
          if tWaitData["object"]["type"] is "stack" then
             put revIDERelativeRectToAbsolute(pActionData["add guide"]["rect"], sTaggedObjects["stack"][tWaitData["object"]["tag"]]) into pActionData["add guide"]["rect"]
          end if
-         revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "rect", pActionData["add guide"]["rect"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "rect", pActionData["add guide"]["rect"]
          break
       case "state"
          switch tWaitData["state"]
             case "scripted"
                # Set the script of the objects
-               revTutorialSetPropertyOfObjects sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]], "script", tWaitData["script"]
+               revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
                break
             case "selected"
-               put sTaggedObjects[tWaitData["object"]["type"]][tWaitData["object"]["tag"]] into sSelected
+               put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
+               break
+            case "grouped"
+               revTutorialCreateAndCaptureObjects tWaitData, pActionData["capture"]
                break
             default
                # No other states require action
                break
          end switch
+         break
+      case "this card"
+         revTutorialGoCard tWaitData["card"]
          break
          # No other waits require action
       default
@@ -2406,7 +2629,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
       exit revTutorialCreateAndCaptureObjects
    end if
-   local tCapture, tType
+   local tCapture, tType, tStacksCaptured
    # Create the object and tag it
    repeat with x = 1 to the number of elements in pCaptureData["captures"]
       put pCaptureData["captures"][x] into tCapture
@@ -2414,15 +2637,32 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       if tType is "stack" then
          revIDEActionNewMainstack "default"
          put the result into sTaggedObjects["stack"][tCapture["tag"]]
+         put true into tStacksCaptured[tCapture["tag"]]
       else if tType is "card" then
-         revIDEActionNewCard
-         put the result into sTaggedObjects["card"][tCapture["tag"]]
+         local tCardID
+         # if we already captured this card's stack then we don't need to create a new card
+         if tStacksCaptured[tCapture["target stack"]["tag"]] then
+            delete variable tStacksCaptured[tCapture["target stack"]["tag"]]
+            put the long id of this card of stack sTaggedObjects["stack"][tCapture["target stack"]["tag"]] into tCardID
+         else
+            set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]["tag"]]
+            revIDEActionNewCard
+            put the result into tCardID
+         end if
+         put tCardID into sTaggedObjects["card"][tCapture["tag"]]
+      else if tType is "group" then
+         local tChildren
+         put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
+         revIDEGroupObjects tChildren
+         put the result into sTaggedObjects["group"][tCapture["tag"]]
+         -- force recompute the children long ids
+         get revTutorialResolveObjectToLongID(pWaitData["object"], true)
       else
          if pHighlightData["tool"] is not empty then
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
             revIDECreateObject the result, sTaggedObjects["stack"][tCapture["target stack"]["tag"]], "0,0"
             put the result into sTaggedObjects[tType][tCapture["tag"]]
-         else if pHighlightData["item"] contains "Import" then
+         else if pHighlightData["item"][1] contains "Import" then
             # Deal with 'import'
             if sFile is empty then
                throw "No file specified for import"
@@ -2438,13 +2678,20 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
                case "videoClip"
                   put "video" into tImportType
                   break
-               case "text"
-                  put "field" into tImportType
+               case "field"
+                  put "text" into tImportType
                   break
+               case "widget"
+                  if pHighlightData["item"][2] contains "graph" then
+                     put "graph" into tImportType
+                     break
+                  end if
+               default
+                  throw "invalid import type" && tType
             end switch
             revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
             put the result into sTaggedObjects[tType][tCapture["tag"]]
-         else if pHighlightData["item"] contains "duplicate" then
+         else if pHighlightData["item"][1] contains "duplicate" then
             revIDESelectObjects sSelected
             revIDEActionDuplicate
             put the result into sTaggedObjects[tType][tCapture["tag"]]
@@ -2455,8 +2702,8 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       end if
    end repeat
    local tObject
-   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
-   if not exists(tObject) then
+   put revTutorialResolveObjectToLongID(pWaitData["object"]) into tObject
+   if tObject is empty then
       throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
    end if
 end revTutorialCreateAndCaptureObjects
@@ -2472,7 +2719,7 @@ on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
 end revTutorialSetPropertyOfObjects
 
 on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
-   local tCapture, tType
+   local tCapture, tType, tStacksCaptured
    # Create the object and tag it
    repeat with x = 1 to the number of elements in pCaptureData["captures"]
       put pCaptureData["captures"][x] into tCapture
@@ -2480,55 +2727,91 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
       if tType is "stack" then
          create stack
          put it into sTaggedObjects["stack"][tCapture["tag"]]
-      else if tType is "card" then
-         create card
-         put it into sTaggedObjects["card"][tCapture["tag"]]
-      else if tType is "widget" then
-         local tKind
-         put word 2 of pHighlightData["tool"] into tKind
-         create widget as tKind
-         put it into sTaggedObjects["widget"][tCapture["tag"]]
-      else
-         if pHighlightData["item"] contains "Import" then
-            # Deal with 'import'
-            if sFile is empty then
-               throw "No file specified for import"
+         put true into tStacksCaptured[tCapture["tag"]]
+      else 
+         set the defaultStack to sTaggedObjects["stack"][tCapture["target stack"]["tag"]]
+         if tType is "card" then
+            local tCardID
+            # if we already captured this card's stack then we don't need to create a new card
+            if tStacksCaptured[tCapture["target stack"]["tag"]] then
+               delete variable tStacksCaptured[tCapture["target stack"]["tag"]]
+               put the long id of this card of stack sTaggedObjects["stack"][tCapture["target stack"]["tag"]] into tCardID
+            else
+               create card
+               put it into tCardID
             end if
-            local tFile
-            put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
-            switch tType
-               case "image"
-                  create image
-                  set the filename of it to tFile
-                  put it into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "audioClip"
-                  import videoClip from file tFile
-                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "videoClip"
-                  import videoClip from file tFile
-                  put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-               case "text"
-                  create field
-                  set the text of it to url ("file:" & tFile)
-                  put it into sTaggedObjects[tType][tCapture["tag"]]
-                  break
-            end switch
-         else if pHighlightData["item"] contains "duplicate" then
-            revIDESelectObjects sSelected
-            revIDEActionDuplicate
-            put the result into sTaggedObjects[tType][tCapture["tag"]]
+            put tCardID into sTaggedObjects["card"][tCapture["tag"]]
+         else if tType is "widget" then
+            local tKind
+            put word 2 of pHighlightData["tool"] into tKind
+            create widget as tKind
+            put it into sTaggedObjects["widget"][tCapture["tag"]]
+         else if tType is "group" then
+            local tChildren
+            put revTutorialResolveObjectToLongID(pWaitData["object"]) into tChildren
+            revIDEGroupObjects tChildren
+            put the result into sTaggedObjects["group"][tCapture["tag"]]
+            -- force recompute the children long ids
+            get revTutorialResolveObjectToLongID(pWaitData["object"], true)
          else
-            do "create" && tType
-            put it into sTaggedObjects[tType][tCapture["tag"]]
+            if pHighlightData["item"][1] contains "Import" then
+               # Deal with 'import'
+               if sFile is empty then
+                  throw "No file specified for import"
+               end if
+               local tFile
+               put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
+               switch tType
+                  case "image"
+                     create image
+                     set the filename of it to tFile
+                     put it into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "audioClip"
+                     import videoClip from file tFile
+                     put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "videoClip"
+                     import videoClip from file tFile
+                     put the long id of the last audioClip into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "field"
+                     create field
+                     set the text of it to textDecode(url ("binfile:" & tFile), "utf-8")
+                     put it into sTaggedObjects[tType][tCapture["tag"]]
+                     break
+                  case "widget"
+                     if pHighlightData["item"][2] contains "graph" then
+                        create widget as "com.livecode.widget.lineGraph"
+                        set the graphData of it to textDecode(url ("binfile:" & tFile), "utf-8")
+                        put it into sTaggedObjects[tType][tCapture["tag"]]
+                        break
+                     end if
+                  default
+                     throw "invalid import type" && tType
+               end switch
+            else if pHighlightData["item"][1] contains "duplicate" then
+               revIDESelectObjects sSelected
+               revIDEActionDuplicate
+               put the result into sTaggedObjects[tType][tCapture["tag"]]
+            else
+               do "create" && tType
+               put it into sTaggedObjects[tType][tCapture["tag"]]
+            end if
          end if
       end if
    end repeat
    local tObject
-   put sTaggedObjects[pWaitData["object"]["type"]][pWaitData["object"]["tag"]] into tObject
-   if not exists(tObject) then
+   put revTutorialResolveObjectToLongID(pWaitData["object"]) into tObject
+   if tObject is empty then
       throw "No capture action for object wait" && pWaitData["object"]["type"] && pWaitData["object"]["tag"]
    end if
 end revTutorialCreateAndCaptureObjectsStandalone
+
+on revTutorialGoCard pCard
+   if pCard is not among the keys of sTaggedObjects["card"] then
+      throw "unsatisfiable wait condition: wait until this card is" && pCard
+      exit revTutorialGoCard
+   end if
+   go card (the short name of sTaggedObjects["card"][pCard])
+end revTutorialGoCard
