@@ -27,8 +27,12 @@ associated with the step, and actions associated with the step.
 	Step
 	  : "step" <Name: STRING>
 		  <Info: TEXT>
-		[  “script” SEPARATOR
+		[ “script” SEPARATOR
 		   TEXT SEPARATOR  ]
+		[ "value" SEPARATOR
+		   TEXT SEPARATOR  ]
+		[ "file" SEPARATOR
+		   STRING SEPARATOR  ]   
 		"action"
 		  { Command SEPARATOR }
 		"end" "step"

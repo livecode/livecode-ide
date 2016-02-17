@@ -64,6 +64,7 @@ function revTutorialParseData pData
             case "action"
             case "script"
             case "file"
+            case "value"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
                   addError "action list not valid in" && tType && " on line" && tLineNum, tErrors
@@ -84,35 +85,48 @@ function revTutorialParseData pData
                break
             default
                // Get the data
-               if tSubType is "text" then
-                  if line -1 of tData is empty then
-                     put word 1 to -1 of tLine after tData
-                  else
-                     put " " & word 1 to -1 of tLine after tData
-                  end if
-               else if tSubType is "script" then
-                  put tLine & CR after tData
-               else if tSubType is "file" then
-                  # If there is a file for this step, record it
-                  put word 1 to -1 of tLine into tData
-               else
-                  add 1 to  tActionNum
-                  put revTutorialParseAction(tLine, tLineNum) into tData
-                  if tData["type"] is "capture" then
-                     # Allow multiple capture actions
-                     get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]["captures"]
-                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]["captures"][it + 1]
-                     put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
-                  else
-                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]
-                  end if
-                  if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
-                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
-                  else if tData["type"] is "interlude" then
-                     put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
-                  end if
-                  put empty into tData
-               end if 
+               switch tSubType
+                  case "text"
+                     if line -1 of tData is empty then
+                        put word 1 to -1 of tLine after tData
+                     else
+                        put " " & word 1 to -1 of tLine after tData
+                     end if
+                     break
+                  case "script"
+                     put tLine & return after tData
+                     break
+                  case "file"
+                     # File is single line 
+                     put word 1 to -1 of tLine into tData
+                     break
+                  case "value"
+                     # Accumulate multi-line value
+                     if tData is empty then
+                        put word 1 to -1 of tLine into tData
+                     else
+                        put return & word 1 to -1 of tLine after tData
+                     end if
+                     break
+                  default
+                     add 1 to  tActionNum
+                     put revTutorialParseAction(tLine, tLineNum) into tData
+                     if tData["type"] is "capture" then
+                        # Allow multiple capture actions
+                        get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]["captures"]
+                        put tData into tStepData[tCurStepName]["actions"][tData["type"]]["captures"][it + 1]
+                        put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
+                     else
+                        put tData into tStepData[tCurStepName]["actions"][tData["type"]]
+                     end if
+                     if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
+                        put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
+                     else if tData["type"] is "interlude" then
+                        put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
+                     end if
+                     put empty into tData
+                     break
+               end switch
                break
          end switch
          next repeat
@@ -1294,6 +1308,7 @@ on revTutorialContinue
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
       revIDETutorialProgressChanged
+      revTutorialSetContextualStepData sSteps[sStepName]
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          # Add guide in case wait is 'fits guide'
@@ -1437,6 +1452,12 @@ on revTutorialEnsureState pStep
    revIDESetTool tTool
 end revTutorialEnsureState
 
+local sStepContextA
+on revTutorialSetContextualStepData pStepDataA
+   put pStepDataA["file"] into sStepContextA["file"]
+   put pStepDataA["value"] into sStepContextA["value"]
+end revTutorialSetContextualStepData
+
 ##############################################################################
 #
 #                     ACTION IMPLEMENTATIONS
@@ -1563,7 +1584,16 @@ function revTutorialCheckWaitCondition pActionData
    
    switch pActionData["wait condition"]
       case "property"
-         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], pActionData["value"]) then
+         local tValue
+         # If the step specified a value then we want to compare with this instead
+         # of the string "value"
+         if pActionData["value"] is "value" and sStepContextA["value"] is not empty then
+            put sStepContextA["value"] into tValue
+         else
+            put pActionData["value"] into tValue
+         end if
+         
+         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue) then
             return true
          end if
          break
@@ -2639,7 +2669,6 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
    revTutorialRunSteps tData, pUntilStep
 end revTutorialRunTutorial
 
-local sFile
 on revTutorialRunSteps pSteps, pStopAtStep
    lock screen
    local tStep, tStepNum
@@ -2651,7 +2680,7 @@ on revTutorialRunSteps pSteps, pStopAtStep
       end if
       
       add 1 to tStepNum
-      put pSteps[tStep]["file"] into sFile
+      revTutorialSetContextualStepData pSteps[tStep]
       revTutorialRunStep pSteps[tStep]["actions"]
       put pSteps[tStep]["actions"]["go"]["step"] into tStep
    end repeat
@@ -2768,7 +2797,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else if pHighlightData["item"][1] contains "Import" then
             # Deal with 'import'
-            if sFile is empty then
+            if sStepContextA["file"] is empty then
                throw "No file specified for import"
             end if
             local tImportType
@@ -2793,7 +2822,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
                default
                   throw "invalid import type" && tType
             end switch
-            revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
+            revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sStepContextA["file"]
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else if pHighlightData["item"][1] contains "duplicate" then
             revIDESelectObjects sSelected
@@ -2813,6 +2842,11 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
 end revTutorialCreateAndCaptureObjects
 
 on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
+   # If the step specified a value then we set this instead of the string "value"
+   if pValue is "value" and sStepContextA["value"] is not empty then
+      put sStepContextA["value"] into pValue
+   end if
+   
    if the environment is "development" then
       revIDESetPropertyOfObject pObjects, pProp, pValue
    else
@@ -2860,11 +2894,11 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
          else
             if pHighlightData["item"][1] contains "Import" then
                # Deal with 'import'
-               if sFile is empty then
+               if sStepContextA["file"] is empty then
                   throw "No file specified for import"
                end if
                local tFile
-               put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
+               put revIDETutorialResourcePath(sRunningInfo) & slash & sStepContextA["file"] into tFile
                switch tType
                   case "image"
                      create image
