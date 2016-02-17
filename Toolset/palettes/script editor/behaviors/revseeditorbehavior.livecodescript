@@ -5380,6 +5380,7 @@ private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
 
       lock messages
       clone invisible field "Script" of me
+      relayer it before field "Script" of me
       set the name of it to tCachedName
       unlock messages
 
