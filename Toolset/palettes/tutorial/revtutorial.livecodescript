@@ -1394,10 +1394,17 @@ on revTutorialDoLoad pLesson
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"]
+   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"], sSteps[pStep]["file"], sSteps[pStep]["value"]
 end revTutorialSetText
 
-on revTutorialSetTextOfMessage pText, pScript
+on revTutorialSetTextOfMessage pText, pScript, pFile, pValue
+   if pValue is not empty then
+      replace "<value>" with pValue in pText
+   end if
+   if pFile is not empty then
+      replace "<file>" with pFile in pText
+   end if
+   
    local tWidthOverride
    put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
