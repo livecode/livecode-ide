@@ -16,7 +16,7 @@ on editorUpdate
    if tAlpha is a number then
       set the thumbposition of scrollbar 1 of me to tAlpha
    else
-      set the thumbposition of scrollbar 1 of me to 0
+      set the thumbposition of scrollbar 1 of me to 255
    end if
    
    set the swatchcolor of widget 1 of me to tValue
