@@ -330,7 +330,7 @@ on rowResize
    local tSubsections
    put the showSubSections of this stack into tSubsections
    
-   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tCount
+   local tGroupLongID, tLastGroupLongID, tHeightOfRow, tCount, tGroupHeight
    local tElement, tPropNumber, tLineNumber
    put 1 into tLineNumber
    repeat for each line tProperty in sOrder
@@ -344,6 +344,7 @@ on rowResize
          add 1 to tLineNumber
          put 1 into tPropNumber
          add tHeightOfRow to tTop
+         add tHeightOfRow to tGroupHeight
          put 0 into tHeightOfRow
       end if
       
@@ -377,20 +378,22 @@ on rowResize
       
       if tEditorHeight is 0 then
          put the formattedheight of tGroupLongID into tEditorHeight
-      else
-         set the height of tGroupLongID to tEditorHeight
-         set the top of tGroupLongID to tTop
       end if
+      
+      set the height of tGroupLongID to tEditorHeight
+      set the top of tGroupLongID to tTop
       
       if tEditorHeight > tHeightOfRow then
          put tEditorHeight into tHeightOfRow
       end if
       
       add tWidthsA[tLineNumber][tPropNumber] + tPadding to tLeft
+      add tHeightOfRow to tGroupHeight
       put tGroupLongID into tLastGroupLongID
       unlock messages
    end repeat
    
+   set the height of me to tGroupHeight
    set the lockloc of me to false
    unlock screen
 end rowResize

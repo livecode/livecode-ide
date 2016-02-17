@@ -38,12 +38,15 @@ constant kControlGap = 5
 on editorResize
    lock screen
    lock messages
-   set the width of field 1 of me to the width of me - kControlGap - kFieldHeight
-   set the height of field 1 of me to kFieldHeight
+   
+   local tFieldHeight
+   put the formattedheight of field 1 of me into tFieldHeight
+   set the width of field 1 of me to the width of me - kControlGap - tFieldHeight
+   set the height of field 1 of me to tFieldHeight
    set the topleft of field 1 of me to the topleft of me
    
-   set the rect of widget 1 of me to 0,0,kFieldHeight,kFieldHeight
-   set the topright of widget 1 of me to the topright of me
+   set the rect of widget 1 of me to 0,0,tFieldHeight,tFieldHeight
+   set the topright of widget 1 of me to the topright of me	
    
    local tButtonWidth
    put (the width of me - kControlGap) / 2 into tButtonWidth
@@ -51,7 +54,7 @@ on editorResize
    set the rect of button "Inspect object" of me to 0,0,tButtonWidth,kButtonHeight
    
    local tButtonTop
-   put the top of me + kFieldHeight + kControlGap into tButtonTop
+   put the top of me + tFieldHeight + kControlGap into tButtonTop
    set the topleft of button "Edit script" of me to the left of me, tButtonTop
    set the topright of button "Inspect object" of me to the right of me, tButtonTop
    unlock messages
