@@ -4175,7 +4175,6 @@ command revIDEOpenPalette pPaletteName
    
    if there is not a stack tStackName then return __revIDEError("No such palette:" && pPaletteName)
    
-   lock messages
    hide stack tStackName
    switch pPaletteName
       case "Start Center"
@@ -4232,7 +4231,6 @@ command revIDEOpenPalette pPaletteName
          return __revIDEError("No such palette:" && pPaletteName)
    end switch
    show stack tStackName
-   unlock messages
    revIDEMessageSend "ideOpenPalette", pPaletteName
 end revIDEOpenPalette
 
