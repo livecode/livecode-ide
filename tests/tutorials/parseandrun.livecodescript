@@ -16,20 +16,20 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+private function SanitiseForTests pScript
+   replace "_internal" with "--_internal" in pScript
+   replace "the revObjectListeners" with "empty" in pScript
+   replace "the effective revAvailableHandlers of pObject" with "empty" in pScript
+   return pScript
+end SanitiseForTests
+
 on TestSetup
-   
-   local tExtensionFolders
-   put "function revIDEExtensionFolders" into tExtensionFolders
-   put "return" && TestGetResp
-   
    local tIDELibrary, tScript
    put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
    
    -- Work around the fact that the property listener is not available in standalone mode
    put the script of stack tIDELibrary into tScript
-   replace "_internal" with "--_internal" in tScript
-   replace "the revObjectListeners" with "empty" in tScript
-   replace "the effective revAvailableHandlers of pObject" with "empty" in tScript
+   put SanitiseForTests(tScript) into tScript
    
    -- Fix revIDESpecialFolderPath
    local tReplace, tReplacement
@@ -39,7 +39,7 @@ on TestSetup
    
    put "stack" && quote & "revpreferences" & quote into tReplace
    put "me" into tReplacement
-    replace tReplace with tReplacement in tScript
+   replace tReplace with tReplacement in tScript
    
    set the script of stack tIDELibrary to tScript
 
@@ -47,6 +47,9 @@ on TestSetup
    
    local tTutorial
    put TestGetIDERepositoryPath() & "/Toolset/palettes/tutorial/revtutorial.livecodescript" into tTutorial
+   put the script of stack tTutorial into tScript
+   put SanitiseForTests(tScript) into tScript
+   set the script of stack tTutorial to tScript
    insert the script of stack tTutorial into back
    
    TestLoadAllExtensions
