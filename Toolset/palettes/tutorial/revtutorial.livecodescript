@@ -1894,6 +1894,7 @@ on revTutorialHighlightItemOfStack pStackID, pItem
    put pStackID into sHighlight["stack"]
    put pItem into sHighlight["object"]
    put "object" into sHighlight["type"]
+   revIDESubscribe "ideStackMoved", pStackID
    revTutorialPositionStackForHighlight
 end revTutorialHighlightItemOfStack
    
@@ -2414,7 +2415,10 @@ function revTutorialObjectIsHighlighted pObject
       case "tool"
          return pObject is the name of stack revIDEPaletteToStackName("tools")
       case "object"
-         return pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"])
+         if pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"]) then
+            return true
+         end if
+         -- fall through and check if the stack is highlighted
       case "stack" 
          return pObject is sHighlight["stack"]
    end switch
