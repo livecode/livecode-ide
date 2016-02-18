@@ -1233,7 +1233,7 @@ end revTutorialStartAtStep
 on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
-   revTutorialClearLastPropertyInspector
+   revTutorialClearAllPalettes
    revTutorialClearSets
    revTutorialSaveProgress
    revFinaliseTutorial
@@ -1293,11 +1293,23 @@ end revTutorialEpilogue
 # Individual highlight actions can force a palette to be kept open.
 local sDismissA
 on revTutorialCleanUp
-   if sDismissA["inspector"] is true then
-      revTutorialClearLastPropertyInspector
-   end if
-   put true into sDismissA["inspector"]
+   repeat for each item tItem in revTutorialPalettesToClear()
+      if sDismissA[tItem] is true then
+         revTutorialClearPalette tItem
+      end if
+      put true into sDismissA[tItem]
+   end repeat
 end revTutorialCleanUp
+
+function revTutorialPalettesToClear
+   return "inspector,script editor"
+end revTutorialPalettesToClear
+
+on revTutorialClearAllPalettes
+   repeat for each item tItem in revTutorialPalettesToClear()
+      revTutorialClearPalette tItem
+   end repeat
+end revTutorialClearAllPalettes
 
 on revTutorialContinue
    repeat forever
@@ -1843,9 +1855,7 @@ on revTutorialHighlightPaletteForObject pPaletteName, pObject
    if there is a tPaletteID then
       revTutorialHighlightObjectByID tPaletteID
    end if
-   if pPaletteName is "inspector" then
-      put false into sDismissA["inspector"]
-   end if
+   put false into sDismissA[pPaletteName]
 end revTutorialHighlightPaletteForObject
 
 on revTutorialHighlightObjectByID pObjID
@@ -1867,9 +1877,7 @@ on revTutorialHighlightItemOfPaletteForObject pPalette, pItem, pObject
    if there is a tPaletteID then
       revTutorialHighlightItemOfStack tPaletteID, pItem
    end if
-   if pPalette is "inspector" then
-      put false into sDismissA["inspector"]
-   end if
+   put false into sDismissA[pPalette]
 end revTutorialHighlightItemOfPaletteForObject
 
 on revTutorialHighlightItemOfPalette pPalette, pItem
@@ -1908,23 +1916,30 @@ on revTutorialHighlightTool pTool
    revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
-local sLastInspectedObjects
-function revTutorialHighlightedInspector
-   local tInspector
-   if sLastInspectedObjects is not empty then
-      put revIDEInspectorForObject(sLastInspectedObjects) into tInspector
-   end if
-   if tInspector is not empty then
-      return the long name of tInspector
+local sLastObjects
+function revTutorialHighlightedPalette pPalette
+   if sLastObjects[pPalette] is empty then
+      return empty
+      end if
+   local tStack
+   switch pPalette
+      case "inspector"
+         put revIDEInspectorForObject(sLastObjects["inspector"]) into tStack
+         break
+      case "script editor"
+         put revScriptEditor(sLastObjects["script editor"]) into tStack
+   end switch
+   if tStack is not empty then
+      return the long name of stack tStack
    end if
    return empty
-end revTutorialHighlightedInspector
+end revTutorialHighlightedPalette
       
 on revTutorialHighlightInspector pSection, pGroup
    local tObjectData
    put pSection into tObjectData["section"]
    put pGroup into tObjectData["group"]
-   put sLastInspectedObjects into tObjectData["object"]
+   put sLastObjects["inspector"] into tObjectData["object"]
    
    revIDEHighlightPaletteObject "inspector", tObjectData
    
@@ -1938,7 +1953,7 @@ on revTutorialHighlightInspector pSection, pGroup
    
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
-   put sLastInspectedObjects into sHighlight["object"]
+   put sLastObjects["inspector"] into sHighlight["object"]
    revTutorialPositionStackForHighlight
    put false into sDismissA["inspector"]
 end revTutorialHighlightInspector
@@ -2032,14 +2047,14 @@ on revTutorialClearGuides
    put empty into sGuides
 end revTutorialClearGuides
 
-on revTutorialClearLastPropertyInspector
-   local tInspector
-   put revTutorialHighlightedInspector() into tInspector
-   if tInspector is not empty then
-      close stack tInspector
-      put empty into sLastInspectedObjects
+on revTutorialClearPalette pPalette
+   local tStack
+   put revTutorialHighlightedPalette(pPalette) into tStack
+   if tStack is not empty then
+      close stack tStack
+      put empty into sLastObjects[pPalette]
    end if
-end revTutorialClearLastPropertyInspector
+end revTutorialClearPalette
 
 on revTutorialClearSets
    # For now, set captures are transient
@@ -2298,7 +2313,7 @@ on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "inspector" then
       if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]) then
          revIDEUnsubscribe "ideInspectObjects"
-         put pObjects into sLastInspectedObjects
+         put pObjects into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2308,6 +2323,7 @@ on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "script editor" then
       if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]) then
          revIDEUnsubscribe "ideEditScript"
+         put pObject into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
    end if

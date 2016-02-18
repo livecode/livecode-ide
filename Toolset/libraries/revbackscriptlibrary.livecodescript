@@ -2165,7 +2165,10 @@ function revRuggedId pObject
 end revRuggedId
 
 function revScriptEditor pObject
-   return _revScriptEditorNew(the long id of pObject)
+   if exists(pObject) then
+      return _revScriptEditorNew(the long id of pObject)
+   end if
+   return empty
 end revScriptEditor
 
 # Parameters
