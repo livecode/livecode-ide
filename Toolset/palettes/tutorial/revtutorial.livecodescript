@@ -803,6 +803,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    set the defaultstack to "revTutorial"
    if sIsInterlude then
       show tGotItButtonID
+      set the height of tGotItButtonID to the formattedHeight of tGotItButtonID
+      set the width of tGotItButtonID to the formattedWidth of tGotItButtonID
       put 460 into pWidthOverride
    else
       hide tGotItButtonID
@@ -815,6 +817,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    else
       put true into tHasScript
       show tScriptFieldID
+      set the height of tCopyButtonID to the formattedHeight of tCopyButtonID
+      set the width of tCopyButtonID to the formattedWidth of tCopyButtonID
       show tCopyButtonID
    end if
    
@@ -1110,9 +1114,8 @@ on revInitialiseTutorial
    set the top of it to 60
    
    create button "Got It"
-   set the width of it to 64
-   set the height of it to 28
    set the backColor of it to revTutorialInterludeAltColor()
+   set the width of it to 1000
    set the label of it to "Got It"
    set the borderWidth of it to 0
    set the showFocusBorder of it to false
@@ -1121,10 +1124,9 @@ on revInitialiseTutorial
    set the visible of it to false
    
    create button "Copy Script"
-   set the width of it to 96
-   set the height of it to 28
    set the backColor of it to revTutorialMessageAltColor()
-   set the label of it to "Copy Script"
+   set the width of it to 1000
+   set the label of it to "Copy Script To Editor"
    set the borderWidth of it to 0
    set the showFocusBorder of it to false
    set the autoHilite of it to false
@@ -2283,7 +2285,7 @@ on mouseUp pWhich
    end if
    
    if tObject is the long id of button "Copy Script" of stack "revTutorial" then
-      revTutorialCopyScriptToClipboard
+      revTutorialCopyScriptToEditor
    end if
    
    if word 1 of tObject is "button" then
@@ -2379,21 +2381,21 @@ on revTutorialSetUnpressedState pButtonID
    set the coloroverlay of pButtonID to empty
 end revTutorialSetUnpressedState
 
-on revTutorialCopyScriptToClipboard
+on revTutorialCopyScriptToEditor pObject
    local tText, tCleanedScript
    put word 1 to -1 of field "Script" of stack "revTutorial" into tText
    repeat for each line tLine in tText
-      if char 1 of tLine is tab then
-         delete char 1 of tLine
-      end if
       if tCleanedScript is empty then
          put word 1 to -1 of tLine into tCleanedScript
       else
          put return & word 1 to -1 of tLine after tCleanedScript
       end if
    end repeat
-   set the clipboardData["text"] to tCleanedScript
-end revTutorialCopyScriptToClipboard
+   local tScriptEditor
+   put revTutorialHighlightedPalette("script editor") into tScriptEditor
+   dispatch "revSESetScript" to tScriptEditor with tCleanedScript
+   dispatch "revSEIndentScript" to tScriptEditor
+end revTutorialCopyScriptToEditor
 
 function revTutorialObjectIsHighlighted pObject
    if sHighlight is empty then

@@ -2890,3 +2890,12 @@ on highlightObject pObject
       end if
    end if
 end highlightObject
+
+on revSESetScript pScript
+   dispatch "textSetScript" to field "Script" of me with pScript
+end revSESetScript
+
+on revSEIndentScript
+   select before line 1 of field "Script" of me
+   dispatch "tabKey" to field "Script" of me
+end revSEIndentScript
