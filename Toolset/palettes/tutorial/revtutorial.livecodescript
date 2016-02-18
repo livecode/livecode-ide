@@ -2080,20 +2080,13 @@ on ideActiveStacksChanged
    revTutorialReShow
 end ideActiveStacksChanged
 
-on closeStackRequest
-   local tStack
-   put revIDEStackOfObject(the long id of the target) into tStack
-   repeat for each element tMainstack in sTaggedObjects["stack"]
-      if tMainstack is tStack then
-         answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
-         if it is "No" then
-            exit closeStackRequest
-         end if
-         send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
-      end if
-   end repeat
-   pass closeStackRequest
-end closeStackRequest
+on ideCloseStackRequest pStack
+   answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
+   if it is "No" then
+      exit ideCloseStackRequest
+   end if
+   send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+end ideCloseStackRequest
 
 on openField
    local tObject
@@ -2151,12 +2144,17 @@ on ideNewStack pStack
    end if
    
    if sWait["wait condition"] is "there is an object" then
-      if sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
-         revIDEUnsubscribe "ideNewStack"
-         revTutorialWaitConditionSatisfied
-      else if sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
-         revIDEUnsubscribe "ideNewStack"
+      local tWaitSatisfied
+      if sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
          revIDEUnsubscribe "ideNewCard"
+         put true into tWaitSatisfied
+      else if sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
+         put true into tWaitSatisfied
+         revIDESubscribe "ideCloseStackRequest", pStack
+      end if
+      
+      if tWaitSatisfied then
+         revIDEUnsubscribe "ideNewStack"
          revTutorialWaitConditionSatisfied
       end if
    end if
