@@ -1947,7 +1947,7 @@ on revTutorialHighlightInspector pSection, pGroup
    revIDEHighlightPaletteObject "inspector", tObjectData
    
    local tInspector
-   put revTutorialHighlightedInspector() into tInspector
+   put revTutorialHighlightedPalette("inspector") into tInspector
    
    revIDESubscribe "ideStackMoved", tInspector
    
@@ -2406,7 +2406,7 @@ function revTutorialObjectIsHighlighted pObject
          return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
       case "property"
          local tInspector
-         put revTutorialHighlightedInspector() into tInspector
+         put revTutorialHighlightedPalette("inspector") into tInspector
          return tInspector is not empty and pObject is the name of tInspector
       case "menu"
          return pObject is the name of stack revIDEPaletteToStackName("menubar")
