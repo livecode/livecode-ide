@@ -2864,11 +2864,29 @@ function absoluteRectOfObject pObject
       put the rect of button "Compile" of me into tRect
    else if there is a button pObject of me then
       put the rect of button pObject of me into tRect
+   else if there is a group pObject of group "Panes" of me then
+      put the rect of group pObject of group "Panes" of me into tRect
+   else
+      local tLine, tStart, tEnd
+      put lineOffset(pObject, field "Script" of me) into tLine
+      put the charIndex of line tLine of field "Script" of me into tStart
+      put the charIndex of char 10 of line tLine of field "Script" of me into tEnd
+      put the formattedRect of char tStart to tEnd of field "Script" of me into tRect
+      # Adjust rect by the current text height - seems to result in the correct rect
+      put item 4 of tRect - the effective textHeight of field "Script" of me into item 4 of tRect
    end if
    put revIDERelativeRectToAbsolute(tRect, me) into tRect
    return tRect
 end absoluteRectOfObject
 
 on highlightObject pObject
-   
+   if there is a group pObject of group "Panes" of me then
+      call "setCurrentTab pObject" to group "Pane Tabs" of me
+   else 
+      local tLine
+      put lineOffset(pObject, field "Script" of me) into tLine
+      if tLine not 0 then
+         dispatch "goLine" to field "Script" of me with tLine, true
+      end if
+   end if
 end highlightObject

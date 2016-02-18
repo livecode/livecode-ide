@@ -515,6 +515,14 @@ on revTutorialParseHighlight pTokens, @rData
             put tData[1] into rData["guide"]
          end if
          break
+      case "line"
+         revTutorialParseSubexpression "highlight line <token> of script editor for <object>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "script line" into rData["highlight type"]
+            put tData[1] into rData["line"]
+            put tData[2] into rData["object"]
+         end if
+         break
       default
          revTutorialParseSubexpression "highlight <object>", pTokens, tFirstToken, tData
          if the result is empty then
@@ -779,7 +787,7 @@ constant kPointerWidth = 40
 constant kPointerOffset = 5
 
 constant kMaxScriptHeight = 200
-on revTutorialPositionStack pStack, pObject, pWidthOverride
+on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
    local tMsgFieldID, tScriptFieldID
    
@@ -811,7 +819,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    end if
    
    local tPointVertical
-   put pStack is "menubar" into tPointVertical
+   put pStack is "menubar" or pForceVertical into tPointVertical
    
    local tScreenRect
    put the screenrect into tScreenRect
@@ -1773,6 +1781,9 @@ on revTutorialDoHighlight pActionData
          case "palette for object"
             revTutorialHighlightPaletteForObject pActionData["palette"], pActionData["object"]
             break
+         case "script line"
+            revTutorialHighlightLineOfScriptEditorForObject pActionData["line"], pActionData["object"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
@@ -1781,6 +1792,11 @@ on revTutorialDoHighlight pActionData
    #  the wrong palette receives focus
    revIDESubscribe "ideResumeStack"
 end revTutorialDoHighlight
+
+on revTutorialHighlightLineOfScriptEditorForObject pLine, pObject
+   put pLine into sHighlight["line"]
+   revTutorialHighlightItemOfPaletteForObject "script editor", sHighlight["line"], pObject
+end revTutorialHighlightLineOfScriptEditorForObject
 
 local sObjectState
 on revTutorialHighlightObject pObjType, pTag
@@ -2406,7 +2422,7 @@ on revTutorialPositionStackForHighlight
          revTutorialPositionStack "tools", sHighlight["tool"]
          break
       case "object"  
-         revTutorialPositionStack sHighlight["stack"], sHighlight["object"]
+         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], "", sHighlight["line"] is not empty
          break
       case "stack"
          revTutorialPositionStack sHighlight["stack"], ""

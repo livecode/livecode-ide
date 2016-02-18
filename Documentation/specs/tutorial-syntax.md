@@ -40,7 +40,9 @@ associated with the step, and actions associated with the step.
 The possible actions are as follows:
 
 	Command
-	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> | <Target : IDEPalette> | <Target: IDEComponent> | “guide” <Guide:STRING> )
+	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> 
+	  				| <Target : IDEPalette> | <Target: IDEComponent> | “guide” <Guide:STRING> 
+	  				| "line" <Line: STRING> of "script" "editor" "for" <Target: Object>)
 	  | "capture" <Target: CaptureTarget>
 	  | "wait" "until" <Condition: WaitCondition>
 	  | "go" "to" "step" <Name: STRING>
