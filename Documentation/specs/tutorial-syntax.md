@@ -1,10 +1,11 @@
 # LiveCode IDE Tutorial Syntax
-A tutorial consists of a declaration of the name, a prologue, some steps
-and an epilogue.
+A tutorial consists of a declaration of the name, a prologue, some
+steps, an epilogue and optional skip points.
 
 	Tutorial
 	  : "tutorial" <Name: STRING> SEPARATOR
 		Prologue SEPARATOR
+		[ "skip" "point" ]
 		{ Step SEPARATOR }
 		Epilogue
 

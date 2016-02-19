@@ -159,6 +159,12 @@ function revTutorialParseData pData
             put it into tCurStepName
             put "text" into tSubType
             break
+         case "skip"
+            if word 1 to -1 of tLine is not "skip point" then
+               parseError "expected: skip point", tLineNum, tErrors
+            end if
+            put "true" into tStepData[tCurStepName]["skip point"]
+            break
          default
             parseError "invalid section" && it, tLineNum, tErrors
             break
@@ -1033,7 +1039,7 @@ end revTutorialPositionStack
 #
 ##############################################################################
 
-local sSteps, sActionNumber, sStepName, sFirstStep, sStepNum, sNumSteps
+local sSteps, sActionNumber, sStepName, sStepNum, sNumSteps
 local sCaptureData, sTaggedObjects, sWaiting, sGuides
 
 on revTutorialSaveProgress
@@ -1052,14 +1058,13 @@ on revInitialiseTutorial
    lock messages
    
    # Initialise all relevant static variables
-   put false into sWaiting
-   put false into sIsInterlude
    put empty into sSteps
    put 0 into sNumSteps 
    put empty into sStepName
    put empty into sTaggedObjects
    put empty into sGuides
    put empty into sCaptureData
+   revTutorialInitialiseStep
    
    # Unsubscribe all messages
    revIDEUnsubscribeAll
@@ -1139,6 +1144,12 @@ on revInitialiseTutorial
    unlock screen
 end revInitialiseTutorial
 
+on revTutorialInitialiseStep
+   put false into sWaiting
+   put false into sIsInterlude
+   put 0 into sActionNumber
+end revTutorialInitialiseStep
+
 on revFinaliseTutorial
    lock screen
    revIDETutorialInfoSetEmpty
@@ -1178,9 +1189,9 @@ on revTutorialUpdateProgress pStep
    put tNumSteps into sNumSteps 
    
    if pStep is empty then
-      put sSteps["first step"] into sFirstStep
+      put sSteps["first step"] into sStepName
    else
-      put pStep into sFirstStep
+      put pStep into sStepName
    end if
    put tStepNum into sStepNum
 end revTutorialUpdateProgress
@@ -1207,6 +1218,7 @@ on revTutorialStartWithState pStep, pTaggedObjects
    end if
    
    put pTaggedObjects into sTaggedObjects
+   
    revTutorialUpdateProgress pStep
    
    lock screen
@@ -1221,18 +1233,58 @@ on revTutorialStartWithState pStep, pTaggedObjects
    else if pStep is "epilogue" then
       revTutorialEpilogue
    else if pStep is among the keys of sSteps then
-      revTutorialEnsureState pStep
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    else
       throw "No such step"
    end if
 end revTutorialStartWithState
 
+on revTutorialContinueFromStep pStep
+   if pStep is empty then
+      revTutorialEpilogue
+      exit revTutorialContinueFromStep
+   end if
+   
+   if pStep is among the keys of sSteps then
+      put pStep into sStepName
+      send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
+   else
+      throw "No such step"
+   end if
+end revTutorialContinueFromStep
+
 on revTutorialStartAtStep pCourse, pTutorial, pLesson, pStepName
-   revTutorialRunTutorial pCourse, pTutorial, pLesson, pStepName
+   revTutorialRunTutorial pCourse, pTutorial, pLesson, "", pStepName
    revIDETutorialInfoSet pCourse, pTutorial, pLesson
    revTutorialStartWithState pStepName, sTaggedObjects
 end revTutorialStartAtStep
+
+on revTutorialSkip
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   if tTutorialInfo is empty then
+      exit revTutorialSkip
+   end if
+   
+   # Calculate the skip point
+   local tSkipPoint
+   put sStepName into tSkipPoint
+   repeat while tSkipPoint is not empty and sSteps[tSkipPoint]["skip point"] is not true
+      put sSteps[tSkipPoint]["actions"]["go"]["step"] into tSkipPoint
+   end repeat
+   
+   local tRunUntil
+   put sSteps[tSkipPoint]["actions"]["go"]["step"] into tRunUntil
+   
+   # Run from the current step to the next skip point
+   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"], sStepName, tRunUntil
+   revTutorialInitialiseStep
+   
+   # Due to how the run loop works, we need to continue from the step
+   # *prior* to the next executed step
+   revTutorialContinueFromStep tSkipPoint
+end revTutorialSkip
 
 on revTutorialStop
    revTutorialClearHighlights
@@ -1317,13 +1369,13 @@ end revTutorialClearAllPalettes
 
 on revTutorialContinue
    repeat forever
-      hide stack "revTutorial"
       if sWaiting then
          exit repeat
       end if
+      hide stack "revTutorial"
       // Tutorial finished when there was no "go" step
       if sStepName is empty then
-         revTutorialDoGoToStep sFirstStep
+         revTutorialDoGoToStep sSteps["first step"]
       else if sSteps[sStepName]["actions"]["go"] is empty then
          revTutorialFinish
          exit repeat
@@ -1341,6 +1393,8 @@ on revTutorialContinue
             next repeat
          end if
       end if
+      // Ensure any expected conditions of the step are satisfied
+      revTutorialEnsureState sStepName
       // Do text, highlight and guide show actions under lock screen, to remove 'flicker'
       lock screen
       // Interlude
@@ -1454,6 +1508,23 @@ function revTutorialScriptRetry pCurrent
    return tText
 end revTutorialScriptRetry
 
+local sLastObjects
+on revTutorialEnsurePaletteForObject pPalette, pTutorialObject
+   local tObjectID
+   put revTutorialResolveObjectToLongID(pTutorialObject) into tObjectID
+   
+   put tObjectID into sLastObjects[pPalette]
+   if revTutorialObjectHasPalette(pPalette, tObjectID) then
+      exit revTutorialEnsurePaletteForObject
+   end if
+   
+   if pPalette is "inspector" then
+      revIDEInspectObjects tObjectID
+   else if pPalette is "script editor" then
+      revIDEEditScriptOfObjects tObjectID
+   end if
+end revTutorialEnsurePaletteForObject
+
 on revTutorialEnsureState pStep
    local tWaitDataA
    put sSteps[pStep]["actions"]["wait"] into tWaitDataA
@@ -1463,12 +1534,12 @@ on revTutorialEnsureState pStep
    
    switch tWaitDataA["wait condition"]
       case "property"
-         revIDEInspectObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
+         revTutorialEnsurePaletteForObject "inspector", tWaitDataA["object"]
          break
       case "state"
          switch tWaitDataA["state"]
             case "scripted"
-               revIDEEditScriptOfObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
+               revTutorialEnsurePaletteForObject "script editor", tWaitDataA["object"]
                break
             case "focused"
             case "clicked"
@@ -1481,6 +1552,15 @@ on revTutorialEnsureState pStep
          break
    end switch
    revIDESetTool tTool
+   
+   local tHighlightDataA
+   put sSteps[pStep]["actions"]["highlight"] into tHighlightDataA
+   switch tHighlightDataA["highlight type"]
+      case "item of palette for object"
+      case "palette for object"
+         revTutorialEnsurePaletteForObject tHighlightDataA["palette"], tHighlightDataA["object"]
+         break
+   end switch
 end revTutorialEnsureState
 
 local sStepContextA
@@ -1496,15 +1576,12 @@ end revTutorialSetContextualStepData
 ##############################################################################
 
 on revTutorialDoGoToStep pStep
-   put pStep into sStepName
-   add 1 to sStepNum
-   put 0 into sActionNumber
+   revTutorialInitialiseStep
    revTutorialClearHighlights
    revTutorialClearGuides
    revTutorialClearSets
    disableToolsPalette
-   put false into sWaiting
-   put false into sIsInterlude
+   revTutorialUpdateProgress pStep
 end revTutorialDoGoToStep
 
 on revTutorialDoCapture pType, pTag, pTargetStack
@@ -1921,7 +1998,6 @@ on revTutorialHighlightTool pTool
    revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
-local sLastObjects
 function revTutorialHighlightedPalette pPalette
    if sLastObjects[pPalette] is empty then
       return empty
@@ -2600,15 +2676,14 @@ function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
 end revTutorialObjectPropertyIsValue
 
 function revTutorialObjectHasPalette pPalette, pObjects
-   local tPaletted
-   if pPalette is "inspector" then
-      put revIDEInspectedObjects() into tPaletted
-   else if pPalette is "script editor" then
-      put revIDEScriptEditingObjects() into tPaletted
-   end if
-   
+   local tPalette
    repeat for each line tObject in pObjects
-      if tObject is not among the lines of tPaletted then
+      if pPalette is "inspector" then
+         put revIDEInspectorForObject(tObject) into tPalette
+      else if pPalette is "script editor" then
+         put revScriptEditor(tObject) into tPalette
+      end if
+      if tPalette is empty then
          return false
       end if
    end repeat
@@ -2700,7 +2775,7 @@ end revTutorialGroupContainsObjects
 ##############################################################################
 
 local sRunningInfo
-on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
+on revTutorialRunTutorial pCourse, pTutorial, pLesson, pFromStep, pUntilStep
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
@@ -2711,20 +2786,22 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
    put pTutorial into sRunningInfo["tutorial"]
    put pLesson into sRunningInfo["lesson"]
    
-   revTutorialRunSteps tData, pUntilStep
+   if pFromStep is empty then
+      put tData["first step"] into pFromStep
+   end if
+   
+   revTutorialRunSteps tData, pFromStep, pUntilStep
 end revTutorialRunTutorial
 
-on revTutorialRunSteps pSteps, pStopAtStep
+on revTutorialRunSteps pSteps, pFromStep, pUntilStep
    lock screen
    local tStep, tStepNum
-   put 0 into tStepNum
-   put pSteps["first step"] into tStep
+   put pFromStep into tStep
    repeat until tStep is empty
-      if tStep is pStopAtStep then
+      if tStep is pUntilStep then
          exit repeat
       end if
       
-      add 1 to tStepNum
       revTutorialSetContextualStepData pSteps[tStep]
       revTutorialRunStep pSteps[tStep]["actions"]
       put pSteps[tStep]["actions"]["go"]["step"] into tStep

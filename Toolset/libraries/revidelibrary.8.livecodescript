@@ -3192,8 +3192,13 @@ function revIDEInspectedObjects
 end revIDEInspectedObjects
 
 function revIDEInspectorForObject pObjectId
+   local tInspectorName
    dispatch function "inspectorForObject" to stack revIDEPaletteToStackName("inspector") with pObjectID
-   return the long id of stack the result
+   put the result into tInspectorName
+   if there is a stack tInspectorName then
+      return the long id of stack tInspectorName
+   end if
+   return empty
 end revIDEInspectorForObject
 
 local sScriptEditingObjects
@@ -9092,6 +9097,10 @@ on revIDETutorialProgressChanged
    # Notify any subscribed objects
    ideMessageSend "ideTutorialProgressChanged"
 end revIDETutorialProgressChanged
+
+on revIDETutorialSkipToNextSkipPoint
+   dispatch "revTutorialSkip" to stack "revTutorial"
+end revIDETutorialSkipToNextSkipPoint
 
 ##################################################
 #
