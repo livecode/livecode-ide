@@ -3077,5 +3077,5 @@ on revTutorialGoCard pCard
       throw "unsatisfiable wait condition: wait until this card is" && pCard
       exit revTutorialGoCard
    end if
-   go card (the short name of sTaggedObjects["card"][pCard])
+   go sTaggedObjects["card"][pCard]
 end revTutorialGoCard
