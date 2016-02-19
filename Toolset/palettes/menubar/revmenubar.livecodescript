@@ -303,6 +303,7 @@ on generateMenu
    generateContextMenu
 end generateMenu
 
+constant kTutorialActionSize = 10
 on generateMenubarUI
    if there is a group "icons" of me then
       delete group "icons" of me
@@ -384,6 +385,7 @@ on generateMenubarUI
    end if
    
    create group "tutorial"
+   set the margins of it to 0
    create group "progress" in group "tutorial" of me
    set the margins of it to 0
    set the opaque of the templateGraphic to true
@@ -394,13 +396,19 @@ on generateMenubarUI
    set the backcolor of it to "white"
    
    create field "label" in group "tutorial" of me
+   set the textSize of it to 10
    
-   set the icongravity of the templatebutton to empty
-   set the showname of the templatebutton to false
-   create widget "quit" as "com.livecode.widget.svgpath" in group "tutorial" of me
-   set the width of it to 15
-   set the height of it to 21
-   set the iconPathPreset of widget "quit" of group "tutorial" of me to "remove circle"
+   create group "actions" in group "tutorial" of me
+   set the margins of it to 0
+   create widget "stop" as "com.livecode.widget.svgpath" in group "actions" of group "tutorial" of me
+   set the width of it to kTutorialActionSize
+   set the height of it to kTutorialActionSize
+   set the iconPathPreset of it to "stop"
+   
+   create widget "skip" as "com.livecode.widget.svgpath" in group "actions" of group "tutorial" of me
+   set the width of it to kTutorialActionSize
+   set the height of it to kTutorialActionSize
+   set the iconPathPreset of it to "forward"
    
    hide group "tutorial" of me
    
@@ -533,27 +541,35 @@ on layoutMenu
    local tTutorial
    put revIDETutorialInProgress() into tTutorial
    if tTutorial is not empty then
+      add 5 to tLeft
       show group "tutorial" of me
       show tLastDivide
       set the text of field "label" of group "tutorial" of me to tTutorial["lesson"] 
       set the width of field "label" of group "tutorial" of me to 1000
+      set the height of field "label" of group "tutorial" of me to the formattedHeight of field "label" of group "tutorial" of me
       local tLabelWidth
       put the formattedwidth of field "label" of group "tutorial" of me into tLabelWidth
       set the width of field "label" of group "tutorial" of me to tLabelWidth
-      set the topleft of field "label" of group "tutorial" of me to 10, 10
-      
-      set the loc of widget "quit" of group "tutorial" of me to the loc of group "tutorial" of me
-      set the left of widget "quit" of group "tutorial" of me to 10 + tLabelWidth
+      set the topleft of field "label" of group "tutorial" of me to 0, 0
       
       set the backcolor of graphic "Trough" of group "progress" of me to "white"
       set the backcolor of graphic "Bar" of group "progress" of me to "black"
       set the rect of graphic "Trough" of group "progress" of me to 0,0,tLabelWidth,5
       set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage() * tLabelWidth / 100, 5
+      set the rect of group "progress" of me to the formattedRect of group "progress" of me
       set the loc of group "progress" of me to the loc of field "label" of me
-      set the top of group "progress" of me to 35
+      set the top of group "progress" of me to the bottom of field "label" of group "tutorial" of me + 2
       
+      set the topleft of widget "skip" of group "actions" of group "tutorial" of me to 0,0
+      set the topleft of widget "stop" of group "actions" of group "tutorial" of me to kTutorialActionSize + 5, 0
+      set the rect of group "actions" of group "tutorial" of me to the formattedRect of group "actions" of group "tutorial" of me
+      set the loc of group "actions" of group "tutorial" of me to the loc of field "label" of me
+      set the top of group "actions" of group "tutorial" of me to the bottom of group "progress" of me + 5
+      
+      set the rect of group "tutorial" of me to the formattedRect of group "tutorial" of me
       set the topleft of group "tutorial" of me to tLeft, tTop
-      add the formattedWidth of group "tutorial" of me + 10 to tLeft
+      
+      add the width of group "tutorial" of me + 10 to tLeft
    else
       hide tLastDivide
       hide group "tutorial" of me
@@ -815,11 +831,13 @@ on mouseUp
    if the target begins with "widget" then
       local tOriginButton, tTarget
       put the short name of the target into tTarget
-      if tTarget is "quit" then
+      if tTarget is "stop" then
          answer "Are you sure you want to exit this tutorial?" with "OK" or "Cancel"
          if it is "OK" then
             revIDEStopTutorial
          end if
+      else if tTarget is "skip" then
+         revIDETutorialSkipToNextSkipPoint
       end if
    end if
    unlock screen
