@@ -2858,6 +2858,9 @@ on revTutorialRunAction pActionData
       case "state"
          switch tWaitData["state"]
             case "scripted"
+               # Everything becomes extremely sad if we already have a tab open for this script 
+               # and try to run a scripting step. So close the palette first.
+               revTutorialClearPalette "script editor"
                # Set the script of the objects
                revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
                break
