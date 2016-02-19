@@ -1145,6 +1145,8 @@ on revInitialiseTutorial
    set the threeD of it to false
    set the visible of it to false
    
+   revIDESetTool "pointer"
+   
    unlock messages
    unlock screen
 end revInitialiseTutorial
