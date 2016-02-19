@@ -11,13 +11,15 @@ function revTutorialParseFile pFile
    return revTutorialParseData(textDecode(tData, "utf-8"))
 end revTutorialParseFile
 
-private on addError pError, @xErrors
+private on parseError pError, pLineNum, @xErrors
+   local tError
+   put "Error on" && pLineNum & ":" && pError into tError
    if xErrors is empty then
-      put pError into xErrors
+      put tError into xErrors
    else
-      put return & pError after xErrors
+      put return & tError after xErrors
    end if
-end addError
+end parseError
 
 function revTutorialParseData pData
    local tErrors
@@ -67,12 +69,12 @@ function revTutorialParseData pData
             case "value"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
-                  addError "action list not valid in" && tType && " on line" && tLineNum, tErrors
+                  parseError "action list not valid in" && tType, tLineNum, tErrors
                   break
                end if
                
                if tSubType is "action" then
-                  throw "action list not valid in" && tType && " on line" && tLineNum
+                  parseError "action list not valid in" && tType, tLineNum, tErrors
                   break
                end if
                
@@ -143,7 +145,7 @@ function revTutorialParseData pData
          case "step"
             put token 2 of tLine into tCurStepName
             if tCurStepName is among the keys of tStepData then
-               addError "duplicate step name" && tCurStepName && "on line" && tLineNum, tErrors
+               parseError "duplicate step name" && tCurStepName, tLineNum, tErrors
             end if
             put it into tType
             put "text" into tSubType
@@ -158,7 +160,7 @@ function revTutorialParseData pData
             put "text" into tSubType
             break
          default
-            addError "invalid section" && it && " on line" && tLineNum, tErrors
+            parseError "invalid section" && it, tLineNum, tErrors
             break
       end switch
    end repeat
