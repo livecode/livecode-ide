@@ -2822,6 +2822,7 @@ end revTutorialRunLoad
 # We don't actually need to select objects, just keep track of what is supposed to be selected
 local sSelected
 on revTutorialRunAction pActionData
+   lock screen
    lock messages
    local tWaitData
    put pActionData["wait"] into tWaitData
@@ -2881,6 +2882,7 @@ on revTutorialRunAction pActionData
          break
    end switch
    unlock messages
+   unlock screen
 end revTutorialRunAction
 
 on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
