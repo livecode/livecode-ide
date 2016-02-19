@@ -1528,9 +1528,6 @@ end revTutorialEnsurePaletteForObject
 on revTutorialEnsureState pStep
    local tWaitDataA
    put sSteps[pStep]["actions"]["wait"] into tWaitDataA
-   # Might need to be tool dependent
-   local tTool
-   put "pointer" into tTool
    
    switch tWaitDataA["wait condition"]
       case "property"
@@ -1541,17 +1538,8 @@ on revTutorialEnsureState pStep
             case "scripted"
                revTutorialEnsurePaletteForObject "script editor", tWaitDataA["object"]
                break
-            case "focused"
-            case "clicked"
-               put "browse" into tTool
-               break
          end switch
-         break
-      case "pops up"
-         put "browse" into tTool
-         break
    end switch
-   revIDESetTool tTool
    
    local tHighlightDataA
    put sSteps[pStep]["actions"]["highlight"] into tHighlightDataA
@@ -2878,6 +2866,15 @@ on revTutorialRunAction pActionData
          break
       case "this card"
          revTutorialGoCard tWaitData["card"]
+         break
+      case "tool"
+         local tTool
+         if tWaitData["tool"] is "run" then
+            put "browse" into tTool
+         else
+            put "pointer" into tTool
+         end if
+         revIDESetTool tTool
          break
          # No other waits require action
       default
