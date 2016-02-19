@@ -1390,8 +1390,10 @@ on revTutorialContinue
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      revIDETutorialProgressChanged
+      
+      // Make sure any of the step's extra contextual data is set
       revTutorialSetContextualStepData sSteps[sStepName]
+      
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          # Add guide in case wait is 'fits guide'
@@ -1404,6 +1406,8 @@ on revTutorialContinue
       revTutorialEnsureState sStepName
       // Do text, highlight and guide show actions under lock screen, to remove 'flicker'
       lock screen
+      // Notify any objects that need to know the tutorial progress has changed
+      revIDETutorialProgressChanged
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       // Load any stack needed for this step
@@ -1423,8 +1427,8 @@ on revTutorialContinue
       // Wait
       revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
       
+      // Remove any palettes not needed for this step
       revTutorialCleanUp
-      
       if sWaiting then
          exit repeat
       end if
@@ -2700,6 +2704,8 @@ function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
 end revTutorialObjectFitsGuide
 
 on revTutorialSnapObjectToGuide pObject, pGuide
+   lock screen
+   lock messages
    local tRect
    put the rect of sGuides[pGuide] into tRect
    if pObject begins with "stack" then
@@ -2709,6 +2715,8 @@ on revTutorialSnapObjectToGuide pObject, pGuide
    else 
       set the rect of pObject to item 1 of tRect - 1, item 2 of tRect - 1, item 3 of tRect + 1, item 4 of tRect + 1
    end if
+   unlock messages
+   unlock screen
 end revTutorialSnapObjectToGuide
 
 // In the future we might want to add a bit more "approximity" to this.
