@@ -4518,6 +4518,7 @@ on revIDEGoToDictionaryEntry pLibrary, pTag, pType
    else
       send "goToEntry pLibrary, pTag, pType" to stack revIDEPaletteToStackName("dictionary") 
    end if
+   revIDEMessageSend "ideOpenPalette", "dictionary"
 end revIDEGoToDictionaryEntry
 
 on revIDEGoToWidgetAPI pKind
