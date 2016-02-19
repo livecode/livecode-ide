@@ -1146,7 +1146,7 @@ on revInitialiseTutorial
    set the visible of it to false
    
    revIDESetTool "pointer"
-   
+   set the selectGroupedControls to true
    unlock messages
    unlock screen
 end revInitialiseTutorial
