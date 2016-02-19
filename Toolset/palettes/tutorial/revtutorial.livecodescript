@@ -2866,6 +2866,7 @@ on revTutorialRunAction pActionData
                break
             case "selected"
                put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
+               revIDESelectObjects sSelected
                break
             case "grouped"
                revTutorialCreateAndCaptureObjects tWaitData, pActionData["capture"]
