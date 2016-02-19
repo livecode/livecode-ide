@@ -78,8 +78,13 @@ remains in the center of the screen.
 	: "dictionary"
 	| “tools”
 	| “menubar”
-	| "message box"
-
+	| "message" "box"
+	| "project" "browser"
+	| "extension" "builder"
+	| "preferences"
+	| "standalone" "settings"
+	| "start" "center"
+	
 	Tool
 	  : [<Item: MenuItem>] "menu" <Menu: STRING>
 	  | "toolbar" <Tool: STRING>

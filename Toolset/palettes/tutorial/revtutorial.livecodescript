@@ -245,6 +245,11 @@ function revTutorialIsPaletteType pType
       case "menubar"
       case "message box"
       case "dictionary"
+      case "project browser"
+      case "extension builder"
+      case "preferences"
+      case "standalone settings"
+      case "start center"
          return true
    end switch
    return false
