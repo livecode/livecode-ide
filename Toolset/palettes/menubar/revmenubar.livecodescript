@@ -397,6 +397,7 @@ on generateMenubarUI
    
    create field "label" in group "tutorial" of me
    set the textSize of it to 10
+   set the traversalOn of it to false
    
    create group "actions" in group "tutorial" of me
    set the margins of it to 0
@@ -404,11 +405,13 @@ on generateMenubarUI
    set the width of it to kTutorialActionSize
    set the height of it to kTutorialActionSize
    set the iconPathPreset of it to "stop"
+   set the traversalOn of it to false
    
    create widget "skip" as "com.livecode.widget.svgpath" in group "actions" of group "tutorial" of me
    set the width of it to kTutorialActionSize
    set the height of it to kTutorialActionSize
    set the iconPathPreset of it to "forward"
+   set the traversalOn of it to false
    
    hide group "tutorial" of me
    
