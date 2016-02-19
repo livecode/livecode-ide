@@ -2821,6 +2821,9 @@ on revTutorialRunStep pStepActions
 end revTutorialRunStep
 
 on revTutorialRunLoad pLoadAction
+   if pLoadAction is empty then
+      exit revTutorialRunLoad
+   end if
    # Store currently running lesson in case there are further load actions
    local tRunningInfo
    put sRunningInfo into tRunningInfo
