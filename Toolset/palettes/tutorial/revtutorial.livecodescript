@@ -987,7 +987,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
             put tMiddle - kPointerWidth into tStackLeft
          else
             put the right of tGraphic - kPointerWidth into tX
-            put tMiddle - tWidth - kPointerWidth into tStackLeft
+            put tMiddle - tWidth + kPointerWidth into tStackLeft
          end if
       end if
       
