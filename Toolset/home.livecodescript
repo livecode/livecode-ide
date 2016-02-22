@@ -436,7 +436,7 @@ private command revInternal__SetupPaths
    
    # The docs cache is per-version and edition
    local tEdition
-   put tolower(revLicenseType()) into tEdition
+   put tolower(sLicenseClass) into tEdition
    
    local tVersion
    put the version into tVersion
