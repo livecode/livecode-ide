@@ -9310,19 +9310,20 @@ end revIDEGenerateDistributedDocs
 
 private on revIDEGenerateDistributedGuide
    # Set the default folder to where the guide markdown files are stored in the IDE
-   local tGuideFolders
-   put "ide:" & revIDESpecialFolderPath("ide guides") into tGuideFolders
+   local tGuideFoldersWithLocationA
+   put revIDESpecialFolderPath("ide guides") into tGuideFoldersWithLocationA[1]["folder"]
+   put "ide" into tGuideFoldersWithLocationA[1]["location"]
    
    if not revEnvironmentIsInstalled() then
-      put return & "repo:" & revIDESpecialFolderPath("repo guides") after tGuideFolders
+      put revIDESpecialFolderPath("repo guides") into tGuideFoldersWithLocationA[2]["folder"]
+      put "repo" into tGuideFoldersWithLocationA[2]["location"]
    end if
    
    # Check if the distributed guide is out of date
    local tLastModified, tLastGenerated
    set the itemdelimiter to ":"
-   repeat for each line tGuideFolder in tGuideFolders
-      delete item 1 of tGuideFolder
-      put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tGuideFolder)) into tLastModified
+   repeat for each element tGuideFolderWithLocationA in tGuideFoldersWithLocationA
+      put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tGuideFolderWithLocationA["folder"])) into tLastModified
    end repeat
    put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
    
@@ -9331,37 +9332,15 @@ private on revIDEGenerateDistributedGuide
       exit revIDEGenerateDistributedGuide
    end if
    
-   repeat for each line tGuideFolder in tGuideFolders
-      local tGuideLocation
-      set the itemdelimiter to ":"
-      put item 1 of tGuideFolder into tGuideLocation
-      put item 2 to -1 of tGuideFolder into tGuideFolder
-      
-      revIDEPushDefaultFolder tGuideFolder
-      
-      local tGuideData, tGuideName
-      set the itemdelimiter to "."
-      repeat for each line tFile in the files
-         if tFile begins with "."  then next repeat
-         if tFile ends with "~" then next repeat
-         # The name of the guide is just the filename without extension
-         put item 1 to -2 of tFile into tGuideName
-         get url ("binfile:" & tGuideFolder & slash & tFile)
-         if it is not empty then
-            get textDecode(it, "utf-8")
-            
-            # Remove table of contents 
-            replace "[toc]" with empty in it
-            
-            # Build JSON data
-            put tab & "{" & CR after tGuideData
-            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
-            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
-            put tab & escape("location") & ":" & escape(tGuideLocation) & comma & return after tGuideData
-            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
-         end if
-      end repeat
-      revIDEPopDefaultFolder
+   local tOrderedGuidesA, tOrderFolder
+   put revIDESpecialFolderPath("ide guides") into tOrderFolder
+   put revDocsOrderedGuideData(tGuideFoldersWithLocationA, tOrderFolder) into tOrderedGuidesA
+   
+   local tGuideData
+   repeat for each element tGuideA in tOrderedGuidesA
+      put tab & "{" after tGuideData
+      put return & revDocsFormatGuideDataAsJSON(tGuideA) after tGuideData
+      put return & tab & "}," after tGuideData
    end repeat
    delete the last char of tGuideData
    
