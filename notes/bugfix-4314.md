@@ -1,0 +1,1 @@
+# Make inspector locked/unlocked states more distinct
