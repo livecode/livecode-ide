@@ -336,7 +336,7 @@ on moveStack pLeft, pTop
       end if
    end if
    
-   # IDE to notify any objects subscribed to the ideMoveStack Message
+   # IDE to notify any objects subscribed to the ideStackMoved Message
    local tLongID
    put the long id of the owner of the target into tLongID
    send "ideMessageSendWithTrigger" &&  "ideStackMoved, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
@@ -381,3 +381,13 @@ on mouseDoubleUp pButton
    send "ideMessageSendWithParameters" &&  "ideMouseDoubleUp, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
    pass mouseDoubleUp
 end mouseDoubleUp
+
+on closeStackRequest
+   # IDE to notify any objects subscribed to the ideCloseStackRequest Message
+   local tLongID
+   put the long id of the owner of the target into tLongID
+   if revIDEStackIsIDEStack(tLongID) then pass closeStackRequest
+   
+   send "ideMessageSendWithTrigger" &&  "ideCloseStackRequest, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
+   pass closeStackRequest
+end closeStackRequest

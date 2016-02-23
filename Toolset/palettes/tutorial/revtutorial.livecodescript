@@ -11,13 +11,15 @@ function revTutorialParseFile pFile
    return revTutorialParseData(textDecode(tData, "utf-8"))
 end revTutorialParseFile
 
-private on addError pError, @xErrors
+private on parseError pError, pLineNum, @xErrors
+   local tError
+   put "Error on" && pLineNum & ":" && pError into tError
    if xErrors is empty then
-      put pError into xErrors
+      put tError into xErrors
    else
-      put return & pError after xErrors
+      put return & tError after xErrors
    end if
-end addError
+end parseError
 
 function revTutorialParseData pData
    local tErrors
@@ -64,14 +66,15 @@ function revTutorialParseData pData
             case "action"
             case "script"
             case "file"
+            case "value"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
-                  addError "action list not valid in" && tType && " on line" && tLineNum, tErrors
+                  parseError "action list not valid in" && tType, tLineNum, tErrors
                   break
                end if
                
                if tSubType is "action" then
-                  throw "action list not valid in" && tType && " on line" && tLineNum
+                  parseError "action list not valid in" && tType, tLineNum, tErrors
                   break
                end if
                
@@ -84,35 +87,48 @@ function revTutorialParseData pData
                break
             default
                // Get the data
-               if tSubType is "text" then
-                  if line -1 of tData is empty then
-                     put word 1 to -1 of tLine after tData
-                  else
-                     put " " & word 1 to -1 of tLine after tData
-                  end if
-               else if tSubType is "script" then
-                  put tLine & CR after tData
-               else if tSubType is "file" then
-                  # If there is a file for this step, record it
-                  put word 1 to -1 of tLine into tData
-               else
-                  add 1 to  tActionNum
-                  put revTutorialParseAction(tLine, tLineNum) into tData
-                  if tData["type"] is "capture" then
-                     # Allow multiple capture actions
-                     get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]["captures"]
-                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]["captures"][it + 1]
-                     put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
-                  else
-                     put tData into tStepData[tCurStepName]["actions"][tData["type"]]
-                  end if
-                  if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
-                     put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
-                  else if tData["type"] is "interlude" then
-                     put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
-                  end if
-                  put empty into tData
-               end if 
+               switch tSubType
+                  case "text"
+                     if line -1 of tData is empty then
+                        put word 1 to -1 of tLine after tData
+                     else
+                        put " " & word 1 to -1 of tLine after tData
+                     end if
+                     break
+                  case "script"
+                     put tLine & return after tData
+                     break
+                  case "file"
+                     # File is single line 
+                     put word 1 to -1 of tLine into tData
+                     break
+                  case "value"
+                     # Accumulate multi-line value
+                     if tData is empty then
+                        put word 1 to -1 of tLine into tData
+                     else
+                        put return & word 1 to -1 of tLine after tData
+                     end if
+                     break
+                  default
+                     add 1 to  tActionNum
+                     put revTutorialParseAction(tLine, tLineNum) into tData
+                     if tData["type"] is "capture" then
+                        # Allow multiple capture actions
+                        get the number of elements of tStepData[tCurStepName]["actions"][tData["type"]]["captures"]
+                        put tData into tStepData[tCurStepName]["actions"][tData["type"]]["captures"][it + 1]
+                        put "capture" into tStepData[tCurStepName]["actions"][tData["type"]]["type"]
+                     else
+                        put tData into tStepData[tCurStepName]["actions"][tData["type"]]
+                     end if
+                     if tData["type"] is "wait" and tData["wait condition"] is "state" and tData["state"] is "scripted" then
+                        put tStepData[tCurStepName]["script"] into tStepData[tCurStepName]["actions"][tData["type"]]["script"]
+                     else if tData["type"] is "interlude" then
+                        put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
+                     end if
+                     put empty into tData
+                     break
+               end switch
                break
          end switch
          next repeat
@@ -129,7 +145,7 @@ function revTutorialParseData pData
          case "step"
             put token 2 of tLine into tCurStepName
             if tCurStepName is among the keys of tStepData then
-               addError "duplicate step name" && tCurStepName && "on line" && tLineNum, tErrors
+               parseError "duplicate step name" && tCurStepName, tLineNum, tErrors
             end if
             put it into tType
             put "text" into tSubType
@@ -143,8 +159,14 @@ function revTutorialParseData pData
             put it into tCurStepName
             put "text" into tSubType
             break
+         case "skip"
+            if word 1 to -1 of tLine is not "skip point" then
+               parseError "expected: skip point", tLineNum, tErrors
+            end if
+            put "true" into tStepData[tCurStepName]["skip point"]
+            break
          default
-            addError "invalid section" && it && " on line" && tLineNum, tErrors
+            parseError "invalid section" && it, tLineNum, tErrors
             break
       end switch
    end repeat
@@ -223,6 +245,11 @@ function revTutorialIsPaletteType pType
       case "menubar"
       case "message box"
       case "dictionary"
+      case "project browser"
+      case "extension builder"
+      case "preferences"
+      case "standalone settings"
+      case "start center"
          return true
    end switch
    return false
@@ -501,6 +528,14 @@ on revTutorialParseHighlight pTokens, @rData
             put tData[1] into rData["guide"]
          end if
          break
+      case "line"
+         revTutorialParseSubexpression "highlight line <token> of script editor for <object>", pTokens, tFirstToken, tData
+         if the result is empty then
+            put "script line" into rData["highlight type"]
+            put tData[1] into rData["line"]
+            put tData[2] into rData["object"]
+         end if
+         break
       default
          revTutorialParseSubexpression "highlight <object>", pTokens, tFirstToken, tData
          if the result is empty then
@@ -764,30 +799,44 @@ constant kPointerHeight = 30
 constant kPointerWidth = 40
 constant kPointerOffset = 5
 
-on revTutorialPositionStack pStack, pObject, pWidthOverride
+constant kMaxScriptHeight = 200
+on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
+   local tGotItButtonID, tCopyButtonID
+   local tMsgFieldID, tScriptFieldID
+   
+   put the long id of button "Got It" of stack "revTutorial" into tGotItButtonID
+   put the long id of button "Copy Script" of stack "revTutorial" into tCopyButtonID
+   put the long id of field "Message" of stack "revTutorial" into tMsgFieldID
+   put the long id of field "Script" of stack "revTutorial" into tScriptFieldID
+   
    lock screen
    lock messages
    local tDefaultStack
    put the defaultStack into tDefaultStack
    set the defaultstack to "revTutorial"
    if sIsInterlude then
-      show button "Got It" of stack "revTutorial"
+      show tGotItButtonID
+      set the height of tGotItButtonID to the formattedHeight of tGotItButtonID
+      set the width of tGotItButtonID to the formattedWidth of tGotItButtonID
       put 460 into pWidthOverride
    else
-      hide button "Got It" of stack "revTutorial"
+      hide tGotItButtonID
    end if
    
    local tHasScript
-   if field "Script" of stack "revTutorial" is empty then
+   if the text of tScriptFieldID is empty then
       put false into tHasScript
-      hide field "Script" of stack "revTutorial"
+      hide tScriptFieldID
    else
       put true into tHasScript
-      show field "Script" of stack "revTutorial"
+      show tScriptFieldID
+      set the height of tCopyButtonID to the formattedHeight of tCopyButtonID
+      set the width of tCopyButtonID to the formattedWidth of tCopyButtonID
+      show tCopyButtonID
    end if
    
    local tPointVertical
-   put pStack is "menubar" into tPointVertical
+   put pStack is "menubar" or pForceVertical into tPointVertical
    
    local tScreenRect
    put the screenrect into tScreenRect
@@ -835,33 +884,42 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
    local tMessageHeight, tMessageWidth
    if pWidthOverride is not empty then
       put max(kMessageWidth, pWidthOverride) into tMessageWidth
-      set the width of field "Message" of stack "revTutorial" to tMessageWidth
+      set the width of tMsgFieldID to tMessageWidth
    end if
    
-   set the height of field "Message" of stack "revTutorial" to 1000
-   put the formattedHeight of field "Message" of stack "revTutorial" into tMessageHeight
+   set the height of tMsgFieldID to 1000
+   put the formattedHeight of tMsgFieldID into tMessageHeight
    
-   set the height of field "Message" of stack "revTutorial" to tMessageHeight
+   set the height of tMsgFieldID to tMessageHeight
    
    put tMessageHeight + kMargin * 2 into tHeight
-   put the formattedWidth of field "Message" of stack "revTutorial" + kMargin * 2 into tWidth
+   put the formattedWidth of tMsgFieldID + kMargin * 2 into tWidth
    
    if tHasScript then
       local tScriptHeight
       if pWidthOverride is not empty then
-         set the width of field "Script" of stack "revTutorial" to pWidthOverride
+         set the width of tScriptFieldID to pWidthOverride
       end if
-      set the height of field "Script" of stack "revTutorial" to 1000
+      set the height of tScriptFieldID to 1000
       
-      put the formattedHeight of field "Script" of stack "revTutorial" into tScriptHeight
-      set the height of field "Script" of stack "revTutorial" to tScriptHeight
+      put the formattedHeight of tScriptFieldID into tScriptHeight
+      if tScriptHeight > kMaxScriptHeight then
+         set the vscrollbar of tScriptFieldID to true
+         put kMaxScriptHeight into tScriptHeight
+      else
+         set the vscrollbar of tScriptFieldID to false
+      end if
+
+      set the height of tScriptFieldID to tScriptHeight
       add tScriptHeight + kMargin * 2 to tHeight
       
-      put max(tWidth, the width of field "Script" of stack "revTutorial" + kMargin * 2) into tWidth
+      put max(tWidth, the width of tScriptFieldID + kMargin * 2) into tWidth
    end if
    
    if sIsInterlude then
-      add the height of button "Got It" of stack "revTutorial" + kMargin to tHeight
+      add the height of tGotItButtonID + kMargin to tHeight
+   else if tHasScript then
+      add the height of tCopyButtonID + kMargin to tHeight
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -929,7 +987,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
             put tMiddle - kPointerWidth into tStackLeft
          else
             put the right of tGraphic - kPointerWidth into tX
-            put tMiddle - tWidth - kPointerWidth into tStackLeft
+            put tMiddle - tWidth + kPointerWidth into tStackLeft
          end if
       end if
       
@@ -964,15 +1022,17 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
-         set the topleft of button "Got It" of stack "revTutorial" to tWidth - kMargin - the width of button "Got It" of stack "revTutorial", tHeight - kMargin - the height of button "Got It" of stack "revTutorial"
+         set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
+      else if tHasScript then
+         set the bottomright of tCopyButtonID to tWidth - kMargin, tHeight - kMargin
       end if
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   set the topleft of field "Message" of stack "revTutorial" to tMessageLeft, tMessageTop
+   set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
    local tScriptTop
-   put kMargin + the bottom of field "Message" of stack "revTutorial" into tScriptTop
-   set the topleft of field "Script" of stack "revTutorial" to tMessageLeft, tScriptTop 
+   put kMargin + the bottom of tMsgFieldID into tScriptTop
+   set the topleft of tScriptFieldID to tMessageLeft, tScriptTop 
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
@@ -984,7 +1044,7 @@ end revTutorialPositionStack
 #
 ##############################################################################
 
-local sSteps, sActionNumber, sStepName, sFirstStep, sStepNum, sNumSteps
+local sSteps, sActionNumber, sStepName, sStepNum, sNumSteps
 local sCaptureData, sTaggedObjects, sWaiting, sGuides
 
 on revTutorialSaveProgress
@@ -1003,14 +1063,13 @@ on revInitialiseTutorial
    lock messages
    
    # Initialise all relevant static variables
-   put false into sWaiting
-   put false into sIsInterlude
    put empty into sSteps
    put 0 into sNumSteps 
    put empty into sStepName
    put empty into sTaggedObjects
    put empty into sGuides
    put empty into sCaptureData
+   revTutorialInitialiseStep
    
    # Unsubscribe all messages
    revIDEUnsubscribeAll
@@ -1027,6 +1086,10 @@ on revInitialiseTutorial
    
    if there is a button "Got It" of stack "revTutorial" then
       delete button "Got It" of stack "revTutorial"
+   end if
+   
+   if there is a button "Copy Script" of stack "revTutorial" then
+      delete button "Copy Script" of stack "revTutorial"
    end if
    
    set the windowShape of stack "revTutorial" to empty
@@ -1063,9 +1126,8 @@ on revInitialiseTutorial
    set the top of it to 60
    
    create button "Got It"
-   set the width of it to 64
-   set the height of it to 28
    set the backColor of it to revTutorialInterludeAltColor()
+   set the width of it to 1000
    set the label of it to "Got It"
    set the borderWidth of it to 0
    set the showFocusBorder of it to false
@@ -1073,9 +1135,27 @@ on revInitialiseTutorial
    set the threeD of it to false
    set the visible of it to false
    
+   create button "Copy Script"
+   set the backColor of it to revTutorialMessageAltColor()
+   set the width of it to 1000
+   set the label of it to "Copy Script To Editor"
+   set the borderWidth of it to 0
+   set the showFocusBorder of it to false
+   set the autoHilite of it to false
+   set the threeD of it to false
+   set the visible of it to false
+   
+   revIDESetTool "pointer"
+   set the selectGroupedControls to true
    unlock messages
    unlock screen
 end revInitialiseTutorial
+
+on revTutorialInitialiseStep
+   put false into sWaiting
+   put false into sIsInterlude
+   put 0 into sActionNumber
+end revTutorialInitialiseStep
 
 on revFinaliseTutorial
    lock screen
@@ -1116,9 +1196,9 @@ on revTutorialUpdateProgress pStep
    put tNumSteps into sNumSteps 
    
    if pStep is empty then
-      put sSteps["first step"] into sFirstStep
+      put sSteps["first step"] into sStepName
    else
-      put pStep into sFirstStep
+      put pStep into sStepName
    end if
    put tStepNum into sStepNum
 end revTutorialUpdateProgress
@@ -1145,6 +1225,7 @@ on revTutorialStartWithState pStep, pTaggedObjects
    end if
    
    put pTaggedObjects into sTaggedObjects
+   
    revTutorialUpdateProgress pStep
    
    lock screen
@@ -1159,23 +1240,63 @@ on revTutorialStartWithState pStep, pTaggedObjects
    else if pStep is "epilogue" then
       revTutorialEpilogue
    else if pStep is among the keys of sSteps then
-      revTutorialEnsureState pStep
       send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
    else
       throw "No such step"
    end if
 end revTutorialStartWithState
 
+on revTutorialContinueFromStep pStep
+   if pStep is empty then
+      revTutorialEpilogue
+      exit revTutorialContinueFromStep
+   end if
+   
+   if pStep is among the keys of sSteps then
+      put pStep into sStepName
+      send "revTutorialContinue" to stack "revTutorial" in 0 millisecs
+   else
+      throw "No such step"
+   end if
+end revTutorialContinueFromStep
+
 on revTutorialStartAtStep pCourse, pTutorial, pLesson, pStepName
-   revTutorialRunTutorial pCourse, pTutorial, pLesson, pStepName
+   revTutorialRunTutorial pCourse, pTutorial, pLesson, "", pStepName
    revIDETutorialInfoSet pCourse, pTutorial, pLesson
    revTutorialStartWithState pStepName, sTaggedObjects
 end revTutorialStartAtStep
 
+on revTutorialSkip
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   if tTutorialInfo is empty then
+      exit revTutorialSkip
+   end if
+   
+   # Calculate the skip point
+   local tSkipPoint
+   put sStepName into tSkipPoint
+   repeat while tSkipPoint is not empty and sSteps[tSkipPoint]["skip point"] is not true
+      put sSteps[tSkipPoint]["actions"]["go"]["step"] into tSkipPoint
+   end repeat
+   
+   local tRunUntil
+   put sSteps[tSkipPoint]["actions"]["go"]["step"] into tRunUntil
+   
+   # Run from the current step to the next skip point
+   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"], sStepName, tRunUntil
+   revTutorialInitialiseStep
+   
+   # Due to how the run loop works, we need to continue from the step
+   # *prior* to the next executed step
+   revTutorialContinueFromStep tSkipPoint
+end revTutorialSkip
+
 on revTutorialStop
    revTutorialClearHighlights
    revTutorialClearGuides
-   revTutorialClearLastPropertyInspector
+   revTutorialClearAllPalettes
    revTutorialClearSets
    revTutorialSaveProgress
    revFinaliseTutorial
@@ -1235,21 +1356,33 @@ end revTutorialEpilogue
 # Individual highlight actions can force a palette to be kept open.
 local sDismissA
 on revTutorialCleanUp
-   if sDismissA["inspector"] is true then
-      revTutorialClearLastPropertyInspector
-   end if
-   put true into sDismissA["inspector"]
+   repeat for each item tItem in revTutorialPalettesToClear()
+      if sDismissA[tItem] is true then
+         revTutorialClearPalette tItem
+      end if
+      put true into sDismissA[tItem]
+   end repeat
 end revTutorialCleanUp
+
+function revTutorialPalettesToClear
+   return "inspector,script editor"
+end revTutorialPalettesToClear
+
+on revTutorialClearAllPalettes
+   repeat for each item tItem in revTutorialPalettesToClear()
+      revTutorialClearPalette tItem
+   end repeat
+end revTutorialClearAllPalettes
 
 on revTutorialContinue
    repeat forever
-      hide stack "revTutorial"
       if sWaiting then
          exit repeat
       end if
+      hide stack "revTutorial"
       // Tutorial finished when there was no "go" step
       if sStepName is empty then
-         revTutorialDoGoToStep sFirstStep
+         revTutorialDoGoToStep sSteps["first step"]
       else if sSteps[sStepName]["actions"]["go"] is empty then
          revTutorialFinish
          exit repeat
@@ -1257,7 +1390,10 @@ on revTutorialContinue
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
-      revIDETutorialProgressChanged
+      
+      // Make sure any of the step's extra contextual data is set
+      revTutorialSetContextualStepData sSteps[sStepName]
+      
       // Skip step if wait condition satisfied
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          # Add guide in case wait is 'fits guide'
@@ -1266,8 +1402,12 @@ on revTutorialContinue
             next repeat
          end if
       end if
+      // Ensure any expected conditions of the step are satisfied
+      revTutorialEnsureState sStepName
       // Do text, highlight and guide show actions under lock screen, to remove 'flicker'
       lock screen
+      // Notify any objects that need to know the tutorial progress has changed
+      revIDETutorialProgressChanged
       // Interlude
       revTutorialExecuteAction sSteps[sStepName]["actions"]["interlude"]
       // Load any stack needed for this step
@@ -1287,8 +1427,8 @@ on revTutorialContinue
       // Wait
       revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
       
+      // Remove any palettes not needed for this step
       revTutorialCleanUp
-      
       if sWaiting then
          exit repeat
       end if
@@ -1343,10 +1483,17 @@ on revTutorialDoLoad pLesson
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"]
+   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"], sSteps[pStep]["file"], sSteps[pStep]["value"]
 end revTutorialSetText
 
-on revTutorialSetTextOfMessage pText, pScript
+on revTutorialSetTextOfMessage pText, pScript, pFile, pValue
+   if pValue is not empty then
+      replace "<value>" with pValue in pText
+   end if
+   if pFile is not empty then
+      replace "<file>" with pFile in pText
+   end if
+   
    local tWidthOverride
    put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to 1000
@@ -1372,34 +1519,54 @@ function revTutorialScriptRetry pCurrent
    return tText
 end revTutorialScriptRetry
 
+local sLastObjects
+on revTutorialEnsurePaletteForObject pPalette, pTutorialObject
+   local tObjectID
+   put revTutorialResolveObjectToLongID(pTutorialObject) into tObjectID
+   
+   put tObjectID into sLastObjects[pPalette]
+   if revTutorialObjectHasPalette(pPalette, tObjectID) then
+      exit revTutorialEnsurePaletteForObject
+   end if
+   
+   if pPalette is "inspector" then
+      revIDEInspectObjects tObjectID
+   else if pPalette is "script editor" then
+      revIDEEditScriptOfObjects tObjectID
+   end if
+end revTutorialEnsurePaletteForObject
+
 on revTutorialEnsureState pStep
    local tWaitDataA
    put sSteps[pStep]["actions"]["wait"] into tWaitDataA
-   # Might need to be tool dependent
-   local tTool
-   put "pointer" into tTool
    
    switch tWaitDataA["wait condition"]
       case "property"
-         revIDEInspectObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
+         revTutorialEnsurePaletteForObject "inspector", tWaitDataA["object"]
          break
       case "state"
          switch tWaitDataA["state"]
             case "scripted"
-               revIDEEditScriptOfObjects sTaggedObjects[tWaitDataA["object"]["type"]][tWaitDataA["object"]["tag"]]
-               break
-            case "focused"
-            case "clicked"
-               put "browse" into tTool
+               revTutorialEnsurePaletteForObject "script editor", tWaitDataA["object"]
                break
          end switch
-         break
-      case "pops up"
-         put "browse" into tTool
+   end switch
+   
+   local tHighlightDataA
+   put sSteps[pStep]["actions"]["highlight"] into tHighlightDataA
+   switch tHighlightDataA["highlight type"]
+      case "item of palette for object"
+      case "palette for object"
+         revTutorialEnsurePaletteForObject tHighlightDataA["palette"], tHighlightDataA["object"]
          break
    end switch
-   revIDESetTool tTool
 end revTutorialEnsureState
+
+local sStepContextA
+on revTutorialSetContextualStepData pStepDataA
+   put pStepDataA["file"] into sStepContextA["file"]
+   put pStepDataA["value"] into sStepContextA["value"]
+end revTutorialSetContextualStepData
 
 ##############################################################################
 #
@@ -1408,15 +1575,12 @@ end revTutorialEnsureState
 ##############################################################################
 
 on revTutorialDoGoToStep pStep
-   put pStep into sStepName
-   add 1 to sStepNum
-   put 0 into sActionNumber
+   revTutorialInitialiseStep
    revTutorialClearHighlights
    revTutorialClearGuides
    revTutorialClearSets
    disableToolsPalette
-   put false into sWaiting
-   put false into sIsInterlude
+   revTutorialUpdateProgress pStep
 end revTutorialDoGoToStep
 
 on revTutorialDoCapture pType, pTag, pTargetStack
@@ -1527,7 +1691,16 @@ function revTutorialCheckWaitCondition pActionData
    
    switch pActionData["wait condition"]
       case "property"
-         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], pActionData["value"]) then
+         local tValue
+         # If the step specified a value then we want to compare with this instead
+         # of the string "value"
+         if pActionData["value"] is "value" and sStepContextA["value"] is not empty then
+            put sStepContextA["value"] into tValue
+         else
+            put pActionData["value"] into tValue
+         end if
+         
+         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue) then
             return true
          end if
          break
@@ -1543,24 +1716,27 @@ function revTutorialCheckWaitCondition pActionData
          end if
          break
       case "state"
-         if pActionData["state"] is "selected" then
-            if revTutorialObjectsAreSelected(tObject) then
-               return true
-            end if
-         else if pActionData["state"] is "scripted" then
-            # If the script hasn't changed then don't do anything.
-            if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+         switch pActionData["state"]
+            case "selected"
+               if revTutorialObjectsAreSelected(tObject) then
+                  return true
+               end if
                break
-            end if
-            if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
-               return true
-            else if sWait["current script"] is not empty then
-               add 1 to sWait["incorrect attempts"]
-               put the script of tObject into sWait["current script"]
-               # Show the current script and the target script in the tip stack
-               revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
-            end if
-         end if
+            case "scripted"
+               # If the script hasn't changed then don't do anything.
+               if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+                  break
+               end if
+               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
+                  return true
+               else if sWait["current script"] is not empty then
+                  add 1 to sWait["incorrect attempts"]
+                  put the script of tObject into sWait["current script"]
+                  # Show the current script and the target script in the tip stack
+                  revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
+               end if
+               break
+         end switch
          break
    end switch
    return false
@@ -1697,6 +1873,9 @@ on revTutorialDoHighlight pActionData
          case "palette for object"
             revTutorialHighlightPaletteForObject pActionData["palette"], pActionData["object"]
             break
+         case "script line"
+            revTutorialHighlightLineOfScriptEditorForObject pActionData["line"], pActionData["object"]
+            break
       end switch
    catch tError
       // Something was specified incorrectly in the tutorial file
@@ -1705,6 +1884,11 @@ on revTutorialDoHighlight pActionData
    #  the wrong palette receives focus
    revIDESubscribe "ideResumeStack"
 end revTutorialDoHighlight
+
+on revTutorialHighlightLineOfScriptEditorForObject pLine, pObject
+   put pLine into sHighlight["line"]
+   revTutorialHighlightItemOfPaletteForObject "script editor", sHighlight["line"], pObject
+end revTutorialHighlightLineOfScriptEditorForObject
 
 local sObjectState
 on revTutorialHighlightObject pObjType, pTag
@@ -1751,9 +1935,7 @@ on revTutorialHighlightPaletteForObject pPaletteName, pObject
    if there is a tPaletteID then
       revTutorialHighlightObjectByID tPaletteID
    end if
-   if pPaletteName is "inspector" then
-      put false into sDismissA["inspector"]
-   end if
+   put false into sDismissA[pPaletteName]
 end revTutorialHighlightPaletteForObject
 
 on revTutorialHighlightObjectByID pObjID
@@ -1775,9 +1957,7 @@ on revTutorialHighlightItemOfPaletteForObject pPalette, pItem, pObject
    if there is a tPaletteID then
       revTutorialHighlightItemOfStack tPaletteID, pItem
    end if
-   if pPalette is "inspector" then
-      put false into sDismissA["inspector"]
-   end if
+   put false into sDismissA[pPalette]
 end revTutorialHighlightItemOfPaletteForObject
 
 on revTutorialHighlightItemOfPalette pPalette, pItem
@@ -1792,6 +1972,7 @@ on revTutorialHighlightItemOfStack pStackID, pItem
    put pStackID into sHighlight["stack"]
    put pItem into sHighlight["object"]
    put "object" into sHighlight["type"]
+   revIDESubscribe "ideStackMoved", pStackID
    revTutorialPositionStackForHighlight
 end revTutorialHighlightItemOfStack
    
@@ -1816,28 +1997,34 @@ on revTutorialHighlightTool pTool
    revTutorialPositionStackForHighlight
 end revTutorialHighlightTool
 
-local sLastInspectedObjects
-function revTutorialHighlightedInspector
-   local tInspector
-   if sLastInspectedObjects is not empty then
-      put revIDEInspectorForObject(sLastInspectedObjects) into tInspector
-   end if
-   if tInspector is not empty then
-      return the long name of tInspector
+function revTutorialHighlightedPalette pPalette
+   if sLastObjects[pPalette] is empty then
+      return empty
+      end if
+   local tStack
+   switch pPalette
+      case "inspector"
+         put revIDEInspectorForObject(sLastObjects["inspector"]) into tStack
+         break
+      case "script editor"
+         put revScriptEditor(sLastObjects["script editor"]) into tStack
+   end switch
+   if tStack is not empty then
+      return the long name of stack tStack
    end if
    return empty
-end revTutorialHighlightedInspector
+end revTutorialHighlightedPalette
       
 on revTutorialHighlightInspector pSection, pGroup
    local tObjectData
    put pSection into tObjectData["section"]
    put pGroup into tObjectData["group"]
-   put sLastInspectedObjects into tObjectData["object"]
+   put sLastObjects["inspector"] into tObjectData["object"]
    
    revIDEHighlightPaletteObject "inspector", tObjectData
    
    local tInspector
-   put revTutorialHighlightedInspector() into tInspector
+   put revTutorialHighlightedPalette("inspector") into tInspector
    
    revIDESubscribe "ideStackMoved", tInspector
    
@@ -1846,7 +2033,7 @@ on revTutorialHighlightInspector pSection, pGroup
    
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
-   put sLastInspectedObjects into sHighlight["object"]
+   put sLastObjects["inspector"] into sHighlight["object"]
    revTutorialPositionStackForHighlight
    put false into sDismissA["inspector"]
 end revTutorialHighlightInspector
@@ -1940,14 +2127,14 @@ on revTutorialClearGuides
    put empty into sGuides
 end revTutorialClearGuides
 
-on revTutorialClearLastPropertyInspector
-   local tInspector
-   put revTutorialHighlightedInspector() into tInspector
-   if tInspector is not empty then
-      close stack tInspector
-      put empty into sLastInspectedObjects
+on revTutorialClearPalette pPalette
+   local tStack
+   put revTutorialHighlightedPalette(pPalette) into tStack
+   if tStack is not empty then
+      close stack tStack
+      put empty into sLastObjects[pPalette]
    end if
-end revTutorialClearLastPropertyInspector
+end revTutorialClearPalette
 
 on revTutorialClearSets
    # For now, set captures are transient
@@ -1970,20 +2157,13 @@ on ideActiveStacksChanged
    revTutorialReShow
 end ideActiveStacksChanged
 
-on closeStackRequest
-   local tStack
-   put revIDEStackOfObject(the long id of the target) into tStack
-   repeat for each element tMainstack in sTaggedObjects["stack"]
-      if tMainstack is tStack then
-         answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
-         if it is "No" then
-            exit closeStackRequest
-         end if
-         send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
-      end if
-   end repeat
-   pass closeStackRequest
-end closeStackRequest
+on ideCloseStackRequest pStack
+   answer "Closing the stack will exit this tutorial. Are you sure?" with "Yes" or "No"
+   if it is "No" then
+      exit ideCloseStackRequest
+   end if
+   send "revIDEStopTutorial" to stack "revIDELibrary" in 0 millisecs
+end ideCloseStackRequest
 
 on openField
    local tObject
@@ -2041,12 +2221,17 @@ on ideNewStack pStack
    end if
    
    if sWait["wait condition"] is "there is an object" then
-      if sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
-         revIDEUnsubscribe "ideNewStack"
-         revTutorialWaitConditionSatisfied
-      else if sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
-         revIDEUnsubscribe "ideNewStack"
+      local tWaitSatisfied
+      if sWait["object"]["type"] is "card" and sWait["object"]["tag"] is among the keys of sTaggedObjects["card"] then
          revIDEUnsubscribe "ideNewCard"
+         put true into tWaitSatisfied
+      else if sWait["object"]["type"] is "stack" and sWait["object"]["tag"] is among the keys of sTaggedObjects["stack"] then
+         put true into tWaitSatisfied
+         revIDESubscribe "ideCloseStackRequest", pStack
+      end if
+      
+      if tWaitSatisfied then
+         revIDEUnsubscribe "ideNewStack"
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2106,7 +2291,7 @@ on idePropertyChanged pObject
    end if
    
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
-      if sWait["wait condition"] is among the items of "property,fits" or (sWait["wait condition"] is "state" and sWait["state"] is "scripted") then
+      if revTutorialIsWaitForProperty(sWait) then
          if revTutorialCheckWaitCondition(sWait) then
             revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
             revTutorialWaitConditionSatisfied
@@ -2149,6 +2334,22 @@ on ideMouseUp pWhich, pTarget
    end if
 end ideMouseUp
 
+on mouseDown
+   local tObject
+   put the long id of the target into tObject
+   if word 1 of tObject is "button" then
+      revTutorialSetPressedState tObject
+   end if
+end mouseDown
+
+on mouseRelease
+   local tObject
+   put the long id of the target into tObject
+   if word 1 of tObject is "button" then
+      revTutorialSetUnpressedState tObject
+   end if
+end mouseRelease
+
 on mouseUp pWhich
    local tObject
    put the long id of the target into tObject
@@ -2157,6 +2358,14 @@ on mouseUp pWhich
       if tObject is the long id of button "Got It" of stack "revTutorial" then
          revTutorialReturnFromInterlude
       end if
+   end if
+   
+   if tObject is the long id of button "Copy Script" of stack "revTutorial" then
+      revTutorialCopyScriptToEditor
+   end if
+   
+   if word 1 of tObject is "button" then
+      revTutorialSetUnpressedState tObject
    end if
 end mouseUp
 
@@ -2182,7 +2391,7 @@ on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "inspector" then
       if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]) then
          revIDEUnsubscribe "ideInspectObjects"
-         put pObjects into sLastInspectedObjects
+         put pObjects into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2192,6 +2401,7 @@ on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "script editor" then
       if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]) then
          revIDEUnsubscribe "ideEditScript"
+         put pObject into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
    end if
@@ -2216,11 +2426,52 @@ on ideOpenCard pTarget
       end if
    end if
 end ideOpenCard
+
 ##############################################################################
 #
 #                     UTILITIES
 #
 ##############################################################################
+
+function revTutorialIsWaitForProperty pWait
+   switch pWait["wait condition"]
+      case "property"
+      case "fits"
+         return true
+      case "state"
+         switch pWait["state"]
+            case "scripted"
+               return true
+         end switch
+         break
+   end switch
+   return false
+end revTutorialIsWaitForProperty
+
+on revTutorialSetPressedState pButtonID
+   set the coloroverlay["opacity"] of pButtonID to "50"
+   set the coloroverlay["color"] of pButtonID to "0,0,0"
+end revTutorialSetPressedState
+
+on revTutorialSetUnpressedState pButtonID
+   set the coloroverlay of pButtonID to empty
+end revTutorialSetUnpressedState
+
+on revTutorialCopyScriptToEditor pObject
+   local tText, tCleanedScript
+   put word 1 to -1 of field "Script" of stack "revTutorial" into tText
+   repeat for each line tLine in tText
+      if tCleanedScript is empty then
+         put word 1 to -1 of tLine into tCleanedScript
+      else
+         put return & word 1 to -1 of tLine after tCleanedScript
+      end if
+   end repeat
+   local tScriptEditor
+   put revTutorialHighlightedPalette("script editor") into tScriptEditor
+   dispatch "revSESetScript" to tScriptEditor with tCleanedScript
+   dispatch "revSEIndentScript" to tScriptEditor
+end revTutorialCopyScriptToEditor
 
 function revTutorialObjectIsHighlighted pObject
    if sHighlight is empty then
@@ -2232,14 +2483,17 @@ function revTutorialObjectIsHighlighted pObject
          return pObject is revIDEStackOfObject(sGuides[sHighlight["guide"]])
       case "property"
          local tInspector
-         put revTutorialHighlightedInspector() into tInspector
+         put revTutorialHighlightedPalette("inspector") into tInspector
          return tInspector is not empty and pObject is the name of tInspector
       case "menu"
          return pObject is the name of stack revIDEPaletteToStackName("menubar")
       case "tool"
          return pObject is the name of stack revIDEPaletteToStackName("tools")
       case "object"
-         return pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"])
+         if pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"]) then
+            return true
+         end if
+         -- fall through and check if the stack is highlighted
       case "stack" 
          return pObject is sHighlight["stack"]
    end switch
@@ -2265,7 +2519,7 @@ on revTutorialPositionStackForHighlight
          revTutorialPositionStack "tools", sHighlight["tool"]
          break
       case "object"  
-         revTutorialPositionStack sHighlight["stack"], sHighlight["object"]
+         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], "", sHighlight["line"] is not empty
          break
       case "stack"
          revTutorialPositionStack sHighlight["stack"], ""
@@ -2421,15 +2675,14 @@ function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
 end revTutorialObjectPropertyIsValue
 
 function revTutorialObjectHasPalette pPalette, pObjects
-   local tPaletted
-   if pPalette is "inspector" then
-      put revIDEInspectedObjects() into tPaletted
-   else if pPalette is "script editor" then
-      put revIDEScriptEditingObjects() into tPaletted
-   end if
-   
+   local tPalette
    repeat for each line tObject in pObjects
-      if tObject is not among the lines of tPaletted then
+      if pPalette is "inspector" then
+         put revIDEInspectorForObject(tObject) into tPalette
+      else if pPalette is "script editor" then
+         put revScriptEditor(tObject) into tPalette
+      end if
+      if tPalette is empty then
          return false
       end if
    end repeat
@@ -2451,6 +2704,8 @@ function revTutorialObjectFitsGuide pObject, pGuide, pTolerance
 end revTutorialObjectFitsGuide
 
 on revTutorialSnapObjectToGuide pObject, pGuide
+   lock screen
+   lock messages
    local tRect
    put the rect of sGuides[pGuide] into tRect
    if pObject begins with "stack" then
@@ -2460,6 +2715,8 @@ on revTutorialSnapObjectToGuide pObject, pGuide
    else 
       set the rect of pObject to item 1 of tRect - 1, item 2 of tRect - 1, item 3 of tRect + 1, item 4 of tRect + 1
    end if
+   unlock messages
+   unlock screen
 end revTutorialSnapObjectToGuide
 
 // In the future we might want to add a bit more "approximity" to this.
@@ -2521,7 +2778,7 @@ end revTutorialGroupContainsObjects
 ##############################################################################
 
 local sRunningInfo
-on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
+on revTutorialRunTutorial pCourse, pTutorial, pLesson, pFromStep, pUntilStep
    local tTutorialData
    put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
    
@@ -2532,22 +2789,23 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson, pUntilStep
    put pTutorial into sRunningInfo["tutorial"]
    put pLesson into sRunningInfo["lesson"]
    
-   revTutorialRunSteps tData, pUntilStep
+   if pFromStep is empty then
+      put tData["first step"] into pFromStep
+   end if
+   
+   revTutorialRunSteps tData, pFromStep, pUntilStep
 end revTutorialRunTutorial
 
-local sFile
-on revTutorialRunSteps pSteps, pStopAtStep
+on revTutorialRunSteps pSteps, pFromStep, pUntilStep
    lock screen
    local tStep, tStepNum
-   put 0 into tStepNum
-   put pSteps["first step"] into tStep
+   put pFromStep into tStep
    repeat until tStep is empty
-      if tStep is pStopAtStep then
+      if tStep is pUntilStep then
          exit repeat
       end if
       
-      add 1 to tStepNum
-      put pSteps[tStep]["file"] into sFile
+      revTutorialSetContextualStepData pSteps[tStep]
       revTutorialRunStep pSteps[tStep]["actions"]
       put pSteps[tStep]["actions"]["go"]["step"] into tStep
    end repeat
@@ -2566,6 +2824,9 @@ on revTutorialRunStep pStepActions
 end revTutorialRunStep
 
 on revTutorialRunLoad pLoadAction
+   if pLoadAction is empty then
+      exit revTutorialRunLoad
+   end if
    # Store currently running lesson in case there are further load actions
    local tRunningInfo
    put sRunningInfo into tRunningInfo
@@ -2576,6 +2837,7 @@ end revTutorialRunLoad
 # We don't actually need to select objects, just keep track of what is supposed to be selected
 local sSelected
 on revTutorialRunAction pActionData
+   lock screen
    lock messages
    local tWaitData
    put pActionData["wait"] into tWaitData
@@ -2600,11 +2862,15 @@ on revTutorialRunAction pActionData
       case "state"
          switch tWaitData["state"]
             case "scripted"
+               # Everything becomes extremely sad if we already have a tab open for this script 
+               # and try to run a scripting step. So close the palette first.
+               revTutorialClearPalette "script editor"
                # Set the script of the objects
                revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
                break
             case "selected"
                put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
+               revIDESelectObjects sSelected
                break
             case "grouped"
                revTutorialCreateAndCaptureObjects tWaitData, pActionData["capture"]
@@ -2617,11 +2883,21 @@ on revTutorialRunAction pActionData
       case "this card"
          revTutorialGoCard tWaitData["card"]
          break
+      case "tool"
+         local tTool
+         if tWaitData["tool"] is "run" then
+            put "browse" into tTool
+         else
+            put "pointer" into tTool
+         end if
+         revIDESetTool tTool
+         break
          # No other waits require action
       default
          break
    end switch
    unlock messages
+   unlock screen
 end revTutorialRunAction
 
 on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
@@ -2664,7 +2940,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else if pHighlightData["item"][1] contains "Import" then
             # Deal with 'import'
-            if sFile is empty then
+            if sStepContextA["file"] is empty then
                throw "No file specified for import"
             end if
             local tImportType
@@ -2689,7 +2965,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
                default
                   throw "invalid import type" && tType
             end switch
-            revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sFile
+            revIDEImportControl tImportType, revIDETutorialResourcePath(sRunningInfo) & slash & sStepContextA["file"]
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else if pHighlightData["item"][1] contains "duplicate" then
             revIDESelectObjects sSelected
@@ -2709,6 +2985,11 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
 end revTutorialCreateAndCaptureObjects
 
 on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
+   # If the step specified a value then we set this instead of the string "value"
+   if pValue is "value" and sStepContextA["value"] is not empty then
+      put sStepContextA["value"] into pValue
+   end if
+   
    if the environment is "development" then
       revIDESetPropertyOfObject pObjects, pProp, pValue
    else
@@ -2756,11 +3037,11 @@ on revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighli
          else
             if pHighlightData["item"][1] contains "Import" then
                # Deal with 'import'
-               if sFile is empty then
+               if sStepContextA["file"] is empty then
                   throw "No file specified for import"
                end if
                local tFile
-               put revIDETutorialResourcePath(sRunningInfo) & slash & sFile into tFile
+               put revIDETutorialResourcePath(sRunningInfo) & slash & sStepContextA["file"] into tFile
                switch tType
                   case "image"
                      create image
@@ -2813,5 +3094,5 @@ on revTutorialGoCard pCard
       throw "unsatisfiable wait condition: wait until this card is" && pCard
       exit revTutorialGoCard
    end if
-   go card (the short name of sTaggedObjects["card"][pCard])
+   go sTaggedObjects["card"][pCard]
 end revTutorialGoCard

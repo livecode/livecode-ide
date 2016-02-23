@@ -1,10 +1,11 @@
 # LiveCode IDE Tutorial Syntax
-A tutorial consists of a declaration of the name, a prologue, some steps
-and an epilogue.
+A tutorial consists of a declaration of the name, a prologue, some
+steps, an epilogue and optional skip points.
 
 	Tutorial
 	  : "tutorial" <Name: STRING> SEPARATOR
 		Prologue SEPARATOR
+		[ "skip" "point" ]
 		{ Step SEPARATOR }
 		Epilogue
 
@@ -27,8 +28,12 @@ associated with the step, and actions associated with the step.
 	Step
 	  : "step" <Name: STRING>
 		  <Info: TEXT>
-		[  “script” SEPARATOR
+		[ “script” SEPARATOR
 		   TEXT SEPARATOR  ]
+		[ "value" SEPARATOR
+		   TEXT SEPARATOR  ]
+		[ "file" SEPARATOR
+		   STRING SEPARATOR  ]   
 		"action"
 		  { Command SEPARATOR }
 		"end" "step"
@@ -36,7 +41,9 @@ associated with the step, and actions associated with the step.
 The possible actions are as follows:
 
 	Command
-	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> | <Target : IDEPalette> | <Target: IDEComponent> | “guide” <Guide:STRING> )
+	  : "highlight" ( <Target: Object> | <Target: Tool> | <Target: Property> 
+	  				| <Target : IDEPalette> | <Target: IDEComponent> | “guide” <Guide:STRING> 
+	  				| "line" <Line: STRING> of "script" "editor" "for" <Target: Object>)
 	  | "capture" <Target: CaptureTarget>
 	  | "wait" "until" <Condition: WaitCondition>
 	  | "go" "to" "step" <Name: STRING>
@@ -71,8 +78,13 @@ remains in the center of the screen.
 	: "dictionary"
 	| “tools”
 	| “menubar”
-	| "message box"
-
+	| "message" "box"
+	| "project" "browser"
+	| "extension" "builder"
+	| "preferences"
+	| "standalone" "settings"
+	| "start" "center"
+	
 	Tool
 	  : [<Item: MenuItem>] "menu" <Menu: STRING>
 	  | "toolbar" <Tool: STRING>
