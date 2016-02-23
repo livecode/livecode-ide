@@ -664,7 +664,7 @@ button, a series of events are sent to the button. For example, when the
 mouse first moves within the border of the button a **mouseEnter**
 message is sent. Then a series of mouseMove messages are sent as the 
 mouse moves over the button. When the mouse button is depressed a 
-##### mouseDown** message is sent. When the mouse is released a **mouseUp
+**mouseDown** message is sent. When the mouse is released a **mouseUp**
 message is sent. You don’t have to respond to all of these events. You 
 simply place code within an object to handle the events you want your 
 application to respond to.
@@ -1283,7 +1283,7 @@ To display a stack in a palette, you use the **palette** command or
 Stacks whose **style** property is set to "palette" always open as 
 palettes, regardless of what command you use to open them.
 
-##### **Ask Question Dialog – for asking a question**
+##### Ask Question Dialog – for asking a question
 
 The ask question dialog is a special type of window that is designed to
 make it easy to ask the user a question. It includes special syntax for
@@ -1325,7 +1325,7 @@ For complete details on the syntax, see the ask command in the
 
 Figure 21 – Icons for Ask and Answer Dialogs on Multiple Platforms
 
-##### **Answer Alert Dialog – for displaying a dialog**
+##### Answer Alert Dialog – for displaying a dialog
 
 Like the ask dialog box above, the answer dialog is a special dialog
 that has been designed to make it easy to display information in a
@@ -1367,7 +1367,7 @@ LiveCode IDE. For details on customizing the IDE, see the section on
 > Message Box (Tools -\> Message Box), then move the mouse pointer over
 > the stack window and press Return: `put the mouseStack`
 
-##### **File Selector Dialogs**
+##### File Selector Dialogs
 
 The file selector dialogs allow you to display the system standard
 dialogs. These dialogs allow the user to select a file or a set of
@@ -1431,7 +1431,7 @@ variable will be empty and "cancel" information will be returned by
 For complete details on the syntax, see answer folder in the 
 *LiveCode Dictionary*.
 
-##### **Color Chooser Dialog**
+##### Color Chooser Dialog
 
 The **answer color** dialog allows you to display the operating system’s
 standard color picker dialog.
@@ -1449,7 +1449,7 @@ returned by *the result* function.
 For complete details on the syntax, see answer color in the 
 *LiveCode Dictionary.*
 
-##### **Printer Dialogs**
+##### Printer Dialogs
 
 The printer dialogs allow you to display the standard printer and page 
 setup dialogs.
@@ -1462,7 +1462,7 @@ Use the **answer printer** command to display a standard printer dialog
 prior to printing. If the user cancels the dialog, "cancel" will be 
 returned by *the result* function.
 
-##### **Visual Effect Dialog**
+##### Visual Effect Dialog
 
 Answer effect allows you to display the QuickTime special effects dialog 
 box.
