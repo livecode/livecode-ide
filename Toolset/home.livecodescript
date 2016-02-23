@@ -211,6 +211,12 @@ on revInternal__openStack
          set the defaultStack to "home" -- plug ins may take away default stack
       end if
       
+      if tSuccess then
+         revInternal__setSplashStatus "Cleaning Cache"
+         revInternal__CleanDocsCache
+         put the result into tSuccess
+      end if
+      
       if tSuccess and not revEnvironmentIsInstalled() then
          revInternal__setSplashStatus "Building Dictionary"
          revInternal__BuildDictionary
@@ -386,7 +392,7 @@ private command revInternal__SetupPaths
          put the folder & slash & ".runrev/preferences" into sPreferencesPath
          put the folder & slash & ".runrev/cache" into sCachePath
          put the folder & slash & ".runrev/crashlogs" into sCrashLogPath
-         put the folder & slash & ".runrev/docs" into sUserDocsPath
+         put the folder & slash & ".runrev/documentationcache" into sUserDocsPath
          set the folder to tOldFolder
          
          -- MW-2013-06-13: Adjust the engine path for Linux
@@ -403,7 +409,7 @@ private command revInternal__SetupPaths
          put specialFolderPath("Preferences") & "/RunRev" into sPreferencesPath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Cache" into sCachePath
          put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Crash Logs" into sCrashLogPath
-         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Docs" into sUserDocsPath
+         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Documentation Cache" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Mac
          put item 1 to -5 of tEnginePath into tEnginePath
@@ -421,12 +427,21 @@ private command revInternal__SetupPaths
          -- We put everything else in the 'Local' AppData folder.
          put specialFolderPath(0x001c) & "/RunRev/Cache" into sCachePath
          put specialFolderPath(0x001c) & "/RunRev/Crash Logs" into sCrashLogPath
-         put specialFolderPath(0x001c) & "/RunRev/Docs" into sUserDocsPath
+         put specialFolderPath(0x001c) & "/RunRev/Documentation Cache" into sUserDocsPath
          
          -- MW-2013-06-13: Adjust the engine path for Windows
          put item 1 to -2 of tEnginePath into tEnginePath
          break
    end switch
+   
+   # The docs cache is per-version and edition
+   local tEdition
+   put tolower(sLicenseClass) into tEdition
+   
+   local tVersion
+   put the version into tVersion
+   put replaceText(tVersion, "[-,\.]", "_") into tVersion
+   put slash & tVersion & "_" & tEdition after sUserDocsPath
    
    -- MW-2013-06-13: [[ CloneAndRun ]] Set up the binaries path.
    local tRepositoryPath
@@ -1495,6 +1510,28 @@ command revInternal__BuildDictionary
    revInternal__Log "Leave", "Building Dictionary"
    return true
 end revInternal__BuildDictionary
+
+command revInternal__CleanDocsCache
+   revInternal__Log "Enter", "Cleaning Docs Cache"
+   # Clean up old non-versioned docs
+   local tOldDocsFolder
+   switch revEnvironmentPlatform()
+      case "Linux"
+         put "~/.runrev/docs" into tOldDocsFolder
+         break
+      case "MacOS X"
+         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Docs" into tOldDocsFolder
+         break
+      case "Windows"
+         put specialFolderPath(0x001c) & "/RunRev/Docs" into tOldDocsFolder
+         break
+   end switch
+   if there is a folder tOldDocsFolder then
+      revDeleteFolder tOldDocsFolder
+   end if
+   revInternal__Log "Leave", "Cleaning Docs Cache"
+   return true
+end revInternal__CleanDocsCache
 
 command revInternal__ConstrainStack pStack
   local tStackTitleBarRect
