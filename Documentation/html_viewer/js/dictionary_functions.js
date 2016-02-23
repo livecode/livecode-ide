@@ -522,6 +522,11 @@
              		else
              			return_text = resolved[0];
              	}
+             	
+             	
+				if(return_text == matched_text){
+					return matched_whole;
+                }
              	return return_text;
          	});
 		}
