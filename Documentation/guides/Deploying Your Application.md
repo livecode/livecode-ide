@@ -1,4 +1,9 @@
+---
+group: deployment
+---
 # Deploying Your Application
+
+## Introduction
 
 With LiveCode, it is easy to deploy your application to anyone.
 

@@ -1,4 +1,9 @@
-# Introduction
+---
+group: basic
+---
+# Programming a User Interface
+
+## Introduction
 
 The user interface for your application is often one of its most important features. 
 The *LiveCode Script* guide shows how to build a user interface using LiveCode’s tools 

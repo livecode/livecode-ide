@@ -1,4 +1,9 @@
+---
+group: intermediate
+---
 # Working with Media
+
+## Introduction
 
 One of the most popular uses for LiveCode is to create full blown
 multimedia applications. Even if you aren't creating a traditional

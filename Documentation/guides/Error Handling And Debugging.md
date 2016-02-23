@@ -1,4 +1,9 @@
+---
+group: intermediate
+---
 # Error Handling & Debugging
+
+## Introduction
 
 In an ideal world everyone would write perfect code and there would never be any need to 
 debug. However in reality, virtually every project is going to require some degree of 

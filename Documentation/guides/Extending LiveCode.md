@@ -1,4 +1,9 @@
-# Introduction
+---
+group: advanced
+---
+# Extending LiveCode
+
+## Introduction
 
 LiveCode 8.0 is the most exciting release in the history of the technology. It provides a 
 simple way to extend the functionality or control set of LiveCode.
@@ -14,7 +19,8 @@ This guide will take you through the process of installing and using these new w
 libraries and for the adventurous among you, provide a guide to building and sharing your 
 own extensions. 
 
-## LiveCode Script vs LiveCode Builder
+## LiveCode Builder Extensions
+
 To make it possible to create extensions and plug them into the LiveCode engine we've 
 created a new flavour of our language called ***LiveCode Builder***. LiveCode Builder 
 looks a lot like LiveCode Script so should feel familiar for any seasoned LiveCode 
@@ -27,7 +33,7 @@ To learn more about LiveCode Builder and creating extensions, read on.
 ***no aspect of LiveCode Builder should considered final***. 
 ***Every piece of syntax in LiveCode Builder is subject to change***.
 
-# Creating Extensions
+### Creating LiveCode Builder Extensions
 
 We have provided a new "Extension Builder" stack to help make development and packaging of 
 extensions as easy as possible. 
@@ -35,7 +41,7 @@ extensions as easy as possible.
 > **Note:** LiveCode Builder is a different flavour of LiveCode so it is not possible to 
 edit LiveCode Builder scripts in the main LiveCode Script IDE.
 
-## Extension Builder
+### Extension Builder
 
 Open the "Extension Builder" from the tools menu:
 
@@ -56,12 +62,12 @@ Tools > Widget Builder
 
 > **Note:** A great way to get started is to tweak the script of one of our widgets examples.
 > 
-##Create your Own
-### Simple Widget
+
+### Create your Own Simple Widget
 A widget and a library are identical, except that a widget draws to a canvas. As a result, 
 the authoring process is much the same for both extension types.
 
-### Create a .lcb file
+#### Create a .lcb file
 We recommend using the Atom text editor, available at https://atom.io/. A LiveCode package 
 is available which provides some colorization as well as indentation. 
 If you prefer to use TextWrangler, there is a colorising script [here](https://github.com/livecode/livecode/tree/develop/contrib/TextWrangler). 
@@ -77,18 +83,18 @@ extension "lcb":
 > **Note:** The extension builder currently relies on there being only one ***.lcb*** file 
 in a given directory.	
 
-### Declare Type and Identifier
+#### Declare Type and Identifier
 Start by declaring the type of extension, either "widget" or "library" followed by your 
 identifier (See "Select A Developer ID" below).
 ```
 widget community.livecode.beaumont.pinkCircle
-   # Code for your widget
+   ## Code for your widget
 end widget
 ```
 This is the unique identifier by which your extension will be referred to by the LiveCode 
 Engine.
 
-### Declare Meta Data
+#### Declare Meta Data
 Next, provide meta data to help LiveCode display your product correctly in product and in 
 the online portal.
 
@@ -102,7 +108,7 @@ metadata version is "1.0.0"
 end widget
 ```
 
-### Importing libraries
+#### Importing libraries
 The LiveCode builder syntax is broken down into **modules**. There are 3 classes of module:
 
 Type|Description
@@ -161,7 +167,7 @@ end widget
 ```
 
 
-### Core Handlers
+#### Core Handlers
 
 There are three core handlers that any widget developer should implement:
 
@@ -189,7 +195,7 @@ end handler
 end widget
 ```
 
-### Draw a Pink Circle
+#### Draw a Pink Circle
 
 ```
 widget community.livecode.beaumont.pinkCircle
@@ -213,7 +219,7 @@ end handler
 end widget
 ```
 
-### Test the Code
+#### Test the Code
 
 Now open the extension builder stack as shown above and click on the load icon to load 
 your ***.lcb*** file into the builder.
@@ -223,7 +229,7 @@ your ***.lcb*** file into the builder.
 Click test. Your widget should be displayed on the new stack. If you can't see it, check 
 behind the extension stack.
 
-### Properties
+#### Properties
 In order to make a widget useful to end users it is likely that you'll want to expose 
 properties that allow them to specify how your widget should behave. 
 
@@ -323,7 +329,7 @@ end handler
 end widget
 ```
 
-### Loading and Saving widget data
+#### Loading and Saving widget data
 When you widget is created you are sent a *OnSave* message. It has the following structure 
 and expects and array return type. You can fill this array with whatever widget data you 
 have. LiveCode saves this data along with instances of the widget in the stack file.
@@ -346,7 +352,7 @@ public handler OnLoad(in pProperties as Array)
 end handler
 ```
 
-### Understanding Error Messages
+#### Understanding Error Messages
 Clicking on the "test" button causes the extension builder to compile your source code 
 file (***.lcb***) and produce a compiled module file (***.lcm***). If an error is 
 encountered it is output in the "console" section of the builder:
@@ -360,7 +366,7 @@ Error: <source path>: <line number>: <char number>: <error message>
 * *char number* - The character number on which the error occurred. 
 * *error message* - The description of the error.
 
-### LiveCode Builder API
+#### LiveCode Builder API
 To start creating more complex widgets see the LiveCode Builder api in the documentation 
 stack in the IDE.
 
@@ -399,7 +405,7 @@ is directly embedded in a stack, or 'child' widgets which are created when a wid
 used as a child widget within another widget.
 The syntax for composed widgets is included in the com.livecode.widget module.
 
-### A simple composed widget
+#### A simple composed widget
 This composed widget example composes the clock widget and the selector widget, to create 
 a version of the clock widget with adjustable time zone.
 ![enter image description here](images/extensions-widget-first.png)
@@ -514,7 +520,7 @@ public handler OnOptionChanged(in pIndex)
     set property "timeZone" of mClock to pIndex - 1
 end handler
 ```
-## Documenting Your Extension
+### Documenting Your Extension
 
 Extensions can provide an API (Dictionary) and User Guide as part of the installed package. 
 They are installed and viewable through the LiveCode Dictionary stack.
@@ -541,7 +547,7 @@ They are installed and viewable through the LiveCode Dictionary stack.
 > Note: In LiveCode 8.0 we'll be including an updated version of the LiveCode Script User 
 Guide. The version currently included with LiveCode has not yet been updated.
 
-### Adding API Markup
+#### Adding API Markup
 Any extension can include an API. To do so, either add a file called *api.lcdoc* to your 
 widget folder alongside the other widget files or markup your source code inline.
 
@@ -582,13 +588,13 @@ Format guide.
 extension package is installed. Currently, this is only possible through the extension
 builder.
 
-### Adding a User Guide
+#### Adding a User Guide
 Any extension can include a user guide. To do so, add a markdown file called *guide.md* 
 to your widget folder alongside the other widget files.
 
 All GitHub flavoured markdown is accepted.
 
-# Packaging Extensions
+### Packaging Extensions
 Packaging extensions is easy. Simply open the "Extension Builder" stack:
 
 ```
@@ -599,7 +605,7 @@ Load your ***.lcb*** file and click "Build Package". A new file will appears in 
 directory as your main file with the extension ***.lce***. This is your final package file 
 ready for upload to the extensions portal.
 
-## Package requirements
+#### Package requirements
 A valid package can be built from a minimum set of files:
 
 ```
@@ -608,7 +614,7 @@ support/icon.png // 20x40 png image
 support/icon@extra-high.png // 40x80 png image
 ```
 
-# Other ways to extend the Built-in Capabilities
+## Other ways to extend the Built-in Capabilities
 
 There are many other ways to extend LiveCode. This section explains how to run shell 
 commands, start other applications, read and write to processes, execute AppleScript, 
@@ -616,9 +622,9 @@ VBScript, send and respond to AppleEvents and communicate between multiple LiveC
 processes. It also tells you where to get information to create external commands and 
 functions (code written in lower level languages).
 
-## Communicating with other process and applications
+### Communicating with other process and applications
 
-### Reading and writing to the command shell
+#### Reading and writing to the command shell
 
 Use the **shell** function to run shell commands and return the result. The following 
 example displays a directory listing on Mac OS X:
@@ -643,7 +649,7 @@ default this is set to "/bin/sh" on Mac OS X and Linux and "command.com" on Wind
 shell command in the background, write the shell script to a text file then execute it 
 with the `launch`command.
 
-### Launching other applications
+#### Launching other applications
 
 Use the **launch** command to launch other applications, documents or URLs. To launch an 
 application, supply the full path to the application. The following example opens a text 
@@ -671,12 +677,12 @@ launch URL "<http://www.livecode.com/>"
 For more information on launching URLs and details on how to render web pages within 
 LiveCode, see the Transferring Information guide.
 
-### Closing another application
+#### Closing another application
 
 Use the **kill process** command to send a signal to another application, to close it or 
 to force it to exit. For more details, see the LiveCode Dictionary.
 
-### Communicating with other processes
+#### Communicating with other processes
 
 Use the **open process** command to open an application or process you want to read and 
 write data from. You can then read from the process with the **read from process** command 
@@ -685,7 +691,7 @@ use the **close process** command. The **openProcesses** returns a list of proce
 have opened and the **openProcessIDs** returns the process IDs of each one. For more 
 details see the *LiveCode Dictionary*.
 
-### Using AppleScript and VBScript (Open Scripting Architecture or Windows Scripting Host)
+#### Using AppleScript and VBScript (Open Scripting Architecture or Windows Scripting Host)
 
 To execute commands using AppleScript on Mac OS or VBScript on Windows, use the **do as** 
 command. **do as** also allows you to use any other *Open Scripting Architecture* languages 
@@ -716,7 +722,7 @@ answer the result
 
 For more information on the do as command, see the LiveCode Dictionary.
 
-### AppleEvents
+#### AppleEvents
 
 To send an AppleEvent, use the **send to program** command.
 
@@ -757,7 +763,7 @@ end appleEvent
 
 For more details see the *LiveCode Dictionary*.
 
-### Using Local sockets
+#### Using Local sockets
 
 If you want to communicate between local applications a common technique that can be used 
 without code changes on all the platforms LiveCode supports, is to open a local socket and 
