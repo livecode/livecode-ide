@@ -85,16 +85,22 @@ on editorEditScript
    end try
 end editorEditScript
 
-on mouseUp
+on mouseDown
    switch the short name of the target
       case "Select"
          popupMenu
          break
+   end switch
+end mouseDown
+
+on mouseUp
+   switch the short name of the target
       case "Edit Script"
          editorEditScript
          break
       case "Inspect object"
          editorGoToObject
+         break
    end switch
 end mouseUp
 
