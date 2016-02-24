@@ -80,7 +80,7 @@ command resize
 
    local tFindHeight
    if sePrefGet("editor,findvisible") then
-      put the height of tControls["find"] into tFindHeight
+      put the formattedheight of tControls["find"] into tFindHeight
    else
       put 0 into tFindHeight
    end if
