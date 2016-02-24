@@ -1,7 +1,12 @@
-# Introduction
+---
+group: introduction
+---
+# LiveCode Script
+
+## Introduction
 
 Before getting started with LiveCode, there are a number of things you
-may want to know. This chapter introduces LiveCode, tells you where to
+may want to know. This guide introduces LiveCode, tells you where to
 begin, how to install, register and how to use the documentation.
 
 ## Welcome
@@ -51,14 +56,14 @@ depth that covers the advanced feature set, while remaining accessible
 to beginners. We hope you find this material useful and enjoy using
 LiveCode.
 
-## Where to Begin
+### Where to Begin
 
 We recommend you start by taking a look at [our online
 resources](https://livecode.com/resources/). There is a wide variety of
 introductory material there, including step-by-step examples and guides
 for performing common tasks.
 
-## System Requirements
+### System Requirements
 
 Memory and disk requirements below are for the *LiveCode development
 environment*, not for applications created by LiveCode. Applications
@@ -72,7 +77,7 @@ run on a moderately powerful computer and require substantially fewer
 resources than those listed for the development environment, others will
 require more.
 
-### All Operating Systems
+#### All Operating Systems
 
 To use LiveCode you will need:
 
@@ -84,7 +89,7 @@ To use LiveCode you will need:
 
 -   At least 150Mb of disk space
 
-### Requirements for Windows Systems
+#### Requirements for Windows Systems
 
 LiveCode supports the following versions of Windows:
 
@@ -103,7 +108,7 @@ LiveCode supports the following versions of Windows:
 Additionally, QuickTime 7 or later is required for most multimedia
 features.
 
-### Requirements for Linux Systems
+#### Requirements for Linux Systems
 
 The minimal requirements for LiveCode to run on Linux are:
 
@@ -134,7 +139,7 @@ Ubuntu 7 supports all these features (although alpha blended window
 shape support requires you to be running with 'Advance Desktop Effects'
 turned on).
 
-### Requirements for Mac OS X Systems
+#### Requirements for Mac OS X Systems
 
 LiveCode supports the following versions of Mac OS X:
 
@@ -145,9 +150,9 @@ LiveCode supports the following versions of Mac OS X:
 - 10.10.x (Yosemite)
 - 10.11.x (El Capitan)
 
-## Using the Documentation
+### Using the Documentation
 
-### Documentation Conventions
+#### Documentation Conventions
 
 Language Terms
 
@@ -168,13 +173,13 @@ Code examples are provided in `typewriter text` or
 
 	code blocks
 
-#### Menu Reference
+##### Menu Reference
 
 When you are told to choose an item from a menu, the menu name is
 written, followed by an arrow, followed by the menu item. For example
 **File -\> New** means choose "New" from the "File" menu.
 
-#### Keyboard Shortcuts
+##### Keyboard Shortcuts
 
 Many menu items have keyboard equivalents. These items can be accessed
 by holding down a modifier key and pressing another key. The modifier
@@ -191,7 +196,7 @@ may need to press **command-x**.
 
 Figure 2– Cross-platform Keyboard Shortcuts
 
-#### Screen Snapshots
+##### Screen Snapshots
 
 Screenshots are used extensively throughout the documentation. Please
 remember that LiveCode is a cross-platform application. While many of
@@ -213,7 +218,7 @@ features.
 > **Caution:** This style of text box warns you about a potential
 > problem that might cause an error or loss of data.
 
-### Navigating the Documentation
+#### Navigating the Documentation
 
 The LiveCode documentation is spread across four components; the Start
 Center, the Resource Center, the Dictionary and the User Guides.
@@ -228,7 +233,7 @@ You can access the documentation from within LiveCode from the **Help**
 menu. Additional resources are available at
 [www.livecode.com](http://www.livecode.com).
 
-### Start Center
+#### Start Center
 
 The purpose of the Start Center is to introduce you to LiveCode and
 provide you with enough knowledge to start implementing your own
@@ -236,7 +241,7 @@ projects. It can be accessed by choosing **Help -\> Start Center**. The
 Center itself is split across two sections; “Getting Started” and “User
 Forums”.
 
-#### Getting Started
+##### Getting Started
 
 The “Getting Started” section contains media and written tutorials.
 These outline the basic functionality behind LiveCode and provide
@@ -246,7 +251,7 @@ Resource Center which is outlined in section 1.6.4.
 
 ![](images/image2.png)
 
-#### User Forums
+##### User Forums
 
 LiveCode has a very active and friendly user community. We encourage all
 new users to sign up to our mailing list and user forums as they are a
@@ -257,7 +262,7 @@ of links to the most recent posts which have been made.
 
 ![](images/image3.png)
 
-### Dictionary
+#### Dictionary
 
 The Dictionary contains the complete LiveCode syntax. This can be
 searched using the quick search box in the top right of the dictionary
@@ -325,7 +330,7 @@ In order to achieve the best possible user experience and to maximize
 the chances of your submissions being approved, please try to adhere to
 the guidelines described in the “About Notes” pop-up box.
 
-### RevOnline
+#### RevOnline
 
 RevOnline gives you the opportunity to upload and share your projects as
 well as download those created by other members of the LiveCode online
@@ -565,13 +570,13 @@ text only searches option is checked RevOnline will only retrieve the
 text data for the search list previews which can also improve
 performance.
 
-### User Guides
+#### User Guides
 
 The User Guides are a complete reference to LiveCode. They detail what
 the dialogs and windows within the development environment do, and
 explain the LiveCode language in depth.
 
-## Additional Resources
+### Additional Resources
 
 If you have a question that isn't answered in this documentation, you
 can find additional information to help you on our web site. You can
@@ -583,7 +588,7 @@ Visit:
 
 http://www.livecode.com
 
-### Developer Community
+#### Developer Community
 
 There are a number of ways to engage with the LiveCode community:
 
@@ -609,7 +614,7 @@ available.
 > archives, using [this
 link](http://www.google.com/advanced_search?q=site:lists.runrev.com)
 
-### Technical Support
+#### Technical Support
 
 LiveCode offers *up and running* technical support to all users to
 assist you in getting the development environment working on your
@@ -622,7 +627,7 @@ technical support contract for advanced support can be purchased.
 Contact us [here](https://livecode.com/about/contact/) or at
 <support@livecode.com>.
 
-# Getting Started
+### Getting Started
 
 Creating a simple *graphical application* in LiveCode can take just
 minutes. First you create a user interface, including any windows,
@@ -631,7 +636,7 @@ controls, like push buttons, check boxes, text fields or menus. Finally,
 you use LiveCode’s English-like programming language to tell your
 application how to behave.
 
-### Prerequisites
+#### Prerequisites
 
 Before you get started, you should be familiar with how to use your
 computer. You should also be familiar with common applications such as a
@@ -640,7 +645,7 @@ Unix, you should be familiar with basic use of the command line. If you
 are not familiar with using a computer, we recommend you spend some time
 getting acquainted before trying to learn LiveCode.
 
-### Event Driven Programming
+#### Event Driven Programming
 
 A LiveCode application is driven by user actions. LiveCode constantly
 watches the computer for common actions, such as clicking on a button,
@@ -659,7 +664,7 @@ button, a series of events are sent to the button. For example, when the
 mouse first moves within the border of the button a **mouseEnter**
 message is sent. Then a series of mouseMove messages are sent as the 
 mouse moves over the button. When the mouse button is depressed a 
-#### mouseDown** message is sent. When the mouse is released a **mouseUp
+**mouseDown** message is sent. When the mouse is released a **mouseUp**
 message is sent. You don’t have to respond to all of these events. You 
 simply place code within an object to handle the events you want your 
 application to respond to.
@@ -673,7 +678,7 @@ Hierarchy*.
 We’ll return to Event Driven Programming in more detail in the section
 *Coding in LiveCode*.
 
-### Object-Based Programming
+#### Object-Based Programming
 
 Any *graphical application* you build using LiveCode will be based on
 objects. With LiveCode you typically create the objects of your
@@ -703,7 +708,7 @@ Object-Based programming is covered in more detail in the section
 *Building a User Interface*. Non-graphical applications are covered in
 more detail in the section *Building a Web Application*.
 
-### The ‘Edit’ and ‘Run’ Mode
+#### The ‘Edit’ and ‘Run’ Mode
 
 > **Important:** In order to enter **run** mode, choose the browse tool
 > in the *top left* of the tools palette.
@@ -737,9 +742,9 @@ and watch each change take effect as you make it. This allows you to
 design and experiment using an iterative process, resulting in a more
 productive and satisfying development experience.
 
-## Structuring your Application
+### Structuring your Application
 
-### Cards, Stacks & Files
+#### Cards, Stacks & Files
 
 The first step in creating a LiveCode application is creating a window,
 which in LiveCode is called a stack. Each window you see in LiveCode is
@@ -768,7 +773,7 @@ A collection of stacks can be saved together in a single file. This file
 is known as a stack file. The first stack in the file is called the main
 stack and will be loaded automatically when your application is run.
 
-### The Structure of a Stack File
+#### The Structure of a Stack File
 
 Each LiveCode file contains one or more stacks: either a single main
 stack, or a main stack and one or more substacks. Since each stack is a
@@ -784,7 +789,7 @@ same main stack.
 
 Figure 3 – Stack File Structure
 
-### Opening a Stack File
+#### Opening a Stack File
 
 When you open a stack file, either by using the "Open Stack" menu item
 in the File menu or by using one of the navigation commands (see **open,
@@ -799,7 +804,7 @@ Substacks in the stack file do not open automatically when the stack
 file opens. You must open a substack in a handler or the Message Box, or
 by using the Application Browser.
 
-### Main Stacks and Substacks
+#### Main Stacks and Substacks
 
 The first stack created in a stack file is called the *mainstack*. Any
 other stacks created in the same stack file are called *substacks* of
@@ -821,7 +826,7 @@ mainstack's script. Because mainstacks are part of the object hierarchy
 of their substacks, the substacks can call this functionality from
 scripts within the substack.
 
-### Stacks, Stack Files, and Memory
+#### Stacks, Stack Files, and Memory
 
 A stack file can be loaded into memory without actually being open. A
 stack whose window is closed (not just hidden) is not listed in the
@@ -851,7 +856,7 @@ closed but not unloaded when its window is closed.
 > **windowID** property. For more information, see the 
 *LiveCode Dictionary*.
 
-### Media & Resources
+#### Media & Resources
 
 When planning a project, it is important to consider what types of media
 you will need to access and how to structure access to that media.
@@ -894,7 +899,7 @@ the *Image* object. For details of the audio formats supported natively,
 see the section on the *audioClip* object. For details on how to control
 a QuickTime movie, see the section on the *Player* object.
 
-### How to Use External Files
+#### How to Use External Files
 
 There are three main ways to use external files:
 
@@ -925,7 +930,7 @@ Keep portions of your application on a server, and download them using
 the built in URL commands. For more details on the URL commands, see the
 section on *Working with Files, URLs & Sockets*.
 
-### When to use a Database
+#### When to use a Database
 
 You don't need to use an external database to store information for your
 application. You can store information in stacks, in text files, and in
@@ -969,14 +974,14 @@ the data, with no coding required.
 For more details on working with databases, see the 
 *Working with Databases* guide.
 
-### LiveCode Memory Limits
+#### LiveCode Memory Limits
 
 The following table details the memory limits for different types of
 LiveCode components. Please note that these limits refer to the maximums
 that may be in use at any one time. You can store additional information
 on disk or in a database and load it when it is required.
 
-#### A note about entries designated as "Unlimited":
+##### A note about entries designated as "Unlimited":
 
 Since each open stack file resides completely in memory, LiveCode stacks
 (and all structures within a stack) are effectively limited by available
@@ -1002,7 +1007,7 @@ on 32-bit systems
 | Maximum nesting level in control structures | Unlimited                                   |
 | Maximum level of recursion                  | Unlimited                                   |
 
-# Building a User Interface
+### Building a User Interface
 
 The user interface for your application is often one of its most
 important features. Building a clear, logical and aesthetically pleasing
@@ -1012,9 +1017,9 @@ LiveCode. It tells you how to create and lay out controls, which objects
 to use and even how to build your own custom objects. We then touch
 briefly on some tips for good user interface design.
 
-## Creating and Organizing Objects
+#### Creating and Organizing Objects
 
-### Creating Controls with the Tools Palette
+##### Creating Controls with the Tools Palette
 
 The main tools palette allows you to change between Edit and Run mode, 
 create objects, and edit bitmap images with the paint tools.
@@ -1041,7 +1046,7 @@ To open a system-standard color chooser, double-click on color chooser
 popup menus at the bottom of the Vector Graphics or Bitmap Graphics
 sections of the tools palette.
 
-### Alignment & Layering
+##### Alignment & Layering
 
 ![](images/image55.png)
 
@@ -1082,7 +1087,7 @@ select multiple objects of different types.
 | **Nudge**      | Nudge the selected object the number of pixels specified in the center of the arrows. To change the number of pixels, click on the number.                                                                                                                                                                                                                                                |
 | **Relayer**    | ‘First to last selected’ will relayer the objects in the selection in the order they were selected. 'Last to first" will relayer the objects in reverse order. Use these buttons to set the tab order of a set of objects. For more information on the tabbing order, see the section on *The Keyboard Focus* below.                                                                      |
 
-### The Keyboard Focus
+##### The Keyboard Focus
 
 The focus is an indication to the user of which control will receive a
 keystroke. Exactly which objects are capable of receiving the keyboard
@@ -1104,9 +1109,9 @@ displaying a border. You can specify whether a border should be
 displayed by setting an object’s Show Focus Border option in the
 Inspector, or setting its *showFocusBorder* property by script.
 
-## Object & Control Types
+#### Object & Control Types
 
-### Stacks – for displaying windows, palettes and dialog boxes
+##### Stacks – for displaying windows, palettes and dialog boxes
 
 In LiveCode, each window is a stack. This includes editable windows,
 modeless and modal dialog boxes, and palettes, as well as sub-windows
@@ -1130,7 +1135,7 @@ You create a new stack – which can then be displayed in any number of
 modes (as described below) – by choosing **File -\> New Mainstack**. You
 can edit stack properties by choosing **Object -\> Stack Inspector**.
 
-### Window Types and the Mode of a Stack
+##### Window Types and the Mode of a Stack
 
 The nature of a stack's window depends on the stack's **style** property
 and on what command was used to open the stack. You can either specify
@@ -1143,7 +1148,7 @@ property to determine the type of window it is displayed in.
 > between editable mode in the development environment, and for example,
 > a dialog in the runtime environment.
 
-### The Standard Window Types
+##### The Standard Window Types
 
 LiveCode windows are usually one of four types: editable or **topLevel**
 windows, **modal** or **modeless** dialog boxes, or **palette** windows.
@@ -1167,7 +1172,7 @@ command (without specifying a mode), or using the Open Stack menu item,
 then the stack is displayed as an editable window unless its **style**
 property specifies another window type.
 
-### Editable Windows – for documents
+##### Editable Windows – for documents
 
 An editable window has the appearance and behavior of a standard
 document window. It can be interleaved with other windows, and you can
@@ -1194,7 +1199,7 @@ editable windows, regardless of what command you use to open them.
 > behaves like the Browse tool when clicking in an unmodifiable stack's
 > window.
 
-### Modeless Dialog Boxes – for alerts and settings
+##### Modeless Dialog Boxes – for alerts and settings
 
 Modeless dialog boxes are similar to editable windows. Like editable
 windows, they can be interleaved with other windows in the application.
@@ -1219,7 +1224,7 @@ To display a stack in a modeless dialog box, you use the **modeless** or
 Stacks whose **style** property is set to "modeless" always open as
 modeless dialog boxes, regardless of what command you use to open them.
 
-### Modal Dialog Boxes – for alerts and settings
+##### Modal Dialog Boxes – for alerts and settings
 
 A modal dialog box is a window that blocks other actions while the
 window is displayed. You cannot bring another window in the application
@@ -1250,7 +1255,7 @@ or **go** commands:
 Stacks whose **style** property is set to "modal" always open as modal 
 dialog boxes, regardless of what command you use to open them.
 
-### Palettes – for accessory and tool windows
+##### Palettes – for accessory and tool windows
 
 A palette has a slightly different appearance, with a narrower title bar
 than an editable window. Like dialog box windows, a palette does not
@@ -1278,7 +1283,7 @@ To display a stack in a palette, you use the **palette** command or
 Stacks whose **style** property is set to "palette" always open as 
 palettes, regardless of what command you use to open them.
 
-### **Ask Question Dialog – for asking a question**
+##### Ask Question Dialog – for asking a question
 
 The ask question dialog is a special type of window that is designed to
 make it easy to ask the user a question. It includes special syntax for
@@ -1320,7 +1325,7 @@ For complete details on the syntax, see the ask command in the
 
 Figure 21 – Icons for Ask and Answer Dialogs on Multiple Platforms
 
-### **Answer Alert Dialog – for displaying a dialog**
+##### Answer Alert Dialog – for displaying a dialog
 
 Like the ask dialog box above, the answer dialog is a special dialog
 that has been designed to make it easy to display information in a
@@ -1362,7 +1367,7 @@ LiveCode IDE. For details on customizing the IDE, see the section on
 > Message Box (Tools -\> Message Box), then move the mouse pointer over
 > the stack window and press Return: `put the mouseStack`
 
-### **File Selector Dialogs**
+##### File Selector Dialogs
 
 The file selector dialogs allow you to display the system standard
 dialogs. These dialogs allow the user to select a file or a set of
@@ -1426,7 +1431,7 @@ variable will be empty and "cancel" information will be returned by
 For complete details on the syntax, see answer folder in the 
 *LiveCode Dictionary*.
 
-### **Color Chooser Dialog**
+##### Color Chooser Dialog
 
 The **answer color** dialog allows you to display the operating system’s
 standard color picker dialog.
@@ -1444,7 +1449,7 @@ returned by *the result* function.
 For complete details on the syntax, see answer color in the 
 *LiveCode Dictionary.*
 
-### **Printer Dialogs**
+##### Printer Dialogs
 
 The printer dialogs allow you to display the standard printer and page 
 setup dialogs.
@@ -1457,7 +1462,7 @@ Use the **answer printer** command to display a standard printer dialog
 prior to printing. If the user cancels the dialog, "cancel" will be 
 returned by *the result* function.
 
-### **Visual Effect Dialog**
+##### Visual Effect Dialog
 
 Answer effect allows you to display the QuickTime special effects dialog 
 box.
@@ -1473,7 +1478,7 @@ command to create a visual effect *transition*. If the user cancels the
 dialog, `it` will be empty and "cancel" will be returned by *the result*
 function.
 
-### Alpha Blend Windows – for Enhanced Tooltips and Multimedia
+##### Alpha Blend Windows – for Enhanced Tooltips and Multimedia
 
 Use the *Shape* option in the *Stack Inspector* to set a stack’s
 **windowShape** property to the transparent, or *alpha channel* of an
@@ -1495,7 +1500,7 @@ Figure 29 – Window with alpha mask applied
 You can change the **windowShape** property dynamically by script to a
 series of images to create an animated translucent window.
 
-### System Palettes – for utilities floating above applications
+##### System Palettes – for utilities floating above applications
 
 A system palette is like a palette, except that it floats in front of
 all windows on the screen, not just the windows in its application. Use
@@ -1514,7 +1519,7 @@ Using this feature overrides the stack's **style** or **mode**.
 
 The system palette style is currently not supported on Linux & Unix.
 
-### Sheet dialog boxes – Mac OS X only
+##### Sheet dialog boxes – Mac OS X only
 
 A sheet is like a modal dialog box, except that it is associated with a
 single window, rather than the entire application. A sheet appears
@@ -1534,7 +1539,7 @@ To display a stack in a sheet dialog box, you use the **sheet** command:
 > cross-platform application as on systems other than OS X, the
 > **sheet** command displays the stack as an ordinary modal dialog box.
 
-### Drawers – Mac OS X only
+##### Drawers – Mac OS X only
 
 A drawer is a subwindow that slides out from underneath one edge of a
 window, and slides back in when you close it. You usually use a button
@@ -1554,7 +1559,7 @@ Use drawers to hold settings, lists of favorites, and similar controls
 that are accessed frequently but that don't need to be constantly
 visible.
 
-### Stack menus – for displaying non-standard menus
+##### Stack menus – for displaying non-standard menus
 
 > **Note:** Usually a menu in a LiveCode application is implemented as a
 > button. We recommend that menus are implemented using buttons, as
@@ -1573,7 +1578,7 @@ is displayed with the behavior of a menu. Internally, the menu is
 implemented as a window, and you can use the **popup**, **pulldown**, or
 **option** command to display any stack as one of these menu types.
 
-### Stack Decorations – for Window Appearance
+##### Stack Decorations – for Window Appearance
 
 Stack decorations allow you to specify how the title bar and border of a
 window will be drawn. You can access the stack decorations options in
@@ -1602,7 +1607,7 @@ may affect whether these properties have an effect. If the
 appropriate decorations *for the current window type* on the current
 platform.
 
-### Button Controls – for performing actions
+##### Button Controls – for performing actions
 
 A button is a clickable object that is typically for allowing a user to
 perform an action by clicking.
@@ -1647,7 +1652,7 @@ Figure 34 – Custom Buttons for Multimedia
 > update all icons in your stack by updating a single image. See the
 > chapter *Working with Media* for more information.
 
-### Text Field Controls – for displaying or entering text
+##### Text Field Controls – for displaying or entering text
 
 Fields allow you to display text. Fields can optionally allow the user
 to edit the text. Fields support multiple fonts, styles and colors,
@@ -1666,7 +1671,7 @@ script.
 
 Figure 35 – Field Controls
 
-### List and Table Field Controls
+##### List and Table Field Controls
 
 List fields allow you to display a set of choices. Users cannot edit
 list fields. You can specify whether the user is allowed to make a
@@ -1676,7 +1681,7 @@ single selection or multiple selections.
 
 Figure 36 – List Fields
 
-### Table Field Control – for displaying a table
+##### Table Field Control – for displaying a table
 
 Table fields allow you to display data in cells, and optionally allow
 the user to edit the cells. Table fields are ideal for displaying basic
@@ -1687,7 +1692,7 @@ you use the Data Grid control.
 
 Figure 37 – Table Field
 
-### Data Grid Control – for presenting data
+##### Data Grid Control – for presenting data
 
 Data Grids allow you to display data in both grid and form modes. You
 can customize a data grid to include custom layouts that include any
@@ -1700,7 +1705,7 @@ documentation](http://lessons.runrev.com/spaces/lessons/manuals/datagrid)
 
 Figure 38 – Data Grid
 
-### Cards
+##### Cards
 
 Each stack contains one or more separate screens of controls. Each
 screen is known as a card. Each card can have an entirely different
@@ -1711,7 +1716,7 @@ Choosing **Object -\> New Card** will create a new card within the
 current stack. The new card will either be completely blank, or will
 contain any shared groups from the previous card.
 
-### Groups & Backgrounds – for organizing, and sharing controls
+##### Groups & Backgrounds – for organizing, and sharing controls
 
 Groups, LiveCode's most versatile object type, are used for several
 purposes: radio button clusters; menu bars; for creating scrollable
@@ -1720,7 +1725,7 @@ objects that are shared between cards. Groups can also be used for
 creating a simple card and stack database, by holding fields that
 contain a different record on each card.
 
-#### What Is a Group?
+###### What Is a Group?
 
 A group is a single object that holds a set of objects. Objects are
 grouped by selecting the controls you want to include in the group, then
@@ -1751,7 +1756,7 @@ You place a group on a card using the **place** command or the
 > group on one card is reflected on all the other cards that share the
 > group.
 
-#### Groups and Backgrounds
+###### Groups and Backgrounds
 
 Both the term **group** and the term **background** can be used to refer
 to groups. The terms are interchangeable in some circumstances and mean
@@ -1788,7 +1793,7 @@ card on which the group named "Navigation" is placed:
 
 	go card 3 of background "Navigation"
 
-#### Nested Groups
+###### Nested Groups
 
 LiveCode supports nested groups (one group containing another). Since a
 group is itself a control, it can be contained in another group.
@@ -1798,7 +1803,7 @@ controls you want to group (including the existing group), then choose
 **Object -\> Group Selected**. The existing group is now a member of the
 new group.
 
-#### Selecting and Editing Groups
+###### Selecting and Editing Groups
 
 To select a group, simply click on one of the objects that is contained
 within it. This will select the group.
@@ -1823,7 +1828,7 @@ toggle this mode programmatically by using the commands
 > select the group. To select the group, you must click one of its
 > controls.
 
-#### Placing and Removing Backgrounds
+###### Placing and Removing Backgrounds
 
 Once you create a group, you can display it on any or all cards in the
 stack. First, ensure that the group’s Behave as Background option has
@@ -1871,12 +1876,12 @@ on.
 > However, leaving the current card makes the ungrouping permanent and
 > deletes the group from all other cards it was on.
 
-#### Groups and the Message Path
+###### Groups and the Message Path
 
 For details on how groups and backgrounds fit into the Message Path, see
 the section on *Groups, Backgrounds & The Message Path*, below.
 
-### Graphics, Images, Players, Audio & Video Clip Objects – for multimedia
+##### Graphics, Images, Players, Audio & Video Clip Objects – for multimedia
 
 LiveCode supports a wide range of media formats, allowing you to produce
 rich media applications. The image object allows you to import or
@@ -1927,7 +1932,7 @@ representation and can be accessed by script or in the Application
 Browser. Players, Audio & Video clips are covered in their respective
 sections within the chapter on *Working with Media*.
 
-### Menu Controls – for displaying choices
+##### Menu Controls – for displaying choices
 
 Menus are used to display a list of choices. The *pulldown* menu
 displays a standard *pulldown* menu, and can be automatically inserted
@@ -1977,7 +1982,7 @@ each tab together and show or hide the appropriate group when you change
 tab; or place the tab object into a group which is then placed as a
 background on multiple cards.
 
-### Other Controls
+##### Other Controls
 
 Scroll bars can be used as a *progress* bar to display a value, a
 *slider* to allow the user to choose a value, or to scroll objects.
@@ -1990,7 +1995,7 @@ display vertically, resize so that the height is greater than the width.
 
 Figure 43 – Scrollbars
 
-## Using the Menu Builder
+#### Using the Menu Builder
 
 The menu builder allows you to create and edit a standard menu bar that
 will work correctly regardless of the platform you intend to deploy on.
@@ -2013,7 +2018,7 @@ Figure 44 – Menu Builder
 | **Menu content area** | Select a menu item to work on from the scrolling list. To create a new menu item, move the orange *divider bar* to the position in the menu bar you want to create the new menu, and press *New Item*. Disable the currently selected item checking *Disabled*. Choose the keyboard shortcut (the portion of the name that is underlined, for use when the menu is open), using the *Mnemonic* popup menu (Windows, Linux & Unix only). To move a menu item up or down the list, select it then click the *up or down arrows* (to the right of the name area). To move items into a *submenu*, click the *Right* arrow, or click the *Left* arrow to move a submenu item back into the main menu bar. To insert a *divider*, position the orange divider bar where you want the divider, the click the blue divider button (top right). To make the menu item a *Checkbox* or *Diamond* option, choose the appropriate option from the *Mark* popup menu. To create a control key *shortcut* for the item, click the Shortcut check box and enter the letter you want to use for the shortcut. To understand the *symbols* that are created next to the menu items, see the section on *Menu Bars* within the chapter on *Programming a User Interface*. |
 | **Scripting**         | *Edit Script* opens the Code Editor for the currently selected menu. *Auto Script* places a blank script within the currently selected button with spaces to insert actions for each of the menu items within that item. We recommend you press Auto Script before pressing Edit Script when you create a menu.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
-## Using the Geometry Manager
+#### Using the Geometry Manager
 
 Use the Geometry Manager to specify how objects should be scaled and 
 positioned when the user resizes the window.
@@ -2043,7 +2048,7 @@ Figure 46 – Geometry Card Settings
 | **Add to cards virtual width or height** | Use this option to implement a layout that allows a section of optional controls to be folded out. The Geometry manager will ignore the extra height or width pixels specified in this area, resizing objects as if that area of the card has not been "expanded". Normally these values are set by script as the window is resized to fold out additional controls. To set these properties by script, set the **cREVGeneral["virtualWidth"]** or **cREVGeneral["virtualHeight"]** card properties. |
 | **Update before opening card**           | Causes the objects to be resized when navigating to the card if the window has been resized while on another card. This option is not needed if the controls are contained within a background that has already been correctly resized to the current window dimensions.                                                                                                                                                                                                                             |
 
-## Using Property Profiles
+#### Using Property Profiles
 
 Use Property Profiles to store different sets of properties in a single
 object. Property Profiles can be used to provide *localized* versions of
@@ -2063,7 +2068,7 @@ Figure 47 – Property Profiles
 For more details on working with *Property Profiles*, see the section on
 *Property Profiles* in the *Programming a User Interface* guide.
 
-## 10 Tips for Good User Interface Design
+#### 10 Tips for Good User Interface Design
 
 If you are creating a simple utility for yourself, a handful of other
 people, or as a research project, the design of the interface is less
@@ -2159,7 +2164,7 @@ KDE Human Interface Guidelines:
 
 <http://wiki.openusability.org/guidelines/index.php/Main_Page>
 
-# Coding in LiveCode
+### Coding in LiveCode
 
 Writing code is how you give your application functionality. Writing the
 right code means your application will do what you want it to do.
@@ -2167,9 +2172,9 @@ Fortunately, LiveCode’s built in high level language, makes this task
 easy. The English-like syntax is easy to read and write. This chapter
 walks you through writing LiveCode.
 
-## The Structure of a Script
+#### The Structure of a Script
 
-### What is a Script
+#### What is a Script
 
 Every object in LiveCode can contain a script, which tells it what to
 do. You edit the script of an object using the Code Editor (see *The
@@ -2184,13 +2189,13 @@ that is commented – remarks that are intended for a human to read and
 are not executed. Technically a script is simply another object
 property, so one script can set another – within certain limits.
 
-### The Types of Handler
+#### The Types of Handler
 
 A *handler* is a complete section of code. Each handler can be executed
 independently. There are four types of handler: commands (message
 handlers), functions, getProp handlers and setProp handlers.
 
-### Message Handlers
+#### Message Handlers
 
 Each *message* handler begins with the **on** control structure followed
 by the name of the message that this handler responds to. The handler
@@ -2205,7 +2210,7 @@ A message handler is executed when the object whose script contains the
 handler receives the message. This example handler responds to the
 **mouseUp** message (see *Messages*).
 
-### Function Handlers
+#### Function Handlers
 
 Each function handler begins with the **function** control structure
 followed by the name of the function that this handler computes. The
@@ -2222,7 +2227,7 @@ A function handler is executed when a handler in the same script (or one
 in an object lower in the *message hierarchy*) calls the function. This
 example handler returns today's name.
 
-### GetProp Handlers
+#### GetProp Handlers
 
 Each **getProp** handler begins with the **getProp** control structure
 followed by the name of the custom property that this handler
@@ -2239,7 +2244,7 @@ can write a `getProp`handler for any custom property of the object or
 another object lower in the message hierarchy. For more information, see
 the section on *Custom Properties*.
 
-### SetProp Handlers
+#### SetProp Handlers
 
 Each setProp handler begins with the **setProp** control structure
 followed by the name of the custom property that this handler
@@ -2257,7 +2262,7 @@ setProp handler for any custom property of the object or another object
 lower in the object hierarchy. For more information, see the section on
 *Custom Properties*.
 
-### Comments
+#### Comments
 
 Comments are remarks that are intended for a human to read and are not
 executed. For some recommendations on what sort of comments to include
@@ -2280,7 +2285,7 @@ choose **Script -\> Comment**.
 Since comments are not executed, you can place them anywhere in a
 script--inside a handler or outside all handlers.
 
-Comments that start with **--** or \# only extend to the end of the
+Comments that start with **--** or \## only extend to the end of the
 line. To create a multiple-line comment, or *block comment*, surround it
 with **/\*** and **\*/** instead:
 
@@ -2298,7 +2303,7 @@ of code while debugging a handler. You can place the characters "/\*" at
 the start of the section, and "\*/" at the end, to prevent the section
 from being executed.
 
-### Compiling a Script
+#### Compiling a Script
 
 A script is compiled when you change the script either by clicking Apply
 in the Code Editor (or, if altering a script from another script, using
@@ -2315,7 +2320,7 @@ You cannot change a script while a handler in it is executing, because
 what is executed is the compiled version, not the text in the **script**
 property.
 
-### Summary
+#### Summary
 
 Each object has a script, which can be empty or can contain one or more
 LiveCode handlers. You change a script using the Code Editor, or by
@@ -2330,12 +2335,12 @@ with **--** or **\#**.
 If a script contains a compile error, none of its handlers can be used
 until the error is fixed.
 
-## Events
+### Events
 
 LiveCode is based upon events. Every action a script takes is triggered
 by an event, which is sent in the form of a message.
 
-### What Causes Messages to be Sent
+#### What Causes Messages to be Sent
 
 Messages are sent by *events*. Events include user actions (such as
 typing a key or clicking the mouse button) and program actions (such as
@@ -2361,7 +2366,7 @@ Similarly, LiveCode sends a function call whenever a handler calls a
 *custom* property, and a **getProp** call whenever a handler gets the
 value of a custom property.
 
-### Responding to Events
+#### Responding to Events
 
 To respond to a message, you write a message handler with the same name
 as the message. For example, to respond to a **keyDown** message sent to
@@ -2373,13 +2378,13 @@ script:
 		if theKey is a number then beep
 	end keyDown
 
-## The Message Path
+### The Message Path
 
 The *message path* is the set of rules that determine which objects, in
 which order, have the opportunity to respond to a message. The message
 path is based on the *object hierarchy*.
 
-### The Object Hierarchy
+#### The Object Hierarchy
 
 Each LiveCode object is part of another object, of a different object
 type. For example, each card is part of a stack, each grouped control is
@@ -2391,7 +2396,7 @@ owner if they are not set. This means that if you set the **textFont**
 of a stack, all the objects within that stack that do not have their
 **textFont** property set will use that text font.
 
-### The Message Path
+#### The Message Path
 
 When a message is sent to an object, it is often handled directly by a
 message handler in that object. However if no handler is present, the
@@ -2443,7 +2448,7 @@ property is provided for compatibility with imported HyperCard stacks,
 and is normally set to false, but you may encounter this behavior when
 working with a stack that was originally created in HyperCard.
 
-### The Message Target
+#### The Message Target
 
 The object that a message *was originally sent* to is called the
 message's target. You can get the target from within any handler in the
@@ -2461,7 +2466,7 @@ message. In this case, the card's script is executing, but the
 **target** is not the card--it's the button that was originally clicked,
 because LiveCode sent the **mouseUp**message to the button.
 
-### Handlers with the Same Name
+#### Handlers with the Same Name
 
 If two different objects in the message path each have a handler with
 the same name, the message is handled by the first object that receives
@@ -2480,7 +2485,7 @@ executed.
 > corresponding message. Other handlers in the same object's script with
 > the same name are never executed.
 
-### Trapping Messages
+#### Trapping Messages
 
 When an object receives a message and a handler for that message is
 found, the handler is executed. Normally, a message that's been handled
@@ -2501,7 +2506,7 @@ hierarchy:
 You can use the same technique to block custom function calls,
 **setProp** triggers, and **getProp** calls.
 
-### Blocking System Messages
+#### Blocking System Messages
 
 You can block system messages – for example those sent when you navigate
 to another card – from being sent while a handler is executing by
@@ -2520,7 +2525,7 @@ messages resumes.
 > stack, press Suppress Messages on the toolbar or choose 
 > **Development -\> Suppress Messages**.
 
-### Passing a Message to the Next Object
+#### Passing a Message to the Next Object
 
 To let a message pass further along the message path, use the **pass**
 control structure. The **pass** control structure stops the current
@@ -2532,7 +2537,7 @@ just as though the object hadn't contained a handler for the message:
 		pass openCard -- let stack get the message too
 	end openCard
 
-### Selectively Trapping or Passing Messages
+#### Selectively Trapping or Passing Messages
 
 Some built-in messages, such as **keyDown**, trigger an action, so
 trapping the message prevents the action from being performed at all.
@@ -2551,7 +2556,7 @@ A similar principle applies to **setProp** triggers. If a **setProp**
 handler does not pass the **setProp** trigger, the custom property is
 not set.
 
-### Groups, Backgrounds & The Message Path
+#### Groups, Backgrounds & The Message Path
 
 As you can see from the diagram above a group's position in the message
 path depends on whether the "Behave as Background" check box has been
@@ -2581,7 +2586,7 @@ sent through the group again after the card has handled it.
 >
 > This filters out any objects that are not part of the group.
 
-## Commands and Functions
+### Commands and Functions
 
 You use commands and functions to perform the actions of your
 application. Commands instruct the application to do something – such as
@@ -2590,13 +2595,13 @@ a value – different functions might add a column of numbers, or get the
 fifteenth line of a certain file, or find out whether a key is being
 pressed.
 
-### Using Built-in Commands and functions
+#### Using Built-in Commands and functions
 
 LiveCode has over one hundred and fifty built-in commands, and over two
 hundred built-in functions, all of which are documented in the LiveCode
 Dictionary.
 
-#### Commands
+##### Commands
 
 A command is an instruction to LiveCode to do something. A command is
 placed at the start of a statement (either the start of a line or after
@@ -2609,7 +2614,7 @@ Here are some examples of how built-in commands are used in statements:
 	beep --beep command
 	set the hilite of me to true-- set command
 
-#### Functions
+##### Functions
 
 A function call is a request to LiveCode for information. A function is
 stated using the name of the function, followed by opening and closing
@@ -2646,7 +2651,7 @@ they're separated with commas. Here are some examples:
 > command or control structure. (In the first example above, the
 > **round** function is used with the **put** command.)
 
-#### Writing function calls with the "the" form
+##### Writing function calls with the "the" form
 
 If a built-in function has no parameters or one parameter, it can be
 written in a different form, with no parentheses:
@@ -2666,12 +2671,12 @@ built-in function shows how to write both forms.
 You can use the "the" form for built-in functions, but not for custom
 functions that you write. Writing custom functions is discussed later.
 
-### Custom Commands and Functions
+#### Custom Commands and Functions
 
 You use custom commands and custom functions the same way as any other
 command or function.
 
-#### Using custom commands
+##### Using custom commands
 
 You can execute a custom command simply by typing the name of the
 command you want to send.
@@ -2719,7 +2724,7 @@ But custom commands cannot use words like "and" and "to" to join parts
 of the command together, the way built-in commands can. Because of this,
 custom commands cannot be as English-like as built-in commands can be.
 
-#### Using custom functions
+##### Using custom functions
 
 When you use the custom function "fileHeader" in a statement, the
 function handler is executed, and the function call is replaced by the
@@ -2749,7 +2754,7 @@ parentheses following the function name. If the function has parameters,
 they are placed inside the parentheses, separated by commas. If the
 function doesn't have parameters, the parentheses are empty.
 
-### Passing Parameters
+#### Passing Parameters
 
 A value that you pass from one handler to another is called a parameter.
 
@@ -2768,7 +2773,7 @@ parameter in its statements:
 		answer theMessage -- uses the parameter "theMessage"
 	end alertUser
 
-### Passing Multiple Parameters
+#### Passing Multiple Parameters
 
 If a statement passes more than one parameter, the parameters are
 separated by commas. The following example has two parameters,
@@ -2787,7 +2792,7 @@ When the "seriouslyBugUser" handler is executed with the statement
 above, the *theMessage* parameter is "Hello", and the *numberOfBeeps*
 parameter is 5.
 
-### Parameter Variables
+#### Parameter Variables
 
 In the example above, "theMessage" and "numberOfBeeps" are the parameter
 variables. You declare parameter variables in the first line of a
@@ -2799,7 +2804,7 @@ expressions, and so on.
 Parameter variables are local variables, so they go out of existence as
 soon as the handler stops executing.
 
-#### Parameter variable names
+##### Parameter variable names
 
 You can give a parameter any name that's a legal variable name. The
 names of variables must consist of a single word and may contain any
@@ -2808,7 +2813,7 @@ character must be either a letter or an underscore.
 
 It is not the name, but the order of parameters that is significant.
 
-#### Empty parameters
+##### Empty parameters
 
 A handler can have any number of parameter variables regardless of the
 number of parameters passed to it. If there are more parameter variables
@@ -2833,7 +2838,7 @@ handler has three parameter variables, so the third parameter variable,
 possibility that "numberOfItems" is empty, you can pass either two or
 three parameters to this handler.
 
-#### Setting a default value for a parameter
+##### Setting a default value for a parameter
 
 To use a default value for a parameter, you check whether the parameter
 is empty. If it is, then no value has been passed, and you can simply
@@ -2858,7 +2863,7 @@ The first statement above specifies the second parameter, so it doesn't
 use the default value. The second statement only specifies one
 parameter, so the data will be placed in "logfile" by default.
 
-### Implicit Parameters
+#### Implicit Parameters
 
 If a statement passes more parameters than the receiving handler has
 parameter variables to hold them, the receiving handler can access the
@@ -2890,7 +2895,7 @@ When the "product" handler executes, the first two parameters – 22 and
 `param(3)`, and the fourth parameter, 7, is accessed with the expression
 `param(4)`.
 
-### Passing Parameters by Reference
+#### Passing Parameters by Reference
 
 Normally, if you pass a variable name as a parameter, that variable is
 not changed by anything the called handler does. This is because the
@@ -2936,13 +2941,13 @@ parameter elsewhere in the handler.
 > "setVariable" command described above using the following parameters
 > will cause an execution error:
 
-#### Empty parameters
+##### Empty parameters
 
 If a handler defines a parameter as being passed by reference, you must
 include that parameter when calling the handler. Omitting it will cause
 an execution error.
 
-### Returning Values
+#### Returning Values
 
 Once a function handler has calculated a value, it needs a way to send
 the result back to the handler that called the function. And if an error
@@ -2969,7 +2974,7 @@ the "expanded" function.
 > **Note:** The **return** control structure stops the handler, so it's
 > usually the last line in the handler.
 
-### Returning an Error from a Message Handler
+#### Returning an Error from a Message Handler
 
 When used in a message handler, the **return** control structure serves
 a slightly different purpose: it returns an error message to the calling
@@ -3006,7 +3011,7 @@ whatever command – built-in or custom – that set it last, so if you're
 going to check the **result**, be sure to do so right after the command
 whose success you want to check.
 
-### Summary
+#### Summary
 
 In this topic, you have learned that:
 
@@ -3027,7 +3032,7 @@ returns a value.
 When used in a message handler, the **return** control structure returns
 an error message that can be accessed with the **result** function.
 
-## Variables
+### Variables
 
 A variable is a place to store data that you create, which has no
 on-screen representation. Variables can hold any data you want to put
@@ -3053,7 +3058,7 @@ variable itself--the "box".
 > variable, put the custom property into a variable in the application's
 > **startUp** or **openStack** handler.
 
-### Variable Scope
+#### Variable Scope
 
 The *scope* of a variable is the part of the application where the
 variable can be used. If you refer to a variable in a handler that's
@@ -3065,7 +3070,7 @@ and **global**. Every variable is one of these three types. The
 difference between these scopes is in where they can be used and how
 long their value lasts.
 
-### Local Variables
+#### Local Variables
 
 A local variable can be used only in the handler that creates it. Once
 the handler finishes executing, the variable is deleted. The next time
@@ -3119,7 +3124,7 @@ Local variables are deleted when the handler that they're used in
 finishes executing. You can also use the **delete variable** command to
 delete a local variable.
 
-### Script Local Variables
+#### Script Local Variables
 
 A script local variable can be used in *any handler* in an object's
 script. You cannot use a script local variable in handlers in other
@@ -3148,7 +3153,7 @@ easy to find:
 You can also use the **delete variable** command to delete a script
 local variable.
 
-### Global Variables
+#### Global Variables
 
 A global variable can be used in any handler, *anywhere* in the
 application. Unlike a *local* variable, a global variable retains its
@@ -3220,7 +3225,7 @@ Global variables are automatically deleted when you quit the
 application. You can also use the **delete variable** command to delete
 a global variable.
 
-### Variable Names
+#### Variable Names
 
 The names of variables must consist of a single word and may contain any
 combination of letters, digits, and underscores (\_). The first
@@ -3251,7 +3256,7 @@ LiveCode development environment.
 See the section on *Tips for Writing Good Code* below for advice on 
 choosing variable names.
 
-### Special Variable Types
+#### Special Variable Types
 
 Most of the time, you use variables that you create yourself, using the
 **local** or **global** commands, or simply by putting a value into a
@@ -3261,7 +3266,7 @@ LiveCode also creates certain types of variables automatically:
 *parameter* variables, *command-line* variables, *environment*
 variables, and the special variable **it**.
 
-#### Parameter variables
+##### Parameter variables
 
 In a handler for a custom command or custom function, you can define
 parameters on the first line of the handler. For example, the following
@@ -3287,7 +3292,7 @@ expressions, and put data into them.
 Like local variables, parameter variables persist only as long as the
 handler is executing.
 
-#### Environment variables
+##### Environment variables
 
 Most operating systems that LiveCode supports provide information about
 the operating environment in *environment* variables.
@@ -3315,7 +3320,7 @@ The environment variables that you create this way are available to the
 application, and are also exported to processes started up by the
 **shell** function or the **open process** command.
 
-#### Command-line argument variables
+##### Command-line argument variables
 
 If you start up the application from a command line, the command name is
 stored in the variable `$0`and any arguments passed on the command line
@@ -3333,7 +3338,7 @@ $1 contains "-h", and `$2`contains "name".
 > and can be used in any handler. However, you do not need to use the
 > **global** command to declare them before using them.
 
-#### The special variable "it"
+##### The special variable "it"
 
 The **it** variable is a special local variable used by LiveCode to
 store certain results.
@@ -3359,7 +3364,7 @@ You can use the **it** variable in the same way as any other local
 variable, using the **put** command to put things into it and using the
 variable in expressions to work with the contents.
 
-### Array Variables
+#### Array Variables
 
 A variable can hold more than a single value. A variable that holds more
 than one value is called an array, and each of the values it holds is
@@ -3397,7 +3402,7 @@ brackets.
 
 You may nest elements within themselves to any number of levels.
 
-#### Deleting Elements of an Array
+##### Deleting Elements of an Array
 
 You use the **delete variable** command to remove one element from an
 array variable, in the same way you delete a variable. To delete an
@@ -3409,7 +3414,7 @@ element, you specify both the variable and the element's key:
 This statement removes the element named "myElement" from the variable
 "myVar", but does not delete the other elements in the array.
 
-#### Listing the Elements in an Array
+##### Listing the Elements in an Array
 
 > **Tip:** To delete the contents of an element without deleting the
 > element itself, put **empty** into the element:
@@ -3421,7 +3426,7 @@ The **keys** function returns a list of elements, one per line:
 	
 	put the keys of myArray into listOfElements
 
-#### Listing Nested Elements within an Element
+##### Listing Nested Elements within an Element
 
 You use the **keys** function to list the child elements of an element
 withn an array variable. The **keys** function returns a list of
@@ -3430,7 +3435,7 @@ elements, one per line:
 	put the keys of myArray[“node25”] into listOfElements
 
 
-#### Transforming a List of Data into an Array
+##### Transforming a List of Data into an Array
 
 The **split** command separates the parts of a variable into elements of
 an array. You can specify what character in the list you want the data
@@ -3450,7 +3455,7 @@ Will result in the following:
 
 For more details, see the **split** command in the LiveCode Dictionary.
 
-#### Combining the Elements of an Array into a List
+##### Combining the Elements of an Array into a List
 
 The **combine** command combines the elements of the *array* into a 
 single variable. After the command is finished executing, the variable 
@@ -3466,7 +3471,7 @@ that they appear on a separate line.
 For more information, see the **combine** command in the LiveCode 
 Dictionary.
 
-#### Nesting an Array
+##### Nesting an Array
 
 You may place an entire array as a child of an element by putting an 
 array variable into an element of another array. For example:
@@ -3476,12 +3481,12 @@ array variable into an element of another array. For example:
 Will result in the entire array being placed as a child of `node50` 
 within tBigArray.
 
-#### More Information
+##### More Information
 
 For more information about using array variables, see the guide on 
 *Processing Text and Data*.
 
-### Constants
+#### Constants
 
 A constant is a value that has a name. Like a variable, a constant is
 set in your script. Unlike variables, constants cannot be changed.
@@ -3495,7 +3500,7 @@ You create a new constant using the **constant** command.
 
 You cannot put anything into a constant once it's been created.
 
-#### Built-in constants
+##### Built-in constants
 
 The LiveCode language defines several constants, such as **return**,
 **space**, and **comma**, for characters that have special meaning in
@@ -3505,7 +3510,7 @@ scripts and therefore can't be entered literally into an expression.
 > Documentation window, click LiveCode Dictionary, and choose
 > "Constants" from the menu at the top of the window.
 
-#### User-defined constants
+##### User-defined constants
 
 You can also define your own constants using the **constant** command:
 
@@ -3521,9 +3526,9 @@ used only in that handler.
 If you place the **constant** command in a script, but outside any
 handler, the constant can be used in any handler in the script.
 
-## Containers, Operators & Sources of Value
+### Containers, Operators & Sources of Value
 
-### What is a Container?
+#### What is a Container?
 
 Containers are sources of information that can be edited using chunk
 expressions. In addition to variables, LiveCode has six other container
@@ -3537,7 +3542,7 @@ Internet server). The Message Box is a special container that's part of
 the development environment. All of these containers are covered in more
 detail in their respective sections.
 
-### Setting and Retrieving Data from Containers
+#### Setting and Retrieving Data from Containers
 
 You use the **put** command to place data into a container, or to place
 data from a container into another container or variable. Containers
@@ -3545,14 +3550,14 @@ support the use of chunk expressions, the ability to specify a portion
 of a container by referring to it in English. For more details, see the
 section on *Chunk Expressions*.
 
-### What are Sources of Value?
+#### What are Sources of Value?
 
 Sources of value are like containers. They can be retrieved using the
 **get** command. However unlike containers, they cannot be set using the
 **put** command. Sources of value include properties, function calls,
 literal strings, and constants.
 
-### Getting and Setting Properties
+#### Getting and Setting Properties
 
 You can use the **get** command to retrieve data from properties.
 Properties may be set using the **set** command. When retrieving data
@@ -3561,12 +3566,12 @@ entirety, using the set command. Properties are covered in more detail
 in the section on *Properties*. Examples of retrieving and setting
 properties are to be found throughout this *User’s Guide*.
 
-### What are Literal Strings?
+#### What are Literal Strings?
 
 A literal string is a string of characters whose value is itself. If the 
 string is a number, the value is that number.
 
-### Using Literal Strings
+#### Using Literal Strings
 
 When you use a literal string in an expression, LiveCode simply 
 substitutes the string for itself:
@@ -3575,7 +3580,7 @@ substitutes the string for itself:
 	get 1 + 2 + it
 	put 1 - 4.234 into field "Result"
 
-#### Quoting strings
+##### Quoting strings
 
 Literal strings that consist of more than one word or are reserved words
 in the LiveCode language must be enclosed in double quotes:
@@ -3594,14 +3599,14 @@ becomes a reserved LiveCode word in the future.
 If the **Script -\> Variable Checking** option is set to true, compiling
 a script that contains an unquoted literal string causes a script error.
 
-### What are Operators?
+#### What are Operators?
 
 Use operators to put together, compare or perform an operation on data.
 Use a *String Operator* to combine data. Use a *Numeric Operator* to
 perform a calculation. Finally, use a *Logical Operator* to return true
 or false.
 
-### Numeric Operators
+#### Numeric Operators
 
 Numeric operators produce a number as their result. Numeric operators
 include the arithmetic operators (**+**, **-**, **\***, **/**, **mod**,
@@ -3613,14 +3618,14 @@ For example:
 
 	put "1+2 =" && 1+2 into field "Eq" -- displays "1+2 = 3"
 
-#### String operators
+##### String operators
 
 String operators produce a string of characters as their result. String 
 operators are the concatenation operators (**&**, **&&**, and **,**).
 
 	put "1+2 =" && 1+2 into field "Eq" -- displays "1+2 = 3"
 
-### Logical Operators
+#### Logical Operators
 
 Logical operators produce either "true" or "false" as their result.
 
@@ -3633,7 +3638,7 @@ and basic logical operators (**and**, **or**, **not**).
 
 	if the platform is "MacOS" and field "Time" < zero then ...
 
-### Binary versus Unary Operators
+#### Binary versus Unary Operators
 
 Operators can use either one argument (a unary operator) or two
 arguments (a binary operator):
@@ -3645,7 +3650,7 @@ The **bitNot**, **there is a**, **there is no**, **is a**, **is not a**,
 and **not** operators are unary operators. All other operators are
 binary operators.
 
-### Conversion of Values
+#### Conversion of Values
 
 LiveCode converts values in expressions to whatever type of data is
 needed for the operation. This conversion happens automatically, so you
@@ -3663,7 +3668,7 @@ converts these strings to numbers so that they can be added together.
 Then it converts the resulting number back to a string so that it can be
 placed in a field as text.
 
-### Operator Precedence
+#### Operator Precedence
 
 When you combine sources of value using operators, LiveCode evaluates
 each source of value in the expression. Next, it applies any operators
@@ -3696,7 +3701,7 @@ Figure 49 – Operator Precedence
 | or             | **or**                                                              | or operations are done last.                                                                                                       |
 | function calls |                                                                     | Functions are evaluated after all possible operators in the function’s parameters are evaluated.                                   |
 
-### Using the Grouping Operator *()*
+#### Using the Grouping Operator *()*
 
 Suppose you want to change the precedence used in an expression. The
 grouping operator () has higher precedence than all other operators, so
@@ -3720,7 +3725,7 @@ you want evaluated first with parentheses:
 If parentheses are nested, the expression within the innermost set of
 parentheses is evaluated first.
 
-### Factors and Expressions
+#### Factors and Expressions
 
 An expression is any source of value, or combination of sources of
 value. Any of the sources of value discussed above – containers,
@@ -3728,7 +3733,7 @@ properties, function calls, literal strings, and constants – are simple
 expressions. You use operators to combine sources of value to produce
 more complex expressions.
 
-### Defining Factors
+#### Defining Factors
 
 A factor is the first fully resolvable portion of an expression. (All
 factors are expressions, but not all expressions are factors.) A factor
@@ -3751,7 +3756,7 @@ each expression, to help you see the distinction:
 | whole world            | whole          |
 | "whole world"          | "whole world"  |
 
-#### When it matters
+##### When it matters
 
 The distinction between factors and expressions matters when you're 
 using the **the** form of built-in functions, when you use **URL**, and 
@@ -3813,13 +3818,13 @@ However, when referring to controls (including groups) or stacks, the
 	select button ("My" && "Button") – works
 
 
-## Making Decisions
+### Making Decisions
 
 You make decisions using the **if … then … else** control structure or, 
 if you want to choose from a list of options, use the **switch** 
 control structure.
 
-### If … then … else
+#### If … then … else
 
 Use the **if** control structure to execute a statement or list of
 statements under certain circumstances. For example, you may want your
@@ -3871,7 +3876,7 @@ single *condition*. If you need to check for multiple possibilities,
 doing something different for each one, use a switch control structure
 instead.
 
-### Switch
+#### Switch
 
 Use the **switch** control structure when you want to choose among 
 several possible values for an expression and then execute a set of 
@@ -3945,13 +3950,13 @@ a **switch** control structure, although the more case sections there
 are, the more expressions LiveCode must evaluate and the more slowly the
 **switch** structure executes.
 
-## Extending the Message Path
+### Extending the Message Path
 
 This section deals with how to extend the message path, either by adding
 code libraries to the message path, or by sending messages directly to
 objects that are not currently in the message path.
 
-### Creating a Code Library
+#### Creating a Code Library
 
 A library is a set of custom commands and custom functions for a
 specific application or a specific area of functionality. You can create
@@ -3975,7 +3980,7 @@ modifying your application. You can design your standalone application
 to work in the same way, making it easy to update it using a small patch
 utility, i.e. without having to reinstall the entire application.
 
-### Using backScripts
+#### Using backScripts
 
 To make the script of an object available to any other handler in
 LiveCode:
@@ -3994,7 +3999,7 @@ the message path, if you place a handler in the **backScript**, it
 eventually gets all the corresponding messages, no matter what object
 sent them, unless another object handles them first.
 
-### Using frontScripts
+#### Using frontScripts
 
 You can also extend the message path by placing objects into the front
 of the message path, before any other object. The script of such an
@@ -4021,7 +4026,7 @@ displays the contextual menu; the **mouseDown** message is trapped and
 goes no further. Otherwise, the handler passes the message to the next
 object in the message path, which is the object you clicked.
 
-### Using a Stack's Script with *start using*
+#### Using a Stack's Script with *start using*
 
 The **start using** command is similar to the **insert script** command,
 but can be used only to place stacks, not other object types, in the
@@ -4031,7 +4036,7 @@ The **start using** command inserts the stack at the end of the message
 path, *after* the object's stack and main stack, but *before* objects
 that have been inserted into the back with **insert script**.
 
-### Sending Messages Directly to Objects
+#### Sending Messages Directly to Objects
 
 If the handler you want to use is not in the message path, instead of
 inserting it into the path to make it a code library, you can use the
@@ -4075,7 +4080,7 @@ with the following statement:
 	get value("myFunction(1,2,3)",card 1)
 
 
-### The *send* Command versus the *call* Command
+#### The *send* Command versus the *call* Command
 
 The **call** command is similar to the **send** command. Like the
 **send** command, the **call** command sends a message to the specified
@@ -4101,7 +4106,7 @@ triggered by the **send** command use the context of the object the
 handler is in, while handlers that are triggered by the **call** command
 use the context of the object that triggered the handler.
 
-### Writing reusable code using behaviors
+#### Writing reusable code using behaviors
 
 Behaviors are a method to create common functionality between objects
 without duplicating the scripts.
@@ -4116,7 +4121,7 @@ Behavior scripts must be stored in button objects. To set an object’s
 behavior, refer to the long id of the button containing the behavior
 script.
 
-## Timer Based Messaging
+### Timer Based Messaging
 
 Timers allow you to schedule events to happen in the future. Use timers
 for updating the display at regular intervals, processing data in
@@ -4129,7 +4134,7 @@ normal. This makes timer based messaging ideal where you want your user
 interface to remain responsive while doing data processing or updating
 the display.
 
-### Delivering a Message in the Future
+#### Delivering a Message in the Future
 
 To deliver a message after a specified time period, use the *in time* 
 form of the send command.
@@ -4137,7 +4142,7 @@ form of the send command.
 	send "updateStatus" to me in 20 seconds
 	send "updateAnimation" to me in 33 milliseconds
 
-### Repeating a Timer Message
+#### Repeating a Timer Message
 
 If you want to send a message repeatedly, for example to continuously
 draw frames in an animation, simply send the same message again at the
@@ -4205,7 +4210,7 @@ activated what frame you should currently be on.
 For more example scripts involving timers and animation, see the 
 *Sample Scripts* section of the online documentation.
 
-### Canceling a Timer Message
+#### Canceling a Timer Message
 
 When a timer message is sent, **the result** function contains the ID of
 the message generated. Use the **cancel** command to cancel that
@@ -4236,7 +4241,7 @@ elapsed, the dialog will not be displayed.
 > is changed and the message is still sent, as the script will no longer
 > be able to find the objects.
 
-### Displaying a List of Pending Timer Messages
+#### Displaying a List of Pending Timer Messages
 
 You can get a list of all the currently pending timer based messages
 using the **pendingMessages** function.
@@ -4262,7 +4267,7 @@ For more details, see the pendingMessages entry in the
 		cancel (item 1 of l)`
 	end repeat
 
-## Tips for Writing Good Code
+### Tips for Writing Good Code
 
 Its worth taking time to establish some conventions in how you write
 code. There are many benefits to making your coding practices
@@ -4277,7 +4282,7 @@ comprehensive guide to writing good code is beyond the scope of this
 manual. But we thought it would be helpful to give you some hints and
 tips
 
-#### Variable naming
+##### Variable naming
 
 Use consistent variable names to make your code easier to understand. It
 may not seem important now, but when you have forgotten how it works 6
@@ -4293,7 +4298,7 @@ you need to get help with something.
 | p         | pVar    | Parameters              | 
 | k         | kVar    | Constants               | 
 | c         | cVar    | Custom properties       | 
-#### Variable scope
+##### Variable scope
 
 As a general rule of thumb, use a variable with just enough scope and no
 more for the task at hand. In other words, if a handler local variable
@@ -4304,13 +4309,13 @@ variable name for different purposes. A handler local variable only has
 meaning within that handler so you can safely use the same variable name
 in other handlers.
 
-#### Use of comments
+##### Use of comments
 
 Comment your code as you go. Don't write comments where the meaning is
 obvious. But even a sentence next to a complex routine will help you or
 others to quickly understand it later.
 
-#### Use of functions
+##### Use of functions
 
 If you're writing a lot of code, consider whether it can be written as a
 series of functions instead of as a single monolithic handler. This
@@ -4319,7 +4324,7 @@ of code. The more you can make these functions "black boxes", that take
 input and produce output without dependences, the easier it will be if
 you later want to change how that aspect of the code works.
 
-#### Explicit Variables
+##### Explicit Variables
 
 If you're working on a larger code base you may want to turn on the
 Variable Checking option in the Script menu of the Code Editor. This

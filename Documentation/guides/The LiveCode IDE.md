@@ -1,6 +1,11 @@
-# Introduction
+---
+group: ide
+---
+# The LiveCode IDE
 
-This section details the main components within LiveCodes Integrated
+## Introduction
+
+This guide details the main components within LiveCodes Integrated
 Development Environment (IDE). The development environment contains all
 the features you need to quickly create a professional application. The
 Application Browser allows you to find your way around your application
