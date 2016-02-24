@@ -1,4 +1,7 @@
 ﻿script "com.livecode.pi.colorwithalpha.behavior"
+constant kColorEditorSize = 24
+constant kControlGap = 5
+
 on editorInitialize
    set the editorMinWidth of me to 60
 end editorInitialize
@@ -28,10 +31,14 @@ end editorUpdate
 on editorResize
    lock screen
    lock messages
-   local tRect
+   set the rect of widget 1 of me to 0,0,kColorEditorSize,kColorEditorSize
    set the topleft of widget 1 of me to the topleft of me
-   put the rect of me into tRect
-   set the rect of scrollbar 1 of me to item 1 of tRect + the width of widget 1 of me + 10, item 2 of tRect, item 3 of tRect, item 4 of tRect
+   
+   local tScrollbarWidth
+   put the width of me  - kColorEditorSize - kControlGap into tScrollbarWidth
+   set the rect of scrollbar 1 of me to 0, 0, tScrollbarWidth, kColorEditorSize
+   set the top of scrollbar 1 of me to the top of me
+   set the left of scrollbar 1 of me to the right of widget 1 of me + kControlGap
    unlock messages
    unlock screen
 end editorResize
