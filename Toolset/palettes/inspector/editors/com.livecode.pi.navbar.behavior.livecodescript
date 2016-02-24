@@ -27,6 +27,7 @@ on editorResize
    set the top of widget 1 of me to the top of me
    set the height of widget 1 of me to the height of me
    unlock messages
+   set the editorHeight of me to the desiredHeight of widget 1 of me
    unlock screen
 end editorResize
 
