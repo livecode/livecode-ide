@@ -306,6 +306,7 @@ on rowResize
    lock messages
    # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
    set the width of field "rowlabel" of me to the formattedwidth of field "rowlabel" of me
+   set the height of field "rowlabel" of me to the formattedHeight of field "rowlabel" of me
    set the top of field "rowlabel" of me to tTop
    set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
