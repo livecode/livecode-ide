@@ -932,6 +932,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    set the opaque of the templateGraphic to true
    create group "Group"
    put it into tGroup
+   set the margins of it to 0
    
    create graphic "Shape" in tGroup
    put it into tGraphic
