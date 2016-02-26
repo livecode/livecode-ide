@@ -954,7 +954,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       if not tPointVertical then
          set the width of tPointer to kPointerWidth
          set the height of tPointer to kPointerHeight
-         set the rect of stack "revTutorial" to 0, 0, tWidth + kPointerWidth / 2, tHeight
          
          put (tBottom + tTop) / 2 into tMiddle
          if tPointerTop then
@@ -975,7 +974,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       else
          set the width of tPointer to kPointerHeight
          set the height of tPointer to kPointerWidth
-         set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight + kPointerWidth / 2
          
          put (tRight + tLeft) / 2 into tMiddle
          if tPointerTop then
@@ -1017,12 +1015,20 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tMessageLeft, tMessageTop
    put kMargin into tMessageLeft
    put kMargin into tMessageTop
+   
    if tRect is not empty then
-      if not tPointVertical and tPointerLeft then
-         add kPointerWidth / 2 to tMessageLeft
-      else if tPointVertical and tPointerTop then
-         add kPointerWidth / 2 to tMessageTop
+      if tPointVertical then
+         add kPointerWidth / 2 to tHeight
+         if tPointerTop then
+            add kPointerWidth / 2 to tMessageTop
+         end if
+      else
+         add kPointerWidth / 2 to tWidth
+         if tPointerLeft then
+            add kPointerWidth / 2 to tMessageLeft
+         end if
       end if
+      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
       if sIsInterlude then
