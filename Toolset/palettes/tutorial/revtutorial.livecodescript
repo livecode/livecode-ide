@@ -838,9 +838,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tPointVertical
    put pStack is "menubar" or pForceVertical into tPointVertical
    
-   local tScreenRect
-   put the screenrect into tScreenRect
-   
    local tRect
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
@@ -858,26 +855,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
          put the long id of stack revIDEPaletteToStackName(pStack) into pStack
       end if
       put the rect of pStack into tRect
-   end if
-   
-   if tRect is not empty then
-      put item 1 of tRect into tLeft
-      put item 2 of tRect into tTop
-      put item 3 of tRect into tRight
-      put item 4 of tRect into tBottom
-      
-      local tPointerLeft, tPointerTop
-      if tRight < (item 3 of tScreenRect / 2) then
-         put true into tPointerLeft
-      else
-         put false into tPointerLeft
-      end if
-      
-      if tTop > (item 4 of tScreenRect / 2) then
-         put false into tPointerTop
-      else
-         put true into tPointerTop
-      end if
    end if
    
    local tWidth, tHeight 
@@ -909,7 +886,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       else
          set the vscrollbar of tScriptFieldID to false
       end if
-
+      
       set the height of tScriptFieldID to tScriptHeight
       add tScriptHeight + kMargin * 2 to tHeight
       
@@ -920,6 +897,30 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       add the height of tGotItButtonID + kMargin to tHeight
    else if tHasScript then
       add the height of tCopyButtonID + kMargin to tHeight
+   end if
+   
+   # Work out what screen the tutorial stack should be on
+   local tScreenRect
+   if exists(pStack) then
+      local tScreen
+      put the screen of pStack into tScreen
+      put line tScreen of the working screenrects into tScreenRect
+   else
+      put the working screenrect into tScreenRect
+   end if
+   
+   if tRect is not empty then
+      local tPointerLeft, tPointerTop, tCanFit
+      revTutorialEnsureOnscreen tWidth, tHeight, tScreenRect, tRect, tPointVertical, tPointerLeft, tPointerTop, tCanFit
+      
+      if tCanFit then
+         put item 1 of tRect into tLeft
+         put item 2 of tRect into tTop
+         put item 3 of tRect into tRight
+         put item 4 of tRect into tBottom
+      else 
+         put empty into tRect
+      end if
    end if
    
    # Store templategraphic props (in case we have a graphic tool selected)
@@ -1048,6 +1049,79 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    unlock screen
 end revTutorialPositionStack
 
+private command revTutorialDecideSide pNear, pFar, @rNear, @rCanFit
+   # If they are both zero then we can't fit
+   if pNear < 0 and pFar < 0 then
+      put false into rCanFit
+      exit revTutorialDecideSide
+   end if
+   
+   # Otherwise, choose the one with the most space
+   put pFar > pNear into rNear
+   put true into rCanFit
+end revTutorialDecideSide
+
+private command revTutorialTryToFitWithPointer pContentWidth, pContentHeight, pScreenRect, pHighlightRect, pPointerVertical, @rPointerLeft, @rPointerTop, @rCanFit
+   # Work out how much space there is
+   local tLeftSpace, tRightSpace, tTopSpace, tBottomSpace, tMiddle
+   if pPointerVertical then
+      # If the pointer is vertical, then we have horizontal space 
+      # from the middle of the target object to the sides of the screen
+      put (item 3 of pHighlightRect + item 1 of pHighlightRect) / 2 into tMiddle
+      put tMiddle - item 1 of pScreenRect - pContentWidth + kPointerOffset into tLeftSpace
+      put item 3 of pScreenRect - tMiddle - pContentWidth + kPointerOffset into tRightSpace
+      put item 2 of pHighlightRect - item 2 of pScreenRect - pContentHeight into tTopSpace
+      put item 4 of pScreenRect - item 4 of pHighlightRect - pContentHeight into tBottomSpace
+      subtract kPointerWidth / 2 from tTopSpace
+      subtract kPointerWidth / 2 from tBottomSpace
+   else
+      # If the pointer is horizontal, then we have vertical space 
+      # from the middle of the target object to the top and bottom of the screen
+      put (item 4 of pHighlightRect + item 2 of pHighlightRect) / 2 into tMiddle
+      put tMiddle - item 2 of pScreenRect - pContentHeight + kPointerOffset into tTopSpace
+      put item 4 of pScreenRect - tMiddle - pContentHeight + kPointerOffset into tBottomSpace
+      put item 1 of pHighlightRect - item 1 of pScreenRect - pContentWidth into tLeftSpace
+      put item 3 of pScreenRect - item 3 of pHighlightRect - pContentWidth into tRightSpace
+      subtract kPointerWidth / 2 from tLeftSpace
+      subtract kPointerWidth / 2 from tRightSpace
+   end if
+   
+   local tPointerLeft, tPointerTop, tCanFit
+   revTutorialDecideSide tLeftSpace, tRightSpace, tPointerLeft, tCanFit
+   if not tCanFit then
+      put false into rCanFit
+      exit revTutorialTryToFitWithPointer
+   end if
+   
+   revTutorialDecideSide tTopSpace, tBottomSpace, tPointerTop, tCanFit
+   if not tCanFit then
+      put false into rCanFit
+      exit revTutorialTryToFitWithPointer
+   end if
+   
+   put tPointerLeft into rPointerLeft
+   put tPointerTop into rPointerTop
+   put true into rCanFit
+end revTutorialTryToFitWithPointer
+
+private command revTutorialEnsureOnscreen pContentWidth, pContentHeight, pScreenRect, pHighlightRect, @xPointerVertical, @rPointerLeft, @rPointerTop, @rCanFit
+   local tPointerVertical, tPointerLeft, tPointerTop, tCanFit
+   put xPointerVertical into tPointerVertical
+   
+   # Try with the pre-existing preference of pointer vertical / horizontal
+   revTutorialTryToFitWithPointer pContentWidth, pContentHeight, pScreenRect, pHighlightRect, tPointerVertical, tPointerLeft, tPointerTop, tCanFit
+   
+   # If it failed, try the other orientation
+   if not tCanFit then
+      put not tPointerVertical into tPointerVertical
+      revTutorialTryToFitWithPointer pContentWidth, pContentHeight, pScreenRect, pHighlightRect, tPointerVertical, tPointerLeft, tPointerTop, tCanFit
+   end if
+   
+   put tPointerVertical into xPointerVertical
+   put tPointerLeft into rPointerLeft
+   put tPointerTop into rPointerTop
+   put tCanFit into rCanFit
+end revTutorialEnsureOnscreen
 ##############################################################################
 #
 #                     MAIN FUNCTIONALITY
