@@ -1626,8 +1626,8 @@ end buildFlipSubmenu
 private function buildRotateSubmenu
    return \
          tab & "By.../|By" & return & \
-         tab & "90° Right/|90" & return & \
-         tab & "90° Left/|270" & return & \
+         tab & "90° Right/|270" & return & \
+         tab & "90° Left/|90" & return & \
          tab & "180°/|180"
 end buildRotateSubmenu
 
