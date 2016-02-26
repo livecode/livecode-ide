@@ -1546,6 +1546,14 @@ on revTutorialEnsurePaletteForObject pPalette, pTutorialObject
    end if
 end revTutorialEnsurePaletteForObject
 
+on revTutorialEnsurePalette pPalette
+   local tStack
+   put revIDEPaletteToStackName(pPalette) into tStack
+   if the mode of stack tStack is 0 then
+      revIDEOpenPalette(pPalette)
+   end if
+end revTutorialEnsurePalette
+
 on revTutorialEnsureState pStep
    local tWaitDataA
    put sSteps[pStep]["actions"]["wait"] into tWaitDataA
@@ -1568,6 +1576,10 @@ on revTutorialEnsureState pStep
       case "item of palette for object"
       case "palette for object"
          revTutorialEnsurePaletteForObject tHighlightDataA["palette"], tHighlightDataA["object"]
+         break
+      case "item of palette"
+      case "palette"
+         revTutorialEnsurePalette tHighlightDataA["palette"]
          break
    end switch
 end revTutorialEnsureState
