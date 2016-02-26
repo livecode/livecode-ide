@@ -926,6 +926,9 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tProps
    put the properties of the templategraphic into tProps
    
+   reset the templategraphic
+   reset the templategroup
+   
    local tGraphic, tPointer, tGroup, tWindowShape
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
