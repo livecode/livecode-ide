@@ -2896,6 +2896,5 @@ on revSESetScript pScript
 end revSESetScript
 
 on revSEIndentScript
-   select before line 1 of field "Script" of me
-   dispatch "tabKey" to field "Script" of me
+   dispatch "scriptFormat" to field "Script" of me with "script"
 end revSEIndentScript
