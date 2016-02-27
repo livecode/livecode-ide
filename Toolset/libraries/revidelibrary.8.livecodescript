@@ -9958,3 +9958,20 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    delete the last char of tMenu
    return tMenu
 end revIDEObjectSelectionMenu
+
+# OK-2007-07-06 : Reworked recent paths system
+command revUpdateRecentFiles pStack
+   if there is no stack pStack then
+      exit revUpdateRecentFiles
+   end if
+
+   if revIDEStackNameIsIDEStack(pStack) then
+      exit revUpdateRecentFiles
+   end if
+
+   if the effective filename of stack pStack is empty then
+      exit revUpdateRecentFiles
+   end if
+
+   revIDEAddRecentStack the effective filename of stack pStack
+end revUpdateRecentFiles
