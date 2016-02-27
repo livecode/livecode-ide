@@ -1190,7 +1190,7 @@ on revInitialiseTutorial
    set the showFocusBorder of it to false
    set the width of it to 1000
    set the cantSelect of it to true
-   set the margins of it to 0
+   set the margins of it to 4
    
    set the left of it to 20
    set the top of it to 60
@@ -1204,7 +1204,7 @@ on revInitialiseTutorial
    set the showFocusBorder of it to false
    set the width of it to 1000
    set the cantSelect of it to true
-   set the margins of it to 0
+   set the margins of it to 4
    
    set the left of it to 20
    set the top of it to 60
