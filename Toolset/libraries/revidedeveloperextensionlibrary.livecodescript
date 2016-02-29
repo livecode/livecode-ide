@@ -277,6 +277,9 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    
    # Default script
    put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["id"], false) into tDetailsA["defaultscript"]
+   if tDetailsA["defaultscript"] is not empty then
+      put pFolder & "/support/defaultscript.livecodescript" into tDetailsA["defaultscript_file"]
+   end if
    return tDetailsA 
 end __revIDEDeveloperExtensionFetchFolderDetails
 
@@ -883,7 +886,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    end if
    
    local tDefaultScript
-   put tDetailsA["default_script"] into tDefaultScript
+   put tDetailsA["defaultscript_file"] into tDefaultScript
    if there is not a file tDefaultScript then
       put empty into tDefaultScript
    end if
