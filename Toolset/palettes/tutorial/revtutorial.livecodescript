@@ -1571,24 +1571,30 @@ on revTutorialSetText pStep
 end revTutorialSetText
 
 on revTutorialSetTextOfMessage pText, pScript, pFile, pValue
+   local tWidthOverride
+   put kMessageWidth into tWidthOverride
+   set the width of field "Message" of stack "revTutorial" to kMessageWidth
+   
    if pValue is not empty then
       replace "<value>" with pValue in pText
    end if
    if pFile is not empty then
       replace "<file>" with pFile in pText
    end if
-   
-   local tWidthOverride
-   put kMessageWidth into tWidthOverride
-   set the width of field "Message" of stack "revTutorial" to 1000
    put pText into field "Message" of stack "revTutorial"
+   
+   # Recalculate the formatted width after replacing value / file
+   put the formattedwidth of field "Message" of stack "revTutorial" into tWidthOverride
+   
    put pScript into field "Script" of stack "revTutorial"
    if pScript is not empty then
       put return before field "Script" of stack "revTutorial"
       local tLength
       put the number of chars in field "Script" of stack "revTutorial" into tLength
       _internal script colorize char 1 to tLength of field "Script" of stack "revTutorial"
-      put the formattedWidth of field "Script" of stack "revTutorial" + 40 into tWidthOverride
+      local tScriptFieldWidth
+      put the formattedWidth of field "Script" of stack "revTutorial" + 2 * kMargin into tScriptFieldWidth
+      put max(tWidthOverride, tScriptFieldWidth) into tWidthOverride
    end if
    
    revTutorialPositionStack "", "", tWidthOverride, false
