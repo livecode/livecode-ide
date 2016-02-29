@@ -1071,7 +1071,7 @@ command revIDECheckForUpdates
       set the itemdelimiter to "/"
       switch the platform
          case "MacOS"
-            put item 1 to -5 of the filename of stack "home" & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
+            put item 1 to -5 of the filename of stack "home" & "/Contents/MacOS/autoupdater" into tCommand
             put quote & tCommand & quote && "install -foregroundupdate" into tCommand
             break
          case "Win32"
