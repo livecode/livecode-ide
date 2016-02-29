@@ -426,8 +426,6 @@ on revIDEDeveloperExtensionTest pPath
    
    __revIDEDeveloperExtensionLog "Launching in Test Window"
    
-   __updateExtensionPropertiesFromManifest pPath & slash & "manifest.xml", tDetailsA["id"]
-   
    __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
@@ -482,11 +480,7 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   if there is a folder (pPath & slash & "resources") then
-      load extension from file (pPath & slash & "module.lcm") with resource path (pPath & slash & "resources")
-   else
-      load extension from file (pPath & slash & "module.lcm") 
-   end if
+   revIDEExtensionLoad pDetailsA["id"], pPath, pDetailsA["version"]
    
    local tResult
    put the result into tResult
@@ -545,7 +539,7 @@ local sInstalledExtension
 on __revIDEDeveloperExtensionUnload pExtension
    # Don't unload if we have installed
    if pExtension is not sInstalledExtension then
-      unload extension pExtension
+      revIDEExtensionUnload pExtension
    end if
 end __revIDEDeveloperExtensionUnload
 
