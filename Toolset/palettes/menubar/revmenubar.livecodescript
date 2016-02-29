@@ -396,6 +396,7 @@ on generateMenubarUI
    set the backcolor of it to "white"
    
    create field "label" in group "tutorial" of me
+   set the margins of it to 4
    set the textSize of it to 10
    set the traversalOn of it to false
    
@@ -504,6 +505,11 @@ on generateContextMenu
    create button "context"
 end generateContextMenu
 
+constant kPadding = 10
+constant kDividerWidth = 2
+constant kDividerHeight = 41
+constant kMenuBarHeight = 26
+constant kMenuBarTop = 3
 on layoutMenu
    lock screen
    lock messages
@@ -512,12 +518,12 @@ on layoutMenu
    put 1 into tDividerCount
    
    local tLeft, tTop
-   put 10 into tLeft
+   put kPadding into tLeft
    
    if the platform is "macos" then 
-      put 3 into tTop
+      put kMenuBarTop into tTop
    else
-      put 29 into tTop
+      put kMenuBarTop + kMenuBarHeight into tTop
    end if
    local tTopLeft
    put the topleft of me into tTopLeft
@@ -527,9 +533,10 @@ on layoutMenu
       if tItem is "Divide" then
          local tName
          put tItem & tDividerCount into tName
-         set the rect of image tName of group "toolbar" of me to tLeft + 4, tTop, tLeft + 6, tTop + 41
+         set the rect of image tName of group "toolbar" of me to 0, 0, kDividerWidth, kDividerHeight
+         set the topleft of image tName of group "toolbar" of me to tLeft + kPadding / 2 - kDividerWidth / 2, tTop
          add 1 to tDividerCount
-         add 10 to tLeft
+         add kPadding to tLeft
          put the long id of image tName into tLastDivide
       else
          local tWidth, tHeight
@@ -544,7 +551,7 @@ on layoutMenu
    local tTutorial
    put revIDETutorialInProgress() into tTutorial
    if tTutorial is not empty then
-      add 5 to tLeft
+      add kPadding/2 to tLeft
       show group "tutorial" of me
       show tLastDivide
       set the text of field "label" of group "tutorial" of me to tTutorial["lesson"] 
@@ -557,32 +564,33 @@ on layoutMenu
       
       set the backcolor of graphic "Trough" of group "progress" of me to "white"
       set the backcolor of graphic "Bar" of group "progress" of me to "black"
-      set the rect of graphic "Trough" of group "progress" of me to 0,0,tLabelWidth,5
-      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage() * tLabelWidth / 100, 5
+      set the rect of graphic "Trough" of group "progress" of me to 0, 0, tLabelWidth, kPadding / 2
+      set the rect of graphic "Bar" of group "progress" of me to 0, 0, revIDETutorialDonePercentage() * tLabelWidth / 100, kPadding / 2
       set the rect of group "progress" of me to the formattedRect of group "progress" of me
       set the loc of group "progress" of me to the loc of field "label" of me
-      set the top of group "progress" of me to the bottom of field "label" of group "tutorial" of me + 2
+      set the top of group "progress" of me to the bottom of field "label" of group "tutorial" of me + kPadding / 5
       
       set the topleft of widget "skip" of group "actions" of group "tutorial" of me to 0,0
-      set the topleft of widget "stop" of group "actions" of group "tutorial" of me to kTutorialActionSize + 5, 0
+      set the topleft of widget "stop" of group "actions" of group "tutorial" of me to kTutorialActionSize + kPadding / 2, 0
       set the rect of group "actions" of group "tutorial" of me to the formattedRect of group "actions" of group "tutorial" of me
       set the loc of group "actions" of group "tutorial" of me to the loc of field "label" of me
-      set the top of group "actions" of group "tutorial" of me to the bottom of group "progress" of me + 5
+      set the top of group "actions" of group "tutorial" of me to the bottom of group "progress" of me + kPadding / 2
       
       set the rect of group "tutorial" of me to the formattedRect of group "tutorial" of me
-      set the topleft of group "tutorial" of me to tLeft, tTop
+      set the loc of group "tutorial" of me to the loc of group "toolbar" of me
+      set the left of group "tutorial" of me to tLeft
       
-      add the width of group "tutorial" of me + 10 to tLeft
+      add the width of group "tutorial" of me + kPadding to tLeft
    else
       hide tLastDivide
       hide group "tutorial" of me
    end if	
    
    set the width of me to tLeft
-   set the height of group "revMenuBar" of me to 26
+   set the height of group "revMenuBar" of me to kMenuBarHeight
    set the width of group "revMenuBar" of me to the width of me
    set the topleft of group "revMenuBar" of me to 0,0
-   set the rect of button "Divider" of group "revMenuBar" of me to "0,24," & tLeft + 10 & ",26"
+   set the rect of button "Divider" of group "revMenuBar" of me to 0, kMenuBarHeight - kDividerWidth, tLeft + kPadding, kMenuBarHeight
    set the topleft of me to tTopLeft
    unlock messages
    
