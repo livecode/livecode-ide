@@ -274,6 +274,11 @@ on preOpenStack
       end if
    end if
    
+   if revIDEObjectIsOnIDEStack(tTarget) then
+      # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+      set the showInvisibles of stack revTargetStack(tTarget) to false
+   end if   
+   
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack
 

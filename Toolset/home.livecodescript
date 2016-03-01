@@ -1298,6 +1298,9 @@ command revInternal__InitialiseScriptEditor
    revInternal__Log "Enter", "Script Editor Initialisation"
    
    set the behavior of stack revScriptEditorMain() to the long id of stack revIDEScriptEditorBehavior("utilities")
+
+   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+   set the showInvisibles of stack revScriptEditorMain() to false
    
    revInternal__Log "Leave", "Script Editor Initialisation"
    
@@ -1309,6 +1312,9 @@ command revInternal__InitialiseErrors
   
   set the cErrorsList of stack "revErrorDisplay" to the scriptExecutionErrors
   set the cScriptErrors of stack "revErrorDisplay" to the scriptParsingErrors
+  
+  # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+  set the showInvisibles of stack "revErrorDisplay" to false
   
   revInternal__Log "Leave", "Errors Initialisation"
   
@@ -1326,6 +1332,9 @@ command revInternal__InitialiseTools
   set the topLeft of stack tToolsStackName to the cToolsTopLeft of stack "revPreferences"
   palette stack tToolsStackName
   
+  # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+  set the showInvisibles of stack tToolsStackName to false
+  
   --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
   revIDESetTool "pointer"
   unlock screen 
@@ -1340,6 +1349,10 @@ command revInternal__InitialiseIcons
   
   lock screen
   hide stack "revicons"
+  
+  # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+  set the showInvisibles of stack "revicons" to false
+
   unlock screen
   
   revInternal__Log "Leave", "Icons Initialisation"
@@ -1375,6 +1388,9 @@ command revInternal__InitialiseMenus
    if tToolsRight < 100 then put tToolsRight + 5 into item 1 of tWindowRect
    put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
    set the windowBoundingRect to tWindowRect
+   
+   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+   set the showInvisibles of stack tMenuBar to false
    
    revInternal__Log "Leave", "Menus Initialisation"
    
