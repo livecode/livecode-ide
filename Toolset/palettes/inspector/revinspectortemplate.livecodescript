@@ -39,7 +39,13 @@ end resizeStack
 #####################
 
 setProp cSelectedObjects pSelectedObjects
-   if pSelectedObjects is sSelectedObjects then exit cSelectedObjects
+   if pSelectedObjects is sSelectedObjects then 
+      exit cSelectedObjects
+   end if
+   
+   if the cLocked of me then
+      exit cSelectedObjects
+   end if
    
    # Unsubscribe the the objects previously 
    revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
@@ -85,7 +91,9 @@ on inspectorLock pState
 end inspectorLock
 
 on lockInspector
+   if the cLocked of me is false then
       dispatch "actionSelected" to me with "inspectorLock"
+   end if
 end lockInspector
 
 on idePropertyChanged

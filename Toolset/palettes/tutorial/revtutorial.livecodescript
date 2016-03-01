@@ -2058,6 +2058,9 @@ on revTutorialHighlightPaletteForObject pPaletteName, pObject
    if there is a tPaletteID then
       revTutorialHighlightObjectByID tPaletteID
    end if
+   if pPaletteName is "inspector" then
+      dispatch "lockInspector" to tPaletteID
+   end if
    put false into sDismissA[pPaletteName]
 end revTutorialHighlightPaletteForObject
 
