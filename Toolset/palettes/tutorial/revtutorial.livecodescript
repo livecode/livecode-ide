@@ -2117,7 +2117,7 @@ end revTutorialClearObjectHighlight
 
 on revTutorialHighlightTool pTool
    revIDEHighlightPaletteObject "tools", pTool
-   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
+   revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("tools")
    put "tool" into sHighlight["type"]
    put pTool into sHighlight["tool"]
    revTutorialPositionStackForHighlight
@@ -2169,7 +2169,7 @@ on revTutorialHighlightMenuItem pMenu, pItem
    local tMenuHighlight
    put pItem into tMenuHighlight[pMenu]
    revIDEHighlightPaletteObject "menubar", tMenuHighlight
-   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("menubar")
    put "menu" into sHighlight["type"]
    put pMenu into sHighlight["menu"]
    revTutorialPositionStackForHighlight
@@ -2177,7 +2177,7 @@ end revTutorialHighlightMenuItem
 
 on revTutorialHighlightToolbarItem pItem
    revIDEHighlightPaletteObject "menubar", pItem
-   revIDESubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
+   revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("menubar")
    put "toolbar" into sHighlight["type"]
    put pItem into sHighlight["item"]
    revTutorialPositionStackForHighlight
@@ -2612,16 +2612,22 @@ function revTutorialObjectIsHighlighted pObject
          put revTutorialHighlightedPalette("inspector") into tInspector
          return tInspector is not empty and pObject is the name of tInspector
       case "menu"
-         return pObject is the name of stack revIDEPaletteToStackName("menubar")
+         return pObject is the long id of stack revIDEPaletteToStackName("menubar")
       case "tool"
-         return pObject is the name of stack revIDEPaletteToStackName("tools")
+         return pObject is the long id of stack revIDEPaletteToStackName("tools")
       case "object"
          if pObject is sHighlight["object"] or pObject is revIDEStackOfObject(sHighlight["object"]) then
             return true
          end if
          -- fall through and check if the stack is highlighted
       case "stack" 
-         return pObject is sHighlight["stack"]
+         if pObject is sHighlight["stack"] then
+            return true
+         end if
+         
+         if sHighlight["stack"] is among the items of revIDEAvailablePalettes() then
+            return pObject is the long id of stack revIDEPaletteToStackName(sHighlight["stack"])
+         end if
    end switch
    return false
 end revTutorialObjectIsHighlighted
@@ -2657,13 +2663,13 @@ end revTutorialPositionStackForHighlight
 on revTutorialClearHighlights
    switch sHighlight["type"]
       case "tool"
-         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("tools")
+         revIDEUnsubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("tools")
          break
       case "property"
-         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("inspector")
+         revIDEUnsubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("inspector")
          break
       case "menu"
-         revIDEUnsubscribe "ideStackMoved", the name of stack revIDEPaletteToStackName("menubar")
+         revIDEUnsubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("menubar")
          break
       case "object"
          revIDEUnsubscribe "idePropertyChanged", sHighlight["object"]
