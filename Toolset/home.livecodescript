@@ -1274,7 +1274,6 @@ command revInternal__InitialiseUserLibraries
   local tEnvironmentIcons, tUserIcons, tList
   
   revInternal__Log "Enter", "User Libraries Initialisation"
-  revInternal__setSplashStatus revEnvironmentResourcesPath("Icon Libraries")
   put revAbsoluteFolderListing(revEnvironmentResourcesPath("Icon Libraries")) into tEnvironmentIcons
   put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Icon Libraries")) into tUserIcons
   put revCombineFilePaths(tUserIcons,tEnvironmentIcons) into tList
