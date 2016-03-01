@@ -8039,10 +8039,13 @@ on revIDEFlipImages pImages, pOrientation
    
    lock screen
    repeat for each line tImage in pImages
+      # Flip command can parse arbitrary image chunk expressions as of 6.7.8
+      local tImageLongID
+      put the long id of tImage into tImageLongID
       if pOrientation is "Horizontal" then
-         flip image id (the id of tImage) horizontal
+         flip tImageLongID horizontal
       else
-         flip image id (the id of tImage) vertical
+         flip tImageLongID vertical
       end if
    end repeat
    unlock screen
@@ -8062,6 +8065,16 @@ on revIDEActionRotateImage pAngle
    revIDERotateImages the selobj, pAngle
 end revIDEActionRotateImage
 
+private command rotateImageByLongID pLongID, pAngle
+   # Force the image reference to begin with the explicit token 'image'
+   local tStack
+   put revIDEStackOfObject(pLongID) into tStack
+   
+   local tImageID
+   put the id of pLongID into tImageID
+   rotate image id tImageID of stack tStack by pAngle
+end rotateImageByLongID
+
 on revIDERotateImages pImages, pAngle
    # Make sure targets are all images
    if not revIDEEnsureControlsOfType(pImages, "image") then
@@ -8071,10 +8084,13 @@ on revIDERotateImages pImages, pAngle
    lock screen
    local tPreviousImageQualitySetting
    repeat for each line tImage in pImages
-      put the resizeQuality of image id (the id of tImage) into tPreviousImageQualitySetting
-      set the resizeQuality of image id (the id of tImage) to "best"
-      rotate image id (the id of tImage) by pAngle
-      set the resizeQuality of image id (the id of tImage) to tPreviousImageQualitySetting
+      local tImageLongID
+      put the long id of tImage into tImageLongID
+      put the resizeQuality of tImageLongID into tPreviousImageQualitySetting
+      set the resizeQuality of tImageLongID to "best"
+      # Arbitrary chunk expressions do not work with rotate command
+      rotateImageByLongID tImageLongID, pAngle
+      set the resizeQuality of tImageLongID to tPreviousImageQualitySetting
    end repeat
    revIDESetTool "pointer"
    unlock screen
