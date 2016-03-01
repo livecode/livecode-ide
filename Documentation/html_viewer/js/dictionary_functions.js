@@ -263,19 +263,32 @@
 	{
 		var tMarkdown = pContent;
 		if(pEntryObject.parameters){
-			$.each(pEntryObject.parameters, function( index, value) {
+			$.each(pEntryObject.parameters, function(index, value) {
 				tMarkdown = tMarkdown.replace('<'+value.name+'>', '*'+value.name+'*');	
 			});
 		}
 
 		if(pEntryObject.synonyms){
-			$.each(pEntryObject.synonyms, function( index, value) {
+			$.each(pEntryObject.synonyms, function(index, value) {
 				tMarkdown = tMarkdown.replace('<'+value+'>', '*'+value+'*');	
 			});
 		}
 	
 		tMarkdown = replace_link_placeholders_with_links(tMarkdown,pEntryObject);
-		return marked(tMarkdown);
+		
+		var renderer = new marked.Renderer();
+		renderer.table = function(header, body) 
+		{
+			var tTable;
+			tTable = '<div class="table-responsive"><table class="table table-bordered">\n';
+			tTable += '<thead>' + header + '</thead>\n';
+			tTable += '<tbody>' + body + '</tbody>\n';
+			tTable += '</table></div>';
+			
+			return tTable;
+		}
+		
+		return marked(tMarkdown, { renderer: renderer });
 	}
 	
 	function displayEntry(pEntryID){	
