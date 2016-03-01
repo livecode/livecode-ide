@@ -838,7 +838,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tPointVertical
    put pStack is "menubar" or pForceVertical into tPointVertical
    
-   local tRect
+   local tRect, tHasPointer
    local tLeft, tRight, tTop, tBottom
    if pObject is not empty then
       if pStack is not empty then
@@ -850,11 +850,13 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       else
          put revIDERelativeRectToAbsolute(the rect of pObject, revIDEStackOfObject(pObject)) into tRect
       end if
+      put true into tHasPointer
    else if pStack is not empty then
       if there is not a stack pStack then
          put the long id of stack revIDEPaletteToStackName(pStack) into pStack
       end if
       put the rect of pStack into tRect
+      put true into tHasPointer
    end if
    
    local tWidth, tHeight 
@@ -909,19 +911,68 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       put the working screenrect into tScreenRect
    end if
    
-   if tRect is not empty then
+   if tHasPointer then
       local tPointerLeft, tPointerTop, tCanFit
       revTutorialEnsureOnscreen tWidth, tHeight, tScreenRect, tRect, tPointVertical, tPointerLeft, tPointerTop, tCanFit
       
-      if tCanFit then
-         put item 1 of tRect into tLeft
-         put item 2 of tRect into tTop
-         put item 3 of tRect into tRight
-         put item 4 of tRect into tBottom
-      else 
-         put empty into tRect
+      if not tCanFit then
+         put false into tHasPointer
       end if
    end if
+   
+   local tMessageLeft, tMessageTop
+   put kMargin into tMessageLeft
+   put kMargin into tMessageTop
+   if tHasPointer then
+      local tStackLeft, tStackTop
+      revTutorialSetWindowShape tWidth, tHeight, tRect, tPointVertical, tPointerLeft, tPointerTop, tStackLeft, tStackTop
+      
+      if tPointVertical then
+         add kPointerWidth / 2 to tHeight
+         if tPointerTop then
+            add kPointerWidth / 2 to tMessageTop
+         end if
+      else
+         add kPointerWidth / 2 to tWidth
+         if tPointerLeft then
+            add kPointerWidth / 2 to tMessageLeft
+         end if
+      end if
+      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
+      set the topleft of stack "revTutorial" to tStackLeft, tStackTop
+   else
+      set the windowshape of stack "revTutorial" to empty
+      set the decorations of stack "revTutorial" to empty
+      if sIsInterlude then
+         set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
+      else if tHasScript then
+         set the bottomright of tCopyButtonID to tWidth - kMargin, tHeight - kMargin
+      end if
+      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
+      set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
+   end if
+   
+   if sIsInterlude then
+      set the backColor of stack "revTutorial" to revTutorialInterludeColor()
+   else
+      set the backColor of stack "revTutorial" to revTutorialMessageColor()
+   end if
+   
+   set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
+   local tScriptTop
+   put kMargin + the bottom of tMsgFieldID into tScriptTop
+   set the topleft of tScriptFieldID to tMessageLeft, tScriptTop 
+   set the defaultstack to tDefaultStack
+   unlock messages
+   unlock screen
+end revTutorialPositionStack
+
+command revTutorialSetWindowShape pContentWidth, pContentHeight, pHighlightRect, pPointVertical, pPointerLeft, pPointerTop, @rStackLeft, @rStackTop
+   local tLeft, tTop, tRight, tBottom
+   put item 1 of pHighlightRect into tLeft
+   put item 2 of pHighlightRect into tTop
+   put item 3 of pHighlightRect into tRight
+   put item 4 of pHighlightRect into tBottom
    
    # Store templategraphic props (in case we have a graphic tool selected)
    local tProps
@@ -941,61 +992,59 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    create graphic "Shape" in tGroup
    put it into tGraphic
    set the style of it to "rectangle"
-   set the width of it to tWidth * the screenpixelscale
-   set the height of it to tHeight * the screenpixelscale
+   set the width of it to pContentWidth * the screenpixelscale
+   set the height of it to pContentHeight * the screenpixelscale
    
-   if tRect is not empty then
-      create graphic "Pointer" in tGroup
-      put it into tPointer
-      set the style of tPointer to "regular"
-      set the polysides of tPointer to 4
+   create graphic "Pointer" in tGroup
+   put it into tPointer
+   set the style of tPointer to "regular"
+   set the polysides of tPointer to 4
+   
+   local tX, tY, tStackTop, tStackLeft, tMiddle
+   
+   if not pPointVertical then
+      set the width of tPointer to kPointerWidth
+      set the height of tPointer to kPointerHeight
       
-      local tX, tY, tStackTop, tStackLeft, tMiddle
-      
-      if not tPointVertical then
-         set the width of tPointer to kPointerWidth
-         set the height of tPointer to kPointerHeight
-         
-         put (tBottom + tTop) / 2 into tMiddle
-         if tPointerTop then
-            put the top of tGraphic + kPointerWidth into tY
-            put tMiddle - kPointerWidth into tStackTop
-         else
-            put the bottom of tGraphic - kPointerWidth into tY
-            put tMiddle - tHeight + kPointerWidth into tStackTop
-         end if
-         
-         if tPointerLeft then
-            put the left of tGraphic into tX
-            put tRight + kPointerOffset into tStackLeft
-         else
-            put the right of tGraphic into tX
-            put tLeft - tWidth - kPointerHeight + kPointerOffset into tStackLeft
-         end if
+      put (tBottom + tTop) / 2 into tMiddle
+      if pPointerTop then
+         put the top of tGraphic + kPointerWidth into tY
+         put tMiddle - kPointerWidth into tStackTop
       else
-         set the width of tPointer to kPointerHeight
-         set the height of tPointer to kPointerWidth
-         
-         put (tRight + tLeft) / 2 into tMiddle
-         if tPointerTop then
-            put the top of tGraphic into tY
-            put tBottom + 5 into tStackTop
-         else
-            put the bottom of tGraphic into tY
-            put tTop - tHeight - kPointerHeight + kPointerOffset into tStackTop
-         end if
-         
-         if tPointerLeft then
-            put the left of tGraphic + kPointerWidth into tX
-            put tMiddle - kPointerWidth into tStackLeft
-         else
-            put the right of tGraphic - kPointerWidth into tX
-            put tMiddle - tWidth + kPointerWidth into tStackLeft
-         end if
+         put the bottom of tGraphic - kPointerWidth into tY
+         put tMiddle - pContentHeight + kPointerWidth into tStackTop
       end if
       
-      set the loc of tPointer to tX,tY
+      if pPointerLeft then
+         put the left of tGraphic into tX
+         put tRight + kPointerOffset into tStackLeft
+      else
+         put the right of tGraphic into tX
+         put tLeft - pContentWidth - kPointerHeight + kPointerOffset into tStackLeft
+      end if
+   else
+      set the width of tPointer to kPointerHeight
+      set the height of tPointer to kPointerWidth
+      
+      put (tRight + tLeft) / 2 into tMiddle
+      if pPointerTop then
+         put the top of tGraphic into tY
+         put tBottom + 5 into tStackTop
+      else
+         put the bottom of tGraphic into tY
+         put tTop - pContentHeight - kPointerHeight + kPointerOffset into tStackTop
+      end if
+      
+      if pPointerLeft then
+         put the left of tGraphic + kPointerWidth into tX
+         put tMiddle - kPointerWidth into tStackLeft
+      else
+         put the right of tGraphic - kPointerWidth into tX
+         put tMiddle - pContentWidth + kPointerWidth into tStackLeft
+      end if
    end if
+   
+   set the loc of tPointer to tX,tY
    
    reset the templateGraphic
    set the properties of the templategraphic to tProps
@@ -1003,51 +1052,14 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    import snapshot from rect (the rect of tGroup) of tGroup
    set the id of the last image to the id of stack "revIcons"
    put the long id of the last image into tWindowShape
-   if sIsInterlude then
-      set the backColor of stack "revTutorial" to revTutorialInterludeColor()
-   else
-      set the backColor of stack "revTutorial" to revTutorialMessageColor()
-   end if
    delete tGroup
    
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
    
-   local tMessageLeft, tMessageTop
-   put kMargin into tMessageLeft
-   put kMargin into tMessageTop
-   
-   if tRect is not empty then
-      if tPointVertical then
-         add kPointerWidth / 2 to tHeight
-         if tPointerTop then
-            add kPointerWidth / 2 to tMessageTop
-         end if
-      else
-         add kPointerWidth / 2 to tWidth
-         if tPointerLeft then
-            add kPointerWidth / 2 to tMessageLeft
-         end if
-      end if
-      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
-      set the topleft of stack "revTutorial" to tStackLeft, tStackTop
-   else
-      if sIsInterlude then
-         set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
-      else if tHasScript then
-         set the bottomright of tCopyButtonID to tWidth - kMargin, tHeight - kMargin
-      end if
-      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
-      set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
-   end if
-   set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
-   local tScriptTop
-   put kMargin + the bottom of tMsgFieldID into tScriptTop
-   set the topleft of tScriptFieldID to tMessageLeft, tScriptTop 
-   set the defaultstack to tDefaultStack
-   unlock messages
-   unlock screen
-end revTutorialPositionStack
+   put tStackLeft into rStackLeft
+   put tStackTop into rStackTop
+end revTutorialSetWindowShape
 
 private command revTutorialDecideSide pNear, pFar, @rNear, @rCanFit
    # If they are both zero then we can't fit
