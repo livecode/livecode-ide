@@ -800,6 +800,8 @@ constant kPointerWidth = 40
 constant kPointerOffset = 5
 
 constant kMaxScriptHeight = 200
+
+local sDontShow
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
    local tMsgFieldID, tScriptFieldID
@@ -1487,6 +1489,10 @@ on revTutorialContinue
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
       
+      // Make sure the tutorial stack is not inadvertantly shown at any point during
+      // execution of this handler
+      put true into sDontShow
+      
       // Make sure any of the step's extra contextual data is set
       revTutorialSetContextualStepData sSteps[sStepName]
       
@@ -1495,6 +1501,7 @@ on revTutorialContinue
          # Add guide in case wait is 'fits guide'
          revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
          if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
+            put false into sDontShow
             next repeat
          end if
       end if
@@ -1522,9 +1529,11 @@ on revTutorialContinue
       revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
       // Wait
       revTutorialExecuteAction sSteps[sStepName]["actions"]["wait"]
-      
       // Remove any palettes not needed for this step
       revTutorialCleanUp
+      // Now allow change in active stacks to trigger re-showing of tutorial stack
+      put false into sDontShow
+      
       if sWaiting then
          exit repeat
       end if
@@ -2262,8 +2271,8 @@ end revTutorialClearSets
 
 on revTutorialReShow
    -- Ensure tutorial stack is always visible if it should be
-   if the visible of me then
-      palette me
+   if the visible of stack "revTutorial" and not sDontShow then
+         palette stack "revTutorial"
    end if
 end revTutorialReShow
 
