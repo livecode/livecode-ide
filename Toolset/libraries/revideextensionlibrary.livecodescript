@@ -565,10 +565,13 @@ function __extensionPropertyInfoFromManifest pManifestPath
    sort tMetadataKeys
    sort tMetadataKeys by tMetadataA[each]["order"]
    repeat for each line tKey in tMetadataKeys
-      if tKey is not among the lines of the propertyNames then
+      local tPropertyInfo
+      put revIDEPropertyInfo(tKey) into tPropertyInfo
+      if tPropertyInfo is empty then
          next repeat
       end if
       add 1 to tOrder
+      union tMetadataA[tKey] with tPropertyInfo
       put tMetadataA[tKey] into tPropertyDataA[tKey]
       put tOrder into tPropertyDataA[tKey]["order"]
    end repeat
