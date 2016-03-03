@@ -117,11 +117,11 @@ command socialMediaHilite pName, pValue
    end if
 end socialMediaHilite
 
-command socialMediaUniliteAll
+command socialMediaUnhiliteAll
    repeat with x = 1 to the number of widgets of group "socialMedia"
        set the blendLevel of widget x of group "socialMedia" to 50
    end repeat
-end socialMediaUniliteAll
+end socialMediaUnhiliteAll
 
 command recentFilesInitialise
    set the dgProps["hilite color"] of group "recentFiles" to uiColor("edition")
