@@ -129,6 +129,9 @@ function revTutorialParseData pData
                      else if tData["type"] is "interlude" then
                         put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
                      end if
+                     if tData["go"]["step"] is among the keys of tStepData then
+                        parseError "circularity in step order" && it, tLineNum, tErrors
+                     end if
                      put empty into tData
                      break
                end switch
