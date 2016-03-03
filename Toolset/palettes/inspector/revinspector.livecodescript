@@ -389,9 +389,7 @@ function absoluteRectOfObject pObjectData
    put inspectorForObject(pObjectData["object"]) into tInspector
    local tRect
    put the rect of group pObjectData["group"] of stack tInspector into tRect
-   # Work around the fact that groups are too large
-   put item 2 of tRect + 21 into item 4 of tRect
-   
+
    # Make sure left of group is left of stack
    put 0 into item 1 of tRect
    
