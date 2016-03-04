@@ -78,8 +78,10 @@ on editorResize
    unlock screen
 end editorResize
 
-on mouseUp
-   editorPopup the mouseloc
+on mouseUp pWhich
+   if pWhich is "1" then
+      editorPopup the mouseloc
+   end if
 end mouseUp
 
 on valueChanged pProperty, pValue
