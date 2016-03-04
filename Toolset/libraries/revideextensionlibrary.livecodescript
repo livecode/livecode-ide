@@ -558,36 +558,30 @@ function __extensionPropertyInfoFromManifest pManifestPath
    end repeat
    
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   local tOrder
+   local tOrder, tPropertyDataA
+   
+   local tMetadataKeys
+   put the keys of tMetadataA into tMetadataKeys
+   sort tMetadataKeys
+   sort tMetadataKeys by tMetadataA[each]["order"]
+   repeat for each line tKey in tMetadataKeys
+      local tPropertyInfo
+      put revIDEPropertyInfo(tKey) into tPropertyInfo
+      if tPropertyInfo is empty then
+         next repeat
+      end if
+      add 1 to tOrder
+      union tMetadataA[tKey] with tPropertyInfo
+      put tMetadataA[tKey] into tPropertyDataA[tKey]
+      put tOrder into tPropertyDataA[tKey]["order"]
+   end repeat
+   
    repeat for each line tProperty in tProperties
       add 1 to tOrder
-      local tName, tLabel, tSection
+      local tName
       put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
-      put tMetadataA[tName] into tExtensionData[tName]
       
-      if tExtensionData[tName]["section"] is empty then
-         put "Basic" into tExtensionData[tName]["section"]
-      end if
-      
-      if tExtensionData[tName]["label"] is empty then
-         put tName into tExtensionData[tName]["label"]
-      end if
-      
-      local tType
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
-      
-      if tExtensionData[tName]["editor"] is empty then 
-         if tType is "Integer" or tType is "Real" then
-            put "com.livecode.pi.number" into tExtensionData[tName]["editor"]
-         else
-            put "com.livecode.pi." & tolower(tType) into tExtensionData[tName]["editor"]
-         end if
-      end if
-      
-      # Process value options, default and delimiter
-      replace comma with return in tExtensionData[tName]["options"]
-      replace "\n" with return in tExtensionData[tName]["default"]     
-      replace "\n" with return in tExtensionData[tName]["delimiter"]
+      put tMetadataA[tName] into tPropertyDataA[tName]
       
       local tReadOnly
       get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
@@ -596,21 +590,47 @@ function __extensionPropertyInfoFromManifest pManifestPath
       else
          put false into tReadOnly
       end if
-      put tReadOnly into tExtensionData[tName]["read_only"]
+      put tReadOnly into tPropertyDataA[tName]["read_only"]
       
-      # Keep track of the order the properties were specified and tag the property as a widget
-      # property, so we can order them correctly after the built-in props for the given section
-      put tOrder into tExtensionData[tName]["order"]
-      put true into tExtensionData[tName]["widget_prop"]
+      if tPropertyDataA[tName]["editor"] is empty then
+         local tType
+         put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
+         if tType is "Integer" or tType is "Real" then
+            put "com.livecode.pi.number" into tPropertyDataA[tName]["editor"]
+         else
+            put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tName]["editor"]
+         end if
+      end if
+      put tOrder into tPropertyDataA[tName]["order"]
+   end repeat
+   
+   repeat for each key tName in tPropertyDataA
+      local tLabel, tSection
       
+      if tPropertyDataA[tName]["section"] is empty then
+         put "Basic" into tPropertyDataA[tName]["section"]
+      end if
       
-      if tExtensionData[tName]["user_visible"] is empty then
-         put true into tExtensionData[tName]["user_visible"]
+      if tPropertyDataA[tName]["label"] is empty then
+         put tName into tPropertyDataA[tName]["label"]
+      end if
+      
+      # Process value options, default and delimiter
+      replace comma with return in tPropertyDataA[tName]["options"]
+      replace "\n" with return in tPropertyDataA[tName]["default"]     
+      replace "\n" with return in tPropertyDataA[tName]["delimiter"]
+      
+      # Tag the property as a widget property, so we can order them 
+      # correctly after the built-in props for the given section
+      put true into tPropertyDataA[tName]["widget_prop"]
+      
+      if tPropertyDataA[tName]["user_visible"] is empty then
+         put true into tPropertyDataA[tName]["user_visible"]
       end if
    end repeat
    
    revXMLDeleteTree tXMLTree
-   return tExtensionData
+   return tPropertyDataA
 end __extensionPropertyInfoFromManifest
 
 command revIDEExtensionSetInfo pTypeID
