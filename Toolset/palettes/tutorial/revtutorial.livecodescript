@@ -33,22 +33,18 @@ function revTutorialParseData pData
    put 0 into tActionNum
    repeat for each line tLine in pData
       add 1 to tLineNum
-      get token 1 of tLine
       
-      if it is empty then 
-         if tSubType is "text" then 
-            put return & return after tData
-         end if
-         next repeat 
-      end if
+      local tFirstToken, tNewType
+      put token 1 of tLine into tFirstToken
+      put tFirstToken into tNewType
       
       // If we're in a type, then extract the data appropriately
       if tType is not empty then
          # Don't interpret indented new lines of text elements as new sections
          if char 1 of tLine is tab then
-            get empty
+            put empty into tNewType
          end if
-         switch it
+         switch tNewType
             case "end"
                // End the section
                if token 2 of tLine is tType then
@@ -82,17 +78,21 @@ function revTutorialParseData pData
                   put tData into tStepData[tCurStepName][tSubType]
                   put empty into tData
                end if
-               put it into tSubType
+               put tNewType into tSubType
                next repeat
                break
             default
                // Get the data
                switch tSubType
                   case "text"
-                     if line -1 of tData is empty then
-                        put word 1 to -1 of tLine after tData
+                     local tTrimmedLine
+                     put word 1 to -1 of tLine into tTrimmedLine
+                     if tTrimmedLine is empty then
+                        put return & return after tData
+                     else if line -1 of tData is empty then
+                        put tTrimmedLine after tData
                      else
-                        put " " & word 1 to -1 of tLine after tData
+                        put " " & tTrimmedLine after tData
                      end if
                      break
                   case "script"
@@ -111,6 +111,9 @@ function revTutorialParseData pData
                      end if
                      break
                   default
+                     if tFirstToken is empty then
+                        next repeat
+                     end if
                      add 1 to  tActionNum
                      put revTutorialParseAction(tLine, tLineNum) into tData
                      if tData["type"] is "capture" then
@@ -126,6 +129,9 @@ function revTutorialParseData pData
                      else if tData["type"] is "interlude" then
                         put tStepData[tCurStepName]["text"] into tStepData[tCurStepName]["actions"][tData["type"]]["text"]
                      end if
+                     if tData["go"]["step"] is among the keys of tStepData then
+                        parseError "circularity in step order" && it, tLineNum, tErrors
+                     end if
                      put empty into tData
                      break
                end switch
@@ -135,7 +141,7 @@ function revTutorialParseData pData
       end if
       
       // Otherwise, start a new section
-      switch it
+      switch tNewType
          case empty
             next repeat
             break
@@ -147,7 +153,7 @@ function revTutorialParseData pData
             if tCurStepName is among the keys of tStepData then
                parseError "duplicate step name" && tCurStepName, tLineNum, tErrors
             end if
-            put it into tType
+            put tNewType into tType
             put "text" into tSubType
             if tFirstStep is empty then
                put tCurStepName into tFirstStep
@@ -155,8 +161,8 @@ function revTutorialParseData pData
             break
          case "prologue"
          case "epilogue"
-            put it into tType
-            put it into tCurStepName
+            put tNewType into tType
+            put tNewType into tCurStepName
             put "text" into tSubType
             break
          case "skip"

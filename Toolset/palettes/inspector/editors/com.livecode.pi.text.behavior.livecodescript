@@ -72,6 +72,14 @@ on enterInField
    valueChanged
 end enterInField
 
+on returnInField
+   if (the controlKey is down) then 
+      enterInField
+   else
+      pass returnInField
+   end if
+end returnInField
+
 on closeField
    valueChanged
 end closeField
