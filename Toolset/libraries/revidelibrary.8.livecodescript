@@ -7844,7 +7844,7 @@ end revIDEAvailableControls
 
 function revIDEAvailableWidgets
    local tWidgetsA, tType, tTitle, tDataA
-   put revIDEExtensions("widget", "installed") into tDataA
+   put revIDEExtensions("widget", "installed", true) into tDataA
    repeat for each key tTypeID in tDataA
       put tDataA[tTypeID]["title"] into tTitle
       if tTitle is empty then

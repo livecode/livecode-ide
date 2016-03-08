@@ -1111,12 +1111,14 @@ on extensionUpdateDataReceived
 end extensionUpdateDataReceived
 
 function revIDEExtensionDocsData
+   local tExtensionsA
+   put revIDEExtensions("", "installed", true) into tExtensionsA
    local tDataA, tCount
-   repeat for each key tCacheIndex in sExtensions
+   repeat for each element tExtension in tExtensionsA
       add 1 to tCount
-      put __extensionPropertyGet(tCacheIndex, "install_path") into tDataA[tCount]["folder"]
-      put __extensionPropertyGet(tCacheIndex, "title") into tDataA[tCount]["title"]
-      put __extensionPropertyGet(tCacheIndex, "author") into tDataA[tCount]["author"]
+      put tExtension["install_path"] into tDataA[tCount]["folder"]
+      put tExtension["title"] into tDataA[tCount]["title"]
+      put tExtension["author"] into tDataA[tCount]["author"]
    end repeat
    return tDataA
 end revIDEExtensionDocsData
