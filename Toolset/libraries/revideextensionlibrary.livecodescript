@@ -617,8 +617,10 @@ function __extensionPropertyInfoFromManifest pManifestPath
       
       # Process value options, default and delimiter
       replace comma with return in tPropertyDataA[tName]["options"]
-      replace "\n" with return in tPropertyDataA[tName]["default"]     
       replace "\n" with return in tPropertyDataA[tName]["delimiter"]
+      if tPropertyDataA[tName]["default"] is not empty then
+         replace "\n" with return in tPropertyDataA[tName]["default"]
+      end if
       
       # Tag the property as a widget property, so we can order them 
       # correctly after the built-in props for the given section
@@ -657,6 +659,12 @@ command revIDEExtensionSetInfo pTypeID
    
    __extensionSetExtensionInfoFromManifest tCacheIndex, tManifest
    __extensionSetPropertyInfoFromManifest pTypeID, tManifest
+   
+   # Set the default name
+   local tTitle
+   put __extensionPropertyGet(tCacheIndex, "title") into tTitle
+   put tTitle into sExtensionProperties[pTypeID]["name"]["default"]
+   
 end revIDEExtensionSetInfo
 
 private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPath
