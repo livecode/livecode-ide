@@ -12,8 +12,9 @@ step "Tutorials Intro"
 	clicking on the stop button.
 	
 	Clicking the fast-forward button will skip to the next important
-	concept being introduced in the tutorial. Use this if you don't want 
-	to create the whole UI for the app, for example.
+	concept being introduced in the tutorial. Use this if you've got the
+	idea about something and don't want to have to create every last 
+	part of the user interface, for example.
 action
 	interlude
 	highlight toolbar "tutorial"
@@ -23,16 +24,16 @@ end step
 skip point
 
 step "Stack Interlude"
-	The most fundamental object in LiveCode is the stack. All objects in
-	LiveCode live on a stack. So to get started, we will create a new
-	stack for our app.
+	The first step in creating a LiveCode application is creating a 
+	window, which in LiveCode is called a stack. Each window you see in 
+	LiveCode is a stack.
 action
 	interlude
 	go to step "Create Mainstack"
 end step
 
 step "Create Mainstack"
-	Click on the File menu, and select New Stack > iPhone 4.
+	Click on the File menu, and select 'New Stack' → 'iPhone 4'.
 action
     highlight menu item "iPhone 4" of menu item "New Stack" of menu "File"
     capture the next new stack as "Mainstack"
@@ -46,12 +47,13 @@ step "Set Stack Rect"
 action
 	add guide "Stack" with rect "0,0,320,480" to stack "Mainstack"
 	highlight guide "Stack"
-	wait until stack "Mainstack" fits guide "Stack" with tolerance 3
+	wait until stack "Mainstack" fits guide "Stack" with tolerance 5
 	go to step "Set Stack Properties"
 end step
 
 step "Set Stack Properties"
-	Click on the toolbar icon to open the property inspector.
+	Click on the Inspector icon on the toolbar to open the property 
+	inspector.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for stack "Mainstack"
@@ -74,7 +76,7 @@ action
 end step
 
 step "Set Stack Background Color"
-	Set the background color of the stack to white.
+	Set the 'Background Fill' color of the stack to white.
 action
 	highlight property "backgroundColor" of section "Colors"
 	wait until the backgroundColor of stack "Mainstack" is "255,255,255"
@@ -82,8 +84,9 @@ action
 end step 
 
 step "Set Stack Text Size"
-	Set the text size of the stack to 18. All objects added to the stack
-	will inherit this text size, unless explicitly set on the object.
+	Set the 'Text Size' of the stack to 18. All objects added to the 
+	stack will inherit this text size, unless explicitly set on the 
+	object.
 action
 	highlight property "textSize" of section "Text"
 	wait until the textSize of stack "Mainstack" is 18
@@ -96,7 +99,7 @@ step "Tools Palette Interlude"
 	This is the tools palette. It contains all the built-in objects that 
 	you can drag out onto your stack, such as buttons, text fields and 
 	scrollbars. It also contains more complex controls called widgets. 
-	These include a header bar, navigation bar and browser.
+	These include a header bar, navigation bar, browser and line graph.
 action
 	interlude
 	highlight tools
@@ -117,7 +120,7 @@ step "Set Header Rect"
 action
 	add guide "Header" with rect "1,1,319,64" to stack "Mainstack"
 	highlight guide "Header"
-	wait until widget "Header" fits guide "Header" with tolerance 3
+	wait until widget "Header" fits guide "Header" with tolerance 5
 	go to step "Open Property Inspector"
 end step
 
@@ -131,7 +134,8 @@ action
 end step
 
 step "Set Calculator Header Title"
-	Set the title of the header widget to "BMI Calculator"
+	Set the 'Title' of the header bar widget to "BMI Calculator", and 
+	press <Return>.
 action
 	highlight property "headerTitle" of section "Basic"
 	wait until the headerTitle of widget "Header" is "BMI Calculator"
@@ -139,7 +143,7 @@ action
 end step
 
 step "Set Calculator Header Style"
-	Set the action style of the header widget to "names"
+	Select 'names' from the 'Action Display Style' drop down menu.
 action
 	highlight property "actionStyle" of section "Basic"
 	wait until the actionStyle of widget "Header" is "names"
@@ -147,7 +151,8 @@ action
 end step
 
 step "Set Calculator Header Actions"
-	Set the name of the header widget action to "Clear"
+	Change the name of the header widget action from "Add" to "Clear", 
+	and press <Return>.
 action
 	highlight property "headerActions" of section "Basic"
 	wait until the actionLabels of widget "Header" is "Clear"
@@ -155,8 +160,8 @@ action
 end step
 
 step "Set Calculator Header Left Label"
-	Set the left label of the header widget to empty. Empty is a special
-	constant in LiveCode which can represent the empty string.
+	Delete the text of the left label of the header widget, and press 
+	<Return>.
 action
 	highlight property "leftLabel" of section "Basic"
 	wait until the leftLabel of widget "Header" is ""
@@ -164,7 +169,7 @@ action
 end step
 
 step "Set Calculator Header Show Back Icon"
-	Hide the back icon of the header widget.
+	Uncheck the 'Show Back Icon' checkbox.
 action
 	highlight property "showBackIcon" of section "Basic"
 	wait until the showBackIcon of widget "Header" is false
@@ -172,7 +177,7 @@ action
 end step
 
 step "Set Calculator Header Show Search Icon"
-	Hide the search icon of the header widget.
+	Uncheck the 'Show Search Icon' checkbox.
 action
 	highlight property "showSearchIcon" of section "Basic"
 	wait until the showSearchIcon of widget "Header" is false
@@ -195,7 +200,7 @@ step "Set Footer Rect"
 action
 	add guide "Footer" with rect "1,430,319,479" to stack "Mainstack"
 	highlight guide "Footer"
-	wait until widget "Footer" fits guide "Footer" with tolerance 3
+	wait until widget "Footer" fits guide "Footer" with tolerance 5
 	go to step "Set Footer Properties"
 end step
 
@@ -208,8 +213,8 @@ action
 end step
 
 step "Set Footer Label"
-	Remove all but one of the navigation bar actions by clicking on the
-	delete icons.
+	Remove all but one of the lines of the navigation bar's 'Navigation
+	Data' by clicking on the delete icons.
 	
 	Then change the name of the remaining one to "Calculator".
 action 
@@ -219,7 +224,12 @@ action
 end step
 
 step "Set Footer Icon"
-	Set the icon of the Calculator item to the cog icon.
+	Each line of the 'Navigation Data' of the navigation bar has two 
+	icons: one for when it is not selected (the gray one) and one for 
+	when it is (the blue one).
+	
+	Click the gray icon to bring up the icon picker, and select the 
+	'cog' icon.
 action
 	highlight property "navData" of section "Basic"
 	wait until the navIcons of widget "Footer" is "cog"
@@ -227,8 +237,8 @@ action
 end step
 
 step "Create Entry Graphic"
-	Create a rounded rectangle graphic. This will be the background to
-	the height and weight entry fields.
+	Create a rounded rectangle graphic. This will used to provide some 
+	background color to the height and weight entry fields.
 action
 	highlight tool "Create Round Rect Graphic"
 	capture the next new graphic of stack "Mainstack" as "Entry Background"
@@ -241,7 +251,7 @@ step "Set Entry Background Rect"
 action
 	add guide "Background" with rect "14,74,308,228" to stack "Mainstack"
 	highlight guide "Background"
-	wait until graphic "Entry Background" fits guide "Background" with tolerance 3
+	wait until graphic "Entry Background" fits guide "Background" with tolerance 5
 	go to step "Set Entry Background Properties"
 end step
 
@@ -254,7 +264,8 @@ action
 end step
 
 step "Set Entry Background Border"
-	Remove the border of the graphic by setting its line size to 0.
+	Remove the border of the graphic by setting its 'Line thickness'
+	property to 0, and press <Return>.
 action
 	highlight property "lineSize" of section "Basic"
 	wait until the lineSize of graphic "Entry Background" is 0
@@ -262,7 +273,7 @@ action
 end step
 
 step "Set Entry Background Fill Color"
-	Set the background color of the graphic to "0,128,255".
+	Set the 'Background Fill' color of the graphic to "0,128,255".
 action
 	highlight property "backgroundColor" of section "Colors"
 	wait until the backgroundColor of graphic "Entry Background" is "0,128,255"
@@ -270,7 +281,9 @@ action
 end step
 
 step "Set Entry Background Blend Level"
-	Set the blendLevel of the graphic to "50"
+	Set the 'Blend Level' of the graphic to "50". The blend level 
+	determines how opaque the background of the graphic is, with 0 
+	begin fully opaque and 100 being fully transparent. 
 action
 	highlight property "blendLevel" of section "Colors"
 	wait until the blendLevel of graphic "Entry Background" is "50"
@@ -304,7 +317,12 @@ action
 end step
 
 step "Set Height Label Text"
-	Set the text of the label to "Height (m):"
+	Set the 'Contents' property of the label to "Height (m):". 
+	
+	Since the 'Contents' property can contain multiple lines, the 
+	<Return> key will simply add a new line to the contents. To apply the
+	changes to the label contents, hold down the <Ctrl> key and press 
+	<Return>.
 action
 	highlight property "styledText" of section "Basic"
 	wait until the text of field "Height Label" is "Height (m):"
@@ -338,7 +356,8 @@ action
 end step
 
 step "Set Weight Label Text"
-	Set the text of the label to "Weight (kg):"
+	Set the 'Contents' property of the label to "Weight (kg):", and 
+	press <Ctrl>+<Return>.
 action
 	highlight property "styledText" of section "Basic"
 	wait until the text of field "Weight Label" is "Weight (kg):"
@@ -360,6 +379,19 @@ action
 	add guide "Entry Field" with rect "185,87,253,117" to stack "Mainstack"
 	highlight guide "Entry Field"
 	wait until field "Height Field" fits guide "Entry Field" with tolerance 3
+	go to step "Name Interlude" 
+end step
+
+skip point
+
+step "Name Interlude"
+	It is important to name objects in LiveCode when you are going to 
+	refer to them using code later on. The field we have just created 
+	will have some text entered by the app user, and we will need to use
+	its contents in script to calculate the BMI. So we will give it a 
+	name that's descriptive of what it represents.
+action
+	interlude
 	go to step "Set Height Field Properties"
 end step
 
@@ -372,7 +404,8 @@ action
 end step
 
 step "Set Height Field Name"
-	Set the name of the field to "height"
+	Set the 'Name' property of the field to "height", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of field "Height Field" is "height"
@@ -406,7 +439,8 @@ action
 end step
 
 step "Set Weight Field Name"
-	Set the name of the field to "weight"
+	Set the 'Name' property of the field to "weight", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of field "Weight Field" is "weight"
@@ -428,7 +462,7 @@ step "Set Calculate Graphic Rect"
 action
 	add guide "Calculate Graphic" with rect "23,178,300,216" to stack "Mainstack"
 	highlight guide "Calculate Graphic"
-	wait until graphic "Calculate Background" fits guide "Calculate Graphic" with tolerance 3
+	wait until graphic "Calculate Background" fits guide "Calculate Graphic" with tolerance 5
 	go to step "Set Calculate Graphic Properties"
 end step
 
@@ -441,7 +475,7 @@ action
 end step
 
 step "Set Calculate Graphic Background"
-	Set the backgroundColor of the graphic to "255,255,255"
+	Set the 'Background Fill' color of the graphic to white
 action
 	highlight property "backgroundColor" of section "Colors"
 	wait until the "backgroundColor" of graphic "Calculate Background" is "255,255,255"
@@ -475,7 +509,8 @@ action
 end step
 
 step "Set Calculate Button Label"
-	Set the label of the button to "Calculate BMI"
+	Set the 'Label' property of the button to "Calculate BMI", and press
+	<Return>.
 action
 	highlight property "label" of section "Basic"
 	wait until the label of button "Calculate" is "Calculate BMI"
@@ -483,7 +518,7 @@ action
 end step
 
 step "Set Calculate Button Transparency"
-	Set the style of the button to "transparent"
+	Select "transparent" from the Style drop down menu.
 action
 	highlight property "style" of section "Basic"
 	wait until the style of button "Calculate" is "transparent"
@@ -491,7 +526,7 @@ action
 end step
 
 step "Set Calculate Button Border"
-	Set the borderWidth of the button to 0
+	Set the 'Border Width' of the button to 0.
 action
 	highlight property "borderWidth" of section "Basic"
 	wait until the borderWidth of button "Calculate" is 0
@@ -513,7 +548,7 @@ step "Set Results Background Rect"
 action
 	add guide "Background" with rect "14,240,308,422" to stack "Mainstack"
 	highlight guide "Background"
-	wait until graphic "Results Background" fits guide "Background" with tolerance 3
+	wait until graphic "Results Background" fits guide "Background" with tolerance 5
 	go to step "Set Results Background Properties"
 end step
 
@@ -526,7 +561,8 @@ action
 end step
 
 step "Set Results Background Name"
-	Set the name of the graphic to "resultsBG"
+	Set the 'Name' property of the graphic to "resultsBG", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of graphic "Results Background" is "resultsBG"
@@ -534,7 +570,7 @@ action
 end step
 
 step "Set Results Background Color"
-	Set the background color of the graphic to "255,255,255".
+	Set the background color of the graphic to white.
 action
 	highlight property "backgroundColor" of section "Colors"
 	wait until the backgroundColor of graphic "Results Background" is "255,255,255"
@@ -542,7 +578,7 @@ action
 end step
 
 step "Set Results Background Blend Level"
-	Set the blendLevel of the graphic to "50"
+	Set the 'Blend Level' property of the graphic to "50".
 action
 	highlight property "blendLevel" of section "Colors"
 	wait until the blendLevel of graphic "Results Background" is "50"
@@ -576,7 +612,8 @@ action
 end step
 
 step "Set Results Label Text"
-	Set the text of the label to "Results"
+	Set the 'Contents' property of the label to "Results", and press
+	<Ctrl>+<Return>.
 action
 	highlight property "styledText" of section "Basic"
 	wait until the text of field "Results Label" is "Results"
@@ -584,7 +621,7 @@ action
 end step
 
 step "Set Results Label Text Style"
-	Set the style of the label text to bold.
+	Set the 'Text Style' of the label to bold.
 action
 	highlight property "textStyle" of section "Text"
 	wait until the textStyle of field "Results Label" is "bold"
@@ -592,7 +629,7 @@ action
 end step
 
 step "Set Results Label Text Alignment"
-	Set the alignment of the label text to center.
+	Set the 'Text Align' of the label text to center.
 action
 	highlight property "textAlign" of section "Text"
 	wait until the textAlign of field "Results Label" is "center"
@@ -626,7 +663,8 @@ action
 end step
 
 step "Set Results Name"
-	Set the name of the field to "results".
+	Set the 'Name' property of the field to "results", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of field "Results" is "results"
@@ -650,8 +688,8 @@ action
 end step
 
 step "Create Advice Field"
-	Duplicate the results field, by selecting Edit > Duplicate Objects
-	from the menubar.
+	Duplicate the results field, by selecting 'Edit' → 
+	'Duplicate Objects' from the menubar.
 action
 	highlight menu item "Duplicate Objects" of menu "Edit"
 	capture the next new field of stack "Mainstack" as "Advice"
@@ -677,7 +715,8 @@ action
 end step
 
 step "Set Advice Name"
-	Set the name of the field to "advice".
+	Set the 'Name' property of the field to "advice", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of field "Advice" is "advice"
@@ -685,7 +724,7 @@ action
 end step
 
 step "Set Advice Dont Wrap"
-	Set the dontWrap property of the advice field to false.
+	Check the 'Don't Wrap' checkbox.
 action
 	highlight property "dontWrap" of section "Basic"
 	wait until the dontWrap of field "Advice" is false
@@ -695,9 +734,9 @@ end step
 skip point
 
 step "Chart Card Interlude"
-	The UI elements for this part of the app is now complete. Before we 
-	start adding code to make things work, we will set up the UI for the
-	chart display.
+	The User Interface (UI) for this part of the app is now complete. 
+	Before we start adding code to make things work, we will set up the 
+	UI for the chart display.
 	
 	LiveCode stacks can have a number of different cards, which function 
 	like separate screens in the app. We are going to add a card for the
@@ -708,8 +747,8 @@ action
 end step
 
 step "Set Calculator Card Properties"
-	Open the property inspector for this card by selecting Object > Card 
-	Inspector from the menubar.
+	Open the property inspector for this card by selecting 'Object' → 
+	Card Inspector from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
 	wait until there is an inspector for card "Calculator"
@@ -717,7 +756,8 @@ action
 end step
 
 step "Set Calculator Card Name"
-	Set the name of this card to "calculator"
+	Set the 'Name' property of this card to "calculator", and press
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of card "Calculator" is "calculator"
@@ -729,7 +769,8 @@ skip point
 step "Background Groups Interlude"
 	Sometimes elements of an app's UI should be present on all cards of
 	the stack. In our case, the header at the top and the navigation bar
-	at the bottom should be visible on the chart card as well as this card.
+	at the bottom should be visible on the chart card as well as this 
+	card.
 	
 	In order to make this happen, we use a feature of LiveCode called
 	a shared group. A shared group can appear on any card of a stack.
@@ -775,7 +816,9 @@ action
 end step
 
 step "Set Footer Group Background Behavior"
-	Set the backgroundBehavior of the group to true.
+	Check the 'Behave like a Background' checkbox. When a group behaves
+	like a background, it becomes a shared group, and is automatically
+	placed on each new card of the stack.
 action
 	highlight property "backgroundBehavior" of section "Basic"
 	wait until the backgroundBehavior of group "Background Group" is true
@@ -786,7 +829,8 @@ skip point
 
 step "Create Chart Card"
 	We are going to add a new card to the stack, to display a chart of 
-	BMI index data. Create a new card.
+	BMI index data. Create a new card by selecting 'Object' → 'New Card' 
+	from the menubar.
 action
 	highlight menu item "New Card" of menu "Object"
 	capture the next new card of stack "Mainstack" as "Chart"
@@ -795,8 +839,8 @@ action
 end step
 
 step "Set Chart Card Properties"
-	Open the property inspector for this card by selecting Object > Card 
-	Inspector from the menubar.
+	Open the property inspector for this card by selecting 'Object' → 
+	'Card Inspector' from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
 	wait until there is an inspector for card "Chart"
@@ -804,7 +848,7 @@ action
 end step
 
 step "Set Chart Card Name"
-	Set the name of this card to "chart".
+	Set the 'Name' property of this card to "chart", and press <Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of card "Chart" is "chart"
@@ -812,8 +856,8 @@ action
 end step
 
 step "Import BMI Chart Data"
-	Import the BMI data from the "bmi.csv" file, by selecting File > 
-	Import As Control > Graph from CSV File from the menu bar.
+	Import the BMI data from the "<file>" file, by selecting 'File' → 
+	'Import As Control' → 'Graph from CSV File' from the menu bar.
 file
 	bmi.csv
 action
@@ -832,7 +876,8 @@ action
 end step
 
 step "Set Chart Name"
-	Set the name of the chart widget to "chart".
+	Set the 'Name' property of the chart widget to "chart", and press
+	<Return>.
 action
 	highlight property "name" of section "Basic"
 	wait until the "name" of widget "BMI Chart" is "chart"
@@ -840,7 +885,7 @@ action
 end step
 
 step "Set Chart Text Size"
-	Set the text size of the chart widget to 10.
+	Set the 'Text Size' of the chart widget to 10.
 action
 	highlight property "textSize" of section "Text"
 	wait until the textSize of widget "BMI Chart" is 10
@@ -852,7 +897,7 @@ step "Set Chart Rect"
 action
 	add guide "Chart" with rect "0,62,320,432" to stack "Mainstack"
 	highlight guide "Chart"
-	wait until widget "BMI Chart" fits guide "Chart" with tolerance 3
+	wait until widget "BMI Chart" fits guide "Chart" with tolerance 5
 	go to step "Set Chart Colors"
 end step
 
@@ -861,7 +906,7 @@ step "Set Chart Colors"
 	going to set the colors of the lines appropriately to display that
 	information.
 	
-	Set the graphColors of the chart to
+	Set the 'Graph Colors' of the chart to
 	
 	<value>
 value
@@ -897,7 +942,7 @@ action
 end step
 
 step "Set Footer Items"
-	Add a new navigation item to the footer.
+	Add a new navigation item to the footer, by clicking the plus icon.
 action 
 	highlight property "navData" of section "Basic"
 	wait until the navLabels of widget "Footer" is "Calculator,New Item"
@@ -905,7 +950,8 @@ action
 end step
 
 step "Set Item Name"
-	Set the name of the new navigation item to "Chart".
+	Change the name of the new navigation item from "New Item" to 
+	"Chart".
 action 
 	highlight property "navData" of section "Basic"
 	wait until the navLabels of widget "Footer" is "Calculator,Chart"
@@ -913,7 +959,9 @@ action
 end step
 
 step "Set Item Icon"
-	Set the icon of the new navigation item to the bar chart icon.
+	Click the grey icon on the new row of the Navigation Data, to bring
+	up the icon picker, and set the icon of the new navigation item to 
+	the "bar chart" icon.
 action 
 	highlight property "navData" of section "Basic"
 	wait until the navIcons of widget "Footer" is "cog,bar chart"
@@ -940,11 +988,14 @@ action
 end step
 
 step "Script Editor Interlude"
-	The Script Editor is a window that allows you to make parts of you 
-	app responsive to user actions. 
+	The Script Editor is a window that allows you to add code to the
+	objects on your stack.
 	
-	This is achieved by adding blocks of script which tell LiveCode what 
-	to do when a given user action has occurred.
+	LiveCode apps work by executing code in response to 'messages', 
+	which are usually triggered by some kind of user action. 
+
+	When an object is sent a message, it will execute the code in the 
+	appropriate block of code, or 'handler'.
 action 
 	interlude
 	highlight script editor for widget "Footer"
@@ -953,37 +1004,26 @@ end step
 
 step "Script Editor Apply"
 	The script entered into the script editor does not become live 
-	until you click on the Apply button. When this is clicked, you will 
-	get feedback about whether the script you have written parses 
-	correctly or not.
+	until you click on the 'Apply' button. When this is clicked, you will 
+	get feedback about whether the script you have written has any 
+	errors in it or not.
 action
 	interlude
 	highlight "Apply" of script editor for widget "Footer"
-	go to step "Script Editor Errors Tab"
+	go to step "Set Navigation Bar Script"	
 end step
 
-step "Script Editor Errors Tab"
-	If there are any errors parsing your script, they will appear in the
-	errors tab of the script editor. It will tell you where the error
-	has occurred. You can double-click the error to navigate to the 
-	appropriate line of code.
+step "Set Navigation Bar Script"	
+	When the navigation bar is clicked by the user, it is sent a message
+	with the name 'navigate'. The message has one parameter, pLabel, 
+	indicating which item on the navigation bar was clicked.
 	
-	If there were no errors, it will display the text "No errors 
-	occurred".
-action
-	interlude
-	highlight "Errors" of script editor for widget "Footer"
-	go to step "Set Navigation Bar Script"
-end step
-
-step "Set Navigation Bar Script"
-	When an icon on the navigation bar is clicked, it is sent a 
-	'navigate' message. Setting the script to the following will cause
-	the app to go to the corresponding card of the stack when an icon is
-	clicked.
+	We want to handle the navigate message, and go to the card 
+	corresponding to the item the user clicked on.	 
 	
-	Add the 'go to card' command to the navigation bar script and click
-	the Apply button.
+	Either add the 'go to card' command to the navigation bar's 
+	'on navigate' handler, or copy the script using the Copy Script To
+	Editor Button, and click the script editor's 'Apply' button.
 script
 	on navigate pLabel
 		go to card pLabel
@@ -991,20 +1031,47 @@ script
 action
 	highlight script editor for widget "Footer"
 	wait until widget "Footer" is scripted
+	go to step "Explain Go To Card"
+end step
+
+step "Explain Go To Card"
+	The 'pLabel' parameter to the handler contains either "Calculator" 
+	or "Chart", depending on which icon was clicked on the navigation 
+	bar.
+	
+	We have named our cards "calculator" and "chart" (LiveCode is not 
+	case-sensitive by default), so going to the appropriate card is as
+	simple as using the passed in parameter.
+action
+	interlude
+	highlight line "go to card" of script editor for widget "Footer"
+	go to step "Script Editor Errors Tab"
+end step
+
+step "Script Editor Errors Tab"
+	If there are any errors in script, they will appear in the errors 
+	tab of the script editor. It will tell you where the error has 
+	occurred. You can double-click the error to highlight the 
+	appropriate line of code.
+	
+	If there were no errors, it will display the text "No errors 
+	occurred".
+action
+	interlude
+	highlight "Errors" of script editor for widget "Footer"
 	go to step "Run Edit Tools Interlude"
 end step
 
 skip point
 
 step "Run Edit Tools Interlude"
-	The browse (aka run) and pointer (aka edit) tools control how you 
-	interact with your stack in the IDE. 
+	LiveCode has two modes: edit mode and run mode. 
 	
-	In edit mode, you can click or drag to select objects on your stack, 
-	or right-click to bring up a contextual menu. In run mode your app 
-	is live - objects will behave as they would for the app user. For 
-	example, clicking on an object will cause mouseDown and mouseUp 
-	messages to be sent to it.
+	Up until now you have been in edit mode all the time. In edit mode
+	you can click or drag to select objects on your stack, and move and 
+	resize them. 
+	
+	You can enter edit mode by clicking this tool in the tools palette.
 action
 	interlude
 	highlight tool "Edit Mode"
@@ -1012,8 +1079,12 @@ action
 end step
 
 step "Test Navigation"
+	In run mode your app is live - objects will behave as they would for 
+	the app user. For example, clicking on the navigation bar will cause
+	the navigate message to be sent to it.
+	
 	To demonstrate the code you have just added, we are going to enter
-	'run' mode and test navigating between the cards.
+	run mode and test going between the cards.
 action
     highlight tool "Run Mode"
     wait until the tool is run
@@ -1021,8 +1092,7 @@ action
 end step
 
 step "Navigate To Calculator Card"
-	Click the 'calculator' navigation item to navigate to the calculator
-	card.
+	Click the 'Calculator' navigation item to go to the calculator card.
 action
 	highlight widget "Footer"
 	wait until this card is "Calculator"
@@ -1030,21 +1100,26 @@ action
 end step
 
 step "Enter Edit Mode"
-	Change the mode back to edit mode to continue making changes to the 
-	app.
+	Change back to edit mode to continue making changes to the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
-	go to step "Open Stack Script"
+	go to step "Function Interlude"
 end step
 
 skip point
 
-step "Open Stack Script"	
-	We are going to add a function to the stack script that takes height 
+step "Function Interlude"
+	A function is another type of handler- one that returns a value. We 
+	are going to add a function to the stack script that takes height 
 	and weight parameters and uses a web service to return the 
 	corresponding BMI.
-	
+action
+	interlude 	
+	go to step "Open Stack Script"
+end step
+
+step "Open Stack Script"		
 	Open up the stack script editor by clicking the 'Code' icon.
 action 
 	highlight toolbar "Code"
@@ -1053,14 +1128,19 @@ action
 end step
 
 step "Set Stack Script"
-	Set the script of the stack to the following:
+	Set the script of the stack to the following, and click the 'Apply' 
+	button:
 script
 	function getBMI pHeight, pWeight
-	   local tURL, tJSon, tArray
+	   local tURL
 	   put "http://api.clinicalcalculator.org/bmi?" & \
 		   "height_in_m=" & pHeight & "&weight_in_kg=" & pWeight into tURL
-	   put url tURL into tJSon
-	   put JsonImport(tJson) into tArray
+	   
+	   local tJSON
+	   put url tURL into tJSON
+	   
+	   local tArray 
+	   put JsonImport(tJSON) into tArray
 	   return round(tArray["result"]["value"])
 	end getBMI
 action
@@ -1071,7 +1151,8 @@ end step
 
 step "Explain URL"
 	This url is a web service that takes a query string and returns the 
-	result in a JSON array.
+	resulting BMI in the form of a JavaScript Object Notation (JSON) 
+	string.
 action
 	interlude
 	highlight line "http://api.clinicalcalculator.org/bmi" of script editor for stack "Mainstack"
@@ -1080,7 +1161,8 @@ end step
 
 step "Explain Parameters"
 	We construct the url with the 'height_in_m' and 'weight_in_kg' 
-	parameters, using the contents of the variables pHeight and pWeight.
+	parameters, using the contents of the variables 'pHeight' and 
+	'pWeight'.
 action
 	interlude
 	highlight line "&weight_in_kg=" of script editor for stack "Mainstack"
@@ -1096,8 +1178,11 @@ action
 end step
 
 step "Explain JSON Library"
-	The LiveCode IDE comes with a pre-packaged JSON library, which we 
-	use to convert the incoming JSON data into a LiveCode array.
+	LiveCode comes with pre-packaged library functions to convert 
+	between JSON and a format understood by LiveCode. 
+	
+	In this case the JSON is converted to an array - which is a single
+	variable in which many values can be stored. 
 action
 	interlude
 	highlight line "put JsonImport" of script editor for stack "Mainstack"
@@ -1106,7 +1191,7 @@ end step
 
 step "Explain Return"
 	Functions should contain a 'return' statement, which returns the
-	specified value so it can be used by the caller.
+	specified value when the function is 'called' by another handler.
 action
 	interlude
 	highlight line "return" of script editor for stack "Mainstack"
@@ -1133,30 +1218,47 @@ end step
 skip point
 
 step "Set Calculate Button Script"
-	When the calculate button is clicked, we want to call the getBMI
+	When the calculate button is clicked, we want to call the 'getBMI'
 	function we added to the stack script using the values that the 
 	user has entered in the height and weight fields.
 
-	Set the script of the button to the following:
+	Set the script of the button to the following, and click the 'Apply'
+	button:
 script
 	on mouseUp
-		local tHeight
-		put field "height" into tHeight
-		
-		local tWeight
-		put field "weight" into tWeight
-		
-		answer getBMI(tHeight, tWeight)
+		answer getBMI(field "weight", field "height")
 	end mouseUp
 action
 	highlight script editor for button "Calculate"
 	wait until button "Calculate" is scripted
+	go to step "Explain Calculate Script"
+end step
+
+step "Explain Calculate Script"
+	The mouseUp message is sent to the button when the button is clicked
+	in run mode. 
+action 
+	interlude
+	go to step "Explain Calculate Script II"
+end step
+
+step "Explain Calculate Script II"
+	In this line we are fetching the contents of the fields named 
+	"height" and "weight" and passing them as parameters to the function
+	getBMI that we added to the stack script.
+	
+	The answer command brings up a dialog box with some content. Here we
+	are telling LiveCode to pop up a dialog box with the result of the 
+	getBMI function with the height and weight values entered by the 
+	user.
+action
+	interlude
 	go to step "Test Calculate Button"
 end step
 
 step "Test Calculate Button"
 	To demonstrate the code you have just added, we are going to enter
-	'run' mode and test the response of the web service.
+	run mode and test the response of the web service.
 action
     highlight tool "Run Mode"
     wait until the tool is run
@@ -1173,8 +1275,7 @@ action
 end step
 
 step "Re-enter Edit Mode"
-	Change the mode back to edit mode to continue making changes to the 
-	app.
+	Change back to edit mode to continue making changes to the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -1189,7 +1290,7 @@ step "Custom Properties Interlude"
 	will use a 'custom property'.
 	
 	The properties you have been setting on objects so far have been 
-	built-in properties. You can set you own (custom) properties on 
+	built-in properties. You can set you own custom properties on 
 	objects and access them in the same way you would a normal property.
 action
 	interlude
@@ -1198,12 +1299,12 @@ end step
 
 step "Open Calculator Card Script"
 	We are going to store the calculated BMI using a custom property on
-	out stack, called "cBMI". We are also going to store the height and 
-	width in custom properties "cHeight" and "cWidth".
+	out stack, called 'cBMI'. We are also going to store the height and 
+	width in custom properties 'cHeight' and 'cWidth'.
 	
 	To do this we will add a custom command to the card script which 
-	will set all the properties for us. So select Object > Card Script 
-	from the menubar.
+	will set all the properties for us. So select 'Object' → 'Card 
+	Script' from the menubar.
 action
 	highlight menu item "Card Script" of menu "Object"
 	wait until there is a script editor for card "Calculator"
@@ -1211,7 +1312,8 @@ action
 end step
 
 step "Set Calculator Card Script"
-	Add the following command to the card script:
+	Add the following command to the card script, and click the Apply
+	button:
 script
 	command calculateBMI
 		local tHeight
@@ -1231,24 +1333,52 @@ script
 	
 	command setData pBMI
 	  put "Calculated BMI:" && pBMI into field "results"
+	  
 	  if pBMI <= 18 then
          put "A BMI less than 19 is considered underweight." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "0,0,255"
+         set the backgroundColor of graphic "resultsBG" to "blue"
       else if pBMI <= 24 then
          put "A BMI between 19 and 24 is considered healthy." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "0,255,0"
+         set the backgroundColor of graphic "resultsBG" to "green"
       else if pBMI <= 29 then
          put "A BMI between 25 and 29 is considered overweight." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "255,255,0"
+         set the backgroundColor of graphic "resultsBG" to "orange"
       else
          put "A BMI over 29 is considered obese." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "255,128,0"
+         set the backgroundColor of graphic "resultsBG" to "red"
       end if	
-      set the opaque of graphic "resultsBG" to true
 	end setData
 action
 	highlight script editor for card "Calculator"
 	wait until card "Calculator" is scripted
+	go to step "Explain Calculator Card Script"
+end step
+
+step "Explain Calculator Card Script"
+	This command sets the values of the custom properties 'cHeight' and
+	'cWeight', and then calculates the BMI value and sets the 'cBMI' 
+	custom property. Finally it calls the setData command which uses the
+	calculated BMI value to populate the results fields of the app.
+action 
+	highlight line "end calculateBMI" of script editor for card "Calculator"
+	go to step "Explain Calculator Card Script II"
+end step
+
+step "Explain Calculator Card Script II"
+	Firstly we display the calculated BMI. '&& pBMI' adds the passed in
+	BMI value to the end of the string.
+action 
+	highlight line "Calculated BMI" of script editor for card "Calculator"
+	go to step "Explain Calculator Card Script III"
+end step
+
+step "Explain Calculator Card Script III"
+	This section displays some text in the 'advice' field, and changes 
+	the background color of the whole results section. Since the content
+	and color depend on the calculated BMI value, we use the 'if' 
+	structure to execute different code for different BMI values.
+action 
+	highlight line "end if" of script editor for card "Calculator"
 	go to step "Select Calculate Button Again"
 end step
 
@@ -1273,11 +1403,12 @@ end step
 
 step "Change Calculate Button Script"
 	Change the button script to call the calculateBMI command you have
-	just added to the card script. We will also add some text color when
-	the mouse is pressed, to give some user feedback.
+	just added to the card script and click the 'Apply' button. We will 
+	also add some text color when the mouse is pressed, to give some 
+	user feedback.
 script
 	on mouseDown
-	   set the textColor of me to "0,0,255"
+	   set the textColor of me to "blue"
 	end mouseDown
 
 	on mouseUp
@@ -1287,12 +1418,33 @@ script
 action
 	highlight script editor for button "Calculate"
 	wait until button "Calculate" is scripted
+	go to step "Explain Calculate Button Script"
+end step
+
+step "Explain Calculate Button Script"
+	The mouseDown message is sent to the button when the user presses 
+	the mouse while the cursor is over it. We change the text color of 
+	the button while the mouse is pressed.
+action
+	highlight line "end mouseDown" of script editor for button "Calculate"
+	go to step "Explain Calculate Button Script II"
+end step
+
+step "Explain Calculate Button Script II"
+	The mouseUp message is sent to the button when the user releases 
+	the mouse while the cursor is over it. So when the mouse is 
+	released, we can set the text color back to its previous value.
+	
+	Setting the text color to 'empty' means using its default or 
+	inherited value.
+action
+	highlight line "end mouseUp" of script editor for button "Calculate"
 	go to step "Test Calculate Button Again"
 end step
 
 step "Test Calculate Button Again"
 	To demonstrate the code you have just added, we are going to enter
-	'run' mode again and click the calculate button.
+	run mode again and click the calculate button.
 action
     highlight tool "Run Mode"
     wait until the tool is run
@@ -1318,7 +1470,7 @@ action
 end step
 
 step "Select Header Widget"
-	All that remains to do on this card is to code the "Clear" action of
+	All that remains to do on this card is to code the 'Clear' action of
 	the header widget.
 	
 	Select the header bar widget.
@@ -1338,30 +1490,43 @@ action
 end step
 
 step "Set Calculator Header Script"
-	Set the script of the header to the following (you can delete the
-	leftAction and searchAction handlers as they will not be used by 
-	this widget):
+	Set the script of the header to the following, and click the 'Apply'
+	button:
+	
+	We don't need the 'leftAction' and 'searchAction' handlers for this 
+	script.
 script
-	on headerAction pName
-	   if pName is "Clear" then
-		  put empty into field "height"
-		  put empty into field "weight"
-		  put empty into field "results"
-		  put empty into field "advice"
-		  set the backgroundColor of graphic "resultsBG" to" white"
-		  set the cBMI of this stack to empty
-		  set the cHeight of this stack to empty
-		  set the cWidth of this stack to empty
-	   end if
+	on headerAction
+		set the cBMI of this stack to empty
+		set the cHeight of this stack to empty
+		set the cWidth of this stack to empty
+		
+		put empty into field "height"
+		put empty into field "weight"
+		put empty into field "results"
+		put empty into field "advice"
+		set the backgroundColor of graphic "resultsBG" to "white"
 	end headerAction
 action
 	highlight script editor for widget "Header"
 	wait until widget "Header" is scripted
+	go to step "Explain Calculator Header Script"
+end step
+
+step "Explain Calculator Header Script"
+	The headerAction message is sent when 'Clear' at the top right of 
+	the header bar is clicked.
+	
+	We simply clear all of the custom properties by setting them to 
+	empty, and clear all the text and colors that are set by the 
+	'setData' command.
+action
+	interlude
 	go to step "Go To Chart Card"
 end step
 
 step "Go To Chart Card"
-	Select View > Go Next to navigate to the chart card.
+	Select 'View' → 'Go Next' to navigate to the chart card.
 action
 	highlight menu item "Go Next" of menu "View"
 	wait until this card is "Chart"
@@ -1380,11 +1545,15 @@ action
 end step
 
 step "Set Chart Card Script"
-	In addition to setting the hilitedCoordinates of the chart, we want 
-	to change the title on the header widget and remove the 'Clear'
-	action whenever the user navigates to this card. 
+	In addition to highlighting where on the chart, the calculated BMI
+	lies, we want to change the title on the header widget whenever the 
+	user navigates to this card.
 	
-	Add the following handler to the card script:
+	We also want to remove the 'Clear' action, as it only relates to 
+	the previous card.
+	
+	Add the following handler to the card script, and click the Apply 
+	button:
 script
 	on preOpenCard
 		if the cBMI of this stack is a number then
@@ -1395,8 +1564,8 @@ script
 			set the hilitedCoordinates of widget "chart" to empty
 		end if
 		
-		set the headerActions of widget "header" to empty
 		set the headerTitle of widget "header" to "BMI Chart"
+		set the headerActions of widget "header" to empty
 	end preOpenCard
 action
 	highlight script editor for card "Chart"
@@ -1405,7 +1574,7 @@ action
 end step
 
 step "Explain PreOpenCard Script"
-	The preOpenCard message is sent to a card before it is opened,
+	The 'preOpenCard' message is sent to a card before it is opened,
 	i.e. just before the user navigates to the card.
 	
 	The preOpenCard handler is normally used to initialise some card 
@@ -1413,19 +1582,46 @@ step "Explain PreOpenCard Script"
 action
 	interlude
 	highlight line "on preOpenCard" of script editor for card "Chart"
+	go to step "Explain PreOpenCard Script II"
+end step
+
+step "Explain PreOpenCard Script II"
+	If the stack has a valid numeric 'cBMI' custom property set on it, 
+	then we highlight the spot on the chart where the value lies using 
+	the 'hilitedCoordinates' property.
+	
+	Otherwise, the cBMI custom property has been cleared, so we also 
+	clear the chart's highlighted spot.
+action
+	interlude
+	highlight line "end if" of script editor for card "Chart"
+	go to step "Explain PreOpenCard Script III"
+end step
+
+step "Explain PreOpenCard Script III"
+	The last two lines change the title of the header bar for this card,
+	and remove the clear action.
+action
+	interlude
+	highlight line "set the headerTitle" of script editor for card "Chart"
 	go to step "Script Editor Documentation Pane"
 end step
 
 step "Script Editor Documentation Pane"
 	The script editor has a documentation pane, which gives some basic 
-	information about the piece of syntax the script editor's caret 
-	(text insertion cursor) is in.
-	
-	Try clicking to put the caret in preOpenCard and have a look at the 
-	description in the documentation pane.
+	information about syntax used in the current script.
 action 
 	interlude
 	highlight "Documentation" of script editor for card "Chart"
+	go to step "Click PreOpenCard"
+end step
+
+step "Click PreOpenCard"
+	Click 'preOpenCard' here to show the description of the message in 
+	the documentation pane.
+action
+	interlude
+	highlight line "on preOpenCard" of script editor for card "Chart"
 	go to step "Launch Documentation"
 end step
 
@@ -1458,9 +1654,9 @@ action
 end step
 
 step "Test Navigation Again"
-	To demonstrate the effect of the preOpenCard code you have just 
-	added, we are going to enter 'run' mode again and navigate back to 
-	this card.
+	To demonstrate the effect of the 'preOpenCard' code you have just 
+	added, we are going to enter run mode again, go to the BMI 
+	calculator card, and then go back to this card.
 action
     highlight tool "Run Mode"
     wait until the tool is run
@@ -1468,7 +1664,7 @@ action
 end step
 
 step "Navigate To Calculator Card Again"
-	Click the 'Calculator' navigation item to navigate to the calculator
+	Click the 'Calculator' navigation item to go to the calculator card.
 	card.
 action
 	highlight widget "Footer"
@@ -1477,8 +1673,7 @@ action
 end step
 
 step "Navigate To Chart Card"
-	Click the 'Chart' navigation item to navigate back to the chart 
-	card.
+	Click the 'Chart' navigation item to go back to the chart card.
 action
 	highlight widget "Footer"
 	wait until this card is "Chart"
@@ -1487,7 +1682,7 @@ end step
 
 step "PreOpenCard Changes"
 	Notice the title of the header widget has now changed, and the clear
-	action has gone. The preOpenCard handler was executed before the 
+	action has gone. The 'preOpenCard' handler was executed before the 
 	card was show, causing the changes to occur.
 action
 	interlude
@@ -1498,10 +1693,10 @@ end step
 step "Navigate To Calculator Card A Third Time"
 	Since the header bar widget is in a shared group, any changes to it
 	will be visible from the calculator card as well. So we need to add
-	a preOpenCard handler to the calculator card to change the title and
-	actions of the header bar widget.
+	a 'preOpenCard' handler to the calculator card to change the title 
+	and actions of the header bar widget.
 	
-	Click the Calculator icon to navigate to the calculator card again.
+	Click the Calculator icon to go back to the calculator card again.
 action
 	highlight widget "Footer"
 	wait until this card is "Calculator"
@@ -1518,7 +1713,7 @@ action
 end step
 
 step "Open Calculator Card Script Again"
-	Select Object > Card Script from the menubar.
+	Select 'Object' → 'Card Script' from the menubar.
 action
 	highlight menu item "Card Script" of menu "Object"
 	wait until there is a script editor for card "Calculator"
@@ -1526,7 +1721,8 @@ action
 end step
 
 step "Set Calculator Card Script Again"
-	Add the following handler to the card script:
+	Add the following handler to the card script, and click the 'Apply'
+	button:
 script
 	on preOpenCard
 		set the actionLabels of widget "header" to "Clear"
@@ -1543,33 +1739,32 @@ script
 		set the cWeight of this stack to tWeight
 		
 		local tBMI
-		put getBMI(tHeight, tWeight) into tBMI
+		put getBMI(field "height", field "weight") into tBMI
 		set the cBMI of this stack to tBMI
 		
 		setData tBMI
 	end calculateBMI
 	
 	command setData pBMI
-	  put "Calculated BMI:" && pBMI into field "results"
-	  if pBMI <= 18 then
-         put "A BMI less than 19 is considered underweight." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "0,0,255"
-      else if pBMI <= 24 then
-         put "A BMI between 19 and 24 is considered healthy." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "0,255,0"
-      else if pBMI <= 29 then
-         put "A BMI between 25 and 29 is considered overweight." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "255,255,0"
-      else
-         put "A BMI over 29 is considered obese." into field "advice"
-         set the backgroundColor of graphic "resultsBG" to "255,128,0"
-      end if	
-      set the opaque of graphic "resultsBG" to true
+		put "Calculated BMI:" && pBMI into field "results"
+		
+		if pBMI <= 18 then
+			put "A BMI less than 19 is considered underweight." into field "advice"
+			set the backgroundColor of graphic "resultsBG" to "blue"
+		else if pBMI <= 24 then
+			put "A BMI between 19 and 24 is considered healthy." into field "advice"
+			set the backgroundColor of graphic "resultsBG" to "green"
+		else if pBMI <= 29 then
+			put "A BMI between 25 and 29 is considered overweight." into field "advice"
+			set the backgroundColor of graphic "resultsBG" to "orange"
+		else
+			put "A BMI over 29 is considered obese." into field "advice"
+			set the backgroundColor of graphic "resultsBG" to "red"
+		end if	
 	end setData
 action
 	highlight script editor for card "Calculator"
 	wait until card "Calculator" is scripted
-	--go to step "Create Browser Card"
 	go to step "Project Browser Interlude"
 end step
 
@@ -1616,16 +1811,17 @@ action
 end step
 
 step "Set Browser Card Name"
-	Set the name of this card to "browser".
+	Set the 'Name' property of this card to "services", and press 
+	<Return>.
 action
 	highlight property "name" of section "Basic"
-	wait until the "name" of card "Browser" is "browser"
+	wait until the "name" of card "Browser" is "services"
 	go to step "Open Browser Card Script"
 end step
 
 step "Open Browser Card Script"
-	Open the script editor for this card, by selecting "Card Script" 
-	from the Object menu.
+	Open the script editor for this card, by selecting 'Card Script' 
+	from the 'Object' menu.
 action	
 	highlight menu item "Card Script" of menu "Object"
 	wait until there is a script editor for card "Browser"
@@ -1636,7 +1832,7 @@ step "Set Browser Script"
 	We need to make sure the header bar is updated when the user 
 	navigates to this card.
 	
-	Set the script to the following:
+	Set the script to the following, and click the 'Apply' button:
 script
 	on preOpenCard
 		set the headerActions of widget "header" to empty
@@ -1665,7 +1861,8 @@ action
 end step
 
 step "Set Footer Items Once More"
-	Add a new navigation item to the footer.
+	Add a new navigation item to the footer, by clicking the plus icon
+	at the right hand side of the bottom row.
 action 
 	highlight property "navData" of section "Basic"
 	wait until the navLabels of widget "Footer" is "Calculator,Chart,New Item"
@@ -1673,15 +1870,17 @@ action
 end step
 
 step "Set Item Name Once More"
-	Set the name of the new navigation item to "Browser".
+	Set the name of the new navigation item to "Services".
 action 
 	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator,Chart,Browser"
+	wait until the navLabels of widget "Footer" is "Calculator,Chart,Services"
 	go to step "Set Item Icon Once More"
 end step
 
 step "Set Item Icon Once More"
-	Set the icon of the new navigation item to the medikit icon.
+	Click the grey icon on the new row of the Navigation Data, to bring
+	up the icon picker, and set the icon of the new navigation item to 
+	the "medikit" icon.
 action 
 	highlight property "navData" of section "Basic"
 	wait until the navIcons of widget "Footer" is "cog,bar chart,medkit"
@@ -1715,7 +1914,7 @@ step "Set Browser Rect"
 action
 	add guide "Browser" with rect "0,62,320,432" to stack "Mainstack"
 	highlight guide "Browser"
-	wait until widget "Browser" fits guide "Browser" with tolerance 3
+	wait until widget "Browser" fits guide "Browser" with tolerance 5
 	go to step "Set Browser URL"
 end step
 
@@ -1726,6 +1925,15 @@ value
 action
 	highlight property "url" of section "Basic"
 	wait until the url of widget "Browser" is value
+	go to step "Final Browse Mode"
+end step
+
+step "Final Browse Mode"
+	Finally, enter browse mode and use your app as it would be by a 
+	user. 
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
 	go to step "More Info In Lessons"
 end step
 
@@ -1739,15 +1947,6 @@ step "More Info In Lessons"
 action
 	interlude
 	highlight toolbar "Tutorials"
-	go to step "Final Browse Mode"
-end step
-
-step "Final Browse Mode"
-	Finally, enter browse mode and use your app	as it would be by a 
-	user. 
-action
-	highlight tool "Run Mode"
-	wait until the tool is run
 end step
 
 epilogue
