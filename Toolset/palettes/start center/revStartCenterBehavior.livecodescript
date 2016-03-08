@@ -1,4 +1,4 @@
-﻿script "startCenterBehavior"
+﻿script "revStartCenterBehavior"
 constant kAllSocialMedia = "facebook,twitter,github,linkedin,youtube,stackoverflow"
 constant kSocialMedia = "github,stackoverflow,youtube,facebook,twitter,linkedin"
 
