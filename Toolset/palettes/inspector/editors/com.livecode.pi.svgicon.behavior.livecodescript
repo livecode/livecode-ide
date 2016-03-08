@@ -33,7 +33,7 @@ on mouseUp
    local tProperties
    put tValue into tProperties["selectedIcon"]
    popup widget "com.livecode.widget.iconpicker" at the clickLoc with properties tProperties
-   if the result is empty then
+   if the result is empty and it is not tValue then
       set the iconPathPreset of widget 1 of me to it
    end if
    valueChanged
