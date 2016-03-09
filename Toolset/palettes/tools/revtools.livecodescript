@@ -317,7 +317,7 @@ on generatePalette
             create widget tControlTypeID as "com.livecode.widget.svgpath" in group tView of group "contents"
             set the width of widget tControlTypeID to BLOCK_SIZE * 2
             set the height of widget tControlTypeID to BLOCK_SIZE
-            set the iconcolor of widget tControlTypeID to 100,100,100
+            set the foregroundColor of widget tControlTypeID to 100,100,100
             set the iconpath of widget tControlTypeID to sViewsData[tView][tControlTypeID]["svgicon"]
             set the cType of widget tControlTypeID to tView
             set the cStyle of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
@@ -653,7 +653,7 @@ on mouseEnter
    if the cDisabled of the target is true then exit mouseEnter
    if word 1 of the target is "widget" then
       revIDESetCursor "com.livecode.cursor.grab"
-      set the iconcolor of the target to revIDEColor("edition_color")
+      set the foregroundColor of the target to revIDEColor("edition_color")
    else if the cTool of the target is false and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
@@ -673,7 +673,7 @@ on mouseLeave
    if the cDisabled of the target is true then exit mouseLeave
    try
       if word 1 of the target is "widget" then
-         set the iconcolor of the target to "100,100,100"
+         set the foregroundColor of the target to "100,100,100"
       else
          hide graphic "tool_hover" of group "contents" 
          set the coloroverlay of the target to empty
@@ -795,7 +795,7 @@ on toolDisable pWhich
       disable button pWhich of me
    else
       set the cDisabled of widget pWhich of me to true
-      set the iconcolor of widget pWhich of me to 200,200,200
+      set the foregroundColor of widget pWhich of me to 200,200,200
    end if
 end toolDisable
 
@@ -814,7 +814,7 @@ on toolEnable pWhich
       enable button pWhich of me
    else
       set the cDisabled of widget pWhich of me to false
-      set the iconcolor of widget pWhich of me to 100,100,100
+      set the foregroundColor of widget pWhich of me to 100,100,100
    end if
 end toolEnable
 
