@@ -282,23 +282,6 @@ on preOpenStack
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack
 
-# OK-2007-07-06 : Reworked recent paths system
-command revUpdateRecentFiles pStack
-   if there is no stack pStack then
-      exit revUpdateRecentFiles
-   end if
-
-   if revIDEStackNameIsIDEStack(pStack) then
-      exit revUpdateRecentFiles
-   end if
-
-   if the effective filename of stack pStack is empty then
-      exit revUpdateRecentFiles
-   end if
-
-   revIDEAddRecentStack the effective filename of stack pStack
-end revUpdateRecentFiles
-
 on rawKeyUp pWhich
    if pWhich is 65386 then
       revIDEHelpKeyPressed

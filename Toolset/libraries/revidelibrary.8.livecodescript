@@ -6180,6 +6180,42 @@ function revIDEStackFileVersion pStackFile
       end if
 end revIDEStackFileVersion
 
+-- The revIDESaveStack and revIDESaveStackAs handlers use the "save"
+-- command with messages locked, which prevents the "saveStackRequest"
+-- message from being sent to the stack being operated on.  However,
+-- stacks may want to do work in "saveStackRequest", or even try block
+-- saving entirely by handling the message rather than passing it.
+--
+-- This function synthesizes a "saveStackRequest" message to the stack
+-- <tStackName>.  If the message was handled by the stack, but not
+-- passed, it returns "handled"; otherwise, it returns "passed" or
+-- "unhandled".
+--
+-- In order to prevent "saveStackRequest" from being intercepted by
+-- revfrontscriptlibrary, this function sets the magical global
+-- variable gREVAllowSaveStackRequest.
+--
+-- See bug 5569, bug 5890 and bug 16992
+private function ideDispatchSaveStackRequest pStackName
+   local tDispatchStatus, tDefaultStack
+   global gREVAllowSaveStackRequest
+
+   put true into gREVAllowSaveStackRequest
+   put the defaultStack into tDefaultStack
+   put "unhandled" into tDispatchStatus
+
+   try
+      set the defaultStack to pStackName
+      dispatch "saveStackRequest" to this card of stack pStackName
+      put it into tDispatchStatus
+   end try
+
+   put false into gREVAllowSaveStackRequest
+   set the defaultStack to tDefaultStack
+
+   return tDispatchStatus
+end ideDispatchSaveStackRequest
+
 on revIDESaveStack pStackID
    local tDefaultStack
    put the defaultStack into tDefaultStack
@@ -6279,28 +6315,18 @@ on revIDESaveStack pStackID
    
    local tSaveResult
    
-   # TH - 27/11/07 : Bug 5569, savestack request not sent to the users stack because messages are locked at this point
-   try
-      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
-      # execution of the revSave command terminates after the sending of saveStackRequest
-      # to the target stack. This is because revFrontScript handles the message and passes
-      # to metaCard, which prevents further execution. This bug is worked round with a nasty
-      # hack involving a global...
-      global gREVAllowSaveStackRequest
-      put true into gREVAllowSaveStackRequest
-      
-      set the defaultStack to tStackName
-      send "saveStackRequest" to this card of stack tStackName
-      set the defaultStack to tDefaultStack
-   end try
+   -- Synthesize a "saveStackRequest" message
+   if ideDispatchSaveStackRequest(tStackName) is "handled" then
+      put empty into tSaveResult
 
-   if tStackFileVersion is not empty then
-      save stack tStackName with format tStackFileVersion
    else
-      save stack tStackName with newest format
+      if tStackFileVersion is not empty then
+         save stack tStackName with format tStackFileVersion
+      else
+         save stack tStackName with newest format
+      end if
+      put the result into tSaveResult
    end if
-   put the result into tSaveResult
-   
    
    ## MJ - 17/07/2006 : Bug 3722, it appears these two lines here override the result...
    ## Hence the introduction of the above variable.
@@ -6536,22 +6562,10 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    # Because you're saving as a new stack, this fingerprint should be removed.
    revRemoveRevOnlineKey "fingerprint",tShortName
 
-   # TH-2007-11-27: Bug 5569, savestack request not sent to the users stack because messages are locked at this point
-   try
-      # OK-2008-03-14 : Bug 5890. When saving a stack with suppress messages turned on
-      # execution of the revSave command terminates after the sending of saveStackRequest
-      # to the target stack. This is because revFrontScript handles the message and passes
-      # to metaCard, which prevents further execution. This bug is worked round with a nasty
-      # hack involving a global...
-      global gREVAllowSaveStackRequest
-      put true into gREVAllowSaveStackRequest
-
-      set the defaultStack to tShortName
-      send "saveStackRequest" to this card of stack tShortName
-      set the defaultStack to tDefaultStackBackup
-   end try
-
-   revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
+   -- Synthesize a "saveStackRequest" message
+   if ideDispatchSaveStackRequest(tShortName) is not "handled" then
+      revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
+   end if
 
    unlock messages
 
@@ -9962,3 +9976,20 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    delete the last char of tMenu
    return tMenu
 end revIDEObjectSelectionMenu
+
+# OK-2007-07-06 : Reworked recent paths system
+command revUpdateRecentFiles pStack
+   if there is no stack pStack then
+      exit revUpdateRecentFiles
+   end if
+
+   if revIDEStackNameIsIDEStack(pStack) then
+      exit revUpdateRecentFiles
+   end if
+
+   if the effective filename of stack pStack is empty then
+      exit revUpdateRecentFiles
+   end if
+
+   revIDEAddRecentStack the effective filename of stack pStack
+end revUpdateRecentFiles
