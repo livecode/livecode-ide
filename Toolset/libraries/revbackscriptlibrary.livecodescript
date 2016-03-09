@@ -1246,7 +1246,7 @@ on selectedObjectChanged
 end selectedObjectChanged
 
 # OK-2008-03-20 : Moved variable declaration as it was being used before declaration
-local lHiddenPalettes
+local sHiddenPalettes
 
 on updateForSelectedObjectChanged
    global gREVStopUpdates, gREVStacksList, gREVSelectionDescription
@@ -1256,7 +1256,7 @@ on updateForSelectedObjectChanged
    
    --check palettes are on screen, workaround for stacks in float about all move that are toplevel
    
-   if lHiddenPalettes is not empty then
+   if sHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
    ideMessageSend "ideSelectedObjectChanged"
@@ -2310,54 +2310,61 @@ local lShowPalettesMsgID
 
 on revInitialiseSEHidePalettes
    put empty into lShowPalettesMsgID
-   put empty into lHiddenPalettes
+   put empty into sHiddenPalettes
 end revInitialiseSEHidePalettes
 
+constant kDontHide = "revMenuBar,revErrorDisplay,revVariableWatcher,revMessageWatcher,revDocsLanguageQuickref"
 on revSEHidePalettes
    if lShowPalettesMsgID is not empty then cancel lShowPalettesMsgID
    put empty into lShowPalettesMsgID
    
-   if lHiddenPalettes is not empty and (the mode of stack "message box" is not 0 and the visible of stack "Message Box" is false) then exit revSEHidePalettes
+   if sHiddenPalettes is not empty and (the mode of stack "message box" is not 0 and the visible of stack "Message Box" is false) then exit revSEHidePalettes
    
    lock screen
    lock messages
    
-   put empty into lHiddenPalettes
+   put empty into sHiddenPalettes
    
    if the mode of stack "revErrorDisplay" is not 0 and the cSEHideErrors of stack "revPreferences" then
       hide stack "revErrorDisplay"
-      put "revErrorDisplay" & cr after lHiddenPalettes
+      put "revErrorDisplay" & cr after sHiddenPalettes
    end if
    
    if the cSEHidePalettes of stack "revPreferences" then
       local tOpenStacks
       put the openStacks into tOpenStacks
-      filter tOpenStacks with "rev*"
-      filter tOpenStacks without "revDragControl"
-      repeat for each line l in tOpenStacks
-         if (l is not among the items of "revMenuBar,revErrorDisplay,revVariableWatcher,revMessageWatcher,revDocsLanguageQuickref") and the mode of stack l is 4 then
+      repeat for each line tStackName in tOpenStacks
+         if not revIDEStackNameIsIDEStack(tStackName) then
+            next repeat
+         end if
+         
+         if not (stack tStackName is visible) then
+         	next repeat
+         end if
+         
+         if (tStackName is not among the items of kDontHide) and the mode of stack tStackName is 4 then
             # OK-2008-06-24 : Bug 6621 : Prevent palettes being hidden if they are owned by the script editor
-            if the mainstack of stack l is the short name of revScriptEditorMain() then
+            if the mainstack of stack tStackName is the short name of revScriptEditorMain() then
                next repeat
             end if
             
             # OK-2009-12-22: Bug 8497 : Also keep separate variable viewer panes open
-            if the short name of stack l begins with "revVariableVisualizer" then
+            if tStackName begins with "revVariableVisualizer" then
                next repeat
             end if
             
-            hide stack l
-            put l & cr after lHiddenPalettes
+            hide stack tStackName
+            put tStackName & return after sHiddenPalettes
          end if
       end repeat
    end if
    -- must be after the others
    if the mode of stack "Message Box" is not 0 and the cSEHideMessageBox of stack "revPreferences" then
       hide stack "Message Box"
-      put "Message Box" & cr after lHiddenPalettes
+      put "Message Box" & return after sHiddenPalettes
    end if
    
-   delete last char of lHiddenPalettes
+   delete last char of sHiddenPalettes
    
    unlock messages
    unlock screen
@@ -2410,7 +2417,7 @@ on revSEDelayShowPalettes
    if tObject is not empty and tStack is "Message Box" and the number of this cd of stack "Message box" is among the items of "1,2" then
       put true into tRestore
    end if
-   repeat for each line tHiddenStack in lHiddenPalettes
+   repeat for each line tHiddenStack in sHiddenPalettes
       # OK-2009-10-08 : Its possible that the stack could be been removed between showing and hiding the palettes,
       # this is due to extra mutable windows added with the new script editor. Check this first or it will keep throwing
       # errors.
@@ -2431,7 +2438,7 @@ on revSEDelayShowPalettes
    if tRestore then 
       --select text of fld "Message Field" of stack "Message Box" -- works better than "focus"
    end if
-   put empty into lHiddenPalettes
+   put empty into sHiddenPalettes
    unlock screen
    unlock messages
 end revSEDelayShowPalettes
