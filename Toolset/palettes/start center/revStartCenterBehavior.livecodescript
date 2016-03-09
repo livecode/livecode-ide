@@ -25,18 +25,18 @@ on openStack
    set the filename of image "firstRunImage" of group "firstRun" to resourcesPath("images/firstRunImage.PNG")
    
    ## Set folder icon
-   set the iconColor of widget "openIcon" to uiColor("dark grey")
-   set the iconPathPreset of widget "openIcon" to "folder open alt"
+   set the foregroundColor of widget "openIcon" to uiColor("dark grey")
+   set the iconPresetName of widget "openIcon" to "folder open alt"
    
    ## Show the banner
    --bannerInitialise
    
    ## Show at startup preference
-   set the iconColor of widget "startupCheckbox" to uiColor("dark grey")
+   set the foregroundColor of widget "startupCheckbox" to uiColor("dark grey")
    if revIDEGetPreference("cStartPageShow") is true then
-      set the iconPathPreset of widget "startupCheckbox" to "lc-checkbox-checked"
+      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-checked"
    else
-      set the iconPathPreset of widget "startupCheckbox" to "lc-checkbox-unchecked"
+      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-unchecked"
    end if
    
    ## First run
@@ -75,16 +75,16 @@ end startCenterClose
 
 command logoInitialise
    ## Set the logo to the correct logo for the version
-   set the iconPathPreset of widget "logo" of me to "lc-logo"
-   set the iconColor of widget "logo" of me to uiColor("logo")
+   set the iconPresetName of widget "logo" of me to "lc-logo"
+   set the foregroundColor of widget "logo" of me to uiColor("logo")
 end logoInitialise
 
 command socialMediaInitialise   
    ## Set the images
    repeat for each item tMedia in kAllSocialMedia
       hide widget tMedia of group "socialMedia"
-      set the iconPathPreset of widget tMedia of group "socialMedia" to ("lc-" & tMedia)
-      set the iconColor of widget tMedia of group "socialMedia" to uiColor(tMedia)
+      set the iconPresetName of widget tMedia of group "socialMedia" to ("lc-" & tMedia)
+      set the foregroundColor of widget tMedia of group "socialMedia" to uiColor(tMedia)
       set the fillrule of widget tMedia of group "socialMedia" to "even odd"
       set the blendLevel of widget tMedia of group "socialMedia" to 50
    end repeat
@@ -494,11 +494,11 @@ end bannerInitialise
 
 
 command startupPreferenceSet
-   if the iconPathPreset of widget "startupCheckbox" is "lc-checkbox-unchecked" then
-      set the iconPathPreset of widget "startupCheckbox" to "lc-checkbox-checked"
+   if the iconPresetName of widget "startupCheckbox" is "lc-checkbox-unchecked" then
+      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-checked"
       revIDESetPreference "cStartPageShow", true
    else
-      set the iconPathPreset of widget "startupCheckbox" to "lc-checkbox-unchecked"
+      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-unchecked"
       revIDESetPreference "cStartPageShow", false
    end if
 end startupPreferenceSet
