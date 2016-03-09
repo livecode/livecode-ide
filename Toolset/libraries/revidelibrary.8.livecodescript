@@ -2898,6 +2898,22 @@ on revIDEActionCreateObject pObjectTypeID
    revIDECreateObject pObjectTypeID, the topStack, the loc of this card of the topStack
 end revIDEActionCreateObject
 
+private command __setPropertiesToDefaults pObjectID, pPropsInfoA
+   # Set all the properties to their default
+   if pPropsInfoA["style"]["default"] is not empty and pPropsInfoA["style"]["default"] is not "no_default" then
+      revIDESetPropertyOfObject pObjectID, "style", pPropsInfoA["style"]["default"] 
+   end if
+   
+   local tPropInfoA
+   repeat for each key tProperty in pPropsInfoA
+      put pPropsInfoA[tProperty] into tPropInfoA
+      if "default" is not among the keys of tPropInfoA then next repeat
+      if tPropInfoA["default"] is "no_default" then next repeat
+      if tPropInfoA["read_only"] is true then next repeat
+      revIDESetPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
+   end repeat
+end __setPropertiesToDefaults
+
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if pObjectTypeID is "com.livecode.interface.classic.card" or \
       pObjectTypeID is "com.livecode.interface.classic.stack" then
@@ -2914,7 +2930,8 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    # Create the object
    lock screen
    lock messages
-
+   
+   local tPropInfoA, tObjPropsA
    # Get the engine control type
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
@@ -2952,43 +2969,28 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
          put the long ID of the last control into tCreatedControlID
       end if
       
-      local tPropInfoA, tObjPropsA
-      # Set all the properties to their default
       put sClassicObjectProperties[pObjectTypeID]["properties"] into tObjPropsA
-      
-      if tObjPropsA["style"]["default"] is not empty and tObjPropsA["style"]["default"] is not "no_default" then
-         revIDESetPropertyOfObject tCreatedControlID, "style", tObjPropsA["style"]["default"] 
-      end if
-      
-      repeat for each key tProperty in tObjPropsA
-         put tObjPropsA[tProperty] into tPropInfoA
-         if tPropInfoA["default"] is "no_default" then next repeat
-         if tPropInfoA["read_only"] is true then next repeat
-         revIDESetPropertyOfObject tCreatedControlID, tProperty, tPropInfoA["default"]
-      end repeat
    else
       # Not a classic control
       try
          create widget as pObjectTypeID
          put the long id of the last control into tCreatedControlID
+         
+         put revIDEExtensionProperties(pObjectTypeID, false) into tObjPropsA
+         union tObjPropsA with sClassicObjectProperties["com.livecode.interface.classic.widget"]["properties"]
+         
          local tSize
          put revIDEExtensionProperty(pObjectTypeID, "preferredsize") into tSize
          if tSize is not empty then
-            set the width of tCreatedControlID to item 1 of tSize
-            set the height of tCreatedControlID to item 2 of tSize
-         end if
-         
-         # Set the name of the newly created widget
-         local tName
-         put revIDEExtensionProperty(pObjectTypeID, "title") into tName
-         if tName is not empty then
-            set the name of tCreatedControlID to tName
+            put item 1 of tSize into tObjPropsA["width"]["default"]
+            put item 2 of tSize into tObjPropsA["height"]["default"]
          end if
       catch tError
          return false
       end try
    end if
-
+   
+   __setPropertiesToDefaults tCreatedControlID, tObjPropsA
    set the loc of tCreatedControlID to pLoc
 
    unlock messages
