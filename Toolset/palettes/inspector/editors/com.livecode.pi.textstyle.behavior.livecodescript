@@ -11,16 +11,19 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   local tSelected
+   local tSelected, tIndex
    repeat for each item tItem in tValue
-      get itemOffset(tItem, the segmentNames of widget 1 of me)
+      put itemOffset(tItem, the itemNames of widget 1 of me) into tIndex
+      if tIndex is 0 then
+         next repeat
+      end if
       if tSelected is empty then 
-         put it into tSelected
+         put tIndex into tSelected
       else
-         put comma & it after tSelected
+         put comma & tIndex after tSelected
       end if
    end repeat
-   set the selectedSegment of widget 1 of me to tSelected
+   set the hilitedItems of widget 1 of me to tSelected
    unlock messages
    unlock screen
 end editorUpdate
@@ -36,17 +39,22 @@ on editorResize
    unlock screen
 end editorResize
 
+on hiliteChanged
+   valueChanged
+end hiliteChanged
+
 on valueChanged
-   if the selectedSegment of widget 1 of me is empty then
+   local tNames
+   put the hilitedItemNames of widget 1 of me into tNames
+   if tNames is empty then
       set the editorValue of me to empty
    else
       local tValue
-      repeat for each item tItem in the selectedSegment of widget 1 of me
-         get item tItem of the segmentNames of widget 1 of me
+      repeat for each item tItem in tNames
          if tValue is empty then 
-            put it into tValue
+            put tItem into tValue
          else
-            put comma & it after tValue
+            put comma & tItem after tValue
          end if
       end repeat
       set the editorValue of me to tValue
