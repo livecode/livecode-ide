@@ -11,7 +11,7 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   set the iconPathPreset of widget 1 of me to tValue
+   set the iconPresetName of widget 1 of me to tValue
    unlock messages
    unlock screen
 end editorUpdate
@@ -34,12 +34,12 @@ on mouseUp
    put tValue into tProperties["selectedIcon"]
    popup widget "com.livecode.widget.iconpicker" at the clickLoc with properties tProperties
    if the result is empty and it is not tValue then
-      set the iconPathPreset of widget 1 of me to it
+      set the iconPresetName of widget 1 of me to it
    end if
    valueChanged
 end mouseUp
 
 on valueChanged
-   set the editorValue of me to the iconPathPreset of widget 1 of me
+   set the editorValue of me to the iconPresetName of widget 1 of me
    updateProperty
 end valueChanged
