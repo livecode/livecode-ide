@@ -30,45 +30,48 @@ on editorInitialize
    put "Buka, Honiara, Noumea" into sTimezones["11"]
    put "Auckland, Suva" into sTimezones["12"]
    
-   put "\(UTC -12) "&sTimezones["-12"]&"/|-12" & return \
-         & "\(UTC -11) "&sTimezones["-11"]&"/|-11" & return \
-         & "\(UTC -10) "&sTimezones["-10"]&"/|-10" & return \
-         & "\(UTC -9) "&sTimezones["-9"]&"/|-9" & return \
-         & "\(UTC -8) "&sTimezones["-8"]&"/|-8" & return \
-         & "\(UTC -7) "&sTimezones["-7"]&"/|-7" & return \
-         & "\(UTC -6) "&sTimezones["-6"]&"/|-6" & return \
-         & "\(UTC -5) "&sTimezones["-5"]&"/|-5" & return \
-         & "\(UTC -4) "&sTimezones["-4"]&"/|-4" & return \
-         & "\(UTC -3) "&sTimezones["-3"]&"/|-3" & return \
-         & "\(UTC -2) "&sTimezones["-2"]&"/|-2" & return \
-         & "\(UTC -1) "&sTimezones["-1"]&"/|-1" & return \
-         & "\(UTC +0) "&sTimezones["0"]&"/|0" & return \
-         & "\(UTC +1) "&sTimezones["1"]&"/|1" & return \
-         & "\(UTC +2) "&sTimezones["2"]&"/|2" & return \
-         & "\(UTC +3) "&sTimezones["3"]&"/|3" & return \
-         & "\(UTC +4) "&sTimezones["4"]&"/|4" & return \
-         & "\(UTC +5) "&sTimezones["5"]&"/|5" & return \
-         & "\(UTC +6) "&sTimezones["6"]&"/|6" & return \
-         & "\(UTC +7) "&sTimezones["7"]&"/|7" & return \
-         & "\(UTC +8) "&sTimezones["8"]&"/|8" & return \
-         & "\(UTC +9) "&sTimezones["9"]&"/|9" & return \
-         & "\(UTC +10) "&sTimezones["10"]&"/|10" & return \
-         & "\(UTC +11) "&sTimezones["11"]&"/|11" & return \
-         & "\(UTC +12) "&sTimezones["12"]&"/|12" \
-         into sTimeZoneList
+   local tHourOffset, tSecondOffset, tLabel
+   put "\Local Time/|local" & return into sTimeZoneList
+   repeat with tHourOffset = -12 to 12
+      put tHourOffset * 3600 into tSecondOffset
+      put valueToLabel(tSecondOffset) into tLabel
+      put merge("\[[tLabel]]/|[[tSecondOffset]]") & return after sTimeZoneList
+   end repeat
+   delete char -1 of sTimeZoneList
    
    set the text of button "pulldown" of me to sTimeZoneList
 end editorInitialize
 
 function UTCTimezoneToDescription pTimezone
-   return sTimezones[pTimezone]
+   if pTimezone is a number then
+      return sTimezones[pTimezone/3600]
+   end if
+   return empty
 end UTCTimezoneToDescription
 
 function valueToLabel pValue
-   if pValue is not a number then return "(UTC +0)" && UTCTimezoneToDescription("0")
-   else if pValue > 12 then return "(UTC +12)" && UTCTimezoneToDescription("+12")
-   else if pValue < -12 then return "(UTC +12)" && UTCTimezoneToDescription("-12")
-   else return "(UTC "&pValue&")" && UTCTimezoneToDescription(pValue)
+   if pValue is empty then return "Local Time"
+   
+   if pValue is not a number then put 0 into pValue
+   
+   local tHourOffset, tMinuteOffset, tSign, tDescription
+   put UTCTimeZoneToDescription(pValue) into tDescription
+   if pValue < 0 then
+      put -pValue into pValue
+      put "-" into tSign
+   else
+      put "+" into tSign
+   end if
+   put floor(pValue/3600) into tHourOffset
+   put floor(pValue/60 - tHourOffset * 60) into tMinuteOffset
+   repeat while length(tHourOffset) < 2
+      put 0 before tHourOffset
+   end repeat
+   repeat while length(tMinuteOffset) < 2
+      put 0 before tMinuteOffset
+   end repeat
+   
+   return merge("(UTC [[tSign]][[tHourOffset]]:[[tMinuteOffset]]) [[tDescription]]") 
 end valueToLabel
 
 on editorUpdate
@@ -102,6 +105,10 @@ on editorResize
 end editorResize
 
 on valueChanged pSelection
-   set the editorValue of me to pSelection
+   if pSelection is "local" then
+      set the editorValue of me to empty
+   else
+      set the editorValue of me to pSelection
+   end if
    updateProperty
 end valueChanged
