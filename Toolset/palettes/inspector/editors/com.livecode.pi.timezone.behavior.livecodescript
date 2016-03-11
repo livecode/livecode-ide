@@ -31,11 +31,16 @@ on editorInitialize
    put "Auckland, Suva" into sTimezones["12"]
    
    local tHourOffset, tSecondOffset, tLabel
-   put "\Local Time/|local" & return into sTimeZoneList
+   put "Local Time/|local" & return into sTimeZoneList
    repeat with tHourOffset = -12 to 12
       put tHourOffset * 3600 into tSecondOffset
       put valueToLabel(tSecondOffset) into tLabel
-      put merge("\[[tLabel]]/|[[tSecondOffset]]") & return after sTimeZoneList
+      
+      -- The space in the menu string is _important_.  On Linux and Windows,
+      -- if the first character in the menu tag is '-' it's treated as a
+      -- separator.  However, numbers in LiveCode are allowed to start with
+      -- a space.
+      put merge("\[[tLabel]]/| [[tSecondOffset]]") & return after sTimeZoneList
    end repeat
    delete char -1 of sTimeZoneList
    
