@@ -38,7 +38,7 @@ on editorUpdate
    
    set the arrayData of widget 1 of me to tValue[sPropSet]
    local tPath
-   put the selectedElement of widget 1 of me into tPath
+   put the hilitedElement of widget 1 of me into tPath
    if tPath is empty then
       put empty into field "key" of me
       put empty into field "value" of me
@@ -56,11 +56,11 @@ on editorUpdate
    set the enabled of field "value" of me to tEnabled
    set the enabled of field "key" of me to tEnabled
    if tEffective is true then
-      set the textcolor of field "value"of me to "150,150,150"
-      set the textcolor of field "key"of me to "150,150,150"
+      set the textcolor of field "value" of me to "150,150,150"
+      set the textcolor of field "key" of me to "150,150,150"
    else
       set the textcolor of field "value" of me to empty
-      set the textcolor of field "key"of me to empty
+      set the textcolor of field "key" of me to empty
    end if
    unlock messages
    unlock screen
@@ -193,13 +193,13 @@ on fetchArrayDataOnPath pPath, pArray, @rData
    end if
 end fetchArrayDataOnPath
 
-on arrayChanged
+on dataChanged
    setPropSet the arrayData of widget 1 of me
-end arrayChanged
+end dataChanged
 
 on valueChanged
    local tPath
-   put the selectedElement of widget 1 of me into tPath
+   put the hilitedElement of widget 1 of me into tPath
    if tPath is empty then
       # Don't update anthing
    else
@@ -211,14 +211,19 @@ on valueChanged
 end valueChanged
 
 on keyChanged
+   lock screen
    local tPath
-   put the selectedElement of widget 1 of me into tPath
+   put the hilitedElement of widget 1 of me into tPath
    if tPath is not empty then
-      local tArray
+      local tArray, tNewKey
+      put field "key" of me into tNewKey
       put the arrayData of widget 1 of me into tArray
-      setArrayKeyOnPath field "key" of me, tPath, tArray
+      setArrayKeyOnPath tNewKey, tPath, tArray
       setPropSet tArray
+      put tNewKey into item 1 of tPath
+      set the hilitedElement of widget 1 of me to tPath
    end if
+   unlock screen
 end keyChanged
 
 on propSetRenamed pFrom, pTo
@@ -287,3 +292,7 @@ function revValidSetName pWhich
    end if
    return pWhich
 end revValidSetName
+
+on hiliteChanged
+   editorUpdate
+end hiliteChanged
