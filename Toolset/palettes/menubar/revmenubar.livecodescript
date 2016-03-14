@@ -405,13 +405,13 @@ on generateMenubarUI
    create widget "stop" as "com.livecode.widget.svgpath" in group "actions" of group "tutorial" of me
    set the width of it to kTutorialActionSize
    set the height of it to kTutorialActionSize
-   set the iconPathPreset of it to "stop"
+   set the iconPresetName of it to "stop"
    set the traversalOn of it to false
    
    create widget "skip" as "com.livecode.widget.svgpath" in group "actions" of group "tutorial" of me
    set the width of it to kTutorialActionSize
    set the height of it to kTutorialActionSize
-   set the iconPathPreset of it to "forward"
+   set the iconPresetName of it to "forward"
    set the traversalOn of it to false
    
    hide group "tutorial" of me

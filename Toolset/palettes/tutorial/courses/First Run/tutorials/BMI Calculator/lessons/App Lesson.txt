@@ -4,7 +4,41 @@ prologue
 	In this tutorial we will put together a small app that calculates
 	a Body Mass Index (BMI) from a given height and weight, describes
 	the result and plots it on a graph.
+image
+	app-screens.png
 end prologue
+
+step "Tutorial Intro I"
+	In creating this app you will learn:
+	
+	- How to build the graphical portion of an app by dragging and 
+	  dropping objects into an app
+
+	- The basics of coding in LiveCode to add user interactivity to an
+	  app 
+
+	- How to use the features of the LiveCode Integrated Development 
+	  Environment (IDE) to enhance your app-building productivity
+action
+	interlude
+	go to step "Tutorial Intro II"
+end step
+
+step "Tutorial Intro II"
+	The tutorial will show you how LiveCode makes complex functionality 
+	easy, including:
+	
+	- Using natively themed widget controls
+	
+	- Connecting to existing web or cloud services
+	
+	- Displaying data in a graph
+	
+	- Embedding web content in a browser
+action
+	interlude
+	go to step "Tutorials Intro"
+end step
 
 step "Tutorials Intro"
 	You can keep track of how much of the tutorial you have completed 
@@ -18,10 +52,18 @@ step "Tutorials Intro"
 action
 	interlude
 	highlight toolbar "tutorial"
-	go to step "Stack Interlude"
+	go to step "Tutorial First Part"
 end step
 
 skip point
+
+step "Tutorial First Part" 
+	In this first section of the tutorial, we will create the user 
+	interface (UI) for the BMI calculator.
+action
+	interlude
+	go to step "Stack Interlude"
+end step
 
 step "Stack Interlude"
 	The first step in creating a LiveCode application is creating a 
@@ -84,9 +126,9 @@ action
 end step 
 
 step "Set Stack Text Size"
-	Set the 'Text Size' of the stack to 18. All objects added to the 
-	stack will inherit this text size, unless explicitly set on the 
-	object.
+	Set the 'Text Size' of the stack to 18, and press the <Return> key. 
+	All objects added to the stack will inherit this text size, unless 
+	explicitly set on the object.
 action
 	highlight property "textSize" of section "Text"
 	wait until the textSize of stack "Mainstack" is 18
@@ -130,6 +172,14 @@ step "Open Property Inspector"
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "Header"
+	go to step "Set Calculator Header Name"
+end step
+
+step "Set Calculator Header Name"
+	Set the 'Name' of the header bar widget to "header".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of widget "Header" is "header"
 	go to step "Set Calculator Header Title"
 end step
 
@@ -137,50 +187,42 @@ step "Set Calculator Header Title"
 	Set the 'Title' of the header bar widget to "BMI Calculator", and 
 	press <Return>.
 action
-	highlight property "headerTitle" of section "Basic"
-	wait until the headerTitle of widget "Header" is "BMI Calculator"
+	highlight property "label" of section "Basic"
+	wait until the label of widget "Header" is "BMI Calculator"
 	go to step "Set Calculator Header Style"
 end step
 
 step "Set Calculator Header Style"
-	Select 'names' from the 'Action Display Style' drop down menu.
+	Select 'text' from the 'Action Display Style' drop down menu.
 action
-	highlight property "actionStyle" of section "Basic"
-	wait until the actionStyle of widget "Header" is "names"
-	go to step "Set Calculator Header Actions"
+	highlight property "itemStyle" of section "Basic"
+	wait until the itemStyle of widget "Header" is "text"
+	go to step "Set Calculator Header Actions I"
 end step
 
-step "Set Calculator Header Actions"
-	Change the name of the header widget action from "Add" to "Clear", 
+step "Set Calculator Header Actions I"
+	Remove the 'Back' item in the 'Header Actions' of the widget by 
+	clicking on its delete icon.
+action
+	highlight property "itemArray" of section "Basic"
+	wait until the itemNames of widget "Header" is "add"
+	go to step "Set Calculator Header Actions II"
+end step
+
+step "Set Calculator Header Actions II"
+	Change the label of the header widget action from "Add" to "Clear", 
 	and press <Return>.
 action
-	highlight property "headerActions" of section "Basic"
-	wait until the actionLabels of widget "Header" is "Clear"
-	go to step "Set Calculator Header Left Label"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Header" is "Clear"
+	go to step "Set Calculator Header Left Action"
 end step
 
-step "Set Calculator Header Left Label"
-	Delete the text of the left label of the header widget, and press 
-	<Return>.
+step "Set Calculator Header Left Action"
+	Uncheck the 'First Action On Left' checkbox.
 action
-	highlight property "leftLabel" of section "Basic"
-	wait until the leftLabel of widget "Header" is ""
-	go to step "Set Calculator Header Show Back Icon"
-end step
-
-step "Set Calculator Header Show Back Icon"
-	Uncheck the 'Show Back Icon' checkbox.
-action
-	highlight property "showBackIcon" of section "Basic"
-	wait until the showBackIcon of widget "Header" is false
-	go to step "Set Calculator Header Show Search Icon"
-end step
-
-step "Set Calculator Header Show Search Icon"
-	Uncheck the 'Show Search Icon' checkbox.
-action
-	highlight property "showSearchIcon" of section "Basic"
-	wait until the showSearchIcon of widget "Header" is false
+	highlight property "firstActionLeft" of section "Basic"
+	wait until the firstItemLeft of widget "Header" is false
 	go to step "Create Navigation Bar Widget"
 end step
 
@@ -216,10 +258,10 @@ step "Set Footer Label"
 	Remove all but one of the lines of the navigation bar's 'Navigation
 	Data' by clicking on the delete icons.
 	
-	Then change the name of the remaining one to "Calculator".
+	Then change the label of the remaining one to "Calculator".
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Footer" is "Calculator"
 	go to step "Set Footer Icon"
 end step
 
@@ -231,8 +273,17 @@ step "Set Footer Icon"
 	Click the gray icon to bring up the icon picker, and select the 
 	'cog' icon.
 action
-	highlight property "navData" of section "Basic"
-	wait until the navIcons of widget "Footer" is "cog"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemIcons of widget "Footer" is "cog"
+	go to step "Set Footer Names"
+end step
+
+step "Set Footer Names" 
+	Set the 'Navigation Names' of the navigation bar to "Calculator", 
+	and press <Return>.
+action
+	highlight property "itemNames" of section "Basic"
+	wait until the itemNames of widget "Footer" is "Calculator"
 	go to step "Create Entry Graphic"
 end step
 
@@ -734,9 +785,9 @@ end step
 skip point
 
 step "Chart Card Interlude"
-	The User Interface (UI) for this part of the app is now complete. 
-	Before we start adding code to make things work, we will set up the 
-	UI for the chart display.
+	The UI for this part of the app is now complete. Before we start 
+	adding code to make things work, we will set up the UI for the chart 
+	display.
 	
 	LiveCode stacks can have a number of different cards, which function 
 	like separate screens in the app. We are going to add a card for the
@@ -944,17 +995,17 @@ end step
 step "Set Footer Items"
 	Add a new navigation item to the footer, by clicking the plus icon.
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator,New Item"
-	go to step "Set Item Name"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Footer" is "Calculator,New Item"
+	go to step "Set Item Label"
 end step
 
-step "Set Item Name"
-	Change the name of the new navigation item from "New Item" to 
+step "Set Item Label"
+	Change the label of the new navigation item from "New Item" to 
 	"Chart".
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator,Chart"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Footer" is "Calculator,Chart"
 	go to step "Set Item Icon"
 end step
 
@@ -963,8 +1014,18 @@ step "Set Item Icon"
 	up the icon picker, and set the icon of the new navigation item to 
 	the "bar chart" icon.
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navIcons of widget "Footer" is "cog,bar chart"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemIcons of widget "Footer" is "cog,bar chart"
+	go to step "Set Item Name"
+end step
+
+step "Set Item Name" 
+	Set the name of the new item by changing the 'Navigation Names' of 
+	the navigation bar from "Calculator,new item" to "Calculator,Chart", 
+	and press <Return>.
+action
+	highlight property "itemNames" of section "Basic"
+	wait until the itemNames of widget "Footer" is "Calculator,Chart"
 	go to step "Navigation Bar Script Interlude"
 end step
 
@@ -1015,19 +1076,18 @@ end step
 
 step "Set Navigation Bar Script"	
 	When the navigation bar is clicked by the user, it is sent a message
-	with the name 'navigate'. The message has one parameter, pLabel, 
-	indicating which item on the navigation bar was clicked.
+	with the name 'hiliteChanged'. 
 	
-	We want to handle the navigate message, and go to the card 
+	We want to handle the 'hiliteChanged' message, and go to the card 
 	corresponding to the item the user clicked on.	 
 	
 	Either add the 'go to card' command to the navigation bar's 
-	'on navigate' handler, or copy the script using the Copy Script To
-	Editor Button, and click the script editor's 'Apply' button.
+	'on hiliteChanged' handler, or copy the script using the Copy Script 
+	To Editor Button, and click the script editor's 'Apply' button.
 script
-	on navigate pLabel
-		go to card pLabel
-	end navigate
+	on hiliteChanged
+		go to card the hilitedItemName of me
+	end hiliteChanged
 action
 	highlight script editor for widget "Footer"
 	wait until widget "Footer" is scripted
@@ -1132,14 +1192,11 @@ step "Set Stack Script"
 	button:
 script
 	function getBMI pHeight, pWeight
-	   local tURL
 	   put "http://api.clinicalcalculator.org/bmi?" & \
 		   "height_in_m=" & pHeight & "&weight_in_kg=" & pWeight into tURL
 	   
-	   local tJSON
 	   put url tURL into tJSON
 	   
-	   local tArray 
 	   put JsonImport(tJSON) into tArray
 	   return round(tArray["result"]["value"])
 	end getBMI
@@ -1316,15 +1373,12 @@ step "Set Calculator Card Script"
 	button:
 script
 	command calculateBMI
-		local tHeight
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
-		
-		local tWeight
+
 		put field "weight" into tWeight
 		set the cWeight of this stack to tWeight
-		
-		local tBMI
+
 		put getBMI(tHeight, tWeight) into tBMI
 		set the cBMI of this stack to tBMI
 		
@@ -1492,21 +1546,20 @@ end step
 step "Set Calculator Header Script"
 	Set the script of the header to the following, and click the 'Apply'
 	button:
-	
-	We don't need the 'leftAction' and 'searchAction' handlers for this 
-	script.
 script
-	on headerAction
-		set the cBMI of this stack to empty
-		set the cHeight of this stack to empty
-		set the cWidth of this stack to empty
+	on mouseUp
+		if the mouseAction is "clear" then
+			set the cBMI of this stack to empty
+			set the cHeight of this stack to empty
+			set the cWidth of this stack to empty
 		
-		put empty into field "height"
-		put empty into field "weight"
-		put empty into field "results"
-		put empty into field "advice"
-		set the backgroundColor of graphic "resultsBG" to "white"
-	end headerAction
+			put empty into field "height"
+			put empty into field "weight"
+			put empty into field "results"
+			put empty into field "advice"
+			set the backgroundColor of graphic "resultsBG" to "white"
+		end if
+	end mouseUp
 action
 	highlight script editor for widget "Header"
 	wait until widget "Header" is scripted
@@ -1514,7 +1567,7 @@ action
 end step
 
 step "Explain Calculator Header Script"
-	The headerAction message is sent when 'Clear' at the top right of 
+	The 'mouseUp' message is sent when 'Clear' at the top right of 
 	the header bar is clicked.
 	
 	We simply clear all of the custom properties by setting them to 
@@ -1557,15 +1610,14 @@ step "Set Chart Card Script"
 script
 	on preOpenCard
 		if the cBMI of this stack is a number then
-			local tCoordinates
 			put the cHeight of this stack, the cWeight of this stack into tCoordinates
 			set the hilitedCoordinates of widget "chart" to tCoordinates
 		else
 			set the hilitedCoordinates of widget "chart" to empty
 		end if
 		
-		set the headerTitle of widget "header" to "BMI Chart"
-		set the headerActions of widget "header" to empty
+		set the label of widget "header" to "BMI Chart"
+		set the itemArray of widget "header" to empty
 	end preOpenCard
 action
 	highlight script editor for card "Chart"
@@ -1725,20 +1777,18 @@ step "Set Calculator Card Script Again"
 	button:
 script
 	on preOpenCard
-		set the actionLabels of widget "header" to "Clear"
-		set the headerTitle of widget "header" to "BMI Calculator"
+		set the itemNames of widget "header" to "Clear"
+		set the itemLabels of widget "header" to "Clear"
+		set the label of widget "header" to "BMI Calculator"
 	end preOpenCard
 	
 	command calculateBMI
-		local tHeight
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
-		
-		local tWeight
+
 		put field "weight" into tWeight
 		set the cWeight of this stack to tWeight
-		
-		local tBMI
+
 		put getBMI(field "height", field "weight") into tBMI
 		set the cBMI of this stack to tBMI
 		
@@ -1835,8 +1885,8 @@ step "Set Browser Script"
 	Set the script to the following, and click the 'Apply' button:
 script
 	on preOpenCard
-		set the headerActions of widget "header" to empty
-		set the headerTitle of widget "header" to "NHS Services"
+		set the itemArray of widget "header" to empty
+		set the label of widget "header" to "NHS Services"
 	end preOpenCard
 action
 	highlight script editor for card "Browser"
@@ -1864,16 +1914,16 @@ step "Set Footer Items Once More"
 	Add a new navigation item to the footer, by clicking the plus icon
 	at the right hand side of the bottom row.
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator,Chart,New Item"
-	go to step "Set Item Name Once More"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Footer" is "Calculator,Chart,New Item"
+	go to step "Set Item Label Once More"
 end step
 
-step "Set Item Name Once More"
-	Set the name of the new navigation item to "Services".
+step "Set Item Label Once More"
+	Set the label of the new navigation item to "Services".
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navLabels of widget "Footer" is "Calculator,Chart,Services"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemLabels of widget "Footer" is "Calculator,Chart,Services"
 	go to step "Set Item Icon Once More"
 end step
 
@@ -1882,8 +1932,18 @@ step "Set Item Icon Once More"
 	up the icon picker, and set the icon of the new navigation item to 
 	the "medikit" icon.
 action 
-	highlight property "navData" of section "Basic"
-	wait until the navIcons of widget "Footer" is "cog,bar chart,medkit"
+	highlight property "itemArray" of section "Basic"
+	wait until the itemIcons of widget "Footer" is "cog,bar chart,medkit"
+	go to step "Set Item Name Once More" 
+end step
+
+step "Set Item Name Once More" 
+	Set the name of the new item by changing the 'Navigation Names' of 
+	the navigation bar from "Calculator,Chart,new item" to 
+	"Calculator,Chart,Services", and press <Return>.
+action
+	highlight property "itemNames" of section "Basic"
+	wait until the itemNames of widget "Footer" is "Calculator,Chart,Services"
 	go to step "Create Browser Widget"
 end step
 
