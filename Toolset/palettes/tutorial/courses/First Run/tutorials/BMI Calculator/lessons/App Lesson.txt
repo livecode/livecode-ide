@@ -52,10 +52,18 @@ step "Tutorials Intro"
 action
 	interlude
 	highlight toolbar "tutorial"
-	go to step "Stack Interlude"
+	go to step "Tutorial First Part"
 end step
 
 skip point
+
+step "Tutorial First Part" 
+	In this first section of the tutorial, we will create the user 
+	interface (UI) for the BMI calculator.
+action
+	interlude
+	go to step "Stack Interlude"
+end step
 
 step "Stack Interlude"
 	The first step in creating a LiveCode application is creating a 
@@ -777,9 +785,9 @@ end step
 skip point
 
 step "Chart Card Interlude"
-	The User Interface (UI) for this part of the app is now complete. 
-	Before we start adding code to make things work, we will set up the 
-	UI for the chart display.
+	The UI for this part of the app is now complete. Before we start 
+	adding code to make things work, we will set up the UI for the chart 
+	display.
 	
 	LiveCode stacks can have a number of different cards, which function 
 	like separate screens in the app. We are going to add a card for the
