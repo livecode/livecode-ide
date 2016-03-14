@@ -4,7 +4,41 @@ prologue
 	In this tutorial we will put together a small app that calculates
 	a Body Mass Index (BMI) from a given height and weight, describes
 	the result and plots it on a graph.
+image
+	app-screens.png
 end prologue
+
+step "Tutorial Intro I"
+	In creating this app you will learn:
+	
+	- How to build the graphical portion of an app by dragging and 
+	  dropping objects into an app
+
+	- The basics of coding in LiveCode to add user interactivity to an
+	  app 
+
+	- How to use the features of the LiveCode Integrated Development 
+	  Environment (IDE) to enhance your app-building productivity
+action
+	interlude
+	go to step "Tutorial Intro II"
+end step
+
+step "Tutorial Intro II"
+	The tutorial will show you how LiveCode makes complex functionality 
+	easy, including:
+	
+	- Using natively themed widget controls
+	
+	- Connecting to existing web or cloud services
+	
+	- Displaying data in a graph
+	
+	- Embedding web content in a browser
+action
+	interlude
+	go to step "Tutorials Intro"
+end step
 
 step "Tutorials Intro"
 	You can keep track of how much of the tutorial you have completed 
