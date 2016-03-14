@@ -337,7 +337,8 @@ on generateFrame
       else
          set the showNavIcons of widget "header_background" of group "background" of me to true
       end if
-      set the selectedNavColor of widget "header_background" of group "background" of me to revIDEColor("edition_color")
+      set the hiliteColor of widget "header_background" of group "background" of me to revIDEColor("edition_color")
+      set the borderColor of widget "header_background" of group "background" of me to "178,178,178"
    else
       if there is a widget "header_background" of group "background" of me then 
          delete widget "header_background" of group "background" of me 
@@ -351,6 +352,8 @@ on generateFrame
       set the isHeader of widget "footer_background" of group "background" of me to false
       set the actionData of widget "footer_background" of group "background" of me to tFooterActionDataA
       set the navData of widget "footer_background" of group "background" of me to empty
+      set the hiliteColor of widget "footer_background" of group "background" of me to revIDEColor("edition_color")
+      set the borderColor of widget "footer_background" of group "background" of me to "178,178,178"
    else
       if there is a widget "footer_background" of group "background" of me then 
          delete widget "footer_background" of group "background" of me 

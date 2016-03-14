@@ -7,6 +7,9 @@ constant kDictionaryMinWidth = 992
 -- take this into account
 constant kScrollbarFudge = 18
 
+-- The background colour for the dictionary stack
+constant kBackColor = "white"
+
 local sTab, sEntry
 on setAsBehavior pTarget
    dispatch "setAsBehavior" to stack revIDEFrameBehavior() with the long id of this me
@@ -22,6 +25,7 @@ on openStack
    set the width of me to tMinWidth
    set the minWidth of me to tMinWidth
    set the title of me to "Dictionary"
+   set the backColor of me to kBackColor
    if sTab is empty then
       put "api" into sTab
    end if
