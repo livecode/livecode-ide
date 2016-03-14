@@ -11,7 +11,7 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   set the navData of widget 1 of me to tValue
+   set the itemArray of widget 1 of me to tValue
    set the height of me to the desiredHeight of widget 1 of me
    set the height of widget 1 of me to the height of me
    unlock messages
@@ -32,7 +32,7 @@ on editorResize
 end editorResize
 
 on valueChanged
-   set the editorValue of me to the navData of widget 1 of me
+   set the editorValue of me to the itemArray of widget 1 of me
    updateProperty
 end valueChanged
 
@@ -44,9 +44,9 @@ on textEdited pValue, pNumber
    valueChanged
 end textEdited
 
-on navDataChanged
+on dataChanged
    valueChanged
-end navDataChanged
+end dataChanged
 
 on editField pRect, pNumber
    put revIDERelativeRectToAbsolute(pRect, the long id of widget 1 of me) into pRect
