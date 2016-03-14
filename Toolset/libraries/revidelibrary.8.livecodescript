@@ -8820,7 +8820,39 @@ function revIDETutorialResourcePath pTutorialInfo
 end revIDETutorialResourcePath
 
 function revIDETutorialInternalResource pRelativePath
-   return revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"]) & "/_resources/" & pRelativePath
+   -- first check to see if there is a platform-specific version
+   local tPlatformFolder
+   switch the platform
+      case "win32"
+         put "windows" into tPlatformFolder
+         break
+      case "macos"
+         put "mac" into tPlatformFolder
+         break
+      case "linux"
+         put "linux" into tPlatformFolder
+         break
+      default
+         break
+   end switch
+   
+   local tInternalResourceBase
+   put revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"]) & "/_resources/" into tInternalResourceBase
+   
+   local tCandidateFile
+   if tPlatformFolder is not empty then
+      put tInternalResourceBase & slash & tPlatformFolder & slash & pRelativePath into tCandidateFile
+      if there is a file tCandidateFile then
+         return tCandidateFile
+      end if
+   end if
+   
+   put tInternalResourceBase & slash & pRelativePath into tCandidateFile
+   if there is a file tCandidateFile then
+      return tCandidateFile
+   end if
+   
+   return empty
 end revIDETutorialInternalResource
 
 function revIDETutorialUserStackPath pStackTag
