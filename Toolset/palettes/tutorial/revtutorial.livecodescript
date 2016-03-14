@@ -63,14 +63,20 @@ function revTutorialParseData pData
             case "script"
             case "file"
             case "value"
+               // None of the above is allowed in epilogue or prologue
+               if tType is "epilogue" or tType is "prologue" then
+                  parseError tNewType && "not valid in" && tType, tLineNum, tErrors
+                  break
+               end if
+               // Fall through
             case "image"
-               // Begin a new subtype
-               if tType is not "step" and tType is not "epilogue" then
-                  parseError "action list not valid in" && tType, tLineNum, tErrors
+               if tType is empty then
+                  parseError tNewType && "not valid outside of step", tLineNum, tErrors
                   break
                end if
                
-               if tSubType is "action" then
+               // Begin a new subtype
+               if tType is tSubType is "action" then
                   parseError "action list not valid in" && tType, tLineNum, tErrors
                   break
                end if
