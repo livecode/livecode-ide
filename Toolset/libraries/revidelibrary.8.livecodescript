@@ -4201,6 +4201,10 @@ command revIDEOpenPalette pPaletteName
          modeless stack tStackName
          break
       case "message box"
+         -- The message box needs to be brought to the front as it takes keyboard focus
+         palette stack tStackName
+         go stack tStackName
+         break
       case "standalone settings"
       case "message watcher"
       case "tools"
