@@ -1132,14 +1132,11 @@ step "Set Stack Script"
 	button:
 script
 	function getBMI pHeight, pWeight
-	   local tURL
 	   put "http://api.clinicalcalculator.org/bmi?" & \
 		   "height_in_m=" & pHeight & "&weight_in_kg=" & pWeight into tURL
 	   
-	   local tJSON
 	   put url tURL into tJSON
 	   
-	   local tArray 
 	   put JsonImport(tJSON) into tArray
 	   return round(tArray["result"]["value"])
 	end getBMI
@@ -1316,15 +1313,12 @@ step "Set Calculator Card Script"
 	button:
 script
 	command calculateBMI
-		local tHeight
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
-		
-		local tWeight
+
 		put field "weight" into tWeight
 		set the cWeight of this stack to tWeight
-		
-		local tBMI
+
 		put getBMI(tHeight, tWeight) into tBMI
 		set the cBMI of this stack to tBMI
 		
@@ -1557,7 +1551,6 @@ step "Set Chart Card Script"
 script
 	on preOpenCard
 		if the cBMI of this stack is a number then
-			local tCoordinates
 			put the cHeight of this stack, the cWeight of this stack into tCoordinates
 			set the hilitedCoordinates of widget "chart" to tCoordinates
 		else
@@ -1730,15 +1723,12 @@ script
 	end preOpenCard
 	
 	command calculateBMI
-		local tHeight
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
-		
-		local tWeight
+
 		put field "weight" into tWeight
 		set the cWeight of this stack to tWeight
-		
-		local tBMI
+
 		put getBMI(field "height", field "weight") into tBMI
 		set the cBMI of this stack to tBMI
 		

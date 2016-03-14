@@ -1150,6 +1150,7 @@ end revTutorialEnsureOnscreen
 
 local sSteps, sActionNumber, sStepName, sStepNum, sNumSteps
 local sCaptureData, sTaggedObjects, sWaiting, sGuides
+local sOldStrictCompilation
 
 on revTutorialSaveProgress
    revIDETutorialSave sTaggedObjects, sStepName
@@ -1251,6 +1252,9 @@ on revInitialiseTutorial
    
    revIDESetTool "pointer"
    set the selectGroupedControls to true
+   
+   -- Store old value of strict compilation preference
+   put revIDEGetPreference("cScriptEditor,explicitVariables") into sOldStrictCompilation
    unlock messages
    unlock screen
 end revInitialiseTutorial
@@ -1266,6 +1270,7 @@ on revFinaliseTutorial
    revIDETutorialInfoSetEmpty
    enableToolsPalette
    revIDEUnsubscribeAll
+   revTutorialSetSEPreference "explicitVariables", sOldStrictCompilation
    unlock screen
 end revFinaliseTutorial
 
@@ -1880,6 +1885,10 @@ on revTutorialWaitUntilObjectIsScripted pTaggedObject
    put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
    put the script of tObjID into sWait["current script"]
    put 0 into sWait["incorrect attempts"]
+   
+   -- Set explicit vars to false when waiting for script
+   revTutorialSetSEPreference "explicitVariables", false
+   
    revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectIsScripted
 
@@ -2427,6 +2436,10 @@ on idePropertyChanged pObject
          if revTutorialCheckWaitCondition(sWait) then
             revIDEUnsubscribe "idePropertyChanged", "", sTaggedObjects[sWait["object"]["type"]][sWait["object"]["tag"]]
             revTutorialWaitConditionSatisfied
+            if sWait["state"] is "scripted" then
+               -- Set explicit vars back to previous setting
+               revTutorialSetSEPreference "explicitVariables", sOldStrictCompilation
+            end if
          end if
       end if
    end if
@@ -2564,6 +2577,11 @@ end ideOpenCard
 #                     UTILITIES
 #
 ##############################################################################
+
+command revTutorialSetSEPreference pProp, pValue
+   revIDESetPreference "cScriptEditor," & pProp, pValue
+   dispatch "revSEUpdateEditors" to revScriptEditorMain() with true
+end revTutorialSetSEPreference
 
 function revTutorialIsWaitForProperty pWait
    switch pWait["wait condition"]
