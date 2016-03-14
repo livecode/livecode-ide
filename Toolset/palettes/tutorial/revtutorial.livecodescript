@@ -1336,9 +1336,7 @@ on revTutorialUpdateProgress pStep
    end repeat
    put tNumSteps into sNumSteps 
    
-   if pStep is empty then
-      put sSteps["first step"] into sStepName
-   else
+   if pStep is not empty then
       put pStep into sStepName
    end if
    put tStepNum into sStepNum
