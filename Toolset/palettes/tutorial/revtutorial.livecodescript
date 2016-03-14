@@ -63,6 +63,7 @@ function revTutorialParseData pData
             case "script"
             case "file"
             case "value"
+            case "image"
                // Begin a new subtype
                if tType is not "step" and tType is not "epilogue" then
                   parseError "action list not valid in" && tType, tLineNum, tErrors
@@ -99,7 +100,8 @@ function revTutorialParseData pData
                      put tLine & return after tData
                      break
                   case "file"
-                     # File is single line 
+                  case "image"
+                     # File and image are single line 
                      put word 1 to -1 of tLine into tData
                      break
                   case "value"
@@ -810,12 +812,13 @@ constant kMaxScriptHeight = 200
 local sDontShow
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
-   local tMsgFieldID, tScriptFieldID
+   local tMsgFieldID, tScriptFieldID, tImageID
    
    put the long id of button "Got It" of stack "revTutorial" into tGotItButtonID
    put the long id of button "Copy Script" of stack "revTutorial" into tCopyButtonID
    put the long id of field "Message" of stack "revTutorial" into tMsgFieldID
    put the long id of field "Script" of stack "revTutorial" into tScriptFieldID
+   put the long id of image "Image" of stack "revTutorial" into tImageID
    
    lock screen
    lock messages
@@ -826,7 +829,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       show tGotItButtonID
       set the height of tGotItButtonID to the formattedHeight of tGotItButtonID
       set the width of tGotItButtonID to the formattedWidth of tGotItButtonID
-      put 460 into pWidthOverride
+      put max(pWidthOverride, 460) into pWidthOverride
    else
       hide tGotItButtonID
    end if
@@ -841,6 +844,16 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       set the height of tCopyButtonID to the formattedHeight of tCopyButtonID
       set the width of tCopyButtonID to the formattedWidth of tCopyButtonID
       show tCopyButtonID
+   end if
+   
+   local tHasImage
+   if the filename of tImageID is not empty then
+      put true into tHasImage
+      set the height of tImageID to the formattedHeight of tImageID
+      set the width of tImageID to the formattedWidth of tImageID
+      show tImageID
+   else
+      hide tImageID
    end if
    
    local tPointVertical
@@ -909,6 +922,11 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       add the height of tCopyButtonID + kMargin to tHeight
    end if
    
+   if tHasImage then
+      add the formattedheight of tImageID + kMargin * 2 to tHeight
+      put max(tWidth, the formattedwidth of tImageID + kMargin * 2) into tWidth
+   end if
+   
    # Work out what screen the tutorial stack should be on
    local tScreenRect
    if exists(pStack) then
@@ -967,9 +985,14 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    end if
    
    set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
-   local tScriptTop
-   put kMargin + the bottom of tMsgFieldID into tScriptTop
-   set the topleft of tScriptFieldID to tMessageLeft, tScriptTop 
+   local tOtherTop
+   put kMargin + the bottom of tMsgFieldID into tOtherTop
+   if tHasScript then
+      set the topleft of tScriptFieldID to tMessageLeft, tOtherTop 
+   else if tHasImage then
+      set the loc of tImageID to the loc of this card of stack "revTutorial"
+      set the top of tImageID to tOtherTop
+   end if
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
@@ -1249,6 +1272,9 @@ on revInitialiseTutorial
    set the autoHilite of it to false
    set the threeD of it to false
    set the visible of it to false
+   
+   create image "Image"
+   set the borderWidth of it to 0
    
    revIDESetTool "pointer"
    set the selectGroupedControls to true
@@ -1599,10 +1625,10 @@ on revTutorialDoLoad pLesson
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"], sSteps[pStep]["file"], sSteps[pStep]["value"]
+   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"], sSteps[pStep]["file"], sSteps[pStep]["value"], sSteps[pStep]["image"]
 end revTutorialSetText
 
-on revTutorialSetTextOfMessage pText, pScript, pFile, pValue
+on revTutorialSetTextOfMessage pText, pScript, pFile, pValue, pImage
    local tWidthOverride
    put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to kMessageWidth
@@ -1613,10 +1639,22 @@ on revTutorialSetTextOfMessage pText, pScript, pFile, pValue
    if pFile is not empty then
       replace "<file>" with pFile in pText
    end if
+   
    put pText into field "Message" of stack "revTutorial"
    
    # Recalculate the formatted width after replacing value / file
    put the formattedwidth of field "Message" of stack "revTutorial" into tWidthOverride
+   
+   local tImageFile
+   if pImage is not empty then
+      local tImageWidth
+      put revIDETutorialInternalResource(pImage) into tImageFile
+      set the filename of image "Image" of stack "revTutorial" to tImageFile
+      put the formattedWidth of image "Image" of stack "revTutorial" + 2 * kMargin into tImageWidth
+      put max(tWidthOverride, tImageWidth) into tWidthOverride
+   else
+      set the filename of image "Image" of stack "revTutorial" to empty
+   end if
    
    put pScript into field "Script" of stack "revTutorial"
    if pScript is not empty then
@@ -1700,6 +1738,7 @@ local sStepContextA
 on revTutorialSetContextualStepData pStepDataA
    put pStepDataA["file"] into sStepContextA["file"]
    put pStepDataA["value"] into sStepContextA["value"]
+   put pStepDataA["image"] into sStepContextA["image"]
 end revTutorialSetContextualStepData
 
 ##############################################################################

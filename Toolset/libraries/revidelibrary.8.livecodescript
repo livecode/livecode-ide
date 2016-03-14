@@ -8819,6 +8819,10 @@ function revIDETutorialResourcePath pTutorialInfo
    return __revIDEError("Tutorial resource path not found") 
 end revIDETutorialResourcePath
 
+function revIDETutorialInternalResource pRelativePath
+   return revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"]) & "/_resources/" & pRelativePath
+end revIDETutorialInternalResource
+
 function revIDETutorialUserStackPath pStackTag
    return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
 end revIDETutorialUserStackPath
