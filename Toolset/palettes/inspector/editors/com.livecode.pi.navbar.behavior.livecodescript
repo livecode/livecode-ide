@@ -38,9 +38,9 @@ end valueChanged
 
 on textEdited pValue, pNumber
    local tNames
-   put the navLabels of widget 1 of me into tNames
+   put the itemLabels of widget 1 of me into tNames
    put pValue into item pNumber of tNames
-   set the navLabels of widget 1 of me to tNames
+   set the itemLabels of widget 1 of me to tNames
    valueChanged
 end textEdited
 
