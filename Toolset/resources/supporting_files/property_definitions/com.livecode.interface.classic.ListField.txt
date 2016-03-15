@@ -27,7 +27,7 @@ listBehavior							true
 multipleHilites							false					
 nonContiguousHilites							false					
 toggleHilites							false					
-fixedLineHeight							true					
+fixedLineHeight											
 textHeight												
 firstIndent							0					
 dontSearch							false					
