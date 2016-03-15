@@ -1179,7 +1179,7 @@ end revTutorialEnsureOnscreen
 
 local sSteps, sActionNumber, sStepName, sStepNum, sNumSteps
 local sCaptureData, sTaggedObjects, sWaiting, sGuides
-local sOldStrictCompilation
+local sOldPrefs
 
 on revTutorialSaveProgress
    revIDETutorialSave sTaggedObjects, sStepName
@@ -1192,6 +1192,7 @@ on revTutorialResume pStacksToOpen, pTaggedObjects, pStepName
    revTutorialStartWithState pStepName, pTaggedObjects
 end revTutorialResume
 
+constant kPrefsToStore = "cScriptEditor,explicitvariables|cToolbarIcons|revTools_show"
 on revInitialiseTutorial
    lock screen
    lock messages
@@ -1285,9 +1286,17 @@ on revInitialiseTutorial
    revIDESetTool "pointer"
    set the selectGroupedControls to true
    
-   -- Store old value of strict compilation preference
-   put revIDEGetPreference("cScriptEditor,explicitVariables") into sOldStrictCompilation
    unlock messages
+   
+   -- Store old prefs values
+   set the itemdelimiter to "|"
+   repeat for each item tPref in kPrefsToStore
+      put revIDEGetPreference(tPref) into sOldPrefs[tPref]
+   end repeat
+   
+   revIDESetPreference "revTools_show", "widget,classic,graphic,graphictools,paint"
+   revIDESetPreference "cToolbarIcons", true
+   
    unlock screen
 end revInitialiseTutorial
 
@@ -1302,7 +1311,15 @@ on revFinaliseTutorial
    revIDETutorialInfoSetEmpty
    enableToolsPalette
    revIDEUnsubscribeAll
-   revTutorialSetSEPreference "explicitVariables", sOldStrictCompilation
+   
+   -- Restore old prefs values
+   set the itemdelimiter to "|"
+   repeat for each item tPref in kPrefsToStore
+      revIDESetPreference tPref, sOldPrefs[tPref]
+   end repeat
+   
+   -- Ensure currently open script editors are updated
+   revTutorialSetSEPreference "explicitVariables", sOldPrefs["cScriptEditor,explicitvariables"]
    unlock screen
 end revFinaliseTutorial
 
@@ -2481,7 +2498,7 @@ on idePropertyChanged pObject
             revTutorialWaitConditionSatisfied
             if sWait["state"] is "scripted" then
                -- Set explicit vars back to previous setting
-               revTutorialSetSEPreference "explicitVariables", sOldStrictCompilation
+               revTutorialSetSEPreference "explicitVariables", sOldPrefs["cScriptEditor,explicitvariables"]
             end if
          end if
       end if
