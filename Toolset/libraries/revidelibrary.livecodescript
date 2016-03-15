@@ -547,3 +547,89 @@ private function utilityCanonicalizePath pPath
     return empty
   end if
 end utilityCanonicalizePath
+<<<<<<< HEAD
+=======
+
+# Returns a list of the recent stack files containing the names only. If two files have the same name then
+# an appropriate portion of their path is shown in order to differentiate them. Populates a script local with a
+# mapping from name back to original path. This is used to resolve the recent files when the user clicks on one in a gui menu.
+private function recentFileNamesListGet
+  local tList
+  put recentPathListGet() into tList
+  
+  set the itemDelimiter to slash
+  
+  # Process the list of paths and construct a list of file names only. Where there are two items with the same
+  # filename, insert some path information to allow the user to distinguish the files.
+  local tFilenameList
+  
+  local tLineNumber
+  put 0 into tLineNumber
+  
+  set the wholeMatches to false
+  repeat for each line tPath in tList
+    add 1 to tLineNumber
+    local tFilename
+    put item -1 of tPath into tFilename
+    
+    # Construct a list that contains all the elements of tList *except* the current line tLine. Get the lineOffset of the filename
+    # in this list. If its not zero then it means there are other files in the list with the same filename as the current line.
+    local tDuplicateLineNumber
+    put lineOffset(tFilename, line 1 to (tLineNumber - 1) of tList & return & line (tLineNumber + 1) to -1 of tList) into tDuplicateLineNumber
+    
+    local tNewItem
+    if tDuplicateLineNumber <> 0 then
+      # Adjust tDuplicateLineNumber to it points to the correct line in tList
+      if tDuplicateLineNumber >= tLineNumber then
+        add 1 to tDuplicateLineNumber
+      end if
+      put utilityDifferentialPath(tPath, line tDuplicateLineNumber of tList) into tNewItem
+    else
+      put tFilename into tNewItem
+    end if
+    
+    if utilityGetPlatform() is not "MacOS" and char 1 of tNewItem is "(" then
+      put space before tNewItem
+    end if
+    
+    put tNewItem & return after tFilenameList
+    put tPath into sRecentFileMap[tNewItem]
+  end repeat
+  delete the last char of tFilenameList
+  set the wholeMatches to true
+  
+  return tFilenameList  
+end recentFileNamesListGet
+
+////////////////////////////////////////////////////////////////////////////////
+
+command revIDECheckForUpdates
+   if line 3 of revLicenseInfo is not "evaluation" then
+      local tCommand
+      set the itemdelimiter to "/"
+      switch the platform
+         case "MacOS"
+            put item 1 to -5 of the filename of stack "home" & "/Contents/MacOS/autoupdater" into tCommand
+            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
+            break
+         case "Win32"
+            put item 1 to -3 of the filename of stack "home" & "/.setup.exe" into tCommand
+            put quote & tCommand & quote && "install -foregroundupdate" into tCommand
+            break
+         case "Linux"
+            put item 1 to -3 of the filename of stack "home" & "/.setup.x86" into tCommand
+            put tCommand && "install -foregroundupdate" into tCommand
+            break
+      end switch
+      set the itemDel to comma
+      open process tCommand for neither
+   end if   
+end revIDECheckForUpdates
+
+////////////////////////////////////////////////////////////////////////////////
+
+private command log pMessage
+   put pMessage after msg
+end log
+
+>>>>>>> origin/develop-7.0
