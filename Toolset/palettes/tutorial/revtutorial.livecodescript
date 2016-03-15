@@ -816,6 +816,7 @@ constant kPointerOffset = 5
 constant kMaxScriptHeight = 200
 
 local sDontShow
+local sLastShape
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
    local tMsgFieldID, tScriptFieldID, tImageID
@@ -952,12 +953,29 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       end if
    end if
    
+   local tNewShape
+   put revTutorialWindowShape(tWidth, tHeight, tHasPointer, tPointVertical, tPointerLeft, tPointerTop) into tNewShape
+   
+   if revTutorialWindowShapeDifferent(sLastShape, tNewShape) then
+      put tNewShape into sLastShape
+      if tHasPointer then
+         if the platform is "win32" then
+            set the windowshape of stack "revTutorial" to empty
+         end if
+      
+         revTutorialSetWindowShape tWidth, tHeight, tPointVertical, tPointerLeft, tPointerTop
+      else
+         set the windowshape of stack "revTutorial" to empty
+         set the decorations of stack "revTutorial" to empty
+      end if
+   end if
+   
    local tMessageLeft, tMessageTop
    put kMargin into tMessageLeft
    put kMargin into tMessageTop
    if tHasPointer then
       local tStackLeft, tStackTop
-      revTutorialSetWindowShape tWidth, tHeight, tRect, tPointVertical, tPointerLeft, tPointerTop, tStackLeft, tStackTop
+      revTutorialStackPosition tWidth, tHeight, tRect, tPointVertical, tPointerLeft, tPointerTop, tStackLeft, tStackTop
       
       if tPointVertical then
          add kPointerWidth / 2 to tHeight
@@ -973,8 +991,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
-      set the windowshape of stack "revTutorial" to empty
-      set the decorations of stack "revTutorial" to empty
       if sIsInterlude then
          set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
       else if tHasScript then
@@ -1004,13 +1020,72 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    unlock screen
 end revTutorialPositionStack
 
-command revTutorialSetWindowShape pContentWidth, pContentHeight, pHighlightRect, pPointVertical, pPointerLeft, pPointerTop, @rStackLeft, @rStackTop
+function revTutorialWindowShape pWidth, pHeight, pHasPointer, pPointVertical, pPointerLeft, pPointerTop
+   local tShapeA
+   put pWidth into tShapeA["width"]
+   put pHeight into tShapeA["height"]
+   if not pHasPointer then
+      put false into tShapeA["pointer"]
+      return tShapeA
+   end if
+   
+   put true into tShapeA["pointer"]
+   put pPointVertical into tShapeA["pointer-vertical"]
+   put pPointerLeft into tShapeA["pointer-left"]
+   put pPointerTop into tShapeA["pointer-top"]
+   return tShapeA
+end revTutorialWindowShape
+
+function revTutorialWindowShapeDifferent pOldShape, pNewShape
+   repeat for each key tKey in pNewShape
+      if pOldShape[tKey] is not pNewShape[tKey] then
+         return true
+      end if
+   end repeat
+   return false
+end revTutorialWindowShapeDifferent
+
+command revTutorialStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointVertical, pPointerLeft, pPointerTop, @rStackLeft, @rStackTop
    local tLeft, tTop, tRight, tBottom
    put item 1 of pHighlightRect into tLeft
    put item 2 of pHighlightRect into tTop
    put item 3 of pHighlightRect into tRight
    put item 4 of pHighlightRect into tBottom
    
+   local tStackTop, tStackLeft, tMiddle
+   if not pPointVertical then
+      put (tBottom + tTop) / 2 into tMiddle
+      if pPointerTop then
+         put tMiddle - kPointerWidth into tStackTop
+      else
+         put tMiddle - pContentHeight + kPointerWidth into tStackTop
+      end if
+      
+      if pPointerLeft then
+         put tRight + kPointerOffset into tStackLeft
+      else
+         put tLeft - pContentWidth - kPointerHeight + kPointerOffset into tStackLeft
+      end if
+   else
+      put (tRight + tLeft) / 2 into tMiddle
+      if pPointerTop then
+         put tBottom + 5 into tStackTop
+      else
+         put tTop - pContentHeight - kPointerHeight + kPointerOffset into tStackTop
+      end if
+      
+      if pPointerLeft then
+         put tMiddle - kPointerWidth into tStackLeft
+      else
+         put tMiddle - pContentWidth + kPointerWidth into tStackLeft
+      end if
+   end if
+   
+   put tStackLeft into rStackLeft
+   put tStackTop into rStackTop
+end revTutorialStackPosition   
+
+command revTutorialSetWindowShape pContentWidth, pContentHeight, pPointVertical, pPointerLeft, pPointerTop
    # Store templategraphic props (in case we have a graphic tool selected)
    local tProps
    put the properties of the templategraphic into tProps
@@ -1037,47 +1112,36 @@ command revTutorialSetWindowShape pContentWidth, pContentHeight, pHighlightRect,
    set the style of tPointer to "regular"
    set the polysides of tPointer to 4
    
-   local tX, tY, tStackTop, tStackLeft, tMiddle
-   
+   local tX, tY
    if not pPointVertical then
       set the width of tPointer to kPointerWidth
       set the height of tPointer to kPointerHeight
       
-      put (tBottom + tTop) / 2 into tMiddle
       if pPointerTop then
          put the top of tGraphic + kPointerWidth into tY
-         put tMiddle - kPointerWidth into tStackTop
       else
          put the bottom of tGraphic - kPointerWidth into tY
-         put tMiddle - pContentHeight + kPointerWidth into tStackTop
       end if
       
       if pPointerLeft then
          put the left of tGraphic into tX
-         put tRight + kPointerOffset into tStackLeft
       else
          put the right of tGraphic into tX
-         put tLeft - pContentWidth - kPointerHeight + kPointerOffset into tStackLeft
       end if
    else
       set the width of tPointer to kPointerHeight
       set the height of tPointer to kPointerWidth
-      
-      put (tRight + tLeft) / 2 into tMiddle
+
       if pPointerTop then
          put the top of tGraphic into tY
-         put tBottom + 5 into tStackTop
       else
          put the bottom of tGraphic into tY
-         put tTop - pContentHeight - kPointerHeight + kPointerOffset into tStackTop
       end if
       
       if pPointerLeft then
          put the left of tGraphic + kPointerWidth into tX
-         put tMiddle - kPointerWidth into tStackLeft
       else
          put the right of tGraphic - kPointerWidth into tX
-         put tMiddle - pContentWidth + kPointerWidth into tStackLeft
       end if
    end if
    
@@ -1093,9 +1157,6 @@ command revTutorialSetWindowShape pContentWidth, pContentHeight, pHighlightRect,
    
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
-   
-   put tStackLeft into rStackLeft
-   put tStackTop into rStackTop
 end revTutorialSetWindowShape
 
 private command revTutorialDecideSide pNear, pFar, @rNear, @rCanFit
