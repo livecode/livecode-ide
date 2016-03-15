@@ -775,7 +775,7 @@ action
 end step
 
 step "Set Advice Dont Wrap"
-	Check the 'Don't Wrap' checkbox.
+	Uncheck the 'Don't Wrap' checkbox.
 action
 	highlight property "dontWrap" of section "Basic"
 	wait until the dontWrap of field "Advice" is false
