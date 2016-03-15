@@ -49,7 +49,14 @@ end closeCard
 
 ----------line in between message field and results field can be dragged up/down to decrease/increase the size of the message field----------
 on mouseDown
-   put true into lMoving
+   local tLineYLoc, tMouseV
+   
+   put item 2 of the mouseLoc into tMouseV
+   put item 2 of the loc of graphic "line" into tLineYLoc   
+   
+   if tMouseV <= (tLineYLoc + 5) and tMouseV >= (tLineYLoc - 5) then 
+      put true into lMoving
+   end if
 end mouseDown
 
 on mouseUp
@@ -64,7 +71,7 @@ end mouseRelease
 on mouseMove pMouseH, pMouseV
    local tLineYLoc
    put item 2 of the loc of graphic "line" into tLineYLoc
-   if pMouseV <= (tLineYLoc + 10) and pMouseV >= (tLineYLoc - 10) then 
+   if pMouseV <= (tLineYLoc + 5) and pMouseV >= (tLineYLoc - 5) then 
       set the cursor to 30
       lock cursor
    else
@@ -77,20 +84,22 @@ command dragLine
    local tLineXLoc, tResultsRect, tMessageRect, tMouseYLoc, tResultsTop, tMessageBottom
    
    put item 1 of the loc of graphic "line" into tLineXLoc
+   put item 2 of the mouseLoc into tMouseYLoc
+   
    put the rect of field "results" into tResultsRect
    put the rect of field "message" into tMessageRect
    
    if lMoving is true then
-      put item 2 of the mouseLoc into tMouseYLoc
-      
       if tMouseYLoc < (the cREVMinHeight of field "message" + the top of field "message") 
       then put (the cREVMinHeight of field "message" + the top of field "message") into tMouseYLoc
       if tMouseYLoc > (the bottom of field "results" - the cREVMinHeight of field "results")
       then put (the bottom of field "results" - the cREVMinHeight of field "results") into tMouseYLoc
+      
       put tMouseYLoc + 2 into tResultsTop
       put tMouseYLoc - 2 into tMessageBottom
-      replace item 2 of tResultsRect with tResultsTop in tResultsRect
-      replace item 4 of tMessageRect with tMessageBottom in tMessageRect
+      
+      put 0,the headerHeight of this stack, the width of this stack,tMessageBottom into tMessageRect
+      put 0,tResultsTop,the width of this stack,the bottom of this card-the footerHeight of this stack into tResultsRect
       
       lock screen
       set the loc of graphic "line" to tLineXLoc,tMouseYLoc
