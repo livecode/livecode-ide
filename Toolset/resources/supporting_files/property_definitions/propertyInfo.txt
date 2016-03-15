@@ -57,7 +57,7 @@ externalReferences	External references	externalRefs	com.livecode.pi.text	true	fa
 filename	Source	Basic	com.livecode.pi.file	true	false			
 fillGradient	Fill Gradient	Colors	com.livecode.pi.gradient	true	false	Background Fill		popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap
 firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1	
-fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false		true	
+fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false		false	
 focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false			
 focusColor	Focus Color	Colors	com.livecode.pi.color	true	false	Focus Fill		
 focusPattern	Focus Pattern	Colors	com.livecode.pi.pattern	true	false	Focus Fill		
