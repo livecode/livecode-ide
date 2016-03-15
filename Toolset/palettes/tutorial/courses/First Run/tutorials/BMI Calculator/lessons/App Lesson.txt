@@ -957,7 +957,7 @@ step "Set Chart Colors"
 	going to set the colors of the lines appropriately to display that
 	information.
 	
-	Set the 'Graph Colors' of the chart to
+	Set the 'Line Colors' of the chart to
 	
 	<value>
 value
@@ -1414,6 +1414,7 @@ step "Explain Calculator Card Script"
 	custom property. Finally it calls the setData command which uses the
 	calculated BMI value to populate the results fields of the app.
 action 
+	interlude
 	highlight line "end calculateBMI" of script editor for card "Calculator"
 	go to step "Explain Calculator Card Script II"
 end step
@@ -1422,6 +1423,7 @@ step "Explain Calculator Card Script II"
 	Firstly we display the calculated BMI. '&& pBMI' adds the passed in
 	BMI value to the end of the string.
 action 
+	interlude
 	highlight line "Calculated BMI" of script editor for card "Calculator"
 	go to step "Explain Calculator Card Script III"
 end step
@@ -1432,6 +1434,7 @@ step "Explain Calculator Card Script III"
 	and color depend on the calculated BMI value, we use the 'if' 
 	structure to execute different code for different BMI values.
 action 
+	interlude
 	highlight line "end if" of script editor for card "Calculator"
 	go to step "Select Calculate Button Again"
 end step
@@ -1480,6 +1483,7 @@ step "Explain Calculate Button Script"
 	the mouse while the cursor is over it. We change the text color of 
 	the button while the mouse is pressed.
 action
+	interlude
 	highlight line "end mouseDown" of script editor for button "Calculate"
 	go to step "Explain Calculate Button Script II"
 end step
@@ -1492,6 +1496,7 @@ step "Explain Calculate Button Script II"
 	Setting the text color to 'empty' means using its default or 
 	inherited value.
 action
+	interlude
 	highlight line "end mouseUp" of script editor for button "Calculate"
 	go to step "Test Calculate Button Again"
 end step
@@ -1575,6 +1580,7 @@ step "Explain Calculator Header Script"
 	'setData' command.
 action
 	interlude
+	highlight line "end mouseUp" of script editor for widget "Header"
 	go to step "Go To Chart Card"
 end step
 
@@ -1591,6 +1597,8 @@ skip point
 step "Open Chart Card Script"
 	We are going to use the custom property set on the stack in order to
 	highlight where on the chart the last calculated BMI is located.
+	
+	Select 'Object' → 'Card Script' from the menubar.
 action
 	highlight menu item "Card Script" of menu "Object"
 	wait until there is a script editor for card "Chart"
@@ -1823,8 +1831,8 @@ skip point
 step "Project Browser Interlude"
 	The project browser is a good way of getting an overview of what's
 	in your app. It shows a list of the open stacks with the option to
-	unfold the tree view to see the structure of all the objects on the 
-	stack. 
+	reveal levels in the hierarchy of objects on the stack by clicking 
+	on the triangle next to the object.
 	
 	Open it using the Tools menu.
 action
