@@ -81,12 +81,15 @@ end logoInitialise
 
 command socialMediaInitialise   
    ## Set the images
+   local tWidget
    repeat for each item tMedia in kAllSocialMedia
-      hide widget tMedia of group "socialMedia"
-      set the iconPresetName of widget tMedia of group "socialMedia" to ("lc-" & tMedia)
-      set the foregroundColor of widget tMedia of group "socialMedia" to uiColor(tMedia)
-      set the fillrule of widget tMedia of group "socialMedia" to "even odd"
-      set the blendLevel of widget tMedia of group "socialMedia" to 50
+      put the long id of widget tMedia of group "socialMedia" into tWidget
+      hide tWidget
+      set the iconPresetName of tWidget to ("lc-" & tMedia)
+      set the foregroundColor of tWidget to uiColor(tMedia)
+      set the fillrule of tWidget to "even odd"
+      set the blendLevel of tWidget to 50
+      set the behavior of tWidget to the long id of button "socialBehavior" of me
    end repeat
 end socialMediaInitialise
 
