@@ -562,7 +562,8 @@ on revIDEDeveloperExtensionUninstall pPath
       exit revIDEDeveloperExtensionUninstall
    end if
    
-   revIDEUninstallExtension tDetailsA["id"]
+   # Don't delete the user's extension files
+   revIDEUninstallExtension tDetailsA["id"], false
    
 end revIDEDeveloperExtensionUninstall
 

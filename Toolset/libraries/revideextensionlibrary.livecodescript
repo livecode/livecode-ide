@@ -61,13 +61,19 @@ on revIDEInstallExtension pExtensionPath, pType, pCallbackObject, pCallbackMessa
 end revIDEInstallExtension
 
 # Uninstalls the extension
-on revIDEUninstallExtension pExtensionTypeID 
+on revIDEUninstallExtension pExtensionTypeID, pDeleteFolder
    # Start the uninstall process
    if pExtensionTypeID is not a number then
       put __extensionCacheID("name", pExtensionTypeID) into pExtensionTypeID
    end if
    
-   __extensionUninstallCheckInUse pExtensionTypeID
+   local tDeleteFolder
+   put true into tDeleteFolder
+   if pDeleteFolder is false then
+      put false into tDeleteFolder
+   end if
+   
+   __extensionUninstallCheckInUse pExtensionTypeID, tDeleteFolder
 end revIDEUninstallExtension
 
 # Returns the extension data
@@ -455,14 +461,18 @@ end __extensionInstallFinalise
 ##############################
 
 # Check if the widget to be uninstalled is in use
-on __extensionUninstallCheckInUse pCacheIndex
+on __extensionUninstallCheckInUse pCacheIndex, pDeleteFolder
    # Update progress
    if pCacheIndex is not a number then return __extensionError(pCacheIndex, "Could not remove extension '" & pCacheIndex & "' because it is not a valid index")
    
    __extensionSendProgressUpdate pCacheIndex, "Checking if extension is in use", 20
    
    # Next step
-   send "__extensionUninstallDeleteFiles" && pCacheIndex to me in 0 milliseconds
+   if pDeleteFolder then
+      send "__extensionUninstallDeleteFiles" && pCacheIndex to me in 0 milliseconds
+   else
+      send "__extensionUninstallUnload" && pCacheIndex to me in 0 milliseconds
+   end if
 end __extensionUninstallCheckInUse
 
 # Delete the files associated to the extension
