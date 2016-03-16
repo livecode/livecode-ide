@@ -221,7 +221,7 @@ end step
 step "Set Calculator Header Left Action"
 	Uncheck the 'First Action On Left' checkbox.
 action
-	highlight property "firstActionLeft" of section "Basic"
+	highlight property "firstItemLeft" of section "Basic"
 	wait until the firstItemLeft of widget "Header" is false
 	go to step "Create Navigation Bar Widget"
 end step
@@ -1095,13 +1095,10 @@ action
 end step
 
 step "Explain Go To Card"
-	The 'pLabel' parameter to the handler contains either "Calculator" 
-	or "Chart", depending on which icon was clicked on the navigation 
-	bar.
-	
-	We have named our cards "calculator" and "chart" (LiveCode is not 
-	case-sensitive by default), so going to the appropriate card is as
-	simple as using the passed in parameter.
+	We have named our cards "calculator" and "chart", the same as the 
+	names of the navigation items in the navigation bar (LiveCode is not 
+	case-sensitive by default). So going to the appropriate card is as
+	simple as going to the card corresponding to the 'hilitedItemName'.
 action
 	interlude
 	highlight line "go to card" of script editor for widget "Footer"
@@ -1853,6 +1850,8 @@ end step
 step "Create Browser Card"
 	We are going to add one more card to the stack, which will contain
 	a browser widget to display the NHS Choices service search website.
+	
+	Select 'Object' → 'New Card' from the menubar.
 action
 	highlight menu item "New Card" of menu "Object"
 	capture the next new card of stack "Mainstack" as "Browser"
