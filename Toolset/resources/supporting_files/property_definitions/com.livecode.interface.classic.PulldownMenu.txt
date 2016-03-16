@@ -33,8 +33,8 @@ traversalOn				false			false
 autoHilite				false			false
 shadow							false					
 shadowOffset							4					
-foregroundColor						Text Fill						
-foregroundPattern						Text Fill						
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
 backgroundColor												
 backgroundPattern												
 hiliteColor												

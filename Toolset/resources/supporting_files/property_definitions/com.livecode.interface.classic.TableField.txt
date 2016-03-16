@@ -40,8 +40,8 @@ showLines							false
 hGrid							true					
 vGrid							true					
 tabStops							75					
-foregroundColor						Text Fill						
-foregroundPattern						Text Fill						
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
 backgroundColor												
 backgroundPattern												
 hiliteColor												
