@@ -8694,12 +8694,27 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
    put pCallbackParams into sTransientTextField["callback_params"]
    put pCallback into sTransientTextField["callback"]
    set the rect of tLongID to pRect
+   
+   -- Preserve the requested left and vertical centering of the field
+   local tLoc, tLeft
+   put the loc of tLongID into tLoc
+   put the left of tLongID into tLeft
+   
    local tScript
    put "on closeField;revIDETransientTextChanged;end closeField" into tScript
    put ";on returnInField; revIDETransientTextChanged;end returnInField" after tScript
    put ";on exitField;revIDETransientTextChanged;end exitField" after tScript
    set the script of tLongID to tScript
    set the text of tLongID to pCurrentText
+   
+   -- Ensure the text fits
+   if the formattedWidth of tLongID > the width of tLongID then
+      set the width of tLongID to the formattedWidth of tLongID
+   end if
+   set the height of tLongID to the formattedHeight of tLongID
+   set the loc of tLongID to tLoc
+   set the left of tLongID to tLeft
+   
    local tTargetLongID
    put the long id of the target into tTargetLongID
    put tTargetLongID into sTransientTextField["callback_target"]
@@ -8708,6 +8723,7 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
       set the textAlign of tLongID to it
    end if
    focus on tLongID
+   select char 1 to -1 of tLongID
    unlock messages
    unlock screen
 end revIDECreateTransientTextField
