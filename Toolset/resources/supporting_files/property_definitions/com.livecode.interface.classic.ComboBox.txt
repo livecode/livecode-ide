@@ -31,8 +31,8 @@ hiliteBorder							true
 borderWidth							2					
 armBorder				false			false
 autoHilite				false			false
-foregroundColor						Text Fill						
-foregroundPattern						Text Fill						
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
 backgroundColor												
 backgroundPattern												
 hiliteColor												
