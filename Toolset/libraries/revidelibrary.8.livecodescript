@@ -9250,13 +9250,13 @@ private function revIDEGetDocsAPIData
       end if
       
       # Check if the .js is out of date
-      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
          put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
       else
          local tLibraryArray, Lcdoc
-         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tCachedDataFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
          put the result into tLibraryArray
          
          dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" with tLibraryArray
