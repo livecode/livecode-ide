@@ -1,0 +1,1 @@
+# Remove invalid `stackref is visible` syntax from IDE
