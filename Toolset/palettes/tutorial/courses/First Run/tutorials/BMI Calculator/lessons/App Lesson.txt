@@ -1550,7 +1550,7 @@ step "Set Calculator Header Script"
 	button:
 script
 	on mouseUp
-		if the mouseAction is "clear" then
+		if the mouseAction of widget "header" is "clear" then
 			set the cBMI of this stack to empty
 			set the cHeight of this stack to empty
 			set the cWidth of this stack to empty
