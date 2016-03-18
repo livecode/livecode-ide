@@ -44,6 +44,10 @@ on preOpenStack
    
    ### Properties
    set the resizable of me to false
+   
+   # Ensure paint defaults are set
+   reset paint
+   set the filled to true
 end preOpenStack
 
 on openStack
@@ -85,22 +89,25 @@ on idePreferenceChanged pPreference
    end switch
 end idePreferenceChanged
 
+constant kPolygonMenu = "Rectangle Tool\nRounded Rectangle Tool\nOval Tool\nRegular Polygon Tool\nPolygon Tool"
 on ideToolChanged
+   local tTool
+   put the tool into tTool
+   set the itemdelimiter to "\n"
+   if tTool is among the items of kPolygonMenu then
+      put "paint polygon shape tool" into tTool
+   end if
+   
+   local tControlID
    repeat with x = 1 to the number of controls of group "contents"
-      if the cToolName of control x of group "contents" is empty then next repeat
-      
-      if the tool is "graphic tool" then 
-         if the cToolName of control x of group "contents" is the tool and the style of the templategraphic is the cStyle of control x of group "contents" then
-            set the loc of graphic "tool_hilite" of group "contents" to the loc of control x of group "contents"
-            show graphic "tool_hilite" of group "contents" 
-            exit ideToolChanged
+      put the long id of control x of group "contents" into tControlID
+      if the cToolName of tControlID is tTool then
+         if tTool is "graphic tool" and the style of the templategraphic is not the cStyle of tControlID then
+            next repeat
          end if
-      else
-         if the cToolName of control x of group "contents" is the tool  then
-            set the loc of graphic "tool_hilite" of group "contents" to the loc of control x of group "contents"
-            show graphic "tool_hilite" of group "contents" 
-            exit ideToolChanged
-         end if
+         set the loc of graphic "tool_hilite" of group "contents" to the loc of tControlID
+         show graphic "tool_hilite" of group "contents" 
+         exit ideToolChanged
       end if
    end repeat
 end ideToolChanged 
@@ -136,6 +143,7 @@ on resizeStack
    unlock screen
 end resizeStack
 
+constant kNoSeparatorSections = "runedit,graphictoolscontrols,paintcontrols"
 on generatePalette
    lock screen
    # Clean up existing UI
@@ -169,9 +177,11 @@ on generatePalette
             break 
          case "graphictools"
             put revIDEGraphicTools() into sViewsData["graphictools"]
+            put revIDEGraphicToolControllers() into sViewsData["graphictoolscontrols"]
             break 
          case "paint"
             put revIDEPaintTools() into sViewsData["paint"]
+            put revIDEPaintToolControllers() into sViewsData["paintcontrols"]
             break
       end switch
    end repeat
@@ -187,8 +197,15 @@ on generatePalette
    # Setup the template button
    set the width of the templatebutton to BLOCK_SIZE * 2
    set the height of the templatebutton to BLOCK_SIZE
+   set the showname of the templatebutton to false
+   set the style of the templatebutton to "transparent"
    
-   # Create hilite and hover graphic for tools
+   set the icongravity of the templatebutton to "top"
+   set the threed of the templatebutton to false
+   set the borderwidth of the templatebutton to 0
+   set the blendlevel of the templatebutton to 0
+   
+   # Set up the template graphic
    set the opaque of the templategraphic to true
    set the visible of the templategraphic to false
    set the linesize of the templategraphic to 0
@@ -196,6 +213,7 @@ on generatePalette
    set the height of the templategraphic to BLOCK_SIZE
    set the backgroundcolor of the templategraphic to revIDEColor("edition_color")
    
+   # Create hilite and hover graphic for tools
    create graphic "tool_hover" in group "contents"
    set the backgroundcolor of the templategraphic to "175,175,175"
    create graphic "tool_hilite" in group "contents"
@@ -222,28 +240,24 @@ on generatePalette
       
       # Create the group to hold the controls
       create group tView in group "contents" 
+      
+      set the itemdel to ","
+      if tView is not among the items of kNoSeparatorSections then
+         create graphic tView in group "contents"
+      end if
+      
       repeat for each line tControlTypeID in tOrder
          # AL-2015-09-07: Don't show objects in tools palette if specified
          if sViewsData[tView][tControlTypeID]["userVisible"] is false then
             next repeat
          end if
          
-         if tControlTypeID is a number then
-            
-         end if
          set the itemdel to ","
          put item 1 of tControlTypeID into tControlTypeID
          set the itemdel to "."
          
          # Setup the default button
-         set the showname of the templatebutton to false
          set the name of the templatebutton to the last item of tControlTypeID
-         set the style of the templatebutton to "transparent"
-         
-         set the icongravity of the templatebutton to "top"
-         set the threed of the templatebutton to false
-         set the borderwidth of the templatebutton to 0
-         set the blendlevel of the templatebutton to 0
          set the cType of the templatebutton to tView
          set the cStyle of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
          set the cName of the templatebutton to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
@@ -282,15 +296,23 @@ on generatePalette
          end if
          
          # If the object is a tool, set the key custom properties to make it behave like a tool
-         if sViewsData[tView][tControlTypeID]["tool"] is not empty then 
-            set the cTool of the templatebutton to true
-            set the cToolName of the templatebutton to sViewsData[tView][tControlTypeID]["tool"]
-         else if sViewsData[tView][tControlTypeID]["type"] is "graphic tool" then
-            set the cTool of the templatebutton to true
-            set the cToolName of the templatebutton to "graphic tool"
-         else
-            set the cTool of the templatebutton to false
-         end if
+         local tToolType
+         put sViewsData[tView][tControlTypeID]["type"] into tToolType
+         switch tToolType
+            case "tool"
+            case "option"
+            case "paint tool"
+               set the cTool of the templatebutton to tToolType
+               set the cToolName of the templatebutton to sViewsData[tView][tControlTypeID]["tool"]
+               break
+            case "graphic tool"
+               set the cTool of the templatebutton to tToolType
+               set the cToolName of the templatebutton to "graphic tool"
+               break
+            default
+               set the cTool of the templatebutton to empty
+               break
+         end switch
          
          local tTooltip
          put sViewsData[tView][tControlTypeID]["tooltip"] into tTooltip
@@ -323,13 +345,10 @@ on generatePalette
             set the cStyle of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["style"]["default"]
             set the cName of widget tControlTypeID to sViewsData[tView][tControlTypeID]["properties"]["name"]["default"]
             set the cStatus of widget tControlTypeID to sViewsData[tView][tControlTypeID]["status"]
-            set the cTool of widget tControlTypeID to false
+            set the cTool of widget tControlTypeID to empty
             set the tooltip of widget tControlTypeID to tTooltip
          end if
       end repeat
-      
-      # Create the seperator
-      create graphic tView in group "contents"
    end repeat
    
    # Reset the templates back post use
@@ -378,11 +397,6 @@ on layoutPalette
    put objectTypes() into tObjectTypeData
    
    repeat with x = 1 to the number of elements of tObjectTypeData
-      # Check if the group of object type exists
-      put tObjectTypeData[x]["name"] into tView
-      if there is not a group tView of group "contents" then next repeat
-      put tView into tLastView
-      
       # Get the column count
       local tColumnCount, tBlockSize
       if  tObjectTypeData[x]["block size"] < 20 then
@@ -397,6 +411,19 @@ on layoutPalette
       put (tWidth - (tColumnCount * tBlockSize)) / (tColumnCount *2) into tPadding
       
       put tPaletteMargin  into tLeft
+      
+      # Check if the group of object type exists
+      put tObjectTypeData[x]["name"] into tView
+      if there is not a group tView of group "contents" then next repeat
+      put tView into tLastView
+      
+      set the itemdel to ","
+      if tView is not among the items of kNoSeparatorSections then        
+         set the top of graphic tView of group "contents" to tTop
+         set the width of graphic tView of group "contents" to tWidth - (tPadding * 2)
+         set the left of graphic tView of group "contents" to tLeft
+         add tPaletteMargin to tTop
+      end if
       
       repeat with y = 1 to the number of controls of group tView of group "contents"
          # Get the short name of the object
@@ -418,19 +445,8 @@ on layoutPalette
             add BLOCK_SIZE + (tPalettePadding) to tTop
          end if
       end repeat
-      
-      if y > 0 then
-         set the width of graphic tView of group "contents" to tWidth - (tPadding * 2)
-         set the left of graphic tView of group "contents" to tPaletteMargin
-         set the top of graphic tView of group "contents" to the bottom of control y of group tView of group "contents" + tPalettePadding
-         
-         put the bottom graphic tView of group "contents" + tPalettePadding into tTop
-         put tPaletteMargin into tLeft
-      end if
+      put the bottom of tObjectID + tPaletteMargin into tTop
    end repeat
-   
-   # Hide the last seperator
-   if there is a graphic tLastView of group "contents" then hide graphic tLastView of group "contents"
    
    reset the templatebutton
    
@@ -459,8 +475,14 @@ function objectTypes
    put "graphictools" into tData[5]["name"]
    put 10 into tData[5]["block size"]
    
-   put "paint" into tData[6]["name"]
+   put "graphictoolscontrols" into tData[6]["name"]
    put 10 into tData[6]["block size"]
+   
+   put "paint" into tData[7]["name"]
+   put 10 into tData[7]["block size"]
+   
+   put "paintcontrols" into tData[8]["name"]
+   put 10 into tData[8]["block size"]
    
    return tData
 end objectTypes
@@ -468,7 +490,7 @@ end objectTypes
 on mouseDoubleUp
    if the mode of the topStack is not 1 or the cantModify of the topStack then  exit mouseDoubleUp
    if the cType of the target is empty then exit mouseDoubleUp
-   if the cTool of the target is true then exit mouseDoubleUp
+   if the cTool of the target is not empty then exit mouseDoubleUp
    
    lock screen
    local tObject
@@ -479,27 +501,55 @@ on mouseDoubleUp
    unlock screen
 end mouseDoubleUp
 
-on mouseDown
+on mouseDown pButton
    if the cType of the target is empty then exit mouseDown
    if the target is disabled then exit mouseDown
    if the cStatus of the target is "error" then
       answer "Widget could not be created because there was an error while loading it. To resolve, please go to the extension manager." 
       exit mouseDown
    end if
-   if the cTool of the target is false then 
-      revIDESetCursor "com.livecode.cursor.grabclose"
-   end if
-   if the cTool of the target is true then
-      reset the templategraphic
-      if the cStyle of the target is not empty then
-         set the style of the templategraphic to the cStyle of the target
-      end if
-      if the cName of the target is not empty then
-         set the name of the templategraphic to the cName of the target
-      end if
-      revIDESetTool the cToolName of the target
+   switch the cTool of the target
+      case "tool"
+         revIDESetTool the cToolName of the target
+         break
+      case "graphic tool"
+         revToolsConfigureTemplateGraphic the cStyle of the target, the cName of the target
+         revIDESetTool the cToolName of the target
+         break
+      case "paint tool"
+         local tTool
+         put the cToolName of the target into tTool
+         revToolsConfigurePaint
+         revIDESetTool tTool
+         
+         -- Set the tool cursor
+         -- The tool does not actually work without doing this
+         switch tTool
+            case "spray tool"
+               set the spray to the spray
+               break
+            case "eraser tool"
+               set the eraser to the eraser
+               break
+            case "brush tool"
+               set the brush to the brush
+               break
+            default
+               break
+         end switch
+         break
+      case "option"
+         revToolsOptionClicked pButton, the long id of the target
+         break
+      default
+         revIDESetCursor "com.livecode.cursor.grabclose"
+         break
+   end switch
+   if the cTool of the target is not empty then 
       exit mouseDown
    end if
+   
+   reset the templategraphic
    
    if the tool is not "browse tool" and the tool is not "pointer tool" then 
       choose "pointer" tool
@@ -654,7 +704,7 @@ on mouseEnter
    if word 1 of the target is "widget" then
       revIDESetCursor "com.livecode.cursor.grab"
       set the foregroundColor of the target to revIDEColor("edition_color")
-   else if the cTool of the target is false and the cStatus of the target is not "error" then 
+   else if the cTool of the target is empty and the cStatus of the target is not "error" then 
       # We are hovering over a draggable item
       revIDESetCursor "com.livecode.cursor.grab"
       set the coloroverlay["opacity"] of the target to "50"
@@ -662,7 +712,7 @@ on mouseEnter
    else if the cStatus of the target is "error" then
       # Not working on windows.. get the egg timer so disabling for now
       --revIDESetCursor "help"
-   else if the cTool of the target is true then
+   else if the cTool of the target is not empty then
       # We are hovering over a tool
       set the loc of graphic "tool_hover" of group "contents" to the loc of the target
       show graphic "tool_hover" of group "contents" 
@@ -676,7 +726,9 @@ on mouseLeave
          set the foregroundColor of the target to "100,100,100"
       else
          hide graphic "tool_hover" of group "contents" 
-         set the coloroverlay of the target to empty
+         if the cTool of the target is empty then
+            set the coloroverlay of the target to empty
+         end if
       end if
    end try
    revIDEResetCursor
@@ -934,3 +986,238 @@ function toolObjectName pTool
    end switch
    return tTool
 end toolObjectName
+
+local sToolColors, sLineSizes, sBrushes, sPolygon, sPolygonSides
+on revToolsOptionClicked pButton, pTarget
+   local tToolName, tSection
+   put the cToolName of the target into tToolName
+   put segment 1 of tToolName into tSection
+   switch tToolName
+      case "paint fill color tool"
+      case "paint line color tool"
+      case "graphic fill color tool"
+      case "graphic line color tool"
+         # Popup the system color dialog
+         answer color with sToolColors[tToolName]
+         if the result is not "Cancel" then
+            put it into sToolColors[tToolName]
+            
+            # We use a color overlay with the multiply blend mode
+            # to just change the white part of the icon to the target color
+            set the colorOverlay["color"] of pTarget to sToolColors[tToolName]
+            set the colorOverlay["blendMode"] of pTarget to "multiply"
+         end if
+         break
+      case "paint line size tool"
+      case "graphic line size tool"
+         revToolsPopupLineSizeMenu tToolName
+         break
+      case "paint polygon shape tool"
+         revToolsPopupPolygonMenu tToolName
+         revIDESetTool sPolygon[tToolName]
+         revToolsConfigurePolygon "paint polygon sides tool"
+         break
+      case "paint polygon sides tool"
+         revToolsPopupPolygonSidesMenu tToolName
+         revToolsConfigurePolygon tToolName
+         break
+      case "paint brush pattern tool"
+         local tBrush, tTool
+         put the tool into tTool
+         switch tTool
+            case "eraser tool"
+               put the eraser into tBrush
+               break
+            case "spray tool"
+               put the spray into tBrush
+               break
+            case "brush tool"
+            default
+               put the brush into tBrush
+         end switch
+         # revBrushpopup presents the brush image options
+         set the cBrushShape of stack "revBrushpopup" to tBrush
+         modal stack "revBrushpopup"
+         put the cBrushShape of stack "revBrushpopup" into sBrushes[tTool]
+         break
+   end switch
+   
+   if tSection is "graphic" then
+      revToolsConfigureTemplateGraphicProperties
+   else if tSection is "paint" then
+      revToolsConfigurePaint
+   end if
+end revToolsOptionClicked
+
+local sPicksA
+on menuPick pWhich
+   
+   # Generic menuPick processing
+   put pWhich into sPicksA[the cName of the target]
+   
+   local tText
+   put the text of the target into tText
+   
+   # Fetch and clear the current selection
+   local tCurrent
+   put line lineOffset("!c",tText) of tText into tCurrent
+   replace "!c" with empty in tCurrent
+   
+   switch the short name of the target
+      case "lineSizeMenu"
+         # Process line size menu pick
+         if tCurrent is not a number then 
+            put empty into tCurrent
+         end if
+         if pWhich is "Other..." then
+            ask "Please enter a line size:" with tCurrent titled "Line Size" as sheet
+            if it is not empty then
+               put it into pWhich
+            else
+               put tCurrent into pWhich
+            end if
+         end if
+         
+         if pWhich is "None" then
+            put 0 into pWhich
+         end if
+         if pWhich is a number then
+            put pWhich into sLineSizes[the cName of the target]
+         end if
+         break
+      case "polygonSidesMenu"
+         # Process polygon sides menu pick
+         if tCurrent is not a number then 
+            put empty into tCurrent
+         end if
+         if pWhich is "Other..." then
+            ask "Please enter a number of sides:" with tCurrent titled "Polygon Sides" as sheet
+            if it is not empty then
+               put it into pWhich
+            else
+               put tCurrent into pWhich
+            end if
+         end if
+         if pWhich is a number and pWhich > 2 then
+            put pWhich into sPolygonSides[the cName of the target]
+         end if
+         break
+      case "polygonMenu"
+         put pWhich into sPolygon[the cName of the target]
+         break
+   end switch
+end menuPick
+
+private command setChecked pTarget, pChecked
+   local tText
+   put the text of pTarget into tText
+   
+   replace "!c" with empty in tText
+   put "!c" before line lineOffset(pChecked,tText) of tText
+   set the text of pTarget to tText
+end setChecked
+
+constant kLineSizeMenu = "None\n1\n2\n3\n4\n6\n8\n10\n-\nOther..."
+constant kPolygonSidesMenu = "3\n4\n5\n6\n7\n8\n9\n10\n-\nOther..."
+on revToolsPopupLineSizeMenu pTarget
+   revToolsPopupMenu "lineSizeMenu", pTarget, kLineSizeMenu, 1
+end revToolsPopupLineSizeMenu
+
+on revToolsPopupPolygonMenu pTarget
+   revToolsPopupMenu "polygonMenu", pTarget, kPolygonMenu, "Rectangle Tool"
+end revToolsPopupPolygonMenu
+
+on revToolsPopupPolygonSidesMenu pTarget
+   revToolsPopupMenu "polygonSidesMenu", pTarget, kPolygonSidesMenu, 4
+end revToolsPopupPolygonSidesMenu
+
+# Generic popup menu creation
+on revToolsPopupMenu pButtonName, pTool, pMenuText, pDefault
+   local tLongID
+   if there is not a button pButtonName of me then
+      set the style of the templatebutton to "menu"
+      set the menumode of the templatebutton to "popup"
+      set the visible of the templatebutton to false
+      local tText
+      put pMenuText into tText
+      replace "\n" with return in tText
+      create button pButtonName
+      set the rect of it to -10,-10,-5,-5
+      set the text of button pButtonName to tText
+      reset the templatebutton
+   end if
+   
+   put the long id of button pButtonName of me into tLongID
+   set the cName of tLongID to pTool
+   
+   local tChecked
+   # If there exists a previous pick for the menu, set the check mark
+   # Otherwise check the default value
+   if sPicksA[pTool] is not empty then
+      put sPicksA[pTool] into tChecked
+   else
+      put pDefault into tChecked
+   end if
+   setChecked tLongID, tChecked
+   
+   popup tLongID
+end revToolsPopupMenu
+
+on revToolsConfigureTemplateGraphic pStyle, pName
+   # Make sure the template graphic has the properties selected in the tools palette
+   reset the templategraphic
+   if pStyle is not empty then
+      set the style of the templategraphic to pStyle
+   end if
+   if pName is not empty then
+      set the name of the templategraphic to pName
+   end if
+   revToolsConfigureTemplateGraphicProperties
+end revToolsConfigureTemplateGraphic
+
+on revToolsConfigureTemplateGraphicProperties
+   set the foreColor of the templategraphic to \ 
+         sToolColors["graphic line color tool"]
+   if sToolColors["graphic fill color tool"] is not empty then
+      set the opaque of the templategraphic to true
+      set the backColor of the templategraphic to \ 
+            sToolColors["graphic fill color tool"]
+   end if
+   if sLineSizes["graphic line size tool"] is not empty then
+      set the lineSize of the templategraphic to \ 
+            sLineSizes["graphic line size tool"]
+   end if
+end revToolsConfigureTemplateGraphicProperties
+
+on revToolsConfigurePaint
+   # Make sure the paint properties are those selected in the tools palette
+   set the penColor to sToolColors["paint line color tool"]
+   set the brushColor to sToolColors["paint fill color tool"]
+   
+   if sLineSizes["paint line size tool"] is not empty then
+      set the penWidth to sLineSizes["paint line size tool"]
+   end if
+   
+   local tTool
+   put the tool into tTool
+   if sBrushes[tTool] is not empty then
+      switch tTool
+         case "eraser tool"
+            set the eraser to sBrushes[tTool]
+            break
+         case "spray tool"
+            set the spray to sBrushes[tTool]
+            break
+         case "brush tool"
+            set the brush to sBrushes[tTool]
+            break
+      end switch
+   end if
+end revToolsConfigurePaint
+
+on revToolsConfigurePolygon pTool
+   if the tool is "regular polygon tool" and sPolygonSides[pTool] is not empty then
+      set the polysides to sPolygonSides[pTool]
+   end if
+   revToolsConfigurePaint
+end revToolsConfigurePolygon
