@@ -55,7 +55,7 @@ on editField pRect, pNumber
    put item 2 of pRect + 3 into item 2 of pRect
    put item 2 of pRect + 21 into item 4 of pRect
    
-   revIDECreateTransientTextField pRect, "textEdited", pNumber, item pNumber of the navLabels of widget 1 of me
+   revIDECreateTransientTextField pRect, "textEdited", pNumber, item pNumber of the itemLabels of widget 1 of me
 end editField
 
 on dismissTransient

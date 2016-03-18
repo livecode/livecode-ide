@@ -1,10 +1,9 @@
 ﻿script "com.livecode.pi.editorList.behavior"
-local sComponentSize, sNumChildren
+local sNumChildren
 
 constant kComponentSpacing = 6
 
 on editorInitialize
-   set the editorMinWidth of me to sNumChildren * sComponentSize
    set the editorMaxWidth of me to 0
 end editorInitialize
 
@@ -68,7 +67,10 @@ on updateSubeditors
       dispatch "editorUpdate" to group ("editor" & x) of me
       local tEditorMinWidth
       put the formattedwidth of group ("editor" & x) of me into tEditorMinWidth
-      add (tEditorMinWidth + kComponentSpacing) to tMinWidth	    
+      add tEditorMinWidth to tMinWidth	    
+      if x is not 1 then
+         add kComponentSpacing to tMinWidth
+      end if
    end repeat
    
    set the editorMinWidth of me to tMinWidth
@@ -89,14 +91,13 @@ on editorResize
    local tLeft, tTop
    put the left of me into tLeft
    put the top of me into tTop
-   
    local tHeight
    repeat with x = 1 to sNumChildren
       dispatch "editorResize" to group ("editor" & x) of me
       set the left of group ("editor" & x) of me to tLeft
       set the top of group ("editor" & x) of me to tTop
-      add the effective width of group ("editor" & x) of me to tLeft
-      put max(the effective height of group ("editor" & x) of me, tHeight) into tHeight
+      add the width of group ("editor" & x) of me + kComponentSpacing to tLeft
+      put max(the formattedheight of group ("editor" & x) of me, tHeight) into tHeight
    end repeat
    unlock messages
    set the editorHeight of me to tHeight

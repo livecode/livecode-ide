@@ -91,7 +91,7 @@ ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blen
 innerGlow	Inner glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread
 innerShadow	Inner shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
 kind	Kind	Basic	com.livecode.pi.string	true	true		no_default
-label	Label	Basic	com.livecode.pi.string	true	false			
+label	Label	Basic	com.livecode.pi.text	true	false			
 layer	Layer	Position	com.livecode.pi.integer	true	false		no_default			1		1
 layerMode	Layer mode	Advanced	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
 left	Left	Position	com.livecode.pi.integer	true	false		no_default					1
