@@ -1,4 +1,5 @@
 ﻿script "revMessageBoxMultipleLinesCardBehavior"
+constant kSeparatorSize = 10
 local lMoving, lDistance
 
 on preOpenCard
@@ -54,7 +55,7 @@ on mouseDown
    put item 2 of the mouseLoc into tMouseV
    put item 2 of the loc of graphic "line" into tLineYLoc   
    
-   if tMouseV <= (tLineYLoc + 5) and tMouseV >= (tLineYLoc - 5) then 
+   if tMouseV <= (tLineYLoc + kSeparatorSize/2) and tMouseV >= (tLineYLoc - kSeparatorSize/2) then 
       put true into lMoving
    end if
 end mouseDown
@@ -71,7 +72,7 @@ end mouseRelease
 on mouseMove pMouseH, pMouseV
    local tLineYLoc
    put item 2 of the loc of graphic "line" into tLineYLoc
-   if pMouseV <= (tLineYLoc + 5) and pMouseV >= (tLineYLoc - 5) then 
+   if pMouseV <= (tLineYLoc + kSeparatorSize/2) and pMouseV >= (tLineYLoc - kSeparatorSize/2) then 
       set the cursor to 30
       lock cursor
    else
