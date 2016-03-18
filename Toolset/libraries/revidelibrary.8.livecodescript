@@ -5879,13 +5879,13 @@ on revIDEImportControl pType, pFileName, pReferenced
    set the defaultStack to tTargetStack
    switch pType
       case "image"
-         revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
          if pReferenced is true then
+            revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
             put the long id of the last control into tCreatedControlID
             set the filename of tCreatedControlID to pFileName
          else
+            import paint from file pFileName
             put the long id of the last image into tCreatedControlID
-            set the text of tCreatedControlID to URL ("binfile:" & pFileName)
          end if
          set the borderWidth of tCreatedControlID to 0
          select tCreatedControlID
