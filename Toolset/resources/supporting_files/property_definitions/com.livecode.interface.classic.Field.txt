@@ -39,8 +39,8 @@ showLines							false
 hGrid							false					
 vGrid							false					
 tabStops												
-foregroundColor						Text Fill						
-foregroundPattern						Text Fill						
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
 backgroundColor												
 backgroundPattern												
 hiliteColor												

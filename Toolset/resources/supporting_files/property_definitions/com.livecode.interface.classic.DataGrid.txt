@@ -5,28 +5,28 @@ Property : optional getter : optional setter	Label	Section	Editor	User Visible	R
 ----------------------------------------------------------------------------------------------------
 name												
 style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Style	Data Grid	com.livecode.pi.enum	true	false		no_default	table,form
-show hscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show HScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
-show vscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show VScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
-allow editing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Allow Text Editing	Data Grid	com.livecode.pi.boolean	true	false		no_default
-alternate row colors:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate Row Colors	Data Grid	com.livecode.pi.boolean	true	false		no_default
-auto hilite:revIDEGetDataGridProperty:revIDESetDataGridProperty	Auto-Hilite Rows	Data Grid	com.livecode.pi.boolean	true	false		no_default
-multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-Row Hilites	Data Grid	com.livecode.pi.boolean	true	false		no_default
-allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag Resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default
-cache controls:revIDEGetDataGridProperty:revIDESetDataGridProperty	Cache Controls	Data Grid	com.livecode.pi.boolean	true	false		no_default
-persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent Data	Data Grid	com.livecode.pi.boolean	true	false		no_default
-fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty Row Height	Data Grid	com.livecode.pi.boolean	true	false		no_default	
-row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row Height	Data Grid	com.livecode.pi.number	true	false		21					1
+show hscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show hScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
+show vscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show vScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
+allow editing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Allow text editing	Data Grid	com.livecode.pi.boolean	true	false		no_default
+alternate row colors:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row colors	Data Grid	com.livecode.pi.boolean	true	false		no_default
+auto hilite:revIDEGetDataGridProperty:revIDESetDataGridProperty	Auto-hilite rows	Data Grid	com.livecode.pi.boolean	true	false		no_default
+multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-row hilites	Data Grid	com.livecode.pi.boolean	true	false		no_default
+allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default
+cache controls:revIDEGetDataGridProperty:revIDESetDataGridProperty	Cache controls	Data Grid	com.livecode.pi.boolean	true	false		no_default
+persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default
+fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	true	false		no_default	
+row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data Grid	com.livecode.pi.number	true	false		21					1
 row template:revIDEGetDataGridProperty:	Other	Data Grid	com.livecode.pi.datagrid	true	true	
 
-text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text Color	Colors	com.livecode.pi.color	true	false
-hilited text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Hilited Text Color	Colors	com.livecode.pi.color	true	false
-background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Background Color	Colors	com.livecode.pi.color	true	false
-row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row Color	Colors	com.livecode.pi.color	true	false
-alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate Row Color	Colors	com.livecode.pi.color	true	false
-hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection Hilite Color	Colors	com.livecode.pi.color	true	false
-column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column Divider Color	Colors	com.livecode.pi.color	true	false
-corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner Color	Colors	com.livecode.pi.color	true	false
-header text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header Text Color	Colors	com.livecode.pi.color	true	false
+text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text color	Colors	com.livecode.pi.color	true	false
+hilited text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Hilited text color	Colors	com.livecode.pi.color	true	false
+background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Background color	Colors	com.livecode.pi.color	true	false
+row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row color	Colors	com.livecode.pi.color	true	false
+alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row color	Colors	com.livecode.pi.color	true	false
+hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false
+column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false
+corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false
+header text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text color	Colors	com.livecode.pi.color	true	false
 label												
 tooltip												
 disabled												
