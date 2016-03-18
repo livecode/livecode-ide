@@ -17,8 +17,8 @@ polySides							8
 angle							0					
 layerMode												
 behavior												
-foregroundColor						Border Fill						
-foregroundPattern						Border Fill						
+foregroundColor						Border fill						
+foregroundPattern						Border fill						
 backgroundColor												
 backgroundPattern												
 fillGradient												

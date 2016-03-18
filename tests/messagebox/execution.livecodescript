@@ -78,7 +78,6 @@ end TestGlobalPropertyCompleted
 on TestIntelligenceObjectMultilineCommand
 	local tScript
 	put "on valueCommand; return" && quote & "value" & quote & "; end valueCommand" into tScript
-	put return & "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" after tScript
 
 	local tStack
 	create stack
@@ -90,14 +89,23 @@ on TestIntelligenceObjectMultilineCommand
 	
 	TestAssert "intelligence object multiple command result", msg is "value"
 	TestAssert "intelligence object multiple command executed", tValidScript is "valueCommand; put the result"
+end TestIntelligenceObjectMultilineCommand
+
+on TestIntelligenceObjectMultilineFunction
+	local tScript
+	put "function valueFunction; return" && quote & "value" & quote & "; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
 	
-	put empty into msg
-	
+	local tValidScript	
 	ideExecuteScript "put valueFunction(); put msg", empty, tStack, false, tValidScript
-	
+
 	TestAssert "intelligence object multiple function result", msg is "value"
 	TestAssert "intelligence object multiple function executed", tValidScript is "put valueFunction(); put msg"
-end TestIntelligenceObjectMultilineCommand
+end TestIntelligenceObjectMultilineFunction
 
 on TestIntelligenceObject
 	local tScript

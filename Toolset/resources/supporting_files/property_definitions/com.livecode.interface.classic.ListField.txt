@@ -27,14 +27,14 @@ listBehavior							true
 multipleHilites							false					
 nonContiguousHilites							false					
 toggleHilites							false					
-fixedLineHeight							true					
+fixedLineHeight											
 textHeight												
 firstIndent							0					
 dontSearch							false					
 layerMode												
 behavior												
-foregroundColor						Text Fill						
-foregroundPattern						Text Fill						
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
 backgroundColor												
 backgroundPattern												
 hiliteColor												

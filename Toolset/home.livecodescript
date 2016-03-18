@@ -1,4 +1,4 @@
-﻿script "home"
+script "home"
 constant kImportantTextColor = "#569e54"
 
 on startup
@@ -265,7 +265,7 @@ on revInternal__openStack
          set the itemdelimiter to "/"
          switch the platform
             case "MacOS"
-               put item 1 to -5 of the filename me & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
+               put item 1 to -5 of the filename me & "/Contents/MacOS/autoupdater" into tCommand
                put quote & tCommand & quote && "install -update" into tCommand
                break
             case "Win32"

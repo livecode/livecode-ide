@@ -2338,7 +2338,7 @@ on revSEHidePalettes
             next repeat
          end if
          
-         if not (stack tStackName is visible) then
+         if not the visible of stack tStackName then
          	next repeat
          end if
          

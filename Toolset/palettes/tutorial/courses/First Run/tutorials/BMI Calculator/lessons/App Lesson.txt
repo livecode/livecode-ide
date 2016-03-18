@@ -221,7 +221,7 @@ end step
 step "Set Calculator Header Left Action"
 	Uncheck the 'First Action On Left' checkbox.
 action
-	highlight property "firstActionLeft" of section "Basic"
+	highlight property "firstItemLeft" of section "Basic"
 	wait until the firstItemLeft of widget "Header" is false
 	go to step "Create Navigation Bar Widget"
 end step
@@ -957,7 +957,7 @@ step "Set Chart Colors"
 	going to set the colors of the lines appropriately to display that
 	information.
 	
-	Set the 'Graph Colors' of the chart to
+	Set the 'Line Colors' of the chart to
 	
 	<value>
 value
@@ -1095,13 +1095,10 @@ action
 end step
 
 step "Explain Go To Card"
-	The 'pLabel' parameter to the handler contains either "Calculator" 
-	or "Chart", depending on which icon was clicked on the navigation 
-	bar.
-	
-	We have named our cards "calculator" and "chart" (LiveCode is not 
-	case-sensitive by default), so going to the appropriate card is as
-	simple as using the passed in parameter.
+	We have named our cards "calculator" and "chart", the same as the 
+	names of the navigation items in the navigation bar (LiveCode is not 
+	case-sensitive by default). So going to the appropriate card is as
+	simple as going to the card corresponding to the 'hilitedItemName'.
 action
 	interlude
 	highlight line "go to card" of script editor for widget "Footer"
@@ -1414,6 +1411,7 @@ step "Explain Calculator Card Script"
 	custom property. Finally it calls the setData command which uses the
 	calculated BMI value to populate the results fields of the app.
 action 
+	interlude
 	highlight line "end calculateBMI" of script editor for card "Calculator"
 	go to step "Explain Calculator Card Script II"
 end step
@@ -1422,6 +1420,7 @@ step "Explain Calculator Card Script II"
 	Firstly we display the calculated BMI. '&& pBMI' adds the passed in
 	BMI value to the end of the string.
 action 
+	interlude
 	highlight line "Calculated BMI" of script editor for card "Calculator"
 	go to step "Explain Calculator Card Script III"
 end step
@@ -1432,6 +1431,7 @@ step "Explain Calculator Card Script III"
 	and color depend on the calculated BMI value, we use the 'if' 
 	structure to execute different code for different BMI values.
 action 
+	interlude
 	highlight line "end if" of script editor for card "Calculator"
 	go to step "Select Calculate Button Again"
 end step
@@ -1480,6 +1480,7 @@ step "Explain Calculate Button Script"
 	the mouse while the cursor is over it. We change the text color of 
 	the button while the mouse is pressed.
 action
+	interlude
 	highlight line "end mouseDown" of script editor for button "Calculate"
 	go to step "Explain Calculate Button Script II"
 end step
@@ -1492,6 +1493,7 @@ step "Explain Calculate Button Script II"
 	Setting the text color to 'empty' means using its default or 
 	inherited value.
 action
+	interlude
 	highlight line "end mouseUp" of script editor for button "Calculate"
 	go to step "Test Calculate Button Again"
 end step
@@ -1548,7 +1550,7 @@ step "Set Calculator Header Script"
 	button:
 script
 	on mouseUp
-		if the mouseAction is "clear" then
+		if the mouseAction of widget "header" is "clear" then
 			set the cBMI of this stack to empty
 			set the cHeight of this stack to empty
 			set the cWidth of this stack to empty
@@ -1575,6 +1577,7 @@ step "Explain Calculator Header Script"
 	'setData' command.
 action
 	interlude
+	highlight line "end mouseUp" of script editor for widget "Header"
 	go to step "Go To Chart Card"
 end step
 
@@ -1591,6 +1594,8 @@ skip point
 step "Open Chart Card Script"
 	We are going to use the custom property set on the stack in order to
 	highlight where on the chart the last calculated BMI is located.
+	
+	Select 'Object' → 'Card Script' from the menubar.
 action
 	highlight menu item "Card Script" of menu "Object"
 	wait until there is a script editor for card "Chart"
@@ -1823,8 +1828,8 @@ skip point
 step "Project Browser Interlude"
 	The project browser is a good way of getting an overview of what's
 	in your app. It shows a list of the open stacks with the option to
-	unfold the tree view to see the structure of all the objects on the 
-	stack. 
+	reveal levels in the hierarchy of objects on the stack by clicking 
+	on the triangle next to the object.
 	
 	Open it using the Tools menu.
 action
@@ -1845,6 +1850,8 @@ end step
 step "Create Browser Card"
 	We are going to add one more card to the stack, which will contain
 	a browser widget to display the NHS Choices service search website.
+	
+	Select 'Object' → 'New Card' from the menubar.
 action
 	highlight menu item "New Card" of menu "Object"
 	capture the next new card of stack "Mainstack" as "Browser"

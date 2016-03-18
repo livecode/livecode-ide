@@ -8376,7 +8376,7 @@ command revIDECheckForUpdates
       set the itemdelimiter to "/"
       switch the platform
          case "MacOS"
-            put item 1 to -5 of the filename of stack "home" & "/LiveCode Setup.app/Contents/MacOS/installer" into tCommand
+            put item 1 to -5 of the filename of stack "home" & "/Contents/MacOS/autoupdater" into tCommand
             put quote & tCommand & quote && "install -foregroundupdate" into tCommand
             break
          case "Win32"
@@ -9250,13 +9250,13 @@ private function revIDEGetDocsAPIData
       end if
       
       # Check if the .js is out of date
-      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
          put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
       else
          local tLibraryArray, Lcdoc
-         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tCachedDataFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
          put the result into tLibraryArray
          
          dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" with tLibraryArray
@@ -9798,18 +9798,7 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    local tIsProperty
    put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
    
-   # Try as an object property of the intelligence object
-   if tIsProperty then
-      ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
-      if the result is empty then 
-         local tName
-         put the name of pIntelligenceObject into tName
-         put tTryProperty && "of" && tName into tValidScript
-      end if
-   end if
-   
-   # If it wasn't valid as an object property then
-   # try as a function or global property
+   # Try as a function or global property
    if tValidScript is empty then
       if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
          ideDoMessage tTryProperty, pDebugMode
@@ -9818,6 +9807,24 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
          end if
       end if
    end if
+   
+   # If it wasn't valid as a function or global property then
+   # try as an object property of the intelligence object
+   if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
+      ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
+      if the result is empty then 
+         local tName
+         # pIntelligence object may be a bad reference or no longer exist
+         try
+            put the name of pIntelligenceObject into tName
+         catch tError
+         end try
+         if tError is not empty then
+            put tTryProperty && "of" && tName into tValidScript
+         end if
+      end if
+   end if
+   
    
    if tValidScript is empty then
       ideDoMessage pScript, pDebugMode
