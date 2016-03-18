@@ -1280,7 +1280,7 @@ step "Set Calculate Button Script"
 	button:
 script
 	on mouseUp
-		answer getBMI(field "weight", field "height")
+		answer getBMI(field "height", field "weight")
 	end mouseUp
 action
 	highlight script editor for button "Calculate"
@@ -1293,6 +1293,7 @@ step "Explain Calculate Script"
 	in run mode. 
 action 
 	interlude
+	highlight line "on mouseUp" of script editor for button "Calculate"
 	go to step "Explain Calculate Script II"
 end step
 
@@ -1307,6 +1308,7 @@ step "Explain Calculate Script II"
 	user.
 action
 	interlude
+	highlight line "answer getBMI" of script editor for button "Calculate"
 	go to step "Test Calculate Button"
 end step
 
@@ -1965,14 +1967,6 @@ action
 	highlight tool "Create com.livecode.widget.browser"
 	capture the next new widget of stack "Mainstack" as "Browser"
 	wait until there is a widget "Browser"
-	go to step "Open Browser Inspector"
-end step 
-
-step "Open Browser Inspector"
-	Open the property inspector for the browser widget.
-action
-	highlight toolbar "Inspector"
-	wait until there is an inspector for widget "Browser"
 	go to step "Set Browser Rect"
 end step
 
@@ -1982,11 +1976,19 @@ action
 	add guide "Browser" with rect "0,62,320,432" to stack "Mainstack"
 	highlight guide "Browser"
 	wait until widget "Browser" fits guide "Browser" with tolerance 5
+	go to step "Open Browser Inspector"
+end step
+
+step "Open Browser Inspector"
+	Open the property inspector for the browser widget.
+action
+	highlight toolbar "Inspector"
+	wait until there is an inspector for widget "Browser"
 	go to step "Set Browser URL"
 end step
 
 step "Set Browser URL"
-	Set the url of the browser to "<value>".
+	Set the url of the browser to "<value>" and press <Return>.
 value 
 	http://www.nhs.uk/service-search
 action
