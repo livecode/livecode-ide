@@ -623,7 +623,7 @@ end mouseUp
 
 on mouseDoubleUp pButtonNo, pTarget
    if revCheckEdit(pTarget) then
-      revIDEOpenInspectorForObjects the long id of the target
+      revIDEOpenInspectorForObjects revIDESelectedObjects()
    else if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
       pass mouseDoubleUp
    end if
