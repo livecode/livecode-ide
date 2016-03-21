@@ -929,11 +929,13 @@ function ideObjectTypeFromObject pObjectID
                   case "pulldown"
                      return "com.livecode.interface.classic.PulldownMenu"
                      break
-                  case "popup"
-                     return "com.livecode.interface.classic.PopupMenu"
-                     break
-                  default
+                  case "tabbed"
                      return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
                      break
                end switch
             case "rectangle"
