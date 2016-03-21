@@ -7504,7 +7504,8 @@ on revIDELaunchResource pName
          launch document revEnvironmentDocumentationPath() & "/pdf/LiveCode User Guide.pdf"
          break
       case "Sample Stacks"
-         launch url "http://livecode.com/links/livecode/revonline"
+         set the _ideoverride of stack "revonline" to true
+         go stack "revOnline"
          break
       case "Sample Scripts"
          launch url "http://lessons.runrev.com/m/2592"
@@ -10056,3 +10057,30 @@ command revUpdateRecentFiles pStack
 
    revIDEAddRecentStack the effective filename of stack pStack
 end revUpdateRecentFiles
+
+/*
+Share the stack to revOnline/LiveCode Share
+*/
+command revIDEShareStack pStackID
+   # Upload stack to RevOnline
+   revOnlinePrefLoad
+   put the effective filename of the topStack into tStackPath
+   if tStackPath is empty then
+      # Stack must be saved to be uploaded to revonline
+      revSaveAs the short name of the topStack,false
+   end if
+   put the effective filename of the topStack into tStackPath
+   if tStackPath is not empty then
+      # Check remember username and password prefs
+      if revOnlineSession() is empty then
+         # No session so need to login
+         revOnlineShowLoginDialog
+      end if
+      # If login was successful
+      if revOnlineSession() is not empty then
+         revGoOnline
+         send "rvoShareThisStack tStackPath" to stack "revonline"
+      end if
+   end if
+   break
+end revIDEShareStack
