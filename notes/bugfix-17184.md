@@ -1,0 +1,1 @@
+# Properties set from menus should be to all selected objects

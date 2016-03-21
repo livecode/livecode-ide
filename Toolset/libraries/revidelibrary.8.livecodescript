@@ -7046,19 +7046,22 @@ on ideActionStyleText pWhich, pValue
       put the long id of the selectedField into tSelectedObject
       put true into tIsField
    else if the selectedObject is not empty then
-      put the long id of the selectedObject into tSelectedObject
+      put revIDESelectedObjects() into tSelectedObjects
    end if
    
    put the selectedChunk into tSelectedChunk
    
-   local tTargetStack
-   put revIDEStackOfObject(tSelectedObject) into tTargetStack
-   if revIDEStackIsIDEStack(tTargetStack) then
-      // Allow IDE stacks to handle whether user text style actions are valid on the target
-      dispatch "ideStyleTextRequest" to tTargetStack with pWhich, pValue, tSelectedChunk, tSelectedObject
-   else
-      ideStyleText tSelectedChunk, tSelectedObject, tIsField, pWhich, pValue
-   end if
+   local tTargetStack, tIDEStack
+   put revIDEStackOfObject(line 1 of tSelectedObjects) into tTargetStack
+   put revIDEStackIsIDEStack(tTargetStack) into tIDEStack
+   repeat for each line tSelectedObject in tSelectedObjects
+      if tIDEStack then
+         // Allow IDE stacks to handle whether user text style actions are valid on the target
+         dispatch "ideStyleTextRequest" to tTargetStack with pWhich, pValue, tSelectedChunk, tSelectedObject
+      else
+         ideStyleText tSelectedChunk, tSelectedObject, tIsField, pWhich, pValue
+      end if
+   end repeat
 end ideActionStyleText
 
 on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
