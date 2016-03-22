@@ -4100,7 +4100,13 @@ on revIDEPositionPaletteDefault pStackName
       default 
          # If no sizing information can be found position the stack in the center of the 
          # default screen
-         set the loc of stack pStackName to the screenloc
+         
+         ## If the stack is a Script Editor ensure it will fit on screen
+         if pStackName begins with revIDEScriptEditorPrefix() then 
+            set the rect of stack pStackName to tScreenWidth * 0.3, tScreenHeight * 0.2, tScreenWidth * 0.7, tScreenHeight * 0.8
+         else
+            set the loc of stack pStackName to the screenloc
+         end if
          break
    end switch
    
