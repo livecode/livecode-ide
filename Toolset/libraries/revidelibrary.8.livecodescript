@@ -892,7 +892,11 @@ function ideObjectTypeFromObject pObjectID
          return "com.livecode.interface.classic.Card"
       case "group"
          if the dgProps["control type"] of pObjectID is "Data Grid" then
-            return "com.livecode.interface.classic.DataGrid"
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
          else
             return "com.livecode.interface.classic.Group"
          end if
@@ -2938,7 +2942,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
       # Create data grid
-      if pObjectTypeID is "com.livecode.interface.classic.DataGrid" then
+      if pObjectTypeID begins with "com.livecode.interface.classic.DataGrid" then
          -- data grid library expects a rect rather than a loc
          local tCreateRect
          put round(the cTabButtonWidth of stack "revPreferences" / 2), round(the cTabButtonHeight of stack "revPreferences" / 2) into tCreateRect
