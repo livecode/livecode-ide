@@ -180,7 +180,16 @@ end mutuallyExclusive
 
 # Sets the row tooltip text
 setProp rowTooltip pTooltipText
+   local tEditor
+   put the long name of group 1 of me into tEditor
+   
+   ## Set the tooltip of the row label
    set the tooltip of field "rowlabel" of me to pTooltipText
+   
+   ## Set the tooltip on each control in the editor group
+   repeat with x = 1 to the number of controls of tEditor
+      set the tooltip of control x of tEditor to pTooltipText
+   end repeat
 end rowTooltip
 
 # Takes a list of properties and returns an array describing how to lay out the editors
