@@ -447,7 +447,7 @@ on inspectorFill
    local tSelectedChunk
    if the focusedobject is not empty then
       if revIDEStackOfObject(the focusedobject) is the long name of me then
-         if the selectedfield is not empty then
+         if the selectedfield is not empty and not the listBehavior of the selectedField then
             put the selectedfield && "of stack" && quote & the short name of me & quote into tSelectedChunk
          end if
       end if
