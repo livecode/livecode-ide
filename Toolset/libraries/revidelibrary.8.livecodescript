@@ -5879,13 +5879,18 @@ on revIDEImportControl pType, pFileName, pReferenced
    set the defaultStack to tTargetStack
    switch pType
       case "image"
-         revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
          if pReferenced is true then
+            ## Create a classic image control with default properties
+            ## Set the filename of the new image control to the referenced image
+            revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
             put the long id of the last control into tCreatedControlID
             set the filename of tCreatedControlID to pFileName
          else
+            ## Create an image control by importing the image file onto the stack
+            ## Importing a paint file preserves the image file properties
+            ## In particualar the repeatCount property is set to -1 for animated gifs and 0 for other images
+            import paint from file pFileName
             put the long id of the last image into tCreatedControlID
-            set the text of tCreatedControlID to URL ("binfile:" & pFileName)
          end if
          set the borderWidth of tCreatedControlID to 0
          select tCreatedControlID
