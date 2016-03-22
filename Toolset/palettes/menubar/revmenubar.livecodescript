@@ -1254,6 +1254,9 @@ private function revMenubarFileMenu pContext
    put enableMenuItem("&Revert to Saved...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
    put "-" & return after tFile
    
+   put enableMenuItem("&Share this stack...", tCanSaveStack) & return after tFile
+   put "-" & return after tFile
+   
    put enableMenuItem("Standalone Application Settings...", tIsUserTarget) & return after tFile
    put enableMenuItem("Save as Standalone Application...", tIsUserTarget) & return after tFile
    put "-" & return after tFile
@@ -2492,6 +2495,9 @@ on revMenubarFileMenuPick pWhich
          break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone the long id of the topStack
+         break
+      case "Share this stack..."
+         revIDEShareStack the long id of the topStack
          break
       case "Standalone Application Settings..."
          revIDEStandaloneSettingsForStack the long id of the topStack
