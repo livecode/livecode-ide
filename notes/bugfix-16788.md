@@ -1,0 +1,1 @@
+# OuterGlow effect gui should be the same as innerGlow effect gui
