@@ -1821,17 +1821,17 @@ function revIDEGraphicToolControllers
    local tTooltip, tName, tCount, tReturnData
    add 1 to tCount
    put "com.livecode.tool.FillColor" into tName
-   put "Graphic Fill Color" into tTooltip
+   put "Set graphic fill color" into tTooltip
    updateOptionArray tName, "graphic fill color tool", tTooltip, tCount, tReturnData
    
    add 1 to tCount
    put "com.livecode.tool.LineColor" into tName
-   put "Graphic Line Color" into tTooltip
+   put "Set graphic line color" into tTooltip
    updateOptionArray tName, "graphic line color tool", tTooltip, tCount, tReturnData
    
    add 1 to tCount
    put "com.livecode.tool.LineSize" into tName
-   put "Graphic Line Size" into tTooltip
+   put "Set graphic line size" into tTooltip
    updateOptionArray tName, "graphic line size tool", tTooltip, tCount, tReturnData
    
    return tReturnData
@@ -1866,22 +1866,22 @@ function revIDEPaintTools
    
    add 1 to tCount
    put "com.livecode.tool.Pencil" into tName
-   put "Pencil Tool - Draws a freehand line on an image" into tTooltip
+   put "Pencil Tool - Draw a freehand line on an image" into tTooltip
    updatePaintToolArray tName, "pencil tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.Brush" into tName
-   put "Brush Tool - Draws freehand brush strokes on an image" into tTooltip
+   put "Brush Tool - Draw freehand brush strokes on an image" into tTooltip
    updatePaintToolArray tName, "brush tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.Bucket" into tName
-   put "Bucket Tool - Fills on outline in an image" into tTooltip
+   put "Bucket Tool - Fill on outline in an image" into tTooltip
    updatePaintToolArray tName, "bucket tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.SprayCan" into tName
-   put "Spray Can Tool - Draws airbrush strokes on an image" into tTooltip
+   put "Spray Can Tool - Draw airbrush strokes on an image" into tTooltip
    updatePaintToolArray tName, "spray tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
@@ -1901,7 +1901,7 @@ function revIDEPaintTools
    
    add 1 to tCount
    put "com.livecode.tool.Eraser" into tName
-   put "Eraser Tool - Erases an area in an image" into tTooltip
+   put "Eraser Tool - Erase an area in an image" into tTooltip
    updatePaintToolArray tName, "eraser tool", tTooltip, tCount, tDataA
    
    return tDataA
@@ -1913,27 +1913,27 @@ function revIDEPaintToolControllers
    local tTooltip, tName, tCount
    add 1 to tCount
    put "com.livecode.tool.FillColor" into tName
-   put "Paint Fill Color" into tTooltip
+   put "Set paint fill color" into tTooltip
    updateOptionArray tName, "paint fill color tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.LineColor" into tName
-   put "Paint Line Color" into tTooltip
+   put "Set paint line color" into tTooltip
    updateOptionArray tName, "paint line color tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.LineSize" into tName
-   put "Paint Line Size" into tTooltip
+   put "Set paint line size" into tTooltip
    updateOptionArray tName, "paint line size tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.BrushPattern" into tName
-   put "Paint Brush Pattern" into tTooltip
+   put "Set paint brush pattern" into tTooltip
    updateOptionArray tName, "paint brush pattern tool", tTooltip, tCount, tDataA
    
    add 1 to tCount
    put "com.livecode.tool.PolygonSides" into tName
-   put "Paint Polygon Sides" into tTooltip
+   put "Set number of paint polygon sides" into tTooltip
    updateOptionArray tName, "paint polygon sides tool", tTooltip, tCount, tDataA
    
    return tDataA
