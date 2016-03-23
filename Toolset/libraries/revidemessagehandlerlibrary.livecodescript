@@ -258,10 +258,11 @@ on deleteWidget
 end deleteWidget
 
 on deleteStack
-   local tTarget
-   put the long id of the target into tTarget
-   if not revIDEObjectIsOnIDEStack(tTarget) then
-      send "ideMessageSend ideStackDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
+   local tLongID
+   -- deleteStack is sent to the card, so the owner of the target is the stack
+   put the long id of the owner of the target into tLongID
+   if not revIDEStackIsIDEStack(tLongID) then
+      send "ideMessageSend ideStackDeleted","tLongID" to stack "revIDELibrary" in 0 milliseconds
    end if
    pass deleteStack
 end deleteStack
