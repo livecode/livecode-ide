@@ -10092,3 +10092,17 @@ command revIDEShareStack pStackID
    end if
    break
 end revIDEShareStack
+
+/*
+Returns the number of lines in the script of an object
+If  the object is on a password protected stack "pwd" is returned
+*/
+function revIDEObjectScriptLines pObject
+   local tScriptLines
+   try
+      put the number of lines in the script of pObject into tScriptLines      
+   catch pError
+      put "pwd" into tScriptLines
+   end try
+   return tScriptLines
+end revIDEObjectScriptLines
