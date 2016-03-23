@@ -144,8 +144,8 @@ on inspectorTreeMenuDisplay
    then put "!cLock Inspector" into tLockInspector
    else put "!nLock Inspector" into tLockInspector
    
-   set the text of button "inspectMenu" of this stack to tInspect & cr & "-" \
-         & cr & "Edit Script" & cr & tSendMessageList
+   set the text of button "inspectMenu" of this stack to tInspect & return & "-" \
+         & return & tSendMessageList
    
    popup button "inspectMenu" of this stack at the mouseloc
    
@@ -160,7 +160,6 @@ on menuPick pWhich
    then send "closeField" to tFocusedObject
    
    put sSelectedObjects into tObjects
-   put revIDEStackOfObject(line 1 of tObjects) into tStack
    set the itemDel to "|"
    switch item 1 of pWhich
       case "Inspect"
@@ -168,9 +167,6 @@ on menuPick pWhich
          break
       case "Send Message"
          revIDESendMessageToObject item 2 of pWhich, tObjects
-         break
-      case "Edit Script"
-         revIDEEditScriptOfObjects tObjects 
          break
    end switch
 end menuPick
@@ -186,6 +182,10 @@ private on inspectorTitleUpdate
       set the title of me to "Multiple objects"
    end if
 end inspectorTitleUpdate
+
+on inspectorEditScript
+   revIDEEditScriptOfObjects sSelectedObjects
+end inspectorEditScript
 
 #####################
 ##### MESSAGES #####
@@ -246,6 +246,7 @@ end inspectorSectionIcon
 # Add to header actions/preferences
 on inspectorAddActions
    addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
+   addFrameItem "inspectorEditScript","header", "action", "Edit script", "lc-edit-script", "lc-edit-script","inspectorEditScript", the long id of me
    addFrameItem "inspectorLock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    addFrameItem "idePropertyInspector_labels", "header", "preference", "Property Labels", "enum","false:Description of option,true:Name of LiveCode property", "inspectorPropLabelsPrefChanged", the long id of me
 end inspectorAddActions
