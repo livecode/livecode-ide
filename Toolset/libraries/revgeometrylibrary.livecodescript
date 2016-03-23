@@ -1005,6 +1005,10 @@ on revCleanSetGeometry pWhichProperty, pWhatValue
 end revCleanSetGeometry
 
 on revSetGeometry pWhichProperty,pWhatValue
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   set the defaultStack to ideStackOfObject(lGeometryObject)
+   
    local tTargetCard
    put revIDECardOfObject(lGeometryObject) into tTargetCard
    --empty card cache
@@ -1034,6 +1038,7 @@ on revSetGeometry pWhichProperty,pWhatValue
    --calculate relative distances if applicable
    # if "absolute" is in pWhichProperty and pWhatValue is false then revCalculateGeometryDistances
    revCalculateGeometryCardRank
+   set the defaultStack to tDefaultStack
 end revSetGeometry
 
 function revGetGeometry pWhichValue
