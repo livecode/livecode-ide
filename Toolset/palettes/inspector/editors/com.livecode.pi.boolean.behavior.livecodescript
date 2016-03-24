@@ -27,6 +27,7 @@ on editorResize
    lock messages
    set the width of button "checkbox" of me to the width of me
    set the width of button "checkbox" of me to the formattedwidth of button "checkbox" of me
+   set the height of button "checkbox" of me to the formattedheight of button "checkbox" of me
    set the top of button "checkbox" of me to the top of me
    set the left of button "checkbox" of me to the left of me
    unlock messages
