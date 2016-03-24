@@ -19,6 +19,7 @@ on editorUpdate
       enable button "inspect object" of me
    end if
    set the enabled of field 1 of me to tEnabled
+   set the visible of widget 1 of me to tEnabled
    if tEffective is true then
       set the textcolor of field 1 of me to "150,150,150"
    else
@@ -37,16 +38,23 @@ constant kButtonHeight = 23
 constant kControlGap = 5
 on editorResize
    lock screen
+   local tEnabled
+   put the editorEnabled of me into tEnabled 
    lock messages
-   
-   local tFieldHeight
+   local tFieldHeight, tFieldWidth
    put the formattedheight of field 1 of me into tFieldHeight
-   set the width of field 1 of me to the width of me - kControlGap - tFieldHeight
+   put the width of me into tFieldWidth
+   if tEnabled then 
+      subtract kControlGap + tFieldHeight from tFieldWidth
+   end if
+   set the width of field 1 of me to tFieldWidth
    set the height of field 1 of me to tFieldHeight
    set the topleft of field 1 of me to the topleft of me
    
-   set the rect of widget 1 of me to 0,0,tFieldHeight,tFieldHeight
-   set the topright of widget 1 of me to the topright of me	
+   if tEnabled then
+      set the rect of widget 1 of me to 0,0,tFieldHeight,tFieldHeight
+      set the topright of widget 1 of me to the topright of me	
+   end if
    
    local tButtonWidth
    put (the width of me - kControlGap) / 2 into tButtonWidth

@@ -892,7 +892,11 @@ function ideObjectTypeFromObject pObjectID
          return "com.livecode.interface.classic.Card"
       case "group"
          if the dgProps["control type"] of pObjectID is "Data Grid" then
-            return "com.livecode.interface.classic.DataGrid"
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
          else
             return "com.livecode.interface.classic.Group"
          end if
@@ -929,11 +933,13 @@ function ideObjectTypeFromObject pObjectID
                   case "pulldown"
                      return "com.livecode.interface.classic.PulldownMenu"
                      break
-                  case "popup"
-                     return "com.livecode.interface.classic.PopupMenu"
-                     break
-                  default
+                  case "tabbed"
                      return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
                      break
                end switch
             case "rectangle"
@@ -2961,7 +2967,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
       # Create data grid
-      if pObjectTypeID is "com.livecode.interface.classic.DataGrid" then
+      if pObjectTypeID begins with "com.livecode.interface.classic.DataGrid" then
          -- data grid library expects a rect rather than a loc
          local tCreateRect
          put round(the cTabButtonWidth of stack "revPreferences" / 2), round(the cTabButtonHeight of stack "revPreferences" / 2) into tCreateRect
@@ -4800,7 +4806,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Align Controls,Basic,Stack Files,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
+   return "Align Controls,Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4838,6 +4844,9 @@ function revIDEPropertySectionNameToIconName pName
          break
       case "data grid"
          return "list alt"
+         break
+      case "columns"
+         return "columns"
          break
       case "advanced"
          return "cogs"
@@ -5208,8 +5217,216 @@ on revIDESetDataGridProperty pObj, pProperty, pValue
 end revIDESetDataGridProperty
 
 function revIDEGetDataGridProperty pObject, pProperty
+   if pProperty is "row behavior" then
+      local tTemplate
+      put the dgProps["row template"] of pObject into tTemplate
+      set the itemdel to "card"
+      return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
+   end if
+   
    return the dgProps[pProperty] of pObject
 end revIDEGetDataGridProperty
+
+local sCurrentColumn
+on revIDESetDataGridColumns pObject, pProperty, pValue
+   local tColumns, tCurrentColumn
+   repeat with x = 1 to the number of elements in pValue
+      if tColumns is empty then
+         put pValue[x]["name"] into tColumns
+      else
+         put return & pValue[x]["name"] after tColumns
+      end if
+      
+      if pValue[x]["current"] then
+         put pValue[x]["name"] into tCurrentColumn
+      end if
+   end repeat
+   if tCurrentColumn is empty then
+      put pValue[1]["name"] into tCurrentColumn
+   end if
+   put tCurrentColumn into sCurrentColumn
+   
+   set the dgProps["columns"] of pObject to tColumns
+end revIDESetDataGridColumns
+
+function revIDEGetDataGridColumns pObject, pProperty
+   local tArray, tColumns, tCount
+   put the dgProps["columns"] of pObject into tColumns
+   repeat for each line tColumn in tColumns
+      add 1 to tCount
+      if tColumn is sCurrentColumn then
+         put true into tArray[tCount]["current"]
+      end if
+      put tColumn into tArray[tCount]["name"]
+   end repeat
+   return tArray
+end revIDEGetDataGridColumns
+
+on revIDESetDataGridColumnProperty pObject, pProperty, pValue
+   switch pProperty
+      case "column name"
+         set the dgColumnName[sCurrentColumn] of pObject to pValue
+         break
+      case "column label"
+         set the dgColumnLabel[sCurrentColumn] of pObject to pValue
+         break
+      case "column visible"
+         set the dgColumnIsVisible[sCurrentColumn] of pObject to pValue
+         break
+      case "column width"
+         set the dgColumnWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column min width"
+         set the dgColumnMinWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column max width"
+         set the dgColumnMaxWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column align"
+         set the dgColumnAlignment[sCurrentColumn] of pObject to pValue
+         break
+      case "sort by column"
+         if pValue then
+            set the dgProps["sort by column"] of pObject to sCurrentColumn
+         else if the dgProps["sort by column"] of pObject is sCurrentColumn then
+            set the dgProps["sort by column"] of pObject to empty
+         end if
+         break
+      case "column drag to resize"
+         set the dgColumnIsResizable[sCurrentColumn] of pObject to pValue
+         break
+      case "column sort direction"
+         set the dgColumnSortDirection[sCurrentColumn] of pObject to pValue
+         break
+      case "column sort type"
+         set the dgColumnSortType[sCurrentColumn] of pObject to pValue
+         break
+      case "column case sensitive"
+         set the dgColumnSortIsCaseSensitive[sCurrentColumn] of pObject to pValue
+         break
+      case "column behavior"
+         revIDENewDataGridColumnBehavior pObject
+         break
+   end switch
+   revIDEPropertyChanged pObject
+end revIDESetDataGridColumnProperty
+
+function revIDEGetDataGridColumnProperty pObject, pProperty
+   switch pProperty
+      case "column name"
+         return sCurrentColumn
+         break
+      case "column label"
+         return the dgColumnLabel[sCurrentColumn] of pObject
+         break
+      case "column visible"
+         return the dgColumnIsVisible[sCurrentColumn] of pObject is not false
+         break
+      case "column width"
+         return the dgColumnWidth[sCurrentColumn] of pObject
+         break
+      case "column min width"
+         return the dgColumnMinWidth[sCurrentColumn] of pObject
+         break
+      case "column max width"
+         return the dgColumnMaxWidth[sCurrentColumn] of pObject
+         break
+      case "column align"
+         local tAlign
+         put the dgColumnAlignment[sCurrentColumn] of pObject into tAlign
+         if tAlign is empty then
+            put "left" into tAlign
+         end if
+         return tAlign
+         break
+      case "sort by column"
+         return the dgProps["sort by column"] of pObject is sCurrentColumn
+         break
+      case "column drag to resize"
+         return the dgColumnIsResizable[sCurrentColumn] of pObject is not false
+         break
+      case "column case sensitive"
+         return the dgColumnSortIsCaseSensitive[sCurrentColumn] of pObject is true
+         break
+      case "column sort direction"
+         local tSortDir
+         put the dgColumnSortDirection[sCurrentColumn] of pObject into tSortDir
+         if tSortDir is empty then
+            put "ascending" into tSortDir
+         end if
+         return tSortDir
+         break
+      case "column sort type"
+         local tSortType
+         put the dgColumnSortType[sCurrentColumn] of pObject into tSortType
+         if tSortType is empty then
+            put "text" into tSortType
+         end if
+         return tSortType
+         break
+      case "column behavior"
+         return the dgColumnTemplate[sCurrentColumn] of pObject
+         break
+   end switch
+end revIDEGetDataGridColumnProperty
+
+command revIDENewDataGridColumnBehavior pObject
+   local tDefault
+   put the defaultStack into tDefault
+   
+   local tTemplate, tTemplateCard, tStackWord
+   put the dgProps["row template"] of pObject into tTemplate
+   put wordoffset("card",tTemplate) into tStackWord
+   put word tStackWord to -1 of tTemplate into tTemplateCard
+   reset the templateButton
+   set the visible of the templateButton to false
+   set the width of the templateButton to 140
+   
+   local tTopLeft
+   put the topLeft of last group of tTemplateCard into tTopLeft
+   add 100 to item 1 of tTopLeft
+   
+   local tGroupRef
+   copy group "default column template" of stack "revdatagridlibrary" to tTemplate
+   put it into tGroupRef
+   set the name of tGroupRef to sCurrentColumn
+   set the topLeft of tGroupRef to tTopLeft
+   put sCurrentColumn into field 1 of tGroupRef
+   
+   local tStack
+   put the long id of the owner of tTemplate into tStack
+   set the name of the templateButton to sCurrentColumn && "Behavior"
+   go inv stack tTemplateCard
+   put wordoffset("stack",tTemplate) into tStackWord
+   put word tStackWord to -1 of tTemplate into tTemplate
+   set the title of stack tTemplate to "Editing template"
+   set the defaultStack to tTemplate
+   local tOpen
+   put the mode of stack tTemplate is not 0 into tOpen
+   lock messages
+   local tButton
+   put the number of card buttons into tButton
+   if tButton is 0 then
+      put 4,200 into tTopLeft
+   else
+      put the topLeft of btn tButton of this card into tTopLeft
+      add 40 to item 2 of tTopLeft
+   end if
+   set the topLeft of the templateButton to tTopLeft
+   local tButtonRef
+   create button
+   put it into tButtonRef
+   set the script of tButtonRef to the uDefaultScript of button "Default Column Script" of stack "revDataGridLibrary"
+   set the parentScript of tGroupRef to it
+   reset the templateGroup
+   reset the templateButton
+   if not tOpen then close stack tTemplate
+   show stack tTemplate
+   set the defaultStack to tDefault
+   unlock messages
+   
+   send "resetList" to pObject
+end revIDENewDataGridColumnBehavior
 
 on revIDESetTableProperty pObject, pProperty, pValue
    switch pProperty

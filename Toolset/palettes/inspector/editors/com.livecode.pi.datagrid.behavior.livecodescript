@@ -1,6 +1,5 @@
 ﻿script "com.livecode.pi.datagrid.behavior"
 on editorInitialize
-   set the rowShowLabel of me to false
    set the editorMinWidth of me to 200
    set the editorMaxWidth of me to 0
 end editorInitialize
@@ -51,16 +50,3 @@ on dataGridTemplateLoad
       go tCard
    end if
 end dataGridTemplateLoad
-
-on dataGridBehaviorScript
-   local tValue
-   put the editorValue of me into tValue
-   
-   local tBehaviorObject
-   set the itemdel to "card"
-   put "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tValue into tBehaviorObject
-   
-   if exists(tBehaviorObject) then
-      edit the script of tBehaviorObject
-   end if
-end dataGridBehaviorScript
