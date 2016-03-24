@@ -24,4 +24,5 @@ layer
 textFont												
 textAlign												
 textSize												
-traversalOn		Advanced					false										
+traversalOn		Advanced					false	
+number									

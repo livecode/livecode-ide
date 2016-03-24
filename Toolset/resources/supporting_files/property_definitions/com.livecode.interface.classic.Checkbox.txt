@@ -68,5 +68,6 @@ location
 left												
 top												
 right												
-bottom												
-layer												
+bottom											
+layer
+number												

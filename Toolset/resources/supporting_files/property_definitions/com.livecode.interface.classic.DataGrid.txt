@@ -60,3 +60,4 @@ right
 bottom												
 layer		
 layerMode
+number
