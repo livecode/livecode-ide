@@ -64,29 +64,32 @@ on TestBug16863
    local tStack
    create stack
    put the short name of it into tStack
-
+   
    ## Create a button on the stack
    set the defaultStack to tStack
    create button
    set the name of it to "test"
-
-   local tValidScript
+   
+   local tValidScript, tScript
+   put "there is a button" && quote & "test" & quote into tScript
+   
    ideExecuteScript "there is a button" && quote & "test" & quote, tStack, empty, true, tValidScript
-
-   TestAssert "; in single line message box", word 1 of msg is "true"
+   TestAssert "boolean expression with 'put' prepended",  msg is "true"
+   TestAssert "boolean expression value with 'put' prepended",  msg is "true"
+   TestAssert "boolean expression executed with 'put' prepended",  tValidScript is put && tScript
 end TestBug16863
 
 on TestGlobalPropertyCompleted
 	local tValidScript
 	ideExecuteScript "backdrop", empty, empty, false, tValidScript
-	
+
 	TestAssert "global prop value with 'put the' prepended", msg is "none"
 	TestAssert "global prop executed with 'put the' prepended", tValidScript is "put the backdrop"
-	
+
 	put empty into msg
-	
+
 	ideExecuteScript "the backdrop", empty, empty, false, tValidScript
-	
+
 	TestAssert "global prop value with 'put' prepended", msg is "none"
 	TestAssert "global prop executed with 'put' prepended", tValidScript is "put the backdrop"
 end TestGlobalPropertyCompleted
