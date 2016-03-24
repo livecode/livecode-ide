@@ -892,7 +892,11 @@ function ideObjectTypeFromObject pObjectID
          return "com.livecode.interface.classic.Card"
       case "group"
          if the dgProps["control type"] of pObjectID is "Data Grid" then
-            return "com.livecode.interface.classic.DataGrid"
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
          else
             return "com.livecode.interface.classic.Group"
          end if
@@ -929,11 +933,13 @@ function ideObjectTypeFromObject pObjectID
                   case "pulldown"
                      return "com.livecode.interface.classic.PulldownMenu"
                      break
-                  case "popup"
-                     return "com.livecode.interface.classic.PopupMenu"
-                     break
-                  default
+                  case "tabbed"
                      return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
                      break
                end switch
             case "rectangle"
@@ -1817,6 +1823,40 @@ function revIDEGraphicTools
    return tReturnData
 end revIDEGraphicTools
 
+function revIDEGraphicToolControllers
+   local tTooltip, tName, tCount, tReturnData
+   add 1 to tCount
+   put "com.livecode.tool.FillColor" into tName
+   put "Set graphic fill color" into tTooltip
+   updateOptionArray tName, "graphic fill color tool", tTooltip, tCount, tReturnData
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineColor" into tName
+   put "Set graphic line color" into tTooltip
+   updateOptionArray tName, "graphic line color tool", tTooltip, tCount, tReturnData
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineSize" into tName
+   put "Set graphic line size" into tTooltip
+   updateOptionArray tName, "graphic line size tool", tTooltip, tCount, tReturnData
+   
+   return tReturnData
+end revIDEGraphicToolControllers
+
+private command updatePaintToolArray pName, pTool, pTooltip, pOrder, @xArray
+   put "paint tool" into xArray[pName]["type"]
+   put pTool into xArray[pName]["tool"]
+   put pTooltip into xArray[pName]["tooltip"]
+   put pOrder into xArray[pName]["order"]
+end updatePaintToolArray
+
+private command updateOptionArray pName, pTool, pTooltip, pOrder, @xArray
+   put "option" into xArray[pName]["type"]
+   put pTool into xArray[pName]["tool"]
+   put pTooltip into xArray[pName]["tooltip"]
+   put pOrder into xArray[pName]["order"]
+end updateOptionArray
+
 /**
 Returns information about the paint tools.
 
@@ -1826,57 +1866,83 @@ those paint tools.
 
 **/
 function revIDEPaintTools
-   local tReturnData
-   put "tool" into tReturnData["com.livecode.tool.Select"]["type"]
-   put "select tool" into tReturnData["com.livecode.tool.Select"]["tool"]
-   put "Select Tool - Select a rectangle area of an image" into tReturnData["com.livecode.tool.Select"]["tooltip"]
-   put 7 into tReturnData["com.livecode.tool.Select"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Bucket"]["type"]
-   put "bucket tool" into tReturnData["com.livecode.tool.Bucket"]["tool"]
-   put "Bucket Tool - Fills on outline in an image" into tReturnData["com.livecode.tool.Bucket"]["tooltip"]
-   put 3 into tReturnData["com.livecode.tool.Bucket"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.SprayCan"]["type"]
-   put "spray tool" into tReturnData["com.livecode.tool.SprayCan"]["tool"]
-   put "Spray Can Tool - Draws airbrush strokes on an image" into tReturnData["com.livecode.tool.SprayCan"]["tooltip"]
-   put 4 into tReturnData["com.livecode.tool.SprayCan"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Eraser"]["type"]
-   put "eraser tool" into tReturnData["com.livecode.tool.Eraser"]["tool"]
-   put "Eraser Tool - Erases an area in an image" into tReturnData["com.livecode.tool.Eraser"]["tooltip"]
-   put 8 into tReturnData["com.livecode.tool.Eraser"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Polygon"]["type"]
-   put "polygon tool" into tReturnData["com.livecode.tool.Polygon"]["tool"]
-   put "Polygon Tool - Click to set each point on the polygon, double click to close the polygon" into tReturnData["com.livecode.tool.Polygon"]["tooltip"]
-   put 5 into tReturnData["com.livecode.tool.Polygon"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Curve"]["type"]
-   put "curve tool" into tReturnData["com.livecode.tool.Curve"]["tool"]
-   put "Curve Tool - Draws a curved line on an image" into tReturnData["com.livecode.tool.Curve"]["tooltip"]
-   put 6 into tReturnData["com.livecode.tool.Curve"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Pencil"]["type"]
-   put "pencil tool" into tReturnData["com.livecode.tool.Pencil"]["tool"]
-   put "Pencil Tool - Draws a freehand line on an image" into tReturnData["com.livecode.tool.Pencil"]["tooltip"]
-   put 1 into tReturnData["com.livecode.tool.Pencil"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Brush"]["type"]
-   put "brush tool" into tReturnData["com.livecode.tool.Brush"]["tool"]
-   put "Brush Tool - Draws freehand brush strokes on an image" into tReturnData["com.livecode.tool.Brush"]["tooltip"]
-   put 2 into tReturnData["com.livecode.tool.Brush"]["order"]
-
-   return tReturnData
+   local tDataA
+   
+   local tTooltip, tName, tCount
+   
+   add 1 to tCount
+   put "com.livecode.tool.Pencil" into tName
+   put "Pencil Tool - Draw a freehand line on an image" into tTooltip
+   updatePaintToolArray tName, "pencil tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Brush" into tName
+   put "Brush Tool - Draw freehand brush strokes on an image" into tTooltip
+   updatePaintToolArray tName, "brush tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Bucket" into tName
+   put "Bucket Tool - Fill on outline in an image" into tTooltip
+   updatePaintToolArray tName, "bucket tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.SprayCan" into tName
+   put "Spray Can Tool - Draw airbrush strokes on an image" into tTooltip
+   updatePaintToolArray tName, "spray tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Polygon" into tName
+   put "Polygon Tool - Click to set each point on the polygon, double click to close the polygon" into tTooltip
+   updateOptionArray tName, "paint polygon shape tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Curve" into tName
+   put "Curve Tool - Draws a curved line on an image" into tTooltip
+   updatePaintToolArray tName, "curve tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Select" into tName
+   put "Select Tool - Select a rectangle area of an image" into tTooltip
+   updatePaintToolArray tName, "select tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Eraser" into tName
+   put "Eraser Tool - Erase an area in an image" into tTooltip
+   updatePaintToolArray tName, "eraser tool", tTooltip, tCount, tDataA
+   
+   return tDataA
 end revIDEPaintTools
 
 function revIDEPaintToolControllers
-   local tReturnData
-   put "property" into tReturnData["com.livecode.globalproperty.brush"]["type"]
-   put "brush" into tReturnData["com.livecode.globalproperty.brush"]["property_name"]
-   put "Set the brush size to change the effect of the brush or eraser" into tReturnData["com.livecode.globalproperty.brush"]["tooltip"]
-   put "1" & return & "2" & return & "3" & return & "4" into tReturnData["com.livecode.globalproperty.brush"]["options"]
-   return tReturnData
+   local tDataA
+   
+   local tTooltip, tName, tCount
+   add 1 to tCount
+   put "com.livecode.tool.FillColor" into tName
+   put "Set paint fill color" into tTooltip
+   updateOptionArray tName, "paint fill color tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineColor" into tName
+   put "Set paint line color" into tTooltip
+   updateOptionArray tName, "paint line color tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineSize" into tName
+   put "Set paint line size" into tTooltip
+   updateOptionArray tName, "paint line size tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.BrushPattern" into tName
+   put "Set paint brush pattern" into tTooltip
+   updateOptionArray tName, "paint brush pattern tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.PolygonSides" into tName
+   put "Set number of paint polygon sides" into tTooltip
+   updateOptionArray tName, "paint polygon sides tool", tTooltip, tCount, tDataA
+   
+   return tDataA
 end revIDEPaintToolControllers
 
 /**
@@ -2065,6 +2131,31 @@ end revIDEGlobalPropertyContinuousRange
 function revIDEMainStacks
    return ideMainStacks()
 end revIDEMainStacks
+
+/**
+A list of the stacks that can be set at the main stack of the given stack
+
+Returns: A list of the names of stacks, one per line
+
+Description:
+Use the <revIDEMainstackPropertyOptions> function to retrieve a list of the names of the 
+stacks that can be set as the main stack of the current stack, taking into account the 
+Show IDE Stacks preference.
+**/
+function revIDEMainstackPropertyOptions
+   local tStackList, tCurrentStack
+   put ideMainStacks() into tStackList
+   put revIDESelectedObjects() into tCurrentStack
+   
+   ## Allow the stack to be set as its own mainstack
+   if word 1 of tCurrentStack is "stack" then
+      if the short name of tCurrentStack is not among the lines of tStackList then
+         put return & the short name of tCurrentStack after tStackList
+      end if
+   end if
+   sort lines of tStackList
+   return tStackList
+end revIDEMainstackPropertyOptions
 
 /**
 A list of the current mainstacks
@@ -2936,7 +3027,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if pObjectTypeID begins with "com.livecode.interface.classic" then
       local tCreatedControlID
       # Create data grid
-      if pObjectTypeID is "com.livecode.interface.classic.DataGrid" then
+      if pObjectTypeID begins with "com.livecode.interface.classic.DataGrid" then
          -- data grid library expects a rect rather than a loc
          local tCreateRect
          put round(the cTabButtonWidth of stack "revPreferences" / 2), round(the cTabButtonHeight of stack "revPreferences" / 2) into tCreateRect
@@ -4100,7 +4191,13 @@ on revIDEPositionPaletteDefault pStackName
       default 
          # If no sizing information can be found position the stack in the center of the 
          # default screen
-         set the loc of stack pStackName to the screenloc
+         
+         ## If the stack is a Script Editor ensure it will fit on screen
+         if pStackName begins with revIDEScriptEditorPrefix() then 
+            set the rect of stack pStackName to tScreenWidth * 0.3, tScreenHeight * 0.2, tScreenWidth * 0.7, tScreenHeight * 0.8
+         else
+            set the loc of stack pStackName to the screenloc
+         end if
          break
    end switch
    
@@ -4775,7 +4872,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Align Controls,Basic,Stack Files,Data Grid,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
+   return "Align Controls,Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -4813,6 +4910,9 @@ function revIDEPropertySectionNameToIconName pName
          break
       case "data grid"
          return "list alt"
+         break
+      case "columns"
+         return "columns"
          break
       case "advanced"
          return "cogs"
@@ -5183,8 +5283,259 @@ on revIDESetDataGridProperty pObj, pProperty, pValue
 end revIDESetDataGridProperty
 
 function revIDEGetDataGridProperty pObject, pProperty
+   if pProperty is "row behavior" then
+      local tTemplate
+      put the dgProps["row template"] of pObject into tTemplate
+      set the itemdel to "card"
+      return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
+   end if
+   
    return the dgProps[pProperty] of pObject
 end revIDEGetDataGridProperty
+
+local sCurrentColumn
+on revIDESetDataGridColumns pObject, pProperty, pValue
+   local tColumns, tCurrentColumn
+   repeat with x = 1 to the number of elements in pValue
+      if tColumns is empty then
+         put pValue[x]["name"] into tColumns
+      else
+         put return & pValue[x]["name"] after tColumns
+      end if
+      
+      if pValue[x]["current"] then
+         put pValue[x]["name"] into tCurrentColumn
+      end if
+   end repeat
+   if tCurrentColumn is empty then
+      put pValue[1]["name"] into tCurrentColumn
+   end if
+   put tCurrentColumn into sCurrentColumn
+   
+   set the dgProps["columns"] of pObject to tColumns
+end revIDESetDataGridColumns
+
+function revIDEGetDataGridColumns pObject, pProperty
+   local tArray, tColumns, tCount
+   put the dgProps["columns"] of pObject into tColumns
+   repeat for each line tColumn in tColumns
+      add 1 to tCount
+      if tColumn is sCurrentColumn then
+         put true into tArray[tCount]["current"]
+      end if
+      put tColumn into tArray[tCount]["name"]
+   end repeat
+   return tArray
+end revIDEGetDataGridColumns
+
+on revIDESetDataGridColumnProperty pObject, pProperty, pValue
+   switch pProperty
+      case "column name"
+         set the dgColumnName[sCurrentColumn] of pObject to pValue
+         break
+      case "column label"
+         set the dgColumnLabel[sCurrentColumn] of pObject to pValue
+         break
+      case "column visible"
+         set the dgColumnIsVisible[sCurrentColumn] of pObject to pValue
+         break
+      case "column width"
+         set the dgColumnWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column min width"
+         set the dgColumnMinWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column max width"
+         set the dgColumnMaxWidth[sCurrentColumn] of pObject to pValue
+         break
+      case "column align"
+         set the dgColumnAlignment[sCurrentColumn] of pObject to pValue
+         break
+      case "sort by column"
+         if pValue then
+            set the dgProps["sort by column"] of pObject to sCurrentColumn
+         else if the dgProps["sort by column"] of pObject is sCurrentColumn then
+            set the dgProps["sort by column"] of pObject to empty
+         end if
+         break
+      case "column drag to resize"
+         set the dgColumnIsResizable[sCurrentColumn] of pObject to pValue
+         break
+      case "column sort direction"
+         set the dgColumnSortDirection[sCurrentColumn] of pObject to pValue
+         break
+      case "column sort type"
+         set the dgColumnSortType[sCurrentColumn] of pObject to pValue
+         break
+      case "column case sensitive"
+         set the dgColumnSortIsCaseSensitive[sCurrentColumn] of pObject to pValue
+         break
+      case "column behavior"
+         revIDENewDataGridColumnBehavior pObject
+         break
+   end switch
+   revIDEPropertyChanged pObject
+end revIDESetDataGridColumnProperty
+
+function revIDEGetDataGridColumnProperty pObject, pProperty
+   switch pProperty
+      case "column name"
+         return sCurrentColumn
+         break
+      case "column label"
+         return the dgColumnLabel[sCurrentColumn] of pObject
+         break
+      case "column visible"
+         return the dgColumnIsVisible[sCurrentColumn] of pObject is not false
+         break
+      case "column width"
+         return the dgColumnWidth[sCurrentColumn] of pObject
+         break
+      case "column min width"
+         return the dgColumnMinWidth[sCurrentColumn] of pObject
+         break
+      case "column max width"
+         return the dgColumnMaxWidth[sCurrentColumn] of pObject
+         break
+      case "column align"
+         local tAlign
+         put the dgColumnAlignment[sCurrentColumn] of pObject into tAlign
+         if tAlign is empty then
+            put "left" into tAlign
+         end if
+         return tAlign
+         break
+      case "sort by column"
+         return the dgProps["sort by column"] of pObject is sCurrentColumn
+         break
+      case "column drag to resize"
+         return the dgColumnIsResizable[sCurrentColumn] of pObject is not false
+         break
+      case "column case sensitive"
+         return the dgColumnSortIsCaseSensitive[sCurrentColumn] of pObject is true
+         break
+      case "column sort direction"
+         local tSortDir
+         put the dgColumnSortDirection[sCurrentColumn] of pObject into tSortDir
+         if tSortDir is empty then
+            put "ascending" into tSortDir
+         end if
+         return tSortDir
+         break
+      case "column sort type"
+         local tSortType
+         put the dgColumnSortType[sCurrentColumn] of pObject into tSortType
+         if tSortType is empty then
+            put "text" into tSortType
+         end if
+         return tSortType
+         break
+      case "column behavior"
+         return the dgColumnTemplate[sCurrentColumn] of pObject
+         break
+   end switch
+end revIDEGetDataGridColumnProperty
+
+command revIDENewDataGridColumnBehavior pObject
+   local tDefault
+   put the defaultStack into tDefault
+   
+   local tTemplate, tTemplateCard, tStackWord
+   put the dgProps["row template"] of pObject into tTemplate
+   put wordoffset("card",tTemplate) into tStackWord
+   put word tStackWord to -1 of tTemplate into tTemplateCard
+   reset the templateButton
+   set the visible of the templateButton to false
+   set the width of the templateButton to 140
+   
+   local tTopLeft
+   put the topLeft of last group of tTemplateCard into tTopLeft
+   add 100 to item 1 of tTopLeft
+   
+   local tGroupRef
+   copy group "default column template" of stack "revdatagridlibrary" to tTemplate
+   put it into tGroupRef
+   set the name of tGroupRef to sCurrentColumn
+   set the topLeft of tGroupRef to tTopLeft
+   put sCurrentColumn into field 1 of tGroupRef
+   
+   local tStack
+   put the long id of the owner of tTemplate into tStack
+   set the name of the templateButton to sCurrentColumn && "Behavior"
+   go inv stack tTemplateCard
+   put wordoffset("stack",tTemplate) into tStackWord
+   put word tStackWord to -1 of tTemplate into tTemplate
+   set the title of stack tTemplate to "Editing template"
+   set the defaultStack to tTemplate
+   local tOpen
+   put the mode of stack tTemplate is not 0 into tOpen
+   lock messages
+   local tButton
+   put the number of card buttons into tButton
+   if tButton is 0 then
+      put 4,200 into tTopLeft
+   else
+      put the topLeft of btn tButton of this card into tTopLeft
+      add 40 to item 2 of tTopLeft
+   end if
+   set the topLeft of the templateButton to tTopLeft
+   local tButtonRef
+   create button
+   put it into tButtonRef
+   set the script of tButtonRef to the uDefaultScript of button "Default Column Script" of stack "revDataGridLibrary"
+   set the parentScript of tGroupRef to it
+   reset the templateGroup
+   reset the templateButton
+   if not tOpen then close stack tTemplate
+   show stack tTemplate
+   set the defaultStack to tDefault
+   unlock messages
+   
+   send "resetList" to pObject
+end revIDENewDataGridColumnBehavior
+
+on revIDESetTableProperty pObject, pProperty, pValue
+   switch pProperty
+      case "celledit"
+         set the cRevTable[pProperty] of pObject to pValue
+         set the locktext of pObject to pValue
+         break
+      case "basicTableObject"
+         set the cREVGeneral["table"] of pObject to pValue
+         if pValue then
+            local tReturned
+            put the cREVDatabase["returnedview"] of pObject into tReturned
+            if tReturned is not empty then
+               set the cREVTable["currentview"] of pObject to tReturned
+            else
+               set the cREVTable["currentview"] of pObject to the text of pObject
+            end if
+         end if
+         revDisplayFormattedData
+         if pValue then
+            set the vScrollbar of pObject to true
+            set the hScrollbar of pObject to true
+         end if
+         break
+      case "cellformat"
+      case "maxColumnCount"
+         set the cRevTable[pProperty] of pObject to pValue
+         break
+   end switch
+end revIDESetTableProperty
+
+function revIDEGetTableProperty pObject, pProperty
+   switch pProperty
+      case "basicTableObject"
+         return the cREVGeneral["table"] of pObject
+         break
+      case "cellformat"
+      case "celledit"
+      case "maxColumnCount"
+         return the cRevTable[pProperty] of pObject
+         break
+   end switch
+end revIDEGetTableProperty
 
 #############
 # Standalone Settings
@@ -7046,9 +7397,9 @@ private function ideUserCanStyleText pObject
 end ideUserCanStyleText
 
 on ideActionStyleText pWhich, pValue
-   local tSelectedObject, tSelectedChunk, tIsField
+   local tSelectedObjects, tSelectedChunk, tIsField
    if the selectedField is not empty then
-      put the long id of the selectedField into tSelectedObject
+      put the long id of the selectedField into tSelectedObjects
       put true into tIsField
    else if the selectedObject is not empty then
       put revIDESelectedObjects() into tSelectedObjects
@@ -10091,6 +10442,7 @@ end revUpdateRecentFiles
 Share the stack to revOnline/LiveCode Share
 */
 command revIDEShareStack pStackID
+   local tStackPath
    # Upload stack to RevOnline
    revOnlinePrefLoad
    put the effective filename of the topStack into tStackPath

@@ -38,6 +38,7 @@ end resizeStack
 #### PI PROPERTIES #####
 #####################
 
+local sObjectTypes
 setProp cSelectedObjects pSelectedObjects
    if pSelectedObjects is sSelectedObjects then 
       exit cSelectedObjects
@@ -58,6 +59,9 @@ setProp cSelectedObjects pSelectedObjects
    lock screen
    revIDESubscribe "idePropertyChanged", pSelectedObjects
    put pSelectedObjects into sSelectedObjects
+   
+   # Keep track of the object 'types' in case they are changed via PI
+   put ideObjectTypesFromObjectList(pSelectedObjects) into sObjectTypes
    
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
@@ -98,8 +102,16 @@ end lockInspector
 
 on idePropertyChanged
    lock screen
-   inspectorFill
-   inspectorTitleUpdate
+   # Check if the object 'types' have been changed via PI
+   local tNewTypes
+   put ideObjectTypesFromObjectList(sSelectedObjects) into tNewTypes
+   if sObjectTypes is not tNewTypes then
+      set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+      put tNewTypes into sObjectTypes
+   else
+      inspectorFill
+      inspectorTitleUpdate
+   end if
    unlock screen
 end idePropertyChanged
 

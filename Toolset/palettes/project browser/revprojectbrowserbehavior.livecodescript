@@ -941,6 +941,12 @@ function getAbsoluteRow pVisibleRow
    return item pVisibleRow of tVisibleRows
 end getAbsoluteRow
 
+function getVisibleRow pLongID
+   local tRow
+   put getRow(pLongID) into tRow
+   return itemOffset(tRow, sDisplayArray["visible object keys"])
+end getVisibleRow
+
 function getOwners pLongID, @pOwnerList
    local tOwner
    try
@@ -2388,7 +2394,13 @@ on updateSelection pRows
    unlock screen
 end updateSelection
 
-on pbRightClick
+on pbRightClick pObject
+   local tVisibleRow, tHilited
+   put getVisibleRow(pObject) into tVisibleRow
+   put the dvHilitedRows of group "objectList" of me into tHilited
+   if tVisibleRow is not among the items of tHilited then
+      set the dvHilitedRows of group "objectList" of me to tVisibleRow
+   end if
    revIDEPopupContextualMenu pbSelectedObjects()
 end pbRightClick
 
