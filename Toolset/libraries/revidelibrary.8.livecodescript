@@ -5186,6 +5186,49 @@ function revIDEGetDataGridProperty pObject, pProperty
    return the dgProps[pProperty] of pObject
 end revIDEGetDataGridProperty
 
+on revIDESetTableProperty pObject, pProperty, pValue
+   switch pProperty
+      case "celledit"
+         set the cRevTable[pProperty] of pObject to pValue
+         set the locktext of pObject to pValue
+         break
+      case "basicTableObject"
+         set the cREVGeneral["table"] of pObject to pValue
+         if pValue then
+            local tReturned
+            put the cREVDatabase["returnedview"] of pObject into tReturned
+            if tReturned is not empty then
+               set the cREVTable["currentview"] of pObject to tReturned
+            else
+               set the cREVTable["currentview"] of pObject to the text of pObject
+            end if
+         end if
+         revDisplayFormattedData
+         if pValue then
+            set the vScrollbar of pObject to true
+            set the hScrollbar of pObject to true
+         end if
+         break
+      case "cellformat"
+      case "maxColumnCount"
+         set the cRevTable[pProperty] of pObject to pValue
+         break
+   end switch
+end revIDESetTableProperty
+
+function revIDEGetTableProperty pObject, pProperty
+   switch pProperty
+      case "basicTableObject"
+         return the cREVGeneral["table"] of pObject
+         break
+      case "cellformat"
+      case "celledit"
+      case "maxColumnCount"
+         return the cRevTable[pProperty] of pObject
+         break
+   end switch
+end revIDEGetTableProperty
+
 #############
 # Standalone Settings
 #############

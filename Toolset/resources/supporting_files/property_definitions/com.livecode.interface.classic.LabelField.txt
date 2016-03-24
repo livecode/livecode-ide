@@ -33,8 +33,9 @@ dontSearch							false
 layerMode												
 behavior												
 basicTableObject							false					
-maxEditableColumns												
-cellFormatting							false					
+cellEdit							false
+maxColumnCount												
+cellFormat							false					
 showLines							false					
 hGrid							false					
 vGrid							false					
