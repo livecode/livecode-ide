@@ -1823,6 +1823,40 @@ function revIDEGraphicTools
    return tReturnData
 end revIDEGraphicTools
 
+function revIDEGraphicToolControllers
+   local tTooltip, tName, tCount, tReturnData
+   add 1 to tCount
+   put "com.livecode.tool.FillColor" into tName
+   put "Set graphic fill color" into tTooltip
+   updateOptionArray tName, "graphic fill color tool", tTooltip, tCount, tReturnData
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineColor" into tName
+   put "Set graphic line color" into tTooltip
+   updateOptionArray tName, "graphic line color tool", tTooltip, tCount, tReturnData
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineSize" into tName
+   put "Set graphic line size" into tTooltip
+   updateOptionArray tName, "graphic line size tool", tTooltip, tCount, tReturnData
+   
+   return tReturnData
+end revIDEGraphicToolControllers
+
+private command updatePaintToolArray pName, pTool, pTooltip, pOrder, @xArray
+   put "paint tool" into xArray[pName]["type"]
+   put pTool into xArray[pName]["tool"]
+   put pTooltip into xArray[pName]["tooltip"]
+   put pOrder into xArray[pName]["order"]
+end updatePaintToolArray
+
+private command updateOptionArray pName, pTool, pTooltip, pOrder, @xArray
+   put "option" into xArray[pName]["type"]
+   put pTool into xArray[pName]["tool"]
+   put pTooltip into xArray[pName]["tooltip"]
+   put pOrder into xArray[pName]["order"]
+end updateOptionArray
+
 /**
 Returns information about the paint tools.
 
@@ -1832,57 +1866,83 @@ those paint tools.
 
 **/
 function revIDEPaintTools
-   local tReturnData
-   put "tool" into tReturnData["com.livecode.tool.Select"]["type"]
-   put "select tool" into tReturnData["com.livecode.tool.Select"]["tool"]
-   put "Select Tool - Select a rectangle area of an image" into tReturnData["com.livecode.tool.Select"]["tooltip"]
-   put 7 into tReturnData["com.livecode.tool.Select"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Bucket"]["type"]
-   put "bucket tool" into tReturnData["com.livecode.tool.Bucket"]["tool"]
-   put "Bucket Tool - Fills on outline in an image" into tReturnData["com.livecode.tool.Bucket"]["tooltip"]
-   put 3 into tReturnData["com.livecode.tool.Bucket"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.SprayCan"]["type"]
-   put "spray tool" into tReturnData["com.livecode.tool.SprayCan"]["tool"]
-   put "Spray Can Tool - Draws airbrush strokes on an image" into tReturnData["com.livecode.tool.SprayCan"]["tooltip"]
-   put 4 into tReturnData["com.livecode.tool.SprayCan"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Eraser"]["type"]
-   put "eraser tool" into tReturnData["com.livecode.tool.Eraser"]["tool"]
-   put "Eraser Tool - Erases an area in an image" into tReturnData["com.livecode.tool.Eraser"]["tooltip"]
-   put 8 into tReturnData["com.livecode.tool.Eraser"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Polygon"]["type"]
-   put "polygon tool" into tReturnData["com.livecode.tool.Polygon"]["tool"]
-   put "Polygon Tool - Click to set each point on the polygon, double click to close the polygon" into tReturnData["com.livecode.tool.Polygon"]["tooltip"]
-   put 5 into tReturnData["com.livecode.tool.Polygon"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Curve"]["type"]
-   put "curve tool" into tReturnData["com.livecode.tool.Curve"]["tool"]
-   put "Curve Tool - Draws a curved line on an image" into tReturnData["com.livecode.tool.Curve"]["tooltip"]
-   put 6 into tReturnData["com.livecode.tool.Curve"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Pencil"]["type"]
-   put "pencil tool" into tReturnData["com.livecode.tool.Pencil"]["tool"]
-   put "Pencil Tool - Draws a freehand line on an image" into tReturnData["com.livecode.tool.Pencil"]["tooltip"]
-   put 1 into tReturnData["com.livecode.tool.Pencil"]["order"]
-
-   put "tool" into tReturnData["com.livecode.tool.Brush"]["type"]
-   put "brush tool" into tReturnData["com.livecode.tool.Brush"]["tool"]
-   put "Brush Tool - Draws freehand brush strokes on an image" into tReturnData["com.livecode.tool.Brush"]["tooltip"]
-   put 2 into tReturnData["com.livecode.tool.Brush"]["order"]
-
-   return tReturnData
+   local tDataA
+   
+   local tTooltip, tName, tCount
+   
+   add 1 to tCount
+   put "com.livecode.tool.Pencil" into tName
+   put "Pencil Tool - Draw a freehand line on an image" into tTooltip
+   updatePaintToolArray tName, "pencil tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Brush" into tName
+   put "Brush Tool - Draw freehand brush strokes on an image" into tTooltip
+   updatePaintToolArray tName, "brush tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Bucket" into tName
+   put "Bucket Tool - Fill on outline in an image" into tTooltip
+   updatePaintToolArray tName, "bucket tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.SprayCan" into tName
+   put "Spray Can Tool - Draw airbrush strokes on an image" into tTooltip
+   updatePaintToolArray tName, "spray tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Polygon" into tName
+   put "Polygon Tool - Click to set each point on the polygon, double click to close the polygon" into tTooltip
+   updateOptionArray tName, "paint polygon shape tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Curve" into tName
+   put "Curve Tool - Draws a curved line on an image" into tTooltip
+   updatePaintToolArray tName, "curve tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Select" into tName
+   put "Select Tool - Select a rectangle area of an image" into tTooltip
+   updatePaintToolArray tName, "select tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.Eraser" into tName
+   put "Eraser Tool - Erase an area in an image" into tTooltip
+   updatePaintToolArray tName, "eraser tool", tTooltip, tCount, tDataA
+   
+   return tDataA
 end revIDEPaintTools
 
 function revIDEPaintToolControllers
-   local tReturnData
-   put "property" into tReturnData["com.livecode.globalproperty.brush"]["type"]
-   put "brush" into tReturnData["com.livecode.globalproperty.brush"]["property_name"]
-   put "Set the brush size to change the effect of the brush or eraser" into tReturnData["com.livecode.globalproperty.brush"]["tooltip"]
-   put "1" & return & "2" & return & "3" & return & "4" into tReturnData["com.livecode.globalproperty.brush"]["options"]
-   return tReturnData
+   local tDataA
+   
+   local tTooltip, tName, tCount
+   add 1 to tCount
+   put "com.livecode.tool.FillColor" into tName
+   put "Set paint fill color" into tTooltip
+   updateOptionArray tName, "paint fill color tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineColor" into tName
+   put "Set paint line color" into tTooltip
+   updateOptionArray tName, "paint line color tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.LineSize" into tName
+   put "Set paint line size" into tTooltip
+   updateOptionArray tName, "paint line size tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.BrushPattern" into tName
+   put "Set paint brush pattern" into tTooltip
+   updateOptionArray tName, "paint brush pattern tool", tTooltip, tCount, tDataA
+   
+   add 1 to tCount
+   put "com.livecode.tool.PolygonSides" into tName
+   put "Set number of paint polygon sides" into tTooltip
+   updateOptionArray tName, "paint polygon sides tool", tTooltip, tCount, tDataA
+   
+   return tDataA
 end revIDEPaintToolControllers
 
 /**
