@@ -7046,9 +7046,9 @@ private function ideUserCanStyleText pObject
 end ideUserCanStyleText
 
 on ideActionStyleText pWhich, pValue
-   local tSelectedObject, tSelectedChunk, tIsField
+   local tSelectedObjects, tSelectedChunk, tIsField
    if the selectedField is not empty then
-      put the long id of the selectedField into tSelectedObject
+      put the long id of the selectedField into tSelectedObjects
       put true into tIsField
    else if the selectedObject is not empty then
       put revIDESelectedObjects() into tSelectedObjects
@@ -10070,6 +10070,7 @@ end revUpdateRecentFiles
 Share the stack to revOnline/LiveCode Share
 */
 command revIDEShareStack pStackID
+   local tStackPath
    # Upload stack to RevOnline
    revOnlinePrefLoad
    put the effective filename of the topStack into tStackPath
