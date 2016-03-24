@@ -45,8 +45,8 @@ top
 right												
 bottom												
 layer												
-style							menu					
-menumode							tabbed					
+style				false			menu					
+menumode				false			tabbed					
 dropShadow												
 innerShadow												
 outerGlow												
