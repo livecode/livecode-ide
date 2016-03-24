@@ -32,6 +32,14 @@ firstIndent							0
 dontSearch							false					
 layerMode												
 behavior												
+basicTableObject							false					
+cellEdit							false
+maxColumnCount												
+cellFormat							false					
+showLines							false					
+hGrid							false					
+vGrid							false					
+tabStops												
 foregroundColor						Text fill						
 foregroundPattern						Text fill						
 backgroundColor												

@@ -1,0 +1,1 @@
+# Correct the options for the style and menuMode properties of buttons in the Property Inspector

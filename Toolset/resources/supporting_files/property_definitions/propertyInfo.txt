@@ -10,7 +10,7 @@ autoTab	Tab on return	Basic	com.livecode.pi.boolean	true	false
 backgroundBehavior	Behave like a background	Basic	com.livecode.pi.boolean	true	false		false	
 backgroundColor	Fill color	Colors	com.livecode.pi.color	true	false	Background fill			
 backgroundPattern	Fill pattern	Colors	com.livecode.pi.pattern	true	false	Background fill		
-basicTableObject	Basic table object	Table	com.livecode.pi.boolean	true	false			
+basicTableObject:revIDEGetTableProperty:revIDESetTableProperty	Basic table object	Table	com.livecode.pi.boolean	true	false		false		
 behavior	Behavior	Advanced	com.livecode.pi.script	true	false			
 blendLevel	Blend level	Colors	com.livecode.pi.number	true	false					0	100	1			
 borderColor	Border/grid color	Colors	com.livecode.pi.color	true	false	Border fill		
@@ -24,7 +24,8 @@ callbacks	Callbacks	Callbacks	com.livecode.pi.string	true	false
 cantAbort	User can't abort scripts	Basic	com.livecode.pi.boolean	true	false		false		
 cantDelete	Can't delete	Basic	com.livecode.pi.boolean	true	false		false	
 cantModify	Can't modify	Basic	com.livecode.pi.boolean	true	false		false	
-cellFormatting	Cell formatting	Table	com.livecode.pi.boolean	true	false	false		
+cellEdit:revIDEGetTableProperty:revIDESetTableProperty	Cell editing	Table	com.livecode.pi.boolean	true	false		false		
+cellFormat:revIDEGetTableProperty:revIDESetTableProperty	Cell formatting	Table	com.livecode.pi.boolean	true	false		false		
 clickColor	Click color	Colors	com.livecode.pi.color	true	false			
 colorOverlay	Color overlay	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode		
 currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1			1		1	
@@ -91,7 +92,7 @@ ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blen
 innerGlow	Inner glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread
 innerShadow	Inner shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
 kind	Kind	Basic	com.livecode.pi.string	true	true		no_default
-label	Label	Basic	com.livecode.pi.string	true	false			
+label	Label	Basic	com.livecode.pi.text	true	false			
 layer	Layer	Position	com.livecode.pi.integer	true	false		no_default			1		1
 layerMode	Layer mode	Advanced	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
 left	Left	Position	com.livecode.pi.integer	true	false		no_default					1
@@ -104,14 +105,14 @@ location	Location	Position	com.livecode.pi.point	true	false		no_default
 lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false	false		
 lockText	Lock text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
-mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainStacks()	
+mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainstackPropertyOptions()	
 margins	Margins	Text	com.livecode.pi.string	true	false			
 mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
 markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	
 markerFilled	Marker filled	Basic	com.livecode.pi.boolean	true	false		false	
 markerLineSize	Marker line thickness	Basic	com.livecode.pi.nubmber	true	false		1	
 markerPoints	Marker points	Basic	com.livecode.pi.text	true	false			
-maxEditableColumns	Maximum editable columns	Table	com.livecode.pi.number	true	false			
+maxColumnCount:revIDEGetTableProperty:revIDESetTableProperty	Maximum editable column	Table	com.livecode.pi.number	true	false			
 maxHeight	Max height	Position	com.livecode.pi.number	true	false		65535	
 maxWidth	Max width	Position	com.livecode.pi.number	true	false		65535	
 menuLines	Number of lines to display	Basic	com.livecode.pi.integer	true	false		5			1		1	
@@ -128,7 +129,7 @@ number	Number	Basic	com.livecode.pi.number	true	false
 numberFormat	Value format	Basic	com.livecode.pi.string	true	false			
 opaque	Opaque	Basic	com.livecode.pi.boolean	true	false			
 orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical
-outerGlow	Outer glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectSize,effectDistance
+outerGlow	Outer glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread
 pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false		8192	
 palindromeFrames	Repeat in reverse	Basic	com.livecode.pi.boolean	true	false			
 pan	Pan	Quicktime	com.livecode.pi.number	true	false			

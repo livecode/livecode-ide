@@ -6,7 +6,7 @@ Property : optional getter : optional setter	Label	Section	Editor	User Visible	R
 name							Button					
 label												
 tooltip												
-style							standard	standard,transparent,opaque,rectangle,roundRect,shadow,menu,checkbox,radioButton				
+style							standard	standard,transparent,opaque,rectangle,roundRect,shadow,checkbox,radioButton				
 visible							true					
 opaque							true					
 showName							true					

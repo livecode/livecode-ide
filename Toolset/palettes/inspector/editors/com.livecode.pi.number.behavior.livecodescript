@@ -108,7 +108,7 @@ on editorResize
    if sFieldWidth > 0 then
       # The field has a fixed size
       set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tBottom
-      add sFieldWidth + CONTROL_PADDING to tLeft
+      add sFieldWidth to tLeft
    else if the visible of scrollbar "twiddle" of me is true then
       # The field is full width but there is a twiddle controller at the end
       set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING, tBottom
@@ -119,15 +119,17 @@ on editorResize
    end if
    
    if the visible of scrollbar "twiddle" of me is true then
+      add CONTROL_PADDING to tLeft
       # The twiddle control is visible
       set the rect of scrollbar "twiddle" of me to tLeft,tTop,tLeft + the width of scrollbar "twiddle" of me, tBottom
-      add the width of scrollbar "twiddle" of me + CONTROL_PADDING to tLeft
+      add the width of scrollbar "twiddle" of me to tLeft
    end if
    
    if the visible of scrollbar "slider" of me is true then
+      add CONTROL_PADDING to tLeft
       # The slider is visible
       local tRemainingWidth
-      put the right of me - tLeft + CONTROL_PADDING into tRemainingWidth
+      put the right of me - tLeft into tRemainingWidth
       if tRemainingWidth > SLIDER_MAX_WIDTH then
          put SLIDER_MAX_WIDTH into tRemainingWidth
       end if

@@ -2073,6 +2073,31 @@ function revIDEMainStacks
 end revIDEMainStacks
 
 /**
+A list of the stacks that can be set at the main stack of the given stack
+
+Returns: A list of the names of stacks, one per line
+
+Description:
+Use the <revIDEMainstackPropertyOptions> function to retrieve a list of the names of the 
+stacks that can be set as the main stack of the current stack, taking into account the 
+Show IDE Stacks preference.
+**/
+function revIDEMainstackPropertyOptions
+   local tStackList, tCurrentStack
+   put ideMainStacks() into tStackList
+   put revIDESelectedObjects() into tCurrentStack
+   
+   ## Allow the stack to be set as its own mainstack
+   if word 1 of tCurrentStack is "stack" then
+      if the short name of tCurrentStack is not among the lines of tStackList then
+         put return & the short name of tCurrentStack after tStackList
+      end if
+   end if
+   sort lines of tStackList
+   return tStackList
+end revIDEMainstackPropertyOptions
+
+/**
 A list of the current mainstacks
 
 Returns: A list of the names of the mainstacks currently in memory, one per line
@@ -5403,6 +5428,49 @@ command revIDENewDataGridColumnBehavior pObject
    send "resetList" to pObject
 end revIDENewDataGridColumnBehavior
 
+on revIDESetTableProperty pObject, pProperty, pValue
+   switch pProperty
+      case "celledit"
+         set the cRevTable[pProperty] of pObject to pValue
+         set the locktext of pObject to pValue
+         break
+      case "basicTableObject"
+         set the cREVGeneral["table"] of pObject to pValue
+         if pValue then
+            local tReturned
+            put the cREVDatabase["returnedview"] of pObject into tReturned
+            if tReturned is not empty then
+               set the cREVTable["currentview"] of pObject to tReturned
+            else
+               set the cREVTable["currentview"] of pObject to the text of pObject
+            end if
+         end if
+         revDisplayFormattedData
+         if pValue then
+            set the vScrollbar of pObject to true
+            set the hScrollbar of pObject to true
+         end if
+         break
+      case "cellformat"
+      case "maxColumnCount"
+         set the cRevTable[pProperty] of pObject to pValue
+         break
+   end switch
+end revIDESetTableProperty
+
+function revIDEGetTableProperty pObject, pProperty
+   switch pProperty
+      case "basicTableObject"
+         return the cREVGeneral["table"] of pObject
+         break
+      case "cellformat"
+      case "celledit"
+      case "maxColumnCount"
+         return the cRevTable[pProperty] of pObject
+         break
+   end switch
+end revIDEGetTableProperty
+
 #############
 # Standalone Settings
 #############
@@ -6096,13 +6164,18 @@ on revIDEImportControl pType, pFileName, pReferenced
    set the defaultStack to tTargetStack
    switch pType
       case "image"
-         revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
          if pReferenced is true then
+            ## Create a classic image control with default properties
+            ## Set the filename of the new image control to the referenced image
+            revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
             put the long id of the last control into tCreatedControlID
             set the filename of tCreatedControlID to pFileName
          else
+            ## Create an image control by importing the image file onto the stack
+            ## Importing a paint file preserves the image file properties
+            ## In particualar the repeatCount property is set to -1 for animated gifs and 0 for other images
+            import paint from file pFileName
             put the long id of the last image into tCreatedControlID
-            set the text of tCreatedControlID to URL ("binfile:" & pFileName)
          end if
          set the borderWidth of tCreatedControlID to 0
          select tCreatedControlID
@@ -7263,19 +7336,22 @@ on ideActionStyleText pWhich, pValue
       put the long id of the selectedField into tSelectedObject
       put true into tIsField
    else if the selectedObject is not empty then
-      put the long id of the selectedObject into tSelectedObject
+      put revIDESelectedObjects() into tSelectedObjects
    end if
    
    put the selectedChunk into tSelectedChunk
    
-   local tTargetStack
-   put revIDEStackOfObject(tSelectedObject) into tTargetStack
-   if revIDEStackIsIDEStack(tTargetStack) then
-      // Allow IDE stacks to handle whether user text style actions are valid on the target
-      dispatch "ideStyleTextRequest" to tTargetStack with pWhich, pValue, tSelectedChunk, tSelectedObject
-   else
-      ideStyleText tSelectedChunk, tSelectedObject, tIsField, pWhich, pValue
-   end if
+   local tTargetStack, tIDEStack
+   put revIDEStackOfObject(line 1 of tSelectedObjects) into tTargetStack
+   put revIDEStackIsIDEStack(tTargetStack) into tIDEStack
+   repeat for each line tSelectedObject in tSelectedObjects
+      if tIDEStack then
+         // Allow IDE stacks to handle whether user text style actions are valid on the target
+         dispatch "ideStyleTextRequest" to tTargetStack with pWhich, pValue, tSelectedChunk, tSelectedObject
+      else
+         ideStyleText tSelectedChunk, tSelectedObject, tIsField, pWhich, pValue
+      end if
+   end repeat
 end ideActionStyleText
 
 on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
@@ -7721,7 +7797,8 @@ on revIDELaunchResource pName
          launch document revEnvironmentDocumentationPath() & "/pdf/LiveCode User Guide.pdf"
          break
       case "Sample Stacks"
-         launch url "http://livecode.com/links/livecode/revonline"
+         set the _ideoverride of stack "revonline" to true
+         go stack "revOnline"
          break
       case "Sample Scripts"
          launch url "http://lessons.runrev.com/m/2592"
@@ -8911,12 +8988,27 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
    put pCallbackParams into sTransientTextField["callback_params"]
    put pCallback into sTransientTextField["callback"]
    set the rect of tLongID to pRect
+   
+   -- Preserve the requested left and vertical centering of the field
+   local tLoc, tLeft
+   put the loc of tLongID into tLoc
+   put the left of tLongID into tLeft
+   
    local tScript
    put "on closeField;revIDETransientTextChanged;end closeField" into tScript
    put ";on returnInField; revIDETransientTextChanged;end returnInField" after tScript
    put ";on exitField;revIDETransientTextChanged;end exitField" after tScript
    set the script of tLongID to tScript
    set the text of tLongID to pCurrentText
+   
+   -- Ensure the text fits
+   if the formattedWidth of tLongID > the width of tLongID then
+      set the width of tLongID to the formattedWidth of tLongID
+   end if
+   set the height of tLongID to the formattedHeight of tLongID
+   set the loc of tLongID to tLoc
+   set the left of tLongID to tLeft
+   
    local tTargetLongID
    put the long id of the target into tTargetLongID
    put tTargetLongID into sTransientTextField["callback_target"]
@@ -8925,6 +9017,7 @@ on revIDECreateTransientTextField pRect, pCallback, pCallbackParams, pCurrentTex
       set the textAlign of tLongID to it
    end if
    focus on tLongID
+   select char 1 to -1 of tLongID
    unlock messages
    unlock screen
 end revIDECreateTransientTextField
@@ -9467,13 +9560,13 @@ private function revIDEGetDocsAPIData
       end if
       
       # Check if the .js is out of date
-      put revIDELastModifiedTimeOfFile(tFolder, "api.lcdoc") into tLastModified
+      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastModified
       put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.js") into tLastGenerated
       if tLastModified < tLastGenerated then
          put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
       else
          local tLibraryArray, Lcdoc
-         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tCachedDataFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
          put the result into tLibraryArray
          
          dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" with tLibraryArray
@@ -10257,3 +10350,44 @@ command revUpdateRecentFiles pStack
 
    revIDEAddRecentStack the effective filename of stack pStack
 end revUpdateRecentFiles
+
+/*
+Share the stack to revOnline/LiveCode Share
+*/
+command revIDEShareStack pStackID
+   # Upload stack to RevOnline
+   revOnlinePrefLoad
+   put the effective filename of the topStack into tStackPath
+   if tStackPath is empty then
+      # Stack must be saved to be uploaded to revonline
+      revSaveAs the short name of the topStack,false
+   end if
+   put the effective filename of the topStack into tStackPath
+   if tStackPath is not empty then
+      # Check remember username and password prefs
+      if revOnlineSession() is empty then
+         # No session so need to login
+         revOnlineShowLoginDialog
+      end if
+      # If login was successful
+      if revOnlineSession() is not empty then
+         revGoOnline
+         send "rvoShareThisStack tStackPath" to stack "revonline"
+      end if
+   end if
+   break
+end revIDEShareStack
+
+/*
+Returns the number of lines in the script of an object
+If  the object is on a password protected stack "pwd" is returned
+*/
+function revIDEObjectScriptLines pObject
+   local tScriptLines
+   try
+      put the number of lines in the script of pObject into tScriptLines      
+   catch pError
+      put "pwd" into tScriptLines
+   end try
+   return tScriptLines
+end revIDEObjectScriptLines
