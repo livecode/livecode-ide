@@ -1,1 +1,0 @@
-# Allow substacks to be made into mainstacks via the Property Inspector
