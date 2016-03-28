@@ -42,9 +42,15 @@ on editorUpdate
    
    set the editorPopupData of me to tPopupData
    
+   updateDisplay tValue
+   
+   unlock screen
+end editorUpdate
+
+private command updateDisplay pValue
    local tFillData
-   put tValue["type"] into tFillData["type"]
-   if tValue["type"] is not "linear" then
+   put pValue["type"] into tFillData["type"]
+   if pValue["type"] is not "linear" then
       put the loc of graphic 1 of me into tFillData["from"]
       put the right of graphic 1 of me,item 2 of the loc of graphic 1 of me into tFillData["to"]
       put item 1 of the loc of graphic 1 of me,the bottom of graphic 1 of me into tFillData["via"]
@@ -53,18 +59,16 @@ on editorUpdate
       put the topright of graphic 1 of me into tFillData["to"]
       put the bottomleft of graphic 1 of me into tFillData["via"]
    end if
-   put tValue["repeat"] into tFillData["repeat"]
-   put tValue["mirror"] into tFillData["mirror"]
-   put tValue["wrap"] into tFillData["wrap"]
-   put tValue["ramp"] into tFillData["ramp"]
-   put tValue["quality"] into tFillData["quality"]
+   put pValue["repeat"] into tFillData["repeat"]
+   put pValue["mirror"] into tFillData["mirror"]
+   put pValue["wrap"] into tFillData["wrap"]
+   put pValue["ramp"] into tFillData["ramp"]
+   put pValue["quality"] into tFillData["quality"]
    
    lock messages
    set the fillgradient of graphic 1 of me to tFillData
    unlock messages 
-   
-   unlock screen
-end editorUpdate
+end updateDisplay
 
 on editorResize
    lock screen
@@ -98,6 +102,7 @@ on valueChanged pProperty, pValue
    put pValue into tValue[char 9 to -1 of pProperty]
    set the editorValue of me to tValue
    
+   updateDisplay tValue
    updateProperty
 end valueChanged
 
