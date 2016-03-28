@@ -3316,6 +3316,11 @@ on revIDEEditScriptOfObjects pObjectList
 end revIDEEditScriptOfObjects
 
 on revIDEEditScriptOfObject pObject
+   # Don't try and edit the script of non-existent objects 
+   if not exists(pObject) then
+      exit revIDEEditScriptOfObject
+   end if
+   
    # Send the ideEditScript message
    send "ideMessageSend ideEditScript","pObject" to stack "revIDELibrary" in 0 milliseconds
 

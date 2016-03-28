@@ -44,6 +44,8 @@ on resizeInspector
    unlock screen
 end resizeInspector
 
+constant kInspectorMinHeight = 200
+constant kInspectorMinWidth = 220
 on inspectorOpenEditor pEditor
    # Check if the stack is already open
    if there is a stack pEditor then exit inspectorOpenEditor
@@ -112,9 +114,9 @@ on inspectorLayoutGroups pGroupList
       put the width of me - (tMargin * 2) into tRowWidth
    end if
    
-   # Don't let the inspector get any smaller than 220
-   if tMinRowWidth + (tMargin * 2) < 220 then
-      put 220 - (tMargin * 2) into tMinRowWidth
+   # Don't let the inspector get any smaller than kInspectorMinWidth
+   if tMinRowWidth + (tMargin * 2) < kInspectorMinWidth then
+      put kInspectorMinWidth - (tMargin * 2) into tMinRowWidth
    end if
    
    # Get the stored width for the inspector to update calculated width. If stored width is larger,
@@ -193,7 +195,12 @@ on inspectorLayoutGroups pGroupList
    set the left of me to tStackLeft
    
    local tStackHeight
-   put tInspectorHeight + tMargin into tStackHeight
+   if tInspectorHeight is empty then
+      put kInspectorMinHeight into tStackHeight
+   else
+      put tInspectorHeight + tMargin into tStackHeight
+   end if
+   
    set the minheight of me to tStackHeight
    set the maxheight of me to tStackHeight
    set the height of me to tStackHeight
@@ -204,6 +211,12 @@ end inspectorLayoutGroups
 
 local sSelectedSection, sSelectedSectionIndex
 private on inspectorSectionSet pSection
+   if sDataA is empty then
+      put empty into sSelectedSection
+      put 0 into sSelectedSectionIndex
+      exit inspectorSectionSet
+   end if
+   
    local tIndex
    put inspectorSectionIndex(pSection) into tIndex
    
@@ -411,10 +424,6 @@ end inspectorChanged
 
 # Sent when the user changes the section
 on inspectorSectionChanged pSection
-   # Timing log
-   local tStartTime
-   put the milliseconds into tStartTime
-   
    # Check if the section is different
    if inspectorSectionGetName() is pSection then exit inspectorSectionChanged
    
@@ -425,8 +434,6 @@ on inspectorSectionChanged pSection
    inspectorSectionSet pSection
    
    inspectorChanged
-   
-   //put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
 end inspectorSectionChanged
 
 on updateFocusedEditor
@@ -477,7 +484,7 @@ on inspectorFillGroups pGroupData
    end repeat
 end inspectorFillGroups
 
-private on inspectorClear
+on inspectorClear
    if the number of groups of card 1 of me is 0 then
       exit inspectorClear
    end if

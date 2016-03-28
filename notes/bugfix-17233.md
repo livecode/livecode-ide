@@ -1,0 +1,1 @@
+# Allow 'no objects selected' state of PI
