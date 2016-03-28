@@ -1,0 +1,1 @@
+# Default add default 'no gradient' option to gradient type editor

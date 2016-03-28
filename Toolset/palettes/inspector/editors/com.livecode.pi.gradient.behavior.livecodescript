@@ -33,7 +33,11 @@ on editorUpdate
    end if
    
    local tPopupData
-   put tValue["type"] into tPopupData["Type"]["gradientType"]["value"]["popup"]
+   if tValue["type"] is empty then
+      put "No gradient" into tPopupData["Type"]["gradientType"]["value"]["popup"]
+   else
+      put tValue["type"] into tPopupData["Type"]["gradientType"]["value"]["popup"]
+   end if
    put tValue["repeat"] into tPopupData["Repeat"]["gradientRepeat"]["value"]["popup"]
    put tValue["mirror"] into tPopupData["Mirror"]["gradientMirror"]["value"]["popup"]
    put tValue["wrap"] into tPopupData["Wrap"]["gradientWrap"]["value"]["popup"]
@@ -49,21 +53,23 @@ end editorUpdate
 
 private command updateDisplay pValue
    local tFillData
-   put pValue["type"] into tFillData["type"]
-   if pValue["type"] is not "linear" then
-      put the loc of graphic 1 of me into tFillData["from"]
-      put the right of graphic 1 of me,item 2 of the loc of graphic 1 of me into tFillData["to"]
-      put item 1 of the loc of graphic 1 of me,the bottom of graphic 1 of me into tFillData["via"]
-   else
-      put the topleft of graphic 1 of me into tFillData["from"]
-      put the topright of graphic 1 of me into tFillData["to"]
-      put the bottomleft of graphic 1 of me into tFillData["via"]
+   if pValue["type"] is not empty then
+      put pValue["type"] into tFillData["type"]
+      if pValue["type"] is not "linear" then
+         put the loc of graphic 1 of me into tFillData["from"]
+         put the right of graphic 1 of me,item 2 of the loc of graphic 1 of me into tFillData["to"]
+         put item 1 of the loc of graphic 1 of me,the bottom of graphic 1 of me into tFillData["via"]
+      else
+         put the topleft of graphic 1 of me into tFillData["from"]
+         put the topright of graphic 1 of me into tFillData["to"]
+         put the bottomleft of graphic 1 of me into tFillData["via"]
+      end if
+      put pValue["repeat"] into tFillData["repeat"]
+      put pValue["mirror"] into tFillData["mirror"]
+      put pValue["wrap"] into tFillData["wrap"]
+      put pValue["ramp"] into tFillData["ramp"]
+      put pValue["quality"] into tFillData["quality"]
    end if
-   put pValue["repeat"] into tFillData["repeat"]
-   put pValue["mirror"] into tFillData["mirror"]
-   put pValue["wrap"] into tFillData["wrap"]
-   put pValue["ramp"] into tFillData["ramp"]
-   put pValue["quality"] into tFillData["quality"]
    
    lock messages
    set the fillgradient of graphic 1 of me to tFillData
@@ -93,6 +99,10 @@ on valueChanged pProperty, pValue
    put the editorValue of me into tValue
    if tValue is empty then
       put the storedValue of me into tValue
+   end if
+   
+   if pProperty is "gradientType" and pValue is "No gradient" then
+      put empty into pValue
    end if
    
    # A gradient must have a ramp
