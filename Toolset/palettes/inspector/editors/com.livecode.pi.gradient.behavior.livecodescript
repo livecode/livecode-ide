@@ -113,9 +113,19 @@ on valueChanged pProperty, pValue
    set the editorValue of me to tValue
    
    updateDisplay tValue
+   
    updateProperty
+   dispatch "editorValueChanged" with "editmode", the editorProperty["property_name"] of me, false
 end valueChanged
 
 private function defaultramp
    return "0,255,255,255" & return & "1,0,0,0"
 end defaultramp
+
+on popupDismissed
+   dispatch "editorValueChanged" with "editmode", "none", false
+end popupDismissed
+
+on editorPopup pClickLoc
+   dispatch "editorValueChanged" with "editmode", the editorProperty["property_name"] of me, false
+end editorPopup

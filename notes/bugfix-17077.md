@@ -1,0 +1,1 @@
+# Ensure gradient editor triggers gradient adjustment handles
