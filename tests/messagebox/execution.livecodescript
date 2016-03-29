@@ -210,3 +210,36 @@ on TestCustomCommandWithStringLiteral
 	TestAssert "command with string literal result", the cValue of tStack is "value"
 	TestAssert "command with string literal executed", tValidScript is tToExecute
 end TestCustomCommandWithStringLiteral
+
+-- Bug 17240
+on TestIntelligenceObjectPutFunctionWithParam
+	local tScript
+	put "function valueFunction pParam; return pParam; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+
+	ideExecuteScript "put valueFunction(" & quote & "hello world" & quote & ")", empty, tStack, false, tValidScript
+	TestAssert "intelligence object put function with single segment param with spaces", msg is "hello world"
+end TestIntelligenceObjectPutFunctionWithParam
+
+-- Bug 17241
+on TestIntelligenceObjectPutFunctionWithParamError
+	local tScript
+	put "function valueFunction pParam; return pParam; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+
+	ideExecuteScript "put valueFunction(hello world)", empty, tStack, false, tValidScript
+	TestAssert "intelligence object put function with multi-segment param error", the result contains "error"
+	TestAssert "intelligence object put function with multi-segment param invalid", tValidScript is empty
+end TestIntelligenceObjectPutFunctionWithParamError
