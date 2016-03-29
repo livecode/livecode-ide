@@ -182,6 +182,15 @@ on inspectorLayoutGroups pGroupList
    put the top of me into tStackTop
    put the left of me into tStackLeft
    
+   
+   if there is a field "noObjects" of me then
+      set the width of field "noObjects" of me to 1000
+      put the formattedWidth of field "noObjects" of me into tMinRowWidth
+      set the height of field "noObjects" of me to the formattedHeight of field "noObjects" of me
+      set the width of field "noObjects" of me to the formattedWidth of field "noObjects" of me
+      set the loc of field "noObjects" of me to the loc of this card
+   end if
+   
    lock messages
    
    if the minWidth of me < tMinRowWidth + (tMargin*2) then
@@ -205,6 +214,7 @@ on inspectorLayoutGroups pGroupList
    set the maxheight of me to tStackHeight
    set the height of me to tStackHeight
    set the top of me to tStackTop
+   
    unlock messages
    unlock screen
 end inspectorLayoutGroups
@@ -277,8 +287,25 @@ private on inspectorGenerate
    local tPropertyData
    put sDataA[sSelectedSectionIndex] into tPropertyData
    
-   inspectorGenerateGroups tPropertyData["grouplist"]
+   if tPropertyData is empty then
+      inspectorNoObject
+   else
+      inspectorGenerateGroups tPropertyData["grouplist"]
+   end if
 end inspectorGenerate
+
+private command inspectorNoObject
+   create group "noObjects"
+   create field "noObjects" in group "noObjects"
+   set the text of it to "No object selected"
+   set the opaque of it to false
+   set the showborder of it to false 
+   set the textSize of it to 24
+   set the textAlign of it to "center"
+   set the themeClass of it to "label"
+   set the lockText of it to true
+   set the traversalOn of it to false
+end inspectorNoObject
 
 on inspectorGenerateGroups pGroupList
    lock screen
