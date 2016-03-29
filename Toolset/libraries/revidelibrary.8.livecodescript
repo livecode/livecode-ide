@@ -5542,6 +5542,52 @@ function revIDEGetTableProperty pObject, pProperty
    end switch
 end revIDEGetTableProperty
 
+
+constant kGradientSetOrder = "type,ramp,quality,repeat,mirror,wrap"
+on revIDESetGradientProperty pObject, pProperty, pValue
+   local tOldValue
+   put the pProperty of pObject into tOldValue
+   
+   if tOldValue is empty or pValue is empty then
+      set the pProperty of pObject to pValue
+      exit revIDESetGradientProperty
+   end if
+   
+   # Find out which keys have changed
+   local tChanged
+   repeat for each item tKey in kGradientSetOrder
+      if pValue[tKey] is empty then
+         next repeat
+      end if
+      if pValue[tKey] is not tOldValue[tKey] then
+         if tChanged is empty then
+            put tKey into tChanged
+         else
+            put return & tKey after tChanged
+         end if
+      end if
+   end repeat
+   
+   # Avoid overwriting primary and secondary gradient props
+   # by setting array prop values one by one
+   local tLast
+   put line -1 of tChanged into tLast
+   lock messages
+   repeat for each line tKey in tChanged
+      if tKey is tLast then
+         unlock messages
+      end if
+      switch pProperty
+         case "fillGradient"
+            set the fillgradient[tKey] of pObject to pValue[tKey]
+            break
+         case "strokeGradient"
+            set the strokeGradient[tKey] of pObject to pValue[tKey]
+            break
+      end switch
+   end repeat
+end revIDESetGradientProperty
+
 #############
 # Standalone Settings
 #############

@@ -102,14 +102,14 @@ on valueChanged pProperty, pValue
    end if
    
    if pProperty is "gradientType" and pValue is "No gradient" then
-      put empty into pValue
+      put empty into tValue
+   else
+      # A gradient must have a ramp
+      if tValue["ramp"] is "" then
+         put defaultramp() into tValue["ramp"]
+      end if
+      put pValue into tValue[char 9 to -1 of pProperty]
    end if
-   
-   # A gradient must have a ramp
-   if tValue["ramp"] is "" then
-      put defaultramp() into tValue["ramp"]
-   end if
-   put pValue into tValue[char 9 to -1 of pProperty]
    set the editorValue of me to tValue
    
    updateDisplay tValue
