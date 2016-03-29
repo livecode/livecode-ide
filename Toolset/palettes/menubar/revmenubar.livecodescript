@@ -2445,7 +2445,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDEDeleteSubstack tTargetStack
          break
       case "Standalone Application Settings..."
-         revIDEStandaloneSettingsForStack the long id of the topStack
+         revIDEStandaloneSettingsForStack tTargetStack
          break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone
