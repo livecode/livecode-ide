@@ -165,16 +165,9 @@
 		}
 	}
 	
-	function sortedKeys(array)
+	function sortedKeys(obj)
 	{
-    	var keys = [];
-
-		for(var key in array)
-		{
-			keys.push(key);
-		}
-
-		return keys.sort();
+		return Object.keys(obj).sort();
 	}
 	
 	function displayFilters(){
