@@ -279,13 +279,10 @@ on ideInspectObjects pObjects
    if the mode of stack tTargetInspector is 0 then
       inspectorPositionPalette tIndex, tSelectedObjects
    end if
-   unlock messages
-   
-   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
-   
-   lock messages
    palette stack tTargetInspector
    unlock messages
+   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
+   
    unlock screen
 end ideInspectObjects
 
