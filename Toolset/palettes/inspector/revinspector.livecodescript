@@ -355,12 +355,22 @@ on ideSelectedObjectChanged
    local tStack
    put revIDEStackOfObject(line 1 of tObjects) into tStack
    
-   # If the object is on an inspector stack, lock it
-   if the short name of tStack begins with kPropertyInspectorPrefix then
-      if the cLocked of tStack is not true then
-         dispatch "lockInspector" to tStack
+   if exists(tStack) then
+      # If the object is on an inspector stack, lock it
+      if the short name of tStack begins with kPropertyInspectorPrefix then
+         if the cLocked of tStack is not true then
+            dispatch "lockInspector" to tStack
+         end if
       end if
+   else
+      put empty into tObjects
    end if
+   
+   repeat with x = the number of lines in tObjects down to 1
+      if not exists(line x of tObjects) then
+         delete line x of tObjects
+      end if
+   end repeat
    
    local tStackName
    repeat for each key tKey in inspectorList()
