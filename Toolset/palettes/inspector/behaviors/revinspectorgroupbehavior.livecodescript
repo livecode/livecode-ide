@@ -111,8 +111,14 @@ setProp rowData pData
    unlock screen
 end rowData
 
-on propertyDeregistor pProperty
-   # Delete the editor for the property
+on rowFinalize
+   repeat for each line tProperty in sOrder
+      dispatch "editorFinalize" to group tProperty of me
+   end repeat
+end rowFinalize
+
+on propertyDeregister pProperty
+   # Finalize and delete the editor for the property
    if there is a group pProperty of me then
       delete group pProperty of me
    end if
@@ -120,7 +126,7 @@ on propertyDeregistor pProperty
    # Remove the property from the list
    delete variable sProperties[pProperty]
    delete line lineOffset(pProperty, sOrder) of sOrder
-end propertyDeregistor
+end propertyDeregister
 
 # Sets the text for the row label
 constant kLabelHeight = 21

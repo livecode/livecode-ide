@@ -188,7 +188,7 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
-on editorPopup pClickLoc
+after editorPopup pClickLoc
    local tStackName
    put popupStackName() into tStackName
    create invisible stack tStackName
@@ -221,8 +221,16 @@ getProp editorPopupData
    return sPopupData
 end editorPopupData
 
-on popupDismissed
-   delete stack popupStackName()
+command editorDeletePopup
+   local tStackName
+   put popupStackName() into tStackName
+   if there is a stack tStackName then
+      delete stack tStackName
+   end if
+end editorDeletePopup
+
+after popupDismissed
+   editorDeletePopup
 end popupDismissed
 
 getProp storedValue
@@ -251,3 +259,9 @@ end editorConflicted
 getprop editorConflicted
    return sConflicted
 end editorConflicted
+
+on editorFinalize
+   if there is a stack popupStackName()  then
+      dispatch "popupDismissed" to me
+   end if
+end editorFinalize
