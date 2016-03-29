@@ -117,17 +117,6 @@ on rowFinalize
    end repeat
 end rowFinalize
 
-on propertyDeregister pProperty
-   # Finalize and delete the editor for the property
-   if there is a group pProperty of me then
-      delete group pProperty of me
-   end if
-   
-   # Remove the property from the list
-   delete variable sProperties[pProperty]
-   delete line lineOffset(pProperty, sOrder) of sOrder
-end propertyDeregister
-
 # Sets the text for the row label
 constant kLabelHeight = 21
 local sShowLabel
