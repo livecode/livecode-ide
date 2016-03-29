@@ -102,7 +102,7 @@ linkColor	Link color	Colors	com.livecode.pi.color	true	false
 listBehavior	List behavior	Basic	com.livecode.pi.boolean	true	false			
 liveResizing	Live resizing	Basic	com.livecode.pi.boolean	true	false		false	
 location	Location	Position	com.livecode.pi.point	true	false		no_default	
-lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false	false		
+lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false		false		
 lockText	Lock text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
 mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainstackPropertyOptions()	
