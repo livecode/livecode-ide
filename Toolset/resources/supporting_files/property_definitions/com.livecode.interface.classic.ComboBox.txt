@@ -68,4 +68,5 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay												
+colorOverlay
+number												

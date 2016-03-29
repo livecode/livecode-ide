@@ -43,4 +43,5 @@ left					true
 top					true							
 right					true							
 bottom					true							
-layer												
+layer		
+number					false											
