@@ -199,7 +199,7 @@ after editorPopup pClickLoc
    dispatch "inspectorFillGroups" to stack tStackName with sPopupData
    set the editorTarget of stack tStackName to the long id of me
    set the title of stack tStackName to the rowLabel of the owner of me
-   modal stack tStackName
+   modeless stack tStackName
 end editorPopup
 
 private function popupStackName
