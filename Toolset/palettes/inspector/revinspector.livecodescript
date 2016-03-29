@@ -271,7 +271,7 @@ on ideInspectObjects pObjects
       put inspectorStackName(tIndex) into tNewInspectorName
       clone invisible stack "revInspectorTemplate"
       set the name of it to tNewInspectorName
-      set the behavior of stack tNewInspectorName to the long id of this me
+      
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
