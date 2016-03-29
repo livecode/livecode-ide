@@ -51,22 +51,26 @@ setProp cSelectedObjects pSelectedObjects
    # Unsubscribe the the objects previously 
    revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
    
-   put pSelectedObjects into sSelectedObjects
+   lock screen
    
+   inspectorClear
+   
+   put pSelectedObjects into sSelectedObjects
+
    if pSelectedObjects is empty then 
       inspectorTitleUpdate
       set the inspectorData of me to empty
       exit cSelectedObjects
    end if
-   
-   lock screen
+
    revIDESubscribe "idePropertyChanged", pSelectedObjects
    
    # Keep track of the object 'types' in case they are changed via PI
    put ideObjectTypesFromObjectList(pSelectedObjects) into sObjectTypes
    
    # Get a list of the properties and groups we'll be displaying
-   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   set the inspectorData of me to revIDEPropertiesInfo(pSelectedObjects)
+   
    inspectorTitleUpdate
    unlock screen
 end cSelectedObjects
