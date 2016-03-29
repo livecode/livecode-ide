@@ -259,3 +259,9 @@ end editorConflicted
 getprop editorConflicted
    return sConflicted
 end editorConflicted
+
+on editorFinalize
+   if there is a stack popupStackName()  then
+      dispatch "popupDismissed" to me
+   end if
+end editorFinalize

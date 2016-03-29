@@ -522,6 +522,7 @@ on inspectorClear
       if the short name of group 2 of me is "background" then
          delete group 1 of card 1 of me
       else
+         dispatch "rowFinalize" to group 2 of card 1 of me
          delete group 2 of card 1 of me
       end if
    end repeat
