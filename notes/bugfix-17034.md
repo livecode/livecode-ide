@@ -1,0 +1,1 @@
+# Set the theme of the Preferences GUI to "legacy" on Linux to prevent truncated text 
