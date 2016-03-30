@@ -2438,24 +2438,24 @@ function revIDEIconID pIcon
    return the ID of image pIcon of card 1 of stack "reviconsnew"
 end revIDEIconID
 
+/*
+The IDE uses a number of referenced images as icons, to ensure these images do not clash with user images IDs in the reserved range are assigned. The reserved range is 101000 to 103000
+
+Returns (integer): The next available ID in the reserved range.
+*/
+
+constant kFirstReservedIconID = 101000
+
 function revIDENewIconID
-   local tIconID, tIDList
+   local tNextIconID, tIDList
    
-   repeat with tImage = 1 to the number of images of stack "revTools" 
-      put the ID of image tImage of stack "revTools" & comma after tIDList
-   end repeat
+   put the ID stack "revTools" & comma into tIDList
+   put the ID of stack "revMenubar" & comma after tIDList
+   put the ID of stack "revIDELibrary" & comma after tIDList
+   put kFirstReservedIconID after tIDList
    
-   repeat with tImage = 1 to the number of images of stack "revMenubar" 
-      put the ID of image tImage of stack "revMenubar" & comma after tIDList
-   end repeat
-   
-   repeat with tImage = 1 to the number of images of stack "revIDELibrary" 
-      put the ID of image tImage of stack "revIDELibrary" & comma after tIDList
-   end repeat
-   if the last char of tIDList is comma then delete the last char of tIDList
-   
-   put max(tIDList) + 1 into tIconID
-   return tIconID
+   put max(tIDList) + 1 into tNextIconID
+   return tNextIconID
 end revIDENewIconID
 
 function revIDEThemePath
