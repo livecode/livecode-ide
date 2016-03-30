@@ -293,10 +293,6 @@ on idePluginsChanged
    setupDevelopmentMenu
 end idePluginsChanged
 
-on ideWindowsChanged
-   setupWindowMenu
-end ideWindowsChanged
-
 on generateMenu
    generateMenubarUI
    generateMenuGroup
@@ -1807,6 +1803,8 @@ end revMenubarSimulatorSubmenu
 
 private function revMenubarWindowMenu pContext
    revIDEUpdateWindowList
+   
+   setupWindowMenu
    
    local tWindow
    if sWindowMenuWindows is empty then

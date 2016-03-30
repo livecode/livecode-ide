@@ -221,6 +221,8 @@ end revMenubarEscapeStackNameForMenu
 private command buildWindowMenu pContext
    #   Set sWindowMenuText to a list of open Windows in suitable format for putting into a menu button.
    #   This will be any script editors or the dictionary or resource center if they are open, and any user stacks.
+   revIDEUpdateWindowList
+   
    local tWindows
    put revIDEWindowList() into tWindows
    
@@ -475,14 +477,11 @@ private command handleWindowMenuPick pItemName
       exit handleWindowMenuPick
    end if
    
-   local tLineNumber
-   put the menuHistory of button "Window" of me into tLineNumber
-   
-   local tStack
-   put line tLineNumber of the cWindows of button "Window" of me into tStack
-   if there is a tStack then
-      go tStack
-      show tStack
+   if exists(pItemName) then
+      lock screen
+      go pItemName
+      show pItemName
+      unlock screen
    end if
 end handleWindowMenuPick
      
