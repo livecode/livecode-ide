@@ -6012,13 +6012,19 @@ on revIDEActionNewCard
 end revIDEActionNewCard
 
 on revIDEActionDeleteCard
-   global gRevStackStatus
-   set the defaultStack to the topStack
-   answer error "Are you sure you want to delete this card?" with "Yes" or "No"
-   if it is not "yes" then exit revIDEActionDeleteCard
-   delete this card
-   put "edited" into gREVStackStatus[the short name of this stack] 
+   revIDEDeleteCard the long id of this card of the topStack
 end revIDEActionDeleteCard
+
+on revIDEDeleteCard pLongID
+   global gRevStackStatus
+   answer error "Are you sure you want to delete" && the long name of pLongID & "?" with "Yes" or "No"
+   if it is not "yes" then exit revIDEDeleteCard
+   delete pLongID
+   
+   local tStackName
+   put the short name of ideStackOfObject(pLongID) into tStackName
+   put "edited" into gREVStackStatus[tStackName] 
+end revIDEDeleteCard
 
 /*
 Creates a new script only stack in memory.
