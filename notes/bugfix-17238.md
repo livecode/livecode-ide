@@ -1,0 +1,1 @@
+# Delete correct card when delete card selected from contextual menu

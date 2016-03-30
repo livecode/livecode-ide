@@ -2422,7 +2422,11 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDEActionNewCard
          break
       case "Delete Card"
-         revIDEActionDeleteCard
+         if word 1 of pTarget is "stack" then
+            revIDEActionDeleteCard
+         else
+            revIDEDeleteCard pTarget
+         end if
          break
       case "Save"
          revIDEActionSaveStack tTargetStack
