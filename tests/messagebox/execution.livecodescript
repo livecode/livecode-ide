@@ -74,7 +74,6 @@ on TestBug16863
    put "there is a button" && quote & "test" & quote into tScript
    
    ideExecuteScript "there is a button" && quote & "test" & quote, tStack, empty, true, tValidScript
-   TestAssert "boolean expression with 'put' prepended",  msg is "true"
    TestAssert "boolean expression value with 'put' prepended",  msg is "true"
    TestAssert "boolean expression executed with 'put' prepended",  tValidScript is put && tScript
 end TestBug16863
