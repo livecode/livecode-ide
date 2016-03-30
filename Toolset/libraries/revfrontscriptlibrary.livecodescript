@@ -19,22 +19,6 @@ global gREVSuppressMessages
 global gREVSuppressMessages
 local lRefreshAOTimerID
 
--- MW-2010-12-16: [[ Bug 9217 ]] Refactored from the backscript so that
---   we are able to handle a 'quit' event when the debugger is active.
-on appleEvent p1, p2, p3
-   if p1 & p2 is "aevtquit" then
-      if the mode of stack "answer dialog" is not 0 then exit to top -- dialog on screen
-
-      -- Make sure the debugger is terminated
-      revDebuggerStop
-
-      send "revHandleAppleEventQuit" to me in 10 millisecs
-      exit appleEvent
-   end if
-
-   pass appleEvent
-end appleEvent
-
 on saveStackRequest
 
    global gREVMessageDispatch
@@ -233,7 +217,6 @@ on suspendStack
    --suspendStack sent during the palette building process
    --it doesn't count then for selecting the background
    if not gREVBuildingPaletteExemption then put false into gREVScriptEdit
-   --revIDESuspendStackFront
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
       pass suspendStack
    end if
@@ -289,9 +272,6 @@ on rawKeyUp pWhich
    pass rawKeyUp
 end rawKeyUp
 
-# OK-2008-03-19 : No longer needed with new debugger
---local lMessageID
-
 on openStack
    global gREVPalettes
 
@@ -311,10 +291,6 @@ on openStack
    # Activate breakpoints for newly opened stack, but only if its a real "openStack" as opposed
    # to something doing "send openstack to button revfrontscript"
 
-   #  if "revCheckBreakPoints" is in the pendingMessages then cancel lMessageID
-   #  send "revCheckBreakPoints" to me in 500 milliseconds
-   #  put the result into lMessageID
-
    local tTarget
    put the long id of the target into tTarget
    if tTarget is not the long id of me then
@@ -327,15 +303,6 @@ on openStack
 
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openStack
 end openStack
-
-on revCheckBreakPoints
-   # OK-2008-03-19 : Modifications for new debugger, this is no longer needed.
-   #  if the traceStack is empty then
-   #    if the cREVScriptDebugMode of stack "revPreferences" then
-   #      set the cREVScriptDebugMode of stack "revPreferences" to true
-   #    end if
-   #  end if
-end revCheckBreakPoints
 
 local lNoRecurse
 
@@ -448,7 +415,6 @@ on closeStack
             local tFileName
             # OK-2008-08-05 : Bug 6562 - Bug where the user was being prompted to delete the home stack on startup,
             # caused by revIDEStack returning true/false instead of empty/non-empty.
-            --            if tAllClosed and revIDEStack(the effective filename of stack tStackName) is not empty then
             if tAllClosed and not revIDEStack(the effective filename of stack tStackName) then
                put the effective fileName of gREVTargetStack into tFileName
 
@@ -458,15 +424,6 @@ on closeStack
                else if the cASKDestroy of stack "revPreferences" is "ask" then
                   answer question "You have closed the last stack in file" && tFilename & ".  Do you want to remove all stacks in this file from memory?  (You can turn this warning off in Preferences under the Edit menu.)" with "No" or "Yes"
                end if
-               --               if tFileName is empty then
-               --                  put "[stack not saved - no file found]" into tFileName
-               --               end if
-               --               if the cASKDestroy of stack "revPreferences" is "ask" then
-               --                  answer question "You have closed the last stack in file" && tFilename & ".  Do you want to remove all stacks in this file from memory?  (You can turn this warning off in Preferences under the Edit menu.)" with "No" or "Yes"
-               --               end if
-
-
-
 
                if it is not "No" then
                   local tMainStack
@@ -482,16 +439,10 @@ on closeStack
 
    revSetActiveStacks
 
-   --  if the mode of stack "revSearch" is not 0 then
-   --    send "revCloseStack" to stack "revSearch"
-   --  end if
-
    global gREVMessageDispatch
    repeat for each line l in gREVMessageDispatch["revCloseStack"]
       send "revCloseStack" to this cd of stack l
    end repeat
-
-   --set the executionError to empty
 
    # LG-2008-04-22
    revIDEStartCenterCheckOnStackClose tStack
@@ -533,7 +484,6 @@ end closeStackRequest
 on revCloseUpdate
    global gREVStacksList, gREVMessageDispatch
    if "revCloseUpdate" is in the pendingMessages then exit revCloseUpdate
-   revCheckToolbar
    put empty into gREVStacksList
    put empty into gREVMessageDispatch
 
@@ -559,14 +509,6 @@ end revCloseUpdate
 
 -- **Bookmark Entry** Editing Handlers
 
-on revCheckToolbar
-/*
-if the topStack is empty then exit revCheckToolBar
-  if the mode of the topStack is not 1 and the cREVNewObject of stack "revmenubar" is "Card"  then send "revUpdatePalette" to cd 1 of stack "revMenuBar"
-  else if the mode of the topStack is 1 and the cREVNewObject of stack "revmenubar" is "Stack" then send "revUpdatePalette" to cd 1 of stack "revMenubar"
-  */
-end revCheckToolbar
-
 on mouseDown pWhich
   local tResult
   revIDEHandleMouseDown pWhich, the long id of the target
@@ -585,13 +527,6 @@ on mouseDown pWhich
     end if
   end switch
 end mouseDown
-
-on revClearBlock
-  # OK-2008-03-31 : No longer needed, but kept here just in case other stuff refers to it.
-
-  --put false into lBlockMouseUp -- don't continue to block mouseUps after editing a script
-  -- might be needed if the user edits script with shortcut and moves mouse outside, mouseRelease instead of mouseUp
-end revClearBLock
 
 on revSetEdited pWhich
   if the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[pWhich]
@@ -822,15 +757,6 @@ function revOKTarget pWhich
    
    return revIDEObjectIsOnIDEStack(tTarget)
 end revOKTarget
-
---on colorChanged
---  put revPalettesList() into tList
---  repeat for each line l in tList
---    if the name of this cd of stack l is "revColors" then
---
---    end if
---  end repeat
---end colorChanged
 
 function revGetProperties pObject
    --return list of properties for an object, excluding all custom properties
