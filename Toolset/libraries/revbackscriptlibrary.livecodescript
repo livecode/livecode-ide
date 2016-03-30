@@ -3458,10 +3458,7 @@ command revIDEHandleNewStack pTarget
    
    put true into gREVScriptEdit
    
-   send "revCheckToolbar" to me in 100 milliseconds
-   
    put the name of tStackName into gREVTargetStack
-   --put word -2 to -1 of the long id of the target into gREVTargetStack
    put empty into gREVStacksList
    
    local tOpenList

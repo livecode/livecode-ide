@@ -493,7 +493,6 @@ end closeStackRequest
 on revCloseUpdate
    global gREVStacksList, gREVMessageDispatch
    if "revCloseUpdate" is in the pendingMessages then exit revCloseUpdate
-   revCheckToolbar
    put empty into gREVStacksList
    put empty into gREVMessageDispatch
 
@@ -518,14 +517,6 @@ on revCloseUpdate
 end revCloseUpdate
 
 -- **Bookmark Entry** Editing Handlers
-
-on revCheckToolbar
-/*
-if the topStack is empty then exit revCheckToolBar
-  if the mode of the topStack is not 1 and the cREVNewObject of stack "revmenubar" is "Card"  then send "revUpdatePalette" to cd 1 of stack "revMenuBar"
-  else if the mode of the topStack is 1 and the cREVNewObject of stack "revmenubar" is "Stack" then send "revUpdatePalette" to cd 1 of stack "revMenubar"
-  */
-end revCheckToolbar
 
 on mouseDown pWhich
   local tResult
