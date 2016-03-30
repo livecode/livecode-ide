@@ -8914,11 +8914,9 @@ from the point of view of the menubar
 function revIDEStackIsWindow pStackName
    if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" or pStackName is "revResourceCenter" then
       return true
-   else if char 1 to 3 of pStackName is not "rev" and pStackName is not among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector" then
-      return true
    end if
    
-   return false
+   return not revIDEStackNameIsIDEStack(pStackName)
 end revIDEStackIsWindow
 
 local sWindowList
@@ -8951,7 +8949,6 @@ on revIDEUpdateWindowList
    
    if tStacks is not sWindowList then
       put tStacks into sWindowList
-      ideMessageSend "ideWindowsChanged"
    end if
 end revIDEUpdateWindowList
 
