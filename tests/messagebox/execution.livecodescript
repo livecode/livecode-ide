@@ -73,9 +73,9 @@ on TestBug16863
    local tValidScript, tScript
    put "there is a button" && quote & "test" & quote into tScript
    
-   ideExecuteScript "there is a button" && quote & "test" & quote, tStack, empty, true, tValidScript
-   TestAssert "boolean expression value with 'put' prepended",  msg is "true"
-   TestAssert "boolean expression executed with 'put' prepended",  tValidScript is put && tScript
+   ideExecuteScript tScript, tStack, empty, false, tValidScript
+   TestAssert "boolean expression value with 'put' prepended", msg is "true"
+   TestAssert "boolean expression executed with 'put' prepended", tValidScript is ("put" && tScript)
 end TestBug16863
 
 on TestGlobalPropertyCompleted

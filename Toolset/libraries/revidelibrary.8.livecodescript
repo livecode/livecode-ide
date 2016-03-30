@@ -2406,7 +2406,11 @@ Example: set the textsize of field 1 to revIDEGetPreference("text size")
 Returns (Any): The value of the preference
 */
 function revIDEGetPreference pPreferenceName
-   return the pPreferenceName of stack "revpreferences"
+   if there is a stack "revPreferences" then
+      return the pPreferenceName of stack "revPreferences"
+   end if
+   
+   return empty
 end revIDEGetPreference
 
 function revIDEPreferences
@@ -3006,73 +3010,89 @@ private command __setPropertiesToDefaults pObjectID, pPropsInfoA
 end __setPropertiesToDefaults
 
 private command  __setSizeToPreference pObjectID, pObjectType  
+   local tWidthPref, tHeightPref
    switch pObjectType 
       case "com.livecode.interface.classic.Button"
       case "com.livecode.interface.classic.DefaultButton"
       case "com.livecode.interface.classic.RectangleButton"
-         set the width of pObjectID to revIDEGetPreference("cButtonWidth")
-         set the height of pObjectID to revIDEGetPreference("cButtonHeight")
+         put "cButtonWidth" into tWidthPref
+         put "cButtonHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.TabPanel"
-         set the width of pObjectID to revIDEGetPreference("cTabButtonWidth")
-         set the height of pObjectID to revIDEGetPreference("cTabButtonHeight")
+         put "cTabButtonWidth" into tWidthPref
+         put "cTabButtonHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.Field"
-         set the width of pObjectID to revIDEGetPreference("cFieldWidth")
-         set the height of pObjectID to revIDEGetPreference("cFieldHeight")
+         put "cFieldWidth" into tWidthPref
+         put "cFieldHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.LabelField"
-         set the width of pObjectID to revIDEGetPreference("cLabelFieldWidth")
-         set the height of pObjectID to revIDEGetPreference("cLabelFieldHeight")
+         put "cLabelFieldWidth" into tWidthPref
+         put "cLabelFieldHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.OptionMenu"
       case "com.livecode.interface.classic.PulldownMenu"
       case "com.livecode.interface.classic.ComboBox"
       case "com.livecode.interface.classic.PopupMenu"
-         set the width of pObjectID to revIDEGetPreference("cMenuWidth")
-         set the height of pObjectID to revIDEGetPreference("cMenuHeight")
+         put "cMenuWidth" into tWidthPref
+         put "cMenuHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.RegularGraphic"
       case "com.livecode.interface.classic.OvalGraphic"
       case "com.livecode.interface.classic.RoundRectGraphic"
       case "com.livecode.interface.classic.RectangleGraphic"
-         set the width of pObjectID to revIDEGetPreference("cREVGraphicWidth")
-         set the height of pObjectID to revIDEGetPreference("cREVGraphicHeight")
+         put "cREVGraphicWidth" into tWidthPref
+         put "cREVGraphicHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.Image"
-         set the width of pObjectID to revIDEGetPreference("cREVImageWidth")
-         set the height of pObjectID to revIDEGetPreference("cREVImageHeight")
+         put "cREVImageWidth" into tWidthPref
+         put "cREVImageHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.Player"
-         set the width of pObjectID to revIDEGetPreference("cREVPlayerWidth")
-         set the height of pObjectID to revIDEGetPreference("cREVPlayerHeight")
+         put "cREVPlayerWidth" into tWidthPref
+         put "cREVPlayerHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.Progressbar"
-         if the platform is "MacOS" then
-            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
-            set the height of pObjectID to revIDEGetPreference("cMacOSProgressScrollbarHeight")
+         if the platform is "MacOS" then         
+            put "cScrollbarWidth" into tWidthPref
+            put "cMacOSProgressScrollbarHeight" into tHeightPref
          else
-            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
-            set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+            put "cScrollbarWidth" into tWidthPref
+            put "cScrollbarHeight" into tHeightPref
          end if
          break
       case "com.livecode.interface.classic.Slider"
-         set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
-         set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+         put "cScrollbarWidth" into tWidthPref
+         put "cScrollbarHeight" into tHeightPref
          break
       case "com.livecode.interface.classic.Scrollbar"
          if the platform is "MacOS" then
-            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
-            set the height of pObjectID to revIDEGetPreference("cMacOSScrollbarHeight")
+            put "cScrollbarWidth" into tWidthPref
+            put "cMacOSScrollbarHeight" into tHeightPref
          else
-            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
-            set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+            put "cScrollbarWidth" into tWidthPref
+            put "cScrollbarHeight" into tHeightPref
          end if
          break
       default
          ## For any other controls the defaults are used
          break
    end switch
+   
+   local tHeight, tWidth
+   if tWidthPref is not empty then
+      put revIDEGetPreference(tWidthPref) into tWidth
+   end if
+   if tHeightPref is not empty then
+      put revIDEGetPreference(tHeightPref) into tHeight
+   end if
+   
+   if tWidth is a number then
+      set the width of pObjectID to tWidth
+   end if
+   if tHeight is a number then
+      set the height of pObjectID to tHeight
+   end if
 end __setSizeToPreference
 
 
@@ -10356,21 +10376,15 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    # Build the string so that it starts with "put"
    put "put" && pScript into tBooleanExpression 
    
-   set the wholeMatches to true
-   
    # Try as a boolean expression
    if tValidScript is empty then
-      try
-         ideDoMessage tBooleanExpression, pDebugMode
-         if the result is empty then
-            put tBooleanExpression into tValidScript
-         end if
-      catch  pError
-         
-      end try
+      ideDoMessage tBooleanExpression, pDebugMode
+      if the result is empty then
+         put tBooleanExpression into tValidScript
+      end if
    end if
    
-   
+   # Otherwise just try as is and ensure we get the correct error
    if tValidScript is empty then
       ideDoMessage pScript, pDebugMode
       if the result is empty then 
