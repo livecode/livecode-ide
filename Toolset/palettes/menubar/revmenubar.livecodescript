@@ -342,16 +342,19 @@ on generateMenubarUI
          local tName
          put tItem & tDividerCount into tName
          create image tName in group "toolbar"of me
+         set the id of it to revIDENewIconID()
          set the filename of image tName of group "toolbar" of me to revMenubarButtonNameToIconPath(tItem)
          add 1 to tDividerCount
       else
          create invisible image tItem in group "icons" of me
+         set the id of it to revIDENewIconID()
          set the filename of image tItem of me to revMenubarButtonNameToIconPath(tItem)
          local tFilename
          repeat for each item tStyle in "hilited,disabled" 
             put revMenubarButtonNameToIconPath(tItem, tStyle) into tFilename
             if there is a file tFilename then
                create invisible image (tItem & "-" & tStyle) in group "icons" of me
+               set the id of it to revIDENewIconID()
                set the filename of image (tItem & "-" & tStyle) of me to tFilename
                if tStyle is "hilited" then 
                   set the hilitedIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me

@@ -2442,6 +2442,26 @@ function revIDEIconID pIcon
    return the ID of image pIcon of card 1 of stack "reviconsnew"
 end revIDEIconID
 
+/*
+The IDE uses a number of referenced images as icons, to ensure these images do not clash with user images IDs in the reserved range are assigned. The reserved range is 101000 to 103000
+
+Returns (integer): The next available ID in the reserved range.
+*/
+
+constant kFirstReservedIconID = 101000
+
+function revIDENewIconID
+   local tNextIconID, tIDList
+   
+   put the ID stack "revTools" & comma into tIDList
+   put the ID of stack "revMenubar" & comma after tIDList
+   put the ID of stack "revIDELibrary" & comma after tIDList
+   put kFirstReservedIconID after tIDList
+   
+   put max(tIDList) + 1 into tNextIconID
+   return tNextIconID
+end revIDENewIconID
+
 function revIDEThemePath
    # Get the platform and system version
    local tPlatformName, tSystemVersion
@@ -3980,6 +4000,7 @@ on revIDESetCursor pCursor
       set the filename of the templateimage to tImagePath
       set the visible of the templateimage to false
       create image pCursor
+      set the id of it to revIDENewIconID()
       reset the templateimage
    end if
 
