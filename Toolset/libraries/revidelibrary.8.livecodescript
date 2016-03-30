@@ -2438,6 +2438,26 @@ function revIDEIconID pIcon
    return the ID of image pIcon of card 1 of stack "reviconsnew"
 end revIDEIconID
 
+function revIDENewIconID
+   local tIconID, tIDList
+   
+   repeat with tImage = 1 to the number of images of stack "revTools" 
+      put the ID of image tImage of stack "revTools" & comma after tIDList
+   end repeat
+   
+   repeat with tImage = 1 to the number of images of stack "revMenubar" 
+      put the ID of image tImage of stack "revMenubar" & comma after tIDList
+   end repeat
+   
+   repeat with tImage = 1 to the number of images of stack "revIDELibrary" 
+      put the ID of image tImage of stack "revIDELibrary" & comma after tIDList
+   end repeat
+   if the last char of tIDList is comma then delete the last char of tIDList
+   
+   put max(tIDList) + 1 into tIconID
+   return tIconID
+end revIDENewIconID
+
 function revIDEThemePath
    # Get the platform and system version
    local tPlatformName, tSystemVersion
@@ -3885,6 +3905,7 @@ on revIDESetCursor pCursor
       set the filename of the templateimage to tImagePath
       set the visible of the templateimage to false
       create image pCursor
+      set the id of it to revIDENewIconID()
       reset the templateimage
    end if
 

@@ -271,6 +271,7 @@ on generatePalette
             set the name of the templateimage to tControlTypeID
             set the visible of the templateimage to true
             create image in group "errors" of group "contents"
+            set the id of it to revIDENewIconID()
          end if
          
          local tImageID
@@ -279,6 +280,7 @@ on generatePalette
             set the visible of the templateimage to false
             set the filename of the templateimage to sViewsData[tView][tControlTypeID]["icon"]
             create image in group "images" of group "contents"
+            set the id of it to revIDENewIconID()
             put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
             revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
             set the icon of the templatebutton to the ID of tImageID
@@ -288,6 +290,7 @@ on generatePalette
             set the visible of the templateimage to false
             set the filename of the templateimage to tThemePath & slash & tControlTypeID & ".icon.png"
             create image in group "images" of group "contents"
+            set the id of it to revIDENewIconID()
             put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
             revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
             set the icon of the templatebutton to the ID of tImageID
