@@ -304,15 +304,6 @@ on openStack
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openStack
 end openStack
 
-on revCheckBreakPoints
-   # OK-2008-03-19 : Modifications for new debugger, this is no longer needed.
-   #  if the traceStack is empty then
-   #    if the cREVScriptDebugMode of stack "revPreferences" then
-   #      set the cREVScriptDebugMode of stack "revPreferences" to true
-   #    end if
-   #  end if
-end revCheckBreakPoints
-
 local lNoRecurse
 
 on preOpenCard
@@ -536,13 +527,6 @@ on mouseDown pWhich
     end if
   end switch
 end mouseDown
-
-on revClearBlock
-  # OK-2008-03-31 : No longer needed, but kept here just in case other stuff refers to it.
-
-  --put false into lBlockMouseUp -- don't continue to block mouseUps after editing a script
-  -- might be needed if the user edits script with shortcut and moves mouse outside, mouseRelease instead of mouseUp
-end revClearBLock
 
 on revSetEdited pWhich
   if the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[pWhich]
