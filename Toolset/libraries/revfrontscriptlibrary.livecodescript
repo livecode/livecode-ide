@@ -217,7 +217,6 @@ on suspendStack
    --suspendStack sent during the palette building process
    --it doesn't count then for selecting the background
    if not gREVBuildingPaletteExemption then put false into gREVScriptEdit
-   --revIDESuspendStackFront
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
       pass suspendStack
    end if
@@ -273,9 +272,6 @@ on rawKeyUp pWhich
    pass rawKeyUp
 end rawKeyUp
 
-# OK-2008-03-19 : No longer needed with new debugger
---local lMessageID
-
 on openStack
    global gREVPalettes
 
@@ -294,10 +290,6 @@ on openStack
    # OK-2008-03-19 : Modifications for new debugger
    # Activate breakpoints for newly opened stack, but only if its a real "openStack" as opposed
    # to something doing "send openstack to button revfrontscript"
-
-   #  if "revCheckBreakPoints" is in the pendingMessages then cancel lMessageID
-   #  send "revCheckBreakPoints" to me in 500 milliseconds
-   #  put the result into lMessageID
 
    local tTarget
    put the long id of the target into tTarget
@@ -432,7 +424,6 @@ on closeStack
             local tFileName
             # OK-2008-08-05 : Bug 6562 - Bug where the user was being prompted to delete the home stack on startup,
             # caused by revIDEStack returning true/false instead of empty/non-empty.
-            --            if tAllClosed and revIDEStack(the effective filename of stack tStackName) is not empty then
             if tAllClosed and not revIDEStack(the effective filename of stack tStackName) then
                put the effective fileName of gREVTargetStack into tFileName
 
@@ -442,15 +433,6 @@ on closeStack
                else if the cASKDestroy of stack "revPreferences" is "ask" then
                   answer question "You have closed the last stack in file" && tFilename & ".  Do you want to remove all stacks in this file from memory?  (You can turn this warning off in Preferences under the Edit menu.)" with "No" or "Yes"
                end if
-               --               if tFileName is empty then
-               --                  put "[stack not saved - no file found]" into tFileName
-               --               end if
-               --               if the cASKDestroy of stack "revPreferences" is "ask" then
-               --                  answer question "You have closed the last stack in file" && tFilename & ".  Do you want to remove all stacks in this file from memory?  (You can turn this warning off in Preferences under the Edit menu.)" with "No" or "Yes"
-               --               end if
-
-
-
 
                if it is not "No" then
                   local tMainStack
@@ -466,16 +448,10 @@ on closeStack
 
    revSetActiveStacks
 
-   --  if the mode of stack "revSearch" is not 0 then
-   --    send "revCloseStack" to stack "revSearch"
-   --  end if
-
    global gREVMessageDispatch
    repeat for each line l in gREVMessageDispatch["revCloseStack"]
       send "revCloseStack" to this cd of stack l
    end repeat
-
-   --set the executionError to empty
 
    # LG-2008-04-22
    revIDEStartCenterCheckOnStackClose tStack
@@ -806,15 +782,6 @@ function revOKTarget pWhich
    
    return revIDEObjectIsOnIDEStack(tTarget)
 end revOKTarget
-
---on colorChanged
---  put revPalettesList() into tList
---  repeat for each line l in tList
---    if the name of this cd of stack l is "revColors" then
---
---    end if
---  end repeat
---end colorChanged
 
 function revGetProperties pObject
    --return list of properties for an object, excluding all custom properties

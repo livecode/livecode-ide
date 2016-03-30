@@ -17,13 +17,6 @@ on revEditImage pWhichImage
    revIDEEditImage pWhichImage
 end revEditImage
 
-# OK-2007-11-27 : Removed...
---on run2
---   if 1 is 1 then
---    put 1 into fld 1200
---  end if
---end run2
-
 function revImageType pImageNo
    --take the numbered image and return a three character file extension for it
    local tHeader
@@ -162,13 +155,6 @@ on revCheckQuit
    set the cREVScriptFont of stack "revPreferences" to the scriptTextFont
    set the cREVScriptSize of stack "revPreferences" to the scriptTextSize
    
-   --  ## mf 17/08/2005 Save Docs Preferences (Bug 2834)
-   -- no longer relevant in new docs 2.7
-   --  put the openStacks into tOpenStacks
-   --  filter tOpenStacks with "revDocs*"
-   --  if there is a stack (line 1 of tOpenStacks)#save preferences in topmost revDocs
-   --  then send "closeStack" to stack (line 1 of tOpenStacks)
-   
    if not the secureMode then
       revInternal__savePreferences
    end if
@@ -223,7 +209,6 @@ on revUpdatePalette
 end revUpdatePalette
 
 function revPaletteObjects
-   --if the cCurrentObject of the target is not empty then return the cCurrentObject of the target
    return revIDESelectedObjects()
 end revPaletteObjects
 
@@ -404,23 +389,6 @@ on revStandardUpdate
          else if word 1 of the name of control l is "button" then set the hilite of control l to false
       end repeat
    end if
-   
-   --   --unicode labels
-   --   put line 1 of tObjects into tObject
-   --   if "label" is among the lines of the cREVPropertiesInUse of this cd then
-   --      if comma is in the effective textFont of tObject then
-   --         set the textFont of char 1 to -1 of fld "label" to the textFont of tObject
-   --      else
-   --         set the textFont of char 1 to -1 of fld "label" to empty
-   --      end if
-   --   end if
-   --   if "text" is among the lines of the cREVPropertiesInUse of this cd then
-   --      if comma is in the effective textFont of tObject then
-   --         set the textFont of char 1 to -1 of fld "text" to the textFont of tObject
-   --      else
-   --         set the textFont of char 1 to -1 of fld "text" to empty
-   --      end if
-   --   end if
 end revStandardUpdate
 
 
@@ -432,41 +400,6 @@ setProp revDisabled pBoolean
    else
       set the disabled of the target to pBoolean
    end if
-   # lock messages
-   # if pBoolean is true then
-   # if not (there is a control ("revDisabled" & the id of the target)) then
-   # put the properties of the templateGraphic into tPrevTemplate
-   # reset the templateGraphic
-   # set the backColor of the templateGraphic to 124,124,124
-   # set the filled of the templateGraphic to true
-   # set the lineSize of the templateGraphic to 0
-   # set the rect of the templateGraphic to the rect of the target
-   # set the ink of the templateGraphic to "notSrcOr"
-   # set the name of the templateGraphic to "revDisabled" & the id of the target
-   # create graphic
-   # reset the templateGraphic
-   # set the properties of the templateGraphic to tPrevTemplate
-   # end if
-   # else
-   # if there is a control ("revDisabled" & the id of the target) then delete control ("revDisabled" & the id of the target)
-   # end if
-   # unlock messages
-   #old disablement routine: if inks aren't used
-   # --a standard enable/disable routine - sets different properties dependant on object type
-   # if pBoolean is true then
-   # disable the target
-   # if word 1 of the name of the target is "field" then
-   # set the backColor of the target to 220,220,220
-   # put empty into the target
-   # else if word 1 of the name of the target is "button" then
-   # set the hilite of the target to false
-   # else if word 1 of the name of the target is "scrollBar" then
-   # set the thumbPosition of the target to 0
-   # end if
-   # else
-   # enable the target
-   # if word 1 of the name of the target is "field" then set the backColor of the target to empty
-   # end if
 end revDisabled
 
 on revBuildPalette
@@ -2658,24 +2591,6 @@ on revUpdateAB
    end if
 end revUpdateAB
 
-# OK-2007-08-02 : Added revGetDatabaseDriverPath to revDB external, and updated this function to use it.
-
---function revDatabaseDriverList
---  local tPath,tSave,tDrivers
---  put revEnvironmentExternalsPath() & "/Database Drivers/Database Drivers.txt" into tEnvironmentFile
---  put revEnvironmentUserExternalsPath() & "/Database Drivers/Database Drivers.txt" into tUserFile
---  put url ("file:"&tUserFile) into tUserDrivers
---  put url ("file:"&tEnvironmentFile) into tEnvironmentDrivers
---  repeat for each line l in tUserDrivers
---    put item 1 of l & cr after tDrivers
---  end repeat
---  repeat for each line l in tEnvironmentDrivers
---    if item 1 of l is not among the lines of tDrivers then put item 1 of l & cr after tDrivers
---  end repeat
---  delete last char of tDrivers
---  return tDrivers
---end revDatabaseDriverList
-
 constant kDriverListFile = "Database Drivers.txt"
 
 -- MW-2013-06-13: [[ CloneAndRun ]] Construct the list of dbdrivers manually
@@ -2858,10 +2773,6 @@ function revDBDriverPath pDriver, pPlatform, pArchitecture
          put revEnvironmentUserRuntimePath() & "/Linux/" & pArchitecture & "/Externals" into tUserFolder
          break
    end switch
-   
-   --   if the cREVUseLegacyDrivers of stack "revPreferences" and pPlatform is not "Linux" then 
-   --      put "/Legacy" after tUserFolder
-   --   end if
    
    local tEnvironmentFile, tUserFile, tLegacyFile
    put tEnvironmentFolder & slash & kDriverIndexSubFolder & slash & kDriverIndexName into tEnvironmentFile
