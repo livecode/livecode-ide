@@ -3005,6 +3005,77 @@ private command __setPropertiesToDefaults pObjectID, pPropsInfoA
    end repeat
 end __setPropertiesToDefaults
 
+private command  __setSizeToPreference pObjectID, pObjectType  
+   switch pObjectType 
+      case "com.livecode.interface.classic.Button"
+      case "com.livecode.interface.classic.DefaultButton"
+      case "com.livecode.interface.classic.RectangleButton"
+         set the width of pObjectID to revIDEGetPreference("cButtonWidth")
+         set the height of pObjectID to revIDEGetPreference("cButtonHeight")
+         break
+      case "com.livecode.interface.classic.TabPanel"
+         set the width of pObjectID to revIDEGetPreference("cTabButtonWidth")
+         set the height of pObjectID to revIDEGetPreference("cTabButtonHeight")
+         break
+      case "com.livecode.interface.classic.Field"
+         set the width of pObjectID to revIDEGetPreference("cFieldWidth")
+         set the height of pObjectID to revIDEGetPreference("cFieldHeight")
+         break
+      case "com.livecode.interface.classic.LabelField"
+         set the width of pObjectID to revIDEGetPreference("cLabelFieldWidth")
+         set the height of pObjectID to revIDEGetPreference("cLabelFieldHeight")
+         break
+      case "com.livecode.interface.classic.OptionMenu"
+      case "com.livecode.interface.classic.PulldownMenu"
+      case "com.livecode.interface.classic.ComboBox"
+      case "com.livecode.interface.classic.PopupMenu"
+         set the width of pObjectID to revIDEGetPreference("cMenuWidth")
+         set the height of pObjectID to revIDEGetPreference("cMenuHeight")
+         break
+      case "com.livecode.interface.classic.RegularGraphic"
+      case "com.livecode.interface.classic.OvalGraphic"
+      case "com.livecode.interface.classic.RoundRectGraphic"
+      case "com.livecode.interface.classic.RectangleGraphic"
+         set the width of pObjectID to revIDEGetPreference("cREVGraphicWidth")
+         set the height of pObjectID to revIDEGetPreference("cREVGraphicHeight")
+         break
+      case "com.livecode.interface.classic.Image"
+         set the width of pObjectID to revIDEGetPreference("cREVImageWidth")
+         set the height of pObjectID to revIDEGetPreference("cREVImageHeight")
+         break
+      case "com.livecode.interface.classic.Player"
+         set the width of pObjectID to revIDEGetPreference("cREVPlayerWidth")
+         set the height of pObjectID to revIDEGetPreference("cREVPlayerHeight")
+         break
+      case "com.livecode.interface.classic.Progressbar"
+         if the platform is "MacOS" then
+            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
+            set the height of pObjectID to revIDEGetPreference("cMacOSProgressScrollbarHeight")
+         else
+            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
+            set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+         end if
+         break
+      case "com.livecode.interface.classic.Slider"
+         set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
+         set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+         break
+      case "com.livecode.interface.classic.Scrollbar"
+         if the platform is "MacOS" then
+            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
+            set the height of pObjectID to revIDEGetPreference("cMacOSScrollbarHeight")
+         else
+            set the width of pObjectID to revIDEGetPreference("cScrollbarWidth")
+            set the height of pObjectID to revIDEGetPreference("cScrollbarHeight")
+         end if
+         break
+      default
+         ## For any other controls the defaults are used
+         break
+   end switch
+end __setSizeToPreference
+
+
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if pObjectTypeID is "com.livecode.interface.classic.card" or \
       pObjectTypeID is "com.livecode.interface.classic.stack" then
@@ -3082,6 +3153,10 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    end if
    
    __setPropertiesToDefaults tCreatedControlID, tObjPropsA
+   
+   ## Set the size of the object to the size set in the Preferences
+   __setSizeToPreference tCreatedControlID, pObjectTypeID
+   
    set the loc of tCreatedControlID to pLoc
 
    unlock messages
