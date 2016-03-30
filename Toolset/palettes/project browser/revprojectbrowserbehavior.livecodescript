@@ -798,6 +798,10 @@ on cloneControls
    unlock screen
 end cloneControls
 
+on backSpaceKey
+   deleteControls
+end backSpaceKey
+
 on deleteControls
    local tControlID, tGroupID, tControlList
    put pbSelectedObjects() into tControlList
