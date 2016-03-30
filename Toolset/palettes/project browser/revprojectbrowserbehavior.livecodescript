@@ -111,6 +111,7 @@ on ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
 on ideNewControl pTarget
+   put the long id of pTarget into pTarget
    if word  1 of pTarget is "stack" or  word  1 of pTarget is "card" then
       exit ideNewControl
    else if word  1 of pTarget is "group" then
