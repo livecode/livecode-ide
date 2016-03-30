@@ -1253,7 +1253,7 @@ on revTutorialResume pStacksToOpen, pTaggedObjects, pStepName
    revTutorialStartWithState pStepName, pTaggedObjects
 end revTutorialResume
 
-constant kPrefsToStore = "cScriptEditor,explicitvariables|cToolbarIcons|revTools_show"
+constant kPrefsToStore = "cScriptEditor,explicitvariables|cToolbarIcons|revTools_show|idePropertyInspector_labels"
 on revInitialiseTutorial
    lock screen
    lock messages
@@ -1357,6 +1357,7 @@ on revInitialiseTutorial
    
    revIDESetPreference "revTools_show", "widget,classic,graphic,graphictools,paint"
    revIDESetPreference "cToolbarIcons", true
+   revIDESetPreference "idePropertyInspector_labels", false
    
    unlock screen
 end revInitialiseTutorial
