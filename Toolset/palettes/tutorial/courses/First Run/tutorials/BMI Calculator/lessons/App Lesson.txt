@@ -267,10 +267,10 @@ end step
 
 step "Set Footer Icon"
 	Each line of the 'Navigation Data' of the navigation bar has two 
-	icons: one for when it is not selected (the gray one) and one for 
-	when it is (the blue one).
+	icons: one for when it is not selected (the left one) and one for 
+	when it is (the right one).
 	
-	Click the gray icon to bring up the icon picker, and select the 
+	Click the left icon to bring up the icon picker, and select the 
 	'cog' icon.
 action
 	highlight property "itemArray" of section "Basic"
