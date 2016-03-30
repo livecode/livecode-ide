@@ -19,22 +19,6 @@ global gREVSuppressMessages
 global gREVSuppressMessages
 local lRefreshAOTimerID
 
--- MW-2010-12-16: [[ Bug 9217 ]] Refactored from the backscript so that
---   we are able to handle a 'quit' event when the debugger is active.
-on appleEvent p1, p2, p3
-   if p1 & p2 is "aevtquit" then
-      if the mode of stack "answer dialog" is not 0 then exit to top -- dialog on screen
-
-      -- Make sure the debugger is terminated
-      revDebuggerStop
-
-      send "revHandleAppleEventQuit" to me in 10 millisecs
-      exit appleEvent
-   end if
-
-   pass appleEvent
-end appleEvent
-
 on saveStackRequest
 
    global gREVMessageDispatch

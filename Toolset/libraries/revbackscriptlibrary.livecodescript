@@ -608,21 +608,6 @@ on appleEvent p1, p2, p3
    pass appleEvent
 end appleEvent
 
--- MW-2010-12-16: [[ Bug 9217 ]] This is called by the appleEvent handler in
---   revFrontScript when a quit message is received. It ensures the debugger is
---   stopped before anything else happens.
-on revHandleAppleEventQuit
-   revCheckQuit
-   if the result is "quit" then
-      lock messages -- prevent duplicate shutDownRequest
-      try
-         remove script of stack "revDebugger" from front
-         remove script of stack "revDebugger" from back
-      end try
-      quit
-   end if
-end revHandleAppleEventQuit
-
 # OK-2007-11-27 : Tidied up
 on revSave pWhichStack
    revIDESaveStack the long ID of stack pWhichStack
