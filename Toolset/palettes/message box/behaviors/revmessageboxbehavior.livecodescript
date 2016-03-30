@@ -449,6 +449,8 @@ command positionOpenStacksButton
    end switch
    
    lock messages
+   set the showBorder of button "Open Stacks" of group "Stacks" of me to true
+   set the opaque of button "Open Stacks" of group "Stacks" of me to false
    set the textsize of button "Open Stacks" of group "Stacks" of me to tTextSize
    set the icon of button "Open Stacks" of group "Stacks" of me to tIcon
    set the height of button "Open Stacks" to barHeight(tSize)
@@ -459,6 +461,7 @@ command positionOpenStacksButton
    set the height of graphic "pipe" to barHeight(tSize)
    set the left of graphic "pipe" to barRight(tSize) + 5
    set the bottom of graphic "pipe" to barHeight(tSize)
+   set the layer of group "background" of me to 1
    unlock messages
    
    unlock screen

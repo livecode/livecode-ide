@@ -10327,6 +10327,27 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
       end if
    end if
    
+   ## If not a function, global property or object property then
+   ## try as a boolean expression
+   local tBooleanExpression
+   
+   # Build the string so that it starts with "put"
+   put "put" && pScript into tBooleanExpression 
+   
+   set the wholeMatches to true
+   
+   # Try as a boolean expression
+   if tValidScript is empty then
+      try
+         ideDoMessage tBooleanExpression, pDebugMode
+         if the result is empty then
+            put tBooleanExpression into tValidScript
+         end if
+      catch  pError
+         
+      end try
+   end if
+   
    
    if tValidScript is empty then
       ideDoMessage pScript, pDebugMode
