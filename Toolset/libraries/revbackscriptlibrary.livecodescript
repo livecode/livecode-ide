@@ -215,12 +215,7 @@ end revPaletteObjects
 on revStandardUpdate
    global gREVLanguageNames
    
-   --sheets
-   local tSheets
-   put the subStacks of stack "revTemplatePalette" & cr & "revIconChooser" into tSheets
-   repeat for each line l in tSheets
-      if the mode of stack l is not 0 then close stack l
-   end repeat 
+   if the mode of stack "revIconChooser" is not 0 then close stack "revIconChooser"
    
    local tObjects
    put revPaletteObjects() into tObjects
@@ -1687,10 +1682,6 @@ function revLinkedAppearancePalettesList pLinkedObjects
    delete last char of tLinkedPalettes
    return tLinkedPalettes
 end revLinkedAppearancePalettesList
-
-on revBuildLinkedPalette pObject
-   send "revBuildPropertyPalette pObject" to stack "revTemplatePalette"
-end revBuildLinkedPalette
 
 function revPalettesList
    local tPalettes
