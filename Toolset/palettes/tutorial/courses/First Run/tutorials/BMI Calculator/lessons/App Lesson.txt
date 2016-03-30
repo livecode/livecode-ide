@@ -1862,7 +1862,8 @@ action
 end step
 
 step "Set Browser Card Properties"
-	Open the property inspector for this card.
+	Open the property inspector for this card by selecting 'Object' → 
+	'Card Inspector' from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
 	wait until there is an inspector for card "Browser"
