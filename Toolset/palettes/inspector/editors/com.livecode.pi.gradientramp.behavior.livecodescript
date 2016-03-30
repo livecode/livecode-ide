@@ -12,7 +12,9 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   set the gradientstops of widget 1 of me to tValue
+   if the mouse is not "down" then
+      set the gradientstops of widget 1 of me to tValue
+   end if
    unlock messages
    subeditorUpdate
    unlock screen
