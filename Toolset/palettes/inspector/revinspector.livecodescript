@@ -271,7 +271,7 @@ on ideInspectObjects pObjects
       put inspectorStackName(tIndex) into tNewInspectorName
       clone invisible stack "revInspectorTemplate"
       set the name of it to tNewInspectorName
-      set the behavior of stack tNewInspectorName to the long id of this me
+      
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
@@ -279,13 +279,10 @@ on ideInspectObjects pObjects
    if the mode of stack tTargetInspector is 0 then
       inspectorPositionPalette tIndex, tSelectedObjects
    end if
-   unlock messages
-   
-   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
-   
-   lock messages
    palette stack tTargetInspector
    unlock messages
+   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
+   
    unlock screen
 end ideInspectObjects
 

@@ -102,20 +102,30 @@ on valueChanged pProperty, pValue
    end if
    
    if pProperty is "gradientType" and pValue is "No gradient" then
-      put empty into pValue
+      put empty into tValue
+   else
+      # A gradient must have a ramp
+      if tValue["ramp"] is "" then
+         put defaultramp() into tValue["ramp"]
+      end if
+      put pValue into tValue[char 9 to -1 of pProperty]
    end if
-   
-   # A gradient must have a ramp
-   if tValue["ramp"] is "" then
-      put defaultramp() into tValue["ramp"]
-   end if
-   put pValue into tValue[char 9 to -1 of pProperty]
    set the editorValue of me to tValue
    
    updateDisplay tValue
+   
    updateProperty
+   dispatch "editorValueChanged" with "editmode", the editorProperty["property_name"] of me, false
 end valueChanged
 
 private function defaultramp
    return "0,255,255,255" & return & "1,0,0,0"
 end defaultramp
+
+on popupDismissed
+   dispatch "editorValueChanged" with "editmode", "none", false
+end popupDismissed
+
+on editorPopup pClickLoc
+   dispatch "editorValueChanged" with "editmode", the editorProperty["property_name"] of me, false
+end editorPopup
