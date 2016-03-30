@@ -2331,10 +2331,6 @@ on revSEDelayShowPalettes
    end if
    lock screen
    
-   local tRestore
-   if tObject is not empty and tStack is "Message Box" and the number of this cd of stack "Message box" is among the items of "1,2" then
-      put true into tRestore
-   end if
    repeat for each line tHiddenStack in sHiddenPalettes
       # OK-2009-10-08 : Its possible that the stack could be been removed between showing and hiding the palettes,
       # this is due to extra mutable windows added with the new script editor. Check this first or it will keep throwing
@@ -2348,14 +2344,8 @@ on revSEDelayShowPalettes
          if word 1 of tHiddenStack is "revPropertyPalette" then 
             send "revUpdateTabs" to stack tHiddenStack
          end if
-         # TH-2008-01-22 : If mode of stack is 0 the stack has been closed and should
-         # therefore not be opened again.  Bug 2641
-         --palette l
       end if
    end repeat
-   if tRestore then 
-      --select text of fld "Message Field" of stack "Message Box" -- works better than "focus"
-   end if
    put empty into sHiddenPalettes
    unlock screen
    unlock messages
