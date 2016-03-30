@@ -72,4 +72,5 @@ left
 top												
 right												
 bottom												
-layer												
+layer	
+number											

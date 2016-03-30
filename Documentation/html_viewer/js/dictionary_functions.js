@@ -165,6 +165,11 @@
 		}
 	}
 	
+	function sortedKeys(obj)
+	{
+		return Object.keys(obj).sort();
+	}
+	
 	function displayFilters(){
 		// First display the applied filters
 		var tHTML = "";
@@ -182,17 +187,21 @@
 		tHTML = "";
 		var tFilterData = filterOptions("type,tags,OS");
 		
-		$.each(tFilterData, function( index, value) {
+		$.each(tFilterData, function(category, value) {
 			if(jQuery.isEmptyObject(value) == false){
 				tHTML += '<div style="margin-bottom:20px">';
-				tHTML += '<b>'+index+':</b> ';
-				$.each(value, function( index2, value2) {
-					if(tState.filters.hasOwnProperty(index) && tState.filters[index].indexOf(index2) > 0){
+				tHTML += '<b>'+category+':</b> ';
+				
+				var tSortedFilters = sortedKeys(value);
+				for (index = 0; index < tSortedFilters.length; ++index)
+				{
+					var tFilter = tSortedFilters[index];
+					if(tState.filters.hasOwnProperty(index) && tState.filters[category].indexOf(tFilter) > 0){
 				
 					} else {
-						tHTML += '<a href="#" class="apply_filter" filter_category="'+index+'" filter_value="'+index2+'">'+index2+' <span class="badge">'+value2+'</span></a> ';
+						tHTML += '<a href="#" class="apply_filter" filter_category="'+category+'" filter_value="'+tFilter+'">'+tFilter+' <span class="badge">'+value[tFilter]+'</span></a> ';
 					}
-				});
+				}
 				tHTML += '</div>';
 			}
 		});

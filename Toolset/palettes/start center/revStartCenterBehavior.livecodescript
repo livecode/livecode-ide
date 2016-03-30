@@ -64,7 +64,7 @@ on ideNewStack
 end ideNewStack
 
 on ideOpenStack pTarget
-   if the short name of the owner of pTarget is not the short name of me then
+   if the short name of ideStackOfObject(pTarget) is not the short name of me then
       startCenterClose
    end if
 end ideOpenStack

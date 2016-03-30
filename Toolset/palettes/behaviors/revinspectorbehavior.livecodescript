@@ -44,6 +44,8 @@ on resizeInspector
    unlock screen
 end resizeInspector
 
+constant kInspectorMinHeight = 200
+constant kInspectorMinWidth = 220
 on inspectorOpenEditor pEditor
    # Check if the stack is already open
    if there is a stack pEditor then exit inspectorOpenEditor
@@ -112,9 +114,9 @@ on inspectorLayoutGroups pGroupList
       put the width of me - (tMargin * 2) into tRowWidth
    end if
    
-   # Don't let the inspector get any smaller than 220
-   if tMinRowWidth + (tMargin * 2) < 220 then
-      put 220 - (tMargin * 2) into tMinRowWidth
+   # Don't let the inspector get any smaller than kInspectorMinWidth
+   if tMinRowWidth + (tMargin * 2) < kInspectorMinWidth then
+      put kInspectorMinWidth - (tMargin * 2) into tMinRowWidth
    end if
    
    # Get the stored width for the inspector to update calculated width. If stored width is larger,
@@ -180,6 +182,15 @@ on inspectorLayoutGroups pGroupList
    put the top of me into tStackTop
    put the left of me into tStackLeft
    
+   
+   if there is a field "noObjects" of me then
+      set the width of field "noObjects" of me to 1000
+      put the formattedWidth of field "noObjects" of me into tMinRowWidth
+      set the height of field "noObjects" of me to the formattedHeight of field "noObjects" of me
+      set the width of field "noObjects" of me to the formattedWidth of field "noObjects" of me
+      set the loc of field "noObjects" of me to the loc of this card
+   end if
+   
    lock messages
    
    if the minWidth of me < tMinRowWidth + (tMargin*2) then
@@ -193,17 +204,29 @@ on inspectorLayoutGroups pGroupList
    set the left of me to tStackLeft
    
    local tStackHeight
-   put tInspectorHeight + tMargin into tStackHeight
+   if tInspectorHeight is empty then
+      put kInspectorMinHeight into tStackHeight
+   else
+      put tInspectorHeight + tMargin into tStackHeight
+   end if
+   
    set the minheight of me to tStackHeight
    set the maxheight of me to tStackHeight
    set the height of me to tStackHeight
    set the top of me to tStackTop
+   
    unlock messages
    unlock screen
 end inspectorLayoutGroups
 
 local sSelectedSection, sSelectedSectionIndex
 private on inspectorSectionSet pSection
+   if sDataA is empty then
+      put empty into sSelectedSection
+      put 0 into sSelectedSectionIndex
+      exit inspectorSectionSet
+   end if
+   
    local tIndex
    put inspectorSectionIndex(pSection) into tIndex
    
@@ -264,8 +287,25 @@ private on inspectorGenerate
    local tPropertyData
    put sDataA[sSelectedSectionIndex] into tPropertyData
    
-   inspectorGenerateGroups tPropertyData["grouplist"]
+   if tPropertyData is empty then
+      inspectorNoObject
+   else
+      inspectorGenerateGroups tPropertyData["grouplist"]
+   end if
 end inspectorGenerate
+
+private command inspectorNoObject
+   create group "noObjects"
+   create field "noObjects" in group "noObjects"
+   set the text of it to "No object selected"
+   set the opaque of it to false
+   set the showborder of it to false 
+   set the textSize of it to 24
+   set the textAlign of it to "center"
+   set the themeClass of it to "label"
+   set the lockText of it to true
+   set the traversalOn of it to false
+end inspectorNoObject
 
 on inspectorGenerateGroups pGroupList
    lock screen
@@ -411,10 +451,6 @@ end inspectorChanged
 
 # Sent when the user changes the section
 on inspectorSectionChanged pSection
-   # Timing log
-   local tStartTime
-   put the milliseconds into tStartTime
-   
    # Check if the section is different
    if inspectorSectionGetName() is pSection then exit inspectorSectionChanged
    
@@ -425,8 +461,6 @@ on inspectorSectionChanged pSection
    inspectorSectionSet pSection
    
    inspectorChanged
-   
-   //put "Last inspector update took" && the milliseconds - tStartTime && "milliseconds" & return after msg
 end inspectorSectionChanged
 
 on updateFocusedEditor
@@ -477,7 +511,7 @@ on inspectorFillGroups pGroupData
    end repeat
 end inspectorFillGroups
 
-private on inspectorClear
+on inspectorClear
    if the number of groups of card 1 of me is 0 then
       exit inspectorClear
    end if
@@ -488,6 +522,7 @@ private on inspectorClear
       if the short name of group 2 of me is "background" then
          delete group 1 of card 1 of me
       else
+         dispatch "rowFinalize" to group 2 of card 1 of me
          delete group 2 of card 1 of me
       end if
    end repeat

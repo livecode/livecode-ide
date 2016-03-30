@@ -188,22 +188,31 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
-on editorPopup pClickLoc
-   create invisible stack sPropertyInfo["property_name"]
-   dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack sPropertyInfo["property_name"]
-   set the frameHidden of stack sPropertyInfo["property_name"] to true
-   dispatch "inspectorGenerateGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
-   dispatch "inspectorLayoutGroups" to stack sPropertyInfo["property_name"] with sPropertyInfo["popup"]
-   dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
-   set the editorTarget of stack sPropertyInfo["property_name"] to the long id of me
-   modal stack sPropertyInfo["property_name"]
+after editorPopup pClickLoc
+   local tStackName
+   put popupStackName() into tStackName
+   create invisible stack tStackName
+   dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack tStackName
+   set the frameHidden of stack tStackName to true
+   dispatch "inspectorGenerateGroups" to stack tStackName with sPropertyInfo["popup"]
+   dispatch "inspectorLayoutGroups" to stack tStackName with sPropertyInfo["popup"]
+   dispatch "inspectorFillGroups" to stack tStackName with sPopupData
+   set the editorTarget of stack tStackName to the long id of me
+   set the title of stack tStackName to the rowLabel of the owner of me
+   modeless stack tStackName
 end editorPopup
+
+private function popupStackName
+   return "revPropertyPopup" && sPropertyInfo["property_name"]
+end popupStackName
 
 setProp editorPopupData pData
    if pData is not sPopupData then
+      local tStackName
+      put popupStackName() into tStackName
       put pData into sPopupData
-      if there is a stack sPropertyInfo["property_name"] then
-         dispatch "inspectorFillGroups" to stack sPropertyInfo["property_name"]  with sPopupData
+      if there is a stack tStackName then
+         dispatch "inspectorFillGroups" to stack tStackName with sPopupData
       end if
    end if
 end editorPopupData
@@ -212,8 +221,16 @@ getProp editorPopupData
    return sPopupData
 end editorPopupData
 
-on popupDismissed
-   delete stack sPropertyInfo["property_name"]
+command editorDeletePopup
+   local tStackName
+   put popupStackName() into tStackName
+   if there is a stack tStackName then
+      delete stack tStackName
+   end if
+end editorDeletePopup
+
+after popupDismissed
+   editorDeletePopup
 end popupDismissed
 
 getProp storedValue
@@ -242,3 +259,9 @@ end editorConflicted
 getprop editorConflicted
    return sConflicted
 end editorConflicted
+
+on editorFinalize
+   if there is a stack popupStackName()  then
+      dispatch "popupDismissed" to me
+   end if
+end editorFinalize

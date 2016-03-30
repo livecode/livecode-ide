@@ -51,20 +51,26 @@ setProp cSelectedObjects pSelectedObjects
    # Unsubscribe the the objects previously 
    revIDEUnsubscribe "idePropertyChanged","",sSelectedObjects
    
+   lock screen
+   
+   inspectorClear
+   
+   put pSelectedObjects into sSelectedObjects
+
    if pSelectedObjects is empty then 
-      inspectorClear
+      inspectorTitleUpdate
+      set the inspectorData of me to empty
       exit cSelectedObjects
    end if
-   
-   lock screen
+
    revIDESubscribe "idePropertyChanged", pSelectedObjects
-   put pSelectedObjects into sSelectedObjects
    
    # Keep track of the object 'types' in case they are changed via PI
    put ideObjectTypesFromObjectList(pSelectedObjects) into sObjectTypes
    
    # Get a list of the properties and groups we'll be displaying
-   set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
+   set the inspectorData of me to revIDEPropertiesInfo(pSelectedObjects)
+   
    inspectorTitleUpdate
    unlock screen
 end cSelectedObjects
@@ -258,7 +264,9 @@ end inspectorSectionIcon
 # Add to header actions/preferences
 on inspectorAddActions
    addFrameItem "inspectorTarget", "header", "action", "Select object to inspect", "bullseye", "bullseye", "inspectorTreeMenuDisplay", the long id of me 
-   addFrameItem "inspectorEditScript","header", "action", "Edit script", "lc-edit-script", "lc-edit-script","inspectorEditScript", the long id of me
+   if sSelectedObjects is not empty then
+      addFrameItem "inspectorEditScript","header", "action", "Edit script", "lc-edit-script", "lc-edit-script","inspectorEditScript", the long id of me
+   end if
    addFrameItem "inspectorLock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
    addFrameItem "idePropertyInspector_labels", "header", "preference", "Property Labels", "enum","false:Description of option,true:Name of LiveCode property", "inspectorPropLabelsPrefChanged", the long id of me
 end inspectorAddActions

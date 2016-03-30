@@ -271,7 +271,7 @@ on ideInspectObjects pObjects
       put inspectorStackName(tIndex) into tNewInspectorName
       clone invisible stack "revInspectorTemplate"
       set the name of it to tNewInspectorName
-      set the behavior of stack tNewInspectorName to the long id of this me
+      
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
@@ -279,13 +279,10 @@ on ideInspectObjects pObjects
    if the mode of stack tTargetInspector is 0 then
       inspectorPositionPalette tIndex, tSelectedObjects
    end if
-   unlock messages
-   
-   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
-   
-   lock messages
    palette stack tTargetInspector
    unlock messages
+   set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
+   
    unlock screen
 end ideInspectObjects
 
@@ -355,12 +352,22 @@ on ideSelectedObjectChanged
    local tStack
    put revIDEStackOfObject(line 1 of tObjects) into tStack
    
-   # If the object is on an inspector stack, lock it
-   if the short name of tStack begins with kPropertyInspectorPrefix then
-      if the cLocked of tStack is not true then
-         dispatch "lockInspector" to tStack
+   if exists(tStack) then
+      # If the object is on an inspector stack, lock it
+      if the short name of tStack begins with kPropertyInspectorPrefix then
+         if the cLocked of tStack is not true then
+            dispatch "lockInspector" to tStack
+         end if
       end if
+   else
+      put empty into tObjects
    end if
+   
+   repeat with x = the number of lines in tObjects down to 1
+      if not exists(line x of tObjects) then
+         delete line x of tObjects
+      end if
+   end repeat
    
    local tStackName
    repeat for each key tKey in inspectorList()
