@@ -364,7 +364,7 @@ on ideSelectedObjectChanged
    end if
    
    repeat with x = the number of lines in tObjects down to 1
-      if not exists(line x of tObjects) then
+      if there is not a (line x of tObjects) then
          delete line x of tObjects
       end if
    end repeat
