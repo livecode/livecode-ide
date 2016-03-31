@@ -70,7 +70,7 @@ on preOpenStack
    set the vgrid of it to true
    set the lockText of it to true
    set the dontwrap of it to true
-   set the tabstops of it to "60,2000"
+   set the tabstops of it to "100,2000"
    set the margins of it to "8,14,8,8"
    set the bordercolor of it to "220,220,220"
    set the showfocusborder of it to false
