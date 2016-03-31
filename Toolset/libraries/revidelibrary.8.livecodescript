@@ -5704,6 +5704,63 @@ on revIDESetGradientProperty pObject, pProperty, pValue
    end repeat
 end revIDESetGradientProperty
 
+private function __resolveStackFilePath pBasePath, pOtherPath
+   -- First absolutize other path (if possible)
+   local tOldFolder
+   put the folder into tOldFolder
+   set the itemDelimiter to slash
+   
+   local tFolderResult
+   set the folder to item 1 to -2 of pOtherPath
+   put the result into tFolderResult
+   if tFolderResult is not empty then
+      set the folder to tOldFolder
+      return pOtherPath
+   end if
+   put the folder & slash & item -1 of pOtherPath into pOtherPath
+   set the folder to tOldFolder
+   
+   -- At this point tOtherPath should be absolute, so if its
+   -- (component-wise) prefix is pBasePath we relativize again.
+   local tBasePathFolder
+   put item 1 to -2 of pBasePath & slash into tBasePathFolder
+   if pOtherPath begins with tBasePathFolder then
+      delete char 1 to (the number of chars in tBasePathFolder) of pOtherPath
+   end if
+   
+   return pOtherPath
+end __resolveStackFilePath
+
+command revIDESetStackFilesProperty pObject, pProperty, pValue
+   local tProcessedValue
+   put empty into tProcessedValue
+   
+   -- If the stack in question has a filename then we process.
+   local tBaseFilename
+   put the effective filename of pObject into tBaseFilename
+   if tBaseFilename is not empty then
+      repeat for each line tEntry in pValue
+         local tStackName, tStackPath
+         put item 1 of tEntry into tStackName
+         put item 2 to -1 of tEntry into tStackPath
+         
+         -- Attempt to resolve the referenced stack's path relative to
+         -- the base path. This will have no effect if the stack path cannot
+         -- be resolved.
+         local tResolvedStackPath
+         put __resolveStackFilePath(tBaseFilename, tStackPath) into tStackPath
+         
+         put tStackName & comma & tStackPath & return after tProcessedValue
+      end repeat
+      delete the last char of tProcessedValue
+   else
+      put pValue into tProcessedValue
+   end if
+   
+   -- Set the stackFile property to the processed stackFile list
+   set the stackFiles of pObject to tProcessedValue
+end revIDESetStackFilesProperty
+
 #############
 # Standalone Settings
 #############
