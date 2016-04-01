@@ -10719,3 +10719,35 @@ function revIDEObjectScriptLines pObject
    end try
    return tScriptLines
 end revIDEObjectScriptLines
+
+/* 
+Returns true if the object is currently open, i.e. determines
+- if the object is a stack, whether the mode is not 0
+- if the object is a card, whether it is the current card of an open stack
+- if the object is a control, whether it is on the current card of an open stack
+*/
+function revIDEObjectIsOpen pLongID
+   local tStack
+   put revIDEStackOfObject(pLongID) into tStack
+   
+   if the mode of tStack is 0 then
+      return false
+   end if
+   
+   if word 1 of pLongID is "stack" then
+      return true
+   end if
+   
+   local tCard
+   put revIDECardOfObject(pLongID) into tCard
+   
+   if tCard is not the long id of this card of tStack then
+      return false
+   end if
+   
+   if word 1 of pLongID is "card" then
+      return true
+   end if
+   
+   return exists(pLongID)
+end revIDEObjectIsOpen

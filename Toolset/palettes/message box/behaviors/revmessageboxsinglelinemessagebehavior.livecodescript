@@ -9,7 +9,12 @@ on returnInField
    end if
    revInitialise
    
-   select the text of me
+   # It's possible to close the message box or change the card while 
+   # the above is executing, so ensure the field is still open before 
+   # selecting its text
+   if revIDEObjectIsOpen(the long id of me) then
+      select the text of me
+   end if
 end returnInField
 
 on enterInField
