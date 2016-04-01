@@ -449,19 +449,24 @@ command positionOpenStacksButton
    end switch
    
    lock messages
-   set the showBorder of button "Open Stacks" of group "Stacks" of me to true
-   set the opaque of button "Open Stacks" of group "Stacks" of me to false
-   set the textsize of button "Open Stacks" of group "Stacks" of me to tTextSize
-   set the icon of button "Open Stacks" of group "Stacks" of me to tIcon
-   set the height of button "Open Stacks" to barHeight(tSize)
-   set the width of button "Open Stacks" of group "Stacks" of me to (the formattedWidth of button "Open Stacks" of group "Stacks" of me) + tPadding
-   put the formattedWidth of button "Open Stacks" of group "Stacks" of me into tWidth
-   set the left of button "Open Stacks" to barRight(tSize) + 5
-   set the bottom of button "Open Stacks" to barHeight(tSize)
-   set the height of graphic "pipe" to barHeight(tSize)
-   set the left of graphic "pipe" to barRight(tSize) + 5
-   set the bottom of graphic "pipe" to barHeight(tSize)
-   set the layer of group "background" of me to 1
+   if there is a group "Stacks" of this card of me then
+      set the showBorder of button "Open Stacks" of group "Stacks" of me to true
+      set the opaque of button "Open Stacks" of group "Stacks" of me to false
+      set the textsize of button "Open Stacks" of group "Stacks" of me to tTextSize
+      set the icon of button "Open Stacks" of group "Stacks" of me to tIcon
+      set the height of button "Open Stacks" to barHeight(tSize)
+      set the width of button "Open Stacks" of group "Stacks" of me to (the formattedWidth of button "Open Stacks" of group "Stacks" of me) + tPadding
+      put the formattedWidth of button "Open Stacks" of group "Stacks" of me into tWidth
+      set the left of button "Open Stacks" to barRight(tSize) + 5
+      set the bottom of button "Open Stacks" to barHeight(tSize)
+      set the height of graphic "pipe" to barHeight(tSize)
+      set the left of graphic "pipe" to barRight(tSize) + 5
+      set the bottom of graphic "pipe" to barHeight(tSize)
+   end if 
+   
+   try
+      set the layer of group "background" of card 1 of me to bottom
+   end try
    unlock messages
    
    unlock screen
