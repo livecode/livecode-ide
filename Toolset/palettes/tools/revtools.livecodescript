@@ -635,7 +635,6 @@ on mouseDown pButton
       if tStackName is "revDragControl" then next repeat
       put the long ID of stack tStackName into tValidDropStacks[tStackCount]["long id"]
       put the rect of stack tStackName into tValidDropStacks[tStackCount]["rect"]
-      put the backgroundcolor of stack tStackName into tValidDropStacks[tStackCount]["backgroundcolor"]
       add 1 to tStackCount
    end repeat
    
@@ -653,7 +652,7 @@ on mouseDown pButton
                put tStackID into tTargetStack
                put x into tTargetStackIndex
                # BB 18/2/2015 [[ Bug 14627 ]] - Part 1 - Removed the old way of highlighting the target stack
-               __hiliteAdd tTargetStack, tValidDropStacks[x]["backgroundcolor"]
+               __hiliteAdd tTargetStack
                exit repeat
             end if
          end repeat
@@ -745,33 +744,46 @@ on dragDrop
    revIDEInstallExtension the dragData["files"]
 end dragDrop
 
-local sHighlightedStack, sOldBGColor
-private on __hiliteAdd pStackLongID, pOldBGColor
-   if pStackLongID is sHighlightedStack then exit __hiliteAdd
-   
+local sHighlightedCard, sOldBGColor, sOldBGPattern
+private on __hiliteAdd pStackLongID
    lock screen
    lock messages
-   # Unhighlight previously hilited stack
-   if sHIghlightedStack is not empty then
+   # Store the new card being hilited
+   local tCardID
+   put the long id of this card of pStackLongID into tCardID
+   
+   if tCardID is sHighlightedCard then 
+      exit __hiliteAdd
+   end if
+   
+   # Remove previous hilite
+   if sHighlightedCard is not empty then
       __hiliteRemove
    end if
    
-   # Store the new stack being hilited
-   put pStackLongID into sHighlightedStack
-   put pOldBGColor into sOldBGColor
-   set the backgroundcolor of pStackLongID to revIDEColor("edition_color")
+   put tCardID into sHighlightedCard
+   put the backcolor of tCardID into sOldBGColor
+   put the backPattern of tCardID into sOldBGPattern
+   set the backgroundcolor of tCardID to revIDEColor("edition_color")
    
    unlock messages
    unlock screen
 end __hiliteAdd
 
 private on __hiliteRemove
-   if not exists(sHighlightedStack) then exit __hiliteRemove
+   if not exists(sHighlightedCard) then 
+      exit __hiliteRemove
+   end if
    
    lock messages
-   set the backgroundcolor of sHighlightedStack to sOldBGColor
-   put empty into sHighlightedStack
+   if sOldBGPattern is not empty then
+      set the backpattern of sHighlightedCard to sOldBGPattern
+   else
+      set the backcolor of sHighlightedCard to sOldBGColor
+   end if
+   put empty into sHighlightedCard
    put empty into sOldBGColor
+   put empty into sOldBGPattern
    unlock messages
 end __hiliteRemove
 

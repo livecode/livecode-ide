@@ -1,0 +1,1 @@
+# Preserve backpattern of stack when dragging object from tools palette
