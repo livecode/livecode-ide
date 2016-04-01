@@ -65,7 +65,6 @@ command paneOpenControl
    set the name of the templateButton to "LaunchDocs"
    set the label of the templateButton to "Launch Documentation"
    set the lockLocation of the templateButton to true
-   set the width of the templateButton to sMetrics["launchButtonWidth"]
    set the height of the templateButton to sMetrics["launchButtonHeight"]
    create button in me
    reset the templateButton
@@ -89,10 +88,19 @@ end paneCloseControl
 
 command paneResizeControl
    metricsInit
-  set the rect of field "View" of me to (the left of me),(the top of me),(the right of me),(the bottom of me - sMetrics["bottombarHeight"])
-  set the bottomRight of button "FullMode" of me to (item 1 of the bottomRight of me + sMetrics["toggleButtonMargin"]), (item 2 of the bottomRight of me)
-  set the bottomLeft of button "LaunchDocs" of me to (item 1 of the bottomLeft of me + sMetrics["launchButtonMargin"]), (item 2 of the bottomLeft of me - 1)
-  scrollbarCheck
+   local tRect
+   put the rect of me into tRect
+   split tRect by comma
+   set the rect of field "View" of me to tRect[1], tRect[2], tRect[3], \
+         tRect[4] - sMetrics["bottombarHeight"]
+   set the bottomRight of button "FullMode" of me to \ 
+         tRect[3] + sMetrics["toggleButtonMargin"], tRect[4]
+   set the width of button "LaunchDocs" of me to \ 
+         the formattedWidth of button "LaunchDocs" of me + \ 
+         sMetrics["launchButtonPadding"]
+   set the bottomLeft of button "LaunchDocs" of me to tRect[1] + \ 
+         sMetrics["launchButtonMargin"], tRect[4] - 1
+   scrollbarCheck
 end paneResizeControl
 
 # Description
@@ -391,8 +399,8 @@ private command metricsInit
    put "8,20,110,8" into sMetrics["viewFieldMargins"]
    put 96 into sMetrics["toggleButtonWidth"]
    put 24 into sMetrics["toggleButtonHeight"]
-   put 124 into sMetrics["launchButtonWidth"]
    put 24 into sMetrics["launchButtonHeight"]
+   put 12 into sMetrics["launchButtonPadding"]
    put 26 into sMetrics["bottombarHeight"]
    put 1 into sMetrics["launchButtonMargin"]
    
