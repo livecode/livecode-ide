@@ -215,7 +215,7 @@ private function preferenceAction pMenuArray
    local tDataA
    put empty into tDataA
    put "preferences" into tDataA["name"]
-   put "preferences" into tDataA["label"]
+   put "Preferences" into tDataA["label"]
    put "cog" into tDataA["icon"]
    put pMenuArray into tDataA["menu"]
    put true into tDataA["enabled"]

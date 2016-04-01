@@ -267,7 +267,7 @@ on inspectorAddActions
    if sSelectedObjects is not empty then
       addFrameItem "inspectorEditScript","header", "action", "Edit script", "lc-edit-script", "lc-edit-script","inspectorEditScript", the long id of me
    end if
-   addFrameItem "inspectorLock","header", "toggle", "Lock Inspector", "unlock", "lock","inspectorLock", the long id of me
+   addFrameItem "inspectorLock","header", "toggle", "Lock inspector", "unlock", "lock","inspectorLock", the long id of me
    addFrameItem "idePropertyInspector_labels", "header", "preference", "Property Labels", "enum","false:Description of option,true:Name of LiveCode property", "inspectorPropLabelsPrefChanged", the long id of me
 end inspectorAddActions
 

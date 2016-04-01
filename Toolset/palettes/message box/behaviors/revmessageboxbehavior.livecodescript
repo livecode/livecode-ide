@@ -37,15 +37,15 @@ on openStack
    
    #Actions - footers
    --frame item: Name                        Location   Type          Label                                  Icon         Icon     Callback Message      Callback Target
-   addFrameItem "outputSource",          "footer",     "action",      "show last output source",    "bullseye",     "bullseye",    "showOutputSource",the long id of me 
-   addFrameItem "lockDefaultStack",     "footer",     "action",      "lock the defaultStack",         "unlock alt",     "unlock alt",    "lockDefaultStack",    the long id of me  
-   addFrameItem "unlockDefaultStack", "footer",     "action",      "unlock the defaultStack",     "lock",     "lock",    "unlockDefaultStack",the long id of me 
-   addFrameItem "removeSelected",       "footer",     "action",     "remove selected variable",    "trash",    "trash",     "removeSelected",     the long id of me
-   addFrameItem "removeAll",               "footer",     "action",      "remove all",                         "trash",     "trash",    "removeAll",              the long id of me 
-   addFrameItem "newGlobalVariable",  "footer",     "action",      "new global variable",            "file alt",    "file alt",    "addGlobalVariable",  the long id of me  
-   addFrameItem "update",                    "footer",     "action",      "update pending messages", "refresh",    "refresh",    "updateMessages",     the long id of me  
-   addFrameItem "cancelAll",                 "footer",     "action",      "cancel all messages",           "remove",    "remove",    "cancelAllMessages",  the long id of me  
-   addFrameItem "addStack",                 "footer",     "action",      "add library stack",                "plus",    "plus",    "addLibraryStack",      the long id of me  
+   addFrameItem "outputSource",          "footer",     "action",      "Show last output source",    "bullseye",     "bullseye",    "showOutputSource",the long id of me
+   addFrameItem "lockDefaultStack",     "footer",     "action",      "Lock the defaultStack",         "unlock alt",     "unlock alt",    "lockDefaultStack",    the long id of me
+   addFrameItem "unlockDefaultStack", "footer",     "action",      "Unlock the defaultStack",     "lock",     "lock",    "unlockDefaultStack",the long id of me
+   addFrameItem "removeSelected",       "footer",     "action",     "Remove selected variable",    "trash",    "trash",     "removeSelected",     the long id of me
+   addFrameItem "removeAll",               "footer",     "action",      "Remove all",                         "trash",     "trash",    "removeAll",              the long id of me
+   addFrameItem "newGlobalVariable",  "footer",     "action",      "New global variable",            "file alt",    "file alt",    "addGlobalVariable",  the long id of me
+   addFrameItem "update",                    "footer",     "action",      "Update pending messages", "refresh",    "refresh",    "updateMessages",     the long id of me
+   addFrameItem "cancelAll",                 "footer",     "action",      "Cancel all messages",           "remove",    "remove",    "cancelAllMessages",  the long id of me
+   addFrameItem "addStack",                 "footer",     "action",      "Add library stack",                "plus",    "plus",    "addLibraryStack",      the long id of me
    
    --GH : hiding footers as every footer is not necessary on all cards; footers are shown on releveant cards
    hideFrameItem "lockDefaultStack"
