@@ -711,7 +711,7 @@ end __objectPropertiesInfo
 
 private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, pOptionalSection
    local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
-   put true into tAllControls
+   put pObjectTypeList is not empty into tAllControls
 
    repeat for each line tObjectType in pObjectTypeList
       set the itemdelimiter to "."
