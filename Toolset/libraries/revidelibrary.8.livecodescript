@@ -460,6 +460,9 @@ private function __classicObjectPropertiesFromType pType
       case "DataGrid"
          return sClassicObjectProperties[pType]
       default
+         if not (pType begins with "com.livecode.interface.classic") then
+            put "com.livecode.interface.classic.widget" into pType
+         end if
          local tPropsA
          put sClassicObjectProperties[pType] into tPropsA
          union tPropsA with sClassicObjectProperties["com.livecode.interface.Control"] recursively

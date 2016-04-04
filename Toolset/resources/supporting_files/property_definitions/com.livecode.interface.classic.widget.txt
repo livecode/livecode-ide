@@ -21,8 +21,7 @@ top
 right												
 bottom												
 layer												
-textFont												
-textAlign												
+textFont																						
 textSize												
 traversalOn		Advanced					false	
 number									
