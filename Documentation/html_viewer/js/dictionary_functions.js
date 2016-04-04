@@ -92,6 +92,8 @@
 			tState.filtered_data = filtered_data;
 		}
 		displayFilters();
+		
+		tState.searched = {};
 		displayEntryListGrep($("#ui_filer").val());	
 	}
 	
@@ -403,9 +405,9 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						var association_html = "";
 						$.each(value, function(index2, value2) {
-							var tIndex = entryNameToID(value2,"glossary");
+							var tIndex = entryNameToID(value2,"object");
 							if(tIndex == 0) tIndex = entryNameToID(value2,"library");
-							if(tIndex == 0) tIndex = entryNameToID(value2,"object");
+							if(tIndex == 0) tIndex = entryNameToID(value2,"glossary");
 							if(association_html == 0) association_html = '<a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
 							else association_html += ', <a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
 						});
