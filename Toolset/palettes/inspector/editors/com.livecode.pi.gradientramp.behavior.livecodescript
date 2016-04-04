@@ -12,32 +12,10 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   if the mouse is not "down" then
-      set the gradientstops of widget 1 of me to tValue
-   end if
+   updateSubeditorValue tValue
    unlock messages
-   subeditorUpdate
    unlock screen
 end editorUpdate
-
-on subeditorUpdate
-   lock screen
-   local tValue
-   put the gradientStops of widget 1 of me into tValue
-   
-   lock messages
-   local tSelected
-   put the selectedStop of widget 1 of me into tSelected
-   local tColorValue
-   if tSelected is 0 then
-      put empty into tColorValue
-   else
-      put item 2 to 5 of line tSelected of tValue into tColorValue
-   end if
-   setColor tColorValue
-   unlock messages
-   unlock screen
-end subeditorUpdate
 
 on editorResize
    lock screen
@@ -65,18 +43,23 @@ on editorResize
    unlock screen
 end editorResize
 
+local sOpacity, sColor
 on valueChanged
    if the long id of the target is the long id of widget 1 of me then
       set the editorValue of me to the gradientstops of widget 1 of me
    else
-      local tValue, tSelected
+      local tSelected
       put the selectedStop of widget 1 of me into tSelected
-      put the gradientStops of widget 1 of me into tValue
-      if tSelected is 0 then
+      if tSelected is 0 then 
          exit valueChanged
       end if
+      
+      local tValue
+      put the editorValue of me into tValue
+      put the thumbposition of scrollbar "alpha" of me into sOpacity
       put currentValue() into item 2 to 5 of line tSelected of tValue 
       set the editorValue of me to tValue
+      updateSubeditorValue tValue
    end if
    updateProperty
 end valueChanged
@@ -86,28 +69,78 @@ on gradientStopsChanged
 end gradientStopsChanged
 
 on selectedStopChanged
-   subeditorUpdate
+   local tValue
+   put rampValue() into tValue
+   updateColorDisplay item 2 to 5 of tValue
+   updateOpacityDisplay item 5 of tValue
 end selectedStopChanged
 
-local sColor, sOpacity
-on setColor pValue
+on updateRampValue tValue
    lock screen
    lock messages
-   local tAlpha
-   put item 4 of pValue into tAlpha
-   if tAlpha is not a number then
-      put 0 into tAlpha
-   end if
-   set the thumbposition of scrollbar "alpha" of me to tAlpha
-   
-   put tAlpha into sOpacity
-   put item 1 to 3 of pValue into sColor
-   
-   set the swatchcolor of widget "color" of me to pValue
-   put pValue into field "value" of me
+   set the gradientStops of widget 1 of me to tValue
    unlock messages
    unlock screen
-end setColor
+end updateRampValue
+
+on updateColorValue pColor
+   lock screen
+   lock messages
+   set the swatchColor of widget "color" of me to pColor
+   put item 1 to 3 of pColor into sColor
+   unlock messages
+   unlock screen
+end updateColorValue
+
+on updateOpacityValue pAlpha
+   lock screen
+   lock messages
+   if pAlpha is not a number then
+      put 0 into pAlpha
+   end if
+   set the thumbposition of scrollbar "alpha" of me to pAlpha
+   put pAlpha into sOpacity
+   unlock messages
+   unlock screen
+end updateOpacityValue
+
+function rampValue
+   lock messages
+   local tValue
+   put the gradientStops of widget 1 of me into tValue
+   local tSelected
+   put the selectedStop of widget 1 of me into tSelected
+   local tColorValue
+   if tSelected is 0 then
+      put empty into tColorValue
+   else
+      put line tSelected of tValue into tColorValue
+   end if
+   unlock messages
+   return tColorValue
+end rampValue
+
+on updateColorDisplay pColor
+   lock screen
+   lock messages
+   put item 1 to 3 of pColor into sColor
+   set the swatchcolor of widget "color" of me to pColor
+   put pColor into field "value" of me
+   unlock messages
+   unlock screen
+end updateColorDisplay
+
+on updateOpacityDisplay pAlpha
+   lock screen
+   lock messages
+   if pAlpha is not a number then
+      put 0 into pAlpha
+   end if
+   set the thumbposition of scrollbar "alpha" of me to pAlpha
+   put pAlpha into sOpacity
+   unlock messages
+   unlock screen
+end updateOpacityDisplay
 
 function currentValue
    if sColor is empty then
@@ -117,12 +150,35 @@ function currentValue
    end if
 end currentValue
 
+local sUpdateRamp, sUpdateOpacity
+on updateSubeditorValue pValue
+   local tMDown
+   if the mouse is "down" then
+      put the mousecontrol into tMDown
+   end if
+   if tMDown is not empty then
+      put the long id of the mousecontrol into tMDown
+   end if
+   
+   if tMDown is not the long id of widget "ramp" of me then 
+      updateRampValue pValue
+   end if
+   
+   local tSelectedValue
+   put rampValue() into tSelectedValue
+   if tMDown is not the long id of scrollbar "alpha" of me then
+      updateOpacityValue item 5 of tSelectedValue
+   end if
+   
+   updateColorValue item 2 to 5 of tSelectedValue
+end updateSubeditorValue
+
 on mouseUp
    switch the short name of the target 
       case "color"
          local tSelectedStop
          put the selectedStop of widget "ramp" of me into tSelectedStop
-         if tSelectedStop is empty then
+         if tSelectedStop is 0 then
             exit mouseUp
          end if
          local tGradientStops, tColorValue
