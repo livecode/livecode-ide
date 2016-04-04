@@ -60,7 +60,7 @@ on FillInData pDataA, pRow
       set the tooltip of button "cantSelect" of me to "Show"
    end if  
    
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
       hide image "groupIcon" of me
    else
@@ -109,7 +109,7 @@ on LayoutControl pControlRect
    end repeat
    
    local tNameFieldLeft
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       set the left of button "disclosure" of me to the right of button ("connector" & tConnectorCount) of me
       set the width of field "type" of me to the formattedWidth of field "type" of me
       set the left of field "type" of me to the right of button "disclosure" of me

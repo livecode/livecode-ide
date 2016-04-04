@@ -28,12 +28,14 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-
+   
    
    # Preferences
-   addFrameItem "ideProjectBrowser_objectType", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me
-   addFrameItem "ideProjectBrowser_show", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "displayPreferenceSelected", the long id of me
-   addFrameItem "ideProjectBrowser_order","header","preference","Order by","enum","Name,Number","preferenceChanged",the long id of me
+   addFrameItem "pb_indicator", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me   
+   addFrameItem "pb_sections", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "preferenceChanged", the long id of me
+   addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideNewControl"
@@ -54,14 +56,19 @@ on preOpenStack
    revIDESubscribe "ideMainstackChanged"
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_sortOrder"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_thumbnails"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_groupThumbnails" 
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_objectType"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_order"
-   revIDESubscribe "idePreferenceChanged:ideProjectBrowser_show"
+   
+   revIDESubscribe "idePreferenceChanged:pb_indicator"
+   revIDESubscribe "idePreferenceChanged:pb_sections"
+   revIDESubscribe "idePreferenceChanged:pb_stackSortType"
+   revIDESubscribe "idePreferenceChanged:pb_cardSortType"
+   revIDESubscribe "idePreferenceChanged:pb_controlSortType"
+   revIDESubscribe "idePreferenceChanged:pb_stackSortOrder"
+   revIDESubscribe "idePreferenceChanged:pb_cardSortOrder"
+   revIDESubscribe "idePreferenceChanged:pb_controlSortOrder"
    
    revIDESubscribe "ideShowInProjectBrowser"
+   
+   setDefaultPreferences
    
    put empty into sDisplayArray
    loadImages
@@ -205,56 +212,62 @@ on ideMainstackChanged pOldName, pNewName, pTarget
 end ideMainstackChanged
 
 on preferenceChanged pPreference, pValue
-   local tOldValue
+   local tOldValue, tSortType, tSortOrder
    
    switch pPreference
-      case "ideProjectBrowser_thumbnails"
-      case "ideProjectBrowser_groupThumbnails"
-         put revIDEGetPreference(pPreference) into tOldValue
-         revIDESetPreference pPreference, not(tOldValue)
+      case "pb_indicator"
+         revIDESetPreference "pb_indicator",pValue
          break
-      case "ideProjectBrowser_sortOrder"
-         revIDESetPreference pPreference, pValue
+      case "pb_sections"
+         local tCurrentPreferenceValue, tPreferencePosition
+         put revIDEGetPreference("pb_sections") into tCurrentPreferenceValue
+         
+         put itemoffset(pValue, tCurrentPreferenceValue) into tPreferencePosition
+         if tPreferencePosition > 0 then
+            delete item tPreferencePosition of tCurrentPreferenceValue
+         else
+            put "," & pValue after tCurrentPreferenceValue
+         end if
+         revIDESetPreference "pb_sections", tCurrentPreferenceValue
          break
-      case "ideProjectBrowser_objectType"
-         revIDESetPreference pPreference, pValue
+      case "pb_stackSort"
+         put word 1 of pValue into tSortType
+         put word -1 of pValue into tSortOrder
+         
+         revIDESetPreference "pb_stackSortType", tSortType
+         revIDESetPreference "pb_stackSortOrder", tSortOrder
          break
-      case "ideProjectBrowser_order"
-         revIDESetPreference pPreference, pValue
+      case "pb_cardSort"
+         put word 1 of pValue into tSortType
+         put word -1 of pValue into tSortOrder
+         
+         revIDESetPreference "pb_cardSortType", tSortType
+         revIDESetPreference "pb_cardSortOrder", tSortOrder         
+         break
+      case "pb_controlSort"
+         put word 1 of pValue into tSortType
+         put word -1 of pValue into tSortOrder
+         
+         revIDESetPreference "pb_controlSortType", tSortType
+         revIDESetPreference "pb_controlSortOrder", tSortOrder         
          break
    end switch
 end preferenceChanged
 
 on idePreferenceChanged pPreference, pValue
    switch pPreference
-      case "ideProjectBrowser_thumbnails"
-      case "ideProjectBrowser_groupThumbnails" 
-      case "ideProjectBrowser_sortOrder"
-      case "ideProjectBrowser_objectType"
-      case "ideProjectBrowser_order"
-      case "ideProjectBrowser_show"
+      case "pb_indicator"
+      case "pb_sections"
+      case "pb_stackSortType"
+      case "pb_stackSortOrder"
+      case "pb_cardSortType"
+      case "pb_cardSortOrder"
+      case "pb_controlSortType"
+      case "pb_controlSortOrder"
       default
          buildProjectView true
    end switch
 end idePreferenceChanged
-
-on displayPreferenceSelected pPreference, pValue
-   lock screen
-   if pPreference is "ideProjectBrowser_show" then
-      local tCurrentPreferenceValue, tPreferencePosition
-      put revIDEGetPreference("ideProjectBrowser_show") into tCurrentPreferenceValue
-      
-      put itemoffset(pValue, tCurrentPreferenceValue) into tPreferencePosition
-      if tPreferencePosition > 0 then
-         delete item tPreferencePosition of tCurrentPreferenceValue
-      else
-         put "," & pValue after tCurrentPreferenceValue
-      end if
-      revIDESetPreference "ideProjectBrowser_show", tCurrentPreferenceValue
-   end if
-   buildProjectView true
-   unlock screen
-end displayPreferenceSelected
 
 on ideShowInProjectBrowser pTarget
    lock screen
@@ -334,7 +347,7 @@ command buildProjectView pRememberExpansion
    
    lock screen
    
-   put revIDEGetPreference("ideProjectBrowser_show") into tSections
+   put revIDEGetPreference("pb_sections") into tSections
    
    if pRememberExpansion then
       repeat for each line tKey in the keys of sDisplayArray["objects"]
@@ -2408,4 +2421,38 @@ on pbRightClick pObject
    end if
    revIDEPopupContextualMenu pbSelectedObjects()
 end pbRightClick
+
+command setDefaultPreferences
+   ## Map pre LC8 preferences to LC8 preferences
+   if revIDEGetPreference("pb_indicator") is empty then
+      revIDESetPreference "pb_indicator","icon"
+   end if
+   
+   if revIDEGetPreference("pb_sections") is empty then
+      revIDESetPreference "pb_sections","Stacks"
+   end if
+   
+   local tSortType,tSortOrder
+   put revIDEGetPreference("ideProjectBrowser_sort") into tSortType
+   put revIDEGetPreference("ideProjectBrowser_sortOrder") into tSortOrder
+   if tSortType is empty then put "Name" into tSortType
+   if tSortOrder is empty then put "bottom to top" into tSortOrder
+   
+   if revIDEGetPreference("pb_stackSortOrder") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPreference "pb_stackSortType", tSortType
+      revIDESetPreference "pb_cardSortType", tSortType
+      revIDESetPreference "pb_controlSortType", tSortType
+      
+      if tSortOrder is "bottom to top" then
+         revIDESetPreference "pb_stackSortOrder", "Ascending"
+         revIDESetPreference "pb_cardSortOrder", "Ascending"
+         revIDESetPreference "pb_controlSortOrder", "Ascending"
+      else
+         revIDESetPreference "pb_stackSortOrder", "Descending"
+         revIDESetPreference "pb_cardSortOrder", "Descending"
+         revIDESetPreference "pb_controlSortOrder", "Descending"
+      end if
+   end if
+end setDefaultPreferences
 

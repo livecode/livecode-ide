@@ -37,7 +37,7 @@ on FillInData pDataA, pRow
       set the tooltip of field "behaviorScriptLines" of me to pDataA["behavior"]
    end if 
    
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
       hide button "controlIcon" of me
    else
@@ -103,7 +103,7 @@ on LayoutControl pControlRect
    end repeat
    
    local tNameFieldLeft
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       set the width of field "type" of me to the formattedWidth of field "type" of me
       set the left of field "type" of me to the right of button ("connector" & tConnectorCount) of me
       put the right of field "type" of me - 5 into tNameFieldLeft

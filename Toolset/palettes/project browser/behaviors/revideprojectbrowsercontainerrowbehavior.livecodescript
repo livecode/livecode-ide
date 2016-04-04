@@ -66,7 +66,7 @@ on FillInData pDataA, pRow
    --      set the icon of button "connector2" of me to the id of image pDataA["levels"][2] of card "templates" of this stack
    --   end if
    
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
       hide button "typeIcon" of me
       --      if pDataA["type"] is "stack" then  hide button "connector1" of me
@@ -136,7 +136,7 @@ on LayoutControl pControlRect
    end if
    
    local tNameFieldLeft
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then     
+   if revIDEGetPreference("pb_indicator") is "text" then     
       set the width of field "type" of me to the formattedWidth of field "type" of me
       set the left of field "type" of me to the right of button "disclosure" of me
       put the right of field "type" of me - 5 into tNameFieldLeft
