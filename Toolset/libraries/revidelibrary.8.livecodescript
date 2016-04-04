@@ -1349,6 +1349,15 @@ private on __fetchPropertyOfControl pProp, @pData
          case "type"
             put word 1 of the name of the target into pData["type"]
             break
+         case "custom control"
+            if the the cIDEProperties["cCustomControl"] of the Target is "true" then
+               put "true" into pData["custom control"]
+            else if the dgProp["control type"] of the target is "Data Grid" then
+               put "true" into pData["custom control"]            
+            else
+               put "false" into pData["custom control"]
+            end if
+            break
          default
             put the pProp of the Target into pData[pProp]
             break
@@ -1447,7 +1456,7 @@ on revIDEInitialiseIDELibrary
    start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
 
    # Setup the default lists of properties to read from objects when reading the structure of a stack
-   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" into sControlPropertiesToRead
+   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
    put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
    put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
 
@@ -2730,8 +2739,13 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       dispatch function "__readPropertiesOfControl" to control id tControlID of pCardID with sControlPropertiesToRead, tControlArray
 
       if tControlArray["type"] is "group" then
-         put "group" into tControlArray["style"]
-         put the number of controls of control id tControlID of pCardID into tControlArray["childCount"]
+         if tControlArray["custom control"] is true then
+            put "control" into tControlArray["style"]
+            put "Custom control" into tControlArray["type"]
+         else
+            put "group" into tControlArray["style"]
+            put the number of controls of control id tControlID of pCardID into tControlArray["childCount"]
+         end if
       else
          put "control" into tControlArray["style"]
       end if
