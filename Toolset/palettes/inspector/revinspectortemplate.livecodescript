@@ -1,12 +1,14 @@
 ﻿script "revInspectorTemplate"
-local sSelectedObjects
+local sSelectedObjects, sObjectTypes
 local sInspectorLock
 on preOpenStack
    put false into sInspectorLock
    put revIDESelectedObjects() into sSelectedObjects
+   # Keep track of the object 'types' in case they are changed via PI
+   put ideObjectTypesFromObjectList(sSelectedObjects) into sObjectTypes
    revIDESubscribe "idePropertyChanged",sSelectedObjects
    inspectorTitleUpdate
-    
+   
    # Set the inspector behaviour
    dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of me
 end preOpenStack
@@ -37,8 +39,6 @@ end resizeStack
 #####################
 #### PI PROPERTIES #####
 #####################
-
-local sObjectTypes
 setProp cSelectedObjects pSelectedObjects
    if pSelectedObjects is sSelectedObjects then 
       exit cSelectedObjects
@@ -56,17 +56,17 @@ setProp cSelectedObjects pSelectedObjects
    inspectorClear
    
    put pSelectedObjects into sSelectedObjects
-
+   
+   # Keep track of the object 'types' in case they are changed via PI
+   put ideObjectTypesFromObjectList(pSelectedObjects) into sObjectTypes
+   
    if pSelectedObjects is empty then 
       inspectorTitleUpdate
       set the inspectorData of me to empty
       exit cSelectedObjects
    end if
-
-   revIDESubscribe "idePropertyChanged", pSelectedObjects
    
-   # Keep track of the object 'types' in case they are changed via PI
-   put ideObjectTypesFromObjectList(pSelectedObjects) into sObjectTypes
+   revIDESubscribe "idePropertyChanged", pSelectedObjects
    
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(pSelectedObjects)
