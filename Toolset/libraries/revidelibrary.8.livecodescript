@@ -2743,7 +2743,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       put "card" into tCardArray[tIndex]["type"]
       put "container" into tCardArray[tIndex]["style"]
       put pLevel+1 into tCardArray[tIndex]["level"]
-      put the number of lines in the childControlIDs of card id tCard of pStackID into tCardArray[tIndex]["childCount"]
+      put the number of lines in the childControlIDs of card id tCardID of pStackID into tCardArray[tIndex]["childCount"]
    end repeat
 
    ## Substacks
