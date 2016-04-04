@@ -92,6 +92,8 @@
 			tState.filtered_data = filtered_data;
 		}
 		displayFilters();
+		
+		tState.searched = {};
 		displayEntryListGrep($("#ui_filer").val());	
 	}
 	
