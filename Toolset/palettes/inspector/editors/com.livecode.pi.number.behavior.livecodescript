@@ -1,6 +1,7 @@
 ﻿script "com.livecode.pi.number.behavior"
-local sFieldWidth, sMax, sMin, sScrollbarFactor
+local sMax, sMin, sScrollbarFactor
 
+constant kFieldWidth = 100
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
 constant CONTROL_PADDING = 5
@@ -31,28 +32,20 @@ on editorInitialize
       end if
       
       put sScrollbarFactor * sMax into field 1 of me
-      put the formattedwidth of field 1 of me into sFieldWidth
       set the visible of scrollbar "slider" of me to true
       set the endvalue of scrollbar "slider"of me to sScrollbarFactor * sMax
       set the startvalue of scrollbar "slider" of me to sScrollbarFactor * sMin
    else
       set the visible of scrollbar "slider" of me to false
    end if
-   
-   local tMinWidth
-   put 25 into tMinWidth
-   if the visible of scrollbar "slider" of me is true then add 25 to tMinWidth
-   
    unlock messages
    unlock screen
-   
-   set the editorMinWidth of me to tMinWidth
    set the editorMaxWidth of me to 0
 end editorInitialize
 
 getProp editorMinWidth
    local tWidth
-   add sFieldWidth to tWidth
+   add kFieldWidth to tWidth
    if the visible of scrollbar "slider" of me is true then
       add SLIDER_MIN_WIDTH to tWidth
       add CONTROL_PADDING to tWidth
@@ -105,18 +98,11 @@ on editorResize
    put the left of me into tLeft
    put the top of me into tTop
    put tTop + the formattedheight of field 1 of me into tBottom
-   if sFieldWidth > 0 then
-      # The field has a fixed size
-      set the rect of field 1 of me to tLeft,tTop,tLeft+sFieldWidth,tBottom
-      add sFieldWidth to tLeft
-   else if the visible of scrollbar "twiddle" of me is true then
-      # The field is full width but there is a twiddle controller at the end
-      set the rect of field 1 of me to tLeft,tTop,the right of me - the width of scrollbar "twiddle" - CONTROL_PADDING, tBottom
-      add the width of field 1 of me to tLeft
-   else
-      set the height of field 1 of me to the formattedheight of field 1 of me
-      set the topleft of field 1 of me to tLeft,tTop
-   end if
+   
+   local tFieldWidth
+   put max(the formattedWidth of field 1 of me, kFieldWidth) into tFieldWidth
+   set the rect of field 1 of me to tLeft,tTop,tLeft+tFieldWidth,tBottom
+   add tFieldWidth to tLeft
    
    if the visible of scrollbar "twiddle" of me is true then
       add CONTROL_PADDING to tLeft
