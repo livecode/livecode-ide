@@ -66,6 +66,10 @@ on registerForMessages
    revIDESubscribe "ideExtensionsChanged"
 end registerForMessages
 
+on closeStack
+   revIDEUnsubscribeAll
+end closeStack
+
 on ideExtensionsChanged
    lock screen
    generatePalette
