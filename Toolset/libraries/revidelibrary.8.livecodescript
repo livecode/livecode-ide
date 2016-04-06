@@ -5136,7 +5136,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Align Controls,Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
+   return "Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
