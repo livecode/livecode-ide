@@ -1321,26 +1321,27 @@ command revInternal__InitialiseErrors
 end revInternal__InitialiseErrors
 
 command revInternal__InitialiseTools
-  revInternal__Log "Enter", "Tools Initialisation"
-  
-  local tToolsStackName
-  put revIDEPaletteToStackName("Tools") into tToolsStackName
-  
-  lock screen
-  send "preOpenStack" to stack tToolsStackName
-  set the topLeft of stack tToolsStackName to the cToolsTopLeft of stack "revPreferences"
-  palette stack tToolsStackName
-  
-  # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
-  set the showInvisibles of stack tToolsStackName to false
-  
-  --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
-  revIDESetTool "pointer"
-  unlock screen 
-  
-  revInternal__Log "Leave", "Tools Initialisation"
-  
-  return true
+   revInternal__Log "Enter", "Tools Initialisation"
+   
+   local tToolsStackName
+   put revIDEPaletteToStackName("Tools") into tToolsStackName
+   
+   --PM-2015-10-05: [[ Bug 16099 ]] IDE should default to Pointer tool and highlight its icon on the Tools palette
+   revIDESetTool "pointer"
+   
+   lock screen
+   go invisible stack tToolsStackName as palette
+   revIDEPositionPalette("tools")
+   
+   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+   set the showInvisibles of stack tToolsStackName to false
+   
+   show stack tToolsStackName
+   unlock screen 
+   
+   revInternal__Log "Leave", "Tools Initialisation"
+   
+   return true
 end revInternal__InitialiseTools
 
 command revInternal__InitialiseIcons
