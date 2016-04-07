@@ -4415,11 +4415,18 @@ on revIDEPositionPalette pStackName
       # default location. Only do this for specified stacks.
       switch pStackName
          case "revMenuBar"
-         case "revTools"
          case "message box"
          case "revDictionary"
             revIDEPositionPaletteDefault pStackName
             break
+         case "revTools"
+            local tOldPref
+            put revIDEGetPreference("cToolsTopLeft") into tOldPref
+            if tOldPref is not empty then
+               set the topleft of stack pStackName to tOldPref
+            else
+               revIDEPositionPaletteDefault pStackName
+            end if
          default
             if pStackName begins with revIDEScriptEditorPrefix() then
                revIDEPositionPaletteDefault pStackName
@@ -4433,6 +4440,7 @@ on revIDEPositionPalette pStackName
    
 end revIDEPositionPalette
 
+constant kToolsMenubarGap = 25
 on revIDEPositionPaletteDefault pStackName
    # No previous rect was found for stack to calculate the appropriate position for the stack
    local tScreenHeight, tScreenWidth
@@ -4444,7 +4452,12 @@ on revIDEPositionPaletteDefault pStackName
          set the topleft of stack pStackName to 0,0
          break
       case "revTools"
-         set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+         local tMenuBar
+         put revIDEPaletteToStackName("menubar") into tMenuBar
+         local tTop
+         put the bottom of stack tMenuBar into tTop
+         add kToolsMenubarGap to tTop
+         set the topleft of stack pStackName to the left of stack tMenuBar,tTop
          break
       case "message box"
          set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
