@@ -11,7 +11,7 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   set the hilitedItemName of widget 1 of me to tValue
+   set the hilitedItemNames of widget 1 of me to tValue
    unlock messages
    unlock screen
 end editorUpdate
