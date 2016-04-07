@@ -3452,16 +3452,15 @@ on revIDEGroupObjects pObjectIDs
 
    repeat for each line tControl in pObjectIDs
       if the layer of tControl < tLayer then put the layer of tControl into tLayer
-      put tControl & " and " after tList
    end repeat
 
-   delete char -5 to -1 of tList
-   put "group " before tList
-
-   do tList
+   // PM-2016-04-07: [[ Bug 17301 ]] Use the "group" command (without an objectList)
+   // so as to group the selection in layer order
+   group
    
    put the long id of the owner of tObj into tGroupID
    set the layer of tGroupID to tLayer
+   unlock screen
    return tGroupID
 end revIDEGroupObjects
 
