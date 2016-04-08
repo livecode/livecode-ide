@@ -1036,6 +1036,8 @@ private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
 end __dumpArrayRecurse
 
 function __revIDEError pMessage
+   global gRevDevelopment
+   
    local tErrorContext, tErrorText, tLockedMessages
    put line -2 of the executioncontexts into tErrorContext
 
@@ -1044,8 +1046,12 @@ function __revIDEError pMessage
    unlock messages
 
    put "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext into tErrorText
-   put return & tErrorText after msg
-
+   
+   # If in IDE development mode output the error to the Message Box
+   if gRevDevelopment is true then
+      put return & tErrorText after msg
+   end if
+   
    # if the messages were locked, lock them again
    if tLockedMessages is true then
       lock messages
