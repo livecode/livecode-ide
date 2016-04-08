@@ -100,7 +100,6 @@ lineInc	Scroll distance on arrow click	Basic	com.livecode.pi.number	true	false		
 lineSize	Line thickness	Basic	com.livecode.pi.number	true	false		1	
 linkColor	Link color	Colors	com.livecode.pi.color	true	false			
 listBehavior	List behavior	Basic	com.livecode.pi.boolean	true	false			
-liveResizing	Live resizing	Basic	com.livecode.pi.boolean	true	false		false	
 location	Location	Position	com.livecode.pi.point	true	false		no_default	
 lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false		false		
 lockText	Lock text	Basic	com.livecode.pi.boolean	true	false			
@@ -119,7 +118,6 @@ menuLines	Number of lines to display	Basic	com.livecode.pi.integer	true	false		5
 menuMode	Menu mode	basic	com.livecode.pi.string	false	false			cascade,combobox,option,popup,pulldown
 menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false		1	1,2,3,0	
 menuName	Use stack panel:	Basic	com.livecode.pi.boolean	true	false			
-metal	Metal texture	Basic	com.livecode.pi.boolean	true	false		false	
 minHeight	Min height	Position	com.livecode.pi.number	true	false		32	
 minWidth	Min width	Position	com.livecode.pi.number	true	false		32	
 multipleHilites	Multi-line	Basic	com.livecode.pi.boolean	true	false		false	
