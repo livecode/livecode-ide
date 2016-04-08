@@ -905,7 +905,7 @@ function ideObjectTypeFromObject pObjectID
          end if
          break
       case "field"
-         if the basicTableObject of pObjectID then
+            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
