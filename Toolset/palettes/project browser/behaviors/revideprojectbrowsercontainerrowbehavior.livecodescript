@@ -32,62 +32,52 @@ on FillInData pDataA, pRow
    end if 
    
    if pDataA["type"] is "stack" then
-      hide button "connector1" of me
+      hide group "connector1" of me
       if pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
-         set the disabledicon of button "disclosure" of me to the id of image "cantExpand" of card "templates" of this stack
+         set the cState of group "disclosure" of me to "cantExpand"
+         set the cIcon of group "disclosure" of me to "cantExpand"
          disable button "disclosure" of me 
       else
          if pDataA["expanded"] is true then
-            set the icon of button "disclosure" of me to the id of image "stackExpanded" of card "templates" of this stack
+            set the cState of group "disclosure" of me to "expanded"
+            set the cIcon of group "disclosure" of me to "stackExpanded"
          else
-            set the icon of button "disclosure" of me to the id of image "stackContracted" of card "templates" of this stack
+            set the cState of group "disclosure" of me to "contracted"
+            set the cIcon of group "disclosure" of me to "stackContracted"
          end if
-         enable button "disclosure" of me 
+         enable group "disclosure" of me 
       end if
    else      
       if pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
-         set the disabledicon of button "disclosure" of me to the id of image "cantExpand" of card "templates" of this stack
-         disable button "disclosure" of me 
+         set the cState of group "disclosure" of me to "cantExpand"
+         set the cIcon of group "disclosure" of me to "cantExpand"
+         disable group "disclosure" of me 
       else
          if pDataA["expanded"] is true then
-            set the icon of button "disclosure" of me to the id of image "childExpanded" of card "templates" of this stack
+            set the cState of group "disclosure" of me to "expanded"
+            set the cIcon of group "disclosure" of me to "childExpanded"
          else
-            set the icon of button "disclosure" of me to the id of image "childContracted" of card "templates" of this stack
+            set the cState of group "disclosure" of me to "contracted"
+            set the cIcon of group "disclosure" of me to "childContracted"
          end if
-         enable button "disclosure" of me 
+         enable group "disclosure" of me 
       end if
    end if 
-   
-   --   if pDataA["levels"][1] is not empty then
-   --      set the icon of button "connector1" of me to the id of image pDataA["levels"][1] of card "templates" of this stack
-   --   end if
-   
-   --   if pDataA["levels"][2] is not empty then
-   --      set the icon of button "connector2" of me to the id of image pDataA["levels"][2] of card "templates" of this stack
-   --   end if
    
    if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
       hide button "typeIcon" of me
-      --      if pDataA["type"] is "stack" then  hide button "connector1" of me
-      --      else  show button "connector1" of me
    else
       hide field "type" of me
       if pDataA["type"] is "stack" then
          set the icon of button "typeIcon" of me to the id of image "stack.png" of card "templates" of this stack
          show button "typeIcon" of me
-         --         hide button "connector1" of me
-         --         hide button "connector2" of me
       else if pDataA["type"] is "substack" then
          set the icon of button "typeIcon" of me to the id of image "substack.png" of card "templates" of this stack
          show button "typeIcon" of me
-         --         show button "connector1" of me
-         --         hide button "connector2" of me
       else if pDataA["type"] is "card" then
          set the icon of button "typeIcon" of me to the id of image "card.png" of card "templates" of this stack
          show button "typeIcon" of me
-         --         show button "connector1" of me
-         --         hide button "connector2" of me
       end if
    end if
 end FillInData
@@ -105,6 +95,19 @@ on LayoutControl pControlRect
    set the width of graphic "bottom_border" of me to (item 3 of pControlRect - item 1 of pControlRect)+2
    set the bottomLeft of graphic "bottom_border" of me to item 1 of pControlRect-1, item 4 of pControlRect
    
+   ## Set the formatted height of all the fields
+   set the fixedLineHeight of field "type" of me to false
+   set the fixedLineHeight of field "name" of me to false
+   set the height of field "type" of me to the formattedHeight of field "type" of me
+   set the height of field "name" of me to the formattedHeight of field "name" of me
+   
+   set the fixedLineHeight of field "scriptLines" of me to true
+   set the fixedLineHeight of field "behaviorScriptLines" of me to true
+   set the textSize of field "scriptLines" of me to empty
+   set the height of field "scriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
+   set the textSize of field "behaviorScriptLines" of me to empty
+   set the height of field "behaviorScriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
+   
    set the loc of field "type" of me to tLoc
    set the loc of field "name" of me to tLoc
    set the loc of button "typeIcon" of me to tLoc
@@ -114,34 +117,37 @@ on LayoutControl pControlRect
    set the width of field "behaviorScriptLines" of me to the formattedWidth of field "behaviorScriptLines" of me
    set the width of field "name" of me to the formattedWidth of field "name" of me
    
+   connectorResize "disclosure"
+   setConnectorIcon the long id of group "disclosure" of me, the cIcon of group "disclosure" of me
    repeat with x = 1 to 2
       if x > tConnectorCount then
-         hide button ("connector" & x) of me
+         hide group ("connector" & x) of me
       else
-         show button ("connector" & x) of me
+         connectorResize ("connector" & x)
+         show group ("connector" & x) of me
          if tLevelConnectors[x] is not empty then
-            set the icon of button  ("connector" & x) of me to the id of image tLevelConnectors[x] of card "templates" of this stack
-            set the left of button ("connector" & x) of me to item 1 of pControlRect + (x-1)*20
+            setConnectorIcon the long id of group ("connector" & x) of me, tLevelConnectors[x] 
+            set the left of group ("connector" & x) of me to item 1 of pControlRect + (x-1)*20
          else
-            set the icon of button  ("connector" & x) of me to empty
-            set the left of button ("connector" & x) of me to item 1 of pControlRect + (x-1)*20
+            setConnectorIcon the long id of group ("connector" & x) of me, empty
+            set the left of group ("connector" & x) of me to item 1 of pControlRect + (x-1)*20
          end if
       end if
    end repeat
    
    if tConnectorCount = 0 then
-      set the left of button "disclosure" of me to item 1 of pControlRect + (10 * (the cIndent of me))
+      set the left of group "disclosure" of me to item 1 of pControlRect + (10 * (the cIndent of me))
    else
-      set the left of button "disclosure" of me to the right of button ("connector" & tConnectorCount) of me
+      set the left of group "disclosure" of me to the right of group ("connector" & tConnectorCount) of me
    end if
    
    local tNameFieldLeft
    if revIDEGetPreference("pb_indicator") is "text" then     
       set the width of field "type" of me to the formattedWidth of field "type" of me
-      set the left of field "type" of me to the right of button "disclosure" of me
+      set the left of field "type" of me to the right of group "disclosure" of me
       put the right of field "type" of me - 5 into tNameFieldLeft
    else
-      set the left of button "typeIcon" of me to the right of button "disclosure" of me
+      set the left of button "typeIcon" of me to the right of group "disclosure" of me
       put the right of button "typeIcon" of me into tNameFieldLeft
    end if
    
@@ -169,12 +175,8 @@ end dvRowControl
 
 setProp dvHilite[pHiliteColor] pBoolean
    # Override basic hilite feature...
-   --   if the cObjectLongID of me is among the lines of the cOwners of group "objectList" then
-   --      set the backgroundColor of graphic "background" of me to "234,234,234"
-   --   end if
    
    if pBoolean then
-      --hide graphic "bottom_border" of me
       set the foregroundColor of field "type" of me to revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of field "name" of me to  revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_1")
@@ -182,8 +184,9 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the backgroundColor of field "scriptLines" of me to  revIDEColor("dataView_TextHiliteColor")
       set the backgroundColor of field "behaviorScriptLines" of me to  revIDEColor("dataView_TextHiliteColor")
       set the colorOverlay["color"] of button "typeIcon" of me to revIDEColor("dataView_TextHiliteColor")
+      set the foregroundColor of me to revIDEColor("dataView_disclosureIconHiliteColor")
+      set the foregroundColor of widget "icon" of group "disclosure" of me to revIDEColor("dataView_disclosureIconHiliteColor")
    else
-      --show graphic "bottom_border" of me
       set the foregroundColor of field "type" of me to revIDEColor("text_2")
       set the foregroundColor of field "name" of me to revIDEColor("text_1")
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_3")
@@ -191,6 +194,8 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
       set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_hiliteColor")
       set the colorOverlay of button "typeIcon" of me to empty
+      set the foregroundColor of me to revIDEColor("dataView_disclosureIconColor")
+      set the foregroundColor of widget "icon" of group "disclosure" of me to revIDEColor("dataView_disclosureIconColor")
    end if
 end dvHilite
 
@@ -202,6 +207,16 @@ on mouseUp
       case "behaviorScriptLines"
          edit the script of the cBehaviorLongID of me
          break
+      case "icon"
+      case "disclosure"
+         if the cState of the owner of the target is "contracted" then
+            toggleGroup the cRowNumber of the owner of the owner of the target,true
+         else if the cState of the owner of the target is"expanded" then
+            toggleGroup  the cRowNumber of  the owner of the owner of the target,false
+         end if
+         break
+      default
+         pass mouseUp
       default
          pass mouseUp
    end switch
@@ -246,8 +261,6 @@ getProp dvAcceptsDrop
    put line 1 of the dragData["private"] into tDraggedRow
    put line 2 of the dragData["private"] into tDraggedStyle
    put line 3 of the dragData["private"] into tDraggedType
-   
-   --put tDraggedType && tDroppedType
    
    if tRow is tDraggedRow then
       put true into theA["above"]
@@ -295,3 +308,18 @@ getProp dvAcceptsDrop
    end if
    return theA
 end dvAcceptsDrop
+
+command connectorResize pControl
+   set the borderWidth of group pControl of me to 0
+   set the showBorder of group pControl of me to false
+   set the threeD of group pControl of me to false
+   
+   set the lockLoc of group pControl of me to true
+   set the height of group pControl of me to the height of me
+   set the width of group pControl of me to 20
+   set the top of group pControl of me to the top of me
+   
+   set the width of widget "icon" of group pControl of me to 12
+   set the height of widget "icon" of group pControl of me to the width of widget "icon" of group pControl of me
+   set the loc of widget "icon" of group pControl  of me to the loc of group pControl of me
+end connectorResize

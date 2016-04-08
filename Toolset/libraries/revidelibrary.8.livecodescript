@@ -2597,6 +2597,12 @@ function revIDEColor pTag
       case "dataView_scriptBackgroundColor"
          return "34,154,206"
          break
+      case "dataView_disclosureIconColor"
+         return "99,99,99"
+         break         
+      case "dataView_disclosureIconHiliteColor"
+         return "216,216,216"
+         break 
       case "palette_background"
          if the platform is "Win32" then
             return "240,240,240"

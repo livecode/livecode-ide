@@ -8,15 +8,19 @@ on FillInData pDataA, pRow
    set the icon of button "typeIcon" of me to the id of image pDataA["title"] of card "templates" of this stack
    if pDataA["expanded"] is true then
       if the number of lines in the keys of pDataA["levels"] is 0 then
-         set the icon of button "disclosure" of me to the id of image "stackExpanded" of card "templates" of this stack
+         set the cState of group "disclosure" of me to "expanded"
+         set the cIcon of group "disclosure" of me to "stackExpanded"
       else
-         set the icon of button "disclosure" of me to the id of image "childExpanded" of card "templates" of this stack
+         set the cState of group "disclosure" of me to "expanded"
+         set the cIcon of group "disclosure" of me to "childExpanded"
       end if
    else
       if the number of lines in the keys of pDataA["levels"] is 0 then
-         set the icon of button "disclosure" of me to the id of image "stackContracted" of card "templates" of this stack
+         set the cState of group "disclosure" of me to "contracted"
+         set the cIcon of group "disclosure" of me to "stackContracted"
       else
-         set the icon of button "disclosure" of me to the id of image "childContracted" of card "templates" of this stack
+         set the cState of group "disclosure" of me to "contracted"
+         set the cIcon of group "disclosure" of me to "childContracted"
       end if
    end if 
 end FillInData
@@ -31,21 +35,25 @@ on LayoutControl pControlRect
    set the width of graphic "bottom_border" of me to (item 3 of pControlRect - item 1 of pControlRect)
    set the bottomLeft of graphic "bottom_border" of me to the bottomLeft of graphic "background" of me
    
+   show group "disclosure" of me
+   connectorResize "disclosure"
+   setConnectorIcon the long id of group "disclosure" of me, the cIcon of group "disclosure" of me
    if tConnectorCount = 0 then
-      hide button "connector1" of me
-      set the left of button "disclosure" of me to item 1 of pControlRect
+      hide group "connector1" of me
+      set the left of group "disclosure" of me to item 1 of pControlRect
    else
-      show button "connector1" of me
-      set the icon of button  "connector1" of me to the id of image tLevelConnectors[1] of card "templates" of this stack
-      set the left of button "connector1" of me to item 1 of pControlRect
-      set the left of button "disclosure" of me to the right of button ("connector1") of me
+      show group "connector1" of me
+      connectorResize "connector1"
+      setConnectorIcon the long id of group "connector1" of me, tLevelConnectors[1]
+      set the left of group "connector1" of me to item 1 of pControlRect
+      set the left of group "disclosure" of me to the right of group ("connector1") of me
    end if
    
    set the loc of field "type" of me to the loc of me 
    set the loc of button "typeIcon" of me to the loc of me 
    
    set the width of field "type" of me to (item 3 of pControlRect - item 1 of pControlRect) - 20
-   set the left of button "typeIcon" of me to the right of button "disclosure" of me
+   set the left of button "typeIcon" of me to the right of group "disclosure" of me
    set the left of field "type" of me to the right of button "typeIcon" of me
 end LayoutControl
 
@@ -65,8 +73,40 @@ setProp dvHilite[pHiliteColor] pBoolean
    if pBoolean then
       set the foregroundColor of field "type" of me to revIDEColor("dataView_TextHiliteColor")
       set the colorOverlay["color"] of button "typeIcon" of me to revIDEColor("dataView_TextHiliteColor")
+      set the foregroundColor of me to revIDEColor("dataView_disclosureIconHiliteColor")
    else
       set the foregroundColor of field "type" of me to revIDEColor("text_1")
       set the colorOverlay of button "typeIcon" of me to empty
+      set the foregroundColor of me to revIDEColor("dataView_disclosureIconColor")
    end if
 end dvHilite
+
+on mouseUp
+   switch the short name of the target
+      case "icon"
+      case "disclosure"
+         if the cState of the owner of the target is "contracted" then
+            toggleGroup the cRowNumber of the owner of the owner of the target,true
+         else if the cState of the owner of the target is"expanded" then
+            toggleGroup  the cRowNumber of  the owner of the owner of the target,false
+         end if
+         break
+      default
+         pass mouseUp
+   end switch
+end mouseUp
+
+command connectorResize pControl
+   set the borderWidth of group pControl of me to 0
+   set the showBorder of group pControl of me to false
+   set the threeD of group pControl of me to false
+   
+   set the lockLoc of group pControl of me to true
+   set the height of group pControl of me to the height of me
+   set the width of group pControl of me to 20
+   set the top of group pControl of me to the top of me
+   
+   set the width of widget "icon" of group pControl of me to 12
+   set the height of widget "icon" of group pControl of me to the width of widget "icon" of group pControl of me
+   set the loc of widget "icon" of group pControl  of me to the loc of group pControl of me
+end connectorResize
