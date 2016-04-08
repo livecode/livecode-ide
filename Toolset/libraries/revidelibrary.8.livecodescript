@@ -5775,10 +5775,14 @@ command revIDENewDataGridColumnBehavior pObject
 end revIDENewDataGridColumnBehavior
 
 on revIDESetTableProperty pObject, pProperty, pValue
+   local tWasTableObject
+   put the cREVGeneral["table"] of pObject into tWasTableObject
    switch pProperty
       case "celledit"
          set the cRevTable[pProperty] of pObject to pValue
+         if tWasTableObject then
          set the locktext of pObject to pValue
+         end if
          break
       case "basicTableObject"
          set the cREVGeneral["table"] of pObject to pValue
@@ -5791,10 +5795,14 @@ on revIDESetTableProperty pObject, pProperty, pValue
                set the cREVTable["currentview"] of pObject to the text of pObject
             end if
          end if
+         
+         # Only change the contents if this was a table or is becoming one
+         if pValue or tWasTableObject then
          revDisplayFormattedData pObject
+         end if
+         
          if pValue then
             set the vScrollbar of pObject to true
-            set the hScrollbar of pObject to true
          end if
          break
       case "cellformat"
