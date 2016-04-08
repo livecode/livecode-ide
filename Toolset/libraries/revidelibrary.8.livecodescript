@@ -3168,7 +3168,7 @@ private command __setPropertiesToDefaults pObjectID, pPropsInfoA
       if "default" is not among the keys of tPropInfoA then next repeat
       if tPropInfoA["default"] is "no_default" then next repeat
       if tPropInfoA["read_only"] is true then next repeat
-      revIDESetPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
+      __setPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
    end repeat
 end __setPropertiesToDefaults
 
@@ -5605,6 +5605,10 @@ function revIDEGetDataGridColumns pObject, pProperty
 end revIDEGetDataGridColumns
 
 on revIDESetDataGridColumnProperty pObject, pProperty, pValue
+   if sCurrentColumn is empty then
+      exit revIDESetDataGridColumnProperty
+   end if
+   
    switch pProperty
       case "column name"
          set the dgColumnName[sCurrentColumn] of pObject to pValue
@@ -5787,7 +5791,7 @@ on revIDESetTableProperty pObject, pProperty, pValue
                set the cREVTable["currentview"] of pObject to the text of pObject
             end if
          end if
-         revDisplayFormattedData
+         revDisplayFormattedData pObject
          if pValue then
             set the vScrollbar of pObject to true
             set the hScrollbar of pObject to true
