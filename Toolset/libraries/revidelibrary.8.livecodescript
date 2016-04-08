@@ -905,7 +905,7 @@ function ideObjectTypeFromObject pObjectID
          end if
          break
       case "field"
-         if the basicTableObject of pObjectID then
+            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
@@ -3174,7 +3174,7 @@ private command __setPropertiesToDefaults pObjectID, pPropsInfoA
       if "default" is not among the keys of tPropInfoA then next repeat
       if tPropInfoA["default"] is "no_default" then next repeat
       if tPropInfoA["read_only"] is true then next repeat
-      revIDESetPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
+      __setPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
    end repeat
 end __setPropertiesToDefaults
 
@@ -5611,6 +5611,10 @@ function revIDEGetDataGridColumns pObject, pProperty
 end revIDEGetDataGridColumns
 
 on revIDESetDataGridColumnProperty pObject, pProperty, pValue
+   if sCurrentColumn is empty then
+      exit revIDESetDataGridColumnProperty
+   end if
+   
    switch pProperty
       case "column name"
          set the dgColumnName[sCurrentColumn] of pObject to pValue
@@ -5777,10 +5781,14 @@ command revIDENewDataGridColumnBehavior pObject
 end revIDENewDataGridColumnBehavior
 
 on revIDESetTableProperty pObject, pProperty, pValue
+   local tWasTableObject
+   put the cREVGeneral["table"] of pObject into tWasTableObject
    switch pProperty
       case "celledit"
          set the cRevTable[pProperty] of pObject to pValue
+         if tWasTableObject then
          set the locktext of pObject to pValue
+         end if
          break
       case "basicTableObject"
          set the cREVGeneral["table"] of pObject to pValue
@@ -5793,10 +5801,14 @@ on revIDESetTableProperty pObject, pProperty, pValue
                set the cREVTable["currentview"] of pObject to the text of pObject
             end if
          end if
-         revDisplayFormattedData
+         
+         # Only change the contents if this was a table or is becoming one
+         if pValue or tWasTableObject then
+         revDisplayFormattedData pObject
+         end if
+         
          if pValue then
             set the vScrollbar of pObject to true
-            set the hScrollbar of pObject to true
          end if
          break
       case "cellformat"
