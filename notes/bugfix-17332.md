@@ -1,0 +1,1 @@
+# Set correct property of textAlign editor widget

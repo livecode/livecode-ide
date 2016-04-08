@@ -2,13 +2,11 @@
 constant kColumnHeaderHeight = 17
 constant kButtonHeight = 19
 constant kControlGap = 5
-constant kMinWidth = 450
 constant kStackColumnWidth = 185
 
 local sSort
 
 on editorInitialize
-   set the editorMinWidth of me to kMinWidth
    put "stack" into sSort
    put the editorLabel of me into field "label" of me
    set the rowShowLabel of me to false

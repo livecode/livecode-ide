@@ -322,7 +322,8 @@ on generateMenubarUI
    set the margins of the templatebutton to "4,0,4,1"
    set the icongravity of the templatebutton to "top"
    set the traversalOn of the templatebutton to false
-
+   set the autoHilite of the templatebutton to false
+   
    # Setup the default image
    set the resizequality of the templateimage to "best"
    
@@ -350,29 +351,38 @@ on generateMenubarUI
          set the id of it to revIDENewIconID()
          set the filename of image tItem of me to revMenubarButtonNameToIconPath(tItem)
          local tFilename
-         repeat for each item tStyle in "hilited,disabled" 
+         repeat for each item tStyle in "hilited,disabled,depressed,hilited-depressed" 
             put revMenubarButtonNameToIconPath(tItem, tStyle) into tFilename
             if there is a file tFilename then
                create invisible image (tItem & "-" & tStyle) in group "icons" of me
                set the id of it to revIDENewIconID()
                set the filename of image (tItem & "-" & tStyle) of me to tFilename
                if tStyle is "hilited" then 
-                  set the hilitedIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me
+                  set the cHighlightedIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me
+               else if tStyle is "depressed" then
+                  set the cDepressedIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me
+               else if tStyle is "hilited-depressed" then
+                  set the cHighlightedDepressedIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me
                else if tStyle is "disabled" then
                   set the disabledIcon of the templatebutton to the id of image (tItem & "-" & tStyle) of group "icons" of me
                end if
             else
                if tStyle is "hilited" then 
-                  set the hilitedIcon of the templatebutton to 0
+                  set the cHighlightedIcon of the templatebutton to the cIcon of the templatebutton
                else if tStyle is "disabled" then
-                  set the disabledIcon of the templatebutton to 0
+                  set the disabledIcon of the templatebutton to the cIcon of the templatebutton
+               else if tStyle is "depressed" then
+                  set the cDepressedIcon of the templatebutton to the cIcon of the templatebutton
+               else if tStyle is "hilited-depressed" then
+                  set the cHighlightedDepressedIcon of the templatebutton to the cDepressedIcon of the templatebutton
                end if
             end if
          end repeat
          
          create button tItem in group "toolbar" of me
-         set the icon of button tItem of group "toolbar" of me to the id of image tItem of group "icons" of me
-         set the label of button tItem of group "toolbar" of me to revIDELocalizeMenuItem(tItem)
+         set the cIcon of it to the id of image tItem of group "icons" of me
+         set the icon of it to the cIcon of it
+         set the label of it to revIDELocalizeMenuItem(tItem)
       end if
    end repeat
    
@@ -419,13 +429,6 @@ on generateMenubarUI
    reset the templatebutton
    reset the templateimage
    reset the templatefield
-   
-   # Quick hack to stop flicker of buttons that toggle. 
-   set the autohilite of button "messages" to false
-   set the autohilite of button "select grouped" to false
-   set the autohilite of button "errors" to false
-   set the autohilite of button "group" to false
-   set the autohilite of button "edit group" to false
    
    unlock messages
 end generateMenubarUI
@@ -693,6 +696,20 @@ private on enableToolbar
    end repeat
 end enableToolbar
 
+on updateButtonHilite pTargetName, pValue
+   lock screen
+   local tTargetLongID
+   put the long id of button pTargetName of group "toolbar" of me into tTargetLongID
+   setButtonHilite tTargetLongID, pValue
+   set the label of tTargetLongID to revMenubarButtonText(pTargetName, pValue)
+   if pValue then
+      set the icon of tTargetLongID to the cHighlightedIcon of tTargetLongID
+   else
+      set the icon of tTargetLongID to the cIcon of tTargetLongID
+   end if
+   unlock screen
+end updateButtonHilite
+
 local sToolbarHighlight
 on updateButtonState
    lock screen
@@ -700,32 +717,43 @@ on updateButtonState
    
    enableToolbar
    
+   local tSelObj
+   put revIDESelectedObjects() into tSelObj
+   
    local tState
-   put ((the selectedField) is empty) & comma & ((the selObj) is empty) & comma & (the mode of the topStack is 1) into tState
+   put ((the selectedField) is empty) & comma & (tSelObj is empty) & comma & (the mode of the topStack is 1) into tState
    
-   if the editBg of the topStack and word 1 of (the selObj) is not "group" then
-      setButtonHilite the long id of button "edit group" of group "toolbar" of me, true
-      set the label of button "edit group" of group "toolbar" of me to "Stop Editing"
-      enable button "edit group" of group "toolbar" of me 
-   else
-      setButtonHilite the long id of button "edit group" of group "toolbar" of me, false
-      set the label of button "edit group" of group "toolbar" of me to "Edit Group"
-      enable button "edit group" of group "toolbar" of me
+   local tEditGroupHilite
+   put the editBg of the topStack and word 1 of tSelObj is not "group" into tEditGroupHilite
+   updateButtonHilite "Edit Group", tEditGroupHilite
+   enable button "Edit Group" of group "toolbar" of me
+   
+   local tGroupHilite
+   put word 1 of tSelObj is "group" and the number of lines in tSelobj is 1 into tGroupHilite
+   updateButtonHilite "Group", tGroupHilite
+   
+   if not tGroupHilite and not the editBg of the topstack then
+      disable button "Edit Group" of group "toolbar" of me 
    end if
    
-   if (the selObj) is not empty and word 1 of (the selObj) is "group" and the number of lines in (the selObj) is 1 then
-      setButtonHilite the long id of button "Group" of group "toolbar" of me, true
-      set the textStyle of button "Group" of group "toolbar" of me to "bold"
-      set the label of button "Group" of group "toolbar" of me to "Ungroup"
-   else
-      setButtonHilite the long id of button "Group" of group "toolbar" of me, false
-      set the label of button "Group" of group "toolbar" of me to "Group"
-      if not the editBg of the topStack then 
-         disable button "edit group" of group "toolbar" of me 
-      end if
-   end if
+   # Click buttons don't stay hilited
+   updateButtonHilite "Message Box", false
+   updateButtonHilite "Inspector", false
+   updateButtonHilite "Code", false
+   updateButtonHilite "Test", false
+   updateButtonHilite "Sample Stacks", false
+   updateButtonHilite "Tutorials", false
+   updateButtonHilite "Resources", false
+   updateButtonHilite "Dictionary", false
    
-   if (the selObj) is empty then
+   # Toggle buttons hilited according to state of property
+   global gRevSuppressErrors, gRevSuppressMessages
+   updateButtonHilite "Errors", gRevSuppressErrors
+   updateButtonHilite "Messages", gRevSuppressMessages
+   updateButtonHilite "Select Grouped", not the selectGroupedControls
+   
+   # Deal with enabled/disabled of code and inspector
+   if tSelObj is empty then
       if the mode of the topStack is 1 then
          enable button "Code" of group "toolbar" of me 
       else 
@@ -733,7 +761,7 @@ on updateButtonState
       end if
       disable button "Group" of group "toolbar" of me 
    else
-      if word 1 of (the selObj) is not among the items of "card,stack" then
+      if word 1 of tSelobj is not among the items of "card,stack" then
          enable button "Group" of group "toolbar" of me 
       end if
       enable button "Code" of group "toolbar" of me 
@@ -741,24 +769,18 @@ on updateButtonState
    
    enable button "Inspector" of group "toolbar" of me
    
+   # Deal with enabled/disabled of test
    if revIDEGetPreference("cDeployPlatforms") is empty then
       disable button "Test" of group "toolbar" of me
    else
       enable button "Test" of group "toolbar" of me
    end if
    
-   local tSelectedObject
-   put the selectedObject into tSelectedObject
-   if there is no tSelectedObject then
+   if tSelObj is empty then
       if the mode of topStack is not 1 then
-         disable button "Inspector"of group "toolbar" of me
+         disable button "Inspector" of group "toolbar" of me
       end if
    end if
-   
-   global gRevSuppressErrors, gRevSuppressMessages
-   setButtonHilite the long id of button "Errors" of group "toolbar" of me, gRevSuppressErrors
-   setButtonHilite the long id of button "Messages" of group "toolbar" of me, gRevSuppressMessages
-   setButtonHilite the long id of button "Select Grouped" of group "toolbar" of me, the selectGroupedControls
    
    if revIDETutorialInProgress() is not empty then
       disableToolbar
@@ -836,6 +858,37 @@ function revIDELocalizeMenuItem pItem
    return pItem
 end revIDELocalizeMenuItem
 
+private on setButtonDepressed pTarget
+   lock screen
+   local tHilite
+   put the hilite of pTarget into tHilite
+   if tHilite then
+      set the icon of pTarget to the cHighlightedDepressedIcon of pTarget
+   else
+      set the icon of pTarget to the cDepressedIcon of pTarget
+   end if
+   setButtonHilite pTarget, not the hilite of pTarget
+   unlock screen
+end setButtonDepressed
+
+private on setButtonReleased pTarget
+   updateButtonState
+end setButtonReleased
+
+on mouseDown
+   if the short name of the owner of the target is "revMenuBar" then
+      revMenubarBuildMenus
+   else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
+      setButtonDepressed the long id of the target
+   end if
+end mouseDown
+
+on mouseRelease
+   if the short name of the owner of the target is "toolbar" and the target begins with "button" then
+      setButtonReleased the long id of the target
+   end if
+end mouseRelease
+
 on mouseUp
    lock screen
    if the target begins with "widget" then
@@ -849,6 +902,9 @@ on mouseUp
       else if tTarget is "skip" then
          revIDETutorialSkipToNextSkipPoint
       end if
+   else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
+      revMenubarMenuButtonClicked the short name of the target
+      setButtonReleased the long id of the target
    end if
    unlock screen
 end mouseUp
@@ -935,18 +991,6 @@ on highlightObject pObject
    end if
    layoutMenu
 end highlightObject
-   
-on mouseDown
-   //answer the short name of the owner of the target
-   //answer the target
-   
-   if the short name of the owner of the target is "revMenuBar" then
-      revMenubarBuildMenus
-   else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
-      revMenubarMenuButtonClicked the short name of the target
-   end if
-   pass mouseDown
-end mouseDown
 
 on revMenubarMenuButtonClicked pWhich
    switch pWhich

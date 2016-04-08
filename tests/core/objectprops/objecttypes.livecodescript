@@ -24,6 +24,7 @@ on TestSetup
    put the script of stack tIDELibrary into tScript
    replace "_internal" with "--_internal" in tScript
    replace "the revObjectListeners" with "empty" in tScript
+   replace "revDisplayFormattedData" with "--revDisplayFormattedData" in tScript
    set the script of stack tIDELibrary to tScript
 
    insert the script of stack "revIDELibrary" into back

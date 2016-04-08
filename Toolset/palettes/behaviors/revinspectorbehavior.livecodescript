@@ -199,6 +199,7 @@ on inspectorLayoutGroups pGroupList
    
    if the width of me < max(tInspectorWidthWithMargins, the minWidth of me) then
       set the width of me to max(tInspectorWidthWithMargins, the minWidth of me)
+      layoutFrame
    end if
    
    set the left of me to tStackLeft

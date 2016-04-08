@@ -905,7 +905,7 @@ function ideObjectTypeFromObject pObjectID
          end if
          break
       case "field"
-         if the basicTableObject of pObjectID then
+            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
             return "com.livecode.interface.classic.TableField"
          else if the listbehavior of pObjectID is true then
             return "com.livecode.interface.classic.ListField"
@@ -1036,6 +1036,8 @@ private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
 end __dumpArrayRecurse
 
 function __revIDEError pMessage
+   global gRevDevelopment
+   
    local tErrorContext, tErrorText, tLockedMessages
    put line -2 of the executioncontexts into tErrorContext
 
@@ -1044,8 +1046,12 @@ function __revIDEError pMessage
    unlock messages
 
    put "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext into tErrorText
-   put return & tErrorText after msg
-
+   
+   # If in IDE development mode output the error to the Message Box
+   if gRevDevelopment is true then
+      put return & tErrorText after msg
+   end if
+   
    # if the messages were locked, lock them again
    if tLockedMessages is true then
       lock messages
@@ -3168,7 +3174,7 @@ private command __setPropertiesToDefaults pObjectID, pPropsInfoA
       if "default" is not among the keys of tPropInfoA then next repeat
       if tPropInfoA["default"] is "no_default" then next repeat
       if tPropInfoA["read_only"] is true then next repeat
-      revIDESetPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
+      __setPropertyOfObject pObjectID, tProperty, tPropInfoA["default"]
    end repeat
 end __setPropertiesToDefaults
 
@@ -3452,16 +3458,15 @@ on revIDEGroupObjects pObjectIDs
 
    repeat for each line tControl in pObjectIDs
       if the layer of tControl < tLayer then put the layer of tControl into tLayer
-      put tControl & " and " after tList
    end repeat
 
-   delete char -5 to -1 of tList
-   put "group " before tList
-
-   do tList
+   // PM-2016-04-07: [[ Bug 17301 ]] Use the "group" command (without an objectList)
+   // so as to group the selection in layer order
+   group
    
    put the long id of the owner of tObj into tGroupID
    set the layer of tGroupID to tLayer
+   unlock screen
    return tGroupID
 end revIDEGroupObjects
 
@@ -4415,11 +4420,18 @@ on revIDEPositionPalette pStackName
       # default location. Only do this for specified stacks.
       switch pStackName
          case "revMenuBar"
-         case "revTools"
          case "message box"
          case "revDictionary"
             revIDEPositionPaletteDefault pStackName
             break
+         case "revTools"
+            local tOldPref
+            put revIDEGetPreference("cToolsTopLeft") into tOldPref
+            if tOldPref is not empty then
+               set the topleft of stack pStackName to tOldPref
+            else
+               revIDEPositionPaletteDefault pStackName
+            end if
          default
             if pStackName begins with revIDEScriptEditorPrefix() then
                revIDEPositionPaletteDefault pStackName
@@ -4433,6 +4445,7 @@ on revIDEPositionPalette pStackName
    
 end revIDEPositionPalette
 
+constant kToolsMenubarGap = 25
 on revIDEPositionPaletteDefault pStackName
    # No previous rect was found for stack to calculate the appropriate position for the stack
    local tScreenHeight, tScreenWidth
@@ -4444,7 +4457,12 @@ on revIDEPositionPaletteDefault pStackName
          set the topleft of stack pStackName to 0,0
          break
       case "revTools"
-         set the topleft of stack pStackName to 0,the bottom of stack revIDEPaletteToStackName("menubar") + revIDEPaletteBarHeight(the long ID of stack pStackName)
+         local tMenuBar
+         put revIDEPaletteToStackName("menubar") into tMenuBar
+         local tTop
+         put the bottom of stack tMenuBar into tTop
+         add kToolsMenubarGap to tTop
+         set the topleft of stack pStackName to the left of stack tMenuBar,tTop
          break
       case "message box"
          set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
@@ -5136,7 +5154,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Align Controls,Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager"
+   return "Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -5593,6 +5611,10 @@ function revIDEGetDataGridColumns pObject, pProperty
 end revIDEGetDataGridColumns
 
 on revIDESetDataGridColumnProperty pObject, pProperty, pValue
+   if sCurrentColumn is empty then
+      exit revIDESetDataGridColumnProperty
+   end if
+   
    switch pProperty
       case "column name"
          set the dgColumnName[sCurrentColumn] of pObject to pValue
@@ -5759,10 +5781,14 @@ command revIDENewDataGridColumnBehavior pObject
 end revIDENewDataGridColumnBehavior
 
 on revIDESetTableProperty pObject, pProperty, pValue
+   local tWasTableObject
+   put the cREVGeneral["table"] of pObject into tWasTableObject
    switch pProperty
       case "celledit"
          set the cRevTable[pProperty] of pObject to pValue
+         if tWasTableObject then
          set the locktext of pObject to pValue
+         end if
          break
       case "basicTableObject"
          set the cREVGeneral["table"] of pObject to pValue
@@ -5775,10 +5801,14 @@ on revIDESetTableProperty pObject, pProperty, pValue
                set the cREVTable["currentview"] of pObject to the text of pObject
             end if
          end if
-         revDisplayFormattedData
+         
+         # Only change the contents if this was a table or is becoming one
+         if pValue or tWasTableObject then
+         revDisplayFormattedData pObject
+         end if
+         
          if pValue then
             set the vScrollbar of pObject to true
-            set the hScrollbar of pObject to true
          end if
          break
       case "cellformat"

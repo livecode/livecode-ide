@@ -118,6 +118,10 @@ on ideSelectedObjectChanged
 end ideSelectedObjectChanged
 
 on ideNewControl pTarget
+   if not exists(pTarget) then
+      exit ideNewControl
+   end if
+   
    put the long id of pTarget into pTarget
    if word  1 of pTarget is "stack" or  word  1 of pTarget is "card" then
       exit ideNewControl
@@ -129,10 +133,16 @@ on ideNewControl pTarget
 end ideNewControl
 
 on ideNewCard pTarget
+   if not exists(pTarget) then
+      exit ideNewCard
+   end if
    addCardToProjectBrowser pTarget
 end ideNewCard
 
 on ideNewStack pTarget
+   if not exists(pTarget) then
+      exit ideNewStack
+   end if
    addStackToProjectBrowser pTarget
 end ideNewStack
 
@@ -158,6 +168,11 @@ end ideReleaseStack
 
 on ideOpenStack pTarget
    local tStack
+   
+   if not exists(pTarget) then
+      exit ideOpenStack
+   end if
+   
    if word 1 of pTarget  is "card" then
       put ideStackOfObject(pTarget) into tStack
    else if word 1 of pTarget is "stack" then

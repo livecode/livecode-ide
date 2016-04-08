@@ -183,7 +183,9 @@ setProp rowTooltip pTooltipText
    
    ## Set the tooltip on each control in the editor group
    repeat with x = 1 to the number of controls of tEditor
-      set the tooltip of control x of tEditor to pTooltipText
+      if the tooltip of control x of tEditor is empty then
+         set the tooltip of control x of tEditor to pTooltipText
+      end if
    end repeat
 end rowTooltip
 

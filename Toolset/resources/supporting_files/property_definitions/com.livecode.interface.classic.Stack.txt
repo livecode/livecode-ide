@@ -9,8 +9,6 @@ mainStack								execute:get revIDEMainstackPropertyOptions()
 decorations												
 windowShape												
 scaleFactor							1					
-metal							false					
-liveResizing							false					
 shadow		Basic					true					
 visible							true					
 formatForPrinting							false					

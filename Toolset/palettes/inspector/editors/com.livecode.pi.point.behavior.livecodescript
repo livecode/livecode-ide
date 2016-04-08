@@ -1,6 +1,7 @@
 ﻿script "com.livecode.pi.point.behavior"
-local sFieldWidth, sMax, sMin
+local sMax, sMin
 
+constant kFieldWidth = 100
 constant SLIDER_MAX_WIDTH = 130
 constant SLIDER_MIN_WIDTH = 80
 constant CONTROL_PADDING = 5
@@ -33,7 +34,7 @@ end editorInitialize
 
 getProp editorMinWidth
    local tWidth
-   add sFieldWidth to tWidth
+   add kFieldWidth to tWidth
    add the width of scrollbar "twiddleX" of me to tWidth
    add CONTROL_PADDING to tWidth
    return tWidth
@@ -89,10 +90,9 @@ on editorResize
    put tXBottom + CONTROL_PADDING into tYTop
    put tYTop +  the formattedheight of field "y" of me  into tYBottom 
    
-   # The field is full width but there is a twiddle controller at the end
-   set the rect of field "x" of me to tLeft,tXTop,the right of me - the width of scrollbar "twiddleX" of me - CONTROL_PADDING,tXBottom
-   set the rect of field "y" of me to tLeft,tYTop,the right of me - the width of scrollbar "twiddleY" of me - CONTROL_PADDING,tYBottom
-   add the width of field "x" of me to tLeft
+   set the rect of field "x" of me to tLeft,tXTop,tLeft + kFieldWidth, tXBottom
+   set the rect of field "y" of me to tLeft,tYTop,tLeft + kFieldWidth, tYBottom
+   add the width of field "x" of me + CONTROL_PADDING to tLeft
    
    set the rect of scrollbar "twiddleX" of me to tLeft,tXTop,tLeft + the width of scrollbar "twiddleX" of me,tXBottom
    set the rect of scrollbar "twiddleY" of me to tLeft,tYTop,tLeft + the width of scrollbar "twiddleY" of me,tYBottom
