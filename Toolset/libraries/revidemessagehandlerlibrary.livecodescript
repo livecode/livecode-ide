@@ -149,24 +149,6 @@ on newWidget
    pass newWidget
 end newWidget
 
-on newBackground
-   local tTarget
-   put the long id of the target into tTarget
-   if not revIDEObjectIsOnIDEStack(tTarget) then
-      send "ideMessageSend" &&  "ideNewControl","tTarget" to stack "revIDELibrary" in 0 milliseconds
-   end if
-   pass newBackground
-end newBackground
-
-on deleteBackground
-   local tTarget
-   put the long id of the target into tTarget
-   if not revIDEObjectIsOnIDEStack(tTarget) then
-      send "ideMessageSend ideControlDeleted","tTarget" to stack "revIDELibrary" in 0 milliseconds
-   end if
-   pass deleteBackground
-end deleteBackground
-
 on deleteButton
    local tTarget
    put the long id of the target into tTarget
