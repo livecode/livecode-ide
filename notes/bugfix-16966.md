@@ -1,0 +1,1 @@
+# Improve usability of custom properties editor
