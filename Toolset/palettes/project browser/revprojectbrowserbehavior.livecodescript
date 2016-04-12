@@ -290,6 +290,7 @@ on idePreferenceChanged pPreference, pValue
          end if
          setUpProjectView
          buildProjectView true
+         break
       default
          buildProjectView true
    end switch
@@ -360,7 +361,7 @@ command setUpProjectView
    set the viewProp["alternate row color"] of group "objectList" of me to revIDEColor("dataView_rowAlternateColor")     
    
    set the viewProp["fixed row height"] of group "objectList" of me to "true"
-   set the viewProp["row height"] of group "objectList" of me to the effective textSize of me + 12
+   set the viewProp["row height"] of group "objectList" of me to the effective textSize of me + 14
    set the viewProp["cache"] of group "objectList" of me to "none"
    set the viewProp["background color"] of group "objectList" of me to empty
    set the viewProp["drop indicator template"] of group "objectList" of me to the long id of group "pbDragIndicator" of card "templates" of this stack
@@ -2541,12 +2542,11 @@ command setConnectorIcon pControl, pState
          
          put tLeft,tTop + (tHeight/2)  & return into tPoints
          put tLeft + (tWidth/2)  -  (the width of widget "icon" of pControl /2) ,tTop + (tHeight/2)  & return after tPoints
-         put tLeft + (tWidth/2) ,(tTop + tHeight) - (the height of widget "icon" of pControl /2) - 2  & return after tPoints
+         put tLeft + (tWidth/2) ,tTop + (tHeight/2) + (the height of widget "icon" of pControl /2) & return after tPoints
          put tLeft + (tWidth/2),tTop + tHeight  & return after tPoints
          
          set the points of graphic "line" of pControl to tPoints
          set the iconPresetName of widget "icon" of pControl to "minus sign"
-         
          
          break
       case "corner"

@@ -66,7 +66,9 @@ end FillInData
 
 on LayoutControl pControlRect
    # Resize controls/row
-   local tLevelConnectors, tConnectorCount, tLoc
+   local tLevelConnectors, tConnectorCount, tLoc, tTextSize
+   
+   put the effective textSize of me into tTextSize
    
    put item 1 of the loc of me & comma & item 2 of the loc me -1 into tLoc
    put the cLevelConnectors of me into tLevelConnectors
@@ -83,10 +85,17 @@ on LayoutControl pControlRect
    set the height of field "name" of me to the formattedHeight of field "name" of me
    
    set the fixedLineHeight of field "scriptLines" of me to true
-   set the fixedLineHeight of field "behaviorScriptLines" of me to true
    set the textSize of field "scriptLines" of me to empty
+   if tTextSize <=12 then
+      set the textHeight of field "scriptLines" of me to (tTextSize + (tTextSize/2))
+   else
+      set the textHeight of field "scriptLines" of me to (tTextSize + (tTextSize/3))
+   end if   
    set the height of field "scriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
+   
+   set the fixedLineHeight of field "behaviorScriptLines" of me to true
    set the textSize of field "behaviorScriptLines" of me to empty
+   set the textHeight of field "behaviorScriptLines" of me to the textHeight of field "scriptLines" of me
    set the height of field "behaviorScriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
    
    set the loc of field "type" of me to tLoc
@@ -99,6 +108,14 @@ on LayoutControl pControlRect
    set the width of field "scriptLines" of me to the formattedWidth of field "scriptLines" of me 
    set the width of field "behaviorScriptLines" of me to the formattedWidth of field "behaviorScriptLines" of me    
    set the width of field "name" of me to the formattedWidth of field "name" of me
+   
+   ## Set the vertical location of the name and text fields
+   if tTextSize <= 14 then
+      set the top of field "name" of me to the top of me + 2
+   else
+      set the top of field "name" of me to the top of me
+   end if
+   set the top of field "type" of me to the top of field "name" of me
    
    repeat with x = 1 to 10
       if x > tConnectorCount then

@@ -17,8 +17,9 @@ end FillInData
 
 on LayoutControl pControlRect
    # Resize controls/row
-   local tLevelConnectors
+   local tLevelConnectors, tTextSize
    
+   put the effective textSize of me into tTextSize
    put the cLevelConnectors of me into tLevelConnectors
    set the rect of graphic "background" of me to pControlRect   
    set the width of graphic "bottom_border" of me to (item 3 of pControlRect - item 1 of pControlRect)
@@ -27,7 +28,30 @@ on LayoutControl pControlRect
    set the width of field "type" of me to the formattedWidth of field "type" of me
    set the width of field "name" of me to the formattedWidth of field "name" of me
    
+   set the fixedLineHeight of field "type" of me to false
+   set the height of field "type" of me to the formattedHeight of field "type" of me
+   if tTextSize <= 14 then
+      set the top of field "name" of me to the top of me + 2
+   else
+      set the top of field "name" of me to the top of me
+   end if
+   set the top of field "type" of me to the top of field "name" of me
+   
+   set the fixedLineHeight of field "name" of me to false
+   set the height of field "name" of me to the formattedHeight of field "name" of me
+   set the top of field "name" of me to the top of field "type" of me
+   set the top of field "type" of me to the top of field "name" of me
+   
+   set the fixedLineHeight of field "scriptLines" of me to true
+   set the textSize of field "scriptLines" of me to empty
+   if tTextSize <=12 then
+      set the textHeight of field "scriptLines" of me to (tTextSize + (tTextSize/2))
+   else
+      set the textHeight of field "scriptLines" of me to (tTextSize + (tTextSize/3))
+   end if
+   set the height of field "scriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
    set the loc of field "scriptLines" of me to the loc of me 
+   
    set the loc of button "typeIcon" of me to the loc of me 
    
    repeat with x = 1 to 2
@@ -46,7 +70,7 @@ on LayoutControl pControlRect
    set the left of group "connector2" of me to the right of group "connector1" of me
    
    local tNameFieldLeft
-   if revIDEGetPreference("ideProjectBrowser_objectType") is "text" then
+   if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
       hide button "typeIcon" of me
       set the left of field "type" of me to the right of  group "connector2" of me

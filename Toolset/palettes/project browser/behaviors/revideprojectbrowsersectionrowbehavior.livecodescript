@@ -26,7 +26,9 @@ on FillInData pDataA, pRow
 end FillInData
 
 on LayoutControl pControlRect
-   local tLevelConnectors, tConnectorCount
+   local tLevelConnectors, tConnectorCount, tTextSize
+   
+   put the effective textSize of me into tTextSize
    put the cLevelConnectors of me into tLevelConnectors
    put the number of lines in the keys of tLevelConnectors into tConnectorCount
    
@@ -47,6 +49,15 @@ on LayoutControl pControlRect
       setConnectorIcon the long id of group "connector1" of me, tLevelConnectors[1]
       set the left of group "connector1" of me to item 1 of pControlRect
       set the left of group "disclosure" of me to the right of group ("connector1") of me
+   end if
+   
+   set the fixedLineHeight of field "type" of me to false
+   set the height of field "type" of me to the formattedHeight of field "type" of me
+   ## Set the vertical location of the name and text fields
+   if tTextSize <= 14 then
+      set the top of field "type" of me to the top of me + 2
+   else
+      set the top of field "type" of me to the top of me
    end if
    
    set the loc of field "type" of me to the loc of me 
