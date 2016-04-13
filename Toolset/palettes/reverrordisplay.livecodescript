@@ -5,9 +5,11 @@ local sLCBErrorCode
 on resizeStack
    revUpdateGeometry
    updateStoredRect
-   set the rect of field "Error" of group "errordisplay" of me to 0,0,the width of me, the height of me - 50
+   set the rect of field "Error" of group "errordisplay" of me to \
+         0,0,the width of me, the height of me - 50
    set the loc of button "Ignore" of group "errordisplay" of me to "-50,437"
-   set the loc of button "Script" of group "errordisplay" of me to the width of me / 2, the height of me - 25
+   set the loc of button "Script" of group "errordisplay" of me to \
+         the width of me / 2, the height of me - 25
    set the loc of button "Debug" of group "errordisplay" of me to "-50,403"
 end resizeStack
 
@@ -18,17 +20,18 @@ private command updateStoredRect
 end updateStoredRect
 
 # OK-2007-07-02: Bug 5203
+constant kExtensionError = "extension: error occured with domain"
 on preOpenStack
    if sLCBErrorCode is empty then
       # AL-2015-07-07: Calculate LCB error code
-      put lineOffset("extension: error occured with domain", the scriptExecutionErrors) into sLCBErrorCode
+      put lineOffset(kExtensionError, the scriptExecutionErrors) into sLCBErrorCode
    end if
    
    local tStoredRect
-   put the cErrorDisplayRect of stack "revPreferences" into tStoredRect
+   put revIDEGetPreference("cErrorDisplayRect") into tStoredRect
    
    local tStoredScreenRect
-   put the cErrorDisplayScreenRect of stack "revPreferences" into tStoredScreenRect
+   put revIDEGetPreference("cErrorDisplayScreenRect") into tStoredScreenRect
    
    lock messages	
    if tStoredRect is not empty then
@@ -39,8 +42,10 @@ on preOpenStack
          put item 2 of tStoredRect into tTop
          
          local tRight, tBottom 
-         put round(item 3 of tStoredRect * (item 3 of the screenRect / item 3 of tStoredScreenRect)) into tRight
-         put round(item 4 of tStoredRect * (item 4 of the screenRect / item 4 of tStoredScreenRect)) into tBottom 
+         put round(item 3 of tStoredRect * (item 3 of the screenRect \
+               / item 3 of tStoredScreenRect)) into tRight
+         put round(item 4 of tStoredRect * (item 4 of the screenRect \ 
+               / item 4 of tStoredScreenRect)) into tBottom 
          
          set the rect of me to tLeft, tTop, tRight, tBottom
       else
@@ -121,18 +126,26 @@ on enterInField
 end enterInField
 
 on returnKey
-  if the default of btn "Ignore" of group "errorDisplay" of me then click at the loc of btn "Ignore" of group "errorDisplay" of me
-  else click at the loc of btn "script"
+   if the default of btn "Ignore" of group "errorDisplay" of me then 
+      click at the loc of btn "Ignore" of group "errorDisplay" of me
+   else 
+      click at the loc of btn "script"
+   end if
 end returnKey
 
 on enterKey
   returnKey
 end enterKey
 
+constant kExternalHandlerError = 634
+constant kErrorTextColor = "64,64,64"
+constant kErrorYellowIconID = 202696
+constant kErrorGreyIconID = 202697
+
 on preOpenCard
    global gREVMovingPalette, gREVDevelopment, gRevExit
-   
-   if "resizeStack" is among the items of line 1 of the executionContexts then -- BZ 2867 resizeStack grabs focus, bringing up a dialog now = disaster
+   -- BZ 2867 resizeStack grabs focus, bringing up a dialog now = disaster
+   if "resizeStack" is among the items of line 1 of the executionContexts then 
       send "modeless revErrorDisplay" to me in 500 milliseconds
       lock messages
       close stack "revErrorDisplay"
@@ -147,14 +160,18 @@ on preOpenCard
    end if
    
    set the lockCursor to false
-   if the platform is "MacOS" and there is a group "revMenuBar" of stack revIDEPaletteToStackName("menubar") then
-      local tReturn
-      put the defaultStack into tReturn
-      set the defaultStack to revIDEPaletteToStackName("menubar")
-      set the defaultMenuBar to the long id of group "revMenuBar" of stack revIDEPaletteToStackName("menubar")
-      set the defaultStack to tReturn
+   if the platform is "MacOS" then
+      local tStackName
+      put revIDEPaletteToStackName("menubar") into tStackName
+      if there is a group "revMenuBar" of stack tStackName then
+         local tReturn
+         put the defaultStack into tReturn
+         set the defaultStack to tStackName
+         set the defaultMenuBar to the long id of group "revMenuBar" \ 
+               of stack tStackName
+         set the defaultStack to tReturn
+      end if
    end if
-   
    local tError
    put the executionError of this stack into tError
    
@@ -201,6 +218,8 @@ on preOpenCard
    set the htmlText of fld 1 to tFldContent
    resizeStack
    --end debug mode stuff
+   
+   local tNumber
    if tError is not empty then
       local tErrorString
       put "     " & tab & "executing at" && the long time & cr into tErrorString
@@ -217,46 +236,56 @@ on preOpenCard
       end if
       put "Type" & tab after tErrorString
       
-      local tNumber
       put item 1 of line 1 of tError into tNumber -- look up number based on line 1 always
       if tNumber is not a number then
          close stack "revErrorDisplay"
          close stack "execution error"
          exit to top
       end if
-      if tNumber is 634 then
-         put item 4 to -1 of line 1 of tError & cr after tErrorString
+      if tNumber is kExternalHandlerError then
+         put item 4 to -1 of line 1 of tError after tErrorString
       else
-         put line tNumber of the scriptExecutionErrors & cr after tErrorString
+         put revIDELookupError("execution", tNumber) after tErrorString
       end if
+      put return after tErrorString
    else if tScriptError is not empty then
       put tScriptError into tError
-      put "     " & tab & "compiling at" && the long time & cr into tErrorString
-      put "Type" & tab & line (item 1 of line 1 of tError) of the cScriptErrors of cd 1 of stack "REVErrorDisplay" & cr after tErrorString
+      put item 1 of line 1 of tError into tNumber
+      put "     " & tab & "compiling at" && the long time & return into tErrorString
+      put "Type" & tab & revIDELookupError("compilation", tNumber) after tErrorString
+      put return after tErrorString
    end if
-   if tOBject is empty then exit to top -- bogus error
-   put "Object" & tab & the short name of tObject & cr after tErrorString
+   
+   if tObject is empty then exit to top -- bogus error
+   put "Object" & tab & the short name of tObject & return after tErrorString
    
    local tTargetStack
    put revTargetStack(tObject) into tTargetStack
    
-   # OK-2010-02-12: No longer correct
-   --if the passKey of stack tTargetStack is not the passWord of stack tTargetStack then -- its password protected
    if not the passkey of stack tTargetStack then
-      answer error "There was an error executing a script in stack" && tTargetStack & ".  No more information is available because the stack is password protected."
+      local tPrompt
+      put "There was an error executing a script in stack" && tTargetStack \
+            & ".  No more information is available because the stack is password protected." \
+            into tPrompt
+      answer error tPrompt
       close stack "revErrorDisplay"
       close stack "execution error"
       exit to top
    end if
    
-   if item 1 of line 1 of tError is sLCBErrorCode then
+   if tNumber is sLCBErrorCode then
       put "LCB Error" & tab & item 4 to -1 of line 2 of tError into line 2 of tErrorString
       put "LCB File" & tab & item 4 to -1 of line 3 of tError & cr after tErrorString
       put "LCB Line" & tab & item 4 to -1 of line 4 of tError after tErrorString
    else
-      local tLineNo
-      if word 1 to -1 of line (item 2 of tError) of the script of tObject is empty or item 2 of tError is 0 then put tErrorLine into tLineNo else put 1 into tLineNo
-      put "Line" & tab & word 1 to -1 of line (item 2 of line tLineNo of tError) of the script of tObject & cr after tErrorString
+      local tLineNo, tScriptLine
+      put word 1 to -1 of line (item 2 of tError) of the script of tObject into tScriptLine
+      if tScriptLine is empty or item 2 of tError is 0 then 
+         put tErrorLine into tLineNo 
+      else
+         put 1 into tLineNo
+      end if
+      put "Line" & tab & tScriptLine & return after tErrorString
       set the cLastError of this cd to line -2 of tErrorString & cr & tObject
       
       local tExit
@@ -280,12 +309,16 @@ on preOpenCard
       put false into tUIError
    end if
    if tUIError and gREVDevelopment is not true then
-      put cr & cr & cr & "*** --Internal error" & cr & tErrorString after URL "file:components/save/sessionlog.txt"
+      local tLogString
+      put cr & cr & cr & "*** --Internal error" & cr & tErrorString into tLogString
+      
       if tError is not empty then
-         put cr & tError & cr & the long id of tObject & cr after URL "file:components/save/sessionlog.txt"
+         put cr & tError after tLogString
       else
-         put tScriptError & cr & the long id of tObject after URL "file:components/save/sessionlog.txt"
+         put tScriptError after tLogString
       end if
+      put return & the long id of tObject & return after tLogString
+      put tLogString after URL "file:components/save/sessionlog.txt"
       lock messages
       close stack "revErrorDisplay"
       set the traceAbort to true
@@ -293,11 +326,11 @@ on preOpenCard
       exit preOpenCard
    else if lExit then
       put tErrorString into line 1 to 5 of fld "Error" of group "errorDisplay" of me
-      set the textColor of line 1 to 5 of fld "Error" of group "errorDisplay" of me to 64,64,64
+      set the textColor of line 1 to 5 of fld "Error" of group "errorDisplay" of me to kErrorTextColor
    else
       put tErrorString & cr & cr before fld "Error" of group "errorDisplay" of me
    end if
-   set the imageSource of char 1 of fld "Error" of group "errorDisplay" of me to 202696
+   set the imageSource of char 1 of fld "Error" of group "errorDisplay" of me to kErrorYellowIconID
    set the textStyle of line 1 of fld "Error" of group "errorDisplay" of me to "bold"
    set the textStyle of line 2 to 5 of fld "Error" of group "errorDisplay" of me to "plain"
    set the textColor of line 1 to 5 of fld "Error" of group "errorDisplay" of me to "black"
@@ -306,10 +339,17 @@ on preOpenCard
       --
    end if
    
-   if the formattedWidth of fld "Error" of group "errorDisplay" of me > the width of fld "Error" of group "errorDisplay" of me then set the hScrollBar of fld "Error" of group "errorDisplay" of me to true
-   else set the hScrollBar of fld "Error" of group "errorDisplay" of me to false
-   set the vScroll of fld "Error" of group "errorDisplay" of me to 0
-   set the hScroll of fld "Error" of group "errorDisplay" of me to 0
+   local tField, tFormattedWidth, tWidth
+   put the long id of field "Error" of group "errorDisplay" of me into tField
+   put the formattedWidth of tField into tFormattedWidth
+   put the width of tField into tWidth
+   if tFormattedWidth > tWidth then 
+      set the hScrollBar of tField to true
+   else 
+      set the hScrollBar of tField to false
+   end if
+   set the vScroll of tField to 0
+   set the hScroll of tField to 0
    
    local tUniqueChunk
    put base64encode(line 1 to 5 of fld "Error" of group "errorDisplay" of me) into tUniqueChunk
@@ -326,7 +366,6 @@ end preOpenCard
 
 on openCard
    global gREVEditNow, gREVExit2
-   --write "got error opencard" & cr to stdout
    if gREVExit2 then
       put false into gREVExit2
       exit openCard
@@ -371,36 +410,35 @@ on revLineColors
    put 1 into tLineStart
    add tTotal * 6 to tLineStart
    
-   # OK-2008-08-18 : Bug 5039 - I'm not sure why this block of code is needed, but its causing bug 5039, so for now, it goes...
-   --  if the selectedField is not empty then -- select script editor field again
-   --    put true into tRestore
-   --    put the long id of the selectedField into tField
-   --    put the selectedChunk into tChunk
-   --  end if
-   set the textColor of line tLineStart to tLineStart+5 of fld "Error" of group "errorDisplay" of me to "64,64,64"
-   set the imageSource of char 1 of line tLineStart of fld "Error" of group "errorDisplay" of me to 202697
+   set the textColor of line tLineStart to tLineStart+5 of \ 
+         fld "Error" of group "errorDisplay" of me to kErrorTextColor
+   set the imageSource of char 1 of line tLineStart of \ 
+         fld "Error" of group "errorDisplay" of me to kErrorGreyIconID
    
-   # OK-2008-08-18 : Bug 5039
-   --  if tRestore then
-   --    put word 2 of tChunk into tCharFrom
-   --    put word 4 of tChunk into tCharTo
-   --    select char tCharFrom to tCharTo of tField
-   --  end if
 end revLineColors
 
 setProp cCurrentObject pWhat
    local tScriptError
-   if "Script Compile Error" is in (the selection) then put true into tScriptError
-   else if (the selection) is empty and line 1 of fld "Error" of group "errorDisplay" of me contains "Script Compile Error" then put true into tScriptError
-   else put false into tScriptError
+   if "Script Compile Error" is in (the selection) then 
+      put true into tScriptError
+   else if (the selection) is empty and line 1 of fld "Error" of \ 
+         group "errorDisplay" of me contains "Script Compile Error" then 
+      put true into tScriptError
+   else
+      put false into tScriptError
+   end if
    
    local tObject
    put last line of pWhat into tObject
    
    local tParsedData
    repeat for each line l in (line 1 to -2 of pWhat)
-      if tScriptError then put "     " & tab & line (item 1 of l) of the cScriptErrors of cd 1 of stack "REVErrorDisplay" & cr after tParsedData
-      else put "Type" & tab & line (item 1 of l) of the cErrorsList of cd 1 of stack "REVErrorDisplay" & cr after tParsedData
+      if tScriptError then 
+         put "     " & tab & revIDELookupError("compilation", (item 1 of l)) after tParsedData
+      else 
+         put "Type" & tab & revIDELookupError("execution", (item 1 of l)) after tParsedData
+      end if
+      put return after tParsedData
       put word 1 to -1 of line (item 2 of l) of the script of tObject & cr after tParsedData
       put "Line" & tab & item 2 of l && "Character:" && item 3 of l & cr after tParsedData
       put "Hint"  & tab & item 4 of l & cr & cr after tParsedData
@@ -434,8 +472,12 @@ on mouseUp
          else
             put 1 into tLineNo
          end if
-         put "char" && word 1 of item 3 of line tLineNo of the tKey of this stack && "to -1 of line" && item 2 of line tLineNo of the tKey of this stack into gREVSelectScriptChunk
-         revDebugScript (item 2 of line tLineNo of the tKey of this stack),tObject
+         local tFirstChar, tOfLine, tStackKey
+         put the tKey of this stack into tStackKey
+         put word 1 of item 3 of line tLineNo of tStackKey into tFirstChar
+         put item 2 of line tLineNo of the tKey of tStackKey into tOfLine
+         put "char" && tFirstChar && "to -1 of line" && tOfLine into gREVSelectScriptChunk
+         revDebugScript tOfLine, tObject
          unlock screen
       end if	
    else if the target begins with "field" then
@@ -451,7 +493,6 @@ on mouseUp
          put base64Encode(the selection) into tKey
          set the cCurrentObject of this card to the tKey of this stack
          if the selection is not empty then
-            --enable btn "Reset All"
             enable button "Script" of group "errorDisplay" of me
          end if
       end if
@@ -460,10 +501,11 @@ end mouseUp
 
 on mouseDoubleUp
    if the target begins with "field" and the short name of the target is "Error" then
-      --global gREVSelectScriptChunk
       lock screen
       lock error dialogs
-      if the selection is empty then select line 1 to 5 of field "Error" of group "errorDisplay" of me
+      if the selection is empty then 
+         select line 1 to 5 of field "Error" of group "errorDisplay" of me
+      end if
       
       local tKey
       put base64Encode(the selection) into tKey
