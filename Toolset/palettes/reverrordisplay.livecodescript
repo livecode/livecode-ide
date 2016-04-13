@@ -239,7 +239,6 @@ on preOpenCard
       put item 1 of line 1 of tError into tNumber -- look up number based on line 1 always
       if tNumber is not a number then
          close stack "revErrorDisplay"
-         close stack "execution error"
          exit to top
       end if
       if tNumber is kExternalHandlerError then
@@ -269,7 +268,6 @@ on preOpenCard
             into tPrompt
       answer error tPrompt
       close stack "revErrorDisplay"
-      close stack "execution error"
       exit to top
    end if
    
