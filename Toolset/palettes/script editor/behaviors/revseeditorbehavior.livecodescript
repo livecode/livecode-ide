@@ -4940,6 +4940,11 @@ command replaceAll pQuery, pString, pIsRegExp, pUseWildCards, pWholeMatch, pIgno
       findText tScript, true, 1, "", tSearch
       put the result into tResults
       
+      # Move to next object if no search results found
+      if tResults is empty then
+         next repeat
+      end if
+      
       # Build the replacements into a single operation so it can be undone
       local tAt, tNewText, tOldText
       replaceBuildSingleOperation tScript, tResults, pString, tAt, tNewText, tOldText
