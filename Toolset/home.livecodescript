@@ -1,4 +1,4 @@
-script "home"
+﻿script "home"
 constant kImportantTextColor = "#569e54"
 
 on startup
@@ -1080,6 +1080,19 @@ end revInternal__InitialiseLibraries
 private command revInternal__SetupExternals
    revInternal__Log "Enter", "Externals Setup"
    
+   local tExtension
+   switch revEnvironmentPlatform()
+      case "Linux"
+         put "so" into tExtension
+         break
+      case "MacOS X"
+         put "bundle" into tExtension
+         break
+      case "Windows"
+         put "dll" into tExtension
+         break
+   end switch
+   
    local tOldFolder, tExternals
    put the folder into tOldFolder
    
@@ -1097,6 +1110,27 @@ private command revInternal__SetupExternals
       put the folder & "/" & tExternal & return after tExternals
    end repeat
    
+   -- Load the MergExt externals bundle
+   if there is a folder revEnvironmentMergExtPath() then
+      set the folder to revEnvironmentMergExtPath()
+      repeat for each line tExternal in the folders
+         if tExternal is empty or tExternal is "." or tExternal is ".." then
+            next repeat
+         end if
+         set the folder to revEnvironmentMergExtPath() & "/" & tExternal
+         
+         -- The folder contains externals for multiple platforms, potentially
+         -- Remember: .bundle "files" are really folders
+         local tFiles
+         put the files & return & the folders into tFiles
+         filter tFiles with ("*." & tExtension)
+         
+         repeat for each line tFile in tFiles
+            put revEnvironmentMergExtPath() & "/" & tExternal & "/" & tFile & return after tExternals
+         end repeat
+      end repeat
+   end if
+   
    if there is a folder revEnvironmentUserExternalsPath() then
       set the folder to revEnvironmentUserExternalsPath()
       repeat for each line tExternal in the folders & return & the files
@@ -1108,19 +1142,6 @@ private command revInternal__SetupExternals
    end if
    
    set the folder to tOldFolder
-   
-   local tExtension
-   switch revEnvironmentPlatform()
-      case "Linux"
-         put "so" into tExtension
-         break
-      case "MacOS X"
-         put "bundle" into tExtension
-         break
-      case "Windows"
-         put "dll" into tExtension
-         break
-   end switch
    
    filter tExternals with ("*." & tExtension)
    
@@ -1677,6 +1698,10 @@ end revEnvironmentRuntimePath
 function revEnvironmentUserRuntimePath
   return sCustomizationPath & "/Runtime"
 end revEnvironmentUserRuntimePath
+
+function revEnvironmentMergExtPath
+   return hookToolsPath("mergext", sToolsPath & "/MergExt")
+end revEnvironmentMergExtPath
 
 //EJB for Testing System
 function revOverrideRuntimePath

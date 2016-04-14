@@ -1,5 +1,5 @@
 ﻿script "com.livecode.pi.customprops.behavior"
-local sPropSet
+local sPropSet, sHilitePath
 
 on editorInitialize
    put empty into sPropSet
@@ -10,6 +10,7 @@ on editorInitialize
    set the editorMaxWidth of me to 0
 end editorInitialize
 
+local sDontUpdate
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled
@@ -39,6 +40,17 @@ on editorUpdate
    set the arrayData of widget 1 of me to tValue[sPropSet]
    local tPath
    put the hilitedElement of widget 1 of me into tPath
+   # Hilite a newly created key
+   if sHilitePath is not empty and sHilitePath is not tPath then
+      # Signals are posted from the widget after the handler has 
+      # executed, so lock messages here doesn't prevent hiliteChanged -
+      # use a script local to prevent second update.
+      put true into sDontUpdate
+      set the hilitedElement of widget 1 of me to sHilitePath
+      put sHilitePath into tPath
+   end if
+   put empty into sHilitePath
+   
    if tPath is empty then
       put empty into field "key" of me
       put empty into field "value" of me
@@ -214,15 +226,23 @@ on keyChanged
    lock screen
    local tPath
    put the hilitedElement of widget 1 of me into tPath
+   
+   local tArray, tNewKey
+   put field "key" of me into tNewKey
+   put the arrayData of widget 1 of me into tArray
+   
    if tPath is not empty then
-      local tArray, tNewKey
-      put field "key" of me into tNewKey
-      put the arrayData of widget 1 of me into tArray
+      # If there is a hilited element then change it
       setArrayKeyOnPath tNewKey, tPath, tArray
-      setPropSet tArray
-      put tNewKey into item 1 of tPath
-      set the hilitedElement of widget 1 of me to tPath
+   else
+      # otherwise add a new key to the current set
+      addArrayKeyOnPath tNewKey, tArray
    end if
+   
+   # Set the new property and hilite the new/changed key
+   setPropSet tArray
+   put tNewKey into item -1 of tPath
+   put tPath into sHilitePath
    unlock screen
 end keyChanged
 
@@ -294,5 +314,10 @@ function revValidSetName pWhich
 end revValidSetName
 
 on hiliteChanged
-   editorUpdate
+   put empty into sHilitePath
+   # Prevent setting hilite in update causing additional call to editorUpdate
+   if not sDontUpdate then
+      editorUpdate
+   end if
+   put false into sDontUpdate
 end hiliteChanged
