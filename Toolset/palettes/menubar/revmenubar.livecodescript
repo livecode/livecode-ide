@@ -760,7 +760,7 @@ on updateButtonState
    global gRevSuppressErrors, gRevSuppressMessages
    updateButtonHilite "Errors", gRevSuppressErrors
    updateButtonHilite "Messages", gRevSuppressMessages
-   updateButtonHilite "Select Grouped", not the selectGroupedControls
+   updateButtonHilite "Select Grouped", the selectGroupedControls
    
    # Deal with enabled/disabled of code and inspector
    if tSelObj is empty then
