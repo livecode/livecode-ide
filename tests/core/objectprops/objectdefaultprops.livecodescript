@@ -1,4 +1,4 @@
-script "IDEObjectProperties"
+script "IDEObjectDefaultProperties"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
