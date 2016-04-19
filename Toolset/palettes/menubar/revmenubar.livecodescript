@@ -86,6 +86,16 @@ private on setupTextMenu
    put the fontNames into tFontNames
    replace "/" with "\" in tFontNames
    sort lines of tFontNames
+   
+   /* Fake fonts begin with "(", but the menu code interprets a "(" at 
+   the beginning of the item to mean the item is disabled. 
+   So, to show a "(" instead of disabling, we need to double it */
+   repeat with tLine = 1 to the number of lines of tFontNames
+      if line tLine of tFontNames begins with "(" then
+         put "(" before line tLine of tFontNames
+      end if
+   end repeat
+   
    put "Use Owner's Font" & return & "-" & return before tFontNames
    
    local fontnum
@@ -750,7 +760,7 @@ on updateButtonState
    global gRevSuppressErrors, gRevSuppressMessages
    updateButtonHilite "Errors", gRevSuppressErrors
    updateButtonHilite "Messages", gRevSuppressMessages
-   updateButtonHilite "Select Grouped", not the selectGroupedControls
+   updateButtonHilite "Select Grouped", the selectGroupedControls
    
    # Deal with enabled/disabled of code and inspector
    if tSelObj is empty then
