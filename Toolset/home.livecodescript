@@ -1330,9 +1330,6 @@ end revInternal__InitialiseScriptEditor
 command revInternal__InitialiseErrors
   revInternal__Log "Enter", "Errors Initialisation"
   
-  set the cErrorsList of stack "revErrorDisplay" to the scriptExecutionErrors
-  set the cScriptErrors of stack "revErrorDisplay" to the scriptParsingErrors
-  
   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
   set the showInvisibles of stack "revErrorDisplay" to false
   

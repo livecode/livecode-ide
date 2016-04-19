@@ -801,23 +801,6 @@ private command revIDEUpdateScriptEditorOnObjectDeletion pObject
    send "revSEObjectDeleted pObject" to revScriptEditorMain()
 end revIDEUpdateScriptEditorOnObjectDeletion
 
-# OK-2008-05-05
-# Parameters
-#   pType : either "compilation", "execution" or "warning"
-#   pCode : the id of the error as returned by the engine.
-# Returns
-#   The description of the specified error. Note that if pType is warning,
-#   this function will currently return empty.
-function revIDELookupError pType, pCode
-   if pType is "compilation" then
-      return line pCode of the cScriptErrors of stack "revErrorDisplay"
-   else if pType is "execution" then
-      return line pCode of the cErrorsList of stack "revErrorDisplay"
-   else if pType is "warning" then
-      return empty
-   end if
-end revIDELookupError
-
 on deleteButton
    revIDEHandleObjectDeleted the long id of the target
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then
