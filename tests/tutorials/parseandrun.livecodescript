@@ -16,53 +16,16 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-private function SanitiseForTests pScript
-   replace "_internal" with "--_internal" in pScript
-   replace "the revObjectListeners" with "empty" in pScript
-   replace "the effective revAvailableHandlers of pObject" with "empty" in pScript
-   return pScript
-end SanitiseForTests
-
-on TestSetup
-   local tIDELibrary, tScript
-   put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
-   
-   -- Work around the fact that the property listener is not available in standalone mode
-   put the script of stack tIDELibrary into tScript
-   put SanitiseForTests(tScript) into tScript
-   
-   -- Fix revIDESpecialFolderPath
-   local tReplace, tReplacement
-   put "the filename of stack" && quote & "home" & quote into tReplace
-   put quote & TestGetIDERepositoryPath() & "/Toolset/home.livecodescript" & quote into tReplacement
-   replace tReplace with tReplacement in tScript
-   
-   put "stack" && quote & "revpreferences" & quote into tReplace
-   put "me" into tReplacement
-   replace tReplace with tReplacement in tScript
-   
-   set the script of stack tIDELibrary to tScript
-
-   insert the script of stack tIDELibrary into back
-   
-   local tTutorial
-   put TestGetIDERepositoryPath() & "/Toolset/palettes/tutorial/revtutorial.livecodescript" into tTutorial
-   put the script of stack tTutorial into tScript
-   put SanitiseForTests(tScript) into tScript
-   set the script of stack tTutorial to tScript
-   insert the script of stack tTutorial into back
-   
+on TestSetup   
    TestLoadAllExtensions
-	
 end TestSetup
 
 private on TestLesson pCourse, pTutorial, pLesson
-	revTutorialLoadData pCourse, pTutorial, pLesson
-	TestAssert "load" && pCourse && "-" && pTutorial && "-" && pLesson, true
-	
-	// Running the tutorial causes problems on Travis CI, for some reason.
-	// revTutorialRunTutorial pCourse, pTutorial, pLesson
-	TestSkip "run" && pCourse && "-" && pTutorial && "-" && pLesson, "Fails on Travis CI"
+   dispatch "revTutorialLoadData" to stack "revTutorial" with pCourse, pTutorial, pLesson
+   TestAssert "load" && pCourse && "-" && pTutorial && "-" && pLesson, true
+   	
+   dispatch "revTutorialRunTutorial" to stack "revTutorial" with pCourse, pTutorial, pLesson
+   TestAssert "run" && pCourse && "-" && pTutorial && "-" && pLesson, true
 end TestLesson
 
 private on TestTutorial pCourse, pTutorial

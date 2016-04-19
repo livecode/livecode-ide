@@ -16,23 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestSetup
-   local tIDELibrary, tScript
-   put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
-
-   -- Work around the fact that the property listener is not available in standalone mode
-   put the script of stack tIDELibrary into tScript
-   replace "_internal" with "--_internal" in tScript
-   replace "the revObjectListeners" with "empty" in tScript
-   replace "revDisplayFormattedData" with "--revDisplayFormattedData" in tScript	
-   set the script of stack tIDELibrary to tScript
-
-   insert the script of stack "revIDELibrary" into back
-
-   -- Need the home stack for some paths
-   get the name of stack (TestGetIDERepositoryPath() & "/Toolset/home.livecodescript")
-end TestSetup
-
 on TestButtonDefaultProps
    local tObjectID
    revIDEActionCreateObject "com.livecode.interface.classic.Button"

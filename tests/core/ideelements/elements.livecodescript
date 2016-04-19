@@ -16,25 +16,14 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestSetup
-   local tIDELibrary, tScript
-   put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
-
-   -- Work around the fact that the property listener is not available in standalone mode
-   put the script of stack tIDELibrary into tScript
-   replace "_internal" with "--_internal" in tScript
-   replace "the revObjectListeners" with "empty" in tScript
-   set the script of stack tIDELibrary to tScript
-
-   insert the script of stack "revIDELibrary" into back
-end TestSetup
-
 on TestIDEStacks
    local tIDEStacks
    put "revStack,com.livecode.stack,answer dialog,ask dialog,home,message box" into tIDEStacks
 
    repeat for each item tItem in tIDEStacks
-      create stack tItem
+   	  if there is not a stack tItem then
+   	     create stack tItem
+   	  end if
       TestAssert tItem && "is ide stack", revIDEStackIsIDEStack(the long id of stack tItem)
       TestAssert tItem && "is ide stack name", revIDEStackNameIsIDEStack(tItem)
       TestAssert tItem && "is not in ideUserMainStacks", tItem is not in ideUserMainStacks()
