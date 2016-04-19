@@ -10924,3 +10924,24 @@ function revIDEObjectIsOpen pLongID
    
    return exists(pLongID)
 end revIDEObjectIsOpen
+
+/**
+Returns the error description associated with the given 
+error code.
+
+pType : either "compilation", "execution" or "warning"
+pCode : the id of the error as returned by the engine.
+Returns : The description of the specified error. 
+
+>*Note:* if <pType> is "warning", this function will currently return 
+empty.
+*/
+function revIDELookupError pType, pCode
+   if pType is "compilation" then
+      return line pCode of the scriptParsingErrors
+   else if pType is "execution" then
+      return line pCode of the scriptExecutionErrors
+   else if pType is "warning" then
+      return empty
+   end if
+end revIDELookupError
