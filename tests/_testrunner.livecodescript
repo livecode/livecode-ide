@@ -20,14 +20,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 constant kLogFilename = "_test_suite.log"
 
 on startup
-   send "TestRunnerMain" to me in 0
-end startup
-
-on openStack
-   if the environment is "development" then
-      invokeAllTests
+   if the environment begins with "development" then
+      send "TestRunnerInvokeAll" to me in 0
+   else
+	  send "TestRunnerMain" to me in 0
    end if
-end openStack
+end startup
 
 ----------------------------------------------------------------
 -- Command-line processing
@@ -89,18 +87,20 @@ command TestRunnerMain
    quit 0
 end TestRunnerMain
 
-private command doRun pInfo
-   local tEngine
-   put pInfo["args"][2] into tEngine
+command TestRunnerInvokeAll
+   invokeLoadIDE
+   invokeAllTests
+end TestRunnerInvokeAll
 
-   if tEngine is empty then
+private command doRun pInfo
+   if pInfo["args"][2] is empty then
       doUsage 1
    end if
 
    runLoadLibrary pInfo
    
    local tAnalysis
-   runAllTests pInfo, tEngine
+   runAllTests pInfo
    put the result into tAnalysis
    
    -- Save the log to file.
@@ -131,6 +131,23 @@ end ErrorDialog
 ----------------------------------------------------------------
 -- Support for invoking test commands
 ----------------------------------------------------------------
+
+private command invokeLoadIDE
+	-- Compute the filename of the home stack
+	local tFilename
+	put the filename of me into tFilename
+
+	set the itemDelimiter to slash
+	put "Toolset/home.livecodescript" into item -2 to -1 of tFilename
+
+	local tStackName
+	put the name of stack tFilename into tStackName
+	
+	insert the script of tStackName into back
+	
+	dispatch "startup" to tStackName
+	open tStackName
+end invokeLoadIDE
 
 private command invokeAllTests
    -- gRevDevelopment should be true by default
@@ -254,13 +271,26 @@ private command runLoadLibrary pInfo
 end runLoadLibrary
 
 -- Launch this stack in the IDE
-private command runAllTests pInfo, pEngine
+private command runAllTests pInfo
    local tAnalysis
-
+	
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
-   local tTestOutput, tTestExitStatus
-   put shell(pEngine && pInfo["self-script"]) into tTestOutput
+   local tTestOutput, tTestExitStatus, tCommand
+   
+   -- First put the target engine into the command to run
+   put pInfo["args"][2] into tCommand
+
+   -- Add the command line args
+   repeat with x = 3 to the number of elements in pInfo["args"]
+      put tCommand && pInfo["args"][x] into tCommand
+   end repeat
+   
+   -- Add the target stack (this one)
+   put tCommand && pInfo["self-script"] into tCommand
+
+   -- Execute the shell command   
+   put shell(tCommand) into tTestOutput
    put the result into tTestExitStatus
    
    write tTestOutput to stdout

@@ -129,9 +129,13 @@ on ClickRowDisclosure pObjectLongID
    put the defaultStack into tDefaultStack
    set the defaultStack to the short name of sPBLongID
    
-   local tLoc
-   put the loc of tButton into tLoc
-   click at tLoc
+   if the environment is "development" then
+      local tLoc
+      put the loc of tButton into tLoc
+      click at tLoc
+   else
+      dispatch "mouseUp" to tButton
+   end if
    
    set the defaultStack to tDefaultStack
 end ClickRowDisclosure

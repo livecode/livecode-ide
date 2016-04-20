@@ -916,22 +916,6 @@ command revInternal__InitialiseSystem
    
    put true into tSuccess
    
-   if tSuccess then
-      if the number of lines of the screenRect < 2 and item 4 of the screenRect < 600 then
-         answer "Revolution requires a 1024x768 display for editing (but not playback). If you continue, you may not be able to use all of the editing tools." with "Continue" or "Quit"
-         if it is "Quit" then
-            put false into tSuccess
-         end if
-      end if
-   end if
-   
-   if tSuccess then
-      if the screenDepth < 15 then
-         answer "Revolution requires a full-colour display." with "Ok"
-         put false into tSuccess
-      end if
-   end if
-   
    get the cCrashReportStyle of stack "revPreferences"
    if it is empty then
       get "Small"
@@ -951,6 +935,24 @@ command revInternal__InitialiseSystem
       
       revInternal__Log "Message", "Configuring crash log output to" && tCrashSettings["filename"]
       do "set the revCrashReportSettings to tCrashSettings"
+   end if
+   
+   if the environment is not "development command line" then 
+	   if tSuccess then
+		  if the number of lines of the screenRect < 2 and item 4 of the screenRect < 600 then
+			 answer "Revolution requires a 1024x768 display for editing (but not playback). If you continue, you may not be able to use all of the editing tools." with "Continue" or "Quit"
+			 if it is "Quit" then
+				put false into tSuccess
+			 end if
+		  end if
+	   end if
+   
+	   if tSuccess then
+		  if the screenDepth < 15 then
+			 answer "Revolution requires a full-colour display." with "Ok"
+			 put false into tSuccess
+		  end if
+	   end if
    end if
    
    revInternal__Log "Leave", "System Initialisation"
@@ -1403,9 +1405,11 @@ command revInternal__InitialiseMenus
    
    local tWindowRect
    put line (the screen of stack tMenuBar) of the working screenRects into tWindowRect
-   if tToolsRight < 100 then put tToolsRight + 5 into item 1 of tWindowRect
-   put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
-   set the windowBoundingRect to tWindowRect
+   if tWindowRect is not empty then
+	   if tToolsRight < 100 then put tToolsRight + 5 into item 1 of tWindowRect
+	   put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
+	   set the windowBoundingRect to tWindowRect
+   end if
    
    # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
    set the showInvisibles of stack tMenuBar to false
