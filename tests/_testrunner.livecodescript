@@ -293,8 +293,6 @@ private command runAllTests pInfo
    put shell(tCommand) into tTestOutput
    put the result into tTestExitStatus
    
-   write tTestOutput to stdout
-   
    -- The output from the subprocesses will be native encoded utf-8.
    put textDecode(tTestOutput, "utf8") into tTestOutput
 
@@ -305,6 +303,18 @@ private command runAllTests pInfo
       put "not ok # Subprocess exited with status" && \
             tTestExitStatus & return after tTestOutput
    end if
+   
+   local tUsefulOutput
+   repeat for each line tLine in tTestOutput
+	   if tLine begins with "PASS:" then
+		  put tLine & return after tUsefulOutput
+	   else if tLine begins with "FAIL:" then
+		  put tLine & return after tUsefulOutput
+	   else if tLine begins with "not ok" then
+		  put tLine & return after tUsefulOutput
+	   end if
+   end repeat
+   write tUsefulOutput to stdout
    
    runTestProcessOutput "IDE", "All IDE tests", tTestOutput
    
