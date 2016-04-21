@@ -27,6 +27,10 @@ on startup
    end if
 end startup
 
+on openStack
+   send "TestRunnerInvokeAll" to me in 0
+end openStack
+
 ----------------------------------------------------------------
 -- Command-line processing
 ----------------------------------------------------------------
@@ -88,7 +92,9 @@ command TestRunnerMain
 end TestRunnerMain
 
 command TestRunnerInvokeAll
-   invokeLoadIDE
+   if there is not a stack "home" then
+	   invokeLoadIDE
+   end if
    invokeAllTests
 end TestRunnerInvokeAll
 
