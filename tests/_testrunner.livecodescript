@@ -219,18 +219,17 @@ private command invokeTestCommand pScriptFile, pCommand
    put the result into tResult
    if word 1 of tResult is "SKIP" then
       TestSkip pCommand, word 2 to -1 of tResult
-      exit invokeTestCommand
+   else
+	   -- Run the actual test itself
+	   try
+	      dispatch pCommand to tStackName
+	   catch tError
+	      TestAssert "execution failure:" && tError, false
+	   end try
+   
+	   -- Do common cleanup tasks
+	   dispatch "TestTearDown" to tStackName
    end if
-   
-   -- Run the actual test itself
-   try
-      dispatch pCommand to tStackName
-   catch tError
-      TestAssert "execution failure:" && tError, false
-   end try
-   
-   -- Do common cleanup tasks
-   dispatch "TestTearDown" to tStackName
    
    global gRevStackStatus
    repeat for each line tStack in the openstacks
