@@ -18,6 +18,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 local sSupportStack
 on TestSetup
+   if the environment is "development command line" then
+      return "SKIP GUI-only tests"
+   end if
+
    revIDEOpenPalette "project browser"
    
    set the itemdelimiter to slash
