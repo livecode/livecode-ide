@@ -708,8 +708,14 @@ end enableToolbar
 
 on updateButtonHilite pTargetName, pValue
    lock screen
+   lock messages
+   
    local tTargetLongID
    put the long id of button pTargetName of group "toolbar" of me into tTargetLongID
+   
+   local tShowIcon
+   put the showIcon of tTargetLongID into tShowIcon
+   
    setButtonHilite tTargetLongID, pValue
    set the label of tTargetLongID to revMenubarButtonText(pTargetName, pValue)
    if pValue then
@@ -717,6 +723,10 @@ on updateButtonHilite pTargetName, pValue
    else
       set the icon of tTargetLongID to the cIcon of tTargetLongID
    end if
+   
+   set the showIcon of tTargetLongID to tShowIcon
+
+   unlock messages
    unlock screen
 end updateButtonHilite
 
@@ -870,14 +880,20 @@ end revIDELocalizeMenuItem
 
 private on setButtonDepressed pTarget
    lock screen
-   local tHilite
+   lock messages
+   
+   local tHilite, tShowIcon
    put the hilite of pTarget into tHilite
+   put the showIcon of pTarget into tShowIcon
    if tHilite then
       set the icon of pTarget to the cHighlightedDepressedIcon of pTarget
    else
       set the icon of pTarget to the cDepressedIcon of pTarget
    end if
    setButtonHilite pTarget, not the hilite of pTarget
+   set the showIcon of pTarget to tShowIcon
+
+   unlock messages
    unlock screen
 end setButtonDepressed
 
