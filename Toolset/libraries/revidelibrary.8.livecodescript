@@ -7224,8 +7224,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put revFixPath(tShortName) into tStackName
 
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
-   local tType
-
    local tStackFileType
    if there is a file the filename of stack tShortName then put revStackFileVersion(the filename of stack tShortName) into tStackFileType
 
@@ -7233,6 +7231,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tSubstitutions
    put tShortName into tSubstitutions[1]
 
+   local tVersion
    switch tStackFileType
       case 5.5
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
@@ -7247,24 +7246,23 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
    end switch
+   put the result into tVersion
 
-   put the result into tType
-
-   switch tType
+   switch tVersion
       case "Legacy LiveCode Stack (7.0)"
-         put 7.0 into tType
+         put 7.0 into tVersion
          break
       case "Legacy LiveCode Stack (5.5)"
-         put 5.5 into tType
+         put 5.5 into tVersion
          break
       case "Legacy LiveCode Stack (2.7)"
-         put 2.7 into tType
+         put 2.7 into tVersion
          break
       case "Legacy LiveCode Stack (2.4)"
-         put 2.4 into tType
+         put 2.4 into tVersion
          break
       default
-         put 8.0 into tType
+         put empty into tVersion
          break
    end switch
 
@@ -7327,7 +7325,11 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
 
    -- Synthesize a "saveStackRequest" message
    if ideDispatchSaveStackRequest(tShortName) is not "handled" then
-      revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
+      -- Make sure we apply the stackfileversion custom property.
+      -- If this is empty, then it means 'latest format'.
+      set the cREVGeneral["stackfileversion"] of stack tShortName to tVersion
+
+      revIDESaveStackAs the long id of stack tShortName, tFilePath, tVersion
    end if
 
    unlock messages
