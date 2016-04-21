@@ -1,4 +1,4 @@
-﻿script "TutorialTesting"
+﻿script "TutorialParsingTests"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
@@ -23,9 +23,6 @@ end TestSetup
 private on TestLesson pCourse, pTutorial, pLesson
    dispatch "revTutorialLoadData" to stack "revTutorial" with pCourse, pTutorial, pLesson
    TestAssert "load" && pCourse && "-" && pTutorial && "-" && pLesson, true
-   	
-   dispatch "revTutorialRunTutorial" to stack "revTutorial" with pCourse, pTutorial, pLesson
-   TestAssert "run" && pCourse && "-" && pTutorial && "-" && pLesson, true
 end TestLesson
 
 private on TestTutorial pCourse, pTutorial
