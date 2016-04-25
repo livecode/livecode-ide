@@ -9321,7 +9321,7 @@ function revIDERecentStacks
    # Generate labels for the stacks. The label is the filename without the file extension
    # If two stacks have the same filename, the minimum path is added to the label to
    # distinguish the entries
-   repeat with x = 1 to the number of lines of the keys of tRecentPathData
+   repeat with x = 1 to the number of elements in tRecentPathData
       put tRecentPathData[x] into tRecentPathData[x]["filename"]
       put revIDEFilepathUniqueLabel(tRecentPaths,tRecentPathData[x]["filename"]) into tRecentPathData[x]["label"] 
       
