@@ -261,3 +261,15 @@ on TestIntelligenceObjectPutFunctionWithParamError
 	TestAssert "intelligence object put function with multi-segment param error", the result contains "error"
 	TestAssert "intelligence object put function with multi-segment param invalid", tValidScript is empty
 end TestIntelligenceObjectPutFunctionWithParamError
+
+on TestIntelligenceObjectPropertyCompleted
+	local tButton, tButtonName
+	create button
+	put it into tButton
+	put the name of tButton into tButtonName
+	
+	local tValidScript
+	ideExecuteScript "width", empty, tButton, false, tValidScript
+	TestAssert "intelligence object property autocomplete result", the result is empty
+	TestAssert "intelligence object property autocomplete executed", tValidScript is "put the width of" && tButtonName
+end TestIntelligenceObjectPropertyCompleted

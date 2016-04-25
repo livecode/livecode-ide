@@ -1,0 +1,1 @@
+# Correctly auto-complete intelligence object property in message box
