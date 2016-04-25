@@ -852,9 +852,9 @@ on __extensionsLoad
          if there is a file tPath then
             put __fetchModuleData(tPath) into tArray
             if tKey is "ide" then
-               put true into tArray["builtin"]
+               put true into tArray["ide"]
             else
-               put false into tArray["builtin"]
+               put false into tArray["ide"]
             end if
             local tTypeID
             if tArray["name"] is empty then
@@ -938,15 +938,16 @@ private command __extensionLoad pID, pExtensionDataA
    # Only try to load the first copy in the load order
    put pExtensionDataA["copies"][1] into tToLoadA
    
-   local tFolder, tVersion, tStatus, tError
+   local tFolder, tVersion, tStatus, tError, tIDEExtension
    put tToLoadA["install_path"] into tFolder
    put tToLoadA["version"] into tVersion
    put tToLoadA["status"] into tStatus
    put tToLoadA["error"] into tError
-   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError
+   put tToLoadA["ide"] into tIDEExtension
+   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension
 end __extensionLoad
 
-command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError
+command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
    local tStatus, tError
    if pError is empty then
       local tResources, tModule
@@ -979,11 +980,12 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
-   # Update name, status, and error 
+   # Update name, status, error, and whether the extension comes with the IDE
    __extensionPropertySet tCacheIndex, "name", pID
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
    __extensionPropertySet tCacheIndex, "status", tStatus
    __extensionPropertySet tCacheIndex, "error", tError
+   __extensionPropertySet tCacheIndex, "ide", pIDEExtension
    
    # Store the extension's property metadata
    revIDEExtensionSetInfo pID
