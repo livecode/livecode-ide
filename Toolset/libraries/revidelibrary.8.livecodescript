@@ -2840,7 +2840,9 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       add 1 to tIndex
       put empty into tControlArray
       dispatch function "__readPropertiesOfControl" to control id tControlID of pCardID with sControlPropertiesToRead, tControlArray
-
+      
+      put tControlArray["type"] && "id" && tControlID && "of" && pCardID into tControlArray["long id"]
+      
       if tControlArray["type"] is "group" then
          if tControlArray["custom control"] is true then
             put "control" into tControlArray["style"]
@@ -2852,8 +2854,6 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       else
          put "control" into tControlArray["style"]
       end if
-      
-      put tControlArray["type"] && "id" && tControlID && "of" && pCardID into tControlArray["long id"]
       
       put pLevel+1 into tControlArray["level"]
       put tControlArray into tFullArray[tIndex]
