@@ -7247,7 +7247,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
    end switch
    put the result into tVersion
-
+   
+   local tLegacy
+   put true into tLegacy
    switch tVersion
       case "Legacy LiveCode Stack (7.0)"
          put 7.0 into tVersion
@@ -7263,6 +7265,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
       default
          put empty into tVersion
+         put false into tLegacy
          break
    end switch
 
@@ -7281,7 +7284,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put it into tFilePath
 
    # Display warning if user has not selected the latest file format
-   if tType < 8 then
+   if tLegacy then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tShortName]
