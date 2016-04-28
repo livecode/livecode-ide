@@ -394,7 +394,7 @@ command buildProjectView pRememberExpansion
    put revIDEGetPreference("pb_sections") into tSections
    
    if pRememberExpansion then
-      repeat for each line tKey in the keys of sDisplayArray["objects"]
+      repeat for each key tKey in sDisplayArray["objects"]
          if sDisplayArray["objects"][tKey]["expanded"] is true then
             if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
@@ -427,7 +427,7 @@ command buildProjectView pRememberExpansion
       put revIDEFrontScripts() into tFrontScripts
       
       if tFrontScripts is not empty then
-         put the number of lines in the keys of tFrontScripts + 1 into tIndex
+         put the number of elements in tFrontScripts + 1 into tIndex
       end if
    end if
    
@@ -536,7 +536,7 @@ function topLevelRows pArray
    put empty into sLongIDToRow
    put empty into sObjectToParent
    
-   repeat with x = 1 to the number of lines in the keys of pArray
+   repeat with x = 1 to the number of elements in pArray
       ## Mainstacks
       if pArray[x]["type"] is "stack" and pArray[x]["level"] is "1" then
          put x & comma after tTopLevelRows
@@ -1292,14 +1292,14 @@ on addChildren pParentID, pParentRow, pVisible
    
    if word 1 of pParentID is "stack" then
       put cardsOfStack(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
-      if the number of lines in the keys of tChildArray is 1 then
+      if the number of elements in tChildArray is 1 then
          put true into tOnlyChild
       end if
       
       ## Audioclips
       if the number of audioclips of pParentID > 0 then
          ## Add the audioclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tAudioclipTitleRow
+         put the number of elements in tChildArray + 1 into tAudioclipTitleRow
          
          put "false" into tChildArray[tAudioclipTitleRow]["expanded"]
          put "Audioclips" into tChildArray[tAudioclipTitleRow]["title"]
@@ -1321,7 +1321,7 @@ on addChildren pParentID, pParentRow, pVisible
       ## Videoclips
       if the number of videoclips of pParentID > 0 then
          ## Add the videoclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tVideoclipTitleRow
+         put the number of elements in tChildArray + 1 into tVideoclipTitleRow
          if the number of audioclips of pParentID > 0 then add 1 to tVideoclipTitleRow
          
          put "false" into tChildArray[tVideoclipTitleRow]["expanded"]
@@ -1673,7 +1673,7 @@ on addCardToProjectBrowser pTarget
          put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
          put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
          if tPosition is "last" then
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       else
          --put itemOffset(max(tChildren),tVisibleRows) into tLastChildPos
@@ -1688,12 +1688,12 @@ on addCardToProjectBrowser pTarget
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put  tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
             if tPosition is "last" then 
-               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
             end if
          else            
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       end if
    else
@@ -1745,8 +1745,11 @@ on addGroupToProjectBrowser pTarget
    ## Add the children to the new group
    local tGroupChildren, tGroupChildrenRows, tRowNumber, tItem, tOldID
    put revIDEControlPropertiesOfGroup(pTarget, 2) into tGroupChildren
-   put the number of lines in the keys of tGroupChildren into sDisplayArray["objects"][theIndex]["childCount"]
-   repeat with x = 1 to the number of lines in the keys of tGroupChildren
+   
+   local tGroupChildrenCount
+   put the number of elements in tGroupChildren into tGroupChildrenCount
+   put tGroupChildrenCount into sDisplayArray["objects"][theIndex]["childCount"]
+   repeat with x = 1 to tGroupChildrenCount
       put tGroupChildren[x]["long id"] into tOldID
       delete word 5 to 8 of tOldID
       put getRow(tOldID) into tRowNumber
@@ -1783,7 +1786,7 @@ on addGroupToProjectBrowser pTarget
    local tLevelConnectors, tParentLevelConnectors
    put sDisplayArray["objects"][tParentRow]["levels"] into tParentLevelConnectors
    
-   repeat with l = 1 to the number of lines in the keys of tParentLevelConnectors
+   repeat with l = 1 to the number of elements in tParentLevelConnectors
       if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "corner" then
          put empty into tLevelConnectors[l] 
       else if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "branch" then
@@ -1803,11 +1806,11 @@ on addGroupToProjectBrowser pTarget
    put sDisplayArray["objects"][tParentRow]["children"] into tParentChildren
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tParentChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors]
       end if
    end repeat
    put getLastSibling(tVisibleRows, tParentChildren) into tLastChild
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
    
    if the first char of tVisibleRows2 is comma then delete the first char of tVisibleRows2
    if the last char of tVisibleRows2 is comma then delete the last char of tVisibleRows2
@@ -1868,11 +1871,11 @@ on addControlToProjectBrowser pTarget
    
    put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
    put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors-1]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors-1]
    
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors-1]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors-1]
       end if
    end repeat
    
@@ -1981,7 +1984,7 @@ on deleteCardFromProjectBrowser pTarget
    
    ## Delete the connectors of the previous children
    local tLevelCount
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount]
    
    ## Update the children of the parent
@@ -2024,7 +2027,7 @@ on deleteControlFromProjectBrowser pTarget
    
    ## Update the connector of the previous child if necessary
    ## Add the level connectors
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount-1]
    
    if word 1 of pTarget is "group" then

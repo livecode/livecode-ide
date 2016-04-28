@@ -2453,7 +2453,7 @@ end revIDEPreferences
 
 function revIDEPreferenceNames
    local tPreferenceNames
-   repeat for each line tKey in the keys of (the customproperties of stack "revpreferences")
+   repeat for each key tKey in (the customproperties of stack "revpreferences")
       if tPreferenceNames is empty then
          put tKey into tPreferenceNames
       else
@@ -3424,7 +3424,7 @@ on revIDECloneObjectWithDefaults pLongID
    put the long ID of the last control into tCreatedControlID
 
    # Set all the properties to their default
-   repeat for each line tProperty in the keys of sClassicObjectProperties[tOriginalObjectType]["properties"]
+   repeat for each key tProperty in sClassicObjectProperties[tOriginalObjectType]["properties"]
       if sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["default"] is "no_default" then next repeat
       if sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["read_only"] is true then next repeat
       revIDESetPropertyOfObject tCreatedControlID, tProperty, sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["default"]
@@ -4753,7 +4753,7 @@ function revIDEItemiseArray pArray
    ## Add in all the parentLastSibling stuff into the array
    ## Was the parent a last sibling
    local tChildren
-   repeat for each line tKey in the keys of pList
+   repeat for each key tKey in pList
       put pList[tKey]["children"] into tChildren
       if tChildren is not empty then
          repeat for each item tChild in tChildren
@@ -5093,7 +5093,7 @@ on revIDECustomPropertiesSet pObject, pProperty, pValue
 end revIDECustomPropertiesSet
 
 private on __populatePropertyArray pObject, pPropertyValues, @xPropertiesA
-   repeat for each line tPropertyName in the keys of pPropertyValues
+   repeat for each key tPropertyName in pPropertyValues
       if tPropertyName begins with "effective" then next repeat
       if pPropertyValues["effective" && tPropertyName] is not empty then
          put pPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][pObject]

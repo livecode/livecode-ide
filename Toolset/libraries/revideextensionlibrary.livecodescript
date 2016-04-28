@@ -76,7 +76,7 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
    
    # Repeat over the extension array looking for elements with matching type
    local tExtensions
-   repeat for each line tExtensionKey in the keys of sExtensions
+   repeat for each key tExtensionKey in sExtensions
       if sExtensions[tExtensionKey]["name"] is empty then 
          delete variable sExtensions[tExtensionKey]
          next repeat
@@ -258,7 +258,7 @@ on __extensionInstallRemoveOlderVersions pCacheIndex
    local tName
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    
-   repeat for each line tCacheIndex in the keys of sExtensions
+   repeat for each key tCacheIndex in sExtensions
       if tCacheIndex is pCacheIndex then next repeat
       if sExtensions[tCacheIndex]["name"] is tName then
          revIDEUninstallExtension tCacheIndex
@@ -915,7 +915,7 @@ end __extensionUpdates
 
 # Returns the ID of the internal array given the extension typeID
 private function __extensionCacheID pPropertyToSearch, pValue
-   repeat for each line tExtensionID in the keys of sExtensions
+   repeat for each key tExtensionID in sExtensions
       if sExtensions[tExtensionID][pPropertyToSearch] is pValue then
          return tExtensionID
       end if
