@@ -2065,7 +2065,7 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
    local tDraggedOwner, tNewRowOwner, tDroppedAfterOwner
    local tDirection, tVisibleRows
    local tUpdateParents
-   local tDraggedCardNumber, tNewRowNumber, tDroppedAfterNumber
+   local tNewRowNumber, tDroppedAfterNumber
    local tDraggedMainStack, tDroppedAfterMainStack
    local tExpanded, tNewID, tRowRect
    
@@ -2111,234 +2111,128 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
    put revIDEStackOfObject(tNewRowID) into tNewRowStack
    put revIDEStackOfObject(tDroppedAfterID) into tDroppedAfterStack
    
-   local tAbs, tLongID
-   
-   if (tDraggedStyle is "control" or tDraggedStyle is "group") and (tDroppedAfterStyle is "control") then
-      ## If both controls have the same owner (card or group)
-      if tDraggedOwner is tDroppedAfterOwner then
-         lock messages
-         set the relayerGroupedControls to true
-         if tDirection is "after" then
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               revIDERelayerControl sDisplayArray["objects"][tAbs]["long id"], tNewRowLayer, tDraggedCard
-            end repeat
+   local tAbs, tLongID, tRelayer
+   switch tDraggedType
+      case "stack"
+         exit reorderRows
+         break
+      case "card"
+         switch tDroppedAfterType
+            case "card"
+               put the number of tNewRowID into tNewRowNumber
+               put the number of tDroppedAfterID+1 into tDroppedAfterNumber
+               break
+            case "stack"
+               put 1 into tNewRowNumber
+               put 1 into tDroppedAfterNumber
+               break
+            case "stack"
+               ## A card has been dropped after a stack
+               put 1 into tNewRowNumber
+               put 1 into tDroppedAfterNumber
+               break
+            case "control"
+            case "group"
+               put the number of tDroppedAfterCard+1 into tDroppedAfterNumber
+               put tDroppedAfterNumber into tNewRowNumber
+               break
+            default
+               exit reorderRows
+               break
+         end switch
+         if tDraggedStack is tDroppedAfterStack then
+            ## Reorder cards
+            revIDERenumberCard tDraggedID,tNewRowNumber
+            refreshChildren tDraggedStack         
          else
-            repeat with x = the number of items in pDraggedRowList down to 1
-               put item x of pDraggedRowList into tRow
-               put getAbsoluteRow(tRow) into tAbs
-               revIDERelayerControl sDisplayArray["objects"][tAbs]["long id"], tNewRowLayer, tDraggedCard
-            end repeat
-         end if
-         set the relayerGroupedControls to false
-         refreshChildren tDraggedCard            
-         unlock messages
-      else
-         if tDraggedCard is tDroppedAfterCard then
-            ## Same card but different groups
-            set the relayerGroupedControls to true
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-               revIDERelayerControl tLongID, tNewRowLayer, tDraggedCard
-            end repeat
-            --put the result into tNewID
-            set the relayerGroupedControls to false
-            refreshChildren tDraggedCard
-         else
-            ## Different cards
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-               revIDEMoveControl tLongID, tDroppedAfterCard, tNewRowLayer
-            end repeat
+            ## Move to another stack
+            put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
+            revIDEMoveCard tDraggedID, tDroppedAfterStack
             put the result into tNewID
-            put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-            refreshChildren tUpdateParents
+            put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
+            revIDERenumberCard tNewID,tDroppedAfterNumber
+            refreshChildren tUpdateParents, tNewID, tExpanded
          end if
-      end if
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and tDroppedAfterType is "card" then
-      ## A control has been dropped after a card
-      if tDraggedCard is tDroppedAfterCard then
-         ## Dragged to the top/after the card
-         set the relayerGroupedControls to true
-         
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDERelayerControl tLongID, "top", tDraggedCard
-         end repeat
-         
-         set the relayerGroupedControls to false
-         refreshChildren tDraggedCard
-      else
-         ## Dragged to another card
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDEMoveControl tLongID, tDroppedAfterCard, 1
-         end repeat
-         
-         put the result into tNewID
-         put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-         refreshChildren tUpdateParents
-      end if
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and tDroppedAfterType is "stack" then
-      ## Control dropped after a stack
-      ## if the stack is closed drop the control onto the current card of the stack
-      if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
-         
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDEMoveControl tLongID, the long id of this card of tDroppedAfterStack , 1
-         end repeat
-         
-         put the result into tNewID
-         put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-         refreshChildren tUpdateParents
-      end if      
-      
-      ## Groups
-      ## Dropped after a group (or into a group)
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and (tDroppedAfterStyle is "group") then
-      ## If both controls have the same owner (card or group)
-      if tDraggedOwner is tDroppedAfterOwner then
-         ## If group is expanded 
-         if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] then
-            set the relayerGroupedControls to true
-            revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-            set the relayerGroupedControls to false
-            refreshChildren tDraggedCard
-         else
-            ## Depending on "drop zone"
-            ## Drop after the group, not into it
-            put the rect of the dvControlOfRow[pDroppedAfterRow] of the dvControl of group "objectList" of me into tRowRect
-            if (the mouseV > item 2 of tRowRect+8) and (the mouseV  <  item 4 of tRowRect-8) then
-               ## Middle
-               set the relayerGroupedControls to true
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               set the relayerGroupedControls to false
-               refreshChildren tDraggedCard
-            else
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               refreshChildren tDraggedCard
-            end if            
-         end if
-      else
-         if tDraggedCard is tDroppedAfterCard then
-            if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] then
-               set the relayerGroupedControls to true
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               set the relayerGroupedControls to false
-               refreshChildren tDraggedCard
-            else
+         break
+      case "substack"
+         local tNewMainstack
+         switch tDroppedAfterType
+            case "substack"
+            case "group"
+            case "control"
+               put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
+               put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
+               put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
+               put tDroppedAfterMainStack into tNewMainstack
+               break
+            case "card"
+            case "stack"
+               put the long name of stack (the mainstack of tDraggedStack) & return & tDroppedAfterStack into tUpdateParents
+               put tDroppedAfterStack into tNewMainstack
+               break
+            default
+               exit reorderRows
+               break
+         end switch
+         revIDEMoveSubstack tDraggedID, tNewMainstack
+         put the long name of stack (line -1 of the substacks of tNewMainstack) into tNewID
+         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
+         refreshChildren tUpdateParents,tNewID,tExpanded
+         break
+      default
+         # Control
+         put true into tRelayer
+         switch tDroppedAfterType
+            case "card"
+               put "bottom" into tNewRowLayer
+               break
+            case "stack"
+               ## if the stack is closed drop the control onto the current card of the stack
+               if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
+                  put the long id of this card of tDroppedAfterStack into tDroppedAfterCard
+               else
+                  put the long id of card 1 of tDroppedAfterStack into tDroppedAfterCard
+               end if
+               put "bottom" into tNewRowLayer
+               break
+            case "group"
+               ## Depending on "drop zone" of non-expanded group
                ## Drop after the group, not into it
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               refreshChildren tDraggedCard
-            end if
-         else
-            ## Different cards
-            revIDEMoveControl tDraggedID, tDroppedAfterCard, tNewRowLayer
-            put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-            refreshChildren tUpdateParents
+               if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
+                  put the rect of the dvControlOfRow[pDroppedAfterRow] of the dvControl of group "objectList" of me into tRowRect
+                  if (the mouseV <= item 2 of tRowRect+8) or (the mouseV  >=  item 4 of tRowRect-8) then
+                     ## outside group
+                     put false into tRelayer
+                  end if  
+               end if 
+               break
+            default
+               if tDroppedAfterStyle is not "control" then
+                  exit reorderRows
+               end if
+               break
+         end switch
+         lock messages
+         if tRelayer then
+            set the relayerGroupedControls to true
          end if
-      end if
-      ## Cards
-   else if tDraggedType is "card" and tDroppedAfterType is "card" then
-      put the number of tDraggedID into tDraggedCardNumber
-      put the number of tNewRowID into tNewRowNumber
-      put the number of tDroppedAfterID+1 into tDroppedAfterNumber
-      
-      if tDraggedStack is tDroppedAfterStack then
-         ## Reorder cards
-         revIDERenumberCard tDraggedID,tNewRowNumber
-         refreshChildren tDraggedStack         
-      else
-         ## Move to another stack
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,tDroppedAfterNumber
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-   else if tDraggedType is "card" and tDroppedAfterType is "stack" then
-      ## A card has been dropped after a stack
-      if tDraggedStack is tDroppedafterStack then
-         revIDERenumberCard tDraggedID,1
-         refreshChildren tDraggedStack       
-      else
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,1
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-   else if tDraggedType is "card" and (tDroppedAfterStyle is "control" or tDroppedAfterStyle is "group") then
-      ## The card has been dropped after the last control on an open card
-      put the number of tDraggedCard into tDraggedCardNumber
-      --put the number of tNewRowCard into tNewRowNumber
-      put the number of tDroppedAfterCard+1 into tDroppedAfterNumber
-      
-      if tDraggedStack is tDroppedAfterStack then
-         ## Reorder cards
-         revIDERenumberCard tDraggedID,tDroppedAfterNumber
-         refreshChildren tDraggedStack         
-      else
-         ## Move to another stack
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,tDroppedAfterNumber
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-      ## Substacks
-   else if tDraggedType is "substack" and tDroppedAfterType is "substack" then
-      ## Drop the substack after the last substack
-      put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
-      put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
-      
-      put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterMainStack
-      put the long name of stack (line -1 of the substacks of tDroppedAfterMainStack) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded
-   else if tDraggedType is "substack" and tDroppedAfterType is "card" then
-      ## Drop the substack after the last card
-      put the long name of stack (the mainstack of tDraggedStack) & return & tDroppedAfterStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterStack
-      put the long name of stack (line -1 of the substacks of stack (tDroppedAfterStack)) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded
-   else if tDraggedType is "substack" and tDroppedAfterType is "stack" then
-      
-   else if tDraggedType is "substack" and (tDroppedAfterStyle is "control" or tDroppedAfterType is "group") then
-      put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
-      put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
-      
-      put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterMainStack
-      put the long name of stack (line -1 of the substacks of tDroppedAfterMainStack) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded      
-   end if
-   
+         repeat for each item tRow in pDraggedRowList
+            put getAbsoluteRow(tRow) into tAbs
+            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
+            if tDraggedCard is not tDroppedAfterCard then
+               revIDEMoveControl tLongID, tDroppedAfterCard, tNewRowLayer
+               put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
+            else
+               revIDERelayerControl tLongID, tNewRowLayer, tDraggedCard
+               put tDraggedCard into tUpdateParents
+            end if
+         end repeat
+         set the relayerGroupedControls to false
+         refreshChildren tUpdateParents            
+         unlock messages
+         break
+   end switch
    refreshProjectView
-   
-   --   if tNewID is empty then put tDraggedID into tNewID
-   --   selectObjects tNewID
 end reorderRows
 
 ####### Property Management
