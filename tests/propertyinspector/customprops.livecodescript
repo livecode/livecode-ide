@@ -16,22 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestSetup
-   local tIDELibrary, tScript
-   put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
-   
-   -- Work around the fact that the property listener is not available in standalone mode
-   put the script of stack tIDELibrary into tScript
-   replace "_internal" with "--_internal" in tScript
-   replace "the revObjectListeners" with "empty" in tScript
-   set the script of stack tIDELibrary to tScript
-
-   insert the script of stack "revIDELibrary" into back
-   
-   create stack "home"
-   set the filename of stack "home" to (TestGetIDERepositoryPath() & "/Toolset/home-dummy.livecode")
-end TestSetup
-
 on TestBug16429
    local tCustomPropsArray
    put "cProp-empty" into tCustomPropsArray[""]["cProp"]

@@ -1,4 +1,4 @@
-﻿script "TestSaveStackRequest"
+﻿script "MessageBoxTestSupport"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -16,19 +16,17 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-constant kFilename = "TestSaveStackRequest.livecode"
+local sMsgLongID
+on libraryStack
+   local tStackName
+   put revIDEPaletteToStackName("message box") into tStackName
+   put the long id of stack tStackName into sMsgLongID
+end libraryStack
 
--- Test that handling saveStackRequest cancels saving a stack
-on TestSaveStackRequest
-   local tStack
+on MessageBoxIsEmpty
+   return field 1 of this card of sMsgLongID is empty
+end MessageBoxIsEmpty
 
-   create invisible stack "SaveTest"
-   put it into tStack
-
-   set the script of tStack to "on saveStackRequest; end saveStackRequest"
-   set the filename of tStack to kFileName
-
-   revIDESaveStack tStack
-
-   TestAssert "Handling saveStackRequest cancels save", there is not a file kFileName
-end TestSaveStackRequest
+on MessageBoxSetEmpty
+   put empty into field 1 of this card of sMsgLongID
+end MessageBoxSetEmpty

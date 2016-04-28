@@ -16,7 +16,7 @@ command revInternal__LoadLibrary pLibrary
    end if
 
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
-   if the environment is "development" then
+   if the environment begins with "development" then
       local tLibraryPath
       if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
       else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath

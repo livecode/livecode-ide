@@ -11,6 +11,11 @@ ide-check: lcs-check
 # top of the engine repository.
 top_srcdir ?= ../..
 
+# Override the test runner
+LCS_TESTRUNNER ?= ../tests/_testrunner.livecodescript
+
+LCS_TESTENGINE ?= development
+
 # Things have now been setup enough that the engine's test Makefile
 # can perform the tests without any further configuration.
 include $(top_srcdir)/tests/Makefile

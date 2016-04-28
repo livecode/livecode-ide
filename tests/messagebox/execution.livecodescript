@@ -16,19 +16,22 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestSetup
-   local tIDELibrary, tScript
-   put TestGetIDERepositoryPath() & "/Toolset/libraries/revidelibrary.8.livecodescript" into tIDELibrary
+local sSupportStack
+on TestSetup   
+   set the itemdelimiter to slash
+   local tSupportStack
+   put the filename of me into tSupportStack
+   put "_support.livecodescript" into item -1 of tSupportStack
+   put tSupportStack into sSupportStack
+   start using stack sSupportStack
    
-   -- Work around the fact that the property listener is not available in standalone mode
-   put the script of stack tIDELibrary into tScript
-   replace "_internal" with "--_internal" in tScript
-   replace "the revObjectListeners" with "empty" in tScript
-   replace "the effective revAvailableHandlers of pObject" with "empty" in tScript
-   set the script of stack tIDELibrary to tScript
-
-   insert the script of stack "revIDELibrary" into back
+   put empty into msg
+   MessageBoxSetEmpty
 end TestSetup
+
+on TestTeardown
+   stop using stack sSupportStack
+end TestTeardown
 
 on TestBug16281
 	local tValidScript, tButton
