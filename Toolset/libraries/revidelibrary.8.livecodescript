@@ -2453,7 +2453,7 @@ end revIDEPreferences
 
 function revIDEPreferenceNames
    local tPreferenceNames
-   repeat for each line tKey in the keys of (the customproperties of stack "revpreferences")
+   repeat for each key tKey in (the customproperties of stack "revpreferences")
       if tPreferenceNames is empty then
          put tKey into tPreferenceNames
       else
@@ -2603,6 +2603,12 @@ function revIDEColor pTag
       case "dataView_scriptBackgroundColor"
          return "34,154,206"
          break
+      case "dataView_disclosureIconColor"
+         return "99,99,99"
+         break         
+      case "dataView_disclosureIconHiliteColor"
+         return "216,216,216"
+         break 
       case "palette_background"
          if the platform is "Win32" then
             return "240,240,240"
@@ -3418,7 +3424,7 @@ on revIDECloneObjectWithDefaults pLongID
    put the long ID of the last control into tCreatedControlID
 
    # Set all the properties to their default
-   repeat for each line tProperty in the keys of sClassicObjectProperties[tOriginalObjectType]["properties"]
+   repeat for each key tProperty in sClassicObjectProperties[tOriginalObjectType]["properties"]
       if sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["default"] is "no_default" then next repeat
       if sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["read_only"] is true then next repeat
       revIDESetPropertyOfObject tCreatedControlID, tProperty, sClassicObjectProperties[tOriginalObjectType]["properties"][tProperty]["default"]
@@ -4747,7 +4753,7 @@ function revIDEItemiseArray pArray
    ## Add in all the parentLastSibling stuff into the array
    ## Was the parent a last sibling
    local tChildren
-   repeat for each line tKey in the keys of pList
+   repeat for each key tKey in pList
       put pList[tKey]["children"] into tChildren
       if tChildren is not empty then
          repeat for each item tChild in tChildren
@@ -5087,7 +5093,7 @@ on revIDECustomPropertiesSet pObject, pProperty, pValue
 end revIDECustomPropertiesSet
 
 private on __populatePropertyArray pObject, pPropertyValues, @xPropertiesA
-   repeat for each line tPropertyName in the keys of pPropertyValues
+   repeat for each key tPropertyName in pPropertyValues
       if tPropertyName begins with "effective" then next repeat
       if pPropertyValues["effective" && tPropertyName] is not empty then
          put pPropertyValues["effective" && tPropertyName] into xPropertiesA[tPropertyName]["effective value"][pObject]
@@ -7224,8 +7230,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put revFixPath(tShortName) into tStackName
 
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
-   local tType
-
    local tStackFileType
    if there is a file the filename of stack tShortName then put revStackFileVersion(the filename of stack tShortName) into tStackFileType
 
@@ -7233,6 +7237,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tSubstitutions
    put tShortName into tSubstitutions[1]
 
+   local tVersion
    switch tStackFileType
       case 5.5
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
@@ -7247,24 +7252,26 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
    end switch
-
-   put the result into tType
-
-   switch tType
+   put the result into tVersion
+   
+   local tLegacy
+   put true into tLegacy
+   switch tVersion
       case "Legacy LiveCode Stack (7.0)"
-         put 7.0 into tType
+         put 7.0 into tVersion
          break
       case "Legacy LiveCode Stack (5.5)"
-         put 5.5 into tType
+         put 5.5 into tVersion
          break
       case "Legacy LiveCode Stack (2.7)"
-         put 2.7 into tType
+         put 2.7 into tVersion
          break
       case "Legacy LiveCode Stack (2.4)"
-         put 2.4 into tType
+         put 2.4 into tVersion
          break
       default
-         put 8.0 into tType
+         put empty into tVersion
+         put false into tLegacy
          break
    end switch
 
@@ -7283,7 +7290,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    put it into tFilePath
 
    # Display warning if user has not selected the latest file format
-   if tType < 8 then
+   if tLegacy then
       answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tShortName]
@@ -7327,7 +7334,11 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
 
    -- Synthesize a "saveStackRequest" message
    if ideDispatchSaveStackRequest(tShortName) is not "handled" then
-      revIDESaveStackAs the long id of stack tShortName, tFilePath, tType
+      -- Make sure we apply the stackfileversion custom property.
+      -- If this is empty, then it means 'latest format'.
+      set the cREVGeneral["stackfileversion"] of stack tShortName to tVersion
+
+      revIDESaveStackAs the long id of stack tShortName, tFilePath, tVersion
    end if
 
    unlock messages
@@ -9319,7 +9330,7 @@ function revIDERecentStacks
    # Generate labels for the stacks. The label is the filename without the file extension
    # If two stacks have the same filename, the minimum path is added to the label to
    # distinguish the entries
-   repeat with x = 1 to the number of lines of the keys of tRecentPathData
+   repeat with x = 1 to the number of elements in tRecentPathData
       put tRecentPathData[x] into tRecentPathData[x]["filename"]
       put revIDEFilepathUniqueLabel(tRecentPaths,tRecentPathData[x]["filename"]) into tRecentPathData[x]["label"] 
       

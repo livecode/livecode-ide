@@ -13,7 +13,7 @@ on preOpenStack
    # Look at the preference setting and validate the entries against the tool data
    local tAllViewList, tObjectData
    put objectTypes() into tObjectData
-   repeat for each line tKey in the keys of tObjectData
+   repeat for each key tKey in tObjectData
       put tObjectData[tKey]["name"] & comma after tAllViewList
    end repeat
    delete the last char of tAllViewList

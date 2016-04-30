@@ -76,7 +76,7 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
    
    # Repeat over the extension array looking for elements with matching type
    local tExtensions
-   repeat for each line tExtensionKey in the keys of sExtensions
+   repeat for each key tExtensionKey in sExtensions
       if sExtensions[tExtensionKey]["name"] is empty then 
          delete variable sExtensions[tExtensionKey]
          next repeat
@@ -258,7 +258,7 @@ on __extensionInstallRemoveOlderVersions pCacheIndex
    local tName
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    
-   repeat for each line tCacheIndex in the keys of sExtensions
+   repeat for each key tCacheIndex in sExtensions
       if tCacheIndex is pCacheIndex then next repeat
       if sExtensions[tCacheIndex]["name"] is tName then
          revIDEUninstallExtension tCacheIndex
@@ -852,9 +852,9 @@ on __extensionsLoad
          if there is a file tPath then
             put __fetchModuleData(tPath) into tArray
             if tKey is "ide" then
-               put true into tArray["builtin"]
+               put true into tArray["ide"]
             else
-               put false into tArray["builtin"]
+               put false into tArray["ide"]
             end if
             local tTypeID
             if tArray["name"] is empty then
@@ -915,7 +915,7 @@ end __extensionUpdates
 
 # Returns the ID of the internal array given the extension typeID
 private function __extensionCacheID pPropertyToSearch, pValue
-   repeat for each line tExtensionID in the keys of sExtensions
+   repeat for each key tExtensionID in sExtensions
       if sExtensions[tExtensionID][pPropertyToSearch] is pValue then
          return tExtensionID
       end if
@@ -938,15 +938,16 @@ private command __extensionLoad pID, pExtensionDataA
    # Only try to load the first copy in the load order
    put pExtensionDataA["copies"][1] into tToLoadA
    
-   local tFolder, tVersion, tStatus, tError
+   local tFolder, tVersion, tStatus, tError, tIDEExtension
    put tToLoadA["install_path"] into tFolder
    put tToLoadA["version"] into tVersion
    put tToLoadA["status"] into tStatus
    put tToLoadA["error"] into tError
-   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError
+   put tToLoadA["ide"] into tIDEExtension
+   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension
 end __extensionLoad
 
-command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError
+command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
    local tStatus, tError
    if pError is empty then
       local tResources, tModule
@@ -979,11 +980,12 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
-   # Update name, status, and error 
+   # Update name, status, error, and whether the extension comes with the IDE
    __extensionPropertySet tCacheIndex, "name", pID
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
    __extensionPropertySet tCacheIndex, "status", tStatus
    __extensionPropertySet tCacheIndex, "error", tError
+   __extensionPropertySet tCacheIndex, "ide", pIDEExtension
    
    # Store the extension's property metadata
    revIDEExtensionSetInfo pID

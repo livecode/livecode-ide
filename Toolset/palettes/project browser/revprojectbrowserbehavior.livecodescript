@@ -36,6 +36,7 @@ on preOpenStack
    addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
    addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
    addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_textSize","header","preference","Text size","enum","default,8,10,12,14,18,24","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideNewControl"
@@ -65,10 +66,19 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:pb_stackSortOrder"
    revIDESubscribe "idePreferenceChanged:pb_cardSortOrder"
    revIDESubscribe "idePreferenceChanged:pb_controlSortOrder"
+   revIDESubscribe "idePreferenceChanged:pb_textSize"
    
    revIDESubscribe "ideShowInProjectBrowser"
    
    setDefaultPreferences
+   
+   local tTextSize
+   put revIDEGetPreference("pb_textSize") into tTextSize
+   if tTextSize is "default" then
+      set the textSize of me to empty
+   else
+      set the textSize of me to tTextSize
+   end if
    
    put empty into sDisplayArray
    loadImages
@@ -266,10 +276,15 @@ on preferenceChanged pPreference, pValue
          revIDESetPreference "pb_controlSortType", tSortType
          revIDESetPreference "pb_controlSortOrder", tSortOrder         
          break
+      case "pb_textSize"
+         revIDESetPreference "pb_textSize", pValue
+         break
    end switch
 end preferenceChanged
 
 on idePreferenceChanged pPreference, pValue
+   local tTextSize
+   
    switch pPreference
       case "pb_indicator"
       case "pb_sections"
@@ -279,6 +294,18 @@ on idePreferenceChanged pPreference, pValue
       case "pb_cardSortOrder"
       case "pb_controlSortType"
       case "pb_controlSortOrder"
+         buildProjectView true
+         break
+      case "pb_textSize"
+         put revIDEGetPreference("pb_textSize") into tTextSize
+         if tTextSize is "default" then
+            set the textSize of me to empty
+         else
+            set the textSize of me to tTextSize
+         end if
+         setUpProjectView
+         buildProjectView true
+         break
       default
          buildProjectView true
    end switch
@@ -315,28 +342,30 @@ function pbSelectedObjects
 end pbSelectedObjects
 
 command setUpProjectView
-   local theStylesA, tBehaviorsFolder, tStackID
+   local theStylesA, tBehaviorsFolder, tStackID, tTemplatesFolder
    put revIDEPaletteResourcePath("behaviors") into tBehaviorsFolder
+   put revIDEPaletteResourcePath("templates") into tTemplatesFolder
    
    set the behavior of group "objectList" of me to revIDEDataViewBehavior()
    send "ResetView" to group "objectList" of me
-   put the long id of group "containerRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["container"]
+   
+   put the long id of group "containerRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsercontainerrowtemplate.livecode") into theStylesA["container"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontainerrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["container"] to tStackID
    
-   put the long id of group "controlRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["control"]
+   put the long id of group "controlRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsercontrolrowtemplate.livecode") into theStylesA["control"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontrolrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["control"] to tStackID
    
-   put the long id of group "libraryRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["library"]
+   put the long id of group "libraryRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowserlibraryrowtemplate.livecode") into theStylesA["library"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowserlibraryrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["library"] to tStackID
    
-   put the long id of group "sectionRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["section"]
+   put the long id of group "sectionRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsersectionrowtemplate.livecode") into theStylesA["section"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsersectionrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["section"] to tStackID
    
-   put the long id of group "groupRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["group"]
+   put the long id of group "groupRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsergrouprowtemplate.livecode") into theStylesA["group"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsergrouprowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["group"] to tStackID
    
@@ -347,7 +376,7 @@ command setUpProjectView
    set the viewProp["alternate row color"] of group "objectList" of me to revIDEColor("dataView_rowAlternateColor")     
    
    set the viewProp["fixed row height"] of group "objectList" of me to "true"
-   set the viewProp["row height"] of group "objectList" of me to 24
+   set the viewProp["row height"] of group "objectList" of me to the effective textSize of me + 14
    set the viewProp["cache"] of group "objectList" of me to "none"
    set the viewProp["background color"] of group "objectList" of me to empty
    set the viewProp["drop indicator template"] of group "objectList" of me to the long id of group "pbDragIndicator" of card "templates" of this stack
@@ -365,7 +394,7 @@ command buildProjectView pRememberExpansion
    put revIDEGetPreference("pb_sections") into tSections
    
    if pRememberExpansion then
-      repeat for each line tKey in the keys of sDisplayArray["objects"]
+      repeat for each key tKey in sDisplayArray["objects"]
          if sDisplayArray["objects"][tKey]["expanded"] is true then
             if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
@@ -398,7 +427,7 @@ command buildProjectView pRememberExpansion
       put revIDEFrontScripts() into tFrontScripts
       
       if tFrontScripts is not empty then
-         put the number of lines in the keys of tFrontScripts + 1 into tIndex
+         put the number of elements in tFrontScripts + 1 into tIndex
       end if
    end if
    
@@ -507,7 +536,7 @@ function topLevelRows pArray
    put empty into sLongIDToRow
    put empty into sObjectToParent
    
-   repeat with x = 1 to the number of lines in the keys of pArray
+   repeat with x = 1 to the number of elements in pArray
       ## Mainstacks
       if pArray[x]["type"] is "stack" and pArray[x]["level"] is "1" then
          put x & comma after tTopLevelRows
@@ -1263,14 +1292,14 @@ on addChildren pParentID, pParentRow, pVisible
    
    if word 1 of pParentID is "stack" then
       put cardsOfStack(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
-      if the number of lines in the keys of tChildArray is 1 then
+      if the number of elements in tChildArray is 1 then
          put true into tOnlyChild
       end if
       
       ## Audioclips
       if the number of audioclips of pParentID > 0 then
          ## Add the audioclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tAudioclipTitleRow
+         put the number of elements in tChildArray + 1 into tAudioclipTitleRow
          
          put "false" into tChildArray[tAudioclipTitleRow]["expanded"]
          put "Audioclips" into tChildArray[tAudioclipTitleRow]["title"]
@@ -1292,7 +1321,7 @@ on addChildren pParentID, pParentRow, pVisible
       ## Videoclips
       if the number of videoclips of pParentID > 0 then
          ## Add the videoclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tVideoclipTitleRow
+         put the number of elements in tChildArray + 1 into tVideoclipTitleRow
          if the number of audioclips of pParentID > 0 then add 1 to tVideoclipTitleRow
          
          put "false" into tChildArray[tVideoclipTitleRow]["expanded"]
@@ -1644,7 +1673,7 @@ on addCardToProjectBrowser pTarget
          put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
          put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
          if tPosition is "last" then
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       else
          --put itemOffset(max(tChildren),tVisibleRows) into tLastChildPos
@@ -1659,12 +1688,12 @@ on addCardToProjectBrowser pTarget
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put  tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
             if tPosition is "last" then 
-               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
             end if
          else            
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       end if
    else
@@ -1716,8 +1745,11 @@ on addGroupToProjectBrowser pTarget
    ## Add the children to the new group
    local tGroupChildren, tGroupChildrenRows, tRowNumber, tItem, tOldID
    put revIDEControlPropertiesOfGroup(pTarget, 2) into tGroupChildren
-   put the number of lines in the keys of tGroupChildren into sDisplayArray["objects"][theIndex]["childCount"]
-   repeat with x = 1 to the number of lines in the keys of tGroupChildren
+   
+   local tGroupChildrenCount
+   put the number of elements in tGroupChildren into tGroupChildrenCount
+   put tGroupChildrenCount into sDisplayArray["objects"][theIndex]["childCount"]
+   repeat with x = 1 to tGroupChildrenCount
       put tGroupChildren[x]["long id"] into tOldID
       delete word 5 to 8 of tOldID
       put getRow(tOldID) into tRowNumber
@@ -1754,7 +1786,7 @@ on addGroupToProjectBrowser pTarget
    local tLevelConnectors, tParentLevelConnectors
    put sDisplayArray["objects"][tParentRow]["levels"] into tParentLevelConnectors
    
-   repeat with l = 1 to the number of lines in the keys of tParentLevelConnectors
+   repeat with l = 1 to the number of elements in tParentLevelConnectors
       if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "corner" then
          put empty into tLevelConnectors[l] 
       else if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "branch" then
@@ -1774,11 +1806,11 @@ on addGroupToProjectBrowser pTarget
    put sDisplayArray["objects"][tParentRow]["children"] into tParentChildren
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tParentChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors]
       end if
    end repeat
    put getLastSibling(tVisibleRows, tParentChildren) into tLastChild
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
    
    if the first char of tVisibleRows2 is comma then delete the first char of tVisibleRows2
    if the last char of tVisibleRows2 is comma then delete the last char of tVisibleRows2
@@ -1839,11 +1871,11 @@ on addControlToProjectBrowser pTarget
    
    put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
    put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors-1]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors-1]
    
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors-1]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors-1]
       end if
    end repeat
    
@@ -1952,7 +1984,7 @@ on deleteCardFromProjectBrowser pTarget
    
    ## Delete the connectors of the previous children
    local tLevelCount
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount]
    
    ## Update the children of the parent
@@ -1995,7 +2027,7 @@ on deleteControlFromProjectBrowser pTarget
    
    ## Update the connector of the previous child if necessary
    ## Add the level connectors
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount-1]
    
    if word 1 of pTarget is "group" then
@@ -2470,4 +2502,109 @@ command setDefaultPreferences
       end if
    end if
 end setDefaultPreferences
+
+## Connector creation for all row types
+command setConnectorIcon pControl, pState
+   local tLeft, tTop, tRight,tBottom, tHeight, tWidth, tPoints
+   
+   put the left of pControl into tLeft
+   put the right of pControl into tRight
+   put the top of pControl into tTop
+   put the bottom of pControl into tBottom
+   
+   put the width of pControl into tWidth
+   put the height of pControl into tHeight
+   
+   set the foregroundColor pControl to empty
+   set the foregroundColor of graphic "line" of pControl to empty
+   
+   switch pState
+      case empty
+         hide widget "icon" of pControl
+         hide graphic "line" of pControl
+         break
+      case "branch"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2), tTop & return into tPoints
+         put tLeft + (tWidth/2), tTop + tHeight & return after tPoints
+         put tLeft + (tWidth/2), tTop + (tHeight/2)  & return after tPoints
+         put tLeft + tWidth, tTop + (tHeight/2)  & return after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         
+         break
+      case "cantExpand"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2)  & return into tPoints
+         put tLeft + (tWidth/2) - (the width of widget "icon" of pControl /2),tTop + (tHeight/2)  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "circle"
+         break
+      case "childContracted"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2) & return into tPoints
+         put tLeft + (tWidth/2) -  (the width of widget "icon" of pControl /2),tTop + (tHeight/2)  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "plus sign"
+         break
+      case "childExpanded"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2)  & return into tPoints
+         put tLeft + (tWidth/2)  -  (the width of widget "icon" of pControl /2) ,tTop + (tHeight/2)  & return after tPoints
+         put tLeft + (tWidth/2) ,tTop + (tHeight/2) + (the height of widget "icon" of pControl /2) & return after tPoints
+         put tLeft + (tWidth/2),tTop + tHeight  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "minus sign"
+         
+         break
+      case "corner"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2),tTop & return into tPoints
+         put  tLeft + (tWidth/2), tTop + (tHeight/2) & return after tPoints
+         put  tLeft + tWidth, tTop + (tHeight/2) after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+      case "horizontal"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft,tTop + (tHeight/2) & return into tPoints
+         put tLeft + tWidth,tTop + (tHeight/2) after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+      case "stackContracted"
+         hide graphic "line" of pControl
+         show widget "icon" of pControl
+         set the iconPresetName of widget "icon" of pControl to "plus sign"
+         break
+      case "stackExpanded"
+         show widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2),tTop +(tHeight/2) +(the height of widget "icon" of pControl /2)  & return into tPoints
+         put tLeft + (tWidth/2),tTop + tHeight after tPoints
+         set the points of graphic "line" of pControl to  tPoints
+         set the iconPresetName of widget "icon" of pControl to "minus sign"
+         break
+      case "vertical"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         put tLeft + (tWidth/2),tTop & return into tPoints
+         put tLeft + (tWidth/2),tBottom after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+   end switch
+end setConnectorIcon
 
