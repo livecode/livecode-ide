@@ -16,6 +16,9 @@ row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data G
 row behavior:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row behavior	Data Grid	com.livecode.pi.script	true	true		no_default					1
 row template:revIDEGetDataGridProperty:	Row template	Data Grid	com.livecode.pi.datagrid	true	true	
 
+text:revIDEGetDataGridProperty:revIDESetDataGridProperty	Contents	Contents	com.livecode.pi.textcontents	true	false		no_default
+first row header:revIDEGetDataGridProperty:revIDESetDataGridProperty	First row is header	Contents	com.livecode.pi.boolean	true	false		no_default
+
 text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text color	Colors	com.livecode.pi.color	true	false
 hilited text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Hilited text color	Colors	com.livecode.pi.color	true	false
 background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Background color	Colors	com.livecode.pi.color	true	false

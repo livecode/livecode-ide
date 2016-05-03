@@ -14,18 +14,20 @@ on propertyRegister pPropertyInfo
    // Some editors are only slight variants of each other. In this case 
    // we allow the editor behavior itself to configure the options
    switch pPropertyInfo["editor"]
-   case "com.livecode.pi.integer"
-      put "com.livecode.pi.number" into tEditor
-      break
-   case "com.livecode.pi.nowraptext"
-   case "com.livecode.pi.styledtext"
-      put "com.livecode.pi.text" into tEditor
-      break
-   default
-      put pPropertyInfo["editor"] into tEditor
-      break
+      case "com.livecode.pi.integer"
+         put "com.livecode.pi.number" into tEditor
+         break
+      case "com.livecode.pi.nowraptext"
+         put "com.livecode.pi.text" into tEditor
+         break
+      case "com.livecode.pi.styledtext"
+         put "com.livecode.pi.textcontents" into tEditor
+         break
+      default
+         put pPropertyInfo["editor"] into tEditor
+         break
    end switch
-
+   
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack tEditor then
