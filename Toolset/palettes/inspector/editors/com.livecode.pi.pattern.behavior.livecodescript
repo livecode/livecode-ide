@@ -36,6 +36,9 @@ end valueChanged
 
 on mouseUp pButton
    if pButton is not 1 then exit mouseUp
+   --PM-2016-05-02: [[ Bug 17496 ]] Show the ID of the currently selected pattern
+   put the backgroundpattern of graphic 1 of me into tIconID
+   send "updateIDField tIconID" to card 1 of stack "revIconChooser"
    sheet "revIconChooser"
    if the cReturnValue of stack "revIconChooser" is not empty then
       set the backgroundpattern of graphic 1 of me to the cReturnValue of stack "revIconChooser"
