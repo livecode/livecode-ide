@@ -47,6 +47,10 @@ on preOpenStack
    
    # Ensure paint defaults are set
    reset paint
+   -- MDW-2016-05-05 [[ bugfix_17553 ]] set defaults for the painting tools
+   set the spray to 34
+   set the brush to 8
+   set the eraser to 2
    set the filled to true
 end preOpenStack
 
