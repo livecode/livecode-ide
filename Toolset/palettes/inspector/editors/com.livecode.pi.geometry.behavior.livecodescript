@@ -441,16 +441,6 @@ on menuPick pWhich
 end menuPick
 
 on setValue pValue
-   local tTurnOffGeometries
-   if sMode is "scaling" then
-      put "moveH,moveV" into tTurnOffGeometries
-   else
-      put "scaleBottom,scaleTop,scaleLeft,scaleRight" into tTurnOffGeometries
-   end if
-   repeat for each item tItem in tTurnOffGeometries
-      put false into pValue[tItem]
-   end repeat
-   
    local tValue
    put the editorValue["geometry"] of me into tValue
    union pValue with tValue recursively
