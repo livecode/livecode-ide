@@ -10607,18 +10607,7 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    local tIsProperty
    put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
    
-   # Try as a function or global property
-   if tValidScript is empty then
-      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
-         ideDoMessage tTryProperty, pDebugMode
-         if the result is empty then
-            put tTryProperty into tValidScript
-         end if
-      end if
-   end if
-   
-   # If it wasn't valid as a function or global property then
-   # try as an object property of the intelligence object
+   # Try as an object property of the intelligence object
    if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
       ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
       if the result is empty then 
@@ -10628,8 +10617,19 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
             put the name of pIntelligenceObject into tName
          catch tError
          end try
-         if tError is not empty then
+         if tError is empty then
             put tTryProperty && "of" && tName into tValidScript
+         end if
+      end if
+   end if
+   
+   # If it wasn't valid as an object property of the intelligence object
+   # then try as a function or global property
+   if tValidScript is empty then
+      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
+         ideDoMessage tTryProperty, pDebugMode
+         if the result is empty then
+            put tTryProperty into tValidScript
          end if
       end if
    end if
