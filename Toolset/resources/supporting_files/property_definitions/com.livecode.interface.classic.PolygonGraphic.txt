@@ -28,6 +28,10 @@ backgroundColor
 backgroundPattern												
 fillGradient												
 strokeGradient
+hiliteColor						Marker border fill
+hilitePattern						Marker border fill
+borderColor						Marker fill
+borderPattern						Marker fill
 topColor												
 topPattern												
 bottomColor												
