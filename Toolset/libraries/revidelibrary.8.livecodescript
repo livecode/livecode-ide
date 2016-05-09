@@ -2690,11 +2690,11 @@ on revIDEMoveControl pControl, pNewCard, pLayerNumber
    lock messages
    copy pControl to pNewCard
    put the long id of it into tNewControl
-
+   
    delete pControl
-
+   
    try
-      --revIDESetPropertyOfObject tNewControl, "layer", pLayerNumber
+      revIDESetPropertyOfObject tNewControl, "layer", pLayerNumber
    catch pError
    end try
    unlock messages

@@ -1,0 +1,1 @@
+# Fix some issues with project browser drag-reordering
