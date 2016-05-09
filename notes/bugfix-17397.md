@@ -1,0 +1,1 @@
+# File associations checkbox should check when clicked

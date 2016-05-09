@@ -706,7 +706,7 @@ setProp navigationDisplayStyle pStyle
 end navigationDisplayStyle
 
 private function __frameItemNameToIndex pName
-   repeat for each line tIndex in the keys of sData
+   repeat for each key tIndex in sData
       if sData[tIndex]["name"] is pName then return tIndex
    end repeat
 end __frameItemNameToIndex
@@ -733,7 +733,7 @@ private on __hiliteFrameItem pIndex
 end __hiliteFrameItem
 
 private on __unhiliteFrameNavigation
-   repeat for each line tIndex in the keys of sData
+   repeat for each key tIndex in sData
       if sData[tIndex]["type"] is "navigation" then put false into sData[tIndex]["selected"]
    end repeat
 end __unhiliteFrameNavigation

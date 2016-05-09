@@ -86,6 +86,16 @@ private on setupTextMenu
    put the fontNames into tFontNames
    replace "/" with "\" in tFontNames
    sort lines of tFontNames
+   
+   /* Fake fonts begin with "(", but the menu code interprets a "(" at 
+   the beginning of the item to mean the item is disabled. 
+   So, to show a "(" instead of disabling, we need to double it */
+   repeat with tLine = 1 to the number of lines of tFontNames
+      if line tLine of tFontNames begins with "(" then
+         put "(" before line tLine of tFontNames
+      end if
+   end repeat
+   
    put "Use Owner's Font" & return & "-" & return before tFontNames
    
    local fontnum
@@ -698,8 +708,14 @@ end enableToolbar
 
 on updateButtonHilite pTargetName, pValue
    lock screen
+   lock messages
+   
    local tTargetLongID
    put the long id of button pTargetName of group "toolbar" of me into tTargetLongID
+   
+   local tShowIcon
+   put the showIcon of tTargetLongID into tShowIcon
+   
    setButtonHilite tTargetLongID, pValue
    set the label of tTargetLongID to revMenubarButtonText(pTargetName, pValue)
    if pValue then
@@ -707,6 +723,10 @@ on updateButtonHilite pTargetName, pValue
    else
       set the icon of tTargetLongID to the cIcon of tTargetLongID
    end if
+   
+   set the showIcon of tTargetLongID to tShowIcon
+
+   unlock messages
    unlock screen
 end updateButtonHilite
 
@@ -750,7 +770,7 @@ on updateButtonState
    global gRevSuppressErrors, gRevSuppressMessages
    updateButtonHilite "Errors", gRevSuppressErrors
    updateButtonHilite "Messages", gRevSuppressMessages
-   updateButtonHilite "Select Grouped", not the selectGroupedControls
+   updateButtonHilite "Select Grouped", the selectGroupedControls
    
    # Deal with enabled/disabled of code and inspector
    if tSelObj is empty then
@@ -860,14 +880,20 @@ end revIDELocalizeMenuItem
 
 private on setButtonDepressed pTarget
    lock screen
-   local tHilite
+   lock messages
+   
+   local tHilite, tShowIcon
    put the hilite of pTarget into tHilite
+   put the showIcon of pTarget into tShowIcon
    if tHilite then
       set the icon of pTarget to the cHighlightedDepressedIcon of pTarget
    else
       set the icon of pTarget to the cDepressedIcon of pTarget
    end if
    setButtonHilite pTarget, not the hilite of pTarget
+   set the showIcon of pTarget to tShowIcon
+
+   unlock messages
    unlock screen
 end setButtonDepressed
 

@@ -90,19 +90,20 @@ on openStack
    
    lock messages
    set the minHeight of me to tMinHeight
-   moveStack
+   moveMsgBoxStack
    unlock messages
    unlock screen
 end openStack
 
-on moveStack
+--PM-2016-04-29: [[ Bug 17534 ]] Make sure the correct handler is called
+on moveMsgBoxStack
    --set the position of the stack as a custom property so when it is reopened/different card is selected it remains in the same location
    set the cREVLeft of me to the left of me
    set the cREVTop of me to the top of me
-end moveStack
+end moveMsgBoxStack
 
 on closeStack
-   moveStack
+   moveMsgBoxStack
 end closeStack
 
 command setUpDataView

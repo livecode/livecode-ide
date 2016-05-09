@@ -36,6 +36,7 @@ on preOpenStack
    addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
    addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
    addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_textSize","header","preference","Text size","enum","default,8,10,12,14,18,24","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"
    revIDESubscribe "ideNewControl"
@@ -65,10 +66,19 @@ on preOpenStack
    revIDESubscribe "idePreferenceChanged:pb_stackSortOrder"
    revIDESubscribe "idePreferenceChanged:pb_cardSortOrder"
    revIDESubscribe "idePreferenceChanged:pb_controlSortOrder"
+   revIDESubscribe "idePreferenceChanged:pb_textSize"
    
    revIDESubscribe "ideShowInProjectBrowser"
    
    setDefaultPreferences
+   
+   local tTextSize
+   put revIDEGetPreference("pb_textSize") into tTextSize
+   if tTextSize is "default" then
+      set the textSize of me to empty
+   else
+      set the textSize of me to tTextSize
+   end if
    
    put empty into sDisplayArray
    loadImages
@@ -266,10 +276,15 @@ on preferenceChanged pPreference, pValue
          revIDESetPreference "pb_controlSortType", tSortType
          revIDESetPreference "pb_controlSortOrder", tSortOrder         
          break
+      case "pb_textSize"
+         revIDESetPreference "pb_textSize", pValue
+         break
    end switch
 end preferenceChanged
 
 on idePreferenceChanged pPreference, pValue
+   local tTextSize
+   
    switch pPreference
       case "pb_indicator"
       case "pb_sections"
@@ -279,6 +294,18 @@ on idePreferenceChanged pPreference, pValue
       case "pb_cardSortOrder"
       case "pb_controlSortType"
       case "pb_controlSortOrder"
+         buildProjectView true
+         break
+      case "pb_textSize"
+         put revIDEGetPreference("pb_textSize") into tTextSize
+         if tTextSize is "default" then
+            set the textSize of me to empty
+         else
+            set the textSize of me to tTextSize
+         end if
+         setUpProjectView
+         buildProjectView true
+         break
       default
          buildProjectView true
    end switch
@@ -315,28 +342,30 @@ function pbSelectedObjects
 end pbSelectedObjects
 
 command setUpProjectView
-   local theStylesA, tBehaviorsFolder, tStackID
+   local theStylesA, tBehaviorsFolder, tStackID, tTemplatesFolder
    put revIDEPaletteResourcePath("behaviors") into tBehaviorsFolder
+   put revIDEPaletteResourcePath("templates") into tTemplatesFolder
    
    set the behavior of group "objectList" of me to revIDEDataViewBehavior()
    send "ResetView" to group "objectList" of me
-   put the long id of group "containerRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["container"]
+   
+   put the long id of group "containerRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsercontainerrowtemplate.livecode") into theStylesA["container"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontainerrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["container"] to tStackID
    
-   put the long id of group "controlRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["control"]
+   put the long id of group "controlRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsercontrolrowtemplate.livecode") into theStylesA["control"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsercontrolrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["control"] to tStackID
    
-   put the long id of group "libraryRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["library"]
+   put the long id of group "libraryRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowserlibraryrowtemplate.livecode") into theStylesA["library"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowserlibraryrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["library"] to tStackID
    
-   put the long id of group "sectionRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["section"]
+   put the long id of group "sectionRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsersectionrowtemplate.livecode") into theStylesA["section"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsersectionrowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["section"] to tStackID
    
-   put the long id of group "groupRow" of card "templates" of stack "revIDEProjectBrowser" into theStylesA["group"]
+   put the long id of group "groupRow" of card 1 of stack (tTemplatesFolder & slash & "revideprojectbrowsergrouprowtemplate.livecode") into theStylesA["group"]
    put the long id of stack (tBehaviorsFolder & slash & "revideprojectbrowsergrouprowbehavior.livecodescript") into tStackID
    set the behavior of theStylesA["group"] to tStackID
    
@@ -347,7 +376,7 @@ command setUpProjectView
    set the viewProp["alternate row color"] of group "objectList" of me to revIDEColor("dataView_rowAlternateColor")     
    
    set the viewProp["fixed row height"] of group "objectList" of me to "true"
-   set the viewProp["row height"] of group "objectList" of me to 24
+   set the viewProp["row height"] of group "objectList" of me to the effective textSize of me + 14
    set the viewProp["cache"] of group "objectList" of me to "none"
    set the viewProp["background color"] of group "objectList" of me to empty
    set the viewProp["drop indicator template"] of group "objectList" of me to the long id of group "pbDragIndicator" of card "templates" of this stack
@@ -365,7 +394,7 @@ command buildProjectView pRememberExpansion
    put revIDEGetPreference("pb_sections") into tSections
    
    if pRememberExpansion then
-      repeat for each line tKey in the keys of sDisplayArray["objects"]
+      repeat for each key tKey in sDisplayArray["objects"]
          if sDisplayArray["objects"][tKey]["expanded"] is true then
             if sDisplayArray["objects"][tKey]["type"] is "stack" or sDisplayArray["objects"][tKey]["type"] is "substack" then
                put sDisplayArray["objects"][tKey]["long id"] & comma & 1 &  return after tOldExpandedControls
@@ -398,7 +427,7 @@ command buildProjectView pRememberExpansion
       put revIDEFrontScripts() into tFrontScripts
       
       if tFrontScripts is not empty then
-         put the number of lines in the keys of tFrontScripts + 1 into tIndex
+         put the number of elements in tFrontScripts + 1 into tIndex
       end if
    end if
    
@@ -507,7 +536,7 @@ function topLevelRows pArray
    put empty into sLongIDToRow
    put empty into sObjectToParent
    
-   repeat with x = 1 to the number of lines in the keys of pArray
+   repeat with x = 1 to the number of elements in pArray
       ## Mainstacks
       if pArray[x]["type"] is "stack" and pArray[x]["level"] is "1" then
          put x & comma after tTopLevelRows
@@ -1263,14 +1292,14 @@ on addChildren pParentID, pParentRow, pVisible
    
    if word 1 of pParentID is "stack" then
       put cardsOfStack(pParentID, sDisplayArray["objects"][pParentRow]["level"]) into tChildArray
-      if the number of lines in the keys of tChildArray is 1 then
+      if the number of elements in tChildArray is 1 then
          put true into tOnlyChild
       end if
       
       ## Audioclips
       if the number of audioclips of pParentID > 0 then
          ## Add the audioclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tAudioclipTitleRow
+         put the number of elements in tChildArray + 1 into tAudioclipTitleRow
          
          put "false" into tChildArray[tAudioclipTitleRow]["expanded"]
          put "Audioclips" into tChildArray[tAudioclipTitleRow]["title"]
@@ -1292,7 +1321,7 @@ on addChildren pParentID, pParentRow, pVisible
       ## Videoclips
       if the number of videoclips of pParentID > 0 then
          ## Add the videoclip title to the array
-         put the number of lines in the keys of tChildArray + 1 into tVideoclipTitleRow
+         put the number of elements in tChildArray + 1 into tVideoclipTitleRow
          if the number of audioclips of pParentID > 0 then add 1 to tVideoclipTitleRow
          
          put "false" into tChildArray[tVideoclipTitleRow]["expanded"]
@@ -1644,7 +1673,7 @@ on addCardToProjectBrowser pTarget
          put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
          put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
          if tPosition is "last" then
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       else
          --put itemOffset(max(tChildren),tVisibleRows) into tLastChildPos
@@ -1659,12 +1688,12 @@ on addCardToProjectBrowser pTarget
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put  tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
             if tPosition is "last" then 
-               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+               put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
             end if
          else            
             put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
             put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+            put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
          end if
       end if
    else
@@ -1716,8 +1745,11 @@ on addGroupToProjectBrowser pTarget
    ## Add the children to the new group
    local tGroupChildren, tGroupChildrenRows, tRowNumber, tItem, tOldID
    put revIDEControlPropertiesOfGroup(pTarget, 2) into tGroupChildren
-   put the number of lines in the keys of tGroupChildren into sDisplayArray["objects"][theIndex]["childCount"]
-   repeat with x = 1 to the number of lines in the keys of tGroupChildren
+   
+   local tGroupChildrenCount
+   put the number of elements in tGroupChildren into tGroupChildrenCount
+   put tGroupChildrenCount into sDisplayArray["objects"][theIndex]["childCount"]
+   repeat with x = 1 to tGroupChildrenCount
       put tGroupChildren[x]["long id"] into tOldID
       delete word 5 to 8 of tOldID
       put getRow(tOldID) into tRowNumber
@@ -1754,7 +1786,7 @@ on addGroupToProjectBrowser pTarget
    local tLevelConnectors, tParentLevelConnectors
    put sDisplayArray["objects"][tParentRow]["levels"] into tParentLevelConnectors
    
-   repeat with l = 1 to the number of lines in the keys of tParentLevelConnectors
+   repeat with l = 1 to the number of elements in tParentLevelConnectors
       if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "corner" then
          put empty into tLevelConnectors[l] 
       else if tParentLevelConnectors[l] is empty or tParentLevelConnectors[l] is "branch" then
@@ -1774,11 +1806,11 @@ on addGroupToProjectBrowser pTarget
    put sDisplayArray["objects"][tParentRow]["children"] into tParentChildren
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tParentChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors]
       end if
    end repeat
    put getLastSibling(tVisibleRows, tParentChildren) into tLastChild
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors]
    
    if the first char of tVisibleRows2 is comma then delete the first char of tVisibleRows2
    if the last char of tVisibleRows2 is comma then delete the last char of tVisibleRows2
@@ -1839,11 +1871,11 @@ on addControlToProjectBrowser pTarget
    
    put levelConnectors(sDisplayArray["objects"][theIndex], tParentRow, tPosition) into tLevelConnectors
    put tLevelConnectors into sDisplayArray["objects"][theIndex]["levels"] 
-   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of lines in the keys of tLevelConnectors-1]
+   put "branch" into sDisplayArray["objects"][tLastChild]["levels"][the number of elements in tLevelConnectors-1]
    
    repeat for each item tDescendant in tDescendants
       if tDescendant is not among the items of tChildren then
-         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of lines in the keys of tLevelConnectors-1]
+         put "vertical" into sDisplayArray["objects"][tDescendant]["levels"][the number of elements in tLevelConnectors-1]
       end if
    end repeat
    
@@ -1952,7 +1984,7 @@ on deleteCardFromProjectBrowser pTarget
    
    ## Delete the connectors of the previous children
    local tLevelCount
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount]
    
    ## Update the children of the parent
@@ -1995,7 +2027,7 @@ on deleteControlFromProjectBrowser pTarget
    
    ## Update the connector of the previous child if necessary
    ## Add the level connectors
-   put the number of lines in the keys of sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
+   put the number of elements in sDisplayArray["objects"][the last item of tChildren]["levels"] into tLevelCount
    put "corner" into sDisplayArray["objects"][the last item of tChildren]["levels"][tLevelCount-1]
    
    if word 1 of pTarget is "group" then
@@ -2036,7 +2068,7 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
    local tDraggedOwner, tNewRowOwner, tDroppedAfterOwner
    local tDirection, tVisibleRows
    local tUpdateParents
-   local tDraggedCardNumber, tNewRowNumber, tDroppedAfterNumber
+   local tNewRowNumber, tDroppedAfterNumber
    local tDraggedMainStack, tDroppedAfterMainStack
    local tExpanded, tNewID, tRowRect
    
@@ -2082,234 +2114,128 @@ on reorderRows pDraggedRowList,pNewStartingRow, pDroppedAfterRow
    put revIDEStackOfObject(tNewRowID) into tNewRowStack
    put revIDEStackOfObject(tDroppedAfterID) into tDroppedAfterStack
    
-   local tAbs, tLongID
-   
-   if (tDraggedStyle is "control" or tDraggedStyle is "group") and (tDroppedAfterStyle is "control") then
-      ## If both controls have the same owner (card or group)
-      if tDraggedOwner is tDroppedAfterOwner then
-         lock messages
-         set the relayerGroupedControls to true
-         if tDirection is "after" then
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               revIDERelayerControl sDisplayArray["objects"][tAbs]["long id"], tNewRowLayer, tDraggedCard
-            end repeat
+   local tAbs, tLongID, tRelayer
+   switch tDraggedType
+      case "stack"
+         exit reorderRows
+         break
+      case "card"
+         switch tDroppedAfterType
+            case "card"
+               put the number of tNewRowID into tNewRowNumber
+               put the number of tDroppedAfterID+1 into tDroppedAfterNumber
+               break
+            case "stack"
+               put 1 into tNewRowNumber
+               put 1 into tDroppedAfterNumber
+               break
+            case "stack"
+               ## A card has been dropped after a stack
+               put 1 into tNewRowNumber
+               put 1 into tDroppedAfterNumber
+               break
+            case "control"
+            case "group"
+               put the number of tDroppedAfterCard+1 into tDroppedAfterNumber
+               put tDroppedAfterNumber into tNewRowNumber
+               break
+            default
+               exit reorderRows
+               break
+         end switch
+         if tDraggedStack is tDroppedAfterStack then
+            ## Reorder cards
+            revIDERenumberCard tDraggedID,tNewRowNumber
+            refreshChildren tDraggedStack         
          else
-            repeat with x = the number of items in pDraggedRowList down to 1
-               put item x of pDraggedRowList into tRow
-               put getAbsoluteRow(tRow) into tAbs
-               revIDERelayerControl sDisplayArray["objects"][tAbs]["long id"], tNewRowLayer, tDraggedCard
-            end repeat
-         end if
-         set the relayerGroupedControls to false
-         refreshChildren tDraggedCard            
-         unlock messages
-      else
-         if tDraggedCard is tDroppedAfterCard then
-            ## Same card but different groups
-            set the relayerGroupedControls to true
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-               revIDERelayerControl tLongID, tNewRowLayer, tDraggedCard
-            end repeat
-            --put the result into tNewID
-            set the relayerGroupedControls to false
-            refreshChildren tDraggedCard
-         else
-            ## Different cards
-            repeat for each item tRow in pDraggedRowList
-               put getAbsoluteRow(tRow) into tAbs
-               put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-               revIDEMoveControl tLongID, tDroppedAfterCard, tNewRowLayer
-            end repeat
+            ## Move to another stack
+            put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
+            revIDEMoveCard tDraggedID, tDroppedAfterStack
             put the result into tNewID
-            put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-            refreshChildren tUpdateParents
+            put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
+            revIDERenumberCard tNewID,tDroppedAfterNumber
+            refreshChildren tUpdateParents, tNewID, tExpanded
          end if
-      end if
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and tDroppedAfterType is "card" then
-      ## A control has been dropped after a card
-      if tDraggedCard is tDroppedAfterCard then
-         ## Dragged to the top/after the card
-         set the relayerGroupedControls to true
-         
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDERelayerControl tLongID, "top", tDraggedCard
-         end repeat
-         
-         set the relayerGroupedControls to false
-         refreshChildren tDraggedCard
-      else
-         ## Dragged to another card
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDEMoveControl tLongID, tDroppedAfterCard, 1
-         end repeat
-         
-         put the result into tNewID
-         put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-         refreshChildren tUpdateParents
-      end if
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and tDroppedAfterType is "stack" then
-      ## Control dropped after a stack
-      ## if the stack is closed drop the control onto the current card of the stack
-      if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
-         
-         repeat for each item tRow in pDraggedRowList
-            put getAbsoluteRow(tRow) into tAbs
-            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
-            revIDEMoveControl tLongID, the long id of this card of tDroppedAfterStack , 1
-         end repeat
-         
-         put the result into tNewID
-         put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-         refreshChildren tUpdateParents
-      end if      
-      
-      ## Groups
-      ## Dropped after a group (or into a group)
-   else if (tDraggedStyle is "control" or tDraggedStyle is "group") and (tDroppedAfterStyle is "group") then
-      ## If both controls have the same owner (card or group)
-      if tDraggedOwner is tDroppedAfterOwner then
-         ## If group is expanded 
-         if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] then
-            set the relayerGroupedControls to true
-            revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-            set the relayerGroupedControls to false
-            refreshChildren tDraggedCard
-         else
-            ## Depending on "drop zone"
-            ## Drop after the group, not into it
-            put the rect of the dvControlOfRow[pDroppedAfterRow] of the dvControl of group "objectList" of me into tRowRect
-            if (the mouseV > item 2 of tRowRect+8) and (the mouseV  <  item 4 of tRowRect-8) then
-               ## Middle
-               set the relayerGroupedControls to true
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               set the relayerGroupedControls to false
-               refreshChildren tDraggedCard
-            else
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               refreshChildren tDraggedCard
-            end if            
-         end if
-      else
-         if tDraggedCard is tDroppedAfterCard then
-            if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] then
-               set the relayerGroupedControls to true
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               set the relayerGroupedControls to false
-               refreshChildren tDraggedCard
-            else
+         break
+      case "substack"
+         local tNewMainstack
+         switch tDroppedAfterType
+            case "substack"
+            case "group"
+            case "control"
+               put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
+               put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
+               put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
+               put tDroppedAfterMainStack into tNewMainstack
+               break
+            case "card"
+            case "stack"
+               put the long name of stack (the mainstack of tDraggedStack) & return & tDroppedAfterStack into tUpdateParents
+               put tDroppedAfterStack into tNewMainstack
+               break
+            default
+               exit reorderRows
+               break
+         end switch
+         revIDEMoveSubstack tDraggedID, tNewMainstack
+         put the long name of stack (line -1 of the substacks of tNewMainstack) into tNewID
+         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
+         refreshChildren tUpdateParents,tNewID,tExpanded
+         break
+      default
+         # Control
+         put true into tRelayer
+         switch tDroppedAfterType
+            case "card"
+               put "bottom" into tNewRowLayer
+               break
+            case "stack"
+               ## if the stack is closed drop the control onto the current card of the stack
+               if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
+                  put the long id of this card of tDroppedAfterStack into tDroppedAfterCard
+               else
+                  put the long id of card 1 of tDroppedAfterStack into tDroppedAfterCard
+               end if
+               put "bottom" into tNewRowLayer
+               break
+            case "group"
+               ## Depending on "drop zone" of non-expanded group
                ## Drop after the group, not into it
-               revIDERelayerControl tDraggedID, tNewRowLayer, tDraggedCard
-               refreshChildren tDraggedCard
-            end if
-         else
-            ## Different cards
-            revIDEMoveControl tDraggedID, tDroppedAfterCard, tNewRowLayer
-            put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
-            refreshChildren tUpdateParents
+               if sDisplayArray["objects"][tDroppedAfterRowIndex]["expanded"] is not true then
+                  put the rect of the dvControlOfRow[pDroppedAfterRow] of the dvControl of group "objectList" of me into tRowRect
+                  if (the mouseV <= item 2 of tRowRect+8) or (the mouseV  >=  item 4 of tRowRect-8) then
+                     ## outside group
+                     put false into tRelayer
+                  end if  
+               end if 
+               break
+            default
+               if tDroppedAfterStyle is not "control" then
+                  exit reorderRows
+               end if
+               break
+         end switch
+         lock messages
+         if tRelayer then
+            set the relayerGroupedControls to true
          end if
-      end if
-      ## Cards
-   else if tDraggedType is "card" and tDroppedAfterType is "card" then
-      put the number of tDraggedID into tDraggedCardNumber
-      put the number of tNewRowID into tNewRowNumber
-      put the number of tDroppedAfterID+1 into tDroppedAfterNumber
-      
-      if tDraggedStack is tDroppedAfterStack then
-         ## Reorder cards
-         revIDERenumberCard tDraggedID,tNewRowNumber
-         refreshChildren tDraggedStack         
-      else
-         ## Move to another stack
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,tDroppedAfterNumber
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-   else if tDraggedType is "card" and tDroppedAfterType is "stack" then
-      ## A card has been dropped after a stack
-      if tDraggedStack is tDroppedafterStack then
-         revIDERenumberCard tDraggedID,1
-         refreshChildren tDraggedStack       
-      else
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,1
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-   else if tDraggedType is "card" and (tDroppedAfterStyle is "control" or tDroppedAfterStyle is "group") then
-      ## The card has been dropped after the last control on an open card
-      put the number of tDraggedCard into tDraggedCardNumber
-      --put the number of tNewRowCard into tNewRowNumber
-      put the number of tDroppedAfterCard+1 into tDroppedAfterNumber
-      
-      if tDraggedStack is tDroppedAfterStack then
-         ## Reorder cards
-         revIDERenumberCard tDraggedID,tDroppedAfterNumber
-         refreshChildren tDraggedStack         
-      else
-         ## Move to another stack
-         put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-         
-         revIDEMoveCard tDraggedID, tDroppedAfterStack
-         put the result into tNewID
-         put tDraggedStack & return & tDroppedAfterStack into tUpdateParents
-         
-         revIDERenumberCard tNewID,tDroppedAfterNumber
-         refreshChildren tUpdateParents, tNewID, tExpanded
-      end if
-      ## Substacks
-   else if tDraggedType is "substack" and tDroppedAfterType is "substack" then
-      ## Drop the substack after the last substack
-      put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
-      put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
-      
-      put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterMainStack
-      put the long name of stack (line -1 of the substacks of tDroppedAfterMainStack) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded
-   else if tDraggedType is "substack" and tDroppedAfterType is "card" then
-      ## Drop the substack after the last card
-      put the long name of stack (the mainstack of tDraggedStack) & return & tDroppedAfterStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterStack
-      put the long name of stack (line -1 of the substacks of stack (tDroppedAfterStack)) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded
-   else if tDraggedType is "substack" and tDroppedAfterType is "stack" then
-      
-   else if tDraggedType is "substack" and (tDroppedAfterStyle is "control" or tDroppedAfterType is "group") then
-      put the long name of stack (the mainstack of tDraggedStack) into tDraggedMainStack
-      put  the long name of stack (the mainstack of tDroppedAfterStack) into tDroppedAfterMainStack
-      
-      put tDraggedMainStack & return & tDroppedAfterMainStack into tUpdateParents
-      put sDisplayArray["objects"][tDraggedRowIndex]["expanded"] into tExpanded
-      
-      revIDEMoveSubstack tDraggedID, tDroppedAfterMainStack
-      put the long name of stack (line -1 of the substacks of tDroppedAfterMainStack) into tNewID
-      refreshChildren tUpdateParents,tNewID,tExpanded      
-   end if
-   
+         repeat for each item tRow in pDraggedRowList
+            put getAbsoluteRow(tRow) into tAbs
+            put sDisplayArray["objects"][tAbs]["long id"] into tLongID
+            if tDraggedCard is not tDroppedAfterCard then
+               revIDEMoveControl tLongID, tDroppedAfterCard, tNewRowLayer
+               put tDraggedCard & return & tDroppedAfterCard into tUpdateParents
+            else
+               revIDERelayerControl tLongID, tNewRowLayer, tDraggedCard
+               put tDraggedCard into tUpdateParents
+            end if
+         end repeat
+         set the relayerGroupedControls to false
+         refreshChildren tUpdateParents            
+         unlock messages
+         break
+   end switch
    refreshProjectView
-   
-   --   if tNewID is empty then put tDraggedID into tNewID
-   --   selectObjects tNewID
 end reorderRows
 
 ####### Property Management
@@ -2470,4 +2396,109 @@ command setDefaultPreferences
       end if
    end if
 end setDefaultPreferences
+
+## Connector creation for all row types
+command setConnectorIcon pControl, pState
+   local tLeft, tTop, tRight,tBottom, tHeight, tWidth, tPoints
+   
+   put the left of pControl into tLeft
+   put the right of pControl into tRight
+   put the top of pControl into tTop
+   put the bottom of pControl into tBottom
+   
+   put the width of pControl into tWidth
+   put the height of pControl into tHeight
+   
+   set the foregroundColor pControl to empty
+   set the foregroundColor of graphic "line" of pControl to empty
+   
+   switch pState
+      case empty
+         hide widget "icon" of pControl
+         hide graphic "line" of pControl
+         break
+      case "branch"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2), tTop & return into tPoints
+         put tLeft + (tWidth/2), tTop + tHeight & return after tPoints
+         put tLeft + (tWidth/2), tTop + (tHeight/2)  & return after tPoints
+         put tLeft + tWidth, tTop + (tHeight/2)  & return after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         
+         break
+      case "cantExpand"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2)  & return into tPoints
+         put tLeft + (tWidth/2) - (the width of widget "icon" of pControl /2),tTop + (tHeight/2)  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "circle"
+         break
+      case "childContracted"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2) & return into tPoints
+         put tLeft + (tWidth/2) -  (the width of widget "icon" of pControl /2),tTop + (tHeight/2)  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "plus sign"
+         break
+      case "childExpanded"
+         show graphic "line" of pControl
+         show widget "icon" of pControl
+         
+         put tLeft,tTop + (tHeight/2)  & return into tPoints
+         put tLeft + (tWidth/2)  -  (the width of widget "icon" of pControl /2) ,tTop + (tHeight/2)  & return after tPoints
+         put tLeft + (tWidth/2) ,tTop + (tHeight/2) + (the height of widget "icon" of pControl /2) & return after tPoints
+         put tLeft + (tWidth/2),tTop + tHeight  & return after tPoints
+         
+         set the points of graphic "line" of pControl to tPoints
+         set the iconPresetName of widget "icon" of pControl to "minus sign"
+         
+         break
+      case "corner"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2),tTop & return into tPoints
+         put  tLeft + (tWidth/2), tTop + (tHeight/2) & return after tPoints
+         put  tLeft + tWidth, tTop + (tHeight/2) after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+      case "horizontal"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft,tTop + (tHeight/2) & return into tPoints
+         put tLeft + tWidth,tTop + (tHeight/2) after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+      case "stackContracted"
+         hide graphic "line" of pControl
+         show widget "icon" of pControl
+         set the iconPresetName of widget "icon" of pControl to "plus sign"
+         break
+      case "stackExpanded"
+         show widget "icon" of pControl
+         show graphic "line" of pControl
+         
+         put tLeft + (tWidth/2),tTop +(tHeight/2) +(the height of widget "icon" of pControl /2)  & return into tPoints
+         put tLeft + (tWidth/2),tTop + tHeight after tPoints
+         set the points of graphic "line" of pControl to  tPoints
+         set the iconPresetName of widget "icon" of pControl to "minus sign"
+         break
+      case "vertical"
+         hide widget "icon" of pControl
+         show graphic "line" of pControl
+         put tLeft + (tWidth/2),tTop & return into tPoints
+         put tLeft + (tWidth/2),tBottom after tPoints
+         set the points of graphic "line" of pControl to tPoints
+         break
+   end switch
+end setConnectorIcon
 

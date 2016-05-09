@@ -3179,7 +3179,7 @@ on revTutorialRunAction pActionData
 end revTutorialRunAction
 
 on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
-   if the environment is not "development" then
+   if not (the environment begins with "development") then
       revTutorialCreateAndCaptureObjectsStandalone pWaitData, pCaptureData, pHighlightData
       exit revTutorialCreateAndCaptureObjects
    end if
@@ -3268,7 +3268,7 @@ on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
       put sStepContextA["value"] into pValue
    end if
    
-   if the environment is "development" then
+   if the environment begins with "development" then
       revIDESetPropertyOfObject pObjects, pProp, pValue
    else
       repeat for each line tLine in pObjects
