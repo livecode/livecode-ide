@@ -3197,10 +3197,13 @@ private command  __setSizeToPreference pObjectID, pObjectType
          put "cTabButtonWidth" into tWidthPref
          put "cTabButtonHeight" into tHeightPref
          break
-      case "com.livecode.interface.classic.Field"
+      case "com.livecode.interface.classic.TableField"
+      case "com.livecode.interface.classic.ListField"
+      case "com.livecode.interface.classic.TextArea"
          put "cFieldWidth" into tWidthPref
          put "cFieldHeight" into tHeightPref
          break
+      case "com.livecode.interface.classic.Field"
       case "com.livecode.interface.classic.LabelField"
          put "cLabelFieldWidth" into tWidthPref
          put "cLabelFieldHeight" into tHeightPref
