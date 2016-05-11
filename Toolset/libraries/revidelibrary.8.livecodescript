@@ -10497,7 +10497,7 @@ private function __publicScriptHandlers pObject
    return tHandlers
 end __publicScriptHandlers
 
-private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScript
+private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
    if pObject is empty then
       return "No such object"
    end if
@@ -10522,6 +10522,7 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
    end if
    
    local tDoScript
+   put pToDo into tDoScript
    set the itemdelimiter to ";"
    repeat for each line tLine in tHandlerList
       local tHandlerName, tHandlerType
@@ -10534,13 +10535,7 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
       local tParams
       if not tIsPutOrGet and tHandlerType is "M" then
          -- If this is a command that matches, just send the message
-         put segment 2 to -1 of item 1 of pToDo into tParams
-         put "dispatch" && tHandlerName && "to" && pObject into tDoScript
-         if tParams is not empty then
-            put " with" && tParams after tDoScript
-         end if
-         put ";" & item 2 to -1 of pToDo after tDoScript
-         put pToDo into rValidScript
+         put pToDo into tDoScript
          exit repeat
       else if tHandlerType is "F" then
          -- otherwise this is a function that matches
@@ -10550,41 +10545,25 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
             -- autocomplete the 'put' if necessary
             put "put" && pToDo into tDoScript
          end if
-         
-         ideCompileCheck tDoScript
-         if the result is not empty then
-            exit repeat
-         end if
-         
-         local tFirstItem
-         put item 1 of tDoScript into tFirstItem
-         # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-         if matchText(token 2 to -1 of tFirstItem, tHandlerName & "\(([^\)]*)?\)", tParams) is false then 
-            exit repeat
-         end if
-         local tResolvedParams
-         # Resolve the params as tokens, item by item
-         repeat for each item tItem in tParams
-            if tResolvedParams is empty then
-               put token 1 to -1 of tItem into tResolvedParams
-            else
-               put comma & token 1 to -1 of tItem after tResolvedParams
-            end if
-         end repeat
-         dispatch function (token 2 of tDoScript) to pObject with tResolvedParams
-         replace tHandlerName & "(" & tParams & ")" with quote & the result & quote in tFirstItem
-         put tDoScript into rValidScript
-         put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
          exit repeat
       end if
    end repeat
    
-   if tDoScript is not empty then
-      put tDoScript into rDoScript
-      return empty
+   local tError
+   ideCompileCheck tDoScript
+   put the result into tError
+   if tError is empty then
+      try
+         send "-- execute in object context" & return & tDoScript to pObject
+      catch tError
+         
+      end try
+   end if
+   if tError is empty then
+      put tDoScript into rValidScript
    end if
    
-   return "Script not valid"
+   return tError
 end __tryToDoScriptInObject
 
 command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
@@ -10606,17 +10585,13 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tDoScript, tValidScript
-   __tryToDoScriptInObject pIntelligenceObject, pScript, tDoScript, tValidScript
+   local tValidScript
+   __tryToDoScriptInObject pIntelligenceObject, pScript, tValidScript
    if the result is not empty then
-      __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tDoScript, tValidScript
+      __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tValidScript
    end if
    
    if the result is empty then
-      ideDoMessage tDoScript, pDebugMode
-      if the result is not empty then
-         return the result
-      end if
       put tValidScript into rValidScript
       return empty
    end if
