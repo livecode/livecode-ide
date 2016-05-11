@@ -5163,7 +5163,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
+   return "Basic,Stack Files,Data Grid,Contents,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -5214,6 +5214,8 @@ function revIDEPropertySectionNameToIconName pName
          return "object justify both"
       case "stack files"
          return "files alt"
+      case "contents"
+         return "list"
       default
          return "remove"
          break
@@ -5569,19 +5571,54 @@ command CreateTemplateForControl pStack
    return theTemplateGroup
 end CreateTemplateForControl
 
+local sFirstRowHeaders
 on revIDESetDataGridProperty pObj, pProperty, pValue
-   set the dgProps[pProperty] of pObj to pValue
+   switch pProperty 
+      case "text"
+         if sFirstRowHeaders[pObj] then
+            set the dgText[true] of pObj to pValue
+         else
+            set the dgText of pObj to pValue
+         end if
+         break
+      case "first row header"
+         local tText
+         if sFirstRowHeaders[pObj] then
+            put the dgText[true] of pObj into tText
+         else
+            put the dgText of pObj into tText
+         end if
+         put pValue into sFirstRowHeaders[pObj]
+         revIDESetDataGridProperty pObj, "text", tText
+         break
+      default
+         set the dgProps[pProperty] of pObj to pValue
+         break
+   end switch
 end revIDESetDataGridProperty
 
 function revIDEGetDataGridProperty pObject, pProperty
-   if pProperty is "row behavior" then
-      local tTemplate
-      put the dgProps["row template"] of pObject into tTemplate
-      set the itemdel to "card"
-      return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
-   end if
-   
-   return the dgProps[pProperty] of pObject
+   switch pProperty 
+      case "row behavior"
+         local tTemplate
+         put the dgProps["row template"] of pObject into tTemplate
+         set the itemdel to "card"
+         return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
+         break
+      case "text"
+         if sFirstRowHeaders[pObject] then
+            return the dgText[true] of pObject
+         else
+           return the dgText of pObject
+         end if
+         break
+      case "first row header"
+         return sFirstRowHeaders[pObject] is true
+         break
+      default
+         return the dgProps[pProperty] of pObject
+         break
+   end switch
 end revIDEGetDataGridProperty
 
 local sCurrentColumn
