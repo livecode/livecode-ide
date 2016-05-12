@@ -2745,9 +2745,9 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tCardList ascending by item 1 of each
+         sort lines of tCardList ascending numeric by item 1 of each
       else
-         sort lines of tCardList descending by item 1 of each
+         sort lines of tCardList descending numeric by item 1 of each
       end if
    end if
    
