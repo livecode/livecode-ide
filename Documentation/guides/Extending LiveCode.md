@@ -255,7 +255,7 @@ approach.
 private variable mMargin as Real
 ```
 
-We'll define a number variable to store the value for the margin. LiveCode Builder is typed 
+We'll define a member variable to store the value for the margin. LiveCode Builder is typed 
 so you must also specify the type of your variable. Remember, the canvas you are drawing 
 to has subpixel precision so our margin can be a decimal number. As a result, we've chosen 
 to specify our margin as a real number. For a full list of types available in LiveCode 
