@@ -1,0 +1,1 @@
+# Replace Revolution text with LiveCode in Dialogs
