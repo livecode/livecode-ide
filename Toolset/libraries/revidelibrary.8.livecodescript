@@ -10965,5 +10965,5 @@ function revIDEExternalsMapping
 end revIDEExternalsMapping
 
 function revIDEDatabaseDriversMapping
-   return "MySQL mysql,ODBC odbc,PostgreSQL postgresql,SQLite sqlite,Oracle oracle"
+   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
 end revIDEDatabaseDriversMapping
