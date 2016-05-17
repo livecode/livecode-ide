@@ -1,9 +1,12 @@
 ﻿script "com.livecode.pi.array.behavior"
+local sHilitePath
+
 on editorInitialize
-   set the editorMinWidth of me to 200
+   set the editorMinWidth of me to 250
    set the editorMaxWidth of me to 0
 end editorInitialize
 
+local sDontUpdate
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled
@@ -11,21 +14,17 @@ on editorUpdate
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    lock messages
-   set the arrayData of widget 1 of me to tValue
    local tPath
-   put the selectedElement of widget 1 of me into tPath
-   if tPath is empty then
-      put empty into field "key" of me
-      put empty into field "value" of me
-   else
-      put fetchArrayDataOnPath(tPath, tValue) into field "value" of me
-      put item -1 of tPath into field "key" of me
-   end if
+   put the hilitedElement of widget 1 of me into tPath
+   set the arrayData of widget 1 of me to tValue
+   unlock messages
+   updateEditorFields tPath
+   lock messages
    set the enabled of field "value" of me to tEnabled
    set the enabled of field "key" of me to tEnabled
    if tEffective is true then
       set the textcolor of field "value" of me to "150,150,150"
-      set the textcolor of field "key"of me to "150,150,150"
+      set the textcolor of field "key" of me to "150,150,150"
    else
       set the textcolor of field "value" of me to empty
       set the textcolor of field "key" of me to empty
@@ -33,6 +32,25 @@ on editorUpdate
    unlock messages
    unlock screen
 end editorUpdate
+
+on updateEditorFields pPath
+   local tValue
+   put the editorValue of me into tValue
+   if pPath is empty then
+      put empty into field "key" of me
+      put empty into field "value" of me
+   else
+      local tKey
+      fetchArrayDataOnPath pPath, tValue, tKey 
+      if the result is empty then
+         put tKey into field "value" of me
+         put item -1 of pPath into field "key" of me
+      else
+         put empty into field "key" of me
+         put empty into field "value" of me
+      end if
+   end if
+end updateEditorFields
 
 constant kControlGap = 5
 constant kKeyFieldHeight = 21
@@ -71,6 +89,11 @@ on editorResize
    unlock screen
 end editorResize
 
+on setValue pArray
+   set the editorValue of me to pArray
+   updateProperty
+end setValue
+
 on setArrayDataOnPath pValue, pPath, @xArray
    local tKey
    put item 1 of pPath into tKey
@@ -96,20 +119,46 @@ on setArrayKeyOnPath pKey, pPath, @xArray
    end if
 end setArrayKeyOnPath
 
-function fetchArrayDataOnPath pPath, pArray
+on deleteArrayKeyOnPath pPath, @xArray
    local tKey
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
-      return pArray[tKey]
+      delete variable xArray[item 1 of pPath]
    else
       delete item 1 of pPath
-      return fetchArrayDataOnPath(pPath, pArray[tKey])
+      deleteArrayKeyOnPath pPath, xArray[tKey]
+   end if
+end deleteArrayKeyOnPath
+
+on addArrayKeyOnPath pPath, @xArray
+   local tKey
+   put item 1 of pPath into tKey
+   if the number of items in pPath is 1 then
+      put "" into xArray[item 1 of pPath]
+   else
+      delete item 1 of pPath
+      addArrayKeyOnPath pPath, xArray[tKey]
+   end if
+end addArrayKeyOnPath
+
+on fetchArrayDataOnPath pPath, pArray, @rData
+   local tKey
+   put item 1 of pPath into tKey
+   if the number of items in pPath is 1 then
+      if tKey is not among the keys of pArray then
+         return "no such key"
+      else
+         put pArray[tKey] into rData
+         return empty
+      end if
+   else
+      delete item 1 of pPath
+      fetchArrayDataOnPath pPath, pArray[tKey], rData
    end if
 end fetchArrayDataOnPath
 
 on dataChanged
-   set the editorValue of me to the arrayData of widget 1 of me
-   updateProperty
+   setValue the arrayData of widget 1 of me
 end dataChanged
 
 on valueChanged
@@ -121,8 +170,7 @@ on valueChanged
       local tArray
       put the arrayData of widget 1 of me into tArray
       setArrayDataOnPath field "value" of me, tPath, tArray
-      set the editorValue of me to tArray
-      updateProperty
+      setValue tArray
    end if
 end valueChanged
 
@@ -130,18 +178,49 @@ on keyChanged
    lock screen
    local tPath
    put the hilitedElement of widget 1 of me into tPath
+   
+   local tArray, tNewKey
+   put field "key" of me into tNewKey
+   put the arrayData of widget 1 of me into tArray
+   
    if tPath is not empty then
-      local tArray, tNewKey
-      put field "key" of me into tNewKey
-      put the arrayData of widget 1 of me into tArray
+      # If there is a hilited element then change it
       setArrayKeyOnPath tNewKey, tPath, tArray
-      setPropSet tArray
-      put tNewKey into item 1 of tPath
-      set the hilitedElement of widget 1 of me to tPath
+   else
+      # otherwise add a new key to the current set
+      addArrayKeyOnPath tNewKey, tArray
    end if
+   
+   # Set the new property and hilite the new/changed key
+   put tNewKey into item -1 of tPath
+   put tPath into sHilitePath
+   setValue tArray
+   send "updateHIlite" to me in 0 millisecs
    unlock screen
 end keyChanged
 
 on hiliteChanged
-   editorUpdate
+   if not sDontUpdate then
+      put empty into sHilitePath
+      # Prevent setting hilite in update causing additional call to editorUpdate
+      editorUpdate
+   end if
+   put false into sDontUpdate
 end hiliteChanged
+
+on updateHIlite
+   local tPath
+   put the hilitedElement of widget 1 of me into tPath
+   
+   # Hilite a newly created key
+   if sHilitePath is not empty and sHilitePath is not tPath then
+      # Signals are posted from the widget after the handler has 
+      # executed, so lock messages here doesn't prevent hiliteChanged -
+      # use a script local to prevent second update.
+      put true into sDontUpdate
+      set the hilitedElement of widget 1 of me to sHilitePath
+      put sHilitePath into tPath
+   end if
+   put empty into sHilitePath
+   updateEditorFields tPath
+end updateHIlite
