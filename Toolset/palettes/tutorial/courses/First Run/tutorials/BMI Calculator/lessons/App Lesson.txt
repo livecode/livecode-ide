@@ -184,8 +184,12 @@ action
 end step
 
 step "Set Calculator Header Title"
-	Set the 'Title' of the header bar widget to "BMI Calculator", and 
-	press <Return>.
+	Set the 'Title' of the header bar widget to "BMI Calculator".
+
+	Since the 'Title' property can contain multiple lines, the 
+	<Return> key will simply add a new line to the title. To apply the
+	changes to the title, hold down the <Ctrl> key and press 
+	<Return>.
 action
 	highlight property "label" of section "Basic"
 	wait until the label of widget "Header" is "BMI Calculator"
@@ -368,12 +372,8 @@ action
 end step
 
 step "Set Height Label Text"
-	Set the 'Contents' property of the label to "Height (m):". 
-	
-	Since the 'Contents' property can contain multiple lines, the 
-	<Return> key will simply add a new line to the contents. To apply the
-	changes to the label contents, hold down the <Ctrl> key and press 
-	<Return>.
+	Set the 'Contents' property of the label to "Height (m):" and 
+	press <Ctrl>+<Return>. 
 action
 	highlight property "styledText" of section "Basic"
 	wait until the text of field "Height Label" is "Height (m):"
