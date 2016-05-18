@@ -2745,9 +2745,9 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tCardList ascending by item 1 of each
+         sort lines of tCardList ascending numeric by item 1 of each
       else
-         sort lines of tCardList descending by item 1 of each
+         sort lines of tCardList descending numeric by item 1 of each
       end if
    end if
    
@@ -2846,7 +2846,9 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       add 1 to tIndex
       put empty into tControlArray
       dispatch function "__readPropertiesOfControl" to control id tControlID of pCardID with sControlPropertiesToRead, tControlArray
-
+      
+      put tControlArray["type"] && "id" && tControlID && "of" && pCardID into tControlArray["long id"]
+      
       if tControlArray["type"] is "group" then
          if tControlArray["custom control"] is true then
             put "control" into tControlArray["style"]
@@ -2858,8 +2860,6 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       else
          put "control" into tControlArray["style"]
       end if
-      
-      put tControlArray["type"] && "id" && tControlID && "of" && pCardID into tControlArray["long id"]
       
       put pLevel+1 into tControlArray["level"]
       put tControlArray into tFullArray[tIndex]
@@ -5163,7 +5163,7 @@ end revIDEPropertyReset
 
 function revIDEPropertySections
 	// AL-2015-03-03: [[ Bug 14769 ]] Add 'Table' section to the property inspector
-   return "Basic,Stack Files,Data Grid,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
+   return "Basic,Stack Files,Data Grid,Contents,Columns,Custom,Table,Colors,Effects,Icons,Position,Text,Advanced,Geometry Manager,Align Controls"
 end revIDEPropertySections
 
 function revIDEPropertySectionNameToIconName pName
@@ -5214,6 +5214,8 @@ function revIDEPropertySectionNameToIconName pName
          return "object justify both"
       case "stack files"
          return "files alt"
+      case "contents"
+         return "list"
       default
          return "remove"
          break
@@ -5569,19 +5571,54 @@ command CreateTemplateForControl pStack
    return theTemplateGroup
 end CreateTemplateForControl
 
+local sFirstRowHeaders
 on revIDESetDataGridProperty pObj, pProperty, pValue
-   set the dgProps[pProperty] of pObj to pValue
+   switch pProperty 
+      case "text"
+         if sFirstRowHeaders[pObj] then
+            set the dgText[true] of pObj to pValue
+         else
+            set the dgText of pObj to pValue
+         end if
+         break
+      case "first row header"
+         local tText
+         if sFirstRowHeaders[pObj] then
+            put the dgText[true] of pObj into tText
+         else
+            put the dgText of pObj into tText
+         end if
+         put pValue into sFirstRowHeaders[pObj]
+         revIDESetDataGridProperty pObj, "text", tText
+         break
+      default
+         set the dgProps[pProperty] of pObj to pValue
+         break
+   end switch
 end revIDESetDataGridProperty
 
 function revIDEGetDataGridProperty pObject, pProperty
-   if pProperty is "row behavior" then
-      local tTemplate
-      put the dgProps["row template"] of pObject into tTemplate
-      set the itemdel to "card"
-      return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
-   end if
-   
-   return the dgProps[pProperty] of pObject
+   switch pProperty 
+      case "row behavior"
+         local tTemplate
+         put the dgProps["row template"] of pObject into tTemplate
+         set the itemdel to "card"
+         return "button" && quote & "Behavior Script" & quote && "card" && item 2 to -1 of tTemplate
+         break
+      case "text"
+         if sFirstRowHeaders[pObject] then
+            return the dgText[true] of pObject
+         else
+           return the dgText of pObject
+         end if
+         break
+      case "first row header"
+         return sFirstRowHeaders[pObject] is true
+         break
+      default
+         return the dgProps[pProperty] of pObject
+         break
+   end switch
 end revIDEGetDataGridProperty
 
 local sCurrentColumn
@@ -10460,7 +10497,7 @@ private function __publicScriptHandlers pObject
    return tHandlers
 end __publicScriptHandlers
 
-private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScript
+private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
    if pObject is empty then
       return "No such object"
    end if
@@ -10485,6 +10522,7 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
    end if
    
    local tDoScript
+   put pToDo into tDoScript
    set the itemdelimiter to ";"
    repeat for each line tLine in tHandlerList
       local tHandlerName, tHandlerType
@@ -10497,13 +10535,7 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
       local tParams
       if not tIsPutOrGet and tHandlerType is "M" then
          -- If this is a command that matches, just send the message
-         put segment 2 to -1 of item 1 of pToDo into tParams
-         put "dispatch" && tHandlerName && "to" && pObject into tDoScript
-         if tParams is not empty then
-            put " with" && tParams after tDoScript
-         end if
-         put ";" & item 2 to -1 of pToDo after tDoScript
-         put pToDo into rValidScript
+         put pToDo into tDoScript
          exit repeat
       else if tHandlerType is "F" then
          -- otherwise this is a function that matches
@@ -10513,41 +10545,25 @@ private command __tryToDoScriptInObject pObject, pToDo, @rDoScript, @rValidScrip
             -- autocomplete the 'put' if necessary
             put "put" && pToDo into tDoScript
          end if
-         
-         ideCompileCheck tDoScript
-         if the result is not empty then
-            exit repeat
-         end if
-         
-         local tFirstItem
-         put item 1 of tDoScript into tFirstItem
-         # If the string is put <userfunction>(<params>) ... then try and evaluate <userfunction> with the params and replace with the result
-         if matchText(token 2 to -1 of tFirstItem, tHandlerName & "\(([^\)]*)?\)", tParams) is false then 
-            exit repeat
-         end if
-         local tResolvedParams
-         # Resolve the params as tokens, item by item
-         repeat for each item tItem in tParams
-            if tResolvedParams is empty then
-               put token 1 to -1 of tItem into tResolvedParams
-            else
-               put comma & token 1 to -1 of tItem after tResolvedParams
-            end if
-         end repeat
-         dispatch function (token 2 of tDoScript) to pObject with tResolvedParams
-         replace tHandlerName & "(" & tParams & ")" with quote & the result & quote in tFirstItem
-         put tDoScript into rValidScript
-         put tFirstItem & ";" & item 2 to -1 of tDoScript into tDoScript 
          exit repeat
       end if
    end repeat
    
-   if tDoScript is not empty then
-      put tDoScript into rDoScript
-      return empty
+   local tError
+   ideCompileCheck tDoScript
+   put the result into tError
+   if tError is empty then
+      try
+         send "-- execute in object context" & return & tDoScript to pObject
+      catch tError
+         
+      end try
+   end if
+   if tError is empty then
+      put tDoScript into rValidScript
    end if
    
-   return "Script not valid"
+   return tError
 end __tryToDoScriptInObject
 
 command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
@@ -10569,17 +10585,13 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tDoScript, tValidScript
-   __tryToDoScriptInObject pIntelligenceObject, pScript, tDoScript, tValidScript
+   local tValidScript
+   __tryToDoScriptInObject pIntelligenceObject, pScript, tValidScript
    if the result is not empty then
-      __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tDoScript, tValidScript
+      __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tValidScript
    end if
    
    if the result is empty then
-      ideDoMessage tDoScript, pDebugMode
-      if the result is not empty then
-         return the result
-      end if
       put tValidScript into rValidScript
       return empty
    end if
