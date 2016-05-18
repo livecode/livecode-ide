@@ -1356,7 +1356,7 @@ end step
 step "Open Calculator Card Script"
 	We are going to store the calculated BMI using a custom property on
 	out stack, called 'cBMI'. We are also going to store the height and 
-	width in custom properties 'cHeight' and 'cWidth'.
+	width in custom properties 'cHeight' and 'cWeight'.
 	
 	To do this we will add a custom command to the card script which 
 	will set all the properties for us. So select 'Object' → 'Card 
@@ -1555,7 +1555,7 @@ script
 		if the mouseAction of widget "header" is "clear" then
 			set the cBMI of this stack to empty
 			set the cHeight of this stack to empty
-			set the cWidth of this stack to empty
+			set the cWeight of this stack to empty
 		
 			put empty into field "height"
 			put empty into field "weight"
