@@ -1662,7 +1662,7 @@ step "Explain PreOpenCard Script III"
 	and remove the clear action.
 action
 	interlude
-	highlight line "set the headerTitle" of script editor for card "Chart"
+	highlight line "set the label" of script editor for card "Chart"
 	go to step "Script Editor Documentation Pane"
 end step
 
