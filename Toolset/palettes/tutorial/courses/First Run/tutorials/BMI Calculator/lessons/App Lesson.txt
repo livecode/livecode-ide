@@ -561,7 +561,7 @@ end step
 
 step "Set Calculate Button Label"
 	Set the 'Label' property of the button to "Calculate BMI", and press
-	<Return>.
+	<Ctrl>+<Return>.
 action
 	highlight property "label" of section "Basic"
 	wait until the label of button "Calculate" is "Calculate BMI"
