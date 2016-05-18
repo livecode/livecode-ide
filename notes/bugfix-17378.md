@@ -1,0 +1,1 @@
+# Reinstate contents pane in PI for fields and data grids

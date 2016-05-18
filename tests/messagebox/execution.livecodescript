@@ -165,7 +165,7 @@ on TestIntelligenceObjectMultipleCommand
 	local tValidScript
 	ideExecuteScript "firstCommand; secondCommand", empty, tStack, false, tValidScript
 	
-	TestAssertBroken "intelligence object mutiple commands", the cValue of tStack is "value", "Bug 16318"
+	TestAssert "intelligence object mutiple commands", the cValue of tStack is "value"
 end TestIntelligenceObjectMultipleCommand
 
 on TestDefaultStackCardScript
@@ -276,3 +276,24 @@ on TestIntelligenceObjectPropertyCompleted
 	TestAssert "intelligence object property autocomplete result", the result is empty
 	TestAssert "intelligence object property autocomplete executed", tValidScript is "put the width of" && tButtonName
 end TestIntelligenceObjectPropertyCompleted
+
+-- Bug 17549
+on TestIntelligenceObjectFunctionNotFirstLine
+	local tScript
+	put "function incr x; return x+1; end incr" into tScript
+	
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tValidScript, tToExecute
+	put "global z" into tToExecute
+	put return & "put 1 into z" after tToExecute
+	put return & "put incr(z)" after tToExecute
+	
+	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object command result", msg is 2
+	TestAssert "intelligence object command executed", tValidScript is tToExecute
+end TestIntelligenceObjectFunctionNotFirstLine
