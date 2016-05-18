@@ -375,7 +375,7 @@ step "Set Height Label Text"
 	Set the 'Contents' property of the label to "Height (m):" and 
 	press <Ctrl>+<Return>. 
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Height Label" is "Height (m):"
 	go to step "Create Weight Label Field"
 end step
@@ -410,7 +410,7 @@ step "Set Weight Label Text"
 	Set the 'Contents' property of the label to "Weight (kg):", and 
 	press <Ctrl>+<Return>.
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Weight Label" is "Weight (kg):"
 	go to step "Create Height Entry Field"
 end step
@@ -666,7 +666,7 @@ step "Set Results Label Text"
 	Set the 'Contents' property of the label to "Results", and press
 	<Ctrl>+<Return>.
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Results Label" is "Results"
 	go to step "Set Results Label Text Style"
 end step
