@@ -1938,9 +1938,9 @@ action
 end step
 
 step "Set Item Icon Once More"
-	Click the grey icon on the new row of the Navigation Data, to bring
-	up the icon picker, and set the icon of the new navigation item to 
-	the "medikit" icon.
+	Click the left hand icon on the new row of the Navigation Data, to 
+	bring up the icon picker again, and set the icon of the new 
+	navigation item to the "medkit" icon.
 action 
 	highlight property "itemArray" of section "Basic"
 	wait until the itemIcons of widget "Footer" is "cog,bar chart,medkit"
