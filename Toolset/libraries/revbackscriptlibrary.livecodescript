@@ -2567,10 +2567,10 @@ function revDatabaseDriverBuildList
    put empty into tList
    // AL-2015-02-17: [[ SB Inclusions ]] Ensure mysql module name is standard (was dbmysql)
    repeat for each item tExternal in revIDEDatabaseDriversMapping()
-      get lineOffset(word -1 of tExternal, the externals of stack "Home")
+      get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash
-         put word 1 to -2 of tExternal, the last item of line it of the externals of stack "Home" & return after tList
+         put word 2 to -1 of tExternal, the last item of line it of the externals of stack "Home" & return after tList
          set the itemDelimiter to comma
       end if
    end repeat
