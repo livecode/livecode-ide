@@ -8259,7 +8259,7 @@ on revIDETogglePalette pPaletteName
    local tStackName
    put revIDEPaletteToStackName(pPaletteName) into tStackName
 
-   if the mode of stack tStackName is 0 then
+   if the mode of stack tStackName is 0 or the visible of stack tStackName is false then
       revIDEOpenPalette pPaletteName
    else
       close stack tStackName
