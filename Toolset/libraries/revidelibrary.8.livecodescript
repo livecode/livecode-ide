@@ -10349,15 +10349,24 @@ private command revIDEGenerateDistributedAPI
 end revIDEGenerateDistributedAPI
 
 on revIDEEnsureDictionaryUrl pWhich
-   local tLastGenerated, tLastModified
+   local tNeedUpdate, tLastGenerated, tLastModified
    set the itemdelimiter to slash
    local tFile
    put revIDEGetDictionaryHTMLTemplate(pWhich) into tFile
    put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastModified
    put revIDEGetDictionaryUrl(pWhich) into tFile
-   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastGenerated
-   
-   if tLastModified > tLastGenerated then
+
+   if there is not a file tFile then
+      put true into tNeedUpdate
+   else
+      put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, \
+            item -1 of tFile) into tLastGenerated
+      if tLastModified > tLastGenerated then
+         put true into tNeedUpdate
+      end if
+   end if
+
+   if tNeedUpdate is true then
       revIDEGenerateDictionaryHTML pWhich
    end if
 end revIDEEnsureDictionaryUrl
