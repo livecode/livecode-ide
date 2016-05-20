@@ -184,8 +184,12 @@ action
 end step
 
 step "Set Calculator Header Title"
-	Set the 'Title' of the header bar widget to "BMI Calculator", and 
-	press <Return>.
+	Set the 'Title' of the header bar widget to "BMI Calculator".
+
+	Since the 'Title' property can contain multiple lines, the 
+	<Return> key will simply add a new line to the title. To apply the
+	changes to the title, hold down the <Ctrl> key and press 
+	<Return>.
 action
 	highlight property "label" of section "Basic"
 	wait until the label of widget "Header" is "BMI Calculator"
@@ -368,14 +372,10 @@ action
 end step
 
 step "Set Height Label Text"
-	Set the 'Contents' property of the label to "Height (m):". 
-	
-	Since the 'Contents' property can contain multiple lines, the 
-	<Return> key will simply add a new line to the contents. To apply the
-	changes to the label contents, hold down the <Ctrl> key and press 
-	<Return>.
+	Set the 'Contents' property of the label to "Height (m):" and 
+	press <Ctrl>+<Return>. 
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Height Label" is "Height (m):"
 	go to step "Create Weight Label Field"
 end step
@@ -410,7 +410,7 @@ step "Set Weight Label Text"
 	Set the 'Contents' property of the label to "Weight (kg):", and 
 	press <Ctrl>+<Return>.
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Weight Label" is "Weight (kg):"
 	go to step "Create Height Entry Field"
 end step
@@ -561,7 +561,7 @@ end step
 
 step "Set Calculate Button Label"
 	Set the 'Label' property of the button to "Calculate BMI", and press
-	<Return>.
+	<Ctrl>+<Return>.
 action
 	highlight property "label" of section "Basic"
 	wait until the label of button "Calculate" is "Calculate BMI"
@@ -666,7 +666,7 @@ step "Set Results Label Text"
 	Set the 'Contents' property of the label to "Results", and press
 	<Ctrl>+<Return>.
 action
-	highlight property "styledText" of section "Basic"
+	highlight property "styledText" of section "Contents"
 	wait until the text of field "Results Label" is "Results"
 	go to step "Set Results Label Text Style"
 end step
@@ -1356,7 +1356,7 @@ end step
 step "Open Calculator Card Script"
 	We are going to store the calculated BMI using a custom property on
 	out stack, called 'cBMI'. We are also going to store the height and 
-	width in custom properties 'cHeight' and 'cWidth'.
+	width in custom properties 'cHeight' and 'cWeight'.
 	
 	To do this we will add a custom command to the card script which 
 	will set all the properties for us. So select 'Object' → 'Card 
@@ -1555,7 +1555,7 @@ script
 		if the mouseAction of widget "header" is "clear" then
 			set the cBMI of this stack to empty
 			set the cHeight of this stack to empty
-			set the cWidth of this stack to empty
+			set the cWeight of this stack to empty
 		
 			put empty into field "height"
 			put empty into field "weight"
@@ -1662,7 +1662,7 @@ step "Explain PreOpenCard Script III"
 	and remove the clear action.
 action
 	interlude
-	highlight line "set the headerTitle" of script editor for card "Chart"
+	highlight line "set the label" of script editor for card "Chart"
 	go to step "Script Editor Documentation Pane"
 end step
 
@@ -1938,9 +1938,9 @@ action
 end step
 
 step "Set Item Icon Once More"
-	Click the grey icon on the new row of the Navigation Data, to bring
-	up the icon picker, and set the icon of the new navigation item to 
-	the "medikit" icon.
+	Click the left hand icon on the new row of the Navigation Data, to 
+	bring up the icon picker again, and set the icon of the new 
+	navigation item to the "medkit" icon.
 action 
 	highlight property "itemArray" of section "Basic"
 	wait until the itemIcons of widget "Footer" is "cog,bar chart,medkit"

@@ -1155,6 +1155,12 @@ on updateForSelectedObjectChanged
    if sHiddenPalettes is not empty then
       revSEShowPalettes
    end if   
+   
+   --make sure plugins are still sent legacy messages
+   repeat for each line l in gREVMessageDispatch["revSelectedObjectChanged"]
+      send "revSelectedObjectChanged" to this cd of stack l
+   end repeat
+   
    ideMessageSend "ideSelectedObjectChanged"
 end updateForSelectedObjectChanged
 
