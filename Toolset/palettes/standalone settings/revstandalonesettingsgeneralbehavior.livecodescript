@@ -44,7 +44,6 @@ on preOpenCard
    set the text of field "Default Build Folder" of me to tStandaloneSettingsA["defaultBuildFolder"]
    set the hilite of button "Automatically Build here" of me to (tStandaloneSettingsA["automaticallyBuildInDefaultFolder"] is true)
    
-   set the enabled of button "Search" to not tStandaloneSettingsA["ios"]
    set the enabled of group "profiles" to not tStandaloneSettingsA["ios"]
    
    local tTipLastShown, tShowTip
