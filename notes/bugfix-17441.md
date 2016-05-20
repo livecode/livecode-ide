@@ -1,0 +1,1 @@
+# Ensure revSelectedObjectChanged is sent to plugins
