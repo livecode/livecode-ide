@@ -167,7 +167,11 @@ on revStandaloneSettings pStack
       if the fileName of stack pStack is "" then exit revStandaloneSettings
    end if
    set the cRevTargetStack of stack "revStandaloneSettings" to pStack
-   revDefaultStandaloneSettings pStack
+   
+   local tSettings
+   put getSettings() into tSettings
+   revSBDefaultStandaloneSettings pStack, tSettings
+   setSettings tSettings
    modeless "revStandaloneSettings"
    send "preOpenCard" to this card of stack "revStandaloneSettings"
    updateLabel the short name of this card of stack "revStandaloneSettings"
@@ -205,7 +209,7 @@ command updateCardSize
 end updateCardSize
 
 on resumeStack
-  if the short name of this stack = "revStandaloneSetings" then
+  if the short name of this stack is "revStandaloneSettings" then
     send "preOpenCard" to the current card 
   end if
 end resumeStack
@@ -340,7 +344,7 @@ function getTargetStack
 end getTargetStack
 
 function getTargetStackName
-   return the cRevTargetStack of this stack
+   return the cRevTargetStack of me
 end getTargetStackName
 
 function getSettings
