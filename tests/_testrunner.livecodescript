@@ -164,6 +164,9 @@ private command invokeLoadIDE
 	
 	dispatch "startup" to tStackName
 	open tStackName
+	
+	-- Set the 'test environment' to true
+	revSetTestEnvironment true
 end invokeLoadIDE
 
 private command invokeAllTests
