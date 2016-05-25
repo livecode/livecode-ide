@@ -6644,8 +6644,15 @@ function revIDEImportableControls
 end revIDEImportableControls
 
 function revIDELiveCodeFileExtensions
-   return revIDEAcceptedTypes("livecode")
+   return revIDEAcceptedTypes("stack")
 end revIDELiveCodeFileExtensions
+
+function revIDEFileHasStackfileExtension pFile
+   local tExtensions
+   put revIDELiveCodeFileExtensions() into tExtensions
+   set the linedelimiter to "."
+   return line -1 of pFile is among the items of tExtensions
+end revIDEFileHasStackfileExtension
 
 function revIDEAcceptedTypes pType
    local tTypes
