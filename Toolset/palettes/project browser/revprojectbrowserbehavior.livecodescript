@@ -429,8 +429,9 @@ command buildProjectView pRememberExpansion
       if exists(tExpandedControl) then
          put getRow(tExpandedControl) into tChildRow
          put itemOffset(tChildRow, tVisibleRows) into tVisibleRowNumber
-         addChildren tExpandedControl, tChildRow, false
-         put the number of items in sDisplayArray["objects"][tChildRow]["children"] into sDisplayArray["objects"][tChildRow]["childCount"] 
+         if sDisplayArray["objects"][tChildRow]["childCount"] is not 0 then
+            addChildren tExpandedControl, tChildRow, false
+         end if
          put "false" into sDisplayArray["objects"][tChildRow]["expanded"]
          dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true
       end if
@@ -1417,7 +1418,7 @@ function levelConnectors pObjectArray, pParentRow, pPosition
             put "branch"  into tLevelConnectors[1] 
          end if
       end if
-   else if pObjectArray["type"] is "group" then
+   else if pObjectArray["style"] is "group" then
       put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
       
       repeat with l = 1 to pObjectArray["level"]-1
