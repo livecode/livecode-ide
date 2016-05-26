@@ -40,7 +40,7 @@ local sExtensionDataForDisplay
 
 private on __loadExtensions
    local tInactiveExtensionFolder, tExtensionData
-
+   
    put empty into sExtensionData
    put empty into sExtensionDataForDisplay
    
@@ -50,7 +50,7 @@ private on __loadExtensions
       if char 1 of tFile is "." then next repeat
       __loadExtension tFile
    end repeat
-
+   
    revIDEPopDefaultFolder
    dispatch "ideExtensionsChanged"
 end __loadExtensions
@@ -58,15 +58,15 @@ end __loadExtensions
 private command __loadExtension pExtensionFile
    local tExtensionID, tExtensionPackageData, tIndex, tKeys
    local tExtractedExtensionFolder
-
+   
    put char 1 to -5 of pExtensionFile into tExtensionID
    put revIDESpecialFolderPath("extensions") into tExtractedExtensionFolder
-
+   
    ## Check if already extracted
    if there is not a folder (tExtractedExtensionFolder & "/" & pExtensionFile) then
       __extractExtension(revIDESpecialFolderPath("extensions") & "/" & pExtensionFile)
    end if
-
+   
    # Try to load the extension
    local tExecutableModuleFile
    put revIDESpecialFolderPath("extensions") & slash & tExtensionID & slash & "module.lcm" into tExecutableModuleFile
@@ -77,17 +77,17 @@ private command __loadExtension pExtensionFile
          return empty
       end if
    end if
-
+   
    ## Check if already loaded
    if tExtensionID is not among the lines of the keys of sExtensionData then
       put the keys of sExtensionDataForDisplay into tKeys
       replace return with comma in tKeys
       put max(tKeys) + 1 into tIndex
-
+      
       ## Extract the extension
       --put __extractExtension(revIDESpecialFolderPath("extensions") & "/" & pExtensionFile) into tExtensionPackageData
       put __extensionData(tExtensionID) into tExtensionPackageData
-
+      
       local tExtenstionTypeID
       put tExtensionPackageData["name"] into tExtenstionTypeID
       put tExtensionPackageData into sExtensionData[tExtenstionTypeID]
@@ -100,16 +100,16 @@ end __loadExtension
 private function __extensionData pExtensionID
    local tExtractedExtensionFolder, tExtensionFolder, tManifest, tXMLTree, tExtensionData
    local tIsWidget, tIsLibrary, tRequiredNodes
-
+   
    put revIDESpecialFolderPath("extensions") into tExtractedExtensionFolder
    put tExtractedExtensionFolder & "/" & pExtensionID into tExtensionFolder
-
+   
    if there is not a folder tExtensionFolder then return empty
-
+   
    ## Manifest
    put url ("file:" & tExtensionFolder & "/manifest.xml") into tManifest
    if tManifest is empty then return empty
-
+   
    put revXMLCreateTree(tManifest,true,true,false) into tXMLTree
    put revXMLNodeContents(tXMLTree,"/package/name") into tExtensionData["name"]
    put revXMLNodeContents(tXMLTree,"/package/title") into tExtensionData["label"]
@@ -117,36 +117,36 @@ private function __extensionData pExtensionID
    put revXMLNodeContents(tXMLTree,"/package/author") into tExtensionData["author"]
    put revXMLNodeContents(tXMLTree,"/package/version") into tExtensionData["version"]
    put revXMLNodeContents(tXMLTree,"/package/license") into tExtensionData["license"]
-
+   
    if item 1 of tExtensionData["author"] is "xmlerr" then
       put empty into tExtensionData["author"]
    end if
-
+   
    ## Type
    put revXMLChildNames(tXMLTree,"package",return,"widget",false) into tIsWidget
    put revXMLChildNames(tXMLTree,"package",return,"library",false) into tIsLibrary
-
+   
    if tIsWidget is "widget" then put "widget" into tExtensionData["type"]
    else if tIsLibrary is "library" then put "library" into tExtensionData["type"]
    else put "widget" into tExtensionData["type"]
-
+   
    ## Requirements
    put revXMLChildNames(tXMLTree,"package",return,"requires",true) into tRequiredNodes
    repeat with x = 1 to the number of lines in tRequiredNodes
       put revXMLAttribute(tXMLTree,"package" & "/" & line x of tRequiredNodes,"name") into tExtensionData["requires"][x]["name"]
       put revXMLAttribute(tXMLTree,"package" & "/" & line x of tRequiredNodes,"version") into tExtensionData["requires"][x]["version"]
    end repeat
-
+   
    revXMLDeleteTree tXMLTree
-
+   
    put (tExtensionFolder & "/manifest.xml") into tExtensionData["manifest_path"]
-
+   
    ## Icons
    if there is a file (tExtensionFolder & "/icon.png") then put (tExtensionFolder & "/icon.png") into tExtensionData["icon"]
-
+   
    ## Guide
    if there is a file (tExtensionFolder & "/guide.md") then put (tExtensionFolder & "/guide.md") into tExtensionData["guide"]
-
+   
    ## API
    if there is a file (tExtensionFolder & "/api.lcdoc") then put (tExtensionFolder & "/api.lcdoc") into tExtensionData["api"]
    return tExtensionData
@@ -155,14 +155,14 @@ end __extensionData
 private command __extractExtension pFilename
    local tManifest, tExtensionData, tIcon, tFileRoot, tIdentifier, tXMLTree, tRequiredNodes, tType
    local tIsWidget, tIsLibrary, tItems
-
+   
    if char -3 to -1 of pFilename is not "lce" then return __revIDEError("The file" && pFilename && "is not a valid LiveCode Extension file.")
-
+   
    local tNewFolderName
    set the itemDel to "/"
    put char 1 to -5 of item -1 of pFilename into tNewFolderName
    revZipOpenArchive pFilename, "read"
-
+   
    local tZipItems
    put revZipEnumerateItems(pFilename) into tZipItems
    if the last char of line 1 of tZipItems is "/" then
@@ -170,25 +170,25 @@ private command __extractExtension pFilename
    else
       put empty into tFileRoot
    end if
-
+   
    ## Extract Extension files
    local tExtensionsFolder, tUnzippedExtensionFolder, tIconFile, tLargeIconFile
    put revIDESpecialFolderPath("extensions") into tExtensionsFolder
    put tExtensionsFolder & "/" & tNewFolderName into tUnzippedExtensionFolder
-
+   
    if there is not a folder tUnzippedExtensionFolder then
       revIDEEnsurePath tUnzippedExtensionFolder
    end if
-
+   
    ## Manifest
    local tManifestPath
    put tUnzippedExtensionFolder & "/manifest.xml" into tManifestPath
    revZipExtractItemToFile pFilename, (tFileRoot & "manifest.xml"), tManifestPath
-
+   
    ## Icon files
    put tUnzippedExtensionFolder & "/icon.png" into tIconFile
    revZipExtractItemToFile pFilename, (tFileRoot & "support/icon.png"), tIconFile
-
+   
    ## Extract any other icon files
    local tUnzippedIconFile
    put revZipEnumerateItems(pFilename) into tItems
@@ -197,24 +197,24 @@ private command __extractExtension pFilename
       put tUnzippedExtensionFolder & "/" & item -1 tIcon into tUnzippedIconFile
       revZipExtractItemToFile pFilename, tIcon, tUnzippedIconFile
    end repeat
-
+   
    ## Documentaion
-
+   
    ## Guide
    local tGuidePath
    put tUnzippedExtensionFolder & "/guide.md" into tGuidePath
    revZipExtractItemToFile pFilename, (tFileRoot & "docs/guide/guide.md"), tGuidePath
    ##-- Rebuild user guide JSON
-
+   
    ## API
    local tAPIPath
    put tUnzippedExtensionFolder & "/api.lcdoc" into tAPIPath
    revZipExtractItemToFile pFilename, (tFileRoot & "docs/api/api.lcdoc"), tAPIPath
    --   put tAPIPath into tExtensionData["api"]
-
+   
    ## Executable Module File
    revZipExtractItemToFile pFilename, (tFileRoot & "module.lcm"), tUnzippedExtensionFolder & "/module.lcm"
-
+   
    revZipCloseArchive pFilename
 end __extractExtension
 
@@ -242,7 +242,7 @@ private on __toolDefinitionsRead
       set the itemdel to "."
       put item 1 of tFile into tToolSection
       put URL ("file:" & tToolDefinitionPath & slash & tFile) into tDefinitionData
-
+      
       local tToolID, tCount
       put 1 into tCount
       set the itemdel to ","
@@ -250,7 +250,7 @@ private on __toolDefinitionsRead
          put item 1 of tToolDescription into tToolID
          put item 2 of tToolDescription into sToolDefinition[tToolSection][tCount]["label"]
          put item 3 of tToolDescription into sToolDefinition[tToolSection][tCount]["icon"]
-
+         
          local tCount2, tPropertyName, tPropertyValue
          put 1 into tCount2
          repeat for each item tProperty in item 4 of tToolDescription
@@ -260,11 +260,11 @@ private on __toolDefinitionsRead
             put tPropertyValue into sToolDefinition[tToolSection][tCount]["properties"][tCount2][tPropertyName]
             add 1 to tCount2
          end repeat
-
+         
          add 1 to tCount
       end repeat
    end repeat
-
+   
    revIDEPopDefaultFolder
 end __toolDefinitionsRead
 
@@ -348,7 +348,7 @@ end __propertyDataProcessLine
 private function __propertyDataFromInfoFile pFileName
    local tPropertyInfo
    put URL ("file:" & pFileName) into tPropertyInfo
-
+   
    local tDataStart, tDataA, tPropName
    put false into tDataStart
    
@@ -358,11 +358,11 @@ private function __propertyDataFromInfoFile pFileName
          put true into tDataStart
          next repeat
       end if
-
+      
       if not tDataStart then
          next repeat
       end if
-
+      
       if token 1 of tLine is empty then
          next repeat
       end if
@@ -578,35 +578,35 @@ private on __objectPropertiesRead
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
-
+   
    # Set to folder to the path where the object definition files for classic controls are stored
    local tObjectDefinitionsPath
    put revIDESpecialFolderPath("Object Property Definitions") into tObjectDefinitionsPath
-
+   
    local tPropertiesInfo
    put __propertyDataFromInfoFile(tObjectDefinitionsPath & slash & __propertyInfoFilename()) into tPropertiesInfo
    revIDEPushDefaultFolder tObjectDefinitionsPath
    
    # Read in each file and build an array
    local tObjectType
-
+   
    repeat for each line tFile in the files
       if not (tFile begins with "com.livecode.interface") then next repeat
       if char 1 of tFile is "." then next repeat
-
+      
       put tFile into tObjectType
       # Get the name of the object
       set the itemdel to "."
       if the last item of tObjectType is "txt" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
-
+      
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
    end repeat
    
    __orderClassicTools
    
    put tPropertiesInfo into sClassicPropertiesInfo
-
+   
    revIDEPopDefaultFolder
 end __objectPropertiesRead
 
@@ -673,7 +673,7 @@ end __orderPropSubArray
 
 private function __orderPropArray pPropsA, pSections
    local tOrderedPropsA,x
-
+   
    local tCount
    put 1 into tCount
    repeat for each item tSection in pSections
@@ -715,7 +715,7 @@ end __objectPropertiesInfo
 private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, pOptionalSection
    local tPropertiesArray,tPropertiesArray2, tPropertiesArray3,x, tSectionProps, tAllControls
    put pObjectTypeList is not empty into tAllControls
-
+   
    repeat for each line tObjectType in pObjectTypeList
       set the itemdelimiter to "."
       get item -1 of tObjectType
@@ -790,7 +790,7 @@ function idePropertyNames pObjectType
    if sClassicPropertiesInfo is empty or sClassicObjectPropertiesInfo is empty then
       __objectPropertiesRead
    end if
-
+   
    local tProps
    if pObjectType is empty then
       put the keys of sClassicPropertiesInfo into tProps
@@ -813,7 +813,7 @@ function ideObjectTypes
    if sClassicObjectPropertiesInfo is empty then
       __objectPropertiesRead
    end if
-
+   
    local tTypes
    put the keys of sClassicObjectPropertiesInfo into tTypes
    sort tTypes
@@ -886,129 +886,129 @@ put ideObjectTypeFromObject(it)  -- outputs com.livecode.interface.classic.ListF
 Description:
 >*Note:* The type returned by <ideObjectTypeFromObject> can depend
 on the values of the object's properties.
-**/
-function ideObjectTypeFromObject pObjectID
-   switch word 1 of the name of pObjectID
-      case "stack"
-         return "com.livecode.interface.classic.Stack"
-      case "card"
-         return "com.livecode.interface.classic.Card"
-      case "group"
-         if the dgProps["control type"] of pObjectID is "Data Grid" then
-            if the dgProps["style"] of pObjectID is "Table" then
-               return "com.livecode.interface.classic.DataGrid"
+   **/
+   function ideObjectTypeFromObject pObjectID
+      switch word 1 of the name of pObjectID
+         case "stack"
+            return "com.livecode.interface.classic.Stack"
+         case "card"
+            return "com.livecode.interface.classic.Card"
+         case "group"
+            if the dgProps["control type"] of pObjectID is "Data Grid" then
+               if the dgProps["style"] of pObjectID is "Table" then
+                  return "com.livecode.interface.classic.DataGrid"
+               else
+                  return "com.livecode.interface.classic.DataGridForm"
+               end if
             else
-               return "com.livecode.interface.classic.DataGridForm"
+               return "com.livecode.interface.classic.Group"
             end if
-         else
-            return "com.livecode.interface.classic.Group"
-         end if
-         break
-      case "field"
+            break
+         case "field"
             if revIDEGetTableProperty(pObjectID, "basicTableObject") then
-            return "com.livecode.interface.classic.TableField"
-         else if the listbehavior of pObjectID is true then
-            return "com.livecode.interface.classic.ListField"
-         else if the vscrollbar of pObjectID is true then
-            return "com.livecode.interface.classic.TextArea"
-         else
-            return "com.livecode.interface.classic.Field"
-         end if
-         break
-      case "button"
-         if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
-
-         switch the style of pObjectID
-            case "radiobutton"
-               return "com.livecode.interface.classic.RadioButton"
-               break
-            case "checkbox"
-               return "com.livecode.interface.classic.Checkbox"
-               break
-            case "menu"
-               switch the menumode of pObjectID
-                  case "combobox"
-                     return "com.livecode.interface.classic.ComboBox"
-                     break
-                  case "option"
-                     return "com.livecode.interface.classic.OptionMenu"
-                     break
-                  case "pulldown"
-                     return "com.livecode.interface.classic.PulldownMenu"
-                     break
-                  case "tabbed"
-                     return "com.livecode.interface.classic.TabPanel"
-                     break
-                  case "popup"
-                  case "cascade"
-                  default
-                     return "com.livecode.interface.classic.PopupMenu"
-                     break
-               end switch
-            case "rectangle"
-               return "com.livecode.interface.classic.RectangleButton"
-               break
-            default
-               if the default of pObjectID is true then
-                  return "com.livecode.interface.classic.DefaultButton"
-               else
-                  return "com.livecode.interface.classic.Button"
-               end if
-               break
-         end switch
-      case "scrollbar"
-         switch the style of pObjectID
-            case "scale"
-               return "com.livecode.interface.classic.Slider"
-               break
-            case "progress"
-               return "com.livecode.interface.classic.ProgressBar"
-               break
-            case "scrollbar"
-               if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
-                  return "com.livecode.interface.classic.LittleArrows"
-               else
-                  return "com.livecode.interface.classic.Scrollbar"
-               end if
-               break
-         end switch
-         break
-      case "image"
-         return "com.livecode.interface.classic.Image"
-         break
-      case "player"
-         return "com.livecode.interface.classic.Player"
-      case "widget"
-         return the kind of pObjectID
-         break
-      case "graphic"
-         switch the style of pObjectID
-            case "text"
-            case "rectangle"
-               return "com.livecode.interface.classic.RectangleGraphic"
-               break
-            case "roundrect"
-               return "com.livecode.interface.classic.RoundRectGraphic"
-               break
-            case "line"
-               return "com.livecode.interface.classic.LineGraphic"
-               break
-            case "arc"
-            case "oval"
-               return "com.livecode.interface.classic.OvalGraphic"
-               break
-            case "curve"
-               return "com.livecode.interface.classic.CurveGraphic"
-               break
-            case "polygon"
-               return "com.livecode.interface.classic.PolygonGraphic"
-               break
-            case "regular"
-               return "com.livecode.interface.classic.RegularGraphic"
-               break
-         end switch
-         break
-   end switch
+               return "com.livecode.interface.classic.TableField"
+            else if the listbehavior of pObjectID is true then
+               return "com.livecode.interface.classic.ListField"
+            else if the vscrollbar of pObjectID is true then
+               return "com.livecode.interface.classic.TextArea"
+            else
+               return "com.livecode.interface.classic.Field"
+            end if
+            break
+         case "button"
+            if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
+            
+            switch the style of pObjectID
+               case "radiobutton"
+                  return "com.livecode.interface.classic.RadioButton"
+                  break
+               case "checkbox"
+                  return "com.livecode.interface.classic.Checkbox"
+                  break
+               case "menu"
+                  switch the menumode of pObjectID
+                     case "combobox"
+                        return "com.livecode.interface.classic.ComboBox"
+                        break
+                     case "option"
+                        return "com.livecode.interface.classic.OptionMenu"
+                        break
+                     case "pulldown"
+                        return "com.livecode.interface.classic.PulldownMenu"
+                        break
+                     case "tabbed"
+                        return "com.livecode.interface.classic.TabPanel"
+                        break
+                     case "popup"
+                     case "cascade"
+                     default
+                        return "com.livecode.interface.classic.PopupMenu"
+                        break
+                  end switch
+               case "rectangle"
+                  return "com.livecode.interface.classic.RectangleButton"
+                  break
+               default
+                  if the default of pObjectID is true then
+                     return "com.livecode.interface.classic.DefaultButton"
+                  else
+                     return "com.livecode.interface.classic.Button"
+                  end if
+                  break
+            end switch
+         case "scrollbar"
+            switch the style of pObjectID
+               case "scale"
+                  return "com.livecode.interface.classic.Slider"
+                  break
+               case "progress"
+                  return "com.livecode.interface.classic.ProgressBar"
+                  break
+               case "scrollbar"
+                  if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
+                     return "com.livecode.interface.classic.LittleArrows"
+                  else
+                     return "com.livecode.interface.classic.Scrollbar"
+                  end if
+                  break
+            end switch
+            break
+         case "image"
+            return "com.livecode.interface.classic.Image"
+            break
+         case "player"
+            return "com.livecode.interface.classic.Player"
+         case "widget"
+            return the kind of pObjectID
+            break
+         case "graphic"
+            switch the style of pObjectID
+               case "text"
+               case "rectangle"
+                  return "com.livecode.interface.classic.RectangleGraphic"
+                  break
+               case "roundrect"
+                  return "com.livecode.interface.classic.RoundRectGraphic"
+                  break
+               case "line"
+                  return "com.livecode.interface.classic.LineGraphic"
+                  break
+               case "arc"
+               case "oval"
+                  return "com.livecode.interface.classic.OvalGraphic"
+                  break
+               case "curve"
+                  return "com.livecode.interface.classic.CurveGraphic"
+                  break
+               case "polygon"
+                  return "com.livecode.interface.classic.PolygonGraphic"
+                  break
+               case "regular"
+                  return "com.livecode.interface.classic.RegularGraphic"
+                  break
+            end switch
+            break
+      end switch
 end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
@@ -1016,22 +1016,22 @@ private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
    put the keys of pArray into tOrderedKeys
    sort lines of tOrderedKeys numeric
    repeat for each line tKey in tOrderedKeys
-
+      
       add 1 to pCounter
-
+      
       repeat for pLevel
          put tab after line pCounter of pList
       end repeat
       put (tKey && "= ") after line pCounter of pList
-
+      
       if (the keys of pArray[tKey]) is empty then
          put line 1 of pArray[tKey] after line pCounter of pList
       else
          put __dumpArrayRecurse(pArray[tKey], (pLevel + 1), pCounter, pList) into pList
       end if
-
+      
    end repeat
-
+   
    return pList
 end __dumpArrayRecurse
 
@@ -1040,11 +1040,11 @@ function __revIDEError pMessage
    
    local tErrorContext, tErrorText, tLockedMessages
    put line -2 of the executioncontexts into tErrorContext
-
+   
    # Unlock messages to ensure the errors get through to the message box
    put the lockmessages into  tLockedMessages
    unlock messages
-
+   
    put "ERROR:" && pMessage & return & "line:" && item 3 of tErrorContext & return & "handler:" && item 2 of tErrorContext & return & "script object:" && item 1 of tErrorContext into tErrorText
    
    # If in IDE development mode output the error to the Message Box
@@ -1056,7 +1056,7 @@ function __revIDEError pMessage
    if tLockedMessages is true then
       lock messages
    end if
-
+   
    return tErrorText
 end __revIDEError
 
@@ -1071,7 +1071,7 @@ function __readStructureOfStackForDataView @pData, pParent, pLevel, pIndex
    # 1) Get desired properties for the current stack
    dispatch function "__readPropertiesOfControlForDataView" to the target with sStackPropertiesToRead, pData,pParent, pLevel, pIndex
    put the result into tStackIndex
-
+   
    --   # 2) Process any cards
    --   local tChildCardIDs
    --   put empty into tChildCardIDs
@@ -1080,22 +1080,22 @@ function __readStructureOfStackForDataView @pData, pParent, pLevel, pIndex
    --      dispatch function "__readPropertiesOfControlForDataView" to card x of the target with sCardPropertiesToRead, pData, tStackIndex, pLevel + 1
    --      local tCardIndex
    --      put the result into tCardIndex
-
+   
    --      if tChildCardIDs is empty then
    --         put tCardIndex into tChildCardIDs
    --      else
    --         put comma & tCardIndex after tChildCardIDs
    --      end if
-
+   
    --      # b) Process the card container for all its controls
-
+   
    --      dispatch function "__readStructureOfContainerForDataView" to card x of the target with pData, tCardIndex, pLevel + 1
    --      put the result into pData[tCardIndex]["children"]
    --      put false into pData[tCardIndex]["expanded"]
    --      put "container" into pData[tCardIndex]["style"]
    --      put "card" into pData[tCardIndex]["type"]
    --   end repeat
-
+   
    --   # 3) Process any subsctacks
    --   repeat for each line tSubstack in the substacks of the target
    --      if tChildCardIDs is empty then
@@ -1105,9 +1105,9 @@ function __readStructureOfStackForDataView @pData, pParent, pLevel, pIndex
    --      end if
    --      dispatch function "__readStructureOfStackForDataView" to stack tSubstack with pData,tStackIndex, pLevel + 1
    --   end repeat
-
+   
    --   put tChildCardIDs into pData[tStackIndex]["children"]
-
+   
    --put the number of cards of the target into pData[tStackIndex]["childCount"]
    put the number of cards of the target & the number of lines in the substacks of the target into pData[tStackIndex]["childCount"]
    put false into pData[tStackIndex]["expanded"]
@@ -1165,7 +1165,7 @@ end __readStructureOfStackForDataView
 function __readStructureOfContainerForDataView @pData, pParentIndex, pLevel
    # 1) Repeat for each control in the container
    local tChildIDs, tChildCount
-
+   
    //repeat with x = 1 to the number of controls of the target
    --repeat for each line tControlId in the childcontrolIDs of the target
    put the number of lines in the childcontrolIDs of the target into tChildCount
@@ -1176,7 +1176,7 @@ function __readStructureOfContainerForDataView @pData, pParentIndex, pLevel
       else
          put line (tChildCount -x) + 1 of the childcontrolIDs of the target into tControlId
       end if
-
+      
       # read the properties of the control
       local tIndex
       dispatch function "__readPropertiesOfControlForDataView" to control ID tControlID of the target with sControlPropertiesToRead, pData, pParentIndex, pLevel + 1
@@ -1186,14 +1186,14 @@ function __readStructureOfContainerForDataView @pData, pParentIndex, pLevel
       else
          put comma & tIndex after tChildIDs
       end if
-
+      
       #  if the control is a group
       if the name of control ID tControlID of the target begins with "group" then
          local tIndexStart
          put the number of elements of pData into tIndexStart
-
+         
          dispatch function "__readStructureOfContainerForDataView" to control ID tControlID of the target with pData, tIndex, pLevel + 1
-
+         
          put the result into pData[tIndex]["children"]
          --add the number of elements of pData - tIndexStart to x
          put false into pData[tIndex]["expanded"]
@@ -1211,7 +1211,7 @@ end __readStructureOfContainerForDataView
 function __readPropertiesOfControlForDataView pList, @pData, pParentIndex, pLevel,pIndex
    local tIndex
    put pIndex + the number of elements of pData + 1 into tIndex
-
+   
    put pParentIndex into pData[tIndex]["parent"]
    --put empty into pList
    repeat for each line tProp in pList
@@ -1250,16 +1250,16 @@ end __readPropertiesOfControlForDataView
 function __readStructureOfStack @pData
    # 1) Get desired properties for the current stack
    dispatch function "__readPropertiesOfControl" to the target with sStackPropertiesToRead, pData
-
+   
    # 2) Process any cards
    repeat with x = 1 to the number of cards of the target
       # a) Get basic properties for the card
       dispatch function "__readPropertiesOfControl" to card x of the target with sCardPropertiesToRead, pData["cards"][x]
-
+      
       # b) Process the card container for all its controls
       dispatch function "__readStructureOfContainer" to card x of the target with pData["cards"][x]["controls"]
    end repeat
-
+   
    # 3) Process any subsctacks
    repeat for each line tSubstack in the substacks of the target
       dispatch function "__readStructureOfStack" to stack tSubstack with pData["substacks"][x]
@@ -1268,25 +1268,25 @@ end __readStructureOfStack
 
 function __readStructureOfContainer @pData
    local tControlsProcessedInContainer
-
+   
    # 1) Repeat for each control in the container
    repeat with x = 1 to the number of controls of the target
       # read the properties of the control
       dispatch function "__readPropertiesOfControl" to control x of the target with sControlPropertiesToRead, pData[x]
-
+      
       --local tName
       --put the name of control x of the target into tName
-
+      
       #  if the control is a group
       if the name of control x of the target begins with "group" then
-
+         
          dispatch function "__readStructureOfContainer" to control x of the target with pData[x]["controls"]
          put the result into tControlsProcessedInContainer
          add the number of elements of pData[x]["controls"] to tControlsProcessedInContainer
          add tControlsProcessedInContainer to x
       end if
    end repeat
-
+   
    return tControlsProcessedInContainer
 end __readStructureOfContainer
 
@@ -1463,21 +1463,21 @@ on revIDEInitialiseIDELibrary
    # Load fonts
    start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
    start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
-
+   
    # Setup the default lists of properties to read from objects when reading the structure of a stack
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
    put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
    put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
-
+   
    ## Load Extensions
    revIDEInitialiseExtensions
-
+   
    ## Regenerate dictionary data
    revIDERegenerateBuiltDictionaryData
-
+   
    ## Initialise property library
    revIDEPropertyLibraryInitialise
-
+   
 end revIDEInitialiseIDELibrary
 
 #############
@@ -1571,7 +1571,7 @@ on revIDEUnsubscribe pMessage, pObject, pObjectList
    if pObject is empty then
       put the long ID of the target into pObject
    end if
-
+   
    # Special case propertyChanged where we have to register for listeners for obejcts
    if pMessage is "idePropertyChanged" then
       repeat for each line tObject in pObjectList
@@ -1603,7 +1603,7 @@ on revIDEUnsubscribeAll pObject
    if pObject is empty then
       put the long ID of the target into pObject
    end if
-
+   
    # Loop through messages and unsubscribe
    repeat for each key tMessage in sSubscriptions
       revIDEUnsubscribe tMessage, pObject
@@ -1619,7 +1619,7 @@ function revIDESubscriptions
    # Get the log ID of the calling object
    local tCallingObjectID
    put the long ID of the target into tCallingObjectID
-
+   
    # Build a list of all the message names the calling object is subscribed to
    local tSubscriptions
    repeat for each key tMessage in sSubscriptions
@@ -1628,7 +1628,7 @@ function revIDESubscriptions
       end if
    end repeat
    delete the last char of tSubscriptions
-
+   
    return tSubscriptions
 end revIDESubscriptions
 
@@ -1644,7 +1644,7 @@ function revIDESubscribedObjects pMessage
    if not revIDEMessageIsValid(pMessage) then
       return __revIDEError("The message ("&pMessage&") you are enquiring about is not valid. Please check the documentation for which messages you can subscribe to.")
    end if
-
+   
    return sSubscriptions[pMessage]["callback targets"]
 end revIDESubscribedObjects
 
@@ -1811,7 +1811,7 @@ graphic objects.
 **/
 function revIDEGraphics
    if sClassicObjectProperties is empty then __objectPropertiesRead
-
+   
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if sClassicObjectProperties[tIndex]["type"] is "graphic" then
@@ -1831,7 +1831,7 @@ by each of those graphic creation tools.
 **/
 function revIDEGraphicTools
    if sClassicObjectProperties is empty then __objectPropertiesRead
-
+   
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if sClassicObjectProperties[tIndex]["type"] is "graphic tool" then
@@ -1976,12 +1976,12 @@ function revIDERunEditTools
    put "browse tool" into tReturnData["com.livecode.tool.Browse"]["tool"]
    put "Browse Tool - Your stack is running and can be interacted with" into tReturnData["com.livecode.tool.Browse"]["tooltip"]
    put 1 into tReturnData["com.livecode.tool.Browse"]["order"]
-
+   
    put "tool" into tReturnData["com.livecode.tool.Pointer"]["type"]
    put "pointer tool" into tReturnData["com.livecode.tool.Pointer"]["tool"]
    put "Pointer Tool - Select and edit objects" into tReturnData["com.livecode.tool.Pointer"]["tooltip"]
    put 2 into tReturnData["com.livecode.tool.Pointer"]["order"]
-
+   
    return tReturnData
 end revIDERunEditTools
 
@@ -1995,7 +1995,7 @@ control tools.
 **/
 function revIDEClassicControls
    if sClassicObjectProperties is empty then __objectPropertiesRead
-
+   
    local tReturnData
    repeat for each key tIndex in sClassicObjectProperties
       if tIndex is "com.livecode.interface.classic.widget" then next repeat
@@ -2039,20 +2039,20 @@ function revIDEGetPropertiesOfObjects pObjects
    repeat for each line tObject in pObjects
       if not exists(tObject) then return __revIDEError("Not all objects in the list provided exist")
    end repeat
-
+   
    # Work out the type of the selected objects
    local tObjectTypeList
    put ideObjectTypesFromObjectList(pObjects) into  tObjectTypeList
-
+   
    # Get this list of all the properties to read for the given type list
    local tSharedProperties
    put __objectPropertiesShared(tObjectTypeList, true) into tSharedProperties
-
+   
    # Generate a list of the properties we want to retreive
    local tPropertyValues
    repeat for each line tObject in pObjects
       dispatch function "__readPropertiesOfControl" to tObject with the keys of tSharedProperties, tPropertyValues
-
+      
       repeat for each key tPropertyName in tPropertyValues
          if tPropertyName begins with "effective" then next repeat
          if tPropertyValues["effective" && tPropertyName] is not empty then
@@ -2061,9 +2061,9 @@ function revIDEGetPropertiesOfObjects pObjects
          put tPropertyValues[tPropertyName] into tSharedProperties[tPropertyName]["value"][tObject]
       end repeat
    end repeat
-
+   
    //put the executioncontexts & return & the milliseconds & return & return & return after msg
-
+   
    return tSharedProperties
 end revIDEGetPropertiesOfObjects
 
@@ -2097,7 +2097,7 @@ returns (list): A comma delimited list of global variable names
 **/
 function revIDEGlobalVariables
    if revIDEGetPreference("cShowRevolutionStacks") is true then return the globals
-
+   
    local tGlobalList
    repeat for each item tGlobalName in the globals
       if tGlobalName begins with "gREV" then next repeat
@@ -2108,7 +2108,7 @@ function revIDEGlobalVariables
       end if
    end repeat
    sort items of tGlobalList
-
+   
    return tGlobalList
 end revIDEGlobalVariables
 
@@ -2187,7 +2187,7 @@ in memory, taking into account the Show IDE Stacks preference.
 function ideMainStacks
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
-
+   
    if tShowIDEStacks then
       return the mainstacks
    else
@@ -2284,7 +2284,7 @@ function revIDEStacksForDataView pIndex
       end if
    else
       if tSortOrder is "ascending" then
-        ## No nothing this is the correct order
+         ## No nothing this is the correct order
       else 
          repeat with x = the number of lines in tMainStacks down to 1
             put line x of tMainStacks & return after tInvertedMainStacks
@@ -2346,7 +2346,7 @@ function revIDEFrontScripts
       dispatch function "__readPropertiesOfControl" to tFrontScriptObject with tProperties, tData[tCount]
       add 1 to tCount
    end repeat
-
+   
    return tData
 end revIDEFrontScripts
 
@@ -2360,11 +2360,11 @@ function revIDEBackScripts
    # If IDE elements are on not showing, filter the list for rev stacks
    local tBackScripts
    put __ideFilterObjectIDListWithPreference(the backscripts) into tBackScripts
-
+   
    # Create the list of properties to retrieve
    local tProperties
    put "short name" & return & "scriptlines" & return & "long id" into tProperties
-
+   
    # Loop through the frontscripts getting the required properties
    # and build the return array
    local tCount, tData
@@ -2373,7 +2373,7 @@ function revIDEBackScripts
       dispatch function "__readPropertiesOfControl" to tBackScriptObject with tProperties, tData[tCount]
       add 1 to tCount
    end repeat
-
+   
    return tData
 end revIDEBackScripts
 
@@ -2386,11 +2386,11 @@ function revIDEStacksInUse
    # Get the list of frontscripts
    local tStacksInUse
    put __ideFilterStackNameListWithPreference(the stacksInUse) into tStacksInUse
-
+   
    # Create the list of properties to retrieve
    local tProperties
    put "short name" & return & "scriptlines" into tProperties
-
+   
    # Loop through the stacks in use getting the required properties
    # and build the return array
    local tCount, tData
@@ -2400,7 +2400,7 @@ function revIDEStacksInUse
       put "stack" && quote & tStack & quote into tData[tCount]["long id"]
       add 1 to tCount
    end repeat
-
+   
    return tData
 end revIDEStacksInUse
 
@@ -2501,32 +2501,32 @@ function revIDEThemePath
    local tPlatformName, tSystemVersion
    put revIDEPlatform() into tPlatformName
    put revIDEPlatformVersion() into tSystemVersion
-
+   
    # Find nearest theme version for the given platform
    revIDEPushDefaultFolder revIDESpecialFolderPath("themes")
-
+   
    local tClosestThemeNumber, tHighestThemeNumber
    repeat for each line tThemeFolder in the folders
       if char 1 of tThemeFolder is "." then next repeat
-
+      
       local tThemeFolderStart
       put "com.livecode.theme." & tPlatformName into tThemeFolderStart
-
+      
       if tThemeFolder begins with tThemeFolderStart then
          delete char 1 to the number of chars of tThemeFolderStart + 1 of tThemeFolder
-
+         
          if highestVersionNumber(tSystemVersion,tThemeFolder) < 2 and highestVersionNumber(tClosestThemeNumber,tThemeFolder) is 2 then
             --if tThemeFolder <= tSystemVersion and tThemeFolder > tClosestThemeNumber then
             put tThemeFolder into tClosestThemeNumber
          end if
-
+         
          # keep track of the highest number
          if highestVersionNumber(tHighestThemeNumber,tThemeFolder) is 2 then
             put tThemeFolder into tHighestThemeNumber
          end if
       end if
    end repeat
-
+   
    # Build the path to the theme
    local tThemeName
    if tClosestThemeNumber is empty then
@@ -2538,9 +2538,9 @@ function revIDEThemePath
    else
       put "com.livecode.theme." & tPlatformName & "." & tClosestThemeNumber into tThemeName
    end if
-
+   
    revIDEPopDefaultFolder
-
+   
    return revIDESpecialFolderPath("themes") & slash & tThemeName
 end revIDEThemePath
 
@@ -2567,14 +2567,14 @@ end revIDEPlatform
 function revIDEPlatformVersion
    local tSystemVersion
    put the systemVersion into tSystemVersion
-
+   
    if tSystemVersion begins with "Windows" or tSystemVersion begins with "NT"   then return the last word of tSystemVersion
    return tSystemVersion
 end revIDEPlatformVersion
 
 function revIDEColor pTag
    if pTag is "edition_color" then return ideCoreEditionColour()
-
+   
    switch pTag
       case "text_1"
          return "0,0,0"
@@ -2620,7 +2620,7 @@ function revIDEColor pTag
          return "200,206,215"
          break
    end switch
-
+   
    return ideColorGet(pTag)
 end revIDEColor
 
@@ -2701,11 +2701,81 @@ on revIDEMoveControl pControl, pNewCard, pLayerNumber
    return tNewControl
 end revIDEMoveControl
 
+command revIDEUpdatePBPreferences
+   ## Map pre LC8 preferences to LC8 preferences
+   if revIDEGetPreference("pb_indicator") is empty then
+      revIDESetPreference "pb_indicator","icon"
+   end if
+   
+   if revIDEGetPreference("pb_sections") is empty then
+      revIDESetPreference "pb_sections","Stacks"
+   end if
+   
+   local tOldSortType,tOldSortOrder
+   put revIDEGetPreference("ideProjectBrowser_sort") into tOldSortType
+   put revIDEGetPreference("ideProjectBrowser_sortOrder") into tOldSortOrder
+   if tOldSortOrder is empty then put "bottom to top" into tOldSortOrder
+   
+   local tSortOrder
+   if tOldSortOrder is "bottom to top" then
+      put "Ascending" into tSortOrder
+   else
+      put "Descending" into tSortOrder
+   end if
+   
+   local tSortType
+   if tOldSortType is empty then
+      put "Name" into tSortType
+   else
+      put tOldSortType into tSortType
+   end if
+   
+   if revIDEGetPreference("pb_stackSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
+   end if
+   
+   -- Number should be default for cards and controls
+   if tOldSortType is empty then
+      put "Number" into tSortType
+   end if
+   
+   if revIDEGetPreference("pb_cardSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
+   end if
+   
+   if revIDEGetPreference("pb_controlSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   end if
+   
+   if revIDEGetPreference("pb_textSize") is empty then
+      revIDESetPreference "pb_textSize", "default"
+   end if
+end revIDEUpdatePBPreferences
+
+command revIDEGetPBSortPreferences pPref, @rSortType, @rSortOrder
+   local tPreference
+   put revIDEGetPreference(pPref) into tPreference
+   if tPreference is empty then
+      revIDEUpdatePBPreferences
+      put revIDEGetPreference(pPref) into tPreference
+   end if
+   
+   put word 1 of tPreference into rSortType
+   put word -1 of tPreference into rSortOrder
+end revIDEGetPBSortPreferences
+
+command revIDESetPBSortPreferences pPref, pSortType, pSortOrder
+   revIDESetPreference pPref, pSortType && "-" && pSortOrder
+end revIDESetPBSortPreferences
+
 function revIDEStackProperties pStackID, pLevel
    if not exists(pStackID) then return __revIDEError("You must specify an object to read from." &&  quote & pStackID & quote && "is not an object")
-
+   
    local tStackArray
-
+   
    dispatch function "__readPropertiesOfControl" to pStackID with sStackPropertiesToRead, tStackArray
    --put the result into tStackArray
    if word 3 of pStackID is "of" then
@@ -2725,10 +2795,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    local tSubStackIDs, tSubstack
    local tSortType, tSortOrder
    
-   put revIDEGetPreference("pb_cardSortType") into tSortType
-   put revIDEGetPreference("pb_cardSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
    
    set the itemDel to tab
    repeat with x = 1 to the number of cards of stack pStackID
@@ -2760,15 +2827,12 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       put pLevel+1 into tCardArray[tIndex]["level"]
       put the number of lines in the childControlIDs of card id tCardID of pStackID into tCardArray[tIndex]["childCount"]
    end repeat
-
+   
    ## Substacks
    local tSubStacks, tSubstacksList, tStackName
    
    ## Sort the substacks as per preferences
-   put revIDEGetPreference("pb_stackSortType") into tSortType
-   put revIDEGetPreference("pb_stackSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
    set the itemDel to tab
    put the substacks of stack pStackID into tSubStacks
@@ -2802,7 +2866,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       put the number of lines in the cardIDs of stack tStackName of pStackID into  tCardArray[tIndex]["childCount"]
       if  tCardArray[tIndex]["childCount"] is 0 then put 1 into  tCardArray[tIndex]["childCount"]
    end repeat
-
+   
    return tCardArray
 end revIDECardPropertiesOfStack
 
@@ -2811,20 +2875,22 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
    local tChildControlList, tControlID
    local tSortType,tSortOrder
    
-   put  the childcontrolIDs of pCardID into tChildControls
-   put the number of lines in tChildControls into tChildCount
+   ## Sort controls as per preferences
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   
+   -- If controls are sorted by name, present them as a flat list
+   if tSortType is name then
+      put the controlIDs of pCardID into tChildControls
+   else
+      put the childcontrolIDs of pCardID into tChildControls
+   end if
    
    set the itemDel to tab
    repeat for each line tControlID in tChildControls
       put the layer of control id tControlID of pCardID & tab & the short name of control id tControlID of pCardID & tab & tControlID & return after tChildControlList
+      add 1 to tChildCount
    end repeat
    delete the last character of tChildControlList
-   
-   ## Sort controls as per preferences
-   put revIDEGetPreference("pb_controlSortType") into tSortType
-   put revIDEGetPreference("pb_controlSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
    
    if tSortType is "name" then
       if tSortOrder is "ascending" then
@@ -2854,8 +2920,13 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
             put "control" into tControlArray["style"]
             put "Custom control" into tControlArray["type"]
          else
-            put "group" into tControlArray["style"]
-            put the number of controls of control id tControlID of pCardID into tControlArray["childCount"]
+            if tSortType is "name" then
+               put 0 into tControlArray["childCount"]
+               put "control" into tControlArray["style"]
+            else
+               put "group" into tControlArray["style"]
+               put the number of controls of control id tControlID of pCardID into tControlArray["childCount"]
+            end if
          end if
       else
          put "control" into tControlArray["style"]
@@ -2882,10 +2953,7 @@ function revIDEControlPropertiesOfGroup pGroupID, pLevel
    delete the last character of tChildControlList
    
    ## Sort controls as per preferences
-   put revIDEGetPreference("pb_controlSortType") into tSortType
-   put revIDEGetPreference("pb_controlSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
    
    if tSortType is "name" then
       if tSortOrder is "ascending" then
