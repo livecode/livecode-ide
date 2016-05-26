@@ -2572,7 +2572,7 @@ function revDatabaseDriverBuildList
    local tList
    put empty into tList
    // AL-2015-02-17: [[ SB Inclusions ]] Ensure mysql module name is standard (was dbmysql)
-   repeat for each item tExternal in "MySQL mysql,ODBC odbc,PostgreSQL postgresql,SqLite sqlite,Oracle oracle"
+   repeat for each item tExternal in revIDEDatabaseDriversMapping()
       get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash
@@ -2655,7 +2655,7 @@ end revDatabaseDriverList
 private function revExternalsBuildList 
    local tList
    put empty into tList
-   repeat for each item tExternal in "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   repeat for each item tExternal in revIDEExternalsMapping()
       get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash

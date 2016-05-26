@@ -11029,3 +11029,11 @@ function revIDELookupError pType, pCode
       return empty
    end if
 end revIDELookupError
+
+function revIDEExternalsMapping
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+end revIDEExternalsMapping
+
+function revIDEDatabaseDriversMapping
+   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
+end revIDEDatabaseDriversMapping

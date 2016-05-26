@@ -113,9 +113,9 @@ The LiveCode builder syntax is broken down into **modules**. There are 3 classes
 
 Type|Description
 ---|---
-Default|The module is part of LiveCode builder and is included by default. Their syntax is always available to you as a LiveCode developer.
-Optional|The module is created and distributed by LiveCode Ltd and must be imported by the extension developer in order to make use of the syntax.
-Custom|This module is created and distributed through the online portal and must be imported by the extension developer in order to make use of the syntax.
+Default|These modules are part of LiveCode builder and are included by default. Their syntax is always available to you as a LiveCode developer.
+Optional|These modules are created and distributed by LiveCode Ltd and must be imported by the extension developer in order to make use of their syntax.
+Custom|These modules are created and distributed through the online portal and must be imported by the extension developer in order to make use of their syntax.
 
 LiveCode builder contains the following modules:
 
@@ -173,7 +173,7 @@ There are three core handlers that any widget developer should implement:
 
 Handler|Description
 ------|------
-OnPaint|The *OnPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of you widget is tied primarily to this handler and should be kept as efficient as possible.
+OnPaint|The *OnPaint* message is sent to your widget whenever LiveCode requires it to redraw. The performance of your widget is tied primarily to this handler and should be kept as efficient as possible.
 OnCreate|The *OnCreate* message is sent to your widget when it is first created by LiveCode. This can be used to initialise default data and where applicable, reduce the burden for calculating constants etc in the onPaint handler.
 OnGeometryChanged| The *OnGeometryChanged* message is sent when the control is changed in size.
 OnSave| The *OnSave* message is sent when your widget is about to be destroyed and enables the widget to save data set on the widget.
@@ -252,21 +252,21 @@ control over the getting/setting process define handlers. In our case we're taki
 approach.
 
 ```
-private variable mMargin as real
+private variable mMargin as Real
 ```
 
-We'll define a member variable to store the value for the margin. LiveCode Builder is type 
+We'll define a member variable to store the value for the margin. LiveCode Builder is typed 
 so you must also specify the type of your variable. Remember, the canvas you are drawing 
 to has subpixel precision so our margin can be a decimal number. As a result, we've chosen 
-the specify our margin as a real number. For a full list of types available in LiveCode 
+to specify our margin as a real number. For a full list of types available in LiveCode 
 Builder please see the [Typing](#Typing) section of the language specification guide below. 
-We also suggest a nameing convension for variable in the section on [variable and case sensitivity](#Case-Sensitivity).
+We also suggest a naming convention for variables in the section on [variable and case sensitivity](#Case-Sensitivity).
 
 We also need to insatiate our circleMargin to a default value. We do this by adding an 
 onCreate handler which is called when the widget is first created.
 
 ```
-public handler setMargin(in pMargin as real) as undefined
+public handler setMargin(in pMargin as Real)
 	put pMargin into mMargin
 	redraw all
 end handler
@@ -305,7 +305,7 @@ use com.livecode.engine
 property circleMargin get mMargin set setMargin
 
 // Local variables
-private variable mMargin as real
+private variable mMargin as Real
 
 public handler onCreate() 
 	put 0 into mMargin
@@ -321,7 +321,7 @@ public handler OnPaint()
    fill tCirclePath on this canvas
 end handler
 
-public handler setMargin(in pMargin as real) as undefined
+public handler setMargin(in pMargin as Real)
 	put pMargin into mMargin
 	redraw all
 end handler
@@ -330,7 +330,7 @@ end widget
 ```
 
 #### Loading and Saving widget data
-When you widget is created you are sent a *OnSave* message. It has the following structure 
+When your widget is created you are sent an *OnSave* message. It has the following structure 
 and expects and array return type. You can fill this array with whatever widget data you 
 have. LiveCode saves this data along with instances of the widget in the stack file.
 
@@ -372,8 +372,8 @@ stack in the IDE.
 
 ![enter image description here](images/extensions-canvas-docs.png)
 
-1. Open the dictionary
-2. API chooser
+1. Open the dictionary (and stay in the 'API' tab)
+2. Click the drop-down button
 3. Choose the "LiveCode Builder" API
 4. The list of all the syntax available
 

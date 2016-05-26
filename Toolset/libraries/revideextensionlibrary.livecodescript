@@ -1207,6 +1207,7 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    end if
    put tTargetAuthor into tDataA["author"]
    
+   # Fetch property metadata
    local tMetadataValue, tMetadataKey
    local tMetadataNodes, tMetadataA, tKeys, tValue
    put revXMLChildNames(tTreeID, "package",return,"metadata",true) into tMetadataNodes
@@ -1218,6 +1219,8 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       end if
       put tMetadataValue into tDataA[tMetadataKey]
    end repeat
+   
+   # Fetch extension dependencies
    local tRequires, tCount
    put 0 into tCount
    put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
@@ -1227,6 +1230,27 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
       put tName into tDataA["requires"][tCount]
    end repeat
+   
+   # Fetch library handlers
+   if tTargetType is "library" then
+      local tHandlerList, tHandlerNodes
+      put revXMLChildNames(tTreeID, "package",return,"handler",true) into tHandlerNodes
+      repeat for each line tHandler in tHandlerNodes
+         local tHandlerName
+         put revXMLAttribute(tTreeID,"package" & "/" & tHandler,"name") into tHandlerName
+         
+         if tHandlerName is empty or tHandlerName begins with "xmlerr" then
+            next repeat
+         end if
+         
+         if tHandlerList is empty then
+            put tHandlerName into tHandlerList
+         else
+            put return & tHandlerName after tHandlerList
+         end if
+      end repeat
+      put tHandlerList into tDataA["handlers"]
+   end if
    
    # User visible should default to true
    if tDataA["uservisible"] is empty then
@@ -1264,3 +1288,10 @@ command revIDEExtensionUnload pKind
    
    return the result
 end revIDEExtensionUnload
+
+function revIDEExtensionLibraryHandlers pLibraryID
+   local tCacheIndex
+   put __extensionCacheID("name", pLibraryID) into tCacheIndex
+   
+   return __extensionPropertyGet(tCacheIndex, "handlers")
+end revIDEExtensionLibraryHandlers
