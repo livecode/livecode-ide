@@ -10157,17 +10157,13 @@ private function revIDEGetDocsAPIData
       put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
 
-      local tLastModified, tLastGenerated
-      put revIDELastModifiedTimeOfFile(tFolder, tSource) into tLastModified
-      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastGenerated
-      
-      # If there is no lcdoc file and no source, we can't generate the docs
-      if tLastModified is empty and tLastGenerated is empty then
-         next repeat
-      end if
+      local tNeedUpdate, tError
+      put revIDEIsFilesetStale(tFolder & slash & tSource, \
+            tCachedDataFolder & slash & "api.lcdoc", false, tError) \
+            into tNeedUpdate
       
       # Regenerate the lcdoc file if required
-      if tLastModified > tLastGenerated then
+      if tNeedUpdate is true then
          # Generate the docs text in lcdoc format 
          local tDoc
          dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with tFolder & slash & tSource
@@ -10178,11 +10174,15 @@ private function revIDEGetDocsAPIData
       end if
       
       # Check if the .js is out of date
-      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.lcdoc") into tLastModified
-      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "api.js") into tLastGenerated
-      if tLastModified < tLastGenerated then
+      if tNeedUpdate is not true then
+         put revIDEIsFilesetStale(tCachedDataFolder & "/api.lcdoc", \
+               tCachedDataFolder & "/api.js", false, tError) \
+               into tNeedUpdate
+      end if
+
+      if tNeedUpdate is false then
          put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
-      else
+      else if tNeedUpdate is true then
          local tLibraryArray, Lcdoc
          dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tCachedDataFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
          put the result into tLibraryArray
@@ -10225,12 +10225,13 @@ private function revIDEGetDocsGuideData
       revIDEEnsurePath tCachedDataFolder
       
       # Check if the .js is out of date
-      local tLastModified, tLastGenerated
-      put revIDELastModifiedTimeOfFile(tFolder, "guide.md") into tLastModified
-      put revIDELastModifiedTimeOfFile(tCachedDataFolder, "guide.js") into tLastGenerated
-      if tLastModified < tLastGenerated then
+      local tNeedUpdate, tError
+      put revIDEIsFilesetStale(tFolder & "/guide.md", \
+            tCachedDataFolder & "/guide.js", false, tError) into tNeedUpdate
+
+      if tNeedUpdate is false then
          put url ("binfile:" & tCachedDataFolder & slash & "guide.js") into tExtensionGuide
-      else
+      else if tNeedUpdate is true then
          local tGuide
          put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
          put textDecode(tGuide, "utf-8") into tGuide
@@ -10244,6 +10245,9 @@ private function revIDEGetDocsGuideData
             
             put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tCachedDataFolder & slash & "guide.js")
          end if
+      else
+         -- FIXME There is some inconsistency in the guide's files that we
+         -- can't cope with
       end if
       
       if tExtensionGuide is not empty then
@@ -10329,16 +10333,20 @@ private on revIDEGenerateDistributedGuide
       put "repo" into tGuideFoldersWithLocationA[2]["location"]
    end if
    
+   local tGuideJSONFile
+   put revIDESpecialFolderPath("guide") & slash & "distributed_guide.js" \
+         into tGuideJSONFile
+
    # Check if the distributed guide is out of date
-   local tLastModified, tLastGenerated
-   set the itemdelimiter to ":"
-   repeat for each element tGuideFolderWithLocationA in tGuideFoldersWithLocationA
-      put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tGuideFolderWithLocationA["folder"])) into tLastModified
+   local tKey, tInputFiles, tNeedUpdate, tError
+   repeat for each key tKey in tGuideFoldersWithLocationA
+      put tGuideFoldersWithLocationA[tKey]["folder"] into tInputFiles[tKey]
    end repeat
-   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("guide"), "distributed_guide.js") into tLastGenerated
-   
+   put revIDEIsFilesetStale(tInputFiles, tGuideJSONFile, true, tError) \
+         into tNeedUpdate
+
    # If we don't need to regenerate, exit
-   if tLastModified < tLastGenerated then
+   if tNeedUpdate is not true then
       exit revIDEGenerateDistributedGuide
    end if
    
@@ -10355,7 +10363,7 @@ private on revIDEGenerateDistributedGuide
    delete the last char of tGuideData
    
    # Write out to apropriate location
-   put textEncode(tGuideData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("guide") & slash & "distributed_guide.js")
+   put textEncode(tGuideData, "utf-8") into url ("binfile:" & tGuideJSONFile)
 end revIDEGenerateDistributedGuide
 
 private command revIDEGenerateDistributedAPI
@@ -10467,15 +10475,15 @@ private command revIDEGenerateDistributedAPI
 end revIDEGenerateDistributedAPI
 
 on revIDEEnsureDictionaryUrl pWhich
-   local tLastGenerated, tLastModified
-   set the itemdelimiter to slash
-   local tFile
-   put revIDEGetDictionaryHTMLTemplate(pWhich) into tFile
-   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastModified
-   put revIDEGetDictionaryUrl(pWhich) into tFile
-   put revIDELastModifiedTimeOfFile(item 1 to -2 of tFile, item -1 of tFile) into tLastGenerated
-   
-   if tLastModified > tLastGenerated then
+   local tInput, tOutput
+   put revIDEGetDictionaryHTMLTemplate(pWhich) into tInput
+   put revIDEGetDictionaryUrl(pWhich) into tOutput
+
+   local tNeedUpdate, tError
+   put revIDEIsFilesetStale(revIDEGetDictionaryHTMLTemplate(pWhich), \
+         revIDEGetDictionaryUrl(pWhich), false, tError) into tNeedUpdate
+
+   if tNeedUpdate is true then
       revIDEGenerateDictionaryHTML pWhich
    end if
 end revIDEEnsureDictionaryUrl
