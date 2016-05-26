@@ -60,6 +60,10 @@ on arrowKey pDirection, pTarget
       if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass arrowKey
    end if
    
+   if revIDEGetPreference("cNavigationArrows") is not true then
+      pass arrowKey
+   end if
+   
    if the selectedField is not empty and (not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget())) then pass arrowKey
    
    local tStack
