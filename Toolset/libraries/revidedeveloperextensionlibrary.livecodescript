@@ -32,18 +32,16 @@ end __revIDEDeveloperCompilationError
 
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    # To avoid excessive recompilation, test to see if the compiled module exists and is up to date.
-   
-   # Recompile because manifest file is missing.
-   if there is not a file (pFolder & slash & "manifest.xml") then 
-      return true
-   end if
-   
-   # Check timestamps to see if compiled module is out of date.
-   local tLastCompiled, tLastModified
-   put revIDELastModifiedTimeOfFile(pFolder, "module.lcm") into tLastCompiled
-   put revIDELastModifiedTimeOfFile(pFolder, pFile) into tLastModified
-   
-   return (tLastCompiled is empty or tLastModified > tLastCompiled)
+   local tCompileInputs, tCompileOutputs, tNeedUpdate, tError
+
+   put pFolder & slash & pFile into tCompileInputs[1]
+
+   put pFolder & slash & "manifest.xml" into tCompileOutputs[1]
+   put pFolder & slash & "module.lcm" into tCompileOutputs[2]
+
+   put revIDEIsFilesetStale(tCompileInputs, tCompileOutputs, false, tError) \
+         into tNeedUpdate
+   return tNeedUpdate is not false
 end __revIDEDeveloperExtensionShouldRecompile
 
 private on __revIDEDeveloperExtensionRemoveFolder pFolder
