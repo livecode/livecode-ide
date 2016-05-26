@@ -2701,6 +2701,76 @@ on revIDEMoveControl pControl, pNewCard, pLayerNumber
    return tNewControl
 end revIDEMoveControl
 
+command revIDEUpdatePBPreferences
+   ## Map pre LC8 preferences to LC8 preferences
+   if revIDEGetPreference("pb_indicator") is empty then
+      revIDESetPreference "pb_indicator","icon"
+   end if
+   
+   if revIDEGetPreference("pb_sections") is empty then
+      revIDESetPreference "pb_sections","Stacks"
+   end if
+   
+   local tOldSortType,tOldSortOrder
+   put revIDEGetPreference("ideProjectBrowser_sort") into tOldSortType
+   put revIDEGetPreference("ideProjectBrowser_sortOrder") into tOldSortOrder
+   if tOldSortOrder is empty then put "bottom to top" into tOldSortOrder
+   
+   local tSortOrder
+   if tOldSortOrder is "bottom to top" then
+      put "Ascending" into tSortOrder
+   else
+      put "Descending" into tSortOrder
+   end if
+   
+   local tSortType
+   if tOldSortType is empty then
+      put "Name" into tSortType
+   else
+      put tOldSortType into tSortType
+   end if
+   
+   if revIDEGetPreference("pb_stackSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
+   end if
+   
+   -- Number should be default for cards and controls
+   if tOldSortType is empty then
+      put "Number" into tSortType
+   end if
+   
+   if revIDEGetPreference("pb_cardSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
+   end if
+   
+   if revIDEGetPreference("pb_controlSort") is empty then
+      ## We can assume none of the new Project Browser prefs are set      
+      revIDESetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   end if
+   
+   if revIDEGetPreference("pb_textSize") is empty then
+      revIDESetPreference "pb_textSize", "default"
+   end if
+end revIDEUpdatePBPreferences
+
+command revIDEGetPBSortPreferences pPref, @rSortType, @rSortOrder
+   local tPreference
+   put revIDEGetPreference(pPref) into tPreference
+   if tPreference is empty then
+      revIDEUpdatePBPreferences
+      put revIDEGetPreference(pPref) into tPreference
+   end if
+   
+   put word 1 of tPreference into rSortType
+   put word -1 of tPreference into rSortOrder
+end revIDEGetPBSortPreferences
+
+command revIDESetPBSortPreferences pPref, pSortType, pSortOrder
+   revIDESetPreference pPref, pSortType && "-" && pSortOrder
+end revIDESetPBSortPreferences
+
 function revIDEStackProperties pStackID, pLevel
    if not exists(pStackID) then return __revIDEError("You must specify an object to read from." &&  quote & pStackID & quote && "is not an object")
 
@@ -2725,10 +2795,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    local tSubStackIDs, tSubstack
    local tSortType, tSortOrder
    
-   put revIDEGetPreference("pb_cardSortType") into tSortType
-   put revIDEGetPreference("pb_cardSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
    
    set the itemDel to tab
    repeat with x = 1 to the number of cards of stack pStackID
@@ -2760,15 +2827,12 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       put pLevel+1 into tCardArray[tIndex]["level"]
       put the number of lines in the childControlIDs of card id tCardID of pStackID into tCardArray[tIndex]["childCount"]
    end repeat
-
+   
    ## Substacks
    local tSubStacks, tSubstacksList, tStackName
    
    ## Sort the substacks as per preferences
-   put revIDEGetPreference("pb_stackSortType") into tSortType
-   put revIDEGetPreference("pb_stackSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
    set the itemDel to tab
    put the substacks of stack pStackID into tSubStacks
@@ -2802,7 +2866,7 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       put the number of lines in the cardIDs of stack tStackName of pStackID into  tCardArray[tIndex]["childCount"]
       if  tCardArray[tIndex]["childCount"] is 0 then put 1 into  tCardArray[tIndex]["childCount"]
    end repeat
-
+   
    return tCardArray
 end revIDECardPropertiesOfStack
 
@@ -2821,10 +2885,7 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
    delete the last character of tChildControlList
    
    ## Sort controls as per preferences
-   put revIDEGetPreference("pb_controlSortType") into tSortType
-   put revIDEGetPreference("pb_controlSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
    
    if tSortType is "name" then
       if tSortOrder is "ascending" then
@@ -2882,10 +2943,7 @@ function revIDEControlPropertiesOfGroup pGroupID, pLevel
    delete the last character of tChildControlList
    
    ## Sort controls as per preferences
-   put revIDEGetPreference("pb_controlSortType") into tSortType
-   put revIDEGetPreference("pb_controlSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
    
    if tSortType is "name" then
       if tSortOrder is "ascending" then

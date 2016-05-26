@@ -1,0 +1,1 @@
+# Ensure check marks in project browser match selected preference

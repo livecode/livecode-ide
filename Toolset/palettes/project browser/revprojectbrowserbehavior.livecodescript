@@ -6,6 +6,8 @@ on preOpenStack
    set the zoomBox of this stack to false
    clearFrameData
    
+   revIDEUpdatePBPreferences
+   
    # Navigation
    
    # Footer Actions
@@ -60,17 +62,12 @@ on preOpenStack
    
    revIDESubscribe "idePreferenceChanged:pb_indicator"
    revIDESubscribe "idePreferenceChanged:pb_sections"
-   revIDESubscribe "idePreferenceChanged:pb_stackSortType"
-   revIDESubscribe "idePreferenceChanged:pb_cardSortType"
-   revIDESubscribe "idePreferenceChanged:pb_controlSortType"
-   revIDESubscribe "idePreferenceChanged:pb_stackSortOrder"
-   revIDESubscribe "idePreferenceChanged:pb_cardSortOrder"
-   revIDESubscribe "idePreferenceChanged:pb_controlSortOrder"
+   revIDESubscribe "idePreferenceChanged:pb_stackSort"
+   revIDESubscribe "idePreferenceChanged:pb_cardSort"
+   revIDESubscribe "idePreferenceChanged:pb_controlSort"
    revIDESubscribe "idePreferenceChanged:pb_textSize"
    
    revIDESubscribe "ideShowInProjectBrowser"
-   
-   setDefaultPreferences
    
    local tTextSize
    put revIDEGetPreference("pb_textSize") into tTextSize
@@ -240,9 +237,6 @@ on preferenceChanged pPreference, pValue
    local tOldValue, tSortType, tSortOrder
    
    switch pPreference
-      case "pb_indicator"
-         revIDESetPreference "pb_indicator",pValue
-         break
       case "pb_sections"
          local tCurrentPreferenceValue, tPreferencePosition
          put revIDEGetPreference("pb_sections") into tCurrentPreferenceValue
@@ -256,28 +250,11 @@ on preferenceChanged pPreference, pValue
          revIDESetPreference "pb_sections", tCurrentPreferenceValue
          break
       case "pb_stackSort"
-         put word 1 of pValue into tSortType
-         put word -1 of pValue into tSortOrder
-         
-         revIDESetPreference "pb_stackSortType", tSortType
-         revIDESetPreference "pb_stackSortOrder", tSortOrder
-         break
       case "pb_cardSort"
-         put word 1 of pValue into tSortType
-         put word -1 of pValue into tSortOrder
-         
-         revIDESetPreference "pb_cardSortType", tSortType
-         revIDESetPreference "pb_cardSortOrder", tSortOrder         
-         break
       case "pb_controlSort"
-         put word 1 of pValue into tSortType
-         put word -1 of pValue into tSortOrder
-         
-         revIDESetPreference "pb_controlSortType", tSortType
-         revIDESetPreference "pb_controlSortOrder", tSortOrder         
-         break
       case "pb_textSize"
-         revIDESetPreference "pb_textSize", pValue
+      case "pb_indicator"
+         revIDESetPreference pPreference,pValue
          break
    end switch
 end preferenceChanged
@@ -288,12 +265,9 @@ on idePreferenceChanged pPreference, pValue
    switch pPreference
       case "pb_indicator"
       case "pb_sections"
-      case "pb_stackSortType"
-      case "pb_stackSortOrder"
-      case "pb_cardSortType"
-      case "pb_cardSortOrder"
-      case "pb_controlSortType"
-      case "pb_controlSortOrder"
+      case "pb_stackSort"
+      case "pb_cardSort"
+      case "pb_controlSort"
          buildProjectView true
          break
       case "pb_textSize"
@@ -2362,40 +2336,6 @@ on pbRightClick pObject
    end if
    revIDEPopupContextualMenu pbSelectedObjects()
 end pbRightClick
-
-command setDefaultPreferences
-   ## Map pre LC8 preferences to LC8 preferences
-   if revIDEGetPreference("pb_indicator") is empty then
-      revIDESetPreference "pb_indicator","icon"
-   end if
-   
-   if revIDEGetPreference("pb_sections") is empty then
-      revIDESetPreference "pb_sections","Stacks"
-   end if
-   
-   local tSortType,tSortOrder
-   put revIDEGetPreference("ideProjectBrowser_sort") into tSortType
-   put revIDEGetPreference("ideProjectBrowser_sortOrder") into tSortOrder
-   if tSortType is empty then put "Name" into tSortType
-   if tSortOrder is empty then put "bottom to top" into tSortOrder
-   
-   if revIDEGetPreference("pb_stackSortOrder") is empty then
-      ## We can assume none of the new Project Browser prefs are set      
-      revIDESetPreference "pb_stackSortType", tSortType
-      revIDESetPreference "pb_cardSortType", tSortType
-      revIDESetPreference "pb_controlSortType", tSortType
-      
-      if tSortOrder is "bottom to top" then
-         revIDESetPreference "pb_stackSortOrder", "Ascending"
-         revIDESetPreference "pb_cardSortOrder", "Ascending"
-         revIDESetPreference "pb_controlSortOrder", "Ascending"
-      else
-         revIDESetPreference "pb_stackSortOrder", "Descending"
-         revIDESetPreference "pb_cardSortOrder", "Descending"
-         revIDESetPreference "pb_controlSortOrder", "Descending"
-      end if
-   end if
-end setDefaultPreferences
 
 ## Connector creation for all row types
 command setConnectorIcon pControl, pState
