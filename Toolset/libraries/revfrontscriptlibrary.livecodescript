@@ -655,9 +655,9 @@ on backspaceKey
          --PM-2015-10-30: [[ Bug 16304 ]] Balance lock screen
          unlock screen
          pass backspaceKey
+      else 
+         pass backSpaceKey to metaCard
       end if
-   else 
-      pass backSpaceKey to metaCard
    end if
    unlock screen
 end backspaceKey
@@ -668,9 +668,9 @@ on deleteKey
       if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then 
          unlock screen
          pass deleteKey
+      else
+         pass deleteKey to metaCard
       end if
-   else 
-      pass deleteKey to metaCard
    end if
    unlock screen
 end deleteKey
