@@ -33,10 +33,13 @@ on TestTeardown
    stop using stack sSupportStack
 end TestTeardown
 
+constant kResourcesFolders = "Sample Projects,Examples"
 on TestBuildStandalone
-	local tFolder
-	put revIDESpecialFolderPath("IDE") & "/Resources/Sample Projects" into tFolder
-	_TestBuildStandalonesOfFolder tFolder
+	local tBase
+	put revIDESpecialFolderPath("IDE") & "/Resources" into tBase
+	repeat for each item tFolder in kResourcesFolders
+		_TestBuildStandalonesOfFolder tBase & slash & tFolder
+	end repeat
 end TestBuildStandalone
 
 private command _TestBuildStandalonesOfFolder pFolder
