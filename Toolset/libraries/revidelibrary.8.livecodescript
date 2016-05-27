@@ -3557,10 +3557,7 @@ pointer - Sets the tool to "pointer" mode causing the application to run as if a
 browse - Sets the tool to "browse" mode allowing you to select object
 */
 on revIDESetTool pTool
-   lock messages
    do "choose" && pTool
-   unlock messages
-   ideMessageSend "ideToolChanged"
 end revIDESetTool
 
 /*
