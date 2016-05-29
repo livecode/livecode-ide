@@ -87,6 +87,7 @@ on updateColorValue pColor
    lock screen
    lock messages
    set the swatchColor of widget "color" of me to pColor
+   put pColor into field "value" of me
    put item 1 to 3 of pColor into sColor
    unlock messages
    unlock screen
