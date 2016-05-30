@@ -449,6 +449,9 @@ private command revInternal__SetupPaths
    if tRepositoryPath is not empty then
       put tRepositoryPath into sRepositoryPath
       put tEnginePath into sBinariesPath
+      
+      global gRevDevelopment
+      put true into gRevDevelopment
    else
       put empty into sRepositoryPath
    end if
@@ -962,23 +965,6 @@ end revInternal__InitialiseSystem
 
 command revInternal__InitialiseGlobals
    revInternal__Log "Enter", "Globals Initialisation"
-   
-   global gREVDevelopment
-   put the cREVDevelopment of stack "Home" is not empty and the cREVDevelopment of stack "Home" into gREVDevelopment
-   
-   # OK-2009-09-16 : I don't think the above feature very useful, so added this instead.
-   local tSettingsFile
-   set the itemDelimiter to slash
-   put item 1 to -2 of the filename of me & "/Development Settings.txt" into tSettingsFile
-   set the itemDelimiter to comma
-   
-   local tSettings
-   put url ("file:" & tSettingsFile) into tSettings
-   split tSettings by return and tab
-   
-   if tSettings["developmentMode"] then
-      put true into gREVDevelopment
-   end if
    
    global gREVAccelerator
    if the platform is "MacOS" then
