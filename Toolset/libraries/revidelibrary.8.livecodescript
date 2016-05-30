@@ -7044,6 +7044,13 @@ function revIDEStackFileVersion pStackFile
       end if
 end revIDEStackFileVersion
 
+function revIDEStackFileIsScriptOnly pStackFile
+   open file pStackFile for text read
+   read from file pStackFile for 1 line
+   close file pStackFile
+   return matchText(it, "script \".*\"")
+end revIDEStackFileIsScriptOnly
+
 -- The revIDESaveStack and revIDESaveStackAs handlers use the "save"
 -- command with messages locked, which prevents the "saveStackRequest"
 -- message from being sent to the stack being operated on.  However,
@@ -7136,14 +7143,26 @@ on revIDESaveStack pStackID
    
    lock messages
    
+   local tStackFilename
+   put the effective filename of stack tStackName into tStackFilename
+   
    local tStackFileVersion
    
-   if the cPreserveStackVersion of stack "revPreferences" is true and the cREVGeneral["stackfileversion"] of stack tStackName is not empty then
-      try
-         put the cREVGeneral["stackfileversion"] of stack tStackName into tStackFileVersion
-      catch tError
-         --
-      end try
+   if the cPreserveStackVersion of stack "revPreferences" is true then
+      put revIDEStackFileVersion(tStackFilename) into tStackFileVersion
+   end if
+   
+   local tStackFileIsScriptOnly
+   put revIDEStackFileIsScriptOnly(tStackFilename) into tStackFileIsScriptOnly
+   
+   # Display warning if user has not selected the latest file format
+   if the scriptOnly of stack tStackName and not tStackFileIsScriptOnly then
+      answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
+      if it is not revIDELocalise("Yes") then
+         put "edited" into gREVStackStatus[tShortName]
+         close stack "revSaving"
+         return "Cancelled"
+      end if
    end if
    
    if the scaleFactor of stack tStackName is a number then
@@ -7156,8 +7175,6 @@ on revIDESaveStack pStackID
       local tOldFolder
       put the folder into tOldFolder
       
-      local tStackFilename
-      put the effective filename of stack tStackName into tStackFilename
       if there is a file tStackFilename then
          set the itemDelimiter to "/"
          set the folder to item 1 to -2 of tStackFilename
@@ -7182,7 +7199,7 @@ on revIDESaveStack pStackID
    -- Synthesize a "saveStackRequest" message
    if ideDispatchSaveStackRequest(tStackName) is "handled" then
       put empty into tSaveResult
-
+      
    else
       if tStackFileVersion is not empty then
          save stack tStackName with format tStackFileVersion
@@ -7326,21 +7343,30 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
 
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
    local tStackFileType
-   if there is a file the filename of stack tShortName then put revStackFileVersion(the filename of stack tShortName) into tStackFileType
-
+   local tStackFileIsScriptOnly = true
+   
+   if there is a file the filename of stack tShortName then 
+      put revStackFileVersion(the filename of stack tShortName) into tStackFileType
+      put revIDEStackFileIsScriptOnly(the filename of stack tShortName) into tStackFileIsScriptOnly
+   end if
+   
    # Prepare substitutions for localisation
    local tSubstitutions
    put tShortName into tSubstitutions[1]
 
    local tVersion
-   switch tStackFileType
-      case 5.5
+   switch 
+      case the scriptOnly of stack tShortName
+         put "script" after tStackName
+         ask file revIDELocalise("Save script only stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Script Only Stack") & "|livecodescript|RSTK")
+         break
+      case tStackFileType is 5.5
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
-      case 2.7
+      case tStackFileType is 2.7
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
          break
-      case 2.4
+      case tStackFileType is 2.4
          ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK")
          break
       default
@@ -7352,16 +7378,16 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tLegacy
    put true into tLegacy
    switch tVersion
-      case "Legacy LiveCode Stack (7.0)"
+      case revIDELocalise("Legacy LiveCode Stack (7.0)")
          put 7.0 into tVersion
          break
-      case "Legacy LiveCode Stack (5.5)"
+      case revIDELocalise("Legacy LiveCode Stack (5.5)")
          put 5.5 into tVersion
          break
-      case "Legacy LiveCode Stack (2.7)"
+      case revIDELocalise("Legacy LiveCode Stack (2.7)")
          put 2.7 into tVersion
          break
-      case "Legacy LiveCode Stack (2.4)"
+      case revIDELocalise("Legacy LiveCode Stack (2.4)")
          put 2.4 into tVersion
          break
       default
@@ -7381,6 +7407,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tFilePath
    if the platform is not "MacOS" and not (it ends with ".rev" or it ends with ".livecode") then
       put ".livecode" after it
+      if the scriptOnly of stack tShortName then
+         put "script" after it
+      end if
    end if
    put it into tFilePath
 
@@ -7392,7 +7421,16 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          return "Cancelled"
       end if
    end if
-
+   
+   # Display warning if user has not selected the latest file format
+   if the scriptOnly of stack tShortName and not tStackFileIsScriptOnly then
+      answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
+      if it is not revIDELocalise("Yes") then
+         put "edited" into gREVStackStatus[tShortName]
+         return "Cancelled"
+      end if
+   end if
+   
    # Window and Mac automatically present overwrite dialog
    if the platform is not in "Win32,MacOS" and there is a file tFilePath then
       answer warning revIDELocalise("File exists. Overwrite?") with revIDELocalise("Cancel") or revIDELocalise("OK")
@@ -7429,10 +7467,6 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
 
    -- Synthesize a "saveStackRequest" message
    if ideDispatchSaveStackRequest(tShortName) is not "handled" then
-      -- Make sure we apply the stackfileversion custom property.
-      -- If this is empty, then it means 'latest format'.
-      set the cREVGeneral["stackfileversion"] of stack tShortName to tVersion
-
       revIDESaveStackAs the long id of stack tShortName, tFilePath, tVersion
    end if
 
