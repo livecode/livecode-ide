@@ -253,7 +253,7 @@ to the LiveCode pages on various social media sites; a collection
 of quick link buttons, which take you to various helps and guides; and 
 a list of your most recently opened stacks.
 
-![](images/startCenter_community.png)
+![](images/startCenter_labels.png)
 
 ##### Social Media Links
 
