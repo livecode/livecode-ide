@@ -264,6 +264,13 @@ command removeAll
    unlock screen
 end removeAll
 
+on revIDEFocusOnMessageBox pChar
+   if lSelectedCard is among the items of "Single Line,Multiple Lines" then
+      focus on field "message" of card lSelectedCard
+      put pChar into the selectedChunk
+   end if
+end revIDEFocusOnMessageBox
+
 command scriptAction pID, pName
    switch the short name of the target
       case "scriptLines"

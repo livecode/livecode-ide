@@ -1251,6 +1251,15 @@ on releaseStack
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass releaseStack
 end releaseStack
 
+on keyDown pWhich
+   if word 1 of the target is "card" and \
+         the mode of stack "Message Box" is not 0 \
+         and the short name of this cd of stack "Message Box" is among the items of "Single Line,Multiple Lines" then
+      dispatch "revIDEFocusOnMessageBox" to stack "Message Box" with pWhich
+   end if
+   pass keyDown
+end keyDown
+
 on mainStackChanged
    if there is a stack "revApplicationOverview" then
       if the mode of stack "revApplicationOverview" is not 0
