@@ -453,7 +453,7 @@
 		// Everything associated with the object. A cross between a overview and userguide
 		
 		if(tEntryObject.type == "object" || tEntryObject.type == "widget" || tEntryObject.type == "library"){
-			var object_name = tEntryObject.name;
+			var object_name = tEntryObject["display name"].toLowerCase();
 			var object_data = {};
 			
 			$.each(dataGet(),function(entry_index, entry_data){
