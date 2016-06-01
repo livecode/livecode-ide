@@ -147,6 +147,7 @@ LiveCode supports the following versions of Mac OS X:
 - 10.10.x (Yosemite)
 - 10.11.x (El Capitan)
 
+
 ### Using the Documentation
 
 #### Documentation Conventions
