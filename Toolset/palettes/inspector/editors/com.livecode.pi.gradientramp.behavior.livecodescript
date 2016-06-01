@@ -83,15 +83,6 @@ on updateRampValue tValue
    unlock screen
 end updateRampValue
 
-on updateColorValue pColor
-   lock screen
-   lock messages
-   set the swatchColor of widget "color" of me to pColor
-   put item 1 to 3 of pColor into sColor
-   unlock messages
-   unlock screen
-end updateColorValue
-
 on updateOpacityValue pAlpha
    lock screen
    lock messages
@@ -170,7 +161,7 @@ on updateSubeditorValue pValue
       updateOpacityValue item 5 of tSelectedValue
    end if
    
-   updateColorValue item 2 to 5 of tSelectedValue
+   updateColorDisplay item 2 to 5 of tSelectedValue
 end updateSubeditorValue
 
 on mouseUp
