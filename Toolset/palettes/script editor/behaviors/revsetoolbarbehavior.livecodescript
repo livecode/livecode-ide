@@ -53,6 +53,7 @@ constant kHandlerListObjectMinWidth = 150
 #   Sent by the parent when the size of the toolbar changes. Resizes / moves all toolbar controls
 #   to reflect the new size of the toolbar.
 command resize
+   lock screen
    # On Windows Vista, the script editor's menubar will be themed, and this theme will include a divider at the bottom,
    # so to prevent ugliness, we hide the divider graphic in this case.
    if seGetPlatform() is "Win32" and char 1 of word 2 of seGetSystemVersion() is "6" then
@@ -108,6 +109,7 @@ command resize
    set the top of button "Fake Handler Menu" of me to the top of button "Handlers" of me
    set the left of button "Handlers" of me to tHandlerListLeft
    set the left of button "Fake Handler Menu" of me to tHandlerListLeft
+   unlock screen
 end resize
 
 # Parameters
@@ -172,7 +174,8 @@ command update pDontRecalculateSelectedHandler
 end update
 
 command updateSelectedHandler pDontRecalculate
-    local tHandler
+   lock screen
+   local tHandler
    revSEGetSelectedHandler pDontRecalculate
    put the result into tHandler
    if tHandler is not empty then
@@ -183,6 +186,7 @@ command updateSelectedHandler pDontRecalculate
       set the toolTip of button "Handlers" of me to "Handler List"
       set the label of button "Fake Handler Menu" of me to "Handler list"
    end if
+   unlock screen
 end updateSelectedHandler
 
 private function shortcutDescription pAction
@@ -234,31 +238,33 @@ end debugControlsEnable
 # Description
 #   Updates the debug controls. In particular populates the execution contexts menu
 private command debugControlsUpdate pMode
-  local tFilteredContexts
-  put seDebugContexts() into tFilteredContexts
-  
-  local tShortContexts
-  repeat for each line tContextLine in tFilteredContexts
-    put debugContextShort(tContextLine) & return after tShortContexts
-  end repeat
-  delete the last char of tShortContexts
-  
-  local tLastContext
-  put seGetDebugContext() into tLastContext
-  
-  set the text of button "Debug Context" of me to tShortContexts
-  
-  if pMode is "debug" then
-    if tLastContext is empty or tLastContext is not among the lines of tFilteredContexts then
-      set the label of button "Debug Context" of me to "TempLabel"
-      set the label of button "Debug Context" of me to line 1 of tShortContexts
-    else
-      set the label of button "Debug Context" of me to "TempLabel"
-      set the label of button "Debug Context" of me to debugContextShort(tLastContext)
-    end if
-  end if
-  
-  set the cContexts of button "Debug Context" of me to tFilteredContexts
+   lock screen
+   local tFilteredContexts
+   put seDebugContexts() into tFilteredContexts
+   
+   local tShortContexts
+   repeat for each line tContextLine in tFilteredContexts
+      put debugContextShort(tContextLine) & return after tShortContexts
+   end repeat
+   delete the last char of tShortContexts
+   
+   local tLastContext
+   put seGetDebugContext() into tLastContext
+   
+   set the text of button "Debug Context" of me to tShortContexts
+   
+   if pMode is "debug" then
+      if tLastContext is empty or tLastContext is not among the lines of tFilteredContexts then
+         set the label of button "Debug Context" of me to "TempLabel"
+         set the label of button "Debug Context" of me to line 1 of tShortContexts
+      else
+         set the label of button "Debug Context" of me to "TempLabel"
+         set the label of button "Debug Context" of me to debugContextShort(tLastContext)
+      end if
+   end if
+   
+   set the cContexts of button "Debug Context" of me to tFilteredContexts
+   unlock screen
 end debugControlsUpdate
 
 # Parameters
@@ -283,6 +289,7 @@ private function debugContextShort pContext
 end debugContextShort
 
 on menuPick pItemName
+   lock screen
    if the short name of the target is "Debug Context" then
       local tNumber, tContexts
       put the menuHistory of button "Debug Context" of me into tNumber
@@ -306,6 +313,7 @@ on menuPick pItemName
       
       revSEGoExecutionPoint tObject, tArray["line number"], true, true
    end if
+   unlock screen
 end menuPick
 
 constant kFudge = 2
@@ -353,23 +361,25 @@ end hideHandlerList
 #   Callback for the handler list object. This is called when the stack is closed
 #   which either means the user has choosen a handler, or dismissed the stack.
 on handlerSelected
-  local tHandler, tLine, tType
-  put item 1 of the cChoice of seHandlerListObject() into tLine
-  put item 2 of the cChoice of seHandlerListObject() into tHandler
-  put item 3 of the cChoice of seHandlerListObject() into tType
-  if tLine is empty then
-    exit handlerSelected
-  end if
-  
-  # OK-2009-03-04 : Bug 7450 - If the script is invalid (i.e. doesn't compile) then the line number returned by the handler
-  # list may be wrong because its the last known location of the handler when the script was compiled. To try and locate
-  # the handler correctly we call this function which will check if tLine is wrong, and attempt to adjust it.
-  put seLocateHandler(tHandler, tLine, tType) into tLine
-  
-  set the label of button "Fake Handler Menu" of me to "TempLabel"
-  set the label of button "Fake Handler Menu" of me to tHandler
-  set the toolTip of button "Handlers" of me to tHandler
-  
-  send "goLine tLine, true" to group "Editor"
-  seUpdateLeftBar
+   lock screen
+   local tHandler, tLine, tType
+   put item 1 of the cChoice of seHandlerListObject() into tLine
+   put item 2 of the cChoice of seHandlerListObject() into tHandler
+   put item 3 of the cChoice of seHandlerListObject() into tType
+   if tLine is empty then
+      exit handlerSelected
+   end if
+   
+   # OK-2009-03-04 : Bug 7450 - If the script is invalid (i.e. doesn't compile) then the line number returned by the handler
+   # list may be wrong because its the last known location of the handler when the script was compiled. To try and locate
+   # the handler correctly we call this function which will check if tLine is wrong, and attempt to adjust it.
+   put seLocateHandler(tHandler, tLine, tType) into tLine
+   
+   set the label of button "Fake Handler Menu" of me to "TempLabel"
+   set the label of button "Fake Handler Menu" of me to tHandler
+   set the toolTip of button "Handlers" of me to tHandler
+   
+   send "goLine tLine, true" to group "Editor"
+   seUpdateLeftBar
+   unlock screen
 end handlerSelected

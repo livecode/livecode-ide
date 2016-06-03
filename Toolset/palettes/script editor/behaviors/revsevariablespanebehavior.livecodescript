@@ -32,6 +32,7 @@ command update pEnvironmentChanged
 end update
 
 private command updateDo pEnvironmentChanged
+   lock screen
    put seGetDebugContext() into sContext
    
    if pEnvironmentChanged is not "false" then
@@ -42,6 +43,9 @@ private command updateDo pEnvironmentChanged
       get buildTree()
       set the arrayData of widget "tree" of me to it
    end if
+   
+   updateVisualizationObjects
+   unlock screen
 end updateDo
 
 command refresh
@@ -249,7 +253,22 @@ private on pathToVariableComponents pPath, @rVariableName, @rDimensions
    end repeat
 end pathToVariableComponents
 
+local sVisualizationObjects
 local sVisualizationObjectCount = 0
+private command addVisualizationObject pObject
+   put "" into sVisualizationObjects[pObject]
+end addVisualizationObject
+
+private command removeVisualizationObject pObject
+   delete variable sVisualizationObjects[pObject]
+end removeVisualizationObject
+
+private command updateVisualizationObjects
+   -- Update any visualization objects
+   repeat for each key tObject in sVisualizationObjects
+      visualizationObjectUpdate tObject
+   end repeat
+end updateVisualizationObjects
 
 on actionInspect pPath
    nodeCreateAndShowVisualizationObject pPath
@@ -260,8 +279,11 @@ on actionDoubleClick pPath
 end actionDoubleClick
 
 private on nodeCreateAndShowVisualizationObject pPath
+   local tObject
    nodeCreateVisualizationObject pPath
-   nodeShowVisualizationObject the result
+   put the result into tObject
+   addVisualizationObject tObject
+   nodeShowVisualizationObject tObject
 end nodeCreateAndShowVisualizationObject
 
 private function visualizationObjectTemplate
@@ -269,6 +291,7 @@ private function visualizationObjectTemplate
 end visualizationObjectTemplate
 
 command visualizationObjectRemove tObject
+   removeVisualizationObject tObject
 end visualizationObjectRemove
 
 private on nodeCreateVisualizationObject pPathToNode

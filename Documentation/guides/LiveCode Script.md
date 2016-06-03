@@ -105,9 +105,6 @@ LiveCode supports the following versions of Windows:
 
 -   Windows Server 2008
 
-Additionally, QuickTime 7 or later is required for most multimedia
-features.
-
 #### Requirements for Linux Systems
 
 The minimal requirements for LiveCode to run on Linux are:
@@ -150,6 +147,7 @@ LiveCode supports the following versions of Mac OS X:
 - 10.10.x (Yosemite)
 - 10.11.x (El Capitan)
 
+
 ### Using the Documentation
 
 #### Documentation Conventions
@@ -165,9 +163,9 @@ of the syntax:
 - `[]` Square brackets enclose optional portions.
 - `{}` Curly braces enclose sets of alternatives from which to choose.
 - `|` Vertical bars separate different alternatives.
-- `\\` Line continuation character – this line continues to the next 
+- `\` Line continuation character – this line continues to the next 
 line.
-- ***Italics*** indicate placeholders that you don't enter literally.
+- *Italics* indicate placeholders that you don't enter literally.
 
 Code examples are provided in `typewriter text` or 
 
@@ -205,29 +203,33 @@ will work on Linux, Unix and Mac OS. Snapshots of these platforms are
 used from time to time and are also used to illustrate platform specific
 features.
 
-> **Tip:** This style of text box tells you about an alternative way to
+##### Note Styles
+
+> **Tip:** This style of note tells you about an alternative way to
 > do something or describes a shortcut.
 
-> **Important:** This style of text box describes an aspect of LiveCode
+> **Important:** This style of note describes an aspect of LiveCode
 > that may confuse you if you don't know about it and tells you how to
 > avoid unexpected behavior.
 
-> **Note:** This style of text box provides some additional information
+> **Note:** This style of note provides some additional information
 > that may be useful, or emphasizes a key point.
 
-> **Caution:** This style of text box warns you about a potential
+> **Caution:** This style of note warns you about a potential
 > problem that might cause an error or loss of data.
 
 #### Navigating the Documentation
 
-The LiveCode documentation is spread across four components; the Start
-Center, the Resource Center, the Dictionary and the User Guides.
+The LiveCode documentation is spread across four areas; the Start
+Center, the Dictionary (API), the Guides and other resources.
 
 The Start Center is aimed at introducing you to LiveCode, and should be
 your first port of call if you have not used LiveCode before. The
-Resource Center will help you build upon any experience you have and the
-dictionary is a reference resource which you can refer to while
-implementing your projects.
+dictionary, or API, is a reference resource which you can refer to while
+implementing your projects. Guides are online resources at livecode.com. 
+Other resources include Sample Stacks, a free, online repository of 
+user-contributed stacks, User forums, and the resources page at 
+livecode.com/resources/.
 
 You can access the documentation from within LiveCode from the **Help**
 menu. Additional resources are available at
@@ -237,21 +239,52 @@ menu. Additional resources are available at
 
 The purpose of the Start Center is to introduce you to LiveCode and
 provide you with enough knowledge to start implementing your own
-projects. It can be accessed by choosing **Help -\> Start Center**. The
-Center itself is split across two sections; “Getting Started” and “User
-Forums”.
+projects. It can be accessed by choosing **Help -\> Start Center**. 
 
-##### Getting Started
+The first time you open the Start Center you will see an invitation to 
+take the Interactive Tour, a step-by-step tutorial that guides you 
+through creation of a simple project in LiveCode. If you choose to 
+skip the tour you may always enter it later by clicking the Interactive 
+Welcome button in the Start Center.
 
-The “Getting Started” section contains media and written tutorials.
-These outline the basic functionality behind LiveCode and provide
-instruction on how to create a simple calendar stack. The section also
-contains a downloadable version of this guide and a link to the LiveCode
-Resource Center which is outlined in section 1.6.4.
+![](images/startCenter_firstrun.png)
 
-![](images/image2.png)
+The Start Center itself is split across three sections&mdash;quick links 
+to the LiveCode pages on various social media sites; a collection 
+of quick link buttons, which take you to various helps and guides; and 
+a list of your most recently opened stacks.
 
-##### User Forums
+![](images/startCenter_labels.png)
+
+##### Social Media Links
+
+LiveCode maintains pages on popular social media sites, such as Facebook, 
+YouTube, LinkedIn and Stack Overflow. These can help you keep up to date 
+LiveCode product announcements, professional networking, and help and 
+training resources.
+
+##### Recent Stacks
+
+This shows a list of your most recently stacks. Double click on a stack 
+to open it and close the Start Center window.
+
+##### Quick Links
+
+The quick link buttons let you quickly access tutorials, sample projects, 
+guides, LiveCode blog posts, and online user forums. Here is an overview 
+of these links:
+
+###### Interactive Welcome
+
+###### New
+
+###### Sample Projects
+
+###### Tutorials
+
+###### In Depth Guides
+
+###### Forums
 
 LiveCode has a very active and friendly user community. We encourage all
 new users to sign up to our mailing list and user forums as they are a
@@ -260,7 +293,9 @@ with what is going on in the world of LiveCode. The “User Forums”
 section provides a link to our forum registration page as well as a list
 of links to the most recent posts which have been made.
 
-![](images/image3.png)
+###### Blog
+
+###### Account
 
 #### Dictionary
 
