@@ -235,6 +235,7 @@ function validateIdentifier pIdentifier
 end validateIdentifier
 
 on revUpdateStandaloneProgress pMessage
+   lock screen
    put pMessage into field 1 of stack "revStandaloneProgress"
    if the mode of stack "revStandaloneProgress" is 0 then 
       lock messages
