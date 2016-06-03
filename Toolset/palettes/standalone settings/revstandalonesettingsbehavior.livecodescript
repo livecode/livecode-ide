@@ -97,31 +97,6 @@ end updateTabButtons
 on buildForEnabled pPlatform
    local tSettings
    put getSettings() into tSettings
-   
-   -- All of the desktop platforms can be built at the same time, but no others
-   -- Both the mobile platforms can be built at the same time, but no others
-   -- Emscripten must be built on its own
-   local tAdditionalTargets
-   put revSBAdditionalTargets() into tAdditionalTargets
-   if pPlatform is among the items of tAdditionalTargets then
-      repeat for each item tSetting in revSBDesktopTargets() & ",errorDialog"
-         put false into tSettings[tSetting]
-      end repeat
-      
-      if pPlatform is "emscripten" then
-         repeat for each item tSetting in tAdditionalTargets
-            put false into tSettings[tSetting]
-         end repeat
-      else
-         put false into tSettings["emscripten"]
-      end if
-      put true into tSettings[pPlatform]
-   else
-      repeat for each item tSetting in tAdditionalTargets
-         put false into tSettings[tSetting]
-      end repeat
-   end if
-   setSettings tSettings
    updateTabButtons tSettings
 end buildForEnabled
 
