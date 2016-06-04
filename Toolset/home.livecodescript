@@ -199,12 +199,6 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading QuickTime..."
-         revInternal__InitialiseQuickTime
-         put the result into tSuccess
-      end if
-      
-      if tSuccess then
          revInternal__setSplashStatus "Loading Plug-ins..."
          revInternal__InitialisePlugIns
          put the result into tSuccess
@@ -1442,16 +1436,6 @@ command revInternal__InitialiseMessageBox
   
   return true
 end revInternal__InitialiseMessageBox
-
-command revInternal__InitialiseQuickTime
-  revInternal__Log "Enter", "QuickTime Initialisation"
-  
-  if the cLoadQuickTimeOnStartup of stack "revPreferences" is not false then get the qtVersion
-  
-  revInternal__Log "Leave", "QuickTime Initialisation"
-  
-  return true
-end revInternal__InitialiseQuickTime
 
 command revInternal__InitialisePlugIns
    revInternal__Log "Enter", "Plug-Ins Initialisation"

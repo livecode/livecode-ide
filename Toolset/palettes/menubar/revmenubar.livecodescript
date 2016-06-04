@@ -7,10 +7,6 @@ on preOpenStack
       exit preOpenStack
    end if
    
-   #set the cRecentPaths of stack "revPreferences" to the cRecentPaths of stack "revPreferences" -- setprop will initialise
-   # OK-2007-07-06 : Reworked recent files list code.
-   //revMenuBarUpdateRecentPaths
-   
    subscribeMessages
    
    setDefaultText
