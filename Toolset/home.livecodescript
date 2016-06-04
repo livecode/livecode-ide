@@ -966,6 +966,11 @@ end revInternal__InitialiseSystem
 command revInternal__InitialiseGlobals
    revInternal__Log "Enter", "Globals Initialisation"
    
+   global gREVDevelopment
+   if gREVDevelopment is empty then
+      put false into gREVDevelopment
+   end if
+   
    global gREVAccelerator
    if the platform is "MacOS" then
       put "Cmd" into gREVAccelerator
