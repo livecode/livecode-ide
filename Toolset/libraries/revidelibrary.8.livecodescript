@@ -10406,9 +10406,26 @@ private command revIDEGenerateDistributedAPI
       put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js")
    end if
    
+   # Check to see if we need to regenerate the datagrid docs
+   local tDatagridDoc, tFolder
+   put revIDESpecialFolderPath("Documentation") &"/dictionary" into tFolder
+   put "datagrid.lcdoc" into tDatagridDoc
+   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "dg.js") into tLastGenerated
+   put revIDELastModifiedTimeOfFile(tFolder, tDatagridDoc) into tLastModified
+   # Regenerate if necessary
+   if tLastModified > tLastGenerated then
+      local tLibA
+      put revDocsParseDocFileToLibraryArray(tFolder & slash & tDatagridDoc, "Data Grid", "LiveCode") into tLibA
+      # Update the database
+      ideDocsUpdateDatabase tLibA
+      put revDocsFormatLibraryArrayAsJSON(tLibA) into tJSON
+      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "dg.js")
+   end if
+   
    local tDictionaryData
    put textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js"), "utf-8") into tDictionaryData
    put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js"), "utf-8") after tDictionaryData
+   put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "dg.js"), "utf-8") after tDictionaryData
    
    put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
 end revIDEGenerateDistributedAPI
