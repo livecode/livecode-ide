@@ -2456,29 +2456,6 @@ on revUpdateAOControls pTarget
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
 
-function revComponentVersion pStack
-   local tResult
-   put empty into tResult
-   if pStack is "all" then
-      local tList
-      put the stackfiles of stack "home" into tList
-      
-      local tStack
-      repeat for each line i in tList
-         put item 1 of i into tStack
-         if there is a stack tStack then
-            put tStack & ":" && the cVersionNo of stack tStack & "-" & the cBuildNo of stack tStack & cr after tResult 
-         end if
-      end repeat
-      put "home:" && the cVersionNo of stack "home" & "-" & the cBuildNo of stack "home" & cr after tResult 
-   else
-      if there is a stack pStack then
-         put the cVersionNo of stack pStack & "-" & the cBuildNo of stack pStack into tResult 
-      end if
-   end if
-   return tResult
-end revComponentVersion
-
 function revExternalVersion pExternal
    local tExternalVersion
    put empty into tExternalVersion
