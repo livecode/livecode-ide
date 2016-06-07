@@ -11055,9 +11055,11 @@ function revIDELookupError pType, pCode
 end revIDELookupError
 
 function revIDEExternalsMapping
-   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   dispatch function "revSBExternalsMapping" to stack "revSBLibrary"
+   return the result
 end revIDEExternalsMapping
 
 function revIDEDatabaseDriversMapping
-   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
+   dispatch function "revSBDatabaseDriversMapping" to stack "revSBLibrary"
+   return the result
 end revIDEDatabaseDriversMapping
