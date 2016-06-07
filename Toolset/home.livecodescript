@@ -638,6 +638,10 @@ private command revInternal__SetupPreferences
       
    end if
    
+   -- ensure the script of stack preferences is empty
+   -- as setprops could be dangerous
+   set the script of stack "revpreferences" to empty
+   
    put the stackFiles of stack "Home" into tStackFiles
    put return & "revPreferences", tPreferencesStackFile7 after tStackFiles
    set the stackFiles of stack "Home" to tStackFiles
