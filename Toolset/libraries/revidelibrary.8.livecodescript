@@ -2264,13 +2264,8 @@ private function __ideFilterObjectIDListWithPreference pObjectList
 end __ideFilterObjectIDListWithPreference
 
 function revIDEStacksForDataView pIndex
-   # Are IDE stacks required
    local tSortType, tSortOrder
-   
-   put revIDEGetPreference("pb_stackSortType") into tSortType
-   put revIDEGetPreference("pb_stackSortOrder") into tSortOrder
-   if tSortType is empty then put "name" into tSortType
-   if tSortOrder is empty then put "ascending" into tSortOrder
+   revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
    # Get list of stacks to display
    local tMainStacks, tInvertedMainStacks
