@@ -122,6 +122,7 @@ on helpButtons
 end helpButtons
 
 on revStandaloneSettings pStack
+   lock screen
    start using stack "revSBLibrary"
    if pStack = "" then 
       put the short name of the topStack into pStack
@@ -140,7 +141,8 @@ on revStandaloneSettings pStack
    setSettings tSettings
    modeless "revStandaloneSettings"
    send "preOpenCard" to this card of stack "revStandaloneSettings"
-   updateLabel the short name of this card of stack "revStandaloneSettings"
+   updateTabButtons tSettings
+   unlock screen
 end revStandaloneSettings
 
 on revSetEdit pStack
@@ -160,6 +162,7 @@ end minCardWidth
 on preOpenCard
    lock screen
    updateCardSize
+   updateLabel the short name of this card of me
    unlock screen
 end preOpenCard
 
