@@ -1,8 +1,4 @@
 ﻿script "revStandaloneSettingsBehavior"
-function editionType
-   return line 4 of the revLicenseInfo
-end editionType
-
 on preOpenStack
    local tLicenseType
    
