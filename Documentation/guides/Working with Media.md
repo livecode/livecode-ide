@@ -362,14 +362,10 @@ timers.
 ## Working with Video
 
 LiveCode supports playback of video with the player object. On Windows
-*QuickTime* is supported. QuickTime allows playback of a wide variety of 
-file formats, including MPEG, H.264 and AAC. LiveCode also supports the 
-controller, accessing QuickTime's streaming features and QuickTime 
-Virtual Reality (QTVR).
-
-On Windows systems, the player object can play back video using the
-*Windows Media subsystem*. This has more limited functionality than
-using QuickTime.
+*DirectShow* is supported. Media format support in the new Windows 
+player control depends on which codecs are installed. A list of the
+[file formats and compression types available as standard](https://msdn.microsoft.com/en-us/library/ms787745(VS.85).aspx)
+on Windows is available in the MSDN documentation
 
 On Mac OS X systems, the player object uses the AV Foundation framework.
 
@@ -407,7 +403,7 @@ The following table describes commonly used player properties:
 | Property Name | Function | Example |
 |--------------------------|-----------------------------------------------------------------------------------------------------------|------------------------------------------------------------|
 | **alwaysBuffer**         | Forces the player to be buffered, allowing objects to be drawn on top and the current frame to be printed | `set the alwaysBuffer of player 1 to true`                   |
-| **showController**       | Shows or hides the QuickTime controller                                                                   | `set the showController of player 1 to false`                |
+| **showController**       | Shows or hides the player controller                                                                   | `set the showController of player 1 to false`                |
 | **currentTime**          | Sets the current frame                                                                                    | `set the currentTime of player 1 to 1000`                    |
 | **duration & timeScale** | The duration of the movie and the number of intervals per second of a movie                               | `put (the duration of me/the timeScale of me) into tRunTime` |
 | **currentTimeChanged**   | Message sent when the current frame changes                                                               | `on currentTimeChanged pInterval`<br>`put pInterval into field "Time Code"`<br>`end currentTimeChanged` |
@@ -428,15 +424,6 @@ The following properties can be used to control a QTVR movie: **pan**,
 
 For more information on any of these terms, see the *LiveCode
 Dictionary*.
-
-### Preventing Use of QuickTime on Windows
-
-To force LiveCode to use the Windows Media subsystem instead of
-QuickTime on Windows systems, even when QuickTime is installed, set the
-**dontUseQT** global property to true.
-
-> **Important:** You must set dontUseQT to true before you perform any
-> movie or player related action.
 
 ## Working with Sounds
 
@@ -476,7 +463,7 @@ To set the volume:
 LiveCode supports visual transition effects when changing card or hiding
 and showing objects. There are three types of effect support: built-in
 effects which work on all platforms, QuickTime effects which work on
-systems that have QuickTime installed and Core Image effects which work
+older Mac OS X systems and Core Image effects which work
 on Mac OS X.
 
 Use the **visual effect** command to display a visual effect. To go to
