@@ -199,12 +199,6 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading QuickTime..."
-         revInternal__InitialiseQuickTime
-         put the result into tSuccess
-      end if
-      
-      if tSuccess then
          revInternal__setSplashStatus "Loading Plug-ins..."
          revInternal__InitialisePlugIns
          put the result into tSuccess
@@ -594,113 +588,66 @@ private command revInternal__SetupPreferences
    put sPreferencesPath & "/" & toLower(kProductName) & "7.rev" into tPreferencesStackFile7
    
    local tIndex, tStackFiles
-   if the buildnumber < 10000 then
-      -- First check to see if we have a preferences stack file in the new location that
-      -- will not load.
-      if there is a file tPreferencesStackFile and there is no stack tPreferencesStackFile then
-         revInternal__Log "Message", "Existing Preferences Stack Corrupted"
-         
-         put 1 into tIndex
-         repeat while there is a file (tPreferencesStackFile & ".corrupt." & tIndex)
-            add 1 to tIndex
-         end repeat
-         
-         revInternal__Log "Message", "Moving Broken Stack to '" & tPreferencesStackFile & "'"
-         
-         rename file tPreferencesStackFile to (tPreferencesStackFile & ".corrupt." & tIndex)
-      end if
+   -- First check to see if we have a preferences stack file in the new location that
+   -- will not load.
+   if there is a file tPreferencesStackFile7 and there is no stack tPreferencesStackFile7 then
+      revInternal__Log "Message", "Existing Preferences 7 Stack Corrupted"
       
-      -- Next check to see that if there is a preferences file in the old location, if there
-      -- there is no preferences stackfile in the new location.
-      if there is no file tPreferencesStackFile and there is a file tOldPreferencesStackFile then
-         revInternal__Log "Message", "Found preferences in old location, copying to new location."
-         put url ("binfile:" & tOldPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile)
-      end if
+      put 1 into tIndex
+      repeat while there is a file (tPreferencesStackFile7 & ".corrupt." & tIndex)
+         add 1 to tIndex
+      end repeat
       
-      -- Next check to see if there is a preferences file in the new location under the
-      -- name 'reventerprise'.
-      if there is no file tPreferencesStackFile and there is a file tOldNewPreferencesStackFile then
-         revInternal__Log "Message", "Found preferences in new location with old name, copying to new location."
-         -- MM-2012-05-03: Fixed typo - changed tOldPreferencesStackFile to tOldNewPreferencesStackFile
-         put url ("binfile:" & tOldNewPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile)
-      end if
+      revInternal__Log "Message", "Moving Broken Stack to '" & tPreferencesStackFile7 & "'"
       
-      if there is no file tPreferencesStackFile then
-         revInternal__Log "Message", "No Existing Preferences Stack Found"
-         revInternal__Log "Message", "Copying template preferences to '" & tPreferencesStackFile & "'"
-         lock messages
-         if there is a stack "revpreferences" then
-            delete stack "revpreferences"
-         end if
-         set the filename of stack "revpreferencestemplate" to tPreferencesStackFile
-         set the name of stack "revpreferencestemplate" to "revpreferences"
-         revInternal__ResetPreferences
-         revInternal__SavePreferences
-         unlock messages
-      end if
-      
-      put the stackFiles of stack "Home" into tStackFiles
-      put return & "revPreferences", tPreferencesStackFile after tStackFiles
-      set the stackFiles of stack "Home" to tStackFiles
-      
-      revInternal__Log "Message", "Mapping Stack 'revpreferences.rev' to stackfile '" & tPreferencesStackFile & "'"
-   else     
-      -- First check to see if we have a preferences stack file in the new location that
-      -- will not load.
-      if there is a file tPreferencesStackFile7 and there is no stack tPreferencesStackFile7 then
-         revInternal__Log "Message", "Existing Preferences 7 Stack Corrupted"
-         
-         put 1 into tIndex
-         repeat while there is a file (tPreferencesStackFile7 & ".corrupt." & tIndex)
-            add 1 to tIndex
-         end repeat
-         
-         revInternal__Log "Message", "Moving Broken Stack to '" & tPreferencesStackFile7 & "'"
-         
-         rename file tPreferencesStackFile7 to (tPreferencesStackFile7 & ".corrupt." & tIndex)
-      end if
-      
-      -- Next check to see that if there is a preferences file in the old location, if there
-      -- there is no preferences stackfile in the new location.
-      if there is no file tPreferencesStackFile7 and there is a file tPreferencesStackFile then
-         revInternal__Log "Message", "Found 2.7 preferences file, copying to new location."
-         put url ("binfile:" & tPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
-      end if
-      
-      if there is no file tPreferencesStackFile7 and there is a file tOldNewPreferencesStackFile then
-         revInternal__Log "Message", "Found preferences in new location with old name, copying to new location."
-         -- MM-2012-05-03: Fixed typo - changed tOldPreferencesStackFile to tOldNewPreferencesStackFile
-         put url ("binfile:" & tOldNewPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
-      end if
-      
-      -- Next check to see if there is a preferences file in the new location under the
-      -- name 'reventerprise'.
-      if there is no file tPreferencesStackFile7 and there is a file tOldNewPreferencesStackFile then
-         revInternal__Log "Message", "Found preferences in new location with old name, copying to new location."
-         -- MM-2012-05-03: Fixed typo - changed tOldPreferencesStackFile to tOldNewPreferencesStackFile
-         put url ("binfile:" & tOldNewPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
-      end if
-      
-      if there is no file tPreferencesStackFile7 then
-         revInternal__Log "Message", "No Existing Preferences Stack Found"
-         revInternal__Log "Message", "Copying template preferences to '" & tPreferencesStackFile7 & "'"
-         lock messages
-         if there is a stack "revpreferences" then
-            delete stack "revpreferences"
-         end if
-         set the filename of stack "revpreferencestemplate" to tPreferencesStackFile7
-         set the name of stack "revpreferencestemplate" to "revpreferences"
-         revInternal__ResetPreferences
-         revInternal__SavePreferences
-         unlock messages
-      end if
-      
-      put the stackFiles of stack "Home" into tStackFiles
-      put return & "revPreferences", tPreferencesStackFile7 after tStackFiles
-      set the stackFiles of stack "Home" to tStackFiles
-      
-      revInternal__Log "Message", "Mapping Stack 'revpreferences.rev' to stackfile '" & tPreferencesStackFile & "'"
+      rename file tPreferencesStackFile7 to (tPreferencesStackFile7 & ".corrupt." & tIndex)
    end if
+   
+   -- Next check to see that if there is a preferences file in the old location, if there
+   -- there is no preferences stackfile in the new location.
+   if there is no file tPreferencesStackFile7 and there is a file tPreferencesStackFile then
+      revInternal__Log "Message", "Found 2.7 preferences file, copying to new location."
+      put url ("binfile:" & tPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
+   end if
+   
+   if there is no file tPreferencesStackFile7 and there is a file tOldNewPreferencesStackFile then
+      revInternal__Log "Message", "Found preferences in new location with old name, copying to new location."
+      -- MM-2012-05-03: Fixed typo - changed tOldPreferencesStackFile to tOldNewPreferencesStackFile
+      put url ("binfile:" & tOldNewPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
+   end if
+   
+   -- Next check to see if there is a preferences file in the new location under the
+   -- name 'reventerprise'.
+   if there is no file tPreferencesStackFile7 and there is a file tOldNewPreferencesStackFile then
+      revInternal__Log "Message", "Found preferences in new location with old name, copying to new location."
+      -- MM-2012-05-03: Fixed typo - changed tOldPreferencesStackFile to tOldNewPreferencesStackFile
+      put url ("binfile:" & tOldNewPreferencesStackFile) into url ("binfile:" & tPreferencesStackFile7)
+   end if
+   
+   if there is no file tPreferencesStackFile7 then
+      revInternal__Log "Message", "No Existing Preferences Stack Found"
+      revInternal__Log "Message", "Copying template preferences to '" & tPreferencesStackFile7 & "'"
+      
+      lock messages
+      if there is not a stack "revpreferences" then
+         create invisible stack "revpreferences"
+      end if
+      set the filename of stack "revpreferences" to tPreferencesStackFile7
+      revInternal__ResetPreferences
+      unlock messages
+      
+   end if
+   
+   -- ensure the script of stack preferences is empty
+   -- as setprops could be dangerous
+   set the script of stack "revpreferences" to empty
+   
+   put the stackFiles of stack "Home" into tStackFiles
+   put return & "revPreferences", tPreferencesStackFile7 after tStackFiles
+   set the stackFiles of stack "Home" to tStackFiles
+   
+   revInternal__Log "Message", "Mapping Stack 'revpreferences.rev' to stackfile '" & tPreferencesStackFile7 & "'"
+   
    revInternal__Log "Leave", "Preferences Setup"
 end revInternal__SetupPreferences
 
@@ -729,12 +676,207 @@ private command revInternal__SetupSplash
 	palette stack "revSplash"
 end revInternal__SetupSplash
 
--- MW-2011-03-10: Ensure certain preference settings reset to what 'new' defaults should be
---   (This was easier than attempting to edit revpreferences.rev which is very very slippery!)
 command revInternal__ResetPreferences
-   set the cREVToolsPaintToolsVisible of stack "revPreferences" to true
-   set the cSEHidePalettes of stack "revPreferences" to false
-   set the cSEHideMessageBox of stack "revPreferences" to false
+   -- clear the preferences stack
+   set the customKeys of stack "revPreferences" to empty
+   set the customPropertySets of stack "revPreferences" to empty
+   
+   local tPropsArray
+   -- default custom property set
+   put "true" into tPropsArray["cREVToolsPaintToolsVisible"]
+   put "false" into tPropsArray["cDestroyStack"]
+   put "false" into tPropsArray["cRevPopups"]
+   put "417,113" into tPropsArray["cREVMsgTabRectGlobalProperties"]
+   put "155" into tPropsArray["cREVPlayerWidth"]
+   put "23" into tPropsArray["cButtonHeight"]
+   put "true" into tPropsArray["cShowProfileEditor"]
+   put "200" into tPropsArray["cScrollbarwidth"]
+   put "false" into tPropsArray["cREVMsgShowUIMessages"]
+   put "false" into tPropsArray["cSEHidePalettes"]
+   put "120" into tPropsArray["cREVImageWidth"]
+   put "500" into tPropsArray["tooltip delay"]
+   put "417,72" into tPropsArray["cREVMsgTabRectSingle Line"]
+   put "false" into tPropsArray["cREVMsgShowUIBackScripts"]
+   put "539,432" into tPropsArray["cREVGeoTopLeft"]
+   put "70378" into tPropsArray["cREVDBCode"]
+   put "276" into tPropsArray["cREVScriptHeight"]
+   put "2" into tPropsArray["cGridSize"]
+   put "483,214,1015,476" into tPropsArray["cVariableWatcherRect"]
+   put "false" into tPropsArray["cShowrevProps"]
+   put "Pixels" into tPropsArray["cREVRulerMeasurement"]
+   put "100" into tPropsArray["cMacOSScrollbarWidth"]
+   put "1,2,3,4,5,7" into tPropsArray["cControlTabs"]
+   put "500" into tPropsArray["cREVToolTipDelay"]
+   put "250" into tPropsArray["cTabButtonwidth"]
+   put "true" into tPropsArray["cGoAlign"]
+   put "0" into tPropsArray["cREVRotatePrev2"]
+   put "993,712" into tPropsArray["cREVPropertyPaletteTopLeft"]
+   put "true" into tPropsArray["cLiveColor"]
+   put "modification date" into tPropsArray["cRecentSort"]
+   put "true" into tPropsArray["cDocsFirstRun"]
+   put "86400" into tPropsArray["cUpdate,MaxAutoPopupFrequency"]
+   put "true" into tPropsArray["cREVExtension"]
+   put "102" into tPropsArray["cMenuWidth"]
+   put "417,72" into tPropsArray["cREVMsgTabRectcard id 1147"]
+   put "468,131" into tPropsArray["cAppearanceTopLeft"]
+   put "false" into tPropsArray["cREVDefaultMenubar"]
+   put "417,113" into tPropsArray["cREVMsgTabRectbackScripts"]
+   put "true" into tPropsArray["cGrid"]
+   put "30" into tPropsArray["cNumRecent"]
+   put "false" into tPropsArray["cShowAsHandlers"]
+   put "false" into tPropsArray["revDocsAlreadySeen"]
+   put "120" into tPropsArray["cREVImageHeight"]
+   put "82" into tPropsArray["cButtonWidth"]
+   put "true" into tPropsArray["cREVProfileReadOnlyWarning"]
+   put "6,7,9" into tPropsArray["cCardTabs"]
+   put "16" into tPropsArray["cMacOSScrollbarHeight"]
+   put "true" into tPropsArray["cFirstRun"]
+   put "14" into tPropsArray["cMacOSProgressScrollbarHeight"]
+   put "mouseMove" into tPropsArray["suppressedMessages"]
+   put "true" into tPropsArray["cAutoFormat"]
+   put "true" into tPropsArray["cREVScriptShortcut"]
+   put "false" into tPropsArray["cShowRevolutionStacks"]
+   put "22" into tPropsArray["cMenuHeight"]
+   put "1067,251,1882,827" into tPropsArray["cRevDocsRect"]
+   put "Black" into tPropsArray["cBackDropColor"]
+   put "false" into tPropsArray["cREVMsgShowUIFrontScripts"]
+   put "false" into tPropsArray["revstack"]
+   put "100" into tPropsArray["cMacOSProgressScrollbarWidth"]
+   put "false" into tPropsArray["cREVUIScriptShortcut"]
+   put "60,27" into tPropsArray["cREVMenuBarTopLeft"]
+   put "322" into tPropsArray["cREVFieldFirstTabHeight"]
+   put "500" into tPropsArray["cTraceDelay"]
+   put "0" into tPropsArray["cREVRotatePrev1"]
+   put "250" into tPropsArray["cFieldWidth"]
+   put "16" into tPropsArray["cScrollbarHeight"]
+   put "true" into tPropsArray["cToolbarIcons"]
+   put "true" into tPropsArray["cShowAudioclipsclips"]
+   put "1,2,3,4,5" into tPropsArray["cAudioclipTabs"]
+   put "620,235" into tPropsArray["cREVMsgTabRectSingleLine"]
+   put "Sections List" into tPropsArray["revHelpDefaultSection"]
+   put "false" into tPropsArray["cCaseSensitive"]
+   put "auto" into tPropsArray["cLargeFonts"]
+   put "Yellow" into tPropsArray["yellow"]
+   put "417,113" into tPropsArray["cREVMsgTabRectGlobalVariables"]
+   put "417,113" into tPropsArray["cREVMsgTabRectpendingMessages"]
+   put "Property Inspector" into tPropsArray["cABCommandDoubleClick"]
+   put "1" into tPropsArray["cREVTipNumber"]
+   put "417,113" into tPropsArray["cREVMsgTabRectstacksInUse"]
+   put format("blue\nbrown\ndarkorange\nred") into tPropsArray["cBuiltInColors"]
+   put "don't remove" into tPropsArray["cASKDestroy"]
+   put "Gray50" into tPropsArray["cSelectionHandle"]
+   put "128,103" into tPropsArray["cREVMaximizedScriptEditorTopLeft"]
+   put "true" into tPropsArray["suppressIDE"]
+   put "Property Inspector" into tPropsArray["cABOptionDoubleClick"]
+   put "45" into tPropsArray["cREVRotatePrev5"]
+   put "170,131" into tPropsArray["cPaletteTopLeft"]
+   put "false" into tPropsArray["cNOPICTWarning"]
+   put "470,460" into tPropsArray["cREVMsgTopLeft"]
+   put format("cButtonWidth,100\ncButtonHeight,20\ncTabButtonwidth,250\ncTabButtonHeight,160\ncMenuWidth,130\ncMenuHeight,20\ncFieldWidth,250\ncFieldHeight,160\ncLabelFieldWidth,100\ncLabelFieldHeight,20\ncMacOSScrollbarHeight,16\ncMacOSProgressScrollbarHeight,14\ncScrollbarWidth,200\ncScrollbarHeight,20\ncREVGraphicWidth,120\ncREVGraphicHeight,120\ncREVImageWidth,120\ncREVImageHeight,120\ncREVPlayerWidth,320\ncREVPlayerHeight,256") into tPropsArray["New Field 2"]
+   put "120" into tPropsArray["cREVGraphicHeight"]
+   put "Dictionary" into tPropsArray["cRevDocsCurrentCard"]
+   put "385" into tPropsArray["cREVScriptWidth"]
+   put "487" into tPropsArray["cREVUnmaximizedScriptWidth"]
+   put "false" into tPropsArray["cREVDontMaximizeScriptEditor"]
+   put "true" into tPropsArray["cDontWrap"]
+   put "false" into tPropsArray["cVariableChecking"]
+   put "302" into tPropsArray["cAppBrowserWidgetLeft"]
+   put "true" into tPropsArray["cUngroupWarning"]
+   put "false" into tPropsArray["resizeable"]
+   put "false" into tPropsArray["cNavigationArrows"]
+   put "457,430,853,680" into tPropsArray["cMessageWatcherRect"]
+   put "287,261" into tPropsArray["cREVMsgTabRectrevbasic"]
+   put "true" into tPropsArray["cSort"]
+   put "false" into tPropsArray["cREVMsgAutoRefresh"]
+   put "true" into tPropsArray["cVariablePreservation"]
+   put "100" into tPropsArray["cLabelFieldWidth"]
+   put "false" into tPropsArray["cREVMsgShowUIVariables"]
+   put "false" into tPropsArray["cHandlerList"]
+   put "red" into tPropsArray["red"]
+   put "selectedObject" into tPropsArray["cREVMsgIntelligenceObject"]
+   put "false" into tPropsArray["cSEHideErrors"]
+   put "56" into tPropsArray["cFieldHeight"]
+   put "none" into tPropsArray["cBackDrop"]
+   put "300" into tPropsArray["cREVUnmaximizedScriptHeight"]
+   put "13,125" into tPropsArray["cToolsTopLeft"]
+   put "--" into tPropsArray["cCommentCharacter"]
+   put "97,92,657,440" into tPropsArray["cScriptEditorRect"]
+   put "11" into tPropsArray["cREVRotatePrev4"]
+   put "530,564" into tPropsArray["cREVMsgTabRectrevscript"]
+   put "146,123,800,408" into tPropsArray["cAppBrowserRect"]
+   put "true" into tPropsArray["cREVAutoCreateProfilesWarning"]
+   put "false" into tPropsArray["cREVSaveStacksAfterMoving"]
+   put "false" into tPropsArray["cREVAutoCreateProfiles"]
+   put "417,113" into tPropsArray["cREVMsgTabRectGlobal Variables"]
+   put "118" into tPropsArray["cREVPlayerHeight"]
+   put "true" into tPropsArray["cShowVideoclips"]
+   put "false" into tPropsArray["cWholeMatches"]
+   put "false" into tPropsArray["cVerboseDebug"]
+   put "417,99" into tPropsArray["cREVMsgTabRectMultipleLines"]
+   put "true" into tPropsArray["cBreakPoints"]
+   put "false" into tPropsArray["cREVGeoOpen"]
+   put "462,120" into tPropsArray["cREVAOTopLeft"]
+   put "blackgreen" into tPropsArray["cCustomColorsList"]
+   put "Penguin" into tPropsArray["revHelpUnixReligion"]
+   put format("cButtonWidth,82\ncButtonHeight,23\ncTabButtonwidth,250\ncTabButtonHeight,160\ncMenuWidth,102\ncMenuHeight,22\ncFieldWidth,250\ncFieldHeight,56\ncLabelFieldWidth,100\ncLabelFieldHeight,21\ncMacOSScrollbarHeight,16\ncMacOSProgressScrollbarHeight,14\ncScrollbarWidth,200\ncScrollbarHeight,16\ncREVGraphicWidth,120\ncREVGraphicHeight,120\ncREVImageWidth,120\ncREVImageHeight,120\ncREVPlayerWidth,155\ncREVPlayerHeight,118") into tPropsArray["cDefaultSizes"]
+   put "false" into tPropsArray["cSelectGrouped"]
+   put "false" into tPropsArray["cSEHideMessageBox"]
+   put "1,2,3,4,5" into tPropsArray["cVideoclipTabs"]
+   put "true" into tPropsArray["cREVMacOSMenubar"]
+   put "false" into tPropsArray["cREVProfileReadOnly"]
+   put "Yellow" into tPropsArray["revHelpHiliteColor"]
+   put "true" into tPropsArray["cToolbarText"]
+   put "true" into tPropsArray["cREVScriptDebugMode"]
+   put "21" into tPropsArray["cLabelFieldHeight"]
+   put "120" into tPropsArray["cREVGraphicWidth"]
+   put "417,99" into tPropsArray["cREVMsgTabRectMultiple Lines"]
+   put "30" into tPropsArray["Num Recent Files"]
+   put "568,259" into tPropsArray["cREVProfileEditorTopLeft"]
+   put "417,113" into tPropsArray["cREVMsgTabRectfrontScripts"]
+   put "11" into tPropsArray["cREVRotatePrev3"]
+   put "338" into tPropsArray["cREVButtonSecondTabHeight"]
+   put "true" into tPropsArray["cREVHelpText"]
+   put "160" into tPropsArray["cTabButtonHeight"]
+   put "287,261" into tPropsArray["cREVMsgTabRectrevstack"]
+   put "417,113" into tPropsArray["cREVMsgTabRectGlobal Properties"]
+   put "true" into tPropsArray["cShowAudioclipclips"]
+   put "revolutionli" into tPropsArray["cREVDBName"]
+   put "true" into tPropsArray["cDocsQuickLinksVisible"]
+   put "true" into tPropsArray["cStartPageShow"]
+   put "278" into tPropsArray["cREVErrorsPaletteExpandedHeight"]
+   put "true" into tPropsArray["cShowAudioclips"]
+   put "filtering" into tPropsArray["revHelpListMethod"]
+   set the customProperties[""] of stack "revPreferences" to tPropsArray
+   delete variable tPropsArray
+   
+   -- cABDoubleClick
+   put "Play" into tPropsArray["videoclips"]
+   put "Toplevel" into tPropsArray["stacks"]
+   put "Property Inspector" into tPropsArray["controls"]
+   put "Play" into tPropsArray["audioclips"]
+   put "Go" into tPropsArray["cards"]
+   set the customProperties["cABDoubleClick"] of stack "revPreferences" to tPropsArray
+   delete variable tPropsArray
+   
+   -- cABCommandDoubleClick
+   put "Edit Script" into tPropsArray["videoclips"]
+   put "Edit Script" into tPropsArray["stacks"]
+   put "Edit Script" into tPropsArray["controls"]
+   put "Edit Script" into tPropsArray["audioclips"]
+   put "Edit Script" into tPropsArray["cards"]
+   set the customProperties["cABCommandDoubleClick"] of stack "revPreferences" to tPropsArray
+   delete variable tPropsArray
+   
+   -- cABOptionDoubleClick
+   put "Property Inspector" into tPropsArray["videoclips"]
+   put "Property Inspector" into tPropsArray["stacks"]
+   put "Property Inspector" into tPropsArray["controls"]
+   put "Property Inspector" into tPropsArray["audioclips"]
+   put "Property Inspector" into tPropsArray["cards"]
+   set the customProperties["cABOptionDoubleClick"] of stack "revPreferences" to tPropsArray
+   delete variable tPropsArray
+   
+   revInternal__SavePreferences
 end revInternal__ResetPreferences
 
 --------------------------------------------------------------------------------
@@ -1447,16 +1589,6 @@ command revInternal__InitialiseMessageBox
   
   return true
 end revInternal__InitialiseMessageBox
-
-command revInternal__InitialiseQuickTime
-  revInternal__Log "Enter", "QuickTime Initialisation"
-  
-  if the cLoadQuickTimeOnStartup of stack "revPreferences" is not false then get the qtVersion
-  
-  revInternal__Log "Leave", "QuickTime Initialisation"
-  
-  return true
-end revInternal__InitialiseQuickTime
 
 command revInternal__InitialisePlugIns
    revInternal__Log "Enter", "Plug-Ins Initialisation"
