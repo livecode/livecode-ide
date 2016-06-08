@@ -105,9 +105,6 @@ LiveCode supports the following versions of Windows:
 
 -   Windows Server 2008
 
-Additionally, QuickTime 7 or later is required for most multimedia
-features.
-
 #### Requirements for Linux Systems
 
 The minimal requirements for LiveCode to run on Linux are:
@@ -862,13 +859,12 @@ When planning a project, it is important to consider what types of media
 you will need to access and how to structure access to that media.
 
 LiveCode supports a wide range of media formats. Media can be accessed
-using the built-in media support, through QuickTime or via an external
-library. The advantage of using the built-in support is that you can
-consistently display or play back the media on all platforms without
-having to check that any 3<sup>rd</sup> party component has been
-installed. The advantage of using QuickTime is that a wider range of
-media is supported. Other 3<sup>rd</sup> party libraries may allow a
-greater range of media access.
+using the built-in media support, through QuickTime on older Mac OS X 
+systems or via an external library. The advantage of using the built-in 
+support is that you can consistently display or play back the media on 
+all platforms without having to check that any 3<sup>rd</sup> party 
+component has been installed. Other 3<sup>rd</sup> party libraries may 
+allow a greater range of media access.
 
 Since each loaded stack file takes up as much memory as the size of all
 its stacks, it is often advisable to place large, seldom-used objects
@@ -878,8 +874,7 @@ need them.
 
 The built-in media support allows you to embed media directly within
 your stack file, or to reference it externally, storing it in a data
-folder, online or on a CD. QuickTime media must be located externally
-and can either be local or streamed from a server.
+folder, online or on a CD.
 
 | **Embedding Media within your project**  | **Referencing Media externally** |
 |---------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
@@ -897,7 +892,7 @@ and can either be local or streamed from a server.
 For details of the image formats supported natively, see the section on
 the *Image* object. For details of the audio formats supported natively,
 see the section on the *audioClip* object. For details on how to control
-a QuickTime movie, see the section on the *Player* object.
+a movie, see the section on the *Player* object.
 
 #### How to Use External Files
 
@@ -1390,7 +1385,7 @@ Figure 23 – Answer File dialog for selecting a file
 	answer file "Select a file:"
 
 	answer file "Select an image file:" 
-		\ with type "QuickTime Movies|mov" or type "All Files|"
+		\ with type "Movies|avi" or type "All Files|"
 
 The file path to the file selected by the user is returned in the
 *special variable* it. If the user cancelled the dialog, the special
@@ -1421,7 +1416,7 @@ Figure 25 – Answer folder dialog for choosing a directory
 
 	answer folder "Please choose a folder:"
 
-	answer folder "Please choose a folder:" with`"/root/default folder"
+	answer folder "Please choose a folder:" with "/root/default folder"
 
 The file path to the folder selected by the user is returned in the
 special variable **it**. If the user cancelled the dialog, the **it**
@@ -1461,22 +1456,6 @@ Figure 27 – Answer printer for standard printer dialog
 Use the **answer printer** command to display a standard printer dialog 
 prior to printing. If the user cancels the dialog, "cancel" will be 
 returned by *the result* function.
-
-##### Visual Effect Dialog
-
-Answer effect allows you to display the QuickTime special effects dialog 
-box.
-
-![](images/image69.png)
-
-Figure 28 – Answer effect dialog for choosing a QuickTime effect
-
-Use the **answer effect** command to display a standard QuickTime effect 
-dialog. The effect will be returned as binary data in the special
-variable **it**. You can use this variable with the visual effect
-command to create a visual effect *transition*. If the user cancels the
-dialog, `it` will be empty and "cancel" will be returned by *the result*
-function.
 
 ##### Alpha Blend Windows – for Enhanced Tooltips and Multimedia
 
@@ -1918,16 +1897,15 @@ export of SVG format graphics. Use graphic objects to create interactive
 interfaces, graphs, charts or games.
 
 Use the player object to display and interact with any media formats
-supported by QuickTime. LiveCode allows you to turn on and off tracks
-within a movie, pan, zoom or change location within a QTVR movie, set
+supported by AVFoundation on Mac OS X and DirectShow on Windows. 
+LiveCode allows you to turn on and off tracks within a movie and set 
 callback messages that trigger scripts at specific points in the movie,
 and stream movies from a server. At time of this writing there is also a
 3<sup>rd</sup> party library that allows you to edit and save movies by
 script.
 
 The Audio Clip & Video Clip objects allow you to embed audio or video
-clip data within a stack. Some audio clip formats can be played back
-directly without QuickTime installed. They do not have any visual
+clip data within a stack. They do not have any visual
 representation and can be accessed by script or in the Application
 Browser. Players, Audio & Video clips are covered in their respective
 sections within the chapter on *Working with Media*.
