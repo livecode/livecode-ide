@@ -429,9 +429,13 @@ on navigateToCard pCardName
 end navigateToCard
 
 on updateLabel pCardName
+   local tCardName
+   put the effective label of button pCardName of group "cards" of me \
+         into tCardName
    local tLabel
    put "Standalone Application Settings for " & getTargetStackName() & \
-         " - " & pCardName into tLabel
+         " - " & tCardName into tLabel
+   set the title of me to tLabel
 end updateLabel
 
 function androidIdentifierValid
