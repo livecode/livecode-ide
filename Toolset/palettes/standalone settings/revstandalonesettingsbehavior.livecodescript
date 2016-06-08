@@ -533,4 +533,5 @@ function canIncludeStackFiles
          put false into tCan
       end if
    end repeat
+   return tCan
 end canIncludeStackFiles
