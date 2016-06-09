@@ -1378,8 +1378,8 @@ Figure 22 – Answer Dialogs on Multiple Platforms
 
 	answer "Hello World!"
 
-	answer question "What city is the capital of Italy?" with
-		\ "Paris" or "London" or "Rome" titled "Multiple Choice"
+	answer question "What city is the capital of Italy?" with \
+		 "Paris" or "London" or "Rome" titled "Multiple Choice"
 
 
 The result is returned in the *special variable* it.
@@ -1422,8 +1422,8 @@ Figure 23 – Answer File dialog for selecting a file
 
 	answer file "Select a file:"
 
-	answer file "Select an image file:" 
-		\ with type "Movies|avi" or type "All Files|"
+	answer file "Select an image file:" \
+		 with type "Movies|avi" or type "All Files|"
 
 The file path to the file selected by the user is returned in the
 *special variable* it. If the user cancelled the dialog, the special
@@ -1438,8 +1438,8 @@ command in the *LiveCode Dictionary.*
 Figure 24 – Ask File dialog for saving a file
 
 	ask file "Save this document as:" with "Untitled.txt" 
-	answer file "Select an image file:" 
-		\ with type "Text Files|txt" or type "All Files|"
+	answer file "Select an image file:" \
+		 with type "Text Files|txt" or type "All Files|"
 
 The file path to the file to be saved is returned in the special
 variable **it**. If the user cancelled the dialog, the it variable will 
