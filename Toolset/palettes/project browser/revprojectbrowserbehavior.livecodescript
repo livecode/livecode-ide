@@ -132,7 +132,11 @@ on ideNewControl pTarget
    put the long id of pTarget into pTarget
    if word  1 of pTarget is "stack" or  word  1 of pTarget is "card" then
       exit ideNewControl
-   else if word  1 of pTarget is "group" then
+   end if
+   
+   local tSortType,tSortOrder
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   if word  1 of pTarget is "group" and tSortType is "number" then
       addGroupToProjectBrowser pTarget
    else
       addControlToProjectBrowser pTarget
@@ -210,6 +214,17 @@ on ideNameChanged pOldName, pNewName, pTarget
    end if
    
    updateObjectRows pTarget, "name", pNewName
+   
+   # If we're sorting by name, we might need to re-order
+   local tSortType,tSortOrder
+   if word 1 of pTarget is "card" then
+      revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
+   else
+      revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   end if
+   if tSortType is "name" then
+      buildProjectView true
+   end if
 end ideNameChanged
 
 on ideMainstackChanged pOldName, pNewName, pTarget
