@@ -1,4 +1,6 @@
 # Autofocus on message box when typing
 
-When typing in the IDE and there is no field in focus if the message box
-is open it will automatically focus
+If the message box is open, it will now automatically gain focus and
+receive keystrokes when you start typing with no field focused.  This
+makes it much faster and more convenient to quickly run message box
+commands without hunting for the message box.
