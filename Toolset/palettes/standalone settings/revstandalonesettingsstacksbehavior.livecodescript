@@ -18,6 +18,7 @@ on preOpenCard
    set the cStackPaths of field "stackfiles" to tStackFiles["full"]
    set the hilitedLines of field "stackfiles" to 1
    send "mouseUp" to field "stackfiles"
+   unlock messages
    pass preOpenCard
 end preOpenCard
 

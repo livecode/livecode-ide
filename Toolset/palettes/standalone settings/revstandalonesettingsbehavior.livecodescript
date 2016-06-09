@@ -1,8 +1,4 @@
 ﻿script "revStandaloneSettingsBehavior"
-function editionType
-   return line 4 of the revLicenseInfo
-end editionType
-
 on preOpenStack
    local tLicenseType
    
@@ -12,12 +8,7 @@ on preOpenStack
    if getTargetStackName() is not among the lines of the mainStacks then
       revStandaloneSettings the mainStack of the topStack
    end if
-   
-   local tStandaloneSettingsA
-   put getSettings() into tStandaloneSettingsA
-   
-   updateTabButtons tStandaloneSettingsA
-   
+
    repeat with X=1 to the number of buttons of group "flavors" of card "Unix"
       set the enabled of button X of group "flavors" of card "Unix" to true
    end repeat
@@ -39,59 +30,59 @@ private command updateTabButtons pSettings
    repeat for each item tItem in "MacOSX,MacOSX PowerPC-32,MacOSX x86-32,MacOSX x86-64"
       put tEnableMacTick or pSettings[tItem] into tEnableMacTick
    end repeat
-   set the visible of button "OSXchecked" to tEnableMacTick
+   set the visible of button "OSXchecked" of group "checks" of me to tEnableMacTick
    
-   set the visible of button "Windowschecked" of group "checks" to pSettings["Windows"] = true
+   set the visible of button "Windowschecked" of group "checks" of me to pSettings["Windows"] = true
    // SN-2015-01-13: [[ Bug 14373 ]] Check also if Linux 64 or Linux ARM are checked
-   set the visible of button "UnixChecked" of group "checks" to pSettings["Linux"] = true \
+   set the visible of button "UnixChecked" of group "checks" of me to pSettings["Linux"] = true \
          or pSettings["Linux x64"] = true \
          or pSettings["Linux ARMv6-HF"] = true
-   set the visible of button "IosChecked" of group "checks" to pSettings["ios"] = true
-   set the visible of button "AndroidChecked" of group "checks" to pSettings["android"] = true
-   set the visible of button "BugsChecked" of group "checks" to pSettings["errorDialog"] = true
-   set the visible of button "EmscriptenChecked" of group "checks" to pSettings["Emscripten"] = true
+   set the visible of button "IosChecked" of group "checks" of me to pSettings["ios"] = true
+   set the visible of button "AndroidChecked" of group "checks" of me to pSettings["android"] = true
+   set the visible of button "BugsChecked" of group "checks" of me to pSettings["errorDialog"] = true
+   set the visible of button "EmscriptenChecked" of group "checks" of me to pSettings["Emscripten"] = true
    
    repeat for each item tItem in "SolIntel,SolSparc,Iris,Odt,rs6000,Linux,Bsd,Hp9k700,SPARC"
       if pSettings[tItem] then
-         set the visible of button "Unixchecked" of group "checks" to true
+         set the visible of button "Unixchecked" of group "checks" of me to true
       end if 
    end repeat
    
-   show button "Windows" 
-   show button "OS X"
-   show button "Bug Reports"
-   show button "Copy Files"
-   show button "Unix"
-   show button "iOS"
-   show button "Emscripten"
+   show button "Windows" of group "cards" of me
+   show button "OS X" of group "cards" of me
+   show button "Bug Reports" of group "cards" of me
+   show button "Copy Files" of group "cards" of me
+   show button "Unix" of group "cards" of me
+   show button "iOS" of group "cards" of me
+   show button "Emscripten" of group "cards" of me
    
    local tLeft
    put 0 into tLeft
    
    local tV
-   put item 2 of the loc of button "OS X"-10 into tV
+   put item 2 of the loc of button "OS X" of group "cards" of me -10 into tV
    repeat for each item tItem in kButtonList
-      if the visible of button tItem then
-         set the left of button tItem to tLeft
-         put the right of button tItem into tLeft
+      if the visible of button tItem of group "cards" of me then
+         set the left of button tItem of group "cards" of me to tLeft
+         put the right of button tItem of group "cards" of me into tLeft
       end if
       
       local tCheck
       put replaceText(tItem," ","")&"checked" into tCheck
-      if there is a button tCheck then
+      if there is a button tCheck of group "checks" of me then
          local tTopLeft
-         put (item 1 of the loc of button tItem),tV into tTopLeft
-         set the topLeft of button tCheck to tTopLeft
+         put (item 1 of the loc of button tItem of group "cards" of me),tV into tTopLeft
+         set the topLeft of button tCheck of group "checks" of me to tTopLeft
       end if
    end repeat
    
    set the wholeMatches to true
-   set the enabled of button "OS X" to ("Mac OS X" is among the items of line 5 of the revLicenseInfo)
-   set the enabled of button "Windows" to ("Windows" is among the items of line 5 of the revLicenseInfo)
-   set the enabled of button "Unix" to ("Linux" is among the items of line 5 of the revLicenseInfo)
-   set the enabled of button "iOS" to ("iOS" is among the items of line 5 of the revLicenseInfo)
-   set the enabled of button "Android" to ("Android" is among the items of line 5 of the revLicenseInfo)
-   set the enabled of button "Emscripten" to true
+   set the enabled of button "OS X" of group "cards" of me to ("Mac OS X" is among the items of line 5 of the revLicenseInfo)
+   set the enabled of button "Windows" of group "cards" of me to ("Windows" is among the items of line 5 of the revLicenseInfo)
+   set the enabled of button "Unix" of group "cards" of me to ("Linux" is among the items of line 5 of the revLicenseInfo)
+   set the enabled of button "iOS" of group "cards" of me to ("iOS" is among the items of line 5 of the revLicenseInfo)
+   set the enabled of button "Android" of group "cards" of me to ("Android" is among the items of line 5 of the revLicenseInfo)
+   set the enabled of button "Emscripten" of group "cards" of me to true
 end updateTabButtons
 
 on buildForEnabled pPlatform
@@ -131,6 +122,7 @@ on helpButtons
 end helpButtons
 
 on revStandaloneSettings pStack
+   lock screen
    start using stack "revSBLibrary"
    if pStack = "" then 
       put the short name of the topStack into pStack
@@ -149,7 +141,8 @@ on revStandaloneSettings pStack
    setSettings tSettings
    modeless "revStandaloneSettings"
    send "preOpenCard" to this card of stack "revStandaloneSettings"
-   updateLabel the short name of this card of stack "revStandaloneSettings"
+   updateTabButtons tSettings
+   unlock screen
 end revStandaloneSettings
 
 on revSetEdit pStack
@@ -169,6 +162,7 @@ end minCardWidth
 on preOpenCard
    lock screen
    updateCardSize
+   updateLabel the short name of this card of me
    unlock screen
 end preOpenCard
 
@@ -435,9 +429,13 @@ on navigateToCard pCardName
 end navigateToCard
 
 on updateLabel pCardName
+   local tCardName
+   put the effective label of button pCardName of group "cards" of me \
+         into tCardName
    local tLabel
    put "Standalone Application Settings for " & getTargetStackName() & \
-         " - " & pCardName into tLabel
+         " - " & tCardName into tLabel
+   set the title of me to tLabel
 end updateLabel
 
 function androidIdentifierValid
@@ -542,4 +540,5 @@ function canIncludeStackFiles
          put false into tCan
       end if
    end repeat
+   return tCan
 end canIncludeStackFiles
