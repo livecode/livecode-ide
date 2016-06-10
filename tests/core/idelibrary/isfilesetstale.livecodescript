@@ -25,31 +25,23 @@ on TestSetup
    create folder sEmptyDir
    create folder sOldDir
    put empty into url("file:" & sOldFile)
-   wait for 2 seconds with messages
+   wait for 2 seconds
    create folder sNewDir
    put empty into url("file:" & sNewFile)
    
 end TestSetup
 
 private command __TestBasicFileset pOld, pNew, pMissing, pEmpty
-   TestAssert "empty filesets are up-to-date", revIDEIsFilesetStale(pEmpty, pEmpty, false) is false
-   TestAssert "empty output fileset is up-to-date", revIdeIsFilesetStale(pNew, pEmpty, false) is false
-   TestAssert "empty input fileset is up-to-date", revIDEIsFilesetStale(pEmpty, pOld, false) is false
+   local tError
+
+   TestAssert "empty filesets are up-to-date", revIDEIsFilesetStale(pEmpty, pEmpty, false, tError) is false
+   TestAssert "empty output fileset is up-to-date", revIdeIsFilesetStale(pNew, pEmpty, false, tError) is false
+   TestAssert "empty input fileset is up-to-date", revIDEIsFilesetStale(pEmpty, pOld, false, tError) is false
    
-   TestAssert "new file is up-to-date", revIDEIsFilesetStale(pOld, pNew, false) is false
-   TestAssert "old file is stale", revIDEIsFilesetStale(pNew, pOld, false) is true
-   TestAssert "missing file is stale", revIDEIsFilesetStale(pOld, pMissing, false) is true
+   TestAssert "new file is up-to-date", revIDEIsFilesetStale(pOld, pNew, false, tError) is false
+   TestAssert "old file is stale", revIDEIsFilesetStale(pNew, pOld, false, tError) is true
+   TestAssert "missing file is stale", revIDEIsFilesetStale(pOld, pMissing, false, tError) is true
 end __TestBasicFileset
-
-command __TestMissingInput
-   return revIDEIsFilesetStale(sMissingFile, sNewFile, false)
-end __TestMissingInput
-
-command __TestEmptyFilename
-   local tFileset
-   put empty into tFileset[1]
-   return revIDEIsFilesetStale(sOldFile, tFileset, false)
-end __TestEmptyFilename
 
 on TestBasicFileset
    local tOldFileset, tNewFileset, tMissingFileset, tEmptyFileset
@@ -71,26 +63,31 @@ on TestBasicFileset
    __TestBasicFileset tOldFileset, tNewFileset, tMissingFileset, tEmptyFileset
 
    TestDiagnostic "Testing basic errors"
-   TestAssertThrow "missing inputs are an error", "__TestMissingInput", \
-      the long id of me, "Failed to check modification time: missing file"
-   TestAssertThrow "invalid filenames are an error", "__TestEmptyFilename", \
-      the long id of me, "Failed to check modification time: invalid filename"
+   local tStale, tError, tBadFileset
+   put revIDEIsFilesetStale(sMissingFile, sNewFile, false, tError) into tStale
+   TestAssert "missing inputs result is empty", tStale is empty
+   TestAssert "missing inputs generate an error", \
+      tError is "Failed to check modification time: missing file"
+   put empty into tBadFileset[1]
+   put revIDEIsFilesetStale(sOldFile, tBadFileset, false, tError) into tStale
+   TestAssert "invalid filename result is empty", tStale is empty
+   TestAssert "invalid filename generates an error", \
+      tError is "Failed to check modification time: invalid filename"
 end TestBasicFileset
 
-command __TestUnexpectedFolder
-   return revIDEIsFilesetStale(sOldFile, sNewDir, false)
-end __TestUnexpectedFolder
-
 private command __TestRecursiveFileset pOld, pNew, pMissing, pEmpty
-   TestAssert "new dir is up-to-date", revIDEIsFilesetStale(pOld, pNew, true) is false
-   TestAssert "old dir is stale", revIDEIsFilesetStale(pNew, pOld, true) is true
-   TestAssert "missing dir is stale", revIDEIsFilesetStale(pOld, pMissing, true) is true
+   local tError
+   TestAssert "new dir is up-to-date", revIDEIsFilesetStale(pOld, pNew, true, tError) is false
+   TestAssert "old dir is stale", revIDEIsFilesetStale(pNew, pOld, true, tError) is true
+   TestAssert "missing dir is stale", revIDEIsFilesetStale(pOld, pMissing, true, tError) is true
 end __TestRecursiveFileset
 
 on TestRecursiveFileset
-   TestAssertThrow "folders are erroneous unless recursive", \
-      "__TestUnexpectedFolder", the long id of me, \
-      "Failed to check modification time: unexpected folder"
-
    __TestRecursiveFileset sOldDir, sNewDir, sMissingDir, sEmptyDir
+
+   local tSlate, tError
+   put revIDEIsFilesetStale(sOldFile, sNewDir, false, tError) into tStale
+   TestAssert "unexpected folder result is empty", tStale is empty
+   TestAssert "unexpected folder generates an error", \
+      tError is "Failed to check modification time: unexpected folder"
 end TestRecursiveFileset

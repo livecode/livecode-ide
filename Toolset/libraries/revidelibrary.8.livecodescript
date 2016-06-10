@@ -11107,18 +11107,23 @@ end revIDEDatabaseDriversMapping
 /**
 Summary: Compute whether derived files are up-to-date
 
-Syntax: revIDEIsFilesetStale(pInputs, pOutputs, pRecursive)
+Syntax: revIDEIsFilesetStale(pInputs, pOutputs, pRecursive, rError)
 
 Parameters:
 pInputs: A numerically-keyed array of filenames, or a filename
 pOutputs: A numerically-keyed array of filenames, or a filename
 pRecursive: True if folders should be checked recursively
+rError: Set to a string describing an error, if necessary.
 
 Description:
-Checks whether the <pOutputs> are up-to-date relative to the <pInputs>,
-by checking the modification times on the files.  Returns true if any
-of the <pInputs> are newer than any of the <pOutputs>, or if any of the
-<pOutputs> are missing.
+Checks whether the <pOutputs> are up-to-date relative to the
+<pInputs>, by checking the modification times on the files.  Returns
+true if any of the <pInputs> are newer than any of the <pOutputs>, or
+if any of the <pOutputs> are missing.  Returns false if all of the
+<pOutputs> are up-to-date.
+
+If an error occurs, returns empty and sets <rError> to a descriptive
+string.
 
 The <pInputs> and the <pOutputs> are file sets, and can either be a
 single filename as a string, or a numerically-keyed array of filenames.
@@ -11133,33 +11138,39 @@ that is a directory is scanned recursively and its files are added to
 the fileset.  If <pRecursive> is false, it is an error for either file
 set to contain directories.
 */
-function revIDEIsFilesetStale pInputs, pOutputs, pRecursive
-   if pRecursive is empty then
-      put false into pRecursive
-   end if
+function revIDEIsFilesetStale pInputs, pOutputs, pRecursive, @rError
+   local tError
+   try
+      if pRecursive is empty then
+         put false into pRecursive
+      end if
    
-   -- Make sure both filesets are non-empty arrays
-   local tInputs, tOutputs
-   put __CheckFileset(pInputs) into tInputs
-   put __CheckFileset(pOutputs) into tOutputs
-   if (tInputs is false) or (tOutputs is false) then
-      return false -- consider everything to be up-to-date
-   end if
+      -- Make sure both filesets are non-empty arrays
+      local tInputs, tOutputs
+      put __CheckFileset(pInputs) into tInputs
+      put __CheckFileset(pOutputs) into tOutputs
+      if (tInputs is false) or (tOutputs is false) then
+         return false -- consider everything to be up-to-date
+      end if
    
-   -- Gather dates from each fileset
-   local tInputTimes, tOutputTimes
-   put __ScanFilesetMTimes(tOutputs, pRecursive, true) into tOutputTimes
-   if (tOutputTimes is false) then
-      return true -- an output file is missing, so update is required
-   end if
+      -- Gather dates from each fileset
+      local tInputTimes, tOutputTimes
+      put __ScanFilesetMTimes(tOutputs, pRecursive, true) into tOutputTimes
+      if (tOutputTimes is false) then
+         return true -- an output file is missing, so update is required
+      end if
    
-   put __ScanFilesetMTimes(tInputs, pRecursive, false) into tInputTimes
+      put __ScanFilesetMTimes(tInputs, pRecursive, false) into tInputTimes
    
-   if (tInputTimes is not an array or tOutputTimes is not an array) then
-      throw "This should never happen"
-   end if
+      if (tInputTimes is not an array or tOutputTimes is not an array) then
+         throw "This should never happen"
+      end if
    
-   return tInputTimes["max"] > tOutputTimes["min"]
+      return tInputTimes["max"] > tOutputTimes["min"]
+   catch tError
+      put tError into rError
+      return empty
+   end try
 end revIDEIsFilesetStale
 
 -- Converts pFileset to an array of at least one element and returns it.
