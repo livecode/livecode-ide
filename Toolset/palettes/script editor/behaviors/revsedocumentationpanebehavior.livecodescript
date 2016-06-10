@@ -273,7 +273,7 @@ private function renderDocData pData, pIndex, pFull
    return tHtml
 end renderDocData
 
-private command renderDoc
+private command renderDoc pType
    if sLastFoundDoc is empty or sDoc is empty then
       renderEmpty
       exit renderDoc
@@ -281,7 +281,7 @@ private command renderDoc
    
    # Documentation library: Retrieve the summary from the docs database
    local tHTML
-   put renderDocDictionary(sDoc) into tHTML
+   put renderDocDictionary(sDoc, pType) into tHTML
    set the htmlText of field "View" of me to tHTML
    
    scrollbarCheck
