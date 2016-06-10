@@ -10794,7 +10794,6 @@ command ideDoMessage pScript, pDebugMode
    
    do "global" && the globals
    
-   lock screen
    local tScriptError
    try
       if pDebugMode then
@@ -10819,7 +10818,6 @@ command ideDoMessage pScript, pDebugMode
       end if
    catch tScriptError
    end try
-   unlock screen
    
    if tScriptError is not empty then
       put "execution error" & return before tScriptError
