@@ -9463,6 +9463,9 @@ function revIDERecentStacks
       sort lines of tRecentPaths by last item of each 
    end if
    
+   # ensure preferences take effect immediately
+   _trimRecentStacks tRecentPaths
+   
    # Split list into array
    local tRecentPathData
    put tRecentPaths into tRecentPathData
@@ -9498,10 +9501,7 @@ on revIDEAddRecentStack pFilePath
       put revIDECleanRecentStackList(tRecentPaths) into tRecentPaths
    end if
    
-   # Ensure the list isn't longer than 15 entries
-   if the number of lines of tRecentPaths > 15 then
-      put line 1 to 15 of tRecentPaths into tRecentPaths
-   end if
+   _trimRecentStacks tRecentPaths
    
    #Set the preference
    revIDESetPreference "cRecentStackPaths", tRecentPaths
@@ -9513,6 +9513,21 @@ on revIDEAddRecentStack pFilePath
    -- and flush the queue on unlock ide messages.. resulting in just one version of the message being sent. 
    ideMessageSend "ideRecentFilesChanged"
 end revIDEAddRecentStack
+
+/*
+Trims the recent files to the user's preferred number
+*/
+private command _trimRecentStacks @xStackFiles
+   local tNumRecent
+   put revIDEGetPreference("cNumRecent") into tNumRecent
+   
+   if tNumRecent is not an integer then
+      revIDESetPreference "cNumRecent",15
+      put 15 into tNumRecent
+   end if
+   
+   delete line tNumRecent+1 to -1 of xStackFiles
+end _trimRecentStacks
 
 /*
 Given a list of filenames and a filename from the list, a unique minimal lable is returned. For example:
