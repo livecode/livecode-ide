@@ -11099,3 +11099,192 @@ function revIDEDatabaseDriversMapping
    dispatch function "revSBDatabaseDriversMapping" to stack "revSBLibrary"
    return the result
 end revIDEDatabaseDriversMapping
+
+----------------------------------------------------------------
+-- Dependency management functions
+----------------------------------------------------------------
+
+/**
+Summary: Compute whether derived files are up-to-date
+
+Syntax: revIDEIsFilesetStale(pInputs, pOutputs, pRecursive)
+
+Parameters:
+pInputs: A numerically-keyed array of filenames, or a filename
+pOutputs: A numerically-keyed array of filenames, or a filename
+pRecursive: True if folders should be checked recursively
+
+Description:
+Checks whether the <pOutputs> are up-to-date relative to the <pInputs>,
+by checking the modification times on the files.  Returns true if any
+of the <pInputs> are newer than any of the <pOutputs>, or if any of the
+<pOutputs> are missing.
+
+The <pInputs> and the <pOutputs> are file sets, and can either be a
+single filename as a string, or a numerically-keyed array of filenames.
+It is an error for either file set is an array with non-numeric keys, or
+for any filename to be the empty string.
+
+If either file set is empty, the return value is true.  It is an error
+for any of the input filenames to be missing.
+
+If <pRecursive> is true, any filename in the <pInputs> or <pOutputs>
+that is a directory is scanned recursively and its files are added to
+the fileset.  If <pRecursive> is false, it is an error for either file
+set to contain directories.
+*/
+function revIDEIsFilesetStale pInputs, pOutputs, pRecursive
+   if pRecursive is empty then
+      put false into pRecursive
+   end if
+   
+   -- Make sure both filesets are non-empty arrays
+   local tInputs, tOutputs
+   put __CheckFileset(pInputs) into tInputs
+   put __CheckFileset(pOutputs) into tOutputs
+   if (tInputs is false) or (tOutputs is false) then
+      return false -- consider everything to be up-to-date
+   end if
+   
+   -- Gather dates from each fileset
+   local tInputTimes, tOutputTimes
+   put __ScanFilesetMTimes(tOutputs, pRecursive, true) into tOutputTimes
+   if (tOutputTimes is false) then
+      return true -- an output file is missing, so update is required
+   end if
+   
+   put __ScanFilesetMTimes(tInputs, pRecursive, false) into tInputTimes
+   
+   if (tInputTimes is not an array or tOutputTimes is not an array) then
+      throw "This should never happen"
+   end if
+   
+   return tInputTimes["max"] > tOutputTimes["min"]
+end revIDEIsFilesetStale
+
+-- Converts pFileset to an array of at least one element and returns it.
+-- Return false if pFileset is an empty array or the empty string.
+function __CheckFileset pFileset
+   if pFileset is an array then
+      if the number of elements in pFileset is 0 then
+         return false
+      else
+         return pFileset
+      end if
+   end if
+
+   local tFileset
+   if pFileset is empty then
+      return false
+   else
+      put pFileset into tFileset[1]
+      return tFileset
+   end if
+end __CheckFileset
+
+-- Scan pFileset, returning the minimum and maximum modification
+-- times found as an array with "min" and "max" keys.
+--
+-- If pRecursive is true, scan directories in pFileset for the
+-- modification times of each file they contain; otherwise,
+-- encountering a directory is an error.
+--
+-- If pAllowMissing is true, return false on encountering a missing
+-- file; otherwise, it is an error for pFileset to contain a
+-- missing file.
+private function __ScanFilesetMTimes pFileset, pRecursive, pAllowMissing
+   local tResult
+   put (infinity + 0) into tResult["min"]
+   put 0 into tResult["max"]
+
+   if pFileset is not an array then
+      throw "Fileset is not an array"
+   end if
+
+   local tFilename
+   repeat for each element tFilename in pFileset
+      if not __ScanFileMTime(tFilename, pRecursive, pAllowMissing, \
+            tResult["min"], tResult["max"]) then
+         return false
+      end if
+   end repeat
+   
+   return tResult
+end __ScanFilesetMTimes
+
+private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
+      @xMin, @xMax
+   
+   local tDirname, tBasename
+   
+   set the itemdelimiter to slash
+   put item 1 to -2 of pFilename into tDirname
+   put item -1 of pFilename into tBasename
+   if tDirname is empty then
+      put "." into tDirname
+   end if
+
+   if tBasename is empty then
+      throw "Failed to check modification time: invalid filename"
+   end if
+
+   -- Regular file
+   local tMTime
+   if there is a file pFilename then
+      put revIDELastModifiedTimeOfFile(tDirname, tBasename) into tMTime
+      if tMTime is empty then
+         throw "Failed to check modification time for file"
+      end if
+      if tMTime < xMin then
+         put tMTime into xMin
+      end if
+      if tMTime > xMax then
+         put tMTime into xMax
+      end if
+      return true
+   end if
+   
+   -- Directory
+   local tContents, tInnerFilename
+   if there is a folder pFilename then
+      if pRecursive then
+         
+         -- List directory contents
+         revIDEPushDefaultFolder pFilename
+         if the result is not empty then
+            throw "Failed to set default folder"
+         end if
+         
+         put files() & return & folders() into tContents
+         filter tContents without ".."
+
+         revIDEPopDefaultFolder pFilename
+         if the result is not empty then
+            throw "Failed to set default folder"
+         end if
+
+         if tContents is empty then
+            return true
+         end if
+
+         -- Recursively scan files & folders
+         repeat for each line tInnerFilename in tContents
+            put pFilename & slash before tInnerFilename
+            if not __ScanFileMTime(tInnerFilename, pRecursive, pAllowMissing, xMin, xMax) then
+               return false
+            end if
+         end repeat
+         
+         return true
+      else
+         throw "Failed to check modification time: unexpected folder"
+      end if
+   end if
+   
+   -- Missing
+   if pAllowMissing then
+      return false
+   else
+      throw "Failed to check modification time: missing file"
+   end if
+end __ScanFileMTime
