@@ -106,6 +106,8 @@ command resize
    put tMyRect[1] + tGutterWidth, tMyRect[4] - tFindHeight, \
        tMyRect[3],  tMyRect[4] into tNewRect
    if the rect of tControls["find"] is not tNewRect then
+      -- something causing lockUpdates behavior but unable to find where it is being set (bug?)
+      set the lockUpdates of tControls["find"] to false
       set the rect of tControls["find"] to tNewRect
    end if
 
