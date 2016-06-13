@@ -1524,7 +1524,7 @@ command revInternal__InitialiseMenus
    
    if the platform is "MacOS" then
       lock messages
-      palette stack tMenuBar
+      modeless stack tMenuBar
       unlock messages
    else
       toplevel stack tMenuBar

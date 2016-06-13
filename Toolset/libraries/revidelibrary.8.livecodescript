@@ -4457,6 +4457,8 @@ on revIDEEnsureOnscreen pStackName
    else if the bottom of stack pStackName > item 4 of tScreenRect and the height of stack pStackName < tScreenHeight then
       set the bottom of stack pStackName to item 4 of tScreenRect
    end if
+   
+   revIDESetPaletteRectPreference pStackName
 end revIDEEnsureOnscreen
 
 /*
@@ -4517,13 +4519,14 @@ end revIDEPositionPalette
 constant kToolsMenubarGap = 25
 on revIDEPositionPaletteDefault pStackName
    # No previous rect was found for stack to calculate the appropriate position for the stack
-   local tScreenHeight, tScreenWidth
-   put item 4 of the screenrect - item 2 of the screenrect into tScreenHeight
-   put item 3 of the screenrect - item 1 of the screenrect into tScreenWidth
+   local tScreenHeight, tScreenWidth, tScreenRect
+   put revIDEStackScreenRect(pStackName, true) into tScreenRect
+   put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
+   put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
    
    switch pStackName
       case "revMenuBar"
-         set the topleft of stack pStackName to 0,0
+         set the topleft of stack pStackName to item 1 to 2 of tScreenRect
          break
       case "revTools"
          local tMenuBar
@@ -4534,10 +4537,10 @@ on revIDEPositionPaletteDefault pStackName
          set the topleft of stack pStackName to the left of stack tMenuBar,tTop
          break
       case "message box"
-         set rect of stack pStackName to 0,tScreenHeight * 0.75, tScreenWidth * 0.3, tScreenHeight
+         set rect of stack pStackName to item 1 of tScreenRect,item 2 of tScreenRect+tScreenHeight * 0.75, item 1 of tScreenRect+tScreenWidth * 0.3,item 2 of tScreenRect+ tScreenHeight
          break
       case "revDictionary"
-         set the rect of stack pStackName to tScreenWidth * 0.5, 100, tScreenWidth * 0.9, tScreenHeight * 0.9
+         set the rect of stack pStackName to item 1 of tScreenRect+tScreenWidth * 0.5, item 2 of tScreenRect+100, item 1 of tScreenRect+tScreenWidth * 0.9, item 2 of tScreenRect+tScreenHeight * 0.9
          break
       default 
          # If no sizing information can be found position the stack in the center of the 
@@ -4545,9 +4548,9 @@ on revIDEPositionPaletteDefault pStackName
          
          ## If the stack is a Script Editor ensure it will fit on screen
          if pStackName begins with revIDEScriptEditorPrefix() then 
-            set the rect of stack pStackName to tScreenWidth * 0.3, tScreenHeight * 0.2, tScreenWidth * 0.7, tScreenHeight * 0.8
+            set the rect of stack pStackName to item 1 of tScreenRect+ tScreenWidth * 0.3,  item 2 of tScreenRect+tScreenHeight * 0.2,item 1 of tScreenRect+ tScreenWidth * 0.7,  item 2 of tScreenRect+tScreenHeight * 0.8
          else
-            set the loc of stack pStackName to the screenloc
+            set the loc of stack pStackName to item 1 of tScreenRect+ tScreenWidth * 0.5, item 2 of tScreenRect+tScreenHeight * 0.5
          end if
          break
    end switch
@@ -6322,9 +6325,10 @@ on revIDENewMainstack pWidth, pHeight
    local tToolsRight
    put the right of stack revIDEPaletteToStackName("tools") into tToolsRight
    
-   local tLeft
-   if tToolsRight < (item 3 of the screenRect / 2) then put tToolsRight + 20 into tLeft
-   else put item 1 of the windowBoundingRect + 20 into tLeft
+   local tLeft, tScreenRect
+   put revIDEStackScreenRect(revIDEPaletteToStackName("tools"), true) into tScreenRect
+   if tToolsRight < (item 3 of tScreenRect / 2) then put tToolsRight + 20 into tLeft
+   else put item 1 of tScreenRect + 20 into tLeft
    set the topLeft of the templateStack to tLeft,(the bottom of stack revIDEPaletteToStackName("menubar") + 40)
 
    # Create the new stack
@@ -6345,6 +6349,45 @@ on revIDENewMainstack pWidth, pHeight
    # Return the created stack long id
    return it
 end revIDENewMainstack
+
+/*
+Summary: Get the screenLoc for a stack based on the screen the stack is on
+
+Parameters:
+pStackName (string): The name of a stack
+pWorking (boolean): If true return the loc relative to OS screen furniture rather than the full screen
+
+Returns: The screenLoc of the screen the stack is on
+*/
+function revIDEStackScreenLoc pStackName, pWorking
+   local tScreenRect
+   put revIDEStackScreenRect(pStackName, pWorking) into tScreenRect
+   
+   local tScreenWidth
+   put item 3 of tScreenRect - item 1 of tScreenRect into tScreenWidth
+   
+   local tScreenHeight
+   put item 4 of tScreenRect - item 2 of tScreenRect into tScreenHeight
+   
+   return item 1 of tScreenRect + (tScreenWidth div 2),item 2 of tScreenRect + (tScreenHeight div 2)
+end revIDEStackScreenLoc
+
+/*
+Summary: Get the screenRect for a stack based on the screen the stack is on
+
+Parameters:
+pStackName (string): The name of a stack
+pWorking (boolean): If true return the loc relative to OS screen furniture rather than the full screen
+
+Returns: The screenRect of the screen the stack is on
+*/
+function revIDEStackScreenRect pStackName, pWorking
+   if pWorking then
+      return line (the screen of stack pStackName) of the working screenRects
+   else
+      return line (the screen of stack pStackName) of the screenRects
+   end if
+end revIDEStackScreenRect
 
 on revIDEActionNewMainstack pStackType
    if  pStackType is "default" then

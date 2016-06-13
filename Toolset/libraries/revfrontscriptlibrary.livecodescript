@@ -281,8 +281,11 @@ on openStack
 
       if revIDEStackNameIsIDEStack(tStackName) and the mode of stack tStackName is 4 and the visible of stack tStackName is false then
          revIDETogglePaletteView
-         if the bottom of stack tStackName > item 4 of the screenRect or the right of stack tStackName > item 3 of the screenRect then
-            set the bottomRight of stack tStackName to item 3 to 4 of the windowBoundingRect
+         
+         local tScreenRect
+         put revIDEStackScreenRect(tStackName, true) into tScreenRect
+         if the bottom of stack tStackName > item 4 of tScreenRect or the right of stack tStackName > item 3 of tScreenRect then
+            set the bottomRight of stack tStackName to item 3 to 4 of tScreenRect
          end if
       end if
    end if

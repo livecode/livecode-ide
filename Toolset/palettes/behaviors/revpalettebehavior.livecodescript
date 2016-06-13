@@ -530,6 +530,10 @@ after resizeStack
    end if
 end resizeStack
 
+on desktopChanged
+   revIDEEnsureOnScreen the short name of this stack
+end desktopChanged
+
 after openCard
    generateFrame
 end openCard
@@ -567,6 +571,12 @@ end closeStack
 after closeStack
    revIDESetPaletteRectPreference the short name of me
 end closeStack
+
+# Description
+#    Sent when the script editor is moved. Saves the new size in the preferences.
+after moveStack
+   revIDESetPaletteRectPreference the short name of me
+end moveStack
 
 private on __doCallback pDataIndex
    local tData
