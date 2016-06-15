@@ -1145,11 +1145,12 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
    
    # Check timestamps to see if API  is out of date.
-   local tLastGenerated, tLastModified
-   put revIDELastModifiedTimeOfFile(pFolder, "api.lcdoc") into tLastGenerated
-   put revIDELastModifiedTimeOfFile(pFolder, pExtensionSource) into tLastModified
+   local tNeedUpdate, tError
+   put revIDEIsFilesetStale(pFolder & slash & pExtensionSource, \
+      pFolder & slash & api.lcdoc, false, tError) into tNeedUpdate
+   if tNeedUpdate is empty then put true into tNeedUpdate
    
-   if tLastGenerated is empty or tLastModified > tLastGenerated then
+   if tNeedUpdate then
       local tAPI
       dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with (pFolder & slash & pExtensionSource) 
       put the result into tAPI 
