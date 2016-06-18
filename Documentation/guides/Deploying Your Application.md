@@ -38,7 +38,7 @@ are applied to the current front most editable stack and are saved with the stac
 means you only need to enter the settings once for each application you create. The same 
 settings will apply if you do another build in the future.
 
-![](images/image104.png)
+![](images/standalone-settings-general.png)
 
 Figure 1 – Standalone Settings – General Tab
 
@@ -65,45 +65,17 @@ It is important that you choose to include all the components that your applicat
 or it may fail. If you do not include your own custom error reporting or LiveCode’s 
 standalone error reporting dialog (discussed below) such failure may be silent – i.e. an 
 operation in your standalone will simply cease working without displaying anything to the 
-user.
+user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 | &nbsp;| &nbsp;|
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Ask Dialog**       | This option is required if any of your scripts use the "ask" or "ask password" commands. The standalone builder will copy the stack "ask dialog" from the IDE into your standalone as a sub stack. The standalone builder makes a copy of your stack before adding resources to it as part of the build process, so your original stack is unaltered.                                                                                                                                                                                                                                           |
-| **Answer Dialog**    | This option is required if any of your scripts use the "answer" command. Note that this only applies to the dialog form of the command. The answer file / printer / color / effect / folder / page setup / printer and record forms of the command do *not* require this option. The standalone builder will copy the stack "answer dialog" into your standalone.                                                                                                                                                                                                                               |
-| **Cursors**          | This option is required if your application uses any of LiveCode's cursors. It is not required if your application only uses OS cursors. It copies the stack "cursors" into your standalone.                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Print Dialog**     | This option is required if your application uses LiveCode's built-in print or page setup dialogs (e.g. for use on Linux without GTK installed). It is not required if you only display the system printer and page setup dialogs. It copies the stack "print dialog" and "page setup" into your standalone.                                                                                                                                                                                                                                                                                     |
-| **Brushes**          | This option is required if your application uses any of LiveCode's brush cursors. It is not required if your application does not make use of the painting commands. It copies the stack "brushes" into your standalone.                                                                                                                                                                                                                                                                                                                                                                        |
-| **PDF Printer**      | This option is required if your application uses the "open printing to pdf" command.
-| **Magnify**		   | This option is required if your application uses the magnify palette.
-| **Script Libraries** | This option allows you to copy script libraries into your standalone. The list of available libraries is automatically updated to include any plug-in libraries or externals you may have installed into the LiveCode distribution. Thus the list you have may differ from what is documented here. During the first part of the application `startup` process before this message is sent, any commands that use a given library will not be available. This may affect attempts to use this a script library in `startup`, `preOpenStack`, openStack, or preOpenCard handers in the main stack. Once the application has finished starting up, the library is available and the script library can be used in any handler.  |
-| **Database Support** | This option is required if you use SQL databases. Ensure you choose to include drivers for any database you need to access.     
+|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Profiles Settings**                        | Choose between the Property Profile settings options. You only need to alter settings in this area if you have used Property Profiles (see the section on *Property Profiles* in Chapter 4, Builder a User Interface above)                        |
 | **Remove all profiles**                      | Removes all profiles and builds the standalone using the currently active profile on each object. Select this option if you don't need to change profile in the standalone and want to save disk space by removing extraneous profile information. |
 | **Set all objects to profile**               | Set all objects to a specific profile then remove the profile data from objects.                                                                                                                                                                   |
 | **Include profiles and the profile library** | Include the profile library and allow switching between profiles in the standalone application. You can choose whether to include specific profiles or all profiles.                                                                               |
 
-The following script libraries are available by default:
 
-| Library Name | Automatic inclusion condition |
-|----------------------|---------------------------------------------------------|
-| **Animation** 	   | This library is unsupported.                             
-| **Browser**   	   | Embedded browser and any `revBrowser`command.                              
-| **Browser (CEF)**    | Embedded CEF browser and any `revBrowser`command.      
-| **Database**         | Database access and any `revDatabase`command.                             
-| **DataGrid**         | DataGrid object.                                                  
-| **Geometry**         | Geometry properties or commands.                               
-| **Internet**         | Internet access, including URL, ftp & POST                              
-| **Printing**         | `revPrintField`, revShowPrintDialog and `revPrintText`                              
-| **Zip**              | All `revZip`commands (but not required for `compress`/de`compress`)                           
-| **Speech**           | `revSpeak`and revSpeechVoices                              
-| **SSL & Encryption** | Any SSL or encryption related commands                         
-| **Table**            | Use of the table object                                
-| **Video Grabber**    | Any video capture commands                           
-| **XML**              | Any `revXML`commands                               
-| **XMLRPC**           | Any `revXMLRPC`commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-
-![](images/image105.png)
+![](images/standalone-settings-stacks.png)
 
 Figure 2 – Standalone Settings – Stacks Tab
 
@@ -129,7 +101,7 @@ component stacks, or to save changes to them. You may also want to consider crea
 preference files in the appropriate location on your end user's system (see the 
 `specialFolderPath`function and query/setRegistry functions for more information).
 
-![](images/image106.png)
+![](images/standalone-settings-copy-files.png)
 
 Figure 3 – Standalone Settings – Copy Files
 
@@ -140,13 +112,63 @@ Figure 3 – Standalone Settings – Copy Files
 | **Destination folder**                 | Create a subfolder within your standalone to copy the image and movie files to.                                                                                                                                                                                        |
 | **Extensions**						 | Select the extensions you wish to include in the standalone.
 
-![](images/image108.png)
+![](images/standalone-settings-inclusions.png)
 
-Figure 4 – Standalone Settings – Mac
+Figure 4 – Standalone Settings – Inclusions
+
+The list of resources available to select for inclusion in a standalone
+application are a combination of currently installed LiveCode Builder
+extensions, externals and database drivers (both built-in and those 
+found in user folders), and built-in resources and script libraries.
+
+The following built-in resources are available by default:
+
+| &nbsp;| &nbsp;|
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Ask Dialog**       | This option is required if any of your scripts use the "ask" or "ask password" commands. The standalone builder will copy the stack "ask dialog" from the IDE into your standalone as a sub stack. The standalone builder makes a copy of your stack before adding resources to it as part of the build process, so your original stack is unaltered.                                                                                                                                                                                                                                           |
+| **Answer Dialog**    | This option is required if any of your scripts use the "answer" command. Note that this only applies to the dialog form of the command. The answer file / printer / color / effect / folder / page setup / printer and record forms of the command do *not* require this option. The standalone builder will copy the stack "answer dialog" into your standalone.                                                                                                                                                                                                                               |
+| **Browser**   	   | This option is required if your application uses the embedded browser or any `revBrowser` command.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Browser (CEF)**    | This option is required if your application uses the embedded CEF browser or any `revBrowser` command.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Brushes**          | This option is required if your application uses any of LiveCode's brush cursors. It is not required if your application does not make use of the painting commands. It copies the stack "brushes" into your standalone.                                                                                                                                                                                                                                                                                                                                                                        |
+| **Cursors**          | This option is required if your application uses any of LiveCode's cursors. It is not required if your application only uses OS cursors. It copies the stack "cursors" into your standalone.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Database**         | This option is required if your application uses database access or any `revDatabase` command.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Magnify**		   | This option is required if your application uses the magnify palette.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **PDF Printer**      | This option is required if your application uses the "open printing to pdf" command.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Print Dialog**     | This option is required if your application uses LiveCode's built-in print or page setup dialogs (e.g. for use on Linux without GTK installed). It is not required if you only display the system printer and page setup dialogs. It copies the stack "print dialog" and "page setup" into your standalone.                                                                                                                                                                                                                                                                                     |
+| **SSL & Encryption** | This option is required if your application uses any SSL or encryption related commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Video Grabber**    | This option is required if your application uses any video capture commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **XML**              | This option is required if your application uses any `revXML` commands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+
+The following script libraries are available by default:
+
+| Library Name | Automatic inclusion condition |
+|----------------------|----------------------------------------------------------------------|
+| **Animation** 	   | This library is unsupported.                                         |
+| **DataGrid**         | DataGrid object.                                                     |
+| **Geometry**         | Geometry properties or commands.                                     |
+| **Internet**         | Internet access, including URL, ftp & POST                           |
+| **Printing**         | `revPrintField`, `revShowPrintDialog` and `revPrintText`             |
+| **Zip**              | All `revZip` commands (but not required for `compress`/`decompress`) |
+| **Speech**           | `revSpeak` and revSpeechVoices                                       |
+| **Table**            | Use of the table object                                              |
+| **XMLRPC**           | Any `revXMLRPC` commands                                             |
+
+The following database drivers are available by default:
+
+- ODBC
+- MySQL
+- SQLite
+- PostgreSQL
+
+![](images/standalone-settings-mac.png)
+
+Figure 5 – Standalone Settings – Mac
 
 | &nbsp;| &nbsp;|
 |-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Mac OS X (Intel)**                                            | Build a standalone that will run natively on Mac OS X Intel machines. This standalone will not run at all under PowerPC.                                                                                                                                                                                                                                                                                                      |
+| **Build for Mac OS X 32-bit**                                   | Build a standalone that will run natively on Mac OS X Intel machines. This standalone will not run at all under PowerPC.                                                                                                                                                                                                                                                                                                      |
+| **Build for Mac OS X 64-bit (EXPERIMENTAL)**                    | Build a standalone that will run natively on Mac OS X Intel machines. This standalone will not run at all under PowerPC.                                                                                                                                                                                                                                                                                                      |
 | **Application Icon**                                            | Choose an application icon to represent the application in the Finder. The icon should be in icns format.                                                                                                                                                                                                                                                                                                                     |
 | **Document Icon**                                               | Choose a document icon to represent your application's documents in the Finder. The icon should be in icns format.                                                                                                                                                                                                                                                                                                            |
 | **Icons for ask / answer dialogs**                              | Choose an icon to display whenever you use the ask or answer commands to display a dialog. On Mac OS X, the convention is that these dialogs should display your application icon. The icon should be stored in your stack as an image, or selected from LiveCode's built-in icons. If you have used a built-in icon, be sure to select the relevant inclusion on the General tab (if you are selecting inclusions manually). |
@@ -157,9 +179,9 @@ Figure 4 – Standalone Settings – Mac
 | **Copyright notice**                                            | The copyright notice for your application.                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Bundle identifier**                                           | A unique identifier for your application used by Mac OS X to identify your application.                                                                                                                                                                                                                                                                                                                                       |
 
-![](images/image109.png)
+![](images/standalone-settings-windows.png)
 
-Figure 5 – Standalone Settings – Windows
+Figure 6 – Standalone Settings – Windows
 
 | &nbsp;| &nbsp;|
 |-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -169,9 +191,9 @@ Figure 5 – Standalone Settings – Windows
 | **Version information** | The version information to be stored as part of your application and displayed in the Windows property inspector and dialogs.                                                                                                                                                    |
 | **UAC Execution Level** | Select the user account control level that applies to your application. For more information, consult [MSDN](https://msdn.microsoft.com/en-us/library/bb384608.aspx)                                                                                                             |
 
-![](images/image110.png)
+![](images/standalone-settings-linux.png)
 
-Figure 6 – Standalone Settings – Linux
+Figure 7 – Standalone Settings – Linux
 
 | &nbsp;| &nbsp;|
 |---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -180,9 +202,9 @@ Figure 6 – Standalone Settings – Linux
 | **Build for Linux ARMv6-HF**    | Build a standalone for Linux ARMv6 HF (including Raspberry Pi)                                                                                                                                                                                                                                 |
 | **Include**                     | Select built-in LiveCode dialogs to include. These dialogs are useful if your application may be run on a system that does not include these dialogs as part of the OS. You do not need to include these dialogs if you are running a recent version of GTK. |
 
-![](images/image111.png)
+![](images/standalone-settings-bug-reports.png)
 
-Figure 7 – Standalone Settings – Bug Reports
+Figure 8 – Standalone Settings – Bug Reports
 
 | &nbsp;| &nbsp;|
 |---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

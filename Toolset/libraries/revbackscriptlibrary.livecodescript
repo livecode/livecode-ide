@@ -1251,6 +1251,15 @@ on releaseStack
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass releaseStack
 end releaseStack
 
+on keyDown pWhich
+   if word 1 of the target is "card" and \
+         the mode of stack "Message Box" is not 0 \
+         and the short name of this cd of stack "Message Box" is among the items of "Single Line,Multiple Lines" then
+      dispatch "revIDEFocusOnMessageBox" to stack "Message Box" with pWhich
+   end if
+   pass keyDown
+end keyDown
+
 on mainStackChanged
    if there is a stack "revApplicationOverview" then
       if the mode of stack "revApplicationOverview" is not 0
@@ -2456,29 +2465,6 @@ on revUpdateAOControls pTarget
    set the hcAddressing of stack tTargetStack to tHCAddressing
 end revUpdateAOControls
 
-function revComponentVersion pStack
-   local tResult
-   put empty into tResult
-   if pStack is "all" then
-      local tList
-      put the stackfiles of stack "home" into tList
-      
-      local tStack
-      repeat for each line i in tList
-         put item 1 of i into tStack
-         if there is a stack tStack then
-            put tStack & ":" && the cVersionNo of stack tStack & "-" & the cBuildNo of stack tStack & cr after tResult 
-         end if
-      end repeat
-      put "home:" && the cVersionNo of stack "home" & "-" & the cBuildNo of stack "home" & cr after tResult 
-   else
-      if there is a stack pStack then
-         put the cVersionNo of stack pStack & "-" & the cBuildNo of stack pStack into tResult 
-      end if
-   end if
-   return tResult
-end revComponentVersion
-
 function revExternalVersion pExternal
    local tExternalVersion
    put empty into tExternalVersion
@@ -2572,7 +2558,7 @@ function revDatabaseDriverBuildList
    local tList
    put empty into tList
    // AL-2015-02-17: [[ SB Inclusions ]] Ensure mysql module name is standard (was dbmysql)
-   repeat for each item tExternal in "MySQL mysql,ODBC odbc,PostgreSQL postgresql,SqLite sqlite,Oracle oracle"
+   repeat for each item tExternal in revIDEDatabaseDriversMapping()
       get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash
@@ -2655,7 +2641,7 @@ end revDatabaseDriverList
 private function revExternalsBuildList 
    local tList
    put empty into tList
-   repeat for each item tExternal in "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+   repeat for each item tExternal in revIDEExternalsMapping()
       get lineOffset(word 1 of tExternal, the externals of stack "Home")
       if it is not 0 then
          set the itemDelimiter to slash

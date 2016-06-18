@@ -1,0 +1,1 @@
+# Make object list in project browser flat when sorting by name

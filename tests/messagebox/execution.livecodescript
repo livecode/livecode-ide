@@ -297,3 +297,21 @@ on TestIntelligenceObjectFunctionNotFirstLine
 	TestAssert "intelligence object command result", msg is 2
 	TestAssert "intelligence object command executed", tValidScript is tToExecute
 end TestIntelligenceObjectFunctionNotFirstLine
+
+-- Bug 17800 
+on TestIntelligenceObjectCommandWithTwoParams
+	local tScript, tStack
+	put "on testParameters p1, p2; put p2; end testParameters" \
+		into tScript
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tToExecute, tValidScript
+	put "testParameters 1, 2" into tToExecute
+	
+	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object command two params result", msg is 2
+	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
+end TestIntelligenceObjectCommandWithTwoParams
