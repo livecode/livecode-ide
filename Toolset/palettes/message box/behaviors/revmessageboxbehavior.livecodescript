@@ -553,13 +553,11 @@ command ideMessageBoxExecuteScript pScript
    local tDebugMode
    put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
-   lock screen
    local tValidScript
    ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, tDebugMode, tValidScript
    if the result is not empty then
       put ideMessageBoxFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
    end if
-   unlock screen
    
    return tValidScript
 end ideMessageBoxExecuteScript 
