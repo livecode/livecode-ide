@@ -1,4 +1,4 @@
-	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:""};
+	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:"", sort_type:""};
 	
 	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
 	
@@ -146,9 +146,9 @@
 	}
 	
 	function compareEntryObject(entryObject1,entryObject2) {
-		if(entryObject1["display syntax"][0].toLowerCase() < entryObject2["display syntax"][0].toLowerCase())
+		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
 			return -1;
-		if (entryObject1["display syntax"][0].toLowerCase() > entryObject2["display syntax"][0].toLowerCase())
+		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
 			return 1;
 		return 0;
 	}
@@ -259,53 +259,83 @@
 		$("#filters_options").html(tHTML);
 	}
 	
-	function displayEntryListGrep(pTerm){
-		var start = new Date().getTime();
-		var tHTML = "";
-		var resultSet = "";
-		
-		if(pTerm){
-			resultSet = dataSearch(pTerm);
+	function sortFilteredData(pData)
+	{
+		if (tState . sort_type == "")
+			return pData;
 			
-			var x = 1;
-			$.each(resultSet, function( index, value) {
-				//if(x > 100) return false;
-				x++;
+		pData . sort(function(pLeft, pRight) {
+			var tLeftValue, tRightValue;
+			tLeftValue = pLeft[tState . sort_type];
+			tRightValue = pRight[tState . sort_type];
+			
+			if (typeof tLeftValue == 'object')
+				tLeftValue = tLeftValue[0]
+			
+			tLeftValue = tLeftValue.toLowerCase();
+
+			if (typeof tRightValue == 'object')
+				tRightValue = tRightValue[0];
 				
-				if(tState.selected == value.id) tClass = " active";
-				else tClass = "";
-				tHTML += '<tr class="entry_list_item load_entry'+tClass+'" entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
-				if(value.hasOwnProperty("display syntax") && value["display syntax"][0] != value["display name"]){
-					tHTML += '<td>'+value["display syntax"][0]+'</td>';
-				} else {
-					tHTML += '<td>'+value["display name"]+'</td>';
-				}
-				tHTML += '</tr>';
-				
-			});
-		} else {
-			resultSet = tState.filtered_data;
-			var x = 1;
-			$.each(resultSet, function( index, value) {
-				//if(x > 100) return false;
-				x++;
-				
-				if(tState.selected == value.id) tClass = " active";
-				else tClass = "";
-				tHTML += '<tr class="entry_list_item load_entry'+tClass+'" entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
-				if(value.hasOwnProperty("display syntax") && value["display syntax"][0] != value["display name"]){
-					tHTML += '<td>'+value["display syntax"][0]+'</td>';
-				} else {
-					tHTML += '<td>'+value["display name"]+'</td>';
-				}
-				tHTML += '</tr>';
-				
-			});
-		}
+			tRightValue = tRightValue.toLowerCase();
+			
+			if (tLeftValue < tRightValue)
+				return -1;
+			
+			if (tRightValue < tLeftValue)
+				return 1;
+			
+			return 0;
+		});
 		
-		$("#list").html(tHTML);
-		$("#entries_showing").html(resultSet.length);
-		$("#entries_total").html(dataGet().length);
+		return pData;
+	}
+	
+	function data_table_html(pDataSet)
+	{
+		var tHTML = "";
+		tHTML += '<tbody id="list">';
+		
+		$.each(pDataSet, function(index, value) 
+		{
+			var tClass = "";
+			if (tState.selected == value.id) 
+				tClass = " active";
+
+			tHTML += '<tr class="entry_list_item load_entry'+tClass+'" ';
+			tHTML += 'entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
+			tHTML += '<td>'+value["display name"]+'</td>';
+			tHTML += '<td>'+value["type"]+'</td>';
+			tHTML += '<td>'+value["display syntax"][0]+'</td>';
+			tHTML += '</tr>';
+		});
+		
+		tHTML += '</tbody>';
+		
+		return tHTML;
+	}
+	
+	function displayEntryListGrep(pTerm){
+		var tHeader;
+		tHeader = '<thead><tr>';
+		tHeader += '<td class="list_sort" sortBy="display name"><a href="#"><b>Name</b><span class="caret"></span></a></td>';
+		tHeader += '<td class="list_sort" sortBy="type"><a href="#"><b>Type</b><span class="caret"></span></a></td>';
+		tHeader += '<td class="list_sort" sortBy="display syntax"><a href="#"><b>Syntax</b><span class="caret"></span></a></td>';
+		
+		$("#table_list_header").html(tHeader);
+		
+		var tData;
+		if (pTerm)
+			tData = dataSearch(pTerm);
+		else
+			tData = tState . filtered_data;
+		
+		sortFilteredData(tData);
+		
+		var tHTML;
+		tHTML = data_table_html(tData);
+
+		$("#table_list").html(tHTML);
 	}
 	
 	function displayLibraryChooser(){
@@ -934,6 +964,11 @@
 			displayEntry(tEntryID);
 		});
 		
+		$("body").on("click", ".list_sort", function() {
+			tState.sort_type = $(this).attr("sortBy");
+			dataFilter();
+		});
+		
 		$("body").on( "click", ".load_breadcrumb_entry", function() {
 			var tHistoryIndex;
 			tHistoryIndex = parseInt($(this).attr("historyIndex"));
@@ -975,8 +1010,60 @@
 			library_set(library_id);
 		});
 		
+		function doTableResize()
+		{
+			var $textarea = $('#header_panel_holder');
+			var $window = $(window);
+			var $resizer = $('#resizer');
+			
+			var tResizerMargin;
+			tResizerMargin = parseInt($resizer.css('margin'));
+			
+			var tHeaderMinHeight;
+			tHeaderMinHeight = parseInt($textarea.css('min-height'));
+			
+			var tTableHeaderHeight;
+			tTableHeaderHeight = parseInt($('#table_list_header').css('height'));
+			
+			$("body").addClass('noselect');
+			
+			$window.on('mousemove', function (evt) {
+				var tNewHeight;
+				tNewHeight = evt.pageY - $textarea.offset().top
+				tNewHeight = Math.max(tHeaderMinHeight, tNewHeight);
+				
+				var tContainerHeight;
+				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight;
+				$('#table_container').css('height', tContainerHeight);
+				
+				if (tContainerHeight < 5)
+				{
+					$textarea.css('height', tHeaderMinHeight);
+					$('#table_header').css('display', 'none');
+				}
+				else
+				{
+					$textarea.css('height', tNewHeight);	
+					$('#table_header').css('display', '');
+				}
+			});
+			
+			$window.on('mouseup', function () {
+				$("body").removeClass('noselect');
+				$window.off('mousemove');
+				$window.off('mouseup');
+			});
+		}
+		
+		// Catch mousedown on the resizer div and resize header panel
+		// holder on mousemove, respecting panel holder's min width
+		$('#resizer').on('mousedown', function (event) {
+			doTableResize();
+		});
+		
+		// Prevent mouse scroll on table bubbling to window level
 		$("#lcdoc_list").bind('mousewheel', function(e, d)  {
-			var t = $("#list");
+			var t = $("#table_container");
 			if (d > 0 && t.scrollTop() === 0) {
 				e.preventDefault();
 			}
