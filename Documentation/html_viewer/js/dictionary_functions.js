@@ -1,4 +1,4 @@
-	var tState = {selected:"",history:[],searched:{},filters:{},filtered_data:{},data:"",selected_api_id:""};
+	var tState = {selected:"",history:[],searched:{},filters:{},filtered_data:[],data:"",selected_api_id:""};
 	
 	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
 	
@@ -25,25 +25,73 @@
 		return tState.data;
 	}
 	
-	function dataSearch(pTerm){
-		if(tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) return tState.searched.data;
+	// Return all the syntax associated with an entry
+	// as a (matchable) string
+	function collectSyntax(pEntry)
+	{
+		var tSyntax = '';
+		$.each(pEntry["display syntax"], function (index, value) 
+		{
+			if (tSyntax != '')
+				tSyntax += ' ';
+				
+			tSyntax += value;
+		});
+		return tSyntax;
+	}
+	
+	// Return a list of matched search terms
+	function dataSearch(pTerm)
+	{
+		// Check the cached search data
+		if (tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) 
+			return tState.searched.data;
+			
 		tState.searched.term = pTerm;
+		tState.searched.data = [];
 		
+		// Get a list of space-delimited search terms				
    		var tokensOfTerm = pTerm.match(/\S+/g);
-
-    	var matchExp = "";
-    	$.each(tokensOfTerm, function(index, matchToken){
-       		matchExp += "(?=.*" + matchToken + ")"
+		
+		
+		// Generate two regexes - one that matches all syntax that 
+		// contains each search term, and one that matches all syntax that
+		// contains a word beginning with each search term. This way we 
+		// can prioritise matches that start with the search terms.
+    	var matchExp = '';
+    	var priorityMatch = '';
+    	$.each(tokensOfTerm, function(index, matchToken)
+    	{
+       		matchExp += '(?=.*' + matchToken + ')';
+       		priorityMatch += '(?=.*\\b' + matchToken + ')';
    		});
 
-		var regex = new RegExp(matchExp,"i");
+		var regex = new RegExp(matchExp, "i");
+		var priorityRegex = new RegExp(priorityMatch, "i");
 		
-		tState.searched.data = $.grep(tState.filtered_data, function (e) {
-			//console.log(e);
-			return regex.test(e["display syntax"][0]);
+		// Grep for the general search term
+		tState . searched . data = $.grep(tState.filtered_data, function (e) 
+		{
+			var tToMatch = collectSyntax(e);
+			var tMatched = regex.test(tToMatch);
+			return tMatched;
 		});
-		
-		return tState.searched.data;
+
+		// Sort the priority matches to the top
+		tState . searched . data . sort(function(a, b) 
+		{
+			var tToMatch = collectSyntax(a);		
+			if (priorityRegex.test(tToMatch))
+				return -1;
+			
+			tToMatch = collectSyntax(b);
+			if (priorityRegex.test(tToMatch))
+				return 1;
+				
+			return 0;
+		});
+	
+		return tState . searched . data;
 	}
 	
 	function dataFilter(){
@@ -775,7 +823,7 @@
 				tState.history = [];
 				tState.searched = {};
 				tState.filters= {};
-				tState.filtered_data = {};
+				tState.filtered_data = [];
 				tState.data = "";
 			
 				dataFilter();
