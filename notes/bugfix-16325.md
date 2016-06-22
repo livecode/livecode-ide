@@ -1,0 +1,1 @@
+# Ensure preferences reset correctly

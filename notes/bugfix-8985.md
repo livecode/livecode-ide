@@ -1,0 +1,1 @@
+# Clicking type disambiguation in Docs pane of Script Editor should work

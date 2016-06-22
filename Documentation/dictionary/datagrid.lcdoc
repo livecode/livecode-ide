@@ -1,0 +1,2592 @@
+Name: Datagrid
+
+Type: object
+
+Syntax: Datagrid
+
+Summary: An object for forms or tables
+
+Description:
+The Data Grid enables you to integrate powerful tables and forms into
+your LiveCode projects. Data grids combine LiveCode groups and behaviors
+to provide you with a simple, yet flexible means of displaying your data
+in just about any way you want. See
+http://lessons.livecode.com/m/datagrid/l/7301-what-is-the-data-grid for
+full documentation, lessons, and tutorials.
+
+
+Name: Datagrid General Properties
+
+Type: glossary
+
+Syntax: Datagrid General Properties
+
+Associations: datagrid
+
+Summary: General properties of the datagrid are applicable whether the
+'style' property is set to 'form' or 'table'
+
+Description:
+All general data grid properties are stored in the dgProps custom
+property set. To access a property you can use dgProps or dgProp: 
+	
+	put the dgProp[ "PROPERTY_NAME" ] of group "Data Grid"
+
+
+Name: allow editing
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["allow editing"] of group "Data Grid"
+
+Summary: Set to true to allow users to edit the cells of a table or the
+fields in a form.
+
+Description:
+
+Set to true to allow users to edit the cells of a table or the fields in
+a form. Note that when customizing templates for form rows or table
+columns you would check this property to determine if fields should
+allow editing. The default Row Behavior script contains an Example of
+
+how to do this.
+
+
+Name: alternate row color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["alternate row color"] of group "Data Grid"
+
+Summary: The color of every other row's background.
+
+Description:
+
+The color of every other row's background. Default value is empty in
+which case a default hilite color is used. Only applicable when
+'alternate row colors' is true. Prefix property name with "effective" to
+get the color being used.
+
+
+Name: alternate row colors
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["alternate row colors"] of group "Data Grid"
+
+Summary: Set to true to alternate the background colors of every other
+row.
+
+Description:
+
+Set to true to alternate the background colors of every other row.
+
+
+Name: auto hilite
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["auto hilite"] of group "Data Grid"
+
+Summary: Enables the data grid to automatically handle row highlighting.
+
+Description:
+
+Set to true if you would like the data grid to automatically handle row
+highlighting in response to user interaction.
+
+
+Name: background color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["background color"] of group "Data Grid"
+
+Summary: The background color of the data grid.
+
+Description:
+
+The background color of the data grid. Note that if 'alternate row
+colors' is true then the alternating row colors will cover the
+background.
+
+
+Name: cache controls
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["cache controls"] of group "Data Grid"
+
+Summary: Caches all controls for rendering.
+
+Description:
+
+By default the data grid only draws the controls that are visible on the
+screen. In circumstances where you don't have large amounts of records
+but the records you have take a long time to draw you may cache all of
+the controls when the data grid is drawn. This takes a little longer to
+display at the beginning but will offer smooth scrolling when the user
+interacts with the data grid.
+
+
+Name: column divider color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["column divider color"] of group "Data Grid"
+
+Summary: Sets the color of the table column dividers.
+
+Description:
+
+Sets the color of the table column dividers. Prefix property name with
+"effective" to get the color being used when this property is set to
+empty
+
+
+Name: column margins
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["column margins"] of group "Data Grid"
+
+Summary: Specifies the margins to be applied to each cell in a column.
+
+Description:
+
+Specifies the margins to be applied to each cell in a column.
+
+
+Name: control type
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["control type"] of group "Data Grid"
+
+Summary: Returns "data grid"
+
+Description:
+
+Returns "data grid". You can check this property to determine if a group
+is a data grid.
+
+
+Name: dim on focusOut
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["dim on focusOut"] of group "Data Grid"
+
+Summary: Dims the highlighted lines when the data grid does not have
+focus.
+
+Description:
+
+If true then the highlighted lines will be dimmed to 'dimmed hilite
+color' when the data grid does not have focus. Default is true.
+
+
+Name: dimmed hilite color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["dimmed hilite color"] of group "Data Grid"
+
+Summary: Color that highlighted lines will be when control is not
+focused.
+
+Description:
+
+Color that highlighted lines will be when control is not focused. Prefix
+property name with "effective" to get the color being used when this
+property is set to empty.
+
+
+Name: fixed row height
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["fixed row height"] of group "Data Grid"
+
+Summary: Set to true if all of your data will be drawn at the same
+height.
+
+Description:
+
+Set to true if all of your data will be drawn at the same height.
+Setting this to true will dramatically improve performance the first
+time the data grid is drawn as the data grid does not have to determine
+the height of all of your records before drawing. Default value is true.
+
+
+Name: hilite color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["hilite color"] of group "Data Grid"
+
+Summary: The color to use when highlighting a row.
+
+Description:
+
+The color to use when highlighting a row. If empty then the hiliteColor
+property is used. Prefix property name with "effective" to get the color
+being used when this property is set to empty.
+
+
+Name: hilited text color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["hilited text color"] of group "Data Grid"
+
+Summary: The color to apply to text when a row is highlighted.
+
+Description:
+
+The color to apply to text when a row is highlighted. By default this
+property is empty in which case the color is black if the average of the
+RGB value for the hilite color > 128, white otherwise.
+
+
+Name: multiple lines
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["multiple lines"] of group "Data Grid"
+
+Summary: Set to true to allow the user to select multiple lines in the
+data grid.
+
+Description:
+
+Set to true to allow the user to select multiple lines in the data grid.
+
+
+Name: opaque
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["opaque"] of group "Data Grid"
+
+Summary: Shows or hides the data grid background.
+
+Description:
+
+Shows or hides the data grid background.
+
+
+Name: persistent data
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["persistent data"] of group "Data Grid"
+
+Summary: Set to true if you would like the data grid to store the data
+being displayed between sessions.
+
+Description:
+
+Set to true if you would like the data grid to store the data being
+displayed between sessions. The data grid always works with data stored
+in a script local variable but if this value is true then the data will
+be cached in a custom property as well. This will double the memory used
+so this is suitable for small lists. For large data sets you should set
+this property to 'false' and set the data grid data each time the data
+grid is opened. The default value is 'true'.
+
+
+Name: row color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["row color"] of group "Data Grid"
+
+Summary: The primary row color.
+
+Description:
+
+The primary row color. This color alternates with 'alternate row color'.
+Prefix property name with "effective" to get the color being used when
+this property is set to empty
+
+
+Name: row height
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["row height"] of group "Data Grid"
+
+Summary: This represents the height that your rows will be drawn at.
+
+Description:
+
+For tables and forms whose 'fixed row height' property is true this
+represents the height that your rows will be drawn at. If this property
+is not set for a form whose 'fixed control height' is true then the
+record template group height is used. For forms whose 'fixed control
+height' is false this represents the height that alternating rows that
+contain no data will be drawn at.
+
+
+Name: row template
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["row template"] of group "Data Grid"
+
+Summary: This is the group that represents a record in your data grid.
+
+Description:
+
+This is the group that represents a record in your data grid. If the
+style of the data grid is form then this group will be copied into the
+data grid. If the data grid style is table then the data grid looks in
+this group for controls named after the columns in your table. If the
+data grid finds a control in this group that matches a column name then
+the control will be used to visually represent the column. Otherwise a
+field is used. By default the LiveCode IDE creates this group on a card
+in a stack whose name starts with "Data Grid Template". Clicking the
+"Row Template" button in the Property Inspector reveal the card
+containing this group.
+
+
+Name: scroll when hscrollbar is hidden
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["scroll when hscrollbar is hidden"] of group
+"Data Grid"
+
+Summary: This overrides the default horizontal scrolling behavior.
+
+Description:
+
+By default a data grid will not respond to the mouse scroll wheel, page
+up, page down, home or end if the scrollbar is hidden. Set this property
+to true if you would like to override this behavior. This is useful if
+you want to create custom scrollbars.
+
+
+Name: scroll when vscrollbar is hidden
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["scroll when vscrollbar is hidden"] of group
+"Data Grid"
+
+Summary: This overrides the default vertical scrolling behavior.
+
+Description:
+
+By default a data grid will not respond to the mouse scroll wheel, page
+up, page down, home or end if the scrollbar is hidden. Set this property
+to true if you would like to override this behavior. This is useful if
+you want to create custom scrollbars.
+
+
+Name: scrollbar corner offset
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["scrollbar corner offset"] of group "Data Grid"
+
+Summary: Scrollbar ofset from the corner when only one is visible.
+
+Description:
+
+This property is an integer that specifies the distance from the corner
+of the window that the vertical and horizontal scrollbars position
+themselves when only one of them is visible. This is primarily useful on
+OS X when your data grid reaches all the way to the bottom right corner
+of the window where the window drag handle appears. Setting this to a
+value like "15" will keep your scrollbar controls from being hidden
+behind the window drag handle. Default value is "0".
+
+
+Name: show vscrollbar
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["show vscrollbar"] of group "Data Grid"
+
+Summary: Toggles the visibility of the vertical scrollbar. True, false,
+or auto.
+
+Description:
+
+Toggles the visibility of the vertical scrollbar. True, false, or auto.
+
+
+Name: show hscrollbar
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["show hscrollbar"] of group "Data Grid"
+
+Summary: Toggles the visibility of the horizontal scrollbar for a table.
+True, false or auto.
+
+Description:
+
+Toggles the visibility of the horizontal scrollbar for a table. True,
+false or auto.
+
+
+Name: scrollbar width
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["scrollbar width"] of group "Data Grid"
+
+Summary: Set the width of the scrollbars
+
+Description:
+
+Set to an integer or to auto if you would like the data grid to set the
+appropriate width based on the platform it is being displayed on.
+Default is auto. When set to auto you can retrieve the actual width in
+pixels using effective scrollbar width.
+
+
+Name: style
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["style"] of group "Data Grid"
+
+Summary: Gets the style of the data grid, either 'form' or 'table'.
+
+Description:
+
+Gets the style of the data grid, either 'form' or 'table'.
+
+
+Name: text color
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["text color"] of group "Data Grid"
+
+Summary: The text color to apply to the data area of a table or form.
+
+Description:
+
+The text color to apply to the data area of a table or form. Prefix
+property name with "effective" to get the color being used when this
+property is set to empty
+
+
+Name: text font
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["text font"] of group "Data Grid"
+
+Summary: The font to apply to the data area of a table or form.
+
+Description:
+
+The font to apply to the data area of a table or form. Prefix property
+name with "effective" to get the font being used when this property is
+set to empty.
+
+
+Name: text size
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["text size"] of group "Data Grid"
+
+Summary: The text size to apply to the data area of a table or form.
+
+Description:
+
+The text size to apply to the data area of a table or form. Prefix
+property name with "effective" to get the size being used when this
+property is set to empty.
+
+
+Name: text style
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: put the dgProp["text style"] of group "Data Grid"
+
+Summary: The text style to apply to the data area of a table or form.
+
+Description:
+
+The text style to apply to the data area of a table or form. Prefix
+property name with "effective" to get the style being used when this
+property is set to empty.
+
+
+Name: Datagrid Table Properties
+
+Type: glossary
+
+Associations: datagrid
+
+Syntax: Datagrid Table Properties
+
+Summary: Table properties of the datagrid are applicable when the 'style'
+property is set to 'table'.
+
+Description:
+
+All data grid table properties are stored in the dgProps custom property
+set. To access a property you can use dgProps or dgProp: 
+
+	put the dgProp[ "PROPERTY_NAME" ] of group "Data Grid"
+
+
+Name: allow column resizing
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["allow column resizing"] of group "Data Grid"
+
+Summary: If true then the user can resize columns in the table header.
+
+Description:
+
+If true then the user can resize columns in the table header. Note that
+you can also turn off resizing for individual columns which would
+override this setting.
+
+
+Name: column divider color
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["column divider color"] of group "Data Grid"
+
+Summary: The color of the column dividers in a table.
+
+Description:
+
+The color of the column dividers in a table.
+
+
+Name: column alignments
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["column alignments"] of group "Data Grid"
+
+Summary: Allows you to set all column alignment values at once.
+
+Description:
+
+Allows you to set all column alignment values at once. Line delimited
+list of alignment values.
+
+
+Name: column visibility
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["column visibility"] of group "Data Grid"
+
+Summary: Allows you to set the visible property for all columns at once.
+
+Description:
+
+Allows you to set the visible property for all columns at once. Line
+delimited list of boolean values.
+
+
+Name: column widths
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["column widths"] of group "Data Grid"
+
+Summary: Allows you to set all column widths at once. Comma delimited
+list of integers.
+
+Description:
+
+Allows you to set all column widths at once. Comma delimited list of
+integers.
+
+
+Name: columns
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["columns"] of group "Data Grid"
+
+Summary: Line delimited list of columns in your table.
+
+Description:
+
+Line delimited list of columns in your table.
+
+
+Name: column labels
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["column labels"] of group "Data Grid"
+
+Summary: Line delimited list of labels for columns in your table.
+
+Description:
+
+Line delimited list of labels for columns in your table.
+
+
+Name: corner color
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["corner color"] of group "Data Grid"
+
+Summary: The color of the corner piece that appears when both horizontal
+and vertical scrollbars are visible.
+
+Description:
+
+The color of the corner piece that appears when both horizontal and
+vertical scrollbars are visible. You set set to a solid color, a
+gradient (two colors, one per line) or an array containing the keys of
+the fillGradient property.
+
+
+Name: default column behavior
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["default column behavior"] of group "Data Grid"
+
+Summary: Used to set the default column behavior.
+
+Description:
+
+The table style has an internal behavior that is used for columns which
+have no custom control defined for them. This behavior sets the text of
+a field as well as the alignment, etc. You can set this property to a
+button containing the default behavior you would like. This can be
+useful if you need to display html, unicode or rtf text among other
+things. The default value is empty. To see the script that the data grid
+uses by default for columns you can edit the script of button "Default
+Column" of group "Behaviors" of stack "revDataGridLibrary"
+
+
+Name: default header behavior
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["default header behavior"] of group "Data Grid"
+
+Summary: Used to set the default header behavior.
+
+Description:
+
+The table style has an internal behavior that is used for column
+headers. If you would like to override the default behavior for column
+headers you can set this property to point to a button with your own
+behavior script. To see the script that the data grid uses by default
+you can edit the script of button "Default Header" of group "Behaviors"
+of stack "revDataGridLibrary"
+
+
+Name: header background color
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header background color"] of group "Data Grid"
+
+Summary: The background color of the header.
+
+Description:
+
+The background color of the header. You set set to a solid color, a
+gradient (two colors, one per line) or an array containing the keys of
+the fillGradient property.
+
+
+Name: header background hilite color
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header background hilite color"] of group "Data
+Grid"
+
+Summary: The background color of the header that is being sorted by.
+
+Description:
+
+The background color of the header that is being sorted by. You set set
+to a solid color, a gradient (two colors, one per line) or an array
+containing the keys of the fillGradient property.
+
+
+Name: header height
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header height"] of group "Data Grid"
+
+Summary: The height of the header are of the table.
+
+Description:
+
+The height of the header are of the table.
+
+
+Name: header margins
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header margins"] of group "Data Grid"
+
+Summary: Specifies the margins to be applied to the fields that display
+the header text.
+
+Description:
+
+Specifies the margins to be applied to the fields that display the
+header text.
+
+
+Name: header text color
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header text color"] of group "Data Grid"
+
+Summary: The text color to apply to the header area of a table.
+
+Description:
+
+The text color to apply to the header area of a table. Prefix property
+name with "effective" to get the color being used when this property is
+set to empty
+
+
+Name: header text font
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header text font"] of group "Data Grid"
+
+Summary: The font to apply to the header area of a table.
+
+Description:
+
+The font to apply to the header area of a table. Prefix property name
+with "effective" to get the font being used when this property is set to
+empty
+
+
+Name: header text size
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header text size"] of group "Data Grid"
+
+Summary: The text size to apply to the header area of a table.
+
+Description:
+
+The text size to apply to the header area of a table. Prefix property
+name with "effective" to get the size being used when this property is
+set to empty
+
+
+Name: header text style
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["header text style"] of group "Data Grid"
+
+Summary: The text style to apply to the header area of a table.
+
+Description:
+
+The text style to apply to the header area of a table. Prefix property
+name with "effective" to get the style being used when this property is
+set to empty
+
+
+Name: show column dividers
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["show column dividers"] of group "Data Grid"
+
+Summary: Toggles the visibility of the column dividers in the data
+display area.
+
+Description:
+
+Toggles the visibility of the column dividers in the data display area.
+Default value is true.
+
+
+Name: show header
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["show header"] of group "Data Grid"
+
+Summary: Toggles the visibility of the header. Default value is true.
+
+Description:
+
+Toggles the visibility of the header. Default value is true.
+
+
+Name: sort by column
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["sort by column"] of group "Data Grid"
+
+Summary: The column that the table data is currently being sorted by.
+
+Description:
+
+The column that the table data is currently being sorted by. You can set
+this property to sort by a new column.
+
+
+Name: visible columns
+
+Type: property
+
+Associations: datagrid, datagrid table properties
+
+Syntax: put the dgProp["visible columns"] of group "Data Grid"
+
+Summary: Line delimited list of columns in your table that are visible.
+
+Description:
+
+Line delimited list of columns in your table that are visible.
+
+
+Name: Datagrid Column Properties
+
+Type: glossary
+
+Syntax: Datagrid Column Properties
+
+Associations: datagrid
+
+Summary: These properties allow you to set properties of individual
+columns in a table when the 'style' property is set to 'table'.
+
+Description:
+
+These properties allow you to set properties of individual columns in a
+table. The syntax you use resembles: set the dgColumnSortType ["COLUMN"]
+of group "Data Grid" to "numeric" where "COLUMN" is the name of the
+column you are targeting.
+
+
+Name: dgColumnAlignment
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnAlignment["col1"] of group "Data Grid"
+
+Summary: Get/set the alignment for a column.
+
+Description:
+
+Get/set the alignment for a column. Valid values are 'left', 'right' or
+'center'.
+
+
+Name: dgColumnIsEditable
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnIsEditable["col1"] of group "Data Grid"
+
+Summary: Toggle whether or not a column is editable by the user.
+
+Description:
+
+Toggle whether or not a column is editable by the user. Set to
+true/false.
+
+
+Name: dgColumnIsVisible
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnIsVisible["col1"] of group "Data Grid"
+
+Summary: Get/set the visibility of the column.
+
+Description:
+
+Get/set the visibility of the column.
+
+
+Name: dgColumnIsResizable
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnIsResizable["col1"] of group "Data Grid"
+
+Summary: Get/set whether or not a column is resizable.
+
+Description:
+
+Get/set whether or not a column is resizable.
+
+
+Name: dgColumnLabel
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnLabel["col1"] of group "Data Grid"
+
+Summary: Get/set the label used for the column.
+
+Description:
+
+Get/set the label used for the column. If the label is empty then the
+column name is used.
+
+
+Name: dgColumnMaxWidth
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnMaxWidth["col1"] of group "Data Grid"
+
+Summary: Get/Set the maximum width that a column can be resized to.
+
+Description:
+
+Get/Set the maximum width that a column can be resized to.
+
+
+Name: dgColumnMinWidth
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnMinWidth["col1"] of group "Data Grid"
+
+Summary: Get/Set the minimum width that a column can be resized to.
+
+Description:
+
+Get/Set the minimum width that a column can be resized to.
+
+
+Name: dgColumnName
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: set the dgColumnName["col1"] of group "Data Grid" to pNewName
+
+Summary: Set a new name for a column.
+
+Description:
+
+Set a new name for a column.
+
+
+Name: dgColumnTemplate
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnTemplate["col1"] of group "Data Grid"
+
+Summary: Get the control that is used to visually represent the column
+in the table.
+
+Description:
+
+Get the control that is used to visually represent the column in the
+table. This control will be a control in the 'row template' group with
+the same name as the column. If no matching control exists then a field
+is used.
+
+
+Name: dgColumnTooltip
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnTooltip["col1"] of group "Data Grid"
+
+Summary: Set the tooltip that appears when the mouse is over the column
+header.
+
+Description:
+
+Set the tooltip that appears when the mouse is over the column header.
+
+
+Name: dgHeaderTemplate
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgHeaderTemplate["col1"] of group "Data Grid"
+
+Summary: Get the control that is used to visually represent the header
+for a column.
+
+Description:
+
+Get the control that is used to visually represent the header for a
+column. This control will be a control in the 'row template' group name
+"COLUMN [Header]". If no matching control exists then the deafult header
+control is used.
+
+
+Name: dgColumnSortDirection
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnSortDirection["col1"] of group "Data Grid"
+
+Summary: Get/set the direction of the sort for the column.
+
+Description:
+
+Get/set the direction of the sort for the column. Valid values are
+'ascending' or 'descending'.
+
+
+Name: dgColumnSortIsCaseSensitive
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnSortIsCaseSensitive["col1"] of group "Data Grid"
+
+Summary: Get/set whether or not column sort is case sensitive.
+
+Description:
+
+Get/set whether or not column sort is case sensitive. Default value is
+false.
+
+
+Name: dgColumnSortType
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnSortType["col1"] of group "Data Grid"
+
+Summary: Get/set the sort type of the column.
+
+Description:
+
+Get/set the sort type of the column to 'text', 'numeric', 'datetime' or
+'system datetime'.
+
+
+Name: dgColumnWidth
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgColumnWidth["col1"] of group "Data Grid"
+
+Summary: Get/set the width of a column.
+
+Description:
+
+Get/set the width of a column.
+
+
+Name: dgHeaderAlignment
+
+Type: property
+
+Associations: datagrid, datagrid column properties
+
+Syntax: put the dgHeaderAlignment["col1"] of group "Data Grid"
+
+Summary: Get/set the alignment for a column's header.
+
+Description:
+
+Get/set the alignment for a column's header.
+
+
+Name: Template Field Editor Properties
+
+Type: glossary
+
+Syntax: Template Field Editor Properties
+
+Associations: datagrid
+
+Summary: Datagrid cells can be edited. These property configure that
+editor.
+
+Description:
+
+The template field editor properties are set using the
+dgTemplateFieldEditor custom property. 
+
+	set the dgTemplateFieldEditor["PROPERTY_NAME"] \ 
+		of group "Data Grid" to SOME_VALUE
+
+
+Name: select text
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: set the dgTemplateFieldEditor["select text"] of group "Data
+Grid" to true
+
+Summary: Set to true to select all text in the field editor.
+
+Description:
+
+Set to true to select all text in the field editor.
+
+
+Name: text
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: set the dgTemplateFieldEditor["text"] of group "Data Grid" to
+pText
+
+Summary: Set to a string that will be assigned to the text property of
+the field editor.
+
+Description:
+
+Set to a string that will be assigned to the text property of the field
+editor.
+
+
+Name: htmltext
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: set the dgTemplateFieldEditor["htmltext"] of group "Data Grid"
+to "<p>Hello World</p>"
+
+Summary: Set to a string that will be assigned to the htmltext property
+of the field editor.
+
+Description:
+
+Set to a string that will be assigned to the htmltext property of the
+field editor.
+
+
+Name: rtftext
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: put the dgTemplateFieldEditor["rtftext"] of group "Data Grid"
+
+Summary: Set to a string that will be assigned to the rtftext property
+of the field editor.
+
+Description:
+
+Set to a string that will be assigned to the rtftext property of the
+field editor.
+
+
+Name: unicodetext
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: put the dgTemplateFieldEditor["unicodetext"] of group "Data
+Grid"
+
+Summary: Set to a string that will be assigned to the unicodetext
+property of the field editor.
+
+Description:
+
+Set to a string that will be assigned to the unicodetext property of the
+field editor.
+
+
+Name: utf8text
+
+Type: property
+
+Associations: datagrid, template field editor properties
+
+Syntax: put the dgTemplateFieldEditor["utf8text"] of group "Data Grid"
+
+Summary: Set to a string that will be assigned to the unicodetext
+property of the field editor after being converted from UTF-8 to UTF16.
+
+Description:
+
+Set to a string that will be assigned to the unicodetext property of the
+field editor after being converted from UTF-8 to UTF16.
+
+
+Name: dgHeader
+
+Type: property
+
+Associations: datagrid
+
+Syntax: put the dgHeader of group "Data Grid"
+
+Summary: Returns the long id of the group that contains the controls for
+the table header.
+
+Description:
+
+Returns the long id of the group that contains the controls for the
+table header. Use this property in a mouseDown/mouseUp handler to
+determine if the user clicked on a the table header. If the dgHeader of
+the target is not empty then ... (user clicked in table header).
+
+
+Name: dgHeaderControl
+
+Type: property
+
+Associations: datagrid
+
+Syntax: put the dgHeaderControl of group "Data Grid"
+
+Summary: Returns the long id of the group that contains the controls for
+a column header.
+
+Description:
+
+Returns the long id of the group that contains the controls for a column
+header. Use this property in a mouseDown/mouseUp handler to determine if
+the user clicked on a column header. If the dgHeaderControl of the
+target is not empty then... (user clicked in a column header).
+
+
+Name: dgControl
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgControl of the target
+
+Summary: Returns the long id of the data grid.
+
+Description:
+
+Returns the long id of the data grid. Useful in row/column template
+behaviors when you need to get properties of the data grid.
+
+
+Name: dgData 
+
+Type: property 
+
+Associations: datagrid
+
+syntax: set the dgData of group "DataGrid" to <pDataArray>
+
+Summary: Get or set the data array that the data grid will display. 
+
+Example: 
+
+get the dgData of grp "Data Grid" 
+
+Description:
+Get or set the data array that the data grid will display. The first
+dimension of the array uses numeric keys and the value of each is an
+array. You can store anything you would like in each numeric key's
+array. For data grid tables the keys should match the column names in
+order for the data grid to correctly map the array value to the column
+cell. The following array would represent two records in the data grid:
+	
+	put "Hi" into theA[1]["message"] 
+	put "Bye" into theA[2]["message"] 
+	set the dgData of group "DataGrid" to theA
+
+Name: dgDataControlOfIndex
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgDataControlOfIndex[pIndex] of group "DataGrid"
+
+Summary: Returns the long id of the data control associated with an
+index.
+
+
+Description:
+Returns the long id of the data control associated with an index. 
+If "cache controls" is not turned on then this property returns empty 
+if the index has no control associated with it because it is offscreen.
+
+>*Important:* The <dgDataControlOfIndex> property is available only for
+Datagrids whose <style> property is set to 'form'.
+
+Related: style (property)
+
+Name: dgDataControlOfLine
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgDataControlOfLine[pLine] of group "DataGrid"
+
+Summary: Returns the long id of the data control associated with a
+line number.
+
+
+Description:
+
+Same as dgDataControlOfIndex but takes a line number as the parameter.
+
+
+Name: dgDataOfIndex 
+
+Type: property 
+
+Associations: datagrid
+
+Syntax: get the dgDataOfIndex[pIndex] of group "DataGrid"
+
+Syntax: set the dgDataOfIndex[pIndex] of group "DataGrid" to <value> 
+
+Summary: Get or set the data associated with a particular index.
+
+Example: set the dgDataOfIndex[pIndex] of group "DataGrid" to pDataA
+
+Example: 
+put the dgDataOfIndex[1] of group "DataGrid" into theMessageA
+put theMessageA["message"] -- puts "hi" 
+
+Description:
+Get or set the data associated with a particular index. The value is
+the array assigned to that index.
+
+>*Note:* Setting the data of an index will cause the data grid to
+refresh the row associated with the index if it is visible on screen.
+
+
+Name: dgDataOfLine 
+
+Type: property 
+
+Associations: datagrid
+
+syntax: get the dgDataOfLine[pLine] of group "DataGrid" summary: Get or
+set the data associated with a particular line.
+
+Example: 
+set the dgDataOfLine [ pLine ] of group "DataGrid" to pDataA
+
+Example: 
+put the dgDataOfLine[1] of group "DataGrid" into theMessageA
+put theMessageA["message"] -- puts "hi" 
+
+Description:
+Get or set the data associated with a particular line. The value is
+the array assigned to that line. 
+
+>*Note:* Setting the data of a line will cause the data grid to refresh 
+the line if it is visible on screen.
+
+
+Name: dgFocus
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgFocus of group "DataGrid" to true
+
+Summary: Set to true to focus on a data grid.
+
+Description:
+
+Set to true to focus on a data grid.
+
+
+Name: dgFormattedHeight
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgFormattedHeight of group "DataGrid"
+
+Summary: Returns the formatted height of the data in the data grid.
+
+Description:
+
+Returns the formatted height of the data in the data grid. The table
+header is not included in the formatted height.
+
+
+Name: dgFormattedWidth
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgFormattedWidth of group "DataGrid"
+
+Summary: Returns the formatted width of the columns in a data grid.
+
+Description:
+
+Returns the formatted width of the columns in a data grid. This is only
+useful in tables as forms don't scroll horizonally.
+
+
+Name: dgNumberOfLines
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgNumberOfLines of group "DataGrid"
+
+Summary: Returns the number of lines displayed in the data grid.
+
+Description:
+
+Returns the number of lines displayed in the data grid.
+
+
+Name: dgNumberOfRecords
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgNumberOfRecords of group "DataGrid" to 20
+
+Summary: For use with fetching data from a database cursor.
+
+Description:
+
+Getting the dgNumberOfRecords is the same as getting the
+dgNumberOfLines. Setting the dgNumberOfRecords has a special
+significance however. If you set the dgNumberOfRecords then you are
+telling the data grid that you know how many total records there are and
+you are going to supply the data for each record on an as-needed basis.
+This is useful when you have data in a database cursor that you would
+like to feed into the data grid. After setting this property the data
+grid will send the GetDataForLine message to the data grid whenever it
+needs to display data for a particular line. You can define this command
+in the data grid script or elsewhere in the hierarchy. The definition is
+as follows: command GetDataForLine pLine, @pDataA -- end GetDataForLine
+You should fill pDataA with the appropriate data based on the line of
+data being requested. pDataA should not have a numeric index. It is the
+array that would be assigned to one of the numeric indexes if you were
+assigning the dgData property.
+
+
+Name: dgText
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgText[pIncludeColumnNames] | set the
+dgText[pIncludeColumnNames] of group "DataGrid" to 20
+
+Summary: The dgText property always reflects the same value as the
+dgData but in tab delimited form.
+
+Description:
+
+The data grid works with arrays behind the scenes but in the interest of
+making life easier for some folks there is a dgText property. The dgText
+property always reflects the same value as the dgData but in tab
+delimited form. pText is assumed to be a collection of data where each
+row is delimited by the return character and each item is delimited by a
+tab. You can map each item of each line in pText to a particular key in
+an array (and thus a table column) by passing in true for
+pFirstLineContainsHeaders. If true then the data grid will extract the
+first line of pText and use the values for the internal key/column
+names. The default value for pFirstLineContainsHeaders is false. If you
+set the dgText of a data grid table then all data will be imported and
+assigned to the appropriate column depending on the value of
+pFirstLineContainsHeaders. Normally you should set this property to true
+and provide the header that maps each item of each line to a specific
+column. Note that if pFirstLineContainsHeaders is true then the columns
+must already exist in your data grid table in order to be displayed. If
+pFirstLineContainsHeaders is false then the columns property of the data
+grid is used for mapping. For Example, the first item of a line of pText
+would be assigned to the column that appears on the first line in the
+columns property of the data grid. If line 1 of pText contains more
+items than there are columns in the table then new columns are added.
+Any new columns are named "Col 1", "Col 2", etc. If you set the dgText
+property of a data grid form then the data will be imported but it is up
+to you to modify your Row Template Behavior to display the imported data
+correctly. If pFirstLineContainsHeaders is false then each item of each
+line in pText will be named "Label X" (where X is the item number) in
+the array that is passed to FillInData. When retrieving the dgText
+property you can include the column names in the first line by setting
+pIncludeColumnNames to true.
+
+
+Name: dgHilitedIndexes synonyms: dgHilitedIndex type: property
+Associations: datagrid
+
+syntax: set the dgHilitedIndexes of group "DataGrid" to pIndex summary:
+Returns a comma delimited list of the indexes that are currently
+selected. Description:
+
+Returns a comma delimited list of the indexes that are currently
+selected.
+
+
+Name: dgHilitedLines synonyms: dgHilitedLine type: property
+Associations: datagrid
+
+syntax: set the dgHilitedLines of group "DataGrid" to pLine summary:
+Returns a comma delimited list of the line numbers that are currently
+selected. Description:
+
+Returns a comma delimited list of the line numbers that are currently
+selected.
+
+
+Name: dgHScroll
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgHScroll to of group "DataGrid" to pInteger
+
+Summary: Get/set the horizontal scroll of the data grid.
+
+Description:
+
+Get/set the horizontal scroll of the data grid. This only applies to
+tables as forms do not scroll horizontally.
+
+
+Name: dgHScrollPercent
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgHScrollPercent of group "DataGrid" to pPercent
+
+Summary: Get/set the percentage of the horizontal scroll.
+
+Description:
+
+Get/set the percentage of the horizontal scroll. A number between 0 and
+1. This only applies to tables as forms do not scroll horizontally.
+
+
+Name: dgIndexes
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgIndexes of group "DataGrid"
+
+Summary: Returns the internal list of indexes in the order in which they
+appear in the data grid.
+
+Description:
+
+Returns the internal list of indexes in the order in which they appear
+in the data grid. Indexes are the numeric indices used when setting the
+dgData property.
+
+
+Name: dgIndexOfLine
+
+Type: property
+
+Associations: datagrid
+
+Syntax: put the dgIndexOfLine[pLine] of group "DataGrid"
+
+Summary: Returns the index associated with the given line.
+
+
+Description:
+
+Returns the index associated with the given line.
+
+
+
+Name: dgVScroll
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgVScroll of group "DataGrid" to pInteger
+
+Summary: Get/set the vertical scroll of the data grid.
+
+Description:
+
+Get/set the vertical scroll of the data grid.
+
+
+Name: dgVScrollPercent
+
+Type: property
+
+Associations: datagrid
+
+Syntax: set the dgVScrollPercent of group "DataGrid" to pPercent
+
+Summary: Get/set the percentage of the vertical scroll.
+
+Description:
+
+Get/set the percentage of the vertical scroll. A number between 0 and 1.
+
+
+Name: dgVisibleLines
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgVisibleLines of group "DataGrid"
+
+Summary: Returns the first and last line being displayed in the data
+grid as a comma delimited list.
+
+Description:
+
+Returns the first and last line being displayed in the data grid as a
+comma delimited list. Useful if you want to provide visual feedback as
+to which lines are being displayed.
+
+
+Name: Datagrid Commands
+
+Type: glossary
+
+Syntax: Datagrid Commands
+
+Associations: datagrid
+
+Summary: Datagrid commands are issued via 'dispatch' or 'send'.
+
+Description:
+
+To issue a command to the datagrid you can use 'dispatch' or 'send'.
+'Dispatch' is preferred as it has the nice 'with' syntax for sending
+parameters. Using dispatch: 
+	
+	put "value" into theArray["property"]
+	dispatch "AddData" to group "DataGrid" with theArray 
+	
+Using send: 
+
+	put "value" into theArray["property"] 
+	send "AddData theArray" to group "DataGrid"
+
+
+Name: AddData
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "AddData" to group "DataGrid" with pDataArray,pLine
+
+Summary: Use this command to add data to the data grid after you have
+already populated it by setting the dgData or dgText.
+
+Description:
+
+pDataArray is an array of custom data to add to the data grid and pLine
+is the line number where it should be added. All data appearing at or
+after pLine will be shifted down 1. You will not overwrite any data. If
+pLine is empty then the data will be added to the end of the existing
+data. If the data is successfully added then the index of the data will
+be returned in the result, otherwise an error is returned.
+
+
+Name: AddLine
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "AddLine" to group "DataGrid" with pText, pColumns,
+pLine
+
+Summary: Add tab delimited text to the data grid after you have already
+populated it by setting the dgData or dgText.
+
+Description:
+
+Use this command to add tab delimited text to the data grid after you
+have already populated it by setting the dgData or dgText. pText is tab
+delimited text to add to the data grid. pColumns is a cr delimited list
+of column names that text items map to. pLine is the line number where
+it should be added. All data appearing at or after pLine will be shifted
+down 1. You will not overwrite any data. If pColumns is empty then the
+"columns" property of the data grid is assumed. If pLine is empty then
+the data will be added to the end of the existing data.
+
+
+Name: DeleteIndex 
+
+Synonyms: DeleteIndexes 
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteIndex" to group "DataGrid" with pIndex 
+
+Summary: Deletes the specified indexes from the data grid. 
+
+Description:
+
+Deletes the specified indexes from the data grid. pIndexes is a comma
+delimited list of integers.
+
+
+Name: DeleteLine 
+
+Synonyms: DeleteLines 
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteLine" to group "DataGrid" with pLine
+
+Summary: Deletes the specified lines from the data grid. 
+
+Description:
+Deletes the specified lines from the data grid. pLines is a comma
+delimited list of integers.
+
+
+Name: EditCell
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditCell" to group "DataGrid" with pColumnName,
+pLineNo
+
+Summary: Sends the EditValue message to the column control for column
+pColumnName of line pLineNo.
+
+Description:
+
+Sends the EditValue message to the column control for column pColumnName
+of line pLineNo. The default behaviors for columns handle the EditValue
+message and open the cell for editing by calling EditFieldText. Can only
+be used with tables.
+
+
+Name: EditCellOfIndex
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditCellOfIndex" to group "DataGrid" with pColumnName,
+pIndex
+
+Summary: Same as EditCell but uses an index rather than a line number to
+locate the line to edit.
+
+Description:
+
+Same as EditCell but uses an index rather than a line number to locate
+the line to edit.
+
+
+Name: EditFieldText
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditFieldText" to group "DataGrid" with pField,
+pIndex, pKey
+
+Summary: Creates an editable field for editing the contents of pField.
+
+Description:
+
+This command will dynamically create an editable field for editing the
+contents of pField (pass in the long id of a field for pField). Calling
+EditFieldText will trigger additional messages related to field editing.
+Scenario 1: Pass in one parameter If you just pass in pField and leave
+pIndex and pKey empty then the data grid behaves as follows: 
+
+1. Creates field editor 
+2. Assign text of pField to field editor 
+3. Sends preOpenFieldEditor pFieldEditor to pField. 
+
+pFieldEditor is the long id of the field editor created in step 1. 
+When editing stops (focus leaves
+field, user presses escape key, etc.) the message DeleteFieldEditor is
+sent to the data grid. This in turn sends CloseFieldEditor pFieldEditor
+to pField if the user changed the content or ExitFieldEditor
+pFieldEditor if no change was made. You can use these messages to save
+any changes the user made in pFieldEditor. Scenario 2: Pass in all three
+parameters If you pass in all three parameters (pField, pIndex, pKey)
+then the data grid will automatically save any changes made while
+editing. The new value will be assigned to the key pKey for index pIndex
+in the dgData array of the data grid. In this scenarios CloseFieldEditor
+pFieldEditor and ExitFieldEditor pFieldEditor are still sent. The
+difference is that after CloseFieldEditor is sent to pField the contents
+of pFieldEditor are saved in the dgData. If for any reason you do not
+want the data to be saved then you can return "cancel" from
+CloseFieldEditor. Note: If the user presses the tab key while editing
+and the autotab property of pField is true then the message
+OpenNextFieldEditor pDirection is sent to pField. If you don't handle
+this message and the data grid is a table then the data grid
+automatically opens the next cell for editing. For data grid forms you
+can handle this message in order to open another field for editing. You
+could call EditKeyOfIndex for Example. Note 2: The default behavior for
+
+pFieldEditor is located in button "Field Editor" of stack
+"revDataGridLibrary". If you want to override this behavior then you can
+assign the behavior of pFieldEditor to another button in the
+preOpenFieldEditor message.
+
+
+Name: EditKey
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditKey" to group "DataGrid" with pKey, pLineNo
+
+Summary: Sends the EditValue pKey message to the row control for line
+pLineNo.
+
+Description:
+
+Sends the EditValue pKey message to the row control for line pLineNo.
+Handle the EditValue message in your data grid form row behavior in
+order to open a field in the row for editing. See EditFieldText.
+
+
+Name: EditKeyOfIndex
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditKeyOfIndex" to group "DataGrid" with pKey, pIndex
+
+Summary: Same as EditKey but uses an index rather than a line number to
+located the line to edit.
+
+Description:
+
+Same as EditKey but uses an index rather than a line number to located
+the line to edit.
+
+
+Name: FindIndex 
+
+Synonyms: FindLine 
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "FindIndex" to group "DataGrid" with pKey,
+pSearchString 
+
+Summary: Same as EditKey but uses an index rather than a line number to 
+located the line to edit. 
+
+Description:
+Search for data in pKey that matches pSearchString. pKey is one of the
+custom defined keys you defined for your data. pSearchingString is the
+value to look for in that key. You can pass multiple pKey=pSearchString
+combinations to match multiple criteria. -- Find the index where
+"message" is "hi" dispatch "FindIndex" to group "DataGrid" with
+"message", "hi" put the result into theIndex Note that pKey can also be
+an array if you want to use array-valued array indexing to locate
+pSearchingString. FindLine returns the found line number vs the found
+index number.
+
+
+Name: RefreshIndex
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "RefreshIndex" to group "DataGrid" with pIndexes
+
+Summary: Redraws row associated with pIndexes using latest data.
+
+
+Description:
+
+Redraws row associated with pIndexes using latest data. Use this
+command in conjunction with
+
+SetDataOfIndex. pIndexes can be a comma delimited list of indexes.
+
+
+Name: RefreshLine
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "RefreshLine" to group "DataGrid" with pLines
+
+Summary: Redraws row using latest data.
+
+Description:
+
+Redraws row using latest data. Use this command in conjunction with
+SetDataOfLine. pLines can be a comma delimited list of lines.
+
+
+Name: ScrollIndexIntoView
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "ScrollIndexIntoView" to group "DataGrid" with pIndex
+
+Summary: Scrolls the data grid so that the line associated with pIndex
+in the internal data array is in view.
+
+
+Description:
+
+Scrolls the data grid so that the line associated with pIndex in the
+internal data array is in view.
+
+
+
+Name: ScrollLineIntoView
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "ScrollLineIntoView" to group "DataGrid" with pLine
+
+Summary: Scrolls the data grid so that pLine is in view.
+
+Description:
+
+Scrolls the data grid so that pLine is in view.
+
+
+Name: SelectAll
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "SelectAll" to group "DataGrid"
+
+Summary: Selects all lines in the data grid.
+
+Description:
+
+Selects all lines in the data grid.
+
+
+Name: SetDataOfIndex
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "SetDataOfIndex" to group "DataGrid" with pIndex, pKey,
+pValue
+
+Summary: Updates the key pIndex in the internal data array.
+
+Description:
+
+Updates the key pIndex in the internal data array. If pKey is empty then
+pValue should be an array. pValue will be assigned to key pIndex in the
+internal data array. If pKey is not empty then pValue will be assigned
+to key pKey of key pIndex in the internal data array. The data grid
+display will not be updated to reflect the new values. To update the
+display call RefreshIndex. Use dgDataOfIndex if you want to
+automatically refresh the data grid when you update the data.
+
+
+Name: SetDataOfLine
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "SetDataOfLine" to group "DataGrid" with pLine, pKey,
+pValue
+
+Summary: Updates the internal array of line pLine in the data grid.
+
+Description:
+
+Updates the internal array of line pLine in the data grid. See notes for
+SetDataOfIndex.
+
+
+Name: SortByColumn
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "SortByColumn" to group "DataGrid" with pColumn
+
+Summary: Pass in a column to sort by.
+
+Description:
+
+Pass in a column to sort by. The current sort properties of the column
+will be used to perform the sort.
+
+
+Name: SortDataByKey
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "SortDataByKey" to group "DataGrid" with pArrayKey,
+pSortType, pDirection, pCaseSensitive
+
+Summary: SortDataByKey is the underlying command that all column sorts
+call.
+
+Description:
+
+SortDataByKey is the underlying command that all column sorts call. It
+can be used to sort data grid forms. pArrayKey is one the keys you
+created when you assigned set dgData property. If you used the dgText
+property then the key will be "Label 1" or "Label 2", etc. pSortType,
+pDirection and pCaseSensitive all reflect the equivalent parameters for
+the built-in 'sort container' command in Revolution. pSortType is
+"text", "numeric', "dateTime" or "international". pDirection is
+"ascending" or "descending". pCaseSensitive is true/false.
+
+
+Name: RefreshList
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "RefreshList" to group "DataGrid"
+
+Summary: Redraws the data displayed in the data grid.
+
+Description:
+
+Redraws the data displayed in the data grid.
+
+
+Name: ResetControl
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "ResetControl" to group "DataGrid"
+
+Summary: Resets the control by clearing out any data.
+
+Description:
+
+Resets the control by clearing out any data.
+
+
+Name: ResetList
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "ResetList" to group "DataGrid"
+
+Summary: Redraws the data grid data after having copied in fresh copies
+of any templates.
+
+Description:
+
+Redraws the data grid data after having copied in fresh copies of any
+templates.
+
+
+Name: ResizeToFit
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "ResizeToFit" to group "DataGrid"
+
+Summary: Used internally when the rect of the data grid changes.
+
+Description:
+
+Used internally when the rect of the data grid changes. Normally you
+will not need to call this handler as setting the rect of the data grid
+will trigger it.
+
+
+Name: ColumnControlOfIndex
+
+Type: function
+
+Associations: datagrid
+
+Syntax: put ColumnControlOfIndex(pColumnName, pIndex)
+
+Summary: Returns the control for the column of index pIndex in the Data
+Grid.
+
+Description:
+
+DATA GRID TABLES ONLY! Returns the control for the column of index
+pIndex in the Data Grid. If "cache" controls" is not true then this may
+return empty if the row the index is displayed in is currently
+offscreen.
+
+
+Name: GetDataOfIndex
+
+Type: function
+
+Associations: datagrid
+
+Syntax: put GetDataOfIndex(pIndex, pKey)
+
+Summary: Retrieves the internal array for key pIndex of the internal
+array in the data grid.
+
+Description:
+
+Retrieves the internal array for key pIndex of the internal array in the
+data grid. If pKey is empty then the array associated with key pIndex
+in the internal data array will be returned. If pKey is not empty
+
+then the value of that key for key pIndex of the internal data array
+will be returned.
+
+
+Name: GetDataOfLine
+
+Type: function
+
+Associations: datagrid
+
+Syntax: put GetDataOfLine(pLine, pKey)
+
+Summary: Retrieves the internal array associated with line pLine in
+the data grid.
+
+
+Description:
+
+Retrieves the internal array associated with line pLine in the data
+grid. See notes for GetDataOfIndex.
+
+
+Name: selectionChanged
+
+Type: message
+
+Associations: datagrid
+
+Syntax: on selectionChanged pHilitedIndexes, pPreviouslyHilitedIndexes
+
+Summary: Sent whenever the user changes the selection through some sort
+of user interaction.
+
+Example:
+on selectionChanged pHilitedIndex, pPrevHilitedIndex 
+	put the dgDataOfIndex [ pHilitedIndex ] of me into theSelDataA 
+	uiViewRecordOfID theSelDataA["id"] 
+end selectionChanged
+
+Description:
+
+Sent whenever the user changes the selection through some sort of user
+interaction. Handle this message in order to update your UI when the
+user makes a selection. 
+
+Name: EditValue
+
+Type: message
+
+Associations: datagrid
+
+Syntax: on EditValue pKey
+
+Summary: The EditValue message is sent to a table column control when
+EditCell or EditCellOfIndex is called.
+
+Description:
+
+The EditValue message is sent to a table column control when EditCell or
+EditCellOfIndex is called. In this scenario there is no pKey parameter
+since the key is the column associated with the column control
+
+the message was sent to. Tip: use the dgColumn property of a column
+template to get the name of a column in the column control. The
+EditValue message is sent to a row when EditKey or EditKeyOfIndex is
+called. In this case the first parameter is the name of the key in
+dgData that should be edited. Normally you will call EditFieldText from
+within the EditValue message in order to open a field editor for
+changing the contents.
+
+
+Name: Datagrid Template Custom Properties & Messages
+
+Type: glossary
+
+Syntax: Datagrid Template Custom Properties & Messages
+
+Associations: datagrid
+
+Summary: The properties and messages associated with the Data Grid 
+template
+
+Description:
+
+When you are coding behaviors for custom templates the following
+properties and messages are applicable.
+
+
+Name: FillInData
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on FillInData pData
+
+Summary: The EditValue message is sent to a table column control when
+EditCell or EditCellOfIndex is called.
+
+Example: 
+# Datagrid row behavior
+on FillInData pDataA
+  ## Assign FirstName value to the "FirstName" field of this row template
+  set the text of field "FirstName" of me to pDataA["FirstName"] 
+end FillInData 
+
+Example:
+# Data Grid table 
+on FillInData pData
+  ## Assign Column value to field 1 of this column template
+  set the text of field 1 of me to pData 
+end FillInData
+
+Description:
+
+The <FillInData> message is where you move data for a row or column into
+the controls for that row or column. Normally you will just assign data
+to controls in the template. You most likely will not resize any of the
+controls at this point. If your data grid is of type "form" then pData
+will be an array holding the row values. If your data grid is of type
+"table" then pData is the value for the column that is being populated.
+
+Name: LayoutControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on LayoutControl pControlRect
+
+Summary: The EditValue message is sent to a table column control when
+EditCell or EditCellOfIndex is called.
+
+Example: 
+on LayoutControl pControlRect 
+	set the rect of field "FirstName" to pControlRect 
+end LayoutControl
+
+Description:
+
+LayoutControl is sent to your custom template when it is time to
+position all of the controls. pControlRect is the rectangle that the
+data grid has resized your control to. This is useful for knowing the
+left (item 1 of pControlRect), top (item 2 of pControlRect), right (item
+3 of pControlRect) and bottom (item 4 of pControlRect) bounds you can
+position controls at. Note that if you have a data grid form that does
+not have fixed height set to true then you can ignore the botom (item 4
+of pControlRect) and make your control as tall as you need. 
+
+Name: dgLine
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: get the dgLine of this control
+
+Summary: The line (or row) number that is being displayed in the copy of
+the template.
+
+Description:
+
+The line (or row) number that is being displayed in the copy of the
+template.
+
+
+Name: dgIndex
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: get the dgIndex of this control
+
+Summary: The index used to uniquely identify the record being displayed
+in the copy of the template.
+
+Description:
+
+The index used to uniquely identify the record being displayed in the
+copy of the template.
+
+
+Name: dgColumn
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: get the dgColumn of me
+
+Summary: Get the name of the column the instance of the template is
+Associations with.
+
+
+Description:
+
+When working with a data grid table you can use the dgColumn of me in a
+custom template behavior to get the name of the column the instance of
+the template is associated with. To use this property in
+
+other scripts you use the target or the mousecontrol as the target as
+well.
+
+
+Name: dgColumnNumber
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: get the dgColumnNumber of me
+
+Summary: Get the column number relative to all visible columns.
+
+Description:
+
+When working with a data grid table you can use the dgColumnNumber of me
+in a custom template behavior to get the column number relative to all
+visible columns. To use this property in other scripts you use the
+target or the mousecontrol as the target as well.
+
+
+Name: dgDataControl
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: getProp dgDataControl
+
+Summary: This is a custom property defined in the behavior script for
+your template
+
+Description:
+
+Your template should 'return the long id of me' in this getprop handler.
+This helps the data grid identify your row template. 
+
+>*Important:* This is required for the Datagrid to work properly
+
+
+Name: dgHilite
+
+Type: property
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: setProp dgHilite {true | false}
+
+Summary: This is a custom property are defined in the behavior script
+for your template
+
+Description:
+
+This property is set by the data grid to set the highlighted state of
+the row or column control. If the value is "true" then the control should
+be highlighted. If "false" then it should not be.

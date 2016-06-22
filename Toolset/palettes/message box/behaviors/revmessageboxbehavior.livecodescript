@@ -264,6 +264,13 @@ command removeAll
    unlock screen
 end removeAll
 
+on revIDEFocusOnMessageBox pChar
+   if lSelectedCard is among the items of "Single Line,Multiple Lines" then
+      focus on field "message" of card lSelectedCard
+      put pChar into the selectedChunk
+   end if
+end revIDEFocusOnMessageBox
+
 command scriptAction pID, pName
    switch the short name of the target
       case "scriptLines"
@@ -546,13 +553,11 @@ command ideMessageBoxExecuteScript pScript
    local tDebugMode
    put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
-   lock screen
    local tValidScript
    ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, tDebugMode, tValidScript
    if the result is not empty then
       put ideMessageBoxFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
    end if
-   unlock screen
    
    return tValidScript
 end ideMessageBoxExecuteScript 

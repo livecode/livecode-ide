@@ -20,15 +20,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 constant kLogFilename = "_test_suite.log"
 
 on startup
-   if the environment begins with "development" then
-      send "TestRunnerInvokeAll" to me in 0
+   local tTarget
+   if the target begins with "card" then
+      put the long id of the owner of the target into tTarget
    else
-	  send "TestRunnerMain" to me in 0
+      put the long id of the target into tTarget
+   end if
+   
+   if tTarget is the long id of me then 
+	   if the environment begins with "development" then
+    	  send "TestRunnerInvokeAll" to me in 0
+	   else
+		  send "TestRunnerMain" to me in 0
+	   end if
    end if
 end startup
 
 on openStack
-   send "TestRunnerInvokeAll" to me in 0
+   if the long id of the target is the long id of this card of me then
+	   send "TestRunnerInvokeAll" to me in 0
+   end if
 end openStack
 
 ----------------------------------------------------------------
@@ -153,6 +164,9 @@ private command invokeLoadIDE
 	
 	dispatch "startup" to tStackName
 	open tStackName
+	
+	-- Set the 'test environment' to true
+	revSetTestEnvironment true
 end invokeLoadIDE
 
 private command invokeAllTests

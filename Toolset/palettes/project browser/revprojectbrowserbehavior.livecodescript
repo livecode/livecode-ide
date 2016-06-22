@@ -132,7 +132,11 @@ on ideNewControl pTarget
    put the long id of pTarget into pTarget
    if word  1 of pTarget is "stack" or  word  1 of pTarget is "card" then
       exit ideNewControl
-   else if word  1 of pTarget is "group" then
+   end if
+   
+   local tSortType,tSortOrder
+   revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   if word  1 of pTarget is "group" and tSortType is "number" then
       addGroupToProjectBrowser pTarget
    else
       addControlToProjectBrowser pTarget
@@ -210,6 +214,17 @@ on ideNameChanged pOldName, pNewName, pTarget
    end if
    
    updateObjectRows pTarget, "name", pNewName
+   
+   # If we're sorting by name, we might need to re-order
+   local tSortType,tSortOrder
+   if word 1 of pTarget is "card" then
+      revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
+   else
+      revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
+   end if
+   if tSortType is "name" then
+      buildProjectView true
+   end if
 end ideNameChanged
 
 on ideMainstackChanged pOldName, pNewName, pTarget
@@ -429,8 +444,9 @@ command buildProjectView pRememberExpansion
       if exists(tExpandedControl) then
          put getRow(tExpandedControl) into tChildRow
          put itemOffset(tChildRow, tVisibleRows) into tVisibleRowNumber
-         addChildren tExpandedControl, tChildRow, false
-         put the number of items in sDisplayArray["objects"][tChildRow]["children"] into sDisplayArray["objects"][tChildRow]["childCount"] 
+         if sDisplayArray["objects"][tChildRow]["childCount"] is not 0 then
+            addChildren tExpandedControl, tChildRow, false
+         end if
          put "false" into sDisplayArray["objects"][tChildRow]["expanded"]
          dispatch "TreeToggleRow" to group "objectList" with sDisplayArray, tVisibleRowNumber, 0, true
       end if
@@ -1417,7 +1433,7 @@ function levelConnectors pObjectArray, pParentRow, pPosition
             put "branch"  into tLevelConnectors[1] 
          end if
       end if
-   else if pObjectArray["type"] is "group" then
+   else if pObjectArray["style"] is "group" then
       put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
       
       repeat with l = 1 to pObjectArray["level"]-1
