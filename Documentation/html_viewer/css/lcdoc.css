@@ -198,3 +198,11 @@
 	margin: 0;
 	padding-left: 0;
 }
+
+#filters_options td {
+	padding-right: 10px;
+}
+
+#filters_options .category {
+	padding-top: 10px;
+}

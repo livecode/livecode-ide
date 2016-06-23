@@ -220,14 +220,65 @@
 		return Object.keys(obj).sort();
 	}
 	
+	function filter_cell(pCategory, pValue)
+	{
+		var tHTML = '';
+		tHTML += '<td><a href="#" class="apply_filter" ';
+		tHTML += 'filter_category="'+pCategory+'" ';
+		tHTML += 'filter_value="'+pValue+'">';
+		tHTML += pValue;
+		//tHTML += '<span class="badge">'+pFilterData[tFilter]+'</span>';
+		tHTML += '</a></td>';
+		return tHTML;
+	}
+	
+	function filter_html(pCategory, pFilterData)
+	{
+		var tHTML = '';
+		tHTML += '<tbody><tr><td class="category"><b>'+pCategory+':</b></td></tr>';
+		var tSortedFilters = sortedKeys(pFilterData);
+		
+		// Create a list of the filters we'll actually be displaying
+		var tDisplayedFilters = [];
+		$.each(tSortedFilters, function(index, value)
+		{
+			if (!tState.filters.hasOwnProperty(index) || 
+				tState.filters[pCategory].indexOf(value) == 0)
+				tDisplayedFilters.push(value);
+		});
+		
+		// Display them in alphabetical order going down the table,
+		// rather than across
+		var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
+		var tOddNumber = tDisplayedFilters.length % 2 == 1;
+		for (i = 1; i <= tRowCount; i++)
+		{
+			tHTML += '<tr>'
+			tHTML += filter_cell(pCategory, tDisplayedFilters[i-1]);
+			if (i != tRowCount || !tOddNumber)
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount]);
+			tHTML += '</tr>';
+		}
+		tHTML += '</tbody>';
+		
+		return tHTML;
+	}
+	
 	function displayFilters(){
 		// First display the applied filters
 		var tHTML = "";
-		$.each(tState.filters, function(filter_tag, filter_data) {
+		$.each(tState.filters, function(filter_tag, filter_data) 
+		{
 			tHTML += '<div style="margin-bottom:10px">';
 			tHTML += '<b>'+filter_tag+':</b> ';
-			$.each(filter_data, function(index, filter_name) {
-				tHTML += '<button type="button" class="btn btn-default btn-sm remove_filter" filter_tag="'+filter_tag+'" filter_data="'+filter_name+'">'+filter_name+'</button>';
+			$.each(filter_data, function(index, filter_name) 
+			{
+				tHTML += '<button type="button" ';
+				tHTML += 'class="btn btn-default btn-sm remove_filter" ';
+				tHTML += 'filter_tag="'+filter_tag+'" ';
+				tHTML += 'filter_data="'+filter_name+'">';
+				tHTML += filter_name;
+				tHTML += '</button>';
 			});
 			tHTML += '</div>';
 		});
@@ -237,25 +288,14 @@
 		tHTML = "";
 		var tFilterData = filterOptions("type,tags,OS");
 		
+		tHTML += '<div style="margin-bottom:20px">';
+		tHTML += '<table>';
 		$.each(tFilterData, function(category, value) {
-			if(jQuery.isEmptyObject(value) == false){
-				tHTML += '<div style="margin-bottom:20px">';
-				tHTML += '<b>'+category+':</b> ';
-				
-				var tSortedFilters = sortedKeys(value);
-				for (index = 0; index < tSortedFilters.length; ++index)
-				{
-					var tFilter = tSortedFilters[index];
-					if(tState.filters.hasOwnProperty(index) && tState.filters[category].indexOf(tFilter) > 0){
-				
-					} else {
-						tHTML += '<a href="#" class="apply_filter" filter_category="'+category+'" filter_value="'+tFilter+'">'+tFilter+' <span class="badge">'+value[tFilter]+'</span></a> ';
-					}
-				}
-				tHTML += '</div>';
-			}
+			if(jQuery.isEmptyObject(value) == false)
+				tHTML += filter_html(category, value);
 		});
-	
+		tHTML += '</table>';
+		tHTML += '</div>';
 		$("#filters_options").html(tHTML);
 	}
 	
