@@ -179,53 +179,6 @@ end revIDEDeployTargetsChanged
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Utility functions used by mobile save as standalone implementations.
-//
-
-local sStackFiles
-
-function revIDEDeployRelativeStackFilesList pStack
-  local tLine,tChars,tStackFiles,tMainStackPath
-  put revIDEDeployGetStackFilesList(pStack) into tStackFiles["full"]
-  set the itemDel to "/"
-  put item 1 to -2 of line 1 of tStackFiles["full"] & "/" into tMainStackPath
-  put the number of chars of tMainStackPath into tChars
-  repeat for each line tLine in tStackFiles["full"]
-    if char 1 to tChars of tLine = tMainStackPath then delete char 1 to tChars of tLine
-    put tLine & cr after tStackFiles["relative"]
-  end repeat
-  delete char -1 of tStackFiles["relative"]
-  return tStackFiles
-end revIDEDeployRelativeStackFilesList
-
-private function revIDEDeployGetStackFilesList pStack
-  put "" into sStackFiles
-  put the effective fileName of stack pStack into sStackFiles
-  revIDEDeployRecursiveStackFileList pStack
-  return sStackFiles
-end revIDEDeployGetStackFilesList
-
-private command revIDEDeployRecursiveStackFileList pStack
-  local tLine,tFileName
-  set the itemDel to "/"
-  put item 1 to -2 of the fileName of stack pStack&"/" into tFileName
-  set the itemDel to ","
-  repeat for each line tLine in the stackFiles of stack pStack
-    if there is not a stack item 2 of tLine then put tFileName before item 2 of tLine
-    if there is a stack item 2 of tLine then
-      if the effective fileName of stack item 2 of tLine is not among the lines of sStackFiles then 
-        put cr& the effective fileName of stack item 2 of tLine after sStackFiles
-        revIDEDeployRecursiveStackFileList item 2 of tLine
-      end if
-    end if
-  end repeat
-  repeat for each line tLine in the substacks of stack pStack
-    revIDEDeployRecursiveStackFileList tLine
-  end repeat
-end revIDEDeployRecursiveStackFileList
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  Preferences require access to various specific aspects of deployment config, so these
 //  calls provide this in a sane manner.
 //

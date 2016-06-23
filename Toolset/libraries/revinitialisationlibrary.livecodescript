@@ -22,25 +22,20 @@ command revInternal__LoadLibrary pLibrary
       else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
+      else if there is a stack pLibrary then put the filename of stack pLibrary into tLibraryPath
       else answer "no file for library" && pLibrary
       
       try
-      	--local tDefaultStack
-      	--put the defaultStack into tDefaultStack
-         // Open the stack
-        -- go stack tLibraryPath
-         
-         --set the defaultStack to tDefaultStack
-         
          // Get its name
          local tStackName
          put the name of stack tLibraryPath into tStackName
          
-         // Insert the script into the backscript
-         send "revLoadLibrary" to stack tStackName
-         
-         put tStackName into sLoadedLibraries[pLibrary]
-                  
+         dispatch "revLoadLibrary" to stack tStackName
+         if it is "unhandled" then
+            delete stack tStackName
+         else
+            put tStackName into sLoadedLibraries[tStackName]
+         end if
          return true
       catch tError
          answer tError
@@ -49,8 +44,12 @@ command revInternal__LoadLibrary pLibrary
       
    else
       try
-         send "revLoadLibrary" to stack pLibrary
-         put pLibrary into sLoadedLibraries[pLibrary]
+         dispatch "revLoadLibrary" to stack pLibrary
+         if it is "unhandled" then
+            delete stack pLibrary
+         else
+            put pLibrary into sLoadedLibraries[pLibrary]
+         end if
       catch tError
          write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
       end try
