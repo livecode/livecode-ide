@@ -510,10 +510,7 @@
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
 						$.each(value, function(index2, value2) {
-							tSyntaxHTML += replace_link_placeholders_with_param(value2);
-							// Syntax can be multi-line
-							tSyntaxHTML = tSyntaxHTML.replace(/\n/g, "<br />")
-							tSyntaxHTML += '<br />';
+							tHTML += '<pre><code>' + remove_link_placeholders(value2) + '</code></pre>';
 						});
 					} else {
 						tSyntaxHTML += 'Malformed syntax in JSON';	
@@ -625,6 +622,15 @@
 			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
 				var resolved = resolve_link_placeholder(matched_text);
 				return '<span class="lcdoc_entry_param">' + resolved[0] + '</span>';	
+			});
+			return pText;
+		}
+	}	
+	
+	function remove_link_placeholders(pText){
+		if(pText){
+			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
+				return matched_text;
 			});
 			return pText;
 		}
