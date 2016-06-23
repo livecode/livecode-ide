@@ -19,17 +19,6 @@
 	<div class="row">
 		<div class="col-md-3">
 			<div class="affix bs-sidebar" id="lcdoc_sidebar">
-				<div class="btn-group" style="width:100%; margin-bottom:15px" id="lcdoc_library_chooser">
-				  <div class="dropdown">
-				  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-					<span id="lcdoc_library_chooser_text"></span>
-					<span class="caret"></span>
-				  </button>
-				  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
-				  </ul>
-				</div>
-				</div>
-			
             	<div class="panel panel-default">
 					<div class="panel-heading">Filters</div>
 					<div class="panel-body" id="filters">none</div>
@@ -48,15 +37,21 @@
 				<div class="panel panel-default affix_right" id="lcdoc_list">
 				  <div class="panel-heading " >
 					  <div class="row">
-					  	
-						<div class="col-md-9">
-							<nav>
-							  <ul class="pagination pagination-sm" style="margin:0;padding-left:0" id="breadcrumb">
-								
-							  </ul>
-							</nav>
+						<div class="col-md-3">
+							<div class="btn-group" style="width:100%" id="lcdoc_library_chooser">
+							  <div class="dropdown">
+				  				<button class="btn btn-default btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+									<span id="lcdoc_library_chooser_text"></span>
+									<span class="caret"></span>
+				  				</button>
+				  				<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
+								</ul>
+							  </div>
+							</div>
 						</div>
-				
+					  	<div class="col-md-3">
+						</div>
+
 						<div class="col-md-3">
 							<div class="input-group" id="filter_box">
 								<input id="ui_filer" type="text" class="form-control input-sm">
@@ -64,8 +59,14 @@
 									<button class="btn btn-default btn-sm" type="button"><span class="glyphicon glyphicon-search"></span></button>
 								</span>
 							</div>
-							<span class="label label-primary">Showing <span id="entries_showing">0</span> of <span id="entries_total">0</span> entries</span>
 						</div><!-- /input-group -->
+						
+						<div class="col-md-3">
+					  		<nav>
+							  <ul class="pagination pagination-sm" id="breadcrumb"></ul>
+							</nav>
+						</div>
+						
 					  </div>
 					</div>
 			  		

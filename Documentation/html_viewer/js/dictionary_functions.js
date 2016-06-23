@@ -1,4 +1,4 @@
-	var tState = {selected:"",history:[],searched:{},filters:{},filtered_data:[],data:"",selected_api_id:""};
+	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:""};
 	
 	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
 	
@@ -350,8 +350,11 @@
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
-	function displayEntry(pEntryID){	
+	function displayEntry(pEntryID)
+	{		
 		var tEntryObject = entryData(pEntryID);
+		history_add(tEntryObject);
+		
 		pEntryID = tEntryObject.id;
 		
 		console.log(tEntryObject);
@@ -693,44 +696,59 @@
 		return tID;
 	} 
 	
-	function breadcrumb_draw(){
-		var tHistory = tState.history;
-		var tHTML = "";
-		var tSelectedKey = entryIDToHistoryKey(tState.selected);
+	function breadcrumb_draw()
+	{
+		var tHistory = tState.history.list;
+				
+		var tHtml = '';
+		if (tHistory . length > 1)
+			tHtml += '<li class="dropdown">';
+		else
+			tHtml += '<li class="disabled">';
 		
-		//console.log(tState.history);
-		if (typeof tSelectedKey == 'undefined') tSelectedKey = 0;
+		tHtml += '<a href="#" class="dropdown-toggle" data-toggle="dropdown">';
+		tHtml += '<span class="glyphicon glyphicon-time" id="dropdownMenu2" aria-expanded="true"></span>';
+		tHtml += '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2" id="lcdoc_history_list">';
 		
-		var start_point = 0;
-		
-		if(tSelectedKey < 2){
-			start_point = 0;
-		} else {
-			start_point = tSelectedKey-2;
-		}
-		
-		end_point = start_point + 4;
-		if(end_point > tHistory.length) end_point = tHistory.length;
-		
-		
-		
-		//console.log(start_point,end_point);
-		
-		$.each(tHistory, function(index, value) {
-			if(index >= start_point && index <= end_point){
-				if(index == tSelectedKey) tHTML = '<li class="active"><a href="#">'+value.name+'</a></li>' + tHTML;
-				else tHTML = '<li><a href="javascript:void(0)" class="load_breadcrumb_entry" entryid ="'+value.id+'">'+value.name+'</a></li>' + tHTML;
-			}
+		$.each(tHistory, function(index, value) 
+		{
+			if (index == tState.history.selected)
+				tHtml += '<li class="active"><a href="#">'+tHistory[index].name+'</a></li>';
+			else
+				tHtml += '<li><a href="javascript:void(0)" class="load_breadcrumb_entry" historyIndex ="'+index+'">'+value.name+'</a></li>';
 		});
+
+		tHtml += '</ul>';
+		tHtml += '</a></li>';
 		
-		if(tSelectedKey==tHistory.length-1) tHTML = '<li class="disabled" style="float:left"><a href="#"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></a></li>' + tHTML;
-		else tHTML = '<li class="lcdoc_history_back"><a href="#"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></a></li>' + tHTML; 
+		var tGlyphPrefix, tGlyphSuffix;
+		tGlyphPrefix = '<a href="#"><span aria-hidden="true" class="glyphicon glyphicon-chevron-';
+		tGlyphSuffix = '"></span>';
+
+		var tAltPrefix, tAltSuffix;		
+		tAltPrefix = '<span class="sr-only">';
+		tAltSuffix = '</span></a>';
 		
-		if(tSelectedKey==0) tHTML += '<li class="disabled"><a href="#"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></a>';
-		else tHTML += '<li class="lcdoc_history_forward"><a href="#"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></a>';
-		$("#breadcrumb").html(tHTML);
-		//console.log(tHistory);
+		var tLeftNavHtml, tRightNavHtml;
+		tLeftNavHtml =  tGlyphPrefix + 'left' + tGlyphSuffix + tAltPrefix + 'Previous' + tAltSuffix;
+		tRightNavHtml = tGlyphPrefix + 'right' + tGlyphSuffix + tAltPrefix + 'Next' + tAltSuffix;		
+
+		var tLeftNavItem;
+		if (tState.history.selected > 0) 
+			tLeftNavItem = '<li class="lcdoc_history_back">' + tLeftNavHtml;
+		else 
+			tLeftNavItem = '<li class="disabled" style="float:left">' + tLeftNavHtml;
 		
+		tLeftNavItem += '</li>';
+		
+		if (tState.history.selected < tHistory.length - 1) 
+			tRightNavItem = '<li class="lcdoc_history_forward">' + tRightNavHtml;
+		else 
+			tRightNavItem = '<li class="disabled">' + tRightNavHtml;
+
+		tRightNavItem += '</li>';
+	
+		$("#breadcrumb").html(tLeftNavItem + tRightNavItem + tHtml);
 	}
 	
 	function parameterFormatValue(pType, pData){
@@ -757,40 +775,54 @@
 		return tHTML;
 	}
 	
-	function history_add(pEntryID){
-		//console.log(pEntryID);
-		var tEntryObject = entryData(pEntryID);
-		$.each(tState.history, function(history_index, history_entry_object) {
-			if(history_entry_object.id == pEntryID){
-				// History already contains this entry.
-				//delete tState.history[history_index];
-				tState.history.splice(history_index,1);
-				return false;
+	function history_selected_entry()
+	{
+		return tState.history.list[tState.history.selected];
+	}
+	
+	function history_add(pEntryObject)
+	{	
+		if (tState.history.selected != -1)
+		{
+			// If this is the currently selected item, don't do anything
+			if (history_selected_entry().id == pEntryObject.id)
+				return;
+		}
+
+		var tObject = {"id":pEntryObject.id,"name":pEntryObject["display name"]}
+		var tNewHistory = tState . history .list;
+		
+		// Remove item from history if it is present
+		$.each(tNewHistory, function(index, value) 
+		{
+			if (value.id == tObject.id)
+			{
+				tNewHistory.splice(index, 1);
+				return;
 			}
 		});
-	
-		var tObject = {"id":pEntryID,"name":tEntryObject["display name"]}
-		tState.history.unshift(tObject);
+		
+		// Push item onto end of history list
+		tNewHistory.push(tObject);
+		
+		tState.history.list = tNewHistory;
+		tState.history.selected = tNewHistory . length - 1;
 	}
 	
-	function entryIDToHistoryKey(pEntryID){
-		var tID = 0;
-		$.each(tState.history, function( index, value) {
-			if(value.id == pEntryID){
-				tID = index;
-				return false;
-			}
-			
-		});
-		return tID;
+	function history_back()
+	{
+		go_history(tState.history.selected - 1);
 	}
 	
-	function history_back(){
-		displayEntry(tState.history[entryIDToHistoryKey(tState.selected)+1].id);
+	function history_forward()
+	{
+		go_history(tState.history.selected + 1);
 	}
 	
-	function history_forward(){
-		displayEntry(tState.history[entryIDToHistoryKey(tState.selected)-1].id);
+	function go_history(pHistoryID)
+	{
+		tState.history.selected = pHistoryID
+		displayEntry(history_selected_entry().id);
 	}
 	
 	function entry_next(){
@@ -805,7 +837,6 @@
 			}
 			
 		});
-		history_add(tNextID);
 		displayEntry(tNextID);
 	}
 	
@@ -820,7 +851,7 @@
 				tState.selected_api_id = pLibraryID;
 				$.session.set("selected_api_id", pLibraryID);
 				tState.selected = ""
-				tState.history = [];
+				tState.history = {list:[], selected:-1};
 				tState.searched = {};
 				tState.filters= {};
 				tState.filtered_data = [];
@@ -862,7 +893,6 @@
 			}
 			
 		});
-		history_add(tPreviousID);
 		displayEntry(tPreviousID);
 	}
 	
@@ -892,19 +922,22 @@
 	}
 	
 	function setActions()
-	{
+	{	
+		breadcrumb_draw();
+	
 		$('#ui_filer').keyup(function() {
 		  displayEntryListGrep(this.value);
 		})
 		
 		$("body").on( "click", ".load_entry", function() {
 			var tEntryID = $(this).attr("entryid");
-			history_add(tEntryID);
 			displayEntry(tEntryID);
 		});
 		
 		$("body").on( "click", ".load_breadcrumb_entry", function() {
-			displayEntry($(this).attr("entryid"));
+			var tHistoryIndex;
+			tHistoryIndex = parseInt($(this).attr("historyIndex"));
+			go_history(tHistoryIndex);
 		});
 		
 		$("body").on( "click", ".apply_filter", function() {
@@ -918,7 +951,7 @@
 			var filter_data = $(this).attr("filter_data");
 			filter_remove(filter_tag,filter_data);
 		});
-		
+
 		$("body").on( "click", ".lcdoc_history_forward", function() {
 			history_forward();
 		});

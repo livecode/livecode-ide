@@ -139,3 +139,19 @@
     color: #428BCA;
     text-decoration: underline;
 }
+
+#breadcrumb {
+	margin: 0;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+#breadcrumb_back {
+	margin: 0;
+	padding-right: 0;
+}
+
+#breadcrumb_forward {
+	margin: 0;
+	padding-left: 0;
+}
