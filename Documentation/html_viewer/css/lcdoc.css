@@ -201,8 +201,12 @@
 	padding-left: 0;
 }
 
-#filters_options {
+#lcdoc_sidebar {
 	height: 100%;
+}
+
+#filters_options {
+	height: 95%;
 	overflow-y: scroll;
 }
 
@@ -212,4 +216,13 @@
 
 #filters_options .category {
 	padding-top: 10px;
+}
+
+#filters_container {
+	height: 100%;
+}
+
+#filters_panel {
+	height: 75%;
+	overflow: hidden;
 }

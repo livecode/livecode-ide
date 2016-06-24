@@ -35,7 +35,7 @@
 				</div>
             	<div class="panel panel-default" id="filters_panel">
 					<div class="panel-heading">Filters</div>
-					<div class="panel-body">
+					<div class="panel-body" id="filters_container">
 						<div id="filters">none</div>
 						<div id="filters_options"></div>
 		  			</div>

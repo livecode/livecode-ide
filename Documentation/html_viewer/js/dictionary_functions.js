@@ -288,7 +288,7 @@
 		tHTML = "";
 		var tFilterData = filterOptions("type,tags,OS");
 		
-		tHTML += '<div style="margin-bottom:20px">';
+		tHTML += '<div style="margin-bottom:50px">';
 		tHTML += '<table>';
 		$.each(tFilterData, function(category, value) {
 			if(jQuery.isEmptyObject(value) == false)
@@ -1126,19 +1126,25 @@
 		$('#resizer').on('mousedown', function (event) {
 			doTableResize();
 		});
-		
-		// Prevent mouse scroll on table bubbling to window level
-		$("#lcdoc_list").bind('mousewheel', function(e, d)  {
-			var t = $("#table_container");
-			if (d > 0 && t.scrollTop() === 0) {
-				e.preventDefault();
-			}
-			else {
-				if (d < 0 && (t.scrollTop() == t.get(0).scrollHeight - t.innerHeight())) {
+
+		// Prevent mouse scroll on table bubbling to window level		
+		function preventScrollBubble(pEventTarget, pScrollTarget)
+		{	
+			pEventTarget.bind('mousewheel', function(e, d)  {
+				if (d > 0 && pScrollTarget.scrollTop() === 0) {
 					e.preventDefault();
 				}
-			}
-		});
+				else {
+					var tBottom;
+					tBottom = pScrollTarget.get(0).scrollHeight - pScrollTarget.innerHeight();
+					if (d < 0 && (pScrollTarget.scrollTop() == tBottom)) {
+						e.preventDefault();
+					}
+				}
+			});
+		}
+		preventScrollBubble($("#lcdoc_list"), $("#table_container"));
+		preventScrollBubble($("#filters_panel"), $("#filters_options"));
 		
 		update_lcdoc_margin();
 		
