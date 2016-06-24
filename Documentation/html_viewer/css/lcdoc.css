@@ -226,3 +226,11 @@
 	height: 75%;
 	overflow: hidden;
 }
+
+#lcdoc_library_chooser {
+	width: 100%;
+}
+
+#dropdownMenu1 {
+	width: 100%;
+}

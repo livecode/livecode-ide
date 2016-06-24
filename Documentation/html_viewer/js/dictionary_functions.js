@@ -901,8 +901,10 @@
 	}
 	
 	function library_set(pLibraryID){
-		var tLibraryName = library_id_to_name(pLibraryID);
-		$("#lcdoc_library_chooser_text").html(tLibraryName);
+		var tChooserLabel = 'Choose API: ';
+		tChooserLabel += library_id_to_name(pLibraryID);
+
+		$("#lcdoc_library_chooser_text").html(tChooserLabel);
 	
 		if(dictionary_data.docs.hasOwnProperty(pLibraryID))
 		{				
