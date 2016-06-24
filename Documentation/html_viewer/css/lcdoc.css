@@ -115,9 +115,9 @@
 	font-style:italic;
 }
 
-#lcdoc_body table{ border: 1px solid #cccccc; width:100%; margin-bottom:10px}
-#lcdoc_body table thead{ border-bottom: 2px solid #cccccc;}
-#lcdoc_body table td{ border: 1px solid #cccccc; padding:5px;}
+#lcdoc_body table{ border: 1px solid rgba(204, 204, 204, 0.35); width:100%; margin-bottom:10px}
+#lcdoc_body table thead{ border-bottom: 2px solid rgba(204, 204, 204, 0.35);}
+#lcdoc_body table td{ border: 1px solid rgba(204, 204, 204, 0.35); padding:5px;}
 #lcdoc_body table td p{ margin-bottom:0px;}
 
 #lcdoc_body .lcdoc_glossary_table td{width:37%}
