@@ -874,7 +874,8 @@
 			if (value.id == tObject.id)
 			{
 				tNewHistory.splice(index, 1);
-				return;
+				// Exit the loop once we have found and removed the item
+				return false;
 			}
 		});
 		
