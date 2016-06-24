@@ -98,11 +98,18 @@
 		var filtered_data = [];
 		var tFound_data = []
 		
-		if(jQuery.isEmptyObject(tState.filters) == true){
+		if (jQuery.isEmptyObject(tState.filters))
+		{
 		 	tState.filtered_data = dataGet();
-		} else {		
-			$.each(dataGet(), function(index, entryData){
-				$.each(tState.filters, function(category, values){
+		} 
+		else 
+		{		
+			// Iterate over the current data to find entries that match
+			// the current filter options
+			$.each(dataGet(), function(index, entryData)
+			{
+				$.each(tState.filters, function(category, values)
+				{
 					tFound_data[category] = 0;
 					$.each(values, function(tag, tag_value){
 					
@@ -115,6 +122,7 @@
 							case "platforms":
 							case "OS":
 							case "tags":
+							case "associations":
 								if(entryData.hasOwnProperty(category)){
 									$.each(entryData[category], function(item_index, entry_item_value){
 										if(tag_value == entry_item_value){
@@ -286,7 +294,7 @@
 		
 		// Next display the filter options
 		tHTML = "";
-		var tFilterData = filterOptions("type,tags,OS");
+		var tFilterData = filterOptions("type,associations,tags,OS,platforms");
 		
 		tHTML += '<div style="margin-bottom:50px">';
 		tHTML += '<table>';
