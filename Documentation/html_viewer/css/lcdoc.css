@@ -199,6 +199,11 @@
 	padding-left: 0;
 }
 
+#filters_options {
+	height: 100%;
+	overflow-y: scroll;
+}
+
 #filters_options td {
 	padding-right: 10px;
 }
