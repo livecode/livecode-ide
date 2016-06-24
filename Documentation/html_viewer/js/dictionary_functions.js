@@ -551,7 +551,19 @@
 					
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 					//tHTML += '<span class="social social-ios"></span>';
-					tHTML += value;
+					if (typeof value == 'object')
+					{
+						var tOutput = '';
+						$.each(value, function(index, content)
+						{
+							if (tOutput != '')
+								tOutput += ', ';
+							tOutput += content;
+						});
+						tHTML += tOutput;
+					}
+					else
+						tHTML += value;
 					tHTML += '</div>';
 					break;
 			}
