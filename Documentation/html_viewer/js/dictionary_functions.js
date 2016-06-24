@@ -775,56 +775,39 @@
 	function breadcrumb_draw()
 	{
 		var tHistory = tState.history.list;
-				
-		var tHtml = '';
-		if (tHistory . length > 1)
-			tHtml += '<li class="dropdown">';
+		
+		if (tState.history.selected > 0) 
+			$('#lcdoc_history_back').removeClass('disabled');
 		else
-			tHtml += '<li class="disabled">';
+			$('#lcdoc_history_back').addClass('disabled');
 		
-		tHtml += '<a href="#" class="dropdown-toggle" data-toggle="dropdown">';
-		tHtml += '<span class="glyphicon glyphicon-time" id="dropdownMenu2" aria-expanded="true"></span>';
-		tHtml += '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2" id="lcdoc_history_list">';
+		if (tState.history.selected < tHistory.length - 1) 
+			$('#lcdoc_history_forward').removeClass('disabled');
+		else
+			$('#lcdoc_history_forward').addClass('disabled');
 		
+		if (tHistory . length <= 1)
+		{
+			$('#lcdoc_history').addClass('disabled');
+			return;
+		}
+		else
+			$('#lcdoc_history').removeClass('disabled');
+		
+		var tHistoryList = '';	
 		$.each(tHistory, function(index, value) 
 		{
 			if (index == tState.history.selected)
-				tHtml += '<li class="active"><a href="#">'+tHistory[index].name+'</a></li>';
+				tHistoryList += '<li class="active"><a href="#">';
 			else
-				tHtml += '<li><a href="javascript:void(0)" class="load_breadcrumb_entry" historyIndex ="'+index+'">'+value.name+'</a></li>';
+			{
+				tHistoryList += '<li><a href="javascript:void(0)" ';
+				tHistoryList += 'class="load_breadcrumb_entry" historyIndex ="'+index+'">';
+			}
+			tHistoryList += value.name + ' (' + value.type + ')</a></li>';
 		});
-
-		tHtml += '</ul>';
-		tHtml += '</a></li>';
-		
-		var tGlyphPrefix, tGlyphSuffix;
-		tGlyphPrefix = '<a href="#"><span aria-hidden="true" class="glyphicon glyphicon-chevron-';
-		tGlyphSuffix = '"></span>';
-
-		var tAltPrefix, tAltSuffix;		
-		tAltPrefix = '<span class="sr-only">';
-		tAltSuffix = '</span></a>';
-		
-		var tLeftNavHtml, tRightNavHtml;
-		tLeftNavHtml =  tGlyphPrefix + 'left' + tGlyphSuffix + tAltPrefix + 'Previous' + tAltSuffix;
-		tRightNavHtml = tGlyphPrefix + 'right' + tGlyphSuffix + tAltPrefix + 'Next' + tAltSuffix;		
-
-		var tLeftNavItem;
-		if (tState.history.selected > 0) 
-			tLeftNavItem = '<li class="lcdoc_history_back">' + tLeftNavHtml;
-		else 
-			tLeftNavItem = '<li class="disabled" style="float:left">' + tLeftNavHtml;
-		
-		tLeftNavItem += '</li>';
-		
-		if (tState.history.selected < tHistory.length - 1) 
-			tRightNavItem = '<li class="lcdoc_history_forward">' + tRightNavHtml;
-		else 
-			tRightNavItem = '<li class="disabled">' + tRightNavHtml;
-
-		tRightNavItem += '</li>';
 	
-		$("#breadcrumb").html(tLeftNavItem + tRightNavItem + tHtml);
+		$("#lcdoc_history_list").html(tHistoryList);
 	}
 	
 	function parameterFormatValue(pType, pData){
@@ -865,7 +848,7 @@
 				return;
 		}
 
-		var tObject = {"id":pEntryObject.id,"name":pEntryObject["display name"]}
+		var tObject = {"id":pEntryObject.id,"name":pEntryObject["display name"],"type":pEntryObject.type}
 		var tNewHistory = tState . history .list;
 		
 		// Remove item from history if it is present
@@ -1034,12 +1017,14 @@
 			filter_remove(filter_tag,filter_data);
 		});
 
-		$("body").on( "click", ".lcdoc_history_forward", function() {
-			history_forward();
+		$('#lcdoc_history_forward').on( "click", function() {
+			if (!$(this).hasClass('disabled'))
+				history_forward();
 		});
 		
-		$("body").on( "click", ".lcdoc_history_back", function() {
-			history_back();
+		$('#lcdoc_history_back').on( "click", function() {
+			if (!$(this).hasClass('disabled'))
+				history_back();
 		});
 		
 		$("body").on( "click", "#table_list", function() {
