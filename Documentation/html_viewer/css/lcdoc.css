@@ -75,8 +75,10 @@
 #header_panel_holder {
 	background-color: #FFFFFF;
 	top: 0;
-	min-height: 55px;
-	height: 313px;
+	padding-top: 25px;
+	position: fixed;
+	min-height: 85px;
+	height: 353px;
 }
 
 #table_container {
@@ -86,7 +88,7 @@
 }
 
 #lcdoc_list {
-	height: 100%;
+	position: fixed;
 }
 
 #lcdoc_body{

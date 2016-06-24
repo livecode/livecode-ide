@@ -1001,7 +1001,7 @@
 	function setActions()
 	{	
 		breadcrumb_draw();
-	
+				
 		$('#ui_filer').keyup(function() {
 		  displayEntryListGrep(this.value);
 		})
@@ -1056,15 +1056,30 @@
 			var library_name = library_id_to_name(library_id);
 			library_set(library_id);
 		});
+
+		var $resizer = $('#resizer');
+		
+		var tResizerMargin;
+		tResizerMargin = parseInt($resizer.css('margin'));
+		
+		function update_lcdoc_margin()
+		{			
+			var tHeaderHeight;
+			tHeaderHeight = parseInt($('#header_panel_holder').css('height'));
+			
+			$('#lcdoc_body').css('margin-top', tHeaderHeight + 20);
+		}
 		
 		function doTableResize()
 		{
 			var $textarea = $('#header_panel_holder');
 			var $window = $(window);
-			var $resizer = $('#resizer');
 			
-			var tResizerMargin;
-			tResizerMargin = parseInt($resizer.css('margin'));
+			var tWindowHeight;
+			tWindowHeight = $window.height();
+			
+			var tWindowScroll;
+			tWindowScroll = $window.scrollTop();
 			
 			var tHeaderMinHeight;
 			tHeaderMinHeight = parseInt($textarea.css('min-height'));
@@ -1075,14 +1090,16 @@
 			$("body").addClass('noselect');
 			
 			$window.on('mousemove', function (evt) {
+				evt.preventDefault();
+			
 				var tNewHeight;
-				tNewHeight = evt.pageY - $textarea.offset().top
+				tNewHeight = Math.min(evt.pageY - tWindowScroll, tWindowHeight - 20);
 				tNewHeight = Math.max(tHeaderMinHeight, tNewHeight);
 				
 				var tContainerHeight;
-				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight;
+				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin;
 				$('#table_container').css('height', tContainerHeight);
-				
+
 				if (tContainerHeight < 5)
 				{
 					$textarea.css('height', tHeaderMinHeight);
@@ -1093,6 +1110,8 @@
 					$textarea.css('height', tNewHeight);	
 					$('#table_header').css('display', '');
 				}
+				
+				update_lcdoc_margin();
 			});
 			
 			$window.on('mouseup', function () {
@@ -1120,6 +1139,8 @@
 				}
 			}
 		});
+		
+		update_lcdoc_margin();
 		
 		$(document).keydown(function(e) {
 		   switch(e.which) {

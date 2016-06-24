@@ -75,14 +75,12 @@
 						<table class="table table-hover table-condensed" id="table_list">
 						</table>
 					</div>
-				</div>
-				
+					<!-- header panel resizer -->
+					<div id="resizer" class="affix_right">
+					</div>   
+				</div>            
             </div><!-- /Affix -->
-            
-            <!-- header panel resizer -->
-			<div id="resizer" class="affix_right">
-			</div>            
-            
+
             <div class="panel panel-default" id="lcdoc_body">
               <div class="panel-body" id="api_entry">
               </div>
