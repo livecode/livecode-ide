@@ -503,8 +503,17 @@
 						tHTML += reference_type + ':';
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
-							if(reference_html == "") reference_html = ' <a href="javascript:void(0)" class="load_entry" entryid="'+entryNameToID(reference_name,reference_type)+'">'+reference_name+'</a>';
-							else reference_html += ', <a href="javascript:void(0)" class="load_entry" entryid="'+entryNameToID(reference_name,reference_type)+'">'+reference_name+'</a>';
+							var tReference, tID;
+							tID = entryNameToID(reference_name, reference_type);
+							if (tID == 0)
+								tReference = reference_name;
+							else
+								tReference = click_text(reference_name, tID);
+							
+							if (reference_html == "") 
+								reference_html = tReference;
+							else 
+								reference_html += ',' + tReference;
 						});
 						tHTML += reference_html;
 						tHTML += '<br />';
@@ -531,11 +540,26 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						var association_html = "";
 						$.each(value, function(index2, value2) {
-							var tIndex = entryNameToID(value2,"object");
-							if(tIndex == 0) tIndex = entryNameToID(value2,"library");
-							if(tIndex == 0) tIndex = entryNameToID(value2,"glossary");
-							if(association_html == 0) association_html = '<a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
-							else association_html += ', <a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
+							var tTypes, tType;
+							tTypes = ["object","library","glossary"];
+							
+							var tData;
+							$.each(tTypes, function(tTypeIndex, tType) {
+								tData = entryData(value2, tType)
+								if (tData != {})
+									return;
+							});
+							
+							var tAssociation;
+							if (tData == {})
+								tAssociation = value2;
+							else
+								tAssociation = click_text_from_entry_data('', tData);
+							
+							if (association_html == "") 
+								association_html = tAssociation;
+							else 
+								association_html += ',' + tAssociation;
 						});
 						tHTML += association_html+'</div>';
 					}
@@ -611,7 +635,7 @@
 				tHTML += '<thead><tr><td><b>Name</b></td><td><b>Summary</b></td><td><b>Syntax</b></td></tr></thead><tbody>';
 				$.each(item_data,function(item_intex, entry_data){
 					tHTML += '<tr>';
-					tHTML += '<td><a href="javascript:void(0)" class="load_entry" entryid="'+entry_data.id+'">'+entry_data["display name"]+'</a></td>';
+					tHTML += '<td>' + click_text_from_entry_data('', entry_data) +'</a></td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.summary)+'</td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.syntax[0])+'</td>';
 					tHTML += '</tr>';
@@ -686,14 +710,13 @@
              	if(return_text == matched_whole){
              		var resolved = resolve_link_placeholder(matched_text);
              		
-             		var entry_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
+             		var resolved_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
              		
-             		if (entry_id)
-             	   		return_text = '<a href="javascript:void(0)" class="load_entry" entryid="'+entry_id+'">' + resolved[0] + '</a>';
+             		if (resolved_id != 0)
+             	   		return_text = click_text(resolved[0], resolved_id)
              		else
              			return_text = resolved[0];
              	}
-             	
              	
 				if(return_text == matched_text){
 					return matched_whole;
@@ -702,6 +725,23 @@
          	});
 		}
 		return pText;
+	}
+	
+	function click_text_from_entry_data(pLink, pEntryData)
+	{
+		if (pLink == '')
+			return click_text(pEntryData["display name"], pEntryData.id);
+		else
+			return click_text(pLink, pEntryData.id);
+	}
+	
+	function click_text(pText, pID)
+	{
+		var text;
+		text = '<a href="javascript:void(0)" class="load_entry"';
+		text += ' entryid="'+pID+'"'; 
+		text += '>' + pText + '</a>';
+		return text;
 	}
 	
 	// Returns an array with the label, the reference name and optional reference type.
