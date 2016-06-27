@@ -22,6 +22,7 @@ on openStack
    lock screen
    --Force the browser to actually resize
    set the rect of widget "Dictionary" of me to 0,0,0,0
+   set the javascripthandlers of widget "Dictionary" of me to "linkClicked"
    set the width of me to tMinWidth
    set the minWidth of me to tMinWidth
    set the title of me to "Dictionary"
@@ -78,3 +79,7 @@ on navigateToEntry pLibrary, pEntry, pType
       toplevel me
    end if
 end navigateToEntry
+
+on linkClicked pLink
+   launch url pLink
+end linkClicked

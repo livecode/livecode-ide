@@ -425,6 +425,16 @@
 			return tTable;
 		}
 		
+		renderer.link = function(href, title, text)
+		{
+			var tLink;
+			tLink = '<a class="external_link" href="' + href + '"';
+			tLink += ' title="' + title + '"';
+			tLink += ' target="_blank"';
+			tLink += '>'+text+'</a>';
+			return tLink;
+		}
+		
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
@@ -1043,6 +1053,11 @@
 		displayEntry(tID);
 	}
 	
+	function isRunningInLiveCodeBrowser()
+	{
+		return (typeof liveCode !== 'undefined');
+	}
+	
 	function setActions()
 	{	
 		breadcrumb_draw();
@@ -1077,6 +1092,15 @@
 			var filter_tag = $(this).attr("filter_tag");
 			var filter_data = $(this).attr("filter_data");
 			filter_remove(filter_tag,filter_data);
+		});
+		
+		$("body").on( "click", ".external_link", function(e) {
+			if (isRunningInLiveCodeBrowser())
+			{
+				e.preventDefault();
+				var tTarget = $(this).attr("href");
+				liveCode.linkClicked(tTarget);
+			}
 		});
 
 		$('#lcdoc_history_forward').on( "click", function() {
