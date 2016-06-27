@@ -80,6 +80,11 @@
    			return first;
    		}
    
+   		function isRunningInLiveCodeBrowser()
+		{
+			return (typeof liveCode !== 'undefined');
+		}
+   
    		function renderMarkdown(pGuideIndex){
 			var renderer = new marked.Renderer();
 			var navigation_html = '<ul class="nav bs-docs-sidenav lc_docs_nav">';
@@ -126,6 +131,16 @@
 				}
 			},
 		
+			renderer.link = function(href, title, text)
+			{
+				var tLink;
+				tLink = '<a class="external_link" href="' + href + '"';
+				tLink += ' title="' + title + '"';
+				tLink += ' target="_blank"';
+				tLink += '>'+text+'</a>';
+				return tLink;
+			},
+		
 			// Set the core markdown
 			$("#documentation").html(marked(tUserGuideData.guides[pGuideIndex].data, { renderer: renderer }));
 			$("#guide_name").html(tUserGuideData.guides[pGuideIndex]["display name"]);
@@ -149,7 +164,14 @@
    			$(this).html(tUserGuideData.guides[$(this).attr("guide")]["display name"]);
 		});
    		
-   		
+   		$("body").on( "click", ".external_link", function(e) {
+			if (isRunningInLiveCodeBrowser())
+			{
+				e.preventDefault();
+				var tTarget = $(this).attr("href");
+				liveCode.linkClicked(tTarget);
+			}
+		});
    });
     </script>
 </body>
