@@ -106,7 +106,7 @@ command resize
    put tMyRect[1] + tGutterWidth, tMyRect[4] - tFindHeight, \
        tMyRect[3],  tMyRect[4] into tNewRect
    if the rect of tControls["find"] is not tNewRect then
-      set the rect of tControls["find"] to tNewRect
+      set the topLeft of tControls["find"] to tMyRect[1] + tGutterWidth, tMyRect[4] - tFindHeight
    end if
 
    -- Position the gutter
