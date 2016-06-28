@@ -4,10 +4,31 @@
 .lcdoc_parameterValue{ font-weight:bold}
 
 #table_list {
-        width: 100%;
-    }
+ 	height: inherit;
+}
 
-#table_list thead, #table_list tbody, #table_list tr, #table_list td, #table_list th { display: block; }
+#table_list_header {
+	margin-bottom: 0px;
+	height: 30px;
+}
+
+#lcdoc_list table {
+	table-layout: fixed;
+}
+
+#lcdoc_list table td:nth-child(1) { 	
+	width: 30%;
+}
+
+#lcdoc_list table td:nth-child(2) { 	
+	width: 15%;
+}
+
+#lcdoc_list table td:nth-child(3) { 	
+	width: 55%;
+}
+
+#table_list thead, #table_list tbody, #table_list tr, #table_list td, #table_list th {}
 
 #table_list tr:after {
     content: ' ';
@@ -23,7 +44,7 @@
 }
 
 #table_list tbody {
-    height: 180px;
+    height: 100%;
     overflow-y: auto;
 }
 
@@ -36,23 +57,47 @@
     
 }
 
-#table_list .active{ background-color:#00ff00}
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#resizer {
+	content:url("../resources/media/vertical_resizer.png");
+	cursor: ns-resize;
+	margin: 10px;
+}
 
 #header_panel_holder {
 	background-color: #FFFFFF;
 	top: 0;
 	padding-top: 25px;
+	position: fixed;
+	min-height: 85px;
+	height: 353px;
+}
+
+#table_container {
+	width: 100%;
+    height: 227px;;
+    overflow: scroll;   
+}
+
+#lcdoc_list {
+	position: fixed;
 }
 
 #lcdoc_body{
-	margin-top:270px
 }
 
 .affix_right
 {
 	width:848px;
 	z-index:100;
-	position: fixed;
 }
 
 .lcdoc_section_title{ font-weight:bold; text-transform:capitalize}
@@ -70,9 +115,9 @@
 	font-style:italic;
 }
 
-#lcdoc_body table{ border: 1px solid #cccccc; width:100%; margin-bottom:10px}
-#lcdoc_body table thead{ border-bottom: 2px solid #cccccc;}
-#lcdoc_body table td{ border: 1px solid #cccccc; padding:5px;}
+#lcdoc_body table{ border: 1px solid rgba(204, 204, 204, 0.35); width:100%; margin-bottom:10px}
+#lcdoc_body table thead{ border-bottom: 2px solid rgba(204, 204, 204, 0.35);}
+#lcdoc_body table td{ border: 1px solid rgba(204, 204, 204, 0.35); padding:5px;}
 #lcdoc_body table td p{ margin-bottom:0px;}
 
 #lcdoc_body .lcdoc_glossary_table td{width:37%}
@@ -138,4 +183,54 @@
 .lcdoc_description a.load_entry:hover {
     color: #428BCA;
     text-decoration: underline;
+}
+
+#breadcrumb {
+	margin: 0;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+#breadcrumb_back {
+	margin: 0;
+	padding-right: 0;
+}
+
+#breadcrumb_forward {
+	margin: 0;
+	padding-left: 0;
+}
+
+#lcdoc_sidebar {
+	height: 100%;
+}
+
+#filters_options {
+	height: 95%;
+	overflow-y: scroll;
+}
+
+#filters_options td {
+	padding-right: 10px;
+}
+
+#filters_options .category {
+	padding-top: 10px;
+}
+
+#filters_container {
+	height: 100%;
+}
+
+#filters_panel {
+	height: 75%;
+	overflow: hidden;
+}
+
+#lcdoc_library_chooser {
+	width: 100%;
+}
+
+#dropdownMenu1 {
+	width: 100%;
 }

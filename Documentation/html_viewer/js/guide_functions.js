@@ -73,6 +73,16 @@
 			}
 		},
 	
+		renderer.link = function(href, title, text)
+		{
+			var tLink;
+			tLink = '<a class="external_link" href="' + href + '"';
+			tLink += ' title="' + title + '"';
+			tLink += ' target="_blank"';
+			tLink += '>'+text+'</a>';
+			return tLink;
+		},
+	
 		// Set the core markdown
 		$("#documentation").html(marked(tUserGuideData.guides[pGuideIndex].data, { renderer: renderer }));
 
@@ -159,6 +169,15 @@
 				if (d < 0 && (t.scrollTop() == t.get(0).scrollHeight - t.innerHeight())) {
 					e.preventDefault();
 				}
+			}
+		});
+   		
+   		$("body").on( "click", ".external_link", function(e) {
+			if (isRunningInLiveCodeBrowser())
+			{
+				e.preventDefault();
+				var tTarget = $(this).attr("href");
+				liveCode.linkClicked(tTarget);
 			}
 		});
    	}
