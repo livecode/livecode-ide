@@ -19,24 +19,24 @@
 	<div class="row">
 		<div class="col-md-3">
 			<div class="affix bs-sidebar" id="lcdoc_sidebar">
-				<div class="btn-group" style="width:100%; margin-bottom:15px" id="lcdoc_library_chooser">
-				  <div class="dropdown">
-				  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-					<span id="lcdoc_library_chooser_text"></span>
-					<span class="caret"></span>
-				  </button>
-				  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
-				  </ul>
+			    <div class="panel panel-default">
+					<div class="panel-heading">
+						<div class="btn-group" style="width:100%" id="lcdoc_library_chooser">
+							<div class="dropdown">
+				  				<button class="btn btn-default btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+									<span id="lcdoc_library_chooser_text"></span>
+									<span class="caret"></span>
+				  				</button>
+				  				<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
+								</ul>
+							</div>
+						</div>					
+					</div>
 				</div>
-				</div>
-			
-            	<div class="panel panel-default">
+            	<div class="panel panel-default" id="filters_panel">
 					<div class="panel-heading">Filters</div>
-					<div class="panel-body" id="filters">none</div>
-				</div>
-		
-				<div class="panel panel-default">
-		  			<div class="panel-body">
+					<div class="panel-body" id="filters_container">
+						<div id="filters">none</div>
 						<div id="filters_options"></div>
 		  			</div>
 				</div>
@@ -48,15 +48,35 @@
 				<div class="panel panel-default affix_right" id="lcdoc_list">
 				  <div class="panel-heading " >
 					  <div class="row">
-					  	
-						<div class="col-md-9">
+						<div class="col-md-3">
 							<nav>
-							  <ul class="pagination pagination-sm" style="margin:0;padding-left:0" id="breadcrumb">
-								
-							  </ul>
-							</nav>
+							  <ul class="pagination pagination-sm" id="breadcrumb">
+							  	<li id="lcdoc_history_back">
+							  		<a href="#">
+							  			<span aria-hidden="true" class="glyphicon glyphicon-chevron-left"></span>
+							  			<span class="sr-only">Previous</span>
+							  		</a>
+							  	</li>
+							  	<li id="lcdoc_history_forward">
+							  		<a href="#">
+							  			<span aria-hidden="true" class="glyphicon glyphicon-chevron-right"></span>
+							  			<span class="sr-only">Next</span>
+							  		</a>
+							  	</li>
+							  	<li id="lcdoc_history" class="dropdown">
+							  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+							  			<span class="glyphicon glyphicon-time" id="dropdownMenu2" aria-expanded="true"></span>
+							  		</a>
+							  		<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2" id="lcdoc_history_list">
+									</ul>
+								</li>
+							</ul>
+							<nav>
 						</div>
-				
+						
+					  	<div class="col-md-6">
+						</div>
+
 						<div class="col-md-3">
 							<div class="input-group" id="filter_box">
 								<input id="ui_filer" type="text" class="form-control input-sm">
@@ -64,20 +84,23 @@
 									<button class="btn btn-default btn-sm" type="button"><span class="glyphicon glyphicon-search"></span></button>
 								</span>
 							</div>
-							<span class="label label-primary">Showing <span id="entries_showing">0</span> of <span id="entries_total">0</span> entries</span>
 						</div><!-- /input-group -->
 					  </div>
 					</div>
-			  		
-					<table class="table table-hover table-condensed" id="table_list">
-						<tbody id="list">
-						</tbody>
-					</table>
-				</div>
-				
+					<div id="table_header">
+						<table class="table table-hover table-condensed" id="table_list_header">
+						</table>
+					</div>
+			  		<div id="table_container">
+						<table class="table table-hover table-condensed" id="table_list">
+						</table>
+					</div>
+					<!-- header panel resizer -->
+					<div id="resizer" class="affix_right">
+					</div>   
+				</div>            
             </div><!-- /Affix -->
-            
-            
+
             <div class="panel panel-default" id="lcdoc_body">
               <div class="panel-body" id="api_entry">
               </div>
