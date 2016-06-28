@@ -30,6 +30,11 @@
 
 #table_list thead, #table_list tbody, #table_list tr, #table_list td, #table_list th {}
 
+#table_list tr.deprecated > td:nth-child(1):before {
+	font-family: "Glyphicons Halflings";
+	content: "\e107  ";
+}
+
 #table_list tr:after {
     content: ' ';
     display: block;

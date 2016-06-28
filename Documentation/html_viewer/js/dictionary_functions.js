@@ -349,6 +349,9 @@
 			var tClass = "";
 			if (tState.selected == value.id) 
 				tClass = " active";
+				
+			if (value.hasOwnProperty("deprecated") && value.deprecated != '')
+				tClass = " deprecated";
 
 			tHTML += '<tr class="entry_list_item load_entry'+tClass+'" ';
 			tHTML += 'entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
