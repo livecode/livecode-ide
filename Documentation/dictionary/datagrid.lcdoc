@@ -1666,7 +1666,7 @@ pFirstLineContainsHeaders. Normally you should set this property to true
 and provide the header that maps each item of each line to a specific
 column. 
 
->Note that if pFirstLineContainsHeaders is true then the columns
+>*Note:* that if pFirstLineContainsHeaders is true then the columns
 >must already exist in your data grid table in order to be displayed. 
 >Setting pFirstLineContainsHeaders to true does not create the headers for you.
 
