@@ -556,18 +556,18 @@
 							var tTypes, tType;
 							tTypes = ["object","library","glossary"];
 							
-							var tData;
+							var tID;
 							$.each(tTypes, function(tTypeIndex, tType) {
-								tData = entryData(value2, tType)
-								if (tData != {})
+								tID = entryNameToID(value2, tType)
+								if (tID != 0)
 									return;
 							});
 							
 							var tAssociation;
-							if (tData == {})
+							if (tID == 0)
 								tAssociation = value2;
 							else
-								tAssociation = click_text_from_entry_data('', tData);
+								tAssociation = click_text(value2, tID);
 							
 							if (association_html == "") 
 								association_html = tAssociation;
