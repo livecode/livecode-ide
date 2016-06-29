@@ -10171,9 +10171,18 @@ private function revIDEGetDocsAPIData
       # Check if the lcdoc file is out of date
       put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
-
+      
+      local tInputs
+      put tFolder & slash & tSource into tInputs[1]
+      
+      # If we are running from source, also add the docs parser as an input 
+      # dependency of the docs files
+      if not revEnvironmentIsInstalled() then
+         put the effective filename of stack "revDocsParser" into tInputs[2]
+      end if
+      
       local tNeedUpdate, tError
-      put revIDEIsFilesetStale(tFolder & slash & tSource, \
+      put revIDEIsFilesetStale(tInputs, \
             tCachedDataFolder & slash & "api.lcdoc", false, tError) \
             into tNeedUpdate
       
@@ -10190,11 +10199,12 @@ private function revIDEGetDocsAPIData
       
       # Check if the .js is out of date
       if tNeedUpdate is not true then
-         put revIDEIsFilesetStale(tCachedDataFolder & "/api.lcdoc", \
+         put tCachedDataFolder & "/api.lcdoc" into tInputs[1]
+         put revIDEIsFilesetStale(tInputs, \
                tCachedDataFolder & "/api.js", false, tError) \
                into tNeedUpdate
       end if
-
+      
       if tNeedUpdate is false then
          put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
       else if tNeedUpdate is true then
