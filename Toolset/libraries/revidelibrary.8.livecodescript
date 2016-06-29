@@ -10392,13 +10392,16 @@ private command revIDEGenerateDistributedAPI
    end if
    
    # Check to see if we need to regenerate the script dictionary
-   local tLastModified, tLastGenerated
-   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "script.js") into tLastGenerated
-   put revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "dictionary", true) into tLastModified
-   put max(tLastModified, revIDELastModifiedTimeOfFilesInFolder(tDocsFolder & slash & "glossary", true)) into tLastModified
+   local tNeedUpdate, tInputs, tError, tOutput
+   put the effective filename of stack "revDocsParser" into tInputs[0]
+   put tDocsFolder & slash & "dictionary" into tInputs[1]
+   put tDocsFolder & slash & "glossary" into tInputs[2]
+   put revIDESpecialFolderPath("api") & slash & "script.js" into tOutput
+   
+   put revIDEIsFilesetStale(tInputs, tOutput, true, tError) into tNeedUpdate
    
    # Regenerate dictionary if necessary
-   if tLastModified > tLastGenerated then
+   if tNeedUpdate then
       local tScriptA
       put "LiveCode Script" into tScriptA["display name"]
       put revDocsModifyForUrl(tScriptA["display name"]) into tScriptA["name"]
@@ -10420,14 +10423,20 @@ private command revIDEGenerateDistributedAPI
    put revDocsGetBuiltinModuleList(revEnvironmentBinariesPath() & slash & "modules" & slash & "lci", tRepoPath) into tModuleList
    
    set the itemdelimiter to slash
-   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "builder.js") into tLastGenerated
-   put 0 into tLastModified
+   put empty into tInputs
+   put revIDESpecialFolderPath("api") & slash & "builder.js" into tOutput
+   put the effective filename of stack "revDocsParser" into tInputs[0]
+   local tCount
+   put 1 into tCount
    repeat for each line tLine in tModuleList
-      put max(tLastModified, revIDELastModifiedTimeOfFile(item 1 to -2 of tLine, item -1 of tLine)) into tLastModified
+      put tLine into tInputs[tCount]
+      add 1 to tCount
    end repeat
    
+   put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
+   
    # Regenerate dictionary if necessary
-   if tLastModified > tLastGenerated then
+   if tNeedUpdate then
       local tModularA, tModularCount, tBlocksA, tParsedA
       put 1 into tModularCount
       set the itemdelimiter to "."
@@ -10466,13 +10475,15 @@ private command revIDEGenerateDistributedAPI
    end if
    
    # Check to see if we need to regenerate the datagrid docs
+   put empty into tInputs
+   put revIDESpecialFolderPath("api") & slash & "dg.js" into tOutput
+   put the effective filename of stack "revDocsParser" into tInputs[0]
    local tDatagridDoc, tFolder
    put revIDESpecialFolderPath("Documentation") &"/dictionary" into tFolder
-   put "datagrid.lcdoc" into tDatagridDoc
-   put revIDELastModifiedTimeOfFile(revIDESpecialFolderPath("api"), "dg.js") into tLastGenerated
-   put revIDELastModifiedTimeOfFile(tFolder, tDatagridDoc) into tLastModified
+   put tFolder & slash & "datagrid.lcdoc" into tInputs[1]
+   put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
    # Regenerate if necessary
-   if tLastModified > tLastGenerated then
+   if tNeedUpdate then
       local tLibA
       put revDocsParseDocFileToLibraryArray(tFolder & slash & tDatagridDoc, "Data Grid", "LiveCode") into tLibA
       # Update the database
