@@ -5303,7 +5303,7 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
    revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    revIDEPopDefaultFolder
-   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
+   return item 5 of line lineOffset(urlEncode(pFile), tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
