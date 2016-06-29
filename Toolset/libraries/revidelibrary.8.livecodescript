@@ -11255,17 +11255,17 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
    if tDirname is empty then
       put "." into tDirname
    end if
-
+   
    if tBasename is empty then
-      throw "Failed to check modification time: invalid filename"
+      throw "Failed to check modification time: invalid filename" && pFilename
    end if
-
+   
    -- Regular file
    local tMTime
    if there is a file pFilename then
       put revIDELastModifiedTimeOfFile(tDirname, tBasename) into tMTime
       if tMTime is empty then
-         throw "Failed to check modification time for file"
+         throw "Failed to check modification time for file" && pFilename
       end if
       if tMTime < xMin then
          put tMTime into xMin
@@ -11284,21 +11284,22 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
          -- List directory contents
          revIDEPushDefaultFolder pFilename
          if the result is not empty then
-            throw "Failed to set default folder"
+            throw "Failed to set default folder" && pFilename
          end if
          
          put files() & return & folders() into tContents
          filter tContents without ".."
-
+         filter tContents without empty
+         
          revIDEPopDefaultFolder pFilename
          if the result is not empty then
-            throw "Failed to set default folder"
+            throw "Failed to set default folder" && pFilename
          end if
-
+         
          if tContents is empty then
             return true
          end if
-
+         
          -- Recursively scan files & folders
          repeat for each line tInnerFilename in tContents
             put pFilename & slash before tInnerFilename
@@ -11309,7 +11310,7 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
          
          return true
       else
-         throw "Failed to check modification time: unexpected folder"
+         throw "Failed to check modification time: unexpected folder" && pFilename
       end if
    end if
    
@@ -11317,6 +11318,6 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
    if pAllowMissing then
       return false
    else
-      throw "Failed to check modification time: missing file"
+      throw "Failed to check modification time: missing file" && pFilename
    end if
 end __ScanFileMTime
