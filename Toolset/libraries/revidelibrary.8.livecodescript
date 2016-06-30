@@ -11226,7 +11226,7 @@ end __CheckFileset
 -- missing file.
 private function __ScanFilesetMTimes pFileset, pRecursive, pAllowMissing
    local tResult
-   put ("infinity" + 0) into tResult["min"]
+   put (infinity + 0) into tResult["min"]
    put 0 into tResult["max"]
 
    if pFileset is not an array then
