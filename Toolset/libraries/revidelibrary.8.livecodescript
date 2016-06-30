@@ -7150,11 +7150,12 @@ on revIDESaveStack pStackID
    local tStackFileIsScriptOnly
    put revIDEStackFileIsScriptOnly(tStackFilename) into tStackFileIsScriptOnly
    
+   global gRevStackStatus
    # Display warning if user has not selected the latest file format
    if the scriptOnly of stack tStackName and not tStackFileIsScriptOnly then
       answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tShortName]
+         put "edited" into gREVStackStatus[tStackName]
          close stack "revSaving"
          return "Cancelled"
       end if
@@ -7221,7 +7222,6 @@ on revIDESaveStack pStackID
       -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
       dispatch "revHookPostSaveStack" to me with pStackID
       
-      global gRevStackStatus
       put empty into gREVStackStatus[tStackName]
       
       local tMainStackList
