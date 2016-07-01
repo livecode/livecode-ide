@@ -674,9 +674,12 @@
 		window.scrollTo(0, 0);
 	}
 	
+	var link_placeholder_regex;
+	link_placeholder_regex = /<([^`>]*)>/igm;
+	
 	function replace_link_placeholders_with_param(pText){
 		if(pText){
-			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
+			var pText = pText.replace(link_placeholder_regex, function(matched_whole, matched_text) {
 				var resolved = resolve_link_placeholder(matched_text);
 				return '<span class="lcdoc_entry_param">' + resolved[0] + '</span>';	
 			});
@@ -686,17 +689,16 @@
 	
 	function remove_link_placeholders(pText){
 		if(pText){
-			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
+			var pText = pText.replace(link_placeholder_regex, function(matched_whole, matched_text) {
 				return matched_text;
 			});
 			return pText;
 		}
 	}	
-				
 	
 	function replace_link_placeholders_with_links(pText, pEntryObject){
 		if(pText && pEntryObject){
-			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
+			var pText = pText.replace(link_placeholder_regex, function(matched_whole, matched_text) {
 				var return_text = matched_whole;
 				
 				if(pEntryObject.hasOwnProperty("display name")) {
