@@ -102,8 +102,10 @@ setProp rowData pData
          end repeat
          if tConflict then
             set the editorConflicted of group tProperty of me to true
+            set the editorConflicts of group tProperty of me to pData[tProperty]["value"]
          else
             set the editorConflicted of group tProperty of me to false
+            set the editorConflicts of group tProperty of me to empty
             set the editorValue of group tProperty of me to tValue
             set the editorEffective of group tProperty of me to pData[tProperty]["effective"][line 1 of tKeys]
          end if
