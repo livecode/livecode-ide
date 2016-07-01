@@ -438,6 +438,11 @@
 			return tLink;
 		}
 		
+		renderer.code = function(contents)
+		{
+			return '<pre><code>' + undo_link_replacement(contents) + '</code></pre>';
+		}
+		
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
@@ -757,6 +762,16 @@
 		text += ' entryid="'+pID+'"'; 
 		text += '>' + pText + '</a>';
 		return text;
+	}
+	
+	function undo_link_replacement(pText)
+	{
+		var tRegex;
+		tRegex = new RegExp('<a href="javascript:void\\(0\\)" class="load_entry"[^>]*>(.+)<\\/a>', 'ig');
+		return pText.replace(tRegex, function(matched_whole, matched_text) 
+		{
+			return '<' + matched_text + '>';
+		});
 	}
 	
 	// Returns an array with the label, the reference name and optional reference type.
