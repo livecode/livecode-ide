@@ -2121,7 +2121,7 @@ in the **Message box**:
  
 Alternatively you can create your own custom column template for a
 particular column. This allows you complete control over the look and
-feel of the column. See section [How Do I Customize A Table's Columns?][]
+feel of the column. See section [How Do I Customize A Table's Columns?](#How-Do-I-Customize-A-Table's-Columns?)
 
 ### How Do I Display Line Numbers in a Table? ###
  
@@ -2348,7 +2348,7 @@ selecting **Edit Script.**
 When the user clicks on a table column header the **SortDataGridColumn**
 message is sent to the Data Grid. Intercepting this message and not
 passing it effectively disables sorting. For more information
-about how **SortDataGridColumn** works see [How Do I Customize Column Sorting?][].
+about how **SortDataGridColumn** works see [How Do I Customize Column Sorting?](#How-Do-I-Customize-Column-Sorting?).
 
 Add the following code to your Data Grid group script and compile.
 
@@ -2377,7 +2377,7 @@ can perform an action whenever a data grid is sorted.
 You can customize what happens when a data grid is sort by adding a
 **SortDataGridColumn** handler to your data grid's script. For more
 information about howSortDataGridColum works please see the lesson
-[How Do I Customize Column Sorting?][].
+[How Do I Customize Column Sorting?](#How-Do-I-Customize-Column-Sorting?).
 
 In order to perform an action AFTER the sort has been applied you simply
 need to call the handler the Data Grid behavior uses to sort but NOT
@@ -2572,7 +2572,7 @@ Finally the decimal remains in the center of the cell if the column is resized.
 This lesson will show you how to change the color of individual lines in
 a Data Grid table. Before you begin this lesson you will need to read
 the lesson [How Do I Override the Default Behavior for Rendering Data
-to a Cell?][]
+to a Cell?](#How-Do-I-Override-the-Default-Behavior-for-Rendering-Data-to-a-Cell?)
 
 ####Attached Files####
 
@@ -2893,7 +2893,7 @@ so you can customize behavior if you would like.
 
 >**Note:** The default column behavior is stored in button "Default Column"
 >of stack "**revDataGridLibrary**". 
->See [How Do I Override the Default Behavior for Rendering Data to a Cell?][]
+>See [How Do I Override the Default Behavior for Rendering Data to a Cell?](#How-Do-I-Override-the-Default-Behavior-for-Rendering-Data-to-a-Cell?)
 
 #### What You Need to Know ####
  
@@ -3067,7 +3067,7 @@ lesson will show you how to provide a specific value for the Data Grid
 to use as the value to edit.
 
 The technique described requires that you create a custom column
-behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ][].
+behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](#How-Do-I-Override-the-Default-Behavior-for-Rendering-Data-to-a-Cell?).
 
 ####The Default Behavior####
 
@@ -3118,7 +3118,7 @@ cursor at the end of the field. This lesson will show how to tell
 the Data Grid that all of the cell text should be selected.
 
 The technique described requires a custom column
-behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ][].
+behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](#How-Do-I-Override-the-Default-Behavior-for-Rendering-Data-to-a-Cell?).
 
 #### The Default Behavior#### 
  
@@ -3468,7 +3468,7 @@ Luckily, you do not need to recreate all that from scratch. Instead you
 can simply copy a template data grid from the data grid library. Because
 this library is neccesary for all data grid functionality, it will be
 added to standalones by the IDE automatically. Please also see 
-[What Do I Need to Do To Deploy a Standalone With A Data Grid?][] 
+[What Do I Need to Do To Deploy a Standalone With A Data Grid?](#What-Do-I-Need-to-Do-To-Deploy-a-Standalone-With-A-Data-Grid?) 
 for an explanation when and how you need to add the library to
 standalones yourself.
 
