@@ -2435,12 +2435,36 @@ Example: set the textsize of field 1 to revIDEGetPreference("text size")
 Returns (Any): The value of the preference
 */
 function revIDEGetPreference pPreferenceName
-   if there is a stack "revPreferences" then
-      return the pPreferenceName of stack "revPreferences"
+   local tValue
+   
+   __DevPreference pPreferenceName, tValue
+   
+   if tValue is empty and there is a stack "revPreferences" then
+      put the pPreferenceName of stack "revPreferences" into tValue
    end if
    
-   return empty
+   return tValue
 end revIDEGetPreference
+
+command __DevPreference pPreferenceName, @rValue
+   global gREVDevelopment
+   
+   if gREVDevelopment then
+      switch pPreferenceName
+         case "cScriptEditor,explicitVariables"
+         case "cScriptEditor,preserveVariables"
+            put true into rValue
+            break
+         case "cScriptEditor,editor,commentchar"
+            put "--" into rValue
+            break
+         case "cScriptEditor,editor,tabdepth"
+            put 3 into rValue
+            break
+      end switch
+      
+   end if
+end __DevPreference
 
 function revIDEPreferences
    return the customproperties of stack "revpreferences"
