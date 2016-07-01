@@ -4914,39 +4914,36 @@ end __escapeStringAndConvertLineEndings
 Install the given extension's user guide
 */
 on revIDEInstallUserGuide pGuideFolder, pExtensionName, pAuthor
-
    local tGuideFile
    put pGuideFolder & slash & "guide.md" into tGuideFile
-
+   
    # Convert the user guide to a JSON array to append to user guide data
    local tGuide
-   put url ("binfile:" & tGuideFile) into tGuide
+   put revIDEUTF8FileContents(tGuideFile) into tGuide
    if tGuide is empty then
       return "no user guide data"
    end if
-
-   put textDecode(tGuide, "utf-8") into tGuide
-
+   
    local tGuideJSON
    put "{" & CR after tGuideJSON
    put tab & quote & "guide" & quote & ":" && quote & pExtensionName & quote & comma & CR after tGuideJSON
    put quote & "data" & quote & ":" & __escapeStringAndConvertLineEndings(tGuide) & CR after tGuideJSON
    put "}" after tGuideJSON
-
-   put textEncode(tGuideJSON, "utf-8") into url ("binfile:" & pGuideFolder & slash & "guide.js")
-
+   
+   revIDESetUTF8FileContents pGuideFolder & slash & "guide.js", tGuideJSON
+   
    # Now regenerate the built guides
-   dispatch "revDocsAddGuideAndRegenerate" to stack "revDocsParser" with tGuideJSON
+   revIDEAddGuideAndRegenerate tGuideJSON
 end revIDEInstallUserGuide
 
 /*
 Install the given extension's API
 */
 on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
-
+   
    local tAPIFile
    put pAPIFolder & slash & "api.lcdoc" into tAPIFile
-
+   
    # Convert the new API to a JSON array to append to API data
    local tAPIJSON
    dispatch function "revDocsFormatAPIAsJSON" to stack "revDocsParser" with pExtensionName, pAuthor, tAPIFile
@@ -4954,11 +4951,11 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
    if tAPIJSON is empty then
       return "no documentation found"
    end if
-
-   put textEncode(tAPIJSON, "utf-8") into url ("binfile:" & pAPIFolder & slash & "api.js")
-
+   
+  revIDESetUTF8FileContents pAPIFolder & slash & "api.js", tAPIJSON
+   
    # Now regenerate the built APIs
-   dispatch "revDocsAddAPIAndRegenerate" to stack "revDocsParser" with tAPIJSON
+   revIDEAddAPIAndRegenerate tAPIJSON
 end revIDEInstallAPI
 
 on revIDEGoToLCSDictionaryEntry pTag, pType
@@ -6779,14 +6776,14 @@ on revIDEImportControl pType, pFileName, pReferenced
       case "text"
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
          put the result into tCreatedControlID
-         put textDecode(URL ("binfile:" & pFileName), "utf-8") into tFileContents
+         put revIDEUTF8FileContents(pFileName) into tFileContents
          put tFileContents into tCreatedControlID
          select tCreatedControlID
          break
       case "graph"
          revIDECreateObject "com.livecode.widget.lineGraph", tTargetStack, tCreatedControlLocation
          put the result into tCreatedControlID
-         put textDecode(URL ("binfile:" & pFileName), "utf-8") into tFileContents
+         put revIDEUTF8FileContents(pFileName) into tFileContents
          set the graphData of tCreatedControlID to tFileContents
          select tCreatedControlID
          break
@@ -9967,14 +9964,16 @@ end revIDETutorialCoursePath
 Returns the description of the given course
 */
 function revIDETutorialCourseDescription pCourse
-   return textDecode(url ("binfile:" & revIDETutorialCoursePath(pCourse) & slash & "description.txt"), "utf-8")
+   return revIDEUTF8FileContents(revIDETutorialCoursePath(pCourse) \ 
+         & slash & "description.txt")
 end revIDETutorialCourseDescription
 
 /*
 Lists the tutorials in the folder for the given course
 */
 function revIDETutorialListTutorials pCourse
-   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) & slash & "tutorials", false)
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) \ 
+         & slash & "tutorials", false)
 end revIDETutorialListTutorials
 
 /*
@@ -9988,7 +9987,8 @@ end revIDETutorialPath
 Returns the description of the given tutorial
 */
 function revIDETutorialDescription pCourse, pTutorial
-   return textDecode(url ("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash & "description.txt"), "utf-8")
+   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
+         & slash & "description.txt")
 end revIDETutorialDescription
 
 /*
@@ -9996,7 +9996,8 @@ Lists the lessons in the folder for the given tutorial of the given course
 */
 function revIDETutorialListLessons pCourse, pTutorial
    local tFiles
-   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) & slash & "lessons", true) into tFiles
+   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) \ 
+         & slash & "lessons", true) into tFiles
    replace ".txt" with empty in tFiles
    return tFiles
 end revIDETutorialListLessons
@@ -10005,7 +10006,8 @@ end revIDETutorialListLessons
 Returns the content of the specified lesson
 */
 function revIDETutorialLessonContent pCourse, pTutorial, pLesson
-   return textDecode(url("binfile:" & revIDETutorialPath(pCourse, pTutorial) & slash &"lessons" & slash & pLesson & ".txt"), "utf-8")
+   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
+         & slash &"lessons" & slash & pLesson & ".txt")
 end revIDETutorialLessonContent
 
 /*
@@ -10154,7 +10156,7 @@ private function revIDEGetDocsAPIData
    
    local tAPIPath
    put revIDESpecialFolderPath("API") into tAPIPath
-   put url ("binfile:" & tAPIPath & slash & "distributed_api.js") into tData
+   put revIDEUTF8FileContents(tAPIPath & slash & "distributed_api.js") into tData
    
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
@@ -10171,7 +10173,7 @@ private function revIDEGetDocsAPIData
       # Check if the lcdoc file is out of date
       put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
-      
+
       local tInputs
       put tFolder & slash & tSource into tInputs[1]
       
@@ -10181,9 +10183,10 @@ private function revIDEGetDocsAPIData
          put the effective filename of stack "revDocsParser" into tInputs[2]
       end if
       
-      local tNeedUpdate, tError
+      local tNeedUpdate, tError, tAPIDoc
+      put tCachedDataFolder & slash & "api.lcdoc" into tAPIDoc
       put revIDEIsFilesetStale(tInputs, \
-            tCachedDataFolder & slash & "api.lcdoc", false, tError) \
+            tAPIDoc, false, tError) \
             into tNeedUpdate
       
       # Regenerate the lcdoc file if required
@@ -10194,31 +10197,35 @@ private function revIDEGetDocsAPIData
          put the result into tDoc
          
          # Output the lcdoc file
-         put textEncode(tDoc, "utf-8") into url ("binfile:" & tCachedDataFolder & slash & "api.lcdoc")
+         revIDESetUTF8FileContents tAPIDoc, tDoc
       end if
       
+      local tAPIJS
+      put tCachedDataFolder & "/api.js" into tAPIJS
       # Check if the .js is out of date
       if tNeedUpdate is not true then
-         put tCachedDataFolder & "/api.lcdoc" into tInputs[1]
-         put revIDEIsFilesetStale(tInputs, \
-               tCachedDataFolder & "/api.js", false, tError) \
+         put tAPIDoc into tInputs[1]
+         put revIDEIsFilesetStale(tInputs, tAPIJS , false, tError) \
                into tNeedUpdate
       end if
       
       if tNeedUpdate is false then
-         put url ("binfile:" & tCachedDataFolder & slash & "api.js") into tExtensionAPI
+         put revIDEUTF8FileContents(tAPIJS) into tExtensionAPI
       else if tNeedUpdate is true then
          local tLibraryArray, Lcdoc
-         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" with (tCachedDataFolder & slash & "api.lcdoc"), tExtensionData["title"], tExtensionData["author"]
+         dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" \ 
+               with tAPIDoc, tExtensionData["title"], \ 
+               tExtensionData["author"]
          put the result into tLibraryArray
          
-         dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" with tLibraryArray
+         dispatch function "revDocsFormatLibraryArrayAsJSON" to stack "revDocsParser" \
+               with tLibraryArray
          put the result into tExtensionAPI
          
          # Update the dictionary database
          ideDocsUpdateDatabase tLibraryArray
-
-         put tExtensionAPI into url ("binfile:" & tCachedDataFolder & slash & "api.js") 
+         
+         revIDESetUTF8FileContents tAPIJS, tExtensionAPI
       end if
       
       if tExtensionAPI is not empty then
@@ -10234,7 +10241,7 @@ private function revIDEGetDocsGuideData
    
    local tGuidePath
    put revIDESpecialFolderPath("guide") into tGuidePath
-   put url ("binfile:" & tGuidePath & slash & "distributed_guide.js") into tData
+   put revIDEUTF8FileContents(tGuidePath & slash & "distributed_guide.js") into tData
    
    local tExtensionDocsDataA
    put revIDEExtensionDocsData() into tExtensionDocsDataA
@@ -10242,24 +10249,26 @@ private function revIDEGetDocsGuideData
    local tFolder, tCachedDataFolder
    set the itemdelimiter to slash
    repeat for each element tExtensionData in tExtensionDocsDataA
-      local tExtensionGuide
+      local tExtensionGuide, tGuideFile
       put empty into tExtensionGuide
       put tExtensionData["folder"] into tFolder
-      put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
-      if there is a not file (tFolder & slash & "guide.md")  then next repeat
+      put revEnvironmentUserDocsPath() & slash & \ 
+            the last item of tFolder into tCachedDataFolder
+      put tFolder & slash & "guide.md" into tGuideFile
+      if there is not a file tGuideFile then next repeat
       revIDEEnsurePath tCachedDataFolder
       
       # Check if the .js is out of date
-      local tNeedUpdate, tError
-      put revIDEIsFilesetStale(tFolder & "/guide.md", \
-            tCachedDataFolder & "/guide.js", false, tError) into tNeedUpdate
-
+      local tNeedUpdate, tError, tGuideJS
+      put tCachedDataFolder & "/guide.js" into tGuideJS
+      put revIDEIsFilesetStale(tGuideFile, tGuideJS, false, tError) \
+            into tNeedUpdate
+      
       if tNeedUpdate is false then
-         put url ("binfile:" & tCachedDataFolder & slash & "guide.js") into tExtensionGuide
+         put revIDEUTF8FileContents(tGuideJS) into tExtensionGuide
       else if tNeedUpdate is true then
          local tGuide
-         put url ("binfile:" & tFolder & slash & "guide.md") into tGuide
-         put textDecode(tGuide, "utf-8") into tGuide
+         put revIDEUTF8FileContents(tGuideFile) into tGuide
          
          if tGuide is not empty then
             put "{" & CR after tExtensionGuide
@@ -10268,7 +10277,7 @@ private function revIDEGetDocsGuideData
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             
-            put textEncode(tExtensionGuide, "utf-8") into url ("binfile:" & tCachedDataFolder & slash & "guide.js")
+            revIDESetUTF8FileContents tGuideJS, tExtensionGuide
          end if
       else
          -- FIXME There is some inconsistency in the guide's files that we
@@ -10302,7 +10311,7 @@ on revIDEAddGuideAndRegenerate pGuide
    
    local tDocsCache
    put revIDESpecialFolderPath("documentation cache") into tDocsCache
-   put tData into URL ("binfile:" & tDocsCache & slash & "built_guide.js")
+   revIDESetUTF8FileContents tDocsCache & slash & "built_guide.js", tData
 end revIDEAddGuideAndRegenerate
 
 on revIDEAddAPIAndRegenerate pAPI
@@ -10324,7 +10333,7 @@ on revIDEAddAPIAndRegenerate pAPI
    
    local tDocsCache
    put revIDESpecialFolderPath("documentation cache") into tDocsCache
-   put tData into URL ("binfile:" & tDocsCache & slash & "built_api.js")
+   revIDESetUTF8FileContents tDocsCache & slash & "built_api.js", tData
 end revIDEAddAPIAndRegenerate
 
 on revIDERegenerateBuiltAPIs
@@ -10388,7 +10397,7 @@ private on revIDEGenerateDistributedGuide
    delete the last char of tGuideData
    
    # Write out to apropriate location
-   put textEncode(tGuideData, "utf-8") into url ("binfile:" & tGuideJSONFile)
+   revIDESetUTF8FileContents tGuideJSONFile, tGuideData
 end revIDEGenerateDistributedGuide
 
 private command revIDEGenerateDistributedAPI
@@ -10425,7 +10434,8 @@ private command revIDEGenerateDistributedAPI
       
       local tJSON
       put revDocsFormatLibraryArrayAsJSON(tScriptA) into tJSON
-      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js")
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api") & slash & "script.js", \
+            tJSON
    end if
    
    # Check to see if we need to regenerate the builder dictionary
@@ -10481,7 +10491,8 @@ private command revIDEGenerateDistributedAPI
       ideDocsUpdateDatabase tBuilderA
       
       put revDocsFormatLibraryArrayAsJSON(tBuilderA) into tJSON
-      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js")
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api") & slash & "builder.js", \
+            tJSON
    end if
    
    # Check to see if we need to regenerate the datagrid docs
@@ -10499,15 +10510,20 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase tLibA
       put revDocsFormatLibraryArrayAsJSON(tLibA) into tJSON
-      put textEncode(tJSON, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "dg.js")
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api") & slash & "dg.js", \
+            tJSON
    end if
    
    local tDictionaryData
-   put textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "script.js"), "utf-8") into tDictionaryData
-   put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "builder.js"), "utf-8") after tDictionaryData
-   put comma & textDecode(url ("binfile:" & revIDESpecialFolderPath("api") & slash & "dg.js"), "utf-8") after tDictionaryData
+   put revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
+         & slash & "script.js") into tDictionaryData
+   put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
+         & slash & "builder.js") after tDictionaryData
+   put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
+         & slash & "dg.js") after tDictionaryData
    
-   put textEncode(tDictionaryData, "utf-8") into url ("binfile:" & revIDESpecialFolderPath("api") & slash & "distributed_api.js")
+   revIDESetUTF8FileContents revIDESpecialFolderPath("api") \ 
+         & slash & "distributed_api.js", tDictionaryData
 end revIDEGenerateDistributedAPI
 
 on revIDEEnsureDictionaryUrl pWhich
@@ -10554,9 +10570,9 @@ on revIDEGenerateDictionaryHTML pWhich, pInitialLibrary, pInitialEntryName, pIni
    put revIDESpecialFolderPath("repo guides") into tRepoGuidesFolder
    
    local tTemplate
-   put textDecode(url("binfile:" & revIDEGetDictionaryHTMLTemplate(pWhich)), "utf-8") into tTemplate
+   put revIDEUTF8FileContents(revIDEGetDictionaryHTMLTemplate(pWhich)) into tTemplate
    put merge(tTemplate) into tTemplate
-   put textEncode(tTemplate, "utf-8") into url("binfile:" & tGeneratedHTMLFile)
+   revIDESetUTF8FileContents tGeneratedHTMLFile, tTemplate
 end revIDEGenerateDictionaryHTML
 
 ##################################################
@@ -11342,3 +11358,25 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
       throw "Failed to check modification time: missing file" && pFilename
    end if
 end __ScanFileMTime
+
+private command __removeByteOrderMark @xData
+   if byte 1 of xData is numToByte(0xef) and \
+         byte 2 of xData is numToByte(0xbb) and \
+         byte 3 of xData is numToByte(0xbf) then
+      delete byte 1 to 3 of xData
+   end if
+end __removeByteOrderMark
+
+function revIDEUTF8FileContents pFile
+   local tContents
+   put url("binfile:" & pFile) into tContents
+   
+   -- Remove byte-order mark if there is one
+   __removeByteOrderMark tContents
+   
+   return textDecode(tContents, "utf-8")
+end revIDEUTF8FileContents
+
+command revIDESetUTF8FileContents pFile, pContents
+   put textEncode(pContents, "utf-8") into url("binfile:" & pFile)
+end revIDESetUTF8FileContents
