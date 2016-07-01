@@ -11359,8 +11359,22 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
    end if
 end __ScanFileMTime
 
+private command __removeByteOrderMark @xData
+   if byte 1 of xData is numToByte(0xef) and \
+         byte 2 of xData is numToByte(0xbb) and \
+         byte 3 of xData is numToByte(0xbf) then
+      delete byte 1 to 3 of xData
+   end if
+end __removeByteOrderMark
+
 function revIDEUTF8FileContents pFile
-   return textDecode(url("binfile:" & pFile), "utf-8")
+   local tContents
+   put url("binfile:" & pFile) into tContents
+   
+   -- Remove byte-order mark if there is one
+   __removeByteOrderMark tContents
+   
+   return textDecode(tContents, "utf-8")
 end revIDEUTF8FileContents
 
 command revIDESetUTF8FileContents pFile, pContents
