@@ -5300,7 +5300,7 @@ function revIDELastModifiedTimeOfFile pFolder, pFile
    revIDEPushDefaultFolder pFolder
    put the detailed files into tDetailedFiles
    revIDEPopDefaultFolder
-   return item 5 of line lineOffset(pFile, tDetailedFiles) of tDetailedFiles
+   return item 5 of line lineOffset(urlEncode(pFile), tDetailedFiles) of tDetailedFiles
 end revIDELastModifiedTimeOfFile
 
 function revIDELastModifiedTimeOfFilesInFolder pFolder, pRecursive
@@ -7164,11 +7164,12 @@ on revIDESaveStack pStackID
    local tStackFileIsScriptOnly
    put revIDEStackFileIsScriptOnly(tStackFilename) into tStackFileIsScriptOnly
    
+   global gRevStackStatus
    # Display warning if user has not selected the latest file format
    if the scriptOnly of stack tStackName and not tStackFileIsScriptOnly then
       answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tShortName]
+         put "edited" into gREVStackStatus[tStackName]
          close stack "revSaving"
          return "Cancelled"
       end if
@@ -7235,7 +7236,6 @@ on revIDESaveStack pStackID
       -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
       dispatch "revHookPostSaveStack" to me with pStackID
       
-      global gRevStackStatus
       put empty into gREVStackStatus[tStackName]
       
       local tMainStackList
@@ -10173,10 +10173,19 @@ private function revIDEGetDocsAPIData
       # Check if the lcdoc file is out of date
       put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
+
+      local tInputs
+      put tFolder & slash & tSource into tInputs[1]
+      
+      # If we are running from source, also add the docs parser as an input 
+      # dependency of the docs files
+      if not revEnvironmentIsInstalled() then
+         put the effective filename of stack "revDocsParser" into tInputs[2]
+      end if
       
       local tNeedUpdate, tError, tAPIDoc
       put tCachedDataFolder & slash & "api.lcdoc" into tAPIDoc
-      put revIDEIsFilesetStale(tFolder & slash & tSource, \
+      put revIDEIsFilesetStale(tInputs, \
             tAPIDoc, false, tError) \
             into tNeedUpdate
       
@@ -10195,7 +10204,8 @@ private function revIDEGetDocsAPIData
       put tCachedDataFolder & "/api.js" into tAPIJS
       # Check if the .js is out of date
       if tNeedUpdate is not true then
-         put revIDEIsFilesetStale(tAPIDoc, tAPIJS , false, tError) \
+         put tAPIDoc into tInputs[1]
+         put revIDEIsFilesetStale(tInputs, tAPIJS , false, tError) \
                into tNeedUpdate
       end if
       
@@ -11282,17 +11292,17 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
    if tDirname is empty then
       put "." into tDirname
    end if
-
+   
    if tBasename is empty then
-      throw "Failed to check modification time: invalid filename"
+      throw "Failed to check modification time: invalid filename" && pFilename
    end if
-
+   
    -- Regular file
    local tMTime
    if there is a file pFilename then
       put revIDELastModifiedTimeOfFile(tDirname, tBasename) into tMTime
       if tMTime is empty then
-         throw "Failed to check modification time for file"
+         throw "Failed to check modification time for file" && pFilename
       end if
       if tMTime < xMin then
          put tMTime into xMin
@@ -11311,21 +11321,22 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
          -- List directory contents
          revIDEPushDefaultFolder pFilename
          if the result is not empty then
-            throw "Failed to set default folder"
+            throw "Failed to set default folder" && pFilename
          end if
          
          put files() & return & folders() into tContents
          filter tContents without ".."
-
+         filter tContents without empty
+         
          revIDEPopDefaultFolder pFilename
          if the result is not empty then
-            throw "Failed to set default folder"
+            throw "Failed to set default folder" && pFilename
          end if
-
+         
          if tContents is empty then
             return true
          end if
-
+         
          -- Recursively scan files & folders
          repeat for each line tInnerFilename in tContents
             put pFilename & slash before tInnerFilename
@@ -11336,7 +11347,7 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
          
          return true
       else
-         throw "Failed to check modification time: unexpected folder"
+         throw "Failed to check modification time: unexpected folder" && pFilename
       end if
    end if
    
@@ -11344,7 +11355,7 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
    if pAllowMissing then
       return false
    else
-      throw "Failed to check modification time: missing file"
+      throw "Failed to check modification time: missing file" && pFilename
    end if
 end __ScanFileMTime
 
