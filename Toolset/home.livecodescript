@@ -1224,7 +1224,7 @@ command revInternal__InitialiseLibraries
          
          repeat for each line tFile in tFiles
             if there is a stack tFile then
-               revInternal__LoadLibrary the short name of stack tFile
+               revInternal__LoadIfLibrary the short name of stack tFile
             end if
          end repeat
       end repeat

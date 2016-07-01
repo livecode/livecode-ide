@@ -22,39 +22,39 @@ command revInternal__LoadLibrary pLibrary
       else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
       else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
-      else if there is a stack pLibrary then put the filename of stack pLibrary into tLibraryPath
       else answer "no file for library" && pLibrary
       
       try
          // Get its name
          local tStackName
          put the name of stack tLibraryPath into tStackName
-         
-         dispatch "revLoadLibrary" to stack tStackName
-         if it is "unhandled" then
-            delete stack tStackName
-         else
-            put tStackName into sLoadedLibraries[tStackName]
-         end if
+         send "revLoadLibrary" to stack tStackName
+         put tStackName into sLoadedLibraries[tStackName]
          return true
       catch tError
-         answer tError
          answer "Error while loading stack:" && tLibraryPath
       end try
       
    else
       try
-         dispatch "revLoadLibrary" to stack pLibrary
-         if it is "unhandled" then
-            delete stack pLibrary
-         else
-            put pLibrary into sLoadedLibraries[pLibrary]
-         end if
+         send "revLoadLibrary" to stack pLibrary
       catch tError
          write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
       end try
    end if
 end revInternal__LoadLibrary
+
+command revInternal__LoadIfLibrary pLibrary
+   try
+      if the revAvailableHandlers of stack pLibrary contains "revLoadLibrary" then
+         send "revLoadLibrary" to stack pLibrary
+         put pLibrary into sLoadedLibraries[pLibrary]
+         return true
+      end if
+   end try
+   delete stack pLibrary
+   return false
+end revInternal__LoadIfLibrary
 
 command revInternal__UnloadLibrary pLibraryName
    // Check if the library is loaded
@@ -94,5 +94,5 @@ end revInternal__SetAppIcon
 command revInternal__SetSmallAppIcon pSmallAppIcon
    global gRevSmallAppIcon
    set the paintCompression to "png" -- match the engine
-   put pSmallAppIcon into gRevAppIcon
+   put pSmallAppIcon into gRevSmallAppIcon
 end revInternal__SetSmallAppIcon
