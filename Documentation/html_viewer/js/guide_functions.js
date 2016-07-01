@@ -89,34 +89,53 @@
 		// Close all 'ul's
 		for (i = current_level; i > 1; i--)
 			navigation_html += '</ul>';
-
+		
+		updateGuideView(pGuideIndex, navigation_html);
+	}
+	
+	function updateGuideView(pCurrentGuideIndex, pCurrentGuideNav)
+	{
 		var navigation_contents_html = '<ul class="nav bs-docs-sidenav lc_docs_nav">';		
 		$.each(tUserGuideData.guides, function( index, value ) {
-			if (index == pGuideIndex)
-				navigation_contents_html += '<li role="presentation" class="guide_list_item">' + navigation_html;
+			if (index == pCurrentGuideIndex)
+				navigation_contents_html += '<li role="presentation" class="guide_list_item">' + pCurrentGuideNav;
 			else
 				navigation_contents_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.name+'">'+value["display name"]+'</a>';
 			navigation_contents_html += '</li>';
 		});
 		navigation_contents_html += '</ul>';
-		
-		$("#guide_name").html(tUserGuideData.guides[pGuideIndex]["display name"]);
+	
 		$("#nav_holder").html(navigation_contents_html);
 		$(window).scrollTop(0);
 		$("#documentation").scrollspy('refresh');
 		$("#documentation img").addClass("img-responsive");
 	
 		$('pre code').each(function(i, block) {
-		//console.log(block);
-		hljs.highlightBlock(block);
-	});	
+			hljs.highlightBlock(block);
+		});
 	}
 	
-	function showLandingPage(pNavList)
+	function showLandingPage()
 	{
-		$("#guide_name").html('Choose Guide:');
-		$("#lcdoc_landing_list").html(pNavList);
+	   	var navigation_chooser_html = '';
+   		var current_group = '';
+		$.each(tUserGuideData.guides, function(index, value) 
+		{
+			if (value.group != current_group)
+			{
+				if (navigation_chooser_html != '')
+					navigation_chooser_html += '</ul></li>';
+				navigation_chooser_html += '<li>' + value.group + '<ul class="nav">';
+				
+				current_group = value.group;
+			}
+			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.name+'">'+value["display name"]+'</a></li>';
+		});
+	
+	
+		$("#lcdoc_landing_list").html(navigation_chooser_html);
 		$("#lcdoc_guide_landing").css('display', '');
+		updateGuideView(-1, '');
 	}
 	
 	function guideLinkClicked(pEvent, pWhich)
@@ -134,19 +153,13 @@
    	{
    		tRepoFolder = pRepoFolder;
    		tIDEFolder = pIDEFolder
-   	
-   		var navigation_chooser_html = '';
-		$.each(tUserGuideData.guides, function( index, value ) {
-			navigation_chooser_html += '<li role="presentation" class="guide_list_item"><a role="menuitem" tabindex="-1" guide="'+index+'" guide_name="'+value.name+'">'+value["display name"]+'</a></li>';
-		});
-		
-		$("#guide_chooser_list").html(navigation_chooser_html);
-		
+				
    		var tLastLoadedGuide;
    		if (guideExists(tLastLoadedGuide))
 			loadGuide(tLastLoadedGuide);
 		else
-			showLandingPage(navigation_chooser_html);
+			showLandingPage();
+			
    	
    		$('#nav_holder').on("click","a",function(e) {
    			var tGuide;

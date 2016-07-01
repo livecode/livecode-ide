@@ -29,7 +29,6 @@
     	<div style="position:relative" id="documentation" style="position:relative">
     		<div id="lcdoc_guide_landing" style="display:none">
     			<h1>LiveCode Guides</h1>
-    			<div>Please select a guide:</div>
     			<ul id="lcdoc_landing_list"></ul>
     		</div>
         </div>
