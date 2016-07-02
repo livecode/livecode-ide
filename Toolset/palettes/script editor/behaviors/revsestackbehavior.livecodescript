@@ -137,7 +137,9 @@ end revSEAddTargetObject
 #   Removes the specified object from this script editor. If the removed object is the current
 #   editing object, then changes the current object to the last selected object.
 command revSERemoveTargetObject pObject, pDontWarn, pDontCloseIfLast, pDontChangeTab
-   if pDontWarn is not true and seGetObjectState(pObject) is "edited" then
+   local tState
+   put seGetObjectState(pObject) into tState
+   if pDontWarn is not true and (tState is "edited" or (tState is "error" and revIDEObjectIsOnIDEStack(pObject))) then
       revSEWarnBeforeClosing pObject
       if the result is "cancel" then
          exit revSERemoveTargetObject
@@ -743,7 +745,9 @@ command revSEGetModifiedObjects
    
    local tEditedObjects
    repeat for each line tObject in tObjects
-      if seGetObjectState(tObject) is "edited" then
+      local tState
+      put seGetObjectState(tObject) into tState
+      if tState is "edited" or (tState is "error" and revIDEObjectIsOnIDEStack(tObject)) then
          # OK-2009-01-17 : Bug 7169
          local tDirty
          send "getDirty tObject" to group "Editor" of me
@@ -1479,7 +1483,7 @@ end seResizeCardBottom
 
 # Parameters
 #   pObject : the object to apply the script of
-#   pIgnoreErrors : causes errors in setting the script not to be displayed in the errors pane
+#   pIgnoreErrors : causes errors in setting the script not to be displayed in the errors pane and IDE scripts to be set regardless of errors
 #   @rCompilationErrors : gets the list of compilation errors placed into it. Will be set to empty if none occurred.
 # Returns
 #   True if the script was applied, false otherwise. Note that compilation errors may occur but the script could 
@@ -1498,9 +1502,7 @@ private command applyScript pObject, pIgnoreErrors, @rCompilationErrors
    # MW-2011-03-11: After moving S/E scripts into behaviors, we have a problem - it makes it too easy
    #   to break everything. Thus in the case the script is in an object which has 'revNewScriptEditor' in its
    #   long id we don't set the script on compilation errors.
-   local tIsEditorScript
-   put "stack" && quote & "revNewScriptEditor" & quote is in pObject into tIsEditorScript
-   if tCompilationResult is empty or not tIsEditorScript then
+   if tCompilationResult is empty or not revIDEObjectIsOnIDEStack(pObject) or pIgnoreErrors then
       local tScript
       send "scriptGet pObject" to group "Editor" of me
       put the result into tScript
