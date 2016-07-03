@@ -1748,16 +1748,32 @@ command actionApplyAndSave
    put the result into tObject
    
    local tStack
-   put revTargetStack(tObject) into tStack
+   put ideMainStackOfObject(tObject) into tStack
    
    local tTargetObjects
    revSEGetTargetObjects
    put the result into tTargetObjects
    
+   local tIgnoreErrors = false
    repeat for each line tTargetObject in tTargetObjects
-      if revTargetStack(tTargetObject) is tStack then
+      if ideMainStackOfObject(tTargetObject) is tStack then
          # OK-2009-06-23 : Bug 8124 - When saving, still display compilation errors, just apply the script anyway.
-         compileScript tTargetObject, false
+         compileScript tTargetObject, tIgnoreErrors
+         
+         local tCompilationErrors
+         put the result into tCompilationErrors
+         
+         if not tIgnoreErrors and tCompilationErrors is not empty and revIDEObjectIsOnIDEStack(tTargetObject) then
+            answer error "The following script has compilation errors. Would you like to ignore errors and apply the script before saving?" & return & the long name of tTargetObject with "Ignore Errors" or "Cancel"
+            
+            if it is "Cancel" then
+               revSESetCurrentObject tTargetObject
+               exit actionApplyAndSave
+            end if
+            
+            put true into tIgnoreErrors
+            compileScript tTargetObject, tIgnoreErrors
+         end if
       end if
    end repeat
    
