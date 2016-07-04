@@ -1,7 +1,15 @@
 ﻿script "revIDEDocumentationLibrary"
 on revLoadLibrary
-   insert the script of me into back
+   if the target is me then
+      insert the script of me into back
+   end if
 end revLoadLibrary
+
+on revUnloadLibrary
+   if the target is me then
+      remove script of me from back
+   end if
+end revUnloadLibrary
 
 private on ideDocsEnsureDatabase pLocation
    if there is not a file (pLocation & slash & "api.sqlite") then
