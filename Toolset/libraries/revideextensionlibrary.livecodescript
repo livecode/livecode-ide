@@ -1147,7 +1147,7 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    # Check timestamps to see if API  is out of date.
    local tNeedUpdate, tError
    put revIDEIsFilesetStale(pFolder & slash & pExtensionSource, \
-      pFolder & slash & api.lcdoc, false, tError) into tNeedUpdate
+      pFolder & slash & "api.lcdoc", false, tError) into tNeedUpdate
    if tNeedUpdate is empty then put true into tNeedUpdate
    
    if tNeedUpdate then

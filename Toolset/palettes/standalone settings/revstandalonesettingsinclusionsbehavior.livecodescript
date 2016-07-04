@@ -151,6 +151,8 @@ function getExtensionHiliteList pExtensionData
             end repeat
             break
          case "resource"
+            put tSettings[tID] into tShouldHilite
+            
             repeat for each item tItem in "ios,android"
                if tSettings[revSBInclusionToMobileKey(tID, "external", tItem)] then
                   put true into tShouldHilite

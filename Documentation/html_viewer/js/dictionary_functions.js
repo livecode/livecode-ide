@@ -1,4 +1,4 @@
-	var tState = {selected:"",history:[],searched:{},filters:{},filtered_data:{},data:"",selected_api_id:""};
+	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:"", sort_type:""};
 	
 	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
 	
@@ -25,36 +25,91 @@
 		return tState.data;
 	}
 	
-	function dataSearch(pTerm){
-		if(tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) return tState.searched.data;
+	// Return all the syntax associated with an entry
+	// as a (matchable) string
+	function collectSyntax(pEntry)
+	{
+		var tSyntax = '';
+		$.each(pEntry["display syntax"], function (index, value) 
+		{
+			if (tSyntax != '')
+				tSyntax += ' ';
+				
+			tSyntax += value;
+		});
+		return tSyntax;
+	}
+	
+	// Return a list of matched search terms
+	function dataSearch(pTerm)
+	{
+		// Check the cached search data
+		if (tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) 
+			return tState.searched.data;
+			
 		tState.searched.term = pTerm;
+		tState.searched.data = [];
 		
+		// Get a list of space-delimited search terms				
    		var tokensOfTerm = pTerm.match(/\S+/g);
-
-    	var matchExp = "";
-    	$.each(tokensOfTerm, function(index, matchToken){
-       		matchExp += "(?=.*" + matchToken + ")"
+		
+		
+		// Generate two regexes - one that matches all syntax that 
+		// contains each search term, and one that matches all syntax that
+		// contains a word beginning with each search term. This way we 
+		// can prioritise matches that start with the search terms.
+    	var matchExp = '';
+    	var priorityMatch = '';
+    	$.each(tokensOfTerm, function(index, matchToken)
+    	{
+       		matchExp += '(?=.*' + matchToken + ')';
+       		priorityMatch += '(?=.*\\b' + matchToken + ')';
    		});
 
-		var regex = new RegExp(matchExp,"i");
+		var regex = new RegExp(matchExp, "i");
+		var priorityRegex = new RegExp(priorityMatch, "i");
 		
-		tState.searched.data = $.grep(tState.filtered_data, function (e) {
-			//console.log(e);
-			return regex.test(e["display syntax"][0]);
+		// Grep for the general search term
+		tState . searched . data = $.grep(tState.filtered_data, function (e) 
+		{
+			var tToMatch = collectSyntax(e);
+			var tMatched = regex.test(tToMatch);
+			return tMatched;
 		});
-		
-		return tState.searched.data;
+
+		// Sort the priority matches to the top
+		tState . searched . data . sort(function(a, b) 
+		{
+			var tToMatch = collectSyntax(a);		
+			if (priorityRegex.test(tToMatch))
+				return -1;
+			
+			tToMatch = collectSyntax(b);
+			if (priorityRegex.test(tToMatch))
+				return 1;
+				
+			return 0;
+		});
+	
+		return tState . searched . data;
 	}
 	
 	function dataFilter(){
 		var filtered_data = [];
 		var tFound_data = []
 		
-		if(jQuery.isEmptyObject(tState.filters) == true){
+		if (jQuery.isEmptyObject(tState.filters))
+		{
 		 	tState.filtered_data = dataGet();
-		} else {		
-			$.each(dataGet(), function(index, entryData){
-				$.each(tState.filters, function(category, values){
+		} 
+		else 
+		{		
+			// Iterate over the current data to find entries that match
+			// the current filter options
+			$.each(dataGet(), function(index, entryData)
+			{
+				$.each(tState.filters, function(category, values)
+				{
 					tFound_data[category] = 0;
 					$.each(values, function(tag, tag_value){
 					
@@ -67,6 +122,7 @@
 							case "platforms":
 							case "OS":
 							case "tags":
+							case "associations":
 								if(entryData.hasOwnProperty(category)){
 									$.each(entryData[category], function(item_index, entry_item_value){
 										if(tag_value == entry_item_value){
@@ -98,9 +154,9 @@
 	}
 	
 	function compareEntryObject(entryObject1,entryObject2) {
-		if(entryObject1["display syntax"][0].toLowerCase() < entryObject2["display syntax"][0].toLowerCase())
+		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
 			return -1;
-		if (entryObject1["display syntax"][0].toLowerCase() > entryObject2["display syntax"][0].toLowerCase())
+		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
 			return 1;
 		return 0;
 	}
@@ -172,14 +228,65 @@
 		return Object.keys(obj).sort();
 	}
 	
+	function filter_cell(pCategory, pValue)
+	{
+		var tHTML = '';
+		tHTML += '<td><a href="#" class="apply_filter" ';
+		tHTML += 'filter_category="'+pCategory+'" ';
+		tHTML += 'filter_value="'+pValue+'">';
+		tHTML += pValue;
+		//tHTML += '<span class="badge">'+pFilterData[tFilter]+'</span>';
+		tHTML += '</a></td>';
+		return tHTML;
+	}
+	
+	function filter_html(pCategory, pFilterData)
+	{
+		var tHTML = '';
+		tHTML += '<tbody><tr><td class="category"><b>'+pCategory+':</b></td></tr>';
+		var tSortedFilters = sortedKeys(pFilterData);
+		
+		// Create a list of the filters we'll actually be displaying
+		var tDisplayedFilters = [];
+		$.each(tSortedFilters, function(index, value)
+		{
+			if (!tState.filters.hasOwnProperty(index) || 
+				tState.filters[pCategory].indexOf(value) == 0)
+				tDisplayedFilters.push(value);
+		});
+		
+		// Display them in alphabetical order going down the table,
+		// rather than across
+		var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
+		var tOddNumber = tDisplayedFilters.length % 2 == 1;
+		for (i = 1; i <= tRowCount; i++)
+		{
+			tHTML += '<tr>'
+			tHTML += filter_cell(pCategory, tDisplayedFilters[i-1]);
+			if (i != tRowCount || !tOddNumber)
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount]);
+			tHTML += '</tr>';
+		}
+		tHTML += '</tbody>';
+		
+		return tHTML;
+	}
+	
 	function displayFilters(){
 		// First display the applied filters
 		var tHTML = "";
-		$.each(tState.filters, function(filter_tag, filter_data) {
+		$.each(tState.filters, function(filter_tag, filter_data) 
+		{
 			tHTML += '<div style="margin-bottom:10px">';
 			tHTML += '<b>'+filter_tag+':</b> ';
-			$.each(filter_data, function(index, filter_name) {
-				tHTML += '<button type="button" class="btn btn-default btn-sm remove_filter" filter_tag="'+filter_tag+'" filter_data="'+filter_name+'">'+filter_name+'</button>';
+			$.each(filter_data, function(index, filter_name) 
+			{
+				tHTML += '<button type="button" ';
+				tHTML += 'class="btn btn-default btn-sm remove_filter" ';
+				tHTML += 'filter_tag="'+filter_tag+'" ';
+				tHTML += 'filter_data="'+filter_name+'">';
+				tHTML += filter_name;
+				tHTML += '</button>';
 			});
 			tHTML += '</div>';
 		});
@@ -187,77 +294,99 @@
 		
 		// Next display the filter options
 		tHTML = "";
-		var tFilterData = filterOptions("type,tags,OS");
+		var tFilterData = filterOptions("type,associations,tags,OS,platforms");
 		
+		tHTML += '<div style="margin-bottom:50px">';
+		tHTML += '<table>';
 		$.each(tFilterData, function(category, value) {
-			if(jQuery.isEmptyObject(value) == false){
-				tHTML += '<div style="margin-bottom:20px">';
-				tHTML += '<b>'+category+':</b> ';
-				
-				var tSortedFilters = sortedKeys(value);
-				for (index = 0; index < tSortedFilters.length; ++index)
-				{
-					var tFilter = tSortedFilters[index];
-					if(tState.filters.hasOwnProperty(index) && tState.filters[category].indexOf(tFilter) > 0){
-				
-					} else {
-						tHTML += '<a href="#" class="apply_filter" filter_category="'+category+'" filter_value="'+tFilter+'">'+tFilter+' <span class="badge">'+value[tFilter]+'</span></a> ';
-					}
-				}
-				tHTML += '</div>';
-			}
+			if(jQuery.isEmptyObject(value) == false)
+				tHTML += filter_html(category, value);
 		});
-	
+		tHTML += '</table>';
+		tHTML += '</div>';
 		$("#filters_options").html(tHTML);
 	}
 	
-	function displayEntryListGrep(pTerm){
-		var start = new Date().getTime();
-		var tHTML = "";
-		var resultSet = "";
-		
-		if(pTerm){
-			resultSet = dataSearch(pTerm);
+	function sortFilteredData(pData)
+	{
+		if (tState . sort_type == "")
+			return pData;
 			
-			var x = 1;
-			$.each(resultSet, function( index, value) {
-				//if(x > 100) return false;
-				x++;
+		pData . sort(function(pLeft, pRight) {
+			var tLeftValue, tRightValue;
+			tLeftValue = pLeft[tState . sort_type];
+			tRightValue = pRight[tState . sort_type];
+			
+			if (typeof tLeftValue == 'object')
+				tLeftValue = tLeftValue[0]
+			
+			tLeftValue = tLeftValue.toLowerCase();
+
+			if (typeof tRightValue == 'object')
+				tRightValue = tRightValue[0];
 				
-				if(tState.selected == value.id) tClass = " active";
-				else tClass = "";
-				tHTML += '<tr class="entry_list_item load_entry'+tClass+'" entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
-				if(value.hasOwnProperty("display syntax") && value["display syntax"][0] != value["display name"]){
-					tHTML += '<td>'+value["display syntax"][0]+'</td>';
-				} else {
-					tHTML += '<td>'+value["display name"]+'</td>';
-				}
-				tHTML += '</tr>';
-				
-			});
-		} else {
-			resultSet = tState.filtered_data;
-			var x = 1;
-			$.each(resultSet, function( index, value) {
-				//if(x > 100) return false;
-				x++;
-				
-				if(tState.selected == value.id) tClass = " active";
-				else tClass = "";
-				tHTML += '<tr class="entry_list_item load_entry'+tClass+'" entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
-				if(value.hasOwnProperty("display syntax") && value["display syntax"][0] != value["display name"]){
-					tHTML += '<td>'+value["display syntax"][0]+'</td>';
-				} else {
-					tHTML += '<td>'+value["display name"]+'</td>';
-				}
-				tHTML += '</tr>';
-				
-			});
-		}
+			tRightValue = tRightValue.toLowerCase();
+			
+			if (tLeftValue < tRightValue)
+				return -1;
+			
+			if (tRightValue < tLeftValue)
+				return 1;
+			
+			return 0;
+		});
 		
-		$("#list").html(tHTML);
-		$("#entries_showing").html(resultSet.length);
-		$("#entries_total").html(dataGet().length);
+		return pData;
+	}
+	
+	function data_table_html(pDataSet)
+	{
+		var tHTML = "";
+		tHTML += '<tbody id="list">';
+		
+		$.each(pDataSet, function(index, value) 
+		{
+			var tClass = "";
+			if (tState.selected == value.id) 
+				tClass = " active";
+				
+			if (value.hasOwnProperty("deprecated") && value.deprecated != '')
+				tClass = " deprecated";
+
+			tHTML += '<tr class="entry_list_item load_entry'+tClass+'" ';
+			tHTML += 'entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
+			tHTML += '<td>'+value["display name"]+'</td>';
+			tHTML += '<td>'+value["type"]+'</td>';
+			tHTML += '<td>'+value["display syntax"][0]+'</td>';
+			tHTML += '</tr>';
+		});
+		
+		tHTML += '</tbody>';
+		
+		return tHTML;
+	}
+	
+	function displayEntryListGrep(pTerm){
+		var tHeader;
+		tHeader = '<thead><tr>';
+		tHeader += '<td class="list_sort" sortBy="display name"><a href="#"><b>Name</b><span class="caret"></span></a></td>';
+		tHeader += '<td class="list_sort" sortBy="type"><a href="#"><b>Type</b><span class="caret"></span></a></td>';
+		tHeader += '<td class="list_sort" sortBy="display syntax"><a href="#"><b>Syntax</b><span class="caret"></span></a></td>';
+		
+		$("#table_list_header").html(tHeader);
+		
+		var tData;
+		if (pTerm)
+			tData = dataSearch(pTerm);
+		else
+			tData = tState . filtered_data;
+		
+		sortFilteredData(tData);
+		
+		var tHTML;
+		tHTML = data_table_html(tData);
+
+		$("#table_list").html(tHTML);
 	}
 	
 	function displayLibraryChooser(){
@@ -299,11 +428,24 @@
 			return tTable;
 		}
 		
+		renderer.link = function(href, title, text)
+		{
+			var tLink;
+			tLink = '<a class="external_link" href="' + href + '"';
+			tLink += ' title="' + title + '"';
+			tLink += ' target="_blank"';
+			tLink += '>'+text+'</a>';
+			return tLink;
+		}
+		
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
-	function displayEntry(pEntryID){	
+	function displayEntry(pEntryID)
+	{		
 		var tEntryObject = entryData(pEntryID);
+		history_add(tEntryObject);
+		
 		pEntryID = tEntryObject.id;
 		
 		console.log(tEntryObject);
@@ -374,8 +516,17 @@
 						tHTML += reference_type + ':';
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
-							if(reference_html == "") reference_html = ' <a href="javascript:void(0)" class="load_entry" entryid="'+entryNameToID(reference_name,reference_type)+'">'+reference_name+'</a>';
-							else reference_html += ', <a href="javascript:void(0)" class="load_entry" entryid="'+entryNameToID(reference_name,reference_type)+'">'+reference_name+'</a>';
+							var tReference, tID;
+							tID = entryNameToID(reference_name, reference_type);
+							if (tID == 0)
+								tReference = reference_name;
+							else
+								tReference = click_text(reference_name, tID);
+							
+							if (reference_html == "") 
+								reference_html = tReference;
+							else 
+								reference_html += ',' + tReference;
 						});
 						tHTML += reference_html;
 						tHTML += '<br />';
@@ -389,10 +540,7 @@
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
 						$.each(value, function(index2, value2) {
-							tSyntaxHTML += replace_link_placeholders_with_param(value2);
-							// Syntax can be multi-line
-							tSyntaxHTML = tSyntaxHTML.replace(/\n/g, "<br />")
-							tSyntaxHTML += '<br />';
+							tHTML += '<pre><code>' + remove_link_placeholders(value2) + '</code></pre>';
 						});
 					} else {
 						tSyntaxHTML += 'Malformed syntax in JSON';	
@@ -405,11 +553,26 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						var association_html = "";
 						$.each(value, function(index2, value2) {
-							var tIndex = entryNameToID(value2,"object");
-							if(tIndex == 0) tIndex = entryNameToID(value2,"library");
-							if(tIndex == 0) tIndex = entryNameToID(value2,"glossary");
-							if(association_html == 0) association_html = '<a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
-							else association_html += ', <a href="javascript:void(0)" class="load_entry" entryid="'+tIndex+'">'+value2+'</a>';
+							var tTypes, tType;
+							tTypes = ["object","library","glossary"];
+							
+							var tID;
+							$.each(tTypes, function(tTypeIndex, tType) {
+								tID = entryNameToID(value2, tType)
+								if (tID != 0)
+									return;
+							});
+							
+							var tAssociation;
+							if (tID == 0)
+								tAssociation = value2;
+							else
+								tAssociation = click_text(value2, tID);
+							
+							if (association_html == "") 
+								association_html = tAssociation;
+							else 
+								association_html += ',' + tAssociation;
 						});
 						tHTML += association_html+'</div>';
 					}
@@ -433,7 +596,19 @@
 					
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 					//tHTML += '<span class="social social-ios"></span>';
-					tHTML += value;
+					if (typeof value == 'object')
+					{
+						var tOutput = '';
+						$.each(value, function(index, content)
+						{
+							if (tOutput != '')
+								tOutput += ', ';
+							tOutput += content;
+						});
+						tHTML += tOutput;
+					}
+					else
+						tHTML += value;
 					tHTML += '</div>';
 					break;
 			}
@@ -473,7 +648,7 @@
 				tHTML += '<thead><tr><td><b>Name</b></td><td><b>Summary</b></td><td><b>Syntax</b></td></tr></thead><tbody>';
 				$.each(item_data,function(item_intex, entry_data){
 					tHTML += '<tr>';
-					tHTML += '<td><a href="javascript:void(0)" class="load_entry" entryid="'+entry_data.id+'">'+entry_data["display name"]+'</a></td>';
+					tHTML += '<td>' + click_text_from_entry_data('', entry_data) +'</a></td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.summary)+'</td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.syntax[0])+'</td>';
 					tHTML += '</tr>';
@@ -504,6 +679,15 @@
 			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
 				var resolved = resolve_link_placeholder(matched_text);
 				return '<span class="lcdoc_entry_param">' + resolved[0] + '</span>';	
+			});
+			return pText;
+		}
+	}	
+	
+	function remove_link_placeholders(pText){
+		if(pText){
+			var pText = pText.replace(/<([^>]*)>/igm, function(matched_whole, matched_text) {
+				return matched_text;
 			});
 			return pText;
 		}
@@ -539,14 +723,13 @@
              	if(return_text == matched_whole){
              		var resolved = resolve_link_placeholder(matched_text);
              		
-             		var entry_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
+             		var resolved_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
              		
-             		if (entry_id)
-             	   		return_text = '<a href="javascript:void(0)" class="load_entry" entryid="'+entry_id+'">' + resolved[0] + '</a>';
+             		if (resolved_id != 0)
+             	   		return_text = click_text(resolved[0], resolved_id)
              		else
              			return_text = resolved[0];
              	}
-             	
              	
 				if(return_text == matched_text){
 					return matched_whole;
@@ -555,6 +738,23 @@
          	});
 		}
 		return pText;
+	}
+	
+	function click_text_from_entry_data(pLink, pEntryData)
+	{
+		if (pLink == '')
+			return click_text(pEntryData["display name"], pEntryData.id);
+		else
+			return click_text(pLink, pEntryData.id);
+	}
+	
+	function click_text(pText, pID)
+	{
+		var text;
+		text = '<a href="javascript:void(0)" class="load_entry"';
+		text += ' entryid="'+pID+'"'; 
+		text += '>' + pText + '</a>';
+		return text;
 	}
 	
 	// Returns an array with the label, the reference name and optional reference type.
@@ -645,44 +845,42 @@
 		return tID;
 	} 
 	
-	function breadcrumb_draw(){
-		var tHistory = tState.history;
-		var tHTML = "";
-		var tSelectedKey = entryIDToHistoryKey(tState.selected);
+	function breadcrumb_draw()
+	{
+		var tHistory = tState.history.list;
 		
-		//console.log(tState.history);
-		if (typeof tSelectedKey == 'undefined') tSelectedKey = 0;
+		if (tState.history.selected > 0) 
+			$('#lcdoc_history_back').removeClass('disabled');
+		else
+			$('#lcdoc_history_back').addClass('disabled');
 		
-		var start_point = 0;
+		if (tState.history.selected < tHistory.length - 1) 
+			$('#lcdoc_history_forward').removeClass('disabled');
+		else
+			$('#lcdoc_history_forward').addClass('disabled');
 		
-		if(tSelectedKey < 2){
-			start_point = 0;
-		} else {
-			start_point = tSelectedKey-2;
+		if (tHistory . length <= 1)
+		{
+			$('#lcdoc_history').addClass('disabled');
+			return;
 		}
+		else
+			$('#lcdoc_history').removeClass('disabled');
 		
-		end_point = start_point + 4;
-		if(end_point > tHistory.length) end_point = tHistory.length;
-		
-		
-		
-		//console.log(start_point,end_point);
-		
-		$.each(tHistory, function(index, value) {
-			if(index >= start_point && index <= end_point){
-				if(index == tSelectedKey) tHTML = '<li class="active"><a href="#">'+value.name+'</a></li>' + tHTML;
-				else tHTML = '<li><a href="javascript:void(0)" class="load_breadcrumb_entry" entryid ="'+value.id+'">'+value.name+'</a></li>' + tHTML;
+		var tHistoryList = '';	
+		$.each(tHistory, function(index, value) 
+		{
+			if (index == tState.history.selected)
+				tHistoryList += '<li class="active"><a href="#">';
+			else
+			{
+				tHistoryList += '<li><a href="javascript:void(0)" ';
+				tHistoryList += 'class="load_breadcrumb_entry" historyIndex ="'+index+'">';
 			}
+			tHistoryList += value.name + ' (' + value.type + ')</a></li>';
 		});
-		
-		if(tSelectedKey==tHistory.length-1) tHTML = '<li class="disabled" style="float:left"><a href="#"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></a></li>' + tHTML;
-		else tHTML = '<li class="lcdoc_history_back"><a href="#"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></a></li>' + tHTML; 
-		
-		if(tSelectedKey==0) tHTML += '<li class="disabled"><a href="#"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></a>';
-		else tHTML += '<li class="lcdoc_history_forward"><a href="#"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></a>';
-		$("#breadcrumb").html(tHTML);
-		//console.log(tHistory);
-		
+	
+		$("#lcdoc_history_list").html(tHistoryList);
 	}
 	
 	function parameterFormatValue(pType, pData){
@@ -709,40 +907,55 @@
 		return tHTML;
 	}
 	
-	function history_add(pEntryID){
-		//console.log(pEntryID);
-		var tEntryObject = entryData(pEntryID);
-		$.each(tState.history, function(history_index, history_entry_object) {
-			if(history_entry_object.id == pEntryID){
-				// History already contains this entry.
-				//delete tState.history[history_index];
-				tState.history.splice(history_index,1);
+	function history_selected_entry()
+	{
+		return tState.history.list[tState.history.selected];
+	}
+	
+	function history_add(pEntryObject)
+	{	
+		if (tState.history.selected != -1)
+		{
+			// If this is the currently selected item, don't do anything
+			if (history_selected_entry().id == pEntryObject.id)
+				return;
+		}
+
+		var tObject = {"id":pEntryObject.id,"name":pEntryObject["display name"],"type":pEntryObject.type}
+		var tNewHistory = tState . history .list;
+		
+		// Remove item from history if it is present
+		$.each(tNewHistory, function(index, value) 
+		{
+			if (value.id == tObject.id)
+			{
+				tNewHistory.splice(index, 1);
+				// Exit the loop once we have found and removed the item
 				return false;
 			}
 		});
-	
-		var tObject = {"id":pEntryID,"name":tEntryObject["display name"]}
-		tState.history.unshift(tObject);
+		
+		// Push item onto end of history list
+		tNewHistory.push(tObject);
+		
+		tState.history.list = tNewHistory;
+		tState.history.selected = tNewHistory . length - 1;
 	}
 	
-	function entryIDToHistoryKey(pEntryID){
-		var tID = 0;
-		$.each(tState.history, function( index, value) {
-			if(value.id == pEntryID){
-				tID = index;
-				return false;
-			}
-			
-		});
-		return tID;
+	function history_back()
+	{
+		go_history(tState.history.selected - 1);
 	}
 	
-	function history_back(){
-		displayEntry(tState.history[entryIDToHistoryKey(tState.selected)+1].id);
+	function history_forward()
+	{
+		go_history(tState.history.selected + 1);
 	}
 	
-	function history_forward(){
-		displayEntry(tState.history[entryIDToHistoryKey(tState.selected)-1].id);
+	function go_history(pHistoryID)
+	{
+		tState.history.selected = pHistoryID
+		displayEntry(history_selected_entry().id);
 	}
 	
 	function entry_next(){
@@ -757,13 +970,14 @@
 			}
 			
 		});
-		history_add(tNextID);
 		displayEntry(tNextID);
 	}
 	
 	function library_set(pLibraryID){
-		var tLibraryName = library_id_to_name(pLibraryID);
-		$("#lcdoc_library_chooser_text").html(tLibraryName);
+		var tChooserLabel = 'Choose API: ';
+		tChooserLabel += library_id_to_name(pLibraryID);
+
+		$("#lcdoc_library_chooser_text").html(tChooserLabel);
 	
 		if(dictionary_data.docs.hasOwnProperty(pLibraryID))
 		{				
@@ -772,10 +986,10 @@
 				tState.selected_api_id = pLibraryID;
 				$.session.set("selected_api_id", pLibraryID);
 				tState.selected = ""
-				tState.history = [];
+				tState.history = {list:[], selected:-1};
 				tState.searched = {};
 				tState.filters= {};
-				tState.filtered_data = {};
+				tState.filtered_data = [];
 				tState.data = "";
 			
 				dataFilter();
@@ -814,7 +1028,6 @@
 			}
 			
 		});
-		history_add(tPreviousID);
 		displayEntry(tPreviousID);
 	}
 	
@@ -843,20 +1056,33 @@
 		displayEntry(tID);
 	}
 	
-	function setActions()
+	function isRunningInLiveCodeBrowser()
 	{
+		return (typeof liveCode !== 'undefined');
+	}
+	
+	function setActions()
+	{	
+		breadcrumb_draw();
+				
 		$('#ui_filer').keyup(function() {
 		  displayEntryListGrep(this.value);
 		})
 		
 		$("body").on( "click", ".load_entry", function() {
 			var tEntryID = $(this).attr("entryid");
-			history_add(tEntryID);
 			displayEntry(tEntryID);
 		});
 		
+		$("body").on("click", ".list_sort", function() {
+			tState.sort_type = $(this).attr("sortBy");
+			dataFilter();
+		});
+		
 		$("body").on( "click", ".load_breadcrumb_entry", function() {
-			displayEntry($(this).attr("entryid"));
+			var tHistoryIndex;
+			tHistoryIndex = parseInt($(this).attr("historyIndex"));
+			go_history(tHistoryIndex);
 		});
 		
 		$("body").on( "click", ".apply_filter", function() {
@@ -871,12 +1097,23 @@
 			filter_remove(filter_tag,filter_data);
 		});
 		
-		$("body").on( "click", ".lcdoc_history_forward", function() {
-			history_forward();
+		$("body").on( "click", ".external_link", function(e) {
+			if (isRunningInLiveCodeBrowser())
+			{
+				e.preventDefault();
+				var tTarget = $(this).attr("href");
+				liveCode.linkClicked(tTarget);
+			}
+		});
+
+		$('#lcdoc_history_forward').on( "click", function() {
+			if (!$(this).hasClass('disabled'))
+				history_forward();
 		});
 		
-		$("body").on( "click", ".lcdoc_history_back", function() {
-			history_back();
+		$('#lcdoc_history_back').on( "click", function() {
+			if (!$(this).hasClass('disabled'))
+				history_back();
 		});
 		
 		$("body").on( "click", "#table_list", function() {
@@ -893,18 +1130,97 @@
 			var library_name = library_id_to_name(library_id);
 			library_set(library_id);
 		});
+
+		var $resizer = $('#resizer');
 		
-		$("#lcdoc_list").bind('mousewheel', function(e, d)  {
-			var t = $("#list");
-			if (d > 0 && t.scrollTop() === 0) {
-				e.preventDefault();
-			}
-			else {
-				if (d < 0 && (t.scrollTop() == t.get(0).scrollHeight - t.innerHeight())) {
+		var tResizerMargin;
+		tResizerMargin = parseInt($resizer.css('margin'));
+		
+		function update_lcdoc_margin()
+		{			
+			var tHeaderHeight;
+			tHeaderHeight = parseInt($('#header_panel_holder').css('height'));
+			
+			$('#lcdoc_body').css('margin-top', tHeaderHeight + 20);
+		}
+		
+		function doTableResize()
+		{
+			var $textarea = $('#header_panel_holder');
+			var $window = $(window);
+			
+			var tWindowHeight;
+			tWindowHeight = $window.height();
+			
+			var tWindowScroll;
+			tWindowScroll = $window.scrollTop();
+			
+			var tHeaderMinHeight;
+			tHeaderMinHeight = parseInt($textarea.css('min-height'));
+			
+			var tTableHeaderHeight;
+			tTableHeaderHeight = parseInt($('#table_list_header').css('height'));
+			
+			$("body").addClass('noselect');
+			
+			$window.on('mousemove', function (evt) {
+				evt.preventDefault();
+			
+				var tNewHeight;
+				tNewHeight = Math.min(evt.pageY - tWindowScroll, tWindowHeight - 20);
+				tNewHeight = Math.max(tHeaderMinHeight, tNewHeight);
+				
+				var tContainerHeight;
+				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin;
+				$('#table_container').css('height', tContainerHeight);
+
+				if (tContainerHeight < 5)
+				{
+					$textarea.css('height', tHeaderMinHeight);
+					$('#table_header').css('display', 'none');
+				}
+				else
+				{
+					$textarea.css('height', tNewHeight);	
+					$('#table_header').css('display', '');
+				}
+				
+				update_lcdoc_margin();
+			});
+			
+			$window.on('mouseup', function () {
+				$("body").removeClass('noselect');
+				$window.off('mousemove');
+				$window.off('mouseup');
+			});
+		}
+		
+		// Catch mousedown on the resizer div and resize header panel
+		// holder on mousemove, respecting panel holder's min width
+		$('#resizer').on('mousedown', function (event) {
+			doTableResize();
+		});
+
+		// Prevent mouse scroll on table bubbling to window level		
+		function preventScrollBubble(pEventTarget, pScrollTarget)
+		{	
+			pEventTarget.bind('mousewheel', function(e, d)  {
+				if (d > 0 && pScrollTarget.scrollTop() === 0) {
 					e.preventDefault();
 				}
-			}
-		});
+				else {
+					var tBottom;
+					tBottom = pScrollTarget.get(0).scrollHeight - pScrollTarget.innerHeight();
+					if (d < 0 && (pScrollTarget.scrollTop() == tBottom)) {
+						e.preventDefault();
+					}
+				}
+			});
+		}
+		preventScrollBubble($("#lcdoc_list"), $("#table_container"));
+		preventScrollBubble($("#filters_panel"), $("#filters_options"));
+		
+		update_lcdoc_margin();
 		
 		$(document).keydown(function(e) {
 		   switch(e.which) {
