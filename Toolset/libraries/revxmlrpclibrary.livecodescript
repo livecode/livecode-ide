@@ -166,6 +166,8 @@ function revXMLRPC_GetParam pXMLRPCDocID, pParamNumber, pType
   put "/" & revXMLRootNode(pXMLRPCDocID) & "/params/param[" & pParamNumber & "]/value" into tValueNode
   put revXMLChildNames(pXMLRPCDocID,tValueNode,return,,false) into tValueType
   put tValueNode & "/" & tValueType into tDataNode
+  
+  local tParamData
   if pType is "xml" or pType is empty then
     put revXMLText(pXMLRPCDocID,tDataNode) into tParamData
   else if pType is not tValueType then
@@ -278,7 +280,7 @@ function revXMLRPC_Execute pXMLRPCDocID
   if sXMLRPC_Data[pXMLRPCDocID,"id"] is empty then return "xmlrpcerr : bad document id" && pXMLRPCDocID
   if sXMLRPC_Data[pXMLRPCDocID,"request"] is not empty then return "xmlrpcerr : document id" && pXMLRPCDocID && "is a response"
   ## if it is a valid doc ID, proceed
-  local tPath, tSocket, tHost, tPort, tURL
+  local tPath, tSocket, tHost, tPort, tURL, tProtocol
   local tPayload, tHTTPHeaders, tResponseData, tResponseID
   -- collect the host, port, path and protocol information
   put sXMLRPC_Data[pXMLRPCDocID,"host"] into tHost
@@ -309,6 +311,7 @@ function revXMLRPC_Execute pXMLRPCDocID
         tHTTPHeaders & CRLF & CRLF & tPayload to socket tSocket
     read from socket tSocket until CRLF
     -- save the response and check the server status code
+    local tServerResponse
     put it into tServerResponse
     if word 2 of line 1 of tServerResponse is not "200" then
       -- make sure to read all the data, even if we ignore it
@@ -318,6 +321,7 @@ function revXMLRPC_Execute pXMLRPCDocID
     end if
     -- read the headers
     read from socket tSocket until (CRLF & CRLF)
+    local tSRHTTPHeaders
     put it into tSRHTTPHeaders
     replace CRLF with return in tSRHTTPHeaders
     if line -1 of tSRHTTPHeaders is empty then delete line -1 of tSRHTTPHeaders
@@ -328,6 +332,7 @@ function revXMLRPC_Execute pXMLRPCDocID
     -- use POST command from libURL
     put toLower(tProtocol) & "://" & tHost & ":" & tPort & "/" & tPath into tURL
     -- now post the payload to the URL
+    local tSaveHTTPHeaders
     put the httpHeaders into tSaveHTTPHeaders #mf 03/08/2005 Bug 2444
     set the httpHeaders to tHTTPHeaders
     post tPayload to URL tURL
