@@ -967,7 +967,6 @@ function revLookUpPackage pPath
 end revLookUpPackage
 
 on reloadStack pStackName, pFileName
-   global gREVSuppressMessages
    if the filename of stack pStackName is pFileName then
       toplevel pStackName
    else
@@ -3472,7 +3471,7 @@ command revIDEHandleNewStack pTarget
          send "revNewStack tStack" to stack "revApplicationOverview"
       end if
    end if
-   global gREVMessageDispatch
+   
    repeat for each line l in gREVMessageDispatch["revPreOpenStack"]
       send "revPreOpenStack" to this cd of stack l
    end repeat
