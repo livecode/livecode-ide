@@ -148,6 +148,11 @@
 	function loadGuide(pGuideName){
 		renderMarkdown(pGuideName);
 	}
+
+	function isRunningInLiveCodeBrowser()
+	{
+		return (typeof liveCode !== 'undefined');
+	}
    	
    	function initializeGuides(pRepoFolder, pIDEFolder)
    	{
