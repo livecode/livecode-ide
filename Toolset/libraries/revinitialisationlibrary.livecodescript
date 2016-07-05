@@ -29,7 +29,7 @@ command revInternal__LoadLibrary pLibrary
          local tStackName
          put the name of stack tLibraryPath into tStackName
          send "revLoadLibrary" to stack tStackName
-         put tStackName into sLoadedLibraries[tStackName]
+         put tStackName into sLoadedLibraries[pLibrary]
          return true
       catch tError
          answer "Error while loading stack:" && tLibraryPath
@@ -48,7 +48,9 @@ command revInternal__LoadIfLibrary pLibrary
    try
       if the revAvailableHandlers of stack pLibrary contains "revLoadLibrary" then
          send "revLoadLibrary" to stack pLibrary
-         put pLibrary into sLoadedLibraries[pLibrary]
+         local tStackName
+         put the name of stack pLibrary into tStackName
+         put tStackName into sLoadedLibraries[pLibrary]
          return true
       end if
    end try
