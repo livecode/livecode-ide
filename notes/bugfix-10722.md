@@ -1,1 +1,0 @@
-# Context menu item "Go to Definition..." always disabled in IDE scripts and names of handlers which are defined in libraries

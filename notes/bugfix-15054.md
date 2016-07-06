@@ -1,1 +1,0 @@
-# revShortCutsLibrary not managing its position in the message path correctly
