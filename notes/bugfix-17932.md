@@ -1,0 +1,1 @@
+# Don't resolve angle brackets as links in code in descriptions
