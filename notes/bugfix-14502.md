@@ -1,1 +1,0 @@
-# Return key doesn't trigger default button in Answer dialog
