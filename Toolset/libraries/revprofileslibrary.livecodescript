@@ -1,11 +1,15 @@
 ﻿script "revprofileslibrary"
 
 on revLoadLibrary
-   insert the script of me into back
+   if the target is me then
+      insert the script of me into back
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of me from back
+   if the target is me then
+      remove the script of me from back
+   end if
 end revUnloadLibrary
 
 # OK-2008-04-14 : Added variable declarations when investigating a bug

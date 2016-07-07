@@ -1,11 +1,15 @@
 ﻿script "revgeometrylibrary"
 
 on revLoadLibrary
-   insert the script of me into back
+   if the target is me then
+      insert the script of me into back
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of me from back
+   if the target is me then
+      remove the script of me from back
+   end if
 end revUnloadLibrary
 
 # OK-2007-08-10 : Added variable declarations and quotes round literals to this script, also tidied up some code and fixed some bugs.
