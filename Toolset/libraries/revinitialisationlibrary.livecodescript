@@ -25,37 +25,38 @@ command revInternal__LoadLibrary pLibrary
       else answer "no file for library" && pLibrary
       
       try
-      	--local tDefaultStack
-      	--put the defaultStack into tDefaultStack
-         // Open the stack
-        -- go stack tLibraryPath
-         
-         --set the defaultStack to tDefaultStack
-         
          // Get its name
          local tStackName
          put the name of stack tLibraryPath into tStackName
-         
-         // Insert the script into the backscript
          send "revLoadLibrary" to stack tStackName
-         
          put tStackName into sLoadedLibraries[pLibrary]
-                  
          return true
       catch tError
-         answer tError
          answer "Error while loading stack:" && tLibraryPath
       end try
       
    else
       try
          send "revLoadLibrary" to stack pLibrary
-         put pLibrary into sLoadedLibraries[pLibrary]
       catch tError
          write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
       end try
    end if
 end revInternal__LoadLibrary
+
+command revInternal__LoadIfLibrary pLibrary
+   try
+      if the revAvailableHandlers of stack pLibrary contains "revLoadLibrary" then
+         send "revLoadLibrary" to stack pLibrary
+         local tStackName
+         put the name of stack pLibrary into tStackName
+         put tStackName into sLoadedLibraries[pLibrary]
+         return true
+      end if
+   end try
+   delete stack pLibrary
+   return false
+end revInternal__LoadIfLibrary
 
 command revInternal__UnloadLibrary pLibraryName
    // Check if the library is loaded
@@ -95,5 +96,5 @@ end revInternal__SetAppIcon
 command revInternal__SetSmallAppIcon pSmallAppIcon
    global gRevSmallAppIcon
    set the paintCompression to "png" -- match the engine
-   put pSmallAppIcon into gRevAppIcon
+   put pSmallAppIcon into gRevSmallAppIcon
 end revInternal__SetSmallAppIcon

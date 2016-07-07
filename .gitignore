@@ -68,3 +68,7 @@ environment_log.txt
 #################
 Documentation/html_viewer/resources/data/api/*.js
 Documentation/html_viewer/resources/data/guide/*.js
+
+# Additional externals #
+########################
+Ext/

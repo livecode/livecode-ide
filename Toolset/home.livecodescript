@@ -246,7 +246,7 @@ on revInternal__openStack
       revIDEOpenPalette "Welcome"
    else if revIDEPrefGet("StartPageShow") is not "false" then
       */
-      if revIDEPrefGet("StartPageShow") is not "false" then
+      if revIDEGetPreference("cStartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
 
@@ -1169,6 +1169,7 @@ command revInternal__InitialiseLibraries
    
    revInternal__LoadLibrary "revBackScriptLibrary"
    
+   revInternal__LoadLibrary "revSBLibrary"
    # MW-2011-04-11: New deploy library for Android/iOS simulate/test support
    revInternal__LoadLibrary "revDeployLibrary"
    
@@ -1207,6 +1208,33 @@ command revInternal__InitialiseLibraries
    try
       revIDEDeployInitialize
    end try
+   
+   -- Load libraries in the Ext externals bundle
+   if there is a folder revEnvironmentExtPath() then
+      local tOldFolder
+      put the folder into tOldFolder
+      
+      set the folder to revEnvironmentExtPath()
+      repeat for each line tExternal in the folders
+         if tExternal is empty or tExternal is "." or tExternal is ".." then
+            next repeat
+         end if
+         set the folder to revEnvironmentExtPath() & "/" & tExternal
+         
+         local tFiles
+         put the files into tFiles
+         filter tFiles with "*.livecode*"
+         
+         repeat for each line tFile in tFiles
+            if there is a stack tFile then
+               revInternal__LoadIfLibrary the short name of stack tFile
+            end if
+         end repeat
+      end repeat
+      
+      set the folder to tOldFolder
+   end if
+   
    revInternal__Log "Leave", "Libraries Initialisation"
    
    return true
@@ -1245,14 +1273,14 @@ private command revInternal__SetupExternals
       put the folder & "/" & tExternal & return after tExternals
    end repeat
    
-   -- Load the MergExt externals bundle
-   if there is a folder revEnvironmentMergExtPath() then
-      set the folder to revEnvironmentMergExtPath()
+   -- Load the Ext externals bundle
+   if there is a folder revEnvironmentExtPath() then
+      set the folder to revEnvironmentExtPath()
       repeat for each line tExternal in the folders
          if tExternal is empty or tExternal is "." or tExternal is ".." then
             next repeat
          end if
-         set the folder to revEnvironmentMergExtPath() & "/" & tExternal
+         set the folder to revEnvironmentExtPath() & "/" & tExternal
          
          -- The folder contains externals for multiple platforms, potentially
          -- Remember: .bundle "files" are really folders
@@ -1261,7 +1289,7 @@ private command revInternal__SetupExternals
          filter tFiles with ("*." & tExtension)
          
          repeat for each line tFile in tFiles
-            put revEnvironmentMergExtPath() & "/" & tExternal & "/" & tFile & return after tExternals
+            put revEnvironmentExtPath() & "/" & tExternal & "/" & tFile & return after tExternals
          end repeat
       end repeat
    end if
@@ -1823,9 +1851,9 @@ function revEnvironmentUserRuntimePath
   return sCustomizationPath & "/Runtime"
 end revEnvironmentUserRuntimePath
 
-function revEnvironmentMergExtPath
-   return hookToolsPath("mergext", sToolsPath & "/MergExt")
-end revEnvironmentMergExtPath
+function revEnvironmentExtPath
+   return hookToolsPath("ext", sToolsPath & "/Ext")
+end revEnvironmentExtPath
 
 //EJB for Testing System
 function revOverrideRuntimePath

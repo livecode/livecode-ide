@@ -3,8 +3,7 @@ on preOpenStack
    local tLicenseType
    
    start using stack "revSaveAsStandalone"
-   start using stack "revSBLibrary"
-   
+  
    if getTargetStackName() is not among the lines of the mainStacks then
       revStandaloneSettings the mainStack of the topStack
    end if
@@ -123,7 +122,6 @@ end helpButtons
 
 on revStandaloneSettings pStack
    lock screen
-   start using stack "revSBLibrary"
    if pStack = "" then 
       put the short name of the topStack into pStack
    end if
@@ -337,7 +335,7 @@ command setSetting pKey, pValue
 end setSetting
 
 function updateIncludeStackFilesList pIncludeList, pPrev
-   local tInclude, tMainStack, tChars, tPath, tStackFiles
+   local tInclude, tMainStack, tChars, tPath
    put line 1 of pPrev into tMainStack
    set the itemDel to "/"
    put item 1 to -2 of tMainStack & "/" into tMainStack
@@ -361,7 +359,9 @@ function updateIncludeStackFilesList pIncludeList, pPrev
       end if
    end repeat
    
-   return revRelativeStackFilesList(getTargetStackName())
+   local tStackFiles
+   revSBRelativeStackFilesList getTargetStackName(), tStackFiles
+   return tStackFiles
 end updateIncludeStackFilesList
 
 on revRecursiveRemoveStackFiles pStack,pRemoveList, @xStackFileList
@@ -471,7 +471,11 @@ end addProfilesToList
 
 function revGetPropertyProfilesList
    local tLine,tStackNames,tStack,tCard,tControl,tFinalList,tProfilesList
-   repeat for each line tLine in revGetStackFilesList(getTargetStackName())
+   
+    local tStackFiles
+   revSBStackFilesList getTargetStackName(), tStackFiles
+  
+   repeat for each line tLine in tStackFiles
       put the mainStack of stack tLine into tStackNames
       put cr & the subStacks of stack tStackNames after tStackNames
       lock messages

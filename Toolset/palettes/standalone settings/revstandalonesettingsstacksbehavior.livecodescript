@@ -13,7 +13,7 @@ on preOpenCard
    set the enabled of field "encrypt" to tEnabled
    
    local tStackFiles
-   put revRelativeStackFilesList(the cRevTargetStack of this stack) into tStackFiles
+   revSBRelativeStackFilesList the cRevTargetStack of this stack, tStackFiles
    put tStackFiles["relative"] into field "stackfiles"
    set the cStackPaths of field "stackfiles" to tStackFiles["full"]
    set the hilitedLines of field "stackfiles" to 1
