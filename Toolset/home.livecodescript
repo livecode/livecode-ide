@@ -1211,6 +1211,9 @@ command revInternal__InitialiseLibraries
    
    -- Load libraries in the Ext externals bundle
    if there is a folder revEnvironmentExtPath() then
+      local tOldFolder
+      put the folder into tOldFolder
+      
       set the folder to revEnvironmentExtPath()
       repeat for each line tExternal in the folders
          if tExternal is empty or tExternal is "." or tExternal is ".." then
@@ -1228,6 +1231,8 @@ command revInternal__InitialiseLibraries
             end if
          end repeat
       end repeat
+      
+      set the folder to tOldFolder
    end if
    
    revInternal__Log "Leave", "Libraries Initialisation"
