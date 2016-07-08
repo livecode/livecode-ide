@@ -446,6 +446,22 @@
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
+	function markdown_section(pWhich, pEntryObject)
+	{
+		var tSection = '';
+		if (pEntryObject[pWhich])
+		{
+			// Format the markdown of the section
+			tSection += '<div class="col-md-2 lcdoc_section_title">';
+			tSection += pWhich;
+			tSection += '</div>';
+			tSection += '<div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
+			tSection += formatMarkdown(pEntryObject, pEntryObject[pWhich]);
+			tSection += '</div>';
+		}
+		return tSection;
+	}
+	
 	function displayEntry(pEntryID)
 	{		
 		var tEntryObject = entryData(pEntryID);
@@ -593,6 +609,7 @@
 				case "tags":
 				case "display name":
 				case "display syntax":
+				case "changes":
 					break;
 					
 				
@@ -619,13 +636,11 @@
 			}
 		});
 		
-		
-		if(tEntryObject.description){
-			// Italicise any parameters
-			tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
-			tHTML += formatMarkdown(tEntryObject, tEntryObject.description);
-			tHTML += '</div>';
-		}
+		var tMarkdownSections = ["description","changes"];
+		$.each(tMarkdownSections, function(index, value)
+		{
+			tHTML += markdown_section(value, tEntryObject);
+		});
 
 		// Now that the entry has been displayed we need to look at the type
 		// If it is object, we need to generate a list of actions / events and properties
