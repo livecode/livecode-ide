@@ -506,22 +506,11 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						tHTML += '<div class="table-responsive"><table class="table table-bordered">';
 						tHTML += '<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>';
-						$.each(value, function(index2, value2) {
-							switch(value2.type){
-								case "array":
-									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("array", value2)+'</td></tr>';
-									break;
-								case "enum":
-									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2)+'</td></tr>';
-									break;
-								default:
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td>';
-									tHTML += '<td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td>';
-									tHTML += '<td><div class="lcdoc_description">'+ formatMarkdown(tEntryObject, value2.description)+'</div></td></tr>';
-									break;
-							}
+						$.each(value, function(index2, value2) 
+						{
+							tHTML += '<tr><td class="lcdoc_entry_param">' + value2.name + '</td>';
+							tHTML += '<td>' + value2.type + '</td>';
+							tHTML += '<td>'+parameterFormatValue(tEntryObject, value2)+'</td></tr>';
 						});
 						tHTML += '</tbody></table></div>';
 						tHTML += '</div>';
@@ -915,24 +904,27 @@
 		$("#lcdoc_history_list").html(tHistoryList);
 	}
 	
-	function parameterFormatValue(pType, pData){
+	function parameterFormatValue(pEntryObject, pData){
 		var tHTML = "";
-		tHTML += "<p>" + pData.description + "</p>";
+		if (pData.hasOwnProperty("description"))
+			tHTML += formatMarkdown(pEntryObject, pData.description);
 		
-		switch(pType){
+		switch(pData.type)
+		{
 			case "enum":
-				if(pData.hasOwnProperty("enum")){
+				if (pData.hasOwnProperty("enum"))
+				{
 				   tHTML += "<p>One of the following items:</p><ul>";
-				   $.each(pData.enum, function(index, value) {
-					   tHTML += '<li><span class="lcdoc_parameterValue">' + value.value + '</span> - ' + value.description + '</li>';
+				   $.each(pData.enum, function(index, value) 
+				   {
+					   tHTML += '<li><span class="lcdoc_parameterValue">';
+					   tHTML += value.value + '</span> - ';
+					   tHTML += value.description + '</li>';
 				   });
 				   tHTML += "</ul>";
 				}
 				break;
 			case "array":
-				if(pData.hasOwnProperty("description")){
-					tHTML += "<p>"+pData.description+"</p>";
-				}
 				break;
 		}
 
