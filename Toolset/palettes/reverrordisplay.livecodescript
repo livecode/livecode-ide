@@ -2,6 +2,14 @@
 # AL-2015-07-07: Ensure LCB error code matches that of the engine.
 local sLCBErrorCode
 
+on moveStack
+   updateStoredRect
+end moveStack
+
+on desktopChanged
+   revIDEEnsureOnScreen the short name of this stack
+end desktopChanged
+
 on resizeStack
    revUpdateGeometry
    updateStoredRect
@@ -15,8 +23,8 @@ end resizeStack
 
 # OK-2007-07-02: Bug 5203
 private command updateStoredRect
-  set the cErrorDisplayRect of stack "revPreferences" to the rect of me
-  set the cErrorDisplayScreenRect of stack "revPreferences" to the screenRect
+   revIDESetPreference "cErrorDisplayRect", the rect of me
+   revIDESetPreference "cErrorDisplayScreenRect", revIDEStackScreenRect(the short name of this stack)
 end updateStoredRect
 
 # OK-2007-07-02: Bug 5203
@@ -33,6 +41,9 @@ on preOpenStack
    local tStoredScreenRect
    put revIDEGetPreference("cErrorDisplayScreenRect") into tStoredScreenRect
    
+   local tScreenRect
+   put revIDEStackScreenRect(the short name of this stack) into tScreenRect
+   
    lock messages	
    if tStoredRect is not empty then
       
@@ -41,10 +52,10 @@ on preOpenStack
          put item 1 of tStoredRect into tLeft
          put item 2 of tStoredRect into tTop
          
-         local tRight, tBottom 
-         put round(item 3 of tStoredRect * (item 3 of the screenRect \
+         local tRight, tBottom
+         put round(item 3 of tStoredRect * (item 3 of tScreenRect \
                / item 3 of tStoredScreenRect)) into tRight
-         put round(item 4 of tStoredRect * (item 4 of the screenRect \ 
+         put round(item 4 of tStoredRect * (item 4 of tScreenRect \ 
                / item 4 of tStoredScreenRect)) into tBottom 
          
          set the rect of me to tLeft, tTop, tRight, tBottom
@@ -56,7 +67,7 @@ on preOpenStack
       set the width of me to 512
       set the height of me to 277
       
-      set the loc of me to the screenLoc
+      set the loc of me to (item 3 of tScreenRect - item 1 of tScreenRect) * 0.5, (item 4 of tScreenRect - item 2 of tScreenRect) * 0.5
    end if
    
    if there is a group "errordisplay" of me then

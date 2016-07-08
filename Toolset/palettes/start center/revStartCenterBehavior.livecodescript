@@ -59,6 +59,10 @@ on openStack
    end if
 end openStack
 
+on desktopChanged
+   set the loc of me to revIDEStackScreenLoc(the short name of me)
+end desktopChanged
+
 on ideNewStack
    startCenterClose
 end ideNewStack

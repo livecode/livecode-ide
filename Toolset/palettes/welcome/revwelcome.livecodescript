@@ -25,8 +25,9 @@ on stackGenerate
    # Stack width determined by screen size. If the user is on a smaller screen trim a 150 pixels off the width
    # When the stack is wider than 800 it looks/feels a little sparce. When under 650, it gets tall and therefor
    # Might not fit that well on small notebooks whose vertical res could be 768.
-   local tStackWidth
-   put ((item 3 of line 1 of the screenrect - item 1 of line 1 of the screenrect) / 2) into tStackWidth
+   local tStackWidth, tScreenRect
+   put revIDEStackScreenRect(the short name of this stack) into tScreenRect
+   put ((item 3 of line 1 of tScreenRect - item 1 of line 1 of tScreenRect) / 2) into tStackWidth
    if tStackWidth > 750 then put 750 into tStackWidth
    else if tStackWidth < 650 then put 650 into tStackWidth
    set the width of this stack to tStackWidth
@@ -257,7 +258,7 @@ on stackLayout
    
    # Set the stack hight and position based on space taken up
    set the height of this stack to tTop + WINDOW_MARGIN
-   set the loc of me to the screenloc
+   set the loc of me to revIDEStackScreenLoc(the short name of this stack)
    
    unlock messages
    unlock screen

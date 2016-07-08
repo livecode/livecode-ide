@@ -2485,6 +2485,10 @@ on suspendStack
    sePrefSave
 end suspendStack
 
+on desktopChanged
+   revIDEEnsureOnscreen the short name of this stack
+end desktopChanged
+
 # Description
 #   Sent when the stack gains focus, hides the message box etc if appropriate
 on resumeStack

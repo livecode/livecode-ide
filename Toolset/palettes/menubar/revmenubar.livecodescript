@@ -210,6 +210,15 @@ function revMenuBarRecentFiles
    return tMenu
 end revMenuBarRecentFiles
 
+on moveStack
+   if the platform is "MacOS" then
+      local tScreenRect
+      put revIDEStackScreenRect(the short name of this stack, true) into tScreenRect
+      set the topLeft of this stack to item 1 to 2 of tScreenRect
+   end if
+   pass moveStack
+end moveStack
+
 on setMenuProperties
    set the height of me to 47
    set the resizable of me to false
@@ -231,20 +240,23 @@ on setMenuProperties
    set the itemDelimiter to comma
    set the title of me to tTitle
    
+   local tScreenRect
+   put revIDEStackScreenRect(the short name of this stack, true) into tScreenRect
+   
    if the platform is not "MacOS" then
       if item 3 of the screenRect is 800 then
-         set the topLeft of me to item 1 to 2 of the windowBoundingRect
+         set the topLeft of me to item 1 to 2 of tScreenRect
       else 
          --screen rect > 800 by 600
-         if the cREVMenuBarTopLeft of stack "revPreferences" is empty
-         then set the loc of me to item 1 of the screenLoc, 54
-         else set the topLeft of me to the cREVMenuBarTopLeft of stack "revPreferences"    
+         if revIDEGetPreference("cREVMenuBarTopLeft") is empty
+         then set the loc of me to item 1 of revIDEStackScreenLoc(the short name of this stack), 54
+         else set the topLeft of me to revIDEGetPreference("cREVMenuBarTopLeft")
       end if
    end if
    
    if the platform is "MacOS" then
       set the decorations of me to empty
-      set the topLeft of me to item 1 of the windowBoundingRect,20
+      set the topLeft of me to item 1 to 2 of tScreenRect
    else
       set the decorations of me to "default"
    end if
