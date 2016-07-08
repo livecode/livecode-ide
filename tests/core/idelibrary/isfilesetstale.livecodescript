@@ -67,12 +67,12 @@ on TestBasicFileset
    put revIDEIsFilesetStale(sMissingFile, sNewFile, false, tError) into tStale
    TestAssert "missing inputs result is empty", tStale is empty
    TestAssert "missing inputs generate an error", \
-      tError is "Failed to check modification time: missing file"
+      tError begins with "Failed to check modification time: missing file"
    put empty into tBadFileset[1]
    put revIDEIsFilesetStale(sOldFile, tBadFileset, false, tError) into tStale
    TestAssert "invalid filename result is empty", tStale is empty
    TestAssert "invalid filename generates an error", \
-      tError is "Failed to check modification time: invalid filename"
+      tError begins with "Failed to check modification time: invalid filename"
 end TestBasicFileset
 
 private command __TestRecursiveFileset pOld, pNew, pMissing, pEmpty
@@ -85,9 +85,9 @@ end __TestRecursiveFileset
 on TestRecursiveFileset
    __TestRecursiveFileset sOldDir, sNewDir, sMissingDir, sEmptyDir
 
-   local tSlate, tError
+   local tStale, tError
    put revIDEIsFilesetStale(sOldFile, sNewDir, false, tError) into tStale
    TestAssert "unexpected folder result is empty", tStale is empty
    TestAssert "unexpected folder generates an error", \
-      tError is "Failed to check modification time: unexpected folder"
+      tError begins with "Failed to check modification time: unexpected folder"
 end TestRecursiveFileset
