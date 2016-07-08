@@ -523,7 +523,7 @@
 					tHTML += '<div class="col-md-2 lcdoc_section_title">Related</div><div class="col-md-10" style="margin-bottom:10px">';
 					
 					$.each(value, function(reference_type, reference_array) {
-						tHTML += reference_type + ':';
+						tHTML += reference_type + ': ';
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
 							var tReference, tID;
@@ -536,7 +536,7 @@
 							if (reference_html == "") 
 								reference_html = tReference;
 							else 
-								reference_html += ',' + tReference;
+								reference_html += ', ' + tReference;
 						});
 						tHTML += reference_html;
 						tHTML += '<br />';
