@@ -10864,7 +10864,7 @@ end shouldShow
 
 function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    local tStack, tDefaultStack
-   local tStacks,tCards,tControls,tOpenStacks
+   local tStacks,tCards,tControls,tStackList
    local tNumControls, tNumCards
    local tCheck, tControlsArray
    local tList,tControlsList
@@ -10928,11 +10928,25 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    set the defaultStack to tDefaultStack
    
    if shouldShow("stack", pTypeFilter) then
+      local tMainstack
+      repeat for each line tMainStack in the mainstacks
+         local tSubstacks
+         put the substacks of stack tMainstack into tSubstacks
+         if tStackList is not empty then
+            put return after tStackList
+         end if
+         put tMainstack after tStackList
+         if tSubstacks is not empty then
+            put return & tSubstacks after tStackList
+         end if
+      end repeat
+      
       global gRevShowStacks
-      if gREVShowStacks then put the openStacks into tOpenStacks
-      else put revFilterStacksList(the openStacks) into tOpenStacks
+      if not gREVShowStacks then 
+         put revFilterStacksList(tStackList) into tStackList
+      end if
       put empty into tStacks
-      repeat for each line l in tOpenStacks
+      repeat for each line l in tStackList
          put the long id of stack l into tLongID
          if tLongID is among the lines of pTargetObjects
          then put "!c" into tCheck
