@@ -200,7 +200,6 @@ on generatePalette
    set the showname of the templatebutton to false
    set the style of the templatebutton to "transparent"
    
-   set the icongravity of the templatebutton to "top"
    set the threed of the templatebutton to false
    set the borderwidth of the templatebutton to 0
    set the blendlevel of the templatebutton to 0
