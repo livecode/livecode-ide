@@ -22,6 +22,8 @@ on openStack
    # Get a list of the properties and groups we'll be displaying
    set the inspectorData of me to revIDEPropertiesInfo(sSelectedObjects)
    unlock screen
+   
+   set the visible of me to true
 end openStack
 
 on closeStack
@@ -73,6 +75,8 @@ setProp cSelectedObjects pSelectedObjects
    
    inspectorTitleUpdate
    unlock screen
+   
+   set the visible of me to true
 end cSelectedObjects
 
 getProp cSelectedObjects
