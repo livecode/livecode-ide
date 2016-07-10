@@ -287,20 +287,6 @@ on openStack
       end if
    end if
 
-   # OK-2008-03-19 : Modifications for new debugger
-   # Activate breakpoints for newly opened stack, but only if its a real "openStack" as opposed
-   # to something doing "send openstack to button revfrontscript"
-
-   local tTarget
-   put the long id of the target into tTarget
-   if tTarget is not the long id of me then
-      local tStack
-      put revTargetStack(tTarget) into tStack
-      if revDebuggerEnabled() then
-         revDebuggerActivateBreakpoints the long id of stack tStack
-      end if
-   end if
-
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openStack
 end openStack
 
