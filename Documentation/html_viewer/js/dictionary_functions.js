@@ -510,7 +510,7 @@
 						{
 							tHTML += '<tr><td class="lcdoc_entry_param">' + value2.name + '</td>';
 							tHTML += '<td>' + value2.type + '</td>';
-							tHTML += '<td>'+parameterFormatValue(tEntryObject, value2)+'</td></tr>';
+							tHTML += '<td>'+parameterFormatValue(tEntryObject, value2, false)+'</td></tr>';
 						});
 						tHTML += '</tbody></table></div>';
 						tHTML += '</div>';
@@ -904,10 +904,23 @@
 		$("#lcdoc_history_list").html(tHistoryList);
 	}
 	
-	function parameterFormatValue(pEntryObject, pData){
+	function nonEmptyElement(pObject, pElementName)
+	{
+		if (!pObject.hasOwnProperty(pElementName))
+			return false;
+			
+		return pObject[pElementName] != '';
+	}
+	
+	function parameterFormatValue(pEntryObject, pData, pSubArray){
 		var tHTML = "";
-		if (pData.hasOwnProperty("description"))
-			tHTML += formatMarkdown(pEntryObject, pData.description);
+		if (nonEmptyElement(pData, "description"))
+		{
+			if (pSubArray)
+				tHTML += pData.description;
+			else
+				tHTML += formatMarkdown(pEntryObject, pData.description);
+		}
 		
 		switch(pData.type)
 		{
@@ -918,13 +931,42 @@
 				   $.each(pData.enum, function(index, value) 
 				   {
 					   tHTML += '<li><span class="lcdoc_parameterValue">';
-					   tHTML += value.value + '</span> - ';
-					   tHTML += value.description + '</li>';
+					   tHTML += value.value + '</span>';
+					   if (nonEmptyElement(value, "description"))
+						   tHTML += ' -' + value.description;
+					   tHTML += '</li>';
 				   });
 				   tHTML += "</ul>";
 				}
 				break;
 			case "array":
+				if (pData.hasOwnProperty("array"))
+				{
+				   tHTML += "<p>The array has the following structure:</p><ul>";
+				   $.each(pData.array, function(index, value) 
+				   {
+						tHTML += '<li><span class="lcdoc_parameterValue">';
+						tHTML += value.key.name;
+						if (nonEmptyElement(value.key, "type"))
+					    	tHTML += ' (' + value.key.type + ')';
+						tHTML += '</span>';
+						if (nonEmptyElement(value.key, "description"))
+							tHTML += ' - ' + value.key.description;
+						tHTML += '<br>';
+						tHTML += '<span class="lcdoc_entry_param">';
+						tHTML += value.value.name;
+						tHTML += '</span>';
+					   	if (nonEmptyElement(value.value, "type"))
+					    	tHTML += ' (' + value.value.type + ')';
+						if (nonEmptyElement(value.key, "description"))
+						{
+							tHTML += ' - '
+					   		tHTML += parameterFormatValue(pEntryObject, value.value, true);
+					   	}
+					   	tHTML += '</li>';
+				   });
+				   tHTML += "</ul>";
+				}
 				break;
 		}
 

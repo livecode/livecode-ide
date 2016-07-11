@@ -1,0 +1,1 @@
+# Output array-style parameter descriptions correctly
