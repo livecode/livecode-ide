@@ -2,11 +2,15 @@
 local sExtensions, sExtensionProperties
 
 on revLoadLibrary
-   insert script of me into back 
+   if the target is me then
+      insert script of me into back 
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove script of me from back
+   if the target is me then
+      remove script of me from back
+   end if
 end revUnloadLibrary
 
 # Called at startup. Loads all the extensions ready for use

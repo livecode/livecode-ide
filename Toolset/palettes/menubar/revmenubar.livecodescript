@@ -329,6 +329,8 @@ on generateMenubarUI
       delete group "toolbar" of me
    end if
    
+   reset the templatebutton
+   
    create group "icons"
    create group "toolbar"
    
@@ -340,7 +342,6 @@ on generateMenubarUI
    set the borderwidth of the templatebutton to 0
    set the blendlevel of the templatebutton to 0
    set the margins of the templatebutton to "4,0,4,1"
-   set the icongravity of the templatebutton to "top"
    set the traversalOn of the templatebutton to false
    set the autoHilite of the templatebutton to false
    

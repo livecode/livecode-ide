@@ -2435,12 +2435,36 @@ Example: set the textsize of field 1 to revIDEGetPreference("text size")
 Returns (Any): The value of the preference
 */
 function revIDEGetPreference pPreferenceName
-   if there is a stack "revPreferences" then
-      return the pPreferenceName of stack "revPreferences"
+   local tValue
+   
+   __DevPreference pPreferenceName, tValue
+   
+   if tValue is empty and there is a stack "revPreferences" then
+      put the pPreferenceName of stack "revPreferences" into tValue
    end if
    
-   return empty
+   return tValue
 end revIDEGetPreference
+
+command __DevPreference pPreferenceName, @rValue
+   global gREVDevelopment
+   
+   if gREVDevelopment then
+      switch pPreferenceName
+         case "cScriptEditor,explicitVariables"
+         case "cScriptEditor,preserveVariables"
+            put true into rValue
+            break
+         case "cScriptEditor,editor,commentchar"
+            put "--" into rValue
+            break
+         case "cScriptEditor,editor,tabdepth"
+            put 3 into rValue
+            break
+      end switch
+      
+   end if
+end __DevPreference
 
 function revIDEPreferences
    return the customproperties of stack "revpreferences"
@@ -10980,7 +11004,7 @@ end shouldShow
 
 function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    local tStack, tDefaultStack
-   local tStacks,tCards,tControls,tOpenStacks
+   local tStacks,tCards,tControls,tStackList
    local tNumControls, tNumCards
    local tCheck, tControlsArray
    local tList,tControlsList
@@ -11044,11 +11068,25 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
    set the defaultStack to tDefaultStack
    
    if shouldShow("stack", pTypeFilter) then
+      local tMainstack
+      repeat for each line tMainStack in the mainstacks
+         local tSubstacks
+         put the substacks of stack tMainstack into tSubstacks
+         if tStackList is not empty then
+            put return after tStackList
+         end if
+         put tMainstack after tStackList
+         if tSubstacks is not empty then
+            put return & tSubstacks after tStackList
+         end if
+      end repeat
+      
       global gRevShowStacks
-      if gREVShowStacks then put the openStacks into tOpenStacks
-      else put revFilterStacksList(the openStacks) into tOpenStacks
+      if not gREVShowStacks then 
+         put revFilterStacksList(tStackList) into tStackList
+      end if
       put empty into tStacks
-      repeat for each line l in tOpenStacks
+      repeat for each line l in tStackList
          put the long id of stack l into tLongID
          if tLongID is among the lines of pTargetObjects
          then put "!c" into tCheck

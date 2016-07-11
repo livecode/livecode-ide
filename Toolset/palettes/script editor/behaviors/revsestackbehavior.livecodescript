@@ -2580,6 +2580,8 @@ command revSEInitialize pDontCheckTarget
    end if
    
    actionResizeStack true
+   
+   set the showInvisibles of me to false
 end revSEInitialize
   
 
