@@ -249,9 +249,11 @@ on preOpenStack
 
    local tTarget
    put the long id of the target into tTarget
+   
+   local tStack
+   put revTargetStack(tTarget) into tStack
+  
    if tTarget is not the long id of me then
-      local tStack
-      put revTargetStack(tTarget) into tStack
       if revDebuggerEnabled() then
          revDebuggerActivateBreakpoints the long id of stack tStack
       end if
@@ -259,8 +261,9 @@ on preOpenStack
    
    if revIDEObjectIsOnIDEStack(tTarget) then
       # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
-      set the showInvisibles of stack revTargetStack(tTarget) to false
-   end if   
+      set the showInvisibles of stack tStack to false
+      set the _ideoverride of stack tStack to true
+   end if
    
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass preOpenStack
 end preOpenStack

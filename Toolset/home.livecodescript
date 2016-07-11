@@ -1316,6 +1316,7 @@ command revInternal__InitialiseScriptEditor
 
    # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
    set the showInvisibles of stack revScriptEditorMain() to false
+   set the _ideoverride of stack revScriptEditorMain() to true
    
    revInternal__Log "Leave", "Script Editor Initialisation"
    
@@ -1327,7 +1328,8 @@ command revInternal__InitialiseErrors
   
   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
   set the showInvisibles of stack "revErrorDisplay" to false
-  
+  set the _ideoverride of stack "revErrorDisplay" to true
+   
   revInternal__Log "Leave", "Errors Initialisation"
   
   return true
@@ -1348,6 +1350,7 @@ command revInternal__InitialiseTools
    
    # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
    set the showInvisibles of stack tToolsStackName to false
+   set the _ideoverride of stack tToolsStackName to true
    
    show stack tToolsStackName
    unlock screen 
@@ -1358,19 +1361,20 @@ command revInternal__InitialiseTools
 end revInternal__InitialiseTools
 
 command revInternal__InitialiseIcons
-  revInternal__Log "Enter", "Icons Initialisation"
-  
-  lock screen
-  hide stack "revicons"
-  
-  # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
-  set the showInvisibles of stack "revicons" to false
-
-  unlock screen
-  
-  revInternal__Log "Leave", "Icons Initialisation"
-  
-  return true
+   revInternal__Log "Enter", "Icons Initialisation"
+   
+   lock screen
+   hide stack "revicons"
+   
+   # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
+   set the showInvisibles of stack "revicons" to false
+   set the _ideoverride of stack "revicons" to true
+   
+   unlock screen
+   
+   revInternal__Log "Leave", "Icons Initialisation"
+   
+   return true
 end revInternal__InitialiseIcons
 
 command revInternal__InitialiseMenus
@@ -1406,6 +1410,7 @@ command revInternal__InitialiseMenus
    
    # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
    set the showInvisibles of stack tMenuBar to false
+   set the _ideoverride of stack tMenubar to true
    
    revInternal__Log "Leave", "Menus Initialisation"
    
