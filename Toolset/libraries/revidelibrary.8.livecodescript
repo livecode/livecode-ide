@@ -9531,7 +9531,7 @@ function revIDERecentStacks
    end if
    
    # ensure preferences take effect immediately
-   _trimRecentStacks tRecentPaths
+   __trimRecentStacks tRecentPaths
    
    # Split list into array
    local tRecentPathData
@@ -9568,7 +9568,7 @@ on revIDEAddRecentStack pFilePath
       put revIDECleanRecentStackList(tRecentPaths) into tRecentPaths
    end if
    
-   _trimRecentStacks tRecentPaths
+   __trimRecentStacks tRecentPaths
    
    #Set the preference
    revIDESetPreference "cRecentStackPaths", tRecentPaths
@@ -9584,7 +9584,7 @@ end revIDEAddRecentStack
 /*
 Trims the recent files to the user's preferred number
 */
-private command _trimRecentStacks @xStackFiles
+private command __trimRecentStacks @xStackFiles
    local tNumRecent
    put revIDEGetPreference("cNumRecent") into tNumRecent
    
@@ -9594,7 +9594,7 @@ private command _trimRecentStacks @xStackFiles
    end if
    
    delete line tNumRecent+1 to -1 of xStackFiles
-end _trimRecentStacks
+end __trimRecentStacks
 
 /*
 Given a list of filenames and a filename from the list, a unique minimal lable is returned. For example:
