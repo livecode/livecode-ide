@@ -7433,23 +7433,37 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tSubstitutions
    put tShortName into tSubstitutions[1]
 
+   local tStackFilter, tStack24Filter, tStack27Filter, tStack55Filter, tStack70Filter, tStack80Filter
+   put (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") into tStackFilter
+   put (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") into tStack24Filter
+   put (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") into tStack27Filter
+   put (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") into tStack55Filter
+   put (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") into tStack70Filter
+   put (revIDELocalise("Legacy LiveCode Stack (8.0)") & "|livecode,rev|RSTK") into tStack80Filter
+   
    local tVersion
    switch 
       case the scriptOnly of stack tShortName
          put "script" after tStackName
          ask file revIDELocalise("Save script only stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Script Only Stack") & "|livecodescript|RSTK")
          break
+	  case tStackFileType is 8.0
+	     ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStack80Filter or type tStackFilter or type tStack70Filter or type tStack55Filter or type tStack27Filter or type tStack24Filter
+		 break
+	  case tStackFileType is 7.0
+	     ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStack70Filter or type tStackFilter or type tStack80Filter or type tStack55Filter or type tStack27Filter or type tStack24Filter
+		 break
       case tStackFileType is 5.5
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or  type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStack55Filter or type tStackFilter or type tStack80Filter or type tStack70Filter or type tStack27Filter or type tStack24Filter
          break
       case tStackFileType is 2.7
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStack27Filter or type tStackFilter or type tStack80Filter or type tStack70Filter or type tStack55Filter or type tStack24Filter
          break
       case tStackFileType is 2.4
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK") or type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStack24Filter or type tStackFilter or type tStack80Filter or type tStack70Filter or type tStack55Filter or type tStack27Filter
          break
       default
-         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type (revIDELocalise("LiveCode Stack") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (7.0)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (5.5)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.7)") & "|livecode,rev|RSTK") or type (revIDELocalise("Legacy LiveCode Stack (2.4)") & "|livecode,rev|RSTK")
+         ask file revIDELocalise("Save stack %1 as:", tSubstitutions) with tStackName with type tStackFilter or type tStack80Filter or type tStack70Filter or type tStack55Filter or type tStack27Filter or type tStack24Filter
          break
    end switch
    put the result into tVersion
@@ -7457,6 +7471,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tLegacy
    put true into tLegacy
    switch tVersion
+      case revIDELocalise("Legacy LiveCode Stack (8.0)")
+	     put 8.0 into tVersion
+		 break
       case revIDELocalise("Legacy LiveCode Stack (7.0)")
          put 7.0 into tVersion
          break
