@@ -62,7 +62,7 @@ on updateSettings
    local tSettings
    put getSettings() into tSettings
    
-   set the unicodeText of field "Display Name" to uniEncode(computeDefault(tSettings["ios,display name"], tSettings["name"]), "UTF8")
+   put computeDefault(tSettings["ios,display name"], tSettings["name"]) into field "Display Name"
    put computeDefault(tSettings["ios,bundle id"], "com.yourcompany.yourapp") into field "Bundle Id"
    put computeDefault(tSettings["ios,bundle version"], "1.0.0") into field "Bundle Version"
    
