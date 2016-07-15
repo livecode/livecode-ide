@@ -1,0 +1,1 @@
+# Make sure multiple object text style/align props don't change on their own

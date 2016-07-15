@@ -260,6 +260,15 @@ getprop editorConflicted
    return sConflicted
 end editorConflicted
 
+local sConflicts
+setProp editorConflicts pValue
+   put pValue into sConflicts
+end editorConflicts
+   
+getprop editorConflicts
+   return sConflicts
+end editorConflicts
+
 on editorFinalize
    if there is a stack popupStackName()  then
       dispatch "popupDismissed" to me
