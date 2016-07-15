@@ -446,6 +446,22 @@
 		return marked(tMarkdown, { renderer: renderer });
 	}
 	
+	function markdown_section(pWhich, pEntryObject)
+	{
+		var tSection = '';
+		if (pEntryObject[pWhich])
+		{
+			// Format the markdown of the section
+			tSection += '<div class="col-md-2 lcdoc_section_title">';
+			tSection += pWhich;
+			tSection += '</div>';
+			tSection += '<div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
+			tSection += formatMarkdown(pEntryObject, pEntryObject[pWhich]);
+			tSection += '</div>';
+		}
+		return tSection;
+	}
+	
 	function displayEntry(pEntryID)
 	{		
 		var tEntryObject = entryData(pEntryID);
@@ -490,22 +506,11 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						tHTML += '<div class="table-responsive"><table class="table table-bordered">';
 						tHTML += '<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>';
-						$.each(value, function(index2, value2) {
-							switch(value2.type){
-								case "array":
-									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("array", value2)+'</td></tr>';
-									break;
-								case "enum":
-									value2.description = replace_link_placeholders_with_links(value2.description, tEntryObject);
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td><td>'+value2.type+'</td><td>'+parameterFormatValue("enum", value2)+'</td></tr>';
-									break;
-								default:
-									tHTML += '<tr><td class="lcdoc_entry_param">'+value2.name+'</td>';
-									tHTML += '<td>'+replace_link_placeholders_with_links(value2.type,tEntryObject)+'</td>';
-									tHTML += '<td><div class="lcdoc_description">'+ formatMarkdown(tEntryObject, value2.description)+'</div></td></tr>';
-									break;
-							}
+						$.each(value, function(index2, value2) 
+						{
+							tHTML += '<tr><td class="lcdoc_entry_param">' + value2.name + '</td>';
+							tHTML += '<td>' + value2.type + '</td>';
+							tHTML += '<td>'+parameterFormatValue(tEntryObject, value2, false)+'</td></tr>';
 						});
 						tHTML += '</tbody></table></div>';
 						tHTML += '</div>';
@@ -518,7 +523,7 @@
 					tHTML += '<div class="col-md-2 lcdoc_section_title">Related</div><div class="col-md-10" style="margin-bottom:10px">';
 					
 					$.each(value, function(reference_type, reference_array) {
-						tHTML += reference_type + ':';
+						tHTML += reference_type + ': ';
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
 							var tReference, tID;
@@ -531,7 +536,7 @@
 							if (reference_html == "") 
 								reference_html = tReference;
 							else 
-								reference_html += ',' + tReference;
+								reference_html += ', ' + tReference;
 						});
 						tHTML += reference_html;
 						tHTML += '<br />';
@@ -593,6 +598,7 @@
 				case "tags":
 				case "display name":
 				case "display syntax":
+				case "changes":
 					break;
 					
 				
@@ -619,13 +625,11 @@
 			}
 		});
 		
-		
-		if(tEntryObject.description){
-			// Italicise any parameters
-			tHTML += '<div class="col-md-2 lcdoc_section_title">description</div><div class="col-md-10 lcdoc_description" style="margin-bottom:10px">';
-			tHTML += formatMarkdown(tEntryObject, tEntryObject.description);
-			tHTML += '</div>';
-		}
+		var tMarkdownSections = ["description","changes"];
+		$.each(tMarkdownSections, function(index, value)
+		{
+			tHTML += markdown_section(value, tEntryObject);
+		});
 
 		// Now that the entry has been displayed we need to look at the type
 		// If it is object, we need to generate a list of actions / events and properties
@@ -900,23 +904,68 @@
 		$("#lcdoc_history_list").html(tHistoryList);
 	}
 	
-	function parameterFormatValue(pType, pData){
+	function nonEmptyElement(pObject, pElementName)
+	{
+		if (!pObject.hasOwnProperty(pElementName))
+			return false;
+			
+		return pObject[pElementName] != '';
+	}
+	
+	function parameterFormatValue(pEntryObject, pData, pSubArray){
 		var tHTML = "";
-		tHTML += "<p>" + pData.description + "</p>";
+		if (nonEmptyElement(pData, "description"))
+		{
+			if (pSubArray)
+				tHTML += pData.description;
+			else
+				tHTML += formatMarkdown(pEntryObject, pData.description);
+		}
 		
-		switch(pType){
+		switch(pData.type)
+		{
 			case "enum":
-				if(pData.hasOwnProperty("enum")){
+				if (pData.hasOwnProperty("enum"))
+				{
 				   tHTML += "<p>One of the following items:</p><ul>";
-				   $.each(pData.enum, function(index, value) {
-					   tHTML += '<li><span class="lcdoc_parameterValue">' + value.value + '</span> - ' + value.description + '</li>';
+				   $.each(pData.enum, function(index, value) 
+				   {
+					   tHTML += '<li><span class="lcdoc_parameterValue">';
+					   tHTML += value.value + '</span>';
+					   if (nonEmptyElement(value, "description"))
+						   tHTML += ' -' + value.description;
+					   tHTML += '</li>';
 				   });
 				   tHTML += "</ul>";
 				}
 				break;
 			case "array":
-				if(pData.hasOwnProperty("description")){
-					tHTML += "<p>"+pData.description+"</p>";
+				if (pData.hasOwnProperty("array"))
+				{
+				   tHTML += "<p>The array has the following structure:</p><ul>";
+				   $.each(pData.array, function(index, value) 
+				   {
+						tHTML += '<li><span class="lcdoc_parameterValue">';
+						tHTML += value.key.name;
+						if (nonEmptyElement(value.key, "type"))
+					    	tHTML += ' (' + value.key.type + ')';
+						tHTML += '</span>';
+						if (nonEmptyElement(value.key, "description"))
+							tHTML += ' - ' + value.key.description;
+						tHTML += '<br>';
+						tHTML += '<span class="lcdoc_entry_param">';
+						tHTML += value.value.name;
+						tHTML += '</span>';
+					   	if (nonEmptyElement(value.value, "type"))
+					    	tHTML += ' (' + value.value.type + ')';
+						if (nonEmptyElement(value.key, "description"))
+						{
+							tHTML += ' - '
+					   		tHTML += parameterFormatValue(pEntryObject, value.value, true);
+					   	}
+					   	tHTML += '</li>';
+				   });
+				   tHTML += "</ul>";
 				}
 				break;
 		}
