@@ -2252,6 +2252,16 @@ on traceError pHandler, pLine, pPosition, pError
       pass traceError
    end if
    
+   -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+   local tContexts
+   put the executionContexts into tContexts
+   local tLine
+   repeat for each line tLine in tContexts
+      if item -2 of tLine is among the words of "moveStack resizeStack" then
+         pass traceError
+      end if
+   end repeat
+   
    if pError is empty then
       revDebuggerStop
       exit traceError
@@ -2304,6 +2314,16 @@ on traceBreak pHandler, pLine
       revDebuggerRun
       exit traceBreak
    end if
+   
+   -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+   local tContexts
+   put the executionContexts into tContexts
+   local tLine
+   repeat for each line tLine in tContexts
+      if item -2 of tLine is among the words of "moveStack resizeStack" then
+         pass traceBreak
+      end if
+   end repeat
    
    local tContext
    put tTarget & comma & pHandler & comma & pLine into tContext

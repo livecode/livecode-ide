@@ -1688,7 +1688,7 @@ function textFormatIndentLineRemoves pPreviousLine, pLine
       else
          return item 1 of sTextFormatKeywordMap["default"]
       end if
-   else if tToken is "end" and token 2 of pLine is not among the words of "if switch repeat try" then
+   else if tToken is "end" and token 2 of pLine is not among the words of "if switch repeat try" and not lineIsContinued(pLine) then
       # Handler ends always remove all indentation as they can't be nested
       # OK-2009-02-16 : Bug 7707 - We can't assume the previous line was correctly formatted or script may be deleted.
       # Instead we simplify this by simply chopping off whatever indentation it did have.
@@ -1802,9 +1802,8 @@ function textFormatLine pLine, pText
    
    # Work out how much indentation the previous line should add to the current line.
    local tIndentPreviousLineAdds
-   if tPreviousLineWasContinued and tPreviousPreviousLineWasContinued then
-      put kContinuationIndent into tIndentPreviousLineAdds
-   else if (tPreviousLineWasContinued) and (not tPreviousPreviousLineWasContinued) then
+   if tPreviousLineWasContinued then
+      # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
       put textFormatIndentLineAdds(tPreviousLine) into tIndentPreviousLineAdds
@@ -1824,8 +1823,10 @@ function textFormatLine pLine, pText
    local tIndentCurrentLineAdds
    if tCurrentLineIsContinued and tPreviousLineWasContinued then
       put 0 into tIndentCurrentLineAdds
-   else if (tCurrentLineIsContinued) and (not tPreviousLineWasContinued) then
+   else if tCurrentLineIsContinued and (not tPreviousLineWasContinued) then
       put kContinuationIndent into tIndentCurrentLineAdds
+   else if (not tCurrentLineIsContinued) and tPreviousLineWasContinued then
+      put -kContinuationIndent into tIndentCurrentLineAdds
    else
       put textFormatIndentLineAdds(tCurrentLine) into tIndentCurrentLineAdds
    end if
@@ -1874,9 +1875,9 @@ function textFormatSelection pText
             end if
          end repeat
       else if item 1 of it > 0 then
-         --         repeat item 1 of it times
-         --            put space before line -1 of tResult
-         --         end repeat
+         repeat item 1 of it times
+            put space before line -1 of tResult
+         end repeat
       end if
       put return & item 2 of it after tResult
    end repeat
@@ -1910,14 +1911,20 @@ function textFormat pLineNumber, pText
    local tHandler
    local tFirstLine
    put true into tFirstLine
+   
+   local tContinuation, tCurrentLineContinues
+   put lineIsContinued(line pLineNumber-1 of pText) into tContinuation
    repeat for each line tLine in tEndText
-      if token 1 of tLine is "end" and token 2 of tLine is not among the items of "if,repeat,switch,try" then
+      put lineIsContinued(tLine) into tCurrentLineContinues
+      if token 1 of tLine is "end" and token 2 of tLine is not among the items of "if,repeat,switch,try" and not tContinuation and not tCurrentLineContinues then
          put token 2 of tLine into tHandler
          exit repeat
       else if token 1 of tLine is among the items of handlerTypes() and not tFirstLine then
          exit repeat
       else if token 1 of tLine is "private" and token 2 of tLine is among the items of handlerTypes() and not tFirstLine then
          exit repeat
+      else
+         put tCurrentLineContinues into tContinuation
       end if
       if tFirstLine then put false into tFirstLine
       add 1 to tEnd
@@ -3719,16 +3726,7 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
       put return & tIndent into tReturn
    else
       local tFormatting
-      put textFormatLine(pLine, tScript) into tFormatting
-      
-      # OK-2009-01-31 : Total hack here, but I can't seem to get textFormatLine to work properly
-      # for both the tabKey case and the returnInField one. There is probably a bug somewhere else
-      # which this is covering up...
-      if lineIsContinued(line (pLine - 1) of tScript) and not lineIsContinued(line pLine of tScript) then
-         repeat kContinuationIndent times
-            delete char 1 of item 2 of tFormatting
-         end repeat
-      end if
+      put textFormatLine(pLine, char 1 to pTo of tScript) into tFormatting
       
       put (the number of chars of line 1 to (pLine - 1) of tScript) + 1 into tAt 
       if pLine <> 1 then 
