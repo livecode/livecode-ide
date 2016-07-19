@@ -3535,7 +3535,14 @@ on revIDEDeleteObjects pObjectIDs
 end revIDEDeleteObjects
 
 on revIDEActionGroupObjects
-   revIDEGroupObjects the selobj
+   local tSelobj
+   put the selobj into tSelobj
+   
+   if tSelobj is empty then
+      exit revIDEActionGroupObjects
+   end if
+   
+   revIDEGroupObjects tSelobj
    
    local tNewGroup
    put the result into tNewGroup
@@ -3545,17 +3552,21 @@ on revIDEActionGroupObjects
 end revIDEActionGroupObjects
 
 on revIDEGroupObjects pObjectIDs
+   if pObjectIDs is empty then
+      exit revIDEGroupObjects
+   end if
+   
    local tLayer, tGroupID, tList, tObj
    
    put the long id of (line 1 of pObjectIDs) into tObj
    put 1000000 into tLayer
-
+   
    lock screen
-
+   
    repeat for each line tControl in pObjectIDs
       if the layer of tControl < tLayer then put the layer of tControl into tLayer
    end repeat
-
+   
    // PM-2016-04-07: [[ Bug 17301 ]] Use the "group" command (without an objectList)
    // so as to group the selection in layer order
    group
