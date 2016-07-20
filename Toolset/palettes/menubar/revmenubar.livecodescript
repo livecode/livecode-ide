@@ -741,6 +741,10 @@ on updateButtonHilite pTargetName, pValue
    unlock screen
 end updateButtonHilite
 
+private command setToolbarButtonState pName, pValue
+   set the enabled of button pName of group "toolbar" of me to pValue
+end setToolbarButtonState
+
 local sToolbarHighlight
 on updateButtonState
    lock screen
@@ -751,21 +755,28 @@ on updateButtonState
    local tSelObj
    put revIDESelectedObjects() into tSelObj
    
-   local tState
-   put ((the selectedField) is empty) & comma & (tSelObj is empty) & comma & (the mode of the topStack is 1) into tState
+   local tControlSelected
+   put tSelObj is not empty and word 1 of tSelObj \ 
+         is not among the items of "card,stack" into tControlSelected
    
-   local tEditGroupHilite
-   put the editBg of the topStack and word 1 of tSelObj is not "group" into tEditGroupHilite
-   updateButtonHilite "Edit Group", tEditGroupHilite
-   enable button "Edit Group" of group "toolbar" of me
+   local tUserStack
+   put not revIDEStackIsIDEStack(the topstack) into tUserStack
    
    local tGroupHilite
    put word 1 of tSelObj is "group" and the number of lines in tSelobj is 1 into tGroupHilite
    updateButtonHilite "Group", tGroupHilite
    
-   if not tGroupHilite and not the editBg of the topstack then
-      disable button "Edit Group" of group "toolbar" of me 
-   end if
+   -- Group button should be disabled if no controls are selected
+   setToolbarButtonState "Group", tControlSelected
+   
+   local tEditGroupHilite
+   put the editBg of the topStack and word 1 of tSelObj is not "group" into tEditGroupHilite
+   updateButtonHilite "Edit Group", tEditGroupHilite
+   
+   -- If a group is selected, the Edit Group button should be enabled
+   -- It should also be enabled (with label 'Stop Editing') if we're currently editing a group
+   setToolbarButtonState "Edit Group", \
+         tGroupHilite or the editBg of the topstack
    
    # Click buttons don't stay hilited
    updateButtonHilite "Message Box", false
@@ -784,34 +795,16 @@ on updateButtonState
    updateButtonHilite "Select Grouped", the selectGroupedControls
    
    # Deal with enabled/disabled of code and inspector
-   if tSelObj is empty then
-      if the mode of the topStack is 1 then
-         enable button "Code" of group "toolbar" of me 
-      else 
-         disable button "Code" of group "toolbar" of me 
-      end if
-      disable button "Group" of group "toolbar" of me 
-   else
-      if word 1 of tSelobj is not among the items of "card,stack" then
-         enable button "Group" of group "toolbar" of me 
-      end if
-      enable button "Code" of group "toolbar" of me 
-   end if
+   global gRevDevelopment
+   local tCanInspect
+   put tControlSelected or tUserStack or gRevDevelopment into tCanInspect
    
-   enable button "Inspector" of group "toolbar" of me
+   setToolbarButtonState "Code", tCanInspect
+   setToolbarButtonState "Inspector", tCanInspect
    
    # Deal with enabled/disabled of test
-   if revIDEGetPreference("cDeployPlatforms") is empty then
-      disable button "Test" of group "toolbar" of me
-   else
-      enable button "Test" of group "toolbar" of me
-   end if
-   
-   if tSelObj is empty then
-      if the mode of topStack is not 1 then
-         disable button "Inspector" of group "toolbar" of me
-      end if
-   end if
+   setToolbarButtonState "Test", \
+         revIDEGetPreference("cDeployPlatforms") is not empty 
    
    if revIDETutorialInProgress() is not empty then
       disableToolbar
