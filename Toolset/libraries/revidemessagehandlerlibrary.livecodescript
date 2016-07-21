@@ -332,6 +332,14 @@ on moveStack pLeft, pTop
    pass moveStack
 end moveStack
 
+on moveControl
+   # IDE to notify any objects subscribed to the ideControlMoved Message
+   local tLongID
+   put the long id of the target into tLongID
+   send "ideMessageSendWithTrigger" &&  "ideControlMoved, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
+   pass moveControl
+end moveControl
+
 on mouseDown pButton
    local tTarget, tParams
    put the long id of the target into tTarget
