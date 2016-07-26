@@ -1,0 +1,1 @@
+# Ensure widget docs are generated on Windows
