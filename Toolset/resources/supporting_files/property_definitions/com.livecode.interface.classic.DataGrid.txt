@@ -15,7 +15,9 @@ allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag r
 persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default
 fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	false	false		true	
 row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data Grid	com.livecode.pi.number	true	false		21					1
-row template:revIDEGetDataGridProperty:	Row template	Data Grid	com.livecode.pi.datagrid	true	true	
+
+row template::revIDEDataGridAction	Row Template...	Data Grid	com.livecode.pi.action	true	false	
+refresh::revIDEDataGridAction	Refresh Data Grid	Data Grid	com.livecode.pi.action	true	false
 
 text:revIDEGetDataGridProperty:revIDESetDataGridProperty	Contents	Contents	com.livecode.pi.textcontents	true	false		no_default
 

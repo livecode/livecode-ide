@@ -5669,6 +5669,24 @@ command CreateTemplateForControl pStack
    return theTemplateGroup
 end CreateTemplateForControl
 
+on revIDEDataGridAction pObj, pProperty
+   switch pProperty 
+      case "row template"
+         local tTemplate
+         put the dgProps["row template"] of pObj into tTemplate
+         set the itemdel to "card"
+         local tCard
+         put "card" && item 2 to -1 of tTemplate into tCard
+         if exists(tCard) then
+            go tCard
+         end if
+         break
+      case "refresh"
+         dispatch "ResetList" to pObj
+         break
+   end switch
+end revIDEDataGridAction
+
 local sFirstRowHeaders
 on revIDESetDataGridProperty pObj, pProperty, pValue
    switch pProperty 
