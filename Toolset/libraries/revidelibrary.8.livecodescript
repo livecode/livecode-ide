@@ -11353,7 +11353,11 @@ function revIDEIsFilesetStale pInputs, pOutputs, pRecursive, @rError
       if (tInputTimes is not an array or tOutputTimes is not an array) then
          throw "This should never happen"
       end if
-   
+      
+      if tOutputTimes["min"] is empty then
+         return false
+      end if
+      
       return tInputTimes["max"] > tOutputTimes["min"]
    catch tError
       put tError into rError
@@ -11393,7 +11397,7 @@ end __CheckFileset
 -- missing file.
 private function __ScanFilesetMTimes pFileset, pRecursive, pAllowMissing
    local tResult
-   put ("infinity" + 0) into tResult["min"]
+   put empty into tResult["min"]
    put 0 into tResult["max"]
 
    if pFileset is not an array then
@@ -11434,7 +11438,7 @@ private function __ScanFileMTime pFilename, pRecursive, pAllowMissing, \
       if tMTime is empty then
          throw "Failed to check modification time for file" && pFilename
       end if
-      if tMTime < xMin then
+      if xMin is empty or tMTime < xMin then
          put tMTime into xMin
       end if
       if tMTime > xMax then
