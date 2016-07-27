@@ -16,8 +16,8 @@ on preOpenStack
    addFrameItem "alignRight","footer", "action", "Align right", "object align right", "","alignControls", the long id of me, "right"
    addFrameItem "alignBottom","footer", "action", "Align bottom", "object align bottom", "","alignControls", the long id of me, "bottom"
    
-   addFrameItem "centerX","footer", "action", "Center vertically", "object align horizontal center", "","centerControls", the long id of me, "horizontal"
-   addFrameItem "centerY","footer", "action", "Center horizontally", "object align vertical center", "","centerControls", the long id of me, "vertical"
+   addFrameItem "centerX","footer", "action", "Center horizontally", "object align horizontal center", "","centerControls", the long id of me, "horizontal"
+   addFrameItem "centerY","footer", "action", "Center vertically", "object align vertical center", "","centerControls", the long id of me, "vertical"
    
    addFrameItem "equalizeWidth","footer", "action", "Equalize width", "object justify horizontal", "","equalizeControls", the long id of me, "width"
    addFrameItem "equalizeHeight","footer", "action", "Equalize height", "object justify vertical", "","equalizeControls", the long id of me, "height"
