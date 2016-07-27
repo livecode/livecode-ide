@@ -830,9 +830,13 @@ on cloneControls
    unlock screen
 end cloneControls
 
-on backSpaceKey
-   deleteControls
-end backSpaceKey
+on backspaceKey
+   if the dvIsFieldEditor of the target then
+      pass backspaceKey
+   else
+      deleteControls
+   end if
+end backspaceKey
 
 on deleteControls
    local tControlID, tGroupID, tControlList
