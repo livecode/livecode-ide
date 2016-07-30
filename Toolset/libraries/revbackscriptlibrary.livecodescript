@@ -1397,6 +1397,7 @@ command revEditScriptInNewWindow pObject, pSpecial
    local tTemplateVisibility, tTemplateRect
    put the visible of revScriptEditorTemplate() into tTemplateVisibility
    set the visible of revScriptEditorTemplate() to false
+   set the _ideoverride of revScriptEditorTemplate() to true
    
    local tEditor
    lock messages
