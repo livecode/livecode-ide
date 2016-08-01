@@ -1255,8 +1255,9 @@ end buildMenuContext
 ################################################################################
 
 private function revMenubarFileMenu pContext
-   local tIsUserTarget
+   local tIsUserTarget, tIsScriptOnly
    put the mode of the topStack is 1 into tIsUserTarget
+   put the scriptOnly of the topStack into tIsScriptOnly
    
    local tCanSaveStack
    put false into tCanSaveStack
@@ -1277,7 +1278,7 @@ private function revMenubarFileMenu pContext
    put tab & "-" & return after tFile
    put tab & "Script only Stack" & return after tFile
    
-   if tIsUserTarget then
+   if tIsUserTarget and not tIsScriptOnly then
       put "&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
    else
       put "(&New Substack" & return after tFile
