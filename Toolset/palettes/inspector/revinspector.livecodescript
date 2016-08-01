@@ -269,6 +269,7 @@ on ideInspectObjects pObjects
       local tNewInspectorName
       put sInspectorMax + 1 into tIndex
       put inspectorStackName(tIndex) into tNewInspectorName
+      set the _ideoverride of stack "revInspectorTemplate" to true
       clone invisible stack "revInspectorTemplate"
       set the name of it to tNewInspectorName
       
