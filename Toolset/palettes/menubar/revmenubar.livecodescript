@@ -2539,6 +2539,11 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Group"
          revIDEGroupObjects pTarget
+         if the result is empty and exists(it) then
+            select it
+         else
+            beep
+         end if
          break
          ######### SUBMENUS ########
       case "Card"

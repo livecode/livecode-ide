@@ -867,8 +867,12 @@ on groupControls
    
    put pbSelectedObjects() into tControlList
    revIDEGroupObjects tControlList
-   put the result into tGroupID
-   select tGroupID
+   
+   if the result is empty and exists(it) then
+      select it
+   else
+      beep
+   end if
    unlock screen
 end groupControls
 
@@ -2501,4 +2505,3 @@ command setConnectorIcon pControl, pState
          break
    end switch
 end setConnectorIcon
-

@@ -3548,37 +3548,66 @@ on revIDEActionGroupObjects
    
    revIDEGroupObjects tSelobj
    
-   local tNewGroup
-   put the result into tNewGroup
-   if exists(tNewGroup) then
-      select tNewGroup
+   if the result is empty and exists(it) then
+      select it
+   else
+      beep
    end if
 end revIDEActionGroupObjects
 
+/**
+
+Name: revIDEGroupObjects
+
+Type: command
+
+Syntax: revIDEGroupObjects <objectList>
+
+Summary: Group a list of objects in their layer order
+
+Description:
+Group a list of objects in the order they are layered in
+
+Parameters:
+objectList (string): A return delimited list of long object IDs
+
+The result:
+An error string
+
+It:
+The new group long ID or empty in the case the group could not be created
+
+**/
 on revIDEGroupObjects pObjectIDs
+   filter lines of pObjectIDs without empty
+   
    if pObjectIDs is empty then
-      exit revIDEGroupObjects
+      return "No objects" for error
    end if
    
-   local tLayer, tGroupID, tList, tObj
+   local tObject
+   repeat for each line tObject in pObjectIDs
+      if not exists(tObject) then
+         return "Object does not exist" for error
+      end if
+   end repeat
    
-   put the long id of (line 1 of pObjectIDs) into tObj
-   put 1000000 into tLayer
+   sort lines of pObjectIDs numeric by the layer of each
    
    lock screen
    
-   repeat for each line tControl in pObjectIDs
-      if the layer of tControl < tLayer then put the layer of tControl into tLayer
-   end repeat
+   replace return with " and " in pObjectIDs
    
-   // PM-2016-04-07: [[ Bug 17301 ]] Use the "group" command (without an objectList)
-   // so as to group the selection in layer order
-   group
+   local tError
+   try
+      do "group " & pObjectIDs
+   catch tError
+      return "Could not group objects" for error
+   end try
    
-   put the long id of the owner of tObj into tGroupID
-   set the layer of tGroupID to tLayer
    unlock screen
-   return tGroupID
+   
+   return it for value
 end revIDEGroupObjects
 
 on revIDEActionUngroup
