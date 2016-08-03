@@ -66,7 +66,7 @@ on arrowKey pDirection, pTarget
    put revTargetStack(line 1 of (the selObj)) into tStack
    
    if (tStack is line 1 of the openStacks or tStack is the short name of the topStack) \
-         and word 1 of (the selobj) is not "card" then
+         and word 1 of (the selobj) is not "card" and word 1 of (the selobj) is not "stack" then
       lock screen
       
       # OK-2008-03-19 : Previously was using lDistance with no declaration
@@ -97,8 +97,9 @@ on arrowKey pDirection, pTarget
       end repeat
       revSendDimensionsUpdate
       unlock screen
+      exit to top
    end if
-   exit to top
+   pass arrowKey
 end arrowKey
 
 on commandKeyDown pWhich

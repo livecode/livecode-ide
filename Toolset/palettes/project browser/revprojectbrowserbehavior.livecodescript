@@ -1,6 +1,46 @@
 ﻿script "revProjectBrowserBehavior"
 local sDisplayArray, sLongIDToRow, sObjectToParent
 
+on arrowKey pDirection
+   local tHilitedRow
+   put the dvHilitedRows of group "objectList" of me into tHilitedRow
+   
+   -- up and down are handled by the data view
+   if the number of items of tHilitedRow is 1 then
+      switch pDirection
+         case "left"
+            if getRowExpanded(getAbsoluteRow(tHilitedRow)) then
+               toggleGroup tHilitedRow, false
+            end if
+            break
+         case "right"
+             if not getRowExpanded(getAbsoluteRow(tHilitedRow)) then
+               toggleGroup tHilitedRow, true
+            end if
+            break
+      end switch
+   end if
+   pass arrowKey
+end arrowKey
+
+on returnKey
+   local tHilitedRow
+   put the dvHilitedRows of group "objectList" of me into tHilitedRow
+   
+   -- up and down are handled by the data view
+   if the number of items of tHilitedRow is 1 then
+      local tDataA, tTemplateStyle
+      DataForRow tHilitedRow, tDataA, tTemplateStyle
+      
+      if exists(tDataA["behavior"]) and the shiftKey is down and the optionKey is down then
+         edit the script of tDataA["behavior"]
+      else if exists(tDataA["long id"]) and the shiftKey is down then
+         edit the script of tDataA["long id"]
+      end if
+   end if
+   pass returnKey
+end returnKey
+
 on preOpenStack   
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
    set the zoomBox of this stack to false
