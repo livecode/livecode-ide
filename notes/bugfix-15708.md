@@ -1,0 +1,1 @@
+# Don't offer to make substacks of script-only stacks
