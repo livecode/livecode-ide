@@ -58,7 +58,7 @@ externalReferences	External references	externalRefs	com.livecode.pi.text	true	fa
 filename	Source	Basic	com.livecode.pi.file	true	false			
 fillGradient::revIDESetGradientProperty	Fill gradient	Colors	com.livecode.pi.gradient	true	false	Background fill		popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap
 firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1	
-fixedLineHeight	Fixed line height	Basic	com.livecode.pi.boolean	true	false		false	
+fixedLineHeight	Fixed line height	Text	com.livecode.pi.boolean	true	false		false	
 focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false			
 focusColor	Focus color	Colors	com.livecode.pi.color	true	false	Focus fill		
 focusPattern	Focus pattern	Colors	com.livecode.pi.pattern	true	false	Focus fill		
@@ -176,7 +176,7 @@ tabStops	Tab stops	Table	com.livecode.pi.string	true	false
 text	Text	Basic	com.livecode.pi.text	false	false			
 textAlign	Text align	Text	com.livecode.pi.textalign	true	false			
 textFont	Font	Text	com.livecode.pi.font	true	false
-textHeight	Text height	Basic	com.livecode.pi.integer	true	false				4		1			
+textHeight	Text height	Text	com.livecode.pi.integer	true	false				4		1			
 textSize	Text size	Text	com.livecode.pi.integer	true	false					1		1			
 textStyle	Text style	Text	com.livecode.pi.textstyle	true	false
 theme	Theme	Basic	com.livecode.pi.enum	true	false			Native|native,Legacy Look-and-Feel|legacy
