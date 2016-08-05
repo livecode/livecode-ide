@@ -1385,9 +1385,14 @@ on revFinaliseTutorial
    unlock screen
 end revFinaliseTutorial
 
-on revTutorialLoadData pCourse, pTutorial, pLesson
-   local tTutorialData
-   put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
+on revTutorialLoadData pInfo
+   local tTutorialData, tCourse, tTutorial, tLesson, tLocation
+   put pInfo["course"] into tCourse
+   put pInfo["tutorial"] into tTutorial
+   put pInfo["lesson"] into tLesson
+   put pInfo["location"] into tLocation
+   put revIDETutorialLessonContent(tCourse, tTutorial, tLesson, tLocation) \
+         into tTutorialData
    
    try
       put revTutorialParseData(tTutorialData) into sSteps
@@ -1395,8 +1400,8 @@ on revTutorialLoadData pCourse, pTutorial, pLesson
    end try
    
    if tError is not empty then 
-      throw ("Error parsing" && pCourse && "-" && pTutorial && "-" \ 
-            && pLesson & return & tError)
+      throw ("Error parsing" && tCourse && "-" && tTutorial && "-" \ 
+            && tLesson & return & tError)
       exit revTutorialLoadData
    end if
    put the number of elements in sSteps into sNumSteps
@@ -1428,7 +1433,7 @@ on revTutorialStartWithState pStep, pTaggedObjects
    put revIDETutorialInProgress() into tTutorialInfo
    
    try
-      revTutorialLoadData tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"]
+      revTutorialLoadData tTutorialInfo
    catch tError
    end try
    
@@ -1478,9 +1483,9 @@ on revTutorialContinueFromStep pStep
    end if
 end revTutorialContinueFromStep
 
-on revTutorialStartAtStep pCourse, pTutorial, pLesson, pStepName
-   revTutorialRunTutorial pCourse, pTutorial, pLesson, "", pStepName
-   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+on revTutorialStartAtStep pCourse, pTutorial, pLesson, pLocation, pStepName
+   revTutorialRunTutorial pCourse, pTutorial, pLesson, pLocation, "", pStepName
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson, pLocation
    revTutorialStartWithState pStepName, sTaggedObjects
 end revTutorialStartAtStep
 
@@ -1503,7 +1508,8 @@ on revTutorialSkip
    put sSteps[tSkipPoint]["actions"]["go"]["step"] into tRunUntil
    
    # Run from the current step to the next skip point
-   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], tTutorialInfo["lesson"], sStepName, tRunUntil
+   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], \ 
+         tTutorialInfo["lesson"], tTutorialInfo["location"], sStepName, tRunUntil
    revTutorialInitialiseStep
    
    # Due to how the run loop works, we need to continue from the step
@@ -1704,7 +1710,7 @@ on revTutorialDoLoad pLesson
    put revIDETutorialInProgress() into tTutorialInfo
    
    # Simply run the lesson that is to be loaded
-   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson
+   revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson, tTutorialInfo["location"]
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
@@ -3056,9 +3062,9 @@ end revTutorialGroupContainsObjects
 ##############################################################################
 
 local sRunningInfo
-on revTutorialRunTutorial pCourse, pTutorial, pLesson, pFromStep, pUntilStep
+on revTutorialRunTutorial pCourse, pTutorial, pLesson, pLocation, pFromStep, pUntilStep
    local tTutorialData
-   put revIDETutorialLessonContent(pCourse, pTutorial, pLesson) into tTutorialData
+   put revIDETutorialLessonContent(pCourse, pTutorial, pLesson, pLocation) into tTutorialData
    
    local tData
    put revTutorialParseData(tTutorialData) into tData
@@ -3108,7 +3114,8 @@ on revTutorialRunLoad pLoadAction
    # Store currently running lesson in case there are further load actions
    local tRunningInfo
    put sRunningInfo into tRunningInfo
-   revTutorialRunTutorial tRunningInfo["course"], tRunningInfo["tutorial"], pLoadAction["lesson"]
+   revTutorialRunTutorial tRunningInfo["course"], tRunningInfo["tutorial"], \ 
+         pLoadAction["lesson"], tRunningInfo["location"]
    put tRunningInfo into sRunningInfo
 end revTutorialRunLoad
 
