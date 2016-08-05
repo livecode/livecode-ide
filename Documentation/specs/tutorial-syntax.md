@@ -28,7 +28,7 @@ components associated with the step, and actions associated with the step.
 	Step
 	  : "step" <Name: STRING>
 		  <Info: TEXT>
-		[ (“script” |  "image") SEPARATOR
+		[ (“script” |  "image" | "url") SEPARATOR
 		   TEXT SEPARATOR  ]
 		[ "value" SEPARATOR
 		   TEXT SEPARATOR  ]
@@ -44,6 +44,7 @@ Also causes a "Copy Script to Editor" button to be added to the tutorial
 stack.
 - "image": Displays an image in the tutorial stack. The image must be 
 located in an _resources folder next to the tutorial's lessons folder.
+- "url": Displays a browser set to the specified url.
 - "value": Causes occurrences of the string "<value>" within the tutorial
 instruction text to be replaced with the specified value.
 - "file": Specifies the desired file target of a step's 'Import as' 

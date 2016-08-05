@@ -63,6 +63,7 @@ function revTutorialParseData pData
             case "script"
             case "file"
             case "value"
+            case "url"
                // None of the above is allowed in epilogue or prologue
                if tType is "epilogue" or tType is "prologue" then
                   parseError tNewType && "not valid in" && tType, tLineNum, tErrors
@@ -107,6 +108,7 @@ function revTutorialParseData pData
                      break
                   case "file"
                   case "image"
+                  case "url"
                      # File and image are single line 
                      put word 1 to -1 of tLine into tData
                      break
@@ -817,6 +819,7 @@ constant kMaxScriptHeight = 200
 
 local sDontShow
 local sLastShape
+local sBrowserTop
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
    local tMsgFieldID, tScriptFieldID, tImageID
@@ -826,6 +829,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    put the long id of field "Message" of stack "revTutorial" into tMsgFieldID
    put the long id of field "Script" of stack "revTutorial" into tScriptFieldID
    put the long id of image "Image" of stack "revTutorial" into tImageID
+   
+   local tHasUrl, tUrlControlID
+   if revIDEBrowserWidgetUnavailable() then
+      put the long id of field "Url" of stack "revTutorial" into tUrlControlID
+      put the text of tUrlControlID is not empty into tHasUrl
+   else
+      put the long id of widget "Browser" of stack "revTutorial" into tUrlControlID
+      put the url of tUrlControlID is not empty into tHasUrl
+   end if
    
    lock screen
    lock messages
@@ -861,6 +873,12 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       show tImageID
    else
       hide tImageID
+   end if
+   
+   if tHasUrl then
+      show tUrlControlID
+   else
+      hide tUrlControlID
    end if
    
    local tPointVertical
@@ -921,6 +939,11 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       add tScriptHeight + kMargin * 2 to tHeight
       
       put max(tWidth, the width of tScriptFieldID + kMargin * 2) into tWidth
+   end if
+   
+   if tHasUrl then
+      add the height of tUrlControlID + kMargin * 2 to tHeight
+      put max(tWidth, the width of tUrlControlID + kMargin * 2) into tWidth
    end if
    
    if sIsInterlude then
@@ -1014,10 +1037,22 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    else if tHasImage then
       set the loc of tImageID to the loc of this card of stack "revTutorial"
       set the top of tImageID to tOtherTop
+   else if tHasUrl then
+      // Work around issues with display of browser 
+      create card
+      delete this card of stack "revTutorial"
+      
+      set the loc of tUrlControlID to the loc of this card of stack "revTutorial"
+      set the top of tUrlControlID to tOtherTop
    end if
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
+   if tHasUrl then
+      put tOtherTop into sBrowserTop
+   else
+      put empty into sBrowserTop
+   end if
 end revTutorialPositionStack
 
 function revTutorialWindowShape pWidth, pHeight, pHasPointer, pPointVertical, pPointerLeft, pPointerTop
@@ -1254,7 +1289,11 @@ on revTutorialResume pStacksToOpen, pTaggedObjects, pStepName
 end revTutorialResume
 
 constant kPrefsToStore = "cScriptEditor,explicitvariables|cToolbarIcons|revTools_show|idePropertyInspector_labels"
+constant kBrowserWidth = 600
+constant kBrowserHeight = 450
 on revInitialiseTutorial
+   set the _ideoverride of stack "revTutorial" to true
+   
    lock screen
    lock messages
    
@@ -1288,58 +1327,73 @@ on revInitialiseTutorial
       delete button "Copy Script" of stack "revTutorial"
    end if
    
+   if there is a widget "Browser" of stack "revTutorial" then
+      delete widget "Browser" of stack "revTutorial"
+   end if
+   
+   if there is a field "Url" of stack "revTutorial" then
+      delete field "Url" of stack "revTutorial"
+   end if
+   
+   if there is an image "Image" of stack "revTutorial" then
+      delete image "Image" of stack "revTutorial"
+   end if
+   
    set the windowShape of stack "revTutorial" to empty
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
    set the textsize of stack "revTutorial" to 15
    
+   -- Create fields
+   set the lockText of the templateField to true
+   set the opaque of the templateField to false
+   set the showborder of the templateField to false
+   set the showFocusBorder of the templateField to false
+   set the width of the templateField to 1000
+   set the cantSelect of the templateField to true
+   set the margins of the templateField to 4
+   
+   set the left of the templateField to 20
+   set the top of the templateField to 60
+   
    create field "Message"
    set the dontWrap of it to false
-   set the lockText of it to true
-   set the opaque of it to false
-   set the showborder of it to false
-   set the showFocusBorder of it to false
-   set the width of it to 1000
-   set the cantSelect of it to true
-   set the margins of it to 4
-   
-   set the left of it to 20
-   set the top of it to 60
    
    create field "Script"
    set the dontWrap of it to true
-   set the lockText of it to true
-   set the opaque of it to true
-   set the backColor of it to "white"
-   set the showborder of it to false
-   set the showFocusBorder of it to false
-   set the width of it to 1000
-   set the cantSelect of it to true
-   set the margins of it to 4
    
-   set the left of it to 20
-   set the top of it to 60
+   if revIDEBrowserWidgetUnavailable() then
+      create field "Url"
+      set the dontWrap of it to true
+   else
+      create widget "Browser" as "com.livecode.widget.browser"
+      set the height of it to kBrowserHeight
+      set the width of it to kBrowserWidth
+      set the left of it to 20
+      set the top of it to 60
+      set the visible of it to false
+   end if
+   
+   reset the templateField
+   
+   -- Create buttons
+   set the width of the templateButton to 1000
+   set the borderWidth of the templateButton to 0
+   set the showFocusBorder of the templateButton to false
+   set the autoHilite of the templateButton to false
+   set the threeD of the templateButton to false
+   set the visible of the templateButton to false
    
    create button "Got It"
    set the backColor of it to revTutorialInterludeAltColor()
-   set the width of it to 1000
    set the label of it to "Got It"
-   set the borderWidth of it to 0
-   set the showFocusBorder of it to false
-   set the autoHilite of it to false
-   set the threeD of it to false
-   set the visible of it to false
    
    create button "Copy Script"
    set the backColor of it to revTutorialMessageAltColor()
-   set the width of it to 1000
    set the label of it to "Copy Script To Editor"
-   set the borderWidth of it to 0
-   set the showFocusBorder of it to false
-   set the autoHilite of it to false
-   set the threeD of it to false
-   set the visible of it to false
+   
+   reset the templateButton
    
    create image "Image"
    set the borderWidth of it to 0
@@ -1644,6 +1698,10 @@ on revTutorialContinue
       // Highlight
       revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
       unlock screen
+      // Work around issues with display of browser 
+      if sBrowserTop is not empty then
+         set the top of widget "Browser" to sBrowserTop + 1
+      end if
       show stack "revTutorial"
       // Capture
       revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
@@ -1708,30 +1766,30 @@ on revTutorialDoLoad pLesson
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
-   revTutorialSetTextOfMessage sSteps[pStep]["text"], sSteps[pStep]["script"], sSteps[pStep]["file"], sSteps[pStep]["value"], sSteps[pStep]["image"]
+   revTutorialConfigureMessage sSteps[pStep]
 end revTutorialSetText
 
-on revTutorialSetTextOfMessage pText, pScript, pFile, pValue, pImage
+on revTutorialConfigureMessage pData
    local tWidthOverride
    put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to kMessageWidth
    
-   if pValue is not empty then
-      replace "<value>" with pValue in pText
+   if pData["value"] is not empty then
+      replace "<value>" with pData["value"] in pData["text"]
    end if
-   if pFile is not empty then
-      replace "<file>" with pFile in pText
+   if pData["file"] is not empty then
+      replace "<file>" with pData["file"] in pData["text"]
    end if
    
-   put pText into field "Message" of stack "revTutorial"
+   put pData["text"] into field "Message" of stack "revTutorial"
    
    # Recalculate the formatted width after replacing value / file
    put the formattedwidth of field "Message" of stack "revTutorial" into tWidthOverride
    
    local tImageFile
-   if pImage is not empty then
+   if pData["image"] is not empty then
       local tImageWidth
-      put revIDETutorialInternalResource(pImage) into tImageFile
+      put revIDETutorialInternalResource(pData["image"]) into tImageFile
       set the filename of image "Image" of stack "revTutorial" to tImageFile
       put the formattedWidth of image "Image" of stack "revTutorial" + 2 * kMargin into tImageWidth
       put max(tWidthOverride, tImageWidth) into tWidthOverride
@@ -1739,8 +1797,8 @@ on revTutorialSetTextOfMessage pText, pScript, pFile, pValue, pImage
       set the filename of image "Image" of stack "revTutorial" to empty
    end if
    
-   put pScript into field "Script" of stack "revTutorial"
-   if pScript is not empty then
+   put pData["script"] into field "Script" of stack "revTutorial"
+   if pData["script"] is not empty then
       put return before field "Script" of stack "revTutorial"
       local tLength
       put the number of chars in field "Script" of stack "revTutorial" into tLength
@@ -1750,8 +1808,24 @@ on revTutorialSetTextOfMessage pText, pScript, pFile, pValue, pImage
       put max(tWidthOverride, tScriptFieldWidth) into tWidthOverride
    end if
    
+   
+   if revIDEBrowserWidgetUnavailable() then
+      if pData["url"] is not empty then
+         set the text of field "Url" of stack "revTutorial" to pData["url"]
+      else
+         set the text of field "Url" of stack "revTutorial" to empty
+      end if
+   else
+      if pData["url"] is not empty then
+         set the url of widget "Browser" of stack "revTutorial" to pData["url"]
+         put max(tWidthOverride, kBrowserWidth) into tWidthOverride
+      else
+         set the url of widget "Browser" of stack "revTutorial" to empty
+      end if
+   end if
+   
    revTutorialPositionStack "", "", tWidthOverride, false
-end revTutorialSetTextOfMessage
+end revTutorialConfigureMessage
 
 function revTutorialScriptRetry pCurrent
    local tText
@@ -1989,7 +2063,10 @@ function revTutorialCheckWaitCondition pActionData
                   add 1 to sWait["incorrect attempts"]
                   put the script of tObject into sWait["current script"]
                   # Show the current script and the target script in the tip stack
-                  revTutorialSetTextOfMessage revTutorialScriptRetry(sWait["current script"]), pActionData["script"]
+                  local tData
+                  put revTutorialScriptRetry(sWait["current script"]) into tData["text"]
+                  put pActionData["script"] into tData["script"]
+                  revTutorialConfigureMessage tData
                end if
                break
          end switch
