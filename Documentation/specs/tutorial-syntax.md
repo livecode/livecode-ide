@@ -22,13 +22,13 @@ and end.
 		  TEXT SEPARATOR
 		"end" "prologue"
 
-A step consists of some text describing the step, optionally some script
-associated with the step, and actions associated with the step.
+A step consists of some text describing the step, optionally some other 
+components associated with the step, and actions associated with the step.
 
 	Step
 	  : "step" <Name: STRING>
 		  <Info: TEXT>
-		[ “script” SEPARATOR
+		[ (“script” |  "image") SEPARATOR
 		   TEXT SEPARATOR  ]
 		[ "value" SEPARATOR
 		   TEXT SEPARATOR  ]
@@ -37,6 +37,19 @@ associated with the step, and actions associated with the step.
 		"action"
 		  { Command SEPARATOR }
 		"end" "step"
+
+Components can be included for the following purposes:
+- "script": Displays a field with colorised script in the tutorial stack.
+Also causes a "Copy Script to Editor" button to be added to the tutorial
+stack.
+- "image": Displays an image in the tutorial stack. The image must be 
+located in an _resources folder next to the tutorial's lessons folder.
+- "value": Causes occurrences of the string "<value>" within the tutorial
+instruction text to be replaced with the specified value.
+- "file": Specifies the desired file target of a step's 'Import as' 
+action. Must be located in the resources folder next to the tutorial's 
+lessons folder. Also causes occurrences of the string "<file>" within 
+the tutorial instruction text to be replaced with the specified value.
 
 The possible actions are as follows:
 
