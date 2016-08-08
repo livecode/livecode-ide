@@ -149,7 +149,7 @@ on LayoutControl pControlRect
    if revIDEGetPreference("pb_indicator") is "text" then
       set the left of group "disclosure" of me to the right of group ("connector" & tConnectorCount) of me
       set the width of field "type" of me to the formattedWidth of field "type" of me
-      set the left of field "type" of me to the right of button "disclosure" of me
+      set the left of field "type" of me to the right of group "disclosure" of me
       put the right of field "type" of me - 5 into tNameFieldLeft
    else
       set the left of group "disclosure" of me to the right of group ("connector" & tConnectorCount) of me
