@@ -22,6 +22,7 @@ on enterInField
 end enterInField
 
 on textChanged
+   _internal script colorize char 1 to (the number of chars of me) of me
    revDisplayAutoComplete(the text of me)
 end textChanged
 
@@ -45,10 +46,13 @@ on commandKeyDown pKey
       put empty into field "auto complete"
       exit commandKeyDown
    end if
-   if pKey is "V" then 
-      revDisplayAutoComplete clipboardData["text"] 
+   if pKey is "V" then
+      put clipboardData["text"] into the selectedChunk
+      revDisplayAutoComplete clipboardData["text"]
+      _internal script colorize char 1 to (the number of chars of me) of me
+   else
+      pass commandKeyDown
    end if
-   pass commandKeyDown
 end commandKeyDown
 
 command revInitialise
@@ -74,8 +78,7 @@ command revInitialise
 end revInitialise
 
 command revDisplayAutoComplete pString
-   set the textColor of field "auto complete" to "gray70"
-   
+   lock screen
    local tString
    put revIDEAutoComplete(pString) into tString
    
@@ -88,6 +91,10 @@ command revDisplayAutoComplete pString
    else 
       put empty into field "auto complete"
    end if
+   
+   _internal script colorize char 1 to (the number of field "auto complete") of field "auto complete"
+   set the textColor of char 1 to -1 of field "auto complete" to "gray70"
+   unlock screen
 end revDisplayAutoComplete
 
 command revNextLine
@@ -102,6 +109,7 @@ command revNextLine
       put field "message" & char (the number of chars of field "message" + 1) to (the number of chars of line lMatchingIndex of lMatchingHistory) of line lMatchingIndex of lMatchingHistory into field "auto complete"
    end if
    select after field "message" 
+    _internal script colorize char 1 to (the number of chars of me) of me
    unlock messages
 end revNextLine
 
@@ -117,6 +125,7 @@ command revPrevLine
       put field "message" & char (the number of chars of field "message" + 1) to (the number of chars of line lMatchingIndex of lMatchingHistory) of line lMatchingIndex of lMatchingHistory into field "auto complete"
    end if
    select after field "message" 
+    _internal script colorize char 1 to (the number of chars of me) of me
    unlock messages
 end revPrevLine
 

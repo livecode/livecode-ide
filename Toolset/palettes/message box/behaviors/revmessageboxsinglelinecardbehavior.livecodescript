@@ -13,6 +13,8 @@ on openCard
    then put line 1 of revIDEGetPreference("IDESingleLineMessageHistory") into field "message"
    else put empty into field "message"
    
+   _internal script colorize char 1 to (the number of chars of field "message" of me) of field "message" of me
+   
    local tActiveStack
    put revIDEGetPreference("IDEActiveStack") into tActiveStack
    revUpdateActiveStack tActiveStack, tActiveStack
