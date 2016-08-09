@@ -803,3 +803,12 @@ Figure 12 – Find and Replace
 | Run                                            | F5                                      | F5                                      |
 | Stop                                           | Shift-F5                                | Shift-F5                                |
 | Abort                                          | Control-.                               | Command-.                               |
+
+| **The Project Browser** |  **Windows / Linux** | **Mac OS X**|
+|------|--------|-------|
+| Scroll through objects                         | Up/down arrow                           | Up/down arrow                           |
+| Expand/contract child objects                  | Right/left arrow                        | Right/left arrow                        |
+| Open object                                    | Return                                  | Return                                  |
+| Edit script of object                          | Shift-Return                            | Shift+Return                            |
+| Edit behavior script of object                 | Shift-Alt-Return                        | Shift-Alt-Return                        |
+| Inspect object                                 | Control-Return                          | Command-Return                          |
