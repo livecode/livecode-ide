@@ -6163,9 +6163,6 @@ on revIDETogglePaletteView
          end if
       end repeat
       delete last char of gREVPalettes
-      --unhilite menuItem 10 of me
-      set the icon of button "toggle palettes" to 201316
-      set the rect of button "Palettes Inverted" to the rect of button "Toggle Palettes"
    else
       sort lines of gREVPalettes descending by item 2 of each
       lock messages
@@ -6180,10 +6177,7 @@ on revIDETogglePaletteView
             lock messages
          end if
       end repeat
-      --hilite menuItem 10 of me
       put empty into gREVPalettes
-      set the icon of button "toggle palettes" to 200874
-      set the loc of button "Palettes Inverted" to -100,-100
    end if
    unlock screen
 end revIDETogglePaletteView
