@@ -7401,7 +7401,7 @@ on revIDESaveStackAs pStackID, pFileName, pVersion
    end if
    
    local tShortName, tResult
-   put the short name of stack pStackID into tShortName
+   put the short name of pStackID into tShortName
    put the result into tResult
    if tResult is not empty then
       local tLocaliseSubstitutions
