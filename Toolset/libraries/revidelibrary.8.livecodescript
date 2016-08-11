@@ -1223,6 +1223,9 @@ function __readPropertiesOfControlForDataView pList, @pData, pParentIndex, pLeve
             case "scriptlines"
                put the number of lines of the script of the target into pData[tIndex][tProp]
                break
+            case "scriptstatus"
+               put the scriptstatus of the target into pData[tIndex][tProp]
+               break
             case "behavior scriptlines"
                put the number of lines of the script of the behavior of the target into pData[tIndex][tProp]
                break
@@ -1346,6 +1349,9 @@ private on __fetchPropertyOfControl pProp, @pData
          case "scriptlines"
             put the number of lines of the script of the target into pData[pProp]
             break
+         case "scriptstatus"
+            put the scriptStatus of the target into pData[pProp]
+            break
          case "behavior scriptlines"
             put the number of lines of the script of the behavior of the target into pData[pProp]
             break
@@ -1410,6 +1416,9 @@ private function __readControlPropertiesForDataView pList
             case "scriptlines"
                put the number of lines of the script of the target into tData[tProp]
                break
+            case "scriptstatus"
+               put the scriptStatus of the target into tData[tProp]
+               break
             case "behavior scriptlines"
                put the number of lines of the script of the behavior of the target into tData[tProp]
                break
@@ -1465,9 +1474,9 @@ on revIDEInitialiseIDELibrary
    start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
    
    # Setup the default lists of properties to read from objects when reading the structure of a stack
-   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
-   put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
-   put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
+   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "scriptstatus" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
+   put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
+   put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
    
    ## Load Extensions
    revIDEInitialiseExtensions
@@ -2331,7 +2340,7 @@ function revIDEFrontScripts
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" & return & "long id" into tProperties
+   put "short name" & return & "scriptlines" & return & "scriptstatus" & return & "long id" into tProperties
    
    # Loop through the frontscripts getting the required properties
    # and build the return array
@@ -2358,7 +2367,7 @@ function revIDEBackScripts
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" & return & "long id" into tProperties
+   put "short name" & return & "scriptlines" & return & "scriptstatus" & return & "long id" into tProperties
    
    # Loop through the frontscripts getting the required properties
    # and build the return array
@@ -2384,7 +2393,7 @@ function revIDEStacksInUse
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" into tProperties
+   put "short name" & return & "scriptstatus" & return & "scriptlines" into tProperties
    
    # Loop through the stacks in use getting the required properties
    # and build the return array
@@ -2621,6 +2630,9 @@ function revIDEColor pTag
          break
       case "dataView_scriptBackgroundColor"
          return "34,154,206"
+         break
+      case "dataView_scriptErrorBackgroundColor"
+         return "255,0,0"
          break
       case "dataView_disclosureIconColor"
          return "99,99,99"
@@ -3052,6 +3064,7 @@ function revIDEStackAudioClips pStack
          put "pwd" into tScriptLines
       end try
       put tScriptLines into tAudioClipArray[tClip]["scriptlines"]
+      put the scriptStatus of Audioclip tClip of pStack into tAudioClipArray[tClip]["scriptstatus"] 
 
       // Behavior
       if the behavior of Audioclip tClip of pStack is not empty then
@@ -3079,17 +3092,18 @@ end revIDEStackAudioClips
 
 function revIDEStackVideoClips pStack
    local tVideoClipCount, tVideoClipArray, tScriptLines, tBehavior, tBehaviorScriptLines, tAudioClipArray
-
+   
    -- MM-2013-09-16: [[ Bug 11280 ]] as a result of the fix for bug 11068, the engine is more strict in the way it processes references.
    -- Removed unecessary "stack" keywords.
    put the num of videoclips in pStack into tVideoClipCount
    repeat with tClip = 1 to tVideoClipCount
       put "videoclip" into tVideoClipArray[tClip]["type"]
       put the short name of videoclip tClip of pStack into tVideoClipArray[tClip]["name"]
-      put the number of lines in  the script of videoclip tClip of pStack into tAudioClipArray[tClip]["scriptlines"]
+      put the number of lines in  the script of videoclip tClip of pStack into tVideoClipArray[tClip]["scriptlines"]
+      put the scriptStatus of videoclip tClip of pStack into tVideoClipArray[tClip]["scriptstatus"]
       put the long id of videoclip tClip of pStack into tVideoClipArray[tClip]["long id"]
       put 3 into tVideoClipArray[tClip]["level"]
-
+      
       // Script
       try
          put the number of lines in  the script of videoclip tClip of pStack into tScriptLines
