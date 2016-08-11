@@ -226,13 +226,14 @@ private command buildWindowMenu pContext
    local tWindows
    put revIDEWindowList() into tWindows
    
-   // PM-2016-05-14: [[ Bug 18166 ]] Show stacks by name, unless they are instances of the script editor,
-   // the Dictionary or the Resource Center. In this case show the stack title, as in LC 6.7.x
+   // PM-2016-05-14: [[ Bug 18166 ]] Show users stacks by name
    local tMenu, tMenuLine, tStackName
    repeat for each line tStack in tWindows
       put the short name of tStack into tStackName
-      if tStackName begins with "revNewScriptEditor" or tStackName is "revDictionary" or tStackName is "revResourceCenter" then
+      // in case we have an instance of of the script editor, the Dictionary or the Resource Center, show their title
+      if revIDEStackNameIsIDEStack(tStackName) then
          put the title of tStack into tStackName
+         put tStackName & CR after msg
       end if
       
       put "!n" & revMenubarEscapeStackNameForMenu(tStackName) & "/|" & tStack into tMenuLine
