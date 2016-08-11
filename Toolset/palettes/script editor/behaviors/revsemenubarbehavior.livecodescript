@@ -226,14 +226,17 @@ private command buildWindowMenu pContext
    local tWindows
    put revIDEWindowList() into tWindows
    
-   local tMenu, tMenuLine, tStackTitle
+   // PM-2016-05-14: [[ Bug 18166 ]] Show users stacks by name
+   local tMenu, tMenuLine, tStackName
    repeat for each line tStack in tWindows
-      put the title of stack tStack into tStackTitle
-      if tStackTitle is empty then
-         put the short name of tStack into tStackTitle
+      put the short name of tStack into tStackName
+      // in case we have an instance of of the script editor, the Dictionary or the Resource Center, show their title
+      if revIDEStackNameIsIDEStack(tStackName) then
+         put the title of tStack into tStackName
+         put tStackName & CR after msg
       end if
       
-      put "!n" & revMenubarEscapeStackNameForMenu(tStackTitle) & "/|" & tStack into tMenuLine
+      put "!n" & revMenubarEscapeStackNameForMenu(tStackName) & "/|" & tStack into tMenuLine
       if tMenu is empty then
          put tMenuLine into tMenu
       else
