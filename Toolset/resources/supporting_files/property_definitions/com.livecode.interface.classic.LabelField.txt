@@ -26,8 +26,6 @@ listBehavior							false
 multipleHilites							false					
 nonContiguousHilites							false					
 toggleHilites							false					
-fixedLineHeight												
-textHeight												
 firstIndent							0					
 dontSearch							false					
 layerMode												
@@ -63,6 +61,8 @@ textFont
 textSize												
 textStyle												
 textAlign							right					
+fixedLineHeight												
+textHeight												
 margins							8					
 lockLoc							false					
 width							100					
