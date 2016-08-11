@@ -2,10 +2,23 @@
 local sExtensionData
 constant kLineHeight = 41
 constant kNumberOfRows = 12
+
+local sHasOpened = false
+
 on preOpenCard
+   lock screen
+   local tScroll
+   if sHasOpened then
+      put the viewProp["vscroll"] of group "extensionList" of me into tScroll
+   end if
+   
    put revSBAvailableInclusions() into sExtensionData
    setUpExtensionList
+   
    send "renderView" to group "extensionList" of me
+   if sHasOpened then
+      set the viewProp["vscroll"] of group "extensionList" of me to tScroll
+   end if
    
    setExtensionList
    
@@ -13,6 +26,10 @@ on preOpenCard
    put the bottom of group "cards" of me \
          + kLineHeight * kNumberOfRows into tHeight
    set the cSize of this card to 568, tHeight
+   
+   unlock screen
+   
+   put true into sHasOpened
    
    pass preOpenCard
 end preOpenCard
