@@ -1343,7 +1343,9 @@ end revInternal__SetupStackFiles
 
 command revInternal__InitialiseDefaults
    revInternal__Log "Enter", "Defaults Initialisation"
-   
+      
+   set the _ideoverride of stack "home" to true
+
    switch sLicensePlatform
       case "MacOS X"
          set the stackFileType to "RevoRSTK"

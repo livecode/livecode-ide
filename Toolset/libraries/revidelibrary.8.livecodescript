@@ -2423,7 +2423,7 @@ Returns (Any): The value of the preference
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue
    revInternal__SavePreferences
-   ideMessageSend "idePreferenceChanged:" & pPreferenceName
+   ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
 end revIDESetPreference
 
 /*
