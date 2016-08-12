@@ -233,7 +233,6 @@ private command buildWindowMenu pContext
       // in case we have an instance of of the script editor, the Dictionary or the Resource Center, show their title
       if revIDEStackNameIsIDEStack(tStackName) then
          put the title of tStack into tStackName
-         put tStackName & CR after msg
       end if
       
       put "!n" & revMenubarEscapeStackNameForMenu(tStackName) & "/|" & tStack into tMenuLine
