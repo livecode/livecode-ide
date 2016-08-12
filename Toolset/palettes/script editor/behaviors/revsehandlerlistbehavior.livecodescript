@@ -145,7 +145,7 @@ command update
       # settings we sort alphabetically anyway, it probably doesn't make much difference to just sort here.
       # This will produce an ordering F, G, H, PF, PH, S, which may need to be adjusted using a custom search
       # function here.
-      sort tHandlers numeric by handlerTypeSortCallback(word 1 of each)
+      sort tHandlers by handlerTypeSortCallback(word 1 of each) & word 2 of each
    end if
    
    # Populate the handlers field with the formatted list of handlers
