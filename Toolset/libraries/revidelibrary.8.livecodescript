@@ -3534,26 +3534,53 @@ on revIDEActionGroupObjects
    end if
 end revIDEActionGroupObjects
 
+
+/**
+
+Name: revIDEGroupObjects
+
+Type: command
+
+Syntax: revIDEGroupObjects <objectList>
+
+Summary: Group a list of objects in their layer order
+
+Description:
+Group a list of objects in the order they are layered in
+
+Parameters:
+objectList (string): A return delimited list of long object IDs
+
+The result:
+The new group long ID or empty in the case the group could not be created
+
+**/
 on revIDEGroupObjects pObjectIDs
-   local tLayer, tGroupID, tList, tObj
+   filter lines of pObjectIDs without empty
    
-   put the long id of (line 1 of pObjectIDs) into tObj
-   put 1000000 into tLayer
-
-   lock screen
-
-   repeat for each line tControl in pObjectIDs
-      if the layer of tControl < tLayer then put the layer of tControl into tLayer
+   if pObjectIDs is empty then
+      return empty
+   end if
+   
+   local tObject
+   repeat for each line tObject in pObjectIDs
+      if not exists(tObject) then
+         return empty
+      end if
    end repeat
-
-   // PM-2016-04-07: [[ Bug 17301 ]] Use the "group" command (without an objectList)
-   // so as to group the selection in layer order
-   group
    
-   put the long id of the owner of tObj into tGroupID
-   set the layer of tGroupID to tLayer
+   put line 1 of pObjectIDs into tObject
+   sort lines of pObjectIDs numeric by the layer of each
+   
+   lock screen
+   
+   replace return with " and " in pObjectIDs
+   do "group " & pObjectIDs
+   
    unlock screen
-   return tGroupID
+   
+   --!TODO in 8.1 we can `return it for value` here
+   return the long id the owner of tObject
 end revIDEGroupObjects
 
 on revIDEActionUngroup
