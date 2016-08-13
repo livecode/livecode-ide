@@ -78,6 +78,7 @@ on openStack
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
+   revIDESubscribe "idePreferenceChanged:cScriptEditor,editor,backgroundcolor"
    
    revIDESubscribe "ideActiveStacksChanged"
    
@@ -91,6 +92,8 @@ on openStack
    lock messages
    set the minHeight of me to tMinHeight
    moveMsgBoxStack
+   
+   __UpdateMessageColors
    unlock messages
    unlock screen
 end openStack
@@ -428,9 +431,19 @@ on idePreferenceChanged pPreference, pValue
          send "resizeStack" to card lSelectedCard of me
          positionOpenStacksButton
          break
+      case "cScriptEditor,editor,backgroundcolor"
+         __UpdateMessageColors
+         break
    end switch
    unlock screen
 end idePreferenceChanged
+
+private command __UpdateMessageColors
+   local tColor
+   put revIDEGetPreference("cScriptEditor,editor,backgroundcolor") into tColor
+   set the backgroundColor of field "auto complete" of card "Single Line" of me to tColor
+   set the backgroundColor of field "message" of card "Multiple Lines" of me to tColor
+end __UpdateMessageColors
 
 command positionOpenStacksButton
    lock screen
@@ -502,6 +515,7 @@ command revIDEAcceptAutoComplete
    put field "auto complete" into field "message" of card "Single Line" of me
    put empty into field "auto complete" of card "Single Line" of me
    select after field "message" of card "Single Line" of me
+   _internal script colorize char 1 to (the number of chars of field "message" of card "Single Line" of me) of field "message" of card "Single Line" of me
    unlock messages
    unlock screen
 end revIDEAcceptAutoComplete

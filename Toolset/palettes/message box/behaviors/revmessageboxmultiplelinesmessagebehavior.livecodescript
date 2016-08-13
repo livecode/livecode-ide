@@ -27,8 +27,12 @@ on commandKeyDown pKey
       put empty into me
       exit commandKeyDown
    end if
-   if pKey is "V" then get clipboardData["text"] 
-   pass commandKeyDown
+   if pKey is "V" then 
+      put clipboardData["text"] into the selectedChunk
+       _internal script colorize char 1 to (the number of chars of me) of me
+   else
+      pass commandKeyDown
+   end if
 end commandKeyDown
 
 on arrowKey which
@@ -66,6 +70,7 @@ command revNextLine
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
    put tMessage into field "message"
+    _internal script colorize char 1 to (the number of chars of me) of me
 end revNextLine
 
 command revPrevLine
@@ -75,4 +80,9 @@ command revPrevLine
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
    put tMessage into field "message"
+    _internal script colorize char 1 to (the number of chars of me) of me
 end revPrevLine
+
+on textChanged
+   _internal script colorize char 1 to (the number of chars of me) of me
+end textChanged
