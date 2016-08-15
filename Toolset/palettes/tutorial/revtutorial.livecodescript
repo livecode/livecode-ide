@@ -819,7 +819,6 @@ constant kMaxScriptHeight = 200
 
 local sDontShow
 local sLastShape
-local sBrowserTop
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tGotItButtonID, tCopyButtonID
    local tMsgFieldID, tScriptFieldID, tImageID
@@ -1048,11 +1047,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    set the defaultstack to tDefaultStack
    unlock messages
    unlock screen
-   if tHasUrl then
-      put tOtherTop into sBrowserTop
-   else
-      put empty into sBrowserTop
-   end if
 end revTutorialPositionStack
 
 function revTutorialWindowShape pWidth, pHeight, pHasPointer, pPointVertical, pPointerLeft, pPointerTop
@@ -1704,10 +1698,7 @@ on revTutorialContinue
       // Highlight
       revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
       unlock screen
-      // Work around issues with display of browser 
-      if sBrowserTop is not empty then
-         set the top of widget "Browser" to sBrowserTop + 1
-      end if
+
       show stack "revTutorial"
       // Capture
       revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
