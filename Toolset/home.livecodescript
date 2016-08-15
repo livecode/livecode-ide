@@ -1085,7 +1085,7 @@ command revInternal__InitialiseSystem
    if the environment is not "development command line" then 
 	   if tSuccess then
 		  if the number of lines of the screenRect < 2 and item 4 of the screenRect < 600 then
-			 answer "Revolution requires a 1024x768 display for editing (but not playback). If you continue, you may not be able to use all of the editing tools." with "Continue" or "Quit"
+			 answer "LiveCode requires a 1024x768 display for editing (but not playback). If you continue, you may not be able to use all of the editing tools." with "Continue" or "Quit"
 			 if it is "Quit" then
 				put false into tSuccess
 			 end if
@@ -1094,7 +1094,7 @@ command revInternal__InitialiseSystem
    
 	   if tSuccess then
 		  if the screenDepth < 15 then
-			 answer "Revolution requires a full-colour display." with "Ok"
+			 answer "LiveCode requires a full-colour display." with "Ok"
 			 put false into tSuccess
 		  end if
 	   end if
