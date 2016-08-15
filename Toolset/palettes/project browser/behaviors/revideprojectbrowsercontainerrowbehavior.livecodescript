@@ -208,8 +208,19 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the foregroundColor of field "name" of me to revIDEColor("text_1")
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_3")
       set the foregroundColor of field "behaviorScriptLines" of me to  revIDEColor("text_3")
-      set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
-      set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_hiliteColor")
+      
+      if the scriptStatus of the cObjectLongID of me is "error" then
+         set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+      else
+         set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
+      end if
+      
+      if exists(the cBehaviorLongID of me) and the scriptStatus of the cBehaviorLongID of me is "error" then
+         set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+      else
+         set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_hiliteColor")
+      end if
+      
       set the colorOverlay of button "typeIcon" of me to empty
       set the foregroundColor of me to revIDEColor("dataView_disclosureIconColor")
       set the foregroundColor of widget "icon" of group "disclosure" of me to revIDEColor("dataView_disclosureIconColor")

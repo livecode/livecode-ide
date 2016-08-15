@@ -1227,6 +1227,9 @@ function __readPropertiesOfControlForDataView pList, @pData, pParentIndex, pLeve
             case "scriptlines"
                put the number of lines of the script of the target into pData[tIndex][tProp]
                break
+            case "scriptstatus"
+               put the scriptstatus of the target into pData[tIndex][tProp]
+               break
             case "behavior scriptlines"
                put the number of lines of the script of the behavior of the target into pData[tIndex][tProp]
                break
@@ -1350,6 +1353,9 @@ private on __fetchPropertyOfControl pProp, @pData
          case "scriptlines"
             put the number of lines of the script of the target into pData[pProp]
             break
+         case "scriptstatus"
+            put the scriptStatus of the target into pData[pProp]
+            break
          case "behavior scriptlines"
             put the number of lines of the script of the behavior of the target into pData[pProp]
             break
@@ -1414,6 +1420,9 @@ private function __readControlPropertiesForDataView pList
             case "scriptlines"
                put the number of lines of the script of the target into tData[tProp]
                break
+            case "scriptstatus"
+               put the scriptStatus of the target into tData[tProp]
+               break
             case "behavior scriptlines"
                put the number of lines of the script of the behavior of the target into tData[tProp]
                break
@@ -1469,9 +1478,9 @@ on revIDEInitialiseIDELibrary
    start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
    
    # Setup the default lists of properties to read from objects when reading the structure of a stack
-   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
-   put "scriptlines" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
-   put "scriptlines" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
+   put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "scriptstatus" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
+   put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sCardPropertiesToRead
+   put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
    
    ## Load Extensions
    revIDEInitialiseExtensions
@@ -1664,7 +1673,7 @@ function revIDEMessages
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
          & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged," \
-         & "ideTutorialProgressChanged,ideWindowsChanged" \
+         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove" \
          )
 end revIDEMessages
 
@@ -1727,11 +1736,6 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
-         next repeat
-      end if
-      
-      # If the stack isn't open, don't send a message
-      if the mode of revIDEStackOfObject(tObjectID) is 0 then 
          next repeat
       end if
       
@@ -2335,7 +2339,7 @@ function revIDEFrontScripts
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" & return & "long id" into tProperties
+   put "short name" & return & "scriptlines" & return & "scriptstatus" & return & "long id" into tProperties
    
    # Loop through the frontscripts getting the required properties
    # and build the return array
@@ -2362,7 +2366,7 @@ function revIDEBackScripts
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" & return & "long id" into tProperties
+   put "short name" & return & "scriptlines" & return & "scriptstatus" & return & "long id" into tProperties
    
    # Loop through the frontscripts getting the required properties
    # and build the return array
@@ -2388,7 +2392,7 @@ function revIDEStacksInUse
    
    # Create the list of properties to retrieve
    local tProperties
-   put "short name" & return & "scriptlines" into tProperties
+   put "short name" & return & "scriptstatus" & return & "scriptlines" into tProperties
    
    # Loop through the stacks in use getting the required properties
    # and build the return array
@@ -2625,6 +2629,9 @@ function revIDEColor pTag
          break
       case "dataView_scriptBackgroundColor"
          return "34,154,206"
+         break
+      case "dataView_scriptErrorBackgroundColor"
+         return "255,0,0"
          break
       case "dataView_disclosureIconColor"
          return "99,99,99"
@@ -3056,6 +3063,7 @@ function revIDEStackAudioClips pStack
          put "pwd" into tScriptLines
       end try
       put tScriptLines into tAudioClipArray[tClip]["scriptlines"]
+      put the scriptStatus of Audioclip tClip of pStack into tAudioClipArray[tClip]["scriptstatus"] 
 
       // Behavior
       if the behavior of Audioclip tClip of pStack is not empty then
@@ -3083,17 +3091,18 @@ end revIDEStackAudioClips
 
 function revIDEStackVideoClips pStack
    local tVideoClipCount, tVideoClipArray, tScriptLines, tBehavior, tBehaviorScriptLines, tAudioClipArray
-
+   
    -- MM-2013-09-16: [[ Bug 11280 ]] as a result of the fix for bug 11068, the engine is more strict in the way it processes references.
    -- Removed unecessary "stack" keywords.
    put the num of videoclips in pStack into tVideoClipCount
    repeat with tClip = 1 to tVideoClipCount
       put "videoclip" into tVideoClipArray[tClip]["type"]
       put the short name of videoclip tClip of pStack into tVideoClipArray[tClip]["name"]
-      put the number of lines in  the script of videoclip tClip of pStack into tAudioClipArray[tClip]["scriptlines"]
+      put the number of lines in  the script of videoclip tClip of pStack into tVideoClipArray[tClip]["scriptlines"]
+      put the scriptStatus of videoclip tClip of pStack into tVideoClipArray[tClip]["scriptstatus"]
       put the long id of videoclip tClip of pStack into tVideoClipArray[tClip]["long id"]
       put 3 into tVideoClipArray[tClip]["level"]
-
+      
       // Script
       try
          put the number of lines in  the script of videoclip tClip of pStack into tScriptLines
@@ -4163,6 +4172,9 @@ function revIDESpecialFolderPath pKey
          break
       case "tutorial"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
+         break
+      case "user tutorial"
+         return revEnvironmentCustomizationPath() & "/Interactive Tutorials"
          break
       case "globals"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
@@ -9842,18 +9854,46 @@ end revIDEFolderListing
 #############
 
 local sTutorialInfo
-on revIDETutorialInfoSet pCourse, pTutorial, pLesson
+on revIDETutorialInfoSet pCourse, pTutorial, pLesson, pLocation
    put pLesson into sTutorialInfo["lesson"]
    put pTutorial into sTutorialInfo["tutorial"]
    put pCourse into sTutorialInfo["course"]
+   if pLocation is empty then
+      put revIDESpecialFolderPath("tutorial") into pLocation
+   end if
+   put pLocation into sTutorialInfo["location"]
 end revIDETutorialInfoSet
 
 on revIDETutorialInfoSetEmpty
    put empty into sTutorialInfo
 end revIDETutorialInfoSetEmpty
 
+private function __tutorialLocations
+   return (revIDESpecialFolderPath("tutorial") & return & \
+         revIDESpecialFolderPath("user tutorial"))
+end __tutorialLocations
+
+private function __findTutorialLocation pCourse, pTutorial, pLesson
+   local tLocation 
+   repeat for each line tLocation in __tutorialLocations()
+      local tLessonPath
+      put revIDETutorialLessonPath(pCourse, pTutorial, pLesson, tLocation) into tLessonPath
+      if there is a file tLessonPath then
+         return tLocation
+      end if
+   end repeat
+   
+   return __revIDEError("tutorial not found" && pCourse && "-" && pTutorial && "-" && pLesson) for error
+end __findTutorialLocation
+
 on revIDEStartTutorial pCourse, pTutorial, pLesson
-   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   local tLocation
+   put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
+   if tLocation is empty then
+      exit revIDEStartTutorial
+   end if
+   
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson, tLocation
    dispatch "revTutorialStart" to stack "revTutorial"
    revIDETutorialProgressChanged
 end revIDEStartTutorial
@@ -9870,7 +9910,8 @@ end revIDETutorialInProgress
 
 function revIDETutorialResourcePath pTutorialInfo
    local tTutorialPath
-   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"]) & "/resources" into tTutorialPath
+   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"], \
+         pTutorialInfo["location"]) & "/resources" into tTutorialPath
    if there is a folder tTutorialPath then
       return tTutorialPath
    end if
@@ -9895,7 +9936,8 @@ function revIDETutorialInternalResource pRelativePath
    end switch
    
    local tInternalResourceBase
-   put revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"]) & "/_resources/" into tInternalResourceBase
+   put revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"], \ 
+         sTutorialInfo["location"]) & "/_resources/" into tInternalResourceBase
    
    local tCandidateFile
    if tPlatformFolder is not empty then
@@ -9914,7 +9956,7 @@ function revIDETutorialInternalResource pRelativePath
 end revIDETutorialInternalResource
 
 function revIDETutorialUserStackPath pStackTag
-   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
+   return (revIDESpecialFolderPath("user tutorial") & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
 end revIDETutorialUserStackPath
 
 on revIDETutorialSave pTaggedObjects, pStepName
@@ -10002,7 +10044,14 @@ private function __fetchAndRemoveControlTags pCard
 end __fetchAndRemoveControlTags
 
 on revIDETutorialLoad pCourse, pTutorial, pLesson
-   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   local tLocation
+   put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
+   
+   if tLocation is empty then
+      exit revIDETutorialLoad
+   end if
+
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson, tLocation
    
    local tCourseProgressA, tLessonDataA
    put revIDETutorialSavedCourseProgress(pCourse) into tCourseProgressA
@@ -10070,15 +10119,15 @@ end revIDETutorialListCourses
 /*
 Returns the path to the folder containing the given course
 */
-function revIDETutorialCoursePath pCourse
-   return revIDESpecialFolderPath("tutorial") & "/courses/" & pCourse
+function revIDETutorialCoursePath pCourse, pLocation
+   return pLocation & "/courses/" & pCourse
 end revIDETutorialCoursePath
 
 /*
 Returns the description of the given course
 */
-function revIDETutorialCourseDescription pCourse
-   return revIDEUTF8FileContents(revIDETutorialCoursePath(pCourse) \ 
+function revIDETutorialCourseDescription pCourse, pLocation
+   return revIDEUTF8FileContents(revIDETutorialCoursePath(pCourse, pLocation) \ 
          & slash & "description.txt")
 end revIDETutorialCourseDescription
 
@@ -10086,42 +10135,49 @@ end revIDETutorialCourseDescription
 Lists the tutorials in the folder for the given course
 */
 function revIDETutorialListTutorials pCourse
-   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) \ 
-         & slash & "tutorials", false)
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse, \ 
+         revIDESpecialFolderPath("tutorial")) & slash & "tutorials", false)
 end revIDETutorialListTutorials
 
 /*
 Returns the path to the folder containing the given tutorial
 */
-function revIDETutorialPath pCourse, pTutorial
-   return revIDETutorialCoursePath(pCourse) & "/tutorials/" & pTutorial
+function revIDETutorialPath pCourse, pTutorial, pLocation
+   return revIDETutorialCoursePath(pCourse, pLocation) & "/tutorials/" & pTutorial
 end revIDETutorialPath
 
 /*
 Returns the description of the given tutorial
 */
-function revIDETutorialDescription pCourse, pTutorial
-   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
+function revIDETutorialDescription pCourse, pTutorial, pLocation
+   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
          & slash & "description.txt")
 end revIDETutorialDescription
 
 /*
 Lists the lessons in the folder for the given tutorial of the given course
 */
-function revIDETutorialListLessons pCourse, pTutorial
+function revIDETutorialListLessons pCourse, pTutorial, pLocation
    local tFiles
-   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) \ 
+   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
          & slash & "lessons", true) into tFiles
    replace ".txt" with empty in tFiles
    return tFiles
 end revIDETutorialListLessons
 
 /*
+Returns the path to the specified lesson
+*/
+function revIDETutorialLessonPath pCourse, pTutorial, pLesson, pLocation
+   return revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
+         & slash &"lessons" & slash & pLesson & ".txt"
+end revIDETutorialLessonPath
+
+/*
 Returns the content of the specified lesson
 */
-function revIDETutorialLessonContent pCourse, pTutorial, pLesson
-   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
-         & slash &"lessons" & slash & pLesson & ".txt")
+function revIDETutorialLessonContent pCourse, pTutorial, pLesson, pLocation
+   return revIDEUTF8FileContents(revIDETutorialLessonPath(pCourse, pTutorial, pLesson, pLocation))
 end revIDETutorialLessonContent
 
 /*
