@@ -107,3 +107,8 @@ end returnInField
 on enterInField
    selectAll
 end enterInField
+
+command clearFilter
+   put empty into me
+   stopFiltering
+end clearFilter

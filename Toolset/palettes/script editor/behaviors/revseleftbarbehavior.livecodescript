@@ -36,7 +36,7 @@ command resize
    unlock screen
 end resize
 
-command update pDontUpdateSelectedHandler
+command update pDontUpdateSelectedHandler, pClearFilter
    lock screen
    
    local tObject, tFilter
@@ -66,14 +66,18 @@ command update pDontUpdateSelectedHandler
    set the cMinHeight of tObject to (the height of me - the height of tFilter)
    
    call "initializeWithoutGrabbingFocus" to tObject
-
+   
    -- Hook up the filter field to the list of handlers, and initialise it.
    set the cCallback of tFilter to "filterChanged"
    set the cCallbackTarget of tFilter to tObject
    set the cPlaceholderText of tFilter to "Filter..."
-
-   send "update" to tFilter
-
+   
+   if pClearFilter then
+      dispatch "clearFilter" to tFilter
+   else
+      send "update" to tFilter
+   end if
+   
    unlock screen
 end update
 
