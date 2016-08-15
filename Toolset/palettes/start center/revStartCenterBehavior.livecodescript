@@ -318,42 +318,42 @@ command startCenterSetState pStateID, pArray
          tilesSet pArray
          break
       case 10
-         if 1 is among the lines of the keys of pArray then
+         if 1 is among the keys of pArray then
             show widget "tile1"
          end if
          break
       case 11
-         if 2 is among the lines of the keys of pArray then
+         if 2 is among the keys of pArray then
             show widget "tile2"
          end if
          break
       case 12
-         if 3 is among the lines of the keys of pArray then
+         if 3 is among the keys of pArray then
             show widget "tile3"
          end if
          break
       case 13
-         if 4 is among the lines of the keys of pArray then
+         if 4 is among the keys of pArray then
             show widget "tile4"
          end if
          break
       case 14
-         if 5 is among the lines of the keys of pArray then
+         if 5 is among the keys of pArray then
             show widget "tile5"
          end if
          break
       case 15
-         if 6 is among the lines of the keys of pArray then
+         if 6 is among the keys of pArray then
             show widget "tile6"
          end if
          break
       case 16
-         if 7 is among the lines of the keys of pArray then
+         if 7 is among the keys of pArray then
             show widget "tile7"
          end if
          break
       case 17
-         if 8 is among the lines of the keys of pArray then
+         if 8 is among the keys of pArray then
             show widget "tile8"
          end if
          break
