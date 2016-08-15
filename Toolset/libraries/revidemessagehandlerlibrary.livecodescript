@@ -340,6 +340,18 @@ on moveControl
    pass moveControl
 end moveControl
 
+on mouseMove pX, pY
+   local tTarget, tParams
+   put the long id of the target into tTarget
+   if not revIDEStackIsIDEStack(tTarget) then
+      put pX into tParams[1]
+      put pY into tParams[2]
+      put tTarget into tParams[3]
+      send "ideMessageSendWithParameters" &&  "ideMouseMove, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   end if
+   pass mouseMove
+end mouseMove
+
 on mouseDown pButton
    local tTarget, tParams
    put the long id of the target into tTarget

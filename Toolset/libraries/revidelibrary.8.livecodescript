@@ -1673,7 +1673,7 @@ function revIDEMessages
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
          & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged," \
-         & "ideTutorialProgressChanged,ideWindowsChanged" \
+         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove" \
          )
 end revIDEMessages
 
@@ -1736,11 +1736,6 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
-         next repeat
-      end if
-      
-      # If the stack isn't open, don't send a message
-      if the mode of revIDEStackOfObject(tObjectID) is 0 then 
          next repeat
       end if
       
