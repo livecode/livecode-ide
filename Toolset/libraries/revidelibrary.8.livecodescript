@@ -4164,6 +4164,9 @@ function revIDESpecialFolderPath pKey
       case "tutorial"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/palettes/tutorial"
          break
+      case "user tutorial"
+         return revEnvironmentCustomizationPath() & "/Interactive Tutorials"
+         break
       case "globals"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/global_properties"
          break
@@ -9842,18 +9845,46 @@ end revIDEFolderListing
 #############
 
 local sTutorialInfo
-on revIDETutorialInfoSet pCourse, pTutorial, pLesson
+on revIDETutorialInfoSet pCourse, pTutorial, pLesson, pLocation
    put pLesson into sTutorialInfo["lesson"]
    put pTutorial into sTutorialInfo["tutorial"]
    put pCourse into sTutorialInfo["course"]
+   if pLocation is empty then
+      put revIDESpecialFolderPath("tutorial") into pLocation
+   end if
+   put pLocation into sTutorialInfo["location"]
 end revIDETutorialInfoSet
 
 on revIDETutorialInfoSetEmpty
    put empty into sTutorialInfo
 end revIDETutorialInfoSetEmpty
 
+private function __tutorialLocations
+   return (revIDESpecialFolderPath("tutorial") & return & \
+         revIDESpecialFolderPath("user tutorial"))
+end __tutorialLocations
+
+private function __findTutorialLocation pCourse, pTutorial, pLesson
+   local tLocation 
+   repeat for each line tLocation in __tutorialLocations()
+      local tLessonPath
+      put revIDETutorialLessonPath(pCourse, pTutorial, pLesson, tLocation) into tLessonPath
+      if there is a file tLessonPath then
+         return tLocation
+      end if
+   end repeat
+   
+   return __revIDEError("tutorial not found" && pCourse && "-" && pTutorial && "-" && pLesson) for error
+end __findTutorialLocation
+
 on revIDEStartTutorial pCourse, pTutorial, pLesson
-   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   local tLocation
+   put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
+   if tLocation is empty then
+      exit revIDEStartTutorial
+   end if
+   
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson, tLocation
    dispatch "revTutorialStart" to stack "revTutorial"
    revIDETutorialProgressChanged
 end revIDEStartTutorial
@@ -9870,7 +9901,8 @@ end revIDETutorialInProgress
 
 function revIDETutorialResourcePath pTutorialInfo
    local tTutorialPath
-   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"]) & "/resources" into tTutorialPath
+   put revIDETutorialPath(pTutorialInfo["course"], pTutorialInfo["tutorial"], \
+         pTutorialInfo["location"]) & "/resources" into tTutorialPath
    if there is a folder tTutorialPath then
       return tTutorialPath
    end if
@@ -9895,7 +9927,8 @@ function revIDETutorialInternalResource pRelativePath
    end switch
    
    local tInternalResourceBase
-   put revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"]) & "/_resources/" into tInternalResourceBase
+   put revIDETutorialPath(sTutorialInfo["course"], sTutorialInfo["tutorial"], \ 
+         sTutorialInfo["location"]) & "/_resources/" into tInternalResourceBase
    
    local tCandidateFile
    if tPlatformFolder is not empty then
@@ -9914,7 +9947,7 @@ function revIDETutorialInternalResource pRelativePath
 end revIDETutorialInternalResource
 
 function revIDETutorialUserStackPath pStackTag
-   return (revEnvironmentCustomizationPath() & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
+   return (revIDESpecialFolderPath("user tutorial") & slash & "Tutorial Data" & slash & sTutorialInfo["course"] & slash & sTutorialInfo["tutorial"] & slash & sTutorialInfo["lesson"] & "-" & pStackTag &".livecode")
 end revIDETutorialUserStackPath
 
 on revIDETutorialSave pTaggedObjects, pStepName
@@ -10002,7 +10035,14 @@ private function __fetchAndRemoveControlTags pCard
 end __fetchAndRemoveControlTags
 
 on revIDETutorialLoad pCourse, pTutorial, pLesson
-   revIDETutorialInfoSet pCourse, pTutorial, pLesson
+   local tLocation
+   put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
+   
+   if tLocation is empty then
+      exit revIDETutorialLoad
+   end if
+
+   revIDETutorialInfoSet pCourse, pTutorial, pLesson, tLocation
    
    local tCourseProgressA, tLessonDataA
    put revIDETutorialSavedCourseProgress(pCourse) into tCourseProgressA
@@ -10070,15 +10110,15 @@ end revIDETutorialListCourses
 /*
 Returns the path to the folder containing the given course
 */
-function revIDETutorialCoursePath pCourse
-   return revIDESpecialFolderPath("tutorial") & "/courses/" & pCourse
+function revIDETutorialCoursePath pCourse, pLocation
+   return pLocation & "/courses/" & pCourse
 end revIDETutorialCoursePath
 
 /*
 Returns the description of the given course
 */
-function revIDETutorialCourseDescription pCourse
-   return revIDEUTF8FileContents(revIDETutorialCoursePath(pCourse) \ 
+function revIDETutorialCourseDescription pCourse, pLocation
+   return revIDEUTF8FileContents(revIDETutorialCoursePath(pCourse, pLocation) \ 
          & slash & "description.txt")
 end revIDETutorialCourseDescription
 
@@ -10086,42 +10126,49 @@ end revIDETutorialCourseDescription
 Lists the tutorials in the folder for the given course
 */
 function revIDETutorialListTutorials pCourse
-   return revIDEFolderListing(revIDETutorialCoursePath(pCourse) \ 
-         & slash & "tutorials", false)
+   return revIDEFolderListing(revIDETutorialCoursePath(pCourse, \ 
+         revIDESpecialFolderPath("tutorial")) & slash & "tutorials", false)
 end revIDETutorialListTutorials
 
 /*
 Returns the path to the folder containing the given tutorial
 */
-function revIDETutorialPath pCourse, pTutorial
-   return revIDETutorialCoursePath(pCourse) & "/tutorials/" & pTutorial
+function revIDETutorialPath pCourse, pTutorial, pLocation
+   return revIDETutorialCoursePath(pCourse, pLocation) & "/tutorials/" & pTutorial
 end revIDETutorialPath
 
 /*
 Returns the description of the given tutorial
 */
-function revIDETutorialDescription pCourse, pTutorial
-   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
+function revIDETutorialDescription pCourse, pTutorial, pLocation
+   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
          & slash & "description.txt")
 end revIDETutorialDescription
 
 /*
 Lists the lessons in the folder for the given tutorial of the given course
 */
-function revIDETutorialListLessons pCourse, pTutorial
+function revIDETutorialListLessons pCourse, pTutorial, pLocation
    local tFiles
-   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial) \ 
+   put revIDEFolderListing(revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
          & slash & "lessons", true) into tFiles
    replace ".txt" with empty in tFiles
    return tFiles
 end revIDETutorialListLessons
 
 /*
+Returns the path to the specified lesson
+*/
+function revIDETutorialLessonPath pCourse, pTutorial, pLesson, pLocation
+   return revIDETutorialPath(pCourse, pTutorial, pLocation) \ 
+         & slash &"lessons" & slash & pLesson & ".txt"
+end revIDETutorialLessonPath
+
+/*
 Returns the content of the specified lesson
 */
-function revIDETutorialLessonContent pCourse, pTutorial, pLesson
-   return revIDEUTF8FileContents(revIDETutorialPath(pCourse, pTutorial) \ 
-         & slash &"lessons" & slash & pLesson & ".txt")
+function revIDETutorialLessonContent pCourse, pTutorial, pLesson, pLocation
+   return revIDEUTF8FileContents(revIDETutorialLessonPath(pCourse, pTutorial, pLesson, pLocation))
 end revIDETutorialLessonContent
 
 /*
