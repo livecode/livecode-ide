@@ -41,6 +41,12 @@ local sLastShownExecutionPoint
 #   Sets the current object to edit to pObject. If pStartingLine is given, then seeks to that line
 #   otherwise seeks to the last selected line.
 command revSESetCurrentObject pObject, pStartingLine, pDontSendCallbacks
+   lock screen
+   
+   revSEGetCurrentObject
+   if the result is not empty and the long id of pObject is the long id of the result then
+       exit revSESetCurrentObject
+   end if
    # Check that pObject is one of the target objects, if not then just do nothing
    local tTargetObjects
    revSEGetTargetObjects
@@ -66,10 +72,11 @@ command revSESetCurrentObject pObject, pStartingLine, pDontSendCallbacks
    # After a new object has been set we need to update the toolbar, as the compile, undo and redo buttons need to be
    # updated.
    call "update" to group "Toolbar" of me
-   call "update" to group "Left Bar" of me
+   dispatch "update" to group "Left Bar" of me with false, true
    
    seUpdateWindowTitle tObject
-    set the allowInterrupts to tOldAllowInterrupts
+   set the allowInterrupts to tOldAllowInterrupts
+   unlock screen
 end revSESetCurrentObject
 
 # Description
