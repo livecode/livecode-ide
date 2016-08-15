@@ -83,7 +83,7 @@ private command __loadExtension pExtensionFile
    end if
    
    ## Check if already loaded
-   if tExtensionID is not among the lines of the keys of sExtensionData then
+   if tExtensionID is not among the keys of sExtensionData then
       put the keys of sExtensionDataForDisplay into tKeys
       replace return with comma in tKeys
       put max(tKeys) + 1 into tIndex
