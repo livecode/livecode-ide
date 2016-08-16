@@ -7181,14 +7181,21 @@ on revIDESnapshotSelectedObjects
 end revIDESnapshotSelectedObjects
 
 function revIDEStackFileVersion pStackFile
-      open file pStackFile for binary read
-      read from file pStackFile for 8
-      close file pStackFile
-      if it begins with "REVO" then
-         return (byte 5 of it & "." & byte 6 of it)
-      else
-         return "2.4"
-      end if
+   open file pStackFile for binary read
+   read from file pStackFile for 8
+   close file pStackFile
+   if it begins with "REVO" then
+      delete byte 1 to 4 of it
+      
+      if it mod 100 is 0 then
+         return it div 1000 & "." & it mod 1000 div 100
+      else
+         -- just in case
+         return it div 1000 & "." & it mod 1000 div 100 & "." & it mod 100 div 10
+      end if
+   else
+      return "2.4"
+   end if
 end revIDEStackFileVersion
 
 function revIDEStackFileIsScriptOnly pStackFile
@@ -7294,18 +7301,35 @@ on revIDESaveStack pStackID
    put the effective filename of stack tStackName into tStackFilename
    
    local tStackFileVersion
+   global gRevStackStatus
    
-   if the cPreserveStackVersion of stack "revPreferences" is true then
+   if revIDEGetPreference("cPreserveStackVersion") is true then
       put revIDEStackFileVersion(tStackFilename) into tStackFileVersion
+      
+      local tFileVersions
+      put tStackFileVersion into tFileVersions[1]
+      put the minStackFileVersion of stack tStackName into tFileVersions[2]
+      if highestVersionNumber(tStackFileVersion, tFileVersions[2]) is 2 then
+         answer revIDELocalise("The preference to preserve stack file formats is is set," && \
+               "however, saving this stack file as version %1 will result in data loss." && \
+               "The minimum stack file version for this stack is %2.", tFileVersions) \
+               with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
+         if it is revIDELocalise("Cancel") then
+            put "edited" into gREVStackStatus[tStackName]
+            close stack "revSaving"
+            return "Cancelled"
+         else if it is revIDELocalise("Save as %2", tFileVersions) then
+            put tFileVersions[2] into tStackFileVersion
+         end if
+      end if
    end if
    
    local tStackFileIsScriptOnly
    put revIDEStackFileIsScriptOnly(tStackFilename) into tStackFileIsScriptOnly
    
-   global gRevStackStatus
-   # Display warning if user has not selected the latest file format
    if the scriptOnly of stack tStackName and not tStackFileIsScriptOnly then
-      answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
+      answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved." && \
+            "Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tStackName]
          close stack "revSaving"
@@ -7536,12 +7560,10 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    end switch
    put the result into tVersion
    
-   local tLegacy
-   put true into tLegacy
    switch tVersion
       case revIDELocalise("Legacy LiveCode Stack (8.0)")
-	     put 8.0 into tVersion
-		 break
+         put 8.0 into tVersion
+         break
       case revIDELocalise("Legacy LiveCode Stack (7.0)")
          put 7.0 into tVersion
          break
@@ -7556,17 +7578,16 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
       default
          put empty into tVersion
-         put false into tLegacy
          break
    end switch
-
+   
    global gRevStackStatus
    # User cancelled the the ask dialog
    if it is empty then
       put "edited" into gREVStackStatus[tShortName]
       return "Cancelled"
    end if
-
+   
    # MacOS Auotmatically appends the filetype to the filename
    local tFilePath
    if the platform is not "MacOS" and not (it ends with ".rev" or it ends with ".livecode") then
@@ -7576,19 +7597,26 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       end if
    end if
    put it into tFilePath
-
-   # Display warning if user has not selected the latest file format
-   if tLegacy then
-      answer revIDELocalise("Saving in legacy format may result in loss of data if you are using recent LiveCode features. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
-      if it is not revIDELocalise("Yes") then
+   
+   local tFileVersions
+   put tVersion into tFileVersions[1]
+   put the minStackFileVersion of stack tShortName into tFileVersions[2]
+   if highestVersionNumber(tVersion, tFileVersions[2]) is 2 then
+      answer revIDELocalise("Saving this stack file as version %1 will result in data loss." && \
+            "The minimum stack file version for this stack is %2.", tFileVersions) \
+            with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
+      if it is revIDELocalise("Cancel") then
          put "edited" into gREVStackStatus[tShortName]
          return "Cancelled"
+      else if it is revIDELocalise("Save as %2", tFileVersions) then
+         put tFileVersions[2] into tVersion
       end if
    end if
    
    # Display warning if user has not selected the latest file format
    if the scriptOnly of stack tShortName and not tStackFileIsScriptOnly then
-      answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
+      answer revIDELocalise("Saving in script only format will result in loss of data as only" & \
+            " the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
          put "edited" into gREVStackStatus[tShortName]
          return "Cancelled"
