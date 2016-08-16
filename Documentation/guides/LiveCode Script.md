@@ -326,73 +326,39 @@ Click this button to log in to your LiveCode online store account.
 There you can see your purchases, as well as look for useful add-ons 
 to make LiveCode and even more powerful development tool.
 
-### Dictionary: Language API and User Guides
+### Dictionary
 
-The Dictionary contains the complete LiveCode syntax. This can be
-searched using the quick search box in the top right of the dictionary
-or filtered using the list of topics on the left.
+The LiveCode Dictionary contains detailed reference materials for developing applications with LiveCode. It is divided into two main sections&mdash;the LiveCode API reference and the LiveCode Guides. It can be accessed by choosing **Dictionary (API)** from the **Help** menu, or by clicking the Dictionary icon on the LiveCode Toolbar.
+
+![](images/toolbar-dict.png)
+
+#### LiveCode APIs
+
+The LiveCode Application Programming Interface, or API, reference contains the complete syntax for all LiveCode components, including LiveCode Script, LiveCode Builder, and all installed widgets and libraries. If you are new to LiveCode you will likely spend most of your time in LiveCode Script, the scripting language used in developing LiveCode applications. The examples that follow will be taken from the LiveCode Script API, but the API documentation for all components uses the same format and layout.
 
 ![](images/image4.png)
 
-When the selected filter is “All” the keyword index will contain all the
-entries in the dictionary. The number of entries will decrease when a
-different filter is chosen as only the syntax for that topic will be
-shown.
+To search one of the API lists, click on the API tab at top left, then choose the API you want to search from the option list. For example, to search for a LiveCode Script term, choose LiveCode Script.
 
-![](images/image5.png)
+**Searching.** If you know what term you want to look up, or if you have a good idea of what it might be, just start typing it into the search box, and a list of terms that match your search term will appear in the entries list. 
 
-![](images/image6.png)
 
-The documentation for a Dictionary entry can be viewed by clicking on
-the entry header in the keyword index. This will show the entry in the
-area underneath the data view list. To expand the entry to fill the
-window, double click the entry in the list. To get back to the previous
-view use the back button.
+![](images/dict-search.png)
 
-![](images/image7.png)
+**Filtering.** If, on the other hand, you don’t know the name of the term, but have a general idea of what terms you want to look at you can filter the list of terms by clicking on a filter topic. For instance, to see a list of messages that buttons can respond to, click "message" under the **type** category and "button" under **associations**. You can clear a filter by clicking again on the selected filter.
 
-![](images/image8.png)
+![](images/dict-filter.png)
 
-The Dictionary itself has two viewing modes; single column view and
-multiple column view. When in single column view, only the keyword for
-each dictionary entry will be shown in the keyword index. In multiple
-column view you can choose which items to see for each entry. The items
-can be chosen via the Preferences pane or by right-clicking on the
-column headings themselves (when in multiple column view).
+Note that the entries list displays only the entry name, token type, and syntax for the entry. You can view the complete entry by clicking on the desired line in the list. This will show the entry in the area underneath the entries list. Each LiveCode scripting term is thoroughly documented with the proper syntax, detailed examples, a detailed description, related terms, and more.
 
-![](images/image9.png)
 
-![](images/image10.png)
+![](images/dict-entry.png)
 
-At the bottom of each dictionary entry, there is a box titled “User
-contributed notes”. This will contain any comments made by other
-LiveCode users about the keyword documented above. It is worth having a
-quick look over these notes as they may often explain ways to do things
-more easily or efficiently, or show how to avoid potential problems.
+#### LiveCode User Guides
 
-If you wish to contribute notes yourself, or to give feedback on the
-helpfulness of existing notes, you will need a RevOnline account. Please
-see the section on RevOnline below, to find out more about RevOnline. If
-you are not logged into your RevOnline account, the dictionary will ask
-you to do so before adding or rating notes.
+The User Guides are a complete reference to LiveCode. They detail what the dialogs and windows within the development environment do, and explain the LiveCode language in depth. To open a guide, click on the Guide tab in the Dictionary and choose the desired guide from the list.
 
-![](images/image11.png)
-
-Once you are logged in, you will be able to submit your own notes to any
-dictionary entry. All submissions get queued for approval by the
-RevOnline team. You will normally receive an email within a few days
-indicating whether or not the note was approved.
-
-There are no formatting options available, so your note will appear just
-as it does in the entry field, with one exception. Anything enclosed in
-xml tags will be treated as a LiveCode code snippet, indented and
-colored.
-
-![](images/image12.png)
-
-In order to achieve the best possible user experience and to maximize
-the chances of your submissions being approved, please try to adhere to
-the guidelines described in the “About Notes” pop-up box.
+![](images/guides.png)
 
 ### RevOnline
 
@@ -633,12 +599,6 @@ pickup changes made to the online content made by other users. If the
 text only searches option is checked RevOnline will only retrieve the
 text data for the search list previews which can also improve
 performance.
-
-### User Guides
-
-The User Guides are a complete reference to LiveCode. They detail what
-the dialogs and windows within the development environment do, and
-explain the LiveCode language in depth.
 
 ## Additional Resources
 
