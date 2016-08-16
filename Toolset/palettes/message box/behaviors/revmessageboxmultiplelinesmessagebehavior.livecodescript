@@ -5,6 +5,7 @@ on enterInField
    ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
+      _internal script colorize char 1 to (the number of chars of me) of me
       local tMessage
       put the text of me into tMessage
       replace return with "\n" in tMessage

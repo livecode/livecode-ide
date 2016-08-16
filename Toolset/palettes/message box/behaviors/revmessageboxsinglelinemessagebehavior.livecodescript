@@ -5,6 +5,7 @@ on returnInField
    ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
+      _internal script colorize char 1 to (the number of chars of me) of me
       revIDEConsoleHistoryAdd(the text of me)
    end if
    revInitialise
