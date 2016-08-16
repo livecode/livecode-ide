@@ -671,94 +671,38 @@ function revPoints pGraphic
   return tResult
 end revPoints
 
-
-----polygon rotation functions (used by menu bar)
---on revRotatePoly pGraphic, pAngle
---  put the topLeft of pGraphic into tTopLeft
---  put revPoints(pGraphic) into tPoints
---  put the loc of pGraphic into tLoc
---  put sin(pAngle * (pi / 180)) into tSinAngle
---  put cos(pAngle * (pi / 180)) into tCosAngle
---  put (number of items of tPoints) div 2 into tNumItems
---  repeat with i = 1 to tNumItems
---    put (item (i + (i - 1)) of tPoints) into tCurrentH -- + item 1 of the center
---    put (item (i + i) of tPoints) into tCurrentV -- + item 2 of the center
---    put trunc((tCosAngle * tCurrentH) - (tSinAngle * tCurrentV)) into tTempH
---    put trunc((tSinAngle * tCurrentH) + (tCosAngle * tCurrentV)) into tTempV
---    put tTempH + (item 1 of tPoints) into tCurrentH
---    put tTempV + (item 2 of tPoints) into tCurrentV
---    put tCurrentH,tCurrentV & comma after tFinalPoints
---  end repeat
---  delete last char of tFinalPoints
---  set the points of pGraphic to tFinalPoints
---  set the topLeft of pGraphic to tTopLeft
---end revRotatePoly
---
---function revPoints pGraphic
---  put the number of lines in the points of pGraphic into tNumPoints
---  put empty into tResult
---  put item 1 of loc of pGraphic into tStartlH
---  put item 2 of loc of pGraphic into tStartV
---  put the points of pGraphic into tPoints
---  replace cr with comma in tPoints
---  if last char of tPoints is comma then delete last char of tPoints
---  repeat with i = 1 to tNumPoints
---    put (item (i + (i - 1)) of tPoints) - tStartlH into tCurrentH
---    put (item (i + i) of tPoints) - tStartV into tCurrentV
---    put tCurrentH,tCurrentV & comma after tResult
---  end repeat
---  delete last char of tResult
---  return tResult
---end revPoints
-
-
-
 --Path Conversion Functions
 
-function revUnixFromMacPath thePath,assumeOSX
-  local numberOfLevels
-  if assumeOSX is empty then -- set default based on current OS
-    set the itemDelimiter to "."
-    if the platform is "MacOS" and item 1 of the systemVersion is "10"
-    then put true into assumeOSX
-    else put false into assumeOSX
-  end if
-  
-  if char 1 of thePath is colon then -- relative path
-    repeat while char 1 of thePath is colon
-      delete char 1 of thePath
-      add 1 to numberOfLevels -- keep track
-    end repeat
-    if numberOfLevels is 1 then
-      put ".:" before thePath
-    else -- more than one level
-      repeat for (numberOfLevels - 1) times
-        put "..:" before thePath
+function revUnixFromMacPath thePath
+   local numberOfLevels
+   
+   if char 1 of thePath is colon then -- relative path
+      repeat while char 1 of thePath is colon
+         delete char 1 of thePath
+         add 1 to numberOfLevels -- keep track
       end repeat
-    end if
-  else -- colon is not char 1 - therefore it's an absolute path
-    set the itemDelimiter to colon
-    if assumeOSX then
+      if numberOfLevels is 1 then
+         put ".:" before thePath
+      else -- more than one level
+         repeat for (numberOfLevels - 1) times
+            put "..:" before thePath
+         end repeat
+      end if
+   else -- colon is not char 1 - therefore it's an absolute path
+      set the itemDelimiter to colon
       if line 1 of the drives is item 1 of thePath then delete item 1 of thePath -- startup drive
       else put "Volumes:" before thePath -- non-startup drives are rooted in the Volumes dir on OS X
-    end if
-    put colon before thePath -- will be transformed to slash
-  end if
-  
-  replace colon with linefeed in thePath
-  replace "/" with colon in thePath
-  replace linefeed with "/" in thePath
-  return thePath
+      put colon before thePath -- will be transformed to slash
+   end if
+   
+   replace colon with linefeed in thePath
+   replace "/" with colon in thePath
+   replace linefeed with "/" in thePath
+   return thePath
 end revUnixFromMacPath
 
-function revMacFromUnixPath thePath,assumeOSX
+function revMacFromUnixPath thePath
   local numberOfLevels
-  if assumeOSX is empty then -- set default based on current OS
-    set the itemDelimiter to "."
-    if the platform is "MacOS" and item 1 of the systemVersion is "10"
-    then put true into assumeOSX
-    else put false into assumeOSX
-  end if
   
   -- MW-2008-02-28: [[ Bug 5678 ]] Make sure we resolve the UNIX ~ component as MacOS
   --   paths don't support this
@@ -787,7 +731,7 @@ function revMacFromUnixPath thePath,assumeOSX
     end repeat
   end if
   
-  if char 1 of thePath is not ":" and assumeOSX then
+  if char 1 of thePath is not ":" then
     -- it's an absolute path, so adjust for OS X if necessary
     set the itemDelimiter to ":"
     if item 1 of thePath is "Volumes" then delete item 1 of thePath -- non-startup disk
@@ -1024,54 +968,14 @@ on revDeleteFolder pSrcFolder
 end revDeleteFolder
 
 on revMoveFolder pSrcFolder, pDestFolder
-  if the platform is "MacOS" and char 1 of the systemVersion is not "1" then
-    if "applescript" is in the alternateLanguages then
-      do revAppleScriptFull("moveFolder",pSrcFolder,pDestFolder) as "applescript"
-    else return "Error: AppleScript not installed"
-  else if the platform is "Win32" then
-    revSetWindowsShellCommand
-    get shell ("move /Y" && revWindowsFromUnixPath(quote&pSrcFolder&quote) && revWindowsFromUnixPath(quote&pDestFolder&quote))
-  else
-    get shell ("mv -f" && quote&pSrcFolder&quote && quote&pDestFolder&quote)
-  end if
-  return the result
+   if the platform is "Win32" then
+      revSetWindowsShellCommand
+      get shell ("move /Y" && revWindowsFromUnixPath(quote&pSrcFolder&quote) && revWindowsFromUnixPath(quote&pDestFolder&quote))
+   else
+      get shell ("mv -f" && quote&pSrcFolder&quote && quote&pDestFolder&quote)
+   end if
+   return the result
 end revMoveFolder
-
---function revPathtoApplescript pPath
---  put empty into tApplescript
---  set itemdelimiter to "/"
---  put the number of items in pPath into tNumItems
---  replace "\" with "\\" in pPath
---  replace quote with "\" & quote in pPath
---  
---  if "/Desktop Folder/" is in pPath
---  then
---    repeat with i = tNumItems down to 3
---      if i > 4 then
---        put tApplescript && quote & item i of pPath & quote && "of folder" into tApplescript
---      else
---        if i = 3 then
---          put tApplescript && quote & item i of pPath & quote into tApplescript
---        else
---          put tApplescript && quote & item i of pPath & quote && "of folder" into tApplescript
---        end if
---      end if
---    end repeat
---  else
---    repeat with i = tNumItems down to 2
---      if i > 3 then
---        put tApplescript && quote & item i of pPath & quote && "of folder" into tApplescript
---      else
---        if i = 2 then
---          put tApplescript && quote & item i of pPath & quote into tApplescript
---        else
---          put tApplescript && quote & item i of pPath & quote && "of disk" into tApplescript
---        end if
---      end if
---    end repeat
---  end if
---  return tApplescript
---end revPathtoApplescript
 
 function revPathtoApplescript pPath
    local tApplescript
@@ -1124,36 +1028,6 @@ private function createCopyFileResult pPath, pDestination
       return tFolder & slash & tPath
    end if
 end createCopyFileResult
-
---function revApplescriptFull pfunction,pSrc,pDest
---   switch pfunction
---      case "deleteFolder"
---         put "tell application" && quote & "Finder" & quote & cr & tab & "delete folder" && revPathtoApplescript(pSrc) && cr & "end tell" into tApplescriptfull
---         exit switch
---      case "copyFile"
---         if there is a folder pDest then
---            put "tell application" && quote & "Finder" & quote & cr & tab & "copy file" && revPathtoApplescript(pSrc) && "to folder" && revPathtoApplescript(pDest) && cr & "end tell" into tApplescriptfull
---         else
---            set the itemDel to "/"
---            put item -1 of pDest into tFile
---            put item 1 to -2 of pDest into tDest
---            put item -1 of pSrc into tOrig
---            --put "tell application" && quote & "Finder" & quote & cr & tab & "copy file" && revPathtoApplescript(pSrc) && "to folder" && revPathtoApplescript(tDest) && cr & tab & "set name of file" && revPathtoApplescript(tDest & "/" & tOrig) && "to" && quote & tFile & quote & cr & "end tell" into tApplescriptfull
---            put "tell application " & quote & "Finder" & quote & return & " duplicate file " & revPathtoApplescript(pSrc) & " to folder " & revPathtoApplescript(tDest) & " without replacing" & return & "set name of file " & revPathtoApplescript(tDest & "/" & tOrig) & " to " & quote & tFile & quote & return & "end tell" into tApplescriptfull
---         end if
---         exit switch
---      case "copyPackage"
---         put "tell application" && quote & "Finder" & quote & cr & tab & "copy package" && revPathtoApplescript(pSrc) && "to folder" && revPathtoApplescript(pDest) && cr & "end tell" into tApplescriptfull
---         exit switch
---      case "copyFolder"
---         put "tell application" && quote & "Finder" & quote & cr & tab & "copy folder" && revPathtoApplescript(pSrc) && "to folder" && revPathtoApplescript(pDest) && cr & "end tell" into tApplescriptfull
---         exit switch
---      case "moveFolder"
---         put "tell application" && quote & "Finder" & quote & cr & tab & "move folder" && revPathtoApplescript(pSrc) && "to folder" && revPathtoApplescript(pDest) && cr & "end tell" into tApplescriptfull
---         exit switch
---   end switch
---   return tApplescriptfull
---end revApplescriptFull
 
 function revApplescriptFull pFunction, pSrc, pDest
    local tScript
@@ -1239,19 +1113,6 @@ private function buildCopyFileApplescript pSrc, pDest, pReplace
    
    return tScript
 end buildCopyFileApplescript
-
-
--- MW-2011-01-05: [[ Bug 9267 ]] Although deprecated as of 4.5, for backwards compatibility
---   this function returns 'Enterprise'. This is the feature set which LiveCode has from 4.5 onwards.
---function revLicenseType
---   local tType
---   if the environment is not "development" then
---      put "Standalone" into tType
---   else
---      put "Enterprise" into tType
---   end if
---   return tType
---end revLicenseType
 
 on revChangeWindowSize pWidth, pHeight, pSlide, pCard, pDelay
    global gREVResizeTime
