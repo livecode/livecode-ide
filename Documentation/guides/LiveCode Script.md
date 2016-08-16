@@ -259,13 +259,13 @@ a list of your most recently opened stacks.
 
 LiveCode maintains pages on popular social media sites, such as Facebook, 
 YouTube, LinkedIn and Stack Overflow. These can help you keep up to date 
-LiveCode product announcements, professional networking, and help and 
+on LiveCode product announcements, professional networking, and help and 
 training resources.
 
 #### Recent Stacks
 
-This shows a list of your most recently stacks. Double click on a stack 
-to open it and close the Start Center window.
+This shows a list of your most recently opened stacks. Double click on a 
+stack to open it and close the Start Center window.
 
 #### Quick Links
 
@@ -275,15 +275,36 @@ of these links:
 
 ##### Interactive Welcome
 
+Enter the Interactive Tour, a step-by-step tutorial that guides you 
+through creation of a simple project in LiveCode.
+
 ##### New
+
+Click this button to create a new stack. You will see a menu of common 
+stack types and sizes to choose from. Once you choose your stack size 
+or type the new stack will be created and the Start Center menu will close.
 
 ##### Sample Projects
 
+The Sample Projects button opens an online repository of sample stacks 
+submitted by LiveCode developers. The repository contains dozens of 
+stacks that you can download for free and use as you wish.
+
 ##### Tutorials
+
+Opens the LiveCode online tutorial web page. From here you can choose 
+one of dozens of lessons and how-to tutorials that give you step-by-step 
+instructions on how to create things, from a simple "hello world" 
+application to simple games to sophisticated graphical effects.
 
 ##### In Depth Guides
 
-##### User Forums
+Opens the LiveCode Dictionary. Here you can choose to enter the API 
+documentation, the definitive reference of all of the terms in the 
+LiveCode scripting language. Or you can open one of several user 
+guides, which describe in detail how to develop and deploy apps in LiveCode. 
+
+##### Forums
 
 LiveCode has a very active and friendly user community. We encourage all
 new users to sign up to our mailing list and user forums as they are a
@@ -294,9 +315,13 @@ of links to the most recent posts which have been made.
 
 ##### Blog
 
+This button takes you to LiveCode's online blog, where LiveCode engineers and developers regularly post updates about what's new in LiveCode, how-to tutorials, and announcements of interest to the LiveCode developer community.
+
 ##### Account
 
-### Dictionary
+Click this button to log in to your LiveCode online store account. There you can see your purchases, as well as look for useful add-ons to make LiveCode and even more powerful development tool.
+
+### Dictionary: Language API and User Guides
 
 The Dictionary contains the complete LiveCode syntax. This can be
 searched using the quick search box in the top right of the dictionary
