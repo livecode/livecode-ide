@@ -315,11 +315,16 @@ of links to the most recent posts which have been made.
 
 ##### Blog
 
-This button takes you to LiveCode's online blog, where LiveCode engineers and developers regularly post updates about what's new in LiveCode, how-to tutorials, and announcements of interest to the LiveCode developer community.
+This button takes you to LiveCode's online blog, where LiveCode engineers
+and developers regularly post updates about what's new in LiveCode, 
+how-to tutorials, and announcements of interest to the LiveCode 
+developer community.
 
 ##### Account
 
-Click this button to log in to your LiveCode online store account. There you can see your purchases, as well as look for useful add-ons to make LiveCode and even more powerful development tool.
+Click this button to log in to your LiveCode online store account. 
+There you can see your purchases, as well as look for useful add-ons 
+to make LiveCode and even more powerful development tool.
 
 ### Dictionary: Language API and User Guides
 
