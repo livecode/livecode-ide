@@ -947,16 +947,11 @@ end revCopyPackage
 
 
 on revDeleteFolder pSrcFolder
-   if the platform is "MacOS" and char 1 of the systemVersion is not "1" then
-      if "applescript" is in the alternateLanguages then
-         # OK-2009-02-11 : Removed unquoted literal pDestFolder
-         --do revAppleScriptFull("deleteFolder",pSrcFolder,pDestFolder) as applescript
-         do revAppleScriptFull("deleteFolder", pSrcFolder) as "applescript"
-      else return "Error: AppleScript not installed"
-   else if the platform is "Win32" then
+   set the itemdelimiter to "."
+   if the platform is "Win32" then
       revSetWindowsShellCommand
       -- check for Win 2000, XP, Vista
-      if char 1 of word 2 of the systemVersion >= "5" then
+      if item 1 of (word 2 of the systemVersion) >= "5" then
          get shell ("rmdir /s /q" && revWindowsFromUnixPath(quote&pSrcFolder&quote))
       else
          get shell ("deltree /Y" && revWindowsFromUnixPath(quote&pSrcFolder&quote))
