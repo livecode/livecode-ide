@@ -103,7 +103,7 @@ on mouseUp
          break
       case "import"
          local tFile
-         revIDEAnswerFile "text"
+         revIDEAnswerFileWithTypes "text,all"
          put the result into tFile
          
          if tFile is not "cancel" then
