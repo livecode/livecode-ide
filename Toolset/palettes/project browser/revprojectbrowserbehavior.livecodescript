@@ -2398,7 +2398,16 @@ on pbRightClick pObject
    if tVisibleRow is not among the items of tHilited then
       set the dvHilitedRows of group "objectList" of me to tVisibleRow
    end if
-   revIDEPopupContextualMenu pbSelectedObjects()
+   
+   -- ensure the target is the first in the list
+   local tSelected
+   filter tSelected without pObject
+   if tSelected is not empty then
+      put return before tSelected
+   end if
+   put pObject before tSelected
+   
+   revIDEPopupContextualMenu tSelected
 end pbRightClick
 
 ## Connector creation for all row types
