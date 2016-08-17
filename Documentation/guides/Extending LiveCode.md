@@ -30,7 +30,7 @@ were only previously available to those who were skilled c/c++ developers.
 To learn more about LiveCode Builder and creating extensions, read on.
 
 > *Warning:* It is important to stress right at the start that 
-***no aspect of LiveCode Builder should considered final***. 
+***no aspect of LiveCode Builder should be considered final***. 
 ***Every piece of syntax in LiveCode Builder is subject to change***.
 
 ### Creating LiveCode Builder Extensions
