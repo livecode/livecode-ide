@@ -40,18 +40,6 @@ on arrowKey pDirection, pTarget
    
    // SN-2015-06-25: [[ Bug 15515 ]] <the target> is the name of the target
    if word 1 of pTarget is "button" and the arm of pTarget then pass arrowKey
-   if the commandKey is down and the optionKey is down and the number of lines in (the selObj) > 1 then
-      --align
-      if pDirection is "up" then put "top" into pDirection
-      if pDirection is "down" then put "bottom" into pDirection
-      local tPosition
-      do "put the" && pDirection && "of the" && line 1 of (the selObj) && "into tPosition"
-      repeat for each line l in (the selObj)
-         do "set the" && pDirection && "of" && l && "to" && tPosition
-      end repeat
-      revSendDimensionsUpdate
-      exit arrowKey
-   end if
    
    if the navigationArrows and (not revOKTarget() and (the optionKey is down or (the selectedField is empty and (the selObj) is empty) or (the selectedField is not empty and revTargetStack(the long id of the selectedField) is not the short name of the topStack))) then
       set the defaultStack to the topStack
@@ -65,39 +53,52 @@ on arrowKey pDirection, pTarget
    local tStack
    put revTargetStack(line 1 of (the selObj)) into tStack
    
-   if (tStack is line 1 of the openStacks or tStack is the short name of the topStack) \
+   if the mode of stack tStack is 1 \
+         and (tStack is line 1 of the openStacks or tStack is the short name of the topStack) \
          and word 1 of (the selobj) is not "card" and word 1 of (the selobj) is not "stack" then
+      
       lock screen
       
-      # OK-2008-03-19 : Previously was using lDistance with no declaration
-      # It apears that this is mean to be a script local so I changed it.
-      local tDistance
-      
-      if the shiftkey is down then
-         put 10 into tDistance 
+      if the commandKey is down and the optionKey is down and the number of lines in (the selObj) > 1 then
+         --align
+         if pDirection is "up" then put "top" into pDirection
+         if pDirection is "down" then put "bottom" into pDirection
+         local tPosition
+         do "put the" && pDirection && "of the" && line 1 of (the selObj) && "into tPosition"
+         repeat for each line l in (the selObj)
+            do "set the" && pDirection && "of" && l && "to" && tPosition
+         end repeat
       else
-         put 1 into tDistance
+         # OK-2008-03-19 : Previously was using lDistance with no declaration
+         # It apears that this is mean to be a script local so I changed it.
+         local tDistance
+         
+         if the shiftkey is down then
+            put 10 into tDistance 
+         else
+            put 1 into tDistance
+         end if
+         
+         repeat for each line tObject in (the selObj)  
+            switch pDirection
+               case "left"
+                  set the left of tObject to the left of tObject - tDistance
+                  break
+               case "right"
+                  set the left of tObject to the left of tObject + tDistance
+                  break
+               case "up"
+                  set the top of tObject to the top of tObject - tDistance
+                  break
+               case "down"
+                  set the top of tObject to the top of tObject + tDistance
+                  break
+            end switch
+         end repeat
+         revSendDimensionsUpdate
+         unlock screen
+         exit to top
       end if
-      
-      repeat for each line tObject in (the selObj)  
-         switch pDirection
-            case "left"
-               set the left of tObject to the left of tObject - tDistance
-               break
-            case "right"
-               set the left of tObject to the left of tObject + tDistance
-               break
-            case "up"
-               set the top of tObject to the top of tObject - tDistance
-               break
-            case "down"
-               set the top of tObject to the top of tObject + tDistance
-               break
-         end switch
-      end repeat
-      revSendDimensionsUpdate
-      unlock screen
-      exit to top
    end if
    pass arrowKey
 end arrowKey
