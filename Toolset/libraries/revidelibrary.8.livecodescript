@@ -10895,11 +10895,15 @@ private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
    -- Check to see if any handler in the message path matches the executed script
    
    local tTargetHandler, tIsPutOrGet
-   put false into tIsPutOrGet
    put token 1 of pToDo into tTargetHandler
+   put false into tIsPutOrGet
    if tTargetHandler is among the items of "put,get" then
       put true into tIsPutOrGet
-      put token 2 of pToDo into tTargetHandler
+      if token 2 of pToDo is "the" then
+         put token 3 of pToDo into tTargetHandler
+      else
+         put token 2 of pToDo into tTargetHandler
+      end if
    end if
    
    local tDoScript
@@ -10983,63 +10987,66 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
    lock screen
    
-   # Try executing as a function or property
-   local tTryProperty
-   
-   # Build the string so that it starts with "put the"
-   if not (pScript begins with "the ") then
-      put "the" && pScript into tTryProperty 
-   else
-      put pScript into tTryProperty
-   end if
-   if not (tTryProperty begins with "put ") then
-      put "put " before tTryProperty 
-   end if
-   
-   set the wholeMatches to true
-   local tIsProperty
-   put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
-   
-   # Try as an object property of the intelligence object
-   if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
-      ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
-      if the result is empty then 
-         local tName
-         # pIntelligence object may be a bad reference or no longer exist
-         try
-            put the name of pIntelligenceObject into tName
-         catch tError
-         end try
-         if tError is empty then
-            put tTryProperty && "of" && tName into tValidScript
+   if not (token 1 of pScript is "get") then
+      # Try executing as a function or property
+      local tTryProperty
+      
+      # Build the string so that it starts with "put the"
+      if not (token 1 of pScript is "the") then
+         put "the" && pScript into tTryProperty 
+      else
+         put pScript into tTryProperty
+      end if
+      if not (token 1 of tTryProperty is "put ") then
+         put "put " before tTryProperty 
+      end if
+      
+      set the wholeMatches to true
+      local tIsProperty
+      put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
+      
+      # Try as an object property of the intelligence object
+      if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
+         ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
+         if the result is empty then 
+            local tName
+            # pIntelligence object may be a bad reference or no longer exist
+            try
+               put the name of pIntelligenceObject into tName
+            catch tError
+            end try
+            if tError is empty then
+               put tTryProperty && "of" && tName into tValidScript
+            end if
          end if
       end if
-   end if
-   
-   # If it wasn't valid as an object property of the intelligence object
-   # then try as a function or global property
-   if tValidScript is empty then
-      if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
-         ideDoMessage tTryProperty, pDebugMode
+      
+      # If it wasn't valid as an object property of the intelligence object
+      # then try as a function or global property
+      if tValidScript is empty then
+         if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
+            ideDoMessage tTryProperty, pDebugMode
+            if the result is empty then
+               put tTryProperty into tValidScript
+            end if
+         end if
+      end if
+      
+      ## If not a function, global property or object property then
+      ## try as a boolean expression
+      local tBooleanExpression
+      
+      # Build the string so that it starts with "put"
+      put "put" && pScript into tBooleanExpression 
+      
+      # Try as a boolean expression
+      if tValidScript is empty then
+         ideDoMessage tBooleanExpression, pDebugMode
          if the result is empty then
-            put tTryProperty into tValidScript
+            put tBooleanExpression into tValidScript
          end if
       end if
-   end if
-   
-   ## If not a function, global property or object property then
-   ## try as a boolean expression
-   local tBooleanExpression
-   
-   # Build the string so that it starts with "put"
-   put "put" && pScript into tBooleanExpression 
-   
-   # Try as a boolean expression
-   if tValidScript is empty then
-      ideDoMessage tBooleanExpression, pDebugMode
-      if the result is empty then
-         put tBooleanExpression into tValidScript
-      end if
+      
    end if
    
    # Otherwise just try as is and ensure we get the correct error
