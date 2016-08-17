@@ -7646,13 +7646,17 @@ on revIDEMoveSubstackToFile pStackID
    # Set filename of stack / remove parent link
 end revIDEMoveSubstackToFile
 
-on revIDESaveAsStandalone
+on revIDESaveAsStandalone pTarget
+   local tStack
+   if exists(pTarget) then
+      put the short name of pTarget into tStack
+   end if
    # Don't want the build process to be interruptable.
    set the allowInterrupts to false
    //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in ideMessageSend
    try
-      revSaveAsStandalone
-      finally
+      revSaveAsStandalone 
+   finally
       # Bug 5111: Standalone has been built, process should now be interruptable.
       set the allowInterrupts to true
       //ideMessagesSupressSet "false"

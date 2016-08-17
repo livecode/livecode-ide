@@ -2528,7 +2528,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          revIDEStandaloneSettingsForStack tTargetStack
          break
       case "Save As Standalone Application..."
-         revIDESaveAsStandalone
+         revIDESaveAsStandalone tTargetStack
          break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
