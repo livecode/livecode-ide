@@ -924,14 +924,20 @@ command scriptComment
       exit scriptComment
    end if
    
+   local tOldLock
+   put the lockScreen into tOldLock
+   lock screen
+   
+   local tCommentChar
+   put sePrefGet("editor,commentchar") & space into tCommentChar
+   
    local tCommentedText
    repeat for each line tLine in tText
       # Don't comment out empty lines as it looks messy
       if not matchText(tLine, "^\s*$") then
-         put sePrefGet("editor,commentchar") & tLine & return after tCommentedText
-      else
-         put tLine & return after tCommentedText
+         put tCommentChar before word 1 of tLine
       end if
+      put  tLine & return after tCommentedText
    end repeat
    delete the last char of tCommentedText
    
@@ -947,6 +953,8 @@ command scriptComment
    if sePrefGet("editor,autoformat") then
       scriptFormat "handler"
    end if
+   
+   set the lockScreen to tOldLock
 end scriptComment
 
 # Desription
@@ -957,6 +965,10 @@ command scriptUncomment
    if tStartLine is empty then
       exit scriptUncomment
    end if
+   
+   local tOldLock
+   put the lockScreen into tOldLock
+   lock screen
    
    local tUncommentedText
    repeat for each line tLine in tText
@@ -994,6 +1006,8 @@ command scriptUncomment
    if sePrefGet("editor,autoformat") then
       scriptFormat "handler"
    end if
+   
+   set the lockScreen to tOldLock
 end scriptUncomment
 
 # OK-2009-03-03 : Bug 7450
@@ -1733,17 +1747,17 @@ private function textFormatGetContinuationIndent pLastLineNumber
    # the indent of the last line 
 end textFormatGetContinuationIndent
 
-private function combineContinuedLine pLastLineNumber, @pText
+private function combineContinuedLine pLastLineNumber, @pTextLines
    local tContinuation
-   put line pLastLineNumber of pText into tContinuation
-   repeat with x = (pLastLineNumber - 1) down to 1
-      local tLine
-      put line x of pText into tLine
-      if not lineIsContinued(tLine) then
+   put pTextLines[pLastLineNumber] into tContinuation
+   
+   local tIndex
+   repeat with tIndex = (pLastLineNumber - 1) down to 1
+      if not lineIsContinued( pTextLines[tIndex]) then
          exit repeat
       end if
       
-      put tLine before tContinuation
+      put pTextLines[tIndex] before tContinuation
    end repeat
    replace "\" with empty in tContinuation
    return tContinuation
@@ -1751,7 +1765,7 @@ end combineContinuedLine
 
 constant kContinuationIndent = 6
 
-function textFormatLine pLine, pText
+function textFormatLine pLine, pTextLines, @xPreviousLine
    local tResult
    
    # OK-2009-01-30 : Bug 7051 - Deal better with continuation characters.
@@ -1762,31 +1776,34 @@ function textFormatLine pLine, pText
    # Continuations can only happen with consecutive lines, there can't be comments or empty lines in between,
    # so we simply use the two previous lines to work out if they are continued or not. If these lines are empty
    # or are comments, then the result will be that they are not continuations anyway which is correct.
-   put lineIsContinued(line (pLine - 1) of pText) into tPreviousLineWasContinued
-   put lineIsContinued(line (pLine - 2) of pText) into tPreviousPreviousLineWasContinued
+   put lineIsContinued(pTextLines[pLine - 1]) into tPreviousLineWasContinued
+   put lineIsContinued(pTextLines[pLine - 2]) into tPreviousPreviousLineWasContinued
    
-   local tCurrentLine
-   put line pLine of pText into tCurrentLine
-   put lineIsContinued(tCurrentLine) into tCurrentLineIsContinued
+   put lineIsContinued(pTextLines[pLine]) into tCurrentLineIsContinued
    
    # Get the previous non-empty line
-   local tPreviousLine
-   repeat with x = (pLine - 1) down to 1
-      if token 1 of line x of pText is not empty then
-         put line x of pText into tPreviousLine
-         exit repeat
-      end if
-   end repeat
+   if xPreviousLine is 0 then
+      put pLine into xPreviousLine
+      repeat while xPreviousLine > 1
+         subtract 1 from xPreviousLine
+         if token 1 of pTextLines[xPreviousLine] is not empty then
+            exit repeat
+         end if 
+      end repeat
+   end if
    
+   local tPreviousLine
    # This is the case where we have reached the end of a continued line. Here, we treat the continued line
    # as a single entity in order to calculate its indentation properties correctly for the line after it.
-   if lineIsContinued(line (x - 1) of pText) then
-      put combineContinuedLine(x, pText) into tPreviousLine
+   if lineIsContinued(pTextLines[xPreviousLine - 1]) then
+      put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
+   else
+      put pTextLines[xPreviousLine] into tPreviousLine
    end if
    
    # Get the current indent of the line
    local tCurrentLineIndent
-   put textFormatGetLineIndent(tCurrentLine) into tCurrentLineIndent
+   put textFormatGetLineIndent(pTextLines[pLine]) into tCurrentLineIndent
    
    # Get the current indent of the previous line
    local tPreviousLineIndent
@@ -1797,7 +1814,7 @@ function textFormatLine pLine, pText
    if tPreviousLineWasContinued then
       put 0 into tIndentCurrentLineRemoves
    else
-      put textFormatIndentLineRemoves(tPreviousLine, tCurrentLine) into tIndentCurrentLineRemoves
+      put textFormatIndentLineRemoves(tPreviousLine, pTextLines[pLine]) into tIndentCurrentLineRemoves
    end if
    
    # Work out how much indentation the previous line should add to the current line.
@@ -1806,7 +1823,7 @@ function textFormatLine pLine, pText
       # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
-      put textFormatIndentLineAdds(tPreviousLine) into tIndentPreviousLineAdds
+      put textFormatIndentLineAdds(pTextLines[xPreviousLine]) into tIndentPreviousLineAdds
    end if
    
    local tCurrentIndent
@@ -1828,7 +1845,7 @@ function textFormatLine pLine, pText
    else if (not tCurrentLineIsContinued) and tPreviousLineWasContinued then
       put -kContinuationIndent into tIndentCurrentLineAdds
    else
-      put textFormatIndentLineAdds(tCurrentLine) into tIndentCurrentLineAdds
+      put textFormatIndentLineAdds(pTextLines[pLine]) into tIndentCurrentLineAdds
    end if
    
    if tIndentCurrentLineAdds < 0 then
@@ -1843,6 +1860,9 @@ function textFormatLine pLine, pText
    
    put tNewIndent after tResult
    
+   if token 1 of pTextLines[pLine] is not empty then
+      put pLine into xPreviousLine
+   end if
    return tResult
 end textFormatLine
 
@@ -1858,40 +1878,36 @@ end firstWordToEnd
 #   pText : the text to format
 function textFormatSelection pText
    local tResult
-   get textFormatLine(1, pText)
-   put firstWordToEnd(line 1 of pText) into tResult
-   put return & item 2 of it after tResult
+   local tPreviousLine = 0
+   local tTextLines
+   put pText into tTextLines
+   split tTextLines by return
    
-   repeat with x = 2 to the number of lines of pText
-      local tLine
-      put line x of pText into tLine
-      put firstWordToEnd(tLine) after tResult
-      get textFormatLine(x, tResult)
+   get textFormatLine(1, tTextLines, tPreviousLine)
+   put firstWordToEnd(tTextLines[1]) into tTextLines[1]
+   put firstWordToEnd(tTextLines[1]) into tResult
+   local tIndex
+   repeat with tIndex = 2 to the number of elements of tTextLines
+      put item 2 of it & firstWordToEnd(tTextLines[tIndex]) into tTextLines[tIndex]
+      get textFormatLine(tIndex, tTextLines, tPreviousLine)
       
       if item 1 of it < 0 then
          repeat -(item 1 of it) times
-            if char 1 of line -1 of tResult is space then
-               delete char 1 of line -1 of tResult
+            if char 1 of line -1 of tTextLines[tIndex] is space then
+               delete char 1 of tTextLines[tIndex]
             end if
          end repeat
       else if item 1 of it > 0 then
          repeat item 1 of it times
-            put space before line -1 of tResult
+            put space before tTextLines[tIndex]
          end repeat
       end if
-      put return & item 2 of it after tResult
+      
+      put return & tTextLines[tIndex] after tResult
    end repeat
-   if the last char of pText is not return then
-      # OK-2008-08-05 : Bug 6697 - If the text did not end in a return, we delete the tailing
-      # return and all formatting that may have been inserted for the line afterwards
-      --delete the last char of tResult
-      delete char -(the number chars of item 2 of it + 1) to -1 of tResult
-   end if
    
    return tResult
 end textFormatSelection
-
-
 
 private function handlerTypes
    return "command,on,function,setprop,getprop,before,after"
@@ -3726,7 +3742,12 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
       put return & tIndent into tReturn
    else
       local tFormatting
-      put textFormatLine(pLine, char 1 to pTo of tScript) into tFormatting
+      local tPreviousLine = 0
+      local tTextLines
+      put char 1 to pTo of tScript into tTextLines
+      split tTextLines by return
+      
+      put textFormatLine(pLine, tTextLines, tPreviousLine) into tFormatting
       
       put (the number of chars of line 1 to (pLine - 1) of tScript) + 1 into tAt 
       if pLine <> 1 then 
