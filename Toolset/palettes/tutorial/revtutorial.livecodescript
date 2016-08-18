@@ -1037,10 +1037,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       set the loc of tImageID to the loc of this card of stack "revTutorial"
       set the top of tImageID to tOtherTop
    else if tHasUrl then
-      // Work around issues with display of browser 
-      create card
-      delete this card of stack "revTutorial"
-      
       set the loc of tUrlControlID to the loc of this card of stack "revTutorial"
       set the top of tUrlControlID to tOtherTop
    end if
