@@ -56,7 +56,9 @@ command resize pDontUpdateTree
    local tFilter, tWidget, tGlobals, tEnvVars, tRect, tTop, tLeft, tWidth, tHeight, tBottom
    put the long id of field "Filter" of me into tFilter
    put the long id of button "Show Globals" of me into tGlobals
+   set the width of tGlobals to the formattedWidth of tGlobals
    put the long id of button "Show Environment Vars" of me into tEnvVars
+   set the width of tEnvVars to the formattedWidth of tEnvVars
    put the long id of widget "tree" of me into tWidget
 
    put the rect of me into tRect
@@ -297,15 +299,20 @@ end visualizationObjectRemove
 private on nodeCreateVisualizationObject pPathToNode
    add 1 to sVisualizationObjectCount
    
+   local tOldLock
+   put the lockMessages into tOldLock
+   lock messages
+   
    local tStack
-   # OK-2009-01-17 : Bug 7576 - Forgot to put the "rev" prefix in front, resulting in unwanted save dialogs and other issues.
+   set the _ideoverride of the templateStack to true
+   
    create invisible stack "revVariableVisualizer " & sVisualizationObjectCount
    put the long id of it into tStack
+   set the behavior of tStack to the long id of stack revIDEScriptEditorBehavior("variable visualizer")
    set the cMutable of tStack to true
    set the destroyStack of tStack to true
    set the destroyWindow of tStack to true
    set the title of tStack to "Value : " & friendlyNodeReference(pPathToNode)
-   set the script of tStack to the cVisualizerStackScript of me
    revMetadataSet the name of stack tStack, "general", "visualizer", true
    
    # For greater flexibility the visualization object is implemented as a group, and we create a stack
@@ -313,14 +320,18 @@ private on nodeCreateVisualizationObject pPathToNode
    copy visualizationObjectTemplate() to tStack
    set the width of tStack to the width of visualizationObjectTemplate()
    set the height of tStack to the height of visualizationObjectTemplate()
-   set the location of tStack to the screenLoc
-   set the cManager of group 1 of tStack to the long id of me
+   set the cManager of tStack to the long id of me
    set the backgroundBehavior of group 1 of tStack to true
-   set the location of group 1 of tStack to the location of this card of tStack
-   set the cName of group 1 of tStack to friendlyNodeReference(pPathToNode)
-   send "setReference pPathToNode" to group 1 of tStack
-   send "initialize" to group 1 of tStack
+   set the location of tStack to the location of this stack of me
+   set the cName of tStack to friendlyNodeReference(pPathToNode)
+   send "setReference pPathToNode" to tStack
+   send "initialize" to tStack
    visualizationObjectUpdate tStack
+   
+   reset the templateStack
+   
+   set the lockMessages to tOldLock
+   
    return tStack
 end nodeCreateVisualizationObject
 
