@@ -722,24 +722,6 @@ on scriptParsingError pWhich
 	revIDEErrorDialog "", pWhich
 end scriptParsingError
 
-# OK-2008-03-27 : Bug where right-click context menus don't work with messages suppressed
-# Added ability to specify the target explicitly.
-
-# Parameters
-#   pTarget : the target of the event that invoked the popup menu
-# Description
-#   Shows the IDE's right-click context menu depending on the target type.
-on revShowpopupmenu pTarget
-   local tTarget
-   if pTarget is not empty then
-      put pTarget into tTarget
-   else
-      put the long id of the target into tTarget
-   end if
-
-	revIDEPopupContextualMenu tTarget
-end revShowpopupmenu
-
 function revOKTarget pWhich
    local tTarget
    if pWhich is not empty then 
