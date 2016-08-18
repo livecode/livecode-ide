@@ -3869,12 +3869,18 @@ on  revIDERenumberCard pCardID,pNewNumber
 end revIDERenumberCard
 
 command revIDESelectObjects pObjects
+   local tOldLockMessages
+   put the lockMessages into tOldLockMessages
+   lock messages
    try
       replace return with " AND " in pObjects
       do "select" && pObjects
    catch tError
-
+      
    end try
+   set the lockMessages to tOldLockMessages
+   
+   send "ideMessageSend" && "ideSelectedObjectChanged" to me in 0 milliseconds
 end revIDESelectObjects
 
 command revIDERefreshProjectBrowser
