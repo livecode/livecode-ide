@@ -446,6 +446,9 @@ private command revInternal__SetupPaths
       
       global gRevDevelopment
       put true into gRevDevelopment
+      
+      global gRevPopups
+      put true into gRevPopups
    else
       put empty into sRepositoryPath
    end if
