@@ -5467,6 +5467,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
       case "interactive find"
          return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
+       case "variable visualizer"
+         return tPathToBehaviors & slash & "revsevariablevisualizerstackbehavior.livecodescript"
       default
          return empty
    end switch
