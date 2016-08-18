@@ -21,6 +21,7 @@ end cValue
 
 command initialize
    disable button "Apply" of me
+   resize
 end initialize
 
 local sReference
