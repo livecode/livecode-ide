@@ -1885,7 +1885,7 @@ function textFormatSelection pText
    
    get textFormatLine(1, tTextLines, tPreviousLine)
    put firstWordToEnd(tTextLines[1]) into tTextLines[1]
-   put firstWordToEnd(tTextLines[1]) into tResult
+   put tTextLines[1] into tResult
    local tIndex
    repeat with tIndex = 2 to the number of elements of tTextLines
       put item 2 of it & firstWordToEnd(tTextLines[tIndex]) into tTextLines[tIndex]

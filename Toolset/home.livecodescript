@@ -883,26 +883,23 @@ end revInternal__ResetPreferences
 -- Internal Utility Functions
 --
 --
+local sSavePreferencesMessage
 
 command revInternal__SavePreferences
-   local tPreference 
-   
-   local tStackFileVersion
-   
-   if the buildnumber < 10000 then
-      put "2.7" into tStackFileVersion
-   else
-      put "7.0" into tStackFileVersion
-   end if
-   
+   cancel sSavePreferencesMessage
+   send "__revInternal_SavePreferences" to me in 500 milliseconds
+   put the result into sSavePreferencesMessage
+end revInternal__SavePreferences
+
+command __revInternal_SavePreferences
    lock messages
    -- MM-2014-02-22: [[ Bug 11442 ]] Saving the prefs stack when security permissions is true is not possible.
    try
-      save stack "revPreferences" with format tStackFileVersion
+      save stack "revPreferences" with format "7.0"
    catch tError
    end try
    unlock messages
-end revInternal__SavePreferences
+end __revInternal_SavePreferences
 
 private command revInternal__EnsureFolder pFolder
   revInternal__Log "Enter", "Ensuring Folder '" & pFolder & "'"
