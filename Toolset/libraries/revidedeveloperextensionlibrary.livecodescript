@@ -33,12 +33,13 @@ end __revIDEDeveloperCompilationError
 private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    # To avoid excessive recompilation, test to see if the compiled module exists and is up to date.
    local tCompileInputs, tCompileOutputs, tNeedUpdate, tError
-
+   
    put pFolder & slash & pFile into tCompileInputs[1]
-
+   put __revIDEDeveloperExtensionCompilerPath() into tCompileInputs[2]
+   
    put pFolder & slash & "manifest.xml" into tCompileOutputs[1]
    put pFolder & slash & "module.lcm" into tCompileOutputs[2]
-
+   
    put revIDEIsFilesetStale(tCompileInputs, tCompileOutputs, false, tError) \
          into tNeedUpdate
    return tNeedUpdate is not false
@@ -707,33 +708,38 @@ private function shellFormat pArg, pSwitch
    return tOutput & quote & pArg & quote & " "
 end shellFormat
 
+private function __revIDEDDeveloperExtensionResourcePath
+   if revEnvironmentIsInstalled() is false then
+      return revEnvironmentBinariesPath()
+   else
+      return revIDESpecialFolderPath("Toolchain")
+   end if
+end __revIDEDDeveloperExtensionResourcePath
+
+private function __revIDEDeveloperExtensionCompilerPath
+   # The actual compile command
+   if the platform is "win32" then
+      return __revIDEDDeveloperExtensionResourcePath() & slash & "lc-compile.exe"
+   else
+      return __revIDEDDeveloperExtensionResourcePath() & slash & "lc-compile"
+   end if
+end __revIDEDeveloperExtensionCompilerPath
+
 private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
       delete file (pTargetFolder & slash & "manifest.xml")
    end if
    
-   local tResourcePath
-   if revEnvironmentIsInstalled() is false then
-      put revEnvironmentBinariesPath() into tResourcePath
-   else
-      put revIDESpecialFolderPath("Toolchain") into tResourcePath
-   end if
-   
    # Build the shell command
    local tShellCommand
+   put shellFormat(__revIDEDeveloperExtensionCompilerPath()) into tShellCommand
    
-   # The actual compile command
-   if the platform is "win32" then
-      put shellFormat(tResourcePath & slash & "lc-compile.exe") into tShellCommand
-   else
-      put shellFormat(tResourcePath & slash & "lc-compile") into tShellCommand
-   end if
    # The folder to put the .lci file
    put shellFormat(pTargetFolder, "modulepath") after tShellCommand
    
    # The built-in module path
-   put shellFormat(tResourcePath & slash & "modules/lci", "modulepath") after tShellCommand
+   put shellFormat(__revIDEDDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
    
    # Installed module path
    put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand
