@@ -3677,7 +3677,6 @@ local sInspectingObjects
 command revIDEInspectObjects pObjects
    lock screen
    put pObjects into sInspectingObjects
-   revIDESelectObjects pObjects
    
    revIDEOpenPalette "inspector"
 
