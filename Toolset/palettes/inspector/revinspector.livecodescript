@@ -99,7 +99,7 @@ on ideInspectObjects pObjects
    palette stack tTargetInspector
    unlock messages
    set the cSelectedObjects of stack tTargetInspector to tSelectedObjects
-   set the cLocked of stack tTargetInspector to tSelectedObjects is not the selectedObjects
+   set the cLocked of stack tTargetInspector to tSelectedObjects is not revIDESelectedObjects()
    unlock screen
 end ideInspectObjects
 
