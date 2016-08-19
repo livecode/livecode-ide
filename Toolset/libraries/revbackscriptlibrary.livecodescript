@@ -3398,7 +3398,7 @@ command revIDEHandleMouseDown pWhich, pTarget
             select tTarget
          end if
          if not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups) then 
-            revIDEPopupContextualMenu tTarget
+            revIDEPopupContextualMenu the selectedObjects
          end if
          send "selectedObjectChanged" to me
       end if
