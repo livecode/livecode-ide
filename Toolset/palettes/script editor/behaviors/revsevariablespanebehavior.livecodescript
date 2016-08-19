@@ -3,6 +3,9 @@
 local sTree
 local sTimes
 
+local sVisualizationObjects
+local sVisualizationObjectCount = 0
+
 command paneOpenControl
    setDefaultsAndCallbacks
    refresh
@@ -11,6 +14,15 @@ end paneOpenControl
 
 command paneCloseControl
 end paneCloseControl
+
+on closeControl
+   local tObject
+   repeat for each key tObject in sVisualizationObjects
+      if there is a tObject then
+         close stack tObject
+      end if
+   end repeat
+end closeControl
 
 command paneResizeControl
    update false
@@ -255,8 +267,7 @@ private on pathToVariableComponents pPath, @rVariableName, @rDimensions
    end repeat
 end pathToVariableComponents
 
-local sVisualizationObjects
-local sVisualizationObjectCount = 0
+
 private command addVisualizationObject pObject
    put "" into sVisualizationObjects[pObject]
 end addVisualizationObject
@@ -288,10 +299,6 @@ private on nodeCreateAndShowVisualizationObject pPath
    nodeShowVisualizationObject tObject
 end nodeCreateAndShowVisualizationObject
 
-private function visualizationObjectTemplate
-   return the long id of group "Visualizer Template" of card "Templates" of revScriptEditorTemplate()
-end visualizationObjectTemplate
-
 command visualizationObjectRemove tObject
    removeVisualizationObject tObject
 end visualizationObjectRemove
@@ -304,7 +311,10 @@ private on nodeCreateVisualizationObject pPathToNode
    lock messages
    
    local tStack
+   reset the templateStack
    set the _ideoverride of the templateStack to true
+   set the width of templateStack to 270
+   set the height of templateStack to 250
    
    create invisible stack "revVariableVisualizer " & sVisualizationObjectCount
    put the long id of it into tStack
@@ -315,13 +325,17 @@ private on nodeCreateVisualizationObject pPathToNode
    set the title of tStack to "Value : " & friendlyNodeReference(pPathToNode)
    revMetadataSet the name of stack tStack, "general", "visualizer", true
    
-   # For greater flexibility the visualization object is implemented as a group, and we create a stack
-   # simply to contain it. All external interactions deal with the group.
-   copy visualizationObjectTemplate() to tStack
-   set the width of tStack to the width of visualizationObjectTemplate()
-   set the height of tStack to the height of visualizationObjectTemplate()
+   -- generate variable visualizer UI
+   set the defaultStack to the short name of tStack
+   reset the templateButton
+   set the height of the templateButton to 23
+   create button "Apply"
+   reset the templateField
+   create field "Value"
+   set the lockText of the templateField to true
+   create field "Name"
+   
    set the cManager of tStack to the long id of me
-   set the backgroundBehavior of group 1 of tStack to true
    set the location of tStack to the location of this stack of me
    set the cName of tStack to friendlyNodeReference(pPathToNode)
    send "setReference pPathToNode" to tStack
@@ -329,7 +343,8 @@ private on nodeCreateVisualizationObject pPathToNode
    visualizationObjectUpdate tStack
    
    reset the templateStack
-   
+   reset the templateButton
+   reset the templateField
    set the lockMessages to tOldLock
    
    return tStack
@@ -337,7 +352,7 @@ end nodeCreateVisualizationObject
 
 command visualizationObjectUpdate pObject
    local tReference
-   call "getReference" to group 1 of pObject
+   call "getReference" to pObject
    put the result into tReference
    
    local tVariable, tDimensions
@@ -349,12 +364,12 @@ command visualizationObjectUpdate pObject
    else
       put revDebuggerGetValue(tVariable, sContext, tDimensions) into tValue
    end if
-   set the cValue of group 1 of pObject to tValue
+   set the cValue of pObject to tValue
 end visualizationObjectUpdate
 
 command visualizationObjectSetValue pObject, pNewValue
    local tReference
-   call "getReference" to group 1 of pObject
+   call "getReference" to pObject
    put the result into tReference
    
    local tVariable, tDimensions
