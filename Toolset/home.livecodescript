@@ -1834,8 +1834,21 @@ function revEnvironmentToolsetPath
 end revEnvironmentToolsetPath
 
 function revEnvironmentPluginsPath
-  return hookToolsPath("plugins", sToolsPath & "/Plugins")
+   return hookToolsPath("plugins", sToolsPath & "/Plugins")
 end revEnvironmentPluginsPath
+
+function revEnvironmentDevelopmentPluginsPath
+   if not revEnvironmentIsInstalled() then
+      -- check for private repo plugins
+      set the itemDelimiter to slash
+      local tPath
+      put item 1 to -3 of sToolsPath & "/ide/Plugins" into tPath
+      if there is a folder tPath then
+         return tPath
+      end if
+   end if
+   return empty
+end revEnvironmentDevelopmentPluginsPath
 
 function revEnvironmentExternalsPath
   return hookToolsPath("externals", sToolsPath & "/Externals")

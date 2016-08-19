@@ -6294,6 +6294,13 @@ on revIDEUpdatePlugins
    local tFinal
    put revCombineFilePaths(tUserPlugins,tEnvironmentPlugins) into tFinal
    
+   local tDevelopmentPlugins
+   put revAbsoluteFolderListing(revEnvironmentDevelopmentPluginsPath()) into tDevelopmentPlugins
+   
+   if tDevelopmentPlugins is not empty then
+      put revCombineFilePaths(tFinal,tDevelopmentPlugins) into tFinal
+   end if
+   
    put empty into gREVStartupList
    put empty into gREVShutdownList
    
