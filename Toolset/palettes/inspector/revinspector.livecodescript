@@ -25,7 +25,6 @@ end inspectorMessagesDeRegister
 on inspectorCloseAll
    ## Unsubscribe from all messges
    inspectorMessagesDeRegister
-   revIDEStopInspecting
 end inspectorCloseAll
 
 #####################

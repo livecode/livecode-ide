@@ -3673,24 +3673,14 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
-local sInspectingObjects
 command revIDEInspectObjects pObjects
    lock screen
-   put pObjects into sInspectingObjects
    
    revIDEOpenPalette "inspector"
 
    ideMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
-
-on revIDEStopInspecting
-   put empty into sInspectingObjects
-end revIDEStopInspecting
-
-function revIDEInspectedObjects
-   return sInspectingObjects
-end revIDEInspectedObjects
 
 function revIDEInspectorForObject pObjectId
    local tInspectorName
