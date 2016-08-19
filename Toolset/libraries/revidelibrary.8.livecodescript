@@ -11636,7 +11636,9 @@ function revIDEObjectsAreSelectable pObjects
          return false
       end if
       
-      if the mode of revIDEStackOfObject(tObject) is not 1 then
+      local tStack
+      put revIDEStackOfObject(tObject) into tStack
+      if the mode of tStack is not 1 then
          return false
       end if
       
@@ -11644,6 +11646,11 @@ function revIDEObjectsAreSelectable pObjects
          return false
       end if
       
+      if word 1 of tObject is not among the words of "card stack" then
+         if revIDECardOfObject(tObject) is not the long id of this card of tStack then
+            return false
+         end if
+      end if
    end repeat
    
    return true
