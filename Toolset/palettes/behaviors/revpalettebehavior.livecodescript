@@ -88,6 +88,15 @@ on hideFrameItem pName
    generateFrame
 end hideFrameItem
 
+on toggleFrameItem pName, pValue
+   local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit toggleFrameItem
+  
+   put pValue into sData[tIndex]["selected"]
+   generateFrame
+end toggleFrameItem
+
 on hiliteFrameItem pName
    lock screen
    lock messages

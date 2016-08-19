@@ -90,6 +90,7 @@ setProp cLocked pState
    else
       put true into sInspectorLock
    end if
+   toggleFrameItem "inspectorLock", pState is true
 end cLocked
 
 getProp cLocked
@@ -101,7 +102,10 @@ end cLocked
 #####################
 
 on inspectorLock pState
-   set the cLocked of me to pState
+   put pState into sInspectorLock
+   if pState is false then
+      send "ideSelectedObjectChanged" to stack "revInspector" in 0 millisecs
+   end if
 end inspectorLock
 
 on lockInspector
