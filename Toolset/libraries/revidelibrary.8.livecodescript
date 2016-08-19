@@ -3673,25 +3673,14 @@ on revIDESetPropertyOfObject pObjects, pProperty, pValue
    unlock screen
 end revIDESetPropertyOfObject
 
-local sInspectingObjects
 command revIDEInspectObjects pObjects
    lock screen
-   put pObjects into sInspectingObjects
-   revIDESelectObjects pObjects
    
    revIDEOpenPalette "inspector"
 
    ideMessageSend "ideInspectObjects", pObjects
    unlock screen
 end revIDEInspectObjects
-
-on revIDEStopInspecting
-   put empty into sInspectingObjects
-end revIDEStopInspecting
-
-function revIDEInspectedObjects
-   return sInspectingObjects
-end revIDEInspectedObjects
 
 function revIDEInspectorForObject pObjectId
    local tInspectorName
@@ -7663,7 +7652,7 @@ on revIDESaveAsStandalone pTarget
    set the allowInterrupts to false
    //ideMessagesSupressSet "true" - This was in the old message library. In 8.0 messages can't be supressed. Might want to add this in ideMessageSend
    try
-      revSaveAsStandalone 
+      revSaveAsStandalone tStack
    finally
       # Bug 5111: Standalone has been built, process should now be interruptable.
       set the allowInterrupts to true
@@ -11616,3 +11605,59 @@ end revIDEUTF8FileContents
 command revIDESetUTF8FileContents pFile, pContents
    put textEncode(pContents, "utf-8") into url("binfile:" & pFile)
 end revIDESetUTF8FileContents
+
+/**
+
+Determine if a list of objects are selectable using
+the select command
+
+Parameters:
+pObjects (String): A return delimited list of object references
+
+Description:
+Returns true if all objects exist, are on an editable open stack and
+have the same owner.
+
+Returns: True if the objects can be selected
+
+*/
+
+function revIDEObjectsAreSelectable pObjects
+   local tOwner, tObject
+   split pObjects by return
+   
+   if there is a pObjects[1] then
+      put the owner of pObjects[1] into tOwner
+   end if
+   
+   if word 1 of tOwner is among the words of "group, bkgnd background" then
+      if not the selectGroupedControls or not the selectGroupedControls of tOwner then
+         return false
+      end if
+   end if
+   
+   repeat for each element tObject in pObjects
+      
+      if there is not a tObject then
+         return false
+      end if
+      
+      local tStack
+      put revIDEStackOfObject(tObject) into tStack
+      if the mode of tStack is not 1 then
+         return false
+      end if
+      
+      if the owner of tObject is not tOwner then
+         return false
+      end if
+      
+      if word 1 of tObject is not among the words of "card stack" then
+         if revIDECardOfObject(tObject) is not the long id of this card of tStack then
+            return false
+         end if
+      end if
+   end repeat
+   
+   return true
+end revIDEObjectsAreSelectable

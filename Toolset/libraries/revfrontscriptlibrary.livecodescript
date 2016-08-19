@@ -16,7 +16,6 @@ end revUnloadLibrary
 
 global gREVStackStatus
 global gREVSuppressMessages
-global gREVSuppressMessages
 local lRefreshAOTimerID
 
 on saveStackRequest
@@ -50,7 +49,7 @@ on saveStackRequest
 end saveStackRequest
 
 on nameChanged pOldname, pNewName, pTarget
-   global gREVSuppressMessages, gREVMessageDispatch, gREVStackName
+   global gREVMessageDispatch, gREVStackName
    
    if revTargetStack(the target) is "answer dialog" then pass nameChanged
    
@@ -151,8 +150,6 @@ on nameChanged pOldname, pNewName, pTarget
 end nameChanged
 
 on idChanged pOldId, pNewId
-   global gREVSuppressMessages
-
    global gREVMessageDispatch
    repeat for each line l in gREVMessageDispatch["revIdChanged"]
       send "revIdChanged pOldId, pNewId" to this cd of stack l
@@ -179,6 +176,7 @@ end mainstackChanged
 // PM-2015-10-02: [[ Bug 13588 ]] Make sure the insertion point is the correct one
 on setCursorAtLoc pAt, pEditor
    if pAt is not empty then
+      local tLine, tCol, tCard
       put item 1 of pAt into tLine
       put item 2 of pAt into tCol
       put the currentCard of stack pEditor into tCard
@@ -194,6 +192,8 @@ on editScript pObject, pAt
    if tResult is "pass" then
       pass editScript
    end if
+   
+   local tEditor
    put revScriptEditor(pObject)  into tEditor
    send "setCursorAtLoc pAt, tEditor" to me in 0 seconds
 end editScript
@@ -605,6 +605,7 @@ function revCheckDelete
       if word 1 of l is "group" and the uProps["control type"] of l is "Data Grid" then
          answer warning "Would you like to delete the record template associated with this data grid? This action cannot be undone." with "Yes" or "No"
          if it is "Yes" then
+            local tTemplate, tCardWord, tTemplateCard, tStackWord, tTemplateStack
             put the uProps["record template"] of l into tTemplate
             put wordoffset("card",tTemplate) into tCardWord
             put word tCardWord to -1 of tTemplate into tTemplateCard
@@ -720,24 +721,6 @@ on scriptParsingError pWhich
    else put tDigest into line (the number of lines in lSeenErrors)+1 of lSeenErrors
 	revIDEErrorDialog "", pWhich
 end scriptParsingError
-
-# OK-2008-03-27 : Bug where right-click context menus don't work with messages suppressed
-# Added ability to specify the target explicitly.
-
-# Parameters
-#   pTarget : the target of the event that invoked the popup menu
-# Description
-#   Shows the IDE's right-click context menu depending on the target type.
-on revShowpopupmenu pTarget
-   local tTarget
-   if pTarget is not empty then
-      put pTarget into tTarget
-   else
-      put the long id of the target into tTarget
-   end if
-
-	revIDEPopupContextualMenu tTarget
-end revShowpopupmenu
 
 function revOKTarget pWhich
    local tTarget

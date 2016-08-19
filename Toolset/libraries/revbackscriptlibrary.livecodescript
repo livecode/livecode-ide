@@ -3370,7 +3370,7 @@ command revIDEHandleMouseDown pWhich, pTarget
    global gREVPopups, gREVScriptShortcut, gREVUIScriptShortcut, gREVPaintImage
    if the commandKey is down and the shiftKey is down and pWhich is 3 and (not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups)) then
       put true into sPopupMenuUp
-      revShowPopupmenu tTarget
+      revIDEPopupContextualMenu tTarget
       return "exit"
    end if
    
@@ -3398,7 +3398,7 @@ command revIDEHandleMouseDown pWhich, pTarget
             select tTarget
          end if
          if not revOKTarget(tTarget) or (revOKTarget(tTarget) and gREVPopups) then 
-            revShowPopupmenu tTarget
+            revIDEPopupContextualMenu the selectedObjects
          end if
          send "selectedObjectChanged" to me
       end if

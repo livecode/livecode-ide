@@ -2401,6 +2401,7 @@ on pbRightClick pObject
    
    -- ensure the target is the first in the list
    local tSelected
+   put pbSelectedObjects() into tSelected
    filter tSelected without pObject
    if tSelected is not empty then
       put return before tSelected
