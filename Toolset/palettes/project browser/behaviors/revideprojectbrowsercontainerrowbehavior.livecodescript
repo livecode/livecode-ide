@@ -209,7 +209,7 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_3")
       set the foregroundColor of field "behaviorScriptLines" of me to  revIDEColor("text_3")
       
-      if the scriptStatus of the cObjectLongID of me is "error" then
+      if exists(the cObjectLongID of me) and the scriptStatus of the cObjectLongID of me is "error" then
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_scriptErrorBackgroundColor")
       else
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
