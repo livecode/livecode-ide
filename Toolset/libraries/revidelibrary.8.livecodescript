@@ -11605,3 +11605,46 @@ end revIDEUTF8FileContents
 command revIDESetUTF8FileContents pFile, pContents
    put textEncode(pContents, "utf-8") into url("binfile:" & pFile)
 end revIDESetUTF8FileContents
+
+/**
+
+Determine if a list of objects are selectable using
+the select command
+
+Parameters:
+pObjects (String): A return delimited list of object references
+
+Description:
+Returns true if all objects exist, are on an editable open stack and
+have the same owner.
+
+Returns: True if the objects can be selected
+
+*/
+
+function revIDEObjectsAreSelectable pObjects
+   local tOwner, tObject
+   split pObjects by return
+   
+   if there is a pObjects[1] then
+      put the owner of pObjects[1] into tOwner
+   end if
+   
+   repeat for each element tObject in pObjects
+      
+      if there is not a tObject then
+         return false
+      end if
+      
+      if the mode of revIDEStackOfObject(tObject) is not 1 then
+         return false
+      end if
+      
+      if the owner of tObject is not tOwner then
+         return false
+      end if
+      
+   end repeat
+   
+   return true
+end revIDEObjectsAreSelectable

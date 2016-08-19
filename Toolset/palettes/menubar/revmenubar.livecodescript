@@ -1991,14 +1991,14 @@ function revMenuBarCardContextMenu pCard, pIndent
    return tText
 end revMenuBarCardContextMenu
 
-function revMenuBarObjectContextMenu pExtraText, pObject, pIndent
+function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    local tIndent
    repeat pIndent
       put tab after tIndent
    end repeat
    
    local tText
-   put revMenuBarStandardContextMenu(pIndent) & return into tText
+   put revMenuBarStandardContextMenu(pIndent, pSelectable) & return into tText
    repeat for each line tLine in pExtraText
       put tIndent & tLine & return after tText
    end repeat
@@ -2008,7 +2008,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent
    return tText
 end revMenuBarObjectContextMenu
 
-function revMenuBarStandardContextMenu pIndent
+function revMenuBarStandardContextMenu pIndent, pSelectable
    local tIndent
    repeat pIndent
       put tab after tIndent
@@ -2018,12 +2018,12 @@ function revMenuBarStandardContextMenu pIndent
    put tIndent & "Edit Script" & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "Cut" & return after tText
-   put tIndent & "Copy" after tText
+   put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
+   put tIndent & enableMenuItem("Copy", pSelectable) after tText
    return tText
 end revMenuBarStandardContextMenu
 
-function revBuildContextSensitiveMenu pExtraText, pTarget, pType
+function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
    local tText
    if word 1 of pTarget is "stack" then
       put revMenuBarStackContextMenu(pTarget, 0) into tText
@@ -2041,9 +2041,9 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
       return tText
    end if
    
-   put revMenuBarObjectContextMenu(pExtraText, pTarget,0) into tText
+   put revMenuBarObjectContextMenu(pExtraText, pTarget,0, pSelectable) into tText
    put return & "-" after tText
-   put return & "Clear" after tText
+   put return & enableMenuItem("Clear", pSelectable) after tText
    put return & "-" after tText
    put return & "Card" after tText
    put return & revMenuBarCardContextMenu(the long id of this card of tTargetStack, 1) after tText
@@ -2054,25 +2054,18 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType
 end revBuildContextSensitiveMenu
 
 function revMenubarContextMenu pType, pTarget
+   local tSelectable
+   put revIDEObjectsAreSelectable(sMenuTarget) into tSelectable
+   
    local tText
    switch pType
-      case "card"
-         put revBuildContextSensitiveMenu("", pTarget) into tText
-         break
-      case "stack"
-         put revBuildContextSensitiveMenu("", pTarget) into tText
-         replace tab&tab with "#####REVDOUBLETAB#####" in tText
-         replace tab with empty in tText
-         replace "#####REVDOUBLETAB#####" with tab in tText
-         break
       case "group"
-         put enableMenuItem("Paste into Group", the clipboard is "objects") & return after tText
+         put enableMenuItem("Paste into Group", tSelectable and the clipboard is "objects") & return after tText
          put "-" & return after tText
-         put "Edit Group" & return after tText
-         put "Ungroup" & return after tText
+         put enableMenuItem("Edit Group", tSelectable) & return after tText
+         put enableMenuItem("Ungroup", tSelectable) & return after tText
          put "-" & return after tText
          put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "image"
          put "-" & return after tText
@@ -2082,12 +2075,10 @@ function revMenubarContextMenu pType, pTarget
          put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
          put enableMenuItem("Make Original Size", the formattedWidth of pTarget is not the width of pTarget \
                or the formattedHeight of pTarget is not the height of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "polygon"
          put "-" & return after tText
-         put "Reshape Polygon" & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
+         put toggleMenuItem( "Reshape Polygon", the editMode of pTarget is "polygon") & return after tText
          break
       case "multiple"
          put "-" & return after tText
@@ -2099,15 +2090,13 @@ function revMenubarContextMenu pType, pTarget
          put tab & "-" & return after tText
          put tab & "Make Widths Equal/|Width" & return after tText
          put tab & "Make Heights Equal/|Height" & return after tText
-         put "Group" & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
+         put enableMenuItem("Group", tSelectable) & return after tText
          break
       case "field"
-         put enableMenuItem("Paste Text", the clipboard is "text") & return after tText
+         put enableMenuItem("Paste Text", tSelectable and the clipboard is "text") & return after tText
          put "-" & return after tText
          put toggleMenuItem("Lock Text", the lockText of pTarget) & return after tText
          put toggleMenuItem("Can Receive Keyboard Focus", the traversalOn of pTarget) & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "player"
          put "-" & return after tText
@@ -2118,20 +2107,14 @@ function revMenubarContextMenu pType, pTarget
          else
             put enableMenuItem("Pause", word 1 of the tool is "browse") & return after tText
          end if
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
          break
       case "menu"
          put enableMenuItem("TopLevel Panel Stack", the menuName of pTarget is not empty) & return after tText
-         put revBuildContextSensitiveMenu(tText, pTarget) into tText
-         break
-      case "widget"
-         put revBuildContextSensitiveMenu("", pTarget) into tText
-         break
-      case "standard"
-      default
-         put revBuildContextSensitiveMenu("", pTarget) into tText
          break
    end switch
+   
+   put revBuildContextSensitiveMenu(tText, pTarget, , tSelectable) into tText
+   
    return modifyMenu(pType, tText)
 end revMenubarContextMenu
 
@@ -2446,6 +2429,14 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Show In Project Browser"
          revIDEShowInProjectBrowser pTarget
+         break
+         ######## GRAPHIC SPECIFIC #########
+      case "Reshape Polygon"
+         if the editMode of pTarget is "polygon" then
+            set the editMode of pTarget to "none"
+         else
+            set the editMode of pTarget to "polygon"
+         end if
          break
          ######## GROUP SPECIFIC #########
       case "Edit Group"
