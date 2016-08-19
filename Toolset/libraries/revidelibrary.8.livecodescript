@@ -11630,6 +11630,12 @@ function revIDEObjectsAreSelectable pObjects
       put the owner of pObjects[1] into tOwner
    end if
    
+   if word 1 of tOwner is among the words of "group, bkgnd background" then
+      if not the selectGroupedControls or not the selectGroupedControls of tOwner then
+         return false
+      end if
+   end if
+   
    repeat for each element tObject in pObjects
       
       if there is not a tObject then
