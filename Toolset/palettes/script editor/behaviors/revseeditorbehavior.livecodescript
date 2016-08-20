@@ -4829,6 +4829,11 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    
    put tDescription & return after tFormattedResults
    
+   local tObjectCount = 0
+   local tFoundCount = 0
+   
+   local tTotalObjects
+   put the number of lines of tObjectList into tTotalObjects
    # Execute the search
    local tGlobalResults, tResults
    repeat for each line tObject in tObjectList
@@ -4840,10 +4845,11 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
       
       if pCallback is not empty then
          # Pass the rugged id to the callback, as this form is quite compact, despite not being the most readable.
-         local tObjectName
-         put revRuggedId(the long id of tObject) into tObjectName
-         findDispatchCallback pCallback, pCallbackTarget, "Searching: " & tObjectName
+         add 1 to tObjectCount
+         findDispatchCallback pCallback, pCallbackTarget, "Search results found:" && tFoundCount && "with" && round(tObjectCount / tTotalObjects * 100) & "% complete"
          if the result is "cancel" then
+            sePrefSet "editor,lastsearchresults", tFormattedResults & tGlobalResults
+            send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
             exit showAllFindResults
          end if
       end if
@@ -4856,13 +4862,11 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
       put the result into tResults
       if tResults is not empty then
          repeat for each line tResult in tResults
+            add 1 to tFoundCount
             local tLineNumber
             put the number of lines of char 1 to (item 1 of tResult) of tScript into tLineNumber
             put tObject & tab & tLineNumber & tab & item 1 of tResult & tab & item 2 of tResult & tab & line tLineNumber of tScript & return after tGlobalResults
          end repeat
-         sePrefSet "editor,lastsearchresults", tFormattedResults & tGlobalResults
-         send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
-         wait 0 with messages
       end if
    end repeat
    
@@ -4872,10 +4876,12 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    local tNewMainstacks
    put the mainstacks into tNewMainstacks
    
-   if tGlobalResults is empty then
-      sePrefSet "editor,lastsearchresults", tFormattedResults
-      send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
+   if pCallback is not empty then
+      findDispatchCallback pCallback, pCallbackTarget, "Total results found:" && tFoundCount 
    end if
+   
+   sePrefSet "editor,lastsearchresults", tFormattedResults & tGlobalResults
+   send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
    
    repeat for each line tStack in tNewMainstacks
       if tStack is not among the lines of tOldMainstacks then
