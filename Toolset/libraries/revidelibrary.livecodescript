@@ -132,7 +132,6 @@ function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncl
    # return an error and put empty into the list. What might also happen is that one of the child objects
    # as its dontSearch set to true. In this case, we'll return a partial list.
    if pObeyDontSearch and word 1 of the name of pRootObject is among the words of "field group card" then
-      put empty into xList
       return "dontSearch of root object set"
    end if
    
@@ -192,13 +191,13 @@ private command addObject pObject, pObeyDontSearch, @xList, pScriptsOnly
    end if
    
    if not pScriptsOnly or the script of pObject is not empty then
-      put empty into xList[the long id of pObject]
+      put true into xList[the long id of pObject]
    end if
    
    local tBehavior
    put the behavior of pObject into tBehavior
    repeat while exists(tBehavior)
-      put empty into xList[the long id of tBehavior]
+      put true into xList[the long id of tBehavior]
       put the behavior of tBehavior into tBehavior
    end repeat
    

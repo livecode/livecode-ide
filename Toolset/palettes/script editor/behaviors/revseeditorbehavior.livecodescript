@@ -4205,8 +4205,8 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
       put sObjectId into tObjectList
    end if
    
-   if tObjectList is not an array then
-      split tObjectList by return as set
+   if tObjectList is an array then
+      combine tObjectList with return as set
    end if
    
    return tObjectList
@@ -4629,7 +4629,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
    
    lock screen
    local tStart
-   repeat for each key tObject in tObjectList
+   repeat for each line tObject in tObjectList
       if seGetRuggedId(tObject) is not seGetRuggedId(sObjectId) then
          revSESetCurrentObject tObject, empty, true
          put 1 into tStart
@@ -4667,7 +4667,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
    end repeat
    
    if tResult is empty then
-      revSESetCurrentObject (line 1 of the keys of tObjectList), empty, true
+      revSESetCurrentObject (line 1 of tObjectList), empty, true
    end if
    
    if tResult is empty and tSearch["start"] > 1 then
@@ -4810,7 +4810,7 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    
    # Execute the search
    local tGlobalResults, tResults
-   repeat for each key tObject in tObjectList
+   repeat for each line tObject in tObjectList
       # OK-2009-04-21 : It seems to be possible for objects to be deleted between listing them and searching them,
       # in this case, we have little option but to skip the object.
       if there is no tObject then
@@ -4927,7 +4927,7 @@ command replaceAll pQuery, pString, pIsRegExp, pUseWildCards, pWholeMatch, pIgno
    local tReplacementCount
    put 0 into tReplacementCount
    
-   repeat for each key tObject in tObjectList
+   repeat for each line tObject in tObjectList
       if pCallback is not empty then
          findDispatchCallback pCallback, pCallbackTarget, "Replacing: " & revRuggedId(the long id of tObject)
          if the result is "cancel" then
