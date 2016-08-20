@@ -4386,6 +4386,8 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
    
    global gREVDevelopment
    
+   local tStackFiles
+   
    local tList
    repeat for each line tMainstack in tMainstacks
       # Skip ide mainstacks based on their filename. It is assumed that a substack is
@@ -4413,6 +4415,10 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
          local tPath
          put resolveStackFilePath(item 2 to -1 of tStackFile, the name of stack tMainstack) into tPath
          
+         if tStackFiles[tPath] then
+            next repeat
+         end if
+         
          local tIsInMemory
          put stackFileIsInMemory(tPath, the name of stack tMainstack) into tIsInMemory
          if tIsInMemory then
@@ -4430,6 +4436,9 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
             get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tList)
             
          end if
+         
+         put true into tStackFiles[tPath]
+         
          unlock messages
       end repeat
    end repeat
