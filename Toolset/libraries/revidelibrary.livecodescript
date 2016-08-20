@@ -125,14 +125,14 @@ end revIDEShowMessageBox
 #   If pRootObject is a stack, the object list is the stack, all its cards, and all objects on each card
 #   If pRootObject is a card the list is the card and all objects on it
 #   If pRootObject is any other control, the list is pRootObject.
-function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncludeSubstacks, pIgnorePasswordProtected, pScriptsOnly, @rList
+function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncludeSubstacks, pIgnorePasswordProtected, pScriptsOnly, @xList
    --delete variable sAddedObjects
    
    # Put the root object into the list first. If this is not possible because to dontSearch or card marking then
    # return an error and put empty into the list. What might also happen is that one of the child objects
    # as its dontSearch set to true. In this case, we'll return a partial list.
-   if word 1 of the name of pRootObject is among the words of "field group card" and pObeyDontSearch then
-      put empty into rList
+   if pObeyDontSearch and word 1 of the name of pRootObject is among the words of "field group card" then
+      put empty into xList
       return "dontSearch of root object set"
    end if
    
@@ -144,90 +144,84 @@ function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncl
    
    # If the root object is a mainstack, we add the stack itself, then all its substacks if applicable
    local tResult
-   if word 1 of pRootObject is "stack" and the mainstack of pRootObject is the short name of pRootObject and pIncludeSubstacks then
-      addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, rList, pScriptsOnly
-      put the result into tResult
-      
-      repeat for each line tSubstack in the substacks of pRootObject
-         local tSubstackResult
-         addStack the name of stack tSubstack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, rList, pScriptsOnly
-         put the result into tSubstackResult
-         if tResult is empty then
-            put tSubstackResult into tResult
-         end if
-      end repeat
-   else if word 1 of pRootObject is "stack" then
-      # If its not a mainstack, or we're not adding substacks, just add the stack
-      addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, rList, pScriptsOnly
-      put the result into tResult
-   else if word 1 of pRootObject is "card" then
-      # If its a card then add the card and all its controls
-      addCard pRootObject, pObeyDontSearch, pMarked, rList, pScriptsOnly
-      put the result into tResult
-   else if word 1 of pRootObject is "group" then
-      # If its a group then add the group and all its control
-      addGroup pRootObject, pObeyDontSearch, rList, pScriptsOnly
-      put the result into tResult
-   else
-      # All other objects, i.e non-containers, just add the single object to the list.
-      addObject pRootObject, pObeyDontSearch, rList, pScriptsOnly
-      put the result into tResult
-   end if
+   switch word 1 of pRootObject
+      case "stack"
+         if the mainstack of pRootObject is the short name of pRootObject and pIncludeSubstacks then
+            addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+            put the result into tResult
+            
+            repeat for each line tSubstack in the substacks of pRootObject
+               local tSubstackResult
+               addStack the name of stack tSubstack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+               put the result into tSubstackResult
+               if tResult is empty then
+                  put tSubstackResult into tResult
+               end if
+            end repeat
+         else
+            # If its not a mainstack, or we're not adding substacks, just add the stack
+            addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+            put the result into tResult
+         end if 
+         break
+      case "card"
+         # If its a card then add the card and all its controls
+         addCard pRootObject, pObeyDontSearch, pMarked, xList, pScriptsOnly
+         put the result into tResult
+         break
+      case "group"
+         # If its a group then add the group and all its control
+         addGroup pRootObject, pObeyDontSearch, xList, pScriptsOnly
+         put the result into tResult
+         break
+      default
+         # All other objects, i.e non-containers, just add the single object to the list.
+         addObject pRootObject, pObeyDontSearch, xList, pScriptsOnly
+         put the result into tResult
+         break
+   end switch
    
    set the hcAddressing of stack revTargetStack(pRootObject) to tOldHCAddressing
    
    return tResult
 end revIDEListSearchObjectTree
 
-private command addObject pObject, pObeyDontSearch, @rList, pScriptsOnly
-   if word 1 of the name of pObject is among the words of "card group field" and pObeyDontSearch and the dontSearch of pObject then
+private command addObject pObject, pObeyDontSearch, @xList, pScriptsOnly
+   if pObeyDontSearch and the dontSearch of pObject and word 1 of the name of pObject is among the words of "card group field" then
       return "dontSearch set on object"
    end if
    
-   local tId
-   put the long id of pObject into tId
-   if word 3 of tId is 0 then
-      # Due to an engine bug, some objects can have IDs of zero. For now, we ignore this...
-      --breakpoint
-   end if
-   
-   
-   if not pScriptsOnly or word 1 of the script of pObject is not empty then
-      --if sAddedObjects[the long id of pObject] then
-      --log "Duplicate object added: " & pObject
-      --log "Context: " & the executionContexts
-      --end if
-      
-      --put true into sAddedObjects[the long id of pObject]
-      put the long id of pObject & return after rList
+   if not pScriptsOnly or the script of pObject is not empty then
+      put empty into xList[the long id of pObject]
    end if
    return empty
 end addObject
 
-private command addCard pCard, pObeyDontSearch, pMarked, @rList, pScriptsOnly
+private command addCard pCard, pObeyDontSearch, pMarked, @xList, pScriptsOnly
    if pMarked is not empty and pMarked is not the mark of pCard then
       return "marked mismatch"
    end if
    
    # Add the card itself
    local tResult
-   addObject pCard, pObeyDontSearch, rList, pScriptsOnly
+   addObject pCard, pObeyDontSearch, xList, pScriptsOnly
    put the result into tResult
    
    # Add the non-grouped controls
    local tObjectResult
-   repeat with x = 1 to the number of controls of pCard
+   local tControlID
+   repeat for each line tControlID in the childControlIDs of pCard
       # Don't add groups
-      if word 1 of the name of control x of pCard is among the words of "grp group background bkgnd bg" then
+      if word 1 of the name of control id tControlID of pCard is among the words of "group bkgnd" then
          next repeat
       end if
       
       # Don't add grouped controls
-      if the owner of control x of pCard is not empty and word 1 of the name of the owner of control x of pCard is among the words of "grp group background bkgnd bg" then
+      if the owner of control id tControlID of pCard is not empty and word 1 of the name of the owner of control id tControlID of pCard is among the words of "group bkgnd" then
          next repeat
       end if
       
-      addObject the long id of control x of pCard, pObeyDontSearch, rList, pScriptsOnly
+      addObject the long id of control id tControlID of pCard, pObeyDontSearch, xList, pScriptsOnly
       put the result into tObjectResult
       
       if tResult is empty then
@@ -237,15 +231,16 @@ private command addCard pCard, pObeyDontSearch, pMarked, @rList, pScriptsOnly
    
    # Add any groups.
    local tGroup, tGroupResult
+   local tID
    repeat for each line tId in the groupIds of pCard
       put the long id of group id tId of pCard into tGroup
-      if the backgroundBehavior of tGroup then
+      if the sharedBehavior of tGroup then
          next repeat
       end if
       
       # Note that if a group on the card does not have its backgroundBehavior set, but is placed on multiple cards,
       # it will be duplicated in the list. I'm not sure if this is correct or not...
-      addGroup tGroup, pObeyDontSearch, rList, pScriptsOnly
+      addGroup tGroup, pObeyDontSearch, xList, pScriptsOnly
       put the result into tGroupResult
       
       if tResult is empty then
@@ -256,18 +251,19 @@ private command addCard pCard, pObeyDontSearch, pMarked, @rList, pScriptsOnly
    return tResult
 end addCard
 
-private command addGroup pGroup, pObeyDontSearch, @rList, pScriptsOnly
+private command addGroup pGroup, pObeyDontSearch, @xList, pScriptsOnly
    if pObeyDontSearch and the dontSearch of pGroup then
       return "dontSearch set on group"
    end if
    
    local tResult
-   addObject pGroup, pObeyDontSearch, rList, pScriptsOnly
+   addObject pGroup, pObeyDontSearch, xList, pScriptsOnly
    put the result into tResult
    
    local tObjectResult
-   repeat with x = 1 to the number of controls of pGroup
-      addObject the long id of control x of pGroup, pObeyDontSearch, rList, pScriptsOnly
+   local tControlID
+   repeat for each line tControlID in the childControlIDs of pGroup
+      addObject the long id of control id tControlID of pGroup, pObeyDontSearch, xList, pScriptsOnly
       put the result into tObjectResult
       
       if tResult is empty then
@@ -278,7 +274,7 @@ private command addGroup pGroup, pObeyDontSearch, @rList, pScriptsOnly
    return tResult
 end addGroup
 
-private command addStack pStack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, @rList, pScriptsOnly
+private command addStack pStack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, @xList, pScriptsOnly
    local tResult
    
    if pIgnorePasswordProtected then
@@ -290,25 +286,28 @@ private command addStack pStack, pObeyDontSearch, pMarked, pIgnorePasswordProtec
    end if
    
    # The stack itself
-   addObject pStack, pObeyDontSearch, rList, pScriptsOnly
+   addObject pStack, pObeyDontSearch, xList, pScriptsOnly
    put the result into tResult
    
-   # All background groups on the stack
-   local tBackground, tBackgroundResult
-   repeat for each line tId in the backgroundIds of pStack
-      addGroup the long id of background id tId of pStack, pObeyDontSearch, rList, pScriptsOnly
-      put the result into tBackgroundResult
+   # All shared groups groups on the stack
+   local tSharedGroupResult
+   local tGroupID
+   repeat for each line tGroupID in the sharedGroupIDs of pStack
+      addGroup the long id of control id tGroupID of pStack, pObeyDontSearch, xList, pScriptsOnly
+      put the result into tSharedGroupResult
       
       if tResult is empty then
-         put tBackgroundResult into tResult
+         put tSharedGroupResult into tResult
       end if
    end repeat
    
    # All the cards on the stack
    local tCardResult
-   repeat with x = 1 to the number of cards of pStack
-      addCard the long id of card x of pStack, pObeyDontSearch, pMarked, rList, pScriptsOnly
+   local tCardID
+   repeat for each line tCardID in the cardIDs of pStack
+      addCard the long id of card id tCardID of pStack, pObeyDontSearch, pMarked, xList, pScriptsOnly
       put the result into tCardResult
+      
       if tResult is empty then
          put tCardResult into tResult
       end if

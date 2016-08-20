@@ -4217,6 +4217,10 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
       put sObjectId into tObjectList
    end if
    
+   if tObjectList is not an array then
+      split tObjectList by return as set
+   end if
+   
    return tObjectList
 end findObjectList
 
@@ -4401,9 +4405,7 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
          return empty
       end if
       
-      local tStackObjectList
-      put empty into tStackObjectList
-      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, true, tStackObjectList)
+      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, true, tList)
       
       # Next search the stackFiles property. Note here that a stack in the stackFiles may also be in the mainstacks
       # if it happens to be open, so we skip these to avoid searching them twice.
@@ -4425,22 +4427,13 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
                return empty
             end if
             
-            local tStackFileList
-            put empty into tStackFileList
+            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tList)
             
-            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tStackFileList)
-            put tStackFileList after tStackObjectList
-            
-            --            lock messages
-            --            delete stack tPath
-            --            unlock messages
          end if
          unlock messages
       end repeat
-      
-      put tStackObjectList after tList
    end repeat
-   delete the last char of tList
+   
    return tList
 end findListObjectsOnAllAvailableStacks
 
@@ -4467,12 +4460,9 @@ private function findListObjectsOnAllStacksAndSubstacks pCallback, pCallbackTarg
          return empty
       end if
       
-      local tStackObjectList
-      put empty into tStackObjectList
-      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, tStackObjectList)
-      put tStackObjectList after tList
+      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, tList)
    end repeat
-   delete the last char of tList
+   
    return tList
 end findListObjectsOnAllStacksAndSubstacks
 
@@ -4648,7 +4638,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
    
    lock screen
    local tStart
-   repeat for each line tObject in tObjectList
+   repeat for each key tObject in tObjectList
       if seGetRuggedId(tObject) is not seGetRuggedId(sObjectId) then
          revSESetCurrentObject tObject, empty, true
          put 1 into tStart
@@ -4686,7 +4676,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
    end repeat
    
    if tResult is empty then
-      revSESetCurrentObject (line 1 of tObjectList), empty, true
+      revSESetCurrentObject (line 1 of the keys of tObjectList), empty, true
    end if
    
    if tResult is empty and tSearch["start"] > 1 then
@@ -4792,7 +4782,7 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    
    # Execute the search
    local tGlobalResults, tResults
-   repeat for each line tObject in tObjectList
+   repeat for each key tObject in tObjectList
       # OK-2009-04-21 : It seems to be possible for objects to be deleted between listing them and searching them,
       # in this case, we have little option but to skip the object.
       if there is no tObject then
@@ -4943,7 +4933,7 @@ command replaceAll pQuery, pString, pIsRegExp, pUseWildCards, pWholeMatch, pIgno
    local tReplacementCount
    put 0 into tReplacementCount
    
-   repeat for each line tObject in tObjectList
+   repeat for each key tObject in tObjectList
       if pCallback is not empty then
          findDispatchCallback pCallback, pCallbackTarget, "Replacing: " & revRuggedId(the long id of tObject)
          if the result is "cancel" then
