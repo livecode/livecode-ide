@@ -4844,13 +4844,17 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
          wait 0 with messages
       end if
    end repeat
-   delete the last char of tGlobalResults
    
    send "expandCurrentPane" to group "Panes" of seStackId()
    send "refreshCurrentPane" to group "Panes" of seStackId()
    
    local tNewMainstacks
    put the mainstacks into tNewMainstacks
+   
+   if tGlobalResults is empty then
+      sePrefSet "editor,lastsearchresults", tFormattedResults
+      send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
+   end if
    
    repeat for each line tStack in tNewMainstacks
       if tStack is not among the lines of tOldMainstacks then

@@ -194,6 +194,14 @@ private command addObject pObject, pObeyDontSearch, @xList, pScriptsOnly
    if not pScriptsOnly or the script of pObject is not empty then
       put empty into xList[the long id of pObject]
    end if
+   
+   local tBehavior
+   put the behavior of pObject into tBehavior
+   repeat while exists(tBehavior)
+      put empty into xList[the long id of tBehavior]
+      put the behavior of tBehavior into tBehavior
+   end repeat
+   
    return empty
 end addObject
 
