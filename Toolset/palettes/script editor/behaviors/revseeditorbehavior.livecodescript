@@ -4205,7 +4205,7 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
       put findListObjectsOnStackAndSubstacks(sObjectId, false, pCallback, pCallbackTarget, rCancelled) into tObjectList
    else if pTarget is "all stacks" then
       # Searches all stacks and substacks in memory
-      put findListObjectsOnAllStacksAndSubstacks(false, pCallback, pCallbackTarget, rCancelled) into tObjectList
+      put findListObjectsOnAllStacksAndSubstacks(pCallback, pCallbackTarget, rCancelled) into tObjectList
    else if pTarget is "stack file and stackfiles" then
       # As for "stack file" except also searches all available stacks in the stackFiles property
       put findListObjectsOnStackAndSubstacks(sObjectId, true, pCallback, pCallbackTarget, rCancelled) into tObjectList
@@ -4390,7 +4390,7 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
    repeat for each line tMainstack in tMainstacks
       # Skip ide mainstacks based on their filename. It is assumed that a substack is
       # ide if and only if its mainstack is.
-      if not gREVDevelopment and revIDEStack(the filename of stack tMainstack) then
+      if not gREVDevelopment and revIDEStackIsIDEStack(the long id of stack tMainstack) then
          next repeat
       end if
       
@@ -4448,9 +4448,12 @@ private function findListObjectsOnAllStacksAndSubstacks pCallback, pCallbackTarg
    
    local tList
    repeat for each line tMainstack in tMainstacks
+      if there is not a stack tMainstack then
+         next repeat
+      end if
       # Skip ide mainstacks based on their filename. It is assumed that a substack is
       # ide if and only if its mainstack is.
-      if not gREVDevelopment and revIDEStack(the filename of stack tMainstack) then
+      if not gREVDevelopment and revIDEStackIsIDEStack(the long id of stack tMainstack) then
          next repeat
       end if
       
@@ -4460,7 +4463,7 @@ private function findListObjectsOnAllStacksAndSubstacks pCallback, pCallbackTarg
          return empty
       end if
       
-      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, tList)
+      get revIDEListSearchObjectTree(the name of stack tMainstack, false, empty, true, true, true, tList)
    end repeat
    
    return tList
