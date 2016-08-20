@@ -352,37 +352,6 @@ function revIDEImmediateOwner pObject, pType
    # Should never get here...
 end revIDEImmediateOwner
 
-# OK-2009-10-09 : The following stuff added for the auto update checker and related systems
-command revIDELaunchUpsellLink pAction
-   local tBaseUrl
-   put "http://developer.runrev.com/redirect.irev?action=" into tBaseUrl
-   
-   local tUrl
-   put tBaseUrl & pAction into tUrl
-   
-   if pAction is among the items of "buy_early_update_pack,buy_update_pack,buy_license" then
-      put "&edition=" & revIDEGetProductEditionName() after tUrl
-   end if
-   
-   launch url tUrl
-end revIDELaunchUpsellLink
-
-function revIDEGetProductEditionName
-   switch line 4 of the revLicenseInfo
-      case "Enterprise"
-         return "revEnterprise"
-         break
-      case "Studio"
-         return "revStudio"
-         break
-      case "Media"
-         return "revMedia"
-         break
-      default
-         return empty
-   end switch
-end revIDEGetProductEditionName
-
 private function idePrefToPropertyName pPref
    return "c" & pPref
 end idePrefToPropertyName
