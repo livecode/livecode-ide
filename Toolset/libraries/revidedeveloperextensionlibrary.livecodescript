@@ -35,13 +35,24 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    local tCompileInputs, tCompileOutputs, tNeedUpdate, tError
    
    put pFolder & slash & pFile into tCompileInputs[1]
-   put __revIDEDeveloperExtensionCompilerPath() into tCompileInputs[2]
    
    put pFolder & slash & "manifest.xml" into tCompileOutputs[1]
    put pFolder & slash & "module.lcm" into tCompileOutputs[2]
    
    put revIDEIsFilesetStale(tCompileInputs, tCompileOutputs, false, tError) \
          into tNeedUpdate
+   
+   if tNeedUpdate is false then
+      -- read the file version string just to make sure
+      -- in the future we should add an --outputversion option to lc-compile to automate this
+      local tBytes
+      open file tCompileOutputs[2] for binary read
+      read from file tCompileOutputs[2] for 4
+      -- Version 8.1 requires a LCB file version 1.0
+      put not(byteToNum(byte 3 of it) is 1 and byteToNum(byte 4 of it) is 0) into tNeedUpdate
+      close file tCompileOutputs[2]
+   end if
+   
    return tNeedUpdate is not false
 end __revIDEDeveloperExtensionShouldRecompile
 
