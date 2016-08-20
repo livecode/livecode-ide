@@ -1585,7 +1585,7 @@ on textEndGroup
 end textEndGroup
 
 -- Text Formatting Code
-on textFormatInitialize
+private command textFormatInitialize
    local tTabDepth
    put sePrefGet("editor,tabdepth") into tTabDepth
    
@@ -1617,7 +1617,7 @@ on textFormatInitialize
    put -tTabDepth & ",0" into sTextFormatKeywordMap["end"]
 end textFormatInitialize
 
-function textFormatIndentLineAdds pLine
+private function textFormatIndentLineAdds pLine
    local tToken
    put token 1 of pLine into tToken
    if tToken is "if" then
@@ -1662,7 +1662,7 @@ function textFormatIndentLineAdds pLine
 end textFormatIndentLineAdds
 
 
-function textFormatIndentLineRemoves pPreviousLine, pLine
+private function textFormatIndentLineRemoves pPreviousLine, pLine
    local tToken
    put token 1 of pLine into tToken
    if tToken is "else" then
@@ -1721,7 +1721,7 @@ function textFormatIndentLineRemoves pPreviousLine, pLine
    end if
 end textFormatIndentLineRemoves
 
-function textFormatGetLineIndent pLine
+private function textFormatGetLineIndent pLine
    local tResult
    repeat for each char tChar in pLine
       if tChar is space then
@@ -1765,7 +1765,7 @@ end combineContinuedLine
 
 constant kContinuationIndent = 6
 
-function textFormatLine pLine, pTextLines, @xPreviousLine
+private function textFormatLine pLine, pTextLines, @xPreviousLine
    local tResult
    
    # OK-2009-01-30 : Bug 7051 - Deal better with continuation characters.
@@ -1876,7 +1876,7 @@ end firstWordToEnd
 
 # Parameters
 #   pText : the text to format
-function textFormatSelection pText
+private function textFormatSelection pText
    local tResult
    local tPreviousLine = 0
    local tTextLines
@@ -1913,7 +1913,7 @@ private function handlerTypes
    return "command,on,function,setprop,getprop,before,after"
 end handlerTypes
 
-function textFormat pLineNumber, pText
+private function textFormat pLineNumber, pText
    -- Find the range to format.
    -- 1. Search down until we find a handler (a) or the end of one (b).
    -- 2. Based on 1, in case a, search up until we find the end of any other handler, or the beginning of the script.
