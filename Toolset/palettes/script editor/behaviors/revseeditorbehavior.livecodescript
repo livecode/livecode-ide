@@ -4783,43 +4783,9 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    
    seFindHistoryAdd "find", tSearch["query"]
    
-   # Execute the search
-   local tGlobalResults, tResults
-   repeat for each key tObject in tObjectList
-      # OK-2009-04-21 : It seems to be possible for objects to be deleted between listing them and searching them,
-      # in this case, we have little option but to skip the object.
-      if there is no tObject then
-         next repeat
-      end if
-      
-      if pCallback is not empty then
-         # Pass the rugged id to the callback, as this form is quite compact, despite not being the most readable.
-         local tObjectName
-         put revRuggedId(the long id of tObject) into tObjectName
-         findDispatchCallback pCallback, pCallbackTarget, "Searching: " & tObjectName
-         if the result is "cancel" then
-            exit showAllFindResults
-         end if
-      end if
-      
-      local tScript
-      scriptGet tObject
-      put the result into tScript
-      
-      findText tScript, true, 1, the number of chars of tScript, tSearch
-      put the result into tResults
-      if tResults is not empty then
-         repeat for each line tResult in tResults
-            local tLineNumber
-            put the number of lines of char 1 to (item 1 of tResult) of tScript into tLineNumber
-            put tObject & tab & tLineNumber & tab & item 1 of tResult & tab & item 2 of tResult & tab & line tLineNumber of tScript & return after tGlobalResults
-         end repeat
-      end if
-   end repeat
-   delete the last char of tGlobalResults
+   local tFormattedResults
    
    # Format the results for display
-   local tFormattedResults
    put pQuery & return into tFormattedResults
    
    local tDescription
@@ -4853,12 +4819,45 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    end switch
    
    put tDescription & return after tFormattedResults
-   put tGlobalResults after tFormattedResults
    
-   # Display the results in the search results pane
-   # OK-2008-09-11 : Refactored to avoid direct interaction with Search Results pane.
-   sePrefSet "editor,lastsearchresults", tFormattedResults
-   send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId()
+   # Execute the search
+   local tGlobalResults, tResults
+   repeat for each key tObject in tObjectList
+      # OK-2009-04-21 : It seems to be possible for objects to be deleted between listing them and searching them,
+      # in this case, we have little option but to skip the object.
+      if there is no tObject then
+         next repeat
+      end if
+      
+      if pCallback is not empty then
+         # Pass the rugged id to the callback, as this form is quite compact, despite not being the most readable.
+         local tObjectName
+         put revRuggedId(the long id of tObject) into tObjectName
+         findDispatchCallback pCallback, pCallbackTarget, "Searching: " & tObjectName
+         if the result is "cancel" then
+            exit showAllFindResults
+         end if
+      end if
+      
+      local tScript
+      scriptGet tObject
+      put the result into tScript
+      
+      findText tScript, true, 1, the number of chars of tScript, tSearch
+      put the result into tResults
+      if tResults is not empty then
+         repeat for each line tResult in tResults
+            local tLineNumber
+            put the number of lines of char 1 to (item 1 of tResult) of tScript into tLineNumber
+            put tObject & tab & tLineNumber & tab & item 1 of tResult & tab & item 2 of tResult & tab & line tLineNumber of tScript & return after tGlobalResults
+         end repeat
+         sePrefSet "editor,lastsearchresults", tFormattedResults & tGlobalResults
+         send "setCurrentTab Search Results" to group "Pane Tabs" of seStackId() in 0
+         wait 0 with messages
+      end if
+   end repeat
+   delete the last char of tGlobalResults
+   
    send "expandCurrentPane" to group "Panes" of seStackId()
    send "refreshCurrentPane" to group "Panes" of seStackId()
    
