@@ -2047,6 +2047,32 @@ private function textReplaceNewGroupNeeded pOldText, pNewText
    return false
 end textReplaceNewGroupNeeded
 
+private command __BracketCompletion pOldText, @xNewText
+   local tCompletionChar
+   switch xNewText
+      case quote
+         put quote into tCompletionChar
+         break
+      case "["
+         put "]" into tCompletionChar
+         break
+      case "("
+         put ")" into tCompletionChar
+         break
+   end switch
+   
+   if tCompletionChar is not empty then
+      if pOldText is empty then
+         put tCompletionChar after xNewText
+         return "pair" for value
+      else
+         put pOldText & tCompletionChar after xNewText
+         return "wrap" for value
+       end if
+   end if
+   return "" for value
+end __BracketCompletion
+
 # Parameters
 #   pOffset : the char number of where the replacement should start
 #   pOldText : the text that is being replaced
@@ -2064,7 +2090,15 @@ private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       put pObject into tObject
    end if
    
+<<<<<<< 1b13b669e33630a952e538ae30a1a3acd85bedc1
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
+=======
+   local tBracketCompletionType
+   __BracketCompletion pOldText, pNewText
+   put it into tBracketCompletionType
+   
+   if textReplaceNewGroupNeeded(pOldText, pNewText) then
+>>>>>>> [[ BracketCompletion ]] Implement bracket completion
       textBeginGroup sTextMark[tObject], tObject
    end if
    
@@ -2084,6 +2118,9 @@ private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    # script cache stored for the object.
    if tObject is empty or seGetRuggedId(tObject) is sObjectId then
       textReplaceRaw pOffset, pOldText, pNewText
+      if tBracketCompletionType is "pair" then
+         select after char pOffset of field "script" of me
+      end if
    else
       local tCache
       put sScriptCache[seGetRuggedId(tObject)] into tCache
