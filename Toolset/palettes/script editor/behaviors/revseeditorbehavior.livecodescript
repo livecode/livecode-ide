@@ -1782,7 +1782,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
    put lineIsContinued(pTextLines[pLine]) into tCurrentLineIsContinued
    
    # Get the previous non-empty line
-   if xPreviousLine is 0 then
+   if xPreviousLine is 0 and pLine > 1 then
       put pLine into xPreviousLine
       repeat while xPreviousLine > 1
          subtract 1 from xPreviousLine
@@ -1793,21 +1793,23 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
    end if
    
    local tPreviousLine
-   # This is the case where we have reached the end of a continued line. Here, we treat the continued line
-   # as a single entity in order to calculate its indentation properties correctly for the line after it.
-   if lineIsContinued(pTextLines[xPreviousLine - 1]) then
-      put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
-   else
-      put pTextLines[xPreviousLine] into tPreviousLine
+   if xPreviousLine > 0 then
+      # This is the case where we have reached the end of a continued line. Here, we treat the continued line
+      # as a single entity in order to calculate its indentation properties correctly for the line after it.
+      if lineIsContinued(pTextLines[xPreviousLine - 1]) then
+         put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
+      else
+         put pTextLines[xPreviousLine] into tPreviousLine
+      end if
+      
+      # Get the current indent of the previous line
+      local tPreviousLineIndent
+      put textFormatGetLineIndent(tPreviousLine) into tPreviousLineIndent
    end if
    
    # Get the current indent of the line
    local tCurrentLineIndent
    put textFormatGetLineIndent(pTextLines[pLine]) into tCurrentLineIndent
-   
-   # Get the current indent of the previous line
-   local tPreviousLineIndent
-   put textFormatGetLineIndent(tPreviousLine) into tPreviousLineIndent
    
    # Work out how much indentation the current line should remove from the previous line
    local tIndentCurrentLineRemoves
@@ -1819,7 +1821,9 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
    
    # Work out how much indentation the previous line should add to the current line.
    local tIndentPreviousLineAdds
-   if tPreviousLineWasContinued then
+   if xPreviousLine is 0 then
+      put 0 into tIndentPreviousLineAdds
+   else if tPreviousLineWasContinued then
       # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
