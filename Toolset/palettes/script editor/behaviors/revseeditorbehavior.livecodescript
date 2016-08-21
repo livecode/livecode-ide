@@ -2047,11 +2047,25 @@ private function textReplaceNewGroupNeeded pOldText, pNewText
    return false
 end textReplaceNewGroupNeeded
 
-private command __BracketCompletion pOldText, @xNewText
+private command __BracketCompletion pOffset, pOldText, @xNewText
    local tCompletionChar
    switch xNewText
       case quote
-         put quote into tCompletionChar
+         if pOldText is empty then
+            -- ensure we really want to insert an extra quote
+            local tLine
+            put the last line of (char 1 to pOffset of field "script" of me) & space into tLine
+            split tLine by quote
+            if (the number of elements in tLine -1) mod 2 is 0 then
+               put space & the first line of (char pOffset to -1 of field "script" of me) into tLine
+               split tLine by quote
+               if (the number of elements in tLine -1) mod 2 is 0 then
+                  put quote into tCompletionChar
+               end if
+            end if
+         else
+            put quote into tCompletionChar
+         end if
          break
       case "["
          put "]" into tCompletionChar
@@ -2068,7 +2082,7 @@ private command __BracketCompletion pOldText, @xNewText
       else
          put pOldText & tCompletionChar after xNewText
          return "wrap" for value
-       end if
+      end if
    end if
    return "" for value
 end __BracketCompletion
@@ -2094,7 +2108,7 @@ private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
 =======
    local tBracketCompletionType
-   __BracketCompletion pOldText, pNewText
+   __BracketCompletion pOffset, pOldText, pNewText
    put it into tBracketCompletionType
    
    if textReplaceNewGroupNeeded(pOldText, pNewText) then
