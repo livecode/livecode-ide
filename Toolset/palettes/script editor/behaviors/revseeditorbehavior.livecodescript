@@ -2048,6 +2048,10 @@ private function textReplaceNewGroupNeeded pOldText, pNewText
 end textReplaceNewGroupNeeded
 
 private command __BracketCompletion pOffset, pOldText, @xNewText
+   if sePrefGet("editor,autocomplete") is not true then
+      return empty for value
+   end if
+   
    local tCompletionChar
    switch xNewText
       case quote
@@ -2084,7 +2088,7 @@ private command __BracketCompletion pOffset, pOldText, @xNewText
          return "wrap" for value
       end if
    end if
-   return "" for value
+   return empty for value
 end __BracketCompletion
 
 # Parameters
