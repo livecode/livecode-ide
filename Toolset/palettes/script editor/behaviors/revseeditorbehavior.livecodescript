@@ -4366,28 +4366,15 @@ private function pathIsRelative pPath
 end pathIsRelative
 
 private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget, @rCancelled
-   # If gREVDEvelopment, then we search all IDE stacks as well, otherwise just the user stacks.
    # Searching only stacks that are actually open seems not too useful, so the script editor will
    # search all stacks in memory.
    local tMainstacks
-   put the mainstacks into tMainstacks
-   
-   global gREVDevelopment
+   put ideMainStacks() into tMainstacks
    
    local tStackFiles
    
    local tList
    repeat for each line tMainstack in tMainstacks
-      # Skip ide mainstacks based on their filename. It is assumed that a substack is
-      # ide if and only if its mainstack is.
-      if not gREVDevelopment and revIDEStackIsIDEStack(the long id of stack tMainstack) then
-         next repeat
-      end if
-      
-      # Unfortunately not all IDE stacks have a filename, in particular the property inspector instances.
-      if not gREVDevelopment and revOKTarget(the long id of stack tMainstack) then
-         next repeat
-      end if
       
       findDispatchCallback pCallback, pCallbackTarget, "Listing: " & revRuggedId(the long id of stack tMainstack)
       if the result is "cancel" then
@@ -4435,25 +4422,13 @@ private function findListObjectsOnAllAvailableStacks pCallback, pCallbackTarget,
 end findListObjectsOnAllAvailableStacks
 
 private function findListObjectsOnAllStacksAndSubstacks pCallback, pCallbackTarget, @rCancelled
-   # If gREVDEvelopment, then we search all IDE stacks as well, otherwise just the user stacks.
    # Searching only stacks that are actually open seems not too useful, so the script editor will
    # search all stacks in memory.
    local tMainstacks
-   put the mainstacks into tMainstacks
-   
-   global gREVDevelopment
+   put ideMainStacks() into tMainstacks
    
    local tList
    repeat for each line tMainstack in tMainstacks
-      if there is not a stack tMainstack then
-         next repeat
-      end if
-      # Skip ide mainstacks based on their filename. It is assumed that a substack is
-      # ide if and only if its mainstack is.
-      if not gREVDevelopment and revIDEStackIsIDEStack(the long id of stack tMainstack) then
-         next repeat
-      end if
-      
       findDispatchCallback pCallback, pCallbackTarget, "Listing: " & revRuggedId(the long id of stack tMainstack)
       if the result is "cancel" then
          put the result into rCancelled
@@ -4756,7 +4731,7 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    end if
    
    local tOldMainstacks
-   put the mainstacks into tOldMainstacks
+   put ideMainStacks() into tOldMainstacks
    
    # Calculate the list of objects to search in
    local tObjectList, tCancelled
@@ -4862,7 +4837,7 @@ command showAllFindResults pQuery, pIsRegExp, pUseWildCards, pWholeMatches, pIgn
    send "refreshCurrentPane" to group "Panes" of seStackId()
    
    local tNewMainstacks
-   put the mainstacks into tNewMainstacks
+   put ideMainStacks() into tNewMainstacks
    
    if pCallback is not empty then
       findDispatchCallback pCallback, pCallbackTarget, "Total results found:" && tFoundCount 
