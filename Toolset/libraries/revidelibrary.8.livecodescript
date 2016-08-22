@@ -11634,7 +11634,9 @@ function revIDEObjectsAreSelectable pObjects
    split pObjects by return
    
    if there is a pObjects[1] then
-      put the owner of pObjects[1] into tOwner
+      put the long owner of pObjects[1] into tOwner
+   else
+      return false
    end if
    
    if word 1 of tOwner is among the words of "group bkgnd background" then
@@ -11655,7 +11657,7 @@ function revIDEObjectsAreSelectable pObjects
          return false
       end if
       
-      if the owner of tObject is not tOwner then
+      if the long owner of tObject is not tOwner then
          return false
       end if
       
