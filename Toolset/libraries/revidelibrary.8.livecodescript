@@ -7314,7 +7314,7 @@ on revIDESaveStack pStackID
       put tStackFileVersion into tFileVersions[1]
       put the minStackFileVersion of stack tStackName into tFileVersions[2]
       if highestVersionNumber(tStackFileVersion, tFileVersions[2]) is 2 then
-         answer revIDELocalise("The preference to preserve stack file formats is is set," && \
+         answer revIDELocalise("The preference to preserve stack file formats is set," && \
                "however, saving this stack file as version %1 will result in data loss." && \
                "The minimum stack file version for this stack is %2.", tFileVersions) \
                with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
@@ -7605,7 +7605,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    local tFileVersions
    put tVersion into tFileVersions[1]
    put the minStackFileVersion of stack tShortName into tFileVersions[2]
-   if highestVersionNumber(tVersion, tFileVersions[2]) is 2 then
+   if tVersion is not empty and highestVersionNumber(tVersion, tFileVersions[2]) is 2 then
       answer revIDELocalise("Saving this stack file as version %1 will result in data loss." && \
             "The minimum stack file version for this stack is %2.", tFileVersions) \
             with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
