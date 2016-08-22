@@ -1,5 +1,5 @@
 ﻿script "IDETestRunner"
-t/*
+/*
 Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
