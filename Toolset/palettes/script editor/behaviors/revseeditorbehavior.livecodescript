@@ -935,9 +935,9 @@ command scriptComment
    repeat for each line tLine in tText
       # Don't comment out empty lines as it looks messy
       if not matchText(tLine, "^\s*$") then
-         put tCommentChar before word 1 of tLine
+         put tCommentChar before tLine
       end if
-      put  tLine & return after tCommentedText
+      put tLine & return after tCommentedText
    end repeat
    delete the last char of tCommentedText
    
@@ -951,7 +951,7 @@ command scriptComment
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
    if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
+      scriptFormat "script"
    end if
    
    set the lockScreen to tOldLock
@@ -1004,7 +1004,7 @@ command scriptUncomment
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
    if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
+      scriptFormat "script"
    end if
    
    set the lockScreen to tOldLock
