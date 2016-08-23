@@ -1709,7 +1709,7 @@ private function textFormatIndentLineRemoves pPreviousLine, pLine
       # OK-2009-02-16 : Bug 7707 - We can't assume the previous line was correctly formatted or script may be deleted.
       # Instead we simplify this by simply chopping off whatever indentation it did have.
       --return min(-(the number of chars of textFormatGetLineIndent(pPreviousLine)), item 1 of sTextFormatKeywordMap[tToken])
-      return -(the number of chars of textFormatGetLineIndent(pPreviousLine))
+      return item 1 of sTextFormatKeywordMap["end"]
    else
       # We can't assume that the previous line was correctly indented
       # because the script might have been edited from outside this script editor. Therefore
