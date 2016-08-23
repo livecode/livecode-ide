@@ -2101,8 +2101,6 @@ end __BracketCompletion
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
 private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
-   __CheckHighlights
-   
    local tObject
    if pObject is empty then
       put sObjectId into tObject
@@ -2607,8 +2605,6 @@ on selectionChangedByArrowKey pArrowKey
    textMark "Insert"
    
    selectionUpdateRequest
-
-   __CheckHighlights
 end selectionChangedByArrowKey
 
 private command selectionUpdateRequest
@@ -2652,6 +2648,9 @@ command selectionUpdate
    # OK-2009-10-05: Some more optimization here, the update method was doing a lot of stuff that is not
    # needed, so I added a more specific method to handle this situation.
    send "updateSelectedHandler" to group "Left Bar" of stack (revTargetStack(the long id of me))
+   
+   __CheckHighlights
+   
    unlock screen
 end selectionUpdate
 
@@ -5489,7 +5488,6 @@ end EditorFieldCacheSwap
 
 constant kBracketBackgroundColor = "255,200,200"
 
-local sHighlightsMessage
 local sHighlightedBrackets
 
 private command __ClearHighlights
@@ -5501,14 +5499,8 @@ private command __ClearHighlights
 end __ClearHighlights
 
 private command __CheckHighlights
-   __ClearHighlights
-   cancel sHighlightsMessage
-   send "__DoCheckHighlights" to me in 100 milliseconds
-   put the result into sHighlightsMessage
-end __CheckHighlights
-
-command __DoCheckHighlights
    lock screen
+   __ClearHighlights
    
    local tChunk
    put the selectedChunk into tChunk
@@ -5528,7 +5520,7 @@ command __DoCheckHighlights
    end if
    
    unlock screen
-end __DoCheckHighlights
+end __CheckHighlights
 
 private command __HighlightBrackets pCharNum, pChar
    local tMatchedCharNum
