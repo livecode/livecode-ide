@@ -924,8 +924,6 @@ command scriptComment
       exit scriptComment
    end if
    
-   local tOldLock
-   put the lockScreen into tOldLock
    lock screen
    
    local tCommentChar
@@ -935,9 +933,9 @@ command scriptComment
    repeat for each line tLine in tText
       # Don't comment out empty lines as it looks messy
       if not matchText(tLine, "^\s*$") then
-         put tCommentChar before word 1 of tLine
+         put tCommentChar before tLine
       end if
-      put  tLine & return after tCommentedText
+      put tLine & return after tCommentedText
    end repeat
    delete the last char of tCommentedText
    
@@ -946,7 +944,7 @@ command scriptComment
    textReplace tStartChar, tText, tCommentedText
    
    # Restore the selection
-   select char tStartChar to (tStartChar + the length of tCommentedText - 1) of field "Script"
+   select char tStartChar to tStartChar + length(tCommentedText)  of field "Script"
    
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
@@ -954,7 +952,7 @@ command scriptComment
       scriptFormat "handler"
    end if
    
-   set the lockScreen to tOldLock
+   unlock screen
 end scriptComment
 
 # Desription
@@ -966,17 +964,18 @@ command scriptUncomment
       exit scriptUncomment
    end if
    
-   local tOldLock
-   put the lockScreen into tOldLock
    lock screen
-   
+   local tCommentChar
+   put sePrefGet("editor,commentchar") into tCommentChar
    local tUncommentedText
+   
+   local tCommentCharLength
+   put the length of tCommentChar  into tCommentCharLength
+   
    repeat for each line tLine in tText
       # Remove the first comment char that appears on the line
       local tOffset
-      local tCommentCharLength
-      put offset(sePrefGet("editor,commentchar"), tLine) into tOffset
-      put the length of sePrefGet("editor,commentchar")  into tCommentCharLength
+      put offset(tCommentChar, tLine) into tOffset
       if tOffset is 0 then
          put tLine & return after tUncommentedText
          next repeat
@@ -987,6 +986,9 @@ command scriptUncomment
       local tPreviousChars
       put char 1 to (tOffset - 1) of tLine into tPreviousChars
       if matchText(tPreviousChars, "^\s*$") then
+         if char tOffset + tCommentCharLength of tLine is space then
+            delete char tOffset + tCommentCharLength of tLine
+         end if
          put char 1 to (tOffset - 1) of tLine & char (tOffset + tCommentCharLength) to -1 of tLine & return after tUncommentedText
       else
          put tLine & return after tUncommentedText
@@ -999,7 +1001,7 @@ command scriptUncomment
    textReplace tStartChar, tText, tUncommentedText
    
    # Restore the selection
-   select char tStartChar to (tStartChar + the length of tUncommentedText - 1) of field "Script"
+   select char tStartChar to tStartChar + length(tUncommentedText)  of field "Script"
    
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
@@ -1007,7 +1009,7 @@ command scriptUncomment
       scriptFormat "handler"
    end if
    
-   set the lockScreen to tOldLock
+   unlock screen
 end scriptUncomment
 
 # OK-2009-03-03 : Bug 7450
@@ -1146,7 +1148,7 @@ command scriptFormat pScope
       
    else # handler only
       local tLine
-      put word 2 of the selectedLine into tline
+      put word 2 of the selectedLine into tLine
       
       local tScript
       put the text of the selectedField into tScript
@@ -1167,7 +1169,7 @@ command scriptFormat pScope
       end if
       
       local tCode
-      put textFormat(tLine, tScript) into tCode
+      put textFormat(tLine, tSelectionLineCount, tScript) into tCode
       textReplace tCode["startchar"], tCode["oldtext"], tCode["newtext"]
       
       local tNewScript
@@ -1585,7 +1587,7 @@ on textEndGroup
 end textEndGroup
 
 -- Text Formatting Code
-on textFormatInitialize
+private command textFormatInitialize
    local tTabDepth
    put sePrefGet("editor,tabdepth") into tTabDepth
    
@@ -1617,7 +1619,7 @@ on textFormatInitialize
    put -tTabDepth & ",0" into sTextFormatKeywordMap["end"]
 end textFormatInitialize
 
-function textFormatIndentLineAdds pLine
+private function textFormatIndentLineAdds pLine
    local tToken
    put token 1 of pLine into tToken
    if tToken is "if" then
@@ -1662,7 +1664,7 @@ function textFormatIndentLineAdds pLine
 end textFormatIndentLineAdds
 
 
-function textFormatIndentLineRemoves pPreviousLine, pLine
+private function textFormatIndentLineRemoves pPreviousLine, pLine
    local tToken
    put token 1 of pLine into tToken
    if tToken is "else" then
@@ -1707,7 +1709,7 @@ function textFormatIndentLineRemoves pPreviousLine, pLine
       # OK-2009-02-16 : Bug 7707 - We can't assume the previous line was correctly formatted or script may be deleted.
       # Instead we simplify this by simply chopping off whatever indentation it did have.
       --return min(-(the number of chars of textFormatGetLineIndent(pPreviousLine)), item 1 of sTextFormatKeywordMap[tToken])
-      return -(the number of chars of textFormatGetLineIndent(pPreviousLine) + textFormatIndentLineAdds(pPreviousLine))
+      return -(the number of chars of textFormatGetLineIndent(pPreviousLine))
    else
       # We can't assume that the previous line was correctly indented
       # because the script might have been edited from outside this script editor. Therefore
@@ -1721,7 +1723,7 @@ function textFormatIndentLineRemoves pPreviousLine, pLine
    end if
 end textFormatIndentLineRemoves
 
-function textFormatGetLineIndent pLine
+private function textFormatGetLineIndent pLine
    local tResult
    repeat for each char tChar in pLine
       if tChar is space then
@@ -1765,7 +1767,7 @@ end combineContinuedLine
 
 constant kContinuationIndent = 6
 
-function textFormatLine pLine, pTextLines, @xPreviousLine
+private function textFormatLine pLine, pTextLines, @xPreviousLine
    local tResult
    
    # OK-2009-01-30 : Bug 7051 - Deal better with continuation characters.
@@ -1782,7 +1784,7 @@ function textFormatLine pLine, pTextLines, @xPreviousLine
    put lineIsContinued(pTextLines[pLine]) into tCurrentLineIsContinued
    
    # Get the previous non-empty line
-   if xPreviousLine is 0 then
+   if xPreviousLine is 0 and pLine > 1 then
       put pLine into xPreviousLine
       repeat while xPreviousLine > 1
          subtract 1 from xPreviousLine
@@ -1793,21 +1795,23 @@ function textFormatLine pLine, pTextLines, @xPreviousLine
    end if
    
    local tPreviousLine
-   # This is the case where we have reached the end of a continued line. Here, we treat the continued line
-   # as a single entity in order to calculate its indentation properties correctly for the line after it.
-   if lineIsContinued(pTextLines[xPreviousLine - 1]) then
-      put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
-   else
-      put pTextLines[xPreviousLine] into tPreviousLine
+   if xPreviousLine > 0 then
+      # This is the case where we have reached the end of a continued line. Here, we treat the continued line
+      # as a single entity in order to calculate its indentation properties correctly for the line after it.
+      if lineIsContinued(pTextLines[xPreviousLine - 1]) then
+         put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
+      else
+         put pTextLines[xPreviousLine] into tPreviousLine
+      end if
+      
+      # Get the current indent of the previous line
+      local tPreviousLineIndent
+      put textFormatGetLineIndent(tPreviousLine) into tPreviousLineIndent
    end if
    
    # Get the current indent of the line
    local tCurrentLineIndent
    put textFormatGetLineIndent(pTextLines[pLine]) into tCurrentLineIndent
-   
-   # Get the current indent of the previous line
-   local tPreviousLineIndent
-   put textFormatGetLineIndent(tPreviousLine) into tPreviousLineIndent
    
    # Work out how much indentation the current line should remove from the previous line
    local tIndentCurrentLineRemoves
@@ -1819,7 +1823,9 @@ function textFormatLine pLine, pTextLines, @xPreviousLine
    
    # Work out how much indentation the previous line should add to the current line.
    local tIndentPreviousLineAdds
-   if tPreviousLineWasContinued then
+   if xPreviousLine is 0 then
+      put 0 into tIndentPreviousLineAdds
+   else if tPreviousLineWasContinued then
       # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
@@ -1876,7 +1882,7 @@ end firstWordToEnd
 
 # Parameters
 #   pText : the text to format
-function textFormatSelection pText
+private function textFormatSelection pText
    local tResult
    local tPreviousLine = 0
    local tTextLines
@@ -1913,14 +1919,16 @@ private function handlerTypes
    return "command,on,function,setprop,getprop,before,after"
 end handlerTypes
 
-function textFormat pLineNumber, pText
+private function textFormat pLineNumber, pLineCount, pText
    -- Find the range to format.
    -- 1. Search down until we find a handler (a) or the end of one (b).
    -- 2. Based on 1, in case a, search up until we find the end of any other handler, or the beginning of the script.
    --    In case b we need to search for the start of that handler.
    local tEnd
-   local tEndText
-   put line pLineNumber to -1 of pText into tEndText
+   
+   local tText
+   put pText into tText
+   split tText by return
    put pLineNumber into tEnd
    
    # Search down to find what the handler name is and whether pLineNumber is the first line of the handler.
@@ -1929,53 +1937,60 @@ function textFormat pLineNumber, pText
    put true into tFirstLine
    
    local tContinuation, tCurrentLineContinues
-   put lineIsContinued(line pLineNumber-1 of pText) into tContinuation
-   repeat for each line tLine in tEndText
-      put lineIsContinued(tLine) into tCurrentLineContinues
-      if token 1 of tLine is "end" and token 2 of tLine is not among the items of "if,repeat,switch,try" and not tContinuation and not tCurrentLineContinues then
-         put token 2 of tLine into tHandler
+   put lineIsContinued(tText[pLineNumber-1]) into tContinuation
+   
+   local tLineIndex
+   repeat with tLineIndex = pLineNumber to the number of elements of tText
+      put lineIsContinued(tText[tLineIndex]) into tCurrentLineContinues
+      if token 1 of tText[tLineIndex] is "end" and token 2 of tText[tLineIndex] is not among the items of "if,repeat,switch,try" and not tContinuation and not tCurrentLineContinues then
+         put true into tHandler[token 2 of tText[tLineIndex]]
+         if pLineCount < 0 then
+            exit repeat
+         end if
+      else if token 1 of tText[tLineIndex] is among the items of handlerTypes() and not tFirstLine then
+         if pLineCount < 0 then
+            exit repeat
+         end if
          exit repeat
-      else if token 1 of tLine is among the items of handlerTypes() and not tFirstLine then
-         exit repeat
-      else if token 1 of tLine is "private" and token 2 of tLine is among the items of handlerTypes() and not tFirstLine then
+      else if token 1 of tText[tLineIndex] is "private" and token 2 of tText[tLineIndex] is among the items of handlerTypes() and not tFirstLine then
+         if pLineCount < 0 then
+            exit repeat
+         end if
          exit repeat
       else
          put tCurrentLineContinues into tContinuation
       end if
       if tFirstLine then put false into tFirstLine
+      subtract 1 from pLineCount
       add 1 to tEnd
    end repeat
    
    # Search up to find the beginning of the handler, or the beginning of the script if not found.
    local tStart
-   repeat with x = pLineNumber down to 1
-      put x into tStart
-      get line x of pText
-      if tHandler is not empty then
-         if token 1 of it is among the items of  handlerTypes() and token 2 of it is tHandler then
+   repeat with tLineIndex = pLineNumber down to 1
+      put tLineIndex into tStart
+      if tHandler is an array then
+         if token 1 of tText[tLineIndex] is among the items of  handlerTypes() and tHandler[token 2 of tText[tLineIndex]] then
             exit repeat
-         else if token 1 of it is "private" and token 2 of it is among the items of handlerTypes() and token 3 of it is tHandler then
+         else if token 1 of tText[tLineIndex] is "private" and token 2 of tText[tLineIndex] is among the items of handlerTypes() and tHandler[token 3 of tText[tLineIndex]] then
             exit repeat
          end if
-      else if token 1 of it is "end" and token 2 of it is not among the items of "if,repeat,switch,catch" then
+      else if token 1 of tText[tLineIndex] is "end" and token 2 of tText[tLineIndex] is not among the items of "if,repeat,switch,catch" then
          exit repeat
       end if
    end repeat
    
-   if tHandler is empty and tStart is not 1 then
+   if tHandler is not an array and tStart is not 1 then
       add 1 to tStart
    end if
-   if tHandler is empty then
-      subtract 1 from tEnd
+   if tEnd > the number of elements of tText then
+      put the number of elements of tText into tEnd
    end if
    
    -- Now format lines tStart to tEnd of pText, and return the result.
    local tStartChar
    if tStart is 1 then
       put 1 into tStartChar
-   else if tHandler is not empty then
-      put the number of chars of line 1 to (tStart - 1) of pText into tStartChar
-      add 2 to tStartChar
    else
       put the number of chars of line 1 to (tStart - 1) of pText into tStartChar
       add 2 to tStartChar
@@ -3744,7 +3759,7 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
       local tFormatting
       local tPreviousLine = 0
       local tTextLines
-      put char 1 to pTo of tScript into tTextLines
+      put tScript into tTextLines
       split tTextLines by return
       
       put textFormatLine(pLine, tTextLines, tPreviousLine) into tFormatting
