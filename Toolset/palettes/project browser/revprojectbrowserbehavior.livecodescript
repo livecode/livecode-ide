@@ -34,8 +34,14 @@ on returnKey
       
       if exists(tDataA["behavior"]) and the shiftKey is down and the optionKey is down then
          edit the script of tDataA["behavior"]
-      else if exists(tDataA["long id"]) and the shiftKey is down then
-         edit the script of tDataA["long id"]
+      else if exists(tDataA["long id"]) then
+         if the shiftKey is down then
+            edit the script of tDataA["long id"]
+         else if the commandKey is down then
+            revIDEInspectObjects tDataA["long id"]
+         else
+            goToObject tDataA["long id"]
+         end if
       end if
    end if
    pass returnKey
