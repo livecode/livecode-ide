@@ -1740,7 +1740,7 @@ on TestPlayerDefaultProps
    put "false" into tPropsA["disabled"]
    put empty into tPropsA["dropShadow"]
    put empty into tPropsA["endTime"]
-   put TestGetIDERepositoryPath() & "/Resources/Sample.mov" into tPropsA["fileName"]
+   put TestGetIDERepositoryPath() & "/Resources/Sample.mpg" into tPropsA["fileName"]
    put empty into tPropsA["focusColor"]
    put empty into tPropsA["focusPattern"]
    put empty into tPropsA["foreColor"]
