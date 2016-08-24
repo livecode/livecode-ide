@@ -74,6 +74,11 @@ setProp cSelectedObjects pSelectedObjects
    set the inspectorData of me to revIDEPropertiesInfo(pSelectedObjects)
    
    inspectorTitleUpdate
+   
+   get pSelectedObjects is not revIDESelectedObjects()
+   put it into sInspectorLock
+   toggleFrameItem "inspectorLock", it
+   
    unlock screen
    
    set the visible of me to true
