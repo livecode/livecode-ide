@@ -1694,8 +1694,11 @@ on revTutorialContinue
       // Highlight
       revTutorialExecuteAction sSteps[sStepName]["actions"]["highlight"]
       unlock screen
-
+      
       show stack "revTutorial"
+      -- Work around windowShape issue on Windows
+      set the backcolor of this card of stack "revTutorial" to the backcolor of this card of stack "revTutorial"
+      
       // Capture
       revTutorialExecuteAction sSteps[sStepName]["actions"]["capture"]
       // Wait
@@ -2482,7 +2485,9 @@ end revTutorialClearSets
 on revTutorialReShow
    -- Ensure tutorial stack is always visible if it should be
    if the visible of stack "revTutorial" and not sDontShow then
-         palette stack "revTutorial"
+      palette stack "revTutorial"
+      -- Work around windowShape issue on Windows
+      set the backcolor of this card of stack "revTutorial" to the backcolor of this card of stack "revTutorial"
    end if
 end revTutorialReShow
 
