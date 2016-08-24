@@ -131,7 +131,7 @@ function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncl
    # Put the root object into the list first. If this is not possible because to dontSearch or card marking then
    # return an error and put empty into the list. What might also happen is that one of the child objects
    # as its dontSearch set to true. In this case, we'll return a partial list.
-   if pObeyDontSearch and word 1 of the name of pRootObject is among the words of "field group card" then
+   if pObeyDontSearch and word 1 of the name of pRootObject is among the words of "field group card" and the dontSearch of pRootObject then
       return "dontSearch of root object set"
    end if
    
@@ -186,7 +186,7 @@ function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncl
 end revIDEListSearchObjectTree
 
 private command addObject pObject, pObeyDontSearch, @xList, pScriptsOnly
-   if pObeyDontSearch and the dontSearch of pObject and word 1 of the name of pObject is among the words of "card group field" then
+   if pObeyDontSearch and word 1 of the name of pObject is among the words of "card group field" and the dontSearch of pObject then
       return "dontSearch set on object"
    end if
    
