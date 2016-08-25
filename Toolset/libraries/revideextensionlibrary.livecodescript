@@ -858,12 +858,10 @@ on __extensionsLoad
             else
                put false into tArray["ide"]
             end if
+            
             local tTypeID
-            if tArray["name"] is empty then
-               put tFolder into tTypeID
-            else
-               put tArray["name"] into tTypeID
-            end if
+            put tArray["name"] into tTypeID
+            
             put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
          end if
       end repeat
