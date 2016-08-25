@@ -673,7 +673,7 @@ end revIDEExtensionSetInfo
 
 private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPath
    local tDataA
-   revIDEExtensionFetchMetadata pManifestPath, tDataA
+   __ExtensionFetchMetadata pManifestPath, tDataA
    
    repeat for each key tKey in tDataA
       __extensionPropertySet pCacheIndex, tKey, tDataA[tKey]
@@ -722,7 +722,7 @@ private function __fetchModuleData pExtensionFile
    local tDataA, tFolder
    set the itemdelimiter to slash
    put item 1 to -2 of pExtensionFile into tFolder
-   revIDEExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
+   __ExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
@@ -1160,7 +1160,7 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
+private command __ExtensionFetchMetadata pManifestPath, @rDataA
    local tDataA
    
    local tManifestContents, tTreeID
@@ -1223,14 +1223,23 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    end repeat
    
    # Fetch extension dependencies
-   local tRequires, tCount
+   local tRequires, tCount, tName
    put 0 into tCount
    put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
    repeat for each line tDependency in tRequires
       add 1 to tCount
-      local tName
       put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
       put tName into tDataA["requires"][tCount]
+   end repeat
+   
+   # Fetch extension inclusions
+   local tIncludes
+   put 0 into tCount
+   put revXMLChildNames(tTreeID,"package",return,"includes",true) into tIncludes
+   repeat for each line tDependency in tIncludes
+      add 1 to tCount
+      put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
+      put tName into tDataA["includes"][tCount]
    end repeat
    
    # Fetch library handlers
@@ -1261,7 +1270,7 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    
    put tDataA into rDataA
    return empty
-end revIDEExtensionFetchMetadata
+end __ExtensionFetchMetadata
 
 function revIDEExtensionModuleFile pKind
    # Get the internal cache index
