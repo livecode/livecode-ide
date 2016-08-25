@@ -718,18 +718,17 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    // Send message to registered targets
 end __extensionSendProgressUpdate
 
-private function __fetchModuleData pExtensionFile
+private function __fetchManifestData pManifestFile
    local tDataA, tFolder
-   set the itemdelimiter to slash
-   put item 1 to -2 of pExtensionFile into tFolder
-   __ExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
+   
+   __ExtensionFetchMetadata pManifestFile, tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
       put "error" into tDataA["status"]
    end if
    return tDataA
-end __fetchModuleData
+end __fetchManifestData
 
 private function __extensionIsBuiltin pID
    switch pID
@@ -849,10 +848,11 @@ on __extensionsLoad
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
-         local tExtensionModulePath, tArray
-         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tPath
+         local tArray
+         put  tExtensionFolder & slash & tFolder & slash & "manifest.xml" into tPath
+         
          if there is a file tPath then
-            put __fetchModuleData(tPath) into tArray
+            put __fetchManifestData(tPath) into tArray
             if tKey is "ide" then
                put true into tArray["ide"]
             else
