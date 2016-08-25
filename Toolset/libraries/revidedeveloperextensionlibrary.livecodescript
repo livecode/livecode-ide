@@ -666,8 +666,8 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    set the itemdelimiter to "."
-   if not tTargetName begins with "community.livecode" or the number of items of tTargetName < 4 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be community.livecode.<yourId>.<extensionTitle>"
+   if the number of items of tTargetName < 4 then
+      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be <domain>.<yourId>.<extensionTitle> eg com.example.fred.barchart"
    end if
    put tTargetName into tDataA["id"]
    
