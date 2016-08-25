@@ -1121,7 +1121,7 @@ end scriptFormatSnippet
 #   Formats the current script according to the pScope parameter. If pScope is "script", then
 #   entire script is formatted. If pScope is handler, then the current handler is formatted.
 #   Note, formatting the whole script could be quite slow.
-command scriptFormat pScope
+command scriptFormat pScope, pDontGroup
    lock screen
    local tScroll
    put the vScroll of field "Script" of me into tScroll
@@ -1140,7 +1140,7 @@ command scriptFormat pScope
       
       local tNewText
       put textFormatSelection(tOldText) into tNewText
-      textReplace tStartChar, tOldText, tNewText
+      textReplace tStartChar, tOldText, tNewText, empty, pDontGroup
       
       if tStart is not empty then
          select char tStart to tEnd of field "Script" of me
@@ -1170,7 +1170,7 @@ command scriptFormat pScope
       
       local tCode
       put textFormat(tLine, tSelectionLineCount, tScript) into tCode
-      textReplace tCode["startchar"], tCode["oldtext"], tCode["newtext"]
+      textReplace tCode["startchar"], tCode["oldtext"], tCode["newtext"], empty, pDontGroup
       
       local tNewScript
       put the text of field "Script" of me into tNewScript
@@ -2056,7 +2056,7 @@ end textReplaceNewGroupNeeded
 #   This is the point through which all standard editing operations on scripts are sent through.
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
-private command textReplace pOffset, pOldText, pNewText, pObject
+private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    local tObject
    if pObject is empty then
       put sObjectId into tObject
@@ -2064,7 +2064,7 @@ private command textReplace pOffset, pOldText, pNewText, pObject
       put pObject into tObject
    end if
    
-   if textReplaceNewGroupNeeded(pOldText, pNewText) then
+   if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
       textBeginGroup sTextMark[tObject], tObject
    end if
    
@@ -2398,9 +2398,14 @@ command actionPaste
    put word 2 of it into tFrom
    put word 4 of it into tTo
    
+   lock screen
    textBeginGroup "Paste"
    textReplace tFrom, char tFrom to tTo of field "Script" of me, the clipboardData["text"]
+   if sePrefGet("editor,autoformat") then
+      scriptFormat "handler", true
+   end if
    textEndGroup
+   unlock screen
    
    # OK-2009-01-19 : Update the handler list
    selectionUpdateRequest
