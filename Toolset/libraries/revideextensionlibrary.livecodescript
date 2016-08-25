@@ -838,7 +838,6 @@ end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
-   revIDEPushDefaultFolder
    
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
@@ -846,8 +845,7 @@ on __extensionsLoad
    set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
-      set the defaultfolder to tExtensionFolder
-      repeat for each line tFolder in the folders
+      repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
@@ -904,7 +902,6 @@ on __extensionsLoad
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
    
-   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
