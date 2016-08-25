@@ -1,6 +1,8 @@
 ﻿script "revIDEDeveloperExtensionLibrary"
 local sExtensionDetailsA
 
+constant kTestStackName = "LiveCode Extension Test Window"
+
 private on __revIDEDeveloperExtensionSendWarning pWarning
    ideMessageSend "ideExtensionLog", "Warning:" && pWarning
 end __revIDEDeveloperExtensionSendWarning
@@ -444,10 +446,10 @@ end revIDEDeveloperExtensionTest
 
 private function __testStackRects
    local tDataA
-   if there is a stack "LiveCode Extension Test Window" then
-      put the rect of stack "LiveCode Extension Test Window" into tDataA["rect"]
-      if there is a widget 1 of stack "LiveCode Extension Test Window" then
-         put the rect of widget 1 of stack "LiveCode Extension Test Window" into tDataA["wrect"]
+   if there is a stack kTestStackName then
+      put the rect of stack kTestStackName into tDataA["rect"]
+      if there is a widget 1 of stack kTestStackName then
+         put the rect of widget 1 of stack kTestStackName into tDataA["wrect"]
       end if
       return tDataA
    end if
@@ -477,7 +479,7 @@ private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    local tRectsA
    put __testStackRects() into tRectsA
    
-   if there is a stack "LiveCode Extension Test Window" then
+   if there is a stack kTestStackName then
       revIDEDeveloperExtensionClearTestStack
    end if
    
@@ -507,41 +509,41 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
    else
       lock screen
       lock messages
-      create stack "LiveCode Extension Test Window"
+      create stack kTestStackName
       if tRectsA["rect"] is not empty then
-         set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
+         set the rect of stack kTestStackName to tRectsA["rect"]
       else
-         set the loc of stack "LiveCode Extension Test Window" to tRectsA["loc"]
+         set the loc of stack kTestStackName to tRectsA["loc"]
       end if
-      set the destroyStack of stack "LiveCode Extension Test Window" to true
+      set the destroyStack of stack kTestStackName to true
       set the title of it to pDetailsA["name"]
       set the script of it to __testStackScript()
-      go stack "LiveCode Extension Test Window"
+      go stack kTestStackName
       create widget as pDetailsA["id"]
       unlock messages
    end if
    
-   if there is not a widget 1 of stack "LiveCode Extension Test Window" then
+   if there is not a widget 1 of stack kTestStackName then
       __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
    
    if tRectsA["wrect"] is not empty then
-      set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
+      set the rect of widget 1 of stack kTestStackName to tRectsA["wrect"]
    end if
    
-   set the cCurExtension of stack "LiveCode Extension Test Window" to pDetailsA["id"]
+   set the cCurExtension of stack kTestStackName to pDetailsA["id"]
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
 
 on __revIDEDeveloperExtensionDoClearTestStack
-   repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
-      delete widget 1 of stack "LiveCode Extension Test Window"
+   repeat while there is a widget 1 of stack kTestStackName 
+      delete widget 1 of stack kTestStackName
    end repeat
    local tExtension
-   put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
-   delete stack "LiveCode Extension Test Window"
+   put the cCurExtension of stack kTestStackName into tExtension
+   delete stack kTestStackName
    if tExtension is not empty then
       __revIDEDeveloperExtensionUnload tExtension
       __revIDEDeveloperExtensionLog "Unloading..."
