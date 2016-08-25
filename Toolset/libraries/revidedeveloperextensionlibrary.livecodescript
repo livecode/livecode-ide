@@ -638,75 +638,15 @@ on revIDEDeveloperExtensionNew pDataA
 end revIDEDeveloperExtensionNew
 
 private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
-   local tDataA
-   
-   local tManifestContents, tId
-   put url ("file:" & pManifestPath) into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tId
-   
-   if tId begins with "xmlerr" then
-      return "Error: invalid xml in manifest"
+   ideExtensionFetchMetadata pManifestPath, rDataA
+   if the result is not empty then
+      local tResult
+      put the result into tResult
+      __revIDEDeveloperExtensionSendError tResult
+      return tResult for error
    end if
    
-   local tTargetType
-   put textDecode(revXMLNodeContents(tId, "/package/type"), "utf-8") into tTargetType
-   
-   if tTargetType begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendError "couldn't retrieve extension type from manifest" && pManifestPath
-      exit __revIDEDeveloperExtensionFetchMetadata
-   end if
-   put tTargetType into tDataA["type"]
-   
-   local tTargetName
-   put textDecode(revXMLNodeContents(tId, "/package/name"), "utf-8") into tTargetName
-   
-   if tTargetName begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendError "couldn't retrieve extension name from manifest" && pManifestPath
-      exit __revIDEDeveloperExtensionFetchMetadata
-   end if
-   
-   set the itemdelimiter to "."
-   if the number of items of tTargetName < 4 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be <domain>.<yourId>.<extensionTitle> eg com.example.fred.barchart"
-   end if
-   put tTargetName into tDataA["id"]
-   
-   # If we have a library, we don't require various packaged elements
-   if tTargetType is "widget" then
-      local tTargetTitle
-      put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
-      
-      if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
-         put empty into tTargetTitle
-      end if
-      put tTargetTitle into tDataA["name"]
-   end if
-   
-   local tTargetVersion
-   put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
-   
-   if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve version from" && tTargetName && "manifest - ensure .lcb file has 'metadata version is " & quote & "<version>" & quote & "'"
-      put empty into tTargetVersion
-   end if
-   
-   if the number of items of tTargetVersion is not 3 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetVersion & ") - must be <major>.<minor>.<revision>"
-   end if
-   put tTargetVersion into tDataA["version"]
-   
-   local tTargetAuthor
-   put textDecode(revXMLNodeContents(tId, "/package/author"), "utf-8") into tTargetAuthor
-   
-   if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve author from" && tTargetName && "manifest - ensure .lcb file has 'metadata author is " & quote & "<author_name>" & quote & "'"
-      put empty into tTargetAuthor
-   end if
-   put tTargetAuthor into tDataA["author"]
-   
-   put tDataA into rDataA
-   return empty
+   return empty for value
 end __revIDEDeveloperExtensionFetchMetadata
 
 private function shellFormat pArg, pSwitch

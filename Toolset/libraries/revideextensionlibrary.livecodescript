@@ -673,7 +673,7 @@ end revIDEExtensionSetInfo
 
 private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPath
    local tDataA
-   __ExtensionFetchMetadata pManifestPath, tDataA
+   ideExtensionFetchMetadata pManifestPath, tDataA
    
    repeat for each key tKey in tDataA
       __extensionPropertySet pCacheIndex, tKey, tDataA[tKey]
@@ -721,7 +721,7 @@ end __extensionSendProgressUpdate
 private function __fetchManifestData pManifestFile
    local tDataA, tFolder
    
-   __ExtensionFetchMetadata pManifestFile, tDataA
+   ideExtensionFetchMetadata pManifestFile, tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
@@ -973,6 +973,7 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
       local tResources, tModule
       put pFolder & slash & "resources" into tResources
       put pFolder & slash & "module.lcm" into tModule
+      
       # If we have a resources folder then load with resource path
       if there is a folder tResources then
          load extension from file tModule with resource path tResources
@@ -1179,7 +1180,22 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-private command __ExtensionFetchMetadata pManifestPath, @rDataA
+/**
+
+Parse manifest file into array
+
+Parameters:
+
+pManifestPath (string): A full path to a manifest file
+
+rDataA (array): Set to the the parsed manifest data
+
+The result:
+An error string if an error occurs
+
+*/
+
+command ideExtensionFetchMetadata pManifestPath, @rDataA
    local tDataA
    
    local tManifestContents, tTreeID
@@ -1187,21 +1203,21 @@ private command __ExtensionFetchMetadata pManifestPath, @rDataA
    put revXMLCreateTree(tManifestContents,true,true,false) into tTreeID
    
    if tTreeID begins with "xmlerr" then
-      return "Error: invalid xml in manifest"
+      return "Error: invalid xml in manifest" for error
    end if
    
    local tTargetType
    put textDecode(revXMLNodeContents(tTreeID, "/package/type"), "utf-8") into tTargetType
    
    if tTargetType begins with "xmlerr" then
-      return "Error: no type found in manifest"
+      return "Error: no type found in manifest" for error
    end if
    put tTargetType into tDataA["type"]
    
    local tTargetName
    put textDecode(revXMLNodeContents(tTreeID, "/package/name"), "utf-8") into tTargetName
    if tTargetName begins with "xmlerr" then
-      return "Error: couldn't retrieve extension name from manifest"
+      return "Error: couldn't retrieve extension name from manifest" for error
    end if
    put tTargetName into tDataA["name"]
    
@@ -1288,8 +1304,9 @@ private command __ExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    put tDataA into rDataA
-   return empty
-end __ExtensionFetchMetadata
+   
+   return empty for value
+end ideExtensionFetchMetadata
 
 function revIDEExtensionModuleFile pKind
    # Get the internal cache index
