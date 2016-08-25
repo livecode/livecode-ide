@@ -42,8 +42,43 @@ on resizeStack
 end resizeStack
 
 on layoutCard
+   set the rect of group "fields" of me to the contentRect of me
    lock screen
-   set the rect of group "fields" of this card to the contentRect of me
+   local tLeft, tTop, tRight, tBottom, tWidth
+   lock messages
+   
+   put the left of group "fields" of me into tLeft
+   put the top of group "fields" of me into tTop
+   put the right of group "fields" of me into tRight
+   put the bottom of group "fields" of me into tBottom
+   
+   local tHeight
+   put the effective textHeight of field "message" of me into tHeight
+   
+   local tMargins
+   put the margins of field "message" of me into tMargins
+   if the number of items of tMargins is 1 then
+      add tMargins to tHeight
+   else
+      add item 2 of tMargins to tHeight
+   end if
+   
+   set the rect of field "message" of me to tLeft,tTop,tRight,(tTop + tHeight)
+   set the rect of field "auto complete" of me to tLeft,tTop,tRight,(tTop + tHeight)
+   set the rect of field "results" of me to tLeft,(tTop + tHeight),tRight,tBottom
+   
+   put (tRight - tLeft) into tWidth
+   set the width of graphic "line" to tWidth
+   set the loc of graphic "line" to (tWidth/2),(tTop+tHeight)
+   
+   unlock messages
    send "positionOpenStacksButton" to me in 0 milliseconds
    unlock screen
 end layoutCard
+
+on closeField
+   if the short name of the target is "results" then
+      put the text of the target into msg
+   end if
+end closeField
+

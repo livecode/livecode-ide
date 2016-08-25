@@ -79,6 +79,8 @@ on openStack
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
    revIDESubscribe "idePreferenceChanged:cScriptEditor,editor,backgroundcolor"
+   revIDESubscribe "idePreferenceChanged:cScriptEditor,editor,font"
+   revIDESubscribe "idePreferenceChanged:cScriptEditor,editor,fontSize"
    
    revIDESubscribe "ideActiveStacksChanged"
    
@@ -94,6 +96,7 @@ on openStack
    moveMsgBoxStack
    
    __UpdateMessageColors
+   __UpdateMessageFont
    unlock messages
    unlock screen
 end openStack
@@ -434,9 +437,28 @@ on idePreferenceChanged pPreference, pValue
       case "cScriptEditor,editor,backgroundcolor"
          __UpdateMessageColors
          break
+      case "cScriptEditor,editor,font"
+      case "cScriptEditor,editor,fontSize"
+         __UpdateMessageFont
+         break
    end switch
    unlock screen
 end idePreferenceChanged
+
+private command __UpdateMessageFont
+   local tFont, tSize
+   put revIDEGetPreference("cScriptEditor,editor,font") into tFont
+   put revIDEGetPreference("cScriptEditor,editor,fontSize") into tSize
+   
+   set the textFont of field "message" of card "Multiple Lines" of me to tFont
+   set the textFont of field "message" of card "Single Line" of me to tFont
+   set the textFont of field "auto complete" of card "Single Line" of me to tFont
+   set the textSize of field "message" of card "Multiple Lines" of me to tSize
+   set the textSize of field "message" of card "Single Line" of me to tSize
+   set the textSize of field "auto complete" of card "Single Line" of me to tSize
+   
+   dispatch "layoutCard" to card "Single Line" of me
+end __UpdateMessageFont
 
 private command __UpdateMessageColors
    local tColor
