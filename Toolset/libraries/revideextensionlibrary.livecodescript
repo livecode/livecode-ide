@@ -219,38 +219,34 @@ on __extensionInstallVerify pCacheIndex
    set the itemdel to "."
    if the last item of tExtensionPath is not "lce" then return __extensionError(pCacheIndex,"Could not install extension. The package extension '"&the last item of tExtensionPath&"' Is not valid. Must be 'lce'.")
    
+   local tManifestDataA
+   ideExtensionParseManifestFromPackage tExtensionPath, "manifest.xml", tManifestDataA
+   if the result is not empty then
+      return the result for error
+   end if
+   
    # Check the manifest contains a name
-   local tExtensionName
-   put __extensionManifestValue(pCacheIndex, "name") into tExtensionName
-   if tExtensionName is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
-   __extensionPropertySet pCacheIndex, "name", tExtensionName
+   if tManifestDataA["name"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
+   __extensionPropertySet pCacheIndex, "name", tManifestDataA["name"]
    
    # Check the manifest contains a version
-   local tExtensionVersion
-   put __extensionManifestValue(pCacheIndex, "version") into tExtensionVersion
-   if tExtensionVersion is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
-   __extensionPropertySet pCacheIndex, "version", tExtensionVersion
+   if tManifestDataA["version"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
+   __extensionPropertySet pCacheIndex, "version", tManifestDataA["name"]
    
    # Check the manifest contains an author
-   local tExtensionAuthor
-   put __extensionManifestValue(pCacheIndex, "author") into tExtensionAuthor
-   if tExtensionAuthor is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
-   __extensionPropertySet pCacheIndex, "author", tExtensionAuthor
+   if tManifestDataA["author"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
+   __extensionPropertySet pCacheIndex, "author", tManifestDataA["author"]
    
    # Check the manifest contains an type
-   local tExtensionType
-   put __extensionManifestValue(pCacheIndex, "type") into tExtensionType
-   if tExtensionType is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
-   __extensionPropertySet pCacheIndex, "type", tExtensionType
+   if tManifestDataA["type"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
+   __extensionPropertySet pCacheIndex, "type", tManifestDataA["type"]
    
    # Check the manifest contains an title
-   local tExtensionTitle
-   put __extensionManifestValue(pCacheIndex, "title") into tExtensionTitle
-   if tExtensionTitle is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
-   __extensionPropertySet pCacheIndex, "title", tExtensionTitle
+   if tManifestDataA["title"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
+   __extensionPropertySet pCacheIndex, "title", tManifestDataA["title"]
    
    # Build the type ID from the name and version
-   __extensionPropertySet pCacheIndex, "type_id", tExtensionName & "." & tExtensionVersion
+   __extensionPropertySet pCacheIndex, "type_id", tManifestDataA["name"] & "." & tManifestDataA["version"]
    
    # Next step
    send "__extensionInstallRemoveOlderVersions" && pCacheIndex to me in 0 milliseconds
@@ -673,7 +669,7 @@ end revIDEExtensionSetInfo
 
 private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPath
    local tDataA
-   ideExtensionFetchMetadata pManifestPath, tDataA
+   ideExtensionParseManifest pManifestPath, tDataA
    
    repeat for each key tKey in tDataA
       __extensionPropertySet pCacheIndex, tKey, tDataA[tKey]
@@ -721,7 +717,7 @@ end __extensionSendProgressUpdate
 private function __fetchManifestData pManifestFile
    local tDataA, tFolder
    
-   ideExtensionFetchMetadata pManifestFile, tDataA
+   ideExtensionParseManifest pManifestFile, tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
@@ -898,7 +894,7 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each item tRootFolder in tDataA[tTypeID]
+      repeat for each key tRootFolder in tDataA[tTypeID]
          repeat for each key tFolder in tDataA[tTypeID][tRootFolder]
             put tDataA[tTypeID][tRootFolder][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
             put tRootFolder & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
@@ -1069,71 +1065,6 @@ function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
    return tScript
 end revIDEExtensionFetchDefaultScript
 
-function __extensionManifestValue pCacheIndex, pProperty
-   # Get the path to the package file
-   local tExtensionPackageFile
-   put __extensionPropertyGet(pCacheIndex, "download_package_path") into tExtensionPackageFile
-   
-   if not there is a file tExtensionPackageFile then return __extensionError(pCacheIndex,"Could not extract manifest because package was not found in downloads folder")
-   
-   # A zip can come compressed with a base folder or without. So work out what the 
-   # root folder is before trying to extract files
-   revZipOpenArchive tExtensionPackageFile, "read"
-   
-   local tZipItems, tZipRoot
-   put revZipEnumerateItems(tExtensionPackageFile) into tZipItems
-   
-   if the last char of line 1 of tZipItems is "/" then
-      put line 1 of tZipItems into tZipRoot
-   else
-      put empty into tZipRoot
-   end if
-   
-   # Extract the package manfiest to a variable to read key data
-   local tManifestData, tManifestXMLTree, tValue
-   revZipExtractItemToVariable tExtensionPackageFile, (tZipRoot & "manifest.xml"), "tManifestData"
-   
-   revZipCloseArchive tExtensionPackageFile
-   
-   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValue
-
-function __extensionManifestValueFromFile pCacheIndex, pProperty
-   # Get the path to the manifest file
-   local tExtensionInstallPath, tManifestFilepath
-   put __extensionPropertyGet(pCacheIndex, "install_path") into tExtensionInstallPath
-   put tExtensionInstallPath & slash & "manifest.xml" into tManifestFilepath
-   
-   if not there is a file tManifestFilepath then 
-      local tError
-      put "Could not get extension manifest information: " into tError
-      put "extension folder does not contain a manifest file" after tError
-      return __extensionError(pCacheIndex,tError)
-   end if
-   
-   # Extract the package manfiest to a variable to read key data
-   local tManifestXMLTree, tValue
-   
-   put revXMLCreateTreeFromFile(tManifestFilepath,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValueFromFile
-
-# Returns a value from the manifest
-//private on __extensionManifestValue pCacheIndex, pManifestKey
-//end __extensionManifestValue
-
-
 ##############################
 # CALLBACKS
 ##############################
@@ -1180,6 +1111,21 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
+private command __StripBOM @xData
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), "UTF-8") into tBom
+
+   if xData begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xData
+   end if
+end __StripBOM
+
+private command __DecodeUTF8 @xData
+   __StripBOM xData
+
+   put textDecode(xData, "UTF-8") into xData
+end __DecodeUTF8
+
 /**
 
 Parse manifest file into array
@@ -1195,13 +1141,85 @@ An error string if an error occurs
 
 */
 
-command ideExtensionFetchMetadata pManifestPath, @rDataA
+command ideExtensionParseManifest pManifestPath, @rDataA
    local tDataA
    
-   local tManifestContents, tTreeID
-   put url ("file:" & pManifestPath) into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tTreeID
+   local tManifestContents
+   put url ("binfile:" & pManifestPath) into tManifestContents
    
+   __DecodeUTF8 tManifestContents
+   
+   __ParseManifest tManifestContents, rDataA
+   
+   if the result is not empty then
+      return the result for error
+   else
+      return empty for value
+   end if   
+end ideExtensionParseManifest
+
+/**
+
+Parse manifest from package into array
+
+Parameters:
+
+pPackagePath (string): A full path to package
+
+pManifestPath (string): A relative path to a manifest file within the
+package
+
+rDataA (array): Set to the the parsed manifest data
+
+The result:
+An error string if an error occurs
+
+*/
+
+command ideExtensionParseManifestFromPackage pPackagePath, pManifestPath, @rDataA
+   local tDataA
+   
+   if not there is a file pPackagePath then \
+      return "Could not extract manifest because package was not found in downloads folder" for error
+   
+   # A zip can come compressed with a base folder or without. So work out what the 
+   # root folder is before trying to extract files
+   revZipOpenArchive pPackagePath, "read"
+   
+   local tZipItems
+   put revZipEnumerateItems(pPackagePath) into tZipItems
+   
+   if the last char of line 1 of tZipItems is "/" then
+      if not (pManifestPath begins with "/") then
+         put "/" before pManifestPath
+      end if
+   else
+      if pManifestPath begins with "/" then
+         delete char 1 of pManifestPath
+      end if
+   end if
+   
+   
+   # Extract the package manfiest to a variable to read key data
+   local tManifestContents
+   revZipExtractItemToVariable pPackagePath, pManifestPath, "tManifestContents"
+   
+   revZipCloseArchive pPackagePath
+   
+   __DecodeUTF8 tManifestContents
+   
+   __ParseManifest tManifestContents, rDataA
+   
+   if the result is not empty then
+      return the result for error
+   else
+      return empty for value
+   end if   
+end ideExtensionParseManifestFromPackage
+
+private command __ParseManifest pManifestContents, @rDataA
+   local tTreeID, tDataA
+   put revXMLCreateTree(pManifestContents, true, true, false) into tTreeID
    if tTreeID begins with "xmlerr" then
       return "Error: invalid xml in manifest" for error
    end if
@@ -1306,7 +1324,7 @@ command ideExtensionFetchMetadata pManifestPath, @rDataA
    put tDataA into rDataA
    
    return empty for value
-end ideExtensionFetchMetadata
+end __ParseManifest
 
 function revIDEExtensionModuleFile pKind
    # Get the internal cache index

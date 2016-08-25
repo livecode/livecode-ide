@@ -198,7 +198,7 @@ function revIDEDeveloperExtensionNoCompile pFolder
    end if
    
    local tDataA
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDataA
+   __FetchManifest (pFolder & slash & "manifest.xml"), tDataA
    
    if the result is not empty then
       put tFile into tDataA["file"]
@@ -357,7 +357,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    
    __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
    local tMetadataA
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tMetadataA
+   __FetchManifest (pFolder & slash & "manifest.xml"), tMetadataA
    union tDetailsA with tMetadataA
    
    if the result is not empty then
@@ -639,8 +639,8 @@ on revIDEDeveloperExtensionNew pDataA
    put merge(tTemplate) into url("file:" & pDataA["path"] & slash & pDataA["name"] & ".lcb")
 end revIDEDeveloperExtensionNew
 
-private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
-   ideExtensionFetchMetadata pManifestPath, rDataA
+private on __FetchManifest pManifestPath, @rDataA
+   ideExtensionParseManifest pManifestPath, rDataA
    if the result is not empty then
       local tResult
       put the result into tResult
@@ -649,7 +649,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    return empty for value
-end __revIDEDeveloperExtensionFetchMetadata
+end __FetchManifest
 
 private function shellFormat pArg, pSwitch
    local tOutput
