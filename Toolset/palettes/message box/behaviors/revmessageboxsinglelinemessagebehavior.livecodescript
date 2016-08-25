@@ -5,7 +5,7 @@ on returnInField
    ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
-      _internal script colorize char 1 to (the number of chars of me) of me
+      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
       revIDEConsoleHistoryAdd(the text of me)
    end if
    revInitialise
@@ -23,7 +23,7 @@ on enterInField
 end enterInField
 
 on textChanged
-   _internal script colorize char 1 to (the number of chars of me) of me
+   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
    revDisplayAutoComplete(the text of me)
 end textChanged
 
@@ -50,7 +50,7 @@ on commandKeyDown pKey
    if pKey is "V" then
       put clipboardData["text"] into the selectedChunk
       revDisplayAutoComplete clipboardData["text"]
-      _internal script colorize char 1 to (the number of chars of me) of me
+      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
    else
       pass commandKeyDown
    end if
@@ -93,7 +93,7 @@ command revDisplayAutoComplete pString
       put empty into field "auto complete"
    end if
    
-   _internal script colorize char 1 to (the number of field "auto complete") of field "auto complete"
+   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of field "auto complete"
    set the textColor of char 1 to -1 of field "auto complete" to "gray70"
    unlock screen
 end revDisplayAutoComplete
