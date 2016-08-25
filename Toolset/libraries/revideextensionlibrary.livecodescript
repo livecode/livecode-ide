@@ -853,16 +853,37 @@ on __extensionsLoad
          
          if there is a file tPath then
             put __fetchManifestData(tPath) into tArray
-            if tKey is "ide" then
-               put true into tArray["ide"]
-            else
-               put false into tArray["ide"]
+            put tKey is "ide" into tArray["ide"]
+            
+            if tArray["type"] is "package" then
+               -- parse included extensions
+               
+               local tInclusion
+               repeat for each element tInclusion in tArray["inclusions"]
+                  local tInclusionFolder
+                  if tInclusion["name"] begins with tArray["name"] & "." then
+                     put char length(tArray["name"]) + 2 to -1 of tInclusion["name"] into tInclusionFolder
+                  else
+                     next repeat
+                  end if
+                  
+                  if there is no folder (tExtensionFolder & slash & tFolder & slash & tInclusionFolder) then
+                     next repeat
+                  end if
+                  
+                  local tInclusionArray
+                  put  tExtensionFolder & slash & tFolder & slash & tInclusionFolder & slash & "manifest.xml" into tPath
+                  
+                  if there is a file tPath then
+                     put __fetchManifestData(tPath) into tInclusionArray
+                     put tKey is "ide" into tInclusionArray["ide"]
+                     
+                     put tInclusionArray into tDataA[tInclusionArray["name"]][tExtensionFolder & slash & tFolder][tInclusionFolder]
+                  end if
+               end repeat
             end if
             
-            local tTypeID
-            put tArray["name"] into tTypeID
-            
-            put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
+            put tArray into tDataA[tArray["name"]][tExtensionFolder][tFolder]
          end if
       end repeat
    end repeat
@@ -877,10 +898,10 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each item tItem in "user,ide"
-         repeat for each key tFolder in tDataA[tTypeID][tFoldersA[tItem]]
-            put tDataA[tTypeID][tFoldersA[tItem]][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
-            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
+      repeat for each item tRootFolder in tDataA[tTypeID]
+         repeat for each key tFolder in tDataA[tTypeID][tRootFolder]
+            put tDataA[tTypeID][tRootFolder][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+            put tRootFolder & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
             add 1 to tExtensionCopyCount
          end repeat
       end repeat
