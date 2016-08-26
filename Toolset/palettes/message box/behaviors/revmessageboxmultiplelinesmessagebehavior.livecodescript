@@ -5,7 +5,7 @@ on enterInField
    ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
-      _internal script colorize char 1 to (the number of chars of me) of me
+      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
       local tMessage
       put the text of me into tMessage
       replace return with "\n" in tMessage
@@ -30,7 +30,7 @@ on commandKeyDown pKey
    end if
    if pKey is "V" then 
       put clipboardData["text"] into the selectedChunk
-       _internal script colorize char 1 to (the number of chars of me) of me
+      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
    else
       pass commandKeyDown
    end if
@@ -71,7 +71,7 @@ command revNextLine
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
    put tMessage into field "message"
-    _internal script colorize char 1 to (the number of chars of me) of me
+   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
 end revNextLine
 
 command revPrevLine
@@ -81,9 +81,9 @@ command revPrevLine
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
    put tMessage into field "message"
-    _internal script colorize char 1 to (the number of chars of me) of me
+   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
 end revPrevLine
 
 on textChanged
-   _internal script colorize char 1 to (the number of chars of me) of me
+    dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
 end textChanged
