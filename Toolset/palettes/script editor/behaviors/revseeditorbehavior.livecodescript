@@ -2183,6 +2183,7 @@ private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpo
    unlock screen
 end textReplaceRaw
 
+
 -- Sets the contents of the fields to pScript WITHOUT touching the undo queue. This should be done before any editing.
 on textSetScriptRaw pScript
    --put empty into field "Script" of me
@@ -2451,6 +2452,49 @@ command actionSelectAll
    end if
    unlock messages
 end actionSelectAll
+
+command shiftSelection pDirection
+   local tSelectedLine
+   put the selectedLine into tSelectedLine
+   
+   local tOriginalLines, tNewLines
+   put the text of tSelectedLine into tOriginalLines
+   
+   local tTabDepth
+   put sePrefGet("editor,tabdepth") into tTabDepth
+   
+   local tTab
+   if pDirection is "right" then
+      repeat for tTabDepth
+         put space after tTab
+      end repeat
+   end if
+   
+   repeat for each line tLine in tOriginalLines
+      if pDirection is "right" then
+         put tTab before tLine
+      else
+         repeat for tTabDepth
+            if char 1 of tLine is space then
+               delete char 1 of tLine
+            end if
+         end repeat
+      end if
+      
+      if tNewLines is not empty then
+         put return after tNewLines
+      end if
+      put tLine after tNewLines
+   end repeat
+   
+   local tAt
+   put the number of chars of line 1 to (word 2 of tSelectedLine-1) of the text of the selectedField + 2 into tAt
+   
+   lock screen
+   textReplace tAt, tOriginalLines, tNewLines
+   select tSelectedLine
+   unlock screen
+end shiftSelection
 
 # Description
 #   Called when the script editor is about to be closed.

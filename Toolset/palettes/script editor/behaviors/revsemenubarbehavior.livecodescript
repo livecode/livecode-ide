@@ -37,34 +37,39 @@ end mouseDown
 #   the menubar, e.g. what text is selected, what the current keyboard shortcuts
 #   are etc.
 private function buildMenusGetContext
-  local tContext
-  
-  # Is there any text selected?
-  local tTextSelected
-  put false into tTextSelected
-  get the selectedChunk
-  
-  # OK-2009-01-17 : Bug 7597 - Text is considered selected if there is any selectedChunk, it doesn't depend on which control may contain it.
-  if (word 2 of it < word 4 of it) then
-    put true into tTextSelected
-  end if
-  put tTextSelected into tContext["textSelected"]
-  
-  # Is there any pastable data on the clipboard?
-  local tClipboardText
-  put false into tClipboardText
-  if the clipboardData["text"] is not empty or the clipboardData["htmltext"] is not empty then
-    put true into tClipboardText
-  end if
-  put tClipboardText into tContext["clipboardText"]
+   local tContext
    
-  # What mode is the script editor in?
-  local tMode
-  revSEGetMode
-  put the result into tMode
-  put tMode into tContext["mode"]
+   # Is there any text selected?
+   local tTextSelected
+   put false into tTextSelected
+   get the selectedChunk
    
-  return tContext
+   # OK-2009-01-17 : Bug 7597 - Text is considered selected if there is any selectedChunk, it doesn't depend on which control may contain it.
+   if (word 2 of it < word 4 of it) then
+      put true into tTextSelected
+   end if
+   put tTextSelected into tContext["textSelected"]
+   
+   # Is there any pastable data on the clipboard?
+   local tClipboardText
+   put false into tClipboardText
+   if the clipboardData["text"] is not empty or the clipboardData["htmltext"] is not empty then
+      put true into tClipboardText
+   end if
+   put tClipboardText into tContext["clipboardText"]
+   
+   # What mode is the script editor in?
+   local tMode
+   revSEGetMode
+   put the result into tMode
+   put tMode into tContext["mode"]
+   
+   local tSelectedLine
+   put the selectedLine into tSelectedLine
+   _internal script commentnesting of line (word 2 of tSelectedLine) of the selectedField
+   put it is not 0 into tContext["multiline"]
+   
+   return tContext
 end buildMenusGetContext
 
 private command buildMenus
@@ -110,23 +115,35 @@ private command buildEditMenu pContext
    
    if pContext["textSelected"] then
       put "Cut/X" & return & \
-             "Copy/C" & return after tEdit
+            "Copy/C" & return after tEdit
    else
       put "(Cut/X" & return & \
-             "(Copy/C" & return after tEdit
+            "(Copy/C" & return after tEdit
    end if
    
    put "Paste/V" & return & \
-          "Select All/A" & return & \
-          "Revert" & return & \
-          "-" & return & \
-          "Comment/-" & return & \
-          "Uncomment/_" & return & \
-          "-" & return & \
-          "Quick Find/F" & return & \
-          "Find and Replace.../^@F" & return & \
-          "Find Selection/^#F" & return & \
-          "Go.../L" & return after tEdit
+         "Select All/A" & return & \
+         "Revert" & return & \
+         "-" & return after tEdit
+   
+   if not pContext["multiline"] then
+      put "Comment/-" & return & \
+            "Uncomment/_" & return after tEdit 
+   end if
+   
+   if pContext["multiline"] or not sePrefGet("editor,autoformat") then
+      put "Shift Right/]" & return & \
+            "Shift Left/[" & return after tEdit 
+   end if
+   
+   if not sePrefGet("editor,autoformat") then
+      put "Re-Indent/|" & return after tEdit 
+   end if
+   
+   put "-" & return & "Quick Find/F" & return & \
+         "Find and Replace.../^@F" & return & \
+         "Find Selection/^#F" & return & \
+         "Go.../L" & return after tEdit
    
    if sePrefGet("explicitVariables") then
       put "!cVariable Checking" & return after tEdit
@@ -135,7 +152,7 @@ private command buildEditMenu pContext
    end if
    
    put "-" & return & \
-          "Preferences" after tEdit
+         "Preferences" after tEdit
    
    set the text of button "Edit" of me to modifyMenu("Edit", tEdit)
 end buildEditMenu
@@ -408,6 +425,15 @@ private command handleEditMenuPick pItemName
          break
       case "Preferences"
          actionShowPreferences
+         break
+      case "Shift Right"
+         actionShiftRight
+         break
+      case "Shift Left"
+         actionShiftLeft
+         break
+      case "Re-Indent"
+         actionReIndent
          break
    end switch
 end handleEditMenuPick
