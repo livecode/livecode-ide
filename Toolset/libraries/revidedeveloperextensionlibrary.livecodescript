@@ -97,9 +97,9 @@ Summary: Returns an array of details of the extensions found in user folders
 Returns (array):
 { key: The path to the folder containing the extensions
 value (array): The array of details pertaining to the extension
-{ key: "id"
+{ key: "name"
 value: The extension ID
-key: "name"
+key: "title"
 value: The title of the extension
 key: "author"
 value: The author of the extension
@@ -288,7 +288,7 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    end if
    
    # Default script
-   put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["id"], false) into tDetailsA["defaultscript"]
+   put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["name"], false) into tDetailsA["defaultscript"]
    if tDetailsA["defaultscript"] is not empty then
       put pFolder & "/support/defaultscript.livecodescript" into tDetailsA["defaultscript_file"]
    end if
@@ -429,7 +429,7 @@ on revIDEDeveloperExtensionTest pPath
    end if
    
    # AL-2015-07-15: [[ Bug ]] If the details of the extension doesn't include an ID, then the compile failed
-   if tDetailsA["id"] is empty then
+   if tDetailsA["name"] is empty then
       __revIDEDeveloperExtensionSendError "Could not compile module" && pPath
       exit revIDEDeveloperExtensionTest
    end if
@@ -495,7 +495,7 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   revIDEExtensionLoad pDetailsA["id"], pPath, pDetailsA["version"]
+   revIDEExtensionLoad pDetailsA["name"], pPath, pDetailsA["version"]
    
    local tResult
    put the result into tResult
@@ -516,15 +516,15 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
          set the loc of stack kTestStackName to tRectsA["loc"]
       end if
       set the destroyStack of stack kTestStackName to true
-      set the title of it to pDetailsA["name"]
+      set the title of it to pDetailsA["title"]
       set the script of it to __testStackScript()
       go stack kTestStackName
-      create widget as pDetailsA["id"]
+      create widget as pDetailsA["name"]
       unlock messages
    end if
    
    if there is not a widget 1 of stack kTestStackName then
-      __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["id"]
+      __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["name"]
       __revIDEDeveloperExtensionDoClearTestStack
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
@@ -533,7 +533,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the rect of widget 1 of stack kTestStackName to tRectsA["wrect"]
    end if
    
-   set the cCurExtension of stack kTestStackName to pDetailsA["id"]
+   set the cCurExtension of stack kTestStackName to pDetailsA["name"]
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
 
@@ -569,12 +569,12 @@ on revIDEDeveloperExtensionUninstall pPath
    local tDetailsA
    put revIDEDeveloperExtension(pPath) into tDetailsA
    
-   if tDetailsA["id"] is empty then
+   if tDetailsA["name"] is empty then
       __revIDEDeveloperExtensionSendError "Extension id lost from" && pPath & ": cannot uninstall"
       exit revIDEDeveloperExtensionUninstall
    end if
    
-   revIDEUninstallExtension tDetailsA["id"]
+   revIDEUninstallExtension tDetailsA["name"]
    
 end revIDEDeveloperExtensionUninstall
 
@@ -763,11 +763,11 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    end if
    
    local tTargetName
-   if tDetailsA["id"] is empty then
-      __revIDEDeveloperExtensionSendError "no id found in " && tFullpath
+   if tDetailsA["name"] is empty then
+      __revIDEDeveloperExtensionSendError "no name found in " && tFullpath
       return "no id found"
    end if
-   put tDetailsA["id"] into tTargetName
+   put tDetailsA["name"] into tTargetName
    
    local tTargetVersion
    if tDetailsA["version"] is empty then
@@ -977,7 +977,7 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
    put pFolder & "/support/defaultscript.livecodescript" into tDefaultScript
    
    local tExpectedName
-   put sExtensionDetailsA[pFolder]["id"] & ".__DefaultScript" into tExpectedName
+   put sExtensionDetailsA[pFolder]["name"] & ".__DefaultScript" into tExpectedName
    if there is a file tDefaultScript then
       try
          # If we have a valid stack, open it and edit the script
@@ -1001,5 +1001,5 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
 end revIDEDeveloperExtensionEditDefaultScript
 
 function revIDEDeveloperExtensionFetchDefaultScript pFolder
-   return revIDEExtensionFetchDefaultScript(pFolder, sExtensionDetailsA[pFolder]["id"], false)
+   return revIDEExtensionFetchDefaultScript(pFolder, sExtensionDetailsA[pFolder]["name"], false)
 end revIDEDeveloperExtensionFetchDefaultScript
