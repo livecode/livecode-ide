@@ -2101,6 +2101,8 @@ end __BracketCompletion
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
 private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
+   __ClearHighlights
+   
    local tObject
    if pObject is empty then
       put sObjectId into tObject
@@ -5552,14 +5554,38 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
    local tBracketCount = 0
    local tEndCondition
    
+   local tScript
    local tScriptLine
    local tCharNum
+   local tIndex
    if pStep < 0 then
       put 1 into tEndCondition
-      put the last line of (char 1 to xCharNum of field "script" of me) into tScriptLine
+      put char 1 to xCharNum of field "script" of me into tScript
+      split tScript by return
+      put tScript[the number of elements of tScript] into tScriptLine
+      
+      repeat with tIndex = the number of elements in tScript-1 down to 1
+         if lineIsContinued(tScript[tIndex]) then
+            put tScript[tIndex] & return before tScriptLine
+         else
+            exit repeat
+         end if
+      end repeat
+      
       put the length of tScriptLine into tCharNum
    else
-      put the first line of (char xCharNum+1 to -1 of field "script" of me) into tScriptLine
+      put char xCharNum+1 to -1 of field "script" of me into tScript
+      split tScript by return
+      put tScript[1] into tScriptLine
+      
+      repeat with tIndex = 1 to the number of elements in tScript
+         if lineIsContinued(tScript[tIndex]) then
+            put return & tScript[tIndex+1] after tScriptLine
+         else
+            exit repeat
+         end if
+      end repeat
+      
       put the length of tScriptLine into tEndCondition
       put 0 into tCharNum
    end if
