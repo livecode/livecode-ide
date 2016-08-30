@@ -2154,10 +2154,6 @@ function revIDEGlobalPropertyContinuousRange pProperty
    return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
-function revIDEMainStacks
-   return ideMainStacks()
-end revIDEMainStacks
-
 /**
 A list of the stacks that can be set at the main stack of the given stack
 
