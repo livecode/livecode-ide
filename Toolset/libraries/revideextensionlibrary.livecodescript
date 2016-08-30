@@ -530,16 +530,6 @@ end __extensionUninstallComplete
 # PRIVATE SHARED
 ##############################
 
-function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
-   local tNode
-   put revXMLMatchingNode(pXMLTree, "package", "metadata", "key", pProperty &"." & pElement, 1) into tNode
-   if tNode is not empty then
-      return revXMLNodeContents(pXMLTree, tNode)
-   end if
-   
-   return empty
-end __extensionFetchPropertyMetadata
-
 function __extensionPropertyInfoFromManifest pManifestPath
    if not there is a file pManifestPath then return empty
    # Create the XML tree
@@ -705,17 +695,8 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    __extensionPropertySet pCacheIndex, "progress", pProgress
    
    local tName
-   //revputarray sExtensions
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
-   
-   //local tCallbackTarget, tCallBackHandler
-   //put __extensionPropertyGet(pCacheIndex, "callback_target") into tCallbackTarget
-   //put __extensionPropertyGet(pCacheIndex, "callback_handler") into tCallBackHandler
-   //if exists(tCallbackTarget) then
-   //dispatch tCallBackHandler to tCallbackTarget with pMessage,pProgress
-   //end if
-   // Send message to registered targets
 end __extensionSendProgressUpdate
 
 private function __fetchManifestData pManifestFile
