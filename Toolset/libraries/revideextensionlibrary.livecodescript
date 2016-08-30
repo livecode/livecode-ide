@@ -539,16 +539,12 @@ function __extensionPropertyInfoFromManifest pManifestPath
    # Process the general property metadata into an array
    local tMetadataNodes, tMetadataA, tKeys, tValue
    put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
-   set the itemdelimiter to "."
+  
    repeat for each line tMetadata in tMetadataNodes
       put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tKeys
       put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tValue
-      repeat with x = the number of items in tKeys down to 1
-         get tValue
-         put empty into tValue
-         put it into tValue[item x of tKeys]
-      end repeat
-      union tMetadataA with tValue recursively
+      split tKeys by "."
+      put tValue into tMetadataA[tKeys]
    end repeat
    
    put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
