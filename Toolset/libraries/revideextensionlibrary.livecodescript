@@ -248,6 +248,10 @@ on __extensionInstallVerify pCacheIndex
    # Build the type ID from the name and version
    __extensionPropertySet pCacheIndex, "type_id", tManifestDataA["name"] & "." & tManifestDataA["version"]
    
+   if tManifestDataA["type"] is "package" then
+      __extensionPropertySet pCacheIndex, "includes", tManifestDataA["includes"]
+   end if
+   
    # Next step
    send "__extensionInstallRemoveOlderVersions" && pCacheIndex to me in 0 milliseconds
 end __extensionInstallVerify
