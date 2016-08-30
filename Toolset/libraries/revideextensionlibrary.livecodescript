@@ -479,15 +479,15 @@ on __extensionUninstallDeleteFiles pCacheIndex
    put __extensionPropertyGet(pCacheIndex, "install_path") into tPath
    
    # Make sure the path contains the folder extension as a check before deleting a folder
-   if tPath contains "extension" then
+   if tPath begins with revIDESpecialFolderPath("user extensions") then
       revDeleteFolder tPath
    end if
    
    # AL-2015-03-15: [[ Bug 15008 ]] Delete interface file from interface folder
    local tInterfaceFile
    put __extensionPropertyGet(pCacheIndex, "name") & ".lci" into tInterfaceFile
-   if there is a file (specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
-      revDeleteFile specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
+   if there is a file (revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
+      revDeleteFile revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
    end if
    
    # Next step
