@@ -248,10 +248,6 @@ on __extensionInstallVerify pCacheIndex
    # Build the type ID from the name and version
    __extensionPropertySet pCacheIndex, "type_id", tManifestDataA["name"] & "." & tManifestDataA["version"]
    
-   if tManifestDataA["type"] is "package" then
-      __extensionPropertySet pCacheIndex, "includes", tManifestDataA["includes"]
-   end if
-   
    # Next step
    send "__extensionInstallRemoveOlderVersions" && pCacheIndex to me in 0 milliseconds
 end __extensionInstallVerify
@@ -403,7 +399,7 @@ on __extensionInstallLoad pCacheIndex
    # Store the extension's property metadata
    local tTypeID
    put  __extensionPropertyGet(pCacheIndex, "name") into tTypeID
-   revIDEExtensionSetInfo(tTypeID)
+   revIDEExtensionSetInfo tTypeID
    
    # Load module file into the engine
    local tDataA
@@ -530,71 +526,32 @@ end __extensionUninstallComplete
 # PRIVATE SHARED
 ##############################
 
-function __extensionPropertyInfoFromManifest pManifestPath
-   if not there is a file pManifestPath then return empty
-   # Create the XML tree
-   local tXMLTree, tProperties, tExtensionData
-   put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
+private command __extensionSetPropertyInfo pCacheIndex
+   local tPropertyDataA
+   put __extensionPropertyGet(pCacheIndex, "property") into tPropertyDataA
    
-   # Process the general property metadata into an array
-   local tMetadataNodes, tMetadataA, tKeys, tValue
-   put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
-  
-   repeat for each line tMetadata in tMetadataNodes
-      put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tKeys
-      put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tValue
-      split tKeys by "."
-      put tValue into tMetadataA[tKeys]
-   end repeat
-   
-   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   local tOrder, tPropertyDataA
-   
-   local tMetadataKeys
-   put the keys of tMetadataA into tMetadataKeys
-   sort tMetadataKeys
-   sort tMetadataKeys by tMetadataA[each]["order"]
-   repeat for each line tKey in tMetadataKeys
+   local tName
+   repeat for each key tName in tPropertyDataA
+      local tMetadata
+      put __extensionPropertyGet(pCacheIndex, tName) into tMetadata
+      if tMetadata is not empty then
+         union tPropertyDataA[tName] with tMetadata recursively
+      end if
+      
       local tPropertyInfo
-      put revIDEPropertyInfo(tKey) into tPropertyInfo
-      if tPropertyInfo is empty then
-         next repeat
+      put revIDEPropertyInfo(tName) into tPropertyInfo
+      if tPropertyInfo is not empty then
+         union tPropertyDataA[tName] with tPropertyInfo recursively
       end if
-      add 1 to tOrder
-      union tMetadataA[tKey] with tPropertyInfo
-      put tMetadataA[tKey] into tPropertyDataA[tKey]
-      put tOrder into tPropertyDataA[tKey]["order"]
-   end repeat
-   
-   repeat for each line tProperty in tProperties
-      add 1 to tOrder
-      local tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
-      
-      put tMetadataA[tName] into tPropertyDataA[tName]
-      
-      local tReadOnly
-      get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
-      if it is empty or it begins with "xmlerr" then
-         put true into tReadOnly
-      else
-         put false into tReadOnly
-      end if
-      put tReadOnly into tPropertyDataA[tName]["read_only"]
-      
+       
       if tPropertyDataA[tName]["editor"] is empty then
-         local tType
-         put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
-         if tType is "Integer" or tType is "Real" then
+         if tPropertyDataA[tName]["get"] is "Integer" or tPropertyDataA[tName]["get"] is "Real" then
             put "com.livecode.pi.number" into tPropertyDataA[tName]["editor"]
          else
-            put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tName]["editor"]
+            put "com.livecode.pi." & tolower(tPropertyDataA[tName]["get"]) into tPropertyDataA[tName]["editor"]
          end if
       end if
-      put tOrder into tPropertyDataA[tName]["order"]
-   end repeat
-   
-   repeat for each key tName in tPropertyDataA
+      
       local tLabel, tSection
       
       if tPropertyDataA[tName]["section"] is empty then
@@ -621,9 +578,9 @@ function __extensionPropertyInfoFromManifest pManifestPath
       end if
    end repeat
    
-   revXMLDeleteTree tXMLTree
-   return tPropertyDataA
-end __extensionPropertyInfoFromManifest
+   put __extensionPropertyGet(pCacheIndex, "name") into tName
+   put tPropertyDataA into sExtensionProperties[tName]
+end __extensionSetPropertyInfo
 
 command revIDEExtensionSetInfo pTypeID
    set the itemdelimiter to slash
@@ -648,7 +605,7 @@ command revIDEExtensionSetInfo pTypeID
    end if
    
    __extensionSetExtensionInfoFromManifest tCacheIndex, tManifest
-   __extensionSetPropertyInfoFromManifest pTypeID, tManifest
+   __extensionSetPropertyInfo tCacheIndex
    
    # Set the default name
    local tTitle
@@ -665,12 +622,6 @@ private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPa
       __extensionPropertySet pCacheIndex, tKey, tDataA[tKey]
    end repeat
 end __extensionSetExtensionInfoFromManifest
-
-command __extensionSetPropertyInfoFromManifest pID, pManifest
-   local tPropertyInfo
-   put __extensionPropertyInfoFromManifest(pManifest) into tPropertyInfo
-   put tPropertyInfo into sExtensionProperties[pID]
-end __extensionSetPropertyInfoFromManifest
 
 function __extensionError pCacheIndex, pErrorMessage
    __extensionSendProgressUpdate pCacheIndex, "Error:" && pErrorMessage, 100
@@ -1245,7 +1196,7 @@ private command __ParseManifest pManifestContents, @rDataA
    
    # Fetch property metadata
    local tMetadataValue, tMetadataKey
-   local tMetadataNodes, tMetadataA, tKeys, tValue
+   local tMetadataNodes
    put revXMLChildNames(tTreeID, "package",return,"metadata",true) into tMetadataNodes
    repeat for each line tMetadata in tMetadataNodes
       put revXMLAttribute(tTreeID,"package" & "/" & tMetadata,"key") into tMetadataKey
@@ -1253,11 +1204,36 @@ private command __ParseManifest pManifestContents, @rDataA
       if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
          put empty into tMetadataValue
       end if
+      split tMetadataKey by "."
       put tMetadataValue into tDataA[tMetadataKey]
    end repeat
    
+   # Fetch properties
+   local tProperties
+   local tProperty
+   local tName
+   local tOrder = 0
+   put revXMLChildNames(tTreeID,"package",return,"property",true) into tProperties
+   repeat for each line tProperty in tProperties
+      add 1 to tOrder
+      put revXMLAttribute(tTreeID,"package" & "/" & tProperty,"name") into tName
+      
+      local tReadOnly
+      get revXMLAttribute(tTreeID,"package" & "/" & tProperty,"set")
+      if it is empty or it begins with "xmlerr" then
+         put true into tReadOnly
+      else
+         put it into tDataA["property"][tName]["set"]
+         put false into tReadOnly
+      end if
+      put tReadOnly into tDataA["property"][tName]["read_only"]
+      
+      put revXMLAttribute(tTreeID,"package" & "/" & tProperty,"get") into tDataA["property"][tName]["get"]
+      put tOrder into tDataA["property"][tName]["order"]
+   end repeat
+   
    # Fetch extension dependencies
-   local tRequires, tCount, tName
+   local tRequires, tCount
    put 0 into tCount
    put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
    repeat for each line tDependency in tRequires
