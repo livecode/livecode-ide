@@ -2182,6 +2182,18 @@ command actionQuit
    quit
 end actionQuit
 
+command actionShiftRight
+   dispatch "shiftSelection" to group "Editor" of me with "right"
+end actionShiftRight
+
+command actionShiftLeft
+   dispatch "shiftSelection" to group "Editor" of me with "left"
+end actionShiftLeft
+
+command actionReIndent
+   dispatch "scriptFormat" to group "Editor" of me with "handler"
+end actionReIndent
+
 ################################################################################
 #
 # Keyboard shortcut handling

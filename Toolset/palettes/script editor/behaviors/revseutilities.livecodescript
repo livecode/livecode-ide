@@ -614,6 +614,9 @@ command sePrefGetDefaults
    put "command '" into tPrefs["shortcuts,SendWindowToBack"]
    put "command p" into tPrefs["shortcuts,Print"]
    put "command option f" into tPrefs["shortcuts,FindSelection"]
+   put "command ]" into tPrefs["shortcuts,ShiftRight"]
+   put "command [" into tPrefs["shortcuts,ShiftLeft"]
+   put "command |" into tPrefs["shortcuts,ReIndent"]
    
    # The default shortcuts need to be different on OS X due to stuff like expose etc.
    if seGetPlatform() is "macos" then

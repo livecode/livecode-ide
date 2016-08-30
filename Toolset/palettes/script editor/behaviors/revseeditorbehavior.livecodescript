@@ -1139,7 +1139,7 @@ command scriptFormat pScope
       put the text of field "Script" of me into tOldText
       
       local tNewText
-      put textFormatSelection(tOldText) into tNewText
+      put textFormatSelection(tOldText, 0) into tNewText
       textReplace tStartChar, tOldText, tNewText
       
       if tStart is not empty then
@@ -1880,38 +1880,51 @@ private function firstWordToEnd pLine
    return char tOffset to -1 of pLine
 end firstWordToEnd
 
+/*
+       
+    Hello
+
+*/
+
 # Parameters
 #   pText : the text to format
-private function textFormatSelection pText
+private function textFormatSelection pText, pLineOffset
    local tResult
    local tPreviousLine = 0
    local tTextLines
    put pText into tTextLines
    split tTextLines by return
    
-   get textFormatLine(1, tTextLines, tPreviousLine)
-   put firstWordToEnd(tTextLines[1]) into tTextLines[1]
+   local tFormat
+   put textFormatLine(1, tTextLines, tPreviousLine) into tFormat
+   
+   _internal script commentnesting of line pLineOffset+1 of field "script" of me
+   if it is 0 then
+      put firstWordToEnd(tTextLines[1]) into tTextLines[1]
+   end if
    put tTextLines[1] into tResult
+   
    local tIndex
    repeat with tIndex = 2 to the number of elements of tTextLines
-      put item 2 of it & firstWordToEnd(tTextLines[tIndex]) into tTextLines[tIndex]
-      get textFormatLine(tIndex, tTextLines, tPreviousLine)
-      
-      if item 1 of it < 0 then
-         repeat -(item 1 of it) times
-            if char 1 of line -1 of tTextLines[tIndex] is space then
-               delete char 1 of tTextLines[tIndex]
-            end if
-         end repeat
-      else if item 1 of it > 0 then
-         repeat item 1 of it times
-            put space before tTextLines[tIndex]
-         end repeat
+      _internal script commentnesting of line pLineOffset+tIndex of field "script" of me
+      if it is 0 then
+         put item 2 of tFormat & firstWordToEnd(tTextLines[tIndex]) into tTextLines[tIndex]
+         put textFormatLine(tIndex, tTextLines, tPreviousLine) into tFormat
+         
+         if item 1 of tFormat < 0 then
+            repeat -(item 1 of tFormat) times
+               if char 1 of line -1 of tTextLines[tIndex] is space then
+                  delete char 1 of tTextLines[tIndex]
+               end if
+            end repeat
+         else if item 1 of tFormat > 0 then
+            repeat item 1 of tFormat times
+               put space before tTextLines[tIndex]
+            end repeat
+         end if
       end if
-      
       put return & tTextLines[tIndex] after tResult
    end repeat
-   
    return tResult
 end textFormatSelection
 
@@ -2002,7 +2015,7 @@ private function textFormat pLineNumber, pLineCount, pText
    local tResult
    put tStartChar into tResult["startchar"]
    put tOldText into tResult["oldtext"]
-   put textFormatSelection(tOldText) into tResult["newtext"]
+   put textFormatSelection(tOldText, tStart-1) into tResult["newtext"]
    
    return tResult
 end textFormat
@@ -2169,6 +2182,7 @@ private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpo
    
    unlock screen
 end textReplaceRaw
+
 
 -- Sets the contents of the fields to pScript WITHOUT touching the undo queue. This should be done before any editing.
 on textSetScriptRaw pScript
@@ -2438,6 +2452,49 @@ command actionSelectAll
    end if
    unlock messages
 end actionSelectAll
+
+command shiftSelection pDirection
+   local tSelectedLine
+   put the selectedLine into tSelectedLine
+   
+   local tOriginalLines, tNewLines
+   put the text of tSelectedLine into tOriginalLines
+   
+   local tTabDepth
+   put sePrefGet("editor,tabdepth") into tTabDepth
+   
+   local tTab
+   if pDirection is "right" then
+      repeat for tTabDepth
+         put space after tTab
+      end repeat
+   end if
+   
+   repeat for each line tLine in tOriginalLines
+      if pDirection is "right" then
+         put tTab before tLine
+      else
+         repeat for tTabDepth
+            if char 1 of tLine is space then
+               delete char 1 of tLine
+            end if
+         end repeat
+      end if
+      
+      if tNewLines is not empty then
+         put return after tNewLines
+      end if
+      put tLine after tNewLines
+   end repeat
+   
+   local tAt
+   put the number of chars of line 1 to (word 2 of tSelectedLine-1) of the text of the selectedField + 2 into tAt
+   
+   lock screen
+   textReplace tAt, tOriginalLines, tNewLines
+   select tSelectedLine
+   unlock screen
+end shiftSelection
 
 # Description
 #   Called when the script editor is about to be closed.
@@ -2747,6 +2804,11 @@ on caretUpdate pField, pScript
       put pField into tField
    end if
    
+   _internal script commentnesting of line tLine of the selectedField
+   if it is not 0 then
+      exit caretUpdate
+   end if
+   
    local tScript
    if pScript is empty then
       put the text of the selectedField into tScript
@@ -3017,8 +3079,9 @@ on backspaceKey
          
          put tTo - tAt + 1 into tLength
       else
+         _internal script commentnesting of line tLine of field "script" of me
          # OK-2008-08-05 : Bug 6867 - If autoformatting is turned off, simply delete the last selected character
-         if sePrefGet("editor,autoformat") then
+         if it is 0 and sePrefGet("editor,autoformat") then
             put caretPositionLeft(tLineStart, tTo, tScript) + 1 into tAt
          else
             put tTo into tAt
@@ -3094,7 +3157,10 @@ on tabKey
       exit tabKey
    end if
    
-   if sePrefGet("editor,autoformat") then
+   local tLine
+   put word 2 of the selectedLine into tLine
+   _internal script commentnesting of line tLine of field "script" of me
+   if it is 0 and sePrefGet("editor,autoformat") then
       scriptFormat "handler"
    else
       get the selectedChunk
@@ -3112,7 +3178,11 @@ on tabKey
          put tTo - tFrom into tLength
       end if
       
-      textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tab
+      local tTab
+      repeat for sePrefGet("editor,tabdepth")
+         put space after tTab
+      end repeat
+      textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tTab
    end if
 end tabKey
 
@@ -3731,57 +3801,66 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
       put char x of tScript after tPreviousChars
    end repeat
    
-   local tWhitespaceBefore
-   put matchText(tPreviousChars, "^\s*$") into tWhitespaceBefore
+   local tLength
+   local tAt
+   local tReturn
    
-   if tWhitespaceBefore then
-      local tIndent
-      put textFormatGetLineIndent(line pLine of tScript) into tIndent
+   _internal script commentnesting of line pLine of the selectedField
+   if it is 0 then
       
-      # If the caret has somehow been placed in the middle of the indentation string we need to allow
-      # for this by subtracting from tIndent
-      local tCurrentChar
-      put pFrom into tCurrentChar
-      repeat until (char tCurrentChar of tScript is not space) or the number of chars of tIndent = 0
-         delete char 1 of tIndent
-         add 1 to tCurrentChar
-      end repeat
+      local tWhitespaceBefore
+      put matchText(tPreviousChars, "^\s*$") into tWhitespaceBefore
       
-      local tLength
-      put 0 into tLength
-      
-      local tAt
-      put pFrom into tAt
-      
-      local tReturn
-      put return & tIndent into tReturn
-   else
-      local tFormatting
-      local tPreviousLine = 0
-      local tTextLines
-      put tScript into tTextLines
-      split tTextLines by return
-      
-      put textFormatLine(pLine, tTextLines, tPreviousLine) into tFormatting
-      
-      put (the number of chars of line 1 to (pLine - 1) of tScript) + 1 into tAt 
-      if pLine <> 1 then 
-         add 1 to tAt 
-      end if
-      
-      if item 1 of tFormatting > 0 then
-         repeat item 1 of tFormatting times
-            put space after tIndent
+      if tWhitespaceBefore then
+         local tIndent
+         put textFormatGetLineIndent(line pLine of tScript) into tIndent
+         
+         # If the caret has somehow been placed in the middle of the indentation string we need to allow
+         # for this by subtracting from tIndent
+         local tCurrentChar
+         put pFrom into tCurrentChar
+         repeat until (char tCurrentChar of tScript is not space) or the number of chars of tIndent = 0
+            delete char 1 of tIndent
+            add 1 to tCurrentChar
          end repeat
-         textReplace tAt, empty, tIndent
-      else if item 1 of tFormatting < 0 then
-         textReplace tAt, char tAt to (tAt - item 1 of tFormatting - 1) of tScript, empty
+         
+         put 0 into tLength
+         
+         put pFrom into tAt
+         
+         put return & tIndent into tReturn
+      else
+         local tFormatting
+         local tPreviousLine = 0
+         local tTextLines
+         put tScript into tTextLines
+         split tTextLines by return
+         
+         put textFormatLine(pLine, tTextLines, tPreviousLine) into tFormatting
+         
+         put (the number of chars of line 1 to (pLine - 1) of tScript) + 1 into tAt 
+         if pLine <> 1 then 
+            add 1 to tAt 
+         end if
+         
+         if item 1 of tFormatting > 0 then
+            repeat item 1 of tFormatting times
+               put space after tIndent
+            end repeat
+            textReplace tAt, empty, tIndent
+         else if item 1 of tFormatting < 0 then
+            textReplace tAt, char tAt to (tAt - item 1 of tFormatting - 1) of tScript, empty
+         end if
+         
+         put 0 into tLength
+         put pFrom into tAt
+         add item 1 of tFormatting to tAt
+         put tReturnString & item 2 of tFormatting into tReturn
       end if
-      
+   else
       put 0 into tLength
       put pFrom into tAt
-      add item 1 of tFormatting to tAt
-      put tReturnString & item 2 of tFormatting into tReturn
+      put return & textFormatGetLineIndent(line pLine of tScript) into tReturn
    end if
    
    put tAt into rAt
