@@ -20,8 +20,7 @@ on preOpenStack
    send "resizeStack" to me
    
    openExtension sLoadedExtension
-   
-   revIDESubscribe "ideExtensionLog"
+
 end preOpenStack
 
 on closeStackRequest
@@ -78,7 +77,11 @@ on headerActionOpenExtension
 end headerActionOpenExtension
 
 on openExtension pPath
-   if there is not a folder pPath then exit openExtension
+   dispatch "__OpenExtension" to stack "revExtensionBuilder" with pPath
+end openExtension
+
+command __OpenExtension pPath
+   if there is not a folder pPath then exit __OpenExtension
    
    clearExtension
    
@@ -113,7 +116,7 @@ on openExtension pPath
    revIDESubscribe "ideExtensionLog"
    unlock messages
    unlock screen
-end openExtension
+end __OpenExtension
 
 on updateExtension
    local tExtensionData
