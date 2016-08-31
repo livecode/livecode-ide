@@ -787,7 +787,7 @@ on __extensionsLoad
                -- parse included extensions
                
                local tInclusion
-               repeat for each element tInclusion in tArray["inclusions"]
+               repeat for each element tInclusion in tArray["includes"]
                   local tInclusionFolder
                   if tInclusion["name"] begins with tArray["name"] & "." then
                      put char length(tArray["name"]) + 2 to -1 of tInclusion["name"] into tInclusionFolder
@@ -816,9 +816,14 @@ on __extensionsLoad
       end repeat
    end repeat
    
+   __extensionsLoadInDependencyOrder tDataA
+   
+end __extensionsLoad
+
+private command __extensionsLoadInDependencyOrder pDataA
    # Now loop through, checking the status of them
    local tExtensionsList, tExtensionsA, tExtensionCount, tExtensionCopyCount, tExtensionDataA
-   put the keys of tDataA into tExtensionsList
+   put the keys of pDataA into tExtensionsList
    sort tExtensionsList
    
    local tToLoadA, tDependencies
@@ -826,9 +831,9 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each key tRootFolder in tDataA[tTypeID]
-         repeat for each key tFolder in tDataA[tTypeID][tRootFolder]
-            put tDataA[tTypeID][tRootFolder][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+      repeat for each key tRootFolder in pDataA[tTypeID]
+         repeat for each key tFolder in pDataA[tTypeID][tRootFolder]
+            put pDataA[tTypeID][tRootFolder][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
             put tRootFolder & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
             add 1 to tExtensionCopyCount
          end repeat
@@ -846,10 +851,13 @@ on __extensionsLoad
    
    # Perform topological sort on list of dependencies so that they are loaded in the correct order
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
+      -- no need to load packages here as their inclusions are already in the dependency order
+      if tToLoadA[tLine]["type"] is "package" then
+         next repeat
+      end if
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
-   
-end __extensionsLoad
+end __extensionsLoadInDependencyOrder
 
 # Returns: List of the packages that are in the directory but not installed
 function __extensionPackagePaths
@@ -896,29 +904,6 @@ private command __extensionLoad pID, pExtensionDataA
 end __extensionLoad
 
 command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
-   local tStatus, tError
-   if pError is empty then
-      local tResources, tModule
-      put pFolder & slash & "resources" into tResources
-      put pFolder & slash & "module.lcm" into tModule
-      
-      # If we have a resources folder then load with resource path
-      if there is a folder tResources then
-         load extension from file tModule with resource path tResources
-      else
-         load extension from file tModule
-      end if
-      if the result is not empty then
-         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
-         put "error" into tStatus
-      else
-         put "installed" into tStatus
-      end if
-   else
-      put pStatus into tStatus
-      put pError into tError
-   end if
-   
    # Find entry in the cache if it exists
    local tCacheIndex
    put __extensionCacheID("install_path", pFolder) into tCacheIndex
@@ -932,12 +917,77 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
    # Update name, status, error, and whether the extension comes with the IDE
    __extensionPropertySet tCacheIndex, "name", pID
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
-   __extensionPropertySet tCacheIndex, "status", tStatus
-   __extensionPropertySet tCacheIndex, "error", tError
    __extensionPropertySet tCacheIndex, "ide", pIDEExtension
    
    # Store the extension's property metadata
    revIDEExtensionSetInfo pID
+   
+   local tStatus, tError
+   if pError is empty then
+      switch __extensionPropertyGet(tCacheIndex, "type")
+         case "widget"
+         case "library"
+         case "module"
+            local tResources, tModule
+            put pFolder & slash & "resources" into tResources
+            put pFolder & slash & "module.lcm" into tModule
+            
+            # If we have a resources folder then load with resource path
+            if there is a folder tResources then
+               load extension from file tModule with resource path tResources
+            else
+               load extension from file tModule
+            end if
+            if the result is not empty then
+               put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
+               put "error" into tStatus
+            else
+               put "installed" into tStatus
+            end if
+            break
+         case "package"
+            -- iterate over inclusions and recurse
+            local tInclusions
+            put __extensionPropertyGet(tCacheIndex, "includes") into tInclusions
+            
+            local tInclusion, tDataA
+            repeat for each element tInclusion in tInclusions
+               local tInclusionFolder
+               if tInclusion["name"] begins with tInclusions["name"] & "." then
+                  put char length(tInclusions["name"]) + 2 to -1 of tInclusion["name"] into tInclusionFolder
+               else
+                  next repeat
+               end if
+               
+               if there is no folder (pFolder & slash & tInclusionFolder) then
+                  next repeat
+               end if
+               
+               local tInclusionArray, tPath
+               put pFolder & slash & tInclusionFolder & slash & "manifest.xml" into tPath
+               
+               if there is a file tPath then
+                  put __fetchManifestData(tPath) into tInclusionArray
+                  put pIDEExtension into tInclusionArray["ide"]
+                  
+                  put tInclusionArray into tDataA[tInclusionArray["name"]][pFolder][tInclusionFolder]
+               end if
+            end repeat
+            
+            __extensionsLoadInDependencyOrder tDataA
+            break
+         default
+            put "error" into tStatus
+            put "unsupported package type" into tError
+            break
+      end switch
+   else
+      put pStatus into tStatus
+      put pError into tError
+   end if
+   
+   __extensionPropertySet tCacheIndex, "status", tStatus
+   __extensionPropertySet tCacheIndex, "error", tError
    
    # Deal with the various icon possibilities
    if sExtensionProperties[pID]["svgIconPath"] is empty then
