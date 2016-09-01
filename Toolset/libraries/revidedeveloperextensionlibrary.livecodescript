@@ -113,7 +113,6 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
-   revIDEPushDefaultFolder
    local tExtensionDetailsA
    
    local tFolders
@@ -144,8 +143,7 @@ function revIDEDeveloperExtensions
       if tFolder is empty then
          next repeat
       end if
-      set the defaultfolder to tFolder
-      put the folders into tExtensionFolders
+      put folders(tFolder) into tExtensionFolders
       repeat for each line tExtensionFolder in tExtensionFolders
          if tExtensionFolder is ".." then 
             next repeat
@@ -163,19 +161,13 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
-   revIDEPopDefaultFolder
-   
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
-   revIDEPushDefaultFolder pFolder
-
    local tFiles
-   put the files into tFiles
+   put files(pFolder) into tFiles
    filter tFiles with "*.lcb"
-   
-   revIDEPopDefaultFolder
    
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
@@ -296,14 +288,13 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
 end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
-   revIDEPushDefaultFolder pFolder
    local tResources, tResource, tPrefix
    if pPrefix is not empty then
       put pPrefix & slash into tPrefix
    end if
    
    # Add files to the list of resources
-   repeat for each line tResource in the files
+   repeat for each line tResource in files(pFolder)
       if tResource begins with "." then next repeat
       if tResources is empty then
          put tPrefix & tResource into tResources
@@ -313,7 +304,7 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    end repeat
    
    # Add folders to the list of resources
-   repeat for each line tResourceFolder in the folders
+   repeat for each line tResourceFolder in folders(pFolder)
       if tResourceFolder begins with "." then next repeat
       local tRecursive
       put __revIDEDeveloperExtensionListResourcesRecursive(pFolder & slash & tResourceFolder, tPrefix & tResourceFolder) into tRecursive
@@ -325,7 +316,7 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
          end if
       end if
    end repeat
-   revIDEPopDefaultFolder
+   
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
