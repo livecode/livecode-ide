@@ -2094,6 +2094,7 @@ private command textReplace pOffset, pOldText, pNewText, pObject
       put tCache into sScriptCache[seGetRuggedId(tObject)]
    end if
    
+   set the caseSensitive to true
    if pOldText is not pNewText then
       seSetObjectState tObject, "edited"
       
