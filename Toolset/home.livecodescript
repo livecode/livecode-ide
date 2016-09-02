@@ -62,6 +62,9 @@ on relaunch
 end relaunch
 
 on shutdown
+   if "__revInternal_SavePreferences" is in the pendingMessages then
+      __revInternal_SavePreferences
+   end if
 end shutdown
 
 on saveStackRequest

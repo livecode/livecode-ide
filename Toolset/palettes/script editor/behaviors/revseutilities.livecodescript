@@ -1024,12 +1024,21 @@ command revSEFormat pScript
 end revSEFormat
 
 command revSEColorizeField pField, pStart, pEnd
+   if pStart is empty then
+      put 1 into pStart
+   end if
+   
+   if pEnd is empty then
+      put the number of chars of pField into pEnd
+   end if
+   
    sePrefInit
    local tConfig
    put sePrefGet("colorization,config") into tConfig
    
    _internal script configure classes sColorizationClasses
    _internal script configure keywords sColorizationKeywords
+   
    _internal script colorize char pStart to pEnd of pField
 end revSEColorizeField
    
