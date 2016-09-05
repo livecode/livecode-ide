@@ -112,28 +112,33 @@ value: The path to the icon of this extension
 key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
-function revIDEDeveloperExtensions
+function revIDEDeveloperExtensions pFolder
    local tExtensionDetailsA
    
    local tFolders
-   if not revEnvironmentIsInstalled() then
-      # Look for extension examples in git repo.
-      put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" into tFolders 
-      put return & revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" after tFolders
-   end if
    
-   # Look for extension examples in previously selected user folders.
-   local tUserFolders
-   put revIDEGetPreference("cDeveloperExtensionsFolders") into tUserFolders
-   repeat for each line tLine in tUserFolders
-      if tLine is among the lines of tFolders then next repeat
-      
-      if tFolders is empty then
-         put tLine into tFolders
-      else
-         put return & tLine after tFolders
+   if pFolder is empty then
+      if not revEnvironmentIsInstalled() then
+         # Look for extension examples in git repo.
+         put revEnvironmentRepositoryPath() & slash & "extensions" & slash & "widgets" into tFolders 
+         put return & revEnvironmentRepositoryPath() & slash & "extensions" & slash & "libraries" after tFolders
       end if
-   end repeat
+      
+      # Look for extension examples in previously selected user folders.
+      local tUserFolders
+      put revIDEGetPreference("cDeveloperExtensionsFolders") into tUserFolders
+      repeat for each line tLine in tUserFolders
+         if tLine is among the lines of tFolders then next repeat
+         
+         if tFolders is empty then
+            put tLine into tFolders
+         else
+            put return & tLine after tFolders
+         end if
+      end repeat
+   else
+      put pFolder into tFolders
+   end if
    
    local tFolder, tExtensionFolders, tExtensionFolder, tFiles, tExtension
    
@@ -150,7 +155,7 @@ function revIDEDeveloperExtensions
          end if
          local tExtensionA
          # On first run, don't compile.
-         put  revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder)  into tExtensionA
+         put revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder) into tExtensionA
          if tExtensionA is not empty then
             put tExtensionA into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
             put true into tFolderHasModule
@@ -185,29 +190,18 @@ function revIDEDeveloperExtensionNoCompile pFolder
    local tFile
    put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
    
-   if tFile is empty then
+   local tDataA
+   if there is a file (pFolder & slash & "manifest.xml") then
+      __FetchManifest (pFolder & slash & "manifest.xml"), tDataA
+   else if there is not a file (pFolder & slash & tFile) then
       return empty
    end if
-   
-   local tDataA
-   __FetchManifest (pFolder & slash & "manifest.xml"), tDataA
    
    if the result is not empty then
       put tFile into tDataA["file"]
    end if
    return tDataA
 end revIDEDeveloperExtensionNoCompile
-
-function revIDEDeveloperExtension pFolder
-   local tFile
-   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
-   
-   if tFile is empty then
-      return empty
-   end if
-   
-   return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
-end revIDEDeveloperExtension
 
 private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    local tDetailsA
@@ -219,25 +213,28 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    else
       put pFolder into tAPIFolder
    end if
-   revIDEExtensionUpdateAPI tAPIFolder, pFile
    
-   local tAPI
-   if the result is empty then
-      # Check to see if we've already parsed to a docs library array
-      put sExtensionDetailsA[pFolder]["api"] into tAPI
-   end if	
-   
-   if tAPI is empty then
-      local tData
-      put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
-      put textDecode(tData, "utf-8") into tData
+   if there is a file pFile then
+      revIDEExtensionUpdateAPI tAPIFolder, pFile
       
-      # If either we had to generate the new docs data or get it from the file, parse to a docs library array
-      local tLibraryA
-      dispatch function "revDocsParseDocTextToLibraryArray" to stack "revDocsParser" with tData, tDetailsA["name"], tDetailsA["author"]
-      put the result into tLibraryA
-      put tLibraryA["doc"] into tDetailsA["api"]
-      put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
+      local tAPI
+      if the result is empty then
+         # Check to see if we've already parsed to a docs library array
+         put sExtensionDetailsA[pFolder]["api"] into tAPI
+      end if	
+      
+      if tAPI is empty then
+         local tData
+         put url ("binfile:" & pFolder & slash & "api.lcdoc") into tData
+         put textDecode(tData, "utf-8") into tData
+         
+         # If either we had to generate the new docs data or get it from the file, parse to a docs library array
+         local tLibraryA
+         dispatch function "revDocsParseDocTextToLibraryArray" to stack "revDocsParser" with tData, tDetailsA["name"], tDetailsA["author"]
+         put the result into tLibraryA
+         put tLibraryA["doc"] into tDetailsA["api"]
+         put tAPIFolder & slash & "api.lcdoc" into tDetailsA["api_file"]
+      end if
    end if
    
    if there is a file (pFolder & slash & "support" & slash & "icon.png") then
@@ -320,36 +317,98 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
-private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
-   local tDetailsA
-   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, pFile) into tDetailsA
+private command __CompilePackage pFolder, pPackageFolder, @xDetailsA
+   local tPackageDataA
+   __FetchManifest (pPackageFolder & slash & "manifest.xml"), tPackageDataA
    
-   put pFile into tDetailsA["file"]
-   if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
-      __revIDEDeveloperExtensionLog "Skipping recompilation of" && pFolder & slash & "module.lcm - module is up to date"
-      # The stored info is up to date.
-      if sExtensionDetailsA[pFolder] is not empty then
-         union tDetailsA with sExtensionDetailsA[pFolder]
-         put tDetailsA into sExtensionDetailsA[pFolder]
-         return sExtensionDetailsA[pFolder]
+   -- inclusions should be listed in dependency order so we must stop
+   -- compiling when we hit our folder as anything listed after may depend
+   -- on the target
+   local tIndex
+   repeat with tIndex = 1 to the number of elements in tPackageDataA["includes"]
+      if tPackageDataA["includes"][tIndex]["name"] begins with (tPackageDataA["name"] & ".") then
+         local tName
+         put tPackageDataA["includes"][tIndex]["name"] into tName
+         put empty into char 1 to length(tPackageDataA["name"] & ".") of tName
+         
+         if pFolder is not (pPackageFolder & slash & tName) then
+            local tFile
+            put __revIDEDeveloperExtensionFetchModuleInFolder(pPackageFolder & slash & tName) into tFile
+            
+            if tFile is not empty then
+               if not __revIDEDeveloperExtensionShouldRecompile(pPackageFolder & slash & tName, tFile) then
+                  __revIDEDeveloperExtensionLog "Skipping recompilation of" && pPackageFolder & slash & tName & slash & "module.lcm - module is up to date"
+               else
+                  # The compiled module or manifest is not up to date, so compile.
+                  __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & tFile
+                  __revIDEDeveloperCompileModule pPackageFolder & slash & tName & slash & tFile, pPackageFolder & slash & tName, pPackageFolder
+                  
+                  if the result is not empty then
+                     # This may be better as a warning, and try to parse info direct from the file.
+                     __revIDEDeveloperExtensionSendError the result
+                     exit __CompilePackage
+                  end if
+               end if
+            end if
+            
+            local tMetadataA
+            __FetchManifest (pPackageFolder & slash & tName & slash & "manifest.xml"), tMetadataA
+            put pPackageFolder & slash & tName into tMetadataA["folder"]
+            put tMetadataA into xDetailsA["requires load"][tIndex]
+         else
+            exit __CompilePackage
+         end if
+      else
+         __revIDEDeveloperExtensionSendError "Inclusions names should begin with package name:" && tPackageDataA["name"]
+         exit __CompilePackage
       end if
-      # The compiled module and manifest are up to date, but we haven't fetched the information yet.
-   else
-      # The compiled module or manifest is not up to date, so compile.
-      __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
-      __revIDEDeveloperCompileModule pFolder & slash & pFile, pFolder
-      
-      if the result is not empty then
-         # This may be better as a warning, and try to parse info direct from the file.
-         __revIDEDeveloperExtensionSendError the result
-         return tDetailsA
+   end repeat
+end __CompilePackage
+
+private function __revIDEDeveloperExtensionDetails pFolder, pPackageFolder
+   if pPackageFolder is empty then
+      put pFolder into pPackageFolder
+   end if
+   
+   local tFile
+   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   
+   local tDetailsA
+   put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, tFile) into tDetailsA
+   
+   # compile dependencies if required
+   if pFolder is not pPackageFolder then
+      __CompilePackage pFolder, pPackageFolder, tDetailsA
+   end if
+   
+   if tFile is not empty then
+      put tFile into tDetailsA["file"]
+      if not __revIDEDeveloperExtensionShouldRecompile(pFolder, tFile) then
+         __revIDEDeveloperExtensionLog "Skipping recompilation of" && pFolder & slash & "module.lcm - module is up to date"
+         # The stored info is up to date.
+         if sExtensionDetailsA[pFolder] is not empty then
+            union tDetailsA with sExtensionDetailsA[pFolder]
+            put tDetailsA into sExtensionDetailsA[pFolder]
+            return sExtensionDetailsA[pFolder]
+         end if
+         # The compiled module and manifest are up to date, but we haven't fetched the information yet.
+      else
+         # The compiled module or manifest is not up to date, so compile.
+         __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & tFile
+         __revIDEDeveloperCompileModule pFolder & slash & tFile, pFolder, pPackageFolder
+         
+         if the result is not empty then
+            # This may be better as a warning, and try to parse info direct from the file.
+            __revIDEDeveloperExtensionSendError the result
+            return tDetailsA
+         end if
       end if
    end if
    
    __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
    local tMetadataA
    __FetchManifest (pFolder & slash & "manifest.xml"), tMetadataA
-   union tDetailsA with tMetadataA
+   union tDetailsA with tMetadataA recursively
    
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
@@ -359,7 +418,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
    put tDetailsA into sExtensionDetailsA[pFolder]
    return sExtensionDetailsA[pFolder]
    
-end __revIDEDeveloperExtensionDetailsFromFile
+end __revIDEDeveloperExtensionDetails
 
 on revIDEDeveloperExtensionAddResourceFile pExtensionFolder, pResourcePath, pType
    if there is not a file pResourcePath then
@@ -410,9 +469,9 @@ on revIDEDeveloperExtensionAddResourceFolder pExtensionFolder, pResourceFolder
    end if
 end revIDEDeveloperExtensionAddResourceFolder
 
-on revIDEDeveloperExtensionTest pPath
+on revIDEDeveloperExtensionTest pPath, pPackagePath
    local tDetailsA
-   put revIDEDeveloperExtension(pPath) into tDetailsA
+   put __revIDEDeveloperExtensionDetails(pPath, pPackagePath) into tDetailsA
    
    if tDetailsA["file"] is empty then
       __revIDEDeveloperExtensionSendError "No extension to test in" && pPath
@@ -486,6 +545,11 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
+   local tIndex
+   repeat with tIndex = 1 to the number of elements in pDetailsA["requires load"]
+      revIDEExtensionLoad pDetailsA["requires load"][tIndex]["name"], pDetailsA["requires load"][tIndex]["folder"], pDetailsA["requires load"][tIndex]["version"]
+   end repeat
+   
    revIDEExtensionLoad pDetailsA["name"], pPath, pDetailsA["version"]
    
    local tResult
@@ -494,11 +558,11 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       __revIDEDeveloperExtensionSendError tResult
       exit __revIDEDeveloperExtensionDoCreateTestStack
    end if
+   lock screen
    
    if there is a stack (pPath & slash & "test.livecode") then
       go stack (pPath & slash & "test.livecode") 
    else
-      lock screen
       lock messages
       create stack kTestStackName
       if tRectsA["rect"] is not empty then
@@ -510,34 +574,54 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the title of it to pDetailsA["title"]
       set the script of it to __testStackScript()
       go stack kTestStackName
-      create widget as pDetailsA["name"]
       unlock messages
    end if
    
-   if there is not a widget 1 of stack kTestStackName then
-      __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["name"]
-      __revIDEDeveloperExtensionDoClearTestStack
-      exit __revIDEDeveloperExtensionDoCreateTestStack
-   end if
+   --!TODO - support other extension types
+   switch pDetailsA["type"]
+      case "widget"
+         lock messages
+         create widget as pDetailsA["name"]
+         
+         if there is not a widget 1 of stack kTestStackName then
+            __revIDEDeveloperExtensionSendError "failed to create widget" && pDetailsA["name"]
+            __revIDEDeveloperExtensionDoClearTestStack
+            exit __revIDEDeveloperExtensionDoCreateTestStack
+         end if
+         
+         if tRectsA["wrect"] is not empty then
+            set the rect of widget 1 of stack kTestStackName to tRectsA["wrect"]
+         end if
+         
+         unlock messages
+         break
+   end switch
    
-   if tRectsA["wrect"] is not empty then
-      set the rect of widget 1 of stack kTestStackName to tRectsA["wrect"]
-   end if
-   
-   set the cCurExtension of stack kTestStackName to pDetailsA["name"]
+   set the cCurExtensionDetails of stack kTestStackName to pDetailsA
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
 
 on __revIDEDeveloperExtensionDoClearTestStack
+   if there is not a stack kTestStackName then
+      exit __revIDEDeveloperExtensionDoClearTestStack
+   end if
+   
    repeat while there is a widget 1 of stack kTestStackName 
       delete widget 1 of stack kTestStackName
    end repeat
-   local tExtension
-   put the cCurExtension of stack kTestStackName into tExtension
+   
+   local tDetailsA
+   put the cCurExtensionDetails of stack kTestStackName into tDetailsA
    delete stack kTestStackName
-   if tExtension is not empty then
-      __revIDEDeveloperExtensionUnload tExtension
+   
+   if tDetailsA["name"] is not empty then
       __revIDEDeveloperExtensionLog "Unloading..."
+      local tIndex
+      repeat with tIndex = the number of elements in tDetailsA["requires load"] down to 1
+         revIDEExtensionUnoad tDetailsA["requires load"][tIndex]["name"]
+      end repeat
+      
+      __revIDEDeveloperExtensionUnload tDetailsA["name"]
    end if
 end __revIDEDeveloperExtensionDoClearTestStack
 
@@ -600,10 +684,6 @@ on revIDEDeveloperExtensionEditScript pFolder
 end revIDEDeveloperExtensionEditScript
 
 on revIDEDeveloperExtensionOpen pFolder
-   if __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) is empty then
-      exit revIDEDeveloperExtensionOpen
-   end if
-   
    __revIDEDeveloperExtensionAddFolder pFolder
    return revIDEDeveloperExtension(pFolder)
 end revIDEDeveloperExtensionOpen
@@ -669,7 +749,7 @@ private function __revIDEDeveloperExtensionCompilerPath
    end if
 end __revIDEDeveloperExtensionCompilerPath
 
-private command __revIDEDeveloperCompileModule pFile, pTargetFolder
+private command __revIDEDeveloperCompileModule pFile, pTargetFolder, pPackageFolder
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
       delete file (pTargetFolder & slash & "manifest.xml")
@@ -680,7 +760,7 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    put shellFormat(__revIDEDeveloperExtensionCompilerPath()) into tShellCommand
    
    # The folder to put the .lci file
-   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
+   put shellFormat(pPackageFolder, "modulepath") after tShellCommand
    
    # The built-in module path
    put shellFormat(__revIDEDDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
