@@ -28,11 +28,12 @@ on preOpenCard
       select char 1 to -1 of field "Line" of group "Breakpoint" of me
    end if
    
+   put the cObject of me into sOriginalObject
+   
    # If we are in editing an existing breakpoint / watch rather than creating a new one,
    # we save the original details so that the existing one can be removed if the user accepts the changes.
    if the cMode of me is "edit" then
       put the cType of me into sOriginalType
-      put the cObject of me into sOriginalObject
       if the cType of me is "watch" then
          put the cHandler of me into sOriginalHandler
          put the cVariable of me into sOriginalVariable
