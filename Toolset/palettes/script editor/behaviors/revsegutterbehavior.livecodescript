@@ -485,6 +485,9 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
    local tBreakpoints
    put revDebuggerListBreakpoints(tObject) into tBreakpoints
    
+   local tConditions
+   put revDebuggerListBreakpointConditions(tObject) into tConditions
+
    local tHorizontal, tVertical
    put item 1 of the loc of me into tHorizontal
    
@@ -540,6 +543,8 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
       set the cState of tImage to tState
       set the loc of tImage to tHorizontal, tVertical
       
+      set the cCondition of tImage to line tLineNumber of tConditions
+      
       add 1 to tLineNumber
    end repeat
 end updateBreakpoints
@@ -593,7 +598,7 @@ command updateContextMenu pContext
   end if
   put "Remove" & return after tText
   put "-" & return after tText
-  put "Condition..." after tText
+  put "Edit..." after tText
   
   set the text of button "Breakpoint Context Menu" of me to tText
   set the cTarget of button "Breakpoint Context Menu" of me to line 4 of pContext
@@ -748,10 +753,8 @@ on menuPick pItemName
       case "Remove"
          revDebuggerRemoveBreakpoint tObject, (the cLine of tImage)
          break
-      case "Condition..."
-         set the cObject of stack "revSEBreakpointCondition" to tObject
-         set the cLine of stack "revSEBreakpointCondition" to (the cLine of tImage)
-         modal stack "revSEBreakpointCondition"
+      case "Edit..."
+         seEditBreakpointDialog "breakpoint", the cLine of tImage,,, the cCondition of tImage, tObject
          exit menuPick
          break
    end switch
