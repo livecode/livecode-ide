@@ -635,7 +635,7 @@ end __revIDEDeveloperExtensionUnload
 
 on revIDEDeveloperExtensionInstall pFolder
    local tPackage
-   __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
+   __BuildPackage pFolder, "", tPackage
    revIDEInstallExtension tPackage
    put pFolder & slash & "module.lcm" into sInstalledExtension
 end revIDEDeveloperExtensionInstall
@@ -808,24 +808,86 @@ end __revIDEDeveloperCompileModule
 
 on revIDEDeveloperExtensionBuildPackage pFolder
    local tBuiltLocation
-   __revIDEDeveloperExtensionBuildPackage pFolder, "", tBuiltLocation
+   __BuildPackage pFolder, "", tBuiltLocation
    # AL-2015-05-22: [[ Bug 14919 ]] Don't display success dialog when package building fails
    if the result is empty then
       answer "Package" && tBuiltLocation && "built successfully"
    end if
 end revIDEDeveloperExtensionBuildPackage
 
-private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
-   local tDetailsA
-   put revIDEDeveloperExtension(pFolder) into tDetailsA
+private command __PackageContent pDetailsA, pFolder, pRootFolder, @xFiles, @xFolders
+   switch pDetailsA["type"]
+      case "package"
+         break
+      case "widget"
+      case "library"
+      case "module"
+         if there is not a file (pFolder & slash & "module.lcm") then
+            return "Error: missing file" && (pFolder & slash & "module.lcm") for error
+         end if
+         put pRootFolder & "module.lcm" into xFiles[pFolder & slash & "module.lcm"]
+         break
+   end switch
    
-   local tFullPath
-   put pFolder & slash & tDetailsA["file"] into tFullPath
+   put "manifest.xml" into xFiles[pFolder & slash & "manifest.xml"]
    
-   if there is not a file tFullPath then
-      return "Error: missing file" && tFullPath
+   local tFolders
+   repeat for each word tFolder in "resources code"
+      if there is folder (pFolder & slash & tFolder) then
+         put tFolder into xFolders[pFolder & slash & tFolder]
+      end if
+   end repeat
+   
+   # AL-2015-05-22: [[ Bug 14919 ]] Use default widget and library icons if none are provided
+   if pDetailsA["svgicon"] is empty then
+      if pDetailsA["icon"] is empty or there is not a file pDetailsA["icon"] then
+         answer file "Select icon file" with type "|png|"
+         if it is empty then
+            __revIDEDeveloperExtensionLog "Using default icon"
+            get revIDEDefaultExtensionIcon(pDetailsA["type"], false)
+         end if
+         put it into pDetailsA["icon"]
+      end if
+      put "support/icon.png" into xFiles[pDetailsA["icon"]]
    end if
    
+   if pDetailsA["svgicon"] is empty then
+      if pDetailsA["retina_icon"] is empty or there is not a file pDetailsA["retina_icon"] then
+         answer file "Select retina icon file" with type "|png|"
+         if it is empty then
+            __revIDEDeveloperExtensionLog "Using default retina icon"
+            get revIDEDefaultExtensionIcon(pDetailsA["type"], true)
+         end if
+         put it into pDetailsA["retina_icon"]
+      end if
+      put "support/icon@extra-high.png" into xFiles[pDetailsA["icon"]]
+   end if
+   
+   if there is a file pDetailsA["guide_file"] then
+      put "docs/guide/guide.md" into xFiles[pDetailsA["guide_file"]]
+   end if
+   
+   if there is a file pDetailsA["api_file"] then
+      put "docs/api/api.lcdoc" into xFiles[pDetailsA["api_file"]]
+   else
+      __revIDEDeveloperExtensionSendWarning "docs formatting error. Docs may be empty"
+   end if
+   
+   # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
+   local tInterfaceFiles
+   put files(pFolder) into tInterfaceFiles
+   filter tInterfaceFiles with "*.lci"
+   local tFile
+   repeat for each line tFile in tInterfaceFiles
+      put tFile into xFiles[pFolder & slash & tFile]
+   end repeat
+   
+   if there is a file pDetailsA["defaultscript_file"] then
+      put "support/defaultscript.livecodescript" into xFiles[pDetailsA["defaultscript_file"]]
+   end if
+end __PackageContent
+
+private command __BuildPackage pFolder, pTargetFolder, @rBuiltLocation
    local tTargetFolder
    if pTargetFolder is empty then
       put pFolder into tTargetFolder
@@ -833,19 +895,25 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put pTargetFolder into tTargetFolder
    end if
    
+   local tDetailsA
+   put revIDEDeveloperExtension(pFolder) into tDetailsA
+   
    local tTargetName
    if tDetailsA["name"] is empty then
-      __revIDEDeveloperExtensionSendError "no name found in " && tFullpath
+      __revIDEDeveloperExtensionSendError "no name found in " && pFolder & slash & "manifest.xml"
       return "no id found"
    end if
    put tDetailsA["name"] into tTargetName
    
    local tTargetVersion
    if tDetailsA["version"] is empty then
-      __revIDEDeveloperExtensionSendError "no version found in " && tFullpath
+      __revIDEDeveloperExtensionSendError "no version found in " && pFolder & slash & "manifest.xml"
       return "no version found"
    end if
    put tDetailsA["version"] into tTargetVersion
+   
+   local tFiles, tFolders
+   __PackageContent tDetailsA, pFolder, "", tFiles, tFolders
    
    local tArchive
    put tTargetFolder & slash & tTargetName & "." & tTargetVersion & ".lce" into tArchive
@@ -857,71 +925,11 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    if the result begins with "ziperr" then
       __revIDEDeveloperExtensionSendError "couldn't open zip archive" &&  tArchive
-      return "couldn't open zip archive" && tArchive
+      return "couldn't open zip archive" && tArchive for error
    end if
    
    local tError
-   
-   # AL-2015-05-22: [[ Bug 14919 ]] Use default widget and library icons if none are provided
-   local tIcon
-   if tError is empty then
-      put tDetailsA["icon"] into tIcon
-      if tIcon is empty or there is not a file tIcon then
-         answer file "Select icon file" with type "|png|"
-         if it is empty then
-            __revIDEDeveloperExtensionLog "Using default icon"
-            get revIDEDefaultExtensionIcon(tDetailsA["type"], false)
-         end if
-         put it into tIcon
-      end if
-   end if
-   
-   local tRetinaIcon
-   if tError is empty then
-      put tDetailsA["retina_icon"] into tRetinaIcon
-      if tRetinaIcon is empty or there is not a file tRetinaIcon then
-         answer file "Select retina icon file" with type "|png|"
-         if it is empty then
-            __revIDEDeveloperExtensionLog "Using default retina icon"
-            get revIDEDefaultExtensionIcon(tDetailsA["type"], true)
-         end if
-         put it into tRetinaIcon
-      end if
-   end if
-   
-   local tGuide
-   put tDetailsA["guide_file"] into tGuide
-   if there is not a file tGuide then
-      put empty into tGuide
-   end if
-   
-   local tDocs
-   put tDetailsA["api_file"] into tDocs
-   if there is not a file tDocs then
-      put empty into tDocs
-   end if
-   
-   local tResources
-   put (pFolder & slash & "resources") into tResources
-   if there is not a folder tResources then
-      put empty into tResources
-   end if
-   
-   # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
-   local tInterfaceFile
-   if there is a file (pFolder & slash & tTargetName & ".lci") then
-      put pFolder & slash & tTargetName & ".lci" into tInterfaceFile
-   end if
-   
-   local tDefaultScript
-   put tDetailsA["defaultscript_file"] into tDefaultScript
-   if there is not a file tDefaultScript then
-      put empty into tDefaultScript
-   end if
-   
-   if tError is empty then
-      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tInterfaceFile, tDefaultScript) into tError
-   end if
+   put __AddSpecifiedFilesToPackage(tArchive, tFiles, tFolders) into tError
    
    revZipCloseArchive tArchive
    
@@ -938,110 +946,40 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    put tArchive into rBuiltLocation
    return empty
-end __revIDEDeveloperExtensionBuildPackage
+end __BuildPackage
 
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pInterfaceFile, pDefaultScript
+private function __AddSpecifiedFilesToPackage pArchive, pFiles, pFolders
    local tError
    
-   set the itemdelimiter to slash
-   # Add source into package
-   revZipAddItemWithFile pArchive, item -1 of pSource, pSource
-   
-   if the result begins with "ziperr" then
-      put "couldn't add source" into tError
-   end if
-   
-   # Add module into package
-   revZipAddItemWithFile pArchive, "module.lcm", pModule
-   
-   if the result begins with "ziperr" then
-      put "couldn't add module" into tError
-   end if
-   
-   # Add manifest into package
+   # Add files
+   local tFile
    if tError is empty then
-      revZipAddItemWithFile pArchive, "manifest.xml", pFolder & slash & "manifest.xml"
-      
-      if the result begins with "ziperr" then
-         put "couldn't add manifest" into tError
-      end if
-   end if
-   
-   # Add user guide
-   if tError is empty then
-      // AL-2015-03-03: [[ Bug 14781 ]] If there is no guide, warn and don't try to add a file
-   	  if pGuide is empty then
-   	    __revIDEDeveloperExtensionSendWarning "no user guide found"
-   	  else
-	    revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
-      end if
-      if the result begins with "ziperr" then
-         put "couldn't add guide" into tError
-      end if
-   end if
-   
-   # Add icons
-   if tError is empty then
-      revZipAddItemWithFile pArchive, "support/icon.png", pIcon
-      
-      if the result begins with "ziperr" then
-         put "couldn't add icon.png" into tError
-      end if
-   end if
-   
-   if tError is empty then
-      revZipAddItemWithFile pArchive, "support/icon@extra-high.png", pRetinaIcon
-      
-      if the result begins with "ziperr" then
-         put "couldn't add icon@extra-high.png" into tError
-      end if
-   end if
-   
-   # Add docs
-   if tError is empty then
-      if pDocs is empty then
-         __revIDEDeveloperExtensionSendWarning "docs formatting error. Docs may be empty"
-      else
-         revZipAddItemWithFile pArchive, "docs/api/api.lcdoc", pDocs
-      end if
-      if the result begins with "ziperr" then
-         put "couldn't add doc " & pDocs into tError 
-      end if
-   end if
-   
-   # Add resources
-   if tError is empty and pResourcesFolder is not empty then
-      local tResources
-      put __revIDEDeveloperExtensionListResourcesRecursive(pResourcesFolder, "") into tResources
-      repeat for each line tLine in tResources
-         revZipAddItemWithFile pArchive, "resources/" & tLine, pResourcesFolder & slash & tLine
-         
+      repeat for each key tFile in pFiles
+         revZipAddItemWithFile pArchive, pFiles[tFile], tFile
          if the result begins with "ziperr" then
-            __revIDEDeveloperExtensionSendWarning "couldn't add resource" && pResourcesFolder & slash & tLine
+            put "couldn't add file:" && tFile into tError
+            exit repeat
          end if
       end repeat
    end if
    
-   # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
-   if tError is empty and pInterfaceFile is not empty then
-      revZipAddItemWithFile pArchive, item -1 of pInterfaceFile, pInterfaceFile
-      
-      if the result begins with "ziperr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't add interface file" && pInterfaceFile
-      end if
-   end if
-   
-   # Add default script
-   if tError is empty and pDefaultScript is not empty then
-      revZipAddItemWithFile pArchive, "support/defaultscript.livecodescript", pDefaultScript
-      
-      if the result begins with "ziperr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't add default script" && pDefaultScript
-      end if
+   # Add folders
+   if tError is empty then
+      repeat for each key tFolder in pFolders
+         local tFiles
+         put __revIDEDeveloperExtensionListResourcesRecursive(tFolder, "") into tFiles
+         repeat for each line tLine in tFiles
+            revZipAddItemWithFile pArchive, pFolders[tFolder] & slash & tLine, tFolder & slash & tLine
+            
+            if the result begins with "ziperr" then
+               __revIDEDeveloperExtensionSendWarning "couldn't add resource" && tFolder & slash & tLine
+            end if
+         end repeat
+      end repeat
    end if
    
    return tError
-end __revIDEDeveloperExtensionAddSpecifiedFilesToPackage
+end __AddSpecifiedFilesToPackage
 
 on revIDEDeveloperExtensionEditDefaultScript pFolder
    local tDefaultScript, tTargetStack
