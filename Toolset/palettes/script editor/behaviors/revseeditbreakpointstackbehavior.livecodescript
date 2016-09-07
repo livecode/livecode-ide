@@ -9,6 +9,10 @@ local sOriginalType
 local sOriginalObject
 
 on preOpenCard
+   ideSubscribe "idePreferenceChanged:cScriptEditor,editor,backgroundcolor"
+   ideSubscribe "idePreferenceChanged:cScriptEditor,editor,font"
+   ideSubscribe "idePreferenceChanged:cScriptEditor,editor,fontSize"
+   
    --   set the loc of me to the screenLoc
    
    update
@@ -38,6 +42,9 @@ on preOpenCard
          put the cBreakpointCondition of me into sOriginalBreakpointCondition
       end if
    end if
+   
+   __UpdateConditionColors
+   __UpdateConditionFont
 end preOpenCard
 
 on mouseUp
@@ -112,6 +119,21 @@ command closeAccept
          revDebuggerRemoveWatch sOriginalObject, sOriginalHandler, sOriginalVariable
       else
          revDebuggerRemoveBreakpoint sOriginalObject, sOriginalLine
+      end if
+   end if
+   
+   local tCondition
+   if the cType of me is "watch" then
+      put the cWatchCondition of me into tCondition
+   else
+      put the cBreakpointCondition of me into tCondition
+   end if
+   
+   if tCondition is not empty then
+      ideCompileCheck "return" && tCondition
+      if the result is not empty then
+         answer error revIDELocalise("The entered condition does not compile")
+         exit closeAccept
       end if
    end if
    
@@ -322,5 +344,40 @@ private command updateBreakpoint
    set the text of field "Line Label" of group "Breakpoint" of me to "Line (1 - " & tLineCount & "):"
    set the text of field "Line" of group "Breakpoint" of me to the cLine of me
    set the text of field "Condition" of group "Breakpoint" of me to the cBreakpointCondition of me
+   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of field "Condition" of me
 end updateBreakpoint
+
+on textChanged
+   if the short name of the target is "Condition" then
+      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of field "Condition" of me
+   end if
+end textChanged
   
+on idePreferenceChanged pPreference, pValue
+   lock screen
+   switch pPreference
+      case "cScriptEditor,editor,backgroundcolor"
+         __UpdateConditionColors
+         break
+      case "cScriptEditor,editor,font"
+      case "cScriptEditor,editor,fontSize"
+         __UpdateConditionFont
+         break
+   end switch
+   unlock screen
+end idePreferenceChanged
+
+private command __UpdateConditionFont
+   local tFont, tSize
+   put revIDEGetPreference("cScriptEditor,editor,font") into tFont
+   put revIDEGetPreference("cScriptEditor,editor,fontSize") into tSize
+   
+   set the textFont of field "condition" of me to tFont
+   set the textSize of field "condition" of me to tSize
+end __UpdateConditionFont
+
+private command __UpdateConditionColors
+   local tColor
+   put revIDEGetPreference("cScriptEditor,editor,backgroundcolor") into tColor
+   set the backgroundColor of field "condition" of me to tColor
+end __UpdateConditionColors
