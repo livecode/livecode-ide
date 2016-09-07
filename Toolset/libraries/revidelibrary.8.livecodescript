@@ -6556,20 +6556,44 @@ Tags: ide
 */
 on revIDENewScriptOnlyStack pName
    revIDENewScriptOnlyStackWithScript pName
-   return the result
+   if the result is empty then
+      return it for value
+   else
+      return the result for error
+   end if
 end revIDENewScriptOnlyStack
 
+/*
+Creates a new script only stack in memory with a given script.
+
+Associations: stack
+
+pName (String): The name of the script only stack.
+pScript (String): The script of the stack.
+
+Example:
+revIDENewScriptOnlyStack "MyNewScriptOnlyStack"
+
+The result:
+An error string if the stack could not be created
+
+It:
+The long id of the newly created stack
+
+Tags: ide
+*/
 on revIDENewScriptOnlyStackWithScript pName, pScript
-   if pName is empty then return __revIDEError("Script only stacks cannot be created without a name")
-   if there is a stack pName then return "A stack with that name already exists"
+   if pName is empty then return __revIDEError("Script only stacks cannot be created without a name") for error
+   if there is a stack pName then return "A stack with that name already exists" for error
    
    local tLongID
    create script only stack pName
    put it into tLongID
    
    set the script of tLongID to pScript
+   
    edit the script of tLongID
-   return tLongID
+   return tLongID for value
 end revIDENewScriptOnlyStackWithScript
 
 on revIDEActionNewScriptOnlyStack
