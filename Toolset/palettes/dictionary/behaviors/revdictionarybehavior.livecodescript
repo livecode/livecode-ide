@@ -75,9 +75,8 @@ on navigateToEntry pLibrary, pEntry, pType
    put pType into sEntry["type"]
    if the mode of me is not 0 then
       browserNavigateComplete
-   else
-      toplevel me
    end if
+   toplevel me
 end navigateToEntry
 
 on linkClicked pLink

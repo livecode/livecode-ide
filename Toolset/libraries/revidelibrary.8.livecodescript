@@ -3739,6 +3739,7 @@ on revIDEEditScriptOfObject pObject
    put revScriptEditor(tObject) into tExistingEditor
    if tExistingEditor is not empty then
       send "revSESetCurrentObject tObject" to stack tExistingEditor
+      toplevel stack tExistingEditor
       exit revIDEEditScriptOfObject
    end if
 
