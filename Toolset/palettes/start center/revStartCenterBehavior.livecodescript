@@ -68,6 +68,10 @@ on ideNewStack
 end ideNewStack
 
 on ideOpenStack pTarget
+   if not exists(pTarget) then
+      exit ideOpenStack
+   end if
+   
    if the short name of ideStackOfObject(pTarget) is not the short name of me then
       startCenterClose
    end if
