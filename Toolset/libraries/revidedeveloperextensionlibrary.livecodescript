@@ -1047,13 +1047,21 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
          local tContents
          put textDecode(url( "binfile:" & tDefaultScript), "utf-8") into tContents
          revIDENewScriptOnlyStackWithScript tExpectedName, tContents
-         put the result into tTargetStack
-         set the filename of tTargetStack to tDefaultScript
+         if the result is empty then
+            put it into tTargetStack
+            set the filename of tTargetStack to tDefaultScript
+         else
+            answer error the result
+         end if
       end try
    else
       # If there is no file, create a new one.
       revIDENewScriptOnlyStack tExpectedName
-      put the result into tTargetStack
+      if the result is empty then
+         put it into tTargetStack
+      else
+         answer error the result
+      end if
    end if
    return tTargetStack
 end revIDEDeveloperExtensionEditDefaultScript
