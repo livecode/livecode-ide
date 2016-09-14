@@ -7328,7 +7328,7 @@ on revIDESaveStack pStackID
    local tStackFileVersion
    global gRevStackStatus
    
-   if revIDEGetPreference("cPreserveStackVersion") is true then
+   if revIDEGetPreference("cPreserveStackVersion") is true and the scriptOnly of stack tMainStack is false then
       put revIDEStackFileVersion(tStackFilename) into tStackFileVersion
       
       local tFileVersions
@@ -7352,7 +7352,7 @@ on revIDESaveStack pStackID
    local tStackFileIsScriptOnly
    put revIDEStackFileIsScriptOnly(tStackFilename) into tStackFileIsScriptOnly
    
-   if the scriptOnly of stack tStackName and not tStackFileIsScriptOnly then
+   if the scriptOnly of stack tMainStack and not tStackFileIsScriptOnly then
       answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved." && \
             "Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
