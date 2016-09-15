@@ -2475,7 +2475,7 @@ on handleSelectionChanged
 end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
-   send "handleSelectionChanged" to me in 0 milliseconds
+   handleSelectionChanged
    get the selectedChunk
    
    local tAt
