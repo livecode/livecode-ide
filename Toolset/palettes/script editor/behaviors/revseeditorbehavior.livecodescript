@@ -2455,9 +2455,14 @@ command cancelPendingMessages
    end if
 end cancelPendingMessages
 
+-- This is sent by the engine
+on selectionChanged
+   handleSelectionChanged
+end selectionChanged
+
 -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
 -- "selectionChangedByArrowKey pArrowKey"
-on selectionChanged
+on handleSelectionChanged
    if the selectedText of field "Script" of me is not empty then
       put the selectedText of field "Script" of me into sLastNonEmptySelection
    end if
@@ -2467,10 +2472,10 @@ on selectionChanged
    if the long id of the focusedObject is the long id of field "Script" of me then
       put word 2 of it & comma & word 4 of it into sLastSelectedChunk
    end if
-end selectionChanged
+end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
-   send "selectionChanged" to me in 0 milliseconds
+   send "handleSelectionChanged" to me in 0 milliseconds
    get the selectedChunk
    
    local tAt
