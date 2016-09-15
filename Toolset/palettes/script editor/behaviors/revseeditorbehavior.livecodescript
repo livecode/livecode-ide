@@ -2471,30 +2471,40 @@ command cancelPendingMessages
    end if
 end cancelPendingMessages
 
-on selectionChanged pArrowKey
+-- This is sent by the engine
+on selectionChanged
+   handleSelectionChanged
+end selectionChanged
+
+-- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
+-- "selectionChangedByArrowKey pArrowKey"
+on handleSelectionChanged
    if the selectedText of field "Script" of me is not empty then
       put the selectedText of field "Script" of me into sLastNonEmptySelection
    end if
-   
-   get the selectedChunk
    
    # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
    # when the user begins typing into the search field.
    if the long id of the focusedObject is the long id of field "Script" of me then
       put word 2 of it & comma & word 4 of it into sLastSelectedChunk
    end if
+end handleSelectionChanged
+
+on selectionChangedByArrowKey pArrowKey
+   handleSelectionChanged
+   get the selectedChunk
    
    local tAt
    if word 2 of it > word 4 of it then
       put word 4 of it into tAt
    else
       -- It is a multiple selection, so we need to exit this.
-      exit selectionChanged
+      exit selectionChangedByArrowKey
    end if
    
    -- Single selection in the process of making a larger selection, so exit if shift is down.
    if the shiftKey is "down" then
-      exit selectionChanged
+      exit selectionChangedByArrowKey
    end if
    
    local tLine
@@ -2543,7 +2553,7 @@ on selectionChanged pArrowKey
    textMark "Insert"
    
    selectionUpdateRequest
-end selectionChanged
+end selectionChangedByArrowKey
 
 
 private command selectionUpdateRequest
@@ -3254,14 +3264,14 @@ on rawKeyDown pKey
    
    # For Windows: Home (Windows / Linux)
    if pKey is kKeyHome and seGetPlatform() is not "macos" then
-      send "selectionChanged" to me in 0 milliseconds
+      send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
    
    # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
    if (pKey is kKeyLeftArrow and (the controlKey is "down" or the commandKey is "down") or \
          (pKey is 65 and the controlKey is "down" and the shiftKey is "up")) and seGetPlatform() is "macos" then
-      send "selectionChanged" to me in 0 milliseconds
+      send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
    
@@ -3333,7 +3343,7 @@ on rawKeyUp pKey
    
    if not scriptLocked() then
       textMark "Insert"
-      send "selectionChanged tKeyName" to me in 0 milliseconds
+      send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
    end if
    pass rawKeyUp
 end rawKeyUp
