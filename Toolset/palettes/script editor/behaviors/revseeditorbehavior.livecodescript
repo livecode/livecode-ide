@@ -2888,12 +2888,35 @@ private command prepareContextMenu
    
    if scriptLocked() then
       put "(Cut" & return & \
-             "Copy" & return & \
-             "(Paste" after tText
+            "Copy" & return & \
+            "(Paste" after tText
    else
       put"Cut" & return & \
-             "Copy" & return & \
-             "Paste" after tText
+            "Copy" & return & \
+            "Paste" after tText
+   end if
+   
+   put return & "-" & return after tText
+   
+   local tLineText
+   local tAllowedLineStarts
+   put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case" into tAllowedLineStarts
+   
+   put line (word 2 of the clickLIne) of field "Script" of me into tLineText
+   if word 1 of tLineText is among the items of tAllowedLineStarts then
+      put "fold-Unfold" after tText
+   else
+      put "(fold-Unfold" after tText
+   end if
+   
+   put return & "-" & return after tText
+   
+   put "Fold All" & return after tText
+   put "Unfold all" & return after tText
+   
+   
+   if the last char of tText is not return then
+      put return after tText
    end if
    
    if the last char of tText is not return then
@@ -3429,7 +3452,15 @@ on menuPick pItemName
          else
             goMatchingDefinition tMatches
          end if
-         
+         break
+      case "fold-Unfold" 
+         folding
+         break
+      case "Fold All"
+         foldAll
+         bread
+      case "Unfold All"
+         unfoldAll
          break
    end switch
 end menuPick
@@ -5424,3 +5455,358 @@ private command EditorFieldCacheSwap pOldRuggedObjectId, pNewRuggedObjectId
    -- controls.
    __EditorFieldCacheFlushExcess
 end EditorFieldCacheSwap
+
+on folding
+   local tLine
+   local tLineText
+   local tHandlerName
+   local tText
+   local tEndBlock
+   local tCounter
+   
+   put word 2 of the clickLine into tLine
+   put line tLine of field "Script" of me into tLineText
+   
+   -- handlers beginning with on, function or command
+   if word 1 of tLineText is among the items of   "on,private,function,command,setProp,getProp,after,before" then
+      if word 1 of tLineText is "private" then
+         put trueWord 3 of tLineText into tHandlername
+      else
+         put trueWord 2 of tLineText into tHandlerName
+      end if
+      put line tLine to - 1 of the text of field "Script" of me into tText
+      put "end" && tHandlerName into tEndBlock
+      put tLine into tCounter
+      repeat for each line aLine in tText
+         if aLine begins with tEndBlock then
+            exit repeat
+         end if
+         add 1 to tCounter
+      end repeat
+      foldUnfold tLine, tCounter
+   end if
+   
+   -- conditionals
+   if word 1 of tLineText is "if"  then
+      local tCommentStartChar
+      local tSubString
+      local tLastWord
+      local tOpenStructs
+      
+      put commentStartsAt(tLineText) into tCommentStartChar
+      if tCommentStartChar > 0 then
+         put char 1 to tCommentStartChar - 1 of tLineText into tSubString
+         put word - 1 of tSubString into tLastWord
+      else
+         put word - 1 of tLineText into tLastWord
+      end if
+      
+      -- it is a one-liner -> exit
+      if (tLineText contains "then") and (tLastWord <> "then") then exit folding 
+      
+      put line tLine to - 1 of the text of field "Script" of me into tText
+      put "end if" into tEndBlock
+      put tLine into tCounter
+      put 0 into tOpenStructs
+      repeat for each line aLine in tText
+         if word 1 of aLine is "if"  then
+            put commentStartsAt(aLine) into tCommentStartChar
+            if tCommentStartChar > 0 then
+               put char 1 to tCommentStartChar - 1 of aLine into tSubString
+               put word - 1 of tSubString into tLastWord
+            else
+               put word - 1 of aLine into tLastWord
+            end if
+            
+            if word 1 of aLIne is "if" and char - 1 of aLine = "\" then 
+               add 1 to tOpenStructs
+               add 1 to tCounter
+               
+               local tBackSlashText
+               put line tCounter to - 1 of the text of field "Script" of me into tBackSlashText
+               
+               workOnBackSlash tBackSlashText, tOpenStructs, tCounter
+               
+               -- backslash should be taken care of, will fold always after backslash
+               if tOpenStructs = 1 then 
+                  exit repeat
+               else
+                  next repeat
+               end if
+            end if
+            
+            if tLastWord = "then" then
+               add 1 to tCounter
+               add 1 to tOpenStructs
+               next repeat
+            end if
+            
+         end if
+         
+         if word 1 to 2 of aLine is tEndBlock then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               add 1 to tCounter
+               next repeat
+            end if
+         end if
+         
+         add 1 to tCounter
+      end repeat
+      foldUnfold tLine, tCounter
+   end if
+   
+   -- repeat
+   if word 1 of tLineText is "repeat"  then
+      put word 2 of tLineText into tHandlerName
+      put line tLine to - 1 of the text of field "Script" of me into tText
+      put "end repeat" into tEndBlock
+      put tLine into tCounter
+      put 0 into tOpenStructs
+      repeat for each line aLine in tText
+         if word 1 of aLIne is "repeat" then 
+            add 1 to tOpenStructs
+            add 1 to tCounter
+            next repeat
+         end if
+         
+         if word 1 to 2 of aLine is tEndBlock then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               add 1 to tCounter
+               next repeat
+            end if
+         end if
+         add 1 to tCounter
+      end repeat
+      foldUnfold tLine, tCounter
+   end if
+   
+   -- switch
+   if word 1 of tLineText is "switch"  then
+      put line tLine to - 1 of the text of field "Script" of me into tText
+      put "end switch" into tEndBlock
+      put tLine into tCounter
+      put 0 into tOpenStructs
+      repeat for each line aLine in tText
+         if word 1 to 2 of aLine is tEndBlock then
+            exit repeat
+         end if
+         add 1 to tCounter
+      end repeat
+      foldUnfold tLine, tCounter
+   end if
+   
+   -- case
+   if word 1 of tLineText is "case"  then
+      local tTerminators
+      local tWordLine
+      local isTerminated
+      
+      put line tLine + 1 to - 1 of the text of field "Script" of me into tText
+      put "end switch,break,default,case" into tTerminators
+      put tLine + 1 into tCounter
+      put 0 into tOpenStructs
+      repeat for each line aLine in tText
+         put false into isTerminated
+         put word 1 to - 1 of aLine into tWordLine
+         repeat for each item anItem in tTerminators
+            if tWordLine begins with anItem then
+               put true into isTerminated
+            end if
+         end repeat
+         if isTerminated then
+            exit repeat
+         end if
+         add 1 to tCounter
+      end repeat
+      foldUnfold tLine, tCounter
+   end if
+end folding
+
+function commentStartsAt pLine
+   local tComments
+   local tOffset
+   local tMinOffset
+   put 0 into tMinOffset
+   
+   put "#,--,/*,//" into tComments
+   repeat for  each item aComment in tComments
+      put offset(aComment, pLine) into tOffset
+      -- could have comment chars in comment -> test all and find first comment char
+      if tOffset > 0  then
+         if tMinOffset = 0 then 
+            put tOffset into tMinOffset
+         else
+            if tOffset < tMinOffset then 
+               put tOffset into tMinOffset
+            end if
+         end if
+      end if
+   end repeat
+   return tMinOffset
+end commentStartsAt
+
+command workOnBackSlash @tBackSlashText, @tOpenStructs, @tCounter
+   local tCommentStartChar
+   local tSubString
+   local tLastWord
+   
+   repeat for each line aLine in tBackSlashText
+      
+      if last char of aLIne is "\" then 
+         if word - 2 of aLine is "then" then
+            add 1 to tCounter
+            exit repeat
+         else
+            add 1 to tCounter
+            next repeat
+         end if
+      end if
+      if word 1 of aLine is "then" then
+         put commentStartsAt(aLine) into tCommentStartChar
+         if tCommentStartChar > 0 then
+            put char 1 to tCommentStartChar - 1 of aLine into tSubString
+            put word - 1 of tSubString into tLastWord
+         else
+            put word - 1 of aLine into tLastWord
+         end if
+         if tLastWord = "then" then
+            add 1 to tCounter
+            next repeat
+         else
+            --add 1 to tCounter
+            exit repeat
+         end if
+      end if
+      if word 1 to 2 of aLine = "end if" then
+         add 1 to tCounter
+         exit repeat
+      end if
+   end repeat
+end workOnBackSlash
+
+private command foldUnfold pStart, pEnd
+   lock screen
+   set the hidden of line pStart + 1 to pEnd  of field "Script" of me to not the hidden of line pStart +1 to pEnd of field "Script" of me
+   if the hidden of line pStart +1 of field "Numbers" of me then
+      set the textStyle["underline"] of line pStart to pEnd of field "Script" of me to false
+   else
+      set the textStyle["underline"] of line pStart of field "Script" of me to true
+   end if
+   set the hidden of line pStart + 1 to pEnd  of field "Numbers" of me to not the hidden of line pStart +1 to pEnd of field "Numbers" of me
+   unlock screen
+end foldUnfold
+
+on unfoldAll
+   lock screen
+   set the hidden of line  1 to -1  of field "Script" of me to false
+   set the hidden of line 1 to - 1  of field "Numbers" of me to false
+   set the textStyle["underline"] of line 1 to - 1 of field "Script" of me to false
+   unlock screen
+end unfoldAll
+
+on foldAll
+   local tHasHidden
+   put the hidden of line 1 to - 1 of field "Script" of me into tHasHidden
+   lock screen
+   -- unfold first is some lines are hidden
+   if tHasHidden is "mixed" or tHasHidden is true then
+      unfoldAll
+   end if
+   
+   local tHandlers
+   local tScriptHTML
+   local tNumbersHTML
+   local tScriptNewHTML
+   local tNumbersNewHTML
+   local tHandlerStart
+   local tHandlerEnd
+   local tHandlerLastEnd
+   local tHidden
+   local tBeginU
+   local tEndU
+   local tScriptTemp
+   local tNumbersTemp
+   local tUnderlineText
+   
+   put " hidden" into tHidden
+   put "<u>" into tBeginU
+   put "</u>" into tEndU
+   put 0 into tHandlerLastEnd
+   
+   local tCompilationResult
+   actionCompile
+   put the result into tCompilationResult
+   if tCompilationResult <> empty then
+      then exit foldAll
+   end if
+   
+   put the cHandlers of field "Handlers" of group "Left Handler List" of group "Left Bar" into tHandlers
+   --    getHandlerList
+   --    put the result into tHandlers
+   put the htmlText of field "Script" of me into tScriptHtml
+   put the htmlText of field "Numbers" of me into tNumbersHtml
+   
+   repeat for each line aLine in tHandlers
+      put word 3 of aLine into tHandlerStart
+      put word 4 of aLine into tHandlerEnd
+      put line tHandlerLastEnd +1 to tHandlerStart - 1 of tScriptHTML & return after tScriptNewHTML
+      put line tHandlerLastEnd + 1 to tHandlerStart of tNumbersHTML & return after tNumbersNewHTML
+      put line tHandlerStart to tHandlerEnd of tScriptHTML into tScriptTemp
+      put line tHandlerStart + 1 to tHandlerEnd of tNumbersHTML into tNumbersTemp
+      put line 1 of tScriptTemp into tUnderLineText
+      
+      put char 1 to 3 of tUnderlineText & tBeginU & char 4 to - 5 of tUnderlineText & tEndU & char -4 to - 1 of tUnderlineText & cr  after tScriptNewHTML 
+      delete line 1 of tScriptTemp
+      repeat for each line aLine in tScriptTemp
+         put char 1 to 2 of aLine & tHidden & char 3 to - 1 of aLine & cr after tScriptNewHTML
+      end repeat
+      repeat for each line aLine in tNumbersTemp
+         put char 1 to 2 of aLIne &  tHidden & char 3 to - 1 of aLine & cr after tNumbersNewHTML
+      end repeat
+      put tHandlerEnd into tHandlerLastEnd
+   end repeat
+   put line tHandlerLastEnd + 1 to - 1 of tNumbersHtml after tNumbersNewHTML
+   put line tHandlerLastEnd + 1 to - 1 of tScriptHTML after tScriptNewHTML
+   set the htmlText of field "Script" of me to tScriptNewHTML
+   set the htmlText of field "Numbers" of me to tNumbersNewHTML
+end foldAll
+
+on syncFoldedFieldNumbers
+   local tHasHidden
+   put the hidden of line 1 to - 1 of field "Script" of me into tHasHidden
+   if tHasHidden is false then
+      exit syncFoldedFieldNumbers
+   end if
+   lock screen
+   local tScriptA
+   local tNumbersHTML
+   local tStart
+   local tEnd
+   local tStartHidden
+   local tKeys
+   
+   put "<p>" into tStart
+   put "</p>" into tEnd
+   put "<p hidden>" into tStartHidden
+   
+   put the styledText of field "Script" into tScriptA
+   put the keys of tScriptA into tKeys
+   sort tKeys ascending numeric
+   
+   repeat for each line aKey in tKeys
+      if tScriptA[aKey]["hidden"] then
+         put tStartHidden & aKey & tEnd & return after tNumbersHTML
+      else
+         put tStart & aKey & tEnd & return after tNumbersHTML
+      end if
+   end repeat
+   put line aKey + 1 to - 1 of the htmlText of field "Numbers" of me after tNumbersHTML
+   set the htmlText of field "Numbers" of me to tNumbersHTML
+end syncFoldedFieldNumbers
+

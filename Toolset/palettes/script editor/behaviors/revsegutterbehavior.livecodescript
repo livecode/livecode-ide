@@ -309,6 +309,7 @@ end updateCurrentLine
 #   pNewNumber : the new number of lines in the script field
 # Description
 #   If there are not enough line numbers to add to the field
+local sLastMode
 command updateLineNumbers pTextEdited, pOldNumber, pNewNumber, pContext
    # Add the lines in a non-locking manner, and after we've finished adding lines, the scroll
    # of the line numbers field should be updated.
@@ -316,6 +317,25 @@ command updateLineNumbers pTextEdited, pOldNumber, pNewNumber, pContext
       send "addLines kLineAdd" to me in 0 milliseconds
    end repeat
    send "updateScroll" to me in 0 milliseconds
+   
+    -- added BN
+   lock screen
+   if pContext["mode"] = "debug" then
+      if sLastMode <> "debug" then
+         send "unfoldAll" to field "Script" of the owner of me
+         put "debug" into sLastMode
+      end if
+   else
+      if sLastMode = "debug" then
+         put "" into sLastMode
+      end if
+      send "syncFoldedFieldNumbers" to field "Script" of the owner of me
+      send "updateScroll" to me -- in 0 milliseconds
+   end if
+   unlock screen
+   -- end added BN
+
+   
 end updateLineNumbers
 
 command addLines pNumberToAdd
