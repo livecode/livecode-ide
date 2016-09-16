@@ -512,10 +512,13 @@ function revLoadedStacks pWhich
 end revLoadedStacks
 
 function revStackNameIsIDEStack pStackName
-   ## Special cases of IDE stacks that don't begin with rev
-   if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
+   if there is a stack pStackName and the _ideoverride of stack pStackName then
+      return true
+   else if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
       return true
    else if pStackName begins with "com.livecode." then
+      return true
+   else if pStackName is among the lines of revInternal__ListLoadedLibraries() then
       return true
    else
       return pStackName begins with "rev"

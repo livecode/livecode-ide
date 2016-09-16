@@ -4862,18 +4862,11 @@ A stack is considered part of the IDE if any of the following are satisfied:
 * It was loaded by the initialisation library
 * Its name begins with "com.livecode."
 * Its name is "message box, answer dialog, ask dialog, or home"
+* Its _ideoverride property is true
 **/
 function revIDEStackNameIsIDEStack pStackName
-   ## Special cases of IDE stacks that don't begin with rev
-   if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
-      return true
-   else if pStackName begins with "com.livecode." then
-      return true
-   else if pStackName is among the lines of revInternal__ListLoadedLibraries() then
-      return true
-   else
-      return pStackName begins with "rev"
-   end if   
+   -- call revStackNameIsIDEStack in revcommonlibrary
+   return revStackNameIsIDEStack(pStackName)
 end revIDEStackNameIsIDEStack
 
 function revIDEItemiseArray pArray
