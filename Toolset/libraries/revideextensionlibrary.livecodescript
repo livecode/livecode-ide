@@ -466,7 +466,7 @@ on __extensionUninstallCheckInUse pCacheIndex
    __extensionSendProgressUpdate pCacheIndex, "Checking if extension is in use", 20
    
    # Next step
-   send "__extensionUninstallDeleteFiles" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallDeleteFiles pCacheIndex
 end __extensionUninstallCheckInUse
 
 # Delete the files associated to the extension
@@ -491,7 +491,7 @@ on __extensionUninstallDeleteFiles pCacheIndex
    end if
    
    # Next step
-   send "__extensionUninstallUnload" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallUnload pCacheIndex
 end __extensionUninstallDeleteFiles
 
 # Unload the extension
@@ -505,7 +505,7 @@ on __extensionUninstallUnload pCacheIndex
    revIDEExtensionUnload tName
    
    # Next step
-   send "__extensionUninstallDocs" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallDocs pCacheIndex
 end __extensionUninstallUnload
 
 # Remove the guide from the IDE
@@ -515,7 +515,7 @@ on __extensionUninstallDocs pCacheIndex
    
    revIDERegenerateBuiltDictionaryData
    
-   send "__extensionUninstallComplete" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallComplete pCacheIndex
 end __extensionUninstallDocs
 
 on __extensionUninstallComplete pCacheIndex
