@@ -2113,57 +2113,6 @@ private function _revScriptEditorNew pObject
    return tFoundEditor
 end _revScriptEditorNew
 
-private function _revScriptEditorOld pObject
-   #LG 2008-01-08 - Bug 5695
-   # Added code which updates the ids of the targets of all the script editors.
-   local tScriptEditor, tScriptEditors
-   put the openStacks into tScriptEditors
-   filter tScriptEditors with "revScriptEditor*"
-   repeat for each line tScriptEditor in tScriptEditors
-      lock messages
-      #LG 2008-03-27
-      #Bug 6087
-      if there is a (the cTargetObject of card 1 of stack tScriptEditor) then
-         set the cTargetObject of card 1 of stack tScriptEditor to the long id of the cTargetObject of card 1 of stack tScriptEditor
-      end if
-      unlock messages
-   end repeat
-   if word 1 of pObject is "group" and the backGroundBehavior of pObject then 
-      local tCardName
-      put line 1 of the cardNames of pObject into tCardName
-      if word 1 to 2 of tCardName is "card id" then 
-         put word 3 of tCardName into word 7 of pObject
-      else
-         # OK-2007-09-17 : Bug 5403 (pObject was previously mistyped as tObject)
-         put the ID of card tCardName of stack revTargetStack(pObject) into word 7 of pObject
-      end if
-   end if
-   
-   repeat for each line tStack in tScriptEditors
-      --check if stack is linked to object or is the active palette and the object is in the selection
-      if pObject is among the lines of the cTargetObject of this card of stack tStack then
-         return tStack
-      end if
-   end repeat
-   return empty
-end _revScriptEditorOld
-
-on revShowScriptEditor pStack
-   _revShowScriptEditorNew pStack
-end revShowScriptEditor
-
-private command _revShowScriptEditorOld pStack
-   lock messages -- unlocked messages cause editor to appear behind menu bar
-   --if menu bar has text and icons hidden, and editor loaded twice
-   show stack pStack
-   revSEHidePalettes
-end _revShowScriptEditorOld
-
-private command _revShowScriptEditorNew pStack
-   modeless pStack
-   revSEHidePalettes
-end _revShowScriptEditorNew
-
 on revUpdatePaletteStack
    global gREVStacksList
    
