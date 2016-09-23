@@ -1,5 +1,6 @@
 ﻿script "com.livecode.pi.font.behavior"
 constant kEffectiveTextColor = "100,100,100"
+constant kFontMenuLines = 20
 
 on editorInitialize
    set the editorMinWidth of me to 40
@@ -9,6 +10,7 @@ on editorInitialize
    put the fontNames into tFontNames
    sort tFontNames
    set the text of button 1 of me to tFontNames
+   set the menuLines of button 1 of me to kFontMenuLines
 end editorInitialize
 
 on editorUpdate
