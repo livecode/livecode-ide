@@ -1,0 +1,1 @@
+# Prevent iOS display name standalone setting becoming utf-8 encoded data
