@@ -5440,6 +5440,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
       case "documentationpane"
          return tPathToBehaviors & slash & "revsedocumentationpanebehavior.livecodescript"
+      case "breakpointpane"
+         return tPathToBehaviors & slash & "revsebreakpointpanebehavior.livecodescript"
       case "filterfield"
          return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
       case "variablescheckbox"
@@ -5452,8 +5454,10 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
       case "interactive find"
          return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
-       case "variable visualizer"
+      case "variable visualizer"
          return tPathToBehaviors & slash & "revsevariablevisualizerstackbehavior.livecodescript"
+      case "edit breakpoint"
+         return tPathToBehaviors & slash & "revseeditbreakpointstackbehavior.livecodescript"
       default
          return empty
    end switch
