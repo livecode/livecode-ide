@@ -2498,7 +2498,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          end if
          break
       case "Save"
-         revIDEActionSaveStack tTargetStack
+         revIDESaveStack tTargetStack
          break
       case "Paste Objects"
          revIDEPasteOntoStack tTargetStack
