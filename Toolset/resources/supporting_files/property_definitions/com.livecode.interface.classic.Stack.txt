@@ -7,6 +7,7 @@ name
 title	
 mainStack								execute:get revIDEMainstackPropertyOptions()			
 decorations												
+style												
 windowShape												
 scaleFactor							1					
 shadow		Basic					true					
