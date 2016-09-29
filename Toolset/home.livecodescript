@@ -1634,7 +1634,6 @@ command revInternal__InitialiseFinalSteps
    revInternal__Log "Enter", "Final Initialisation"
    
    revInternal__Log "Message", "Initialising Script Editor Palette Hiding"
-   send "revInitialiseSEHidePalettes" to stack "revBackScriptLibrary"
    set the cREVScriptDebugMode of stack "revPreferences" to the cREVScriptDebugMode of stack "revPreferences"
    
    --the following *MUST* be the last item to avoid excess sending to overview as environment loads

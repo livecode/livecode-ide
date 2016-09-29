@@ -6736,7 +6736,6 @@ on revIDEActionCloseStack
    end repeat
    set the defaultStack to tStack
    if word 1 of the short name of this stack is "revScriptEditor" then
-      send "revCheckScriptSaved" to this cd
       close this stack
       exit revIDEActionCloseStack
    end if

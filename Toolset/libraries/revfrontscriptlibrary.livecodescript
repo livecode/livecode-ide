@@ -25,10 +25,6 @@ on saveStackRequest
       send "revSaveStackRequest" to this cd of stack l
    end repeat
 
-   local tStackName
-   put the short name of the owner of the target into tStackName
-   revCheckScriptSaved tStackName
-
    put empty into gREVStackStatus[revTargetStack(the target)]
    if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
       select empty
