@@ -504,8 +504,6 @@ function revSaveCheck pStack, pNoWarning
             break
       end switch
    else if word 1 of pStack is "revScriptEditor" and the mode of stack pStack is not 0 then
-      -- check script is saved
-      send "revCheckScriptSaved" to cd 1 of stack pStack
       -- this will exit to top on cancel
       lock messages
       close stack pStack
@@ -1157,7 +1155,7 @@ on updateForSelectedObjectChanged
    
    --check palettes are on screen, workaround for stacks in float about all move that are toplevel
    
-   if sHiddenPalettes is not empty then
+   if sHiddenPalettes is an array then
       revSEShowPalettes
    end if   
    
@@ -1327,28 +1325,6 @@ end revKill
 function revScriptEditors pStackPath
    return _revScriptEditorsNew(pStackPath)
 end revScriptEditors
-
-private function _revScriptEditorsOld pStackPath
-   local tStacks
-   put the mainStack of stack pStackPath into tStacks
-   put cr & the substacks of stack tStacks after tStacks
-   
-   local tPalettes
-   put the openStacks into tPalettes
-   filter tPalettes with "revPropertyPalette*"
-   
-   local tScriptEditorCards
-   put empty into tScriptEditorCards
-   repeat for each line l in tPalettes
-      if the short name of this cd of stack l is "revScript" then
-         if revTargetStack(the cTargetObject of this cd of stack l) is among the lines of tStacks then
-            put the long id of this cd of stack l & cr after tScriptEditorCards
-         end if
-      end if
-   end repeat
-   delete last char of tScriptEditorCards
-   return tScriptEditorCards
-end _revScriptEditorsOld
 
 # Change this for now to prevent the ide interfering with the new script editor
 constant kScriptEditorPrefix = "revNewScriptEditor "
@@ -1560,25 +1536,6 @@ function revMenuManagerGroup pGroups
    end repeat
    return false
 end revMenuManagerGroup
-
-on revCheckScriptSaved pStack
-   _revCheckScriptSavedNew pStack
-end revCheckScriptSaved
-
-private command _revCheckScriptSavedOld pWhichStack
-   local tEnabled
-   repeat for each line l in revScriptEditors(pWhichStack)
-      do "put the enabled of btn" && quote & "apply" & quote && "of" && l && "into tEnabled"
-      if tEnabled then
-         send "revCheckScriptSaved" to l
-      end if
-   end repeat
-end _revCheckScriptSavedOld
-
-private command _revCheckScriptSavedNew pStack
-   # Not required
-end _revCheckScriptSavedNew
-
 
 on errorDialog pWhatError, pWhatError2
    ######################
@@ -2035,9 +1992,7 @@ function revRuggedId pObject
          put (the name of stack (char 2 to -2 of tMainStack)) into tStack
       end if
    catch tError
-      --      log "Error getting rugged id of object"
-      --      log "pObject = " & pObject
-      --      log "Context = " & the executionContexts
+      
    end try
    
    # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
@@ -2099,11 +2054,6 @@ private function _revScriptEditorNew pObject
       send "revSEGetTargetObjects" to tEditor
       put the result into tTargetObjects
       
-      if pObject is empty or there is no pObject then
-         #log "Invalid object supplied from context:  " & return & the executionContexts
-         log "Invalid object supplied: " & pObject
-      end if
-      
       if revRuggedId(pObject) is among the lines of tTargetObjects then
          put the short name of tEditor into tFoundEditor
          exit repeat
@@ -2112,57 +2062,6 @@ private function _revScriptEditorNew pObject
    
    return tFoundEditor
 end _revScriptEditorNew
-
-private function _revScriptEditorOld pObject
-   #LG 2008-01-08 - Bug 5695
-   # Added code which updates the ids of the targets of all the script editors.
-   local tScriptEditor, tScriptEditors
-   put the openStacks into tScriptEditors
-   filter tScriptEditors with "revScriptEditor*"
-   repeat for each line tScriptEditor in tScriptEditors
-      lock messages
-      #LG 2008-03-27
-      #Bug 6087
-      if there is a (the cTargetObject of card 1 of stack tScriptEditor) then
-         set the cTargetObject of card 1 of stack tScriptEditor to the long id of the cTargetObject of card 1 of stack tScriptEditor
-      end if
-      unlock messages
-   end repeat
-   if word 1 of pObject is "group" and the backGroundBehavior of pObject then 
-      local tCardName
-      put line 1 of the cardNames of pObject into tCardName
-      if word 1 to 2 of tCardName is "card id" then 
-         put word 3 of tCardName into word 7 of pObject
-      else
-         # OK-2007-09-17 : Bug 5403 (pObject was previously mistyped as tObject)
-         put the ID of card tCardName of stack revTargetStack(pObject) into word 7 of pObject
-      end if
-   end if
-   
-   repeat for each line tStack in tScriptEditors
-      --check if stack is linked to object or is the active palette and the object is in the selection
-      if pObject is among the lines of the cTargetObject of this card of stack tStack then
-         return tStack
-      end if
-   end repeat
-   return empty
-end _revScriptEditorOld
-
-on revShowScriptEditor pStack
-   _revShowScriptEditorNew pStack
-end revShowScriptEditor
-
-private command _revShowScriptEditorOld pStack
-   lock messages -- unlocked messages cause editor to appear behind menu bar
-   --if menu bar has text and icons hidden, and editor loaded twice
-   show stack pStack
-   revSEHidePalettes
-end _revShowScriptEditorOld
-
-private command _revShowScriptEditorNew pStack
-   modeless pStack
-   revSEHidePalettes
-end _revShowScriptEditorNew
 
 on revUpdatePaletteStack
    global gREVStacksList
@@ -2217,75 +2116,11 @@ function revBrowserTopStack
 end revBrowserTopStack
 
 ------------------------------------
-Script Editor hide/show palettes
+-- Script Editor hide/show palettes
 ------------------------------------
-local lShowPalettesMsgID
-
-on revInitialiseSEHidePalettes
-   put empty into lShowPalettesMsgID
-   put empty into sHiddenPalettes
-end revInitialiseSEHidePalettes
+local sPalettesMsgID
 
 constant kDontHide = "revMenuBar,revErrorDisplay,revVariableWatcher,revMessageWatcher,revDocsLanguageQuickref"
-on revSEHidePalettes
-   if lShowPalettesMsgID is not empty then cancel lShowPalettesMsgID
-   put empty into lShowPalettesMsgID
-   
-   if sHiddenPalettes is not empty and (the mode of stack "message box" is not 0 and the visible of stack "Message Box" is false) then exit revSEHidePalettes
-   
-   lock screen
-   lock messages
-   
-   put empty into sHiddenPalettes
-   
-   if the mode of stack "revErrorDisplay" is not 0 and the cSEHideErrors of stack "revPreferences" then
-      hide stack "revErrorDisplay"
-      put "revErrorDisplay" & cr after sHiddenPalettes
-   end if
-   
-   if the cSEHidePalettes of stack "revPreferences" then
-      local tOpenStacks
-      put the openStacks into tOpenStacks
-      repeat for each line tStackName in tOpenStacks
-         if not revIDEStackNameIsIDEStack(tStackName) then
-            next repeat
-         end if
-         
-         if not the visible of stack tStackName then
-         	next repeat
-         end if
-         
-         if (tStackName is not among the items of kDontHide) and the mode of stack tStackName is 4 then
-            # OK-2008-06-24 : Bug 6621 : Prevent palettes being hidden if they are owned by the script editor
-            if the mainstack of stack tStackName is the short name of revScriptEditorMain() then
-               next repeat
-            end if
-            
-            # OK-2009-12-22: Bug 8497 : Also keep separate variable viewer panes open
-            if tStackName begins with "revVariableVisualizer" then
-               next repeat
-            end if
-            
-            hide stack tStackName
-            put tStackName & return after sHiddenPalettes
-         end if
-      end repeat
-   end if
-   -- must be after the others
-   if the mode of stack "Message Box" is not 0 and the cSEHideMessageBox of stack "revPreferences" then
-      hide stack "Message Box"
-      put "Message Box" & return after sHiddenPalettes
-   end if
-   
-   delete last char of sHiddenPalettes
-   
-   unlock messages
-   unlock screen
-end revSEHidePalettes
-
-private command log pMessage
-   put pMessage & return after msg
-end log
 
 # OK-2008-05-12 : Added to fix problem with script editor dialogs not being recognized as part of the script editor
 # and palettes consequently being reshown when they are invoked.
@@ -2309,43 +2144,100 @@ private function revSEStackIsScriptEditor pStackname
    return false
 end revSEStackIsScriptEditor
 
+on revSEHidePalettes
+   cancel sPalettesMsgID
+   send "revSEDelayTogglePalettes false" to me in 200 milliseconds
+   put the result into sPalettesMsgID
+end revSEHidePalettes
+
 on revSEShowPalettes
-   send "revSEDelayShowPalettes" to me in 200 milliseconds
-   put the result into lShowPalettesMsgID
+   cancel sPalettesMsgID
+   send "revSEDelayTogglePalettes true" to me in 200 milliseconds
+   put the result into sPalettesMsgID
 end revSEShowPalettes
 
-on revSEDelayShowPalettes
-   if the iconic of stack revIDEPaletteToStackName("menubar") then exit revSEDelayShowPalettes
-   
-   local tObject
-   put the focusedObject into tObject
-   if tObject is not empty then
-      local tStack
-      put revTargetStack(tObject) into tStack
-      if tStack is "Answer dialog" or "revVariableWatcher" is in tStack or "revMessageWatcher" is in tStack or revSEStackIsScriptEditor(tStack) then exit revSEDelayShowPalettes
-   end if
+on revSEDelayTogglePalettes pShow
    lock screen
    
-   repeat for each line tHiddenStack in sHiddenPalettes
-      # OK-2009-10-08 : Its possible that the stack could be been removed between showing and hiding the palettes,
-      # this is due to extra mutable windows added with the new script editor. Check this first or it will keep throwing
-      # errors.
-      if there is no stack tHiddenStack then
-         next repeat
-      end if
-      lock messages
-      show stack tHiddenStack
-      if the mode of stack tHiddenStack is 0 then--Unix Window Managers 
-         if word 1 of tHiddenStack is "revPropertyPalette" then 
-            send "revUpdateTabs" to stack tHiddenStack
+   local tOldLock
+   put the lockMessages into tOldLock
+   lock messages
+   
+   if pShow then
+      if the iconic of stack revIDEPaletteToStackName("menubar") then exit revSEDelayTogglePalettes
+      
+      local tObject
+      put the focusedObject into tObject
+      if tObject is not empty then
+         local tStack
+         put revTargetStack(tObject) into tStack
+         if tStack is "Answer dialog" or "revVariableWatcher" is in tStack or \
+               "revMessageWatcher" is in tStack or revSEStackIsScriptEditor(tStack) then
+            exit revSEDelayTogglePalettes
          end if
       end if
-   end repeat
-   put empty into sHiddenPalettes
+      
+      local tHiddenStack
+      repeat for each key tHiddenStack in sHiddenPalettes
+         # OK-2009-10-08 : Its possible that the stack could be been removed between showing and hiding the palettes,
+         # this is due to extra mutable windows added with the new script editor. Check this first or it will keep throwing
+         # errors.
+         if there is no stack tHiddenStack then
+            next repeat
+         end if
+         show stack tHiddenStack
+         if the mode of stack tHiddenStack is 0 then--Unix Window Managers 
+            if word 1 of tHiddenStack is "revPropertyPalette" then 
+               send "revUpdateTabs" to stack tHiddenStack
+            end if
+         end if
+      end repeat
+      
+      delete variable sHiddenPalettes
+   else
+      if the mode of stack "revErrorDisplay" is not 0 and revIDEGetPreference("cSEHideErrors") then
+         hide stack "revErrorDisplay"
+         put empty into sHiddenPalettes["revErrorDisplay"]
+      end if
+      
+      if the cSEHidePalettes of stack "revPreferences" then
+         local tOpenStacks
+         put the openStacks into tOpenStacks
+         repeat for each line tStackName in tOpenStacks
+            if not revIDEStackNameIsIDEStack(tStackName) then
+               next repeat
+            end if
+            
+            if not the visible of stack tStackName then
+               next repeat
+            end if
+            
+            if (tStackName is not among the items of kDontHide) and the mode of stack tStackName is 4 then
+               # OK-2008-06-24 : Bug 6621 : Prevent palettes being hidden if they are owned by the script editor
+               if the mainstack of stack tStackName is the short name of revScriptEditorMain() then
+                  next repeat
+               end if
+               
+               # OK-2009-12-22: Bug 8497 : Also keep separate variable viewer panes open
+               if tStackName begins with "revVariableVisualizer" then
+                  next repeat
+               end if
+               
+               hide stack tStackName
+               put empty into sHiddenPalettes[tStackName]
+            end if
+         end repeat
+      end if
+      -- must be after the others
+      if the mode of stack "Message Box" is not 0 and revIDEGetPreference("cSEHideMessageBox") then
+         hide stack "Message Box"
+         put empty into sHiddenPalettes["Message Box"]
+      end if
+   end if
+   
+   set the lockMessages to tOldLock
    unlock screen
-   unlock messages
-end revSEDelayShowPalettes
-
+end revSEDelayTogglePalettes
 
 # OK-2007-11-29 : Bug 5562
 # Parameters
