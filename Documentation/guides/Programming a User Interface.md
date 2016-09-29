@@ -2151,7 +2151,7 @@ A stack, then, can be in any of four states:
 is visible.
 
 **Open and hidden:**The stack is loaded into memory, its window is open, but the window 
-is hidden. The stack is listed in the Window menu and in the Application Browser.
+is hidden. The stack is listed in the Window menu and in the Project Browser.
 
 **Closed but loaded into memory:**The stack is loaded into memory, but its window is not 
 open and it is not listed by the **openStacks** function or in the Window menu. However, 
