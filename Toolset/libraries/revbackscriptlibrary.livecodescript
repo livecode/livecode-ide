@@ -504,8 +504,6 @@ function revSaveCheck pStack, pNoWarning
             break
       end switch
    else if word 1 of pStack is "revScriptEditor" and the mode of stack pStack is not 0 then
-      -- check script is saved
-      send "revCheckScriptSaved" to cd 1 of stack pStack
       -- this will exit to top on cancel
       lock messages
       close stack pStack
@@ -1328,28 +1326,6 @@ function revScriptEditors pStackPath
    return _revScriptEditorsNew(pStackPath)
 end revScriptEditors
 
-private function _revScriptEditorsOld pStackPath
-   local tStacks
-   put the mainStack of stack pStackPath into tStacks
-   put cr & the substacks of stack tStacks after tStacks
-   
-   local tPalettes
-   put the openStacks into tPalettes
-   filter tPalettes with "revPropertyPalette*"
-   
-   local tScriptEditorCards
-   put empty into tScriptEditorCards
-   repeat for each line l in tPalettes
-      if the short name of this cd of stack l is "revScript" then
-         if revTargetStack(the cTargetObject of this cd of stack l) is among the lines of tStacks then
-            put the long id of this cd of stack l & cr after tScriptEditorCards
-         end if
-      end if
-   end repeat
-   delete last char of tScriptEditorCards
-   return tScriptEditorCards
-end _revScriptEditorsOld
-
 # Change this for now to prevent the ide interfering with the new script editor
 constant kScriptEditorPrefix = "revNewScriptEditor "
 
@@ -1560,25 +1536,6 @@ function revMenuManagerGroup pGroups
    end repeat
    return false
 end revMenuManagerGroup
-
-on revCheckScriptSaved pStack
-   _revCheckScriptSavedNew pStack
-end revCheckScriptSaved
-
-private command _revCheckScriptSavedOld pWhichStack
-   local tEnabled
-   repeat for each line l in revScriptEditors(pWhichStack)
-      do "put the enabled of btn" && quote & "apply" & quote && "of" && l && "into tEnabled"
-      if tEnabled then
-         send "revCheckScriptSaved" to l
-      end if
-   end repeat
-end _revCheckScriptSavedOld
-
-private command _revCheckScriptSavedNew pStack
-   # Not required
-end _revCheckScriptSavedNew
-
 
 on errorDialog pWhatError, pWhatError2
    ######################
@@ -2035,9 +1992,7 @@ function revRuggedId pObject
          put (the name of stack (char 2 to -2 of tMainStack)) into tStack
       end if
    catch tError
-      --      log "Error getting rugged id of object"
-      --      log "pObject = " & pObject
-      --      log "Context = " & the executionContexts
+      
    end try
    
    # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
@@ -2098,11 +2053,6 @@ private function _revScriptEditorNew pObject
       local tTargetObjects
       send "revSEGetTargetObjects" to tEditor
       put the result into tTargetObjects
-      
-      if pObject is empty or there is no pObject then
-         #log "Invalid object supplied from context:  " & return & the executionContexts
-         log "Invalid object supplied: " & pObject
-      end if
       
       if revRuggedId(pObject) is among the lines of tTargetObjects then
          put the short name of tEditor into tFoundEditor
@@ -2288,12 +2238,6 @@ on revSEDelayTogglePalettes pShow
    set the lockMessages to tOldLock
    unlock screen
 end revSEDelayTogglePalettes
-
-
-private command log pMessage
-   put pMessage & return after msg
-end log
-
 
 # OK-2007-11-29 : Bug 5562
 # Parameters
