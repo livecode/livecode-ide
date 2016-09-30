@@ -2110,6 +2110,10 @@ private command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       put pObject into tObject
    end if
    
+   local tBracketCompletionType
+   __BracketCompletion  pOffset, pOldText, pNewText
+   put it into tBracketCompletionType
+   
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
       textBeginGroup sTextMark[tObject], tObject
    end if
@@ -2542,6 +2546,8 @@ on handleSelectionChanged
    if the long id of the focusedObject is the long id of field "Script" of me then
       put word 2 of it & comma & word 4 of it into sLastSelectedChunk
    end if
+   
+   selectionUpdateRequest
 end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
