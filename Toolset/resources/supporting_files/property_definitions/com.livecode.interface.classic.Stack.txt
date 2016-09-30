@@ -7,7 +7,7 @@ name
 title	
 mainStack								execute:get revIDEMainstackPropertyOptions()			
 decorations												
-style							toplevel|Toplevel,Modeless,Modal,Palette
+style							Toplevel,Modeless,Modal,Palette
 windowShape												
 scaleFactor							1					
 shadow		Basic					true					
