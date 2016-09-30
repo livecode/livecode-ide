@@ -103,6 +103,8 @@ command TestRunnerMain
 end TestRunnerMain
 
 command TestRunnerInvokeAll
+   logInit
+   
    if there is not a stack "home" then
 	   invokeLoadIDE
    end if
@@ -184,6 +186,8 @@ private command invokeAllTests
       invokeTestScript tTopLevel & slash & tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
+   
+   runPrintSummary tAnalysis
    quit 0
 end invokeAllTests
 
