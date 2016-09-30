@@ -1685,7 +1685,41 @@ private function revIDEMessageIsValid pMessage
          or pMessage begins with "ideToggleChanged")
 end revIDEMessageIsValid
 
+private command __ListSubscribers pMessage, pTriggeringObjects
+   # Validate input
+   if not revIDEMessageIsValid(pMessage) then
+      return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.") for error
+   end if
+   
+   # Add all universal subscribers to the subscription list
+   local tObjects, tObjectID
+   repeat for each line tObjectID in sSubscriptions[pMessage]["callback targets"]
+      # if the callback object doesn't exist, don't send message
+      if not exists(tObjectID) then
+         revIDEUnsubscribeAll tObjectID
+      else
+         put empty into tObjects[tObjectID]
+      end if
+   end repeat
+   
+   # Add any per-object subscriptions
+   repeat for each line tLine in pTriggeringObjects
+      local tSubscription
+      put pMessage & "," & tLine into tSubscription
+      repeat for each line tObjectID in sSubscriptions[tSubscription]["callback targets"]
+         if not exists(tObjectID) then
+            revIDEUnsubscribeAll tObjectID
+         else
+            put empty into tObjects[tObjectID]
+         end if
+      end repeat
+   end repeat
+   
+   return tObjects for value
+end __ListSubscribers 
+
 /**
+
 Sends the given message to all subscribed objects.
 
 Parameters:
@@ -1697,47 +1731,61 @@ This is used for example with the <idePropertyChanged> message to
 convey which objects had properties changed.
 
 pParamsArray (array): 
-A numerically keyed aray (starting at 1) of the parameters to pass along with the message.
+A numerically keyed array (starting at 1) of the parameters to pass along with the message.
 
 Description:
 Sends <pMessage> to all objects which have subscribed to it using
 <revIDESubscribe>.
 
-References: ideSubscribe (command), idePropertyChanged (message)
+References: ideSubscribe (command), idePropertyChanged (message), ideMessageSendWithMutableParameters (message)
+
 **/
+
 on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
+   __ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray, false
+   return the result
+end ideMessageSendWithParameters
+
+/**
+
+Sends the given message to all subscribed objects where subscribers can mutate the parameters
+
+Parameters:
+pMessage (string): The message to send
+
+pTriggeringObjects (optional string):
+A list, one per line, of the long ids of the objects triggering the message.
+This is used for example with the <idePropertyChanged> message to
+convey which objects had properties changed.
+
+pParamsArray (array): 
+A numerically keyed array (starting at 1) of the parameters to pass along with the message.
+
+Description:
+Sends <pMessage> to all objects which have subscribed to it using
+<revIDESubscribe>.
+
+References: ideSubscribe (command), idePropertyChanged (message), ideMessageSendWithParameters (message)
+
+**/
+
+on ideMessageSendWithMutableParameters pMessage, pTriggeringObjects, @pParamsArray
+   __ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray, true
+   return the result
+end ideMessageSendWithMutableParameters
+
+private command __ideMessageSendWithParameters pMessage, pTriggeringObjects, @pParamsArray, pMutable
    lock screen
    
-   # Validate input
-   if not revIDEMessageIsValid(pMessage) then
-      return __revIDEError("The message ("&pMessage&") you have requested to be sent is not a valid IDE message. Please check the documentation for which messages you can subscribe to.")
+   __ListSubscribers pMessage, pTriggeringObjects
+   if the result is not empty then
+      return the result
    end if
    
-   # If in run mode don't send any updates
-   //if the tool is not "pointer tool" then exit ideMessageSendWithParameters
+   local tParamsArray
+   put pParamsArray into tParamsArray
    
-   local tSubscriptionList, tTargetsA, tSubscription
-   # Add all universal subscribers to the subscription list
-   put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
-   
-   # Add any per-object subscriptions
-   repeat for each line tLine in pTriggeringObjects
-      put pMessage & "," & tLine into tSubscription
-      repeat for each line tTarget in sSubscriptions[tSubscription]["callback targets"]
-         if tSubscriptionList is empty then
-            put tTarget into tSubscriptionList
-         else
-            put return & tTarget after tSubscriptionList
-         end if
-      end repeat
-   end repeat
-   
-   repeat for each line tObjectID in tSubscriptionList
-      # if the callback object doesn't exist, don't send message
-      if not exists(tObjectID) then
-         revIDEUnsubscribeAll tObjectID
-         next repeat
-      end if
+   repeat for each key tObjectID in it
       
       # Send the message!
       set the itemdel to ":"
@@ -1772,6 +1820,11 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
             put return & tError after tErrors
          end if
       end try
+      
+      -- if not filterable reset between each message
+      if pMutable is not true then
+         put tParamsArray into pParamsArray
+      end if
    end repeat
    unlock screen
    
@@ -1780,7 +1833,7 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
    end if
    
    return empty
-end ideMessageSendWithParameters
+end __ideMessageSendWithParameters
 
 -- 0 or 1 param special case
 on ideMessageSend pMessage, pParam
@@ -5187,7 +5240,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    end if
    
    if sLockUpdates then
-      ideMessageSendWithParameters "idePropertyChanged", pObjectList
+      revIDEMessageSend "idePropertyChanged", pObjectList
       put false into sLockUpdates
    end if
    
