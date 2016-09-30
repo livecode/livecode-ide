@@ -85,6 +85,12 @@ command logoInitialise
    ## Set the logo to the correct logo for the version
    set the iconPresetName of widget "logo" of me to "lc-logo"
    set the foregroundColor of widget "logo" of me to uiColor("logo")
+   
+   ## Set the title to contain the correct version string
+   local tMajorVersion
+   set the itemDelimiter to "."
+   put item 1 to 2 of the version into tMajorVersion
+   put merge("Welcome to LiveCode [[tMajorVersion]]") into field "title" of me
 end logoInitialise
 
 command socialMediaInitialise   
