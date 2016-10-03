@@ -206,13 +206,14 @@ on updateSettings
    end if
    set the label of button "Supported Devices" to it
    
-   -- We only support iOS 6.0 and later
+   -- SN-2015-02-04: [[ Bug 14422 ]] We only support iOS 5.1.1 and later
+   -- MM-2013-09-23: We only support iOS 4.3 and later
    --
-   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] < "6.0" then
+   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] <= "5.1" then
       put empty into tSettings["ios,minimum version"]
    end if   
    
-   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "6.0") && "or later"
+   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "5.1.1") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
    set the hilite of button "Exits on Suspend" to computeDefault(tSettings["ios,exits on suspend"], "true")
