@@ -1,10 +1,12 @@
 ﻿script "revdebuggerlibrary"
 
 on revLoadLibrary
-	if the target is not me then
-		pass "revLoadLibrary"
-	end if
+   if the target is not me then
+      pass "revLoadLibrary"
+   end if
    insert the script of me into front
+   
+   ideSubscribe "idePreferenceChanged:cREVScriptDebugMode"
 end revLoadLibrary
 
 on revUnloadLibrary
@@ -37,6 +39,22 @@ command revDebuggerInitialize
    end if
 end revDebuggerInitialize
 
+on idePreferenceChanged pPreference, pValue
+   if the target is me then
+      switch pPreference
+         case "cREVScriptDebugMode"
+            if debuggerEnabled() then
+               __DebuggerEnable
+            else
+               __DebuggerDisable
+            end if
+            break
+      end switch
+   else
+      pass idePreferenceChanged
+   end if
+end idePreferenceChanged
+
 # Returns
 #   Whether or not the debugger is enabled. This is currently defined as whether or not the cREVScriptDebugMode
 #   of stack "revPreferences" is true.
@@ -47,6 +65,10 @@ end revDebuggerEnabled
 # Description
 #   Enables the debugger, should be called when the user switches script debug mode on.
 command revDebuggerEnable
+   revIDESetPreference "cREVScriptDebugMode", true
+end revDebuggerEnable
+
+private command __DebuggerEnable
    # When the debugger is enabled we need to go through all the open stacks and 
    # activate their breakpoints if appropriate.
    local tOpenStacks
@@ -61,22 +83,23 @@ command revDebuggerEnable
    
    revDebuggerActivateWatches empty
    
-   set the cREVScriptDebugMode of stack "revPreferences" to true
-   
    # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
    revDebuggerInitialize
-end revDebuggerEnable
+end __DebuggerEnable
 
 local sContext
 
 # Description
 #   Disables the debugger, should be called when the user switches script debug mode off.
 command revDebuggerDisable
+   revIDESetPreference "cREVScriptDebugMode", false
+end revDebuggerDisable
+
+private command __DebuggerDisable
    set the breakpoints to empty
    set the watchedVariables to empty
-   set the cREVScriptDebugMode of stack "revPreferences" to false
    put empty into sContext
-end revDebuggerDisable
+end __DebuggerDisable
 
 # Returns
 #   The current debug context if there is one, empty otherwise. The context returned by this function
@@ -1936,21 +1959,7 @@ end debuggerGetId
 #   Whether or not the debugger is enabled. This is currently determined by the "Script Debug Mode"
 #   setting in the LiveCode preferences stack.
 private function debuggerEnabled
-   
-   # OK-2009-01-07 : It seems that under certain quite specific circumstances, this line can throw an error
-   # somewhere in the MCU_dofrontscripts method. Unfortunately the only recipe I have is an OS X specific
-   # bug involving revBrowser and a massive call stack, debugging this was proving too time-consuming, so
-   # for now, the issue is fixed by locking messages to prevent the frontscripts running at all.
-   lock messages
-   
-   # OK-2009-01-12 : Bizarrely it seems that the above lock messages can cause virtual setProps to not work
-   # properly under some circumstances. In particular it broke the docs editor. So instead of just returning the 
-   # required value, we now evaluate it, unlock messages, then return it...
-   
-   get the cREVScriptDebugMode of stack "revPreferences"
-   unlock messages
-   
-   return (it is true)
+   return revIDEGetPreference("cREVScriptDebugMode")
 end debuggerEnabled
 
 # Parameters

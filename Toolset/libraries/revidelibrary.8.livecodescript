@@ -8439,19 +8439,7 @@ on revIDEToggle pProperty
          put "selectionMode" into tToggleMessage
          break
       case "Script Debug Mode"
-         if revDebuggerEnabled() then
-            revDebuggerDisable
-         else
-            revDebuggerEnable
-         end if
-         
-         # OK-2010-01-18: Update any open script editors so that the breakpoints are shown correctly,
-         # they should all be grey when script debug mode is off, otherwise their color depends on their
-         # exact circumstances.
-         local tPrefsChanged
-         put false into tPrefsChanged
-         send "revSEUpdateEditors tPrefsChanged" to revScriptEditorMain()
-         
+         revIDESetPreference "cREVScriptDebugMode", not revIDEGetPreference("cREVScriptDebugMode")
          put "scriptDebugMode" into tToggleMessage
          break
       case "Show IDE Stacks In Lists"
@@ -9332,11 +9320,9 @@ command revIDESuspendDevelopmentTools
    global gREVRestore
    
    -- Store the old setting of scriptdebugmode and disable it
-   put the cREVScriptDebugMode of stack "revPreferences" into gREVRestore["scriptdebugmode"]
+   put revIDEGetPreference("cREVScriptDebugMode") into gREVRestore["scriptdebugmode"]
    
-   -- As cREVScriptDebugMode is a virtual custom property handler present in the revBackScript
-   -- we need to do this before removing the backscripts!
-   revIDESetScriptDebugMode false
+   revIDESetPreference "cREVScriptDebugMode",false
    
    # OK-2008-05-23 : Suspend any script editors.
    send "revSESuspendEditors" to revScriptEditorMain()
@@ -9482,7 +9468,7 @@ command revIDERestoreDevelopmentTools
    choose gREVRestore["tool"]
    
    -- Restore the script debug mode
-   revIDESetScriptDebugMode gREVRestore["scriptdebugmode"]
+   revIDESetPreference "cREVScriptDebugMode", gREVRestore["scriptdebugmode"]
    
    # OK-2008-05-23 : Restore any script editors.
    send "revSERestoreEditors" to revScriptEditorMain()

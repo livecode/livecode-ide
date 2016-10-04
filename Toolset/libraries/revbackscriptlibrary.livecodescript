@@ -1835,21 +1835,6 @@ on revClearAllBreakPoints
    end repeat
 end revClearAllBreakPoints
 
-setProp cREVScriptDebugMode pWhat
-   _setScriptDebugModeNew pWhat
-   pass cREVScriptDebugMode
-end cREVScriptDebugMode
-
-private command _setScriptDebugModeNew pMode
-   lock messages
-   set the cREVScriptDebugMode of stack "revPreferences" to pMode
-   unlock messages
-   
-   if pMode is not "true" then
-      revDebuggerRun
-   end if
-end _setScriptDebugModeNew
-
 function revAllSameType pObjects
    --first line true or false
    --second line the object type
