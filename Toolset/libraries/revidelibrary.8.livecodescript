@@ -1732,35 +1732,35 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       end repeat
    end repeat
    
+   # Send the message!
+   set the itemdel to ":"
+   local tMessage
+   put item 1 of pMessage into tMessage
+   
+   # Construct a dispatch command with all the desired parameters
+   local tDoString, tParams, tErrors
+   put "dispatch tMessage to tObjectID" into tDoString
+   
+   # If this is a parameterised message, add the parameter as the first arg
+   if the number of items of pMessage > 1 then
+      put " with item 2 of pMessage" into tParams
+   end if
+   
+   repeat with tParam = 1 to the number of elements in pParamsArray
+      if tParams is empty then
+         put " with pParamsArray[" & tParam & "]" into tParams
+      else
+         put ", pParamsArray[" & tParam & "]" after tParams
+      end if
+   end repeat
+   put tParams after tDoString
+   
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-      
-      # Send the message!
-      set the itemdel to ":"
-      local tMessage
-      put item 1 of pMessage into tMessage
-      
-      # Construct a dispatch command with all the desired parameters
-      local tDoString, tParams, tErrors
-      put "dispatch tMessage to tObjectID" into tDoString
-      
-      # If this is a parameterised message, add the parameter as the first arg
-      if the number of items of pMessage > 1 then
-         put " with item 2 of pMessage" into tParams
-      end if
-      
-      repeat with tParam = 1 to the number of elements in pParamsArray
-         if tParams is empty then
-            put " with pParamsArray[" & tParam & "]" into tParams
-         else
-            put ", pParamsArray[" & tParam & "]" after tParams
-         end if
-      end repeat
-      put tParams after tDoString
       
       # Ensure any error doesn't prevent subsequent subscribers from receiving messages
       try
