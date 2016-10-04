@@ -2557,6 +2557,8 @@ command revSEInitialize pDontCheckTarget
       exit revSEInitialize
    end if
    
+   dispatch "ideSubscribe" to me with "idePreferenceChanged:cREVScriptDebugMode"
+   
    # Initialize the preferences
    sePrefInit
    
@@ -2610,7 +2612,14 @@ command revSEInitialize pDontCheckTarget
    
    set the showInvisibles of me to false
 end revSEInitialize
-  
+
+on idePreferenceChanged pPreference, pValue
+   switch pPreference
+      case "cREVScriptDebugMode"
+         revSEUpdate true
+         break
+   end switch
+end idePreferenceChanged
 
 on closeStackRequest
    if the long id of the target is not the long id of this card of me then

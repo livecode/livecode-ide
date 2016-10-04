@@ -14,16 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
-command revIDESetScriptDebugMode pState
-   local tOldLockMessages
-   put the lockMessages into tOldLockMessages
-   
-   set the lockMessages to false
-   set the cREVScriptDebugMode of stack "revPreferences" to pState
-   
-   set the lockMessages to tOldLockMessages
-end revIDESetScriptDebugMode
-
 # LG-2008-04-22
 command revIDEStartCenterCheckOnStackClose pStackName
    --  Want to check if there are any user stacks open.  If there are not we want to display the

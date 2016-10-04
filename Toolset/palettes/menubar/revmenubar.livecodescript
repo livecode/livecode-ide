@@ -1448,8 +1448,6 @@ end revMenubarToolsMenu
 ################################################################################
 
 private function revMenubarTextMenu pContext
-   global gREVDisabledText, gREVTextMenu
-   
    local tText,tFont,tSize,tAlign,tStyle,tColor
    
    if not pContext["enableText"] then
@@ -2334,7 +2332,7 @@ end unIconifyStack
 
 on iconifyStack
    local tOpenStackslist, tMaxlist
-   global gREVBackDropRestore, gREVMenutopLeft, gREVRestore
+   global gREVBackDropRestore, gREVRestore
    put the windowBoundingRect into gREVRestore["windowBoundingRect"]
    set the windowBoundingRect to 0,0,item 3 to 4 of the windowBoundingRect
    lock messages
@@ -2654,7 +2652,6 @@ on revMenubarFileMenuPick pWhich
 end revMenubarFileMenuPick
 
 on revMenubarEditMenuPick pWhich
-   global gREVChunkStore, gREVUndoList
    switch pWhich
       case "Undo"
          revIDEUndo
@@ -2899,8 +2896,6 @@ end revMenubarTextMenuPick
 
 local lRestore
 on revMenubarDevelopmentMenuPick pWhich
-   global gREVSuppressErrors, gREVSuppressMessages, gREVRestore, gREVOldScriptDebugMode
-   
    local tWhich
    set the itemDelimiter to "|"
    put item 1 of pWhich into tWhich
@@ -2944,7 +2939,6 @@ on revMenubarDevelopmentMenuPick pWhich
 end revMenubarDevelopmentMenuPick
 
 on revMenubarViewMenuPick pWhich
-   global gREVSuppressErrors, gREVSuppressMessages, gREVPalettes, gREVShowStacks
    switch pWhich
       case "Show IDE Stacks In Lists"
       case "Show Invisible Objects"

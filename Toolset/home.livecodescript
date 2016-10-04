@@ -1633,9 +1633,6 @@ end revInternal__InitialisePlugIns
 command revInternal__InitialiseFinalSteps
    revInternal__Log "Enter", "Final Initialisation"
    
-   revInternal__Log "Message", "Initialising Script Editor Palette Hiding"
-   set the cREVScriptDebugMode of stack "revPreferences" to the cREVScriptDebugMode of stack "revPreferences"
-   
    --the following *MUST* be the last item to avoid excess sending to overview as environment loads
    revInternal__Log "Message", "Installing Remaining Libraries"
    revInternal__LoadLibrary "revFrontScriptLibrary"
