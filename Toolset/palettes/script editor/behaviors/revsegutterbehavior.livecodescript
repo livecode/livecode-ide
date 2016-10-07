@@ -282,7 +282,7 @@ private command updateCurrentLine pContext
       put tArray["line number"] into tDebugLine
    end if
    
-   if (the long id of pContext["object"] is not the long id of tDebugObject) then
+   if (seGetRuggedId(pContext["object"]) is not seGetRuggedId(tDebugObject)) then
       exit updateCurrentLine
    end if
    
