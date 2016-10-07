@@ -234,26 +234,18 @@ end revSetActiveStacks
 # handler that deals with the opening of new stacks.
 on preOpenStack
    revIDEHandleNewStack the long id of the target
-
+   
    local tScaleFactor
    put the cREVGeneral["scalefactor"] of this stack into tScaleFactor
    if tScaleFactor is a number and tScaleFactor is not 1 then
       set the scalefactor of this stack to tScaleFactor
    end if 
-  
-   # CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
-
+   
    local tTarget
    put the long id of the target into tTarget
    
    local tStack
    put revTargetStack(tTarget) into tStack
-  
-   if tTarget is not the long id of me then
-      if revDebuggerEnabled() then
-         revDebuggerActivateBreakpoints the long id of stack tStack
-      end if
-   end if
    
    if revIDEObjectIsOnIDEStack(tTarget) then
       # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects

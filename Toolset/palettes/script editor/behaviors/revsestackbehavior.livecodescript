@@ -907,17 +907,7 @@ end seErrorDescription
 # Description
 #   Returns a friendly form of the object name suitable for displaying on tabs, etc.
 function seFriendlyObject pObject
-   local tFriendlyName
-   put word 1 of the name of pObject & space into tFriendlyName
-   
-   # This means that the object essentially has no name, eg its name is: card id 1002 or similar.
-   if the name of pObject is the short name of pObject then
-      put word -1 of the short name of pObject after tFriendlyName
-   else
-      put quote & the short name of pObject & quote after tFriendlyName
-   end if
-   
-   return tFriendlyName
+   return revDebuggerObjectName(pObject)
 end seFriendlyObject
 
 # Parameters
@@ -2813,7 +2803,7 @@ end seUpdateWindowTitle
 #   The title that the script editor window should have if pObject is the current object
 #   being edited.
 function seCreateWindowTitle pObject
-   return the long name of pObject & " - Code Editor"
+   return revDebuggerObjectLongName(pObject) & " - Code Editor"
 end seCreateWindowTitle
 
 command seUpdateCheckSum pObject, @pScript

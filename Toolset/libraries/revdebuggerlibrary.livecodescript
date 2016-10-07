@@ -6,19 +6,332 @@ on revLoadLibrary
    end if
    insert the script of me into front
    
-   ideSubscribe "idePreferenceChanged:cREVScriptDebugMode"
+   if "development" is in the environment then
+      ideSubscribe "idePreferenceChanged:cREVScriptDebugMode"
+   end if
+   
+   revDebuggerInitialize
 end revLoadLibrary
 
 on revUnloadLibrary
-	if the target is not me then
-		pass "revUnloadLibrary"
-	end if
+   if the target is not me then
+      pass "revUnloadLibrary"
+   end if
    remove the script of me from front
 end revUnloadLibrary
 
-# This constant specifies that the debugger should use the cREVGeneral
-# custom property set to store its metadata.
-constant kMetadataType = "general"
+################################################################################
+#
+# Remote Debugger Support
+#
+################################################################################
+
+-- the socket for communicating between the remote debugger
+-- and the IDE. The IDE will either be in local debugger mode
+-- or be connected to a remote debugger session
+local sSocketID
+
+local sRemoteScriptObjectCacheStack
+
+-- the port to accept connections on
+-- we may want this to be user configurable at some point
+constant kPort = 9999
+
+-- the network interfaces to attempt to open a socket to the IDE
+local sNetworkInterfaces
+local sCurrentInterface = 0
+
+-- we recurse like this as a guard against some code indiscriminately
+-- closing sockets it didn't open... aka libURLResetAll
+command __EnsureAccept
+   if kPort is not among the lines of the openSockets then
+      accept connections on port kPort with message "__RemoteSessionCallback"
+   end if
+   send "__EnsureAccept" to me in 1 second
+end __EnsureAccept
+
+private command __StartRemoteSession
+   add 1 to sCurrentInterface
+   if sNetworkInterfaces[sCurrentInterface] is empty then
+      put 1 into sCurrentInterface
+   end if
+   
+   if sNetworkInterfaces[sCurrentInterface] is not empty then
+      open socket to (sNetworkInterfaces[sCurrentInterface] & ":" & kPort) with message "__RemoteSessionCallback"
+   end if
+end __StartRemoteSession
+
+on __RemoteSessionCallback pSocketID
+   local tOpen = true
+   if tOpen then
+      put sSocketID is empty into tOpen
+   end if
+   
+   if tOpen and "development" is in the environment then
+      answer question revIDELocalise("Would you like to start a remote debugger session?") with revIDELocalise("Yes") or revIDELocalise("No")
+      put it is revIDELocalise("Yes") into tOpen
+   end if
+   
+   if not tOpen then
+      -- only allow one session
+      close socket pSocketID
+   else
+      put pSocketID into sSocketID
+      __ReadRemoteMessage
+   end if
+end __RemoteSessionCallback
+
+private command __ReadRemoteMessage
+   read from socket sSocketID until "[END]" with message "__ReadRemoteMessageCallback"
+   if the result is not empty then
+      put empty into sSocketID
+      __Disable
+   end if
+end __ReadRemoteMessage
+
+command __ReadRemoteMessageCallback pSocketID, pData
+   -- delete the trailing `[END]`
+   delete char -5 to -1 of pData
+   try
+      put arrayDecode(base64Decode(pData)) into pData
+   catch e
+      __WriteRemoteError "Unable to decode message"
+   end try
+   
+   switch pData["type"]
+      case "error"
+         __ReadRemoteError pData
+         break
+      case "result"
+         __ReadRemoteResult pData
+         break
+      case "handler"
+         __ReadRemoteHandler pData
+         break
+   end switch
+   
+   __ReadRemoteMessage
+end __ReadRemoteMessageCallback
+
+local sResult
+
+private command __WriteRemoteError pError, pResultID
+   local tArray
+   put "error" into tArray["type"]
+   put pError into tArray["error"]
+   put pResultID into tArray["id"]
+   __WriteRemoteMessage tArray
+end __WriteRemoteError
+
+private command __ReadRemoteError pArray
+   -- in the event an error occured when waiting for a handler result
+   -- we want to make sure sResult becomes an array at this point
+   put pArray into sResult[pArray["id"]]
+end __ReadRemoteError
+
+private command __WriteRemoteResult pResult, pResultID
+   local tArray
+   put "result" into tArray["type"]
+   put pResult into tArray["result"]
+   put pResultID into tArray["id"]
+   __WriteRemoteMessage tArray
+end __WriteRemoteResult
+
+private command __ReadRemoteResult pArray
+   -- there should be a __WriteRemoteHandler waiting for this
+   put pArray into sResult[pArray["id"]]
+end __ReadRemoteResult
+
+private command __ReadRemoteHandler pArray
+   local tHandler, tObject
+   put pArray["handler"] into tHandler
+   put pArray["object"] into tObject
+   if there is not a tObject then
+      __WriteRemoteError "Object does not exist:" && tObject, pArray["id"]
+      exit __ReadRemoteHandler
+   end if
+   
+   local tDoString
+   put "dispatch " into tDoString
+   
+   if pArray["handler type"] is "function" then
+      put "function " after tDoString
+   end if
+   
+   put "tHandler to tObject" after tDoString
+   
+   if pArray["params"] is an array then
+      put " with " after tDoString
+      
+      local tParam
+      repeat with tParam = 1 to the number of elements of pArray["params"]
+         if tParam > 1 then
+            put comma after tDoString
+         end if
+         put "pArray[" & quote & "params" & quote & "][" & tParam & "]" after tDoString
+      end repeat
+   end if
+   
+   try
+      do tDoString
+   catch tError
+      __WriteRemoteError tError, pArray["id"]
+      exit __ReadRemoteHandler
+   end try
+   
+   __WriteRemoteResult the result, pArray["id"]
+end __ReadRemoteHandler
+
+private command __WriteRemoteHandler pHandler, pHandlerType, pObject
+   local tArray
+   put "handler" into tArray["type"]
+   put pHandler into tArray["handler"]
+   put pHandlerType into tArray["handler type"]
+   put revRuggedID(pObject) into tArray["object"]
+   
+   local tParam
+   repeat with tParam = 4 to the paramCount
+      put param(tParam) into tArray["params"][tParam-3]
+   end repeat
+   
+   put uuid() into tArray["id"]
+   
+   __WriteRemoteMessage tArray
+   wait until sResult[tArray["id"]] is an array or sSocketID is empty with messages
+   
+   local tResult
+   put sResult[tArray["id"]]["result"] into tResult
+   delete variable sResult[tArray["id"]]
+   
+   return tResult
+end __WriteRemoteHandler
+   
+private command __WriteRemoteMessage pArray
+   put base64Encode(arrayEncode(pArray)) into pArray
+   put "[END]" after pArray
+   write pArray to socket sSocketID with message "__WriteRemoteMessageCallback"
+end __WriteRemoteMessage
+
+command __WriteRemoteMessageCallback pSocketID
+   __ReadRemoteMessage
+end __WriteRemoteMessageCallback
+
+
+private function __CachedRemoteScriptObject pObject
+   if there is not a stack sRemoteScriptObjectCacheStack then
+      create invisible stack sRemoteScriptObjectCacheStack
+      set the _ideoverride of stack sRemoteScriptObjectCacheStack to true
+   end if
+   
+   local tObject
+   put __FindCachedRemoteScriptObject(pObject) into tObject
+   
+   if tObject is empty then
+      local tName
+      put uuid() into tName
+      set the defaultStack to sRemoteScriptObjectCacheStack
+      create button tName
+      set the uRuggedID of button tName to pObject
+      
+      __WriteRemoteHandler "revDebuggerGetRemoteObjectInfo", "function", the long id of me, pObject
+      local tObjectInfo
+      put the result into tObjectInfo
+      
+      local tOldExplicitVariables
+      put the explicitVariables into tOldExplicitVariables
+      set the explicitVariables to false
+      set the script of button tName to tObjectInfo["script"]
+      set the explicitVariables to tOldExplicitVariables
+      
+      set the uLongName of button tName to tObjectInfo["long name"]
+      set the uName of button tName to tObjectInfo["name"]
+      
+      put revRuggedID(the long id of button tName) into tObject
+   end if
+   
+   return tObject
+end __CachedRemoteScriptObject
+
+private function __FindCachedRemoteScriptObject pObject
+   local tID
+   repeat for each line tID in the childControlIDs of card 1 of stack sRemoteScriptObjectCacheStack
+      if the uRuggedID of control id tID of stack sRemoteScriptObjectCacheStack is pObject then
+         return revRuggedID(the long id of control id tID of stack sRemoteScriptObjectCacheStack)
+      end if
+   end repeat
+   
+   return empty
+end __FindCachedRemoteScriptObject
+
+private function __RemoteReferenceForCachedObject pObject
+   if there is a pObject then
+      return the uRuggedID of pObject
+   end if
+   
+   return empty
+end __RemoteReferenceForCachedObject
+
+function revDebuggerGetRemoteObjectInfo pObject
+   local tInfo
+   if there is a pObject then
+      put the name of pObject into tInfo["name"]
+      put the long name of pObject into tInfo["long name"]
+      put the script of pObject into tInfo["script"]
+   end if
+   
+   return tInfo
+end revDebuggerGetRemoteObjectInfo
+   
+on socketTimeout pSocketID
+   if pSocketID is not sSocketID then
+      pass socketTimeout
+   end if
+   
+   -- setup a new read
+   __ReadRemoteMessage
+end socketTimeout
+
+on socketError pSocketID, pError
+   if pSocketID is not sSocketID then
+      pass socketError
+   end if
+   
+   if "development" is not in the environment then
+      __StartRemoteSession
+   else
+      put empty into sSocketID
+      if __Enabled() then
+         __Enable
+      else
+         __Disable
+      end if
+      answer error revIDELocalise("There was a problem with the remote debugger session:") & return & pError
+   end if
+end socketError
+
+on socketClosed pSocketID
+   if pSocketID is not sSocketID then
+      pass socketClosed
+   end if
+   if "development" is in the environment then
+      put empty into sSocketID
+      if __Enabled() then
+         __Enable
+      else
+         __Disable
+      end if
+      answer information revIDELocalise("The remote debugger session was closed")
+   else
+      __Disable
+   end if
+end socketClosed
+
+on shutdown
+   if sSocketID is not empty then
+      close socket sSocketID
+   end if
+   pass shutdown
+end shutdown
 
 ################################################################################
 #
@@ -32,21 +345,37 @@ command revDebuggerInitialize
    # When the debugger is first initialized, the breakpoints property should be empty as other
    # IDE stacks should not be setting it. Unfortunately if there are no breakpoints set, traceError messages
    # are not sent by the engine, so we have to set a dummy breakpoint here to prevent this problem.
-   if debuggerEnabled() then
+   if __Enabled() then
       set the breakpoints to the long id of me,5000
+      if "development" is in the environment then
+         __EnsureAccept
+         put uuid() into sRemoteScriptObjectCacheStack
+      end if
    else
       set the breakpoints to empty
    end if
 end revDebuggerInitialize
 
+command revDebuggerSetNetworkInterfaces pInterfaces
+   if "development" is not in the environment then
+      split pInterfaces by comma
+      put pInterfaces into sNetworkInterfaces
+      __StartRemoteSession
+   end if
+end revDebuggerSetNetworkInterfaces
+
+# This constant specifies that the debugger should use the cREVGeneral
+# custom property set to store its metadata.
+constant kMetadataType = "general"
+
 on idePreferenceChanged pPreference, pValue
    if the target is me then
       switch pPreference
          case "cREVScriptDebugMode"
-            if debuggerEnabled() then
-               __DebuggerEnable
+            if __Enabled() then
+               __Enable
             else
-               __DebuggerDisable
+               __Disable
             end if
             break
       end switch
@@ -59,25 +388,29 @@ end idePreferenceChanged
 #   Whether or not the debugger is enabled. This is currently defined as whether or not the cREVScriptDebugMode
 #   of stack "revPreferences" is true.
 function revDebuggerEnabled
-   return debuggerEnabled()
+   return __Enabled()
 end revDebuggerEnabled
 
 # Description
 #   Enables the debugger, should be called when the user switches script debug mode on.
 command revDebuggerEnable
-   revIDESetPreference "cREVScriptDebugMode", true
+   if the environment contains "development" then
+      revIDESetPreference "cREVScriptDebugMode", true
+   else
+      __Enable
+   end if
 end revDebuggerEnable
 
-private command __DebuggerEnable
+private command __Enable
    # When the debugger is enabled we need to go through all the open stacks and 
    # activate their breakpoints if appropriate.
    local tOpenStacks
    put the openStacks into tOpenStacks
    repeat for each line tStack in tOpenStacks
-      if not debuggerStackAllowed(the long id of stack tStack) then
+      if not __StackAllowed(the long id of stack tStack) then
          next repeat
       end if
-      revDebuggerActivateBreakpoints the long id of stack tStack
+      __ActivateBreakpoints the long id of stack tStack
       revDebuggerActivateWatches the long id of stack tStack
    end repeat
    
@@ -85,27 +418,43 @@ private command __DebuggerEnable
    
    # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
    revDebuggerInitialize
-end __DebuggerEnable
+end __Enable
 
 local sContext
 
 # Description
 #   Disables the debugger, should be called when the user switches script debug mode off.
 command revDebuggerDisable
-   revIDESetPreference "cREVScriptDebugMode", false
+   if the environment contains "development" then
+      revIDESetPreference "cREVScriptDebugMode", false
+   else
+      __Disable
+   end if
 end revDebuggerDisable
 
-private command __DebuggerDisable
+private command __Disable
    set the breakpoints to empty
    set the watchedVariables to empty
    put empty into sContext
-end __DebuggerDisable
+   if sSocketID is not empty then
+      if there is a stack sRemoteScriptObjectCacheStack then
+         delete stack sRemoteScriptObjectCacheStack
+      end if
+      close socket sSocketID
+      put empty into sSocketID
+   end if
+end __Disable
 
 # Returns
 #   The current debug context if there is one, empty otherwise. The context returned by this function
 #    is persistent, in that if we are debugging, there is always a debug context. Unless the debug context
 #    is set by using revDebuggerSetContext, it will be the context of the next line to execute in the debugger.
 function revDebuggerGetContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerGetContext", "function", the long id of me
+      return __LocalizeContexts(the result, false)
+   end if
+   
    # Check that we are definitely still debugging- the user may have manually turned off the debugger.
    if the traceStack is empty or not revDebuggerEnabled() then
       return empty
@@ -130,6 +479,11 @@ end revDebuggerGetContext
 #   Sets the debugger context to pContext. This value will only remain while the debugger remains on its current line
 #   when the line changes (e.g. because the user has pressed "Step over") the context will be reset to the current one.
 command revDebuggerSetContext pContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerSetContext", "command", the long id of me, __LocalizeContexts(pContext, true)
+      return the result
+   end if
+   
    put pContext into sContext
 end revDebuggerSetContext
 
@@ -140,6 +494,11 @@ end revDebuggerSetContext
 #   The returned list is reversed so that it takes the order of a call stack. Whether the debugger is active
 #   or not is defined as whether the revDebuggerContexts is empty.
 function revDebuggerContexts
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerContexts", "function", the long id of me
+      return __LocalizeContexts(the result, false)
+   end if
+   
    local tContextsRaw, tContexts, tControl, tStack
    global gREVDevelopment
    
@@ -154,7 +513,7 @@ function revDebuggerContexts
       
       # OK-2009-06-23 : Bug 7954 - Parse the execution contexts properly to avoid problems with commas
       local tArray
-      put parseExecutionContext(tContext) into tArray
+      put __ParseExecutionContext(tContext) into tArray
       
       if tArray["behavior"] is not empty then
          put tArray["behavior"] into tControl
@@ -170,10 +529,13 @@ function revDebuggerContexts
       
       put revTargetStack(the long id of tControl) into tStack
       
+      local tParsedContext
+      put tArray["object"], tArray["handler"], tArray["line number"], tArray["behavior"] into tParsedContext
+      
       # If gREVDevelopment is false then only non IDE stacks can appear in the contexts
       if not gREVDEvelopment then
-         if debuggerStackAllowed(the long id of stack tStack) then
-            put return & tLineNumber & comma & tContext before tContexts
+         if __StackAllowed(the long id of stack tStack) then
+            put return & tLineNumber & comma & tParsedContext before tContexts
          else
             next repeat
          end if
@@ -192,20 +554,56 @@ function revDebuggerContexts
                next repeat
             end if
          else
-            put return & tLineNumber & comma & tContext before tContexts
+            put return & tLineNumber & comma & tParsedContext before tContexts
          end if
       end if
    end repeat
    delete the first char of tContexts
    return tContexts
 end revDebuggerContexts
-  
-function revDebuggerParseExecutionContext pContext
-   return  parseExecutionContext(pContext)
-end revDebuggerParseExecutionContext
+
+
+private function __LocalizeContexts pContext, pForRemote
+   local tLineNumber, tContext, tContexts
+   put 0 into tLineNumber
+   repeat for each line tContext in pContext
+      add 1 to tLineNumber
+      
+      # OK-2009-06-23 : Bug 7954 - Parse the execution contexts properly to avoid problems with commas
+      local tArray
+      put __ParseExecutionContext(tContext, pForRemote) into tArray
+      
+      put return & tLineNumber, tArray["object"], tArray["handler"], tArray["line number"], tArray["behavior"] before tContexts
+   end repeat
+   delete the first char of tContexts
+   return tContexts
+end __LocalizeContexts
+
+private function __LocalizeBreakpoints pBreakpoints, pForRemote
+   local tBreakpoint, tBreakpoints
+   
+   repeat for each line tBreakpoint in pBreakpoints
+      put __ContextRuggedID(item 1 to -2 of tBreakpoint, pForRemote), item -1 of tBreakpoint & return after tBreakpoints
+   end repeat
+   
+   delete the last char of tBreakpoints
+   return tBreakpoints
+end __LocalizeBreakpoints
+
+--!TODO watchedVariables needs support for filenames containing comma in the engine and the IDE
+private function __LocalizeWatches pWatches, pForRemote
+   local tWatch, tWatches
+   
+   repeat for each line tWatch in pWatches
+      put __ContextRuggedID(item 1 of tWatch, pForRemote), item 2 to -1 of tWatch & return after tWatches
+   end repeat
+   
+   delete the last char of tWatches
+   return tWatches
+end __LocalizeWatches
 
 # OK-2009-06-23 : Bug 7954 - Parses an execution context taking into account that object long ids may contain commas.
-private function parseExecutionContext pContext
+private function __ParseExecutionContext pContext, pForRemote
    # If pContext was from the revDebuggerContexts it will have an extra "context number" at the start,
    # chop this off first.
    local tArray
@@ -222,30 +620,52 @@ private function parseExecutionContext pContext
       if tItem is an integer then
          put tItem into tArray["line number"]
          put item (tItemNumber - 1) of pContext into tArray["handler"]
-         put item 1 to (tItemNumber - 2) of pContext into tArray["object"]
+         put __ContextRuggedID(item 1 to (tItemNumber - 2) of pContext, pForRemote) into tArray["object"]
          put item (tItemNumber + 1 ) to -1 of pContext into tArray["behavior"]
+         if tArray["behavior"] is not empty then
+            put __ContextRuggedID(tArray["behavior"], pForRemote) into tArray["behavior"]
+         end if
          return tArray
       end if
    end repeat
-end parseExecutionContext
+end __ParseExecutionContext
+
+private function __ContextRuggedID pObject, pForRemote
+   if sSocketID is not empty and "development" is in the environment then
+      if pForRemote is true then
+         return __RemoteReferenceForCachedObject(pObject)
+      else
+         local tStack
+         put revTargetStack(pObject) into tStack
+         if tStack is sRemoteScriptObjectCacheStack then
+            return revRuggedID(pObject)
+         else
+            return __CachedRemoteScriptObject(pObject)
+         end if
+      end if
+   else
+      return revRuggedID(pObject)
+   end if
+end __ContextRuggedID
 
 function revDebuggerParseExecutionContext pContext
-   return parseExecutionContext(pContext)
+   return __ParseExecutionContext(pContext)
 end revDebuggerParseExecutionContext
   
-
 # Returns
 #   A list of global variable names
 # Description
 #   Returns a filtered list of global names. Included for symmetry with other call to get variable names.
 #   The list contains one global name per line.
 function revDebuggerGlobalNames
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerGlobalNames", "function", the long id of me
+      return the result
+   end if
+   
    local tGlobalsRaw, tGlobals
    
-   # OK-2009-01-29 : Bug 7178 - The 64 bit Vista environment variables ending with (x86) cause problems 
-   # because LiveCode throws an error when parsing do "global $VARIABLE(x86)" or similar. For now, we just 
-   # remove these until we can test on a 64 bit Vista machine to get them working.
-   put revDebuggerValidGlobalNames() into tGlobalsRaw
+   put the globals into tGlobalsRaw
    replace comma with return in tGlobalsRaw
    
    global gREVShowStacks
@@ -259,15 +679,6 @@ function revDebuggerGlobalNames
    return tGlobals
 end revDebuggerGlobalNames
 
-# Returns
-#   A list of the globals with valid names.
-#
-# FIXME this function is no longer required; all globals now contain
-# valid names.
-function revDebuggerValidGlobalNames
-   return the globals
-end revDebuggerValidGlobalNames
-
 # Parameters
 #   pContext : a debug context in the format returned by revDebuggerContexts (<context number>,<object>,<handler>,<line>
 # Returns
@@ -276,6 +687,11 @@ end revDebuggerValidGlobalNames
 #   the local variables declared in the current handler up to the current execution point. Line 3 contains the currently
 #   declared script local variables. If pContext is empty, attempts to use the current debugger context.
 function revDebuggerLocalNames pContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerLocalNames", "function", the long id of me, __LocalizeContexts(pContext, true)
+      return the result
+   end if
+   
    local tLocalsRaw, tLocalsCommand, tLocals, tNames
    put "return the localNames" into tLocalsCommand
    
@@ -314,6 +730,11 @@ end revDebuggerLocalNames
 #   A list of variable names in the specified context. The return value is in the same format as the variableNames property. If no context is specified
 #   the current debugger context is used.
 function revDebuggerVariableNames pContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerVariableNames", "function", the long id of me, __LocalizeContexts(pContext, true)
+      return the result
+   end if
+   
    local tCommand
    
    put "return the variableNames" into tCommand
@@ -339,6 +760,10 @@ end revDebuggerVariableNames
 local sDebuggerElementList
 
 function revDebuggerGetElementList
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerGetElementList", "function", the long id of me
+      return the result
+   end if
    return sDebuggerElementList
 end revDebuggerGetElementList
 
@@ -350,6 +775,11 @@ end revDebuggerGetElementList
 # Returns
 #   The value of the variable. If pContext is not specified, uses sContext
 function revDebuggerGetValue pVariable, pContext, pElementList, pIsGlobal
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerGetValue", "function", the long id of me, pVariable, __LocalizeContexts(pContext, true), pElementList, pIsGlobal
+      return the result
+   end if
+   
    local tValue, tCommand
    
    local tContextNumber
@@ -402,6 +832,11 @@ end revDebuggerGetValue
 #   A sorted list of keys for the given variable. If the extents of the array are non-empty then the list is sorted
 #   numerically, otherwise it is sorted alphebetically. If pContext is empty then uses sContext.
 function revDebuggerGetKeys pName, pContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerGetKeys", "function", the long id of me, pName, __LocalizeContexts(pContext, true)
+      return the result
+   end if
+   
    local tKeys, tCommand, tExtents, tExtentsCommand
    
    local tContextNumber
@@ -443,6 +878,11 @@ end revDebuggerGetKeys
 #   returns the result on line 1 and any error that may have ocurred on line 2.
 #   If pContext is empty, uses sContext.
 command revDebuggerDo pCommand, pContext
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerDo", "command", the long id of me, pCommand, __LocalizeContexts(pContext, true)
+      return the result
+   end if
+   
    local tContextNumber
    if pContext is empty then
       put item 1 of revDebuggerGetContext() into tContextNumber
@@ -473,7 +913,10 @@ local sDebugElements, sDebugValue
 # Description
 #   Sets the specified value in the specified debug context
 command revDebuggerSetValue pVariableName, pElementList, @pNewValue, pContext
-   
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerSetValue", "command", the long id of me, pVariableName, pElementList, pNewValue, __LocalizeContexts(pContext, true)
+      return the result
+   end if
    
    --   if pVariableName is among the items of the globalNames then
    --      put "global " & the globalNames & return into tStatement
@@ -482,10 +925,10 @@ command revDebuggerSetValue pVariableName, pElementList, @pNewValue, pContext
    put pElementList into sDebugElements
    put pNewValue into sDebugValue
    
---   local tStatement 
---   put "put pNewValue into " & pVariableName after tStatement 
---   repeat with x = 1 to item 2 of line 1 of extents(pElementList) 
---      put "[pElementList[" & x & "]]" after tStatement 
+   --   local tStatement 
+   --   put "put pNewValue into " & pVariableName after tStatement 
+   --   repeat with x = 1 to item 2 of line 1 of extents(pElementList) 
+   --      put "[pElementList[" & x & "]]" after tStatement 
    --   end repeat
    
    # In order not to interfere with the code being debugged, we change the value by passing a reference
@@ -529,6 +972,11 @@ end revDebuggerSetValueDo
 # Description
 #   Runs the currently debugging script until the next breakpoint
 command revDebuggerRun
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerRun", "command", the long id of me
+      return the result
+   end if
+   
    set the traceStack to empty
    set the traceUntil to 65535
    set the traceReturn to true
@@ -538,6 +986,11 @@ end revDebuggerRun
 # Description
 #  Performs the debugger "stop" function, terminates the script currently being debugged
 command revDebuggerStop
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerStop", "command", the long id of me
+      return the result
+   end if
+   
    # When executing certain structures, the debugger will continue to loop until the
    # breakpoints property becomes empty. In order to make sure the debugger always
    # exits when asked to, we set the breakpoints to empty here and restore them again
@@ -564,6 +1017,11 @@ end revDebuggerStop
 #   Sets the breakpoints property to the specified value. Please do not call this command
 #   from outside the debugger. It has to be made public due to how the debugger works in the engine.
 command revDebuggerSetBreakpoints pBreakpoints
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerSetBreakpoints", "command", the long id of me, pBreakpoints
+      return the result
+   end if
+   
    set the breakpoints to pBreakpoints
 end revDebuggerSetBreakpoints
 
@@ -576,6 +1034,11 @@ local sLastTraceMode
 #   Performs the step into debugger action. If the next line to execute cannot be stepped into,
 #   e.g. because its an engine command, does the same as step over.
 command revDebuggerStepInto pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerStepInto", "command", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    put "Step Into" into sLastTraceMode
    set the traceStack to revTargetStack(pObject)
    set the traceUntil to 65535
@@ -588,6 +1051,11 @@ end revDebuggerStepInto
 # Description
 #   Performs the step over debugger action.
 command revDebuggerStepOver pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerStepOver", "command", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    put "Step Over" into sLastTraceMode
    set the traceStack to revTargetStack(pObject)
    set the traceReturn to true
@@ -600,6 +1068,11 @@ end revDebuggerStepOver
 # Description
 #   Performs the step out debugger action
 command revDebuggerStepOut pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerStepOut", "command", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    put "Step Out" into sLastTraceMode
    set the traceStack to revTargetStack(pObject)
    set the traceReturn to true
@@ -633,7 +1106,12 @@ constant kObjectBreakpointLimit = 100
 #   Empty under normal circumstances. If there are already the maximum number
 #   of breakpoints set then returns an error string.
 command revDebuggerAddBreakpoint pObject, pLine
-   debuggerAddBreakpoint pObject, pLine, empty
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerAddBreakpoint", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine
+      return the result
+   end if
+   
+   __AddBreakpoint pObject, pLine, empty
 end revDebuggerAddBreakpoint
 
 # Parameters
@@ -654,7 +1132,12 @@ end revDebuggerAddBreakpoint
 #   Empty under normal circumstances. If there are already the maximum number
 #   of breakpoints set then returns an error string.
 command revDebuggerAddConditionalBreakpoint pObject, pLine, pCondition
-   debuggerAddBreakpoint pObject, pLine, pCondition
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerAddConditionalBreakpoint", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine, pCondition
+      return the result
+   end if
+   
+   __AddBreakpoint pObject, pLine, pCondition
 end revDebuggerAddConditionalBreakpoint
 
 # Parameters
@@ -668,14 +1151,19 @@ end revDebuggerAddConditionalBreakpoint
 #   breakpoints are stored as stack metadata, which in theory could be changed from
 #   outside this script (although shouldn't).
 command revDebuggerRemoveBreakpoint pObject, pLine
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerRemoveBreakpoint", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine
+      return the result
+   end if
+   
    # Deactivate the breakpoint then remove it from the object
    revDebuggerDeactivateBreakpoint pObject, pLine
    
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tBreakpoint
+   put __GetId(pObject) & comma & pLine into tBreakpoint
    
    local tObjectBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tObjectBreakpoints
@@ -687,7 +1175,7 @@ command revDebuggerRemoveBreakpoint pObject, pLine
    put revMetadataGet(tStack, kMetadataType, "breakpointconditions") into tConditions
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
    
    if tLineNumber = 0 then
       return "Breakpoint not found"
@@ -700,7 +1188,7 @@ command revDebuggerRemoveBreakpoint pObject, pLine
    revMetadataSet tStack, kMetadataType, "breakpointstates", tStates
    revMetadataSet tStack, kMetadataType, "breakpointconditions", tConditions
    
-   debuggerCleanBreakpoints tStack
+   __CleanBreakpoints tStack
 end revDebuggerRemoveBreakpoint
 
 # Parameters
@@ -720,6 +1208,11 @@ command revDebuggerMoveBreakpoint pOldObject, pOldLine, pNewObject, pNewLine
       return "invalid line specified: " pNewLine
    end if
    
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerMoveBreakpoint", "command", the long id of me, pOldObject, pOldLine, pNewObject, pNewLine
+      return the result
+   end if
+   
    # OK-2008-05-01 : Don't enforce this because the script editor will want to move the
    # breakpoint before applying the script when the user is editing it.
    #   if pNewLine > the number of lines of the script of pNewObject then
@@ -729,23 +1222,23 @@ command revDebuggerMoveBreakpoint pOldObject, pOldLine, pNewObject, pNewLine
    revDebuggerSuspendBreakpoints pOldObject
    
    local tStack
-   put debuggerTargetStack(pOldObject) into tStack
+   put __TargetStack(pOldObject) into tStack
    
    local tBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tBreakpoints
    
    local tBreakpoint
-   put debuggerGetId(pOldObject) & comma & pOldLine into tBreakpoint
+   put __GetId(pOldObject) & comma & pOldLine into tBreakpoint
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpoint, tBreakpoints) into tLineNumber
    if tLineNumber = 0 then
       exit revDebuggerMoveBreakpoint
    end if
    
    local tChanged
    put false into tChanged
-   put debuggerGetId(pNewObject) & comma & pNewLine into line tLineNumber of tBreakpoints
+   put __GetId(pNewObject) & comma & pNewLine into line tLineNumber of tBreakpoints
    
    revMetadataSet tStack, kMetadataType, "breakpoints", tBreakpoints
    revDebuggerRestoreBreakpoints pOldObject
@@ -754,9 +1247,14 @@ end revDebuggerMoveBreakpoint
 # Description
 #   Removes breakpoints from all open stacks. If gREVDevelopment is true this includes IDE stacks.
 command revDebuggerClearAllBreakpoints
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerClearAllBreakpoints", "command", the long id of me
+      return the result
+   end if
+   
    global gREVDevelopment
    local tMainstacks
-   if not gREVDevelopment then
+   if "development" is in the environment and not gREVDevelopment then
       put revFilterStacksList(the mainstacks) into tMainstacks
    else
       put the mainstacks into tMainstacks
@@ -771,9 +1269,9 @@ command revDebuggerClearAllBreakpoints
    end repeat
    delete the last char of tStacks
    
-      repeat for each line tStack in tStacks
-         debuggerClearStackBreakpoints tStack
-      end repeat
+   repeat for each line tStack in tStacks
+      __ClearStackBreakpoints tStack
+   end repeat
 end revDebuggerClearAllBreakpoints
 
 # Parameters
@@ -781,9 +1279,9 @@ end revDebuggerClearAllBreakpoints
 # Description
 #   Removes all breakpoints from the stack that owns pObject, this means all breakpoints set on the 
 #   and any of its cards / objects are removed and deactivated.
-private command debuggerClearStackBreakpoints pObject
+private command __ClearStackBreakpoints pObject
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tStackBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tStackBreakpoints
@@ -793,11 +1291,11 @@ private command debuggerClearStackBreakpoints pObject
       # clearing all breakpoints that that values in the metadata will be valid, hence the try.
       try
          local tObjectId
-         put debuggerResolveId(item 1 of tBreakpoint, tStack) into tObjectId
+         put __ResolveId(item 1 of tBreakpoint, tStack) into tObjectId
          revDebuggerRemoveBreakpoint tObjectId, item 2 of tBreakpoint
       end try
    end repeat
-end debuggerClearStackBreakpoints
+end __ClearStackBreakpoints
 
 
 
@@ -808,6 +1306,11 @@ end debuggerClearStackBreakpoints
 #   property but does not actually mark them as deactivated. Breakpoints are only
 #   suspending temporarily, e.g. next time rev restarts, they will be restored.
 command revDebuggerSuspendBreakpoints pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerSuspendBreakpoints", "command", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    local tBreakpoints
    put the breakpoints into tBreakpoints
    
@@ -828,7 +1331,7 @@ end revDebuggerSuspendBreakpoints
 #   Restores the correct state of all breakpoints for the specified object.
 #   i.e. activates them if their state is "active"
 command revDebuggerRestoreBreakpoints pObject
-   revDebuggerActivateBreakpoints debuggerTargetStack(pObject), pObject
+   __ActivateBreakpoints __TargetStack(pObject), pObject
 end revDebuggerRestoreBreakpoints
 
 constant kMaxActiveWatches = 100
@@ -840,14 +1343,19 @@ constant kMaxActiveWatches = 100
 # Description
 #   Activates the specified watch. I.e by putting it into the watchedVariables
 command revDebuggerActivateWatch pObject, pHandler, pVariable
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerActivateWatch", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pHandler, pVariable
+      return the result
+   end if
+   
    local tStoredWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tStoredWatches
+   put __GetWatchInformation(pObject, "watches") into tStoredWatches
    
    local tWatch
-   put debuggerBuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
    
    local tLineNumber
-   put debuggerWatchOffset(tWatch, tStoredWatches) into tLineNumber
+   put __WatchOffset(tWatch, tStoredWatches) into tLineNumber
    if tLineNumber = 0 then
       return "watch_not_found"
    end if
@@ -866,7 +1374,7 @@ command revDebuggerActivateWatch pObject, pHandler, pVariable
    if pObject is empty then
       put empty & comma & empty & comma & pVariable & comma & tCondition into tWatchString
    else
-      put debuggerResolveId(item 1 of tWatch, debuggerTargetStack(pObject)) & comma & pHandler & comma & pVariable & comma & tCondition into tWatchString
+      put __ResolveId(item 1 of tWatch, __TargetStack(pObject)) & comma & pHandler & comma & pVariable & comma & tCondition into tWatchString
    end if
    
    if tCurrentWatches is empty then
@@ -878,109 +1386,8 @@ command revDebuggerActivateWatch pObject, pHandler, pVariable
    end if
    
    # Store the breakpoint's status in the object so it is remembered between restarts etc
-   debuggerUpdateWatchStatus pObject, tLineNumber, "active"
+   __UpdateWatchStatus pObject, tLineNumber, "active"
 end revDebuggerActivateWatch
-
-command revDebuggerActivateWatches pStack
-   local tWatches
-   put debuggerGetWatchInformation(pStack, "watches") into tWatches
-   
-   local tWatchStates
-   put debuggerGetWatchInformation(pStack, "watchstates") into tWatchStates
-   
-   local tLineNumber
-   put 1 into tLineNumber
-   repeat for each line tWatchState in tWatchStates
-      local tCurrentWatches
-      put the watchedVariables into tCurrentWatches
-      if the number of lines of tCurrentWatches >= kMaxActiveWatches then
-         return "Active watch limit reached"
-      end if
-      
-      if tWatchState is not "active" then
-         add 1 to tLineNumber
-         next repeat
-      end if
-      
-      local tWatch
-      put line tLineNumber of tWatches into tWatch
-      
-      local tWatchString
-      if item 1 of tWatch is empty then
-         put tWatch into tWatchString
-      else
-         put debuggerResolveId(item 1 of tWatch, pStack) & comma & item 2 to -1 of tWatch into tWatchString
-      end if
-      
-      if tCurrentWatches is empty then
-         set the watchedVariables to tWatchString
-      else
-         if tWatchString is not among the lines of tCurrentWatches then
-            set the watchedVariables to tCurrentWatches & return & tWatchString
-         end if
-      end if
-      
-      add 1 to tLineNumber
-   end repeat
-end revDebuggerActivateWatches
-
-# Parameters
-#   pStack : reference to the stack to activate breakpoints for
-#   pObject : reference to an object on the stack
-# Description
-#   Activates breakpoints stored on pStack. If pObject is empty then all breakpoints
-#   are activated, otherwise only those breakpoints that are in the script of pObject 
-#   are activated.
-command revDebuggerActivateBreakpoints pStack, pObject
-   local tStack
-   if pObject is not empty then
-      put debuggerTargetStack(pObject) into tStack
-      if the long id of tStack is not the long id of pStack then
-         return "invalid object"
-      end if
-   end if
-   
-   local tLineNumber
-   put 1 into tLineNumber
-   
-   local tStackBreakpoints
-   put revMetadataGet(pStack, kMetadataType, "breakpoints") into tStackBreakpoints
-   
-   local tStates
-   put revMetadataGet(pStack, kMetadataType, "breakpointstates") into tStates
-   
-   local tBreakpointsToActivate
-   repeat for each line tBreakpoint in tStackBreakpoints
-      if pObject is empty or item 1 of tBreakpoint is debuggerGetId(pObject) then
-         local tState
-         put line tLineNumber of tStates into tState
-         
-         if tState is "active" then
-            put debuggerResolveId(item 1 of tBreakpoint, pStack) & comma & item 2 of tBreakpoint & return after tBreakpointsToActivate
-         end if
-      end if
-   end repeat
-   delete the last char of tBreakpointsToActivate
-   
-   # If the breakpoints property is allowed to contain duplicates,  then the lines with duplicate breakpoints on
-   # will break more than once, i.e. multiple traceBreak messages. We should ensure that this doesn't happen,
-   # as there is no good reason for it and it will just cause annoyance.
-   local tBreakpointsNotActivated
-   repeat for each line tBreakpoint in tBreakpointsToActivate
-      if tBreakpoint is among the lines of the breakpoints then
-         next repeat
-      end if
-      put tBreakpoint & return after tBreakpointsNotActivated
-   end repeat
-   delete the last char of tBreakpointsNotActivated
-   put tBreakpointsNotActivated into tBreakpointsToActivate
-   
-   if the breakpoints is empty then
-      set the breakpoints to tBreakpointsToActivate
-   else
-      set the breakpoints to the breakpoints & return & tBreakpointsToActivate
-   end if
-end revDebuggerActivateBreakpoints
 
 # Parameters
 #   pObject : reference to the object owning the breakpoint
@@ -991,17 +1398,22 @@ end revDebuggerActivateBreakpoints
 # Returns
 #   Empty if successful, an error string otherwise.
 command revDebuggerActivateBreakpoint pObject, pLine
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerActivateBreakpoint", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine
+      return the result
+   end if
+   
    local tBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tBreakpoint
+   put __GetId(pObject) & comma & pLine into tBreakpoint
    
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tObjectBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tObjectBreakpoints
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
    
    if tLineNumber = 0 then
       # This is a bug in the code that called this command
@@ -1016,7 +1428,7 @@ command revDebuggerActivateBreakpoint pObject, pLine
    end if
    
    local tBreakpointString
-   put debuggerResolveId(item 1 of tBreakpoint, tStack) & comma & pLine into tBreakpointString
+   put __ResolveId(item 1 of tBreakpoint, tStack) & comma & pLine into tBreakpointString
    
    if tCurrentBreakpoints is empty then
       set the breakpoints to tBreakpointString
@@ -1027,7 +1439,7 @@ command revDebuggerActivateBreakpoint pObject, pLine
    end if
    
    # Store the breakpoint's status in the object so it is remembered between restarts etc
-   debuggerUpdateBreakpointStatus tStack, tLineNumber, "active"
+   __UpdateBreakpointStatus tStack, tLineNumber, "active"
 end revDebuggerActivateBreakpoint
 
 # Parameters
@@ -1037,19 +1449,24 @@ end revDebuggerActivateBreakpoint
 # Description
 #   Sets the specified condition on the breakpoint. Set the condition to empty to remove it.
 command revDebuggerSetBreakpointCondition pObject, pLine, pCondition
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerSetBreakpointCondition", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine, pCondition
+      return the result
+   end if
+   
    local tBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tBreakpoint
+   put __GetId(pObject) & comma & pLine into tBreakpoint
    
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tObjectBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tObjectBreakpoints
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpoint, tObjectBreakpoints) into tLineNumber
    
-   debuggerUpdateBreakpointCondition tStack, tLineNumber, pCondition
+   __UpdateBreakpointCondition tStack, tLineNumber, pCondition
 end revDebuggerSetBreakpointCondition
 
 # Parameters
@@ -1058,18 +1475,23 @@ end revDebuggerSetBreakpointCondition
 # Description
 #   Deactivates the specified breakpoint.
 command revDebuggerDeactivateBreakpoint pObject, pLine
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerDeactivateBreakpoint", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pLine
+      return the result
+   end if
+   
    # Ensure that the breakpoint actually exists
    local tBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tBreakpoint
+   put __GetId(pObject) & comma & pLine into tBreakpoint
    
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tObjectBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tObjectBreakpoints
    
    local tStackLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tObjectBreakpoints) into tStackLineNumber
+   put __BreakpointOffset(tBreakpoint, tObjectBreakpoints) into tStackLineNumber
    
    if tStackLineNumber = 0 then
       # This is a bug in the code that called this command. Don't throw errors in the debugger library
@@ -1082,16 +1504,16 @@ command revDebuggerDeactivateBreakpoint pObject, pLine
    put the breakpoints into tCurrentBreakpoints
    
    local tBreakpointString
-   put debuggerResolveId(item 1 of tBreakpoint, tStack) & comma & pLine into tBreakpointString
+   put __ResolveId(item 1 of tBreakpoint, tStack) & comma & pLine into tBreakpointString
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpointString, tCurrentBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpointString, tCurrentBreakpoints) into tLineNumber
    delete line tLineNumber of tCurrentBreakpoints
    set the breakpoints to tCurrentBreakpoints
    
    # Update the breakpoint's status
    # Store the breakpoint's status in the object so it is remember between restarts etc
-   debuggerUpdateBreakpointStatus tStack, tStackLineNumber, "inactive"
+   __UpdateBreakpointStatus tStack, tStackLineNumber, "inactive"
 end revDebuggerDeactivateBreakpoint
 
 # Parameters
@@ -1101,19 +1523,24 @@ end revDebuggerDeactivateBreakpoint
 #   inactive and conditional breakpoints. The breakpoints list is returned in the same
 #   format as the engine "breakpoints" property.
 function revDebuggerListBreakpoints pObject
-   local tStack
-   put debuggerTargetStack(pObject) into tStack
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListBreakpoints", "function", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return __LocalizeBreakpoints(the result, false)
+   end if
    
-   debuggerCleanBreakpoints tStack
+   local tStack
+   put __TargetStack(pObject) into tStack
+   
+   __CleanBreakpoints tStack
    
    local tStackBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tStackBreakpoints
    
    local tBreakpointsList
    repeat for each line tBreakpoint in tStackBreakpoints
-      if debuggerGetId(pObject) = item 1 of tBreakpoint then
+      if __GetId(pObject) = item 1 of tBreakpoint then
          local tBreakpointString
-         put debuggerResolveId(item 1 of tBreakpoint, tStack) & comma & item 2 of tBreakpoint into tBreakpointString
+         put __ResolveId(item 1 of tBreakpoint, tStack) & comma & item 2 of tBreakpoint into tBreakpointString
          put tBreakpointString & return after tBreakpointsList
       end if
    end repeat
@@ -1125,10 +1552,15 @@ end revDebuggerListBreakpoints
 # Returns
 #   A list of all active breakpoints
 function revDebuggerListActiveBreakpoints
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListActiveBreakpoints", "function", the long id of me
+      return __LocalizeBreakpoints(the result)
+   end if
+   
    global gREVDevelopment
    
    # With gREVDevelopment we return all breakpoints exactly as they are
-   if gREVDevelopment then
+   if "development" is not in the environment or gREVDevelopment then
       return the breakpoints
    end if
    
@@ -1144,7 +1576,7 @@ function revDebuggerListActiveBreakpoints
       local tStack
       put revTargetStack(revRuggedId(tObject)) into tStack
       
-      if revIDEStack(the effective filename of stack tStack) then
+      if revIDEStackIsIDEStack(the long id of stack tStack) then
          next repeat
       end if
       
@@ -1158,6 +1590,11 @@ end revDebuggerListActiveBreakpoints
 # Returns
 #   A list of all active watches
 function revDebuggerListActiveWatches
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListActiveWatches", "function", the long id of me
+      return __LocalizeWatches(the result, false)
+   end if
+   
    return the watchedVariables
 end revDebuggerListActiveWatches
 
@@ -1199,8 +1636,13 @@ end revDebuggerParseWatch
 # Description
 #   Registers a watch with the specified parameters. Does not activate the watch.
 command revDebuggerAddWatch pObject, pHandler, pVariable, pCondition
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerAddWatch", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pHandler, pVariable, pCondition
+      return the result
+   end if
+   
    local tWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tWatches
+   put __GetWatchInformation(pObject, "watches") into tWatches
    if the number of lines of tWatches >= kMaxActiveWatches then
       # Return an error here as the other option (removal of other watches
       # to make room) could potentially confuse the user.
@@ -1208,21 +1650,21 @@ command revDebuggerAddWatch pObject, pHandler, pVariable, pCondition
    end if
    
    local tWatch
-   put debuggerBuildWatchLineFromDetails(pObject, pHandler, pVariable, pCondition, true) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable, pCondition, true) into tWatch
    if tWatches is empty then
       put tWatch into tWatches
    else
       put tWatches & return & tWatch into tWatches
    end if
-   debuggerSetWatchInformation pObject, "watches", tWatches
+   __SetWatchInformation pObject, "watches", tWatches
    
    # New watches are initially inactive.
    local tStates
-   put debuggerGetWatchInformation(pObject, "watchstates") into tStates
+   put __GetWatchInformation(pObject, "watchstates") into tStates
    put "inactive" into line (the number of lines of tWatches) of tStates
-   debuggerSetWatchInformation pObject, "watchstates", tStates
+   __SetWatchInformation pObject, "watchstates", tStates
    
-   debuggerCleanWatches pObject
+   __CleanWatches pObject
 end revDebuggerAddWatch
 
 # Parameters
@@ -1232,37 +1674,43 @@ end revDebuggerAddWatch
 # Description
 #   Removes the specified watch, deactivating it first.
 command revDebuggerRemoveWatch pObject, pHandler, pVariable
+   -- sync remote debugger
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerRemoveWatch", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pHandler, pVariable
+      return the result
+   end if
+   
    # Deactivate the watch then remove it from the object
    revDebuggerDeactivateWatch pObject, pHandler, pVariable
    
    local tWatch
-   put debuggerBuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
    
    local tStoredWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tStoredWatches
+   put __GetWatchInformation(pObject, "watches") into tStoredWatches
    
    local tStates
-   put debuggerGetWatchInformation(pObject, "watchstates") into tStates
+   put __GetWatchInformation(pObject, "watchstates") into tStates
    
    local tLineNumber
-   put debuggerWatchOffset(tWatch, tStoredWatches) into tLineNumber
+   put __WatchOffset(tWatch, tStoredWatches) into tLineNumber
    if tLineNumber = 0 then
       return "Watch not found"
    end if
    delete line tLineNumber of tStoredWatches
    delete line tLineNumber of tStates
    
-   debuggerSetWatchInformation pObject, "watches", tStoredWatches
-   debuggerSetWatchInformation pObject, "watchstates", tStates
-   debuggerCleanWatches pObject
+   __SetWatchInformation pObject, "watches", tStoredWatches
+   __SetWatchInformation pObject, "watchstates", tStates
+   __CleanWatches pObject
 end revDebuggerRemoveWatch
 
-private function debuggerBuildWatchLineFromDetails pObject, pHandler, pVariable, pCondition, pIncludeTrailingCommaIfConditionEmpty
+private function __BuildWatchLineFromDetails pObject, pHandler, pVariable, pCondition, pIncludeTrailingCommaIfConditionEmpty
    local tLine
    if pObject is empty then
       put empty & comma & empty & comma & pVariable into tLine
    else
-      put debuggerGetId(pObject) & comma & pHandler & comma & pVariable into tLine
+      put __GetId(pObject) & comma & pHandler & comma & pVariable into tLine
    end if
    
    if pIncludeTrailingCommaIfConditionEmpty or pCondition is not empty then
@@ -1274,52 +1722,56 @@ private function debuggerBuildWatchLineFromDetails pObject, pHandler, pVariable,
    end if
    
    return tLine
-end debuggerBuildWatchLineFromDetails
+end __BuildWatchLineFromDetails
 
-private function debuggerGetWatchDataStoreForObject pObject
+private function __GetWatchDataStoreForObject pObject
    if pObject is empty then
-      return the long id of stack "revPreferences"
+      if the environment contains "development" then
+         return the long id of stack "revPreferences"
+      else
+         return the long id of me
+      end if
    else
-      return debuggerTargetStack(pObject)
+      return __TargetStack(pObject)
    end if
-end debuggerGetWatchDataStoreForObject
+end __GetWatchDataStoreForObject
 
-private function debuggerGetWatchDataStoreTypeForObject pObject
+private function __GetWatchDataStoreTypeForObject pObject
    if pObject is empty then
       return "debugger"
    else
       return kMetadataType
    end if
-end debuggerGetWatchDataStoreTypeForObject
+end __GetWatchDataStoreTypeForObject
 
-private command debuggerSetWatchInformation pObject, pInformationType, pValue
+private command __SetWatchInformation pObject, pInformationType, pValue
    # Watch information (watchedVariables) can be found in two possible locations,
    # if pObject is given, then the stack owning pObject will contain the metadata in its
    # cREVGeneral custom property set. This is for watchedVariables at handler or script local scope.
    # For global variables, pObject is empty, and the information is stored in the preferences stack.
    local tMetadataType
-   put debuggerGetWatchDataStoreTypeForObject(pObject) into tMetadataType
+   put __GetWatchDataStoreTypeForObject(pObject) into tMetadataType
    
    local tMetadataStore
-   put debuggerGetWatchDataStoreForObject(pObject) into tMetadataStore
+   put __GetWatchDataStoreForObject(pObject) into tMetadataStore
    
    revMetadataSet tMetadataStore, tMetadataType, pInformationType, pValue
-end debuggerSetWatchInformation
+end __SetWatchInformation
 
 
-private function debuggerGetWatchInformation pObject, pInformationType
+private function __GetWatchInformation pObject, pInformationType
    # Watch information (watchedVariables) can be found in two possible locations,
    # if pObject is given, then the stack owning pObject will contain the metadata in its
    # cREVGeneral custom property set. This is for watchedVariables at handler or script local scope.
    # For global variables, pObject is empty, and the information is stored in the preferences stack.
    local tMetadataType
-   put debuggerGetWatchDataStoreTypeForObject(pObject) into tMetadataType
+   put __GetWatchDataStoreTypeForObject(pObject) into tMetadataType
    
    local tMetadataStore
-   put debuggerGetWatchDataStoreForObject(pObject) into tMetadataStore
+   put __GetWatchDataStoreForObject(pObject) into tMetadataStore
    
    return revMetadataGet(tMetadataStore, tMetadataType, pInformationType)
-end debuggerGetWatchInformation
+end __GetWatchInformation
 
 
 # Parameters
@@ -1329,6 +1781,11 @@ end debuggerGetWatchInformation
 # Description
 #   Deactivates the specified watch, by removing it from the watchedVariables.
 command revDebuggerDeactivateWatch pObject, pHandler, pVariable
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerDeactivateWatch", "command", the long id of me, __RemoteReferenceForCachedObject(pObject), pHandler, pVariable
+      return the result
+   end if
+   
    --   local tWatch, tDataStore, tMetadataType
    --   if pObject is empty then
    --      put empty & comma & empty & comma & pVariable into tWatch
@@ -1340,13 +1797,13 @@ command revDebuggerDeactivateWatch pObject, pHandler, pVariable
    --   end if
    
    local tStackWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tStackWatches
+   put __GetWatchInformation(pObject, "watches") into tStackWatches
    
    local tWatch
-   put debuggerBuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
    
    local tStackLineNumber
-   put debuggerWatchOffset(tWatch, tStackWatches) into tStackLineNumber
+   put __WatchOffset(tWatch, tStackWatches) into tStackLineNumber
    
    if tStackLineNumber = 0 then
       # This is a bug in the code that called this command. Don't throw errors in the debugger library
@@ -1365,7 +1822,7 @@ command revDebuggerDeactivateWatch pObject, pHandler, pVariable
    if pObject is empty then
       put empty into tResolvedObject
    else
-      put debuggerResolveId(item 1 of tWatch, debuggerTargetStack(pObject)) into tResolvedObject
+      put __ResolveId(item 1 of tWatch, __TargetStack(pObject)) into tResolvedObject
    end if
    
    local tWatchString
@@ -1376,13 +1833,13 @@ command revDebuggerDeactivateWatch pObject, pHandler, pVariable
    end if
    
    local tLineNumber
-   put debuggerWatchOffset(tWatchString, tCurrentWatches) into tLineNumber
+   put __WatchOffset(tWatchString, tCurrentWatches) into tLineNumber
    
    delete line tLineNumber of tCurrentWatches
    set the watchedVariables to tCurrentWatches
    
    # Store the watch's status in the object so it is remembered between restarts etc
-   debuggerUpdateWatchStatus pObject, tStackLineNumber, "inactive"
+   __UpdateWatchStatus pObject, tStackLineNumber, "inactive"
 end revDebuggerDeactivateWatch
 
 # Parameters
@@ -1390,16 +1847,21 @@ end revDebuggerDeactivateWatch
 # Returns
 #   A list of watches set on the specified object, in the format of the watchedVariables property.
 function revDebuggerListWatches pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListWatches", "function", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return __LocalizeWatches(the result, false)
+   end if
+   
    local tWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tWatches
+   put __GetWatchInformation(pObject, "watches") into tWatches
    
    local tMatchingWatches
    repeat for each line tWatch in tWatches
       if pObject is empty then
          put empty & comma & item 2 to -1 of tWatch & return after tMatchingWatches
       else
-         if debuggerGetId(pObject) is item 1 of tWatch then
-            put debuggerResolveId(item 1 of tWatch, debuggerTargetStack(pObject)) & comma & item 2 to -1 of tWatch & return after tMatchingWatches
+         if __GetId(pObject) is item 1 of tWatch then
+            put __ResolveId(item 1 of tWatch, __TargetStack(pObject)) & comma & item 2 to -1 of tWatch & return after tMatchingWatches
          end if
       end if
    end repeat
@@ -1409,9 +1871,13 @@ function revDebuggerListWatches pObject
 end revDebuggerListWatches
 
 function revDebuggerListWatchStates pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListWatchStates", "function", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
    
    local tWatches
-   put debuggerGetWatchInformation(pObject, "watches") into tWatches
+   put __GetWatchInformation(pObject, "watches") into tWatches
    
    local tMatchingLineNumbers
    
@@ -1421,7 +1887,7 @@ function revDebuggerListWatchStates pObject
       if pObject is empty then
          put tLineNumber & return after tMatchingLineNumbers
       else
-         if debuggerGetId(pObject) is item 1 of tWatch then
+         if __GetId(pObject) is item 1 of tWatch then
             put tLineNumber & return after tMatchingLineNumbers
          end if
       end if
@@ -1430,7 +1896,7 @@ function revDebuggerListWatchStates pObject
    delete the last char of tMatchingLineNumbers
    
    local tStates
-   put debuggerGetWatchInformation(pObject, "watchstates") into tStates
+   put __GetWatchInformation(pObject, "watchstates") into tStates
    
    local tMatchingStates
    repeat for each line tMatchingLineNumber in tMatchingLineNumbers
@@ -1450,8 +1916,13 @@ end revDebuggerListWatchStates
 #   and revDebuggerDeactiveBreakpoint commands. The statuses are returned
 #   in the same order as the breakpoints list.
 function revDebuggerListBreakpointStates pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListBreakpointStates", "function", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tBreakpoints
@@ -1461,7 +1932,7 @@ function revDebuggerListBreakpointStates pObject
    
    local tMatchingLines
    repeat for each line tBreakpoint in tBreakpoints
-      if debuggerGetId(pObject) = item 1 of tBreakpoint then
+      if __GetId(pObject) = item 1 of tBreakpoint then
          put tLineNumber & return after tMatchingLines
       end if
       add 1 to tLineNumber
@@ -1485,8 +1956,13 @@ end revDebuggerListBreakpointStates
 # Description
 #   Returns a list of the conditions of the breakpoints for pObject.
 function revDebuggerListBreakpointConditions pObject
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerListBreakpointConditions", "function", the long id of me, __RemoteReferenceForCachedObject(pObject)
+      return the result
+   end if
+   
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tBreakpoints
@@ -1496,7 +1972,7 @@ function revDebuggerListBreakpointConditions pObject
    
    local tMatchingLines
    repeat for each line tBreakpoint in tBreakpoints
-      if debuggerGetId(pObject) = item 1 of tBreakpoint then
+      if __GetId(pObject) = item 1 of tBreakpoint then
          put tLineNumber & return after tMatchingLines
       end if
       add 1 to tLineNumber
@@ -1548,7 +2024,7 @@ function revDebuggerNextAvailableBreakpoint @pScript, pLineNumber
    put line tLineNumber to -1 of pScript into tText
    
    local tContinuation
-   put debuggerLineHasContinuation(line 1 of tText) into tContinuation
+   put __LineHasContinuation(line 1 of tText) into tContinuation
    
    local tInHandler
    
@@ -1562,7 +2038,7 @@ function revDebuggerNextAvailableBreakpoint @pScript, pLineNumber
       
       # Detect if the line is a continuation of line tLineNumber
       if tContinuation then
-         put debuggerLineHasContinuation(tCurrentLine) into tContinuation
+         put __LineHasContinuation(tCurrentLine) into tContinuation
          next repeat
       end if
       
@@ -1596,6 +2072,25 @@ function revDebuggerNextAvailableBreakpoint @pScript, pLineNumber
    end if
 end revDebuggerNextAvailableBreakpoint
      
+     
+command revDebuggerReturnToEditMode
+   if sSocketID is not empty and "development" is not in the environment then
+      __WriteRemoteHandler "revDebuggerReturnToEditMode", "command", the long id of me
+      return the result
+   end if
+   
+   repeat for each line tScriptEditor in revScriptEditors()
+      send "revSESetMode edit" to tScriptEditor
+   end repeat
+   
+   send "__DeleteScriptObjectCacheStack" to me in 0
+end revDebuggerReturnToEditMode
+
+command __DeleteScriptObjectCacheStack
+   if there is a stack sRemoteScriptObjectCacheStack then
+      delete stack sRemoteScriptObjectCacheStack
+   end if
+end __DeleteScriptObjectCacheStack
 
 ################################################################################
 #
@@ -1613,16 +2108,16 @@ local sLastDisplayedContexts
 # Returns
 #   The line number that the specified breakpoint appears on in
 #   pBreakpoints, or 0 if it does not appear.
-private function debuggerBreakpointOffset pBreakpoint, pBreakpoints
+private function __BreakpointOffset pBreakpoint, pBreakpoints
    set the wholeMatches to true
    return lineOffset(pBreakpoint, pBreakpoints)
    set the wholeMatches to false
-end debuggerBreakpointOffset
+end __BreakpointOffset
 
 # Parameters
 #   pWatch : the watch to search for (object, handler, variable)
 #   pWatches : the list of watches to search in
-private function debuggerWatchoffset pWatch, pWatches
+private function __Watchoffset pWatch, pWatches
    local tMatchString
    if the last char of pWatch is not comma then
       put pWatch & comma into tMatchString
@@ -1630,13 +2125,13 @@ private function debuggerWatchoffset pWatch, pWatches
       put pWatch into tMatchString
    end if
    return lineOffset(tMatchString, pWatches)
-end debuggerWatchoffset
+end __Watchoffset
 
 # Parameters
 #   pLine : a line of LiveCode script
 # Returns
 #   Whether or not pLine has a continuation
-private function debuggerLineHasContinuation pLine
+private function __LineHasContinuation pLine
    # First find if the line contains a continuation char among its words, if not then we're done.
    local tContinuationCharOffset
    put wordOffset("\", pLine) into tContinuationCharOffset
@@ -1669,7 +2164,7 @@ private function debuggerLineHasContinuation pLine
          end if
       end if
    end repeat
-end debuggerLineHasContinuation
+end __LineHasContinuation
 
 
 # Parameters
@@ -1679,19 +2174,19 @@ end debuggerLineHasContinuation
 # Description
 #   Evaluates the specified breakpoint's condition and returns whether to break or not.
 #   If the breakpoint has no condition attached to to, returns true, otherwise it depends on the condition.
-private function debuggerEvaluateCondition pObject, pLine, pContext
+private function __EvaluateCondition pObject, pLine, pContext
    
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tBreakpoints
    
    local tBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tBreakpoint
+   put __GetId(pObject) & comma & pLine into tBreakpoint
    
    local tLineNumber
-   put debuggerBreakpointOffset(tBreakpoint, tBreakpoints) into tLineNumber
+   put __BreakpointOffset(tBreakpoint, tBreakpoints) into tLineNumber
    if tLineNumber = 0 then
       # The debugger library does not know about this breakpoint but this is not neccessarily an error,
       # it could be a script breakpoint or one that the user manually set. Also it could be an internal breakpoint
@@ -1723,19 +2218,19 @@ private function debuggerEvaluateCondition pObject, pLine, pContext
    else
       return false
    end if
-end debuggerEvaluateCondition
+end __EvaluateCondition
 
-private function debuggerTargetStack pObject
+private function __TargetStack pObject
    local tStackName
    put revTargetStack(pObject) into tStackName
    return the long id of stack tStackName
-end debuggerTargetStack
+end __TargetStack
 
 # Implements the revDebuggerAddBreakpoint and revDebuggerAddConditionalBreakpoint
 # commands, please see the comments above them for semantics and parameters.
-private command debuggerAddBreakpoint pObject, pLine, pCondition
+private command __AddBreakpoint pObject, pLine, pCondition
    local tStack
-   put debuggerTargetStack(pObject) into tStack
+   put __TargetStack(pObject) into tStack
    
    local tStackBreakpoints
    put revMetadataGet(tStack, kMetadataType, "breakpoints") into tStackBreakpoints
@@ -1746,7 +2241,7 @@ private command debuggerAddBreakpoint pObject, pLine, pCondition
    end if
    
    local tNewBreakpoint
-   put debuggerGetId(pObject) & comma & pLine into tNewBreakpoint
+   put __GetId(pObject) & comma & pLine into tNewBreakpoint
    
    if tStackBreakpoints is empty then
       put tNewBreakpoint into tStackBreakpoints
@@ -1762,7 +2257,7 @@ private command debuggerAddBreakpoint pObject, pLine, pCondition
    revMetadataSet tStack, kMetadataType, "breakpointstates", tStates
    
    if pCondition is empty then
-      exit debuggerAddBreakpoint
+      exit __AddBreakpoint
    end if
    
    # Apply the condition if given.
@@ -1771,8 +2266,8 @@ private command debuggerAddBreakpoint pObject, pLine, pCondition
    put pCondition into line (the number of lines of tStackBreakpoints) of tStackConditions
    revMetadataSet tStack, kMetadataType, "breakpointconditions", tStackConditions
    
-   debuggerCleanBreakpoints tStack
-end debuggerAddBreakpoint
+   __CleanBreakpoints tStack
+end __AddBreakpoint
 
 # Parameters
 #   pObject : reference to the object to clean watches for
@@ -1780,12 +2275,12 @@ end debuggerAddBreakpoint
 #   Cleans up the specified stack's watch related metadata by removing
 #   watches that cannot be resolved (e.g. because the object was deleted)
 #   and removing any duplicates.
-private command debuggerCleanWatches pObject
+private command __CleanWatches pObject
    local tStack
-   put debuggerGetWatchDataStoreForObject(pObject) into tStack
+   put __GetWatchDataStoreForObject(pObject) into tStack
    
    local tMetadataType
-   put debuggerGetWatchDataStoreTypeForObject(pObject) into tMetadataType
+   put __GetWatchDataStoreTypeForObject(pObject) into tMetadataType
    
    local tWatches
    put revMetadataGet(tStack, tMetadataType, "watches") into tWatches
@@ -1802,7 +2297,7 @@ private command debuggerCleanWatches pObject
       # otherwise we're cleaning the global watches, so we don't perform this check.
       if pObject is not empty then
          try
-            get debuggerResolveId(item 1 of tWatch, tStack)
+            get __ResolveId(item 1 of tWatch, tStack)
          catch tError
             # debuggerResolveId will fail if the watch cannot be resolved,
             # this means the object has somehow been deleted, moved etc without
@@ -1812,7 +2307,7 @@ private command debuggerCleanWatches pObject
       end if
       
       # Remove duplicates
-      if debuggerWatchOffset(tWatch, tCleanedWatches) <> 0 then
+      if __WatchOffset(tWatch, tCleanedWatches) <> 0 then
          next repeat
       end if
       
@@ -1825,7 +2320,7 @@ private command debuggerCleanWatches pObject
    
    revMetadataSet tStack, tMetadataType, "watches", tCleanedWatches
    revMetadataSet tStack, tMetadataType, "watchstates", tCleanedStates
-end debuggerCleanWatches
+end __CleanWatches
 
 # Parameters
 #   pStack : reference to the stack to clean breakpoints for
@@ -1833,7 +2328,7 @@ end debuggerCleanWatches
 #   Cleans up the specified stack's breakpoint related metadata by removing
 #   breakpoints that cannot be resolved (e.g. because the object was deleted)
 #   and removing any duplicates.
-private command debuggerCleanBreakpoints pStack
+private command __CleanBreakpoints pStack
    local tBreakpoints
    put revMetadataGet(pStack, kMetadataType, "breakpoints") into tBreakpoints
    
@@ -1849,7 +2344,7 @@ private command debuggerCleanBreakpoints pStack
    local tCleanedBreakpoints, tCleanedStates, tCleanedConditions
    repeat for each line tBreakpoint in tBreakpoints
       try
-         get debuggerResolveId(item 1 of tBreakpoint, pStack)
+         get __ResolveId(item 1 of tBreakpoint, pStack)
       catch tError
          # debuggerResolveId will fail if the breakpoint cannot be resolved,
          # this means the object has somehow been deleted, moved etc without
@@ -1875,7 +2370,7 @@ private command debuggerCleanBreakpoints pStack
    revMetadataSet pStack, kMetadataType, "breakpoints", tCleanedBreakpoints
    revMetadataSet pStack, kMetadataType, "breakpointstates", tCleanedStates
    revMetadataSet pStack, kMetadataType, "breakpointconditions", tCleanedConditions
-end debuggerCleanBreakpoints
+end __CleanBreakpoints
 
 # Parameters
 #   pStack : reference to the stack to update
@@ -1883,12 +2378,12 @@ end debuggerCleanBreakpoints
 #   pStatus : the breakpoint status to set. This can be "active" or "inactive".
 # Description
 #   Sets a breakpoint's status to pStatus.
-private command debuggerUpdateBreakpointStatus pStack, pBreakpointNumber, pStatus
+private command __UpdateBreakpointStatus pStack, pBreakpointNumber, pStatus
    local tObjectBreakpointStatus
    put revMetadataGet(pStack, kMetadataType, "breakpointstates") into tObjectBreakpointStatus
    put pStatus into line pBreakpointNumber of tObjectBreakpointStatus
    revMetadataSet pStack, kMetadataType, "breakpointstates", tObjectBreakpointStatus
-end debuggerUpdateBreakpointStatus
+end __UpdateBreakpointStatus
 
 # Parameters
 #   pStack : reference to the stack to update
@@ -1897,19 +2392,19 @@ end debuggerUpdateBreakpointStatus
 #                       breakpoint's context and should evaluate to true or false.
 # Description
 #   Sets a breakpoint's condition to pCondition.
-private command debuggerUpdateBreakpointCondition pStack, pBreakpointNumber, pCondition
+private command __UpdateBreakpointCondition pStack, pBreakpointNumber, pCondition
    local tConditions
    put revMetadataGet(pStack, kMetadataType, "breakpointconditions") into tConditions
    put pCondition into line pBreakpointNumber of tConditions
    revMetadataSet pStack, kMetadataType, "breakpointconditions", tConditions
-end debuggerUpdateBreakpointCondition
+end __UpdateBreakpointCondition
 
-private command debuggerUpdateWatchStatus pObject, pWatchNumber, pStatus
+private command __UpdateWatchStatus pObject, pWatchNumber, pStatus
    local tStack
-   put debuggerGetWatchDataStoreForObject(pObject) into tStack
+   put __GetWatchDataStoreForObject(pObject) into tStack
    
    local tMetadataType
-   put debuggerGetWatchDataStoreTypeForObject(pObject) into tMetadataType
+   put __GetWatchDataStoreTypeForObject(pObject) into tMetadataType
    
    local tStates
    put revMetadataGet(tStack, tMetadataType, "watchstates") into tStates
@@ -1917,7 +2412,113 @@ private command debuggerUpdateWatchStatus pObject, pWatchNumber, pStatus
    put pStatus into line pWatchNumber of tStates
    
    revMetadataSet tStack, tMetadataType, "watchstates", tStates
-end debuggerUpdateWatchStatus
+end __UpdateWatchStatus
+
+private command __ActivateWatches pStack
+   if sSocketID is not empty and "development" is in the environment then
+      __WriteRemoteHandler "revDebuggerActivateWatches", "command", the long id of me, pStack
+      return the result
+   end if
+   
+   local tWatches
+   put __GetWatchInformation(pStack, "watches") into tWatches
+   
+   local tWatchStates
+   put __GetWatchInformation(pStack, "watchstates") into tWatchStates
+   
+   local tLineNumber
+   put 1 into tLineNumber
+   repeat for each line tWatchState in tWatchStates
+      local tCurrentWatches
+      put the watchedVariables into tCurrentWatches
+      if the number of lines of tCurrentWatches >= kMaxActiveWatches then
+         return "Active watch limit reached"
+      end if
+      
+      if tWatchState is not "active" then
+         add 1 to tLineNumber
+         next repeat
+      end if
+      
+      local tWatch
+      put line tLineNumber of tWatches into tWatch
+      
+      local tWatchString
+      if item 1 of tWatch is empty then
+         put tWatch into tWatchString
+      else
+         put __ResolveId(item 1 of tWatch, pStack) & comma & item 2 to -1 of tWatch into tWatchString
+      end if
+      
+      if tCurrentWatches is empty then
+         set the watchedVariables to tWatchString
+      else
+         if tWatchString is not among the lines of tCurrentWatches then
+            set the watchedVariables to tCurrentWatches & return & tWatchString
+         end if
+      end if
+      
+      add 1 to tLineNumber
+   end repeat
+end __ActivateWatches
+
+# Parameters
+#   pStack : reference to the stack to activate breakpoints for
+#   pObject : reference to an object on the stack
+# Description
+#   Activates breakpoints stored on pStack. If pObject is empty then all breakpoints
+#   are activated, otherwise only those breakpoints that are in the script of pObject 
+#   are activated.
+private command __ActivateBreakpoints pStack, pObject
+   local tStack
+   if pObject is not empty then
+      put __TargetStack(pObject) into tStack
+      if the long id of tStack is not the long id of pStack then
+         return "invalid object"
+      end if
+   end if
+   
+   local tLineNumber
+   put 1 into tLineNumber
+   
+   local tStackBreakpoints
+   put revMetadataGet(pStack, kMetadataType, "breakpoints") into tStackBreakpoints
+   
+   local tStates
+   put revMetadataGet(pStack, kMetadataType, "breakpointstates") into tStates
+   
+   local tBreakpointsToActivate
+   repeat for each line tBreakpoint in tStackBreakpoints
+      if pObject is empty or item 1 of tBreakpoint is __GetId(pObject) then
+         local tState
+         put line tLineNumber of tStates into tState
+         
+         if tState is "active" then
+            put __ResolveId(item 1 of tBreakpoint, pStack) & comma & item 2 of tBreakpoint & return after tBreakpointsToActivate
+         end if
+      end if
+   end repeat
+   delete the last char of tBreakpointsToActivate
+   
+   # If the breakpoints property is allowed to contain duplicates,  then the lines with duplicate breakpoints on
+   # will break more than once, i.e. multiple traceBreak messages. We should ensure that this doesn't happen,
+   # as there is no good reason for it and it will just cause annoyance.
+   local tBreakpointsNotActivated
+   repeat for each line tBreakpoint in tBreakpointsToActivate
+      if tBreakpoint is among the lines of the breakpoints then
+         next repeat
+      end if
+      put tBreakpoint & return after tBreakpointsNotActivated
+   end repeat
+   delete the last char of tBreakpointsNotActivated
+   put tBreakpointsNotActivated into tBreakpointsToActivate
+   
+   if the breakpoints is empty then
+      set the breakpoints to tBreakpointsToActivate
+   else
+      set the breakpoints to the breakpoints & return & tBreakpointsToActivate
+   end if
+end __ActivateBreakpoints
 
 # Paramaeters
 #  pId : the debugger id of an object used to store a breakpoint.
@@ -1927,18 +2528,20 @@ end debuggerUpdateWatchStatus
 # Description
 #   pId is either the short id of a control in pStack, or 0 if the breakpoint
 #   being resolved is in the stack script.
-private function debuggerResolveId pId, pStack
+private function __ResolveId pId, pStack
+   local tID
    if pId is 0 then
-      return the long id of pStack
+      put the long id of pStack into tID
    else
       # As the object could be a card, we attempt that first
       if there is a card id pId of pStack then
-         return the long id of card id pId of pStack
+         put the long id of card id pId of pStack into tID
       else
-         return the long id control id pId of pStack
+         put the long id of control id pId of pStack into tID
       end if
    end if
-end debuggerResolveId
+   return revRuggedID(tID)
+end __ResolveId
 
 # Parameters
 #   pObject : reference to the object to get the debugger id for
@@ -1947,29 +2550,31 @@ end debuggerResolveId
 #   with breakpoints set on the object, and used to determine which object each
 #   breakpoint is associated with. The debugger id is the short id of the object if
 #   it is a control or a card. If the object is a stack, the debugger id is 0.
-private function debuggerGetId pObject
+private function __GetId pObject
    if word 1 of the name of pObject is "stack" then
       return 0
    end if
    
    return the id of pObject
-end debuggerGetId
+end __GetId
 
 # Returns
 #   Whether or not the debugger is enabled. This is currently determined by the "Script Debug Mode"
 #   setting in the LiveCode preferences stack.
-private function debuggerEnabled
-   return revIDEGetPreference("cREVScriptDebugMode")
-end debuggerEnabled
+private function __Enabled
+   return the environment is not "development" or \
+         sSocketID is not empty or \
+         revIDEGetPreference("cREVScriptDebugMode")
+end __Enabled
 
 # Parameters
 #   pStack : reference to a stack
 # Returns
 #   Whether or not the debugger is allowed to debug the specified stack in
 #   the current circumstances.
-private function debuggerStackAllowed pStack
+private function __StackAllowed pStack
    global gREVDevelopment
-   if gREVDEvelopment then
+   if "development" is not in the environment or gREVDEvelopment then
       # With gREVDevelopment allow all stacks to be debugged except the debugger, as doing this will probably not work anyway.
       if the short name of pStack is "revDebuggerLibrary" then
          return false
@@ -1984,7 +2589,47 @@ private function debuggerStackAllowed pStack
    else
       return true
    end if
-end debuggerStackAllowed
+end __StackAllowed
+
+function revDebuggerObjectName pObject
+   if exists(pObject) then
+      if sSocketID is not empty and "development" is in the environment then
+         local tStack
+         put revTargetStack(pObject) into tStack
+         if tStack is sRemoteScriptObjectCacheStack then
+            return the uName of pObject
+         else
+            return the name of pObject
+         end if
+      else
+         return the name of pObject
+      end if
+   else
+      return pObject
+   end if
+end revDebuggerObjectName
+
+function revDebuggerObjectLongName pObject
+   if exists(pObject) then
+      if sSocketID is not empty and "development" is in the environment then
+         local tStack
+         put revTargetStack(pObject) into tStack
+         if tStack is sRemoteScriptObjectCacheStack then
+            return the uLongName of pObject
+         else
+            return the long name of pObject
+         end if
+      else
+         return the long name of pObject
+      end if
+   else
+      return pObject
+   end if
+end revDebuggerObjectLongName
+
+command revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
+   __UpdateScriptEditor pObject, pHandler, pLine, pState, pError
+end revDebuggerUpdateScriptEditor
 
 # Parameters
 #   pObject : reference to the object owning the executing code
@@ -1996,15 +2641,29 @@ end debuggerStackAllowed
 #   of code is about to be executed in the debugger. If there is no script
 #   editor open for pObject then does nothing.
 #   Otherwise tells the script editor to display the appropriate line etc.
-private command debuggerUpdateScriptEditor pObject, pHandler, pLine, pState
+private command __UpdateScriptEditor pObject, pHandler, pLine, pState, pError
+   put revDebuggerContexts() into sLastDisplayedContexts
+   
+   if sSocketID is not empty then
+      if "development" is not in the environment then
+         __WriteRemoteHandler "revDebuggerUpdateScriptEditor", "command", the long id of me, revRuggedID(pObject), pHandler, pLine, pState, pError
+         return the result
+      else
+         put __CachedRemoteScriptObject(pObject) into pObject
+      end if
+   end if
+   
+   if there is not a pObject then
+      return empty
+   end if
+   
    local tScriptEditor
    put revScriptEditor(the long id of pObject) into tScriptEditor
    if tScriptEditor is empty then
-      debuggerShowScript pObject
+      __ShowScript pObject
    end if
    
    put revScriptEditor(the long id of pObject) into tScriptEditor
-   put revDebuggerContexts() into sLastDisplayedContexts
    
    local tMode
    send "revSEGetMode" to stack tScriptEditor
@@ -2025,57 +2684,67 @@ private command debuggerUpdateScriptEditor pObject, pHandler, pLine, pState
    
    # OK-2008-08-18 : Bug 6935 - Toplevel / uniconify the script editor here.
    revGoScriptEditor the name of stack tScriptEditor
-end debuggerUpdateScriptEditor
+   
+   if pError is not empty then
+      # OK-2008-07-10 : This needs to be sent in time so that it arrives after the script
+      # editor has finished initializing itself.
+      send "revSEDisplayExecutionError pError, pObject" to stack tScriptEditor in 0 milliseconds
+   end if
+end __UpdateScriptEditor
 
-private function debuggerErrorsSuppressed
+private function __ErrorsSuppressed
    global gREVSuppressErrors
    return (gREVSuppressErrors is true)
-end debuggerErrorsSuppressed
+end __ErrorsSuppressed
 
 private function revScriptEditors
    return revListScriptEditors()
 end revScriptEditors
 
-private command debuggerShowScript pObject
+private command __ShowScript pObject
    edit the script of pObject
-end debuggerShowScript
+end __ShowScript
 
-private command log pMessage
-   put pMessage & return after msg
-end log
+private command __Log pMessage
+   if the environment contains "development" then
+      put pMessage & return after msg
+   else
+      write pMessage & return to stdout
+   end if
+end __Log
 
 # Description
 #   Shows revErrorDisplay in response to a trace error.
 #   This has been hacked in for now to avoid modifying revErrorDisplay.
-private command debuggerShowErrorDialog pObject, pHandler, pLine, pError
+private command __ShowErrorDialog pObject, pHandler, pLine, pError
    answer error "An execution error ocurred in the script of the object : " & the short name of pObject & return & \
    "The error was on line " & pLine & " in the " & pHandler & " handler. The error was: " & return & \
    pError & " What would you like to do?" with "Ignore" or "Debug" or "Script"
    
    if it is "Ignore" then
       revDebuggerStop
-      exit debuggerShowErrorDialog
+      exit __ShowErrorDialog
    end if
    
    if it is "Script" then
       revDebuggerStop
-      debuggerUpdateScriptEditor pObject, pHandler, pLine, "edit"
+      __UpdateScriptEditor pObject, pHandler, pLine, "edit"
    end if
    
    if it is "Debug" then
-      debuggerUpdateScriptEditor pObject, pHandler, pLine, "debug"
+      __UpdateScriptEditor pObject, pHandler, pLine, "debug"
    end if
-end debuggerShowErrorDialog
+end __ShowErrorDialog
 
 # Parameters
 #   pTarget : the long id of the target of the message
 #   pContextLine : the complete line of the executionContexts that represents the code in the user stack about to run.
 # Returns
 #   The target object that contains the line of script about to run, taking parentScripts into account.
-private function debuggerResolveTarget pTarget, pContextLine
+private function __ResolveTarget pTarget, pContextLine
    # OK-2009-06-23: Bug 7954
    local tArray
-   put parseExecutionContext(pContextLine) into tArray
+   put __ParseExecutionContext(pContextLine) into tArray
    
    if tArray["behavior"] is not empty then
       return tArray["behavior"]
@@ -2088,14 +2757,14 @@ private function debuggerResolveTarget pTarget, pContextLine
    --   else
    --      return pTarget
    --   end if
-end debuggerResolveTarget
+end __ResolveTarget
 
 # Parameters
 #   pContextLine: the complete line of the executionContexts that represents the code in the user stack about to run.
-private function debuggerResolveHandler pContextLine
+private function __ResolveHandler pContextLine
     # OK-2009-06-23 : Bug 7954
    local tArray
-   put parseExecutionContext(pContextLine) into tArray
+   put __ParseExecutionContext(pContextLine) into tArray
    return tArray["handler"]
    
    --   if the number of items of pContextLine = 5 then
@@ -2103,21 +2772,38 @@ private function debuggerResolveHandler pContextLine
    --   else
    --      return item -2 of pContextLine
    --   end if
-end debuggerResolveHandler
+end __ResolveHandler
 
-private function debuggerTargetIsModal pTarget
+private function __TargetIsModal pTarget
    return (the mode of stack (revTargetStack(pTarget)) = 5)
-end debuggerTargetIsModal
+end __TargetIsModal
 
-private command debuggerShowModalWarning
+private command __ShowModalWarning
    
-end debuggerShowModalWarning
+end __ShowModalWarning
 
 ################################################################################
 #
 # Event handlers
 #
 ################################################################################
+
+# CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
+on preOpenStack
+   if revDebuggerEnabled() then
+      local tTarget
+      put the long id of the target into tTarget
+      
+      local tStack
+      put revTargetStack(tTarget) into tStack
+      
+      if tTarget is not the long id of me then
+         __ActivateBreakpoints the long id of stack tStack
+         __ActivateWatches the long id of stack tStack
+      end if
+   end if
+   pass preOpenStack
+end preOpenStack
 
 local sLastAllowedContext
 
@@ -2132,16 +2818,20 @@ local sLastAllowedContext
 #   was called from, then updates the script editor. If the last debug action
 #   was "Step Into", always updates the script editor.
 on trace pHandler, pLine, pPosition
+   if sSocketID is not empty and "development" is in the environment then
+      exit trace
+   end if
+   
    local tTarget
-   put debuggerResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
+   put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
    local tStack
-   put debuggerTargetStack(tTarget) into tStack
+   put __TargetStack(tTarget) into tStack
    
    local tCurrentContexts
    put revDebuggerContexts() into tCurrentContexts
    
-   if not debuggerStackAllowed(tStack) then
+   if not __StackAllowed(tStack) then
       # OK-2009-03-13 : Instead of stepping out, instead we just ignore this and wait for the next
       # trace message. This will result in the debugger being slower as some of the advantage of using
       # traceUntil will be lost. 
@@ -2168,13 +2858,13 @@ on trace pHandler, pLine, pPosition
    local tNextContextCount
    
    if sLastTraceMode is "Step Into" then
-      debuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       
    else if sLastTraceMode is "Step Over" then
       local tLastHandler
-      put debuggerResolveHandler(line 1 of sLastDisplayedContexts) into tLastHandler
+      put __ResolveHandler(line 1 of sLastDisplayedContexts) into tLastHandler
       if line 2 to -1 of sLastDisplayedContexts is line 2 to -1 of tCurrentContexts and pHandler is tLastHandler then
-         debuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
          set the traceStack to the name of tStack
       else
          # Calculate the number of execution contexts that there should be before we get the next trace message.
@@ -2188,10 +2878,10 @@ on trace pHandler, pLine, pPosition
    else if sLastTraceMode is "Step Out" then
       # OK-2009-06-23 : Bug 7954
       local tArray
-      put parseExecutionContext(line 2 of sLastDisplayedContexts) into tArray
+      put __ParseExecutionContext(line 2 of sLastDisplayedContexts) into tArray
       
       if line 3 to -1 of sLastDisplayedContexts is line 2 to -1 of revDebuggerContexts() and pHandler is tArray["handler"] then
-         debuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       else
          put item 1 line 1 of tCurrentContexts - 2 into tNextContextCount
          set the traceUntil to tNextContextCount
@@ -2206,13 +2896,15 @@ end trace
 #   all open script editors to switch to edit mode, then does the debugger run
 #   action.
 on traceDone
+   if sSocketID is not empty and "development" is in the environment then
+      pass traceDone
+   end if
+   
    # OK-2009-03-13 : Once we've got a traceDone, shut down the debugger first,
    # as otherwise we have to trace through all the script editor code which slows things down.
    revDebuggerRun
    
-   repeat for each line tScriptEditor in revScriptEditors()
-      send "revSESetMode edit" to tScriptEditor
-   end repeat
+   revDebuggerReturnToEditMode
 end traceDone
 
 constant kErrorRecursionLimit = 2
@@ -2228,10 +2920,15 @@ constant kErrorRecursionLimit = 2
 #   via the throw command, or messages are suppressed, exits to top.
 #   Otherwise, launches the debugger, showing the current execution context.
 on traceError pHandler, pLine, pPosition, pError
+   if sSocketID is not empty and "development" is in the environment then
+      write "traceError"&& pHandler, pLine, pPosition, pError & return & the executionContexts & return to stdout
+      pass traceError
+   end if
+   
    if item 1 of pError is kErrorRecursionLimit then
       local tMessage
       put "The handler: " & pHandler & " has reached the recursion limit of: " & the recursionLimit & "." & return & \
-             "Execution will be terminated to prevent hang" into tMessage
+            "Execution will be terminated to prevent hang" into tMessage
       
       answer error tMessage
       revDebuggerStop
@@ -2239,21 +2936,21 @@ on traceError pHandler, pLine, pPosition, pError
    end if
    
    local tTarget
-   put debuggerResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
+   put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
    close printing
    
-   if not debuggerEnabled() then
+   if not __Enabled() then
       pass traceError
    end if
    
-   if debuggerTargetIsModal(tTarget) then
-      debuggerShowModalWarning
+   if __TargetIsModal(tTarget) then
+      __ShowModalWarning
       pass traceError
    end if
    
    local tStack
-   put debuggerTargetStack(tTarget) into tStack
+   put __TargetStack(tTarget) into tStack
    
    # OK-2008-11-05 : If the target of the debugger message is modal, then act as though the debugger
    # is disabled. This is not ideal, but beats allowing the IDE to lock up.
@@ -2276,25 +2973,18 @@ on traceError pHandler, pLine, pPosition, pError
       exit traceError
    end if
    
-   if debuggerErrorsSuppressed() or the waitDepth > 2 then
+   if __ErrorsSuppressed() or the waitDepth > 2 then
       exit to top
    end if
    
-   if not debuggerStackAllowed(tStack) then
+   if not __StackAllowed(tStack) then
       revDebuggerStop
       exit traceError
    end if
    
-   debuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+   __UpdateScriptEditor tTarget, pHandler, pLine, "debug", pError
    
    set the traceStack to the short name of tStack
-   
-   local tEditor
-   put revScriptEditor(tTarget) into tEditor
-   
-   # OK-2008-07-10 : This needs to be sent in time so that it arrives after the script
-   # editor has finished initializing itself.
-   send "revSEDisplayExecutionError pError, tTarget" to stack tEditor in 0 milliseconds
 end traceError
 
 # Parameters
@@ -2305,42 +2995,47 @@ end traceError
 #   nothing. Otherwise, opens a script editor for the object (unless one is
 #   already open) and updates it appropriately.
 on traceBreak pHandler, pLine
-   local tTarget
-   put debuggerResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
-   
-   if not debuggerEnabled() then
+   if sSocketID is not empty and "development" is in the environment then
       pass traceBreak
    end if
    
-   if debuggerTargetIsModal(tTarget) then
-      debuggerShowModalWarning
+   local tTarget
+   put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
+   
+   if not __Enabled() then
+      pass traceBreak
+   end if
+   
+   if "development" is in the environment and __TargetIsModal(tTarget) then
+      __ShowModalWarning
       pass traceBreak
    end if
    
    local tStack
-   put debuggerTargetStack(tTarget) into tStack
-   if not debuggerStackAllowed(tStack) then
+   put __TargetStack(tTarget) into tStack
+   if not __StackAllowed(tStack) then
       revDebuggerRun
       exit traceBreak
    end if
    
-   -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
-   local tContexts
-   put the executionContexts into tContexts
-   local tLine
-   repeat for each line tLine in tContexts
-      if item -2 of tLine is among the words of "moveStack resizeStack" then
-         pass traceBreak
-      end if
-   end repeat
+   if "development" is in the environment then
+      -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+      local tContexts
+      put the executionContexts into tContexts
+      local tLine
+      repeat for each line tLine in tContexts
+         if item -2 of tLine is among the words of "moveStack resizeStack" then
+            pass traceBreak
+         end if
+      end repeat
+   end if
    
    local tContext
    put tTarget & comma & pHandler & comma & pLine into tContext
    
-   if debuggerEvaluateCondition(tTarget, pLine, tContext) then
-      set the traceStack to the short name of debuggerTargetStack(the long id of the target)
-      debuggerShowScript tTarget
-      debuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+   if __EvaluateCondition(tTarget, pLine, tContext) then
+      set the traceStack to the short name of __TargetStack(the long id of the target)
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
    else
       set the traceReturn to true
    end if
@@ -2350,13 +3045,3 @@ end traceBreak
 on updateVariable pLine, pHandler, pValue
    traceBreak pHandler, pLine
 end updateVariable
-
-  
-
-
-
-
-
-
-
-
