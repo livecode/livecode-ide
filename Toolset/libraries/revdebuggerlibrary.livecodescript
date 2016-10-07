@@ -6,13 +6,17 @@ on revLoadLibrary
    end if
    insert the script of me into front
    
-   ideSubscribe "idePreferenceChanged:cREVScriptDebugMode"
+   if "development" is in the environment then
+      ideSubscribe "idePreferenceChanged:cREVScriptDebugMode"
+   end if
+   
+   revDebuggerInitialize
 end revLoadLibrary
 
 on revUnloadLibrary
-	if the target is not me then
-		pass "revUnloadLibrary"
-	end if
+   if the target is not me then
+      pass "revUnloadLibrary"
+   end if
    remove the script of me from front
 end revUnloadLibrary
 
