@@ -5184,6 +5184,27 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       put true into sLockUpdates
    end if
    
+   # Set stack edited before property change
+   local tStacksListA, tStackShortNamesListA, tStack, tStackName
+   repeat for each line tObject in pObjectList
+      put revIDEStackOfObject(tObject) into tStack
+      if not tStacksListA[tStack] then
+         put true into tStacksListA[tStack]
+         
+         # If stack name is changed, use new name when setting edited
+         if tStack is tObject and pProperty is "name" then
+            put pValue into tStackName
+         else
+            put the short name of tStack into tStackName
+         end if
+         put true into tStackShortNamesListA[tStackName]
+      end if
+   end repeat
+   
+   repeat for each key tStackName in tStackShortNamesListA
+      revIDESetEdited tStackName
+   end repeat
+   
    # Multi-object properties require the object list to be passed
    local tMultiObjectSetter
    put sClassicObjectProperties["com.livecode.interface.MultipleObjects"]["properties"][pProperty]["setter"] into tMultiObjectSetter
