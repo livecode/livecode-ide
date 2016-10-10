@@ -3462,9 +3462,8 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
 
    ## Prevent passing of ideNewControl message for objects created on IDE stacks
    if revIDEObjectIsOnIDEStack(tCreatedControlID) is false then
-      global gRevStackStatus
       // AL-2015-04-08: [[ Bug 14822 ]] Ensure 'edited' status of stack is set
-      put "edited" into gREVStackStatus[the short name of this stack]
+      revIDESetEdited the short name of this stack
       ideMessageSend "ideNewControl", tCreatedControlID
    end if
 
@@ -6510,7 +6509,6 @@ on revIDEActionNewMainstack pStackType
 end revIDEActionNewMainstack
 
 on revIDEActionNewCard
-   global gRevStackStatus
    local tFilterStack
    put the short name of the topStack into tFilterStack
    if revFilterStacksList(tFilterStack) is empty then 
@@ -6520,7 +6518,7 @@ on revIDEActionNewCard
    local tCardID
    create card
    put the long id of it into tCardID
-   put "edited" into gREVStackStatus[the short name of this stack]
+   revIDESetEdited the short name of this stack
    ideMessageSend "ideNewCard tCardID"
    
    # Return the card id
@@ -6532,14 +6530,11 @@ on revIDEActionDeleteCard
 end revIDEActionDeleteCard
 
 on revIDEDeleteCard pLongID
-   global gRevStackStatus
    answer error "Are you sure you want to delete" && the long name of pLongID & "?" with "Yes" or "No"
    if it is not "yes" then exit revIDEDeleteCard
    delete pLongID
    
-   local tStackName
-   put the short name of ideStackOfObject(pLongID) into tStackName
-   put "edited" into gREVStackStatus[tStackName] 
+  revIDESetEdited the short name of ideStackOfObject(pLongID)
 end revIDEDeleteCard
 
 /*
@@ -7268,6 +7263,28 @@ private function ideDispatchSaveStackRequest pStackName
    return tDispatchStatus
 end ideDispatchSaveStackRequest
 
+command revIDESetEdited pStackName
+   if revIDEStackNameIsIDEStack(pStackName) then
+      exit revIDESetEdited
+   end if
+   
+   # Don't set edited on a stack if it is currently saving
+   if the mode of stack "revSaving" is 0 then 
+      global gRevStackStatus
+      put "edited" into gRevStackStatus[pStackName]
+   end if
+end revIDESetEdited
+
+command revIDESetUnedited pStackName
+   global gRevStackStatus
+   put empty into gRevStackStatus[pStackName]
+end revIDESetUnedited
+
+function revIDEStackIsEdited pStackName
+   global gRevStackStatus
+   return gRevStackStatus[pStackName] is "edited"
+end revIDEStackIsEdited
+
 on revIDESaveStack pStackID
    local tDefaultStack
    put the defaultStack into tDefaultStack
@@ -7328,7 +7345,6 @@ on revIDESaveStack pStackID
    put the effective filename of stack tStackName into tStackFilename
    
    local tStackFileVersion
-   global gRevStackStatus
    
    if revIDEGetPreference("cPreserveStackVersion") is true and the scriptOnly of stack tMainStack is false then
       put revIDEStackFileVersion(tStackFilename) into tStackFileVersion
@@ -7342,7 +7358,7 @@ on revIDESaveStack pStackID
                "The minimum stack file version for this stack is %2.", tFileVersions) \
                with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
          if it is revIDELocalise("Cancel") then
-            put "edited" into gREVStackStatus[tStackName]
+            revIDESetEdited tStackName
             close stack "revSaving"
             return "Cancelled"
          else if it is revIDELocalise("Save as %2", tFileVersions) then
@@ -7358,7 +7374,7 @@ on revIDESaveStack pStackID
       answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved." && \
             "Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tStackName]
+         revIDESetEdited tStackName
          close stack "revSaving"
          return "Cancelled"
       end if
@@ -7425,14 +7441,14 @@ on revIDESaveStack pStackID
       -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
       dispatch "revHookPostSaveStack" to me with pStackID
       
-      put empty into gREVStackStatus[tStackName]
+      revIDESetUnedited tStackName
       
       local tMainStackList
       put the mainStack of stack tStackName into tMainStackList
       put return & the substacks of stack tStackName after tMainStackList
       repeat for each line tStack in tMainStackList
          if tStack is empty then next repeat
-         put empty into gREVStackStatus[tStack]
+         revIDESetUnedited tStack
       end repeat
       revUpdateRecentFiles tStackName
    end if
@@ -7499,15 +7515,14 @@ on revIDESaveStackAs pStackID, pFileName, pVersion
       answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & tResult
       close stack "revSaving"
    else
-      global gRevStackStatus
-      put empty into gREVStackStatus[tShortName]
+      revIDESetUnedited tShortName
       
       local tMainStackList
       put the mainStack of pStackID into tMainStackList
       put return & the substacks of pStackID after tMainStackList
       repeat for each line tStack in tMainStackList
          if tStack is empty then next repeat
-         put empty into gREVStackStatus[tStack]
+         revIDESetUnedited tStack
       end repeat
       revUpdateRecentFiles the short name of pStackID
    end if
@@ -7608,10 +7623,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
    end switch
    
-   global gRevStackStatus
    # User cancelled the the ask dialog
    if it is empty then
-      put "edited" into gREVStackStatus[tShortName]
+      revIDESetEdited tShortName
       return "Cancelled"
    end if
    
@@ -7633,7 +7647,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
             "The minimum stack file version for this stack is %2.", tFileVersions) \
             with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
       if it is revIDELocalise("Cancel") then
-         put "edited" into gREVStackStatus[tShortName]
+         revIDESetEdited tShortName
          return "Cancelled"
       else if it is revIDELocalise("Save as %2", tFileVersions) then
          put tFileVersions[2] into tVersion
@@ -7645,7 +7659,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       answer revIDELocalise("Saving in script only format will result in loss of data as only" & \
             " the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tShortName]
+        revIDESetEdited tShortName
          return "Cancelled"
       end if
    end if
