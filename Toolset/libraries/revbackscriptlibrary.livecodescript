@@ -1407,6 +1407,8 @@ command revEditScriptInNewWindow pObject, pSpecial
       set the behavior of stack tNewEditorName to the long id of stack revIDEScriptEditorBehavior("stack")
    end if
    
+   set the cIDETransient of it to true
+   
    put the long id of it into tEditor
    send "setBehaviors" to tEditor
    
