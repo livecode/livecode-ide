@@ -2354,17 +2354,9 @@ function revExternalVersion pExternal
    
    local tExternalList
    put empty into tExternalList
-   if (the platform is "MacOS") and (char 1 of the systemVersion is not "1") then
-      --MacOS 9+
-      local tOS9HomePath
-      put the fileName of stack "home" into tOS9HomePath
-      
-      local tCheckExternals
-      put getResources(tOS9HomePath,"CODE") into tCheckExternals
-   else
-      -- Win,OSX and Unix
-      put the externals of stack "home" into tCheckExternals
-   end if
+   -- Win,OSX and Unix
+   local tCheckExternals
+   put the externals of stack "home" into tCheckExternals
    
    local tExternals
    repeat for each line i in tCheckExternals
