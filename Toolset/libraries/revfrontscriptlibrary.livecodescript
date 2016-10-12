@@ -14,7 +14,6 @@ on revUnloadLibrary
    remove the script of me from front
 end revUnloadLibrary
 
-global gREVStackStatus
 global gREVSuppressMessages
 local lRefreshAOTimerID
 
@@ -24,8 +23,9 @@ on saveStackRequest
    repeat for each line l in gREVMessageDispatch["revSaveStackRequest"]
       send "revSaveStackRequest" to this cd of stack l
    end repeat
+   
+   revIDESetUnedited the short name of revIDEStackOfObject(the long id of the target)
 
-   put empty into gREVStackStatus[revTargetStack(the target)]
    if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
       select empty
       send "revSetMarkers true" to stack "revReshapeLibrary"
@@ -517,7 +517,7 @@ on mouseDown pWhich
 end mouseDown
 
 on revSetEdited pWhich
-  if the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[pWhich]
+   revIDESetEdited pWhich
 end revSetEdited
 
 on mouseUp pWhich
@@ -553,10 +553,8 @@ on mouseDoubleUp pButtonNo, pTarget
 end mouseDoubleUp
 
 on openField
-   local tTargetStack
-  put revTargetStack() into tTargetSTack
-  if the mode of stack tTargetStack is 1 and the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[tTargetSTack]
-  if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openField
+   revIDESetEdited the short name of revIDEStackOfObject(the long id of the target)
+   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openField
 end openField
 
 on closeField

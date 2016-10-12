@@ -2479,6 +2479,8 @@ end cancelPendingMessages
 -- This is sent by the engine
 on selectionChanged
    handleSelectionChanged
+   -- Unmark found results when clicking on the SE
+   selectionUpdateRequest
 end selectionChanged
 
 -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
@@ -2487,6 +2489,9 @@ on handleSelectionChanged
    if the selectedText of field "Script" of me is not empty then
       put the selectedText of field "Script" of me into sLastNonEmptySelection
    end if
+   
+   -- [[ Bug 18528 ]] We need this here otherwise the "it" var in the if block below is empty
+   get the selectedChunk
    
    # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
    # when the user begins typing into the search field.
@@ -2497,7 +2502,6 @@ end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
    handleSelectionChanged
-   get the selectedChunk
    
    local tAt
    if word 2 of it > word 4 of it then
