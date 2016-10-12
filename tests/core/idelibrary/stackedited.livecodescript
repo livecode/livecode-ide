@@ -101,7 +101,7 @@ on TestStackSavedNotEdited
       
    revIDESetEdited tStackName
    
-   set the filename of tStackID to the folder & "/" & sWorkDir & "/stack.livecode"
+   set the filename of tStackID to the folder & "/" & tDir & "/stack.livecode"
 
    revIDESaveStack tStackID
    
