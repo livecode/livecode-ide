@@ -15,7 +15,6 @@ on revUnloadLibrary
 end revUnloadLibrary
 
 global gREVSuppressMessages
-global gREVStackStatus
 
 local lUpdateDimensionsTimerID, lUpdateAOControlsTimerID, lLastTopStack
 
@@ -442,7 +441,8 @@ end revMovePalettesForSheet
 function revSaveCheck pStack, pNoWarning
    if the secureMode then return true
    put the short name of stack pStack into pStack
-   if gREVStackStatus[pStack] is "edited" and the short name of stack (the mainstack of stack pStack) is not the short name of revScriptEditorMain() then
+   if revIDEStackIsEdited(pStack) and the short name of stack \ 
+         (the mainstack of stack pStack) is not the short name of revScriptEditorMain() then
       toplevel stack pStack
       
       local tStackPath
@@ -497,7 +497,7 @@ function revSaveCheck pStack, pNoWarning
             end if
             break
          case "Don't Save"
-            put empty into gREVStackStatus[pStack]
+            revIDESetUnedited pStack
             break
          case "Cancel"
             return false
@@ -1485,13 +1485,6 @@ function revScriptEditorMain
 end revScriptEditorMain
    
 command revGoScriptEditor pEditor, pPosition
-   # When the user clicks on any stack, revFrontScript intercepts the resulting mouseDown
-   # and among other things, attempts to detect whether or not the stack has been edited
-   # as a result of the click. Unfortunately any stack clicked on in run mode is flagged as edited,
-   # this causes a problem with script editors asking the user to "save" etc when they are closed.
-   # For now we work around this here by manually ensuring the editor is not flagged as edited.
-   put empty into gREVStackStatus[the short name of pEditor]
-   
    lock screen
    lock messages
    toplevel pEditor
@@ -3294,7 +3287,8 @@ command revIDEHandleMouseDown pWhich, pTarget
          end if
          send "selectedObjectChanged" to me
       end if
-      if the mode of stack "revSaving" is 0 then put "edited" into gREVStackStatus[revTargetStack(tTarget)]
+      revIDESetEdited the short name of revIDEStackOfObject(tTarget)
+      
       return "exit to top"
    end if
 end revIDEHandleMouseDown

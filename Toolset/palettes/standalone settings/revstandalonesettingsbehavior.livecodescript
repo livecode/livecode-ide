@@ -144,11 +144,10 @@ on revStandaloneSettings pStack
 end revStandaloneSettings
 
 on revSetEdit pStack
-   global gRevStackStatus
    if pStack = "" then 
       put getTargetStackName() into pStack
    end if
-   put "edited" into gRevStackStatus[pStack]
+   revIDESetEdited pStack
 end revSetEdit
 
 constant kButtonWidth = 66
