@@ -1544,7 +1544,7 @@ private command applyScript pObject, pIgnoreErrors, @rCompilationErrors
       
       local tStack
       put revTargetStack(pObject) into tStack
-      revSetEdited tStack
+      revIDESetEdited tStack
       
       # OK-2008-08-19 : Bug 6947 - The script checksum is updated regardless of whether or not the compilation succeeded,
       # as the script is still set if it failed. If there was an execution error of course, it won't have been set. This is typically
