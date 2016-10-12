@@ -516,10 +516,6 @@ on mouseDown pWhich
   end switch
 end mouseDown
 
-on revSetEdited pWhich
-   revIDESetEdited pWhich
-end revSetEdited
-
 on mouseUp pWhich
   local tTarget
   put the long id of the target into tTarget
