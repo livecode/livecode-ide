@@ -231,10 +231,10 @@ function revIDEDeployIOSGetDeviceSDK pVersion
    return the result
 end revIDEDeployIOSGetDeviceSDK
 
-function revIDEDeployIOSSanatizeSystemVersion
-   dispatch function "deploySanatizeSystemVersion" to stack "revDeployLibraryiOS"
+function revIDEDeployIOSSanitizeSystemVersion
+   dispatch function "deploySanitizeSystemVersion" to stack "revDeployLibraryiOS"
    return the result
-end revIDEDeployIOSSanatizeSystemVersion
+end revIDEDeployIOSSanitizeSystemVersion
 
 //SN-2015-04-30: [[ Bug 15300 ]]  Refactor functions used from revDeployLibraryIOS
 function revIDEDeployIOSGetInvalidityMessage piOSXcodePairs
