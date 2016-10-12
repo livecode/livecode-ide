@@ -68,6 +68,12 @@ on TestStackNameChangedEdited
 end TestStackNameChangedEdited
 
 on TestStackOpenFieldEdited
+   
+   if the environment contains "command line" then
+      TestSkip "Stack with opened field is marked edited", "Can't click in field in no UI mode"
+      exit TestStackOpenFieldEdited
+   end if
+   
    local tStackName
    create stack
    put the short name of it into tStackName
