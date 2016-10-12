@@ -1068,7 +1068,7 @@ command revInternal__InitialiseSystem
    if it is empty then
       get "Small"
    end if
-   if sLicensePlatform is "Windows" and the word 2 of the systemVersion >= "5.1" and it is not "None" then
+   if sLicensePlatform is "Windows" and it is not "None" then
       local tCrashSettings, tVersion
       put the version into tVersion
       replace "." with "_" in tVersion
@@ -1343,13 +1343,7 @@ command revInternal__InitialiseDefaults
          break
       case "Windows"
          set the hidePalettes to false
-         
-         if word 1 of the systemVersion is "Windows" then
-            set the shellCommand to "command.com"
-         else
-            set the shellCommand to "cmd.exe"
-         end if
-         
+         set the shellCommand to "cmd.exe"
          hide stack "revCursors"
          break
       case "Linux"
@@ -1722,7 +1716,7 @@ command revInternal__ConstrainStack pStack
   else
     -- We assume this is about 30 pixels
     put 30 into tTitleBarHeight
-    if the platform is "macos" and char 1 of the systemVersion is "1" then
+    if the platform is "macos" then
       put 0 into tBorderWidth
     else
       put 5 into tBorderWidth
@@ -2095,26 +2089,22 @@ end revEnvironmentGuessRepositoryPath
 --
 
 function revEnvironmentPlatform
-  local tPlatform
-  
-  switch the platform
-  case "Linux"
-    put "Linux" into tPlatform
-    break
-  case "MacOS"
-    if char 1 of the systemVersion is 1 then
-      put "MacOS X" into tPlatform
-    else
-      put "MacOS Classic" into tPlatform
-    end if
-    break
-  case "Win32"
-    put "Windows" into tPlatform
-    break
-  default
-    put "Unsupported" into tPlatform
-    break
-  end switch
-  
-  return tPlatform
+   local tPlatform
+   
+   switch the platform
+      case "Linux"
+         put "Linux" into tPlatform
+         break
+      case "MacOS"
+         put "MacOS X" into tPlatform
+         break
+      case "Win32"
+         put "Windows" into tPlatform
+         break
+      default
+         put "Unsupported" into tPlatform
+         break
+   end switch
+   
+   return tPlatform
 end revEnvironmentPlatform
