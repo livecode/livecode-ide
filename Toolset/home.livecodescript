@@ -196,12 +196,6 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Loading Debugger..."
-         revInternal__InitialiseDebugger
-         put the result into tSuccess
-      end if
-      
-      if tSuccess then
          revInternal__setSplashStatus "Loading Plug-ins..."
          revInternal__InitialisePlugIns
          put the result into tSuccess
@@ -1666,16 +1660,6 @@ command revInternal__InitialiseFinalSteps
    
    return true
 end revInternal__InitialiseFinalSteps
-
-# OK-2008-03-11
-# Description
-#   Initializes the debugger. This resets the breakpoints property to the appropriate
-#   value for IDE startup. This command must be called after the preferences stack has 
-#   been initialized.
-command  revInternal__InitialiseDebugger
-   send "revDebuggerInitialize" to stack "revDebuggerLibrary"
-   return true
-end  revInternal__InitialiseDebugger
 
 command revInternal__BuildDictionary
    revInternal__Log "Enter", "Building Dictionary"

@@ -276,13 +276,9 @@ private function debugContextShort pContext
    local tArray
    put revDebuggerParseExecutionContext(pContext) into tArray
    
-   local tControl, tCommand, tName, tResult
-   --put item 2 to -3 of pContext into tControl
-   put tArray["object"] into tControl
-   put "put the name of tControl into tName" into tCommand
-   do tCommand
+   local tName, tResult
+   put seFriendlyObject(tArray["object"]) into tName
    
-   --put tName & comma & " line " & item -1 of pContext into tResult
    put tName & comma & " line " & tArray["line number"] into tResult
    
    return tResult
