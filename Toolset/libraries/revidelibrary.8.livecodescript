@@ -36,241 +36,7 @@ end revUnloadLibrary
 #############
 # Internal functions
 #############
-# Reads all the of the extension files into an internal array which is then used by all revIDEExtension and revIDEWidget
-# type functions
 
-local sExtensionData
-local sExtensionDataForDisplay
-
-private on __loadExtensions
-   local tInactiveExtensionFolder, tExtensionData
-   
-   put empty into sExtensionData
-   put empty into sExtensionDataForDisplay
-   
-   ## Load installed extensions
-   revIDEPushDefaultFolder revIDESpecialFolderPath("extensions")
-   repeat for each line tFile in the files
-      if char 1 of tFile is "." then next repeat
-      __loadExtension tFile
-   end repeat
-   
-   revIDEPopDefaultFolder
-   dispatch "ideExtensionsChanged"
-end __loadExtensions
-
-private command __loadExtension pExtensionFile
-   local tExtensionID, tExtensionPackageData, tIndex, tKeys
-   local tExtractedExtensionFolder
-   
-   put char 1 to -5 of pExtensionFile into tExtensionID
-   put revIDESpecialFolderPath("extensions") into tExtractedExtensionFolder
-   
-   ## Check if already extracted
-   if there is not a folder (tExtractedExtensionFolder & "/" & pExtensionFile) then
-      __extractExtension(revIDESpecialFolderPath("extensions") & "/" & pExtensionFile)
-   end if
-   
-   # Try to load the extension
-   local tExecutableModuleFile
-   put revIDESpecialFolderPath("extensions") & slash & tExtensionID & slash & "module.lcm" into tExecutableModuleFile
-   if there is a file tExecutableModuleFile then
-      load extension from file tExecutableModuleFile
-      if the result is not empty then
-         __revIDEError("loading extension failed: " && the result)
-         return empty
-      end if
-   end if
-   
-   ## Check if already loaded
-   if tExtensionID is not among the keys of sExtensionData then
-      put the keys of sExtensionDataForDisplay into tKeys
-      replace return with comma in tKeys
-      put max(tKeys) + 1 into tIndex
-      
-      ## Extract the extension
-      --put __extractExtension(revIDESpecialFolderPath("extensions") & "/" & pExtensionFile) into tExtensionPackageData
-      put __extensionData(tExtensionID) into tExtensionPackageData
-      
-      local tExtenstionTypeID
-      put tExtensionPackageData["name"] into tExtenstionTypeID
-      put tExtensionPackageData into sExtensionData[tExtenstionTypeID]
-      put tExtensionPackageData into sExtensionDataForDisplay[tIndex]
-      put "active" into sExtensionData[tExtenstionTypeID]["status"]
-      put "active" into sExtensionDataForDisplay[tIndex]["status"]
-   end if
-end __loadExtension
-
-private function __extensionData pExtensionID
-   local tExtractedExtensionFolder, tExtensionFolder, tManifest, tXMLTree, tExtensionData
-   local tIsWidget, tIsLibrary, tRequiredNodes
-   
-   put revIDESpecialFolderPath("extensions") into tExtractedExtensionFolder
-   put tExtractedExtensionFolder & "/" & pExtensionID into tExtensionFolder
-   
-   if there is not a folder tExtensionFolder then return empty
-   
-   ## Manifest
-   put url ("file:" & tExtensionFolder & "/manifest.xml") into tManifest
-   if tManifest is empty then return empty
-   
-   put revXMLCreateTree(tManifest,true,true,false) into tXMLTree
-   put revXMLNodeContents(tXMLTree,"/package/name") into tExtensionData["name"]
-   put revXMLNodeContents(tXMLTree,"/package/title") into tExtensionData["label"]
-   put revXMLNodeContents(tXMLTree,"/package/description") into tExtensionData["description"]
-   put revXMLNodeContents(tXMLTree,"/package/author") into tExtensionData["author"]
-   put revXMLNodeContents(tXMLTree,"/package/version") into tExtensionData["version"]
-   put revXMLNodeContents(tXMLTree,"/package/license") into tExtensionData["license"]
-   
-   if item 1 of tExtensionData["author"] is "xmlerr" then
-      put empty into tExtensionData["author"]
-   end if
-   
-   ## Type
-   put revXMLChildNames(tXMLTree,"package",return,"widget",false) into tIsWidget
-   put revXMLChildNames(tXMLTree,"package",return,"library",false) into tIsLibrary
-   
-   if tIsWidget is "widget" then put "widget" into tExtensionData["type"]
-   else if tIsLibrary is "library" then put "library" into tExtensionData["type"]
-   else put "widget" into tExtensionData["type"]
-   
-   ## Requirements
-   put revXMLChildNames(tXMLTree,"package",return,"requires",true) into tRequiredNodes
-   repeat with x = 1 to the number of lines in tRequiredNodes
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tRequiredNodes,"name") into tExtensionData["requires"][x]["name"]
-      put revXMLAttribute(tXMLTree,"package" & "/" & line x of tRequiredNodes,"version") into tExtensionData["requires"][x]["version"]
-   end repeat
-   
-   revXMLDeleteTree tXMLTree
-   
-   put (tExtensionFolder & "/manifest.xml") into tExtensionData["manifest_path"]
-   
-   ## Icons
-   if there is a file (tExtensionFolder & "/icon.png") then put (tExtensionFolder & "/icon.png") into tExtensionData["icon"]
-   
-   ## Guide
-   if there is a file (tExtensionFolder & "/guide.md") then put (tExtensionFolder & "/guide.md") into tExtensionData["guide"]
-   
-   ## API
-   if there is a file (tExtensionFolder & "/api.lcdoc") then put (tExtensionFolder & "/api.lcdoc") into tExtensionData["api"]
-   return tExtensionData
-end __extensionData
-
-private command __extractExtension pFilename
-   local tManifest, tExtensionData, tIcon, tFileRoot, tIdentifier, tXMLTree, tRequiredNodes, tType
-   local tIsWidget, tIsLibrary, tItems
-   
-   if char -3 to -1 of pFilename is not "lce" then return __revIDEError("The file" && pFilename && "is not a valid LiveCode Extension file.")
-   
-   local tNewFolderName
-   set the itemDel to "/"
-   put char 1 to -5 of item -1 of pFilename into tNewFolderName
-   revZipOpenArchive pFilename, "read"
-   
-   local tZipItems
-   put revZipEnumerateItems(pFilename) into tZipItems
-   if the last char of line 1 of tZipItems is "/" then
-      put line 1 of tZipItems into tFileRoot
-   else
-      put empty into tFileRoot
-   end if
-   
-   ## Extract Extension files
-   local tExtensionsFolder, tUnzippedExtensionFolder, tIconFile, tLargeIconFile
-   put revIDESpecialFolderPath("extensions") into tExtensionsFolder
-   put tExtensionsFolder & "/" & tNewFolderName into tUnzippedExtensionFolder
-   
-   if there is not a folder tUnzippedExtensionFolder then
-      revIDEEnsurePath tUnzippedExtensionFolder
-   end if
-   
-   ## Manifest
-   local tManifestPath
-   put tUnzippedExtensionFolder & "/manifest.xml" into tManifestPath
-   revZipExtractItemToFile pFilename, (tFileRoot & "manifest.xml"), tManifestPath
-   
-   ## Icon files
-   put tUnzippedExtensionFolder & "/icon.png" into tIconFile
-   revZipExtractItemToFile pFilename, (tFileRoot & "support/icon.png"), tIconFile
-   
-   ## Extract any other icon files
-   local tUnzippedIconFile
-   put revZipEnumerateItems(pFilename) into tItems
-   filter tItems with "*icon*"
-   repeat for each line tIcon in tItems
-      put tUnzippedExtensionFolder & "/" & item -1 tIcon into tUnzippedIconFile
-      revZipExtractItemToFile pFilename, tIcon, tUnzippedIconFile
-   end repeat
-   
-   ## Documentaion
-   
-   ## Guide
-   local tGuidePath
-   put tUnzippedExtensionFolder & "/guide.md" into tGuidePath
-   revZipExtractItemToFile pFilename, (tFileRoot & "docs/guide/guide.md"), tGuidePath
-   ##-- Rebuild user guide JSON
-   
-   ## API
-   local tAPIPath
-   put tUnzippedExtensionFolder & "/api.lcdoc" into tAPIPath
-   revZipExtractItemToFile pFilename, (tFileRoot & "docs/api/api.lcdoc"), tAPIPath
-   --   put tAPIPath into tExtensionData["api"]
-   
-   ## Executable Module File
-   revZipExtractItemToFile pFilename, (tFileRoot & "module.lcm"), tUnzippedExtensionFolder & "/module.lcm"
-   
-   revZipCloseArchive pFilename
-end __extractExtension
-
-private function __trimZippedData pString
-   if codepointToNum(the last char of pString) < 32 then
-      delete the last char of pString
-   end if
-   return pString
-end __trimZippedData
-
-# Reads in all the tool data
-local sToolDefinition
-private on __toolDefinitionsRead
-   put empty into sToolDefinition
-   
-   # Set to folder to the path where the object definition files for classic controls are stored
-   local tToolDefinitionPath
-   put revIDESpecialFolderPath("Tool Definitions") into tToolDefinitionPath
-   revIDEPushDefaultFolder tToolDefinitionPath
-   
-   # Read in each file and build an array
-   local tDefinitionData, tToolSection
-   repeat for each line tFile in the files
-      if char 1 of tFile is "." then next repeat
-      set the itemdel to "."
-      put item 1 of tFile into tToolSection
-      put URL ("file:" & tToolDefinitionPath & slash & tFile) into tDefinitionData
-      
-      local tToolID, tCount
-      put 1 into tCount
-      set the itemdel to ","
-      repeat for each line tToolDescription in tDefinitionData
-         put item 1 of tToolDescription into tToolID
-         put item 2 of tToolDescription into sToolDefinition[tToolSection][tCount]["label"]
-         put item 3 of tToolDescription into sToolDefinition[tToolSection][tCount]["icon"]
-         
-         local tCount2, tPropertyName, tPropertyValue
-         put 1 into tCount2
-         repeat for each item tProperty in item 4 of tToolDescription
-            set the itemdel to ":"
-            put item 1 of tProperty into tPropertyName
-            put item 2 of tProperty into tPropertyValue
-            put tPropertyValue into sToolDefinition[tToolSection][tCount]["properties"][tCount2][tPropertyName]
-            add 1 to tCount2
-         end repeat
-         
-         add 1 to tCount
-      end repeat
-   end repeat
-   
-   revIDEPopDefaultFolder
-end __toolDefinitionsRead
 
 private on __resolvePopupData @xInfo, pData
    if not xInfo["options"] begins with "popup:" then
@@ -2013,10 +1779,6 @@ function revIDEClassicControls
    end repeat
    return tReturnData
 end revIDEClassicControls
-
-function revIDEWidgets
-   return revIDEExtensions("widget","installed", true)
-end revIDEWidgets
 
 /**
 For a given list of objects, returns a structured array of properties, values and other meta data.
@@ -5435,6 +5197,18 @@ function revIDEDefaultExtensionIcon pType, pRetina
          end if
    end switch
 end revIDEDefaultExtensionIcon
+
+function revIDEDefaultExtensionIconPath pType
+   switch pType
+      case "library"
+         return "M1024 1376L1024 1312Q1024 1298 1015 1289 1006 1280 992 1280L288 1280Q274 1280 265 1289 256 1298 256 1312L256 1376Q256 1390 265 1399 274 1408 288 1408L992 1408Q1006 1408 1015 1399 1024 1390 1024 1376ZM1024 1120L1024 1056Q1024 1042 1015 1033 1006 1024 992 1024L288 1024Q274 1024 265 1033 256 1042 256 1056L256 1120Q256 1134 265 1143 274 1152 288 1152L992 1152Q1006 1152 1015 1143 1024 1134 1024 1120ZM1280 768L1280 1568Q1280 1608 1252 1636 1224 1664 1184 1664L96 1664Q56 1664 28 1636 0 1608 0 1568L0 224Q0 184 28 156 56 128 96 128L640 128 640 672Q640 712 668 740 696 768 736 768L1280 768ZM1277 640L768 640 768 131Q850 146 900 196L1212 508Q1262 558 1277 640Z"
+      case "package"
+         return "M402 717L896 1022 554 1307 64 988ZM1388 1272L1388 1380 898 1673 898 1674 897 1673 896 1674 896 1673 407 1380 407 1272 554 1368 896 1084 896 1082 897 1083 898 1082 898 1084 1241 1368ZM554 128L896 413 402 717 64 447ZM1390 717L1728 988 1239 1307 896 1022ZM1239 128L1728 447 1390 717 896 413Z"
+      case "widget"
+      default
+         return "M1664 1134Q1664 1215 1619.5 1269 1575 1323 1496 1323 1455 1323 1418.5 1305.5 1382 1288 1359.5 1267.5 1337 1247 1303 1229.5 1269 1212 1232 1212 1122 1212 1122 1336 1122 1375 1138 1451 1154 1527 1153 1566L1153 1571Q1131 1571 1120 1572 1086 1575 1022.5 1583.5 959 1592 907 1597 855 1602 809 1602 748 1602 706 1575.5 664 1549 664 1492 664 1455 681.5 1421 699 1387 719.5 1364.5 740 1342 757.5 1305.5 775 1269 775 1228 775 1149 721 1104.5 667 1060 586 1060 502 1060 443 1105.5 384 1151 384 1233 384 1276 399 1316 414 1356 432.5 1380.5 451 1405 466 1433.5 481 1462 481 1484 481 1529 435 1573 398 1608 318 1608 223 1608 73 1584 64 1582 45.5 1580 27 1578 18 1576L5 1574Q4 1574 2 1573 0 1573 0 1572L0 548Q2 549 17.5 551.5 33 554 51.5 556.5 70 559 73 560 223 584 318 584 398 584 435 549 481 505 481 460 481 438 466 409.5 451 381 432.5 356.5 414 332 399 292 384 252 384 209 384 127 443 81.5 502 36 587 36 667 36 721 80.5 775 125 775 204 775 245 757.5 281.5 740 318 719.5 340.5 699 363 681.5 397 664 431 664 468 664 525 706 551.5 748 578 809 578 873 578 989 563 1105 548 1152 546L1152 548Q1151 550 1148.5 565.5 1146 581 1143.5 599.5 1141 618 1140 621 1116 771 1116 866 1116 946 1151 983 1195 1029 1240 1029 1262 1029 1290.5 1014 1319 999 1343.5 980.5 1368 962 1408 947 1448 932 1491 932 1573 932 1618.5 991 1664 1050 1664 1134Z"
+   end switch
+end revIDEDefaultExtensionIconPath
 
 function revIDEWidgetDefaultScript pKind
    return revIDEExtensionProperty(pKind, "defaultScript")

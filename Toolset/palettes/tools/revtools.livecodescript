@@ -167,7 +167,7 @@ on generatePalette
    repeat for each item tView in tViews
       switch tView
          case "widget"
-            put revIDEWidgets() into sViewsData["widget"]
+            put revIDEExtensions("widget","installed", true) into sViewsData["widget"]
             break
          case "classic"
             put revIDEClassicControls() into sViewsData["classic"]
@@ -818,7 +818,7 @@ on groupDisable pWhich, pDisable
    local tTools
    switch pWhich
       case "widget"
-         put revIDEWidgets() into tTools
+         put revIDEExtensions("widget","installed", true) into tTools
          break
       case "classic"
          put revIDEClassicControls() into tTools

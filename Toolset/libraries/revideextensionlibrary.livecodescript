@@ -219,38 +219,34 @@ on __extensionInstallVerify pCacheIndex
    set the itemdel to "."
    if the last item of tExtensionPath is not "lce" then return __extensionError(pCacheIndex,"Could not install extension. The package extension '"&the last item of tExtensionPath&"' Is not valid. Must be 'lce'.")
    
+   local tManifestDataA
+   ideExtensionParseManifestFromPackage tExtensionPath, "manifest.xml", tManifestDataA
+   if the result is not empty then
+      return the result for error
+   end if
+   
    # Check the manifest contains a name
-   local tExtensionName
-   put __extensionManifestValue(pCacheIndex, "name") into tExtensionName
-   if tExtensionName is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
-   __extensionPropertySet pCacheIndex, "name", tExtensionName
+   if tManifestDataA["name"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
+   __extensionPropertySet pCacheIndex, "name", tManifestDataA["name"]
    
    # Check the manifest contains a version
-   local tExtensionVersion
-   put __extensionManifestValue(pCacheIndex, "version") into tExtensionVersion
-   if tExtensionVersion is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
-   __extensionPropertySet pCacheIndex, "version", tExtensionVersion
+   if tManifestDataA["version"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
+   __extensionPropertySet pCacheIndex, "version", tManifestDataA["name"]
    
    # Check the manifest contains an author
-   local tExtensionAuthor
-   put __extensionManifestValue(pCacheIndex, "author") into tExtensionAuthor
-   if tExtensionAuthor is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
-   __extensionPropertySet pCacheIndex, "author", tExtensionAuthor
+   if tManifestDataA["author"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
+   __extensionPropertySet pCacheIndex, "author", tManifestDataA["author"]
    
    # Check the manifest contains an type
-   local tExtensionType
-   put __extensionManifestValue(pCacheIndex, "type") into tExtensionType
-   if tExtensionType is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
-   __extensionPropertySet pCacheIndex, "type", tExtensionType
+   if tManifestDataA["type"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
+   __extensionPropertySet pCacheIndex, "type", tManifestDataA["type"]
    
    # Check the manifest contains an title
-   local tExtensionTitle
-   put __extensionManifestValue(pCacheIndex, "title") into tExtensionTitle
-   if tExtensionTitle is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
-   __extensionPropertySet pCacheIndex, "title", tExtensionTitle
+   if tManifestDataA["title"] is empty then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
+   __extensionPropertySet pCacheIndex, "title", tManifestDataA["title"]
    
    # Build the type ID from the name and version
-   __extensionPropertySet pCacheIndex, "type_id", tExtensionName & "." & tExtensionVersion
+   __extensionPropertySet pCacheIndex, "type_id", tManifestDataA["name"] & "." & tManifestDataA["version"]
    
    # Next step
    send "__extensionInstallRemoveOlderVersions" && pCacheIndex to me in 0 milliseconds
@@ -403,7 +399,7 @@ on __extensionInstallLoad pCacheIndex
    # Store the extension's property metadata
    local tTypeID
    put  __extensionPropertyGet(pCacheIndex, "name") into tTypeID
-   revIDEExtensionSetInfo(tTypeID)
+   revIDEExtensionSetInfo tTypeID
    
    # Load module file into the engine
    local tDataA
@@ -479,15 +475,15 @@ on __extensionUninstallDeleteFiles pCacheIndex
    put __extensionPropertyGet(pCacheIndex, "install_path") into tPath
    
    # Make sure the path contains the folder extension as a check before deleting a folder
-   if tPath contains "extension" then
+   if tPath begins with revIDESpecialFolderPath("user extensions") then
       revDeleteFolder tPath
    end if
    
    # AL-2015-03-15: [[ Bug 15008 ]] Delete interface file from interface folder
    local tInterfaceFile
    put __extensionPropertyGet(pCacheIndex, "name") & ".lci" into tInterfaceFile
-   if there is a file (specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
-      revDeleteFile specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
+   if there is a file (revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
+      revDeleteFile revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
    end if
    
    # Next step
@@ -530,85 +526,32 @@ end __extensionUninstallComplete
 # PRIVATE SHARED
 ##############################
 
-function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
-   local tNode
-   put revXMLMatchingNode(pXMLTree, "package", "metadata", "key", pProperty &"." & pElement, 1) into tNode
-   if tNode is not empty then
-      return revXMLNodeContents(pXMLTree, tNode)
-   end if
+private command __extensionSetPropertyInfo pCacheIndex
+   local tPropertyDataA
+   put __extensionPropertyGet(pCacheIndex, "property") into tPropertyDataA
    
-   return empty
-end __extensionFetchPropertyMetadata
-
-function __extensionPropertyInfoFromManifest pManifestPath
-   if not there is a file pManifestPath then return empty
-   # Create the XML tree
-   local tXMLTree, tProperties, tExtensionData
-   put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
-   
-   # Process the general property metadata into an array
-   local tMetadataNodes, tMetadataA, tKeys, tValue
-   put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
-   set the itemdelimiter to "."
-   repeat for each line tMetadata in tMetadataNodes
-      put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tKeys
-      put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tValue
-      repeat with x = the number of items in tKeys down to 1
-         get tValue
-         put empty into tValue
-         put it into tValue[item x of tKeys]
-      end repeat
-      union tMetadataA with tValue recursively
-   end repeat
-   
-   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   local tOrder, tPropertyDataA
-   
-   local tMetadataKeys
-   put the keys of tMetadataA into tMetadataKeys
-   sort tMetadataKeys
-   sort tMetadataKeys by tMetadataA[each]["order"]
-   repeat for each line tKey in tMetadataKeys
+   local tName
+   repeat for each key tName in tPropertyDataA
+      local tMetadata
+      put __extensionPropertyGet(pCacheIndex, tName) into tMetadata
+      if tMetadata is not empty then
+         union tPropertyDataA[tName] with tMetadata recursively
+      end if
+      
       local tPropertyInfo
-      put revIDEPropertyInfo(tKey) into tPropertyInfo
-      if tPropertyInfo is empty then
-         next repeat
+      put revIDEPropertyInfo(tName) into tPropertyInfo
+      if tPropertyInfo is not empty then
+         union tPropertyDataA[tName] with tPropertyInfo recursively
       end if
-      add 1 to tOrder
-      union tMetadataA[tKey] with tPropertyInfo
-      put tMetadataA[tKey] into tPropertyDataA[tKey]
-      put tOrder into tPropertyDataA[tKey]["order"]
-   end repeat
-   
-   repeat for each line tProperty in tProperties
-      add 1 to tOrder
-      local tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
-      
-      put tMetadataA[tName] into tPropertyDataA[tName]
-      
-      local tReadOnly
-      get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
-      if it is empty or it begins with "xmlerr" then
-         put true into tReadOnly
-      else
-         put false into tReadOnly
-      end if
-      put tReadOnly into tPropertyDataA[tName]["read_only"]
-      
+       
       if tPropertyDataA[tName]["editor"] is empty then
-         local tType
-         put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
-         if tType is "Integer" or tType is "Real" then
+         if tPropertyDataA[tName]["get"] is "Integer" or tPropertyDataA[tName]["get"] is "Real" then
             put "com.livecode.pi.number" into tPropertyDataA[tName]["editor"]
          else
-            put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tName]["editor"]
+            put "com.livecode.pi." & tolower(tPropertyDataA[tName]["get"]) into tPropertyDataA[tName]["editor"]
          end if
       end if
-      put tOrder into tPropertyDataA[tName]["order"]
-   end repeat
-   
-   repeat for each key tName in tPropertyDataA
+      
       local tLabel, tSection
       
       if tPropertyDataA[tName]["section"] is empty then
@@ -635,9 +578,9 @@ function __extensionPropertyInfoFromManifest pManifestPath
       end if
    end repeat
    
-   revXMLDeleteTree tXMLTree
-   return tPropertyDataA
-end __extensionPropertyInfoFromManifest
+   put __extensionPropertyGet(pCacheIndex, "name") into tName
+   put tPropertyDataA into sExtensionProperties[tName]
+end __extensionSetPropertyInfo
 
 command revIDEExtensionSetInfo pTypeID
    set the itemdelimiter to slash
@@ -662,7 +605,7 @@ command revIDEExtensionSetInfo pTypeID
    end if
    
    __extensionSetExtensionInfoFromManifest tCacheIndex, tManifest
-   __extensionSetPropertyInfoFromManifest pTypeID, tManifest
+   __extensionSetPropertyInfo tCacheIndex
    
    # Set the default name
    local tTitle
@@ -673,18 +616,12 @@ end revIDEExtensionSetInfo
 
 private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPath
    local tDataA
-   revIDEExtensionFetchMetadata pManifestPath, tDataA
+   ideExtensionParseManifest pManifestPath, tDataA
    
    repeat for each key tKey in tDataA
       __extensionPropertySet pCacheIndex, tKey, tDataA[tKey]
    end repeat
 end __extensionSetExtensionInfoFromManifest
-
-command __extensionSetPropertyInfoFromManifest pID, pManifest
-   local tPropertyInfo
-   put __extensionPropertyInfoFromManifest(pManifest) into tPropertyInfo
-   put tPropertyInfo into sExtensionProperties[pID]
-end __extensionSetPropertyInfoFromManifest
 
 function __extensionError pCacheIndex, pErrorMessage
    __extensionSendProgressUpdate pCacheIndex, "Error:" && pErrorMessage, 100
@@ -705,31 +642,21 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    __extensionPropertySet pCacheIndex, "progress", pProgress
    
    local tName
-   //revputarray sExtensions
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
-   
-   //local tCallbackTarget, tCallBackHandler
-   //put __extensionPropertyGet(pCacheIndex, "callback_target") into tCallbackTarget
-   //put __extensionPropertyGet(pCacheIndex, "callback_handler") into tCallBackHandler
-   //if exists(tCallbackTarget) then
-   //dispatch tCallBackHandler to tCallbackTarget with pMessage,pProgress
-   //end if
-   // Send message to registered targets
 end __extensionSendProgressUpdate
 
-private function __fetchModuleData pExtensionFile
+private function __fetchManifestData pManifestFile
    local tDataA, tFolder
-   set the itemdelimiter to slash
-   put item 1 to -2 of pExtensionFile into tFolder
-   revIDEExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
+   
+   ideExtensionParseManifest pManifestFile, tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
       put "error" into tDataA["status"]
    end if
    return tDataA
-end __fetchModuleData
+end __fetchManifestData
 
 private function __extensionIsBuiltin pID
    switch pID
@@ -838,7 +765,6 @@ end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
-   revIDEPushDefaultFolder
    
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
@@ -846,34 +772,58 @@ on __extensionsLoad
    set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
-      set the defaultfolder to tExtensionFolder
-      repeat for each line tFolder in the folders
+      repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
-         local tExtensionModulePath, tArray
-         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tPath
+         local tArray
+         put  tExtensionFolder & slash & tFolder & slash & "manifest.xml" into tPath
+         
          if there is a file tPath then
-            put __fetchModuleData(tPath) into tArray
-            if tKey is "ide" then
-               put true into tArray["ide"]
-            else
-               put false into tArray["ide"]
+            put __fetchManifestData(tPath) into tArray
+            put tKey is "ide" into tArray["ide"]
+            
+            if tArray["type"] is "package" then
+               -- parse included extensions
+               
+               local tInclusion
+               repeat for each element tInclusion in tArray["includes"]
+                  local tInclusionFolder
+                  if tInclusion["name"] begins with tArray["name"] & "." then
+                     put char length(tArray["name"]) + 2 to -1 of tInclusion["name"] into tInclusionFolder
+                  else
+                     next repeat
+                  end if
+                  
+                  if there is no folder (tExtensionFolder & slash & tFolder & slash & tInclusionFolder) then
+                     next repeat
+                  end if
+                  
+                  local tInclusionArray
+                  put  tExtensionFolder & slash & tFolder & slash & tInclusionFolder & slash & "manifest.xml" into tPath
+                  
+                  if there is a file tPath then
+                     put __fetchManifestData(tPath) into tInclusionArray
+                     put tKey is "ide" into tInclusionArray["ide"]
+                     
+                     put tInclusionArray into tDataA[tInclusionArray["name"]][tExtensionFolder & slash & tFolder][tInclusionFolder]
+                  end if
+               end repeat
             end if
-            local tTypeID
-            if tArray["name"] is empty then
-               put tFolder into tTypeID
-            else
-               put tArray["name"] into tTypeID
-            end if
-            put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
+            
+            put tArray into tDataA[tArray["name"]][tExtensionFolder][tFolder]
          end if
       end repeat
    end repeat
    
+   __extensionsLoadInDependencyOrder tDataA
+   
+end __extensionsLoad
+
+private command __extensionsLoadInDependencyOrder pDataA
    # Now loop through, checking the status of them
    local tExtensionsList, tExtensionsA, tExtensionCount, tExtensionCopyCount, tExtensionDataA
-   put the keys of tDataA into tExtensionsList
+   put the keys of pDataA into tExtensionsList
    sort tExtensionsList
    
    local tToLoadA, tDependencies
@@ -881,10 +831,10 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each item tItem in "user,ide"
-         repeat for each key tFolder in tDataA[tTypeID][tFoldersA[tItem]]
-            put tDataA[tTypeID][tFoldersA[tItem]][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
-            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
+      repeat for each key tRootFolder in pDataA[tTypeID]
+         repeat for each key tFolder in pDataA[tTypeID][tRootFolder]
+            put pDataA[tTypeID][tRootFolder][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+            put tRootFolder & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
             add 1 to tExtensionCopyCount
          end repeat
       end repeat
@@ -901,11 +851,13 @@ on __extensionsLoad
    
    # Perform topological sort on list of dependencies so that they are loaded in the correct order
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
+      -- no need to load packages here as their inclusions are already in the dependency order
+      if tToLoadA[tLine]["type"] is "package" then
+         next repeat
+      end if
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
-   
-   revIDEPopDefaultFolder
-end __extensionsLoad
+end __extensionsLoadInDependencyOrder
 
 # Returns: List of the packages that are in the directory but not installed
 function __extensionPackagePaths
@@ -952,28 +904,6 @@ private command __extensionLoad pID, pExtensionDataA
 end __extensionLoad
 
 command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
-   local tStatus, tError
-   if pError is empty then
-      local tResources, tModule
-      put pFolder & slash & "resources" into tResources
-      put pFolder & slash & "module.lcm" into tModule
-      # If we have a resources folder then load with resource path
-      if there is a folder tResources then
-         load extension from file tModule with resource path tResources
-      else
-         load extension from file tModule
-      end if
-      if the result is not empty then
-         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
-         put "error" into tStatus
-      else
-         put "installed" into tStatus
-      end if
-   else
-      put pStatus into tStatus
-      put pError into tError
-   end if
-   
    # Find entry in the cache if it exists
    local tCacheIndex
    put __extensionCacheID("install_path", pFolder) into tCacheIndex
@@ -987,12 +917,77 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
    # Update name, status, error, and whether the extension comes with the IDE
    __extensionPropertySet tCacheIndex, "name", pID
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
-   __extensionPropertySet tCacheIndex, "status", tStatus
-   __extensionPropertySet tCacheIndex, "error", tError
    __extensionPropertySet tCacheIndex, "ide", pIDEExtension
    
    # Store the extension's property metadata
    revIDEExtensionSetInfo pID
+   
+   local tStatus, tError
+   if pError is empty then
+      switch __extensionPropertyGet(tCacheIndex, "type")
+         case "widget"
+         case "library"
+         case "module"
+            local tResources, tModule
+            put pFolder & slash & "resources" into tResources
+            put pFolder & slash & "module.lcm" into tModule
+            
+            # If we have a resources folder then load with resource path
+            if there is a folder tResources then
+               load extension from file tModule with resource path tResources
+            else
+               load extension from file tModule
+            end if
+            if the result is not empty then
+               put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
+               put "error" into tStatus
+            else
+               put "installed" into tStatus
+            end if
+            break
+         case "package"
+            -- iterate over inclusions and recurse
+            local tInclusions
+            put __extensionPropertyGet(tCacheIndex, "includes") into tInclusions
+            
+            local tInclusion, tDataA
+            repeat for each element tInclusion in tInclusions
+               local tInclusionFolder
+               if tInclusion["name"] begins with tInclusions["name"] & "." then
+                  put char length(tInclusions["name"]) + 2 to -1 of tInclusion["name"] into tInclusionFolder
+               else
+                  next repeat
+               end if
+               
+               if there is no folder (pFolder & slash & tInclusionFolder) then
+                  next repeat
+               end if
+               
+               local tInclusionArray, tPath
+               put pFolder & slash & tInclusionFolder & slash & "manifest.xml" into tPath
+               
+               if there is a file tPath then
+                  put __fetchManifestData(tPath) into tInclusionArray
+                  put pIDEExtension into tInclusionArray["ide"]
+                  
+                  put tInclusionArray into tDataA[tInclusionArray["name"]][pFolder][tInclusionFolder]
+               end if
+            end repeat
+            
+            __extensionsLoadInDependencyOrder tDataA
+            break
+         default
+            put "error" into tStatus
+            put "unsupported package type" into tError
+            break
+      end switch
+   else
+      put pStatus into tStatus
+      put pError into tError
+   end if
+   
+   __extensionPropertySet tCacheIndex, "status", tStatus
+   __extensionPropertySet tCacheIndex, "error", tError
    
    # Deal with the various icon possibilities
    if sExtensionProperties[pID]["svgIconPath"] is empty then
@@ -1052,71 +1047,6 @@ function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
    return tScript
 end revIDEExtensionFetchDefaultScript
 
-function __extensionManifestValue pCacheIndex, pProperty
-   # Get the path to the package file
-   local tExtensionPackageFile
-   put __extensionPropertyGet(pCacheIndex, "download_package_path") into tExtensionPackageFile
-   
-   if not there is a file tExtensionPackageFile then return __extensionError(pCacheIndex,"Could not extract manifest because package was not found in downloads folder")
-   
-   # A zip can come compressed with a base folder or without. So work out what the 
-   # root folder is before trying to extract files
-   revZipOpenArchive tExtensionPackageFile, "read"
-   
-   local tZipItems, tZipRoot
-   put revZipEnumerateItems(tExtensionPackageFile) into tZipItems
-   
-   if the last char of line 1 of tZipItems is "/" then
-      put line 1 of tZipItems into tZipRoot
-   else
-      put empty into tZipRoot
-   end if
-   
-   # Extract the package manfiest to a variable to read key data
-   local tManifestData, tManifestXMLTree, tValue
-   revZipExtractItemToVariable tExtensionPackageFile, (tZipRoot & "manifest.xml"), "tManifestData"
-   
-   revZipCloseArchive tExtensionPackageFile
-   
-   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValue
-
-function __extensionManifestValueFromFile pCacheIndex, pProperty
-   # Get the path to the manifest file
-   local tExtensionInstallPath, tManifestFilepath
-   put __extensionPropertyGet(pCacheIndex, "install_path") into tExtensionInstallPath
-   put tExtensionInstallPath & slash & "manifest.xml" into tManifestFilepath
-   
-   if not there is a file tManifestFilepath then 
-      local tError
-      put "Could not get extension manifest information: " into tError
-      put "extension folder does not contain a manifest file" after tError
-      return __extensionError(pCacheIndex,tError)
-   end if
-   
-   # Extract the package manfiest to a variable to read key data
-   local tManifestXMLTree, tValue
-   
-   put revXMLCreateTreeFromFile(tManifestFilepath,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValueFromFile
-
-# Returns a value from the manifest
-//private on __extensionManifestValue pCacheIndex, pManifestKey
-//end __extensionManifestValue
-
-
 ##############################
 # CALLBACKS
 ##############################
@@ -1163,29 +1093,131 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
+private command __StripBOM @xData
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), "UTF-8") into tBom
+
+   if xData begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xData
+   end if
+end __StripBOM
+
+private command __DecodeUTF8 @xData
+   __StripBOM xData
+
+   put textDecode(xData, "UTF-8") into xData
+end __DecodeUTF8
+
+/**
+
+Parse manifest file into array
+
+Parameters:
+
+pManifestPath (string): A full path to a manifest file
+
+rDataA (array): Set to the the parsed manifest data
+
+The result:
+An error string if an error occurs
+
+*/
+
+command ideExtensionParseManifest pManifestPath, @rDataA
    local tDataA
    
-   local tManifestContents, tTreeID
-   put url ("file:" & pManifestPath) into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tTreeID
+   local tManifestContents
+   put url ("binfile:" & pManifestPath) into tManifestContents
    
+   __DecodeUTF8 tManifestContents
+   
+   __ParseManifest tManifestContents, rDataA
+   
+   if the result is not empty then
+      return the result for error
+   else
+      return empty for value
+   end if   
+end ideExtensionParseManifest
+
+/**
+
+Parse manifest from package into array
+
+Parameters:
+
+pPackagePath (string): A full path to package
+
+pManifestPath (string): A relative path to a manifest file within the
+package
+
+rDataA (array): Set to the the parsed manifest data
+
+The result:
+An error string if an error occurs
+
+*/
+
+command ideExtensionParseManifestFromPackage pPackagePath, pManifestPath, @rDataA
+   local tDataA
+   
+   if not there is a file pPackagePath then \
+      return "Could not extract manifest because package was not found in downloads folder" for error
+   
+   # A zip can come compressed with a base folder or without. So work out what the 
+   # root folder is before trying to extract files
+   revZipOpenArchive pPackagePath, "read"
+   
+   local tZipItems
+   put revZipEnumerateItems(pPackagePath) into tZipItems
+   
+   if the last char of line 1 of tZipItems is "/" then
+      if not (pManifestPath begins with "/") then
+         put "/" before pManifestPath
+      end if
+   else
+      if pManifestPath begins with "/" then
+         delete char 1 of pManifestPath
+      end if
+   end if
+   
+   
+   # Extract the package manfiest to a variable to read key data
+   local tManifestContents
+   revZipExtractItemToVariable pPackagePath, pManifestPath, "tManifestContents"
+   
+   revZipCloseArchive pPackagePath
+   
+   __DecodeUTF8 tManifestContents
+   
+   __ParseManifest tManifestContents, rDataA
+   
+   if the result is not empty then
+      return the result for error
+   else
+      return empty for value
+   end if   
+end ideExtensionParseManifestFromPackage
+
+private command __ParseManifest pManifestContents, @rDataA
+   local tTreeID, tDataA
+   put revXMLCreateTree(pManifestContents, true, true, false) into tTreeID
    if tTreeID begins with "xmlerr" then
-      return "Error: invalid xml in manifest"
+      return "Error: invalid xml in manifest" for error
    end if
    
    local tTargetType
    put textDecode(revXMLNodeContents(tTreeID, "/package/type"), "utf-8") into tTargetType
    
    if tTargetType begins with "xmlerr" then
-      return "Error: no type found in manifest"
+      return "Error: no type found in manifest" for error
    end if
    put tTargetType into tDataA["type"]
    
    local tTargetName
    put textDecode(revXMLNodeContents(tTreeID, "/package/name"), "utf-8") into tTargetName
    if tTargetName begins with "xmlerr" then
-      return "Error: couldn't retrieve extension name from manifest"
+      return "Error: couldn't retrieve extension name from manifest" for error
    end if
    put tTargetName into tDataA["name"]
    
@@ -1214,7 +1246,7 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    
    # Fetch property metadata
    local tMetadataValue, tMetadataKey
-   local tMetadataNodes, tMetadataA, tKeys, tValue
+   local tMetadataNodes
    put revXMLChildNames(tTreeID, "package",return,"metadata",true) into tMetadataNodes
    repeat for each line tMetadata in tMetadataNodes
       put revXMLAttribute(tTreeID,"package" & "/" & tMetadata,"key") into tMetadataKey
@@ -1222,7 +1254,32 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
       if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
          put empty into tMetadataValue
       end if
+      split tMetadataKey by "."
       put tMetadataValue into tDataA[tMetadataKey]
+   end repeat
+   
+   # Fetch properties
+   local tProperties
+   local tProperty
+   local tName
+   local tOrder = 0
+   put revXMLChildNames(tTreeID,"package",return,"property",true) into tProperties
+   repeat for each line tProperty in tProperties
+      add 1 to tOrder
+      put revXMLAttribute(tTreeID,"package" & "/" & tProperty,"name") into tName
+      
+      local tReadOnly
+      get revXMLAttribute(tTreeID,"package" & "/" & tProperty,"set")
+      if it is empty or it begins with "xmlerr" then
+         put true into tReadOnly
+      else
+         put it into tDataA["property"][tName]["set"]
+         put false into tReadOnly
+      end if
+      put tReadOnly into tDataA["property"][tName]["read_only"]
+      
+      put revXMLAttribute(tTreeID,"package" & "/" & tProperty,"get") into tDataA["property"][tName]["get"]
+      put tOrder into tDataA["property"][tName]["order"]
    end repeat
    
    # Fetch extension dependencies
@@ -1231,9 +1288,18 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
    repeat for each line tDependency in tRequires
       add 1 to tCount
-      local tName
       put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
       put tName into tDataA["requires"][tCount]
+   end repeat
+   
+   # Fetch extension inclusions
+   local tIncludes
+   put 0 into tCount
+   put revXMLChildNames(tTreeID,"package",return,"includes",true) into tIncludes
+   repeat for each line tDependency in tIncludes
+      add 1 to tCount
+      put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
+      put tName into tDataA["includes"][tCount]
    end repeat
    
    # Fetch library handlers
@@ -1263,8 +1329,9 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    put tDataA into rDataA
-   return empty
-end revIDEExtensionFetchMetadata
+   
+   return empty for value
+end __ParseManifest
 
 function revIDEExtensionModuleFile pKind
    # Get the internal cache index
