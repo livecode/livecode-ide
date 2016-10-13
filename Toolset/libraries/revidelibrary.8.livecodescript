@@ -892,7 +892,7 @@ Description:
 on the values of the object's properties.
    **/
    function ideObjectTypeFromObject pObjectID
-      switch word 1 of the name of pObjectID
+      switch word 1 of pObjectID
          case "stack"
             return "com.livecode.interface.classic.Stack"
          case "card"
@@ -7278,26 +7278,39 @@ private function ideDispatchSaveStackRequest pStackName
    return tDispatchStatus
 end ideDispatchSaveStackRequest
 
+local sStackEdited
 command revIDESetEdited pStackName
-   if revIDEStackNameIsIDEStack(pStackName) then
+   # Don't set edited on a transient IDE stack (i.e. SE or PI generated)
+   if there is a stack pStackName and  \
+         the cIDETransient of stack pStackName then
       exit revIDESetEdited
    end if
    
    # Don't set edited on a stack if it is currently saving
-   if the mode of stack "revSaving" is 0 then 
-      global gRevStackStatus
-      put "edited" into gRevStackStatus[pStackName]
+   if pStackName is "revSaving" or the mode of stack "revSaving" is 0 then 
+      put true into sStackEdited[pStackName]
    end if
 end revIDESetEdited
 
 command revIDESetUnedited pStackName
-   global gRevStackStatus
-   put empty into gRevStackStatus[pStackName]
+   put false into sStackEdited[pStackName]
 end revIDESetUnedited
 
 function revIDEStackIsEdited pStackName
-   global gRevStackStatus
-   return gRevStackStatus[pStackName] is "edited"
+   if revIDEStackNameIsIDEStack(pStackName) then
+      global gRevDevelopment
+      # Ignore status of IDE stacks if gRevDevelopment is false
+      if not gRevDevelopment then
+         return false
+      end if
+      
+      # Ignore status of IDE stacks that are not toplevel
+      if the mode of stack pStackName > 1 then
+         return false
+      end if
+   end if
+   
+   return sStackEdited[pStackName] is true
 end revIDEStackIsEdited
 
 on revIDESaveStack pStackID
