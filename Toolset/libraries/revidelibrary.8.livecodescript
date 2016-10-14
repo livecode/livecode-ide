@@ -10898,7 +10898,7 @@ private on __fetchNamesToColors
 end __fetchNamesToColors
 
 private on __fetchColorsToNames
-   put fetchMapping("namesToColors.txt") into sColorsToNamesA
+   put fetchMapping("colorsToNames.txt") into sColorsToNamesA
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName
