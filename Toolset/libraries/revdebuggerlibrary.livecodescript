@@ -94,7 +94,7 @@ private command __Enable
    __ActivateWatches empty
    
    # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
-   revDebuggerInitialize
+   __Initialize
 end __Enable
 
 local sContext
@@ -235,8 +235,11 @@ private function __ParseExecutionContext pContext
       if tItem is an integer then
          put tItem into tArray["line number"]
          put item (tItemNumber - 1) of pContext into tArray["handler"]
-         put item 1 to (tItemNumber - 2) of pContext into tArray["object"]
+         put revRuggedID(item 1 to (tItemNumber - 2) of pContext) into tArray["object"]
          put item (tItemNumber + 1 ) to -1 of pContext into tArray["behavior"]
+         if tArray["behavior"] is not empty then
+            put revRuggedID(tArray["behavior"]) into tArray["behavior"]
+         end if
          return tArray
       end if
    end repeat
@@ -1969,7 +1972,11 @@ end __GetId
 #   Whether or not the debugger is enabled. This is currently determined by the "Script Debug Mode"
 #   setting in the LiveCode preferences stack.
 private function __Enabled
-   return revIDEGetPreference("cREVScriptDebugMode")
+   if the environment is "development" then
+      return revIDEGetPreference("cREVScriptDebugMode")
+   end if
+   
+   return false
 end __Enabled
 
 # Parameters
@@ -2291,11 +2298,11 @@ on traceError pHandler, pLine, pPosition, pError
    
    close printing
    
-   if not __Enabled() then
+   if not revDebuggerEnabled() then
       pass traceError
    end if
    
-   if __TargetIsModal(tTarget) then
+   if the environment contains "development" and __TargetIsModal(tTarget) then
       __ShowModalWarning
       pass traceError
    end if
@@ -2305,19 +2312,21 @@ on traceError pHandler, pLine, pPosition, pError
    
    # OK-2008-11-05 : If the target of the debugger message is modal, then act as though the debugger
    # is disabled. This is not ideal, but beats allowing the IDE to lock up.
-   if the mode of tStack >= 5 then
-      pass traceError
-   end if
-   
-   -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
-   local tContexts
-   put the executionContexts into tContexts
-   local tLine
-   repeat for each line tLine in tContexts
-      if item -2 of tLine is among the words of "moveStack resizeStack" then
+   if the environment contains "development" then
+      if the mode of tStack >= 5 then
          pass traceError
       end if
-   end repeat
+      
+      -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+      local tContexts
+      put the executionContexts into tContexts
+      local tLine
+      repeat for each line tLine in tContexts
+         if item -2 of tLine is among the words of "moveStack resizeStack" then
+            pass traceError
+         end if
+      end repeat
+   end if
    
    if pError is empty then
       revDebuggerStop
@@ -2349,7 +2358,7 @@ on traceBreak pHandler, pLine
    local tTarget
    put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
-   if not __Enabled() then
+   if not revDebuggerEnabled() then
       pass traceBreak
    end if
    
