@@ -1188,7 +1188,11 @@ command revInternal__InitialiseLibraries
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
-   
+ 
+   if the editionType is "professional" then
+      put return & "remotedebugger" after tLoadList 
+   end if
+
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
    put return & "revsaveasstandalone" after tBackList
@@ -1216,7 +1220,7 @@ command revInternal__InitialiseLibraries
    catch tError 	 	
       revInternal__Log "Error", "Error loading library" && tLib & return & tError 	 	
    end try
-      
+   
    # MW-2010-10-13: [[ Bug 8600 ]] Make sure the handler lists of the rev frontscript, backscript and shortcuts script
    #    are all up to date (used by revNoMessages script).
    set the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revBackScriptLibrary")

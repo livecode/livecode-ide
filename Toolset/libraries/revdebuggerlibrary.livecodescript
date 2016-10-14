@@ -199,7 +199,7 @@ function revDebuggerContexts
          #  debugger itself and anything that was called by the debugger, i.e. appears after a debugger
          #  call in the call stack.
          
-         if tStack is "revDebuggerLibrary" then
+         if tStack is "revDebuggerLibrary" or tStack is "com.livecode.script-library.remotedebugger" then
             # No debugger stack contexts are placed onto the call stack, however we also need to remove
             # *any* contexts that appear after a trace, traceError or traceBreak (or traceDone although less important).
             --if item -2 of tContext is among the words of "trace traceError traceBreak traceDone" then
