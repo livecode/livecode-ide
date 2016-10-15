@@ -5,8 +5,7 @@ AntiqueWhite,249,232,210
 AntiqueWhite1,254,237,214
 AntiqueWhite2,235,219,197
 AntiqueWhite3,200,185,166
-AntiqueWhite4,139,131,120
-AntiqueWhite4,139,131,120
+AntiqueWhite4,129,116,104
 Aquamarine,67,183,186
 Aquamarine1,127,255,212
 Aquamarine2,118,238,198
