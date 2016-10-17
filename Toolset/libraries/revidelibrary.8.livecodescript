@@ -10869,25 +10869,7 @@ end revIDEGenerateDictionaryHTML
 
 local sNamesToColorsA, sColorsToNamesA
 
-private function __colorsResourcePath
-   set the itemdelimiter to slash
-   return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/colors"
-end __colorsResourcePath
-
-private function fetchMapping pFile
-   local tData, tMappingA
-   put url ("file:" & __colorsResourcePath() & slash & pFile) into tData
-   repeat for each line tLine in tData
-      if token 1 of tLine is empty then
-         next repeat
-      end if
-      put item 2 to -1 of tLine into tMappingA[item 1 of tLine]
-   end repeat
-   return tMappingA
-end fetchMapping
-
 private on __fetchNamesToColors
-#   put fetchMapping("namesToColors.txt") into sNamesToColorsA
    local tColorRGB
    
    repeat for each line tColorName in the colorNames
