@@ -54,6 +54,12 @@ on TestObjectTypes
    put true into tArray["com.livecode.interface.classic.RegularGraphic"]
 
    repeat for each key tKey in tArray
+      if tKey is "com.livecode.interface.classic.Player" and \ 
+      	the platform is "linux" then
+      	TestSkip tKey && "object", "Bug 18618"
+      	next repeat
+      end if
+   
       TestDiagnostic tKey
       revIDEActionCreateObject tKey
       TestAssert tKey && "object", ideObjectTypeFromObject(the result) is tKey
