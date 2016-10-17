@@ -1524,6 +1524,10 @@ function revMenuManagerGroup pGroups
 end revMenuManagerGroup
 
 on errorDialog pWhatError, pWhatError2
+   if revTestEnvironment() then
+      pass errorDialog
+   end if
+   
    ######################
    close printing
    global gREVSuppressErrors, gREVDevelopment

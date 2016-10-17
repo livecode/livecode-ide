@@ -2283,6 +2283,10 @@ constant kErrorRecursionLimit = 2
 #   via the throw command, or messages are suppressed, exits to top.
 #   Otherwise, launches the debugger, showing the current execution context.
 on traceError pHandler, pLine, pPosition, pError
+   if the environment contains "development" and revTestEnvironment() then
+      pass traceError
+   end if
+   
    if item 1 of pError is kErrorRecursionLimit then
       local tMessage
       put "The handler: " & pHandler & " has reached the recursion limit of: " & the recursionLimit & "." & return & \
@@ -2355,6 +2359,10 @@ end traceError
 #   nothing. Otherwise, opens a script editor for the object (unless one is
 #   already open) and updates it appropriately.
 on traceBreak pHandler, pLine
+   if the environment contains "development" and revTestEnvironment() then
+      pass traceBreak
+   end if
+   
    local tTarget
    put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
