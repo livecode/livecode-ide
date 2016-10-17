@@ -103,8 +103,8 @@ end ideInspectObjects
 private command inspectorCloneTemplate pNewName
    set the _ideoverride of stack "revInspectorTemplate" to true
    clone invisible stack "revInspectorTemplate"
-   set the name of it to pNewName
    set the cIDETransient of it to true
+   set the name of it to pNewName
 end inspectorCloneTemplate
 
 function inspectorStackName pIndex
