@@ -10887,11 +10887,20 @@ private function fetchMapping pFile
 end fetchMapping
 
 private on __fetchNamesToColors
-   put fetchMapping("namesToColors.txt") into sNamesToColorsA
+#   put fetchMapping("namesToColors.txt") into sNamesToColorsA
+   local tColorRGB
+   
+   repeat for each line tColorName in the colorNames
+   	  set the colorOverlay["color"] of the templateGraphic to tColorName
+   	  put the colorOverlay["color"] of the templateGraphic into tColorRGB
+  		put tColorRGB into sNamesToColorsA[tColorName]
+   end repeat
 end __fetchNamesToColors
 
 private on __fetchColorsToNames
-   put fetchMapping("namesToColors.txt") into sColorsToNamesA
+    repeat for each line tColor in the colorNames
+  		 put tColor into sColorsToNamesA[revIDENamedColorToRGB(tColor)]
+		end repeat
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName
