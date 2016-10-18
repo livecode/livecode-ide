@@ -12,7 +12,7 @@ command revInternal__LoadLibrary pLibrary
    put toLower(pLibrary) into pLibrary
    
    if sLoadedLibraries[pLibrary] is not empty then
-      return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
+     return empty
    end if
    
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
@@ -56,7 +56,7 @@ command revInternal__LoadLibrary pLibrary
       set the itemDelimiter to comma
       
       if tLibraryPath is empty then
-         answer "no file for library" && pLibrary
+         return "no file for library" && pLibrary
       end if
       
       try
@@ -65,18 +65,20 @@ command revInternal__LoadLibrary pLibrary
          put the name of stack tLibraryPath into tStackName
          send "revLoadLibrary" to stack tStackName
          put tStackName into sLoadedLibraries[pLibrary]
-         return true
       catch tError
-         answer "Error while loading stack:" && tLibraryPath
+         return "Error while loading stack:" && tLibraryPath & return & tError
       end try
       
    else
       try
          send "revLoadLibrary" to stack pLibrary
       catch tError
-         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
+         put "Error" && tError && "while loading stack:" && pLibrary into tError
+         write tError to stderr
+         return tError
       end try
    end if
+   return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
