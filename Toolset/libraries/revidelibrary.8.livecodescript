@@ -6492,11 +6492,17 @@ pWorking (boolean): If true return the loc relative to OS screen furniture rathe
 Returns: The screenRect of the screen the stack is on
 */
 function revIDEStackScreenRect pStackName, pWorking
+   local tRect
    if pWorking then
-      return line (the screen of stack pStackName) of the working screenRects
+      put line (the screen of stack pStackName) of the working screenRects into tRect
    else
-      return line (the screen of stack pStackName) of the screenRects
+      put line (the screen of stack pStackName) of the screenRects into tRect
    end if
+   if tRect is empty then
+      return 0,0,0,0
+   end if
+   
+   return tRect
 end revIDEStackScreenRect
 
 on revIDEActionNewMainstack pStackType
