@@ -1161,63 +1161,61 @@ end revInternal__FilterHandlerList
 command revInternal__InitialiseLibraries
    revInternal__Log "Enter", "Libraries Initialisation"
    
-   insert script of stack "revInitialisationLibrary" into back
-   
-   # BB-2014-09-30: New IDE library
    try	
-      insert script of stack "revideextensionlibrary" into back 	 
-      insert script of stack "revidedeveloperextensionlibrary" into back	
-      insert script of stack "revsaveasstandalone" into back
-      insert script of stack "revsaveasiosstandalone" into back
-      insert script of stack "revsaveasandroidstandalone" into back
-      insert script of stack "revsaveasemscriptenstandalone" into back
+      insert script of stack "revInitialisationLibrary" into back 	 
    catch tError 	 	
-      answer "Error loading extensions library" & return & tError 	 	
-   end try 	 	
-   	    	 	
-   # AL-2015-11-15 : New documentation library
-   revInternal__LoadLibrary "revIDEDocumentationLibrary"
-   
-   try 	 	
-      revInternal__LoadLibrary "revIDELibrary.8"	 
-      revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
-   catch tError 	 	
-      answer "Error loading main IDE" & return & tError 	 	
-   end try 
-   
-   revInternal__LoadLibrary "revBackScriptLibrary"
-   
-   revInternal__LoadLibrary "revSBLibrary"
-   # MW-2011-04-11: New deploy library for Android/iOS simulate/test support
-   revInternal__LoadLibrary "revDeployLibrary"
-   
-   # OK-2008-03-11 : New debugger and metadata library
-   revInternal__LoadLibrary "revDebuggerLibrary"
-   revInternal__LoadLibrary "revMetadataLibrary"
-   
-   # OK-2008-11-25 : revOnline library
-   insert the script of stack "revOnlineLibrary" into back
-   
-   revInternal__LoadLibrary "revIdeLibrary"
-   revInternal__LoadLibrary "revLibUrl"
-   revInternal__LoadLibrary "revCommonLibrary"
-   revInternal__LoadLibrary "revPrintLibrary"
-   revInternal__LoadLibrary "revAnimationLibrary"
-   revInternal__LoadLibrary "revGeometryLibrary"
-   revInternal__LoadLibrary "revXMLRPCLibrary"
-   revInternal__LoadLibrary "revProfilesLibrary"
-   revInternal__LoadLibrary "revDatabaseLibrary"
-   revInternal__LoadLibrary "revTableLibrary"
-   
-   // EJB - New IDE Libraries
-   
-   try      
-      insert script of stack "revCore" into back
+      revInternal__Log "Error", "Error loading initialisation library" & return & tError 	 	
    end try
+
+   local tLoadList
+   put "revIDEDocumentationLibrary" into tLoadList
+   put return & "revideextensionlibrary" after tLoadList
+   put return & "revIDELibrary.8" after tLoadList
+   put return & "revidemessagehandlerlibrary" after tLoadList
+   put return & "revBackScriptLibrary" after tLoadList 
+   put return & "revSBLibrary" after tLoadList
+   put return & "revDeployLibrary" after tLoadList
+   put return & "revDebuggerLibrary" after tLoadList 
+   put return & "revMetadataLibrary" after tLoadList
+   put return & "revIdeLibrary" after tLoadList
+   put return & "revLibUrl" after tLoadList 
+   put return & "revCommonLibrary" after tLoadList 
+   put return & "revPrintLibrary" after tLoadList 
+   put return & "revAnimationLibrary" after tLoadList 
+   put return & "revGeometryLibrary" after tLoadList 
+   put return & "revXMLRPCLibrary" after tLoadList 
+   put return & "revProfilesLibrary" after tLoadList 
+   put return & "revDatabaseLibrary" after tLoadList 
+   put return & "revTableLibrary" after tLoadList 
+
+   local tBackList
+   put "revidedeveloperextensionlibrary" into tBackList
+   put return & "revsaveasstandalone" after tBackList
+   put return & "revsaveasiosstandalone" after tBackList
+   put return & "revsaveasandroidstandalone" after tBackList
+   put return & "revsaveasemscriptenstandalone" after tBackList
+   put return & "revOnlineLibrary" after tBackList
+   put return & "revCore" after tBackList
    
    # AL-2015-09-02: [[ Bug 15841 ]] Temporarily add project browser library to prevent preference errors
-   insert script of stack "revIDEProjectBrowserLibrary" into back
+   put return & "revIDEProjectBrowserLibrary" after tBackList
    
+   local tLib
+   repeat for each line tLib in tLoadList	 	
+      revInternal__LoadLibrary tLib
+	  if the result is not empty then
+	     revInternal__Log "Error", the result 
+	  end if
+   end repeat
+   
+   try	
+      repeat for each line tLib in tBackList
+         insert script of stack tLib into back 	 
+      end repeat
+   catch tError 	 	
+      revInternal__Log "Error", "Error loading library" && tLib & return & tError 	 	
+   end try
+      
    # MW-2010-10-13: [[ Bug 8600 ]] Make sure the handler lists of the rev frontscript, backscript and shortcuts script
    #    are all up to date (used by revNoMessages script).
    set the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revBackScriptLibrary")
@@ -1662,12 +1660,20 @@ command revInternal__InitialiseFinalSteps
    
    --the following *MUST* be the last item to avoid excess sending to overview as environment loads
    revInternal__Log "Message", "Installing Remaining Libraries"
+
    revInternal__LoadLibrary "revFrontScriptLibrary"
+   if the result is not empty then
+      revInternal__Log "Error", the result  
+   end if
+      
    set the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revFrontScriptLibrary")
    
    revInternal__LoadLibrary "revShortCutsLibrary"
+   if the result is not empty then
+      revInternal__Log "Error", the result  
+   end if
+   
    set the cREVGeneral["handlerlist"] of stack "revShortCutsLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revShortCutsLibrary")
-   //insert script of btn "revShortcuts" of cd 1 of stack "revLibrary" into front
    
    revInternal__Log "Message", "Setting up verbose debugging"
    send "revVerboseDebug" && the cVerboseDebug of stack "revPreferences" to stack "revFrontScriptLibrary"
@@ -1692,8 +1698,6 @@ command revInternal__InitialiseFinalSteps
    end if
    
    revInternal__Log "Message", "Initialising revFrontScript"
-   --send "preOpenStack" to stack "revFrontScriptLibrary" in 5 milliseconds
-   --send "preOpenStack" to stack "revFrontScriptLibrary" in 5 milliseconds
    
    revInternal__Log "Leave", "Final Initialisation"
    
