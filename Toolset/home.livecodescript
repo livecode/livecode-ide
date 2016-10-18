@@ -2,6 +2,8 @@
 constant kImportantTextColor = "#569e54"
 
 on startup
+   revSetTestEnvironment($TRAVIS is true)
+
    -- MW-2011-03-13: Make sure the externals are empty on startup
    set the externals of me to empty
    
