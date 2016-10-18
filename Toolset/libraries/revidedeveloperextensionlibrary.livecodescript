@@ -111,7 +111,6 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
-   revIDEPushDefaultFolder
    local tExtensionDetailsA
    
    local tFolders
@@ -142,8 +141,7 @@ function revIDEDeveloperExtensions
       if tFolder is empty then
          next repeat
       end if
-      set the defaultfolder to tFolder
-      put the folders into tExtensionFolders
+      put folders(tFolder) into tExtensionFolders
       repeat for each line tExtensionFolder in tExtensionFolders
          if tExtensionFolder is ".." then 
             next repeat
@@ -160,8 +158,6 @@ function revIDEDeveloperExtensions
          __revIDEDeveloperExtensionRemoveFolder tFolder
       end if
    end repeat
-   
-   revIDEPopDefaultFolder
    
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
