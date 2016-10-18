@@ -989,7 +989,57 @@ command revInternal__InstallFileAssociations
    end if
 end revInternal__InstallFileAssociations
 
-local sLogIndent, sLogPath
+local sLogIndent, sLogPath, sLog
+private command revInternal__LogToFile pType, pMessage   
+   if sLogPath is empty then
+      exit revInternal__LogToFile
+   end if
+   
+   open file sLogPath for text append
+   
+   if pType is not "Message" then
+      put pType && pMessage into pMessage
+   end if
+   
+   repeat for each line tLine in pMessage
+      if sLogIndent > 0 then
+         write char 1 to sLogIndent of "                                " to file sLogPath
+      end if
+      write tLine & return to file sLogPath
+   end repeat
+   
+   close file sLogPath
+end revInternal__LogToFile
+
+private command revInternal__LogToVariable pType, pMessage  
+   if pType is "Error" then 
+	   repeat for each line tLine in pMessage
+    	  put tLine & return after sLog["Error"]
+	   end repeat
+   end if
+   
+   if pType is not "Message" then
+      put pType && pMessage into pMessage
+   end if
+   
+   repeat for each line tLine in pMessage
+      if sLogIndent > 0 then
+         put char 1 to sLogIndent of "                                " after sLog["Message"]
+      end if
+      put tLine & return after sLog["Message"]
+   end repeat
+   
+end revInternal__LogToVariable
+
+-- For test mode
+function revEnvironmentGetStartupLog pType
+   if sTestEnvironment is not true then
+      return empty
+   end if
+   
+   return sLog[pType]
+end revEnvironmentGetStartupLog
+
 command revInternal__Log pType, pMessage
    if pType is "Start" then
       local tLogPath
@@ -1023,32 +1073,17 @@ command revInternal__Log pType, pMessage
       exit revInternal__Log
    end if
    
-   if sLogPath is empty then
-      exit revInternal__Log
-   end if
-   
-   open file sLogPath for text append
-   
    if pType is "Leave" then
       subtract 2 from sLogIndent
-   end if
-   
-   if pType is not "Message" then
-      put pType && pMessage into pMessage
-   end if
-   
-   repeat for each line tLine in pMessage
-      if sLogIndent > 0 then
-         write char 1 to sLogIndent of "                                " to file sLogPath
-      end if
-      write tLine & return to file sLogPath
-   end repeat
-   
-   if pType is "Enter" then
+   else if pType is "Enter" then
       add 2 to sLogIndent
    end if
    
-   close file sLogPath
+   if sTestEnvironment is true then
+      revInternal__LogToVariable pType, pMessage
+   else
+      revInternal__LogToFile pType, pMessage
+   end if
 end revInternal__Log
 
 --------------------------------------------------------------------------------
