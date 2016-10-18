@@ -105,9 +105,12 @@ end TestRunnerMain
 command TestRunnerInvokeAll
    logInit
    
+   invokeLoadLibrary
+
    if there is not a stack "home" then
 	   invokeLoadIDE
    end if
+
    invokeAllTests
 end TestRunnerInvokeAll
 
@@ -160,23 +163,32 @@ private command invokeLoadIDE
 	put "Toolset/home.livecodescript" into item -2 to -1 of tFilename
 
 	local tStackName
+	-- load home stack
 	put the name of stack tFilename into tStackName
+
+	-- Set the 'test environment' to true
+	dispatch "revSetTestEnvironment" to stack tStackName with true
 	
 	insert the script of tStackName into back
 	
-	dispatch "startup" to tStackName
-	open tStackName
+	dispatch "startup" to tStackName	
+	TestAssert "IDE startup without error", the result is empty
 	
-	-- Set the 'test environment' to true
-	revSetTestEnvironment true
+	open tStackName
 end invokeLoadIDE
 
 private command invokeAllTests
+	local tStartupError
+	put revEnvironmentGetStartupLog("Error") into tStartupError
+	TestAssert "Home stack opens without error", tStartupError is empty
+	
+	if tStartupError is not empty then
+		TestDiagnostic revEnvironmentGetStartupLog("Message")
+	end if
+
    -- gRevDevelopment should be true by default
    global gRevDevelopment
    put true into gRevDevelopment
-
-   invokeLoadLibrary
    
    local tTopLevel
    put revIDESpecialFolderPath("IDE") & "/tests" into tTopLevel
@@ -262,7 +274,9 @@ end invokeTestCommand
 -- Add the unit test library stack and the input library to the backscripts
 private command invokeLoadLibrary
    local tLibrary, tStackName, tStackFile, tRepoPath
-   put revEnvironmentRepositoryPath() into tRepoPath
+   set the itemdelimiter to "/"
+   put item 1 to -4 of the filename of me into tRepoPath
+   set the itemdelimiter to ","
    repeat for each item tLibrary in "_testlib,_inputlib,_testerlib"
       -- Compute the filename of the library stack and load it
       put tRepoPath & slash & "tests" & slash & tLibrary & ".livecodescript" into tStackFile
