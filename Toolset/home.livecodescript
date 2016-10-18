@@ -28,6 +28,8 @@ on startup
    end try
    
    revInternal__Log "Leave", "Startup"
+   
+   return tError
 end startup
 
 on relaunch
