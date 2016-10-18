@@ -1718,6 +1718,11 @@ end TestImageDefaultProps
 
 
 on TestPlayerDefaultProps
+   if the platform is "linux" then
+      TestSkip "player property tests", "Bug 18618"
+      exit TestPlayerDefaultProps
+   end if
+	
    local tObjectID
    revIDEActionCreateObject "com.livecode.interface.classic.Player"
    put the result into tObjectID

@@ -67,7 +67,7 @@ on TestStackNameChangedEdited
    TestAssert "Stack with name change is marked edited", revIDEStackIsEdited("TestStackNewName")
 end TestStackNameChangedEdited
 
-on TestStackOpenFieldEdited
+on TestStackOpenFieldEdited   
    local tStackName
    create stack
    put the short name of it into tStackName
@@ -78,9 +78,7 @@ on TestStackOpenFieldEdited
    put it into tFieldID
    revIDESetUnedited tStackName
    
-   -- Simulate openField
-   choose browse tool
-   click at the loc of tFieldID
+   dispatch "openField" to tFieldID
     
    TestAssert "Stack with opened field is marked edited", revIDEStackIsEdited(tStackName)
 end TestStackOpenFieldEdited
