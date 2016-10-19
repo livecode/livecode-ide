@@ -7311,7 +7311,7 @@ function revIDEStackIsEdited pStackName
       end if
       
       # Ignore status of IDE stacks that are not toplevel
-      if the mode of stack pStackName > 1 then
+      if the mode of stack pStackName is not 1 then
          return false
       end if
    end if
