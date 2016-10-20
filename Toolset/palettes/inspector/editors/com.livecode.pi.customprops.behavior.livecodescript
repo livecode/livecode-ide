@@ -38,9 +38,9 @@ on editorUpdate
    end if
    
    if arrayKeysAreNumeric(tValue[sPropSet]) then
-      set the sorttype of of widget 1 of me to "numeric"
+      set the sorttype of widget 1 of me to "numeric"
    else
-      set the sorttype of of widget 1 of me to "text"
+      set the sorttype of widget 1 of me to "text"
    end if
    set the arrayData of widget 1 of me to tValue[sPropSet]
    local tPath
