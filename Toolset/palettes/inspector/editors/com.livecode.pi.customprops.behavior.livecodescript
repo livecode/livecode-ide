@@ -37,6 +37,11 @@ on editorUpdate
       set the label of button "customPropertySet" of group "Set buttons" of me to sPropSet
    end if
    
+   if arrayKeysAreNumeric(tValue[sPropSet]) then
+      set the sorttype of widget 1 of me to "numeric"
+   else
+      set the sorttype of widget 1 of me to "text"
+   end if
    set the arrayData of widget 1 of me to tValue[sPropSet]
    local tPath
    put the hilitedElement of widget 1 of me into tPath
@@ -321,3 +326,13 @@ on hiliteChanged
    end if
    put false into sDontUpdate
 end hiliteChanged
+
+
+function arrayKeysAreNumeric pArrayA
+   local tKey
+   
+   repeat for each key tKey in pArrayA
+      if tKey is not an integer then return false
+   end repeat
+   return true
+end arrayKeysAreNumeric
