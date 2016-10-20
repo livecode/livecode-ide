@@ -2451,9 +2451,7 @@ function revIDEGetPreference pPreferenceName
 end revIDEGetPreference
 
 command __DevPreference pPreferenceName, @rValue
-   global gREVDevelopment
-   
-   if gREVDevelopment then
+   if not revEnvironmentIsInstalled() then
       switch pPreferenceName
          case "cScriptEditor,explicitVariables"
          case "cScriptEditor,preserveVariables"
