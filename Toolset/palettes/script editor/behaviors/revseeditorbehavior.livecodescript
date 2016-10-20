@@ -4359,15 +4359,11 @@ private function findListObjectsOnStackAndSubstacks pObject, pIncludeStackfiles,
                return empty
             end if
             
-            local tStackFileList
-            put empty into tStackFileList
-            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tStackFileList)
-            put tStackFileList after tList
+            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tList)
          end if
          unlock messages
          
       end repeat
-      delete the last char of tList
    end if
    
    return tList
