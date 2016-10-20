@@ -1947,7 +1947,7 @@ private function __ResolveId pId, pStack
          put the long id of control id pId of pStack into tID
       end if
    end if
-   return revRuggedID(tID)
+   return tID
 end __ResolveId
 
 # Parameters
