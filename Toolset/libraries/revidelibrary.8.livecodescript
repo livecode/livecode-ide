@@ -10794,8 +10794,9 @@ private command revIDEGenerateDistributedAPI
    put tFolder & slash & "datagrid.lcdoc" into tInputs[1]
    put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
    # Regenerate if necessary
+   local tLibA
+   
    if tNeedUpdate then
-      local tLibA
       put revDocsParseDocFileToLibraryArray(tFolder & slash & tDatagridDoc, "Data Grid", "LiveCode") into tLibA
       # Update the database
       ideDocsUpdateDatabase tLibA
@@ -10811,6 +10812,35 @@ private command revIDEGenerateDistributedAPI
          & slash & "builder.js") after tDictionaryData
    put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "dg.js") after tDictionaryData
+   
+   
+   local tExtractedDocsFolder
+   put revEnvironmentBinariesPath() & slash & "extracted_docs" into tExtractedDocsFolder
+   
+   local tFiles
+   put files(tExtractedDocsFolder) into tFiles
+   filter tFiles with "*.lcdoc"
+   
+   set the itemDelimiter to "."
+   local tFile
+   repeat for each line tFile in tFiles
+      # Check to see if we need to regenerate the docs
+      put empty into tInputs
+      put revIDESpecialFolderPath("api") & slash & toLower(item 1 to -2 of tFile) & ".js" into tOutput
+      put the effective filename of stack "revDocsParser" into tInputs[0]
+      put tExtractedDocsFolder & slash & tFile into tInputs[1]
+      put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
+      # Regenerate if necessary
+      if tNeedUpdate then
+         put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
+         # Update the database
+         ideDocsUpdateDatabase tLibA
+         put revDocsFormatLibraryArrayAsJSON(tLibA) into tJSON
+         revIDESetUTF8FileContents tOutput, tJSON
+      end if
+      
+      put comma & revIDEUTF8FileContents(tOutput) after tDictionaryData
+   end repeat
    
    revIDESetUTF8FileContents revIDESpecialFolderPath("api") \ 
          & slash & "distributed_api.js", tDictionaryData
