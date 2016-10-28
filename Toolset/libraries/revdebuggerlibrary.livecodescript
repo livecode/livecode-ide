@@ -1988,7 +1988,7 @@ private function __StackAllowed pStack
    global gREVDevelopment
    if "development" is not in the environment or gREVDEvelopment then
       # With gREVDevelopment allow all stacks to be debugged except the debugger, as doing this will probably not work anyway.
-      if the short name of pStack is "revDebuggerLibrary" then
+      if the short name of pStack is among the items of "revDebuggerLibrary,com.livecode.script-library.remotedebugger" then
          return false
       else
          return true
