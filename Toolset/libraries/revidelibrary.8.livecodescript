@@ -5073,9 +5073,21 @@ end revIDEGoToObjectAPI
 # Properties API
 #############
 
-local sLockUpdates
-on revIDEPropertyLibraryInitialise
+local sLockUpdates, sThrottleTime
+private command __LockPropertyUpdates pThrottleTime
+   if pThrottleTime is empty then
+      put 10 into pThrottleTime
+   end if
+   put true into sLockUpdates
+   put pThrottleTime into sThrottleTime
+end __LockPropertyUpdates
+
+private command __UnlockPropertyUpdates
    put false into sLockUpdates
+end __UnlockPropertyUpdates
+
+on revIDEPropertyLibraryInitialise
+   __UnlockPropertyUpdates
 end revIDEPropertyLibraryInitialise
 
 ## Register new listeners for objects
@@ -5101,12 +5113,39 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
-on revIDEPropertyChanged pObject
+local sObjListA
+on revIDEUnlockPropertyUpdates
+   __UnlockPropertyUpdates
+   revIDESendPropertyChanged the keys of sObjListA
+   put empty into sObjListA
+end revIDEUnlockPropertyUpdates
+
+on revIDESendPropertyChanged pObjectList
+   repeat for each line tObject in pObjectList
+      ideMessageSendWithTrigger "idePropertyChanged", tObject, tObject
+   end repeat
+end revIDESendPropertyChanged
+
+local sPropertyChangedMsgID
+on revIDEPropertyChanged pObjectList
    if sLockUpdates is true then
+      -- Accumulate a list of objects whose property changes were locked
+      -- from triggering an ide message.
+      repeat for each line tObj in pObjectList
+         put true into sObjListA[tObj]
+      end repeat  
+      
+      if "revIDEUnlockPropertyUpdates" is in the pendingMessages then
+         cancel sPropertyChangedMsgID
+      end if
+      
+      -- Postpone update until sThrottleTime millisecs has passed
+      send "revIDEUnlockPropertyUpdates" to me in sThrottleTime millisecs
+      put the result into sPropertyChangedMsgID
       exit revIDEPropertyChanged
    end if
    
-   ideMessageSendWithTrigger "idePropertyChanged", pObject, pObject
+   revIDESendPropertyChanged pObjectList
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
@@ -5181,9 +5220,10 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    end if
    
    if tThrottlePropertyChanged or pLockUpdates then
-      put true into sLockUpdates
+      __LockPropertyUpdates 10
    end if
    
+   lock screen
    # Set stack edited before property change
    local tStacksListA, tStackShortNamesListA, tStack, tStackName
    repeat for each line tObject in pObjectList
@@ -5216,11 +5256,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       end repeat
    end if
    
-   if sLockUpdates then
-      ideMessageSendWithParameters "idePropertyChanged", pObjectList
-      put false into sLockUpdates
-   end if
-   
+   unlock screen
 end revIDEPropertySet
 
 local sStoredPropsA
