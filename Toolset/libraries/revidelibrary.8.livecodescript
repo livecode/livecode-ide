@@ -6194,6 +6194,25 @@ command revIDESetStackFilesProperty pObject, pProperty, pValue
    set the stackFiles of pObject to tProcessedValue
 end revIDESetStackFilesProperty
 
+command revIDESetRectProperty pObject, pProperty, pValue
+   switch pProperty
+      case "width"
+         if pValue is "fit" then
+            set the width of pObject to the formattedwidth of pObject
+         else if pValue is a number then
+            set the width of pObject to pValue
+         end if
+         break
+      case "height"
+         if pValue is "fit" then
+            set the height of pObject to the formattedheight of pObject
+         else if pValue is a number then
+            set the height of pObject to pValue
+         end if
+         break
+   end switch
+end revIDESetRectProperty
+
 #############
 # Standalone Settings
 #############

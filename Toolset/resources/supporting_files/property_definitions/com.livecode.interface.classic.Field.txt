@@ -65,8 +65,8 @@ fixedLineHeight
 textHeight												
 margins							8					
 lockLoc							false					
-width							100					
-height							21					
+width::revIDESetRectProperty			com.livecode.pi.dimension				100					
+height::revIDESetRectProperty			com.livecode.pi.dimension				21					
 location												
 left												
 top												

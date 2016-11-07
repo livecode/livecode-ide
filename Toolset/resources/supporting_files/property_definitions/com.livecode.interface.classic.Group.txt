@@ -52,8 +52,8 @@ textStyle							empty
 textAlign							empty					
 margins		Basic					8					
 lockLoc							false					
-width												
-height												
+width::revIDESetRectProperty			com.livecode.pi.dimension									
+height::revIDESetRectProperty			com.livecode.pi.dimension									
 location												
 left												
 top												

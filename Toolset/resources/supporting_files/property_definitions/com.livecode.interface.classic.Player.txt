@@ -51,8 +51,8 @@ textStyle
 textAlign												
 margins							8					
 lockLoc							false					
-width							310					
-height							264					
+width::revIDESetRectProperty			com.livecode.pi.dimension				310					
+height::revIDESetRectProperty			com.livecode.pi.dimension				264					
 location												
 left												
 top												
