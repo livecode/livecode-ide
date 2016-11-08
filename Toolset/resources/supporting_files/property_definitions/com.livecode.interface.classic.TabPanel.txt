@@ -39,12 +39,6 @@ margins							4
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				234					
 height::revIDESetRectProperty			com.livecode.pi.dimension				144					
-location												
-left												
-top												
-right												
-bottom												
-layer												
 style				false			menu					
 menumode				false			tabbed					
 dropShadow												
@@ -52,4 +46,3 @@ innerShadow
 outerGlow												
 innerGlow												
 colorOverlay
-number												

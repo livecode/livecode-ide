@@ -53,16 +53,9 @@ textAlign							empty
 margins		Basic					8					
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension									
-height::revIDESetRectProperty			com.livecode.pi.dimension									
-location												
-left												
-top												
-right												
-bottom												
-layer												
+height::revIDESetRectProperty			com.livecode.pi.dimension																				
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay
-number												

@@ -68,15 +68,8 @@ margins							8
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				250					
 height::revIDESetRectProperty			com.livecode.pi.dimension				56					
-location												
-left												
-top												
-right												
-bottom												
-layer												
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay
-number												
