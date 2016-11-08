@@ -1,0 +1,1 @@
+# Reinstate 'fit content' button in property inspector Position pane

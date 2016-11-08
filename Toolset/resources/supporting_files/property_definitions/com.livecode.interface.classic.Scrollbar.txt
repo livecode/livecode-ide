@@ -40,15 +40,8 @@ margins							4
 lockLoc							false					
 width							200					
 height							20					
-location												
-left												
-top												
-right												
-bottom												
-layer												
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay	
-number											
