@@ -51,17 +51,10 @@ textStyle
 textAlign												
 margins							8					
 lockLoc							false					
-width							310					
-height							264					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension				310					
+height::revIDESetRectProperty			com.livecode.pi.dimension				264																
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay
-number												

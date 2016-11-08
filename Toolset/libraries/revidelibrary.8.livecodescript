@@ -550,6 +550,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       
       add 1 to tCountsA[tSection][tGroupLabel]["count"]
       put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+      -- Put 'control properties' last
+      -- TODO: there should be a more transparent way of ordering these
+      if pObjectType is "com.livecode.interface.Control" then
+         add 1000 to pPropInfoA[tPropertyName]["group_order"]
+      end if
       
       put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
       put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
@@ -6193,6 +6198,60 @@ command revIDESetStackFilesProperty pObject, pProperty, pValue
    -- Set the stackFile property to the processed stackFile list
    set the stackFiles of pObject to tProcessedValue
 end revIDESetStackFilesProperty
+
+local sResizeA
+command revIDESetRectProperty pObject, pProperty, pValue
+   switch pProperty
+      case "width"
+         if pValue is "fit" then
+            set the width of pObject to the formattedwidth of pObject
+         else if pValue is a number then
+            set the width of pObject to pValue
+         end if
+         break
+      case "height"
+         if pValue is "fit" then
+            set the height of pObject to the formattedheight of pObject
+         else if pValue is a number then
+            set the height of pObject to pValue
+         end if
+         break
+      case "resize"
+         put pValue into sResizeA[pObject]
+         break
+      case "left"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + the left of pObject - pValue)
+         end if
+         set the left of pObject to pValue
+         break
+      case "right"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + pValue - the right of pObject)
+         end if
+         set the right of pObject to pValue
+         break
+      case "top"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + the top of pObject - pValue)
+         end if
+         set the top of pObject to pValue
+         break
+      case "bottom"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + pValue - the bottom of pObject)
+         end if
+         set the bottom of pObject to pValue
+         break
+   end switch
+end revIDESetRectProperty
+
+function revIDEGetRectProperty pObject, pProperty
+   switch pProperty
+      case "resize"
+         return sResizeA[pObject]
+   end switch
+end revIDEGetRectProperty
 
 #############
 # Standalone Settings

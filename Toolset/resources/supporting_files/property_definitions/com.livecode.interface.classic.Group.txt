@@ -52,17 +52,10 @@ textStyle							empty
 textAlign							empty					
 margins		Basic					8					
 lockLoc							false					
-width												
-height												
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension									
+height::revIDESetRectProperty			com.livecode.pi.dimension																				
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay
-number												
