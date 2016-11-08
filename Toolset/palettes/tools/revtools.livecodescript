@@ -639,6 +639,8 @@ on mouseDown pButton
    
    local tTargetStack, tTargetStackIndex, tScreenmouseloc
    repeat while the mouse is down
+      // Tickle the event queue to ensure screenmouseloc is always updated
+      wait for 0
       put the screenmouseloc into tScreenmouseloc
       set the loc of this stack to tScreenmouseloc
       

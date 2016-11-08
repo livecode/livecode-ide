@@ -37,16 +37,9 @@ textAlign
 margins							8					
 lockLoc							false					
 width							15					
-height							23					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+height							23																	
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay		
-number										
