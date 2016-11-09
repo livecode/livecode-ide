@@ -1,0 +1,1 @@
+# Update locked inspectors when mainstack names change

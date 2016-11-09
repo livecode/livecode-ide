@@ -158,7 +158,32 @@ on ideCloseStack
    ideSelectedObjectChanged
 end ideCloseStack
 
-on ideNameChanged
+on stackNameChanged pOldName, pNewLongID
+   lock screen
+   local tStackName
+   repeat for each key tKey in inspectorList()
+      put kPropertyInspectorPrefix && tKey into tStackName
+      if the cLocked of stack tStackName is true and the mode of stack tStackName is not 0 then
+         local tCurObj
+         put the cSelectedObjects of stack tStackName into tCurObj
+         if tCurObj contains ("stack" && quote & pOldName & quote) then
+            replace ("stack" && quote & pOldName & quote) with pNewLongID in tCurObj
+            set the cLocked of stack tStackName to false
+            set the cSelectedObjects of stack tStackName to tCurObj
+            set the cLocked of stack tStackName to true
+         end if
+      end if
+   end repeat
+   unlock screen
+end stackNameChanged
+
+on ideNameChanged pOldName, pNewName, pNewLongID
+   # If a stack name changed, we need to check locked inspectors for
+   # long id changes
+   if word 1 of pNewLongID is "stack" then
+      stackNameChanged pOldName, pNewLongID
+   end if
+   
    ideSelectedObjectChanged
 end ideNameChanged
 
