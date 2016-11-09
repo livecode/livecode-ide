@@ -218,15 +218,34 @@ end dataChanged
 on valueChanged
    local tPath
    put the hilitedElement of widget 1 of me into tPath
-   if tPath is empty then
-      # Don't update anthing
-   else
-      local tArray
-      put the arrayData of widget 1 of me into tArray
-      setArrayDataOnPath field "value" of me, tPath, tArray
-      setPropSet tArray
-   end if
+   valueChangedOnPath tPath
 end valueChanged
+
+private command valueChangedOnPath pPath
+   if pPath is empty then
+      # Don't update anthing
+      exit valueChangedOnPath
+   end if
+   local tArray
+   put the arrayData of widget 1 of me into tArray
+   
+   local tValue, tExisting
+   put field "value" of me into tValue
+   fetchArrayDataOnPath pPath, tArray, tExisting
+   
+   local tChanged
+   if tExisting is an array then
+      put tValue is not empty into tChanged
+   else
+      put tExisting is not tValue into tChanged
+   end if
+   
+   if not tChanged then
+      exit valueChangedOnPath
+   end if
+   setArrayDataOnPath field "value" of me, pPath, tArray
+   setPropSet tArray
+end valueChangedOnPath
 
 on keyChanged
    lock screen
