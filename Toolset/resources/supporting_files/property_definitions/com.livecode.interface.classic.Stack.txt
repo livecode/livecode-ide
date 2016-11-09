@@ -58,4 +58,3 @@ minWidth							32
 minHeight							32					
 maxWidth							65535					
 maxHeight							65535					
-behavior
