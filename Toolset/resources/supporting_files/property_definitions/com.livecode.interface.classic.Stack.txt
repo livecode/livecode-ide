@@ -21,7 +21,7 @@ cantDelete							false
 cantModify							false					
 cantAbort							false					
 stackFiles												
-externalReferences												
+externals												
 behavior
 foregroundColor												
 foregroundPattern												
