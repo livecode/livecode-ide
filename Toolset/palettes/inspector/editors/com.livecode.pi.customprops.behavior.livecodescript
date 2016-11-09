@@ -357,9 +357,24 @@ function revValidSetName pWhich
 end revValidSetName
 
 on hiliteChanged
+   checkRehilite
+   editorUpdate
    put empty into sHilitePath
 end hiliteChanged
 
+on checkRehilite
+   # Check to see if the key or value has changed
+   keyChangedOnPath sLastHilite
+   valueChangedOnPath sLastHilite
+   
+   # Store the existing hilited path
+   put the hilitedElement of widget "array" of me into sLastHilite
+   if sLastHilite is not empty then
+      # If a click caused a new path to be hilited, don't trigger 
+      # a rehilite of the old path
+      put empty into sHilitePath
+   end if
+end checkRehilite
 
 function arrayKeysAreNumeric pArrayA
    local tKey
