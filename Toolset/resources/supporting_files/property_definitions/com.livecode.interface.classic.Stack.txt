@@ -5,7 +5,7 @@ Property : optional getter : optional setter	Label	Section	Editor	User Visible	R
 ----------------------------------------------------------------------------------------------------
 name												
 title	
-mainStack								execute:get revIDEMainstackPropertyOptions()			
+mainStack		
 decorations												
 windowShape												
 scaleFactor							1					

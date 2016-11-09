@@ -104,7 +104,7 @@ location	Location	Position	com.livecode.pi.point	true	false		no_default
 lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false		false		
 lockText	Lock text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
-mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainstackPropertyOptions()	
+mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get ideMainStacks(); sort it
 margins	Margins	Text	com.livecode.pi.string	true	false			
 mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
 markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	

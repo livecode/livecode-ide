@@ -2167,29 +2167,11 @@ function revIDEMainStacks
 end revIDEMainStacks
 
 /**
-A list of the stacks that can be set at the main stack of the given stack
-
-Returns: A list of the names of stacks, one per line
-
-Description:
-Use the <revIDEMainstackPropertyOptions> function to retrieve a list of the names of the 
-stacks that can be set as the main stack of the current stack, taking into account the 
-Show IDE Stacks preference.
+Used by the PI to make a substack into a mainstack
 **/
-function revIDEMainstackPropertyOptions
-   local tStackList, tCurrentStack
-   put ideMainStacks() into tStackList
-   put revIDESelectedObjects() into tCurrentStack
-   
-   ## Allow the stack to be set as its own mainstack
-   if word 1 of tCurrentStack is "stack" then
-      if the short name of tCurrentStack is not among the lines of tStackList then
-         put return & the short name of tCurrentStack after tStackList
-      end if
-   end if
-   sort lines of tStackList
-   return tStackList
-end revIDEMainstackPropertyOptions
+command revIDEMakeSubstackMainstack pObj
+   set the mainstack of pObj to the short name of pObj
+end revIDEMakeSubstackMainstack
 
 /**
 A list of the current mainstacks
