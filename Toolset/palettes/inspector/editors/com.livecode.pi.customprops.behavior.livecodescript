@@ -212,6 +212,7 @@ on fetchArrayDataOnPath pPath, pArray, @rData
 end fetchArrayDataOnPath
 
 on dataChanged
+   checkRehilite
    setPropSet the arrayData of widget 1 of me
 end dataChanged
 
