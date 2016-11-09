@@ -11,6 +11,7 @@ on inspectorMessagesRegister
    revIDESubscribe "ideInspectObjects"
    revIDESubscribe "ideCloseStack"
    revIDESubscribe "ideNameChanged"
+   revIDESubscribe "ideMainstackChanged"
 end inspectorMessagesRegister
 
 on inspectorMessagesDeRegister
@@ -20,6 +21,7 @@ on inspectorMessagesDeRegister
    revIDEUnsubscribe "ideNewStack"
    revIDEUnsubscribe "ideCloseStack"
    revIDEUnsubscribe "ideNameChanged"
+   revIDEUnsubscribe "ideMainstackChanged"
 end inspectorMessagesDeRegister 
 
 on inspectorCloseAll
@@ -161,6 +163,10 @@ end ideCloseStack
 on ideNameChanged
    ideSelectedObjectChanged
 end ideNameChanged
+
+on ideMainstackChanged
+   ideSelectedObjectChanged
+end ideMainstackChanged
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged
