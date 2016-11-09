@@ -10,6 +10,14 @@ on editorInitialize
    put "stack" into sSort
    put the editorLabel of me into field "label" of me
    set the rowShowLabel of me to false
+   
+   if the editorEnabled of me then
+      show button "Remove key" of me
+      show button "New key" of me
+   else
+      hide button "Remove key" of me
+      hide button "New key" of me
+   end if
 end editorInitialize
 
 on editorUpdate
