@@ -248,17 +248,31 @@ private command valueChangedOnPath pPath
 end valueChangedOnPath
 
 on keyChanged
-   lock screen
    local tPath
    put the hilitedElement of widget 1 of me into tPath
+   keyChangedOnPath tPath
+end keyChanged
+
+local sLastHilite
+private command keyChangedOnPath pPath
+   if pPath is empty then
+      # Don't update anthing
+      exit keyChangedOnPath
+   end if
    
-   local tArray, tNewKey
+   local tNewKey
    put field "key" of me into tNewKey
+   if tNewKey is item -1 of pPath then
+      exit  keyChangedOnPath
+   end if
+   
+   local tArray
    put the arrayData of widget 1 of me into tArray
    
-   if tPath is not empty then
+   lock screen
+   if pPath is not empty then
       # If there is a hilited element then change it
-      setArrayKeyOnPath tNewKey, tPath, tArray
+      setArrayKeyOnPath tNewKey, pPath, tArray
    else
       # otherwise add a new key to the current set
       addArrayKeyOnPath tNewKey, tArray
@@ -266,10 +280,14 @@ on keyChanged
    
    # Set the new property and hilite the new/changed key
    setPropSet tArray
-   put tNewKey into item -1 of tPath
-   put tPath into sHilitePath
+   
+   # Since the key changed, invalidate the last hilite path
+   put empty into sLastHilite
+   
+   put tNewKey into item -1 of pPath
+   put pPath into sHilitePath
    unlock screen
-end keyChanged
+end keyChangedOnPath
 
 on propSetRenamed pFrom, pTo
    local tArray
