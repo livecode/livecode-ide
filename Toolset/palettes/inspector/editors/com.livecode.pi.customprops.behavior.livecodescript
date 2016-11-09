@@ -10,7 +10,10 @@ on editorInitialize
    set the editorMaxWidth of me to 0
 end editorInitialize
 
-local sDontUpdate
+on updateHilitePath pPath
+   set the hilitedElement of widget 1 of me to pPath
+end updateHilitePath
+
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled
@@ -48,10 +51,8 @@ on editorUpdate
    # Hilite a newly created key
    if sHilitePath is not empty and sHilitePath is not tPath then
       # Signals are posted from the widget after the handler has 
-      # executed, so lock messages here doesn't prevent hiliteChanged -
-      # use a script local to prevent second update.
-      put true into sDontUpdate
-      set the hilitedElement of widget 1 of me to sHilitePath
+      # executed, so we need to delay rehiliting the old path
+      send "updateHilitePath sHilitePath" to me in 10 millisecs
       put sHilitePath into tPath
    end if
    put empty into sHilitePath
@@ -320,11 +321,6 @@ end revValidSetName
 
 on hiliteChanged
    put empty into sHilitePath
-   # Prevent setting hilite in update causing additional call to editorUpdate
-   if not sDontUpdate then
-      editorUpdate
-   end if
-   put false into sDontUpdate
 end hiliteChanged
 
 
