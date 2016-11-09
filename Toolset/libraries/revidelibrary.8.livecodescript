@@ -461,6 +461,7 @@ private function __classicObjectPropertiesFromType pType
    switch the last item of pType
       case "Card"
       case "Stack"
+      case "Substack"
       case "DataGrid"
          return sClassicObjectProperties[pType]
       default
@@ -726,9 +727,7 @@ private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, 
    put pObjectTypeList is not empty into tAllControls
    
    repeat for each line tObjectType in pObjectTypeList
-      set the itemdelimiter to "."
-      get item -1 of tObjectType
-      if it is "Card" or it is "Stack" then
+      if not __objectTypeIsControl(tObjectType) then
          put false into tAllControls  
       end if
       if tPropertiesArray is empty then
@@ -896,128 +895,132 @@ Description:
 >*Note:* The type returned by <ideObjectTypeFromObject> can depend
 on the values of the object's properties.
    **/
-   function ideObjectTypeFromObject pObjectID
-      switch word 1 of the name of pObjectID
-         case "stack"
+function ideObjectTypeFromObject pObjectID
+   switch word 1 of the name of pObjectID
+      case "stack"
+         if word 4 of pObjectID is "stack" then
+            return "com.livecode.interface.classic.Substack"
+         else
             return "com.livecode.interface.classic.Stack"
-         case "card"
-            return "com.livecode.interface.classic.Card"
-         case "group"
-            if the dgProps["control type"] of pObjectID is "Data Grid" then
-               if the dgProps["style"] of pObjectID is "Table" then
-                  return "com.livecode.interface.classic.DataGrid"
+         end if
+      case "card"
+         return "com.livecode.interface.classic.Card"
+      case "group"
+         if the dgProps["control type"] of pObjectID is "Data Grid" then
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
+         else
+            return "com.livecode.interface.classic.Group"
+         end if
+         break
+      case "field"
+         if revIDEGetTableProperty(pObjectID, "basicTableObject") then
+            return "com.livecode.interface.classic.TableField"
+         else if the listbehavior of pObjectID is true then
+            return "com.livecode.interface.classic.ListField"
+         else if the vscrollbar of pObjectID is true then
+            return "com.livecode.interface.classic.TextArea"
+         else
+            return "com.livecode.interface.classic.Field"
+         end if
+         break
+      case "button"
+         if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
+         
+         switch the style of pObjectID
+            case "radiobutton"
+               return "com.livecode.interface.classic.RadioButton"
+               break
+            case "checkbox"
+               return "com.livecode.interface.classic.Checkbox"
+               break
+            case "menu"
+               switch the menumode of pObjectID
+                  case "combobox"
+                     return "com.livecode.interface.classic.ComboBox"
+                     break
+                  case "option"
+                     return "com.livecode.interface.classic.OptionMenu"
+                     break
+                  case "pulldown"
+                     return "com.livecode.interface.classic.PulldownMenu"
+                     break
+                  case "tabbed"
+                     return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
+                     break
+               end switch
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleButton"
+               break
+            default
+               if the default of pObjectID is true then
+                  return "com.livecode.interface.classic.DefaultButton"
                else
-                  return "com.livecode.interface.classic.DataGridForm"
+                  return "com.livecode.interface.classic.Button"
                end if
-            else
-               return "com.livecode.interface.classic.Group"
-            end if
-            break
-         case "field"
-            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
-               return "com.livecode.interface.classic.TableField"
-            else if the listbehavior of pObjectID is true then
-               return "com.livecode.interface.classic.ListField"
-            else if the vscrollbar of pObjectID is true then
-               return "com.livecode.interface.classic.TextArea"
-            else
-               return "com.livecode.interface.classic.Field"
-            end if
-            break
-         case "button"
-            if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
-            
-            switch the style of pObjectID
-               case "radiobutton"
-                  return "com.livecode.interface.classic.RadioButton"
-                  break
-               case "checkbox"
-                  return "com.livecode.interface.classic.Checkbox"
-                  break
-               case "menu"
-                  switch the menumode of pObjectID
-                     case "combobox"
-                        return "com.livecode.interface.classic.ComboBox"
-                        break
-                     case "option"
-                        return "com.livecode.interface.classic.OptionMenu"
-                        break
-                     case "pulldown"
-                        return "com.livecode.interface.classic.PulldownMenu"
-                        break
-                     case "tabbed"
-                        return "com.livecode.interface.classic.TabPanel"
-                        break
-                     case "popup"
-                     case "cascade"
-                     default
-                        return "com.livecode.interface.classic.PopupMenu"
-                        break
-                  end switch
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleButton"
-                  break
-               default
-                  if the default of pObjectID is true then
-                     return "com.livecode.interface.classic.DefaultButton"
-                  else
-                     return "com.livecode.interface.classic.Button"
-                  end if
-                  break
-            end switch
-         case "scrollbar"
-            switch the style of pObjectID
-               case "scale"
-                  return "com.livecode.interface.classic.Slider"
-                  break
-               case "progress"
-                  return "com.livecode.interface.classic.ProgressBar"
-                  break
-               case "scrollbar"
-                  if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
-                     return "com.livecode.interface.classic.LittleArrows"
-                  else
-                     return "com.livecode.interface.classic.Scrollbar"
-                  end if
-                  break
-            end switch
-            break
-         case "image"
-            return "com.livecode.interface.classic.Image"
-            break
-         case "player"
-            return "com.livecode.interface.classic.Player"
-         case "widget"
-            return the kind of pObjectID
-            break
-         case "graphic"
-            switch the style of pObjectID
-               case "text"
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleGraphic"
-                  break
-               case "roundrect"
-                  return "com.livecode.interface.classic.RoundRectGraphic"
-                  break
-               case "line"
-                  return "com.livecode.interface.classic.LineGraphic"
-                  break
-               case "arc"
-               case "oval"
-                  return "com.livecode.interface.classic.OvalGraphic"
-                  break
-               case "curve"
-                  return "com.livecode.interface.classic.CurveGraphic"
-                  break
-               case "polygon"
-                  return "com.livecode.interface.classic.PolygonGraphic"
-                  break
-               case "regular"
-                  return "com.livecode.interface.classic.RegularGraphic"
-                  break
-            end switch
-            break
-      end switch
+               break
+         end switch
+      case "scrollbar"
+         switch the style of pObjectID
+            case "scale"
+               return "com.livecode.interface.classic.Slider"
+               break
+            case "progress"
+               return "com.livecode.interface.classic.ProgressBar"
+               break
+            case "scrollbar"
+               if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
+                  return "com.livecode.interface.classic.LittleArrows"
+               else
+                  return "com.livecode.interface.classic.Scrollbar"
+               end if
+               break
+         end switch
+         break
+      case "image"
+         return "com.livecode.interface.classic.Image"
+         break
+      case "player"
+         return "com.livecode.interface.classic.Player"
+      case "widget"
+         return the kind of pObjectID
+         break
+      case "graphic"
+         switch the style of pObjectID
+            case "text"
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleGraphic"
+               break
+            case "roundrect"
+               return "com.livecode.interface.classic.RoundRectGraphic"
+               break
+            case "line"
+               return "com.livecode.interface.classic.LineGraphic"
+               break
+            case "arc"
+            case "oval"
+               return "com.livecode.interface.classic.OvalGraphic"
+               break
+            case "curve"
+               return "com.livecode.interface.classic.CurveGraphic"
+               break
+            case "polygon"
+               return "com.livecode.interface.classic.PolygonGraphic"
+               break
+            case "regular"
+               return "com.livecode.interface.classic.RegularGraphic"
+               break
+         end switch
+         break
+   end switch
 end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
@@ -3378,10 +3381,19 @@ private command  __setSizeToPreference pObjectID, pObjectType
    end if
 end __setSizeToPreference
 
+private function __objectTypeIsControl pObjectTypeID
+   switch pObjectTypeID
+      case "com.livecode.interface.classic.Stack"
+      case "com.livecode.interface.classic.Substack"
+      case "com.livecode.interface.classic.Card"
+         return false
+      default
+         return true
+   end switch
+end __objectTypeIsControl
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
-   if pObjectTypeID is "com.livecode.interface.classic.card" or \
-      pObjectTypeID is "com.livecode.interface.classic.stack" then
+   if not __objectTypeIsControl(pObjectTypeID) then
       return __revIDEError("Object must be a control")
    end if
 
