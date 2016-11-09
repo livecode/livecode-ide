@@ -1,0 +1,1 @@
+# Retain custom prop changes when clicking on tree view in editor
