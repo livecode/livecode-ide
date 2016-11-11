@@ -2770,9 +2770,9 @@ command revIDEUpdatePBPreferences
       revIDESetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    end if
    
-   -- Number should be default for cards and controls
+   -- Layer should be default for cards and controls
    if tOldSortType is empty then
-      put "Number" into tSortType
+      put "Layer" into tSortType
    end if
    
    if revIDEGetPreference("pb_cardSort") is empty then
@@ -2884,9 +2884,9 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tSubStacksList ascending by item 1 of each
+         sort lines of tSubStacksList ascending numeric by item 1 of each
       else
-         sort lines of tSubStacksList descending by item 1 of each
+         sort lines of tSubStacksList descending numeric by item 1 of each
       end if
    end if
    
@@ -2935,9 +2935,9 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 1 of each
+         sort lines of tChildControlList ascending numeric by item 1 of each
       else
-         sort lines of tChildControlList descending by item 1 of each
+         sort lines of tChildControlList descending numeric by item 1 of each
       end if
    end if
    
