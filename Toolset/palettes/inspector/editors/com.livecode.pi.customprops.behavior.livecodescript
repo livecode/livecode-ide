@@ -10,7 +10,10 @@ on editorInitialize
    set the editorMaxWidth of me to 0
 end editorInitialize
 
-local sDontUpdate
+on updateHilitePath pPath
+   set the hilitedElement of widget 1 of me to pPath
+end updateHilitePath
+
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled
@@ -37,16 +40,19 @@ on editorUpdate
       set the label of button "customPropertySet" of group "Set buttons" of me to sPropSet
    end if
    
+   if arrayKeysAreNumeric(tValue[sPropSet]) then
+      set the sorttype of widget 1 of me to "numeric"
+   else
+      set the sorttype of widget 1 of me to "text"
+   end if
    set the arrayData of widget 1 of me to tValue[sPropSet]
    local tPath
    put the hilitedElement of widget 1 of me into tPath
    # Hilite a newly created key
    if sHilitePath is not empty and sHilitePath is not tPath then
       # Signals are posted from the widget after the handler has 
-      # executed, so lock messages here doesn't prevent hiliteChanged -
-      # use a script local to prevent second update.
-      put true into sDontUpdate
-      set the hilitedElement of widget 1 of me to sHilitePath
+      # executed, so we need to delay rehiliting the old path
+      send "updateHilitePath sHilitePath" to me in 10 millisecs
       put sHilitePath into tPath
    end if
    put empty into sHilitePath
@@ -206,34 +212,68 @@ on fetchArrayDataOnPath pPath, pArray, @rData
 end fetchArrayDataOnPath
 
 on dataChanged
+   checkRehilite
    setPropSet the arrayData of widget 1 of me
 end dataChanged
 
 on valueChanged
    local tPath
    put the hilitedElement of widget 1 of me into tPath
-   if tPath is empty then
-      # Don't update anthing
-   else
-      local tArray
-      put the arrayData of widget 1 of me into tArray
-      setArrayDataOnPath field "value" of me, tPath, tArray
-      setPropSet tArray
-   end if
+   valueChangedOnPath tPath
 end valueChanged
 
-on keyChanged
-   lock screen
-   local tPath
-   put the hilitedElement of widget 1 of me into tPath
-   
-   local tArray, tNewKey
-   put field "key" of me into tNewKey
+private command valueChangedOnPath pPath
+   if pPath is empty then
+      # Don't update anthing
+      exit valueChangedOnPath
+   end if
+   local tArray
    put the arrayData of widget 1 of me into tArray
    
-   if tPath is not empty then
+   local tValue, tExisting
+   put field "value" of me into tValue
+   fetchArrayDataOnPath pPath, tArray, tExisting
+   
+   local tChanged
+   if tExisting is an array then
+      put tValue is not empty into tChanged
+   else
+      put tExisting is not tValue into tChanged
+   end if
+   
+   if not tChanged then
+      exit valueChangedOnPath
+   end if
+   setArrayDataOnPath field "value" of me, pPath, tArray
+   setPropSet tArray
+end valueChangedOnPath
+
+on keyChanged
+   local tPath
+   put the hilitedElement of widget 1 of me into tPath
+   keyChangedOnPath tPath
+end keyChanged
+
+local sLastHilite
+private command keyChangedOnPath pPath
+   if pPath is empty then
+      # Don't update anthing
+      exit keyChangedOnPath
+   end if
+   
+   local tNewKey
+   put field "key" of me into tNewKey
+   if tNewKey is item -1 of pPath then
+      exit  keyChangedOnPath
+   end if
+   
+   local tArray
+   put the arrayData of widget 1 of me into tArray
+   
+   lock screen
+   if pPath is not empty then
       # If there is a hilited element then change it
-      setArrayKeyOnPath tNewKey, tPath, tArray
+      setArrayKeyOnPath tNewKey, pPath, tArray
    else
       # otherwise add a new key to the current set
       addArrayKeyOnPath tNewKey, tArray
@@ -241,10 +281,14 @@ on keyChanged
    
    # Set the new property and hilite the new/changed key
    setPropSet tArray
-   put tNewKey into item -1 of tPath
-   put tPath into sHilitePath
+   
+   # Since the key changed, invalidate the last hilite path
+   put empty into sLastHilite
+   
+   put tNewKey into item -1 of pPath
+   put pPath into sHilitePath
    unlock screen
-end keyChanged
+end keyChangedOnPath
 
 on propSetRenamed pFrom, pTo
    local tArray
@@ -314,10 +358,30 @@ function revValidSetName pWhich
 end revValidSetName
 
 on hiliteChanged
+   checkRehilite
+   editorUpdate
    put empty into sHilitePath
-   # Prevent setting hilite in update causing additional call to editorUpdate
-   if not sDontUpdate then
-      editorUpdate
-   end if
-   put false into sDontUpdate
 end hiliteChanged
+
+on checkRehilite
+   # Check to see if the key or value has changed
+   keyChangedOnPath sLastHilite
+   valueChangedOnPath sLastHilite
+   
+   # Store the existing hilited path
+   put the hilitedElement of widget "array" of me into sLastHilite
+   if sLastHilite is not empty then
+      # If a click caused a new path to be hilited, don't trigger 
+      # a rehilite of the old path
+      put empty into sHilitePath
+   end if
+end checkRehilite
+
+function arrayKeysAreNumeric pArrayA
+   local tKey
+   
+   repeat for each key tKey in pArrayA
+      if tKey is not an integer then return false
+   end repeat
+   return true
+end arrayKeysAreNumeric

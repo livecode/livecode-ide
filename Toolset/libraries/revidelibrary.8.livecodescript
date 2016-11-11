@@ -461,6 +461,7 @@ private function __classicObjectPropertiesFromType pType
    switch the last item of pType
       case "Card"
       case "Stack"
+      case "Substack"
       case "DataGrid"
          return sClassicObjectProperties[pType]
       default
@@ -550,6 +551,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       
       add 1 to tCountsA[tSection][tGroupLabel]["count"]
       put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+      -- Put 'control properties' last
+      -- TODO: there should be a more transparent way of ordering these
+      if pObjectType is "com.livecode.interface.Control" then
+         add 1000 to pPropInfoA[tPropertyName]["group_order"]
+      end if
       
       put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
       put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
@@ -721,9 +727,7 @@ private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, 
    put pObjectTypeList is not empty into tAllControls
    
    repeat for each line tObjectType in pObjectTypeList
-      set the itemdelimiter to "."
-      get item -1 of tObjectType
-      if it is "Card" or it is "Stack" then
+      if not __objectTypeIsControl(tObjectType) then
          put false into tAllControls  
       end if
       if tPropertiesArray is empty then
@@ -891,128 +895,132 @@ Description:
 >*Note:* The type returned by <ideObjectTypeFromObject> can depend
 on the values of the object's properties.
    **/
-   function ideObjectTypeFromObject pObjectID
-      switch word 1 of pObjectID
-         case "stack"
+function ideObjectTypeFromObject pObjectID
+   switch word 1 of the name of pObjectID
+      case "stack"
+         if word 4 of pObjectID is "stack" then
+            return "com.livecode.interface.classic.Substack"
+         else
             return "com.livecode.interface.classic.Stack"
-         case "card"
-            return "com.livecode.interface.classic.Card"
-         case "group"
-            if the dgProps["control type"] of pObjectID is "Data Grid" then
-               if the dgProps["style"] of pObjectID is "Table" then
-                  return "com.livecode.interface.classic.DataGrid"
+         end if
+      case "card"
+         return "com.livecode.interface.classic.Card"
+      case "group"
+         if the dgProps["control type"] of pObjectID is "Data Grid" then
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
+         else
+            return "com.livecode.interface.classic.Group"
+         end if
+         break
+      case "field"
+         if revIDEGetTableProperty(pObjectID, "basicTableObject") then
+            return "com.livecode.interface.classic.TableField"
+         else if the listbehavior of pObjectID is true then
+            return "com.livecode.interface.classic.ListField"
+         else if the vscrollbar of pObjectID is true then
+            return "com.livecode.interface.classic.TextArea"
+         else
+            return "com.livecode.interface.classic.Field"
+         end if
+         break
+      case "button"
+         if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
+         
+         switch the style of pObjectID
+            case "radiobutton"
+               return "com.livecode.interface.classic.RadioButton"
+               break
+            case "checkbox"
+               return "com.livecode.interface.classic.Checkbox"
+               break
+            case "menu"
+               switch the menumode of pObjectID
+                  case "combobox"
+                     return "com.livecode.interface.classic.ComboBox"
+                     break
+                  case "option"
+                     return "com.livecode.interface.classic.OptionMenu"
+                     break
+                  case "pulldown"
+                     return "com.livecode.interface.classic.PulldownMenu"
+                     break
+                  case "tabbed"
+                     return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
+                     break
+               end switch
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleButton"
+               break
+            default
+               if the default of pObjectID is true then
+                  return "com.livecode.interface.classic.DefaultButton"
                else
-                  return "com.livecode.interface.classic.DataGridForm"
+                  return "com.livecode.interface.classic.Button"
                end if
-            else
-               return "com.livecode.interface.classic.Group"
-            end if
-            break
-         case "field"
-            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
-               return "com.livecode.interface.classic.TableField"
-            else if the listbehavior of pObjectID is true then
-               return "com.livecode.interface.classic.ListField"
-            else if the vscrollbar of pObjectID is true then
-               return "com.livecode.interface.classic.TextArea"
-            else
-               return "com.livecode.interface.classic.Field"
-            end if
-            break
-         case "button"
-            if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
-            
-            switch the style of pObjectID
-               case "radiobutton"
-                  return "com.livecode.interface.classic.RadioButton"
-                  break
-               case "checkbox"
-                  return "com.livecode.interface.classic.Checkbox"
-                  break
-               case "menu"
-                  switch the menumode of pObjectID
-                     case "combobox"
-                        return "com.livecode.interface.classic.ComboBox"
-                        break
-                     case "option"
-                        return "com.livecode.interface.classic.OptionMenu"
-                        break
-                     case "pulldown"
-                        return "com.livecode.interface.classic.PulldownMenu"
-                        break
-                     case "tabbed"
-                        return "com.livecode.interface.classic.TabPanel"
-                        break
-                     case "popup"
-                     case "cascade"
-                     default
-                        return "com.livecode.interface.classic.PopupMenu"
-                        break
-                  end switch
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleButton"
-                  break
-               default
-                  if the default of pObjectID is true then
-                     return "com.livecode.interface.classic.DefaultButton"
-                  else
-                     return "com.livecode.interface.classic.Button"
-                  end if
-                  break
-            end switch
-         case "scrollbar"
-            switch the style of pObjectID
-               case "scale"
-                  return "com.livecode.interface.classic.Slider"
-                  break
-               case "progress"
-                  return "com.livecode.interface.classic.ProgressBar"
-                  break
-               case "scrollbar"
-                  if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
-                     return "com.livecode.interface.classic.LittleArrows"
-                  else
-                     return "com.livecode.interface.classic.Scrollbar"
-                  end if
-                  break
-            end switch
-            break
-         case "image"
-            return "com.livecode.interface.classic.Image"
-            break
-         case "player"
-            return "com.livecode.interface.classic.Player"
-         case "widget"
-            return the kind of pObjectID
-            break
-         case "graphic"
-            switch the style of pObjectID
-               case "text"
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleGraphic"
-                  break
-               case "roundrect"
-                  return "com.livecode.interface.classic.RoundRectGraphic"
-                  break
-               case "line"
-                  return "com.livecode.interface.classic.LineGraphic"
-                  break
-               case "arc"
-               case "oval"
-                  return "com.livecode.interface.classic.OvalGraphic"
-                  break
-               case "curve"
-                  return "com.livecode.interface.classic.CurveGraphic"
-                  break
-               case "polygon"
-                  return "com.livecode.interface.classic.PolygonGraphic"
-                  break
-               case "regular"
-                  return "com.livecode.interface.classic.RegularGraphic"
-                  break
-            end switch
-            break
-      end switch
+               break
+         end switch
+      case "scrollbar"
+         switch the style of pObjectID
+            case "scale"
+               return "com.livecode.interface.classic.Slider"
+               break
+            case "progress"
+               return "com.livecode.interface.classic.ProgressBar"
+               break
+            case "scrollbar"
+               if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
+                  return "com.livecode.interface.classic.LittleArrows"
+               else
+                  return "com.livecode.interface.classic.Scrollbar"
+               end if
+               break
+         end switch
+         break
+      case "image"
+         return "com.livecode.interface.classic.Image"
+         break
+      case "player"
+         return "com.livecode.interface.classic.Player"
+      case "widget"
+         return the kind of pObjectID
+         break
+      case "graphic"
+         switch the style of pObjectID
+            case "text"
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleGraphic"
+               break
+            case "roundrect"
+               return "com.livecode.interface.classic.RoundRectGraphic"
+               break
+            case "line"
+               return "com.livecode.interface.classic.LineGraphic"
+               break
+            case "arc"
+            case "oval"
+               return "com.livecode.interface.classic.OvalGraphic"
+               break
+            case "curve"
+               return "com.livecode.interface.classic.CurveGraphic"
+               break
+            case "polygon"
+               return "com.livecode.interface.classic.PolygonGraphic"
+               break
+            case "regular"
+               return "com.livecode.interface.classic.RegularGraphic"
+               break
+         end switch
+         break
+   end switch
 end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
@@ -2155,29 +2163,11 @@ function revIDEGlobalPropertyContinuousRange pProperty
 end revIDEGlobalPropertyContinuousRange
 
 /**
-A list of the stacks that can be set at the main stack of the given stack
-
-Returns: A list of the names of stacks, one per line
-
-Description:
-Use the <revIDEMainstackPropertyOptions> function to retrieve a list of the names of the 
-stacks that can be set as the main stack of the current stack, taking into account the 
-Show IDE Stacks preference.
+Used by the PI to make a substack into a mainstack
 **/
-function revIDEMainstackPropertyOptions
-   local tStackList, tCurrentStack
-   put ideMainStacks() into tStackList
-   put revIDESelectedObjects() into tCurrentStack
-   
-   ## Allow the stack to be set as its own mainstack
-   if word 1 of tCurrentStack is "stack" then
-      if the short name of tCurrentStack is not among the lines of tStackList then
-         put return & the short name of tCurrentStack after tStackList
-      end if
-   end if
-   sort lines of tStackList
-   return tStackList
-end revIDEMainstackPropertyOptions
+command revIDEMakeSubstackMainstack pObj
+   set the mainstack of pObj to the short name of pObj
+end revIDEMakeSubstackMainstack
 
 /**
 A list of the current mainstacks
@@ -2759,9 +2749,9 @@ command revIDEUpdatePBPreferences
       revIDESetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    end if
    
-   -- Number should be default for cards and controls
+   -- Layer should be default for cards and controls
    if tOldSortType is empty then
-      put "Number" into tSortType
+      put "Layer" into tSortType
    end if
    
    if revIDEGetPreference("pb_cardSort") is empty then
@@ -2873,9 +2863,9 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tSubStacksList ascending by item 1 of each
+         sort lines of tSubStacksList ascending numeric by item 1 of each
       else
-         sort lines of tSubStacksList descending by item 1 of each
+         sort lines of tSubStacksList descending numeric by item 1 of each
       end if
    end if
    
@@ -2924,9 +2914,9 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 1 of each
+         sort lines of tChildControlList ascending numeric by item 1 of each
       else
-         sort lines of tChildControlList descending by item 1 of each
+         sort lines of tChildControlList descending numeric by item 1 of each
       end if
    end if
    
@@ -3367,10 +3357,19 @@ private command  __setSizeToPreference pObjectID, pObjectType
    end if
 end __setSizeToPreference
 
+private function __objectTypeIsControl pObjectTypeID
+   switch pObjectTypeID
+      case "com.livecode.interface.classic.Stack"
+      case "com.livecode.interface.classic.Substack"
+      case "com.livecode.interface.classic.Card"
+         return false
+      default
+         return true
+   end switch
+end __objectTypeIsControl
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
-   if pObjectTypeID is "com.livecode.interface.classic.card" or \
-      pObjectTypeID is "com.livecode.interface.classic.stack" then
+   if not __objectTypeIsControl(pObjectTypeID) then
       return __revIDEError("Object must be a control")
    end if
 
@@ -5061,9 +5060,21 @@ end revIDEGoToObjectAPI
 # Properties API
 #############
 
-local sLockUpdates
-on revIDEPropertyLibraryInitialise
+local sLockUpdates, sThrottleTime
+private command __LockPropertyUpdates pThrottleTime
+   if pThrottleTime is empty then
+      put 10 into pThrottleTime
+   end if
+   put true into sLockUpdates
+   put pThrottleTime into sThrottleTime
+end __LockPropertyUpdates
+
+private command __UnlockPropertyUpdates
    put false into sLockUpdates
+end __UnlockPropertyUpdates
+
+on revIDEPropertyLibraryInitialise
+   __UnlockPropertyUpdates
 end revIDEPropertyLibraryInitialise
 
 ## Register new listeners for objects
@@ -5089,12 +5100,39 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
-on revIDEPropertyChanged pObject
+local sObjListA
+on revIDEUnlockPropertyUpdates
+   __UnlockPropertyUpdates
+   revIDESendPropertyChanged the keys of sObjListA
+   put empty into sObjListA
+end revIDEUnlockPropertyUpdates
+
+on revIDESendPropertyChanged pObjectList
+   repeat for each line tObject in pObjectList
+      ideMessageSendWithTrigger "idePropertyChanged", tObject, tObject
+   end repeat
+end revIDESendPropertyChanged
+
+local sPropertyChangedMsgID
+on revIDEPropertyChanged pObjectList
    if sLockUpdates is true then
+      -- Accumulate a list of objects whose property changes were locked
+      -- from triggering an ide message.
+      repeat for each line tObj in pObjectList
+         put true into sObjListA[tObj]
+      end repeat  
+      
+      if "revIDEUnlockPropertyUpdates" is in the pendingMessages then
+         cancel sPropertyChangedMsgID
+      end if
+      
+      -- Postpone update until sThrottleTime millisecs has passed
+      send "revIDEUnlockPropertyUpdates" to me in sThrottleTime millisecs
+      put the result into sPropertyChangedMsgID
       exit revIDEPropertyChanged
    end if
    
-   ideMessageSendWithTrigger "idePropertyChanged", pObject, pObject
+   revIDESendPropertyChanged pObjectList
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
@@ -5169,9 +5207,10 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    end if
    
    if tThrottlePropertyChanged or pLockUpdates then
-      put true into sLockUpdates
+      __LockPropertyUpdates 10
    end if
    
+   lock screen
    # Set stack edited before property change
    local tStacksListA, tStackShortNamesListA, tStack, tStackName
    repeat for each line tObject in pObjectList
@@ -5204,11 +5243,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       end repeat
    end if
    
-   if sLockUpdates then
-      ideMessageSendWithParameters "idePropertyChanged", pObjectList
-      put false into sLockUpdates
-   end if
-   
+   unlock screen
 end revIDEPropertySet
 
 local sStoredPropsA
@@ -6149,6 +6184,60 @@ command revIDESetStackFilesProperty pObject, pProperty, pValue
    -- Set the stackFile property to the processed stackFile list
    set the stackFiles of pObject to tProcessedValue
 end revIDESetStackFilesProperty
+
+local sResizeA
+command revIDESetRectProperty pObject, pProperty, pValue
+   switch pProperty
+      case "width"
+         if pValue is "fit" then
+            set the width of pObject to the formattedwidth of pObject
+         else if pValue is a number then
+            set the width of pObject to pValue
+         end if
+         break
+      case "height"
+         if pValue is "fit" then
+            set the height of pObject to the formattedheight of pObject
+         else if pValue is a number then
+            set the height of pObject to pValue
+         end if
+         break
+      case "resize"
+         put pValue into sResizeA[pObject]
+         break
+      case "left"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + the left of pObject - pValue)
+         end if
+         set the left of pObject to pValue
+         break
+      case "right"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + pValue - the right of pObject)
+         end if
+         set the right of pObject to pValue
+         break
+      case "top"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + the top of pObject - pValue)
+         end if
+         set the top of pObject to pValue
+         break
+      case "bottom"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + pValue - the bottom of pObject)
+         end if
+         set the bottom of pObject to pValue
+         break
+   end switch
+end revIDESetRectProperty
+
+function revIDEGetRectProperty pObject, pProperty
+   switch pProperty
+      case "resize"
+         return sResizeA[pObject]
+   end switch
+end revIDEGetRectProperty
 
 #############
 # Standalone Settings
@@ -10915,8 +11004,8 @@ end __fetchNamesToColors
 
 private on __fetchColorsToNames
     repeat for each line tColor in the colorNames
-  		 put tColor into sColorsToNamesA[revIDENamedColorToRGB(tColor)]
-		end repeat
+  	   put tColor into sColorsToNamesA[revIDENamedColorToRGB(tColor)]
+	end repeat
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName

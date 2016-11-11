@@ -132,7 +132,7 @@ end _TestOrderPref
 
 on TestOrder	
 	repeat for each item tWhich in kSortPrefs
-		repeat for each item tType in "name,number"
+		repeat for each item tType in "name,layer"
 			repeat for each item tOrder in "ascending,descending"
 				_TestOrderPref tWhich, tType, tOrder
 			end repeat

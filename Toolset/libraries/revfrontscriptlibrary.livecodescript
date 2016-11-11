@@ -541,7 +541,11 @@ on mouseDoubleUp pButtonNo, pTarget
 end mouseDoubleUp
 
 on openField
-   revIDESetEdited the short name of revIDEStackOfObject(the long id of the target)
+   local tStack
+   put revIDEStackOfObject(the long id of the target) into tStack
+   if the mode of tStack is 1 then
+      revIDESetEdited the short name of tStack
+   end if
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass openField
 end openField
 

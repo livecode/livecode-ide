@@ -1,0 +1,1 @@
+# Reinstate resize checkbox in property inspector Position pane
