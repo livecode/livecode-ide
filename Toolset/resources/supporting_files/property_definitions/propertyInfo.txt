@@ -54,7 +54,7 @@ enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true
 endArrow	End arrow	Basic	com.livecode.pi.boolean	true	false		false	
 endTime	End	Basic	com.livecode.pi.integer	true	false					0		1			
 endValue	End value	Basic	com.livecode.pi.number	true	false		100					1			
-externalReferences	External references	externalRefs	com.livecode.pi.text	true	false			
+externals	External references	externalRefs	com.livecode.pi.text	true	false			
 filename	Source	Basic	com.livecode.pi.file	true	false			
 fillGradient::revIDESetGradientProperty	Fill gradient	Colors	com.livecode.pi.gradient	true	false	Background fill		popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap
 firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1	
@@ -104,7 +104,7 @@ location	Location	Position	com.livecode.pi.point	true	false		no_default
 lockLoc	Lock size and position	Position	com.livecode.pi.boolean	true	false		false		
 lockText	Lock text	Basic	com.livecode.pi.boolean	true	false			
 looping	Loop	Basic	com.livecode.pi.boolean	true	false		false	
-mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get revIDEMainstackPropertyOptions()	
+mainStack	Main stack	Basic	com.livecode.pi.enum	true	false			execute:get ideMainStacks(); sort it
 margins	Margins	Text	com.livecode.pi.string	true	false			
 mark	Marked	Basic	com.livecode.pi.boolean	true	false		false	
 markerDrawn	Draw shape at vertices	Basic	com.livecode.pi.boolean	true	false		false	
