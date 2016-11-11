@@ -16,32 +16,6 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-local sColorsToNamesA
-
-# use the engine to convert from colorname to rgb value
-# currently it doesn't seem possible to set a property of the templateGraphic from a unit test.
-private function revIDEColorNameToRGB pColorName
-	 local tRGBValue
-#	 local tOriginalColorOverlay
-
-#   put the colorOverlay["color"] of the templateGraphic into tOriginalColorOverlay
-#   set the colorOverlay["color"] of the templateGraphic to pColorName 
-#   put the colorOverlay["color"] of the templateGraphic into tRGBValue
-#   set the colorOverlay["color"] of the templateGraphic to tOriginalColorOverlay 
-   put revIDENamedColorToRGB(pColorName) into tRGBValue
-   return tRGBValue
-end revIDEColorNameToRGB
-
-private command setupRGBArray
-	 repeat for each line tColor in the colornames
-  	  put tColor into sColorsToNamesA[revIDEColorNameToRGB(tColor)]
-	 end repeat
-end setupRGBArray
-
-private function revIDERGBToColorName pRGB
-   return sColorsToNamesA[pRGB]
-end revIDERGBToColorName
-
 on TestGrayNamesToColors
    local tColorNames
    local tGrayValue
@@ -77,7 +51,6 @@ on TestGrayColorsToNames
    put the colornames into tColorNames
    filter tColorNames with "Gray*"
    TestAssert "Gray colors are among color names", tColorNames is not empty
-   setupRGBArray
    repeat for each line tColor in tColorNames
       put tColor into tGrayValue
       replace "Gray" with empty in tGrayValue
@@ -88,7 +61,7 @@ on TestGrayColorsToNames
       end if
       # the next line looks up the value in colorsToNames.txt
       put tRGB,tRGB,tRGB into tGrayRGB
-      put revIDERGBToColorName(tGrayRGB) into tColorName
+      put revIDERGBToNamedColor(tGrayRGB) into tColorName
       # Gray100 is 255,255,255 which is a alias for White
       if tColor is "Gray100" then
          put "White" into tColor
@@ -99,16 +72,14 @@ on TestGrayColorsToNames
 end TestGrayColorsToNames
 
 on TestNamesToColors
-   local tColorNames
    local tColorRGBValue
    local tRGB
    
-   put the colornames into tColorNames
-   repeat for each line tColor in tColorNames
+   repeat for each line tColor in the colornames
       # get the RGB value from the engine
       put revIDENamedColorToRGB(tColor) into tColorRGBValue
       # get the actual RGB value
-      put revIDEColorNameToRGB(tColor) into tRGB
+      put revIDENamedColorToRGB(tColor) into tRGB
       TestAssert tColor && "rgb value is" && tColorRGBValue && "but should be" && tRGB, tRGB is tColorRGBValue
    end repeat
 end TestNamesToColors
@@ -172,17 +143,14 @@ private function DisambiguateColorName pColorName
 end DisambiguateColorName
 
 on TestColorsToNames
-   local tColorNames
    local tColorName
    local tRGB
    
-   put the colornames into tColorNames
-   setupRGBArray
-   repeat for each line tColor in tColorNames
+   repeat for each line tColor in the colornames
       # get the RGB value from the engine
       put revIDENamedColorToRGB(tColor) into tRGB
       # get the colorname from our array
-      put DisambiguateColorName(revIDERGBToColorName(tRGB)) into tColorName
+      put DisambiguateColorName(revIDERGBToNamedColor(tRGB)) into tColorName
       TestAssert tColor && "is the correct color name for" && tRGB && "got" && tColorName, DisambiguateColorName(tColor) is tColorName
    end repeat
 end TestColorsToNames
