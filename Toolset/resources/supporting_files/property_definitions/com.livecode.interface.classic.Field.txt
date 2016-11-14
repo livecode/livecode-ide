@@ -65,17 +65,10 @@ fixedLineHeight
 textHeight												
 margins							8					
 lockLoc							false					
-width							100					
-height							21					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension				100					
+height::revIDESetRectProperty			com.livecode.pi.dimension				21																	
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
-number												
+colorOverlay											

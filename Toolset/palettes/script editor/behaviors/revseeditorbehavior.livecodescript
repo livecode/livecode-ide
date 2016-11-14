@@ -2503,6 +2503,9 @@ end handleSelectionChanged
 on selectionChangedByArrowKey pArrowKey
    handleSelectionChanged
    
+   -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
+   get the selectedChunk
+   
    local tAt
    if word 2 of it > word 4 of it then
       put word 4 of it into tAt

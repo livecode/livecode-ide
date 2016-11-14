@@ -15,13 +15,6 @@ blendLevel							0	0,100
 lockLoc							false					
 width							no_default					
 height							no_default					
-location												
-left												
-top												
-right												
-bottom												
-layer												
 textFont																						
 textSize												
 traversalOn		Advanced					false	
-number									
