@@ -7045,7 +7045,7 @@ on revIDEImportControl pType, pFileName, pReferenced
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
          put the result into tCreatedControlID
          put revIDEUTF8FileContents(pFileName) into tFileContents
-         put tFileContents into tCreatedControlID
+         set the text of tCreatedControlID to tFileContents
          select tCreatedControlID
          break
       case "graph"
