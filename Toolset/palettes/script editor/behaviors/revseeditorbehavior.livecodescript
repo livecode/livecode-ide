@@ -2476,9 +2476,14 @@ command cancelPendingMessages
    end if
 end cancelPendingMessages
 
+# Stores that an arrowKey is pressed from rawKeyDown
+local sArrowKeyPressed
+
 -- This is sent by the engine
 on selectionChanged
-   handleSelectionChanged
+   if not (sArrowKeyPressed) then
+      handleSelectionChanged
+   end if
    -- Unmark found results when clicking on the SE
    selectionUpdateRequest
 end selectionChanged
@@ -2486,22 +2491,18 @@ end selectionChanged
 -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
 -- "selectionChangedByArrowKey pArrowKey"
 on handleSelectionChanged
-   if the selectedText of field "Script" of me is not empty then
-      put the selectedText of field "Script" of me into sLastNonEmptySelection
-   end if
+   saveLastSelections
    
-   -- [[ Bug 18528 ]] We need this here otherwise the "it" var in the if block below is empty
    get the selectedChunk
-   
-   # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
-   # when the user begins typing into the search field.
-   if the long id of the focusedObject is the long id of field "Script" of me then
-      put word 2 of it & comma & word 4 of it into sLastSelectedChunk
+   -- a text selection
+   if word 2 of it < word 4 of it then
+      exit handleSelectionChanged
    end if
+   caretUpdate
 end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
-   handleSelectionChanged
+   saveLastSelections
    
    -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
    get the selectedChunk
@@ -2563,10 +2564,24 @@ on selectionChangedByArrowKey pArrowKey
    end switch
    
    textMark "Insert"
-   
+   put false into sArrowKeyPressed
    selectionUpdateRequest
 end selectionChangedByArrowKey
 
+private command saveLastSelections
+   if the selectedText of field "Script" of me is not empty then
+      put the selectedText of field "Script" of me into sLastNonEmptySelection
+   end if
+   
+   -- [[ Bug 18528 ]] We need this here otherwise the "it" var in the if block below is empty
+   get the selectedChunk
+   
+   # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
+   # when the user begins typing into the search field.
+   if the long id of the focusedObject is the long id of field "Script" of me then
+      put word 2 of it & comma & word 4 of it into sLastSelectedChunk
+   end if
+end saveLastSelections
 
 private command selectionUpdateRequest
    if sSelectionUpdateRequest is not empty then
@@ -3276,6 +3291,7 @@ on rawKeyDown pKey
    
    # For Windows: Home (Windows / Linux)
    if pKey is kKeyHome and seGetPlatform() is not "macos" then
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
@@ -3283,6 +3299,7 @@ on rawKeyDown pKey
    # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
    if (pKey is kKeyLeftArrow and (the controlKey is "down" or the commandKey is "down") or \
          (pKey is 65 and the controlKey is "down" and the shiftKey is "up")) and seGetPlatform() is "macos" then
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
@@ -3312,32 +3329,29 @@ on rawKeyDown pKey
       end if
    end if
    
-   pass rawKeyDown
-end rawKeyDown
-
-
-# Description
-#   RawKeyUp is handled to deal with the arrow keys. The script editor needs to update when these are pressed
-#   because they change the selection, however in order to do this efficiently, we have to only update when the key
-#   is actually released, not each repeat interval.
-on rawKeyUp pKey
-   if not handleEvent("rawKeyUp", the long id of the target) then
-      pass rawKeyUp
-   end if
-   
-   if pKey is not among the items of kKeyLeftArrow,kKeyRightArrow,kKeyUpArrow,kKeyDownArrow then
-      pass rawKeyUp
-   end if
-   
-   # Check to see if one of the arrow keys is still being held down. If so, don't do the selectionChanged update until they
-   # are all released as it will still be moving
-   local tDownKeys
-   put keysDown() into tDownKeys
-   if (kKeyLeftArrow is among the items of tDownKeys) or (kKeyRightArrow is among the items of tDownKeys) or (kKeyUpArrow is among the items of tDownKeys) or (kKeyDownArrow is among the items of tDownKeys) then
-      pass rawKeyUp
-   end if
-   
+   # optionKey is down
    local tKeyName
+   if (pKey is kKeyLeftArrow or pKey is kKeyRightArrow) and the optionkey is down then
+      put true into sArrowKeyPressed
+      if pKey is kkeyRightArrow then
+         send "selectionChangedByArrowKey" to me in 0 milliseconds
+      else
+         put "left" into tKeyName
+         send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
+      end if
+      pass rawKeyDown
+   end if
+
+   if pKey is not among the items of kKeyLeftArrow,kKeyRightArrow,kKeyUpArrow,kKeyDownArrow then
+      pass rawKeyDown
+   end if
+   
+   # for simple arrowKeys
+   
+   #  [[ Bug 18595 ]] "cursor should move to begin of text if click is left of text"
+   # moved handling of arrowKey from rawKeyUp here to flag arrowKey in sArrowKeyPressed
+   # before "selectionChanged" message is fired 
+   
    switch pKey
       case kKeyLeftArrow
          put "left" into tKeyName
@@ -3355,10 +3369,11 @@ on rawKeyUp pKey
    
    if not scriptLocked() then
       textMark "Insert"
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
    end if
-   pass rawKeyUp
-end rawKeyUp
+   pass rawKeyDown
+end rawKeyDown
 
 local sLastClickLine
 
