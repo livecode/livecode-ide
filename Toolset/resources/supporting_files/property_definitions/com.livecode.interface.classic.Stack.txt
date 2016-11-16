@@ -41,8 +41,8 @@ shadowPattern
 focusColor												
 focusPattern												
 linkColor												
-clickColor												
-visitedColor												
+linkHiliteColor												
+linkVisitedColor												
 underlineLinks							true					
 customProperties												
 blendLevel							0	0,100				
