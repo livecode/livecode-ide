@@ -142,48 +142,68 @@ on popupMenu
 end popupMenu
 
 on menuPick pObject   
-   switch pObject
-      case "create empty behavior"
-      case "create behavior from script"
-         local tError, tSuggestedName, tStackName
-         local tScript
-         
-         ask revIDELocalise("Please enter a name for the script only stack") with the short name of the cSelectedObjects of this stack && "Behavior"
-         if it is empty then exit menuPick
-         put it into tStackName
-         put word 1 to -1 of line 1 of tStackName into tStackName
-         replace quote with "'" in tStackName
-         
-         ask file revIDELocalise("Please specify a location for the script only stack") with tStackName & ".livecodescript"
-         if it is empty then exit menuPick
-         
-         if pObject is "create behavior from script" then
-            put the script of the cSelectedObjects of this stack into tScript
-         end if
-         
-         put "script" && quote & tStackName & quote & cr & tScript into url("file:" & it)
-         put the result into tError
-         
-         if tError is empty then
-            local tStackIsLoaded
-            
-            put there is a stack it into tStackIsLoaded
-            if tStackIsLoaded then
-               set the behavior of the cSelectedObjects of this stack to the long id of stack tStackName
-               if pObject is "create behavior from script" then
-                  set the script of the cSelectedObjects of this stack to empty
-               end if
-            end if
-         end if
-         
-         if tError is not empty then
-            answer error tError
-         end if
-         break
-         
-      default
-         set the itemdelimiter to "|"
-         put the last item of pObject into field 1 of me
-         valueChanged
-   end switch
+  switch pObject
+    case "create empty behavior"
+    case "create behavior from script"
+      local tError, tSuggestedName, tStackName
+      local tTargetObject, tFilename, tStack
+      
+      put the cSelectedObjects of this stack into tTargetObject
+      put revIDEStackOfObject(tTargetObject) into tStack
+      put the effective filename of tStack into tDefaultFilename
+      
+      ask revIDELocalise("Please enter a name for the script only stack") with the short name of tTargetObject && "Behavior"
+      if it is empty then exit menuPick
+      put it into tStackName
+      put word 1 to -1 of line 1 of tStackName into tStackName
+      replace quote with "'" in tStackName
+      
+      if tDefaultFilename is not empty then
+        set the itemDelimiter to "/"
+        put tStackName & ".livecodescript" into the last item of tDefaultFilename
+      else
+        put tStackName & ".livecodescript" into tDefaultFilename
+      end if
+      
+      ask file revIDELocalise("Please specify a location for the script only stack") with tDefaultFilename
+      if it is empty then exit menuPick
+      put it into tFilename
+      
+      lock messages
+      create invisible stack tStackName
+      close stack tStackName
+      set the filename of stack tStackName to tFilename
+      set the scriptOnly of stack tStackName to true
+      
+      if pObject is "create behavior from script" then
+        set the script of stack tStackName to the script of tTargetObject
+      end if
+      
+      save stack tStackName
+      put the result into tError
+      unlock messages
+      
+      if tError is empty then
+        local tStackFiles
+        
+        set the behavior of tTargetObject to the long id of stack tStackName
+        put the stackFiles of tStack into tStackFiles
+        put tStackName & "," & tFilename into line (the number of lines of tStackFiles + 1) of tStackFiles
+        set the stackfiles of tStack to tStackFiles
+        
+        if pObject is "create behavior from script" then
+          set the script of tTargetObject to empty
+        end if
+      end if
+      
+      if tError is not empty then
+        answer error tError
+      end if
+      break
+      
+    default
+      set the itemdelimiter to "|"
+      put the last item of pObject into field 1 of me
+      valueChanged
+  end switch
 end menuPick
