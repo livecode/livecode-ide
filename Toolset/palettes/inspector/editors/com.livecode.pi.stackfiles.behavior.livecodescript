@@ -80,18 +80,22 @@ on mouseUp
          revIDEAnswerFile "stack"
          
          # Get the path of to the file
-         local tStackFilePath
-         put the result into tStackFilePath
+         local tStackFilePaths, tStackFilePath
+         put the result into tStackFilePaths
          
-         if tStackFilePath is not empty then
+         if tStackFilePaths is not empty AND tStackFilePaths is not "cancel" then
             local tEditorValue, tNewLine
-            put the short name of stack tStackFilePath & comma & tStackFilePath into tNewLine
+            
             put the editorValue of me into tEditorValue
-            if tEditorValue is empty then
-               put tNewLine into tEditorValue
-            else
-               put return & tNewLine after tEditorValue
-            end if
+            
+            repeat for each line tStackFilePath in tStackFilePaths
+              put the short name of stack tStackFilePath & comma & tStackFilePath into tNewLine
+              if tEditorValue is empty then
+                 put tNewLine into tEditorValue
+              else
+                 put return & tNewLine after tEditorValue
+              end if
+            end repeat
             set the editorValue of me to tEditorValue
             updateProperty
          end if
