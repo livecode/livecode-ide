@@ -2,8 +2,8 @@
 on editorInitialize
    set the editorMinWidth of me to 230
    set the editorMaxWidth of me to 0
-      disable button "edit script" of me
-      disable button "inspect object" of me
+   disable button "edit script" of me
+   disable button "inspect object" of me
 end editorInitialize
 
 on editorUpdate
@@ -127,12 +127,63 @@ on editorGoToObject
 end editorGoToObject
 
 on popupMenu
-   set the text of button "Menu" of me to "Select Behavior" & return & revIDEObjectSelectionMenu("", "button,stack")
+   local tMenu, tObject
+   
+   put the cSelectedObjects of this stack into tObject
+   
+   put "Select Behavior" & return & revIDEObjectSelectionMenu("", "button,stack") into tMenu
+   put return & "Create behavior from new script only stack/|create empty behavior" & return after tMenu
+   if word 1 to -1 of the script of tObject is empty then
+      put "(" after tMenu
+   end if
+   put "Create behavior using control script and script only stack/|create behavior from script" after tMenu
+   set the text of button "Menu" of me to tMenu
    popup button "Menu" of me at the mouseLoc
 end popupMenu
 
-on menuPick pObject
-   set the itemdelimiter to "|"
-   put the last item of pObject into field 1 of me
-   valueChanged
+on menuPick pObject   
+   switch pObject
+      case "create empty behavior"
+      case "create behavior from script"
+         local tError, tSuggestedName, tStackName
+         local tScript
+         
+         ask revIDELocalise("Please enter a name for the script only stack") with the short name of the cSelectedObjects of this stack && "Behavior"
+         if it is empty then exit menuPick
+         put it into tStackName
+         put word 1 to -1 of line 1 of tStackName into tStackName
+         replace quote with "'" in tStackName
+         
+         ask file revIDELocalise("Please specify a location for the script only stack") with tStackName & ".livecodescript"
+         if it is empty then exit menuPick
+         
+         if pObject is "create behavior from script" then
+            put the script of the cSelectedObjects of this stack into tScript
+         end if
+         
+         put "script" && quote & tStackName & quote & cr & tScript into url("file:" & it)
+         put the result into tError
+         
+         if tError is empty then
+            local tStackIsLoaded
+            
+            put there is a stack it into tStackIsLoaded
+            if tStackIsLoaded then
+               set the behavior of the cSelectedObjects of this stack to the long id of stack tStackName
+               if pObject is "create behavior from script" then
+                  set the script of the cSelectedObjects of this stack to empty
+               end if
+            end if
+         end if
+         
+         if tError is not empty then
+            answer error tError
+         end if
+         break
+         
+      default
+         set the itemdelimiter to "|"
+         put the last item of pObject into field 1 of me
+         valueChanged
+   end switch
 end menuPick
