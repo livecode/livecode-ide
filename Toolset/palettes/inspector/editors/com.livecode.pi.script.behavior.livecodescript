@@ -189,7 +189,7 @@ on menuPick pObject
         set the behavior of tTargetObject to the long id of stack tStackName
         put the stackFiles of tStack into tStackFiles
         put tStackName & "," & tFilename into line (the number of lines of tStackFiles + 1) of tStackFiles
-        set the stackfiles of tStack to tStackFiles
+        revIDESetStackFilesProperty tStack, empty, tStackFiles
         
         if pObject is "create behavior from script" then
           set the script of tTargetObject to empty
