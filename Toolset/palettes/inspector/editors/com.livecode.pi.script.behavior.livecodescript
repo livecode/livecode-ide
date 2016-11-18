@@ -193,6 +193,8 @@ on menuPick pObject
         
         if pObject is "create behavior from script" then
           set the script of tTargetObject to empty
+        else
+          edit script of tTargetObject
         end if
       end if
       
