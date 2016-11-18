@@ -1,1 +1,1 @@
-clicking left of text now move caret to begin of text
+# Clicking left of text now moves caret to the beginning of text
