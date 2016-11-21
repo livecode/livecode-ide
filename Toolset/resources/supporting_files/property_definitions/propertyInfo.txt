@@ -87,7 +87,7 @@ hoverIcon	Hover icon	Icons	com.livecode.pi.imageid	true	false		0
 hScrollbar	Horizontal scrollbar	Basic	com.livecode.pi.boolean	true	false		false		
 icon	Icon	Icons	com.livecode.pi.imageid	true	false		0	
 iconic	Minimized	Basic	com.livecode.pi.boolean	true	false		false	
-id	ID	Basic	com.livecode.pi.image_id	true	false			
+id	ID	Basic	com.livecode.pi.imageID	true	false			
 ink	Ink	Colors	com.livecode.pi.enum	true	false		srcCopy	blendClear,blendSrc,blendDst,blendSrcOver,blendDstOver,blendSrcIn,blendDstIn,blendSrcOut,blendDstOut,blendSrcAtop,blendDstAtop,blendXor,blendPlus,blendMultiply,blendScreen,blendOverlay,blendDarken,blendLighten,blendDodge,blendBurn,blendHardLight,blendSoftLight,blendDifference,blendExclusion,clear,noop,notSrcAnd,notSrcAndReverse,notSrcCopy,notSrcOr,notSrcOrReverse,notSrcXor,reverse,set,srcAnd,srcAndReverse,srcCopy,srcOr,srcOrReverse,srcXor,blend,addPin,addOver,subPin,transparent,adMin,addMax
 innerGlow	Inner glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread
 innerShadow	Inner shadow	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode,effectFilter,effectSize,effectSpread,effectDistance,effectAngle
