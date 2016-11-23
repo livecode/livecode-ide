@@ -159,6 +159,8 @@ on updateSettings
    put computeDefault(tSettings["ios,ipad landscape splash"], empty) into field "iPad Landscape Splash"
    put computeDefault(tSettings["ios,ipad retina portrait splash"], empty) into field "iPad Retina Portrait Splash"
    put computeDefault(tSettings["ios,ipad retina landscape splash"], empty) into field "iPad Retina Landscape Splash"   
+   put computeDefault(tSettings["ios,ipad pro 12.9 portrait splash"], empty) into field "iPad Pro 12.9 Portrait Splash"
+   put computeDefault(tSettings["ios,ipad pro 12.9 landscape splash"], empty) into field "iPad Pro 12.9 Landscape Splash"  
    
    local tProfiles, tProfileIndex
    put empty into tProfileIndex
