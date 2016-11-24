@@ -132,17 +132,23 @@ on popupMenu
    put the cSelectedObjects of this stack into tObject
    
    put "Select Behavior" & return & revIDEObjectSelectionMenu("", "button,stack") into tMenu
-   put return & "Create behavior from new script only stack/|create empty behavior" & return after tMenu
+   put return & "Create behavior from script only stack|create behavior" after tMenu   
+   put return & tab & "Create stack with empty script/|create empty behavior" & return after tMenu
    if word 1 to -1 of the script of tObject is empty then
       put "(" after tMenu
    end if
-   put "Create behavior using control script and script only stack/|create behavior from script" after tMenu
+   put tab & "Create stack using existing control script/|create behavior from script" after tMenu
    set the text of button "Menu" of me to tMenu
    popup button "Menu" of me at the mouseLoc
 end popupMenu
 
-on menuPick pObject   
-  switch pObject
+on menuPick pObject
+  local tAction
+  
+  set the itemdelimiter to "|"
+  put item -1 of pObject into tAction
+  
+  switch tAction
     case "create empty behavior"
     case "create behavior from script"
       local tError, tSuggestedName, tStackName
@@ -175,7 +181,7 @@ on menuPick pObject
       set the filename of stack tStackName to tFilename
       set the scriptOnly of stack tStackName to true
       
-      if pObject is "create behavior from script" then
+      if tAction is "create behavior from script" then
         set the script of stack tStackName to the script of tTargetObject
       end if
       
@@ -191,7 +197,7 @@ on menuPick pObject
         put tStackName & "," & tFilename into line (the number of lines of tStackFiles + 1) of tStackFiles
         revIDESetStackFilesProperty tStack, empty, tStackFiles
         
-        if pObject is "create behavior from script" then
+        if tAction is "create behavior from script" then
           set the script of tTargetObject to empty
         else
           edit script of stack tStackName
