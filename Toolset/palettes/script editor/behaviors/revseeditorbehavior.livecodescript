@@ -2495,7 +2495,7 @@ on handleSelectionChanged
    
    get the selectedChunk
    -- a text selection
-   if word 2 of it < word 4 of it then
+   if word 2 of it <= word 4 of it then
       exit handleSelectionChanged
    end if
    caretUpdate
