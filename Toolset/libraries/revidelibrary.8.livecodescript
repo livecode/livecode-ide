@@ -2805,36 +2805,19 @@ function revIDEStackProperties pStackID, pLevel
 end revIDEStackProperties
 
 function revIDECardPropertiesOfStack pStackID, pLevel
-   local tCardList, tCardID, tCardArray, tIndex
-   local tSubStackIDs, tSubstack
+   local tCardID, tCardArray, tIndex,tCardIDs
+   local tSubStackIDs, tSubstack, tSortedChildControlListIndexA
    local tSortType, tSortOrder
    
    revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
    
-   set the itemDel to tab
-   repeat with x = 1 to the number of cards of stack pStackID
-      put x & tab & the short name of card x of stack pStackID & tab & the id of card x of stack pStackID & return after tCardList
-   end repeat
-   delete the last character of tCardList
+   put the cardIDs of stack pStackID into tCardIDs
    
-   ## Sort the cards as per preferences
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tCardList ascending by item 2 of each
-      else
-         sort lines of tCardList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tCardList ascending numeric by item 1 of each
-      else
-         sort lines of tCardList descending numeric by item 1 of each
-      end if
-   end if
+   put  __createSortedControlsArray (pStackID, tCardIDs, tSortType, tSortOrder) into tSortedChildControlListIndexA
    
-   repeat for each line tCard in tCardList
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tCardID
       add 1 to tIndex
-      put item 3 of tCard into tCardID
       dispatch function "__readPropertiesOfControl" to card id tCardID of pStackID with sCardPropertiesToRead, tCardArray[tIndex]
       put "card" into tCardArray[tIndex]["type"]
       put "container" into tCardArray[tIndex]["style"]
@@ -2884,9 +2867,57 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    return tCardArray
 end revIDECardPropertiesOfStack
 
+function __createSortedControlsArray pParentObject, pChildControls, pSortType, pSortOrder
+   local tChildCount, tChildControlListA, tChildControlListIndexA, tNextIndex, tSortedChildControlListIndexA
+   -- create the array
+   put 1 into tChildCount
+   
+   if pParentObject begins with "stack" then
+      repeat with x = 1 to the number of cards of stack pParentObject
+         put x into tChildControlListA["layer"]
+         put the short name of card x of stack pParentObject into tChildControlListA["short name"]
+         put the id of card x of stack pParentObject into tChildControlListA["controlID"]
+         put tChildControlListA into tChildControlListIndexA[tChildCount]
+         add 1 to tChildCount
+      end repeat
+   else -- parent is a card or a group
+      repeat for each line tControlID in pChildControls
+         put the layer of control id tControlID of pParentObject into tChildControlListA["layer"]
+         put the short name of control id tControlID of pParentObject into tChildControlListA["short name"]
+         put tControlID into tChildControlListA["controlID"]
+         put tChildControlListA into tChildControlListIndexA[tChildCount]
+         add 1 to tChildCount
+      end repeat
+   end if
+   
+   -- sort the array
+   get the keys of tChildControlListIndexA
+   if pSortType is "name" then
+      if pSortOrder is "ascending" then
+         sort lines of it ascending by tChildControlListIndexA[each]["short name"]
+      else
+         sort lines of it descending by tChildControlListIndexA[each]["short name"]
+      end if
+   else --tSortType is "layer"
+      if pSortOrder is "ascending" then
+         sort lines of it ascending numeric by tChildControlListIndexA[each]["layer"]
+      else
+         sort lines of it descending numeric by tChildControlListIndexA[each]["layer"]
+      end if
+   end if
+   split it by return
+   put 1 into tNextIndex
+   repeat for each element tIndex in it
+      put tChildControlListIndexA[tIndex] into tSortedChildControlListIndexA[tNextIndex]
+      add 1 to tNextIndex
+   end repeat
+   
+   return tSortedChildControlListIndexA
+end __createSortedControlsArray
+
 function revIDEControlPropertiesOfCard pCardID, pLevel
-   local tChildControls, tControlArray, tIndex, tFullArray, tChildCount
-   local tChildControlList, tControlID
+   local tChildControls, tControlArray, tIndex, tFullArray
+   local tSortedChildControlListIndexA, tControlID
    local tSortType,tSortOrder
    
    ## Sort controls as per preferences
@@ -2899,29 +2930,10 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       put the childcontrolIDs of pCardID into tChildControls
    end if
    
-   set the itemDel to tab
-   repeat for each line tControlID in tChildControls
-      put the layer of control id tControlID of pCardID & tab & the short name of control id tControlID of pCardID & tab & tControlID & return after tChildControlList
-      add 1 to tChildCount
-   end repeat
-   delete the last character of tChildControlList
+   put  __createSortedControlsArray (pCardID, tChildControls, tSortType, tSortOrder) into tSortedChildControlListIndexA
    
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 2 of each
-      else
-         sort lines of tChildControlList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending numeric by item 1 of each
-      else
-         sort lines of tChildControlList descending numeric by item 1 of each
-      end if
-   end if
-   
-   repeat with x = 1 to the number of lines in tChildControlList
-      put item 3 of line x of tChildControlList into tControlID
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tControlID
       
       add 1 to tIndex
       put empty into tControlArray
@@ -2953,39 +2965,20 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
 end revIDEControlPropertiesOfCard
 
 function revIDEControlPropertiesOfGroup pGroupID, pLevel
-   local tControlArray, tIndex
-   local tChildControls, tChildCount, tChildControlList
+   local tControlArray, tIndex, tControlID
+   local tChildControls, tSortedChildControlListIndexA
    local tSortType,tSortOrder
   
-   put  the childcontrolIDs of pGroupID into tChildControls
-   put the number of lines in tChildControls into tChildCount
-   
-   set the itemDel to tab
-   repeat for each line tControlID in tChildControls
-      put the layer of control id tControlID of pGroupID & tab & the short name of control id tControlID of pGroupID & tab & tControlID & return after tChildControlList
-   end repeat
-   delete the last character of tChildControlList
-   
-   ## Sort controls as per preferences
+  ## Sort controls as per preferences
    revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
    
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 2 of each
-      else
-         sort lines of tChildControlList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 1 of each
-      else
-         sort lines of tChildControlList descending by item 1 of each
-      end if
-   end if
+   put  the childcontrolIDs of pGroupID into tChildControls
    
-   repeat for each line tControl in tChildControlList
+   put  __createSortedControlsArray (pGroupID, tChildControls, tSortType, tSortOrder) into tSortedChildControlListIndexA
+  
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tControlID
       add 1 to tIndex
-      put item 3 of tControl into tControlID
       dispatch function "__readPropertiesOfControl" to control id tControlID of pGroupID with sControlPropertiesToRead, tControlArray[tIndex]
       
       if tControlArray[tIndex]["type"] is "group" then
