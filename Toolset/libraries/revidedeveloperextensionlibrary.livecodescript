@@ -513,7 +513,8 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the title of it to pDetailsA["name"]
       set the script of it to __testStackScript()
       go stack "LiveCode Extension Test Window"
-      create widget as pDetailsA["id"]
+      revIDECreateObject pDetailsA["id"], the long id of the defaultStack, \
+            (the width of the defaultStack / 2) & comma & (the height of the defaultStack / 2)
       unlock messages
    end if
    
