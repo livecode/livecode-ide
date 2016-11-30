@@ -870,11 +870,14 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    local tError
    
+   local tHaveSvgIcon
+   put ("svgicon" is among the keys of tDetailsA) into tHaveSvgIcon
+   
    # AL-2015-05-22: [[ Bug 14919 ]] Use default widget and library icons if none are provided
    local tIcon
    if tError is empty then
       put tDetailsA["icon"] into tIcon
-      if tIcon is empty or there is not a file tIcon then
+      if (tIcon is empty or there is not a file tIcon) and not tHaveSvgIcon then
          answer file "Select icon file" with type "|png|"
          if it is empty then
             __revIDEDeveloperExtensionLog "Using default icon"
@@ -887,7 +890,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    local tRetinaIcon
    if tError is empty then
       put tDetailsA["retina_icon"] into tRetinaIcon
-      if tRetinaIcon is empty or there is not a file tRetinaIcon then
+      if (tRetinaIcon is empty or there is not a file tRetinaIcon) and not tHaveSvgIcon then
          answer file "Select retina icon file" with type "|png|"
          if it is empty then
             __revIDEDeveloperExtensionLog "Using default retina icon"
@@ -989,7 +992,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    end if
    
    # Add icons
-   if tError is empty then
+   if tError is empty and pIcon is not empty then
       revZipAddItemWithFile pArchive, "support/icon.png", pIcon
       
       if the result begins with "ziperr" then
@@ -997,7 +1000,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
-   if tError is empty then
+   if tError is empty and pRetinaIcon is not empty then
       revZipAddItemWithFile pArchive, "support/icon@extra-high.png", pRetinaIcon
       
       if the result begins with "ziperr" then
