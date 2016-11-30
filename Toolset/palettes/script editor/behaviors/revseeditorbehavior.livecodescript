@@ -3133,7 +3133,11 @@ on tabKey
    end if
    
    if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
+      if the shiftKey is "down" then
+         scriptFormat "script"
+      else
+         scriptFormat "handler"
+      end if
    else
       get the selectedChunk
       
