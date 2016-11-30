@@ -663,16 +663,14 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetName into tDataA["id"]
    
    # If we have a library, we don't require various packaged elements
-   if tTargetType is "widget" then
-      local tTargetTitle
-      put __fetchMetadatum(tId, "title") into tTargetTitle
-      
-      if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
-         put empty into tTargetTitle
-      end if
-      put tTargetTitle into tDataA["name"]
+   local tTargetTitle
+   put __fetchMetadatum(tId, "title") into tTargetTitle
+   
+   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
+      __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
+      put empty into tTargetTitle
    end if
+   put tTargetTitle into tDataA["name"]
    
    local tTargetVersion
    put __fetchMetadatum(tId, "version") into tTargetVersion
