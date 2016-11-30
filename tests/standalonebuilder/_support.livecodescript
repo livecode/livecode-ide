@@ -79,7 +79,7 @@ function StandaloneBuilderExecutable pStack
 	put GetBuildPlatform() into tBuildPlatform
 	
 	local tTargetFolder
-	put GetTargetFolder() into tTargetFolder
+	put GetTargetFolder() & slash into tTargetFolder
 	
 	local tStandaloneExecutable
 	put	revSBStandaloneOutputDirectory(pStack, "", tTargetFolder, tBuildPlatform, false) \
