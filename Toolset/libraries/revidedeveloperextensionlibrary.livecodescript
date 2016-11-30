@@ -640,7 +640,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    local tTargetType
-   put textDecode(revXMLNodeContents(tId, "/package/type"), "utf-8") into tTargetType
+   put __fetchMetadatum(tId, "type") into tTargetType
    
    if tTargetType begins with "xmlerr" then
       __revIDEDeveloperExtensionSendError "couldn't retrieve extension type from manifest" && pManifestPath
@@ -649,7 +649,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetType into tDataA["type"]
    
    local tTargetName
-   put textDecode(revXMLNodeContents(tId, "/package/name"), "utf-8") into tTargetName
+   put __fetchMetadatum(tId, "name") into tTargetName
    
    if tTargetName begins with "xmlerr" then
       __revIDEDeveloperExtensionSendError "couldn't retrieve extension name from manifest" && pManifestPath
@@ -665,7 +665,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    # If we have a library, we don't require various packaged elements
    if tTargetType is "widget" then
       local tTargetTitle
-      put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
+      put __fetchMetadatum(tId, "title") into tTargetTitle
       
       if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
          __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
@@ -675,7 +675,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    local tTargetVersion
-   put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
+   put __fetchMetadatum(tId, "version") into tTargetVersion
    
    if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
       __revIDEDeveloperExtensionSendWarning "couldn't retrieve version from" && tTargetName && "manifest - ensure .lcb file has 'metadata version is " & quote & "<version>" & quote & "'"
@@ -688,7 +688,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetVersion into tDataA["version"]
    
    local tTargetAuthor
-   put textDecode(revXMLNodeContents(tId, "/package/author"), "utf-8") into tTargetAuthor
+   put __fetchMetadatum(tId, "author") into tTargetAuthor
    
    if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
       __revIDEDeveloperExtensionSendWarning "couldn't retrieve author from" && tTargetName && "manifest - ensure .lcb file has 'metadata author is " & quote & "<author_name>" & quote & "'"
@@ -699,6 +699,29 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tDataA into rDataA
    return empty
 end __revIDEDeveloperExtensionFetchMetadata
+
+private function __fetchMetadatum pXmlId, pKey
+   local tNode
+   
+   if pKey is among the items of "name,type,title,author,description,version" then
+      -- Some metadata are placed into specifically-named top-level XML
+      -- elements in the manifest.  This list must be kept up-to-date
+      -- with the list of special-cased metadatum keys listed in the
+      -- "GenerateManifestDefinitions" action in lc-compile's
+      -- "generate.g"
+      put "/package/" & pKey into tNode
+      
+   else
+      -- Find a corresponding node for a generic metadatum
+      put revXmlMatchingNode(pXmlId, "/package", "metadata", "key", pKey, 1) into tNode
+      
+   end if
+   
+   if tNode is empty or tNode begins with "xmlerr" then
+      return tNode
+   end if
+   return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
+end __fetchMetadatum
 
 private function shellFormat pArg, pSwitch
    local tOutput
