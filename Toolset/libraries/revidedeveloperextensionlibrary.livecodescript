@@ -698,8 +698,10 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put __FetchMetadatum(tId, "svgicon") into tTargetIcon
    if tTargetIcon begins with "xmlerr" then
       __revIDEDeveloperExtensionSendWarning merge("couldn't retrieve SVG icon from [[tTargetName]] manifest")
+   else
+      put tTargetIcon into tDataA["svgicon"]
    end if
-   put tTargetIcon into tDataA["svgicon"]
+   
    
    put tDataA into rDataA
    return empty
