@@ -696,6 +696,13 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    put tTargetAuthor into tDataA["author"]
    
+   local tTargetIcon
+   put __FetchMetadatum(tId, "svgicon") into tTargetIcon
+   if tTargetIcon begins with "xmlerr" then
+      __revIDEDeveloperExtensionSendWarning merge("couldn't retrieve SVG icon from [[tTargetName]] manifest")
+   end if
+   put tTargetIcon into tDataA["svgicon"]
+   
    put tDataA into rDataA
    return empty
 end __revIDEDeveloperExtensionFetchMetadata
