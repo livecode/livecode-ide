@@ -11838,3 +11838,11 @@ function revIDEObjectsAreSelectable pObjects
    
    return true
 end revIDEObjectsAreSelectable
+
+on revIDEFindMoreWidgets
+   lock screen
+   revIDEOpenPalette "extension manager"
+   send "showExtensionStore" to \ 
+         stack revIDEPaletteToStackName("extension manager")
+   unlock screen
+end revIDEFindMoreWidgets
