@@ -32,6 +32,7 @@ on FillInData pDataA, pRow
       hide button "update" of me
    end if
    
+   set the cIDE of me to (pDataA["ide"] is true)
    if pDataA["ide"] is true then
       hide button "uninstall" of me
    end if
@@ -154,7 +155,9 @@ on mouseUp
 end mouseUp
 
 on mouseDoubleUp
-   dispatch "browserGoToExtensionPage" to card 2 of this stack with the cTypeID of me
+   if not the cIDE of me then
+      dispatch "browserGoToExtensionPage" to card 2 of this stack with the cTypeID of me
+   end if
 end mouseDoubleUp
 
 getProp dvRowControl
