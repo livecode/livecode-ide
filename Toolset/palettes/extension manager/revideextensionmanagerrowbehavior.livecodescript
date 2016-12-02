@@ -111,12 +111,28 @@ on LayoutControl pControlRect
    set the right of image "Error" of me to the left of button "Uninstall" of me - tPadding
    set the width of field "Error Message" of me to the formattedWidth of field "Error Message" of me
    set the loc of field "Error Message" of me to the loc of me
+   
    if the visible of image "Error" of me then
       set the right of field "Error Message" of me to the left of image "Error" of me
    else
       set the right of field "Error Message" of me to item 3 of pControlRect - tMargin
    end if
    
+   -- Don't allow the error field to overspill the description
+   -- or go past a third of the width
+   local tLeft
+   put max(the right of field "description" of me + tPadding, \
+         the width of me / 3) into tLeft
+   if the left of field "Error Message" of me < tLeft then
+      set the dontWrap of field "Error Message" of me to false
+      local tWidth
+      put the right of field "Error Message" of me into tWidth
+      subtract tLeft from tWidth
+      set the width of field "Error Message" of me to tWidth
+      set the height of field "Error Message" of me to the formattedHeight of field "Error Message" of me
+      set the loc of field "Error Message" of me to the loc of me
+      set the left of field "Error Message" of me to tLeft
+   end if
 end LayoutControl
 
 on mouseUp
