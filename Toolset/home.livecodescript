@@ -1187,7 +1187,8 @@ command revInternal__InitialiseLibraries
    put return & "revProfilesLibrary" after tLoadList 
    put return & "revDatabaseLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
-   put return & "com.livecode.script-library.oauth2" after tLoadList
+   put return & "oauth2" after tLoadList
+   put return & "getopt" after tLoadList
    
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
