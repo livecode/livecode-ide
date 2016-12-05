@@ -1188,6 +1188,7 @@ command revInternal__InitialiseLibraries
    put return & "revDatabaseLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
+   put return & "getopt" after tLoadList
    
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
