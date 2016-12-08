@@ -714,15 +714,6 @@ end newEPS
 
 
 on newGraphic
-   if the width of the target < 9 and the height of the target < 9 then
-      local tOrigLoc
-      put the loc of the target into tOrigLoc
-      if the style of the target is in "polygon,curve" then set the points of the target to 0,0,100,100,100,50,50,100
-      if the style of the target is "line" then set the points of the target to 0,0,120,120
-      set the width of the target to the cREVGraphicWidth of stack "revPreferences"
-      set the height of the target to the cREVGraphicHeight of stack "revPreferences"
-      set the loc of the target to tOrigLoc
-   end if
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
    // PM-2015-09-17: [[ Bug 13826 ]] Allow a new graphic to appear offscreen
    revUpdateAOControls
