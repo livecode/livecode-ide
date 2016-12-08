@@ -132,7 +132,7 @@ on popupMenu
    put the cSelectedObjects of this stack into tObject
    
    put "Select Behavior" & return & revIDEObjectSelectionMenu("", "button,stack") into tMenu
-   put return & "Create behavior from script only stack|create behavior" after tMenu   
+   put return & "Create behavior from script only stack/|create behavior" after tMenu   
    put return & tab & "Create stack with empty script/|create empty behavior" & return after tMenu
    if word 1 to -1 of the script of tObject is empty then
       put "(" after tMenu
