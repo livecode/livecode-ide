@@ -6122,31 +6122,94 @@ on revIDESetGradientProperty pObject, pProperty, pValue
 end revIDESetGradientProperty
 
 private function __resolveStackFilePath pBasePath, pOtherPath
-   -- First absolutize other path (if possible)
-   local tOldFolder
-   put the folder into tOldFolder
-   set the itemDelimiter to slash
+   set the itemdelimiter to "/"
+   put __resolveRelativeFilenameReference(pOtherPath, item 1 to -2 of pBasePath) into pOtherPath
    
-   local tFolderResult
-   set the folder to item 1 to -2 of pOtherPath
-   put the result into tFolderResult
-   if tFolderResult is not empty then
-      set the folder to tOldFolder
-      return pOtherPath
-   end if
-   put the folder & slash & item -1 of pOtherPath into pOtherPath
-   set the folder to tOldFolder
-   
-   -- At this point tOtherPath should be absolute, so if its
+   -- At this point pOtherPath should be absolute, so if its
    -- (component-wise) prefix is pBasePath we relativize again.
    local tBasePathFolder
-   put item 1 to -2 of pBasePath & slash into tBasePathFolder
-   if pOtherPath begins with tBasePathFolder then
-      delete char 1 to (the number of chars in tBasePathFolder) of pOtherPath
-   end if
+   put item 1 to -2 of pBasePath into tBasePathFolder
+   put __makePathRelative(pOtherPath, tBasePathFolder) into pOtherPath
    
    return pOtherPath
 end __resolveStackFilePath
+
+private function __resolveRelativeFilenameReference pFilename, pRootFolder
+   local tNewFilename
+   
+   set the itemdelimiter to "/"
+   
+   if not (pFilename begins with "../") then
+      if pFilename begins with "/" or item 1 of pFilename contains ":" then
+         return pFilename
+      else
+         return pRootFolder & "/" & pFilename
+      end if
+   end if
+   
+   put pFilename into tNewFilename
+   
+   repeat while tNewFilename begins with "../"
+      if pRootFolder is empty then
+         return "out of bounds" for error
+      else
+         delete the last item of pRootFolder
+         delete char 1 to 3 of tNewFilename
+      end if
+   end repeat
+   
+   if tNewFilename is empty then
+      return pRootFolder for value
+   else
+      return pRootFolder & "/" & tNewFilename for value
+   end if
+end __resolveRelativeFilenameReference
+
+private function __makePathRelative pFilename, pRootFolder
+   local tIndex
+   local tMatchCount = 0
+   local tNonMatchCount =0
+
+   # Normalize
+   if char 1 of pFilename is slash then delete char 1 of pFilename
+   if char 1 of pRootFolder is slash then delete char 1 of pRootFolder
+   if the last char of pFilename is slash then delete the last char of pFilename
+   if the last char of pRootFolder is slash then delete the last char of pRootFolder
+   set the itemdelimiter to slash
+
+   if pFilename is empty then return empty
+   if pRootFolder is empty then return pFilename
+
+   # Is pFilename a child directory of pRootFolder?
+   if pRootFolder is item 1 to (the number of items of pRootFolder) of pFilename then
+      delete char 1 to length(pRootFolder) + 1 of pFilename
+   else if pFilename is char 1 to length(pFilename) of pRootFolder then
+      delete char 1 to length(pFilename) + 1 of pRootFolder
+      put empty into pFilename
+      repeat with tIndex = 1 to the number of items of pRootFolder
+         put "../" after pFilename
+      end repeat
+   else
+      # determine where paths diverge
+      repeat with tIndex = 1 to the number of items of pFilename
+         if item tIndex of pFilename is not item tIndex of pRootFolder then
+            put tIndex - 1 into tMatchCount
+            put the number of items of pRootFolder - tIndex + 1 into tNonMatchCount
+            exit repeat
+         end if
+      end repeat
+
+      if tMatchCount > 0 then
+         delete item 1 to tMatchCount of pFilename
+      end if
+
+      repeat with tIndex = 1 to tNonMatchCount
+         put "../" before pFilename
+      end repeat
+   end if
+
+   return pFilename
+end __makePathRelative
 
 command revIDESetStackFilesProperty pObject, pProperty, pValue
    local tProcessedValue
