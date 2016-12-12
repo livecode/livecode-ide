@@ -1337,7 +1337,19 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    end repeat
 end __readGroupedPropertiesOfControl
 
-private on __fetchPropertyOfControl pProp, @pData
+private command __fetchPropertyCustomGetter pGetter, pObject, pProperty, @xPropArray
+   local tEffective, tValue
+   dispatch function pGetter with pObject, pProperty, tEffective
+   put the result into tValue
+   if tEffective then
+      put tValue into xPropArray["effective" && pProperty]
+      put empty into xPropArray[pProperty]
+   else
+      put tValue into xPropArray[pProperty]
+   end if
+end __fetchPropertyCustomGetter
+
+private on __fetchPropertyOfControl pProp, @xData
    local tError
    put empty into tError
    
@@ -1348,59 +1360,59 @@ private on __fetchPropertyOfControl pProp, @pData
    put __classicObjectProperties(tObjID) into tProperties
    
    if tProperties["properties"][pProp]["getter"] is not empty then
-      dispatch function tProperties["properties"][pProp]["getter"] with tObjID, pProp
-      put the result into pData[pProp]
+      __fetchPropertyCustomGetter tProperties["properties"][pProp]["getter"], \
+            tObjId, pProp, xData
       exit __fetchPropertyOfControl
    end if
    
    try
       switch pProp
          case "short name"
-            put the short name of the target into pData[pProp]
+            put the short name of the target into xData[pProp]
             break
          case "scriptlines"
-            put the number of lines of the script of the target into pData[pProp]
+            put the number of lines of the script of the target into xData[pProp]
             break
          case "scriptstatus"
-            put the scriptStatus of the target into pData[pProp]
+            put the scriptStatus of the target into xData[pProp]
             break
          case "behavior scriptlines"
-            put the number of lines of the script of the behavior of the target into pData[pProp]
+            put the number of lines of the script of the behavior of the target into xData[pProp]
             break
          case "long id"
-            put the long id of the target into pData[pProp]
+            put the long id of the target into xData[pProp]
             break
          case "owner"
-            put the long id of the owner of the target into pData[pProp]
+            put the long id of the owner of the target into xData[pProp]
             break
          case "type"
-            put word 1 of the name of the target into pData["type"]
+            put word 1 of the name of the target into xData["type"]
             break
          case "custom control"
             if the the cIDEProperties["cCustomControl"] of the Target is "true" then
-               put "true" into pData["custom control"]
+               put "true" into xData["custom control"]
             else if the dgProp["control type"] of the target is "Data Grid" then
-               put "true" into pData["custom control"]            
+               put "true" into xData["custom control"]            
             else
-               put "false" into pData["custom control"]
+               put "false" into xData["custom control"]
             end if
             break
          default
-            put the pProp of the Target into pData[pProp]
+            put the pProp of the Target into xData[pProp]
             break
       end switch
-      put the short name of the target into pData["name"]
+      put the short name of the target into xData["name"]
    catch tError
    end try
    
    # AL-2015-07-15: Remove 'do' construction, as evaluating the target as a string
    #  causes incorrect object references when obejcts have the same name
-   if pData[pProp] is empty then
+   if xData[pProp] is empty then
       try
          local tEffective
          put the effective pProp of the target into tEffective
          if tEffective is not empty then
-            put tEffective into pData["effective" && pProp]
+            put tEffective into xData["effective" && pProp]
          end if
       catch tError
       end try
