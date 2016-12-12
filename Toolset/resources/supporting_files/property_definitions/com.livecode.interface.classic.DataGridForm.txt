@@ -53,3 +53,8 @@ bottom
 layer		
 layerMode
 number
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay
