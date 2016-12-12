@@ -5815,7 +5815,32 @@ on revIDESetDataGridProperty pObj, pProperty, pValue
    end switch
 end revIDESetDataGridProperty
 
-function revIDEGetDataGridProperty pObject, pProperty
+private function __DataGridTextProperty pObject, pProperty, @rEffective
+   local tRealProperty
+   switch pProperty
+      case "text font"
+      case "header text font"
+         put "textFont" into tRealProperty
+         break
+      case "text size"
+      case "header text size"
+         put "textSize" into tRealProperty
+         break
+      case "text style"
+      case "header text style"
+         put "textStyle" into tRealProperty
+         break
+   end switch
+   local tValue
+   put the dgProps[pProperty] of pObject into tValue
+   if tValue is empty then
+      put the effective tRealProperty of pObject into tValue
+      put true into rEffective
+   end if
+   return tValue
+end __DataGridTextProperty
+
+function revIDEGetDataGridProperty pObject, pProperty, @rEffective
    switch pProperty 
       case "row behavior"
          local tTemplate
@@ -5827,12 +5852,19 @@ function revIDEGetDataGridProperty pObject, pProperty
          if sFirstRowHeaders[pObject] then
             return the dgText[true] of pObject
          else
-           return the dgText of pObject
+            return the dgText of pObject
          end if
          break
       case "first row header"
          return sFirstRowHeaders[pObject] is true
          break
+      case "text font"
+      case "text size"
+      case "text style"
+      case "header text font"
+      case "header text size"
+      case "header text style"
+         return __DataGridTextProperty(pObject, pProperty, rEffective)
       default
          return the dgProps[pProperty] of pObject
          break
