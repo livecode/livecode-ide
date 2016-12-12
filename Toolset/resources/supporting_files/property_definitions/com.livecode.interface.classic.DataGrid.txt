@@ -29,7 +29,11 @@ alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternat
 hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false
 column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false
 corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false
+header background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header color	Colors	com.livecode.pi.color	true	false
 header text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text color	Colors	com.livecode.pi.color	true	false
+header background hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header hilite color	Colors	com.livecode.pi.color	true	false
+
+
 
 show header:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show column headers	Columns	com.livecode.pi.boolean	true	false		true
 columnData:revIDEGetDataGridColumns:revIDESetDataGridColumns	Columns	Columns	com.livecode.pi.datagridcolumns	true	false		no_default

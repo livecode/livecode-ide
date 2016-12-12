@@ -5865,6 +5865,16 @@ function revIDEGetDataGridProperty pObject, pProperty, @rEffective
       case "header text size"
       case "header text style"
          return __DataGridTextProperty(pObject, pProperty, rEffective)
+      case "header background color"
+      case "header background hilite color"
+         -- Special case these as their default values are two-color gradients
+         local tColor
+         put the dgProps[pProperty] of pObject into tColor
+         if the number of lines in tColor is 2 then
+            put true into rEffective
+            return line 1 of tColor
+         end if
+         return tColor
       default
          return the dgProps[pProperty] of pObject
          break
