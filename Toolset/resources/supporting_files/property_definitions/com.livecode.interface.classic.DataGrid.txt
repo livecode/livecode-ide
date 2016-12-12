@@ -76,6 +76,8 @@ bottom
 layer		
 layerMode
 number
+blendLevel							0	0,100				
+ink												
 dropShadow												
 innerShadow												
 outerGlow												
