@@ -1,0 +1,1 @@
+# Reinstate fixedLineHeight for tableField

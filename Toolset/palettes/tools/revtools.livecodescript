@@ -9,6 +9,7 @@ on preOpenStack
    # Preferences
    if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", 2
    addFrameItem "revTools_columns", "header", "preference", "View Columns", "enum","2,3,4", "framePreferenceSelected", the long id of me
+   addFrameItem "add_widget","header", "action", "Find More Widgets", "plus", "plus","findMoreWidgets", the long id of me
    
    # Look at the preference setting and validate the entries against the tool data
    local tAllViewList, tObjectData
@@ -66,6 +67,12 @@ on registerForMessages
    revIDESubscribe "ideExtensionsChanged"
 end registerForMessages
 
+on findMoreWidgets
+    lock screen
+    revIDEFindMoreWidgets
+    unlock screen
+ end findMoreWidgets
+ 
 on ideExtensionsChanged
    lock screen
    generatePalette
