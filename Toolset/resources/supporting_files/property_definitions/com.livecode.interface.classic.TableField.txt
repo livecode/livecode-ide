@@ -62,7 +62,7 @@ textFont
 textSize												
 textStyle												
 textAlign							left					
-fixedLineHeight												
+fixedLineHeight							true					
 textHeight												
 margins							8					
 lockLoc							false					
