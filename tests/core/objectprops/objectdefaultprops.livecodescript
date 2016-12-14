@@ -863,7 +863,7 @@ on TestTableFieldDefaultProps
    put "true" into tPropsA["dontWrap"]
    put empty into tPropsA["dropShadow"]
    put 0 into tPropsA["firstIndent"]
-   put "false" into tPropsA["fixedLineHeight"]
+   put "true" into tPropsA["fixedLineHeight"]
    put empty into tPropsA["focusColor"]
    put empty into tPropsA["focusPattern"]
    put empty into tPropsA["foreColor"]
