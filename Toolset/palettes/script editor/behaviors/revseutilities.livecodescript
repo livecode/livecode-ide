@@ -1104,7 +1104,9 @@ function seDefaultScript pObjectType, pStyle
          if pStyle is among the items of "standard,rectangle,checkbox,radiobutton,transparent,opaque" then
             return "on mouseUp" & return & tIndent & return & "end mouseUp"
          if pStyle is among the items of "Slider,little arrows,scrollbar" then
-            return "on mouseDown --save the initial value" & return & tIndent & return & "put the thumbPos of me into startValue" & return & "end mouseDown" & return & return & "on scrollbarDrag newValue -- "save the final value" & return & tIndent & return & "end scrollbarDrag"
+            return "local tStartValue" & return & return & "on mouseDown --save the initial value" & return & tIndent & return &\
+            "put the thumbPos of me into tStartValue" & return & "end mouseDown" & return & return &\
+            "on scrollbarDrag newValue -- save the final value" & return & tIndent & return & "end scrollbarDrag"
          else if pStyle is "menu" then
             return "on menuPick pItemName" & return & tIndent & "switch pItemName" & return & tIndent & tIndent & return & tIndent & "end switch" & return & "end menuPick"
          end if
