@@ -236,7 +236,7 @@ on revInternal__openStack
    end if
    
    if $REV_TOOLS_PATH is empty and (revInternal__CheckFileAssociations() is true) and (the platform is "win32") then
-      if revIDEPrefGet("DontShowFileAssociationsDialog") is not true then
+      if revIDEGetPreference("cDontShowFileAssociationsDialog") is not true then
          modal stack "revFileAssociations"
       end if
    end if
@@ -1177,7 +1177,6 @@ command revInternal__InitialiseLibraries
    put return & "revDeployLibrary" after tLoadList
    put return & "revDebuggerLibrary" after tLoadList 
    put return & "revMetadataLibrary" after tLoadList
-   put return & "revIdeLibrary" after tLoadList
    put return & "revLibUrl" after tLoadList 
    put return & "revCommonLibrary" after tLoadList 
    put return & "revPrintLibrary" after tLoadList 
