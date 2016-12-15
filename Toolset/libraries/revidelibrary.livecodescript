@@ -14,36 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
---local sAddedObjects
-
-function revIDEImmediateOwner pObject, pType
-   # Start with the object itself
-   local tObject
-   put revRuggedId(pObject) into tObject
-   
-   repeat
-      # First check if the current object is of the type we want, if so, return it
-      if pType is "card" then
-         if word 1 of the name of tObject is "card" then
-            return tObject
-         else if word 1 of the name of tObject is "stack" then
-            return tObject
-         end if
-      end if
-      
-      # If the object has no owner we can't continue, this can only happen if the caller requests the card that owns a stack,
-      # so is a bug.
-      if the owner of tObject is empty then
-         exit repeat
-      end if
-      
-      # This means the object was not of the type we wanted, but it does have an owner, so we check its owner.
-      put the owner of tObject into tObject
-   end repeat
-   
-   # Should never get here...
-end revIDEImmediateOwner
-
 private function idePrefToPropertyName pPref
    return "c" & pPref
 end idePrefToPropertyName
