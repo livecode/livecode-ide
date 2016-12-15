@@ -14,24 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
-private function idePrefToPropertyName pPref
-   return "c" & pPref
-end idePrefToPropertyName
-
-function revIDEPrefGet pPref
-   local tPropname
-   put idePrefToPropertyName(pPref) into tPropname
-   return the tPropname of stack "revPreferences"
-end revIDEPrefGet
-
-command revIDEPrefSet pPref, pValue
-   local tPropname
-   put idePrefToPropertyName(pPref) into tPropname
-   set the tPropname of stack "revPreferences" to pValue
-end revIDEPrefSet
-
-////////////////////////////////////////////////////////////////////////////////
-
 # Parameters
 #   pPath : The full path of a stack
 # Description

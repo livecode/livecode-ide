@@ -236,7 +236,7 @@ on revInternal__openStack
    end if
    
    if $REV_TOOLS_PATH is empty and (revInternal__CheckFileAssociations() is true) and (the platform is "win32") then
-      if revIDEPrefGet("DontShowFileAssociationsDialog") is not true then
+      if revIDEGetPreference("cDontShowFileAssociationsDialog") is not true then
          modal stack "revFileAssociations"
       end if
    end if
