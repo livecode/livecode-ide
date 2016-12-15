@@ -1177,7 +1177,6 @@ command revInternal__InitialiseLibraries
    put return & "revDeployLibrary" after tLoadList
    put return & "revDebuggerLibrary" after tLoadList 
    put return & "revMetadataLibrary" after tLoadList
-   put return & "revIdeLibrary" after tLoadList
    put return & "revLibUrl" after tLoadList 
    put return & "revCommonLibrary" after tLoadList 
    put return & "revPrintLibrary" after tLoadList 
