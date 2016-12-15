@@ -29,7 +29,11 @@ alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternat
 hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false
 column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false
 corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false
+header background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header color	Colors	com.livecode.pi.color	true	false
 header text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text color	Colors	com.livecode.pi.color	true	false
+header background hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header hilite color	Colors	com.livecode.pi.color	true	false
+
+
 
 show header:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show column headers	Columns	com.livecode.pi.boolean	true	false		true
 columnData:revIDEGetDataGridColumns:revIDESetDataGridColumns	Columns	Columns	com.livecode.pi.datagridcolumns	true	false		no_default
@@ -46,6 +50,13 @@ column sort direction:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnPro
 column sort type:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnProperty	Sort type	Columns	com.livecode.pi.enum	true	false	Sort Options	Text	Text,Numeric,DateTime,System DateTime,International
 column case sensitive:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnProperty	Case sensitive	Columns	com.livecode.pi.boolean	true	false		no_default
 column behavior:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnProperty	Column behavior	Columns	com.livecode.pi.dgcolumnbehavior	true	false		no_default
+
+text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false
+text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false		empty								
+text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false
+header text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text font	Text	com.livecode.pi.font	true	false
+header text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text size	Text	com.livecode.pi.integer	true	false		empty								
+header text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text style	Text	com.livecode.pi.textstyle	true	false
 
 label												
 tooltip												
@@ -65,3 +76,10 @@ bottom
 layer		
 layerMode
 number
+blendLevel							0	0,100				
+ink												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay
