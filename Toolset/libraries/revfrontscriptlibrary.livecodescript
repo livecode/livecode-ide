@@ -395,7 +395,7 @@ on closeStack
             local tFileName
             # OK-2008-08-05 : Bug 6562 - Bug where the user was being prompted to delete the home stack on startup,
             # caused by revIDEStack returning true/false instead of empty/non-empty.
-            if tAllClosed and not revIDEStack(the effective filename of stack tStackName) then
+            if tAllClosed and not revIDEStackNameIsIDEStack(tStackName) then
                put the effective fileName of gREVTargetStack into tFileName
 
                # TH - 7689 improved wording of warning message

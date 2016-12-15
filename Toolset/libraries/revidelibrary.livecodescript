@@ -14,26 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
-# Parameters
-#   pPath : The full path of a stack
-# Description
-#   Returns true if pPath is the path of an IDE stack, false otherwise.
-function revIDEStack pPath
-   # OK-2008-06-16 : There is of course one other IDE mainstack that is not a stackFile of stack "Home"....
-   if pPath is the filename of stack "Home" then
-      return true
-   end if
-   
-   local tStackfilePath
-   repeat for each line tStackfile in the stackfiles of stack "home"
-      put item 2 to -1 of tStackfile into tStackfilePath
-      if pPath is tStackfilePath then
-         return true
-      end if
-   end repeat
-   return false
-end revIDEStack
-
 # OK-2007-11-29 : Bug 5597
 # Parameters
 #   <none>
