@@ -1096,11 +1096,11 @@ end getFirstIndentLevel
 #   The default script that the script editor should use for objects of the specified
 #   type if they have no script set. Returns empty if no default script is to be used.
 function seDefaultScript pObjectType, pStyle
+  # AL-2015-09-21: [[ Bug 15961 ]] Add default mouseup handler to opaque button
+   local tIndent
+   put getFirstIndentLevel() into tIndent
    switch pObjectType
-      case "button"
-         # AL-2015-09-21: [[ Bug 15961 ]] Add default mouseup handler to opaque button
-         local tIndent
-         put getFirstIndentLevel() into tIndent
+    case "button"
          if pStyle is among the items of "standard,rectangle,checkbox,radiobutton,transparent,opaque" then
             return "on mouseUp" & return & tIndent & return & "end mouseUp"
          else if pStyle is "menu" then
@@ -1108,11 +1108,11 @@ function seDefaultScript pObjectType, pStyle
          end if
          break
        case "scrollbar"
-           if pStyle is among the items of "Slider,little arrows,scrollbar" then
+         if pStyle is among the items of "scale,scrollbar" then
             return "local sStartValue" & return & return & "on mouseDown --save the initial value" & return &\
-            "  put the thumbPos of me into sStartValue" & return & "end mouseDown" & return & return &\
+            tIndent & "put the thumbPos of me into sStartValue" & return & "end mouseDown" & return & return &\
             "on scrollbarDrag newValue -- save the final value" & return & tIndent & return & "end scrollbarDrag" 
-            end if
+          end if
           break
       case "widget"
          return revIDEWidgetDefaultScript(pStyle)
