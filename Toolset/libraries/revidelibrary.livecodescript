@@ -14,37 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
-# LG-2008-04-22
-command revIDEStartCenterCheckOnStackClose pStackName
-   --  Want to check if there are any user stacks open.  If there are not we want to display the
-   --  start center.
-   
-   if revOkTarget(the long id of stack pStackName) or the cStartPageShow of stack "revPreferences" is false or the cReloadStartCenter of stack "revPreferences" is false then
-      exit revIDEStartCenterCheckOnStackClose
-   end if
-   
-   # LG-2008-06-20 - Bug 6600
-   # The stack being closed may still be in the openStacks as revIDEStartCenterCheckOnStackClose is no longer sent in time.
-   # Therefore the stack must be filtered out of the openStacks list.
-   repeat for each line openStack in the openStacks
-      -- Check is openStack is a user stack
-      --if char 1 to 3 of openStack is not "rev" or openStack is not among the items of "Message Box,Home,answer dialog,ask dialog,script debugger,file selector,color chooser" then
-      if ((not revOkTarget(the long id of stack openStack)) and (the short name of stack openStack is not pStackName)) then
-         exit revIDEStartCenterCheckOnStackClose
-      end if
-      
-      # OK-2009-01-20 : Additionally there are certain IDE stacks which we don't want the start centre to jump up over. These are 
-      # basically most windows other than the tools palette, menubar and possibly message box and property inspector.
-      if (the short name of stack openStack is not pStackName) and (openStack is not among the lines of revIDESideWindows()) then
-         exit revIDEStartCenterCheckOnStackClose
-      end if
-   end repeat
-   
-   # LG-2008-06-20  - Bug 6600
-   # Now sent in time so the start center will appear after the stack disappears.
-   send "revIDEShowStartCenter" to me in 0 milliseconds
-end revIDEStartCenterCheckOnStackClose
-
 # Returns
 #   A list of the short names of IDE stacks which are considered not to be "main windows", i.e they could be open most of the time
 #   Even when the user is not actually using them. This may require some tweaking to get right...

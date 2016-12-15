@@ -424,10 +424,6 @@ on closeStack
       send "revCloseStack" to this cd of stack l
    end repeat
 
-   # LG-2008-04-22
-   revIDEStartCenterCheckOnStackClose tStack
-   --------------------------------------------------
-
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass closeStack
 end closeStack
 
