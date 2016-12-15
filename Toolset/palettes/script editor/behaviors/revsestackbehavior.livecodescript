@@ -1920,12 +1920,6 @@ command actionPreviousScriptTab
 end actionPreviousScriptTab
 
 # Description
-#   Launches the message box
-command actionLaunchMessageBox
-   revIDEShowMessageBox
-end actionLaunchMessageBox
-
-# Description
 #   Sends the current window to the back.
 command actionSendWindowToBack
    revIDESendCurrentWindowToBack
