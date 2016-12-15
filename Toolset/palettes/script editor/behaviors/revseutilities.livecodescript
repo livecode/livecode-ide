@@ -1109,7 +1109,7 @@ function seDefaultScript pObjectType, pStyle
          break
        case "scrollbar"
            if pStyle is among the items of "Slider,little arrows,scrollbar" then
-            return "local sStartValue" & return & return & "on mouseDown --save the initial value" & return & tIndent &\
+            return "local sStartValue" & return & return & "on mouseDown --save the initial value" & return & "  " &\
             "put the thumbPos of me into sStartValue" & return & "end mouseDown" & return & return &\
             "on scrollbarDrag newValue -- save the final value" & return & tIndent & return & "end scrollbarDrag" 
             end if
