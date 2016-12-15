@@ -20,14 +20,44 @@ on FillInData pDataA, pRow
       put pDataA["scriptlines"] into field "scriptLines" of me
    end if 
    
+   -- Behaviors
    if pDataA["behavior scriptlines"] is empty then
-      hide field "behaviorScriptLines" of me
-      put "-" into field "behaviorScriptLines" of me
-      set the tooltip of field "behaviorScriptLines" of me to "This control does not have an associated behavior"
+      repeat with i = 1 to 10
+         hide grc ("behaviorScriptLines" & i) of me
+      end repeat
    else
-      show field "behaviorScriptLines" of me
-      put pDataA["behavior scriptlines"] into field "behaviorScriptLines" of me
-      set the tooltip of field "behaviorScriptLines" of me to pDataA["behavior"]
+      
+      # check parent behaviors
+      local tTargetBehavior
+      local tBehaviorList
+      
+      put pDataA["behavior"] into tTargetBehavior
+      put tTargetBehavior & cr into tBehaviorList
+      repeat
+         put the behavior of tTargetBehavior into tTargetBehavior
+         if tTargetBehavior <> "" then
+            put tTargetBehavior & cr after tBehaviorList
+         else
+            exit repeat
+         end if
+      end repeat
+      delete char - 1 of tBehaviorList -- return
+      
+      local tNoOfLInes
+      local tCounter
+      local tCPName
+      
+      put min(the number of lines of tBehaviorList, 10) into tNoOfLines
+      repeat with i = 1 to tNoOfLines
+         set the toolTip of grc ("behaviorScriptLines" & i) of me to line i of tBehaviorList
+         show grc ("behaviorScriptLines" & i) of me
+         put ("cBehaviorLongID" & i) into tCPName
+         set the tCPName of me to line i of tBehaviorList
+         put i into tCounter
+      end repeat
+      repeat with j = tCounter + 1 to 10
+         hide grc ("behaviorScriptLines" & j) of me
+      end repeat
    end if 
    
    if pDataA["childCount"] is empty or pDataA["childCount"] is 0  then 
@@ -102,13 +132,23 @@ on LayoutControl pControlRect
    end if
    set the height of field "scriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
    
-   set the fixedLineHeight of field "behaviorScriptLines" of me to true   
-   set the textSize of field "behaviorScriptLines" of me to empty
-   set the textHeight of field "behaviorScriptLines" of me to the textHeight of field "scriptLines" of me
-   set the height of field "behaviorScriptLines" of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
+   repeat with i = 1 to 10
+      set the textSize of grc ("behaviorScriptLines" & i) of me to empty
+      set the height of grc ("behaviorScriptLines" & i) of me to the viewProp["row height"] of the owner of the owner of the owner of me - 6
+      set the width of grc ("behaviorScriptLines" & i) of me to tTextSize + 2
+   end repeat
+   
+   set the loc of field "type" of me to tLoc
+   set the loc of field "name" of me to tLoc
+   set the loc of button "cantSelect" of me to tLoc
+   set the loc of button "visible" of me to tLoc
+   set the loc of field "scriptLines" of me to tLoc
+   
+   repeat with i = 1 to 10
+      set the loc of grc ("behaviorScriptLines" & i) of me to tLoc
+   end repeat
    
    set the width of field "scriptLines" of me to the formattedWidth of field "scriptLines" of me 
-   set the width of field "behaviorScriptLines" of me to the formattedWidth of field "behaviorScriptLines" of me 
    set the width of field "name" of me to the formattedWidth of field "name" of me
    
    set the loc of field "type" of me to tLoc
@@ -116,7 +156,6 @@ on LayoutControl pControlRect
    set the loc of button "cantSelect" of me to tLoc
    set the loc of button "visible" of me to tLoc
    set the loc of field "scriptLines" of me to tLoc
-   set the loc of field "behaviorScriptLines" of me to tLoc
    set the loc of image "groupIcon" of me to tLoc
    
    ## Set the vertical location of the name and text fields
@@ -160,17 +199,26 @@ on LayoutControl pControlRect
    set the right of button "cantSelect" of me to the item 3 of pControlRect - the palettePadding of me   
    set the right of button "visible" of me to the left of button "cantSelect" of me - the palettePadding of me   
    set the right of field "scriptLines" of me to the left of button "visible" of me  - the palettePadding of me
-   set the right of field "behaviorScriptLines" of me to the left of field "scriptLines" of me  - the palettePadding of me
+   set the right of grc "behaviorScriptLines1" of me to the left of field "scriptLines" of me - the palettePadding of me -2
+   repeat with i = 2 to 10
+      set the right of grc ("behaviorScriptLines" & i) of me to the left of grc ("behaviorScriptLines" & i - 1) of me - the palettePadding of me + 2
+   end repeat
    
    ## Check the width of  the "name" field so it doesn't overrun the space
    local tNameWidth
-   if the visible of field "behaviorScriptLines" of me then
-      put the left of field "behaviorScriptLines" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
+   if the visible of grc "behaviorScriptLines1" of me then
+      put the left of grc "behaviorScriptLines1" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
+      repeat with i = 10 down to 2
+         if the visible of grc ("behaviorScriptLines" & i)  of me then
+            put the left of grc  ("behaviorScriptLines" & i) of me - tNameFieldLeft - the palettePadding of me into tNameWidth
+            exit repeat
+         end if
+      end repeat
    else
       put the left of field "scriptLines" of me - tNameFieldLeft - the palettePadding of me into tNameWidth
    end if
    
-   if the width of field "name" of me > tNameWidth then
+    if the width of field "name" of me > tNameWidth then
       set the width of field "name" of me to tNameWidth
    end if
    set the left of field "name" of me to tNameFieldLeft
@@ -188,9 +236,11 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the foregroundColor of field "type" of me to revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of field "name" of me to  revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_1")
-      set the foregroundColor of field "behaviorScriptLines" of me to  revIDEColor("text_1")
       set the backgroundColor of field "scriptLines" of me to  revIDEColor("dataView_TextHiliteColor")
-      set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_TextHiliteColor")
+     repeat with i = 1 to 10
+         set the foregroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("text_1")
+         set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_TextHiliteColor")
+      end repeat
       set the colorOverlay["color"] of image "groupIcon" of me to revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of widget "icon" of group "disclosure" of me to revIDEColor("dataView_disclosureIconHiliteColor")
       set the foregroundColor of me to revIDEColor("dataView_disclosureIconHiliteColor")
@@ -198,7 +248,10 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the foregroundColor of field "type" of me to revIDEColor("text_2")
       set the foregroundColor of field "name" of me to revIDEColor("text_1")
       set the foregroundColor of field "scriptLines" of me to  revIDEColor("text_3")
-      set the foregroundColor of field "behaviorScriptLines" of me to  revIDEColor("text_3")
+      repeat with i = 1 to 10
+         set the foregroundColor of grc ("behaviorScriptLines" & i) of me to  revIDEColor("text_3")
+         set the backgroundColor of grc ("behaviorScriptLines" & i) of me to  revIDEColor("dataView_hiliteColor")
+      end repeat
       
       if exists(the cObjectLongID of me) and the scriptStatus of the cObjectLongID of me is "error" then
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_scriptErrorBackgroundColor")
@@ -206,11 +259,15 @@ setProp dvHilite[pHiliteColor] pBoolean
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
       end if
       
-      if exists(the cBehaviorLongID of me) and the scriptStatus of the cBehaviorLongID of me is "error" then
-         set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_scriptErrorBackgroundColor")
-      else
-         set the backgroundColor of field "behaviorScriptLines" of me to revIDEColor("dataView_hiliteColor")
-      end if
+       local tCPName
+      repeat with i = 1 to 10
+         put ("cBehaviorLongID" & i) into tCPName
+         if exists(the tCPName of me) and the scriptStatus of the tCPName of me is "error" then
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+         else
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_hiliteColor")
+         end if
+      end repeat
       
       set the colorOverlay of image "groupIcon" of me to empty
       set the foregroundColor of widget "icon" of group "disclosure" of me to revIDEColor("dataView_disclosureIconColor")
@@ -223,8 +280,35 @@ on mouseUp
       case "scriptLines"
          edit the script of the cObjectLongID of me
          break
-      case "behaviorScriptLines"
-         edit the script of the cBehaviorLongID of me
+      case "behaviorScriptLines1"
+         edit the script of the cBehaviorLongID1 of me
+         break
+      case "behaviorScriptLines2"
+         edit the script of the cBehaviorLongID2 of me
+         break
+      case "behaviorScriptLines3"
+         edit the script of the cBehaviorLongID3 of me
+         break
+      case "behaviorScriptLines4"
+         edit the script of the cBehaviorLongID4 of me
+         break
+      case "behaviorScriptLines5"
+         edit the script of the cBehaviorLongID5 of me
+         break
+      case "behaviorScriptLines6"
+         edit the script of the cBehaviorLongID6 of me
+         break
+      case "behaviorScriptLines7"
+         edit the script of the cBehaviorLongID7 of me
+         break
+      case "behaviorScriptLines8"
+         edit the script of the cBehaviorLongID8 of me
+         break
+      case "behaviorScriptLines9"
+         edit the script of the cBehaviorLongID9 of me
+         break
+      case "behaviorScriptLines10"
+         edit the script of the cBehaviorLongID10 of me
          break
       case "icon"
       case "disclosure"
