@@ -14,35 +14,6 @@ end revUnloadLibrary
 
 ////////////////////////////////////////////////////////////////////////////////
 
-# OK-2007-11-29 : Bug 5597
-# Parameters
-#   <none>
-# Description
-#   Sent when the user has requested to "Save" either by clicking in File -> Save As or by pressing ctrl-s.
-#   This command attempts to save the topStack if appropriate. Note that if the shiftKey is down, the command 
-#   exits, this was kept to preserve existing behavior. Sends "closeField" to the focused field of the property
-#   inspector if it is open.
-command revIDESaveRequest
-  if the mode of the topStack is not 1 then
-    exit revIDESaveRequest
-  end if
-  if the shiftKey is down then
-    exit revIDESaveRequest
-  end if
-   
-  if (the focusedObject) is not empty and word 1 of revTargetStack(the focusedObject) is "revPropertyPalette" and word 1 of (the focusedObject) is "field" then
-    local tObject
-    put the focusedObject into tObject
-    send "closeField" to tObject
-  end if
-  
-  if the effective filename of the topStack is not empty then
-    revSave (the short name of the topStack)
-  else
-    revSaveAs (the short name of the topStack)
-  end if
-end revIDESaveRequest
-
 # Returns whether the path pPath is case sensitive. pPath must point to a file.
 private function utilityPathIsCaseSensitive pPath
   local tFolder
