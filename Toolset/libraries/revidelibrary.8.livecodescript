@@ -462,7 +462,6 @@ private function __classicObjectPropertiesFromType pType
       case "Card"
       case "Stack"
       case "Substack"
-      case "DataGrid"
          return sClassicObjectProperties[pType]
       default
          if not (pType begins with "com.livecode.interface.classic") then
