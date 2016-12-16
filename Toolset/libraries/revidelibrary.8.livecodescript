@@ -5656,6 +5656,7 @@ command ConfirmPresenceOfTemplateStack pStack
       put kTemplateStack && tUnique into tStackName
       set the topleft of the templatestack to -1000,-1000
       create stack tStackName
+      reset the templatestack
       close stack tStackName
       set the mainstack of stack tStackName to the mainstack of stack pStack
 
