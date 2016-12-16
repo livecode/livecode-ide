@@ -68,14 +68,7 @@ customProperties
 lockLoc							false					
 width							250					
 height							160					
-location												
-left												
-top												
-right												
-bottom												
-layer		
 layerMode
-number
 blendLevel							0	0,100				
 ink												
 dropShadow												
