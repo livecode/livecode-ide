@@ -1,0 +1,1 @@
+# Reset the templateStack after datagrid creation
