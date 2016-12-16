@@ -186,7 +186,7 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
-after editorPopup pClickLoc
+on editorPopup pClickLoc
    local tStackName
    put popupStackName() into tStackName
    create invisible stack tStackName
