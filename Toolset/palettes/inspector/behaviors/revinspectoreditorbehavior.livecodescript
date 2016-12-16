@@ -186,6 +186,10 @@ getProp editorWidth
 end editorWidth
 
 local sPopupData
+on editorPopup pClickLoc
+   
+end editorPopup
+
 after editorPopup pClickLoc
    local tStackName
    put popupStackName() into tStackName
