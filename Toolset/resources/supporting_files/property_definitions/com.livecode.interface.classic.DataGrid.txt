@@ -69,6 +69,7 @@ lockLoc							false
 width							250					
 height							160					
 location												
+resize:revIDEGetRectProperty:revIDESetRectProperty	Resize when setting rect property	Position	com.livecode.pi.boolean	true	false
 left												
 top												
 right												
