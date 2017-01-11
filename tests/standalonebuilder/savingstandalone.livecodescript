@@ -1,6 +1,6 @@
-﻿script "StandaloneBuilding"
+﻿script "SavingStandaloneMessage"
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -97,7 +97,7 @@ on TestSavingStandalone
    TestAssert "standalone in expected location", there is a file tExe
    
    local tOutput
-   put shell(quote & tExe & quote) into tOutput
+   put shell(quote & tExe & quote && "-ui") into tOutput
    
    TestDiagnostic "shell output" && tOutput
    
