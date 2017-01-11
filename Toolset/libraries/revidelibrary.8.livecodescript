@@ -9233,7 +9233,7 @@ on revIDERelayerControls pObjectList, pMode
    local tRelayerGrouped
    put the relayerGroupedControls into tRelayerGrouped
    
-   set the relayerGroupedControls to true
+   set the relayerGroupedControls to false
    switch pMode
       case "send to back"
          sort lines of tLayers numeric descending
