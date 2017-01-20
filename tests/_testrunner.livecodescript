@@ -231,9 +231,7 @@ private command runAllTests pInfo
    
    local tUsefulOutput
    repeat for each line tLine in tTestOutput
-	   if tLine begins with "PASS:" then
-		  put tLine & return after tUsefulOutput
-	   else if tLine begins with "FAIL:" then
+      if word 1 of tLine is among the items of "PASS:,FAIL:,SKIP:,XPASS:,XFAIL:" then
 		  put tLine & return after tUsefulOutput
 	   else if tLine begins with "not ok" then
 		  put tLine & return after tUsefulOutput
