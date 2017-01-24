@@ -1188,11 +1188,12 @@ command revInternal__InitialiseLibraries
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
- 
+   
    if the editionType is "professional" then
       put return & "remotedebugger" after tLoadList 
+      put return & "scriptprofiler" after tLoadList 
    end if
-
+   
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
    put return & "revsaveasstandalone" after tBackList
