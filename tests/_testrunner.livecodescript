@@ -103,9 +103,6 @@ command TestRunnerMain
 end TestRunnerMain
 
 command TestRunnerInvokeAll
-   if there is not a stack "home" then
-	   invokeLoadIDE
-   end if
    invokeAllTests
 end TestRunnerInvokeAll
 
@@ -169,17 +166,57 @@ private command invokeLoadIDE
 	revSetTestEnvironment true
 end invokeLoadIDE
 
-private command invokeAllTests
+private command TestUpdateAnalysis pFilename, pTestCommand, @xAnalysis
+   local tOutput   
+   put TestFetchAndClearOutput() into tOutput
+   write textEncode(tOutput,"utf-8") to stdout
+   runTestProcessOutput pFilename, \
+	   pTestCommand, tOutput
+   put TesterTapCombine(xAnalysis, the result) into xAnalysis
+end TestUpdateAnalysis
+
+private command TestLoadIDE
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   
+   local tLoadResult
+   if there is not a stack "home" then
+	   invokeLoadIDE
+	   put the result into tLoadResult
+   end if
+
    -- gRevDevelopment should be true by default
    global gRevDevelopment
    put true into gRevDevelopment
 
    invokeLoadLibrary
    
+   -- Don't output to stdout
+   TestOutputToVariable
+
+   TestAssert "IDE loads without error", tLoadResult is empty
+
+   TestAssert "IDE load preserves defaultFolder", \
+   	  the defaultFolder is tDefaultFolder
+
+   TestDiagnostic "original default folder:" && tDefaultFolder
+   TestDiagnostic "new default folder:" && the defaultFolder
+   
+   local tAnalysis
+   TestUpdateAnalysis the effective filename of me, \
+	   "TestLoadIDE", tAnalysis
+   return tAnalysis
+end TestLoadIDE
+
+private command invokeAllTests      
+   local tAnalysis   
+   TestLoadIDE
+   put the result into tAnalysis
+      
    local tTopLevel
    put revIDESpecialFolderPath("IDE") & "/tests" into tTopLevel
    
-   local tFile, tAnalysis
+   local tFile
    repeat for each element tFile in TesterGetTestFileNames(tTopLevel)
       invokeTestScript tTopLevel & slash & tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
@@ -191,14 +228,11 @@ end invokeAllTests
 private command invokeTestScript pScriptFile
    -- Don't output to stdout
    TestOutputToVariable
-   	
+   
    local tCommand, tAnalysis, tOutput
    repeat for each element tCommand in TesterParseTestCommandNames(pScriptFile)
       invokeTestCommand pScriptFile, tCommand
-      put TestFetchAndClearOutput() into tOutput
-      write textEncode(tOutput,"utf-8") to stdout
-      runTestProcessOutput pScriptFile, tCommand, tOutput
-      put TesterTapCombine(tAnalysis, the result) into tAnalysis
+      TestUpdateAnalysis pScriptFile, tCommand, tAnalysis
    end repeat
    return tAnalysis
 end invokeTestScript
