@@ -573,7 +573,7 @@ for the new file to be submitted.
 The list of tags applied to your own uploads can be altered by using the
 “Add/Delete tags” control 
 
-![](images/revonline-add-delete-tags).png
+![](images/revonline-add-delete-tags.png)
 
 which will bring up the following dialog:
 
@@ -1640,7 +1640,7 @@ doing so will replace the system standard check box and display your
 icon in each state depending on whether the button has been pressed or
 depressed.
 
-![](images/image-75.png)
+![](images/image75.png)
 
 Figure 34 – Custom Buttons for Multimedia
 
