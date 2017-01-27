@@ -364,10 +364,10 @@ The User Guides are a complete reference to LiveCode. They detail what the dialo
 
 RevOnline gives you the opportunity to upload and share your projects as
 well as download those created by other members of the LiveCode online
-community. It can be accessed via the RevOnline button located in the
+community. It can be accessed via the Sample Stacks button located in the
 menu bar. The main interface can be seen below:
 
-![](images/image13.png)
+![](images/revonline-main.png)
 
 The interface is designed to organise the online content into various
 categories to aid you in finding the kind of content you wish to
@@ -378,7 +378,7 @@ using a lower level language. A code snippet is a portion of LiveCode
 script that you can paste into and incorporate into your own projects.
 
 The results of searching or browsing through the RevOnline content are
-displayed in the *search list* area. This is an explaination of the
+displayed in the *search list* area. This is an explanation of the
 controls you can use to adjust the parameters of your search:
 
 | &nbsp;| &nbsp;|
@@ -391,18 +391,18 @@ controls you can use to adjust the parameters of your search:
 | **View mode**       | The search list area can be viewed in two modes, a vertical scrolling list or a grid. In “list” mode 10 results will be displayed per page, in “grid” mode the number of results displayed will be dependent upon the size of the RevOnline stack. Whilst in “grid” mode the *viewing pane* area will not be visible.         |
 | **User filter**     | If you apply user filter to a search, the user’s name will appear above the type and tag lists (see below), subsequently only content by that user will be returned in the search results. Clicking on the button or text of the user filter will remove it.                                                                  |
 
-![](images/image14.png)
+![](images/revonline-user-filter.png)
 
 The *search list* area displays a preview of the results your search has
 returned. At the top of this list you will see the *page controls* which
 allow you to navigate forwards and backwards through the pages of your
 search should it return more results than can be displayed on one page.
 
-![](images/image15.png)
+![](images/revonline-page-list.png)
 
 An example of the search list previews can be seen below:
 
-![](images/image16.png)
+![](images/revonline-list-preview.png)
 
 At the top of the preview is the content’s name. You can also see its
 average user rating out of five stars, the total number of times it has
@@ -428,7 +428,7 @@ in the *viewing pane*.
 
 The *viewing pane* displays detailed information on users and uploads.
 
-![](images/image20.png)
+![](images/revonline-view-pane.png)
 
 If you are a viewing stack details as shown above, in addition to the
 information provided by the preview you will also see a headline,
@@ -463,7 +463,8 @@ text feedback in response to the operations you perform such as
 In the top right corner of RevOnline you will find the *login controls*
 which will display your current login status as shown below:
 
-![](images/image22.png)
+![](images/revonline-login-status-not-logged-in.png)
+![](images/revonline-login-status-logged-in.png)
 
 In order to upload, rate and tag content in RevOnline you must have an
 account, this account is also required for making comments in the wiki
@@ -475,7 +476,7 @@ must hit the activation link in the email before your account can be
 accessed. Once activated, you can login to your account using the “Log
 In” control pictured above which will bring up the following dialog:
 
-![](images/image23.png)
+![](images/revonline-login-dialog.png)
 
 The “Remember me” check box will cause RevOnline to maintain your
 username in the “Email :” field between login attempts. The “Sign in
@@ -491,7 +492,7 @@ opportunity to enter information about into the highlighted fields and
 change your profile picture using the *change profile picture* control
 as shown below:
 
-![](images/image24.png)
+![](images/revonline-account-details.png)
 
 Clicking on the *change profile picture* control will bring up the
 following dialog:
@@ -519,7 +520,7 @@ To upload content to RevOnline simply click on the “upload content” in
 the *login controls,* you will then be presented with the content
 browser view.
 
-![](images/image26.png)
+![](images/revonline-content-browser-code.png)
 
 Clicking on the tabs at the top of this view will change the content
 type. Above you can see the code snippet view, it simply requires you to
@@ -533,7 +534,7 @@ to upload (shown below). The default file types for extensions on each
 platform are; “.dll” for Windows , “.bundle” for Mac OS X and “.so” for
 Linux.
 
-![](images/image27.png)
+![](images/revonline-content-browser-external.png)
 
 When uploading a code snippet or external RevOnline will place the code
 or file into an installer stack. The installer stacks give you the
@@ -553,9 +554,9 @@ Whenever you are viewing content that you have uploaded or your own
 profile whilst logged in the edit controls will appear above the
 *viewing pane*, shown below:
 
-![](images/image28.png)
+![](images/revonline-edit-stack.png)
 
-By clicking on the “edit profile” or “edit content” (for stacks etc.)
+By clicking on the “edit profile” or “edit stack” (for stacks etc.)
 button you are entering edit mode which allows you to make changes to
 the information shown. When editing your profile you can simply save or
 discard the changes you have made. When editing an upload you have the
@@ -567,11 +568,14 @@ present you with the content browser view discussed earlier. After you
 have chosen a replacement file you need to save your changes in order
 for the new file to be submitted.
 
-![](images/image29.png)
+![](images/revonline-edit-content-controls.png)
 
 The list of tags applied to your own uploads can be altered by using the
-“Add/Delete tags” control (shown above) which will bring up the
-following dialog:
+“Add/Delete tags” control 
+
+![](images/revonline-add-delete-tags).png
+
+which will bring up the following dialog:
 
 ![](images/image30.png)
 
@@ -588,7 +592,7 @@ can submit your changes by clicking the ok button.
 Additional options for the RevOnline interface can be set in the
 RevOnline tab of the preferences stack. As pictured below:
 
-![](images/image31.png)
+![](images/revonline-preferences.png)
 
 Here you can set the remember password and user name preferences and
 change your password to one of your choosing. The search results in
