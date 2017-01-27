@@ -993,9 +993,7 @@ With LiveCode’s built in *Database Library*, your application can
 communicate with external SQL databases. You can get data from
 single-user and multi-user databases, update data in them, get
 information about the database structure, and display data from the
-database in your stack. With the Database Query Builder, you can
-automate the process of querying a database and populating fields with
-the data, with no coding required.
+database in your stack. 
 
 For more details on working with databases, see the 
 *Working with Databases* guide.
