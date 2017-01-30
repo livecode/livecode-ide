@@ -440,6 +440,12 @@ end revMovePalettesForSheet
 
 function revSaveCheck pStack, pNoWarning
    if the secureMode then return true
+
+   -- Don't check stack save in test environment
+   if revTestEnvironment() then
+	   return true
+   end if
+   
    put the short name of stack pStack into pStack
    if revIDEStackIsEdited(pStack) and the short name of stack \ 
          (the mainstack of stack pStack) is not the short name of revScriptEditorMain() then
