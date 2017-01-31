@@ -11316,6 +11316,28 @@ on ideCompileCheck pScript
    return empty
 end ideCompileCheck
 
+private command __removeMessageBoxFromDebugContexts @xContexts
+   local tTarget
+   put the long id of the target into tTarget
+   local tFirst, tLast, tCount, tObject
+   put 1 into tFirst
+   put 0 into tLast
+   repeat for each line tLine in xContexts
+      add 1 to tCount
+      put item 2 of tLine into tObject
+      if tObject is not empty then
+         put the long id of tObject into tObject
+      end if
+      -- Message box execution always begins with 'returnInField' from the target
+      if item 3 of tLine is "returnInField" and \ 
+            tObject is tTarget then
+         put tCount into tLast
+      end if
+   end repeat
+   
+   delete line tFirst to tLast of xContexts
+end __removeMessageBoxFromDebugContexts
+
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
@@ -11327,22 +11349,28 @@ command ideDoMessage pScript, pDebugMode
    local tScriptError
    try
       if pDebugMode then
-         # OK-2010-01-02: Remove the message box itself from the debug context. 
-         # Line 1 will be revDebugDoMessage
-         # Line 2 is revExecuteMessage (message box field)
-         # Line 3 is returnInField (message box field)
-         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
-         # Note that this code is called from both the single and multi-line fields, but luckily they both 
-         # have the same number of calls.
-         local tContext, tContextNumber
-         get revDebuggerContexts()
-         put line 4 of it into tContext
-         
+         local tContext, tScriptEditor
+         put revTopMostScriptEditor() into tScriptEditor
+         -- Ensure a user-selected debug context in the script editor is the first
+         -- option for execution context in the message box
+         if tScriptEditor is not empty then
+            dispatch function "seGetSelectedDebugContext" to tScriptEditor
+            put the result into tContext
+         end if
+         -- Otherwise, remove the chain of message box execution contexts
+         -- from the list, and take the next one.
+         if tContext is empty then
+            local tContexts
+            put revDebuggerContexts() into tContexts
+            __removeMessageBoxFromDebugContexts tContexts
+            put line 1 of tContexts into tContext
+         end if
          local tResult
          revDebuggerDo pScript, tContext
-         get the result
-         put line 1 of it into tResult
-         put line 2 to -1 of it into tScriptError
+         put the result into tResult
+         put line 2 to -1 of tResult into tScriptError
+         put line 1 of tResult into tResult
+         
       else
          do pScript
       end if

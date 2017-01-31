@@ -716,6 +716,10 @@ function seDebugContexts
 end seDebugContexts
 
 local sDebugContext
+function seGetSelectedDebugContext
+   return sDebugContext
+end seGetSelectedDebugContext
+
 function seGetDebugContext
    local tMode
    revSEGetMode

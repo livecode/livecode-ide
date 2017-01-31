@@ -587,7 +587,7 @@ command ideMessageBoxExecuteScript pScript
       put empty into tIntelligenceObject
    end try
    local tDebugMode
-   put revIDEGetPreference("IDEDebugMode") into tDebugMode
+   put the traceStack is not empty into tDebugMode
    
    local tValidScript
    ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, tDebugMode, tValidScript
