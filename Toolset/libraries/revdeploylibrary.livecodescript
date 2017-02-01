@@ -25,7 +25,7 @@ end revUnloadLibrary
 -- history for which the stack is configured. This is then used to pick the last chosen
 -- target for this platform.
 
-constant kSupportedPlatforms = "iOS Android"
+constant kSupportedPlatforms = "iOS Android Desktop"
 
 -- The mapping from deploy target to platform
 local sDeployTargetPlatforms
@@ -103,6 +103,10 @@ end revIDEDeployBuild
 function revIDEDeployListTargets
    local tTargets
    repeat for each word tPlatform in kSupportedPlatforms
+      if there is not a stack ("revDeployLibrary" & tPlatform) then
+         next repeat
+      end if
+      
       dispatch function "deployListTargets" to stack ("revDeployLibrary" & tPlatform) 
       if it is "handled" and the result is not empty then
          put the result into tTargets[tPlatform]
@@ -132,6 +136,19 @@ function revIDEDeployGetTarget
          if the cRevStandaloneSettings[tPlatform] of stack tStack then
             return sDeployTargets[tPlatform]
          end if
+         
+         if there is a stack ("revDeployLibrary" & tPlatform) then
+            dispatch function "deployListTargets" to stack ("revDeployLibrary" & tPlatform) 
+            if it is "handled" and the result is not empty then
+               
+               local tTarget
+               repeat for each line tTarget in the result
+                  if the cRevStandaloneSettings[tTarget] of stack tStack then
+                     return sDeployTargets[tPlatform]
+                  end if
+               end repeat
+            end if
+         end if
       end repeat
    end if
    
@@ -147,13 +164,34 @@ function revIDEDeployIsPossible pPlatform
    
    local tStack
    put the mainStack of the topStack into tStack
-   return the cRevStandaloneSettings[pPlatform] of stack tStack
+   if the cRevStandaloneSettings[pPlatform] of stack tStack then
+      return true
+   end if
+   
+   if there is a stack ("revDeployLibrary" & pPlatform) then
+      dispatch function "deployListTargets" to stack ("revDeployLibrary" & pPlatform) 
+      if it is "handled" and the result is not empty then
+         
+         local tTarget
+         repeat for each line tTarget in the result
+            if the cRevStandaloneSettings[tTarget] of stack tStack then
+               return true
+            end if
+         end repeat
+      end if
+   end if
+   
+   return false
 end revIDEDeployIsPossible
 
 -- This method is called on startup to initialize the deployment library. This includes
 -- attempting to auto-configure any SDKs and such if necessary.
 command revIDEDeployInitialize
    repeat for each word tPlatform in kSupportedPlatforms
+      if there is not a stack ("revDeployLibrary" & tPlatform) then
+         next repeat
+      end if
+      
       dispatch command "deployInitialize" to stack ("revDeployLibrary" & tPlatform) 
    end repeat
    
@@ -172,6 +210,10 @@ end revIDEDeployInitialize
 on revIDEDeployTargetsChanged
    put empty into sDeployTargetPlatforms
    repeat for each word tPlatform in kSupportedPlatforms
+      if there is not a stack ("revDeployLibrary" & tPlatform) then
+         next repeat
+      end if
+      
       dispatch function "deployListTargets" to stack ("revDeployLibrary" & tPlatform) 
       if it is "handled" and the result is not empty then
          repeat for each line tTarget in the result
