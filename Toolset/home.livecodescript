@@ -514,7 +514,27 @@ function revInternal__StackFiles
    if revEnvironmentIsInstalled() then
       put return & revEnvironmentToolsetPath() after tFolders
    else
-      put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
+      local tRepoPath
+      put revEnvironmentRepositoryPath() into tRepoPath
+      put return & tRepoPath & slash & "ide-support" after tFolders
+      
+      set the itemDelimiter to slash
+      put "ide/Toolset" into the last item of tRepoPath
+      
+      if there is a folder tRepoPath then
+         
+         put tRepoPath & slash & "palettes" into tPaletteFolder
+         if there is a folder tPaletteFolder then
+            put return & tPaletteFolder after tFolders
+            
+            repeat for each line tFolder in folders(tPaletteFolder)
+               if char 1 of tFolder is "." then next repeat
+               put return & tPaletteFolder & slash & tFolder after tFolders
+            end repeat
+         end if
+      
+         put return & tRepoPath & slash & "libraries" after tFolders
+      end if
    end if	
    
    
