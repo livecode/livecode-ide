@@ -11316,6 +11316,10 @@ on ideCompileCheck pScript
    return empty
 end ideCompileCheck
 
+function ideIsDebugging
+   return revTopMostScriptEditor("debug") is not empty
+end ideIsDebugging
+
 private command __removeMessageBoxFromDebugContexts @xContexts
    local tTarget
    put the long id of the target into tTarget
@@ -11350,7 +11354,7 @@ command ideDoMessage pScript, pDebugMode
    try
       if pDebugMode then
          local tContext, tScriptEditor
-         put revTopMostScriptEditor() into tScriptEditor
+         put revTopMostScriptEditor("debug") into tScriptEditor
          -- Ensure a user-selected debug context in the script editor is the first
          -- option for execution context in the message box
          if tScriptEditor is not empty then
