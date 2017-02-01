@@ -616,11 +616,11 @@ support/icon@extra-high.png // 40x80 png image
 
 ## The Extension Store
 
-Once you have created and packaged your extension you can make it available to the LiveCode Community via the Extension Store.
+Once you have created and packaged your extension you can make it available to the LiveCode Community via the [Extension Store](https://livecode.com/products/extensions), in the [widgets](https://livecode.com/products/widgets/) section.
 
 ### Registering as an Extension Developer
 
-The first step is to register as an Extension Developer.
+The first step is to [register](https://livecode.com/account/developer/register) as an Extension Developer.
 
 - Log in to your LiveCode Account
 - Select the Register option under the Developer section
@@ -635,9 +635,9 @@ Choose the Developer ID you want to use here, if your chosen ID is already in us
 
 ### Uploading Extensions to the Store
 
-To upload a packaged extension to the store log in to your LiveCode account and go to the Extensions section of the Developer area.
+To upload a packaged extension to the store log in to your LiveCode account and go to the [Extensions](https://livecode.com/account/developer/extensions) section of the Developer area.
 
-Any extensions you have uploaded will be show here, and you have the option to add new extensions.
+Any extensions you have uploaded will be shown here, and you have the option to add new extensions.
 
 - Click the "Add New Extension" button (if available)
 - Drag your packaged extension (.lce) file into the upload area
@@ -656,11 +656,13 @@ To activate your extension click "activate" under Status, at this stage you will
 
 Once your extension is activated its status will change to "Active".
 
-### Using the Extension Store
+### The Extension Store in the Extension Manager
 
 You can view and downlaod extensions via the Extension Store. To see the extensions that are available to download open the Extension Manager from the LiveCode Tools menu and select the "Store" tab.
 
 ![enter image description here](images/extensions-store.png)
+
+You can also download extension from the [Widget Store](https://livecode.com/products/widgets/) on the LiveCode website and install the downloaded extension using the Extension Manager.
 
 ## Other ways to extend the Built-in Capabilities
 
