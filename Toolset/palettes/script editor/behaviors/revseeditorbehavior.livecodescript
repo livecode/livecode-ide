@@ -1019,76 +1019,61 @@ end scriptUncomment
 #   pType : the handler type code (e.g "F", "PM" etc)
 # Returns
 #   The line number that the handler was located at, or empty if it could not be found.
+# MDW-2015-09-15 [[ feature_fast_locateHandler ]]
+# only called from two places as seLocateHandler
+# this takes advantage of the new regex filter syntax
+# and ignores pProposedPosition
 command locateHandler pName, pProposedPosition, pType
    local tScript
+   local tFilteredScript
+   local tType
+   local tMatchRegex
+   -- this allows us to ignore the 'private' modifier
+   constant kRegex = "^(?:private\s)?"
+  
    put the text of field "Script" of me into tScript
-   
-   local tStartLine
-   put line pProposedPosition of tScript into tStartLine
-   
-   local tSyntaxOptions
-   put convertTypeCodeToSyntax(pType, pName) into tSyntaxOptions
-   
-   # Unknown handler type, this is a bug in whatever called this command.
-   if tSyntaxOptions is empty then
-      return empty
-   end if
-   
-   repeat for each line tSyntax in tSyntaxOptions
-      if word 1 to (the number of words of tSyntax) of tStartLine is tSyntax and word (the number of words of tSyntax + 1) of tStartLine is pName then
-         return pProposedPosition
-      end if
-   end repeat
-   
-   # If we got here, it means the handler was no longer at the location proposed. This is probably because the handler
-   # was moved and at the same time the script was made invalid. We search for the handler manually instead.
-   # As this case will not happen too often, it is not optimized for now.
-   local tLineNumber
-   put 1 into tLineNumber
-   repeat for each line tLine in tScript
-      repeat for each line tSyntax in tSyntaxOptions
-         if word 1 to (the number of words of tSyntax) of tLine is tSyntax and word (the number of words of tSyntax + 1) of tLine is pName then
-            return tLineNumber
-         end if
-      end repeat
-      add 1 to tLineNumber
-   end repeat
-   
-   # Could not be found, in this case the script editor will get the wrong line...
-   return pProposedPosition
+	switch char -1 of pType -- ignore a "P" modifier if present
+		case "M"
+				put "(on|command)" into tType
+				break
+		case "F"
+				put "function" into tType
+				break
+		case "G"
+				put "getprop" into tType
+				break
+		case "S"
+				put "setprop" into tType
+				break
+		case "B"
+				put "before" into tType
+				break
+		case "A"
+				put "after" into tType
+				break
+	end switch
+   put kRegex & tType & "\s" & pName & "\b.*" into tMatchRegex
+   --if matchText(line pProposedPosition of tScript, tMatchRegex) then
+   	-- if the script is already compiled we will get a match
+  		--put pProposedPosition into tResult
+   --else
+   	-- otherwise we ignore pProposedPosition and find the real line number
+		-- filter down to just the line we're looking for
+		filter tScript with regex tMatchRegex into tFilteredScript
+		--put lineoffset(tFilteredScript, tScript) into tResult
+		put 1 into tResult
+		repeat for each line tLine in tScript
+			if tLine is tFilteredScript then
+				exit repeat
+			end if
+			add 1 to tResult
+		end repeat
+		if tResult is 0 then
+			put empty into tResult
+		end if
+   --end if
+   return tResult
 end locateHandler
-
-private function convertTypeCodeToSyntax pTypeCode
-   local tSyntax
-   switch pTypeCode
-      case "F"
-         return "function"
-         break
-      case "PF"
-         return "private function"
-         break
-      case "M"
-         return "on" & return & "command"
-         break
-      case "PM"
-         return "private on" & return & "private command"
-         break
-      case "G"
-         return "getprop"
-         break
-      case "S"
-         return "setprop"
-         break
-      case "B"
-         return "before"
-         break
-      case "A"
-         return "after"
-         break
-      default
-         return empty
-   end switch
-end convertTypeCodeToSyntax
 
 # Parameters
 #   pOption : one of three possible strings, see below for details.
