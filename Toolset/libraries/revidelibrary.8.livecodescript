@@ -11932,3 +11932,7 @@ on revIDEFindMoreWidgets
          stack revIDEPaletteToStackName("extension manager")
    unlock screen
 end revIDEFindMoreWidgets
+
+command revIDESetEdited pStackName
+   revSetEdited pStackName
+end revIDESetEdited
