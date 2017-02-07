@@ -2294,6 +2294,8 @@ command seFinalize
    seFindHistorySave
    sePrefSave
    seHistorySave
+   
+   put empty into sDebugContext
 end seFinalize
 
 # Returns
