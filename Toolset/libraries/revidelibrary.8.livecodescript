@@ -5236,6 +5236,14 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
          
          # If stack name is changed, use new name when setting edited
          if tStack is tObject and pProperty is "name" then
+            if char 1 to 3 of pValue is "rev" then
+               answer warning "Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected."
+            end if
+            if pValue is a number then 
+               beep
+               answer error "You cannot set the name of a stack to a number."
+               exit revIDEPropertySet
+            end if
             put pValue into tStackName
          else
             put the short name of tStack into tStackName
