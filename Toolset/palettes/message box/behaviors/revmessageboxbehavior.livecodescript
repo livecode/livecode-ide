@@ -67,7 +67,7 @@ on openStack
    showCard "Single Line"
    
    lock messages
-   set the revMessageBoxRedirect to the long id of me
+   set the messageBoxRedirect to the long id of me
    unlock messages
    
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
@@ -181,7 +181,7 @@ command showOutputSource
    --opens the script at the line that has put something into the message box
    local tLastMessageSource, tEditorStack, tObject, tLineNumber
    
-   put the revmessageboxlastobject into tLastMessageSource
+   put the messageboxlastobject into tLastMessageSource
    if tLastMessageSource is empty then exit showOutputSource
    
    set the itemdel to comma
