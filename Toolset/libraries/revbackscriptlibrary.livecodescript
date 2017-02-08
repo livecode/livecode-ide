@@ -3404,3 +3404,10 @@ on ideMouseMove pX, pY, pTarget
       unlock cursor
    end if
 end ideMouseMove
+
+on msgChanged pHandler, pLine
+   global gRevDevelopment
+   if gRevDevelopment then
+      pass msgChanged
+   end if
+end msgChanged

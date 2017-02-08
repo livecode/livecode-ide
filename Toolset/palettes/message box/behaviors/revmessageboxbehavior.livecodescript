@@ -7,6 +7,8 @@ constant kHistoryMax = 200
 constant kHalfMessageFieldHeight = 12.5
 constant kExternalErrorCode = 0
 
+local sLastMsg
+
 on setAsBehavior pTarget
    set the behavior of pTarget to the long id of this me
    setBehaviors
@@ -66,10 +68,6 @@ on openStack
    hiliteFrameItem "single line"
    showCard "Single Line"
    
-   lock messages
-   set the messageBoxRedirect to the long id of me
-   unlock messages
-   
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
    revIDESetActiveStack
    
@@ -97,6 +95,38 @@ on openStack
    unlock messages
    unlock screen
 end openStack
+
+on ideMsgChanged pTarget, pHandler, pLine, pMsg
+   lock messages
+   lock screen
+   
+   if the mode of me is 0 then
+      go stack (the short name of me)
+   end if
+   
+   local tField
+   if the short name of this card of me is "Multiple Lines" then
+      put the long id of field "results" of card "Multiple Lines" of me into tField
+   else
+      put the long id of field "results" of card "Single Line" of me into tField
+   end if
+   
+   set the text of tField to pMsg
+   
+   -- PM-2015-06-26: [[ Bug 15478 ]] Make msg box to auto scroll
+   local tLines, tHeight
+   put the number of lines of the text of tField into tLines
+   put the effective textHeight of tField into tHeight
+   set the vScroll of tField to tLines * tHeight 
+   
+   put pTarget into sLastMsg["target"]
+   put pHandler into sLastMsg["handler"]
+   put pLine into sLastMsg["line"]
+   
+   unlock screen
+   unlock messages
+end ideMsgChanged
+
 
 --PM-2016-04-29: [[ Bug 17534 ]] Make sure the correct handler is called
 on moveMsgBoxStack
@@ -179,21 +209,13 @@ end unlockDefaultStack
 
 command showOutputSource
    --opens the script at the line that has put something into the message box
-   local tLastMessageSource, tEditorStack, tObject, tLineNumber
+   global gRevDevelopment
+   if not exists(sLastMsg["target"]) or \
+         revIDEObjectIsOnIDEStack(sLastMsg["target"]) and not gRevDevelopment then
+      exit showOutputSource
+   end if
    
-   put the messageboxlastobject into tLastMessageSource
-   if tLastMessageSource is empty then exit showOutputSource
-   
-   set the itemdel to comma
-   if item 4 of tLastMessageSource is not empty
-   then put item 4 of tLastMessageSource into tObject
-   else put item 1 of tLastMessageSource into tObject
-   
-   edit script of tObject
-   put revScriptEditor(tObject) into tEditorStack
-   put (item 3 of tLastMessageSource) into tLineNumber
-   
-   send "revSEGoExecutionPoint tObject, tLineNumber, true" to stack tEditorStack in 0 millisecs
+   edit script of sLastMsg["target"] at sLastMsg["line"]
 end showOutputSource
 
 on removeSelected

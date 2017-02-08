@@ -1650,17 +1650,18 @@ command revInternal__InitialiseProjectBrowser
 end revInternal__InitialiseProjectBrowser
 
 command revInternal__InitialiseMessageBox
-  revInternal__Log "Enter", "Message Box Initialisation"
-  
-  if the platform is among the items of "MacOS,Win32" then
-    set the style of stack "Message Box" to "palette"
-  else
-    set the style of stack "Message Box" to "modeless"
-  end if
-  
-  revInternal__Log "Leave", "Message Box Initialisation"
-  
-  return true
+   revInternal__Log "Enter", "Message Box Initialisation"
+   
+   if the platform is among the items of "MacOS,Win32" then
+      set the style of stack "Message Box" to "palette"
+   else
+      set the style of stack "Message Box" to "modeless"
+   end if
+   dispatch "ideInitialiseMessageBox" to stack "Message Box"
+   
+   revInternal__Log "Leave", "Message Box Initialisation"
+   
+   return true
 end revInternal__InitialiseMessageBox
 
 command revInternal__InitialisePlugIns
