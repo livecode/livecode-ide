@@ -79,7 +79,7 @@ function StandaloneBuilderExecutable pStack
 	put GetBuildPlatform() into tBuildPlatform
 	
 	local tTargetFolder
-	put GetTargetFolder() into tTargetFolder
+	put GetTargetFolder() & slash into tTargetFolder
 	
 	local tStandaloneExecutable
 	put	revSBStandaloneOutputDirectory(pStack, "", tTargetFolder, tBuildPlatform, false) \
@@ -87,3 +87,19 @@ function StandaloneBuilderExecutable pStack
 
 	return tStandaloneExecutable
 end StandaloneBuilderExecutable
+
+function StandaloneBuilderResources pStack
+	local tExe, tResources
+	put StandaloneBuilderExecutable(pStack) into tExe
+	
+	set the itemdelimiter to slash
+	switch GetBuildPlatform()
+	   case "MacOSX x86-64"
+	   case "MacOSX x86-32"
+	      put item 1 to -3 of tExe & "/Resources/_MacOS" into tResources
+	      break
+       default
+          put item 1 to -2 of tExe into tResources
+    end switch
+    return tResources
+end StandaloneBuilderResources
