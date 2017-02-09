@@ -106,6 +106,7 @@ command TestRunnerInvokeAll
    if there is not a stack "home" then
 	   invokeLoadIDE
    end if
+	
    invokeAllTests
 end TestRunnerInvokeAll
 
@@ -159,14 +160,14 @@ private command invokeLoadIDE
 
 	local tStackName
 	put the name of stack tFilename into tStackName
+
+   	-- Set the 'test environment' to true
+	dispatch "revSetTestEnvironment" to stack tStackName with "true"
 	
 	insert the script of tStackName into back
 	
 	dispatch "startup" to tStackName
 	open tStackName
-	
-	-- Set the 'test environment' to true
-	revSetTestEnvironment true
 end invokeLoadIDE
 
 private command invokeAllTests
