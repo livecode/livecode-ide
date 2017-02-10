@@ -66,8 +66,8 @@ on StandaloneBuilderSaveAsStandalone pStack
 		end if
 	end repeat
 
-	local tResult
-	revDoSaveAsStandalone pStack, tTargetFolder
+	local tResult, tStandalonePaths
+	revDoSaveAsStandalone pStack, tTargetFolder, , tStandalonePaths
 	put the result into tResult
 
 	TestDiagnostic tResult	
