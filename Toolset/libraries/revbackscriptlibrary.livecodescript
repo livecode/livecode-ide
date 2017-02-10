@@ -3469,7 +3469,7 @@ resize cursor when the mouse is over a selection handle.
 constant kHandleSize = 5
 
 on ideMouseMove pX, pY, pTarget
-   if the tool is "browse tool" then exit ideMouseMove
+   if the tool is not "pointer tool" then exit ideMouseMove
    
    if pTarget is among the lines of the selectedObjects then
       local tRect
