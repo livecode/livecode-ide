@@ -137,7 +137,8 @@ private command _TestStandaloneStackPath pWhich
    end if
    save stack "main"
    
-   StandaloneBuilderSaveAsStandalone "main"
+   local tStandalonePath
+   StandaloneBuilderSaveAsStandalone "main", tStandalonePath
    if the result is not empty then
       TestAssert "building standalone", false
       exit _TestStandaloneStackPath
@@ -146,7 +147,7 @@ private command _TestStandaloneStackPath pWhich
    TestAssert "building standalone", true
    
    local tResources
-   put StandaloneBuilderResources("main") into tResources
+   put StandaloneBuilderResources("main", tStandalonePath) into tResources
    
    TestDiagnostic tResources
    TestDiagnostic files(tResources)

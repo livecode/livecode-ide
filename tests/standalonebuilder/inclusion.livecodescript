@@ -151,7 +151,8 @@ private command _TestStandaloneWithInclusion pStackId, pStackFilename, pItem
    set the script of pStackId to tScript
    revIDESaveStack pStackId
    	 
-   _TestBuildStandalone pStackFilename
+   local tExecutablePath
+   _TestBuildStandalone pStackFilename, tExecutablePath
    if the result is not empty then
       TestAssert "building standalone", false
       exit _TestStandaloneWithInclusion
@@ -161,15 +162,13 @@ private command _TestStandaloneWithInclusion pStackId, pStackFilename, pItem
    
    local tStackName
    put the short name of pStackId into tStackName
+    
+   TestDiagnostic "location" && tExecutablePath
    
-   local tExe
-   put StandaloneBuilderExecutable(tStackName) into tExe   
-   TestDiagnostic "location" && tExe
-   
-   TestAssert "standalone in expected location", there is a file tExe
+   TestAssert "standalone in expected location", there is a file tExecutablePath
    
    local tResult, tShellCmd
-   put quote & tExe & quote into tShellCmd
+   put quote & tExecutablePath & quote into tShellCmd
    if the environment contains "command line" then
       put " -ui" after tShellCmd
    end if
@@ -184,12 +183,12 @@ private command _TestStandaloneWithInclusion pStackId, pStackFilename, pItem
          tResult is empty
 end _TestStandaloneWithInclusion
 
-private command _TestBuildStandalone pStackPath
+private command _TestBuildStandalone pStackPath, @xStandalonePath
 	local tStackName, tResult
 	put the short name of stack pStackPath into tStackName
 	
 	TestDiagnostic "Building standalone -" && pStackPath
 	
-	StandaloneBuilderSaveAsStandalone tStackName
+	StandaloneBuilderSaveAsStandalone tStackName, xStandalonePath
 	return the result
 end _TestBuildStandalone
