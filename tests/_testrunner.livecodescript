@@ -68,8 +68,9 @@ end openStack
 command TestRunnerImpl_DoInvoke pInfo
    TestRunnerRunLoadLibraries
    TestRunnerInvokeLoadLibraries
-   
-   TestLoadIDE
+    
+   -- Don't output to stdout
+   TestOutputToVariable
    
    if pInfo["invoke"]["script"] is not empty then
       invokeTest pInfo
@@ -115,36 +116,37 @@ private command invokeLoadIDE
 	open tStackName
 end invokeLoadIDE
 
-private command TestLoadIDE
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
-   local tLoadResult
+private command TestLoadIDE   
    if there is not a stack "home" then
-	   invokeLoadIDE
-	   put the result into tLoadResult
+      local tDefaultFolder
+      put the defaultFolder into tDefaultFolder
+	  
+	  try
+	     invokeLoadIDE
+	  catch tError
+	  end try
+	  
+	  TestAssert "Home stack opens without error", tError is empty
+	  TestDiagnostic tError
+	  
+	  TestAssert "IDE load preserves defaultFolder", \
+   	     the defaultFolder is tDefaultFolder
+
+      TestDiagnostic "original default folder:" && tDefaultFolder
+      TestDiagnostic "new default folder:" && the defaultFolder
    end if
 
    -- gRevDevelopment should be true by default
    global gRevDevelopment
    put true into gRevDevelopment
-   
-   -- Don't output to stdout
-   TestOutputToVariable
 
-	local tStartupError
-	put revEnvironmentGetStartupLog("Error") into tStartupError
-	TestAssert "Home stack opens without error", tStartupError is empty
+   local tStartupError
+   put revEnvironmentGetStartupLog("Error") into tStartupError
+   TestAssert "Home stack opens without error", tStartupError is empty
 	
-	if tStartupError is not empty then
-		TestDiagnostic revEnvironmentGetStartupLog("Message")
-	end if
-
-   TestAssert "IDE load preserves defaultFolder", \
-   	  the defaultFolder is tDefaultFolder
-
-   TestDiagnostic "original default folder:" && tDefaultFolder
-   TestDiagnostic "new default folder:" && the defaultFolder
+   if tStartupError is not empty then
+      TestDiagnostic revEnvironmentGetStartupLog("Message")
+   end if
    
    local tAnalysis
    TestUpdateAnalysis the effective filename of me, \
