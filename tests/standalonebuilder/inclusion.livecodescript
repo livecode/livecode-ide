@@ -33,89 +33,12 @@ on TestTeardown
    stop using stack sSupportStack
 end TestTeardown
 
-/*
-   on testInclusion
-      <use inclusion-dependent syntax>
-      if <success condition> then
-         quit 0
-      else
-         write the result to stderr
-         quit 1
-      end if
-   end testInclusion   
-   
-   on startup
-      try
-         testInclusion
-      catch tError
-         write "inclusion not loaded" to stderr
-         quit 1
-      end try
-   end startup
-*/
-private function _TestScript pCall, pSucceed
-   local tScript
-   put "on testInclusion" & return after tScript
-   put pCall & return after tScript
-   put "if" && pSucceed && "then" & return after tScript
-   put "quit 0" & return after tScript
-   put "else" & return after tScript
-   put "write the result to stderr" & return after tScript
-   put "quit 1" & return after tScript
-   put "end if" & return after tScript
-   put "end testInclusion" & return after tScript   
-   put "on startup" & return after tScript
-   -- Do the test in a try structure, as if the symbol is not found
-   -- we will get a script execution error
-   put "try" & return after tScript
-   put "testInclusion" & return after tScript
-   put "catch tError" & return after tScript
-   put "write" && quote & "inclusion not loaded" & quote && "to stderr" & return after tScript
-   put "quit 1" & return after tScript
-   put "end try" & return after tScript
-   put "end startup" & return after tScript
-   return tScript
-end _TestScript
-
-private function _TestRevXML
-   local tCall, tSucceed
-   put "get revXMLTrees()" into tCall
-   put "the result is empty" into tSucceed
-   return _TestScript(tCall, tSucceed)
-end _TestRevXML
-
-private function _TestRevSecurity
-   local tCall, tSucceed
-   put "get cipherNames()" into tCall
-   put "the result is empty" into tSucceed
-   return _TestScript(tCall, tSucceed)
-end _TestRevSecurity
-
-private function _TestRevZip
-   local tCall, tSucceed
-   put "get revZipOpenArchives()" into tCall
-   put "the result is empty" into tSucceed
-   return _TestScript(tCall, tSucceed)
-end _TestRevZip
-
-private function _TestDBSQLite
-   local tCall, tSucceed
-   put "get revOpenDatabase(" & quote & "sqlite" & quote & "," & quote & "test.db" & quote & ",,,,,,)" into tCall
-   put "the result is empty" into tSucceed
-   return _TestScript(tCall, tSucceed)
-end _TestDBSQLite
-
 private function _TestScriptForInclusion pWhich
-   switch pWhich
-      case "xml"
-         return _TestRevXML()
-      case "security"
-         return _TestRevSecurity()
-      case "zip"
-         return _TestRevZip()
-      case "sqlite"
-         return _TestDBSQLite()
-   end switch
+   set the itemdelimiter to slash
+   local tExternalTest
+   put the filename of me into tExternalTest
+   put "/externals/" & pWhich & ".livecodescript" into item -1 of tExternalTest
+   return textDecode(url("binfile:" & tExternalTest), "utf-8")
 end _TestScriptForInclusion
 
 on TestStandaloneInclusions
