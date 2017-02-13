@@ -80,11 +80,15 @@ function StandaloneBuilderExecutable pStack
 	
 	local tTargetFolder
 	put GetTargetFolder() & slash into tTargetFolder
-	
+		
 	local tStandaloneExecutable
 	put	revSBStandaloneOutputDirectory(pStack, "", tTargetFolder, tBuildPlatform, false) \
 		& pStack into tStandaloneExecutable
 
+	if GetBuildPlatform() contains "MacOSX" then 
+        put ".app/Contents/MacOS/" & pStack after tStandaloneExecutable
+    end if
+ 
 	return tStandaloneExecutable
 end StandaloneBuilderExecutable
 
