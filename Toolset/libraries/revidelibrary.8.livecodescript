@@ -9253,13 +9253,13 @@ on revIDERelayerControls pObjectList, pMode
       case "send to back"
          sort lines of tLayers numeric descending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to bottom
+            relayer tObjectArray[tLayer] to back of owner
          end repeat
          break
       case "bring to front"
          sort lines of tLayers numeric ascending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to top
+            relayer tObjectArray[tLayer] to front of owner
          end repeat
          break
       case "move forward"
