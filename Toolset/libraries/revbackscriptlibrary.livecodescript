@@ -1453,14 +1453,22 @@ end revListScriptEditors
 
 # Returns
 #   The long id of the topmost script editor, or empty if there is no script editor open.
-function revTopMostScriptEditor
+function revTopMostScriptEditor pMode
    local tEditors
    put revListScriptEditors() into tEditors
-   if the number of lines of tEditors = 0 then
-      return empty
-   else
+   
+   if pMode is empty then
       return line 1 of tEditors
    end if
+   
+   repeat for each line tEditor in tEditors
+      dispatch "revSEGetMode" to tEditor
+      if the result is pMode then
+         return tEditor
+      end if
+   end repeat
+   
+   return empty
 end revTopMostScriptEditor
 
 function revScriptEditorTemplate

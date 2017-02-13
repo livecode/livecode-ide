@@ -1208,6 +1208,7 @@ command revInternal__InitialiseLibraries
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
+   put return & "mime" after tLoadList
  
    if the editionType is "professional" then
       put return & "remotedebugger" after tLoadList 

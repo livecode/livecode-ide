@@ -2149,9 +2149,16 @@ private function __ResolveHandler pContextLine
    --   end if
 end __ResolveHandler
 
-private function __TargetIsModal pTarget
-   return (the mode of stack (revTargetStack(pTarget)) = 5)
-end __TargetIsModal
+private function __ModalPresented
+   local tStack
+   repeat for each line tStack in the openStacks
+      if the mode of stack tStack is 5 then
+         return true
+      end if
+   end repeat
+   
+   return false
+end __ModalPresented
 
 private command __ShowModalWarning
    
@@ -2310,7 +2317,7 @@ on traceError pHandler, pLine, pPosition, pError
       pass traceError
    end if
    
-   if the environment contains "development" and __TargetIsModal(tTarget) then
+   if "development" is in the environment and __ModalPresented() then
       __ShowModalWarning
       pass traceError
    end if
@@ -2374,7 +2381,7 @@ on traceBreak pHandler, pLine
       pass traceBreak
    end if
    
-   if "development" is in the environment and __TargetIsModal(tTarget) then
+   if "development" is in the environment and __ModalPresented() then
       __ShowModalWarning
       pass traceBreak
    end if

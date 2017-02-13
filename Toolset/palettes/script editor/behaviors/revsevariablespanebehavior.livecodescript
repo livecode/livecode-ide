@@ -323,7 +323,9 @@ private on nodeCreateVisualizationObject pPathToNode
    set the height of the templateButton to 23
    create button "Apply"
    reset the templateField
+   set the vScrollbar of the templateField to true
    create field "Value"
+   reset the templateField
    set the lockText of the templateField to true
    create field "Name"
    
