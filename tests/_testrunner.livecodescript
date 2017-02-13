@@ -68,10 +68,9 @@ end openStack
 command TestRunnerImpl_DoInvoke pInfo
    TestRunnerRunLoadLibraries
    TestRunnerInvokeLoadLibraries
-   
-   if there is not a stack "home" then
-	   invokeLoadIDE
-   end if
+    
+   -- Don't output to stdout
+   TestOutputToVariable
    
    if pInfo["invoke"]["script"] is not empty then
       invokeTest pInfo
@@ -117,23 +116,61 @@ private command invokeLoadIDE
 	open tStackName
 end invokeLoadIDE
 
-private command invokeAllTests
-	local tStartupError
-	put revEnvironmentGetStartupLog("Error") into tStartupError
-	TestAssert "Home stack opens without error", tStartupError is empty
-	
-	if tStartupError is not empty then
-		TestDiagnostic revEnvironmentGetStartupLog("Message")
-	end if
+private command TestLoadIDE   
+   if there is not a stack "home" then
+      local tDefaultFolder
+      put the defaultFolder into tDefaultFolder
+	  
+	  try
+	     invokeLoadIDE
+	  catch tError
+	  end try
+	  
+	  TestAssert "Home stack opens without error", tError is empty
+	  TestDiagnostic tError
+	  
+	  TestAssert "IDE load preserves defaultFolder", \
+   	     the defaultFolder is tDefaultFolder
+
+      TestDiagnostic "original default folder:" && tDefaultFolder
+      TestDiagnostic "new default folder:" && the defaultFolder
+   end if
 
    -- gRevDevelopment should be true by default
    global gRevDevelopment
    put true into gRevDevelopment
+
+   local tStartupError
+   put revEnvironmentGetStartupLog("Error") into tStartupError
+   TestAssert "Home stack opens without error", tStartupError is empty
+	
+   if tStartupError is not empty then
+      TestDiagnostic revEnvironmentGetStartupLog("Message")
+   end if
    
+   local tAnalysis
+   TestUpdateAnalysis the effective filename of me, \
+	   "TestLoadIDE", tAnalysis
+   return tAnalysis
+end TestLoadIDE
+
+private command TestUpdateAnalysis pFilename, pTestCommand, @xAnalysis
+   local tOutput   
+   put TestFetchAndClearOutput() into tOutput
+   write textEncode(tOutput,"utf-8") to stdout
+   TestRunnerProcessOutput pFilename, pTestCommand, tOutput
+   put TesterTapCombine(xAnalysis, the result) into xAnalysis
+end TestUpdateAnalysis
+
+private command invokeAllTests      
+   local tAnalysis   
+   TestLoadIDE
+   put the result into tAnalysis
+      
    local tTopLevel
    put revIDESpecialFolderPath("IDE") & "/tests" into tTopLevel
    
-   local tFile, tAnalysis
+   local tFile
    repeat for each element tFile in TesterGetTestFileNames(tTopLevel)
       invokeTestScript tTopLevel & slash & tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
@@ -156,14 +193,11 @@ end invokeTest
 private command invokeTestScript pScriptFile
    -- Don't output to stdout
    TestOutputToVariable
-   	
+   
    local tCommand, tAnalysis, tOutput
    repeat for each element tCommand in TesterParseTestCommandNames(pScriptFile)
       invokeTestCommand pScriptFile, tCommand
-      put TestFetchAndClearOutput() into tOutput
-      write textEncode(tOutput,"utf-8") to stdout
-      TestRunnerProcessOutput pScriptFile, tCommand, tOutput
-      put TesterTapCombine(tAnalysis, the result) into tAnalysis
+      TestUpdateAnalysis pScriptFile, tCommand, tAnalysis
    end repeat
    return tAnalysis
 end invokeTestScript
