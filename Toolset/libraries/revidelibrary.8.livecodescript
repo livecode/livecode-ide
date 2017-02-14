@@ -5530,6 +5530,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablevisualizerstackbehavior.livecodescript"
       case "edit breakpoint"
          return tPathToBehaviors & slash & "revseeditbreakpointstackbehavior.livecodescript"
+      case "error template"
+         return tPathToBehaviors & slash & "revseerrortemplatebehavior.livecodescript"
       default
          return empty
    end switch

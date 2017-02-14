@@ -94,7 +94,7 @@ private command __Enable
    __ActivateWatches empty
    
    # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
-   revDebuggerInitialize
+   __Initialize
 end __Enable
 
 local sContext
@@ -199,7 +199,7 @@ function revDebuggerContexts
          #  debugger itself and anything that was called by the debugger, i.e. appears after a debugger
          #  call in the call stack.
          
-         if tStack is "revDebuggerLibrary" then
+         if tStack is "revDebuggerLibrary" or tStack is "com.livecode.script-library.remotedebugger" then
             # No debugger stack contexts are placed onto the call stack, however we also need to remove
             # *any* contexts that appear after a trace, traceError or traceBreak (or traceDone although less important).
             --if item -2 of tContext is among the words of "trace traceError traceBreak traceDone" then
@@ -235,8 +235,11 @@ private function __ParseExecutionContext pContext
       if tItem is an integer then
          put tItem into tArray["line number"]
          put item (tItemNumber - 1) of pContext into tArray["handler"]
-         put item 1 to (tItemNumber - 2) of pContext into tArray["object"]
+         put revRuggedID(item 1 to (tItemNumber - 2) of pContext) into tArray["object"]
          put item (tItemNumber + 1 ) to -1 of pContext into tArray["behavior"]
+         if tArray["behavior"] is not empty then
+            put revRuggedID(tArray["behavior"]) into tArray["behavior"]
+         end if
          return tArray
       end if
    end repeat
@@ -1969,7 +1972,11 @@ end __GetId
 #   Whether or not the debugger is enabled. This is currently determined by the "Script Debug Mode"
 #   setting in the LiveCode preferences stack.
 private function __Enabled
-   return revIDEGetPreference("cREVScriptDebugMode")
+   if the environment is "development" then
+      return revIDEGetPreference("cREVScriptDebugMode")
+   end if
+   
+   return false
 end __Enabled
 
 # Parameters
@@ -1981,7 +1988,7 @@ private function __StackAllowed pStack
    global gREVDevelopment
    if "development" is not in the environment or gREVDEvelopment then
       # With gREVDevelopment allow all stacks to be debugged except the debugger, as doing this will probably not work anyway.
-      if the short name of pStack is "revDebuggerLibrary" then
+      if the short name of pStack is among the items of "revDebuggerLibrary,com.livecode.script-library.remotedebugger" then
          return false
       else
          return true
@@ -2004,6 +2011,11 @@ function revDebuggerObjectLongName pObject
    return the long name of pObject
 end revDebuggerObjectLongName
 
+private command __UpdateScriptEditor pObject, pHandler, pLine, pState, pError
+   put revDebuggerContexts() into sLastDisplayedContexts
+   revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
+end __UpdateScriptEditor
+
 # Parameters
 #   pObject : reference to the object owning the executing code
 #   pHandler : the name of the handler executing
@@ -2015,7 +2027,6 @@ end revDebuggerObjectLongName
 #   editor open for pObject then does nothing.
 #   Otherwise tells the script editor to display the appropriate line etc.
 command revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
-   put revDebuggerContexts() into sLastDisplayedContexts
    
    if there is not a pObject then
       return empty
@@ -2092,11 +2103,11 @@ private command __ShowErrorDialog pObject, pHandler, pLine, pError
    
    if it is "Script" then
       revDebuggerStop
-      revDebuggerUpdateScriptEditor pObject, pHandler, pLine, "edit"
+      __UpdateScriptEditor pObject, pHandler, pLine, "edit"
    end if
    
    if it is "Debug" then
-      revDebuggerUpdateScriptEditor pObject, pHandler, pLine, "debug"
+      __UpdateScriptEditor pObject, pHandler, pLine, "debug"
    end if
 end __ShowErrorDialog
 
@@ -2225,13 +2236,13 @@ on trace pHandler, pLine, pPosition
    local tNextContextCount
    
    if sLastTraceMode is "Step Into" then
-      revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       
    else if sLastTraceMode is "Step Over" then
       local tLastHandler
       put __ResolveHandler(line 1 of sLastDisplayedContexts) into tLastHandler
       if line 2 to -1 of sLastDisplayedContexts is line 2 to -1 of tCurrentContexts and pHandler is tLastHandler then
-         revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
          set the traceStack to the name of tStack
       else
          # Calculate the number of execution contexts that there should be before we get the next trace message.
@@ -2247,8 +2258,8 @@ on trace pHandler, pLine, pPosition
       local tArray
       put __ParseExecutionContext(line 2 of sLastDisplayedContexts) into tArray
       
-      if line 3 to -1 of sLastDisplayedContexts is line 2 to -1 of revDebuggerContexts() and pHandler is tArray["handler"] then
-         revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      if line 3 to -1 of sLastDisplayedContexts is line 2 to -1 of tCurrentContexts and pHandler is tArray["handler"] then
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       else
          put item 1 line 1 of tCurrentContexts - 2 into tNextContextCount
          set the traceUntil to tNextContextCount
@@ -2283,6 +2294,10 @@ constant kErrorRecursionLimit = 2
 #   via the throw command, or messages are suppressed, exits to top.
 #   Otherwise, launches the debugger, showing the current execution context.
 on traceError pHandler, pLine, pPosition, pError
+   if the environment contains "development" and revTestEnvironment() then
+      pass traceError
+   end if
+   
    if item 1 of pError is kErrorRecursionLimit then
       local tMessage
       put "The handler: " & pHandler & " has reached the recursion limit of: " & the recursionLimit & "." & return & \
@@ -2298,7 +2313,7 @@ on traceError pHandler, pLine, pPosition, pError
    
    close printing
    
-   if not __Enabled() then
+   if not revDebuggerEnabled() then
       pass traceError
    end if
    
@@ -2312,19 +2327,21 @@ on traceError pHandler, pLine, pPosition, pError
    
    # OK-2008-11-05 : If the target of the debugger message is modal, then act as though the debugger
    # is disabled. This is not ideal, but beats allowing the IDE to lock up.
-   if the mode of tStack >= 5 then
-      pass traceError
-   end if
-   
-   -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
-   local tContexts
-   put the executionContexts into tContexts
-   local tLine
-   repeat for each line tLine in tContexts
-      if item -2 of tLine is among the words of "moveStack resizeStack" then
+   if the environment contains "development" then
+      if the mode of tStack >= 5 then
          pass traceError
       end if
-   end repeat
+      
+      -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+      local tContexts
+      put the executionContexts into tContexts
+      local tLine
+      repeat for each line tLine in tContexts
+         if item -2 of tLine is among the words of "moveStack resizeStack" then
+            pass traceError
+         end if
+      end repeat
+   end if
    
    if pError is empty then
       revDebuggerStop
@@ -2340,7 +2357,7 @@ on traceError pHandler, pLine, pPosition, pError
       exit traceError
    end if
    
-   revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug", pError
+   __UpdateScriptEditor tTarget, pHandler, pLine, "debug", pError
    
    set the traceStack to the short name of tStack
 end traceError
@@ -2353,10 +2370,14 @@ end traceError
 #   nothing. Otherwise, opens a script editor for the object (unless one is
 #   already open) and updates it appropriately.
 on traceBreak pHandler, pLine
+   if the environment contains "development" and revTestEnvironment() then
+      pass traceBreak
+   end if
+   
    local tTarget
    put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
-   if not __Enabled() then
+   if not revDebuggerEnabled() then
       pass traceBreak
    end if
    
@@ -2389,7 +2410,7 @@ on traceBreak pHandler, pLine
    
    if __EvaluateCondition(tTarget, pLine, tContext) then
       set the traceStack to the short name of __TargetStack(the long id of the target)
-      revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
    else
       set the traceReturn to true
    end if

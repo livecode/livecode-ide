@@ -514,7 +514,27 @@ function revInternal__StackFiles
    if revEnvironmentIsInstalled() then
       put return & revEnvironmentToolsetPath() after tFolders
    else
-      put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
+      local tRepoPath
+      put revEnvironmentRepositoryPath() into tRepoPath
+      put return & tRepoPath & slash & "ide-support" after tFolders
+      
+      set the itemDelimiter to slash
+      put "ide/Toolset" into the last item of tRepoPath
+      
+      if there is a folder tRepoPath then
+         
+         put tRepoPath & slash & "palettes" into tPaletteFolder
+         if there is a folder tPaletteFolder then
+            put return & tPaletteFolder after tFolders
+            
+            repeat for each line tFolder in folders(tPaletteFolder)
+               if char 1 of tFolder is "." then next repeat
+               put return & tPaletteFolder & slash & tFolder after tFolders
+            end repeat
+         end if
+      
+         put return & tRepoPath & slash & "libraries" after tFolders
+      end if
    end if	
    
    
@@ -1189,7 +1209,11 @@ command revInternal__InitialiseLibraries
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
    put return & "mime" after tLoadList
-   
+ 
+   if the editionType is "professional" then
+      put return & "remotedebugger" after tLoadList 
+   end if
+
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
    put return & "revsaveasstandalone" after tBackList
@@ -1217,7 +1241,7 @@ command revInternal__InitialiseLibraries
    catch tError 	 	
       revInternal__Log "Error", "Error loading library" && tLib & return & tError 	 	
    end try
-      
+   
    # MW-2010-10-13: [[ Bug 8600 ]] Make sure the handler lists of the rev frontscript, backscript and shortcuts script
    #    are all up to date (used by revNoMessages script).
    set the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" to revInternal__FilterHandlerList(the revAvailableHandlers of stack "revBackScriptLibrary")
