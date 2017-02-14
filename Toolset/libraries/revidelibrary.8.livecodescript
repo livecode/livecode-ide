@@ -2106,7 +2106,8 @@ returns (String): A return delimited list of stack names
 function revIDEEditableStacks
    local tEditableStacks
    repeat for each line tStack in the openstacks
-      if the mode of stack tStack < 2 then
+      if the mode of stack tStack is 1 and \
+            the visible of stack tStack is true then
          if tEditableStacks is empty then
             put tStack into tEditableStacks
          else
