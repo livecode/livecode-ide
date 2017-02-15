@@ -5,8 +5,9 @@ Property : optional getter : optional setter	Label	Section	Editor	User Visible	R
 ----------------------------------------------------------------------------------------------------
 name												
 title	
-mainStack								execute:get revIDEMainstackPropertyOptions()			
+mainStack		
 decorations												
+style							Toplevel,Modeless,Modal,Palette
 windowShape												
 scaleFactor							1					
 shadow		Basic					true					
@@ -21,7 +22,7 @@ cantDelete							false
 cantModify							false					
 cantAbort							false					
 stackFiles												
-externalReferences												
+externals												
 behavior
 foregroundColor												
 foregroundPattern												
@@ -40,8 +41,8 @@ shadowPattern
 focusColor												
 focusPattern												
 linkColor												
-clickColor												
-visitedColor												
+linkHiliteColor												
+linkVisitedColor												
 underlineLinks							true					
 customProperties												
 blendLevel							0	0,100				
@@ -58,4 +59,3 @@ minWidth							32
 minHeight							32					
 maxWidth							65535					
 maxHeight							65535					
-behavior

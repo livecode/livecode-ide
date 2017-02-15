@@ -479,15 +479,15 @@ on __extensionUninstallDeleteFiles pCacheIndex
    put __extensionPropertyGet(pCacheIndex, "install_path") into tPath
    
    # Make sure the path contains the folder extension as a check before deleting a folder
-   if tPath contains "extension" then
+   if tPath begins with revIDESpecialFolderPath("user extensions") then
       revDeleteFolder tPath
    end if
    
    # AL-2015-03-15: [[ Bug 15008 ]] Delete interface file from interface folder
    local tInterfaceFile
    put __extensionPropertyGet(pCacheIndex, "name") & ".lci" into tInterfaceFile
-   if there is a file (specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
-      revDeleteFile specialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
+   if there is a file (revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile) then
+      revDeleteFile revIDESpecialFolderPath("user extensions") & slash & "interface" & slash & tInterfaceFile
    end if
    
    # Next step
@@ -837,17 +837,14 @@ function revIDEExtensionsOrderByDependency pExtensions
 end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
-   local tDataA
-   revIDEPushDefaultFolder
-   
+   local tDataA   
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
    put revIDEExtensionFolders() into tFoldersA
    set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
-      set the defaultfolder to tExtensionFolder
-      repeat for each line tFolder in the folders
+      repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
@@ -903,8 +900,6 @@ on __extensionsLoad
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
-   
-   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -1140,12 +1135,10 @@ end revIDEExtensionDocsData
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
       local tFiles
-      revIDEPushDefaultFolder pFolder
-      put the files into tFiles
+      put files(pFolder) into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI
       put line 1 of tFiles into pExtensionSource
-      revIDEPopDefaultFolder
    end if
    
    # Check timestamps to see if API  is out of date.

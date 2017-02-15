@@ -111,7 +111,6 @@ key: "retina_icon"
 value: The path to the retina icon of this extension } } 
 */
 function revIDEDeveloperExtensions
-   revIDEPushDefaultFolder
    local tExtensionDetailsA
    
    local tFolders
@@ -142,8 +141,7 @@ function revIDEDeveloperExtensions
       if tFolder is empty then
          next repeat
       end if
-      set the defaultfolder to tFolder
-      put the folders into tExtensionFolders
+      put folders(tFolder) into tExtensionFolders
       repeat for each line tExtensionFolder in tExtensionFolders
          if tExtensionFolder is ".." then 
             next repeat
@@ -161,19 +159,13 @@ function revIDEDeveloperExtensions
       end if
    end repeat
    
-   revIDEPopDefaultFolder
-   
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
 private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
-   revIDEPushDefaultFolder pFolder
-
    local tFiles
-   put the files into tFiles
+   put files(pFolder) into tFiles
    filter tFiles with "*.lcb"
-   
-   revIDEPopDefaultFolder
    
    local tFile
    # For now, if there are multiple lcb files in one folder, just use the first one.
@@ -294,14 +286,13 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
 end __revIDEDeveloperExtensionFetchFolderDetails
 
 private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPrefix
-   revIDEPushDefaultFolder pFolder
    local tResources, tResource, tPrefix
    if pPrefix is not empty then
       put pPrefix & slash into tPrefix
    end if
    
    # Add files to the list of resources
-   repeat for each line tResource in the files
+   repeat for each line tResource in files(pFolder)
       if tResource begins with "." then next repeat
       if tResources is empty then
          put tPrefix & tResource into tResources
@@ -311,7 +302,7 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    end repeat
    
    # Add folders to the list of resources
-   repeat for each line tResourceFolder in the folders
+   repeat for each line tResourceFolder in folders(pFolder)
       if tResourceFolder begins with "." then next repeat
       local tRecursive
       put __revIDEDeveloperExtensionListResourcesRecursive(pFolder & slash & tResourceFolder, tPrefix & tResourceFolder) into tRecursive
@@ -323,7 +314,6 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
          end if
       end if
    end repeat
-   revIDEPopDefaultFolder
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
@@ -517,7 +507,8 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the title of it to pDetailsA["name"]
       set the script of it to __testStackScript()
       go stack "LiveCode Extension Test Window"
-      create widget as pDetailsA["id"]
+      revIDECreateObject pDetailsA["id"], the long id of the defaultStack, \
+            (the width of the defaultStack / 2) & comma & (the height of the defaultStack / 2)
       unlock messages
    end if
    
@@ -649,7 +640,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    
    local tTargetType
-   put textDecode(revXMLNodeContents(tId, "/package/type"), "utf-8") into tTargetType
+   put __fetchMetadatum(tId, "type") into tTargetType
    
    if tTargetType begins with "xmlerr" then
       __revIDEDeveloperExtensionSendError "couldn't retrieve extension type from manifest" && pManifestPath
@@ -658,7 +649,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetType into tDataA["type"]
    
    local tTargetName
-   put textDecode(revXMLNodeContents(tId, "/package/name"), "utf-8") into tTargetName
+   put __fetchMetadatum(tId, "name") into tTargetName
    
    if tTargetName begins with "xmlerr" then
       __revIDEDeveloperExtensionSendError "couldn't retrieve extension name from manifest" && pManifestPath
@@ -672,19 +663,17 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetName into tDataA["id"]
    
    # If we have a library, we don't require various packaged elements
-   if tTargetType is "widget" then
-      local tTargetTitle
-      put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetTitle
-      
-      if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-         __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
-         put empty into tTargetTitle
-      end if
-      put tTargetTitle into tDataA["name"]
+   local tTargetTitle
+   put __fetchMetadatum(tId, "title") into tTargetTitle
+   
+   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
+      __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
+      put empty into tTargetTitle
    end if
+   put tTargetTitle into tDataA["name"]
    
    local tTargetVersion
-   put textDecode(revXMLNodeContents(tId, "/package/version"), "utf-8") into tTargetVersion
+   put __fetchMetadatum(tId, "version") into tTargetVersion
    
    if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
       __revIDEDeveloperExtensionSendWarning "couldn't retrieve version from" && tTargetName && "manifest - ensure .lcb file has 'metadata version is " & quote & "<version>" & quote & "'"
@@ -697,7 +686,7 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    put tTargetVersion into tDataA["version"]
    
    local tTargetAuthor
-   put textDecode(revXMLNodeContents(tId, "/package/author"), "utf-8") into tTargetAuthor
+   put __fetchMetadatum(tId, "author") into tTargetAuthor
    
    if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
       __revIDEDeveloperExtensionSendWarning "couldn't retrieve author from" && tTargetName && "manifest - ensure .lcb file has 'metadata author is " & quote & "<author_name>" & quote & "'"
@@ -705,9 +694,41 @@ private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
    end if
    put tTargetAuthor into tDataA["author"]
    
+   local tTargetIcon
+   put __FetchMetadatum(tId, "svgicon") into tTargetIcon
+   if tTargetIcon begins with "xmlerr" then
+      __revIDEDeveloperExtensionSendWarning merge("couldn't retrieve SVG icon from [[tTargetName]] manifest")
+   else
+      put tTargetIcon into tDataA["svgicon"]
+   end if
+   
+   
    put tDataA into rDataA
    return empty
 end __revIDEDeveloperExtensionFetchMetadata
+
+private function __fetchMetadatum pXmlId, pKey
+   local tNode
+   
+   if pKey is among the items of "name,type,title,author,description,version" then
+      -- Some metadata are placed into specifically-named top-level XML
+      -- elements in the manifest.  This list must be kept up-to-date
+      -- with the list of special-cased metadatum keys listed in the
+      -- "GenerateManifestDefinitions" action in lc-compile's
+      -- "generate.g"
+      put "/package/" & pKey into tNode
+      
+   else
+      -- Find a corresponding node for a generic metadatum
+      put revXmlMatchingNode(pXmlId, "/package", "metadata", "key", pKey, 1) into tNode
+      
+   end if
+   
+   if tNode is empty or tNode begins with "xmlerr" then
+      return tNode
+   end if
+   return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
+end __fetchMetadatum
 
 private function shellFormat pArg, pSwitch
    local tOutput
@@ -849,11 +870,14 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    
    local tError
    
+   local tHaveSvgIcon
+   put ("svgicon" is among the keys of tDetailsA) into tHaveSvgIcon
+   
    # AL-2015-05-22: [[ Bug 14919 ]] Use default widget and library icons if none are provided
    local tIcon
    if tError is empty then
       put tDetailsA["icon"] into tIcon
-      if tIcon is empty or there is not a file tIcon then
+      if (tIcon is empty or there is not a file tIcon) and not tHaveSvgIcon then
          answer file "Select icon file" with type "|png|"
          if it is empty then
             __revIDEDeveloperExtensionLog "Using default icon"
@@ -866,7 +890,7 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    local tRetinaIcon
    if tError is empty then
       put tDetailsA["retina_icon"] into tRetinaIcon
-      if tRetinaIcon is empty or there is not a file tRetinaIcon then
+      if (tRetinaIcon is empty or there is not a file tRetinaIcon) and not tHaveSvgIcon then
          answer file "Select retina icon file" with type "|png|"
          if it is empty then
             __revIDEDeveloperExtensionLog "Using default retina icon"
@@ -968,7 +992,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
    end if
    
    # Add icons
-   if tError is empty then
+   if tError is empty and pIcon is not empty then
       revZipAddItemWithFile pArchive, "support/icon.png", pIcon
       
       if the result begins with "ziperr" then
@@ -976,7 +1000,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end if
    end if
    
-   if tError is empty then
+   if tError is empty and pRetinaIcon is not empty then
       revZipAddItemWithFile pArchive, "support/icon@extra-high.png", pRetinaIcon
       
       if the result begins with "ziperr" then

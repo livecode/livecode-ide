@@ -62,12 +62,5 @@ textStyle
 textAlign							center					
 margins							4					
 lockLoc							false					
-width							82					
-height							23					
-location												
-left												
-top												
-right												
-bottom												
-layer
-number												
+width::revIDESetRectProperty			com.livecode.pi.dimension				82					
+height::revIDESetRectProperty			com.livecode.pi.dimension				23					

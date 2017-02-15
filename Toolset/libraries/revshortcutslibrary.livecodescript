@@ -79,22 +79,8 @@ on arrowKey pDirection, pTarget
             put 1 into tDistance
          end if
          
-         repeat for each line tObject in (the selObj)  
-            switch pDirection
-               case "left"
-                  set the left of tObject to the left of tObject - tDistance
-                  break
-               case "right"
-                  set the left of tObject to the left of tObject + tDistance
-                  break
-               case "up"
-                  set the top of tObject to the top of tObject - tDistance
-                  break
-               case "down"
-                  set the top of tObject to the top of tObject + tDistance
-                  break
-            end switch
-         end repeat
+         revIDENudgeControls the selobj, pDirection, tDistance
+         
          revSendDimensionsUpdate
          unlock screen
          exit to top

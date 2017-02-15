@@ -461,7 +461,7 @@ private function __classicObjectPropertiesFromType pType
    switch the last item of pType
       case "Card"
       case "Stack"
-      case "DataGrid"
+      case "Substack"
          return sClassicObjectProperties[pType]
       default
          if not (pType begins with "com.livecode.interface.classic") then
@@ -550,6 +550,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       
       add 1 to tCountsA[tSection][tGroupLabel]["count"]
       put tCountsA[tSection][tGroupLabel]["count"] into pPropInfoA[tPropertyName]["order"]
+      -- Put 'control properties' last
+      -- TODO: there should be a more transparent way of ordering these
+      if pObjectType is "com.livecode.interface.Control" then
+         add 1000 to pPropInfoA[tPropertyName]["group_order"]
+      end if
       
       put pPropInfoA[tPropertyName] into sClassicObjectProperties[pObjectType]["properties"][tPropertyName]
       put pPropInfoA[tPropertyName] into tObjectPropertiesA[tPropertyName]
@@ -721,9 +726,7 @@ private function __objectPropertiesShared pObjectTypeList, pOrganiseInSections, 
    put pObjectTypeList is not empty into tAllControls
    
    repeat for each line tObjectType in pObjectTypeList
-      set the itemdelimiter to "."
-      get item -1 of tObjectType
-      if it is "Card" or it is "Stack" then
+      if not __objectTypeIsControl(tObjectType) then
          put false into tAllControls  
       end if
       if tPropertiesArray is empty then
@@ -891,128 +894,132 @@ Description:
 >*Note:* The type returned by <ideObjectTypeFromObject> can depend
 on the values of the object's properties.
    **/
-   function ideObjectTypeFromObject pObjectID
-      switch word 1 of the name of pObjectID
-         case "stack"
+function ideObjectTypeFromObject pObjectID
+   switch word 1 of the name of pObjectID
+      case "stack"
+         if word 4 of pObjectID is "stack" then
+            return "com.livecode.interface.classic.Substack"
+         else
             return "com.livecode.interface.classic.Stack"
-         case "card"
-            return "com.livecode.interface.classic.Card"
-         case "group"
-            if the dgProps["control type"] of pObjectID is "Data Grid" then
-               if the dgProps["style"] of pObjectID is "Table" then
-                  return "com.livecode.interface.classic.DataGrid"
+         end if
+      case "card"
+         return "com.livecode.interface.classic.Card"
+      case "group"
+         if the dgProps["control type"] of pObjectID is "Data Grid" then
+            if the dgProps["style"] of pObjectID is "Table" then
+               return "com.livecode.interface.classic.DataGrid"
+            else
+               return "com.livecode.interface.classic.DataGridForm"
+            end if
+         else
+            return "com.livecode.interface.classic.Group"
+         end if
+         break
+      case "field"
+         if revIDEGetTableProperty(pObjectID, "basicTableObject") then
+            return "com.livecode.interface.classic.TableField"
+         else if the listbehavior of pObjectID is true then
+            return "com.livecode.interface.classic.ListField"
+         else if the vscrollbar of pObjectID is true then
+            return "com.livecode.interface.classic.TextArea"
+         else
+            return "com.livecode.interface.classic.Field"
+         end if
+         break
+      case "button"
+         if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
+         
+         switch the style of pObjectID
+            case "radiobutton"
+               return "com.livecode.interface.classic.RadioButton"
+               break
+            case "checkbox"
+               return "com.livecode.interface.classic.Checkbox"
+               break
+            case "menu"
+               switch the menumode of pObjectID
+                  case "combobox"
+                     return "com.livecode.interface.classic.ComboBox"
+                     break
+                  case "option"
+                     return "com.livecode.interface.classic.OptionMenu"
+                     break
+                  case "pulldown"
+                     return "com.livecode.interface.classic.PulldownMenu"
+                     break
+                  case "tabbed"
+                     return "com.livecode.interface.classic.TabPanel"
+                     break
+                  case "popup"
+                  case "cascade"
+                  default
+                     return "com.livecode.interface.classic.PopupMenu"
+                     break
+               end switch
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleButton"
+               break
+            default
+               if the default of pObjectID is true then
+                  return "com.livecode.interface.classic.DefaultButton"
                else
-                  return "com.livecode.interface.classic.DataGridForm"
+                  return "com.livecode.interface.classic.Button"
                end if
-            else
-               return "com.livecode.interface.classic.Group"
-            end if
-            break
-         case "field"
-            if revIDEGetTableProperty(pObjectID, "basicTableObject") then
-               return "com.livecode.interface.classic.TableField"
-            else if the listbehavior of pObjectID is true then
-               return "com.livecode.interface.classic.ListField"
-            else if the vscrollbar of pObjectID is true then
-               return "com.livecode.interface.classic.TextArea"
-            else
-               return "com.livecode.interface.classic.Field"
-            end if
-            break
-         case "button"
-            if the menumode of pObjectID is "combobox" then return "com.livecode.interface.classic.ComboBox"
-            
-            switch the style of pObjectID
-               case "radiobutton"
-                  return "com.livecode.interface.classic.RadioButton"
-                  break
-               case "checkbox"
-                  return "com.livecode.interface.classic.Checkbox"
-                  break
-               case "menu"
-                  switch the menumode of pObjectID
-                     case "combobox"
-                        return "com.livecode.interface.classic.ComboBox"
-                        break
-                     case "option"
-                        return "com.livecode.interface.classic.OptionMenu"
-                        break
-                     case "pulldown"
-                        return "com.livecode.interface.classic.PulldownMenu"
-                        break
-                     case "tabbed"
-                        return "com.livecode.interface.classic.TabPanel"
-                        break
-                     case "popup"
-                     case "cascade"
-                     default
-                        return "com.livecode.interface.classic.PopupMenu"
-                        break
-                  end switch
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleButton"
-                  break
-               default
-                  if the default of pObjectID is true then
-                     return "com.livecode.interface.classic.DefaultButton"
-                  else
-                     return "com.livecode.interface.classic.Button"
-                  end if
-                  break
-            end switch
-         case "scrollbar"
-            switch the style of pObjectID
-               case "scale"
-                  return "com.livecode.interface.classic.Slider"
-                  break
-               case "progress"
-                  return "com.livecode.interface.classic.ProgressBar"
-                  break
-               case "scrollbar"
-                  if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
-                     return "com.livecode.interface.classic.LittleArrows"
-                  else
-                     return "com.livecode.interface.classic.Scrollbar"
-                  end if
-                  break
-            end switch
-            break
-         case "image"
-            return "com.livecode.interface.classic.Image"
-            break
-         case "player"
-            return "com.livecode.interface.classic.Player"
-         case "widget"
-            return the kind of pObjectID
-            break
-         case "graphic"
-            switch the style of pObjectID
-               case "text"
-               case "rectangle"
-                  return "com.livecode.interface.classic.RectangleGraphic"
-                  break
-               case "roundrect"
-                  return "com.livecode.interface.classic.RoundRectGraphic"
-                  break
-               case "line"
-                  return "com.livecode.interface.classic.LineGraphic"
-                  break
-               case "arc"
-               case "oval"
-                  return "com.livecode.interface.classic.OvalGraphic"
-                  break
-               case "curve"
-                  return "com.livecode.interface.classic.CurveGraphic"
-                  break
-               case "polygon"
-                  return "com.livecode.interface.classic.PolygonGraphic"
-                  break
-               case "regular"
-                  return "com.livecode.interface.classic.RegularGraphic"
-                  break
-            end switch
-            break
-      end switch
+               break
+         end switch
+      case "scrollbar"
+         switch the style of pObjectID
+            case "scale"
+               return "com.livecode.interface.classic.Slider"
+               break
+            case "progress"
+               return "com.livecode.interface.classic.ProgressBar"
+               break
+            case "scrollbar"
+               if the height of pObjectID > the width of pObjectID and the height of pObjectID < 54 then
+                  return "com.livecode.interface.classic.LittleArrows"
+               else
+                  return "com.livecode.interface.classic.Scrollbar"
+               end if
+               break
+         end switch
+         break
+      case "image"
+         return "com.livecode.interface.classic.Image"
+         break
+      case "player"
+         return "com.livecode.interface.classic.Player"
+      case "widget"
+         return the kind of pObjectID
+         break
+      case "graphic"
+         switch the style of pObjectID
+            case "text"
+            case "rectangle"
+               return "com.livecode.interface.classic.RectangleGraphic"
+               break
+            case "roundrect"
+               return "com.livecode.interface.classic.RoundRectGraphic"
+               break
+            case "line"
+               return "com.livecode.interface.classic.LineGraphic"
+               break
+            case "arc"
+            case "oval"
+               return "com.livecode.interface.classic.OvalGraphic"
+               break
+            case "curve"
+               return "com.livecode.interface.classic.CurveGraphic"
+               break
+            case "polygon"
+               return "com.livecode.interface.classic.PolygonGraphic"
+               break
+            case "regular"
+               return "com.livecode.interface.classic.RegularGraphic"
+               break
+         end switch
+         break
+   end switch
 end ideObjectTypeFromObject
 
 private function __dumpArrayRecurse pArray, pLevel, @pCounter, @pList
@@ -1329,7 +1336,19 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    end repeat
 end __readGroupedPropertiesOfControl
 
-private on __fetchPropertyOfControl pProp, @pData
+private command __fetchPropertyCustomGetter pGetter, pObject, pProperty, @xPropArray
+   local tEffective, tValue
+   dispatch function pGetter with pObject, pProperty, tEffective
+   put the result into tValue
+   if tEffective then
+      put tValue into xPropArray["effective" && pProperty]
+      put empty into xPropArray[pProperty]
+   else
+      put tValue into xPropArray[pProperty]
+   end if
+end __fetchPropertyCustomGetter
+
+private on __fetchPropertyOfControl pProp, @xData
    local tError
    put empty into tError
    
@@ -1340,59 +1359,59 @@ private on __fetchPropertyOfControl pProp, @pData
    put __classicObjectProperties(tObjID) into tProperties
    
    if tProperties["properties"][pProp]["getter"] is not empty then
-      dispatch function tProperties["properties"][pProp]["getter"] with tObjID, pProp
-      put the result into pData[pProp]
+      __fetchPropertyCustomGetter tProperties["properties"][pProp]["getter"], \
+            tObjId, pProp, xData
       exit __fetchPropertyOfControl
    end if
    
    try
       switch pProp
          case "short name"
-            put the short name of the target into pData[pProp]
+            put the short name of the target into xData[pProp]
             break
          case "scriptlines"
-            put the number of lines of the script of the target into pData[pProp]
+            put the number of lines of the script of the target into xData[pProp]
             break
          case "scriptstatus"
-            put the scriptStatus of the target into pData[pProp]
+            put the scriptStatus of the target into xData[pProp]
             break
          case "behavior scriptlines"
-            put the number of lines of the script of the behavior of the target into pData[pProp]
+            put the number of lines of the script of the behavior of the target into xData[pProp]
             break
          case "long id"
-            put the long id of the target into pData[pProp]
+            put the long id of the target into xData[pProp]
             break
          case "owner"
-            put the long id of the owner of the target into pData[pProp]
+            put the long id of the owner of the target into xData[pProp]
             break
          case "type"
-            put word 1 of the name of the target into pData["type"]
+            put word 1 of the name of the target into xData["type"]
             break
          case "custom control"
             if the the cIDEProperties["cCustomControl"] of the Target is "true" then
-               put "true" into pData["custom control"]
+               put "true" into xData["custom control"]
             else if the dgProp["control type"] of the target is "Data Grid" then
-               put "true" into pData["custom control"]            
+               put "true" into xData["custom control"]            
             else
-               put "false" into pData["custom control"]
+               put "false" into xData["custom control"]
             end if
             break
          default
-            put the pProp of the Target into pData[pProp]
+            put the pProp of the Target into xData[pProp]
             break
       end switch
-      put the short name of the target into pData["name"]
+      put the short name of the target into xData["name"]
    catch tError
    end try
    
    # AL-2015-07-15: Remove 'do' construction, as evaluating the target as a string
    #  causes incorrect object references when obejcts have the same name
-   if pData[pProp] is empty then
+   if xData[pProp] is empty then
       try
          local tEffective
          put the effective pProp of the target into tEffective
          if tEffective is not empty then
-            put tEffective into pData["effective" && pProp]
+            put tEffective into xData["effective" && pProp]
          end if
       catch tError
       end try
@@ -1732,35 +1751,35 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       end repeat
    end repeat
    
+   # Send the message!
+   set the itemdel to ":"
+   local tMessage
+   put item 1 of pMessage into tMessage
+   
+   # Construct a dispatch command with all the desired parameters
+   local tDoString, tParams, tErrors
+   put "dispatch tMessage to tObjectID" into tDoString
+   
+   # If this is a parameterised message, add the parameter as the first arg
+   if the number of items of pMessage > 1 then
+      put " with item 2 of pMessage" into tParams
+   end if
+   
+   repeat with tParam = 1 to the number of elements in pParamsArray
+      if tParams is empty then
+         put " with pParamsArray[" & tParam & "]" into tParams
+      else
+         put ", pParamsArray[" & tParam & "]" after tParams
+      end if
+   end repeat
+   put tParams after tDoString
+   
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-      
-      # Send the message!
-      set the itemdel to ":"
-      local tMessage
-      put item 1 of pMessage into tMessage
-      
-      # Construct a dispatch command with all the desired parameters
-      local tDoString, tParams, tErrors
-      put "dispatch tMessage to tObjectID" into tDoString
-      
-      # If this is a parameterised message, add the parameter as the first arg
-      if the number of items of pMessage > 1 then
-         put " with item 2 of pMessage" into tParams
-      end if
-      
-      repeat with tParam = 1 to the number of elements in pParamsArray
-         if tParams is empty then
-            put " with pParamsArray[" & tParam & "]" into tParams
-         else
-            put ", pParamsArray[" & tParam & "]" after tParams
-         end if
-      end repeat
-      put tParams after tDoString
       
       # Ensure any error doesn't prevent subsequent subscribers from receiving messages
       try
@@ -2155,29 +2174,11 @@ function revIDEGlobalPropertyContinuousRange pProperty
 end revIDEGlobalPropertyContinuousRange
 
 /**
-A list of the stacks that can be set at the main stack of the given stack
-
-Returns: A list of the names of stacks, one per line
-
-Description:
-Use the <revIDEMainstackPropertyOptions> function to retrieve a list of the names of the 
-stacks that can be set as the main stack of the current stack, taking into account the 
-Show IDE Stacks preference.
+Used by the PI to make a substack into a mainstack
 **/
-function revIDEMainstackPropertyOptions
-   local tStackList, tCurrentStack
-   put ideMainStacks() into tStackList
-   put revIDESelectedObjects() into tCurrentStack
-   
-   ## Allow the stack to be set as its own mainstack
-   if word 1 of tCurrentStack is "stack" then
-      if the short name of tCurrentStack is not among the lines of tStackList then
-         put return & the short name of tCurrentStack after tStackList
-      end if
-   end if
-   sort lines of tStackList
-   return tStackList
-end revIDEMainstackPropertyOptions
+command revIDEMakeSubstackMainstack pObj
+   set the mainstack of pObj to the short name of pObj
+end revIDEMakeSubstackMainstack
 
 /**
 A list of the current mainstacks
@@ -2451,9 +2452,7 @@ function revIDEGetPreference pPreferenceName
 end revIDEGetPreference
 
 command __DevPreference pPreferenceName, @rValue
-   global gREVDevelopment
-   
-   if gREVDevelopment then
+   if not revEnvironmentIsInstalled() then
       switch pPreferenceName
          case "cScriptEditor,explicitVariables"
          case "cScriptEditor,preserveVariables"
@@ -2761,9 +2760,9 @@ command revIDEUpdatePBPreferences
       revIDESetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    end if
    
-   -- Number should be default for cards and controls
+   -- Layer should be default for cards and controls
    if tOldSortType is empty then
-      put "Number" into tSortType
+      put "Layer" into tSortType
    end if
    
    if revIDEGetPreference("pb_cardSort") is empty then
@@ -2817,36 +2816,19 @@ function revIDEStackProperties pStackID, pLevel
 end revIDEStackProperties
 
 function revIDECardPropertiesOfStack pStackID, pLevel
-   local tCardList, tCardID, tCardArray, tIndex
-   local tSubStackIDs, tSubstack
+   local tCardID, tCardArray, tIndex,tCardIDs
+   local tSubStackIDs, tSubstack, tSortedChildControlListIndexA
    local tSortType, tSortOrder
    
    revIDEGetPBSortPreferences "pb_cardSort", tSortType, tSortOrder
    
-   set the itemDel to tab
-   repeat with x = 1 to the number of cards of stack pStackID
-      put x & tab & the short name of card x of stack pStackID & tab & the id of card x of stack pStackID & return after tCardList
-   end repeat
-   delete the last character of tCardList
+   put the cardIDs of stack pStackID into tCardIDs
    
-   ## Sort the cards as per preferences
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tCardList ascending by item 2 of each
-      else
-         sort lines of tCardList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tCardList ascending numeric by item 1 of each
-      else
-         sort lines of tCardList descending numeric by item 1 of each
-      end if
-   end if
+   put  __createSortedControlsArray (pStackID, tCardIDs, tSortType, tSortOrder) into tSortedChildControlListIndexA
    
-   repeat for each line tCard in tCardList
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tCardID
       add 1 to tIndex
-      put item 3 of tCard into tCardID
       dispatch function "__readPropertiesOfControl" to card id tCardID of pStackID with sCardPropertiesToRead, tCardArray[tIndex]
       put "card" into tCardArray[tIndex]["type"]
       put "container" into tCardArray[tIndex]["style"]
@@ -2875,9 +2857,9 @@ function revIDECardPropertiesOfStack pStackID, pLevel
       end if
    else
       if tSortOrder is "ascending" then
-         sort lines of tSubStacksList ascending by item 1 of each
+         sort lines of tSubStacksList ascending numeric by item 1 of each
       else
-         sort lines of tSubStacksList descending by item 1 of each
+         sort lines of tSubStacksList descending numeric by item 1 of each
       end if
    end if
    
@@ -2896,9 +2878,57 @@ function revIDECardPropertiesOfStack pStackID, pLevel
    return tCardArray
 end revIDECardPropertiesOfStack
 
+function __createSortedControlsArray pParentObject, pChildControls, pSortType, pSortOrder
+   local tChildCount, tChildControlListA, tChildControlListIndexA, tNextIndex, tSortedChildControlListIndexA
+   -- create the array
+   put 1 into tChildCount
+   
+   if pParentObject begins with "stack" then
+      repeat with x = 1 to the number of cards of stack pParentObject
+         put x into tChildControlListA["layer"]
+         put the short name of card x of stack pParentObject into tChildControlListA["short name"]
+         put the id of card x of stack pParentObject into tChildControlListA["controlID"]
+         put tChildControlListA into tChildControlListIndexA[tChildCount]
+         add 1 to tChildCount
+      end repeat
+   else -- parent is a card or a group
+      repeat for each line tControlID in pChildControls
+         put the layer of control id tControlID of pParentObject into tChildControlListA["layer"]
+         put the short name of control id tControlID of pParentObject into tChildControlListA["short name"]
+         put tControlID into tChildControlListA["controlID"]
+         put tChildControlListA into tChildControlListIndexA[tChildCount]
+         add 1 to tChildCount
+      end repeat
+   end if
+   
+   -- sort the array
+   get the keys of tChildControlListIndexA
+   if pSortType is "name" then
+      if pSortOrder is "ascending" then
+         sort lines of it ascending by tChildControlListIndexA[each]["short name"]
+      else
+         sort lines of it descending by tChildControlListIndexA[each]["short name"]
+      end if
+   else --tSortType is "layer"
+      if pSortOrder is "ascending" then
+         sort lines of it ascending numeric by tChildControlListIndexA[each]["layer"]
+      else
+         sort lines of it descending numeric by tChildControlListIndexA[each]["layer"]
+      end if
+   end if
+   split it by return
+   put 1 into tNextIndex
+   repeat for each element tIndex in it
+      put tChildControlListIndexA[tIndex] into tSortedChildControlListIndexA[tNextIndex]
+      add 1 to tNextIndex
+   end repeat
+   
+   return tSortedChildControlListIndexA
+end __createSortedControlsArray
+
 function revIDEControlPropertiesOfCard pCardID, pLevel
-   local tChildControls, tControlArray, tIndex, tFullArray, tChildCount
-   local tChildControlList, tControlID
+   local tChildControls, tControlArray, tIndex, tFullArray
+   local tSortedChildControlListIndexA, tControlID
    local tSortType,tSortOrder
    
    ## Sort controls as per preferences
@@ -2911,29 +2941,10 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
       put the childcontrolIDs of pCardID into tChildControls
    end if
    
-   set the itemDel to tab
-   repeat for each line tControlID in tChildControls
-      put the layer of control id tControlID of pCardID & tab & the short name of control id tControlID of pCardID & tab & tControlID & return after tChildControlList
-      add 1 to tChildCount
-   end repeat
-   delete the last character of tChildControlList
+   put  __createSortedControlsArray (pCardID, tChildControls, tSortType, tSortOrder) into tSortedChildControlListIndexA
    
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 2 of each
-      else
-         sort lines of tChildControlList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 1 of each
-      else
-         sort lines of tChildControlList descending by item 1 of each
-      end if
-   end if
-   
-   repeat with x = 1 to the number of lines in tChildControlList
-      put item 3 of line x of tChildControlList into tControlID
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tControlID
       
       add 1 to tIndex
       put empty into tControlArray
@@ -2965,39 +2976,20 @@ function revIDEControlPropertiesOfCard pCardID, pLevel
 end revIDEControlPropertiesOfCard
 
 function revIDEControlPropertiesOfGroup pGroupID, pLevel
-   local tControlArray, tIndex
-   local tChildControls, tChildCount, tChildControlList
+   local tControlArray, tIndex, tControlID
+   local tChildControls, tSortedChildControlListIndexA
    local tSortType,tSortOrder
   
-   put  the childcontrolIDs of pGroupID into tChildControls
-   put the number of lines in tChildControls into tChildCount
-   
-   set the itemDel to tab
-   repeat for each line tControlID in tChildControls
-      put the layer of control id tControlID of pGroupID & tab & the short name of control id tControlID of pGroupID & tab & tControlID & return after tChildControlList
-   end repeat
-   delete the last character of tChildControlList
-   
-   ## Sort controls as per preferences
+  ## Sort controls as per preferences
    revIDEGetPBSortPreferences "pb_controlSort", tSortType, tSortOrder
    
-   if tSortType is "name" then
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 2 of each
-      else
-         sort lines of tChildControlList descending by item 2 of each
-      end if
-   else
-      if tSortOrder is "ascending" then
-         sort lines of tChildControlList ascending by item 1 of each
-      else
-         sort lines of tChildControlList descending by item 1 of each
-      end if
-   end if
+   put  the childcontrolIDs of pGroupID into tChildControls
    
-   repeat for each line tControl in tChildControlList
+   put  __createSortedControlsArray (pGroupID, tChildControls, tSortType, tSortOrder) into tSortedChildControlListIndexA
+  
+   repeat with x = 1 to the number of elements of tSortedChildControlListIndexA
+      put tSortedChildControlListIndexA[x]["controlID"] into tControlID
       add 1 to tIndex
-      put item 3 of tControl into tControlID
       dispatch function "__readPropertiesOfControl" to control id tControlID of pGroupID with sControlPropertiesToRead, tControlArray[tIndex]
       
       if tControlArray[tIndex]["type"] is "group" then
@@ -3369,10 +3361,19 @@ private command  __setSizeToPreference pObjectID, pObjectType
    end if
 end __setSizeToPreference
 
+private function __objectTypeIsControl pObjectTypeID
+   switch pObjectTypeID
+      case "com.livecode.interface.classic.Stack"
+      case "com.livecode.interface.classic.Substack"
+      case "com.livecode.interface.classic.Card"
+         return false
+      default
+         return true
+   end switch
+end __objectTypeIsControl
 
 on revIDECreateObject pObjectTypeID, pTarget, pLoc
-   if pObjectTypeID is "com.livecode.interface.classic.card" or \
-      pObjectTypeID is "com.livecode.interface.classic.stack" then
+   if not __objectTypeIsControl(pObjectTypeID) then
       return __revIDEError("Object must be a control")
    end if
 
@@ -3458,9 +3459,8 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
 
    ## Prevent passing of ideNewControl message for objects created on IDE stacks
    if revIDEObjectIsOnIDEStack(tCreatedControlID) is false then
-      global gRevStackStatus
       // AL-2015-04-08: [[ Bug 14822 ]] Ensure 'edited' status of stack is set
-      put "edited" into gREVStackStatus[the short name of this stack]
+      revIDESetEdited the short name of this stack
       ideMessageSend "ideNewControl", tCreatedControlID
    end if
 
@@ -5064,9 +5064,21 @@ end revIDEGoToObjectAPI
 # Properties API
 #############
 
-local sLockUpdates
-on revIDEPropertyLibraryInitialise
+local sLockUpdates, sThrottleTime
+private command __LockPropertyUpdates pThrottleTime
+   if pThrottleTime is empty then
+      put 10 into pThrottleTime
+   end if
+   put true into sLockUpdates
+   put pThrottleTime into sThrottleTime
+end __LockPropertyUpdates
+
+private command __UnlockPropertyUpdates
    put false into sLockUpdates
+end __UnlockPropertyUpdates
+
+on revIDEPropertyLibraryInitialise
+   __UnlockPropertyUpdates
 end revIDEPropertyLibraryInitialise
 
 ## Register new listeners for objects
@@ -5092,12 +5104,39 @@ on revIDEPropertyCancelAllListeners
    end repeat
 end revIDEPropertyCancelAllListeners
 
-on revIDEPropertyChanged pObject
+local sObjListA
+on revIDEUnlockPropertyUpdates
+   __UnlockPropertyUpdates
+   revIDESendPropertyChanged the keys of sObjListA
+   put empty into sObjListA
+end revIDEUnlockPropertyUpdates
+
+on revIDESendPropertyChanged pObjectList
+   repeat for each line tObject in pObjectList
+      ideMessageSendWithTrigger "idePropertyChanged", tObject, tObject
+   end repeat
+end revIDESendPropertyChanged
+
+local sPropertyChangedMsgID
+on revIDEPropertyChanged pObjectList
    if sLockUpdates is true then
+      -- Accumulate a list of objects whose property changes were locked
+      -- from triggering an ide message.
+      repeat for each line tObj in pObjectList
+         put true into sObjListA[tObj]
+      end repeat  
+      
+      if "revIDEUnlockPropertyUpdates" is in the pendingMessages then
+         cancel sPropertyChangedMsgID
+      end if
+      
+      -- Postpone update until sThrottleTime millisecs has passed
+      send "revIDEUnlockPropertyUpdates" to me in sThrottleTime millisecs
+      put the result into sPropertyChangedMsgID
       exit revIDEPropertyChanged
    end if
    
-   ideMessageSendWithTrigger "idePropertyChanged", pObject, pObject
+   revIDESendPropertyChanged pObjectList
 end revIDEPropertyChanged
 
 on revIDEHideProperty pProperty
@@ -5172,8 +5211,45 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    end if
    
    if tThrottlePropertyChanged or pLockUpdates then
-      put true into sLockUpdates
+      __LockPropertyUpdates 10
    end if
+   
+   lock screen
+   # Set stack edited before property change
+   local tStacksListA, tStackShortNamesListA, tStack, tStackName
+   repeat for each line tObject in pObjectList
+      put revIDEStackOfObject(tObject) into tStack
+      if not tStacksListA[tStack] then
+         put true into tStacksListA[tStack]
+         
+         # If stack name is changed, use new name when setting edited
+         if tStack is tObject and pProperty is "name" then
+            local tOldName
+            put the short name of tStack into tOldName
+            if char 1 to 3 of pValue is "rev" then
+               answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
+               if it is revIDELocalise("Cancel") then
+                  set the name of tStack to tOldName
+                  exit revIDEPropertySet
+               end if
+            end if
+            if pValue is a number then 
+               beep
+               answer error revIDELocalise("You cannot set the name of a stack to a number.")
+               set the name of tStack to tOldName
+               exit revIDEPropertySet
+            end if
+            put pValue into tStackName
+         else
+            put the short name of tStack into tStackName
+         end if
+         put true into tStackShortNamesListA[tStackName]
+      end if
+   end repeat
+   
+   repeat for each key tStackName in tStackShortNamesListA
+      revIDESetEdited tStackName
+   end repeat
    
    # Multi-object properties require the object list to be passed
    local tMultiObjectSetter
@@ -5186,11 +5262,7 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
       end repeat
    end if
    
-   if sLockUpdates then
-      ideMessageSendWithParameters "idePropertyChanged", pObjectList
-      put false into sLockUpdates
-   end if
-   
+   unlock screen
 end revIDEPropertySet
 
 local sStoredPropsA
@@ -5458,6 +5530,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablevisualizerstackbehavior.livecodescript"
       case "edit breakpoint"
          return tPathToBehaviors & slash & "revseeditbreakpointstackbehavior.livecodescript"
+      case "error template"
+         return tPathToBehaviors & slash & "revseerrortemplatebehavior.livecodescript"
       default
          return empty
    end switch
@@ -5602,6 +5676,7 @@ command ConfirmPresenceOfTemplateStack pStack
       put kTemplateStack && tUnique into tStackName
       set the topleft of the templatestack to -1000,-1000
       create stack tStackName
+      reset the templatestack
       close stack tStackName
       set the mainstack of stack tStackName to the mainstack of stack pStack
 
@@ -5749,7 +5824,32 @@ on revIDESetDataGridProperty pObj, pProperty, pValue
    end switch
 end revIDESetDataGridProperty
 
-function revIDEGetDataGridProperty pObject, pProperty
+private function __DataGridTextProperty pObject, pProperty, @rEffective
+   local tRealProperty
+   switch pProperty
+      case "text font"
+      case "header text font"
+         put "textFont" into tRealProperty
+         break
+      case "text size"
+      case "header text size"
+         put "textSize" into tRealProperty
+         break
+      case "text style"
+      case "header text style"
+         put "textStyle" into tRealProperty
+         break
+   end switch
+   local tValue
+   put the dgProps[pProperty] of pObject into tValue
+   if tValue is empty then
+      put the effective tRealProperty of pObject into tValue
+      put true into rEffective
+   end if
+   return tValue
+end __DataGridTextProperty
+
+function revIDEGetDataGridProperty pObject, pProperty, @rEffective
    switch pProperty 
       case "row behavior"
          local tTemplate
@@ -5761,12 +5861,29 @@ function revIDEGetDataGridProperty pObject, pProperty
          if sFirstRowHeaders[pObject] then
             return the dgText[true] of pObject
          else
-           return the dgText of pObject
+            return the dgText of pObject
          end if
          break
       case "first row header"
          return sFirstRowHeaders[pObject] is true
          break
+      case "text font"
+      case "text size"
+      case "text style"
+      case "header text font"
+      case "header text size"
+      case "header text style"
+         return __DataGridTextProperty(pObject, pProperty, rEffective)
+      case "header background color"
+      case "header background hilite color"
+         -- Special case these as their default values are two-color gradients
+         local tColor
+         put the dgProps[pProperty] of pObject into tColor
+         if the number of lines in tColor is 2 then
+            put true into rEffective
+            return line 1 of tColor
+         end if
+         return tColor
       default
          return the dgProps[pProperty] of pObject
          break
@@ -6132,6 +6249,60 @@ command revIDESetStackFilesProperty pObject, pProperty, pValue
    set the stackFiles of pObject to tProcessedValue
 end revIDESetStackFilesProperty
 
+local sResizeA
+command revIDESetRectProperty pObject, pProperty, pValue
+   switch pProperty
+      case "width"
+         if pValue is "fit" then
+            set the width of pObject to the formattedwidth of pObject
+         else if pValue is a number then
+            set the width of pObject to pValue
+         end if
+         break
+      case "height"
+         if pValue is "fit" then
+            set the height of pObject to the formattedheight of pObject
+         else if pValue is a number then
+            set the height of pObject to pValue
+         end if
+         break
+      case "resize"
+         put pValue into sResizeA[pObject]
+         break
+      case "left"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + the left of pObject - pValue)
+         end if
+         set the left of pObject to pValue
+         break
+      case "right"
+         if sResizeA[pObject] then
+            set the width of pObject to (the width of pObject + pValue - the right of pObject)
+         end if
+         set the right of pObject to pValue
+         break
+      case "top"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + the top of pObject - pValue)
+         end if
+         set the top of pObject to pValue
+         break
+      case "bottom"
+         if sResizeA[pObject] then
+            set the height of pObject to (the height of pObject + pValue - the bottom of pObject)
+         end if
+         set the bottom of pObject to pValue
+         break
+   end switch
+end revIDESetRectProperty
+
+function revIDEGetRectProperty pObject, pProperty
+   switch pProperty
+      case "resize"
+         return sResizeA[pObject]
+   end switch
+end revIDEGetRectProperty
+
 #############
 # Standalone Settings
 #############
@@ -6472,11 +6643,17 @@ pWorking (boolean): If true return the loc relative to OS screen furniture rathe
 Returns: The screenRect of the screen the stack is on
 */
 function revIDEStackScreenRect pStackName, pWorking
+   local tRect
    if pWorking then
-      return line (the screen of stack pStackName) of the working screenRects
+      put line (the screen of stack pStackName) of the working screenRects into tRect
    else
-      return line (the screen of stack pStackName) of the screenRects
+      put line (the screen of stack pStackName) of the screenRects into tRect
    end if
+   if tRect is empty then
+      return 0,0,0,0
+   end if
+   
+   return tRect
 end revIDEStackScreenRect
 
 on revIDEActionNewMainstack pStackType
@@ -6504,7 +6681,6 @@ on revIDEActionNewMainstack pStackType
 end revIDEActionNewMainstack
 
 on revIDEActionNewCard
-   global gRevStackStatus
    local tFilterStack
    put the short name of the topStack into tFilterStack
    if revFilterStacksList(tFilterStack) is empty then 
@@ -6514,7 +6690,7 @@ on revIDEActionNewCard
    local tCardID
    create card
    put the long id of it into tCardID
-   put "edited" into gREVStackStatus[the short name of this stack]
+   revIDESetEdited the short name of this stack
    ideMessageSend "ideNewCard tCardID"
    
    # Return the card id
@@ -6526,14 +6702,11 @@ on revIDEActionDeleteCard
 end revIDEActionDeleteCard
 
 on revIDEDeleteCard pLongID
-   global gRevStackStatus
    answer error "Are you sure you want to delete" && the long name of pLongID & "?" with "Yes" or "No"
    if it is not "yes" then exit revIDEDeleteCard
    delete pLongID
    
-   local tStackName
-   put the short name of ideStackOfObject(pLongID) into tStackName
-   put "edited" into gREVStackStatus[tStackName] 
+  revIDESetEdited the short name of ideStackOfObject(pLongID)
 end revIDEDeleteCard
 
 /*
@@ -6936,7 +7109,7 @@ on revIDEImportControl pType, pFileName, pReferenced
          revIDECreateObject "com.livecode.interface.classic.field", tTargetStack, tCreatedControlLocation
          put the result into tCreatedControlID
          put revIDEUTF8FileContents(pFileName) into tFileContents
-         put tFileContents into tCreatedControlID
+         set the text of tCreatedControlID to tFileContents
          select tCreatedControlID
          break
       case "graph"
@@ -7262,6 +7435,41 @@ private function ideDispatchSaveStackRequest pStackName
    return tDispatchStatus
 end ideDispatchSaveStackRequest
 
+local sStackEdited
+command revIDESetEdited pStackName
+   # Don't set edited on a transient IDE stack (i.e. SE or PI generated)
+   if there is a stack pStackName and  \
+         the cIDETransient of stack pStackName then
+      exit revIDESetEdited
+   end if
+   
+   # Don't set edited on a stack if it is currently saving
+   if pStackName is "revSaving" or the mode of stack "revSaving" is 0 then 
+      put true into sStackEdited[pStackName]
+   end if
+end revIDESetEdited
+
+command revIDESetUnedited pStackName
+   put false into sStackEdited[pStackName]
+end revIDESetUnedited
+
+function revIDEStackIsEdited pStackName
+   if revIDEStackNameIsIDEStack(pStackName) then
+      global gRevDevelopment
+      # Ignore status of IDE stacks if gRevDevelopment is false
+      if not gRevDevelopment then
+         return false
+      end if
+      
+      # Ignore status of IDE stacks that are not toplevel
+      if the mode of stack pStackName is not 1 then
+         return false
+      end if
+   end if
+   
+   return sStackEdited[pStackName] is true
+end revIDEStackIsEdited
+
 on revIDESaveStack pStackID
    local tDefaultStack
    put the defaultStack into tDefaultStack
@@ -7322,7 +7530,6 @@ on revIDESaveStack pStackID
    put the effective filename of stack tStackName into tStackFilename
    
    local tStackFileVersion
-   global gRevStackStatus
    
    if revIDEGetPreference("cPreserveStackVersion") is true and the scriptOnly of stack tMainStack is false then
       put revIDEStackFileVersion(tStackFilename) into tStackFileVersion
@@ -7336,7 +7543,7 @@ on revIDESaveStack pStackID
                "The minimum stack file version for this stack is %2.", tFileVersions) \
                with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
          if it is revIDELocalise("Cancel") then
-            put "edited" into gREVStackStatus[tStackName]
+            revIDESetEdited tStackName
             close stack "revSaving"
             return "Cancelled"
          else if it is revIDELocalise("Save as %2", tFileVersions) then
@@ -7352,7 +7559,7 @@ on revIDESaveStack pStackID
       answer revIDELocalise("Saving in script only format will result in loss of data as only the script will be saved." && \
             "Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tStackName]
+         revIDESetEdited tStackName
          close stack "revSaving"
          return "Cancelled"
       end if
@@ -7419,14 +7626,14 @@ on revIDESaveStack pStackID
       -- Dispatch the post-save hook, straight after the save, but only if it succeeded.
       dispatch "revHookPostSaveStack" to me with pStackID
       
-      put empty into gREVStackStatus[tStackName]
+      revIDESetUnedited tStackName
       
       local tMainStackList
       put the mainStack of stack tStackName into tMainStackList
       put return & the substacks of stack tStackName after tMainStackList
       repeat for each line tStack in tMainStackList
          if tStack is empty then next repeat
-         put empty into gREVStackStatus[tStack]
+         revIDESetUnedited tStack
       end repeat
       revUpdateRecentFiles tStackName
    end if
@@ -7493,15 +7700,14 @@ on revIDESaveStackAs pStackID, pFileName, pVersion
       answer revIDELocalise("Can't save stack %1 with error:", tLocaliseSubstitutions) & return & tResult
       close stack "revSaving"
    else
-      global gRevStackStatus
-      put empty into gREVStackStatus[tShortName]
+      revIDESetUnedited tShortName
       
       local tMainStackList
       put the mainStack of pStackID into tMainStackList
       put return & the substacks of pStackID after tMainStackList
       repeat for each line tStack in tMainStackList
          if tStack is empty then next repeat
-         put empty into gREVStackStatus[tStack]
+         revIDESetUnedited tStack
       end repeat
       revUpdateRecentFiles the short name of pStackID
    end if
@@ -7602,10 +7808,9 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
          break
    end switch
    
-   global gRevStackStatus
    # User cancelled the the ask dialog
    if it is empty then
-      put "edited" into gREVStackStatus[tShortName]
+      revIDESetEdited tShortName
       return "Cancelled"
    end if
    
@@ -7627,7 +7832,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
             "The minimum stack file version for this stack is %2.", tFileVersions) \
             with revIDELocalise("Save as %1", tFileVersions) and  revIDELocalise("Save as %2", tFileVersions) and revIDELocalise("Cancel")
       if it is revIDELocalise("Cancel") then
-         put "edited" into gREVStackStatus[tShortName]
+         revIDESetEdited tShortName
          return "Cancelled"
       else if it is revIDELocalise("Save as %2", tFileVersions) then
          put tFileVersions[2] into tVersion
@@ -7639,7 +7844,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
       answer revIDELocalise("Saving in script only format will result in loss of data as only" & \
             " the script will be saved. Are you sure you wish to continue?") with revIDELocalise("No") and revIDELocalise("Yes")
       if it is not revIDELocalise("Yes") then
-         put "edited" into gREVStackStatus[tShortName]
+        revIDESetEdited tShortName
          return "Cancelled"
       end if
    end if
@@ -8439,19 +8644,7 @@ on revIDEToggle pProperty
          put "selectionMode" into tToggleMessage
          break
       case "Script Debug Mode"
-         if revDebuggerEnabled() then
-            revDebuggerDisable
-         else
-            revDebuggerEnable
-         end if
-         
-         # OK-2010-01-18: Update any open script editors so that the breakpoints are shown correctly,
-         # they should all be grey when script debug mode is off, otherwise their color depends on their
-         # exact circumstances.
-         local tPrefsChanged
-         put false into tPrefsChanged
-         send "revSEUpdateEditors tPrefsChanged" to revScriptEditorMain()
-         
+         revIDESetPreference "cREVScriptDebugMode", not revIDEGetPreference("cREVScriptDebugMode")
          put "scriptDebugMode" into tToggleMessage
          break
       case "Show IDE Stacks In Lists"
@@ -9061,13 +9254,13 @@ on revIDERelayerControls pObjectList, pMode
       case "send to back"
          sort lines of tLayers numeric descending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to bottom
+            relayer tObjectArray[tLayer] to back of owner
          end repeat
          break
       case "bring to front"
          sort lines of tLayers numeric ascending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to top
+            relayer tObjectArray[tLayer] to front of owner
          end repeat
          break
       case "move forward"
@@ -9332,11 +9525,9 @@ command revIDESuspendDevelopmentTools
    global gREVRestore
    
    -- Store the old setting of scriptdebugmode and disable it
-   put the cREVScriptDebugMode of stack "revPreferences" into gREVRestore["scriptdebugmode"]
+   put revIDEGetPreference("cREVScriptDebugMode") into gREVRestore["scriptdebugmode"]
    
-   -- As cREVScriptDebugMode is a virtual custom property handler present in the revBackScript
-   -- we need to do this before removing the backscripts!
-   revIDESetScriptDebugMode false
+   revIDESetPreference "cREVScriptDebugMode",false
    
    # OK-2008-05-23 : Suspend any script editors.
    send "revSESuspendEditors" to revScriptEditorMain()
@@ -9482,7 +9673,7 @@ command revIDERestoreDevelopmentTools
    choose gREVRestore["tool"]
    
    -- Restore the script debug mode
-   revIDESetScriptDebugMode gREVRestore["scriptdebugmode"]
+   revIDESetPreference "cREVScriptDebugMode", gREVRestore["scriptdebugmode"]
    
    # OK-2008-05-23 : Restore any script editors.
    send "revSERestoreEditors" to revScriptEditorMain()
@@ -10756,8 +10947,9 @@ private command revIDEGenerateDistributedAPI
    put tFolder & slash & "datagrid.lcdoc" into tInputs[1]
    put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
    # Regenerate if necessary
+   local tLibA
+   
    if tNeedUpdate then
-      local tLibA
       put revDocsParseDocFileToLibraryArray(tFolder & slash & tDatagridDoc, "Data Grid", "LiveCode") into tLibA
       # Update the database
       ideDocsUpdateDatabase tLibA
@@ -10773,6 +10965,35 @@ private command revIDEGenerateDistributedAPI
          & slash & "builder.js") after tDictionaryData
    put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "dg.js") after tDictionaryData
+   
+   
+   local tExtractedDocsFolder
+   put revEnvironmentBinariesPath() & slash & "extracted_docs" into tExtractedDocsFolder
+   
+   local tFiles
+   put files(tExtractedDocsFolder) into tFiles
+   filter tFiles with "*.lcdoc"
+   
+   set the itemDelimiter to "."
+   local tFile
+   repeat for each line tFile in tFiles
+      # Check to see if we need to regenerate the docs
+      put empty into tInputs
+      put revIDESpecialFolderPath("api") & slash & toLower(item 1 to -2 of tFile) & ".js" into tOutput
+      put the effective filename of stack "revDocsParser" into tInputs[0]
+      put tExtractedDocsFolder & slash & tFile into tInputs[1]
+      put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
+      # Regenerate if necessary
+      if tNeedUpdate then
+         put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
+         # Update the database
+         ideDocsUpdateDatabase tLibA
+         put revDocsFormatLibraryArrayAsJSON(tLibA) into tJSON
+         revIDESetUTF8FileContents tOutput, tJSON
+      end if
+      
+      put comma & revIDEUTF8FileContents(tOutput) after tDictionaryData
+   end repeat
    
    revIDESetUTF8FileContents revIDESpecialFolderPath("api") \ 
          & slash & "distributed_api.js", tDictionaryData
@@ -10835,29 +11056,20 @@ end revIDEGenerateDictionaryHTML
 
 local sNamesToColorsA, sColorsToNamesA
 
-private function __colorsResourcePath
-   set the itemdelimiter to slash
-   return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/colors"
-end __colorsResourcePath
-
-private function fetchMapping pFile
-   local tData, tMappingA
-   put url ("file:" & __colorsResourcePath() & slash & pFile) into tData
-   repeat for each line tLine in tData
-      if token 1 of tLine is empty then
-         next repeat
-      end if
-      put item 2 to -1 of tLine into tMappingA[item 1 of tLine]
-   end repeat
-   return tMappingA
-end fetchMapping
-
 private on __fetchNamesToColors
-   put fetchMapping("namesToColors.txt") into sNamesToColorsA
+   local tColorRGB
+   
+   repeat for each line tColorName in the colorNames
+   	  set the colorOverlay["color"] of the templateGraphic to tColorName
+   	  put the colorOverlay["color"] of the templateGraphic into tColorRGB
+  		put tColorRGB into sNamesToColorsA[tColorName]
+   end repeat
 end __fetchNamesToColors
 
 private on __fetchColorsToNames
-   put fetchMapping("namesToColors.txt") into sColorsToNamesA
+    repeat for each line tColor in the colorNames
+  	   put tColor into sColorsToNamesA[revIDENamedColorToRGB(tColor)]
+	end repeat
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName
@@ -11139,6 +11351,32 @@ on ideCompileCheck pScript
    return empty
 end ideCompileCheck
 
+function ideIsDebugging
+   return revTopMostScriptEditor("debug") is not empty
+end ideIsDebugging
+
+private command __removeMessageBoxFromDebugContexts @xContexts
+   local tTarget
+   put the long id of the target into tTarget
+   local tFirst, tLast, tCount, tObject
+   put 1 into tFirst
+   put 0 into tLast
+   repeat for each line tLine in xContexts
+      add 1 to tCount
+      put item 2 of tLine into tObject
+      if tObject is not empty then
+         put the long id of tObject into tObject
+      end if
+      -- Message box execution always begins with 'returnInField' from the target
+      if item 3 of tLine is "returnInField" and \ 
+            tObject is tTarget then
+         put tCount into tLast
+      end if
+   end repeat
+   
+   delete line tFirst to tLast of xContexts
+end __removeMessageBoxFromDebugContexts
+
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
@@ -11150,22 +11388,28 @@ command ideDoMessage pScript, pDebugMode
    local tScriptError
    try
       if pDebugMode then
-         # OK-2010-01-02: Remove the message box itself from the debug context. 
-         # Line 1 will be revDebugDoMessage
-         # Line 2 is revExecuteMessage (message box field)
-         # Line 3 is returnInField (message box field)
-         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
-         # Note that this code is called from both the single and multi-line fields, but luckily they both 
-         # have the same number of calls.
-         local tContext, tContextNumber
-         get revDebuggerContexts()
-         put line 4 of it into tContext
-         
+         local tContext, tScriptEditor
+         put revTopMostScriptEditor("debug") into tScriptEditor
+         -- Ensure a user-selected debug context in the script editor is the first
+         -- option for execution context in the message box
+         if tScriptEditor is not empty then
+            dispatch function "seGetSelectedDebugContext" to tScriptEditor
+            put the result into tContext
+         end if
+         -- Otherwise, remove the chain of message box execution contexts
+         -- from the list, and take the next one.
+         if tContext is empty then
+            local tContexts
+            put revDebuggerContexts() into tContexts
+            __removeMessageBoxFromDebugContexts tContexts
+            put line 1 of tContexts into tContext
+         end if
          local tResult
          revDebuggerDo pScript, tContext
-         get the result
-         put line 1 of it into tResult
-         put line 2 to -1 of it into tScriptError
+         put the result into tResult
+         put line 2 to -1 of tResult into tScriptError
+         put line 1 of tResult into tResult
+         
       else
          do pScript
       end if
@@ -11715,3 +11959,11 @@ function revIDEObjectsAreSelectable pObjects
    
    return true
 end revIDEObjectsAreSelectable
+
+on revIDEFindMoreWidgets
+   lock screen
+   revIDEOpenPalette "extension manager"
+   send "showExtensionStore" to \ 
+         stack revIDEPaletteToStackName("extension manager")
+   unlock screen
+end revIDEFindMoreWidgets

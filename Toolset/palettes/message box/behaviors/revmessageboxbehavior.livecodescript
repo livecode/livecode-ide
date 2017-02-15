@@ -71,9 +71,6 @@ on openStack
    unlock messages
    
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
-   if the traceStack is not empty 
-   then revIDESetPreference "IDEDebugMode",true
-   else revIDESetPreference "IDEDebugMode",false
    revIDESetActiveStack
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
@@ -586,11 +583,9 @@ command ideMessageBoxExecuteScript pScript
    catch tError
       put empty into tIntelligenceObject
    end try
-   local tDebugMode
-   put revIDEGetPreference("IDEDebugMode") into tDebugMode
    
    local tValidScript
-   ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, tDebugMode, tValidScript
+   ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, ideIsDebugging(), tValidScript
    if the result is not empty then
       put ideMessageBoxFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
    end if
@@ -628,13 +623,6 @@ end ideMessageBoxFormatErrorForDisplay
 command revIDEUpdateIntelligenceObject
    set the cREVIntelligenceObject of me to revIDEGetPreference("ideMessageBox_intelligenceobject")
 end revIDEUpdateIntelligenceObject
-
-#   Updates the message box mode to reflect whether or not we are debugging something.
-command revMessageBoxUpdateMode
-   if the traceStack is not empty 
-   then revIDESetPreference "IDEDebugMode", true
-   else revIDESetPreference "IDEDebugMode", false
-end revMessageBoxUpdateMode
 
 on ideActiveStacksChanged
    local tCard

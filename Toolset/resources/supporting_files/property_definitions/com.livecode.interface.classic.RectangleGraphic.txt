@@ -36,15 +36,8 @@ margins							8
 lockLoc							false					
 width							120					
 height							120					
-location												
-left												
-top												
-right												
-bottom												
-layer												
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay	
-number											

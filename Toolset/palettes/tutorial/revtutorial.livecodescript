@@ -3141,6 +3141,7 @@ on revTutorialRunTutorial pCourse, pTutorial, pLesson, pLocation, pFromStep, pUn
    put pCourse into sRunningInfo["course"]
    put pTutorial into sRunningInfo["tutorial"]
    put pLesson into sRunningInfo["lesson"]
+   put pLocation into sRunningInfo["location"]
    
    if pFromStep is empty then
       put tData["first step"] into pFromStep

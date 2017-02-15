@@ -29,7 +29,11 @@ alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternat
 hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false
 column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false
 corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false
-header text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text color	Colors	com.livecode.pi.color	true	false
+
+text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false
+text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false										
+text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false
+
 label												
 tooltip												
 disabled												
@@ -40,11 +44,11 @@ customProperties
 lockLoc							false					
 width							250					
 height							160					
-location												
-left												
-top												
-right												
-bottom												
-layer		
 layerMode
-number
+blendLevel							0	0,100				
+ink												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay

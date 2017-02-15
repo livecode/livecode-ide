@@ -56,7 +56,7 @@ Tools > Widget Builder
 3. Console: Shows status, error and log messages.
 4. Test: Creates a stack, compiles the extensions and creates an instance.
 5. Script: Opens the lcb script in an external default editor.
-6. Insall: Installs the extension into the IDE
+6. Install: Installs the extension into the IDE
 7. Uninstall: Uninstalls the extension from the IDE
 8. Package: Creates a .lce package which can uploaded to the extension store. It is placed in the extension directory
 

@@ -65,14 +65,8 @@ fixedLineHeight
 textHeight												
 margins							8					
 lockLoc							false					
-width							250					
-height							56					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension				250					
+height::revIDESetRectProperty			com.livecode.pi.dimension				56					
 basicTableObject							false					
 maxEditableColumns												
 cellFormatting							false					
@@ -84,5 +78,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
-number												
+colorOverlay												

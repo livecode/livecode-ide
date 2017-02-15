@@ -12,40 +12,51 @@ command revInternal__LoadLibrary pLibrary
    put toLower(pLibrary) into pLibrary
    
    if sLoadedLibraries[pLibrary] is not empty then
-      return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
+     return empty
    end if
    
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
-   set the itemDelimiter to "."
    if the environment begins with "development" then
-      local tLibraryPath, tLibSuffix
+      local tPaths
+      
+      local tToolsetPath
+      put revEnvironmentToolsetPath() into tToolsetPath
+      
+      local tLibSuffix
+      set the itemDelimiter to "."
+      put the last item of pLibrary into tLibSuffix
+      
+      put merge("[[tToolsetPath]]/libraries/[[pLibrary]]") into tPaths[1]
+      put merge("[[tToolsetPath]]/libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[2]
       
       if not revEnvironmentIsInstalled() then
-         -- look for libraries in parent repository
-         if there is a file (revEnvironmentRepositoryPath() & "/ide-support/" & pLibrary & ".livecodescript") then
-            put revEnvironmentRepositoryPath() & "/ide-support/" & pLibrary & ".livecodescript" into tLibraryPath
-         else 
-            put the last item of pLibrary into tLibSuffix
-            if there is a file (revEnvironmentRepositoryPath() & "/extensions/script-libraries/" & tLibSuffix & slash & tLibSuffix & ".livecodescript") then
-               put revEnvironmentRepositoryPath() & "/extensions/script-libraries/" & tLibSuffix & slash & tLibSuffix & ".livecodescript" into tLibraryPath
-            end if
-         end if
+         local tRepoPath
+         put revEnvironmentRepositoryPath() into tRepoPath
+         
+         put merge("[[tRepoPath]]/ide-support/[[pLibrary]]") into tPaths[3]
+         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[4]
+         set the itemDelimiter to slash
+         delete the last item of tRepoPath
+         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[5]
+         put merge("[[tRepoPath]]/ide/libraries/[[tLibSuffix]]") into tPaths[6]
       end if
       
-      if tLibraryPath is empty then
-         if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then 
-            put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
-         else
-            put the last item of pLibrary into tLibSuffix
-            if there is a file (revEnvironmentToolsetPath() & "/libraries/" & tLibSuffix & slash & tLibSuffix & ".livecodescript") then
-               put revEnvironmentToolsetPath() & "/libraries/" & tLibSuffix & slash & tLibSuffix & ".livecodescript" into tLibraryPath
+      local tLibraryPath
+      local tIndex
+      repeat with tIndex = 1 to the number of elements in tPaths
+         local tExtension
+         repeat for each word tExtension in "livecodescript livecode"
+            if there is a file (tPaths[tIndex]& "." & tExtension) then
+               put tPaths[tIndex]& "." & tExtension into tLibraryPath
+               exit repeat
             end if
-         end if
-      end if
+         end repeat
+      end repeat
+      
       set the itemDelimiter to comma
       
       if tLibraryPath is empty then
-         answer "no file for library" && pLibrary
+         return "no file for library" && pLibrary
       end if
       
       try
@@ -54,18 +65,20 @@ command revInternal__LoadLibrary pLibrary
          put the name of stack tLibraryPath into tStackName
          send "revLoadLibrary" to stack tStackName
          put tStackName into sLoadedLibraries[pLibrary]
-         return true
       catch tError
-         answer "Error while loading stack:" && tLibraryPath
+         return "Error while loading stack:" && tLibraryPath & return & tError
       end try
       
    else
       try
          send "revLoadLibrary" to stack pLibrary
       catch tError
-         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
+         put "Error" && tError && "while loading stack:" && pLibrary into tError
+         write tError to stderr
+         return tError
       end try
    end if
+   return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary

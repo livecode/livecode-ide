@@ -1472,3 +1472,97 @@ function macVersionLessThan pLeft, pRight
    end repeat
    return false
 end macVersionLessThan
+
+# Parameters
+#   pObject : either a long id or a valid reference to an object.
+# Returns
+#   The "rugged" id of the object. This can be used the same as a long id,
+#   but is slightly more resistant to stuff like objects being grouped, renamed etc.
+#   The script editor uses rugged ids to store object ids when there is a chance that the object
+#   could be renamed or grouped etc. 
+function revRuggedId pObject
+   # First get the long id of our object. If pObject is a valid object reference we just get the 
+   # object's long id. If its not a valid reference, this does not always mean the object doesn't
+   # exist (because of edit group mode), in this case we assume that pObject is the long id of the object
+   # we want, and parse it directly to obtain the rugged id, without needing to refer to the actual
+   # object at all.
+   local tObject
+   if there is a pObject then
+      put the long id of pObject into tObject
+   else
+      put pObject into tObject
+      # MDW-2015-08-21: [[ bugfix_revRuggedId ]] pObject is empty when creating a new object
+      if tObject is empty then
+         put the long id of the target into tObject
+      end if
+   end if
+   
+   # Find out what the name of the stack owning the object is. We are only interested in the 
+   # stack that immediately owns the object, which could be a substack. To find this we can
+   # simply search from the front and find the first ocurrence of "of stack".
+   local tSubStack, tMainstack
+   local tStackFound
+   local tWordNumber
+   put 1 into tWordNumber
+   repeat for each word tWord in tObject
+      # The first match is always the substack, the second (and last) match is always the mainstack
+      if tWord is "stack" then
+         if tStackFound then
+            put tMainStack into tSubStack
+            put word (tWordNumber + 1) of tObject into tMainStack
+            exit repeat
+         else
+            put word (tWordNumber + 1) of tObject into tMainStack
+         end if
+         put true into tStackFound
+      end if
+      add 1 to tWordNumber
+   end repeat
+   
+   try
+      local tStack
+      if tSubStack is not empty then
+         put "stack " & tSubStack & " of " & (the name of stack (char 2 to -2 of tMainStack)) into tStack
+      else
+         put (the name of stack (char 2 to -2 of tMainStack)) into tStack
+      end if
+   catch tError
+      
+   end try
+   
+   # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
+   #    is in a different form than this expects. Thus we temporarily fetch it while hcAddressing
+   #    is false.
+   if there is a tStack and the hcAddressing of tStack then
+      set the hcAddressing of tStack to false
+      put the long id of pObject into tObject
+      set the hcAddressing of tStack to true
+   end if
+   
+   local tType
+   put word 1 of tObject into tType
+   
+   local tId
+   if tType is "stack" then
+      # With stacks, the name is the most robust way to refer to them. We assume that the stack exists...
+      put tStack into tId
+   else if tType is "audioclip" then
+      put "audioclip id" && word 3 of tObject & " of " & tStack into tId
+   else if tType is "videoclip" then
+      put "videoclip id" && word 3 of tObject & " of " & tStack into tId
+   else
+      # With any other object, the safest thing is to return the object id and the name of its owning stack.
+      # For cards we use "card id..." for other objects "control id..". This is significant because when in
+      # edit group mode, the group being edited can be referred to as "control id.." but *not* "group id..."
+      
+      local tPrefix
+      if tType is "card" then
+         put "card" into tPrefix
+      else
+         put "control" into tPrefix
+      end if
+      put tPrefix & " id " & word 3 of tObject & " of " & tStack into tId
+   end if
+   
+   return tId
+end revRuggedId

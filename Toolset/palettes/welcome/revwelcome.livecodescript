@@ -283,7 +283,7 @@ end mouseMove
 on mouseUp
    if the mouseloc is within the rect of button "close" then
       stackClose
-      if revIDEPrefGet("StartPageShow") is not "false" then
+      if revIDEGetPreference("cStartPageShow") is not "false" then
          revIDEOpenPalette "Start Center"
       end if
    else if the mouseloc is within the rect of graphic "nonprogrammer-hover" then

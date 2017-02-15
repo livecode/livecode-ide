@@ -1,0 +1,61 @@
+type	stack
+title	 Substack
+												
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+----------------------------------------------------------------------------------------------------
+name												
+title	
+mainStack		
+makeMainstack::revIDEMakeSubstackMainstack	Make mainstack	Basic	com.livecode.pi.action	true	true
+decorations												
+windowShape												
+scaleFactor							1					
+shadow		Basic					true					
+visible							true					
+formatForPrinting							false					
+systemWindow							false					
+iconic							false					
+startupIconic							false					
+destroyStack							false					
+destroyWindow							false					
+cantDelete							false					
+cantModify							false					
+cantAbort							false					
+stackFiles					true							
+externals												
+behavior
+foregroundColor												
+foregroundPattern												
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+linkColor												
+clickColor												
+visitedColor												
+underlineLinks							true					
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							empty					
+resizable							true					
+width							400					
+height							400					
+location												
+minWidth							32					
+minHeight							32					
+maxWidth							65535					
+maxHeight							65535					

@@ -6,6 +6,10 @@ local sTimes
 local sVisualizationObjects
 local sVisualizationObjectCount = 0
 
+local sContext
+local sLastUpdateContext
+local sUpdateHasRun = "false"
+
 command paneOpenControl
    setDefaultsAndCallbacks
    refresh
@@ -29,23 +33,11 @@ command paneResizeControl
    resize
 end paneResizeControl
 
-local sContext
-
-local sLastUpdateContext
-local sUpdateHasRun = "false"
-
 command update pEnvironmentChanged
-   local tCurrentContext
-   put seGetDebugContext() & the width of me & the height of me into tCurrentContext
+   put seGetDebugContext() into sContext 
+   put sContext & the width of me & the height of me into sLastUpdateContext
    
-   put tCurrentContext into sLastUpdateContext
-   updateDo pEnvironmentChanged
-   put true into sUpdateHasRun
-end update
-
-private command updateDo pEnvironmentChanged
    lock screen
-   put seGetDebugContext() into sContext
    
    if pEnvironmentChanged is not "false" then
       applyPreferences
@@ -58,7 +50,9 @@ private command updateDo pEnvironmentChanged
    
    updateVisualizationObjects
    unlock screen
-end updateDo
+   
+   put true into sUpdateHasRun
+end update
 
 command refresh
    update
@@ -133,8 +127,6 @@ private command applyPreferences
    */
 end applyPreferences
 
-local sDebugContext
-
 private function buildTree
    local tTreeA, tTopNodes
    
@@ -182,9 +174,9 @@ private function buildTopNodes
       end repeat
       delete the last char of tTopNodes
    end if
-   
+  
    # Show the remaining variables only in debugging mode.
-   if seGetDebugContext() is not empty then
+   if sContext is not empty then
       if the cShowGlobals of me is true then
          # All global variables are currently being shown, so we only need to add the local variables to the list
          get processVariableNames(revDebuggerLocalNames(sContext))
@@ -331,7 +323,9 @@ private on nodeCreateVisualizationObject pPathToNode
    set the height of the templateButton to 23
    create button "Apply"
    reset the templateField
+   set the vScrollbar of the templateField to true
    create field "Value"
+   reset the templateField
    set the lockText of the templateField to true
    create field "Name"
    

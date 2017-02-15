@@ -38,17 +38,10 @@ textStyle
 textAlign												
 margins							8					
 lockLoc							false					
-width							120					
-height							120					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension				120					
+height::revIDESetRectProperty			com.livecode.pi.dimension				120																
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay	
-number											
+colorOverlay												

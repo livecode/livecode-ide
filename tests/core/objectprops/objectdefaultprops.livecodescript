@@ -863,7 +863,7 @@ on TestTableFieldDefaultProps
    put "true" into tPropsA["dontWrap"]
    put empty into tPropsA["dropShadow"]
    put 0 into tPropsA["firstIndent"]
-   put "false" into tPropsA["fixedLineHeight"]
+   put "true" into tPropsA["fixedLineHeight"]
    put empty into tPropsA["focusColor"]
    put empty into tPropsA["focusPattern"]
    put empty into tPropsA["foreColor"]
@@ -1718,6 +1718,11 @@ end TestImageDefaultProps
 
 
 on TestPlayerDefaultProps
+   if the platform is "linux" then
+      TestSkip "player property tests", "Bug 18618"
+      exit TestPlayerDefaultProps
+   end if
+	
    local tObjectID
    revIDEActionCreateObject "com.livecode.interface.classic.Player"
    put the result into tObjectID

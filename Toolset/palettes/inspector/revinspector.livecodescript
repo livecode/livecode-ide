@@ -11,6 +11,7 @@ on inspectorMessagesRegister
    revIDESubscribe "ideInspectObjects"
    revIDESubscribe "ideCloseStack"
    revIDESubscribe "ideNameChanged"
+   revIDESubscribe "ideMainstackChanged"
 end inspectorMessagesRegister
 
 on inspectorMessagesDeRegister
@@ -20,6 +21,7 @@ on inspectorMessagesDeRegister
    revIDEUnsubscribe "ideNewStack"
    revIDEUnsubscribe "ideCloseStack"
    revIDEUnsubscribe "ideNameChanged"
+   revIDEUnsubscribe "ideMainstackChanged"
 end inspectorMessagesDeRegister 
 
 on inspectorCloseAll
@@ -85,10 +87,7 @@ on ideInspectObjects pObjects
       local tNewInspectorName
       put sInspectorMax + 1 into tIndex
       put inspectorStackName(tIndex) into tNewInspectorName
-      set the _ideoverride of stack "revInspectorTemplate" to true
-      clone invisible stack "revInspectorTemplate"
-      set the name of it to tNewInspectorName
-      
+      inspectorCloneTemplate tNewInspectorName
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
@@ -102,6 +101,13 @@ on ideInspectObjects pObjects
   
    unlock screen
 end ideInspectObjects
+
+private command inspectorCloneTemplate pNewName
+   set the _ideoverride of stack "revInspectorTemplate" to true
+   clone invisible stack "revInspectorTemplate"
+   set the cIDETransient of it to true
+   set the name of it to pNewName
+end inspectorCloneTemplate
 
 function inspectorStackName pIndex
    return kPropertyInspectorPrefix && pIndex
@@ -158,9 +164,38 @@ on ideCloseStack
    ideSelectedObjectChanged
 end ideCloseStack
 
-on ideNameChanged
+on stackNameChanged pOldName, pNewLongID
+   lock screen
+   local tStackName
+   repeat for each key tKey in inspectorList()
+      put kPropertyInspectorPrefix && tKey into tStackName
+      if the cLocked of stack tStackName is true and the mode of stack tStackName is not 0 then
+         local tCurObj
+         put the cSelectedObjects of stack tStackName into tCurObj
+         if tCurObj contains ("stack" && quote & pOldName & quote) then
+            replace ("stack" && quote & pOldName & quote) with pNewLongID in tCurObj
+            set the cLocked of stack tStackName to false
+            set the cSelectedObjects of stack tStackName to tCurObj
+            set the cLocked of stack tStackName to true
+         end if
+      end if
+   end repeat
+   unlock screen
+end stackNameChanged
+
+on ideNameChanged pOldName, pNewName, pNewLongID
+   # If a stack name changed, we need to check locked inspectors for
+   # long id changes
+   if word 1 of pNewLongID is "stack" then
+      stackNameChanged pOldName, pNewLongID
+   end if
+   
    ideSelectedObjectChanged
 end ideNameChanged
+
+on ideMainstackChanged
+   ideSelectedObjectChanged
+end ideMainstackChanged
 
 # Sent by the IDE when the selection changed
 on ideSelectedObjectChanged

@@ -72,3 +72,7 @@ Documentation/html_viewer/resources/data/guide/*.js
 # Additional externals #
 ########################
 Ext/
+
+# Edition file #
+################
+edition.txt

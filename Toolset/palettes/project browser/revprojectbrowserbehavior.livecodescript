@@ -81,9 +81,9 @@ on preOpenStack
    # Preferences
    addFrameItem "pb_indicator", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me   
    addFrameItem "pb_sections", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "preferenceChanged", the long id of me
-   addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
-   addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
-   addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Number - ascending,Number - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
+   addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
    addFrameItem "pb_textSize","header","preference","Text size","enum","default,8,10,12,14,18,24","preferenceChanged",the long id of me
    
    revIDESubscribe "ideSelectedObjectChanged"

@@ -309,10 +309,6 @@ on revConnectQuery pObject
          if the platform is "Win32" then
             replace "/" with "\" in tInfo["dbdatabase"]
          end if
-         if the platform is "MacOS" and char 1 of the systemVersion is not "1" then
-            put revMacFromUnixPath(tInfo["dbdatabase"]) into tInfo["dbdatabase"]
-         end if
-         
          local tResult
          put revdb_connect(tInfo["dbtype"],tInfo["dbhost"],tInfo["dbdatabase"],tInfo["dbuser"],tInfo["dbpassword"],3*1024,tInfo["dbuser"],tInfo["dbpassword"]) into tResult
       else

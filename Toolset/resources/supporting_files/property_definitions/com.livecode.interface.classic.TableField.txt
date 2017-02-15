@@ -62,21 +62,14 @@ textFont
 textSize												
 textStyle												
 textAlign							left					
-fixedLineHeight												
+fixedLineHeight							true					
 textHeight												
 margins							8					
 lockLoc							false					
-width							250					
-height							56					
-location												
-left												
-top												
-right												
-bottom												
-layer												
+width::revIDESetRectProperty			com.livecode.pi.dimension				250					
+height::revIDESetRectProperty			com.livecode.pi.dimension				56					
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
 colorOverlay
-number												

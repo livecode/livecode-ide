@@ -144,11 +144,10 @@ on revStandaloneSettings pStack
 end revStandaloneSettings
 
 on revSetEdit pStack
-   global gRevStackStatus
    if pStack = "" then 
       put getTargetStackName() into pStack
    end if
-   put "edited" into gRevStackStatus[pStack]
+   revIDESetEdited pStack
 end revSetEdit
 
 constant kButtonWidth = 66
@@ -373,7 +372,7 @@ on revRecursiveRemoveStackFiles pStack,pRemoveList, @xStackFileList
         put tRef&cr after tNewStackFiles
         if the effective fileName of stack item 1 of tRef is not among the lines of xStackFileList then
           put the effective fileName of stack item 1 of tRef & cr after xStackFileList
-          revRecursiveRemoveStackFiles the effective fileName of stack item 1 of tRef,pRemoveList
+          revRecursiveRemoveStackFiles the effective fileName of stack item 1 of tRef,pRemoveList,xStackFileList
         end if
       end if
     end if
@@ -392,7 +391,7 @@ on revRecursiveRemoveStackFiles pStack,pRemoveList, @xStackFileList
           put tRef&cr after tNewStackFiles
           if the effective fileName of stack item 1 of tRef is not among the lines of xStackFileList then
             put the effective fileName of stack item 1 of tRef & cr after xStackFileList
-            revRecursiveRemoveStackFiles the effective fileName of stack item 1 of tRef,pRemoveList
+            revRecursiveRemoveStackFiles the effective fileName of stack item 1 of tRef,pRemoveList,xStackFileList
           end if
         end if
       end if

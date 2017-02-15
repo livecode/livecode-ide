@@ -2529,29 +2529,37 @@ command cancelPendingMessages
    end if
 end cancelPendingMessages
 
+# Stores that an arrowKey is pressed from rawKeyDown
+local sArrowKeyPressed
+
 -- This is sent by the engine
 on selectionChanged
-   handleSelectionChanged
+   if not (sArrowKeyPressed) then
+      handleSelectionChanged
+   end if
+   -- Unmark found results when clicking on the SE
+   selectionUpdateRequest
 end selectionChanged
 
 -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
 -- "selectionChangedByArrowKey pArrowKey"
 on handleSelectionChanged
-   if the selectedText of field "Script" of me is not empty then
-      put the selectedText of field "Script" of me into sLastNonEmptySelection
-   end if
+   saveLastSelections
    
-   # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
-   # when the user begins typing into the search field.
-   if the long id of the focusedObject is the long id of field "Script" of me then
-      put word 2 of it & comma & word 4 of it into sLastSelectedChunk
+   get the selectedChunk
+   -- a text selection
+   if word 2 of it <= word 4 of it then
+      exit handleSelectionChanged
    end if
    
    selectionUpdateRequest
+   caretUpdate
 end handleSelectionChanged
 
 on selectionChangedByArrowKey pArrowKey
-   handleSelectionChanged
+   saveLastSelections
+   
+   -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
    get the selectedChunk
    
    local tAt
@@ -2611,9 +2619,24 @@ on selectionChangedByArrowKey pArrowKey
    end switch
    
    textMark "Insert"
-   
+   put false into sArrowKeyPressed
    selectionUpdateRequest
 end selectionChangedByArrowKey
+
+private command saveLastSelections
+   if the selectedText of field "Script" of me is not empty then
+      put the selectedText of field "Script" of me into sLastNonEmptySelection
+   end if
+   
+   -- [[ Bug 18528 ]] We need this here otherwise the "it" var in the if block below is empty
+   get the selectedChunk
+   
+   # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
+   # when the user begins typing into the search field.
+   if the long id of the focusedObject is the long id of field "Script" of me then
+      put word 2 of it & comma & word 4 of it into sLastSelectedChunk
+   end if
+end saveLastSelections
 
 private command selectionUpdateRequest
    if sSelectionUpdateRequest is not empty then
@@ -3168,7 +3191,11 @@ on tabKey
    end if
    
    if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
+      if the shiftKey is "down" then
+         scriptFormat "script"
+      else
+         scriptFormat "handler"
+      end if
    else
       get the selectedChunk
       
@@ -3326,6 +3353,7 @@ on rawKeyDown pKey
    
    # For Windows: Home (Windows / Linux)
    if pKey is kKeyHome and seGetPlatform() is not "macos" then
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
@@ -3333,6 +3361,7 @@ on rawKeyDown pKey
    # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
    if (pKey is kKeyLeftArrow and (the controlKey is "down" or the commandKey is "down") or \
          (pKey is 65 and the controlKey is "down" and the shiftKey is "up")) and seGetPlatform() is "macos" then
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey" to me in 0 milliseconds
       pass rawKeyDown
    end if
@@ -3362,32 +3391,29 @@ on rawKeyDown pKey
       end if
    end if
    
-   pass rawKeyDown
-end rawKeyDown
-
-
-# Description
-#   RawKeyUp is handled to deal with the arrow keys. The script editor needs to update when these are pressed
-#   because they change the selection, however in order to do this efficiently, we have to only update when the key
-#   is actually released, not each repeat interval.
-on rawKeyUp pKey
-   if not handleEvent("rawKeyUp", the long id of the target) then
-      pass rawKeyUp
-   end if
-   
-   if pKey is not among the items of kKeyLeftArrow,kKeyRightArrow,kKeyUpArrow,kKeyDownArrow then
-      pass rawKeyUp
-   end if
-   
-   # Check to see if one of the arrow keys is still being held down. If so, don't do the selectionChanged update until they
-   # are all released as it will still be moving
-   local tDownKeys
-   put keysDown() into tDownKeys
-   if (kKeyLeftArrow is among the items of tDownKeys) or (kKeyRightArrow is among the items of tDownKeys) or (kKeyUpArrow is among the items of tDownKeys) or (kKeyDownArrow is among the items of tDownKeys) then
-      pass rawKeyUp
-   end if
-   
+   # optionKey is down
    local tKeyName
+   if (pKey is kKeyLeftArrow or pKey is kKeyRightArrow) and the optionkey is down then
+      put true into sArrowKeyPressed
+      if pKey is kkeyRightArrow then
+         send "selectionChangedByArrowKey" to me in 0 milliseconds
+      else
+         put "left" into tKeyName
+         send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
+      end if
+      pass rawKeyDown
+   end if
+
+   if pKey is not among the items of kKeyLeftArrow,kKeyRightArrow,kKeyUpArrow,kKeyDownArrow then
+      pass rawKeyDown
+   end if
+   
+   # for simple arrowKeys
+   
+   #  [[ Bug 18595 ]] "cursor should move to begin of text if click is left of text"
+   # moved handling of arrowKey from rawKeyUp here to flag arrowKey in sArrowKeyPressed
+   # before "selectionChanged" message is fired 
+   
    switch pKey
       case kKeyLeftArrow
          put "left" into tKeyName
@@ -3405,10 +3431,11 @@ on rawKeyUp pKey
    
    if not scriptLocked() then
       textMark "Insert"
+      put true into sArrowKeyPressed
       send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
    end if
-   pass rawKeyUp
-end rawKeyUp
+   pass rawKeyDown
+end rawKeyDown
 
 local sLastClickLine
 
@@ -4412,15 +4439,11 @@ private function findListObjectsOnStackAndSubstacks pObject, pIncludeStackfiles,
                return empty
             end if
             
-            local tStackFileList
-            put empty into tStackFileList
-            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tStackFileList)
-            put tStackFileList after tList
+            get revIDEListSearchObjectTree(the name of stack tPath, false, empty, true, true, true, tList)
          end if
          unlock messages
          
       end repeat
-      delete the last char of tList
    end if
    
    return tList
@@ -5179,22 +5202,25 @@ command tooltipUpdate
       end if
    end if
    
+   local tContext
+   put seGetDebugContext() into tContext
+   
    # Find out if the variable is an array
    local tKeys
-   put revDebuggerGetKeys(tMouseVariable) into tKeys
+   put revDebuggerGetKeys(tMouseVariable, tContext) into tKeys
    
    # Get its value in the curent debug context from the debugger. Truncate to make sure we don't try and 
    # display very large variables and format it for the tooltip.
    local tValue
    if tKeys is empty then
-      put tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, empty, empty, empty), empty, 500) into tValue
+      put tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, tContext, empty, empty), empty, 500) into tValue
    else
       repeat for each line tKey in line 1 to kTooltipArrayKeyCount of tKeys
          --local tExpression
          --put tMouseVariable & "[" & quote & tKey & quote & "]" into tExpression
          local tElementList
          put tKey into tElementList[1]
-         put tKey & " = " & tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, ,tElementList, empty), 1, 200) & return after tValue
+         put tKey & " = " & tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, tContext, tElementList, empty), 1, 200) & return after tValue
       end repeat
       delete the last char of tValue
    end if
@@ -5622,3 +5648,212 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
       end if
    end repeat
 end __LookForPair
+
+# Parameters
+#   pRootObject : the object to list the tree for, this is a reference to any LiveCode object
+#   pIncludeSubstacks : if pRootObject is a mainstack, this determines whether or not its substacks are searched. Otherwise its ignored.
+# Returns
+#   Empty if all possible objects were returned, otherwise a warning string explaining why some / all were ommited.
+# Description
+#   rList will be set to the list of objects underneath the root object. This is inclusive, i.e. it includes pRootObject.
+#   If pRootObject is a mainstack, the stack will be searched, followed by all mainstacks if pIncludeSubstacks is true.
+#   If pRootObject is a stack, the object list is the stack, all its cards, and all objects on each card
+#   If pRootObject is a card the list is the card and all objects on it
+#   If pRootObject is any other control, the list is pRootObject.
+function revIDEListSearchObjectTree pRootObject, pObeyDontSearch, pMarked, pIncludeSubstacks, pIgnorePasswordProtected, pScriptsOnly, @xList
+   --delete variable sAddedObjects
+   
+   # Put the root object into the list first. If this is not possible because to dontSearch or card marking then
+   # return an error and put empty into the list. What might also happen is that one of the child objects
+   # as its dontSearch set to true. In this case, we'll return a partial list.
+   if pObeyDontSearch and word 1 of the name of pRootObject is among the words of "field group card" and the dontSearch of pRootObject then
+      return "dontSearch of root object set"
+   end if
+   
+   # Set the HCAddressing property of the owning stack of pRootObject to false, as this will mess
+   # up everything otherwise.
+   local tOldHCAddressing
+   put the hcAddressing of stack revTargetStack(pRootObject) into tOldHCAddressing
+   set the hcAddressing of stack revTargetStack(pRootObject) to false
+   
+   # If the root object is a mainstack, we add the stack itself, then all its substacks if applicable
+   local tResult
+   switch word 1 of pRootObject
+      case "stack"
+         if the mainstack of pRootObject is the short name of pRootObject and pIncludeSubstacks then
+            addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+            put the result into tResult
+            
+            repeat for each line tSubstack in the substacks of pRootObject
+               local tSubstackResult
+               addStack the name of stack tSubstack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+               put the result into tSubstackResult
+               if tResult is empty then
+                  put tSubstackResult into tResult
+               end if
+            end repeat
+         else
+            # If its not a mainstack, or we're not adding substacks, just add the stack
+            addStack pRootObject, pObeyDontSearch, pMarked, pIgnorePasswordProtected, xList, pScriptsOnly
+            put the result into tResult
+         end if 
+         break
+      case "card"
+         # If its a card then add the card and all its controls
+         addCard pRootObject, pObeyDontSearch, pMarked, xList, pScriptsOnly
+         put the result into tResult
+         break
+      case "group"
+         # If its a group then add the group and all its control
+         addGroup pRootObject, pObeyDontSearch, xList, pScriptsOnly
+         put the result into tResult
+         break
+      default
+         # All other objects, i.e non-containers, just add the single object to the list.
+         addObject pRootObject, pObeyDontSearch, xList, pScriptsOnly
+         put the result into tResult
+         break
+   end switch
+   
+   set the hcAddressing of stack revTargetStack(pRootObject) to tOldHCAddressing
+   
+   return tResult
+end revIDEListSearchObjectTree
+
+private command addObject pObject, pObeyDontSearch, @xList, pScriptsOnly
+   if pObeyDontSearch and word 1 of the name of pObject is among the words of "card group field" and the dontSearch of pObject then
+      return "dontSearch set on object"
+   end if
+   
+   if not pScriptsOnly or the script of pObject is not empty then
+      put true into xList[the long id of pObject]
+   end if
+   
+   local tBehavior
+   put the behavior of pObject into tBehavior
+   repeat while exists(tBehavior)
+      put true into xList[the long id of tBehavior]
+      put the behavior of tBehavior into tBehavior
+   end repeat
+   
+   return empty
+end addObject
+
+private command addCard pCard, pObeyDontSearch, pMarked, @xList, pScriptsOnly
+   if pMarked is not empty and pMarked is not the mark of pCard then
+      return "marked mismatch"
+   end if
+   
+   # Add the card itself
+   local tResult
+   addObject pCard, pObeyDontSearch, xList, pScriptsOnly
+   put the result into tResult
+   
+   # Add the non-grouped controls
+   local tObjectResult
+   local tControlID
+   repeat for each line tControlID in the childControlIDs of pCard
+      # Don't add groups
+      if word 1 of the name of control id tControlID of pCard is among the words of "group bkgnd" then
+         next repeat
+      end if
+      
+      # Don't add grouped controls
+      if the owner of control id tControlID of pCard is not empty and word 1 of the name of the owner of control id tControlID of pCard is among the words of "group bkgnd" then
+         next repeat
+      end if
+      
+      addObject the long id of control id tControlID of pCard, pObeyDontSearch, xList, pScriptsOnly
+      put the result into tObjectResult
+      
+      if tResult is empty then
+         put tObjectResult into tResult
+      end if
+   end repeat
+   
+   # Add any groups.
+   local tGroup, tGroupResult
+   local tID
+   repeat for each line tId in the groupIds of pCard
+      put the long id of group id tId of pCard into tGroup
+      if the sharedBehavior of tGroup then
+         next repeat
+      end if
+      
+      # Note that if a group on the card does not have its backgroundBehavior set, but is placed on multiple cards,
+      # it will be duplicated in the list. I'm not sure if this is correct or not...
+      addGroup tGroup, pObeyDontSearch, xList, pScriptsOnly
+      put the result into tGroupResult
+      
+      if tResult is empty then
+         put tGroupResult into tResult
+      end if
+   end repeat
+   
+   return tResult
+end addCard
+
+private command addGroup pGroup, pObeyDontSearch, @xList, pScriptsOnly
+   if pObeyDontSearch and the dontSearch of pGroup then
+      return "dontSearch set on group"
+   end if
+   
+   local tResult
+   addObject pGroup, pObeyDontSearch, xList, pScriptsOnly
+   put the result into tResult
+   
+   local tObjectResult
+   local tControlID
+   repeat for each line tControlID in the childControlIDs of pGroup
+      addObject the long id of control id tControlID of pGroup, pObeyDontSearch, xList, pScriptsOnly
+      put the result into tObjectResult
+      
+      if tResult is empty then
+         put tObjectResult into tResult
+      end if
+   end repeat
+   
+   return tResult
+end addGroup
+
+private command addStack pStack, pObeyDontSearch, pMarked, pIgnorePasswordProtected, @xList, pScriptsOnly
+   local tResult
+   
+   if pIgnorePasswordProtected then
+      try
+         get the script of pStack
+      catch tError
+         return "Stack password protected"
+      end try
+   end if
+   
+   # The stack itself
+   addObject pStack, pObeyDontSearch, xList, pScriptsOnly
+   put the result into tResult
+   
+   # All shared groups groups on the stack
+   local tSharedGroupResult
+   local tGroupID
+   repeat for each line tGroupID in the sharedGroupIDs of pStack
+      addGroup the long id of control id tGroupID of pStack, pObeyDontSearch, xList, pScriptsOnly
+      put the result into tSharedGroupResult
+      
+      if tResult is empty then
+         put tSharedGroupResult into tResult
+      end if
+   end repeat
+   
+   # All the cards on the stack
+   local tCardResult
+   local tCardID
+   repeat for each line tCardID in the cardIDs of pStack
+      addCard the long id of card id tCardID of pStack, pObeyDontSearch, pMarked, xList, pScriptsOnly
+      put the result into tCardResult
+      
+      if tResult is empty then
+         put tCardResult into tResult
+      end if
+   end repeat
+   
+   return tResult
+end addStack
