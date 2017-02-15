@@ -193,6 +193,9 @@ end editorPopup
 after editorPopup pClickLoc
    local tStackName
    put popupStackName() into tStackName
+   if tStackName is in the openstacks then
+      exit editorPopup
+   end if
    create invisible stack tStackName
    dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack tStackName
    set the frameHidden of stack tStackName to true
