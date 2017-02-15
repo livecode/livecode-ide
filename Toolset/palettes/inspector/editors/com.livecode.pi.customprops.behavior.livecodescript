@@ -8,6 +8,7 @@ on editorInitialize
    set the label of button "customPropertySet" of group "Set buttons" of me to "customKeys"
    set the editorMinWidth of me to 250
    set the editorMaxWidth of me to 0
+   checkRehilite
 end editorInitialize
 
 on updateHilitePath pPath
@@ -60,6 +61,7 @@ on editorUpdate
    if tPath is empty then
       put empty into field "key" of me
       put empty into field "value" of me
+      put false into tEnabled
    else
       local tKey
       fetchArrayDataOnPath tPath, tValue[sPropSet], tKey 
@@ -375,6 +377,9 @@ on checkRehilite
       # a rehilite of the old path
       put empty into sHilitePath
    end if
+   
+   set the disabled of field "value" of me to sLastHilite is empty
+   set the disabled of field "key" of me to sLastHilite is empty
 end checkRehilite
 
 function arrayKeysAreNumeric pArrayA
