@@ -719,6 +719,10 @@ function seDebugContexts
 end seDebugContexts
 
 local sDebugContext
+function seGetSelectedDebugContext
+   return sDebugContext
+end seGetSelectedDebugContext
+
 function seGetDebugContext
    local tMode
    revSEGetMode
@@ -2294,6 +2298,8 @@ command seFinalize
    seFindHistorySave
    sePrefSave
    seHistorySave
+   
+   put empty into sDebugContext
 end seFinalize
 
 # Returns

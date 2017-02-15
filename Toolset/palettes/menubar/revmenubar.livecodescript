@@ -1640,11 +1640,44 @@ private function revMenubarObjectMenu pContext
    
    put "-" & return after tObject
    
+   local tCanRelayer = true
+   local tCanMoveBack = true
+   local tCanMoveForward = true
+   if pContext["objectsSelected"] then
+      local tSelectedObjects
+      put the selectedObjects into tSelectedObjects
+      
+      local tOwner
+      put the long owner of (line 1 of tSelectedObjects) into tOwner
+      
+      local tNumSelected
+      put the number of lines of (tSelectedObjects) into tNumSelected
+      if tNumSelected is the number of controls of tOwner then
+         put false into tCanRelayer
+      end if
+      
+      if tCanRelayer then
+         local tID
+         repeat for each line tID in tSelectedObjects
+            if the long owner of tID is not tOwner then
+               put false into tCanRelayer
+               exit repeat
+            end if
+            if the layer of tID is the layer of tOwner + 1 then
+               put false into tCanMoveBack
+            end if
+            if the layer of tID is the layer of tOwner + the number of controls of tOwner then
+               put false into tCanMoveForward
+            end if
+         end repeat
+      end if
+   end if
+   
    ### Send to back, Move Backward, Move Forward and Bring to Front
-   put enableMenuItem("&Send to Back", pContext["objectsSelected"]) & return after tObject
-   put enableMenuItem("Move Backward/[", pContext["objectsSelected"]) & return after tObject
-   put enableMenuItem("Move For&ward/]", pContext["objectsSelected"]) & return after tObject
-   put enableMenuItem("Bring to &Front", pContext["objectsSelected"]) & return after tObject
+   put enableMenuItem("&Send to Back", pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
+   put enableMenuItem("Move Backward/[", pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
+   put enableMenuItem("Move For&ward/]", pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObject
+   put enableMenuItem("Bring to &Front", pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObject
    
    return modifyMenu("Object", tObject)
 end revMenubarObjectMenu

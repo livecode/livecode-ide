@@ -5224,6 +5224,21 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
          
          # If stack name is changed, use new name when setting edited
          if tStack is tObject and pProperty is "name" then
+            local tOldName
+            put the short name of tStack into tOldName
+            if char 1 to 3 of pValue is "rev" then
+               answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
+               if it is revIDELocalise("Cancel") then
+                  set the name of tStack to tOldName
+                  exit revIDEPropertySet
+               end if
+            end if
+            if pValue is a number then 
+               beep
+               answer error revIDELocalise("You cannot set the name of a stack to a number.")
+               set the name of tStack to tOldName
+               exit revIDEPropertySet
+            end if
             put pValue into tStackName
          else
             put the short name of tStack into tStackName
@@ -9239,13 +9254,13 @@ on revIDERelayerControls pObjectList, pMode
       case "send to back"
          sort lines of tLayers numeric descending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to bottom
+            relayer tObjectArray[tLayer] to back of owner
          end repeat
          break
       case "bring to front"
          sort lines of tLayers numeric ascending
          repeat for each line tLayer in tLayers
-            set the layer of tObjectArray[tLayer] to top
+            relayer tObjectArray[tLayer] to front of owner
          end repeat
          break
       case "move forward"
@@ -11336,6 +11351,32 @@ on ideCompileCheck pScript
    return empty
 end ideCompileCheck
 
+function ideIsDebugging
+   return revTopMostScriptEditor("debug") is not empty
+end ideIsDebugging
+
+private command __removeMessageBoxFromDebugContexts @xContexts
+   local tTarget
+   put the long id of the target into tTarget
+   local tFirst, tLast, tCount, tObject
+   put 1 into tFirst
+   put 0 into tLast
+   repeat for each line tLine in xContexts
+      add 1 to tCount
+      put item 2 of tLine into tObject
+      if tObject is not empty then
+         put the long id of tObject into tObject
+      end if
+      -- Message box execution always begins with 'returnInField' from the target
+      if item 3 of tLine is "returnInField" and \ 
+            tObject is tTarget then
+         put tCount into tLast
+      end if
+   end repeat
+   
+   delete line tFirst to tLast of xContexts
+end __removeMessageBoxFromDebugContexts
+
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
@@ -11347,22 +11388,28 @@ command ideDoMessage pScript, pDebugMode
    local tScriptError
    try
       if pDebugMode then
-         # OK-2010-01-02: Remove the message box itself from the debug context. 
-         # Line 1 will be revDebugDoMessage
-         # Line 2 is revExecuteMessage (message box field)
-         # Line 3 is returnInField (message box field)
-         # Line 4 will hopefully be the user code (assuming of course the message box isnt' changed).
-         # Note that this code is called from both the single and multi-line fields, but luckily they both 
-         # have the same number of calls.
-         local tContext, tContextNumber
-         get revDebuggerContexts()
-         put line 4 of it into tContext
-         
+         local tContext, tScriptEditor
+         put revTopMostScriptEditor("debug") into tScriptEditor
+         -- Ensure a user-selected debug context in the script editor is the first
+         -- option for execution context in the message box
+         if tScriptEditor is not empty then
+            dispatch function "seGetSelectedDebugContext" to tScriptEditor
+            put the result into tContext
+         end if
+         -- Otherwise, remove the chain of message box execution contexts
+         -- from the list, and take the next one.
+         if tContext is empty then
+            local tContexts
+            put revDebuggerContexts() into tContexts
+            __removeMessageBoxFromDebugContexts tContexts
+            put line 1 of tContexts into tContext
+         end if
          local tResult
          revDebuggerDo pScript, tContext
-         get the result
-         put line 1 of it into tResult
-         put line 2 to -1 of it into tScriptError
+         put the result into tResult
+         put line 2 to -1 of tResult into tScriptError
+         put line 1 of tResult into tResult
+         
       else
          do pScript
       end if

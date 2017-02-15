@@ -62,7 +62,8 @@ private command _TestBuildStandalone pStackPath
 	
 	TestDiagnostic "Building standalone -" && pStackPath
 	
-	StandaloneBuilderSaveAsStandalone tStackName
+	local tStandalonePath
+	StandaloneBuilderSaveAsStandalone tStackName, tStandalonePath
 	put the result into tResult
 	
 	TestAssert tStackName && "- builds successfully", tResult is empty

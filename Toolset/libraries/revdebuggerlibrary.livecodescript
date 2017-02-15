@@ -2011,6 +2011,11 @@ function revDebuggerObjectLongName pObject
    return the long name of pObject
 end revDebuggerObjectLongName
 
+private command __UpdateScriptEditor pObject, pHandler, pLine, pState, pError
+   put revDebuggerContexts() into sLastDisplayedContexts
+   revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
+end __UpdateScriptEditor
+
 # Parameters
 #   pObject : reference to the object owning the executing code
 #   pHandler : the name of the handler executing
@@ -2022,7 +2027,6 @@ end revDebuggerObjectLongName
 #   editor open for pObject then does nothing.
 #   Otherwise tells the script editor to display the appropriate line etc.
 command revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
-   put revDebuggerContexts() into sLastDisplayedContexts
    
    if there is not a pObject then
       return empty
@@ -2099,11 +2103,11 @@ private command __ShowErrorDialog pObject, pHandler, pLine, pError
    
    if it is "Script" then
       revDebuggerStop
-      revDebuggerUpdateScriptEditor pObject, pHandler, pLine, "edit"
+      __UpdateScriptEditor pObject, pHandler, pLine, "edit"
    end if
    
    if it is "Debug" then
-      revDebuggerUpdateScriptEditor pObject, pHandler, pLine, "debug"
+      __UpdateScriptEditor pObject, pHandler, pLine, "debug"
    end if
 end __ShowErrorDialog
 
@@ -2145,9 +2149,16 @@ private function __ResolveHandler pContextLine
    --   end if
 end __ResolveHandler
 
-private function __TargetIsModal pTarget
-   return (the mode of stack (revTargetStack(pTarget)) = 5)
-end __TargetIsModal
+private function __ModalPresented
+   local tStack
+   repeat for each line tStack in the openStacks
+      if the mode of stack tStack is 5 then
+         return true
+      end if
+   end repeat
+   
+   return false
+end __ModalPresented
 
 private command __ShowModalWarning
    
@@ -2225,13 +2236,13 @@ on trace pHandler, pLine, pPosition
    local tNextContextCount
    
    if sLastTraceMode is "Step Into" then
-      revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       
    else if sLastTraceMode is "Step Over" then
       local tLastHandler
       put __ResolveHandler(line 1 of sLastDisplayedContexts) into tLastHandler
       if line 2 to -1 of sLastDisplayedContexts is line 2 to -1 of tCurrentContexts and pHandler is tLastHandler then
-         revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
          set the traceStack to the name of tStack
       else
          # Calculate the number of execution contexts that there should be before we get the next trace message.
@@ -2247,8 +2258,8 @@ on trace pHandler, pLine, pPosition
       local tArray
       put __ParseExecutionContext(line 2 of sLastDisplayedContexts) into tArray
       
-      if line 3 to -1 of sLastDisplayedContexts is line 2 to -1 of revDebuggerContexts() and pHandler is tArray["handler"] then
-         revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      if line 3 to -1 of sLastDisplayedContexts is line 2 to -1 of tCurrentContexts and pHandler is tArray["handler"] then
+         __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
       else
          put item 1 line 1 of tCurrentContexts - 2 into tNextContextCount
          set the traceUntil to tNextContextCount
@@ -2306,7 +2317,7 @@ on traceError pHandler, pLine, pPosition, pError
       pass traceError
    end if
    
-   if the environment contains "development" and __TargetIsModal(tTarget) then
+   if "development" is in the environment and __ModalPresented() then
       __ShowModalWarning
       pass traceError
    end if
@@ -2346,7 +2357,7 @@ on traceError pHandler, pLine, pPosition, pError
       exit traceError
    end if
    
-   revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug", pError
+   __UpdateScriptEditor tTarget, pHandler, pLine, "debug", pError
    
    set the traceStack to the short name of tStack
 end traceError
@@ -2370,7 +2381,7 @@ on traceBreak pHandler, pLine
       pass traceBreak
    end if
    
-   if "development" is in the environment and __TargetIsModal(tTarget) then
+   if "development" is in the environment and __ModalPresented() then
       __ShowModalWarning
       pass traceBreak
    end if
@@ -2399,7 +2410,7 @@ on traceBreak pHandler, pLine
    
    if __EvaluateCondition(tTarget, pLine, tContext) then
       set the traceStack to the short name of __TargetStack(the long id of the target)
-      revDebuggerUpdateScriptEditor tTarget, pHandler, pLine, "debug"
+      __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
    else
       set the traceReturn to true
    end if

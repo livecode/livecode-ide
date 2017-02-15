@@ -1,4 +1,4 @@
-﻿script "SavingStandaloneMessage"
+﻿script "StandaloneInclusions"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -33,27 +33,19 @@ on TestTeardown
    stop using stack sSupportStack
 end TestTeardown
 
-private function _TestSavingStandaloneStackScript
-	local tScript
-	put "on startup" & return after tScript
-	put "write the cModified of me to stdout" & return after tScript
-	put "quit 0" & return after tScript
-	put "end startup" & return after tScript
-	put "on savingStandalone" & return after tScript
-	put "set the cModified of me to true" & return after tScript
-	put "end savingStandalone" & return after tScript
-	put "on standaloneSaved pFolder" & return after tScript
-	put "set the cFolder of me to pFolder" & return after tScript
-	put "end standaloneSaved" & return after tScript
+private function _TestScriptForInclusion pWhich
+   set the itemdelimiter to slash
+   local tExternalTest
+   put the filename of me into tExternalTest
+   put "/externals/" & pWhich & ".livecodescript" into item -1 of tExternalTest
+   return textDecode(url("binfile:" & tExternalTest), "utf-8")
+end _TestScriptForInclusion
 
-	return tScript
-end _TestSavingStandaloneStackScript
-
-on TestSavingStandalone
+on TestStandaloneInclusions
    local tDir
    set the itemdelimiter to slash
    set the defaultfolder to item 1 to -2 of the filename of me
-
+   
    put "_TestSavingStandalone" into tDir
    
    create folder tDir
@@ -62,43 +54,57 @@ on TestSavingStandalone
    create stack
    put it into tStackID
    put the short name of tStackID into tStackName
-
+   
    local tStackFilename
    put the folder & "/" & tDir & "/stack.livecode" into tStackFilename
    set the filename of tStackID to tStackFilename
    
-   set the script of tStackID to _TestSavingStandaloneStackScript()
-   
-   set the cModified of tStackID to false
-   
-   revIDESaveStack tStackID
-	 
-	 local tStandalonePath
-   _TestBuildStandalone tStackFilename, tStandalonePath
-   if the result is not empty then
-      TestAssert "building standalone", false
-      exit TestSavingStandalone
-   end if
-
-   TestAssert "building standalone", true
-   TestAssert "standalone state reloaded", the cModified of stack tStackName is not true
-   
-   local tFolder
-   put the cFolder of stack tStackName into tFolder
-
-   TestDiagnostic "location" && tStandalonePath
-   TestAssert "standalone in expected location", there is a file tStandalonePath
-   
-   local tOutput
-   put shell(quote & tStandalonePath & quote && "-ui") into tOutput
-   
-   TestDiagnostic "shell output" && tOutput
-   
-   TestAssert "savingStandalone side-effect present in standalone", \ 
-   		tOutput is "true"
+   set the itemdelimiter to comma
+   repeat for each item tItem in "xml,security,zip,sqlite"
+      _TestStandaloneWithInclusion tStackId, tStackFilename, tItem
+   end repeat
    
    revDeleteFolder tDir
-end TestSavingStandalone
+end TestStandaloneInclusions
+
+private command _TestStandaloneWithInclusion pStackId, pStackFilename, pItem
+   local tScript
+   put _TestScriptForInclusion(pItem) into tScript
+   
+   set the script of pStackId to tScript
+   revIDESaveStack pStackId
+   	 
+   local tExecutablePath
+   _TestBuildStandalone pStackFilename, tExecutablePath
+   if the result is not empty then
+      TestAssert "building standalone", false
+      exit _TestStandaloneWithInclusion
+   end if
+   
+   TestAssert "building standalone", true
+   
+   local tStackName
+   put the short name of pStackId into tStackName
+    
+   TestDiagnostic "location" && tExecutablePath
+   
+   TestAssert "standalone in expected location", there is a file tExecutablePath
+   
+   local tResult, tShellCmd
+   put quote & tExecutablePath & quote into tShellCmd
+   if the environment contains "command line" then
+      put " -ui" after tShellCmd
+   end if
+   get shell(tShellCmd)
+   put the result into tResult
+   
+   if tResult is not empty then
+      TestDiagnostic "standalone quit with" && tResult & ":" && it
+   end if
+      
+   TestAssert "standalone with" && pItem && "inclusion startup", \
+         tResult is empty
+end _TestStandaloneWithInclusion
 
 private command _TestBuildStandalone pStackPath, @xStandalonePath
 	local tStackName, tResult

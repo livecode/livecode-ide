@@ -51,7 +51,7 @@ on StandaloneBuilderCleanupStandalones
 	revDeleteFolder tTargetFolder	
 end StandaloneBuilderCleanupStandalones
 
-on StandaloneBuilderSaveAsStandalone pStack	
+on StandaloneBuilderSaveAsStandalone pStack, @xStandalonePath
 	local tBuildPlatform
 	put GetBuildPlatform() into tBuildPlatform
 	
@@ -66,24 +66,25 @@ on StandaloneBuilderSaveAsStandalone pStack
 		end if
 	end repeat
 
-	local tResult
-	revDoSaveAsStandalone pStack, tTargetFolder
+	local tResult, tStandalonePaths
+	revDoSaveAsStandalone pStack, tTargetFolder, , tStandalonePaths
 	put the result into tResult
-
+	put tStandalonePaths[tBuildPlatform] into xStandalonePath
 	TestDiagnostic tResult	
 	return tResult
 end StandaloneBuilderSaveAsStandalone
 
-function StandaloneBuilderExecutable pStack	
-	local tBuildPlatform
-	put GetBuildPlatform() into tBuildPlatform
+function StandaloneBuilderResources pStack, pExecutablePath
+	local tResources
 	
-	local tTargetFolder
-	put GetTargetFolder() into tTargetFolder
-	
-	local tStandaloneExecutable
-	put	revSBStandaloneOutputDirectory(pStack, "", tTargetFolder, tBuildPlatform, false) \
-		& pStack into tStandaloneExecutable
-
-	return tStandaloneExecutable
-end StandaloneBuilderExecutable
+	set the itemdelimiter to slash
+	switch GetBuildPlatform()
+	   case "MacOSX x86-64"
+	   case "MacOSX x86-32"
+	      put item 1 to -3 of pExecutablePath & "/Resources/_MacOS" into tResources
+	      break
+       default
+          put item 1 to -2 of pExecutablePath into tResources
+    end switch
+    return tResources
+end StandaloneBuilderResources

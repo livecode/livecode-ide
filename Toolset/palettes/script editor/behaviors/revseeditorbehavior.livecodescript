@@ -5144,22 +5144,25 @@ command tooltipUpdate
       end if
    end if
    
+   local tContext
+   put seGetDebugContext() into tContext
+   
    # Find out if the variable is an array
    local tKeys
-   put revDebuggerGetKeys(tMouseVariable) into tKeys
+   put revDebuggerGetKeys(tMouseVariable, tContext) into tKeys
    
    # Get its value in the curent debug context from the debugger. Truncate to make sure we don't try and 
    # display very large variables and format it for the tooltip.
    local tValue
    if tKeys is empty then
-      put tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, empty, empty, empty), empty, 500) into tValue
+      put tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, tContext, empty, empty), empty, 500) into tValue
    else
       repeat for each line tKey in line 1 to kTooltipArrayKeyCount of tKeys
          --local tExpression
          --put tMouseVariable & "[" & quote & tKey & quote & "]" into tExpression
          local tElementList
          put tKey into tElementList[1]
-         put tKey & " = " & tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, ,tElementList, empty), 1, 200) & return after tValue
+         put tKey & " = " & tooltipTruncateValue(revDebuggerGetValue(tMouseVariable, tContext, tElementList, empty), 1, 200) & return after tValue
       end repeat
       delete the last char of tValue
    end if

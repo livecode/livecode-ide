@@ -330,55 +330,56 @@ command addLines pNumberToAdd
 end addLines
 
 command updateCompilationErrors pContext
-  local tObject
-  if pContext["object"] is not empty then
-    put pContext["object"] into tObject
-  else
-    getObject
-    put the result into tObject
-  end if
-  if tObject is empty then
-    exit updateCompilationErrors
-  end if
+   local tObject
+   if pContext["object"] is not empty then
+      put pContext["object"] into tObject
+   else
+      getObject
+      put the result into tObject
+   end if
    
-  # Remove previous compilation errors
-  if pContext["errorImages"] is not empty then
-    repeat for each line tImageId in pContext["errorImages"]
-      delete image id tImageId of me
-    end repeat
-  else
-    clearCompilationErrors  
-  end if
+   if there is not a tObject then
+      return "object does not exist" for error
+   end if
    
-  local tHorizontal
-  put item 1 of the loc of me into tHorizontal
+   # Remove previous compilation errors
+   if pContext["errorImages"] is not empty then
+      repeat for each line tImageId in pContext["errorImages"]
+         delete image id tImageId of me
+      end repeat
+   else
+      clearCompilationErrors  
+   end if
    
-  local tErrorNumber
-  put 1 into tErrorNumber
+   local tHorizontal
+   put item 1 of the loc of me into tHorizontal
    
-  local tVertical
-  local tDescription, tLine, tToken
-  repeat for each line tError in sErrors[seGetRuggedId(tObject)]
-    put seErrorDescription("compilation", item 1 of tError) into tDescription
-    put item 2 of tError into tLine
-    put item 4 to -1 of tError into tToken
-    put lineNumberToVerticalLoc(tLine) into tVertical
-    if tVertical is 0 then
-      # If 0 it means that the line number of the error is not within the gutter's current bounds
-      next repeat
-    end if
-     
-    local tImage
-    copy getErrorImageId() to group "Mutables" of me
-    put the long id of it into tImage
-    set the cError of tImage to true
-    set the cLine of tImage to tLine
-    set the tooltip of tImage to "Error (line " & tLine & "): " & tDescription
-    set the loc of tImage to tHorizontal, tVertical
-    set the name of tImage to "Error " & tErrorNumber
-     
-    add 1 to tErrorNumber
-  end repeat
+   local tErrorNumber
+   put 1 into tErrorNumber
+   
+   local tVertical
+   local tDescription, tLine, tToken
+   repeat for each line tError in sErrors[seGetRuggedId(tObject)]
+      put seErrorDescription("compilation", item 1 of tError) into tDescription
+      put item 2 of tError into tLine
+      put item 4 to -1 of tError into tToken
+      put lineNumberToVerticalLoc(tLine) into tVertical
+      if tVertical is 0 then
+         # If 0 it means that the line number of the error is not within the gutter's current bounds
+         next repeat
+      end if
+      
+      local tImage
+      copy getErrorImageId() to group "Mutables" of me
+      put the long id of it into tImage
+      set the cError of tImage to true
+      set the cLine of tImage to tLine
+      set the tooltip of tImage to "Error (line " & tLine & "): " & tDescription
+      set the loc of tImage to tHorizontal, tVertical
+      set the name of tImage to "Error " & tErrorNumber
+      
+      add 1 to tErrorNumber
+   end repeat
 end updateCompilationErrors
 
 
@@ -475,6 +476,10 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
    else
       getObject
       put the result into tObject
+   end if
+   
+   if there is not a tObject then
+      return "object does not exist" for error
    end if
    
    if pTextChanged then
