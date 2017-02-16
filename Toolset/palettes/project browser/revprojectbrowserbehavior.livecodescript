@@ -746,7 +746,6 @@ on goToObject pObjectID
       exit goToObject
    end if
    
-   lock messages
    if word 1 of pObjectID is "stack"  then
       if not the visible of pObjectID then show pObjectID
       go pObjectID 
@@ -757,7 +756,6 @@ on goToObject pObjectID
       go ideStackOfObject(pObjectID)
       revIDESelectObjects pObjectID
    end if
-   unlock messages
 end goToObject
 
 ########### Footer actions ############

@@ -34,6 +34,10 @@ on openStack
    unlock screen
 end openStack
 
+on closeStack
+   send "popupDismissed" to sTarget in 0 millisecs
+end closeStack
+
 on editorValueChanged pProperty, pValue, pLockUpdates
    try
       dispatch "valueChanged" to sTarget with pProperty, pValue
