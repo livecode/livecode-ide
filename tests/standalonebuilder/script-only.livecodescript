@@ -86,22 +86,21 @@ private command _TestScriptOnlyDeployStack pWhich
    
    revIDESaveStack tStackID	
 
-   _TestBuildStandalone tStackFilename
+   local tExePath
+   _TestBuildStandalone tStackFilename, tExePath
    if the result is not empty then
       TestAssert "building standalone", false
       exit _TestScriptOnlyDeployStack
    end if
    
    TestAssert "building standalone", true
+    
+   TestDiagnostic "location" && tExePath
    
-   local tExe
-   put StandaloneBuilderExecutable(tStackName) into tExe   
-   TestDiagnostic "location" && tExe
-   
-   TestAssert "standalone in expected location", there is a file tExe
+   TestAssert "standalone in expected location", there is a file tExePath
    
    local tResult, tShellCmd
-   put quote & tExe & quote into tShellCmd
+   put quote & tExePath & quote into tShellCmd
    if the environment contains "command line" then
       put " -ui" after tShellCmd
    end if
@@ -118,13 +117,13 @@ private command _TestScriptOnlyDeployStack pWhich
    revDeleteFolder tDir
 end _TestScriptOnlyDeployStack
 
-private command _TestBuildStandalone pStackPath
+private command _TestBuildStandalone pStackPath, @rStandalonePath
 	local tStackName, tResult
 	put the short name of stack pStackPath into tStackName
 	
 	TestDiagnostic "Building standalone -" && pStackPath
 	
-	StandaloneBuilderSaveAsStandalone tStackName
+	StandaloneBuilderSaveAsStandalone tStackName, rStandalonePath
 	return the result
 end _TestBuildStandalone
 
