@@ -1,15 +1,19 @@
-﻿script "revdatabaselibrary"
+script "revdatabaselibrary"
 
 on revLoadLibrary
    if the target is not me then
       pass "revLoadLibrary"
    end if	
    insert the script of me into front
-    -- MW-2009-07-09: We only do this if we are in a standalone environment
-    -- ( note that 'runtime' check can be removed if you reading this :o) )
-	if the environment is not "browser" and the environment is not "player" and the environment is not "runtime" then
-   		revDBInit
-   	end if
+
+   -- If we are running in development mode, we must set the driver path
+   if the environment is "development" then
+      if revEnvironmentIsInstalled() then
+         revSetDatabaseDriverPath revEnvironmentExternalsPath() & slash & "Database Drivers"
+      else
+         revSetDatabaseDriverPath revEnvironmentBinariesPath()
+      end if
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
@@ -2383,27 +2387,3 @@ private command log pMessage
   --put pMessage & return after msg
 end log
 
-# OK-2007-09-24 : Legacy driver support. Rewrote this handler as it seemed to have deprecated code, the old handler is 
-# commented out above.
-command revDBInit
-   try
-      if the environment is "development" then
-         local tDataPath
-         if the cREVUseLegacyDrivers of stack "revPreferences" then
-            put revEnvironmentUserExternalsPath() & "/Legacy/Database Drivers" into tDataPath
-         else
-            put revEnvironmentExternalsPath() & "/Database Drivers" into tDataPath
-         end if
-         
-         local tRootPath
-         put revEnvironmentUserExternalsPath() Into tRootPath
-         if there is a folder tRootPath then 
-            put return & tRootPath & "/Database Drivers" after tDataPath
-         end if
-      else
-         put specialfolderpath("engine") & slash & "Externals/database_drivers" into tDataPath
-      end if
-      
-      revSetDatabaseDriverPath tDataPath
-   end try
-end revDBInit
