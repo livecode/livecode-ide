@@ -1859,6 +1859,10 @@ end revMenubarViewMenu
 
 private function revMenubarDevelopmentMenu pContext
    global gREVSuppressErrors, gREVSuppressMessages
+   
+   local tIsUserTarget
+   put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
+   
    local tDevelopment
    put "Plugins" & return after tDevelopment
    if sPluginMenuText is not empty then
@@ -1869,6 +1873,18 @@ private function revMenubarDevelopmentMenu pContext
    put "-" & return after tDevelopment
    put revMenubarSimulatorSubmenu() after tDevelopment
    put "-" & return after tDevelopment   
+   
+   if there is a stack "com.livecode.script-library.scriptprofiler" then
+      local tProfiler
+      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      if tProfiler is among the lines of the backScripts then
+         put enableMenuItem("Start Profiling Scripts", tIsUserTarget) & return after tDevelopment
+      else
+         put enableMenuItem("Stop Profiling Scripts...", tIsUserTarget) & return after tDevelopment
+      end if
+      put "-" & return after tDevelopment
+   end if
+   
    put toggleMenuItem("Script Debug Mode", revDebuggerEnabled()) & return after tDevelopment
    put"Clear All Breakpoints" & return after tDevelopment
    put "Message Watcher" & return after tDevelopment
@@ -1994,6 +2010,18 @@ function revMenubarStackContextMenu pStack, pIndent
    put tIndent & "Standalone Application Settings..." & return after tText
    put tIndent & "Save As Standalone Application..." & return after tText
    put tIndent & "-" & return after tText
+   
+   if there is a stack "com.livecode.script-library.scriptprofiler" then
+      local tProfiler
+      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      if tProfiler is among the lines of the backScripts then
+         put tIndent & "Start Profiling Scripts" & return after tText
+      else
+         put tIndent & "Stop Profiling Scripts..." & return after tText
+      end if
+      put tIndent & "-" & return after tText
+   end if
+   
    put revMenubarSendContextMenu(pStack, pIndent) after tText
    put revMenubarAdditionalContextMenu(pIndent) after tText
    
@@ -2552,6 +2580,12 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Save As Standalone Application..."
          revIDESaveAsStandalone tTargetStack
          break
+      case "Start Profiling Scripts" 
+         scriptprofilerStartProfiler the short name of tTargetStack
+         break
+      case "Stop Profiling Scripts..." 
+         scriptprofilerStopProfiler
+         break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
          revIDEAlignControls pTarget, item 2 of pWhich 
@@ -2967,6 +3001,12 @@ on revMenubarDevelopmentMenuPick pWhich
                revIDEOpenPlugin tPicked
                break
          end switch
+         break
+      case "Start Profiling Scripts" 
+         scriptprofilerStartProfiler the short name of the topStack
+         break
+      case "Stop Profiling Scripts..." 
+         scriptprofilerStopProfiler
          break
    end switch
 end revMenubarDevelopmentMenuPick

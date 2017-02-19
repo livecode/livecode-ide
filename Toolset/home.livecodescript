@@ -1212,8 +1212,9 @@ command revInternal__InitialiseLibraries
  
    if the editionType is "professional" then
       put return & "remotedebugger" after tLoadList 
+      put return & "scriptprofiler" after tLoadList 
    end if
-
+   
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
    put return & "revsaveasstandalone" after tBackList
