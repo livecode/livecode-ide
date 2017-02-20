@@ -629,9 +629,9 @@ The first step is to [register](https://livecode.com/account/developer/register)
 
 LiveCode Extensions must have unique identifiers. These identifiers use reverse domain notation.
 
-You can sign up on this page for a LiveCode Community developer ID. Having a developer ID will allow you to use extension identifiers of the form: community.livecode.developerID.extensionName
+You can sign up on this page for a LiveCode Community Developer ID. Having a developer ID will allow you to use extension identifiers of the form: `community.livecode.developerID.extensionName`.
 
-Choose the Developer ID you want to use here, if your chosen ID is already in use you will be asked to choose a different one.
+Choose the Developer ID you want to use here. If your chosen ID is already in use you will be asked to choose a different one.
 
 ### Uploading Extensions to the Store
 
@@ -640,17 +640,16 @@ To upload a packaged extension to the store log in to your LiveCode account and 
 Any extensions you have uploaded will be shown here, and you have the option to add new extensions.
 
 - Click the "Add New Extension" button (if available)
-- Drag your packaged extension (.lce) file into the upload area
+- Drag your packaged extension (`.lce`) file into the upload area
+- When the extension has uploaded it will appear in your list
 
 ![enter image description here](images/extensions-upload.png)
-
-- When the extension has uploaded it will appear in your list
 
 ### Activating your Extension
 
 When an extension is first uploaded it is not active so will not show in the Extension Store.
 
-To activate your extension click "activate" under Status, at this stage you will be warned if any information is missing and you can add it by clicking the "Edit" button.
+To activate your extension click "activate" under Status. At this stage you will be warned if any information is missing and you can add it by clicking the "Edit" button.
 
 ![enter image description here](images/extensions-activate.png)
 
@@ -662,7 +661,7 @@ You can view and downlaod extensions via the Extension Store. To see the extensi
 
 ![enter image description here](images/extensions-store.png)
 
-You can also download extension from the [Widget Store](https://livecode.com/products/widgets/) on the LiveCode website and install the downloaded extension using the Extension Manager.
+You can also download extensions from the [Widget Store](https://livecode.com/products/widgets/) on the LiveCode website then install the downloaded extension using the Extension Manager.
 
 ## Other ways to extend the Built-in Capabilities
 
