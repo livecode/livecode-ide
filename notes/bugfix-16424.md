@@ -1,0 +1,1 @@
+# interobject links in geometry manager not active
