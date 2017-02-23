@@ -7,4 +7,5 @@ group-order:
 	- deployment
 	- advanced
 	- reference
+	- other
 ---
