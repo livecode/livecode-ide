@@ -391,7 +391,20 @@ on closeStackRequest
    -- closeStackRequest is sent to the card, so the owner of the target is the stack
    put the long id of the owner of the target into tLongID
    if not revIDEStackIsIDEStack(tLongID) then   
-      send "ideMessageSendWithTrigger" &&  "ideCloseStackRequest, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
+      send "ideMessageSendWithParameters" &&  "ideCloseStackRequest, tLongID, tLongID" to stack "revIDELibrary" in 0 milliseconds
    end if
    pass closeStackRequest
 end closeStackRequest
+
+on msgChanged pHandler, pLine
+   local tTarget
+   put the long id of the target into tTarget
+   
+   local tParams
+   put tTarget into tParams[1]
+   put pHandler into tParams[2]
+   put pLine into tParams[3]
+   put msg into tParams[4]
+   send "ideMessageSendWithParameters" &&  "ideMsgChanged, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
+   pass msgChanged
+end msgChanged
