@@ -364,10 +364,10 @@ The User Guides are a complete reference to LiveCode. They detail what the dialo
 
 RevOnline gives you the opportunity to upload and share your projects as
 well as download those created by other members of the LiveCode online
-community. It can be accessed via the RevOnline button located in the
+community. It can be accessed via the Sample Stacks button located in the
 menu bar. The main interface can be seen below:
 
-![](images/image13.png)
+![](images/revonline-main.png)
 
 The interface is designed to organise the online content into various
 categories to aid you in finding the kind of content you wish to
@@ -378,7 +378,7 @@ using a lower level language. A code snippet is a portion of LiveCode
 script that you can paste into and incorporate into your own projects.
 
 The results of searching or browsing through the RevOnline content are
-displayed in the *search list* area. This is an explaination of the
+displayed in the *search list* area. This is an explanation of the
 controls you can use to adjust the parameters of your search:
 
 | &nbsp;| &nbsp;|
@@ -391,18 +391,18 @@ controls you can use to adjust the parameters of your search:
 | **View mode**       | The search list area can be viewed in two modes, a vertical scrolling list or a grid. In “list” mode 10 results will be displayed per page, in “grid” mode the number of results displayed will be dependent upon the size of the RevOnline stack. Whilst in “grid” mode the *viewing pane* area will not be visible.         |
 | **User filter**     | If you apply user filter to a search, the user’s name will appear above the type and tag lists (see below), subsequently only content by that user will be returned in the search results. Clicking on the button or text of the user filter will remove it.                                                                  |
 
-![](images/image14.png)
+![](images/revonline-user-filter.png)
 
 The *search list* area displays a preview of the results your search has
 returned. At the top of this list you will see the *page controls* which
 allow you to navigate forwards and backwards through the pages of your
 search should it return more results than can be displayed on one page.
 
-![](images/image15.png)
+![](images/revonline-page-list.png)
 
 An example of the search list previews can be seen below:
 
-![](images/image16.png)
+![](images/revonline-list-preview.png)
 
 At the top of the preview is the content’s name. You can also see its
 average user rating out of five stars, the total number of times it has
@@ -428,7 +428,7 @@ in the *viewing pane*.
 
 The *viewing pane* displays detailed information on users and uploads.
 
-![](images/image20.png)
+![](images/revonline-view-pane.png)
 
 If you are a viewing stack details as shown above, in addition to the
 information provided by the preview you will also see a headline,
@@ -463,7 +463,8 @@ text feedback in response to the operations you perform such as
 In the top right corner of RevOnline you will find the *login controls*
 which will display your current login status as shown below:
 
-![](images/image22.png)
+![](images/revonline-login-status-not-logged-in.png)
+![](images/revonline-login-status-logged-in.png)
 
 In order to upload, rate and tag content in RevOnline you must have an
 account, this account is also required for making comments in the wiki
@@ -475,7 +476,7 @@ must hit the activation link in the email before your account can be
 accessed. Once activated, you can login to your account using the “Log
 In” control pictured above which will bring up the following dialog:
 
-![](images/image23.png)
+![](images/revonline-login-dialog.png)
 
 The “Remember me” check box will cause RevOnline to maintain your
 username in the “Email :” field between login attempts. The “Sign in
@@ -491,7 +492,7 @@ opportunity to enter information about into the highlighted fields and
 change your profile picture using the *change profile picture* control
 as shown below:
 
-![](images/image24.png)
+![](images/revonline-account-details.png)
 
 Clicking on the *change profile picture* control will bring up the
 following dialog:
@@ -519,7 +520,7 @@ To upload content to RevOnline simply click on the “upload content” in
 the *login controls,* you will then be presented with the content
 browser view.
 
-![](images/image26.png)
+![](images/revonline-content-browser-code.png)
 
 Clicking on the tabs at the top of this view will change the content
 type. Above you can see the code snippet view, it simply requires you to
@@ -533,7 +534,7 @@ to upload (shown below). The default file types for extensions on each
 platform are; “.dll” for Windows , “.bundle” for Mac OS X and “.so” for
 Linux.
 
-![](images/image27.png)
+![](images/revonline-content-browser-external.png)
 
 When uploading a code snippet or external RevOnline will place the code
 or file into an installer stack. The installer stacks give you the
@@ -553,9 +554,9 @@ Whenever you are viewing content that you have uploaded or your own
 profile whilst logged in the edit controls will appear above the
 *viewing pane*, shown below:
 
-![](images/image28.png)
+![](images/revonline-edit-stack.png)
 
-By clicking on the “edit profile” or “edit content” (for stacks etc.)
+By clicking on the “edit profile” or “edit stack” (for stacks etc.)
 button you are entering edit mode which allows you to make changes to
 the information shown. When editing your profile you can simply save or
 discard the changes you have made. When editing an upload you have the
@@ -567,11 +568,14 @@ present you with the content browser view discussed earlier. After you
 have chosen a replacement file you need to save your changes in order
 for the new file to be submitted.
 
-![](images/image29.png)
+![](images/revonline-edit-content-controls.png)
 
 The list of tags applied to your own uploads can be altered by using the
-“Add/Delete tags” control (shown above) which will bring up the
-following dialog:
+“Add/Delete tags” control 
+
+![](images/revonline-add-delete-tags.png)
+
+which will bring up the following dialog:
 
 ![](images/image30.png)
 
@@ -588,7 +592,7 @@ can submit your changes by clicking the ok button.
 Additional options for the RevOnline interface can be set in the
 RevOnline tab of the preferences stack. As pictured below:
 
-![](images/image31.png)
+![](images/revonline-preferences.png)
 
 Here you can set the remember password and user name preferences and
 change your password to one of your choosing. The search results in
@@ -989,9 +993,7 @@ With LiveCode’s built in *Database Library*, your application can
 communicate with external SQL databases. You can get data from
 single-user and multi-user databases, update data in them, get
 information about the database structure, and display data from the
-database in your stack. With the Database Query Builder, you can
-automate the process of querying a database and populating fields with
-the data, with no coding required.
+database in your stack. 
 
 For more details on working with databases, see the 
 *Working with Databases* guide.
@@ -1046,7 +1048,7 @@ briefly on some tips for good user interface design.
 The main tools palette allows you to change between Edit and Run mode, 
 create objects, and edit bitmap images with the paint tools.
 
-![](images/image54.png)
+![](images/script-build-ui-tools-palette.png)
 
 Figure 13 - The Main Tools Palette
 
@@ -1070,7 +1072,7 @@ sections of the tools palette.
 
 #### Alignment & Layering
 
-![](images/image55.png)
+![](images/script-build-ui-size-position.png)
 
 Figure 14 – Size & Position Inspector
 
@@ -1086,7 +1088,7 @@ Figure 14 – Size & Position Inspector
 Use the Align Objects Inspector to resize objects relative to other
 objects, to reposition objects and/or to relayer objects.
 
-![](images/image56.png)
+![](images/script-build-ui-align-objects.png)
 
 Figure 15 – Align Objects Inspector
 
@@ -1201,7 +1203,10 @@ document window. It can be interleaved with other windows, and you can
 use any of LiveCode's tools to create, select, move, or delete objects
 in the stack.
 
-![](images/image57.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-editable-stack-mac.png) |  ![](images/script-build-ui-editable-stack-win.png) | ![](images/script-build-ui-editable-stack-linux.png) |
+| Mac | Windows | Linux |
 
 Figure 16 – Editable Document Windows on Multiple Platforms
 
@@ -1228,7 +1233,11 @@ windows, they can be interleaved with other windows in the application.
 Their appearance may differ slightly from the appearance of editable
 windows, depending on the platform.
 
-![](images/image58.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-modeless-stack-mac.png) |  ![](images/script-build-ui-modeless-stack-win.png) | ![](images/script-build-ui-modeless-stack-linux.png) |
+| Mac | Windows | Linux |
+
 
 Figure 17 – Modeless Dialog Boxes on Multiple Platforms
 
@@ -1255,7 +1264,10 @@ using the tools in the Tools palette. While a modal dialog box is being
 displayed, the handler that displayed it pauses until the dialog box is
 closed.
 
-![](images/image59.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-modal-stack-mac.png) |  ![](images/script-build-ui-modal-stack-win.png) | ![](images/script-build-ui-modal-stack-linux.png) |
+| Mac | Windows | Linux |
 
 Figure 18 – Modal Dialog Boxes on Multiple Platforms
 
@@ -1283,7 +1295,11 @@ A palette has a slightly different appearance, with a narrower title bar
 than an editable window. Like dialog box windows, a palette does not
 allow use of tools other than the Browse tool.
 
-![](images/image60.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-palette-stack-mac.png) |  ![](images/script-build-ui-palette-stack-win.png) | ![](images/script-build-ui-palette-stack-linux.png) |
+| Mac | Windows | Linux |
+
 
 Figure 19 – Palette Windows on Multiple Platforms
 
@@ -1317,7 +1333,11 @@ operating system. However, if you do require more flexibility than is
 provided in this dialog, you should create your own modal dialog box
 instead (see above).
 
-![](images/image61.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-ask-dialog-mac.png) |  ![](images/script-build-ui-ask-dialog-win.png) | ![](images/script-build-ui-ask-dialog-linux.png) |
+| Mac | Windows | Linux |
+
 
 Figure 20 – Ask Question Dialog Boxes on Multiple Platforms
 
@@ -1361,7 +1381,11 @@ dialog, the font, object positions, button order and icon will
 do require more flexibility than is provided in this dialog, you should
 create your own modal dialog box instead (see above).
 
-![](images/image63.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-answer-dialog-mac.png) |  ![](images/script-build-ui-answer-dialog-win.png) | ![](images/script-build-ui-answer-dialog-linux.png) |
+| Mac | Windows | Linux |
+
 
 Figure 22 – Answer Dialogs on Multiple Platforms
 
@@ -1458,7 +1482,7 @@ For complete details on the syntax, see answer folder in the
 The **answer color** dialog allows you to display the operating system’s
 standard color picker dialog.
 
-![](images/image67.png)
+![](images/script-build-ui-answer-color.png)
 
 Figure 26 – Answer color dialog for choosing a color 
 
@@ -1499,7 +1523,7 @@ window to block as a dialog, float as a palette, etc.
 > methods of dragging and closing the window if you want the user to be
 > able to do these tasks.
 
-![](images/image70.png)
+![](images/script-build-ui-window-shape.png)
 
 Figure 29 – Window with alpha mask applied
 
@@ -1513,7 +1537,7 @@ all windows on the screen, not just the windows in its application. Use
 system palettes for utilities that you want the user to be able to see
 and access in every application.
 
-![](images/image71.png)
+![](images/script-build-ui-system-window.png)
 
 Figure 30 – System Window floating above other applications
 
@@ -1524,46 +1548,6 @@ feature, see the entry for systemWindow in the *LiveCode Dictionary*.
 Using this feature overrides the stack's **style** or **mode**.
 
 The system palette style is currently not supported on Linux & Unix.
-
-#### Sheet dialog boxes – Mac OS X only
-
-A sheet is like a modal dialog box, except that it is associated with a
-single window, rather than the entire application. A sheet appears
-within its parent window, sliding from underneath the title bar. While
-the sheet is displayed, it blocks other actions in its parent window,
-but not in other windows in the application.
-
-To display a stack in a sheet dialog box, you use the **sheet** command:
-
-	sheet "My Stack" -- appears in defaultStack
-	sheet "My Stack" in stack "My Document"
-
-> **Note:** Note the **answer**, **answer file**, **answer folder**,
-> **ask**, **ask file**, and **answer folder** commands (see above) all
-> include an ...as sheet form, so you can display these dialog boxes as
-> sheets on Mac OS X. You can safely use the ‘as sheet’ form on
-> cross-platform application as on systems other than OS X, the
-> **sheet** command displays the stack as an ordinary modal dialog box.
-
-#### Drawers – Mac OS X only
-
-A drawer is a subwindow that slides out from underneath one edge of a
-window, and slides back in when you close it. You usually use a button
-in the main window to open and close a drawer.
-
-To display a stack as a drawer, you use the **drawer** command:
-
-	drawer "My Stack" at left *-- of defaultStack*
-	drawer "My Stack" at bottom of stack "My Document"
-
-On systems other than OS X, the **drawer** command displays the stack as
-an editable window. Because this does not map well to other platforms,
-we recommend you only use drawers for applications that are only being
-developed for Mac OS X.
-
-Use drawers to hold settings, lists of favorites, and similar controls
-that are accessed frequently but that don't need to be constantly
-visible.
 
 #### Stack menus – for displaying non-standard menus
 
@@ -1618,7 +1602,12 @@ platform.
 A button is a clickable object that is typically for allowing a user to
 perform an action by clicking.
 
-![](images/image73.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-standard-button-mac.png) |  ![](images/script-build-ui-standard-button-win.png) | ![](images/script-build-ui-standard-button-linux.png) |
+| ![](images/script-build-ui-default-button-mac.png) |  ![](images/script-build-ui-default-button-win.png) | ![](images/script-build-ui-default-button-linux.png) |
+| ![](images/script-build-ui-rectangle-button-mac.png) |  ![](images/script-build-ui-rectangle-button-win.png) | ![](images/script-build-ui-rectangle-button-linux.png) |
+| Mac | Windows | Linux |
 
 Figure 32 – Button Objects on Multiple Platforms
 
@@ -1632,7 +1621,11 @@ options may be turned on and others may be off.
 > a group. For more details on groups, see the section on 
 > *Groups and Backgrounds*.
 
-![](images/image74.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-check-box-mac.png) |  ![](images/script-build-ui-check-box-win.png) | ![](images/script-build-ui-check-box-linux.png) |
+| ![](images/script-build-ui-radio-button-mac.png) |  ![](images/script-build-ui-radio-button-win.png) | ![](images/script-build-ui-radio-button-linux.png) |
+| Mac | Windows | Linux |
 
 Figure 33 – Check Boxes and Radio Buttons on Multiple Platforms
 
@@ -1967,7 +1960,14 @@ For more details on working with and scripting menus in general, see the
 section *Working with Menus* in the *Programming a User Interface* 
 guide.
 
-![](images/image82.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-pulldown-menu-mac.png) |  ![](images/script-build-ui-pulldown-menu-win.png) | ![](images/script-build-ui-pulldown-menu-linux.png) |
+| ![](images/script-build-ui-option-menu-mac.png) |  ![](images/script-build-ui-option-menu-win.png) | ![](images/script-build-ui-option-menu-linux.png) |
+| ![](images/script-build-ui-combo-box-mac.png) |  ![](images/script-build-ui-combo-box-win.png) | ![](images/script-build-ui-combo-box-linux.png) |
+| ![](images/script-build-ui-popup-menu-mac.png) |  ![](images/script-build-ui-popup-menu-win.png) | ![](images/script-build-ui-popup-menu-linux.png) |
+| Mac | Windows | Linux |
+
 
 Figure 41 – Menu Controls
 
@@ -1996,7 +1996,11 @@ groups as these can display a built-in scroll bar.) Sliders and
 scrollbars can be displayed both horizontally and vertically – to
 display vertically, resize so that the height is greater than the width.
 
-![](images/image84.png)
+| &nbsp;| &nbsp;| &nbsp;|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](images/script-build-ui-progress-bar-mac.png) |  ![](images/script-build-ui-progress-bar-win.png) | ![](images/script-build-ui-progress-bar-linux.png) |
+| ![](images/script-build-ui-scrollbar-mac.png) |  ![](images/script-build-ui-scrollbar-win.png) | ![](images/script-build-ui-scrollbar-linux.png) |
+| ![](images/script-build-ui-slider-mac.png) |  ![](images/script-build-ui-slider-win.png) | ![](images/script-build-ui-slider-linux.png) |
 
 Figure 43 – Scrollbars
 
@@ -2011,7 +2015,7 @@ details, see the section on *Programming a User Interface*.
 
 Choose **Tools -\> Menu Builder** to open the Menu Builder.
 
-![](images/image85.png)
+![](images/script-build-ui-menu-builder.png)
 
 Figure 44 – Menu Builder
 
@@ -2028,7 +2032,7 @@ Figure 44 – Menu Builder
 Use the Geometry Manager to specify how objects should be scaled and 
 positioned when the user resizes the window.
 
-![](images/image86.png)
+![](images/script-build-ui-geometry-manager.png)
 
 Figure 45 – The Geometry Manager
 
@@ -2039,39 +2043,6 @@ Figure 45 – The Geometry Manager
 | **Clipping settings** | Turn on Prevent Object Clipping Text to prevent the control getting too small to display its label when the window is resized. If the control is a field, you can also turn on the option to display scroll bars if the text within the field does not fit. |
 | **Limit settings**    | Allows you to set the minimum and maximum possible widths and heights for the object.                                                                                                                                                                       |
 | **Remove All**        | Removes all Geometry settings from the control. Use this option if the settings you have applied do not give the desired effect and you want to start over.                                                                                                 |
-
-The Geometry Card Settings options can be accessed from within the Card
-Property Inspector. Use these options to determine how Geometry is
-applied to the controls within the current card.
-
-![](images/image87.png)
-
-Figure 46 – Geometry Card Settings
-
-| &nbsp;| &nbsp;|
-|------------------------------------------|-----------|
-| **Add to cards virtual width or height** | Use this option to implement a layout that allows a section of optional controls to be folded out. The Geometry manager will ignore the extra height or width pixels specified in this area, resizing objects as if that area of the card has not been "expanded". Normally these values are set by script as the window is resized to fold out additional controls. To set these properties by script, set the **cREVGeneral["virtualWidth"]** or **cREVGeneral["virtualHeight"]** card properties. |
-| **Update before opening card**           | Causes the objects to be resized when navigating to the card if the window has been resized while on another card. This option is not needed if the controls are contained within a background that has already been correctly resized to the current window dimensions.                                                                                                                                                                                                                             |
-
-### Using Property Profiles
-
-Use Property Profiles to store different sets of properties in a single
-object. Property Profiles can be used to provide *localized* versions of
-your application, or different *themes* or skins.
-
-![](images/image88.png)
-
-Figure 47 – Property Profiles
-
-| &nbsp;| &nbsp;|
-|------------------------------------|-----------------|
-| **Create, delete or set Profiles** | The icons from left to right allow you to *duplicate*, *delete* or*create* a new profile for the currently selected object. The *Set all* button allows you to set all the objects on the current card or stack to the profile currently selected in Profile selector area.<br><br>When creating a new profile, ensure you choose a name that is *valid as a variable* and not a reserved LiveCode word. Use consistent names to allow you to create a theme or language and set all the objects in your card or stack to the same profile.<br><br>When you create a new profile, LiveCode automatically switches the object to use that profile. There are two ways to include new property settings in a profile: by using the property inspector to specify the properties you want to include, and by changing the properties directly while the profile is active.<br><br>If you make changes to the properties of the object, the profile editor will track the changes and save those into the current Profile. Any properties that have not been set for the current profile will be *inherited* from the Master profile. The profiles system supports all common object properties including styled text and Geometry information. However it does not store properties that duplicate each other (e.g. only the `rect`value will be stored, not the object’s left, right or other location properties). Scripts and custom properties are also not stored by the profile editor. You can however write scripts that first check what profile is in use on the object before taking an action by checking the `revProfile` property of the object.<br><br>You can set profiles by script by setting the `revProfile` property. To set the entire card, stack or stack file, use `revSetcardProfile`, revSetStackProfile or `revSetStackFileProfile`commands respectively. To turn on the storage of new properties in the current profile and thus change profiles more rapidly, toggle the g`revProfile`ReadOnly global.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **Profile selector**               | Select a profile to change all the object’s properties to the values contained in that profile. Click the currently selected profile to update the list of properties stored for it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **Profiles properties**            | Displays a list of all properties that have been changed in the currently selected profile, and thus have a value unique to this profile. Select a property to see its contents. Press the *plus* icon to manually *add* a new property to the current profile. Delete the property from the current profile using the *delete* icon.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **Property contents**              | View and edit the contents of the currently selected property associated with the currently selected profile.<br><br>The Add Property dialog box lists all applicable properties, but the Property Profiles pane automatically eliminates redundant properties and property synonyms. For example, if you add the `backgroundColor`and foregroundColor properties, the Property Profiles pane displays the `colors`property instead the next time you re-open the property inspector. This is because the `colors`property contains all eight color settings of an object, so it's not necessary to store the individual color properties once they've been set.<br><br>To easily copy a property value from another profile, click the "Copy" button in the bottom section and choose the profile you want to copy from.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-
-For more details on working with *Property Profiles*, see the section on
-*Property Profiles* in the *Programming a User Interface* guide.
 
 ### 10 Tips for Good User Interface Design
 
