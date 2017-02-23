@@ -30,28 +30,27 @@ were only previously available to those who were skilled c/c++ developers.
 To learn more about LiveCode Builder and creating extensions, read on.
 
 > *Warning:* It is important to stress right at the start that 
-***no aspect of LiveCode Builder should be considered final***. 
-***Every piece of syntax in LiveCode Builder is subject to change***.
+> ***no aspect of LiveCode Builder should be considered final***. 
+> ***Every piece of syntax in LiveCode Builder is subject to change***.
 
 ### Creating LiveCode Builder Extensions
 
 We have provided a new "Extension Builder" stack to help make development and packaging of 
 extensions as easy as possible. 
 
-> **Note:** LiveCode Builder is a different flavour of LiveCode so it is not possible to 
-edit LiveCode Builder scripts in the main LiveCode Script IDE.
+> **Note:** LiveCode Builder is a different flavour of LiveCode so it is 
+> not possible to edit LiveCode Builder scripts in the main LiveCode 
+> Script IDE.
 
 ### Extension Builder
 
 Open the "Extension Builder" from the tools menu:
 
-```
-Tools > Widget Builder
-```
+	Tools > Extension Builder
 
-![enter image description here](images/extensions-plugin-overview.png)
+![Extension Builder plugin](images/extensions-plugin-overview.png)
 
-1. Select the extension you wish the develop or click the "open" icon in the header back to locate an extension you've not loaded before. All LiveCode authored widgets in the application package at: /contents/extensions/. To play with one of these extensions we recommend copying the folder from the application package to your desktop and loading it from there. Changing the extension id in the source code will also mean it doesn't conflict with the existing extension.
+1. Shows the currently selected extension. 
 2. Data that the builder was able to parse from the directory such as icons, resources, API's the user guides.
 3. Console: Shows status, error and log messages.
 4. Test: Creates a stack, compiles the extensions and creates an instance.
@@ -60,12 +59,17 @@ Tools > Widget Builder
 7. Uninstall: Uninstalls the extension from the IDE
 8. Package: Creates a .lce package which can uploaded to the extension store. It is placed in the extension directory
 
-> **Note:** A great way to get started is to tweak the script of one of our widgets examples.
-> 
+> **Note:** A great way to get started is to tweak the script of one of 
+> our widget examples.
 
-### Create your Own Simple Widget
-A widget and a library are identical, except that a widget draws to a canvas. As a result, 
-the authoring process is much the same for both extension types.
+Using the selection dropdown (1), you can select the extension you wish 
+to develop or click the "open" icon in the header back to locate an 
+extension you've not loaded before. 
+
+### Create your own simple widget
+The main difference between widgets and libraries is that a widget draws 
+to a pre-existing canvas. Apart from that, the authoring process is much 
+the same for both extension types.
 
 #### Create a .lcb file
 We recommend using the Atom text editor, available at https://atom.io/. A LiveCode package 
@@ -76,37 +80,39 @@ It should be placed in /Application Support/TextWrangler/Language Modules/
 Start by creating a plain text file in a new directory and save it to disk with the 
 extension "lcb":
 
-```
-/Desktop/widgettest/main.lcb
-```
+	/Desktop/widgettest/main.lcb
 
-> **Note:** The extension builder currently relies on there being only one ***.lcb*** file 
-in a given directory.	
+> **Note:** The extension builder currently relies on there being only 
+> one ***.lcb*** file in a given directory.	
 
 #### Declare Type and Identifier
 Start by declaring the type of extension, either "widget" or "library" followed by your 
 identifier (See "Select A Developer ID" below).
-```
-widget community.livecode.beaumont.pinkCircle
-   ## Code for your widget
-end widget
-```
+
+	widget community.livecode.beaumont.pinkCircle
+	   ## Code for your widget
+	end widget
+
 This is the unique identifier by which your extension will be referred to by the LiveCode 
 Engine.
 
-#### Declare Meta Data
-Next, provide meta data to help LiveCode display your product correctly in product and in 
-the online portal.
+> **Note:** All LiveCode authored widgets are in the application package 
+at /Tools/Extensions/. To play with one of these extensions we recommend 
+copying the folder from the application package to your desktop and 
+loading it from there. Changing the extension identifier in the source 
+code will ensure it doesn't conflict with the existing extension.
 
-```
-widget community.livecode.beaumont.pinkCircle
+#### Declare Metadata
+Next, provide metadata to help LiveCode display your widget correctly 
+in the IDE and in the online portal.
 
-metadata title is "My Pink Circle"
-metadata author is "Benjamin Beaumont"
-metadata version is "1.0.0"
+	widget community.livecode.beaumont.pinkCircle
 
-end widget
-```
+	metadata title is "My Pink Circle"
+	metadata author is "Benjamin Beaumont"
+	metadata version is "1.0.0"
+
+	end widget
 
 #### Importing libraries
 The LiveCode builder syntax is broken down into **modules**. There are 3 classes of module:
@@ -152,20 +158,17 @@ The new LiveCode dictionary has a full list of all available syntax as well as t
 each belongs to. As a general rule we recommend importing all three optional module 
 whenever developing widgets.
 
-```
-widget community.livecode.beaumont.pinkCircle
+	widget community.livecode.beaumont.pinkCircle
 
-use com.livecode.canvas
-use com.livecode.widget
-use com.livecode.engine
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
 
-metadata title is "My Pink Circle"
-metadata author is "Benjamin Beaumont"
-metadata version is "1.0.0"
+	metadata title is "My Pink Circle"
+	metadata author is "Benjamin Beaumont"
+	metadata version is "1.0.0"
 
-end widget
-```
-
+	end widget
 
 #### Core Handlers
 
@@ -181,48 +184,46 @@ OnLoad| The *OnLoad* message is sent when your widget is created and enables the
 
 For the most basic example, only the OnPaint() handler is required.
 
-```
-widget community.livecode.beaumont.pinkCircle
 
-metadata title is "My Pink Circle"
-metadata author is "Benjamin Beaumont"
-metadata version is "1.0.0"
+	widget community.livecode.beaumont.pinkCircle
 
-public handler OnPaint()
-   // Draw widget
-end handler
+	metadata title is "My Pink Circle"
+	metadata author is "Benjamin Beaumont"
+	metadata version is "1.0.0"
 
-end widget
-```
+	public handler OnPaint()
+	   // Draw widget
+	end handler
+
+	end widget
+
 
 #### Draw a Pink Circle
 
-```
-widget community.livecode.beaumont.pinkCircle
+	widget community.livecode.beaumont.pinkCircle
 
-metadata title is "My Pink Circle"
-metadata author is "Benjamin Beaumont"
-metadata version is "1.0.0"
+	metadata title is "My Pink Circle"
+	metadata author is "Benjamin Beaumont"
+	metadata version is "1.0.0"
 
-use com.livecode.canvas
+	use com.livecode.canvas
 
-public handler OnPaint()
-   // Create a path with a radius of half the width of the canvas
-   // Set the paint to a solid pink color
-   // Fill the path
-   variable tCirclePath as Path
-   put circle path centered at point [my width / 2, my height / 2] with radius (my width/2) into tCirclePath
-   set the paint of this canvas to solid paint with color [1, 0, 1]
-   fill tCirclePath on this canvas
-end handler
+	public handler OnPaint()
+	   // Create a path with a radius of half the width of the canvas
+	   // Set the paint to a solid pink color
+	   // Fill the path
+	   variable tCirclePath as Path
+	   put circle path centered at point [my width / 2, my height / 2] with radius (my width/2) into tCirclePath
+	   set the paint of this canvas to solid paint with color [1, 0, 1]
+	   fill tCirclePath on this canvas
+	end handler
 
-end widget
-```
+	end widget
 
 #### Test the Code
 
-Now open the extension builder stack as shown above and click on the load icon to load 
-your ***.lcb*** file into the builder.
+Now open the extension builder stack as shown above and click on the 
+folder icon at the top right to load your ***.lcb*** file into the builder.
 
 ![enter image description here](images/extensions-widget-first.png)
 
@@ -234,16 +235,13 @@ In order to make a widget useful to end users it is likely that you'll want to e
 properties that allow them to specify how your widget should behave. 
 
 To specify a property you must provide a name and the method to get and set the property.
-```
-property <name> get <variable/handler> set <variable/handler>
-```
+
+	property <name> get <variable/handler> set <variable/handler>
 
 The simplest properties to get/set are numbers or strings. So lets create a circleMargin 
 property that allows users to define a margin.
 
-```
-property circleMargin get mMargin set setMargin
-```
+	property circleMargin get mMargin set setMargin
 
 In the above example, when the ***circleMargin*** property is requested, the variable 
 "mMargin" is returned, when set, the handler "setMargin" is called. To have LiveCode 
@@ -251,33 +249,30 @@ Builder handle the getting/setting of data, provide the variable name, to take f
 control over the getting/setting process define handlers. In our case we're taking a mixed 
 approach.
 
-```
-private variable mMargin as Real
-```
+	private variable mMargin as Real
+
 
 We'll define a member variable to store the value for the margin. LiveCode Builder is typed 
 so you must also specify the type of your variable. Remember, the canvas you are drawing 
 to has subpixel precision so our margin can be a decimal number. As a result, we've chosen 
 to specify our margin as a real number. For a full list of types available in LiveCode 
-Builder please see the [Typing](#Typing) section of the language specification guide below. 
-We also suggest a naming convention for variables in the section on [variable and case sensitivity](#Case-Sensitivity).
+Builder please see the Typing section of the language specification guide. 
+We also suggest a naming convention for variables in the section on 
+variable and case sensitivity.
 
 We also need to insatiate our circleMargin to a default value. We do this by adding an 
-onCreate handler which is called when the widget is first created.
+OnCreate handler which is called when the widget is first created.
 
-```
-public handler setMargin(in pMargin as Real)
-	put pMargin into mMargin
-	redraw all
-end handler
-```
+	public handler OnCreate() 
+		put 0 into mMargin
+	end handler
+	
+Finally we have to implement our `setMargin` handler.
 
-Finally we have to implement our setMargin handler.
-```
-public handler onCreate() 
-	put 0 into mMargin
-end handler
-```
+	public handler setMargin(in pMargin as Real) returns nothing
+		put pMargin into mMargin
+		redraw all
+	end handler
 
 Implementing the "setter" ourselves provides us with a little more flexibility. In this 
 case when the property is set we want our pink circle to immediately redraw to reflect the 
@@ -285,81 +280,72 @@ property change. We do this by calling "redraw all".
 
 To test the property click "test" and from the message box set the property.
 
-```
-set the cicleMargin of widget 1 to 15
-```
+	set the cicleMargin of widget 1 to 15
 
 **Full Example**
-```
-widget community.livecode.beaumont.pinkCircle
 
-metadata title is "My Pink Circle"
-metadata author is "Benjamin Beaumont"
-metadata version is "1.0.0"
+	widget community.livecode.beaumont.pinkCircle
 
-use com.livecode.canvas
-use com.livecode.widget
-use com.livecode.engine
+	metadata title is "My Pink Circle"
+	metadata author is "Benjamin Beaumont"
+	metadata version is "1.0.0"
 
-// Properties
-property circleMargin get mMargin set setMargin
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
 
-// Local variables
-private variable mMargin as Real
+	// Properties
+	property circleMargin get mMargin set setMargin
 
-public handler onCreate() 
-	put 0 into mMargin
-end handler
+	// Local variables
+	private variable mMargin as Real
 
-public handler OnPaint()
-   // Create a path with a radius of half the width of the canvas
-   // Set the paint to a solid pink color
-   // Fill the path
-   variable tCirclePath as Path
-   put circle path centered at point [my width / 2, my height / 2] with radius ((my width - mMargin)/2) into tCirclePath
-   set the paint of this canvas to solid paint with color [1, 0, 1]
-   fill tCirclePath on this canvas
-end handler
+	public handler onCreate() 
+		put 0 into mMargin
+	end handler
 
-public handler setMargin(in pMargin as Real)
-	put pMargin into mMargin
-	redraw all
-end handler
+	public handler OnPaint()
+	   // Create a path with a radius of half the width of the canvas
+	   // Set the paint to a solid pink color
+	   // Fill the path
+	   variable tCirclePath as Path
+	   put circle path centered at point [my width / 2, my height / 2] with radius ((my width - mMargin)/2) into tCirclePath
+	   set the paint of this canvas to solid paint with color [1, 0, 1]
+	   fill tCirclePath on this canvas
+	end handler
+
+	public handler setMargin(in pMargin as Real)
+		put pMargin into mMargin
+		redraw all
+	end handler
 	
-end widget
-```
+	end widget
 
 #### Loading and Saving widget data
 When your widget is created you are sent an *OnSave* message. It has the following structure 
 and expects and array return type. You can fill this array with whatever widget data you 
 have. LiveCode saves this data along with instances of the widget in the stack file.
 
-```
-public handler OnSave(out rProperties as Array)
-	put the empty array into rProperties
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
 	
-	put mMargin into rProperties["margin"]
+		put mMargin into rProperties["margin"]
 	
-	return rProperties
-end handler
-```
+		return rProperties
+	end handler
 
 This same array will be returned to you when the widget is next opened.
 
-```
-public handler OnLoad(in pProperties as Array)
-	put pProperties["margin"] into mMargin
-end handler
-```
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["margin"] into mMargin
+	end handler
 
 #### Understanding Error Messages
 Clicking on the "test" button causes the extension builder to compile your source code 
 file (***.lcb***) and produce a compiled module file (***.lcm***). If an error is 
 encountered it is output in the "console" section of the builder:
 
-```
-Error: <source path>: <line number>: <char number>: <error message>
-```
+	Error: <source path>: <line number>: <char number>: <error message>
 
 * *source path* - The path the .lcb file that is being compiled
 * *line number* - The line number in the script on which the error occurred.
@@ -385,19 +371,15 @@ startup.
 ### Loading and Creating Widgets Manually
 To load a compiled library file call:
 
-```
-load extension <filepath.lcm>
-```
+	load extension <filepath.lcm>
 
 To create a widget from script call:
 
-```
-create widget <name> as <identifier>
+	create widget <name> as <identifier>
 
 e.g.
 
-create widget "myWidget" as "com.livecode.extensions.waddingham.clock" 
-```
+	create widget "myWidget" as "com.livecode.extensions.waddingham.clock" 
 
 ### Composed Widgets
 Widgets can either be 'host' widgets, as in the previous example, created when a widget 
@@ -408,40 +390,41 @@ The syntax for composed widgets is included in the com.livecode.widget module.
 #### A simple composed widget
 This composed widget example composes the clock widget and the selector widget, to create 
 a version of the clock widget with adjustable time zone.
-![enter image description here](images/extensions-widget-first.png)
+![enter image description here](images/extensions-composed.png)
 The label at the top of the widget reflects which portion of the widget the mouse is over.
 
-```
-widget com.livecode.extensions.example.simplecomposed
+	widget com.livecode.extensions.example.simplecomposed
 
-use com.livecode.canvas
-use com.livecode.widget
+	use com.livecode.canvas
+	use com.livecode.widget
 
-metadata title is "Simple Composed Widget"
-metadata author is "LiveCode"
-metadata version is "1.0.0"
+	metadata title is "Simple Composed Widget"
+	metadata author is "LiveCode"
+	metadata version is "1.0.0"
 
-private variable mInsideChild as String
-private variable mInside as Boolean
+	private variable mInsideChild as String
+	private variable mInside as Boolean
 
-private variable mSelector as Widget
-private variable mClock as Widget
+	private variable mSelector as Widget
+	private variable mClock as Widget
 
-public handler OnCreate()
-    put false into mInside
-    put the empty string into mInsideChild
+	public handler OnCreate()
+		put false into mInside
+		put the empty string into mInsideChild
 
-    put a new widget "com.livecode.extensions.livecode.selector" into mSelector
-    set property "numSelections" of mSelector to 6
-    set annotation "Name" of mSelector to "Selector"
+		put a new widget "com.livecode.extensions.livecode.selector" into mSelector
+		set property "numSelections" of mSelector to 6
+		set annotation "Name" of mSelector to "Selector"
 
-    put a new widget "com.livecode.extensions.livecode.clock" into mClock
-    set annotation "Name" of mClock to "Clock"
+		put a new widget "com.livecode.extensions.livecode.clock" into mClock
+		set annotation "Name" of mClock to "Clock"
 
-    place mSelector
-    place mClock
-end handler
-```
+		place mSelector
+		place mClock
+	end handler
+	
+	end widget
+
 Notice that Widget is a variable type. This widget stores references to its child widgets 
 in private variables. In the `OnCreate` handler, the widget objects are created, stored 
 in the private variables and 'placed'. Child widgets can be stored as variables and 
@@ -452,50 +435,46 @@ Placing a widget ensures that they are drawn, in placement order. Setting an ann
 a child widget assigns it a tag so that when an unknown child widget is returned by an 
 operator, its annotation can be used to identify it.
 
-```
-public handler OnMouseEnter()
-    put true into mInside
-    
-    if the target is not nothing then
-        put annotation "Name" of the target into mInsideChild
-    end if
+	public handler OnMouseEnter()
+		put true into mInside
+	
+		if the target is not nothing then
+			put annotation "Name" of the target into mInsideChild
+		end if
 
-    redraw all
-end handler
+		redraw all
+	end handler
 
-public handler OnMouseLeave()
-    if the target is not nothing then
-        put the empty string into mInsideChild
-    end if
+	public handler OnMouseLeave()
+		if the target is not nothing then
+			put the empty string into mInsideChild
+		end if
 
-    put false into mInside
+		put false into mInside
 
-    redraw all
-end handler
-```
+		redraw all
+	end handler
 
 In the *OnMouseEnter* and *OnMouseLeave* handlers, *the target* is used to obtain a 
 reference to the child widget that triggered the *OnMouseEnter* and *OnMouseLeave* events, 
 and the previously assigned annotation put into the `mInsideChild` variable, which in turn 
 is rendered to the canvas in the *OnPaint* handler.
 
-```
-public handler OnPaint()
-    set the paint of this canvas to solid paint with color [0.75, 0.75, 0.75]
-    fill rectangle path of my bounds on this canvas
-    
-    if mInside then
-        set the paint of this canvas to solid paint with color [1.0, 0.0, 0.0]
-        set the stroke width of this canvas to 4.0
-        stroke rectangle path of my bounds on this canvas
-    end if
-    
-    if mInsideChild is not the empty string then
-        set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
-        fill text mInsideChild at top of my bounds on this canvas
-    end if
-end handler
-```
+	public handler OnPaint()
+		set the paint of this canvas to solid paint with color [0.75, 0.75, 0.75]
+		fill rectangle path of my bounds on this canvas
+	
+		if mInside then
+			set the paint of this canvas to solid paint with color [1.0, 0.0, 0.0]
+			set the stroke width of this canvas to 4.0
+			stroke rectangle path of my bounds on this canvas
+		end if
+	
+		if mInsideChild is not the empty string then
+			set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
+			fill text mInsideChild at top of my bounds on this canvas
+		end if
+	end handler
 
 The rectangle of each child widget is controlled using the following syntax:
 * ```the rectangle of <widget>``` - Enables manipulation of the rectangle property of a child widget.
@@ -503,23 +482,20 @@ The rectangle of each child widget is controlled using the following syntax:
 * ```the height of <widget>``` - Enables manipulation of the height property of a child widget.
 * ```the location of <widget>``` - Enables manipulation of the location property of a child widget.
 
-```
-public handler OnGeometryChanged()
-    set the rectangle of mSelector to rectangle [ 0, 20, my width, 50 ]
-    set the rectangle of mClock to rectangle [ 0, 50, my width, my height ]
-end handler
-```
+	public handler OnGeometryChanged()
+		set the rectangle of mSelector to rectangle [ 0, 20, my width, 50 ]
+		set the rectangle of mClock to rectangle [ 0, 50, my width, my height ]
+	end handler
 
 Finally, messages posted by child widgets can be handled in the direct parent by handling 
 the appropriate message (prepending 'On'). For example, the selector widget posts 
 *optionChanged* when one of its numbers is selected. This is handled by this composed 
 widget example in an *OnOptionChanged* handler.
 
-```
-public handler OnOptionChanged(in pIndex)
-    set property "timeZone" of mClock to pIndex - 1
-end handler
-```
+	public handler OnOptionChanged(in pIndex)
+		set property "timeZone" of mClock to pIndex - 1
+	end handler
+
 ### Documenting Your Extension
 
 Extensions can provide an API (Dictionary) and User Guide as part of the installed package. 
@@ -554,29 +530,26 @@ widget folder alongside the other widget files or markup your source code inline
 Marking up your scripts is simple and follows a similar model to other documentation formats.
 
 Consider the following handler
-```
-public handler myHandler(in pString as String, in pNumber as Number)
-   # Code 
-end handler
-```
+
+	public handler myHandler(in pString as String, in pNumber as Number)
+	   # Code 
+	end handler
 
 To add an entry to the API for this handler, place a formatted comment above the handler 
 definition:
 
-```
-/*
-summary: Use this handler to do an action
-pString: This parameter does x
-pNumber: This parameter does y
-description:
-# Markdown Title
-Here is a full description in markdown for how this function works. Once again, any GitHub 
-flavoured markdown is accepted.
-*/
-public handler myHandler(in pString as String, in pNumber as Number)
-   # Code 
-end handler
-```
+	/*
+	summary: Use this handler to do an action
+	pString: This parameter does x
+	pNumber: This parameter does y
+	description:
+	# Markdown Title
+	Here is a full description in markdown for how this function works. Once again, any GitHub 
+	flavoured markdown is accepted.
+	*/
+	public handler myHandler(in pString as String, in pNumber as Number)
+	   # Code 
+	end handler
 
 The LiveCode API parser will combine the comment items with other data pulled directly 
 from your handler definition such as name, type and some parameter details.
@@ -597,9 +570,7 @@ All GitHub flavoured markdown is accepted.
 ### Packaging Extensions
 Packaging extensions is easy. Simply open the "Extension Builder" stack:
 
-```
-Tools > Extension Builder
-```
+	Tools > Extension Builder
 
 Load your ***.lcb*** file and click "Build Package". A new file will appears in the same 
 directory as your main file with the extension ***.lce***. This is your final package file 
@@ -608,11 +579,9 @@ ready for upload to the extensions portal.
 #### Package requirements
 A valid package can be built from a minimum set of files:
 
-```
-widget.lcb // Widget source file
-support/icon.png // 20x40 png image
-support/icon@extra-high.png // 40x80 png image
-```
+	widget.lcb // Widget source file
+	support/icon.png // 20x40 png image
+	support/icon@extra-high.png // 40x80 png image
 
 ## The Extension Store
 
@@ -678,15 +647,11 @@ functions (code written in lower level languages).
 Use the **shell** function to run shell commands and return the result. The following 
 example displays a directory listing on Mac OS X:
 
-```
-answer shell("ls")
-```
+	answer shell("ls")
 
 And this example stores a directory listing in a variable on Windows:
 
-```
-put shell("dir") into tDirectory
-```
+	put shell("dir") into tDirectory
 
 On Windows systems you can prevent a terminal window from being displayed by setting the 
 **hideConsoleWindows** global property to true.
@@ -704,9 +669,7 @@ Use the **launch** command to launch other applications, documents or URLs. To l
 application, supply the full path to the application. The following example opens a text 
 document with TextEdit on OS X:
 
-```
-launch "/Users/someuser/Desktop/text document.rtf" with "/Applications/TextEdit.app"
-```
+	launch "/Users/someuser/Desktop/text document.rtf" with "/Applications/TextEdit.app"
 
 > **Tip:** To get the path to an application, use the `answer file` command to select the 
 application then copy it into your script. Run this in the message box: 
@@ -715,13 +678,11 @@ application then copy it into your script. Run this in the message box:
 To open a document with the application it is associated with use the **launch document** 
 command.
 
-```
-launch document "C:/My document.pdf"
-```
+	launch document "C:/My document.pdf"
 
 To open a URL in the default web browser, use the **launch URL** command.
 
-launch URL "<http://www.livecode.com/>"
+	launch URL "<http://www.livecode.com/>"
 
 For more information on launching URLs and details on how to render web pages within 
 LiveCode, see the Transferring Information guide.
@@ -756,18 +717,14 @@ the following into a field:
 
 Then run:
 
-```
-do field 1 as "appleScript"
-```
+	do field 1 as "appleScript"
 
 To retrieve a result from commands executed using `do as`, use `the result` function. Any 
 error message will also be returned in `the result`. The following example displays 
 `the result` of an addition performed using VBScript:
 
-```
-do "result = 1 + 1" as "vbscript"
-answer the result
-```
+	do "result = 1 + 1" as "vbscript"
+	answer the result
 
 For more information on the do as command, see the LiveCode Dictionary.
 
@@ -780,35 +737,31 @@ card. Intercept this message to perform actions such as handling a request to qu
 application or opening a document. The following example shows how you could handle a 
 request to quit:
 
-```
-on appleEvent pClass, pID, pSender
-	if pClass & pID is "aevtquit" then
-	-- call a function that prompts the user to save changes
-	put checkSaveChanges() into tOkToQuit
-	-- returns false if the user presses "cancel"
-	if tOkToQuit is true then quit
-	else exit appleEvent
-	end if
-end appleEvent
-```
+	on appleEvent pClass, pID, pSender
+		if pClass & pID is "aevtquit" then
+		-- call a function that prompts the user to save changes
+		put checkSaveChanges() into tOkToQuit
+		-- returns false if the user presses "cancel"
+		if tOkToQuit is true then quit
+		else exit appleEvent
+		end if
+	end appleEvent
 
 To retrive additional information passed with the appleEvent use the 
 **request appleEvent data** command. The following example shows how you could handle a 
 request to open a stack:
 
-```
-on appleEvent pClass, pID, pSender
-	--appleEvent sent when stack is opened from the finder
-	if pClass & pID is " aevtodoc " then
-		-- get the file path(s)
-		request AppleEvent data
-		put it into tFilesList
-		repeat for each line l in tFilesList
-			go stack l
-		end repeat
-	end if
-end appleEvent
-```
+	on appleEvent pClass, pID, pSender
+		--appleEvent sent when stack is opened from the finder
+		if pClass & pID is " aevtodoc " then
+			-- get the file path(s)
+			request AppleEvent data
+			put it into tFilesList
+			repeat for each line l in tFilesList
+				go stack l
+			end repeat
+		end if
+	end appleEvent
 
 For more details see the *LiveCode Dictionary*.
 
@@ -829,9 +782,7 @@ processor core. By using socket messaging to communicate with each one you can k
 main application's user interface responsive and display status information. The following 
 example shows you how to open a socket to the local machine:
 
-```
-open socket to "127.0.0.1:10000" with message gotConnection
-```
+	open socket to "127.0.0.1:10000" with message gotConnection
 
 A detailed discussion of how to create a protocol using sockets can be found in the 
 Transferring Information guide.
