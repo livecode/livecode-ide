@@ -1502,9 +1502,11 @@ on revIDEInitialiseIDELibrary
    put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
    
    ## Load Extensions
+   revInternal__LoadLibrary "revideextensionlibrary"
    revIDEInitialiseExtensions
    
    ## Regenerate dictionary data
+   revInternal__LoadLibrary "revDatabaseLibrary"
    revIDERegenerateBuiltDictionaryData
    
    ## Initialise property library
