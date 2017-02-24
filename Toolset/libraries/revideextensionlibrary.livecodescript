@@ -819,11 +819,34 @@ private function __dependencyOrder pDependencies, pList
    return tOrder
 end __dependencyOrder
 
+private on listChildRequirements pWidget, @xChildRequirements
+   local tChildren
+   put revIDEExtensionProperty(pWidget, "childWidgets") into tChildren
+   repeat for each item tItem in tChildren
+      if tItem is among the keys of xChildRequirements then next repeat
+      listChildRequirements tItem, xChildRequirements
+      put tItem into xChildRequirements[tItem]
+      get revIDEExtensionProperty(tItem, "requires")
+      if it is not empty then
+         put return & it after xChildRequirements[tItem]
+      end if
+   end repeat
+end listChildRequirements
+
 function revIDEExtensionsOrderByDependency pExtensions
    # Accumulate an array of dependencies
    local tDependencies, tRequirements
    repeat for each line tExtension in pExtensions
       put revIDEExtensionProperty(tExtension, "requires") into tRequirements
+      
+      local tChildRequirements
+      listChildRequirements tExtension, tChildRequirements
+      repeat for each element tChildRequires in tChildRequirements
+         repeat for each line tRequire in tChildRequires
+            put tRequire into tRequirements[the number of elements in tRequirements + 1]
+         end repeat
+      end repeat
+      
       repeat for each element tDependent in tRequirements
          if __extensionIsBuiltin(tDependent) then
             next repeat
@@ -831,6 +854,7 @@ function revIDEExtensionsOrderByDependency pExtensions
          __addToDependencies tExtension, tDependent, tDependencies
       end repeat
    end repeat
+   
    
    # Order them
    return __dependencyOrder(tDependencies, pExtensions)
