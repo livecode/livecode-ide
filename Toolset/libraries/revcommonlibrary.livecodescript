@@ -559,11 +559,7 @@ command revRotatePoly pGraphic, pAngle
     
     lock screen
     lock messages
-    if the realPoints of pGraphic is empty then
-        put the effective points of pGraphic into tPoints
-    else
-        put the realPoints of pGraphic into tPoints
-    end if
+    put the effective points of pGraphic into tPoints
     put the loc of pGraphic into tLoc
     put item 1 of tLoc into tOrigLeft
     put item 2 of tLoc into tOrigTop
@@ -582,7 +578,6 @@ command revRotatePoly pGraphic, pAngle
         set the style of pGraphic to "polygon"
     end if
     set points of pGraphic to tFinalPoints
-    set the realPoints of pGraphic to tFinalPoints
     set loc of pGraphic to tLoc
     unlock messages
     unlock screen
