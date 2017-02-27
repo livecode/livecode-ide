@@ -36,8 +36,11 @@ end TestTeardown
 private function _TestSavingStandaloneStackScript
 	local tScript
 	put "on startup" & return after tScript
-	put "write the cModified of me to stdout" & return after tScript
+	put "if the cModified of me then" & return after tScript
 	put "quit 0" & return after tScript
+	put "else" & return after tScript
+	put "quit 1" & return after tScript
+	put "end if" & return after tScript
 	put "end startup" & return after tScript
 	put "on savingStandalone" & return after tScript
 	put "set the cModified of me to true" & return after tScript
@@ -89,13 +92,20 @@ on TestSavingStandalone
    TestDiagnostic "location" && tStandalonePath
    TestAssert "standalone in expected location", there is a file tStandalonePath
    
-   local tOutput
-   put shell(quote & tStandalonePath & quote && "-ui") into tOutput
+   local tResult, tShellCmd
+   put quote & tStandalonePath & quote into tShellCmd
+   if the environment contains "command line" then
+      put " -ui" after tShellCmd
+   end if
+   get shell(tShellCmd)
+   put the result into tResult
    
-   TestDiagnostic "shell output" && tOutput
-   
+   if tResult is not empty then
+      TestDiagnostic "standalone quit with" && tResult & ":" && it
+   end if
+      
    TestAssert "savingStandalone side-effect present in standalone", \ 
-   		tOutput is "true"
+   		tResult is empty
    
    revDeleteFolder tDir
 end TestSavingStandalone
