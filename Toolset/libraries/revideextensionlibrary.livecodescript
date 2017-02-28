@@ -757,6 +757,7 @@ private function __extensionIsBuiltin pID
       case "com.livecode.type"
       case "com.livecode.typeconvert"
       case "com.livecode.extensions.libbrowser"
+      case "com.livecode.java"
          return true
       default
          return false
