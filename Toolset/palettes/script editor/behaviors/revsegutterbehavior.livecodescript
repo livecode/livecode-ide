@@ -663,38 +663,44 @@ on mouseUp pButtonNumber
       exit mouseUp
    end if
    
+   local tTarget, tClickLoc
+   put the long id of the target into tTarget
+   put the clickloc into tClickLoc
+   -- We might delete the target if it is a breakpoint, so do mouseUp
+   -- handling with a send.
+   send "gutterMouseUp tTarget, tClickLoc" to me in 0 millisecs
+end mouseUp
+
+on gutterMouseUp pTarget, pClickLoc
    local tObject
    revSEGetCurrentObject
    put the result into tObject
    
-   if the cBreakpoint of the target or the short name of the target is "Current Line" then
+   if the cBreakpoint of pTarget or the short name of pTarget is "Current Line" then
       # The current line image doesn't do anything itself, but it can be above a breakpoint.
       # In this case we want it to be as though the user clicked on the breakpoint. This is done
       # simply by changing the tTarget variable to contain a reference to the breakpoint image
       # instead of the original target.
-      local tTarget
-      put the long id of the target into tTarget
-      
       local tBreakpointImage
-      put breakpointCovered(tTarget) into tBreakpointImage
+      put breakpointCovered(pTarget) into tBreakpointImage
       if tBreakpointImage is not empty then
-         put tBreakpointImage into tTarget
+         put tBreakpointImage into pTarget
       end if
       
-      if the cState of tTarget is "active" then
-         revDebuggerRemoveBreakpoint tObject, (the cLine of tTarget)
+      if the cState of pTarget is "active" then
+         revDebuggerRemoveBreakpoint tObject, (the cLine of pTarget)
       else
          # A breakpoint is invalid if it is not currently placed on a valid line of executable code,
          # e.g. a commented line, variable declaration etc.
-         if the cInvalid of tTarget or not revDebuggerEnabled() or seGetObjectState(tObject) is not "applied" then
-            revDebuggerRemoveBreakpoint tObject, (the cLine of tTarget)
+         if the cInvalid of pTarget or not revDebuggerEnabled() or seGetObjectState(tObject) is not "applied" then
+            revDebuggerRemoveBreakpoint tObject, (the cLine of pTarget)
          else
-            revDebuggerActivateBreakpoint tObject, (the cLine of tTarget)
+            revDebuggerActivateBreakpoint tObject, (the cLine of pTarget)
          end if
       end if
    else
       local tLineNumber
-      put verticalLocToLineNumber(item 2 of the clickLoc) into tLineNumber
+      put verticalLocToLineNumber(item 2 of pClickLoc) into tLineNumber
       
       if tLineNumber is not empty then
          # Adjust the line number to find the next available breakpoint
@@ -717,11 +723,11 @@ on mouseUp pButtonNumber
    lock screen
    clearMutableObjects
    updateBreakpoints 1, 1, 1, 1, false
-    # OK-2010-02-26: Avoid delays when updating breakpoints by only updating the breakpoints pane
+   # OK-2010-02-26: Avoid delays when updating breakpoints by only updating the breakpoints pane
    --   sePanesUpdate
    seRefreshCurrentPaneIfItsBreakpoints
    unlock screen
-end mouseUp
+end gutterMouseUp
 
 on menuPick pItemName
    # The target appears to be wrong in this case. As there is only currently one menu
