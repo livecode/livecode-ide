@@ -28,11 +28,19 @@ end preOpenStack
 on openStack
    lock screen
    lock messages
-   set the left of me to the right of revIDEStackOfObject(sTarget) + 5
+   ensureOnScreen
    show me
    unlock messages
    unlock screen
 end openStack
+
+on ensureOnScreen
+   if (the right of revIDEStackOfObject(sTarget) + 5 + the width of me) < item 3 of the screenrect then
+      set the left of me to the right of revIDEStackOfObject(sTarget) + 5
+   else
+      set the right of me to the left of revIDEStackOfObject(sTarget) - 5
+   end if
+end ensureOnScreen
 
 on closeStack
    send "popupDismissed" to sTarget in 0 millisecs
