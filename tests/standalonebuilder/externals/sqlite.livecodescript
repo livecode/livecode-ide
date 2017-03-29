@@ -1,7 +1,7 @@
 ﻿script "TestRevSqlite"
 on _testInclusion
   get revOpenDatabase("sqlite","test.db")
-  if not (it begins with "dberr") then
+  if not (it begins with "revdberr") then
 	 quit 0
   else
 	 write "error - " & it to stderr
