@@ -65,7 +65,7 @@ on inspectorOpenEditor pEditor
 end inspectorOpenEditor
 
 # Layout inspector
-on inspectorLayout
+on inspectorLayout pForceHeight
    //put "layout inspector" & return after msg
    lock screen
    
@@ -73,11 +73,13 @@ on inspectorLayout
    local tSelectedGroup
    put inspectorSectionGet() into tSelectedGroup
    
-   inspectorLayoutGroups sDataA[tSelectedGroup]["grouplist"]
+   inspectorLayoutGroups sDataA[tSelectedGroup]["grouplist"], pForceHeight
+   
    unlock screen
 end inspectorLayout
 
-on inspectorLayoutGroups pGroupList
+local sManualHeight
+on inspectorLayoutGroups pGroupList, pForceHeight
    lock screen
    # Get the margin, padding
    local tMargin, tPadding
@@ -88,16 +90,19 @@ on inspectorLayoutGroups pGroupList
    local tTop, tLeft, tContentRect
    put the contentRect of me into tContentRect
    put item 1 of tContentRect + tMargin into tLeft
+   put tLeft into item 1 of tContentRect
    put item 2 of tContentRect + tMargin into tTop
+   put tTop into item 2 of tContentRect
    
    # Loop through the editors and get the minimum width of the labels and editors
    # To work out an initial row width
-   local tMinRowWidth, tMinEditorsWidth, tRowWidth, tMinLabelWidth
+   local tMinRowWidth, tMinEditorsWidth, tRowWidth, tMinLabelWidth, tRowGroup
    repeat for each element tElement in pGroupList
-      if there is not a group tElement["label"] of me then next repeat
+      if there is not a group tElement["label"] of group "inspector" of me then next repeat
+      put the long id of group tElement["label"] of group "inspector" of me into tRowGroup
       local tEditorsReportedWidth, tLabelReportedWidth
-      put the rowMinWidth of group tElement["label"] of me into tEditorsReportedWidth
-      put the rowLabelWidth of group tElement["label"] of me into tLabelReportedWidth
+      put the rowMinWidth of tRowGroup into tEditorsReportedWidth
+      put the rowLabelWidth of tRowGroup into tLabelReportedWidth
       
       if tEditorsReportedWidth > tMinEditorsWidth then
          put tEditorsReportedWidth into tMinEditorsWidth
@@ -125,6 +130,11 @@ on inspectorLayoutGroups pGroupList
    local tInspectorWidthWithMargins
    put tRowWidth + (tMargin  * 2) into tInspectorWidthWithMargins
    
+   if there is a group "inspector" of me and \ 
+         the vscrollbar of group "inspector" of me then
+      subtract the scrollbarwidth of group "inspector" of me from tRowWidth
+   end if
+   
    local tSubsections, tCurSection, tNewSubsection
    # Check if this inspector wants to show subsections
    put the showSubSections of me into tSubsections
@@ -145,43 +155,43 @@ on inspectorLayoutGroups pGroupList
          end if
       end if
       
-      if there is a group tElement["label"] of me then
-         # set the width and topleft of the editor
-         lock messages
-         set the topleft of group tElement["label"] of me to tLeft,tTop
-         set the lockloc of  group tElement["label"] of me to true
-         set the width of group tElement["label"] of me to tRowWidth
-         unlock messages
-         
-         # Tell the row to resize
-         dispatch "rowResize" to group tElement["label"] of me
-         
-         local tEditorHeight
-         # If the editor does not report its own height, use the formatted height
-         # This tends to report slightly strange values, otherwise we could just use it
-         # all the time.
-         put the editorHeight of group tElement["label"] of me into tEditorHeight
-         if not tEditorHeight > 0 then
-            put the formattedheight of group tElement["label"] of me into tEditorHeight
-         end if
-         
-         lock messages
-         add tEditorHeight + tPadding to tTop
-         
-         if tRowWidth > tMaxRowWidth then
-            put tRowWidth into tMaxRowWidth
-         end if
-         if tTop > tInspectorHeight then
-            put tTop into tInspectorHeight
-         end if
-         unlock messages
+      if there is not a group tElement["label"] of group "inspector" of me then next repeat
+      put the long id of group tElement["label"] of group "inspector" of me into tRowGroup
+      
+      # set the width and topleft of the editor
+      lock messages
+      set the topleft of tRowGroup to tLeft,tTop
+      set the lockloc of tRowGroup to true
+      set the width of tRowGroup to tRowWidth
+      unlock messages
+      
+      # Tell the row to resize
+      dispatch "rowResize" to tRowGroup
+      
+      local tEditorHeight
+      # If the editor does not report its own height, use the formatted height
+      # This tends to report slightly strange values, otherwise we could just use it
+      # all the time.
+      put the editorHeight of tRowGroup into tEditorHeight
+      if not tEditorHeight > 0 then
+         put the formattedheight of tRowGroup into tEditorHeight
       end if
+      
+      lock messages
+      add tEditorHeight + tPadding to tTop
+      
+      if tRowWidth > tMaxRowWidth then
+         put tRowWidth into tMaxRowWidth
+      end if
+      if tTop > tInspectorHeight then
+         put tTop into tInspectorHeight
+      end if
+      unlock messages
    end repeat
    
    local tStackTop, tStackLeft
    put the top of me into tStackTop
    put the left of me into tStackLeft
-   
    
    if there is a field "noObjects" of me then
       set the width of field "noObjects" of me to 1000
@@ -202,8 +212,6 @@ on inspectorLayoutGroups pGroupList
       layoutFrame
    end if
    
-   set the left of me to tStackLeft
-   
    local tStackHeight
    if tInspectorHeight is empty then
       put kInspectorMinHeight into tStackHeight
@@ -211,11 +219,27 @@ on inspectorLayoutGroups pGroupList
       put tInspectorHeight + tMargin into tStackHeight
    end if
    
-   set the minheight of me to tStackHeight
    set the maxheight of me to tStackHeight
-   set the height of me to tStackHeight
+   if pForceHeight and not sManualHeight then
+      set the height of me to tStackHeight
+   end if
+   set the left of me to tStackLeft
    set the top of me to tStackTop
    
+   if there is a group "inspector" of me then
+      if the height of me < tStackHeight then
+         put true into sManualHeight
+         set the vscrollbar of group "inspector" of me to true
+      else
+         put false into sManualHeight
+         set the vscrollbar of group "inspector" of me to false
+      end if
+      set the rect of group "inspector" of me to \
+            item 1 of tContentRect, \ 
+            item 2 of tContentRect, \ 
+            the right of this card of me, \
+            the bottom of this card of me
+   end if
    unlock messages
    unlock screen
 end inspectorLayoutGroups
@@ -313,9 +337,6 @@ on inspectorGenerateGroups pGroupList
    set the margins of the templategroup to 0
    set the visible of the templategroup to false
    
-   local tStackPath
-   set the behavior of the templategroup to the long ID of stack revIDEPaletteResourcePath("behaviors/revinspectorgroupbehavior.livecodescript", the long ID of stack "revInspector")
-   
    set the traversalon of the templatefield to false
    set the threed of the templatefield to false
    set the showborder of the templatefield to false
@@ -328,9 +349,19 @@ on inspectorGenerateGroups pGroupList
    
    lock messages
    if there is not a group "template" then
+      local tBehavior
+      put the long ID of stack revIDEPaletteResourcePath( \
+            "behaviors/revinspectorgroupbehavior.livecodescript", \ 
+            the long ID of stack "revInspector") into tBehavior
       create group "template"
+      set the behavior of it to tBehavior
       create field "rowlabel" in group "template"
       set the topleft of field "rowlabel" of group "template" to the topleft of group "template"
+   end if
+   
+   if there is not a group "inspector" then
+      create group "inspector"
+      set the rect of it to the rect of this card of me
    end if
    unlock messages
    
@@ -359,20 +390,22 @@ on inspectorGenerateGroups pGroupList
       end if
       
       lock messages
-      copy group "template" to me
+      local tRowGroup
+      copy group "template" to group "inspector" of me
       set the name of it to tElement["label"]
-      show group tElement["label"] of me
+      put the long id of group tElement["label"] of group "inspector" of me into tRowGroup
+      show tRowGroup
       unlock messages
-      set the rowShowLabel of group tElement["label"] of me to true
+      set the rowShowLabel of tRowGroup to true
       
       local tName
-      put the short name of group tElement["label"] of me into tName
-      if exists(group tElement["label"] of me) then
+      put the short name of tRowGroup into tName
+      if exists(tRowGroup) then
          local tPropList, tProperty
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
             if tProperty["user_visible"] is false then next repeat
-            dispatch "propertyRegister" to group tElement["label"] of me with tProperty
+            dispatch "propertyRegister" to tRowGroup with tProperty
             
             # Build the list of properties to display in the tooltip for the row
             if tPropList is empty then
@@ -393,16 +426,16 @@ on inspectorGenerateGroups pGroupList
             put tElement["label"] into tLabel
          end if
          
-         set the rowTooltip of group tElement["label"] of me to tTooltip
+         set the rowTooltip of tRowGroup to tTooltip
          if tElement["label"] is not tElement["subsection"] then
-            set the rowLabel of group tElement["label"] of me to tLabel
+            set the rowLabel of tRowGroup to tLabel
          end if
       end if
       put empty into tPropList
    end repeat
    reset the templatefield
    reset the templategroup
-   
+   show group "inspector"
    unlock screen
 end inspectorGenerateGroups
 
@@ -445,7 +478,7 @@ on inspectorChanged
    inspectorFill
    
    # Layout
-   inspectorLayout
+   inspectorLayout true
    
    unlock screen
 end inspectorChanged
@@ -506,8 +539,8 @@ end inspectorFill
 on inspectorFillGroups pGroupData
    local tRow
    repeat for each key tRow in pGroupData
-      if there is a group tRow of me then
-         set the rowData of group tRow of me to pGroupData[tRow]
+      if there is a group tRow of group "inspector" of me then
+         set the rowData of group tRow of group "inspector" of me to pGroupData[tRow]
       end if
    end repeat
 end inspectorFillGroups
@@ -566,10 +599,10 @@ private function rowLabelWidthCalculate
    local tMaxWidth, tLabelWidth, tChildren
    put 0 into tMaxWidth
    
-   put the childControlNames of this card of me into tChildren
+   put the childControlNames of group "inspector" of me into tChildren
    repeat for each line tControl in tChildren
-      if there is a field "rowlabel" of group tControl of me then
-         put the rowLabelWidth of group tControl of me into tLabelWidth
+      if there is a field "rowlabel" of group tControl of group "inspector" of me then
+         put the rowLabelWidth of group tControl of group "inspector" of me into tLabelWidth
       end if
       if tLabelWidth > tMaxWidth then
          put tLabelWidth into tMaxWidth
