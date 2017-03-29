@@ -221,7 +221,10 @@ on inspectorLayoutGroups pGroupList, pForceHeight
    
    set the maxheight of me to tStackHeight
    if pForceHeight and not sManualHeight then
-      set the height of me to tStackHeight
+      -- Make stack smaller rather than go offscreen
+      local tScreenRect
+      put revIDEStackScreenRect(the long id of me, true) into tScreenRect
+      set the height of me to min(tStackHeight, item 4 of tScreenRect - tStackTop)
    end if
    set the left of me to tStackLeft
    set the top of me to tStackTop
