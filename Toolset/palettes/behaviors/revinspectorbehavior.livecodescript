@@ -78,6 +78,91 @@ on inspectorLayout pForceHeight
    unlock screen
 end inspectorLayout
 
+private function inspectorCalculateLayout pGroupList, pLeft, pTop, pRowWidth, pSubsections, pCurSection, pExpandableExtra, @rCanExpand
+   local tLeft, tTop
+   put pLeft into tLeft
+   put pTop into tTop
+   
+   local tMaxRowWidth, tInspectorHeight, tColumnNumber, tColumnTop, 
+   local tCanExpand, tRowGroup, tThisCanExpand
+   put 1 into tColumnNumber
+   put 0 into tCanExpand
+   repeat for each element tElement in pGroupList
+      if pSubsections and tElement["subsection"] is not empty then
+         # If we have a new subsection, create the subsection header
+         if tElement["subsection"] is not pCurSection then
+            lock messages
+            set the width of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
+            set the width of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
+            set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
+            unlock messages
+            add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
+            put tElement["subsection"] into pCurSection
+         end if
+      end if
+      
+      if there is not a group tElement["label"] of group "inspector" of me then next repeat
+      put the long id of group tElement["label"] of group "inspector" of me into tRowGroup
+      
+      # set the width and topleft of the editor
+      lock messages
+      set the topleft of tRowGroup to tLeft,tTop
+      set the lockloc of tRowGroup to true
+      set the width of tRowGroup to pRowWidth
+      unlock messages
+      
+      # Tell the row to resize
+      dispatch "rowResize" to tRowGroup
+      
+      local tEditorHeight
+      # If the editor does not report its own height, use the formatted height
+      # This tends to report slightly strange values, otherwise we could just use it
+      # all the time.
+      put the editorHeight of tRowGroup into tEditorHeight
+      if not tEditorHeight > 0 then
+         put the formattedheight of tRowGroup into tEditorHeight
+      end if
+      
+      dispatch function "canExpandVertically" to tRowGroup
+      put the result into tThisCanExpand
+      if tThisCanExpand then
+         add 1 to tCanExpand
+         if pExpandableExtra > 0 then
+            lock messages
+            set the height of tRowGroup to tEditorHeight + pExpandableExtra
+            unlock messages
+            dispatch "rowResize" to tRowGroup
+         end if
+      end if
+      
+      # Get the margin, padding
+      local tPadding, tMargin
+      put the palettePadding of me into tPadding
+      put the paletteMargin of me into tMargin
+      lock messages
+      add tEditorHeight + tPadding to tTop
+      
+      if pRowWidth > tMaxRowWidth then
+         put pRowWidth into tMaxRowWidth
+      end if
+      if tTop > tInspectorHeight then
+         put tTop into tInspectorHeight
+      end if
+      unlock messages
+   end repeat
+   
+   local tHeightDiff
+   put the height of me - 2* tMargin - tInspectorHeight into tHeightDiff
+   if pExpandableExtra is 0 and tCanExpand > 0 and tHeightDiff > 0 then
+      local tExpandableExtra, tDummy
+      put tHeightDiff / tCanExpand into tExpandableExtra
+      get inspectorCalculateLayout(pGroupList, pLeft, pTop, pRowWidth, pSubsections, pCurSection, tExpandableExtra, tDummy)
+   end if
+   
+   put tCanExpand > 0 into rCanExpand
+   return tInspectorHeight
+end inspectorCalculateLayout
+
 local sManualHeight
 on inspectorLayoutGroups pGroupList, pForceHeight
    lock screen
@@ -139,55 +224,9 @@ on inspectorLayoutGroups pGroupList, pForceHeight
    # Check if this inspector wants to show subsections
    put the showSubSections of me into tSubsections
    
-   local tMaxRowWidth, tInspectorHeight, tColumnNumber, tColumnTop
-   put 1 into tColumnNumber
-   repeat for each element tElement in pGroupList
-      if tSubsections and tElement["subsection"] is not empty then
-         # If we have a new subsection, create the subsection header
-         if tElement["subsection"] is not tCurSection then
-            lock messages
-            set the width of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
-            set the width of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me to the formattedwidth of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me
-            set the topleft of group ("Subsection_" & tElement["subsection"]) of me to tLeft,tTop
-            unlock messages
-            add (the formattedheight of field tElement["subsection"] of group ("Subsection_" & tElement["subsection"]) of me) to tTop
-            put tElement["subsection"] into tCurSection
-         end if
-      end if
-      
-      if there is not a group tElement["label"] of group "inspector" of me then next repeat
-      put the long id of group tElement["label"] of group "inspector" of me into tRowGroup
-      
-      # set the width and topleft of the editor
-      lock messages
-      set the topleft of tRowGroup to tLeft,tTop
-      set the lockloc of tRowGroup to true
-      set the width of tRowGroup to tRowWidth
-      unlock messages
-      
-      # Tell the row to resize
-      dispatch "rowResize" to tRowGroup
-      
-      local tEditorHeight
-      # If the editor does not report its own height, use the formatted height
-      # This tends to report slightly strange values, otherwise we could just use it
-      # all the time.
-      put the editorHeight of tRowGroup into tEditorHeight
-      if not tEditorHeight > 0 then
-         put the formattedheight of tRowGroup into tEditorHeight
-      end if
-      
-      lock messages
-      add tEditorHeight + tPadding to tTop
-      
-      if tRowWidth > tMaxRowWidth then
-         put tRowWidth into tMaxRowWidth
-      end if
-      if tTop > tInspectorHeight then
-         put tTop into tInspectorHeight
-      end if
-      unlock messages
-   end repeat
+   local tInspectorHeight, tCanExpand
+   put inspectorCalculateLayout(pGroupList, tLeft, tTop, tRowWidth, \ 
+         tSubsections, tCurSection, 0, tCanExpand) into tInspectorHeight
    
    local tStackTop, tStackLeft
    put the top of me into tStackTop
@@ -219,7 +258,12 @@ on inspectorLayoutGroups pGroupList, pForceHeight
       put tInspectorHeight + tMargin into tStackHeight
    end if
    
-   set the maxheight of me to tStackHeight
+   if tCanExpand then
+      set the maxheight of me to 65535
+   else
+      set the maxheight of me to tStackHeight
+   end if
+   
    if pForceHeight and not sManualHeight then
       -- Make stack smaller rather than go offscreen
       local tScreenRect
@@ -241,7 +285,7 @@ on inspectorLayoutGroups pGroupList, pForceHeight
             item 1 of tContentRect, \ 
             item 2 of tContentRect, \ 
             the right of this card of me, \
-            the bottom of this card of me
+            the bottom of this card of me - tMargin
    end if
    unlock messages
    unlock screen

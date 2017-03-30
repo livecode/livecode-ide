@@ -279,3 +279,12 @@ on editorFinalize
       dispatch "popupDismissed" to me
    end if
 end editorFinalize
+
+local sExpandVertical
+setProp editorExpandVertical pValue
+   put pValue into sExpandVertical
+end editorExpandVertical
+
+getProp editorExpandVertical
+   return sExpandVertical
+end editorExpandVertical

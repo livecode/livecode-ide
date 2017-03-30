@@ -18,6 +18,7 @@ on editorInitialize
       hide button "Remove key" of me
       hide button "New key" of me
    end if
+   set the editorExpandVertical of me to true
 end editorInitialize
 
 on editorUpdate
