@@ -73,28 +73,32 @@ end revDebuggerEnabled
 command revDebuggerEnable
    if the environment contains "development" then
       revIDESetPreference "cREVScriptDebugMode", true
-   else
-      __Enable
    end if
+   
+   __Enable
 end revDebuggerEnable
 
 private command __Enable
+   # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
+   __Initialize
+   
    # When the debugger is enabled we need to go through all the open stacks and 
    # activate their breakpoints if appropriate.
-   local tOpenStacks
-   put the openStacks into tOpenStacks
-   repeat for each line tStack in tOpenStacks
-      if not __StackAllowed(the long id of stack tStack) then
-         next repeat
-      end if
-      __ActivateBreakpoints the long id of stack tStack
-      __ActivateWatches the long id of stack tStack
+   local tMainstacks, tMainstack
+   put the mainstacks into tMainstacks
+   repeat for each line tMainstack in tMainstacks
+      repeat for each line tStack in tMainstack & return & the substacks of stack tMainstack
+         if tStack is empty then next repeat
+         
+         if not __StackAllowed(the long id of stack tStack) then
+            next repeat
+         end if
+         __ActivateBreakpoints the long id of stack tStack
+         __ActivateWatches the long id of stack tStack
+      end repeat
    end repeat
    
    __ActivateWatches empty
-   
-   # OK-2008-08-07 : 6875 - The debugger must be re-initialized when script debug node is switched on.
-   __Initialize
 end __Enable
 
 local sContext
