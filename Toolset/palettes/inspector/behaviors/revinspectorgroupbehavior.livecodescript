@@ -301,7 +301,7 @@ function expandedToFit pMinMaxA, pSpace
    return tFixedA
 end expandedToFit
 
-on rowResize
+on rowResize pExpandableExtra
    lock screen
    set the lockloc of me to true
    
@@ -342,8 +342,9 @@ on rowResize
    put the showSubSections of this stack into tSubsections
    
    local tGroupLongID, tLastGroupLongID, tHeightOfRow, tCount, tGroupHeight
-   local tElement, tPropNumber, tLineNumber
+   local tElement, tPropNumber, tLineNumber, tCanExpand
    put 1 into tLineNumber
+   put 0 into tCanExpand
    repeat for each line tProperty in sOrder
       add 1 to tPropNumber
       put sProperties[tProperty] into tElement
@@ -397,12 +398,32 @@ on rowResize
       if tEditorHeight > tHeightOfRow then
          put tEditorHeight into tHeightOfRow
       end if
+      unlock messages
+      
+      local tThisCanExpand
+      put the editorExpandVertical of tGroupLongID into tThisCanExpand
+      if tThisCanExpand then
+         add 1 to tCanExpand
+         if pExpandableExtra > 0 then
+            lock messages
+            set the height of tGroupLongID to tEditorHeight + pExpandableExtra
+            unlock messages
+            dispatch "editorResize" to tGroupLongID
+         end if
+      end if
       
       add tWidthsA[tLineNumber][tPropNumber] + tPadding to tLeft
       add tHeightOfRow to tGroupHeight
       put tGroupLongID into tLastGroupLongID
-      unlock messages
    end repeat
+   
+   local tHeightDiff
+   put the height of me - tGroupHeight into tHeightDiff
+   if pExpandableExtra is empty and tCanExpand > 0 and tHeightDiff > 0 then
+      local tExpandableExtra, tDummy
+      put tHeightDiff / tCanExpand into tExpandableExtra
+      rowResize tExpandableExtra
+   end if
    
    set the height of me to tGroupHeight
    set the lockloc of me to false
@@ -443,3 +464,15 @@ setProp rowEnabled pValue
    end repeat
    set the enabled of field "rowlabel" of me to pValue
 end rowEnabled
+
+// The group can expand vertically if any of the editors can
+function canExpandVertically
+   local tElement
+   repeat for each line tProperty in sOrder
+      put sProperties[tProperty] into tElement
+      if the editorExpandVertical of group tElement["property"] of me then
+         return true
+      end if
+   end repeat
+   return false
+end canExpandVertically

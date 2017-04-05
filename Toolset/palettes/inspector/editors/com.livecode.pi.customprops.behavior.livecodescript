@@ -9,6 +9,7 @@ on editorInitialize
    set the editorMinWidth of me to 250
    set the editorMaxWidth of me to 0
    checkRehilite
+   set the editorExpandVertical of me to true
 end editorInitialize
 
 on updateHilitePath pPath
