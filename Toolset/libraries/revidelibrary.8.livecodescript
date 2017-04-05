@@ -5525,6 +5525,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
       case "documentationpane"
          return tPathToBehaviors & slash & "revsedocumentationpanebehavior.livecodescript"
+      case "errorspane"
+         return tPathToBehaviors & slash & "revseerrorspanebehavior.livecodescript"	
       case "filterfield"
          return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
       case "variablescheckbox"
