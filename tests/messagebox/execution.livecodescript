@@ -330,3 +330,21 @@ on TestIntelligenceObjectGetNonExistantFunction
 	TestAssert "intelligence object non-existant function result", the result contains "error"
 	TestAssert "intelligence object non-existant function executed", tValidScript is empty
 end TestIntelligenceObjectGetNonExistantFunction
+
+-- Bug 18032
+on TestIntelligenceObjectCommandWithTwoLiteralParams
+	local tScript, tStack
+	put "on testParameters p1, p2; put p2; end testParameters" \
+		into tScript
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tToExecute, tValidScript
+	put "testParameters " & quote & "foo/bar" & quote & ", " & quote & "foo/bar" & quote into tToExecute
+	
+	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object command two params result", msg is "foo/bar"
+	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
+end TestIntelligenceObjectCommandWithTwoLiteralParams
