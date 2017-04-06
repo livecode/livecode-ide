@@ -898,11 +898,11 @@ end sePaneMaximumHeight
 
 # Parameters
 #   pType : either "compilation", "execution" or "warning"
-#   pErrorId : the id of an error as returned by the engine.
+#   pErrorId : the error string
 # Returns
 #   The description of the specified error.
-function seErrorDescription pType, pErrorId
-   return revIDELookupError(pType, pErrorId)
+function seErrorDescription pType, pError
+   return revIDELookupError(pType, pError)
 end seErrorDescription
 
 # Parameters

@@ -88,22 +88,26 @@ end clearErrors
 #   A string in the following format.
 #   <object> tab <type> tab <line> tab <char> tab <description> tab <token>
 private function formatError pType, pError, pObject
-  local tLine, tPosition, tDescription, tToken
-  if pType is "compilation" then
-    put seErrorDescription(pType, item 1 of pError) into tDescription
-    put item 2 of pError into tLine
-    put item 3 of pError into tPosition
-    put item 4 to -1 of pError into tToken
-  else if pType is "execution" then
-    put seErrorDescription(pType, item 1 of line 1 of pError) into tDescription
-    put item 2 of line 1 of pError into tLine
-    put item 3 of line 1 of pError into tPosition
-    put item 4 to -1 of line 1 of pError into tToken
-  end if
-  
-  local tFormattedError
-  put pObject & tab & pType & tab & tLine & tab & tPosition & tab & tDescription & tab & tToken into tFormattedError
-  return tFormattedError
+   local tLine, tPosition, tDescription, tToken
+   if pType is "compilation" then
+      put seErrorDescription(pType, pError) into tDescription
+      put item 2 of pError into tLine
+      put item 3 of pError into tPosition
+      put item 4 to -1 of pError into tToken
+   else if pType is "execution" then
+      put seErrorDescription(pType, pError) into tDescription
+      put item 4 to -1 of line 1 of pError into tToken
+      put item 2 of line 1 of pError into tLine
+      if tToken is "runtime" then
+         put empty into tToken
+      else
+         put item 3 of line 1 of pError into tPosition
+      end if
+   end if
+   
+   local tFormattedError
+   put pObject & tab & pType & tab & tLine & tab & tPosition & tab & tDescription & tab & tToken into tFormattedError
+   return tFormattedError
 end formatError
 
 private command updateList   

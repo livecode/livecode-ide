@@ -255,14 +255,13 @@ on preOpenCard
       if tNumber is kExternalHandlerError then
          put item 4 to -1 of line 1 of tError after tErrorString
       else
-         put revIDELookupError("execution", tNumber) after tErrorString
+         put revIDELookupError("execution", tError) after tErrorString
       end if
       put return after tErrorString
    else if tScriptError is not empty then
       put tScriptError into tError
-      put item 1 of line 1 of tError into tNumber
       put "     " & tab & "compiling at" && the long time & return into tErrorString
-      put "Type" & tab & revIDELookupError("compilation", tNumber) after tErrorString
+      put "Type" & tab & revIDELookupError("compilation", tError) after tErrorString
       put return after tErrorString
    end if
    
@@ -443,9 +442,9 @@ setProp cCurrentObject pWhat
    local tParsedData
    repeat for each line l in (line 1 to -2 of pWhat)
       if tScriptError then 
-         put "     " & tab & revIDELookupError("compilation", (item 1 of l)) after tParsedData
+         put "     " & tab & revIDELookupError("compilation", l) after tParsedData
       else 
-         put "Type" & tab & revIDELookupError("execution", (item 1 of l)) after tParsedData
+         put "Type" & tab & revIDELookupError("execution", l) after tParsedData
       end if
       put return after tParsedData
       put word 1 to -1 of line (item 2 of l) of the script of tObject & cr after tParsedData

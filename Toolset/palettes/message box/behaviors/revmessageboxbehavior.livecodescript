@@ -601,17 +601,16 @@ function ideMessageBoxFormatErrorForDisplay pErrorTrace, pErrorType
    local tError, tErrorDisplay, tLineNum
    put line 1 of pErrorTrace into tError
    if item 1 of tError is a number and item 1 of tError >= 0 then
-      if pErrorType is "compile error" then
-         put item 1 of line 1 of tError into tLineNum
+      if tErrorType is "compile error" then
          --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]",revIDELookupError("compilation",tLineNum)) into tErrorDisplay
-         put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", tLineNum) into tErrorDisplay
+         put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", tError) into tErrorDisplay
       else
          if item 1 of tError is kExternalErrorCode then
             --put revIDELocalisedConstructedString("External execution error:" & cr & "Error description: [error]",item 4 to -1 of line 1 of tError) into tErrorDisplay
             put "External execution error:" & cr & "Error description:" && item 4 to -1 of line 1 of tError into tErrorDisplay
          else 
             --put revIDELocalisedConstructedString("Message execution error:" & cr & "Error description: [error]" & cr & "Hint: [hint]",revIDELookupError("execution", (item 1 of line 1 of tError)),item 4 to -1 of line 1 of tError) into tErrorDisplay
-            put "Message execution error:" & cr & "Error description:" && revIDELookupError("execution", (item 1 of line 1 of tError))  & cr & \
+            put "Message execution error:" & cr & "Error description:" && revIDELookupError("execution", tError)  & cr & \
                   "Hint:" && item 4 to -1 of line 1 of tError into tErrorDisplay
          end if
       end if
