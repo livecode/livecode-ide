@@ -587,20 +587,21 @@ command ideMessageBoxExecuteScript pScript
    local tValidScript
    ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, ideIsDebugging(), tValidScript
    if the result is not empty then
-      put ideMessageBoxFormatErrorForDisplay(the result) into field "results" of card lSelectedCard of me
+      put ideMessageBoxFormatErrorForDisplay(the result, "compile error") into field "results" of card lSelectedCard of me
+   else if it is not empty then
+      put ideMessageBoxFormatErrorForDisplay(it, "execution error") into field "results" of card lSelectedCard of me
    end if
    
    return tValidScript
 end ideMessageBoxExecuteScript 
    
-function ideMessageBoxFormatErrorForDisplay pErrorTrace
+function ideMessageBoxFormatErrorForDisplay pErrorTrace, pErrorType
    --if there is an error, then this will be formatted and then displayed in the results field
    ##GH : will need localising
-   local tError, tErrorDisplay, tLineNum, tErrorType
-   put line 1 of pErrorTrace into tErrorType
-   put line 2 of pErrorTrace into tError
+   local tError, tErrorDisplay, tLineNum
+   put line 1 of pErrorTrace into tError
    if item 1 of tError is a number and item 1 of tError >= 0 then
-      if tErrorType is "compile error" then
+      if pErrorType is "compile error" then
          put item 1 of line 1 of tError into tLineNum
          --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]",revIDELookupError("compilation",tLineNum)) into tErrorDisplay
          put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", tLineNum) into tErrorDisplay

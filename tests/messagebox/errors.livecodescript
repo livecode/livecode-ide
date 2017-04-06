@@ -34,11 +34,68 @@ on TestTeardown
 end TestTeardown
 
 on TestBug17380
-   // An error is thrown when running this test due to bug 17465
-   /*
    revIDELaunchResource("sample stacks")
    MessageBoxIsEmpty
    
    TestAssert "message box is empty after opening revOnline stack", the result
-   */
 end TestBug17380
+
+on TestMessageBoxCompileError
+   local tValidScript, tScript
+   // Should be "if true then..."
+   put "if true ten go home" into tScript
+   
+   ideExecuteScript tScript, empty, empty, false, tValidScript
+   TestAssert "execute script with compile error result", line 1 of the result is "189,2,4,ten"
+   TestAssert "execute script with compile error script invalid", tValidScript is empty
+end TestMessageBoxCompileError
+
+on TestMessageBoxExecutionError
+   local tValidScript, tScript
+   put "edit the script of stack nonexistent" into tScript
+   
+   ideExecuteScript tScript, empty, empty, false, tValidScript
+   TestAssert "execute script with script error result", line 1 of it is "91,11401,1"
+   TestAssert "execute script with script error script invalid", tValidScript is tScript
+end TestMessageBoxExecutionError
+
+on TestMessageBoxExecuteMultipleWithError
+   local tValidScript, tScript
+   put "put foo; throw bar" into tScript
+   
+   ideExecuteScript tScript, empty, empty, false, tValidScript
+   TestAssert "execute multiline script with script error result", msg is "foo"
+   TestAssert "execute multiline script with compile error script invalid", tValidScript is tScript
+end TestMessageBoxExecuteMultipleWithError
+
+-- Bug 17863
+on TestIntelligenceObjectGetNonExistentFunction
+   local tStack
+	create stack
+	put it into tStack
+	
+   local tToExecute, tValidScript
+	put "get aNonExistentFunction()" into tToExecute
+	
+	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	
+	TestAssert "intelligence object non-existent function result", line 1 of it is "219,11400,4,aNonExistentFunction"
+	TestAssert "intelligence object non-existent function executed", tValidScript is tToExecute
+end TestIntelligenceObjectGetNonExistentFunction
+
+-- Bug 17241
+on TestIntelligenceObjectPutFunctionWithParamError
+	local tScript
+	put "function valueFunction pParam; return pParam; end valueFunction" into tScript
+
+	local tStack
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+
+	local tValidScript
+
+	ideExecuteScript "put valueFunction(hello world)", empty, tStack, false, tValidScript
+	TestAssert "intelligence object put function with multi-segment param error", the result is "126,2,19,world"
+	TestAssert "intelligence object put function with multi-segment param invalid", tValidScript is empty
+end TestIntelligenceObjectPutFunctionWithParamError

@@ -11122,7 +11122,7 @@ end __publicScriptHandlers
 
 private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
    if pObject is empty then
-      return "No such object"
+      return empty
    end if
    
    local tHandlerList
@@ -11175,22 +11175,22 @@ private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
          exit repeat
       end if
    end repeat
-   
-   local tError
+
+   local tCompileError
    ideCompileCheck tDoScript
-   put the result into tError
-   if tError is empty then
-      try
-         send "-- execute in object context" & return & tDoScript to pObject
-      catch tError
-         
-      end try
-   end if
-   if tError is empty then
-      put tDoScript into rValidScript
+   put the result into tCompileError
+   if tCompileError is not empty then
+      return tCompileError for error
    end if
    
-   return tError
+   local tScriptError
+   try
+      send "-- execute in object context" & return & tDoScript to pObject
+   catch tScriptError
+      return tScriptError for value
+   end try
+   
+   put tDoScript into rValidScript
 end __tryToDoScriptInObject
 
 command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
@@ -11202,27 +11202,30 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    
    if pScript is empty then exit ideExecuteScript
    
-   # Try executing as a command first
-   if word 1 of pScript is among the lines of the commandNames then
-      ideDoMessage pScript, pDebugMode
-      if the result is empty then
-         put pScript into rValidScript
-         return empty
-      end if
-   end if
+   local tCompileError
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
    local tValidScript
    __tryToDoScriptInObject pIntelligenceObject, pScript, tValidScript
-   if the result is not empty then
+   if tValidScript is empty then
       __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tValidScript
    end if
    
-   if the result is empty then
+   if tValidScript is not empty then
       put tValidScript into rValidScript
-      return empty
+      return it for value
    end if
    put empty into tValidScript
+   
+   # Try executing as a command
+   if word 1 of pScript is among the lines of the commandNames then
+      ideDoMessage pScript, pDebugMode
+      put the result into tCompileError
+      if tCompileError is empty then
+         put pScript into rValidScript
+         return it for value
+      end if
+   end if
    
    --deals with the put command, if the put command cannot be executed as is then:
    --the message box will attempt to auto complete the typing of a name of an object property and the contents of that property into the results area
@@ -11250,7 +11253,8 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
       # Try as an object property of the intelligence object
       if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
          ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
-         if the result is empty then 
+         put the result into tCompileError
+         if tCompileError is empty then
             local tName
             # pIntelligence object may be a bad reference or no longer exist
             try
@@ -11268,7 +11272,8 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
       if tValidScript is empty then
          if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
             ideDoMessage tTryProperty, pDebugMode
-            if the result is empty then
+            put the result into tCompileError
+            if tCompileError is empty then
                put tTryProperty into tValidScript
             end if
          end if
@@ -11284,7 +11289,8 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
       # Try as a boolean expression
       if tValidScript is empty then
          ideDoMessage tBooleanExpression, pDebugMode
-         if the result is empty then
+         put the result into tCompileError
+         if tCompileError is empty then
             put tBooleanExpression into tValidScript
          end if
       end if
@@ -11294,18 +11300,19 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    # Otherwise just try as is and ensure we get the correct error
    if tValidScript is empty then
       ideDoMessage pScript, pDebugMode
-      if the result is empty then 
+      put the result into tCompileError
+      if tCompileError is empty then 
          put pScript into tValidScript
       end if
    end if
    
    if tValidScript is empty then
-      return the result
+      return tCompileError for error
    end if
    unlock screen
    
    put tValidScript into rValidScript
-   return empty
+   return it for value
 end ideExecuteScript
 
 /** 
@@ -11361,7 +11368,7 @@ end __removeMessageBoxFromDebugContexts
 command ideDoMessage pScript, pDebugMode
    ideCompileCheck pScript
    if the result is not empty then
-      return "compile error" & return & the result
+      return the result for error
    end if
    
    do "global" && the globals
@@ -11397,10 +11404,7 @@ command ideDoMessage pScript, pDebugMode
    catch tScriptError
    end try
    
-   if tScriptError is not empty then
-      put "execution error" & return before tScriptError
-   end if
-   return tScriptError
+   return tScriptError for value
 end ideDoMessage
 
 private function menuitemEscape pItem, pFirst
