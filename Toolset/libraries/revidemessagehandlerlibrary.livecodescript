@@ -343,7 +343,7 @@ end moveControl
 on mouseMove pX, pY
    local tTarget, tParams
    put the long id of the target into tTarget
-   if not revIDEStackIsIDEStack(tTarget) then
+   if not revIDEObjectIsOnIDEStack(tTarget) then
       put pX into tParams[1]
       put pY into tParams[2]
       put tTarget into tParams[3]
@@ -355,7 +355,7 @@ end mouseMove
 on mouseDown pButton
    local tTarget, tParams
    put the long id of the target into tTarget
-   if not revIDEStackIsIDEStack(tTarget) then
+   if not revIDEObjectIsOnIDEStack(tTarget) then
       put pButton into tParams[1]
       put tTarget into tParams[2]
       send "ideMessageSendWithParameters" &&  "ideMouseDown, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
@@ -366,7 +366,7 @@ end mouseDown
 on mouseUp pButton
    local tTarget, tParams
    put the long id of the target into tTarget
-   if not revIDEStackIsIDEStack(tTarget) then
+   if not revIDEObjectIsOnIDEStack(tTarget) then
       put pButton into tParams[1]
       put tTarget into tParams[2]
       send "ideMessageSendWithParameters" &&  "ideMouseUp, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
@@ -377,7 +377,7 @@ end mouseUp
 on mouseDoubleUp pButton
    local tTarget, tParams
    put the long id of the target into tTarget
-   if not revIDEStackIsIDEStack(tTarget) then
+   if not revIDEObjectIsOnIDEStack(tTarget) then
       put pButton into tParams[1]
       put tTarget into tParams[2]
       send "ideMessageSendWithParameters" &&  "ideMouseDoubleUp, tTarget, tParams" to stack "revIDELibrary" in 0 milliseconds
