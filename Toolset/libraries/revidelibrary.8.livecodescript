@@ -1509,9 +1509,6 @@ on revIDEInitialiseIDELibrary
    
    ## Initialise property library
    revIDEPropertyLibraryInitialise
-   
-   ## Initialise error handling
-   revIDEInitialiseErrors
 end revIDEInitialiseIDELibrary
 
 #############
@@ -11633,14 +11630,7 @@ function revIDEObjectIsOpen pLongID
    return exists(pLongID)
 end revIDEObjectIsOpen
 
-local sLCBErrorCode
-constant kExtensionError = "extension: error occured with domain"
-private command revIDEInitialiseErrors
-   if sLCBErrorCode is empty then
-      put lineOffset(kExtensionError, the scriptExecutionErrors) into sLCBErrorCode
-   end if
-end revIDEInitialiseErrors
-
+constant kExtensionErrorCode = 863
 /**
 Returns the error description associated with the given 
 error code.
@@ -11658,7 +11648,7 @@ function revIDELookupError pType, pError
    if pType is "compilation" then
       return line tCode of the scriptParsingErrors
    else if pType is "execution" then
-      if tCode is sLCBErrorCode then
+      if tCode is kExtensionErrorCode then
          local tLine, tFile, tDesc
          put item 4 to -1 of line 2 of pError into tDesc
          put item 4 to -1 of line 3 of pError into tFile

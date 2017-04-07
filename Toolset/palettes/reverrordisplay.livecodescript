@@ -1,7 +1,4 @@
 ﻿script "revErrorDisplay"
-# AL-2015-07-07: Ensure LCB error code matches that of the engine.
-local sLCBErrorCode
-
 on moveStack
    updateStoredRect
 end moveStack
@@ -28,13 +25,7 @@ private command updateStoredRect
 end updateStoredRect
 
 # OK-2007-07-02: Bug 5203
-constant kExtensionError = "extension: error occured with domain"
 on preOpenStack
-   if sLCBErrorCode is empty then
-      # AL-2015-07-07: Calculate LCB error code
-      put lineOffset(kExtensionError, the scriptExecutionErrors) into sLCBErrorCode
-   end if
-   
    local tStoredRect
    put revIDEGetPreference("cErrorDisplayRect") into tStoredRect
    
@@ -152,6 +143,7 @@ constant kExternalHandlerError = 634
 constant kErrorTextColor = "64,64,64"
 constant kErrorYellowIconID = 202696
 constant kErrorGreyIconID = 202697
+constant kExtensionErrorCode = 863
 
 on preOpenCard
    global gREVMovingPalette, gREVDevelopment, gRevExit
@@ -281,7 +273,7 @@ on preOpenCard
       exit to top
    end if
    
-   if tNumber is sLCBErrorCode then
+   if tNumber is kExtensionErrorCode then
       put "LCB Error" & tab & item 4 to -1 of line 2 of tError into line 2 of tErrorString
       put "LCB File" & tab & item 4 to -1 of line 3 of tError & cr after tErrorString
       put "LCB Line" & tab & item 4 to -1 of line 4 of tError after tErrorString
@@ -525,7 +517,7 @@ on mouseDoubleUp
       put the tKey of this stack into tError
       
       -- If it is an LCB Error there is no double-click behavior
-      if item 1 of line 1 of tError is sLCBErrorCode then
+      if item 1 of line 1 of tError is kExtensionErrorCode then
          exit mouseDoubleUp
       end if
       
