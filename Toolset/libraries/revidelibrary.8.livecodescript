@@ -1509,7 +1509,6 @@ on revIDEInitialiseIDELibrary
    
    ## Initialise property library
    revIDEPropertyLibraryInitialise
-   
 end revIDEInitialiseIDELibrary
 
 #############
@@ -5525,6 +5524,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
       case "documentationpane"
          return tPathToBehaviors & slash & "revsedocumentationpanebehavior.livecodescript"
+      case "errorspane"
+         return tPathToBehaviors & slash & "revseerrorspanebehavior.livecodescript"	
       case "filterfield"
          return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
       case "variablescheckbox"
@@ -11629,6 +11630,7 @@ function revIDEObjectIsOpen pLongID
    return exists(pLongID)
 end revIDEObjectIsOpen
 
+constant kExtensionErrorCode = 863
 /**
 Returns the error description associated with the given 
 error code.
@@ -11640,11 +11642,20 @@ Returns : The description of the specified error.
 >*Note:* if <pType> is "warning", this function will currently return 
 empty.
 */
-function revIDELookupError pType, pCode
+function revIDELookupError pType, pError
+   local tCode
+   put item 1 of line 1 of pError into tCode
    if pType is "compilation" then
-      return line pCode of the scriptParsingErrors
+      return line tCode of the scriptParsingErrors
    else if pType is "execution" then
-      return line pCode of the scriptExecutionErrors
+      if tCode is kExtensionErrorCode then
+         local tLine, tFile, tDesc
+         put item 4 to -1 of line 2 of pError into tDesc
+         put item 4 to -1 of line 3 of pError into tFile
+         put item 4 to -1 of line 4 of pError into tLine
+         return merge("LCB Error in file [[tFile]] at line [[tLine]]: [[tDesc]]")
+      end if
+      return line tCode of the scriptExecutionErrors
    else if pType is "warning" then
       return empty
    end if
