@@ -162,17 +162,34 @@ private command TestUpdateAnalysis pFilename, pTestCommand, @xAnalysis
    put TesterTapCombine(xAnalysis, the result) into xAnalysis
 end TestUpdateAnalysis
 
+private command appendToList pElt, @xList
+   put pElt into xList[the number of elements in xList + 1]
+end appendToList
+
+private function getAllTestFileNames
+   local tIDETests, tIDESupportTests
+   put TestGetIDERepositoryPath() & "/tests" into tIDETests
+   put TestGetEngineRepositoryPath() & "/tests/ide-support" into tIDESupportTests
+   
+   local tFiles
+   repeat for each element tFile in TesterGetTestFileNames(tIDETests)
+      appendToList tIDETests & slash & tFile, tFiles
+   end repeat
+   
+   repeat for each element tFile in TesterGetTestFileNames(tIDESupportTests)
+      appendToList tIDESupportTests & slash & tFile, tFiles
+   end repeat
+
+   return tFiles
+end getAllTestFileNames
+
 private command invokeAllTests      
    local tAnalysis   
    TestLoadIDE
    put the result into tAnalysis
-      
-   local tTopLevel
-   put revIDESpecialFolderPath("IDE") & "/tests" into tTopLevel
-   
-   local tFile
-   repeat for each element tFile in TesterGetTestFileNames(tTopLevel)
-      invokeTestScript tTopLevel & slash & tFile
+
+   repeat for each element tFile in getAllTestFileNames()
+      invokeTestScript tFile
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
    
