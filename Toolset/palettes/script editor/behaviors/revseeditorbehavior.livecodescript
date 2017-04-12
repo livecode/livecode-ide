@@ -6,51 +6,10 @@
 # The map is updated whenever scriptCompile is called.
 local sHandlerMap
 
-# The following variables store information used for the undo / redo system.
-local sTextOperationOffsets
-local sTextOperationNewTexts
-local sTextOperationOldTexts
-local sTextOperationIndex
-
-local sTextOperationTop
-
-local sTextGroupLabels
-local sTextGroupLengths
-local sTextGroupIndex
-local sTextGroupTop
-
-local sTextGutterNumbers
-local sTextGutterOverlay
-local sTextGutterLastNumber
-
-local sTextFormatKeywordMap
-
-local sTextMark
-
 # These two variables store which object the current search was started on, and which#
 # object the most recent result was found in respectively.
 local sFirstFindObject
 local sLastFindObject
-
-# OK-2009-01-17 : Bug 7169 - Store whether scripts are "dirty" or not, i.e whether the user has actually
-# modified them, as opposed to they were modified by the script editor. (This can happen in the case of template scripts)
-local sDirty
-
-################################################################################
-#
-# Editor object interface, please do not call any commands / functions outside the
-# following section.
-#
-################################################################################
-
-# OK-2009-01-17 : Bug 7169
-command setDirty pObject, pValue
-   put pValue into sDirty[pObject]
-end setDirty
-
-command getDirty pObject
-   return sDirty[pObject]
-end getDirty
 
 constant kMinGutterWidth = 16
 
@@ -137,7 +96,6 @@ command resize
 
 end resize
 
-local sObjectId
 local sUniqueId
 
 # Description
@@ -145,9 +103,9 @@ local sUniqueId
 #   Initializes the group. Note that this is also called when there are no more
 #   objects to edit, this may happen when the user has removed the last object
 #   from the script editor. This is the reason why this command saves the previous
-#   context before putting empty into sObjectId.
+#   context before putting empty into getObjectID().
 command initialize
-   if sObjectId is not empty then
+   if getObjectID() is not empty then
       contextSave
    end if
    
@@ -172,7 +130,7 @@ command initialize
       call "openControl" to group "Interactive Find" of me
    end if
    
-   put empty into sObjectId
+   setObjectID empty
    put 0 into sUniqueId
    
    unlock screen
@@ -226,9 +184,6 @@ command reapplyPreferences
    unlock screen
 end reapplyPreferences
 
-# Stores an array of cached object scripts for switching back to objects with unsaved changes
-local sScriptCache
-
 local sLastSelections
 
 # Description
@@ -238,32 +193,30 @@ local sLastSelections
 #   in memory as a script local. Thus full selections are remembered when switching tabs, but only
 #   the location of the selection is remembered when opening a new tab or after restarting rev.
 private command contextSave
-   revMetadataSet sObjectId, "general", "scripteditorvscroll", the vScroll of field "Script" of me
+   revMetadataSet getObjectID(), "general", "scripteditorvscroll", the vScroll of field "Script" of me
    
    if the long id of the focusedObject is the long id of field "Script" of me then
       get the selectedChunk
-      put word 2 of it & comma & word 4 of it into sLastSelections[sObjectId]
-      revMetadataSet sObjectId, "general", "scripteditorselection", word 4 of it
+      put word 2 of it & comma & word 4 of it into sLastSelections[getObjectID()]
+      revMetadataSet getObjectID(), "general", "scripteditorselection", word 4 of it
    end if
 end contextSave
-
-local sLastSelectedChunk
 
 # Description
 #   Loads the previously saved context for for current object if one was saved.
 private command contextLoad
    local tSelection
    
-   if sLastSelections[sObjectId] is not empty then
+   if sLastSelections[getObjectID()] is not empty then
       # If there is a last selection stored in memory, this means the user has previously opened this object
       # and is just changing tabs. In this case we remember the entire selection.
-      put sLastSelections[sObjectId] into tSelection
+      put sLastSelections[getObjectID()] into tSelection
    else
       # If there is no last selection in memory, this means either the user didnt select anything, or they
       # have not opened the object yet. In this case we only remember the location of the selection, not what was selected.
       # This information is stored as object metadata. In previous versions of the script editor, both the selection start and end
       # were stored, but this was changed to store only the selection end. This change is what warrants the extra check.
-      put revMetadataGet(sObjectId, "general", "scripteditorselection") into tSelection
+      put revMetadataGet(getObjectID(), "general", "scripteditorselection") into tSelection
       
       # In case the object was last edited with an older version, get rid of any excess selection info.
       if the number of items of tSelection > 1 then
@@ -280,12 +233,12 @@ private command contextLoad
          select char (item 1 of tSelection) to (item 2 of tSelection) of field "Script" of me
          
          # OK-2009-01-17 : Bug 7601 - Update sLastSelectedChunk here as it will be incorrect until the first selectionChanged message is triggered
-         put tSelection into sLastSelectedChunk
+         setLastSelectedChunk tSelection
       end try
    end if
    
    local tScroll
-   put revMetadataGet(sObjectId, "general", "scripteditorvscroll") into tScroll
+   put revMetadataGet(getObjectID(), "general", "scripteditorvscroll") into tScroll
    
    if tScroll is not empty then
       set the vScroll of field "Script" of me to tScroll
@@ -324,21 +277,66 @@ command loadScript
    end if
    
    local tCachedScript
-   put sScriptCache[sObjectId] into tCachedScript
+   scriptGetCache getObjectID()
+   put the result into tCachedScript
+   
    lock screen
    if tCachedScript is not empty then
       # If there is a cached script, this means that the user is coming back to this object from another tab.
       textSetScriptRaw tCachedScript
    else
-      local tScript
-      put the script of sObjectId into tScript
-      
-      textSetScriptRaw tScript
-      
-      # OK-2008-07-07 : Bug 6746
-      seUpdateCheckSum sObjectId, tScript
-      if tScript is empty then   
-         select before field "Script" of me
+      # If the object has no script, get the default script for it, otherwise the current script is used
+      if the script of getObjectID() is not empty then
+         local tScript
+         put the script of getObjectID() into tScript
+         
+         textSetScriptRaw tScript
+         
+         # OK-2008-07-07 : Bug 6746
+         seUpdateCheckSum getObjectID(), tScript
+      else
+         # AL-2015-09-21: Tweaked logic for default script
+         local tType, tStyle
+         put word 1 of the name of getObjectID() into tType
+         if tType is among the items of "button,field,stack,graphic,scrollbar" then
+            put the style of getObjectID() into tStyle
+         else if tType is "widget" then
+            put the kind of getObjectID() into tStyle
+         else -- groups, cards, images and players have no style property so just pass empty
+            put empty into tStyle
+         end if
+         
+         local tDefaultScript
+         put seDefaultScript(tType, tStyle) into tDefaultScript
+         textSetScriptRaw tDefaultScript
+         
+         local tDefaultSelection
+         put seDefaultScriptSelection(tType, tStyle) into tDefaultSelection
+         
+         # OK-2008-08-19 : When a default script is put into an object, the object should be marked as modified
+         # in the script editor, as the script in the field is not the same as the object's actual script.
+         if tDefaultScript is not empty then
+            seSetObjectState getObjectID(), "edited"
+         end if
+         
+         # OK-2008-07-07 : Bug 6746 - When a default script was loaded, it means the object's actual script was empty,
+         # therefore the checksum should represent this. 
+         local tEmpty
+         put empty into tEmpty
+         seUpdateChecksum getObjectID(), tEmpty
+         
+         if tDefaultSelection is not empty then
+            # Try is needed here to allow the IDE to add objects to a script editor before opening it
+            try
+               select char (item 1 of tDefaultSelection) to (item 2 of tDefaultSelection) of field "Script" of me
+               
+               # OK-2009-01-17 : Bug 7601 - When a script is first loaded, slastSelectedChunk may be empty
+               # or incorrect as the user has not yet done a selection to trigger selectedChanged and update it.
+               setLastSelectedChunk tDefaultSelection
+            end try
+         else
+            select before field "Script" of me
+         end if
       end if
    end if
    
@@ -364,18 +362,18 @@ command setObject pObjectId, pDontSendCallbacks
    local tRuggedObjectId
    put seGetRuggedId(pObjectId) into tRuggedObjectId
 
-   if sObjectId is not empty and tRuggedObjectId is sObjectId then
+   if getObjectID() is not empty and tRuggedObjectId is getObjectID() then
       if not pDontSendCallbacks then
-         seSendCallbacks sObjectId, the name of stack (revTargetStack(the long id of me))
+         seSendCallbacks getObjectID(), the name of stack (revTargetStack(the long id of me))
       end if
       exit setObject
    end if
    
    # If we are closing a previous object and the script has not been applied,
    # cache the script of the previous object internally, and save the context
-   if sObjectId is not empty then
-      put textGetScript() into sScriptCache[sObjectId]
-      if there is a sObjectId then
+   if getObjectID() is not empty then
+      cacheScript getObjectID(), textGetScript()
+      if there is a getObjectID() then
          contextSave
       end if
    end if
@@ -389,14 +387,14 @@ command setObject pObjectId, pDontSendCallbacks
    
    findClearResults
    
-   EditorFieldCacheSwap sObjectId, tRuggedObjectId
-   put tRuggedObjectId into sObjectId
+   EditorFieldCacheSwap getObjectID(), tRuggedObjectId
+   setObjectID tRuggedObjectId
    loadScript
    resize
    unlock screen
    
    if not pDontSendCallbacks then
-      seSendCallbacks sObjectId, the name of stack (revTargetStack(the long id of me))
+      seSendCallbacks getObjectID(), the name of stack (revTargetStack(the long id of me))
    end if
 end setObject
 
@@ -404,7 +402,7 @@ end setObject
 #   Reverts the script of the current object to the last applied version
 command revertObject
    loadScript
-   seSetObjectState sObjectId, "applied"
+   seSetObjectState getObjectID(), "applied"
 end revertObject
 
 # Parameters
@@ -415,113 +413,31 @@ end revertObject
 #   its rugged id. It should not be called outside this situation as stuff will break.
 command setObjectRaw pObjectId
    local tOldObjectId
-   put sObjectId into tOldObjectId
+   put getObjectID() into tOldObjectId
    
-   put seGetRuggedId(pObjectId) into sObjectId
+   setObjectID pObjectId
    
    if tOldObjectId is empty then
       exit setObjectRaw
    end if
    
-   # If there was a previous object and we are changing its id, then we have to update all the script locals
-   # that may contain references to the old object. This is rather ugly, but it allows things like undo to work
-   # even when objects are moved.
-   local tStateData
-   
-   # Script cache, stores unapplied scripts when tabs are changed
-   updateArrayKey sScriptCache, tOldObjectId, sObjectId
-   
-   # Undo stuff
-   updateMultiItemArrayKey sTextOperationOffsets, tOldObjectId, sObjectId, 44, 1
-   updateMultiItemArrayKey sTextOperationOldTexts, tOldObjectId, sObjectId, 44, 1
-   updateMultiItemArrayKey sTextOperationNewTexts, tOldObjectId, sObjectId, 44, 1
-   updateArrayKey sTextOperationTop, tOldObjectId, sObjectId
-   updateArrayKey sTextOperationIndex, tOldObjectId, sObjectId
-   
-   updateMultiItemArrayKey sTextGroupLabels, tOldObjectId, sObjectId, 44, 1
-   updateMultiItemArrayKey sTextGroupLengths, tOldObjectId, sObjectId, 44, 1
-   updateArrayKey sTextGroupIndex, tOldObjectId, sObjectId
-   updateArrayKey sTextGroupTop, tOldObjectId, sObjectId
-   updateArrayKey sTextMark, tOldObjectId, sObjectId
+   updateObjectID tOldObjectID, getObjectID()
    
    # Find results
    if sLastFindObject is tOldObjectId then
-      put sObjectId into sLastFindObject
+      put getObjectID() into sLastFindObject
    end if
    
    if sFirstFindObject is tOldObjectId then
-      put sObjectId into sFirstFindObject
+      put getObjectID() into sFirstFindObject
    end if
 end setObjectRaw
-
-
-# Parameters
-#   pArray : reference to an array. This gets modified
-#   pOldKey : one of the array keys
-#   pNewKey : the new key to replace pOldKey with
-# Description
-#   Removes the element pOldKey from the array, and creates
-#   a new element pNewKey with the same data. Essentially renaming the key.
-#   If the element is empty, does nothing.
-private command updateArrayKey @pArray, pOldKey, pNewKey
-   local tData
-   if pArray[pOldKey] is not empty then
-      put pArray[pOldKey] into tData
-      delete variable pArray[pOldKey]
-      put tData into pArray[pNewKey]
-   end if
-end updateArrayKey
-
-# Parameters
-#   pArray : reference to an array. This gets modified
-#   pOldKey : one of the array keys
-#   pNewKey : the new key to replace pOldKey with
-#   pDelimiter : an ascii char code that delimits dimensions in the array's key. If empty, comma is assumed.
-#   pItemNumer : which item number of the key needs to match pOldKey
-# Description
-#   Removes all keys with the specified dimension matching pOldKey from the array
-#   and replaces them with equivalent keys matching pNewKey.
-private command updateMultiItemArrayKey @pArray, pOldKey, pNewKey, pDelimiter, pItemNumber
-   local tData
-   
-   if pDelimiter is not empty then
-      set the itemDelimiter to numToChar(pDelimiter)
-   end if
-   
-   # Create a list of keys that need to be modified
-   local tKeys
-   repeat for each line tKey in the keys of pArray
-      if item pItemNumber of tKey is pOldKey then
-         put tKey & return after tKeys
-      end if
-   end repeat
-   delete the last char of tKeys
-   
-   if tKeys is empty then
-      exit updateMultiItemArrayKey
-   end if
-   
-   # Apply the modification to the keys
-   repeat for each line tKey in tKeys
-      local tNewKey
-      put tKey into tNewKey
-      put pNewKey into item pItemNumber of tNewKey
-      put pArray[tKey] into pArray[tNewKey]
-      delete variable pArray[tKey]
-   end repeat
-end updateMultiItemArrayKey
 
 # Description
 #   Returns a reference to the current object being edited.
 command getObject
-   return sObjectId
+   return getObjectID()
 end getObject
-
-# Description
-#   Returns the number of the selected line in the current script
-command getSelectedLine
-   return word 2 of the selectedLine
-end getSelectedLine
 
 # Parameters
 #   pDontUpdate : if true, the selected handler is assumed to be up to date and the stored one is just returned.
@@ -612,7 +528,7 @@ private command updateHandlerList
    local tOldVarChecking
    put sePrefGet("explicitVariables") into tOldVarChecking
    sePrefSet "explicitVariables", "false"
-   scriptCompile sObjectId
+   scriptCompile getObjectID()
    sePrefSet "explicitVariables", tOldVarChecking
 end updateHandlerList
 
@@ -628,132 +544,10 @@ command clearCache pObject, pDontCheckId
    else
       put seGetRuggedId(pObject) into tObject
    end if
-   delete variable sScriptCache[tObject]
    delete variable sLastSelections[tObject]
+   
+   pass clearCache
 end clearCache
-
---command revertCache pObject
---   local tObject
---   put seGetRuggedId(pObject) into tObject
---   delete variable sLastSelections[tObject]
---   put the script of tObject into sScriptCache[tObject]
---end revertCache
-
-# Description
-#  Returns the last known token that the caret was placed into. This is not done properly
-#  at the moment as it depends on the syntax, for now we just return something sensible.
-command getCaretToken pUseClick
-   local tScript
-   put the text of getScriptField() into tScript
-   
-   # Don't return tokens in comments. For now we determine if the user is typing
-   # in a comment by simple means, using proper tokenization is not yet possible.
-   # This means that multi-line comments will break this.
-   local tLine
-   if pUseClick then
-      put word 2 of the clickLine into tLine
-   else
-      put word 2 of the selectedLine of getScriptField() into tLine
-   end if
-   if token 1 of line tLine of tScript is empty then
-      return empty
-   end if
-   
-   local tSelectedText
-   if pUseClick then
-      put the clickText into tSelectedText
-   else
-      put the selectedText of getScriptField() into tSelectedText
-      # OK-2008-06-22 : Bug 8054 - pUseClick is only set if we are building a context menu, so in this case
-      # do the expansion anyway to try and get a whole token.
-      if tSelectedText is not empty then
-         return tSelectedText
-      end if
-   end if
-   
-   # This is expanded to include tokens that the caret was placed immediately before or after,
-   # the reason for this is that it allows us to begin searching for tokens while the user is typing.
-   local tFrom, tTo
-   if pUseClick then
-      get the clickChunk
-   else
-      get the selectedChunk
-   end if
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   # We can't perfectly match tokens at the moment, so we just make a reasonable guess with a regular expression
-   # to match any char that delimits a token.
-   ## AL-2014-01-15: [[ Bug 11094 ]] Added # to the list of script editor token delimiters
-   local tExpression 
-   put "\s|[\%\^\&\*\(\)\-\+\=\]\]\;\,\\@\\\/\<\>\#]" into tExpression
-   
-   # Try looking backwards first
-   local tText, tChar
-   repeat with x = (tFrom - 1) down to 1
-      put char x of tScript into tChar
-      if matchText(tChar, tExpression) then
-         exit repeat
-      end if
-      put tChar before tText
-   end repeat
-   
-   # Try looking forwards
-   repeat with x = tFrom to the number of chars of tScript
-      put char x of tScript into tChar
-      if matchText(tChar, tExpression) then
-         exit repeat
-      end if
-      put tChar after tText
-   end repeat
-   
-   return tText
-end getCaretToken
-
-local slastNonEmptySelection
-
-command getLastSelection
-   return slastNonEmptySelection
-end getLastSelection
-
-command getLastSelectedWord
-   local tFrom, tTo
-   put item 1 of sLastSelectedChunk into tFrom
-   put item 2 of sLastSelectedChunk into tTo
-   
-   # If there is a non empty selection, just return that.
-   if tTo > tFrom then
-      return char tFrom to tTo of the text of getScriptField()
-   end if
-   
-   # If the selection is in the middle of a word, then return that.
-   # First loop back from the selected character to find the first part of the word. Keep going until we find a character
-   # that is either whitespace, or a bracket.
-   local tWordDivider
-   put merge("^[\[[quote]]|\[|\]\(|\)|\s]$") into tWordDivider
-   
-   local tBefore
-   repeat with x = tTo down to 1
-      get char x of the text of getScriptField()
-      if matchText(it, tWordDivider) then
-         exit repeat
-      end if
-      put it before tBefore
-   end repeat
-   
-   local tAfter
-   repeat with x = tTo + 1 to the number of chars of the text of getScriptField()
-      get char x of the text of getScriptField()
-      if matchText(it, tWordDivider) then
-         exit repeat
-      end if
-      put it after tAfter
-   end repeat
-   
-   local tWord
-   put tBefore & tAfter into tWord
-   return tWord
-end getLastSelectedWord
 
 # Description
 #   Locks the script to prevent the uesr from editing it. Used by the debugger.
@@ -761,12 +555,6 @@ command scriptLock
    set the lockText of field "Script" of me to true
    set the backgroundColor of field "Script" of me to sePrefGet("editor,debugBackgroundcolor")
 end scriptLock
-
-# Returns
-#   Whether or not the script is locked
-private function scriptLocked
-   return the lockText of field "Script" of me
-end scriptLocked
 
 # Description
 #   Unlocks the script, allowing the user to edit it.
@@ -779,12 +567,12 @@ end scriptUnlock
 #   Whether or not the current object script is password protected.
 private function scriptProtected
    # Prevent errors when editing the script editor.
-   if sObjectId is empty then
+   if getObjectID() is empty then
       return false
    end if
    
    local tStack
-   put revTargetStack(sObjectId)  into tStack
+   put revTargetStack(getObjectID())  into tStack
    
    # think this may be wrong...
    --   if the passKey of stack tStack is not the password of stack tStack then
@@ -805,165 +593,10 @@ end scriptProtected
 #   Shows error indicators for the specified compilation errors
 command setCompilationErrors pErrors, pObject
    send "setCompilationErrors pErrors, pObject" to group "Gutter" of me
-   if seGetRuggedId(pObject) is sObjectId then
+   if seGetRuggedId(pObject) is getObjectID() then
       updateGutterRequest empty, empty, empty, empty, false, true
    end if
 end setCompilationErrors
-
-# Parameters
-#   rStartLine : receives the line number that the current selection begins on
-#   rEndLine : receices the line number that the current selection ends on
-#   rStartChar : receives the char that the curent selection starts on
-#   rText : receives the block of text that will be commented or uncommented.
-# Description
-#   This command obtains the details required to comment / uncomment a block of code
-#   it is used by the scriptComment and scriptUncomment commands.
-private command commentGetDetails @rStartLine, @rEndLine, @rStartChar, @rText
-   # Calculate the chunk of text that the commenting will be applied to
-   local tStartLine, tEndLine
-   get the selectedLine
-   put word 2 of it into tStartLine
-   if word 3 of it is "to" then
-      put word 4 of it into tEndLine
-   end if
-   
-   # Adjust the chunk so that we have only complete lines by searching from the beginning
-   # backwards to the next return char. Don't bother doing this for the end as this doesn't matter.
-   get the selectedChunk
-   local tCurrentStart
-   put word 2 of it into tCurrentStart
-   
-   local tStartChar
-   
-   if tStartLine = 1 then
-      put 1 into tStartChar
-   else
-      local tPreviousChars
-      put char 1 to (tCurrentStart - 1) of field "Script" of me into tPreviousChars
-      
-      local tOffset
-      put 0 into tOffset
-      repeat with x = the number of chars of tPreviousChars down to 1
-         if char x of tPreviousChars is return then
-            exit repeat
-         end if
-         add 1 to tOffset
-      end repeat
-      #subtract 1 from tOffset
-      
-      put tCurrentStart - tOffset into tStartChar
-   end if
-   
-   # Get the text and add in the comments
-   local tText
-   if tEndLine is empty then
-      put line tStartLine of field "Script" of me into tText
-   else
-      put line tStartLine to tEndLine of field "Script" of me into tText
-   end if
-   
-   put tStartChar into rStartChar
-   put tStartLine into rStartLine
-   put tEndLine into rEndLine
-   put tText into rText
-end commentGetDetails
-
-# Description
-#   Comments out the selected text
-command scriptComment
-   local tStartLine, tEndLine, tStartChar, tText
-   commentGetDetails tStartLine, tEndLine, tStartChar, tText
-   if tStartLine is empty then
-      exit scriptComment
-   end if
-   
-   lock screen
-   
-   local tCommentChar
-   put sePrefGet("editor,commentchar") & space into tCommentChar
-   
-   local tCommentedText
-   repeat for each line tLine in tText
-      # Don't comment out empty lines as it looks messy
-      if not matchText(tLine, "^\s*$") then
-         put tCommentChar before tLine
-      end if
-      put tLine & return after tCommentedText
-   end repeat
-   delete the last char of tCommentedText
-   
-   # Apply the mutation to the field
-   textMark "Insert"
-   textReplace tStartChar, tText, tCommentedText
-   
-   # Restore the selection
-   select char tStartChar to tStartChar + length(tCommentedText)  of field "Script"
-   
-   # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
-   # but the proper solution is rather time-consuming.
-   if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
-   end if
-   
-   unlock screen
-end scriptComment
-
-# Desription
-#   Uncomments the selected text
-command scriptUncomment
-   local tStartLine, tEndLine, tStartChar, tText
-   commentGetDetails tStartLine, tEndLine, tStartChar, tText
-   if tStartLine is empty then
-      exit scriptUncomment
-   end if
-   
-   lock screen
-   local tCommentChar
-   put sePrefGet("editor,commentchar") into tCommentChar
-   local tUncommentedText
-   
-   local tCommentCharLength
-   put the length of tCommentChar  into tCommentCharLength
-   
-   repeat for each line tLine in tText
-      # Remove the first comment char that appears on the line
-      local tOffset
-      put offset(tCommentChar, tLine) into tOffset
-      if tOffset is 0 then
-         put tLine & return after tUncommentedText
-         next repeat
-      end if
-      
-      # Only remove the comment char if there is nothing significant before it
-      # MM-2012-09-28: [[ Bug 10162 ]] Make sure we include lines with chars before the comment in the uncommented text.
-      local tPreviousChars
-      put char 1 to (tOffset - 1) of tLine into tPreviousChars
-      if matchText(tPreviousChars, "^\s*$") then
-         if char tOffset + tCommentCharLength of tLine is space then
-            delete char tOffset + tCommentCharLength of tLine
-         end if
-         put char 1 to (tOffset - 1) of tLine & char (tOffset + tCommentCharLength) to -1 of tLine & return after tUncommentedText
-      else
-         put tLine & return after tUncommentedText
-      end if
-   end repeat
-   delete the last char of tUncommentedText
-   
-   # Apply the mutation to the field
-   textMark "Insert"
-   textReplace tStartChar, tText, tUncommentedText
-   
-   # Restore the selection
-   select char tStartChar to tStartChar + length(tUncommentedText)  of field "Script"
-   
-   # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
-   # but the proper solution is rather time-consuming.
-   if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
-   end if
-   
-   unlock screen
-end scriptUncomment
 
 # OK-2009-03-03 : Bug 7450
 # Parameters
@@ -1044,126 +677,6 @@ private function convertTypeCodeToSyntax pTypeCode
 end convertTypeCodeToSyntax
 
 # Parameters
-#   pOption : one of three possible strings, see below for details.
-#   pValue : depends on pOption, details below.
-# Description
-#   Colorizes the current script. pOption is one of the following options.
-#     "script" - colorize the whole script (default). pValue is ignored.
-#     "line" - colorize a particular line, pValue is the line number
-#     "handler" - colorize a particular handler, pValue is the handler name. Currently not implemented.
-command scriptColorize pOption, pValue
-   if pOption is "script" then
-      _internal script colorize char 1 to (the number of chars of field "Script" of me) of field "Script" of me
-   else if pOption is "line" then
-      _internal script colorize line pValue to pValue of field "Script" of me
-   end if
-end scriptColorize
-
-# Formats the specified script snippet.
-command scriptFormatSnippet pScript
-   textFormatInitialize
-   local tNewScript
-   put textFormatSelection(pScript) into tNewScript
-   return tNewScript
-end scriptFormatSnippet
-
-
-# Parameters
-#   pScope : either "script" or "handler"
-# Description
-#   Formats the current script according to the pScope parameter. If pScope is "script", then
-#   entire script is formatted. If pScope is handler, then the current handler is formatted.
-#   Note, formatting the whole script could be quite slow.
-command scriptFormat pScope
-   lock screen
-   local tScroll
-   put the vScroll of field "Script" of me into tScroll
-   
-   local tStart, tEnd
-   get the selectedChunk
-   put word 2 of it into tStart
-   put word 4 of it into tEnd
-   
-   if pScope is "script" then
-      local tStartChar
-      put 1 into tStartChar
-      
-      local tOldText
-      put the text of field "Script" of me into tOldText
-      
-      local tNewText
-      put textFormatSelection(tOldText) into tNewText
-      textReplace tStartChar, tOldText, tNewText
-      
-      if tStart is not empty then
-         select char tStart to tEnd of field "Script" of me
-      end if
-      
-   else # handler only
-      local tLine
-      put word 2 of the selectedLine into tLine
-      
-      local tScript
-      put the text of the selectedField into tScript
-      
-      local tSelectionLineCount
-      put the number of lines of char tStart to tEnd of tScript into tSelectionLineCount
-      
-      # Before doing the formatting, save the indent of the first and last line of the selection.
-      # Once the formatting is done, we can compare this with the new indents in order to adjust the selection.
-      local tOldFirstIndent
-      put textFormatGetLineIndent(line tLine of tScript) into tOldFirstIndent
-      
-      local tOldLastIndent
-      if tStart > tEnd then
-         put tOldFirstIndent into tOldLastIndent
-      else
-         put textFormatGetLineIndent(line (tLine + tSelectionLineCount) of tScript) into tOldLastIndent
-      end if
-      
-      local tCode
-      put textFormat(tLine, tSelectionLineCount, tScript) into tCode
-      textReplace tCode["startchar"], tCode["oldtext"], tCode["newtext"]
-      
-      local tNewScript
-      put the text of field "Script" of me into tNewScript
-      
-      # We know that formatting cannot change the number of lines of the field, so we can assume that
-      # tLine will still be corrrect. (tStart and tEnd now no longer point to meaningful chars in the new script.)
-      local tNewFirstIndent
-      put textFormatGetLineIndent(line tLine of tNewScript) into tNewFirstIndent
-      
-      local tNewLastIndent
-      if tStart > tEnd then
-         put tNewFirstIndent into tNewLastIndent
-      else
-         # Note that we use the line count from the original selection, as we know this is correct, rather than calculating
-         # it again for the new selection.
-         put textFormatGetLineIndent(line (tLine + tSelectionLineCount) of tNewScript) into tNewLastIndent
-      end if
-      
-      # The selection offsets are composed of two parts, the difference in the indent of the line that the selection started / ended on
-      # and the difference in the number of chars before that line.
-      local tFirstSelectionOffset
-      put (the number of chars of tNewFirstIndent - the number of chars of tOldFirstIndent) + (the number of chars of line 1 to (tLine - 1) of tNewScript - the number of chars of line 1 to (tLine - 1) of tScript) into tFirstSelectionOffset
-      
-      local tLastSelectionOffset
-      if tStart > tEnd then
-         put tFirstSelectionOffset into tLastSelectionOffset
-      else
-         put (the number of chars of tNewLastIndent - the number of chars of tOldLastIndent) + (the number of chars of line 1 to (tLine + tSelectionLineCount) of tNewScript - the number of chars of line 1 to (tLine + tSelectionLineCount) of tScript) into tLastSelectionOffset
-      end if
-      
-      if tStart is not empty then
-         select char (tStart + tFirstSelectionOffset) to (tEnd + tLastSelectionOffset) of field "Script" of me
-      end if
-   end if
-   
-   set the vScroll of field "Script" of me to tScroll
-   unlock screen
-end scriptFormat
-
-# Parameters
 #   pObject : reference to the object to compile the script of. Must be one of the target objects.
 # Description
 #   Attempts to compile the specified script. Does not apply it to the target object, instead
@@ -1205,150 +718,6 @@ command scriptCompile pObject
    return tResult
 end scriptCompile
 
-# Parameters
-#   pObject : the object to get the script of. Must be one of the current target objects
-# Description
-#   If pObject is not specified then returns the current script in the editor group,
-#   otherwise returns the script of the specified object in the state it was last left in
-#   by the user. I.e. if the script is not applied, the edited one is returned.
-command scriptGet pObject
-   if pObject is empty or seGetRuggedId(pObject) is seGetRuggedId(sObjectId) then
-      return textGetScript()
-   end if
-   
-   # If not the current script, we need to retrieve the script from a cache, as it
-   # is no longer in the field.
-   local tCachedScript
-   put sScriptCache[seGetRuggedId(pObject)] into tCachedScript
-   if tCachedScript is empty then
-      return the script of pObject
-   else
-      return tCachedScript
-   end if
-end scriptGet
-
-# Description
-#   Returns the number of lines of the current script
-command scriptGetLineCount
-   return the number of lines of field "Script" of me
-end scriptGetLineCount
-
-# Description
-#   This command returns the current script as *real* html. The result of this command
-#   is suitable for displaying in a browser, not in Revolution fields as htmlText. This command
-#   requires the colorization scheme "Revolution Classic" to be used as it contains hard-coded 
-#   replacements. For html suitable for printing or displaying in a Revolution field see scriptGetHtmlText.
-command scriptGetAsHtml
-   local tOldScript
-   put the text of field "Script" of me into tOldScript
-   
-   # First wrap the script to the required width, this is a total hack as doing it properly would take quite a while.
-   local tScript
-   put tOldScript into tScript
-   
-   local tMaxCharCount
-   put "65" into tMaxCharCount
-   
-   local tWrappedScript
-   repeat for each line tLine in tScript
-      # Ignore lines that don't need to be wrapped
-      if the number of chars of tLine <= tMaxCharCount then
-         put tLine & return after tWrappedScript
-         next repeat
-      end if
-      
-      # Find the word offset to wrap from. Only whole words can be wrapped
-      local tWordOffset
-      put (the number of words of char 1 to tMaxCharCount of tLine)  -1 into tWordOffset
-      
-      # The line could be a comment, in which case we need to find which comment char its using
-      # wrap the line, and put the comment char in front of the wrapped part. This won't work with
-      # multi-line comments etc.
-      local tCommentChar
-      if token 1 of tLine is empty then
-         local tOffset
-         put offset("#", tLine) into tOffset
-         if tOffset = 0 then
-            put offset("--", tLine) into tOffset
-            put "--" into tCommentChar
-         else
-            put "#" into tCommentChar
-         end if
-         
-         if tCommentChar is empty then
-            put word 1 to tWordOffset of tLine & return & word tWordOffset + 1 to -1 of tLine & return after tWrappedScript
-         else
-            put word 1 to tWordOffset of tLine & return & tCommentChar & space & word tWordOffset + 1 to -1 of tLine & return after tWrappedScript
-         end if
-         next repeat
-      end if
-      
-      # The line was not a comment. In this case we just wrap it with a continuation char
-      # This of course may have issues if the line already has a continuation char, is inside a nested comment etc.
-      if token 1 of tLine is not empty then
-         put word 1 to tWordOffset of tLine & " \" & return & word tWordOffset + 1 to -1 of tLine & return after tWrappedScript
-         next repeat
-      end if
-   end repeat
-   delete the last char of tWrappedScript
-   
-   textReplace 1, tOldScript, tWrappedScript
-   scriptFormat "script"
-   
-   local tHtml
-   put the htmlText of field "Script" of me into tHtml
-   
-   local tNewHtml
-   put "<div class=" & quote & "code" & quote & ">" & return into tNewHtml
-   put "<pre>" & return after tNewHtml
-   
-   local tBody
-   put tHtml into tBody
-   replace "<p>" with empty in tBody
-   replace "</p>" with empty in tBody
-   
-   replace "<font color=" & quote & "#000000" & quote & ">" with "<span class=" & quote & "normal" & quote & ">" in tBody
-   replace "<font color=" & quote & "#0000FF" & quote & ">" with "<span class=" & quote & "command" & quote & ">" in tBody
-   replace "<font color=" & quote & "#FF0000" & quote & ">" with "<span class=" & quote & "property" & quote & ">" in tBody
-   replace "<font color=" & quote & "#68228B" & quote & ">" with "<span class=" & quote & "comment" & quote & ">" in tBody
-   replace "<font color=" & quote & "#F88017" & quote & ">" with "<span class=" & quote & "function" & quote & ">" in tBody
-   replace "<font color=" & quote & "#980517" & quote & ">" with "<span class=" & quote & "keyword" & quote & ">" in tBody
-   replace "</font>" with "</span>" in tBody
-   put tBody & return after tNewHtml
-   
-   put "</pre>" & return after tNewHtml
-   put "</div>" after tNewHtml
-   
-   
-   # Restore the original script
-   textReplace 1, the text of field "Script" of me, tOldScript
-   
-   return tNewHtml
-end scriptGetAsHtml
-
-# Description
-#   Returns the htmlText of the script field. This is suitable for printing, or displaying
-#   in another Revolution field, not for putting on the net. For real html, see scriptGetAsHtml.
-command scriptGetHtmlText
-   return the htmlText of field "Script" of me
-end scriptGetHtmlText
-
-# Description
-#   Returns the long id of the script field. This is required by the Revolution printing library,
-#   the field ID is used to determine the properties require to make the printout look correct.
-#   Please *do not* use this command to directly access the script field, doing so will break the 
-#   script editor completely.
-command scriptGetField
-   return the long id of field "Script" of me
-end scriptGetField
-
-# Description
-#   Returns the name of the current handler. This is the handler that the caret
-#   is inside in edit mode, or that the current statement to execute is in in
-#   debug mode.
-command scriptGetCurrentHandler
-   # Waiting for engine support for this function...
-end scriptGetCurrentHandler
 
 # Description
 #   Shows the interactive find dialog and focuses the appropriate control for the user to enter text.
@@ -1364,28 +733,6 @@ command hideInteractiveFind
    resize
    send "closeControl" to group "Interactive Find" of me
 end hideInteractiveFind
-
-# Description
-#   Returns whether or not undo is available in the current object. I.e. the script has been edited since it was opened in this
-#   instance of the script editor.
-command undoAvailable
-   if sTextGroupIndex[sObjectId] is 0 then
-      return false
-   else
-      return true
-   end if
-end undoAvailable
-
-# Description
-#   Returns whether or not redo is available in the current object. I.e. something has been undone since it was opened in
-#   this instance of the script editor.
-command redoAvailable
-   if sTextGroupIndex[sObjectId] is sTextGroupTop[sObjectId] then
-      return false
-   else
-      return true
-   end if
-end redoAvailable
 
 ################################################################################
 #
@@ -1472,1112 +819,55 @@ private function arrayShow pArray
 end arrayShow
 
 command textInitialize
-   put empty into field "Script" of me
-   put empty into sTextOperationOffsets
-   put empty into sTextOperationNewTexts
-   put empty into sTextOperationOldTexts
-   put 0 into sTextOperationIndex
-   put 0 into sTextOperationTop
-   
-   put empty into sTextGroupLabels
-   put empty into sTextGroupLengths
-   put 0 into sTextGroupIndex
-   put 0 into sTextGroupTop
-   
-   put empty into sTextMark
-   put empty into sScriptCache
-   
    initializeFonts
-   textFormatInitialize
    seColorizationInit
    
    colorizationUpdate
    
-   textMark "Insert"
-
    EditorFieldCacheFlushAll
+   
+   pass textInitialize
 end textInitialize
-
-on textMark pLabel
-   put pLabel into sTextMark[sObjectId]
-end textMark
-
-on textBeginGroup pLabel, pObject
-   local tObject
-   if pObject is empty then
-      put sObjectId into tObject
-   else
-      put pObject into tObject
-   end if
-   
-   add 1 to sTextGroupIndex[tObject]
-   
-   put pLabel into sTextGroupLabels[tObject,sTextGroupIndex[tObject]]
-   put 0 into sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
-   
-   repeat with tIndex = sTextGroupIndex[tObject] + 1 to sTextGroupTop[tObject]
-      delete variable sTextGroupLabels[tObject,tIndex]
-      delete variable sTextGroupLengths[tObject,tIndex]
-   end repeat
-   
-   repeat with tIndex = sTextOperationIndex[tObject] + 1 to sTextOperationTop[tObject]
-      delete variable sTextOperationOffsets[tObject,tIndex]
-      delete variable sTextOperationNewTexts[tObject,tIndex]
-      delete variable sTextOperationOldTexts[tObject,tIndex]
-   end repeat
-   
-   put sTextOperationIndex[sObjectId] into sTextOperationTop[tObject]
-   put sTextGroupIndex[sObjectId] into sTextGroupTop[tObject]
-   
-   put empty into sTextMark[tObject]
-end textBeginGroup
-
-on textEndGroup
-   if sTextGroupLengths[sObjectId,sTextGroupIndex[sObjectId]] = 0 then
-      throw "empty_text_group_inserted"
-   end if
-   textMark "Insert"
-end textEndGroup
-
--- Text Formatting Code
-private command textFormatInitialize
-   local tTabDepth
-   put sePrefGet("editor,tabdepth") into tTabDepth
-   
-   put "0," & tTabDepth into sTextFormatKeywordMap["try"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["switch"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["if"]
-   put -tTabDepth & ",0" into sTextFormatKeywordMap["endif"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["elseif"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["repeat"]
-   
-   put "0," & tTabDepth into sTextFormatKeywordMap["on"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["function"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["setprop"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["getprop"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["command"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["private"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["before"]
-   put "0," & tTabDepth into sTextFormatKeywordMap["after"]
-   
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["else"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["case"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["default"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["catch"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["finally"]
-   put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["catch"]
-   --put -tTabDepth & comma & tTabDepth into sTextFormatKeywordMap["break"]
-   put 0 & comma & 0 into sTextFormatKeywordMap["break"]
-   
-   put -tTabDepth & ",0" into sTextFormatKeywordMap["end"]
-end textFormatInitialize
-
-private function textFormatIndentLineAdds pLine
-   local tToken
-   put token 1 of pLine into tToken
-   if tToken is "if" then
-      if "else" is among the words of pLine then
-         return 0
-      else if token -1 of pLine is not "then" then
-         return 0
-      else
-         return item 2 of sTextFormatKeywordMap["if"]
-      end if
-      
-   else if tToken is "else" then
-      if token 2 of pLine is "if" then
-         if "else" is among the words of word 3 to -1 of pLine then
-            return 0
-         else if token -1 of pLine is not "then" then
-            return 0
-         else
-            return item 2 of sTextFormatKeywordMap["elseif"]
-         end if
-      else if token 2 of pLine is not empty then
-         return 0
-      else
-         return item 2 of sTextFormatKeywordMap["else"]
-      end if
-      
-   else if token 1 of pLine is empty then
-      return 0
-      ## Bug 10467 - else in a comment was causing incorrect indentation
-      ## Check for "else" in line without comments
-      --else if token 1 of pLine is not "else" and "else" is among the words of pLine then
-   else if token 1 of pLine is not "else" and "else" is among the words of lineStripComments(pLine) then
-      return -sePrefGet("editor,tabdepth")
-   else if token -1 of pLine is "then" then
-      # Either a weirdly formatted if structure, or the condition of the if contained a line continuation character.
-      # In this case, behave as though pLine is a normal if.
-      return item 2 of sTextFormatKeywordMap["if"]
-   else
-      return item 2 of sTextFormatKeywordMap[tToken]
-   end if
-   return 0
-end textFormatIndentLineAdds
-
-
-private function textFormatIndentLineRemoves pPreviousLine, pLine
-   local tToken
-   put token 1 of pLine into tToken
-   if tToken is "else" then
-      if token 2 of pLine is "if" then
-         if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" then
-            return 0
-         else
-            return item 1 of sTextFormatKeywordMap["elseif"]
-         end if
-         
-      else
-         if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" then
-            return 0
-         else
-            return item 1 of sTextFormatKeywordMap["else"]
-         end if
-      end if
-   else if tToken is empty then
-      # Comments and empty lines do not remove any formatting
-      return 0
-   else if tToken is "end" and token 2 of pLine is "switch" and token 1 of pPreviousLine is not "switch" then
-      # Special case for end switch if there is a preceeding "break", "default" or other statement, we need to remove
-      # double the normal indent.
-      return (2 * item 1 of sTextFormatKeywordMap["end"])
-   else if tToken is "case" then
-      # A case statement removes indent from the previous line in all cases except if the
-      # previous line was the beginning of the parent switch structure.
-      if token 1 of pPreviousLine is "switch"  then
-         return 0
-      else
-         return item 1 of sTextFormatKeywordMap["case"]
-      end if
-      # OK-2009-04-28 : Bug 8016 - Special case required for "default" to make switches format correctly.
-   else if tToken is "default" then
-      if token 1 of pPreviousLine is "switch" then
-         return 0
-      else
-         return item 1 of sTextFormatKeywordMap["default"]
-      end if
-   else if tToken is "end" and token 2 of pLine is not among the words of "if switch repeat try" and not lineIsContinued(pLine) then
-      # Handler ends always remove all indentation as they can't be nested
-      # OK-2009-02-16 : Bug 7707 - We can't assume the previous line was correctly formatted or script may be deleted.
-      # Instead we simplify this by simply chopping off whatever indentation it did have.
-      --return min(-(the number of chars of textFormatGetLineIndent(pPreviousLine)), item 1 of sTextFormatKeywordMap[tToken])
-      return item 1 of sTextFormatKeywordMap["end"]
-   else
-      # We can't assume that the previous line was correctly indented
-      # because the script might have been edited from outside this script editor. Therefore
-      # we have to ensure that a line doesnt try to remove more formating than the previous
-      # line actually had. Otherwise non-whitespace chars may be deleted.
-      if the number of chars of textFormatGetLineIndent(pPreviousLine) + the number of chars of textFormatGetLineIndent(pLine) + textFormatIndentLineAdds(pPreviousLine) < abs(item 1 of sTextFormatKeywordMap[tToken]) then
-         return -(the number of chars of textFormatGetLineIndent(pPreviousLine))
-      else
-         return item 1 of sTextFormatKeywordMap[tToken]
-      end if
-   end if
-end textFormatIndentLineRemoves
-
-private function textFormatGetLineIndent pLine
-   local tResult
-   repeat for each char tChar in pLine
-      if tChar is space then
-         put space after tResult
-      else
-         return tResult
-      end if
-   end repeat
-   return tResult
-end textFormatGetLineIndent
-
-private function lineIsContinued pLine
-   if word -1 of pLine is "\" then
-      return true
-   else
-      return false
-   end if
-end lineIsContinued
-
-private function textFormatGetContinuationIndent pLastLineNumber
-   # In order to calculate the indentation we need to loop back until we find the start of the continuation,
-   # constructing a string which is the equivalent of the continued line in a single line. We then use this to calculate
-   # the indent of the last line 
-end textFormatGetContinuationIndent
-
-private function combineContinuedLine pLastLineNumber, @pTextLines
-   local tContinuation
-   put pTextLines[pLastLineNumber] into tContinuation
-   
-   local tIndex
-   repeat with tIndex = (pLastLineNumber - 1) down to 1
-      if not lineIsContinued( pTextLines[tIndex]) then
-         exit repeat
-      end if
-      
-      put pTextLines[tIndex] before tContinuation
-   end repeat
-   replace "\" with empty in tContinuation
-   return tContinuation
-end combineContinuedLine
-
-constant kContinuationIndent = 6
-
-private function textFormatLine pLine, pTextLines, @xPreviousLine
-   local tResult
-   
-   # OK-2009-01-30 : Bug 7051 - Deal better with continuation characters.
-   local tCurrentLineIsContinued
-   local tPreviousLineWasContinued
-   local tPreviousPreviousLineWasContinued
-   
-   # Continuations can only happen with consecutive lines, there can't be comments or empty lines in between,
-   # so we simply use the two previous lines to work out if they are continued or not. If these lines are empty
-   # or are comments, then the result will be that they are not continuations anyway which is correct.
-   put lineIsContinued(pTextLines[pLine - 1]) into tPreviousLineWasContinued
-   put lineIsContinued(pTextLines[pLine - 2]) into tPreviousPreviousLineWasContinued
-   
-   put lineIsContinued(pTextLines[pLine]) into tCurrentLineIsContinued
-   
-   # Get the previous non-empty line
-   if xPreviousLine is 0 and pLine > 1 then
-      put pLine into xPreviousLine
-      repeat while xPreviousLine > 1
-         subtract 1 from xPreviousLine
-         if token 1 of pTextLines[xPreviousLine] is not empty then
-            exit repeat
-         end if 
-      end repeat
-   end if
-   
-   local tPreviousLine
-   if xPreviousLine > 0 then
-      # This is the case where we have reached the end of a continued line. Here, we treat the continued line
-      # as a single entity in order to calculate its indentation properties correctly for the line after it.
-      if lineIsContinued(pTextLines[xPreviousLine - 1]) then
-         put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
-      else
-         put pTextLines[xPreviousLine] into tPreviousLine
-      end if
-      
-      # Get the current indent of the previous line
-      local tPreviousLineIndent
-      put textFormatGetLineIndent(tPreviousLine) into tPreviousLineIndent
-   end if
-   
-   # Get the current indent of the line
-   local tCurrentLineIndent
-   put textFormatGetLineIndent(pTextLines[pLine]) into tCurrentLineIndent
-   
-   # Work out how much indentation the current line should remove from the previous line
-   local tIndentCurrentLineRemoves
-   if tPreviousLineWasContinued then
-      put 0 into tIndentCurrentLineRemoves
-   else
-      put textFormatIndentLineRemoves(tPreviousLine, pTextLines[pLine]) into tIndentCurrentLineRemoves
-   end if
-   
-   # Work out how much indentation the previous line should add to the current line.
-   local tIndentPreviousLineAdds
-   if xPreviousLine is 0 then
-      put 0 into tIndentPreviousLineAdds
-   else if tPreviousLineWasContinued then
-      # we always add the continuation indent because we combined the continued lines
-      put kContinuationIndent into tIndentPreviousLineAdds
-   else
-      put textFormatIndentLineAdds(pTextLines[xPreviousLine]) into tIndentPreviousLineAdds
-   end if
-   
-   local tCurrentIndent
-   repeat (the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds)
-      put space after tCurrentIndent
-   end repeat
-   
-   put ((the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds) - the number of chars of tCurrentLineIndent) & comma into tResult
-   
-   -- Finally, calculate the expected next indent.
-   local tNewIndent
-   put tCurrentIndent into tNewIndent
-   
-   local tIndentCurrentLineAdds
-   if tCurrentLineIsContinued and tPreviousLineWasContinued then
-      put 0 into tIndentCurrentLineAdds
-   else if tCurrentLineIsContinued and (not tPreviousLineWasContinued) then
-      put kContinuationIndent into tIndentCurrentLineAdds
-   else if (not tCurrentLineIsContinued) and tPreviousLineWasContinued then
-      put -kContinuationIndent into tIndentCurrentLineAdds
-   else
-      put textFormatIndentLineAdds(pTextLines[pLine]) into tIndentCurrentLineAdds
-   end if
-   
-   if tIndentCurrentLineAdds < 0 then
-      repeat -tIndentCurrentLineAdds times
-         delete char 1 of tNewIndent
-      end repeat
-   else
-      repeat tIndentCurrentLineAdds times
-         put space after tNewIndent
-      end repeat
-   end if
-   
-   put tNewIndent after tResult
-   
-   if token 1 of pTextLines[pLine] is not empty then
-      put pLine into xPreviousLine
-   end if
-   return tResult
-end textFormatLine
-
-# Returns
-#   The chunk of pLine from the beginning of the first word to the end.
-private function firstWordToEnd pLine
-   local tOffset
-   put offset(word 1 of pLine, pLine) into tOffset
-   return char tOffset to -1 of pLine
-end firstWordToEnd
-
-# Parameters
-#   pText : the text to format
-private function textFormatSelection pText
-   local tResult
-   local tPreviousLine = 0
-   local tTextLines
-   put pText into tTextLines
-   split tTextLines by return
-   
-   get textFormatLine(1, tTextLines, tPreviousLine)
-   put firstWordToEnd(tTextLines[1]) into tTextLines[1]
-   put tTextLines[1] into tResult
-   local tIndex
-   repeat with tIndex = 2 to the number of elements of tTextLines
-      put item 2 of it & firstWordToEnd(tTextLines[tIndex]) into tTextLines[tIndex]
-      get textFormatLine(tIndex, tTextLines, tPreviousLine)
-      
-      if item 1 of it < 0 then
-         repeat -(item 1 of it) times
-            if char 1 of line -1 of tTextLines[tIndex] is space then
-               delete char 1 of tTextLines[tIndex]
-            end if
-         end repeat
-      else if item 1 of it > 0 then
-         repeat item 1 of it times
-            put space before tTextLines[tIndex]
-         end repeat
-      end if
-      
-      put return & tTextLines[tIndex] after tResult
-   end repeat
-   
-   return tResult
-end textFormatSelection
-
-private function handlerTypes
-   return "command,on,function,setprop,getprop,before,after"
-end handlerTypes
-
-private function textFormat pLineNumber, pLineCount, pText
-   -- Find the range to format.
-   -- 1. Search down until we find a handler (a) or the end of one (b).
-   -- 2. Based on 1, in case a, search up until we find the end of any other handler, or the beginning of the script.
-   --    In case b we need to search for the start of that handler.
-   local tEnd
-   
-   local tText
-   put pText into tText
-   split tText by return
-   put pLineNumber into tEnd
-   
-   # Search down to find what the handler name is and whether pLineNumber is the first line of the handler.
-   local tHandler
-   local tFirstLine
-   put true into tFirstLine
-   
-   local tContinuation, tCurrentLineContinues
-   put lineIsContinued(tText[pLineNumber-1]) into tContinuation
-   
-   local tLineIndex
-   repeat with tLineIndex = pLineNumber to the number of elements of tText
-      put lineIsContinued(tText[tLineIndex]) into tCurrentLineContinues
-      if token 1 of tText[tLineIndex] is "end" and token 2 of tText[tLineIndex] is not among the items of "if,repeat,switch,try" and not tContinuation and not tCurrentLineContinues then
-         put true into tHandler[token 2 of tText[tLineIndex]]
-         if pLineCount < 0 then
-            exit repeat
-         end if
-      else if token 1 of tText[tLineIndex] is among the items of handlerTypes() and not tFirstLine then
-         if pLineCount < 0 then
-            exit repeat
-         end if
-         exit repeat
-      else if token 1 of tText[tLineIndex] is "private" and token 2 of tText[tLineIndex] is among the items of handlerTypes() and not tFirstLine then
-         if pLineCount < 0 then
-            exit repeat
-         end if
-         exit repeat
-      else
-         put tCurrentLineContinues into tContinuation
-      end if
-      if tFirstLine then put false into tFirstLine
-      subtract 1 from pLineCount
-      add 1 to tEnd
-   end repeat
-   
-   # Search up to find the beginning of the handler, or the beginning of the script if not found.
-   local tStart
-   repeat with tLineIndex = pLineNumber down to 1
-      put tLineIndex into tStart
-      if tHandler is an array then
-         if token 1 of tText[tLineIndex] is among the items of  handlerTypes() and tHandler[token 2 of tText[tLineIndex]] then
-            exit repeat
-         else if token 1 of tText[tLineIndex] is "private" and token 2 of tText[tLineIndex] is among the items of handlerTypes() and tHandler[token 3 of tText[tLineIndex]] then
-            exit repeat
-         end if
-      else if token 1 of tText[tLineIndex] is "end" and token 2 of tText[tLineIndex] is not among the items of "if,repeat,switch,catch" then
-         exit repeat
-      end if
-   end repeat
-   
-   if tHandler is not an array and tStart is not 1 then
-      add 1 to tStart
-   end if
-   if tEnd > the number of elements of tText then
-      put the number of elements of tText into tEnd
-   end if
-   
-   -- Now format lines tStart to tEnd of pText, and return the result.
-   local tStartChar
-   if tStart is 1 then
-      put 1 into tStartChar
-   else
-      put the number of chars of line 1 to (tStart - 1) of pText into tStartChar
-      add 2 to tStartChar
-   end if
-   
-   local tOldText
-   put line tStart to tEnd of pText into tOldText
-   
-   local tResult
-   put tStartChar into tResult["startchar"]
-   put tOldText into tResult["oldtext"]
-   put textFormatSelection(tOldText) into tResult["newtext"]
-   
-   return tResult
-end textFormat
-
-function textGetScript
-   return the text of field "Script" of me
-end textGetScript
-
-function getScriptField
-   return the long id of field "Script" of me
-end getScriptField
-
-on textSetSelection pAfterChar
-   select after char pAfterChar of field "Script" of me
-end textSetSelection
-
-# Parameters
-#   pOldText : the text replaced in an operation
-#   pNewText : the replacing text in an operation
-# Returns
-#   Whether or not a new undo group is needed for the specified
-#   operation.
-private function textReplaceNewGroupNeeded pOldText, pNewText
-   # If the invoker of the replacement operation has specified that an undo group
-   # is needed, always create one
-   if sTextMark[sObjectId] is not empty then
-      return true
-   end if
-   
-   # If the number of chars of either the string replaced or replacing string is above one
-   # this means it must be a deletion of a selection or a cut or paste. This should always
-   # require a new group
-   if the number of chars of pOldText > 1 or the number of chars of pNewText > 1 then
-      return true
-   end if
-   
-   # If either the text being replaced or the replacing text contain return chars, new group
-   if pOldText contains return or pNewText contains return then
-      return true
-   end if
-   
-   return false
-end textReplaceNewGroupNeeded
-
-# Parameters
-#   pOffset : the char number of where the replacement should start
-#   pOldText : the text that is being replaced
-#   pNewText : the text that is being inserted
-#   pObject : the long id of the object to replace in. If not given, the current object is assumed.
-# Description
-#   This is the point through which all standard editing operations on scripts are sent through.
-#   Any change made via this function will be added to the undo system. This is called when the
-#   user types keys, formats text, cuts, pastes etc.
-private command textReplace pOffset, pOldText, pNewText, pObject
-   local tObject
-   if pObject is empty then
-      put sObjectId into tObject
-   else
-      put pObject into tObject
-   end if
-   
-   if textReplaceNewGroupNeeded(pOldText, pNewText) then
-      textBeginGroup sTextMark[tObject], tObject
-   end if
-   
-   add 1 to sTextOperationIndex[tObject]
-   add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
-   
-   put pOffset into sTextOperationOffsets[tObject,sTextOperationIndex[tObject]]
-   put pOldText into sTextOperationOldTexts[tObject,sTextOperationIndex[tObject]]
-   put pNewText into sTextOperationNewTexts[tObject,sTextOperationIndex[tObject]]
-   
-   # When the script has been edited, the breakpoints should be suspended until it is applied again.
-   # Because this command is called as the user types, we could a send in time for this, as its not that urgent.
-   revDebuggerSuspendBreakpoints tObject
-   
-   # If the specified object to replace in is the current object being edited, we perform the replace
-   # directly on the script editing field using textReplaceRaw. Otherwise we perform it on the
-   # script cache stored for the object.
-   if tObject is empty or seGetRuggedId(tObject) is sObjectId then
-      textReplaceRaw pOffset, pOldText, pNewText
-   else
-      local tCache
-      put sScriptCache[seGetRuggedId(tObject)] into tCache
-      if tCache is empty then
-         put the script of tObject into tCache
-      end if
-      textReplaceRawInVariable tCache, pOffset, pOldText, pNewText
-      put tCache into sScriptCache[seGetRuggedId(tObject)]
-   end if
-   
-   set the caseSensitive to true
-   if pOldText is not pNewText then
-      seSetObjectState tObject, "edited"
-      
-      # OK-2009-01-17 : Bug 7169 - Flag the object as dirty when it is modifed by this method only.
-      # The textReplaceRaw etc functions should not do this as they do not represent a user modifying
-      # the script.
-      setDirty tObject, true
-   end if
-end textReplace
-
-# Parameters
-#   pOffset : the char number to begin the replacement at
-#   @rScript : the text to perform the replacement in, gets mutated
-#   @pOldText : the text that is to be replaced. This is not mutated, its a reference for efficiency reasons
-#   @pNewText : the text to be inserted. This is not mutated, its a reference for efficiency reasons
-# Description
-#   Performs a raw replace exactly as textReplaceRaw, except in a variable instead of directly in the editing field.
-#   This is used by replace-all, because it may need to replace text in the script of objects which are not open.
-private command textReplaceRawInVariable @rScript, pOffset, @pOldText, @pNewText
-   local tOldLength
-   put the length of pOldText into tOldLength
-   put pNewText into char pOffset to pOffset + tOldLength - 1 of rScript
-end textReplaceRawInVariable
-
-# Parameters
-#   pOffset : the char number to begin the replacement at
-#   @pOldText : the text that is to be replaced. This is not mutated, its a reference for efficiency reasons
-#   @pNewText : the text to be inserted. This is not mutated, its a reference for efficiency reasons
-#   pDontUpdateBreakpoints : optional, defaults to false. If this is true, breakpoints in the gutter are not moved.
-# Description
-#   This is the raw replacement operation that performs a mutation on the script field without
-#   saving any undo information. This should be called only from inside textReplace, when doing an undo or a redo
-#   and when setting the script when a new object is loaded.
-private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpoints
-   lock screen
-   lock messages
-   
-   local tSelectedLine
-   put word 2 of the selectedLine into tSelectedLine
-   
-   local tEndOffset
-   put max(0, pOffset + the length of pOldText - 1) into tEndOffset
-
-   _internal script replace char pOffset to tEndOffset of field "Script" of me with pNewText
-   
-   --Do some work to update the gutter.
-   local tOldLines, tNewLines
-   put the number of lines of pOldText into tOldLines
-   if pOldText is not return and (char -1 of pOldText is return or pOldText is empty) then
-      add 1 to tOldLines
-   end if
-   if pNewText is empty and pOldText is return then
-      put 0 into tNewLines
-   else
-      put the number of lines of pNewText into tNewLines
-      if char -1 of pNewText is return or pNewText is return or pNewText is empty then
-         add 1 to tNewLines
-      end if
-   end if
-   
-   if pDontUpdateBreakpoints then
-      updateGutterRequest empty, empty, tOldLines, tNewLines, false, false
-   else
-      updateGutterRequest pOffset, tSelectedLine, tOldLines, tNewLines, true, false
-   end if
-   
-   unlock messages
-   
-   # OK-2008-09-10 : Bug 7132 - Update the panes  and handler list everytime the text of the field is changed.
-   # OK-2009-01-19 : Don't do this here as it slows down the script editor on OS X. Instead do it in the individual
-   # cases where it may be needed, cut, paste, return, delete, backspace, undo and redo
-   --selectionUpdateRequest
-   
-   unlock screen
-end textReplaceRaw
-
--- Sets the contents of the fields to pScript WITHOUT touching the undo queue. This should be done before any editing.
-on textSetScriptRaw pScript
-   --put empty into field "Script" of me
-   local tOldText
-   put the text of field "Script" of me into tOldText
-   if tOldText is not pScript then
-      textReplaceRaw 1, tOldText, pScript, true
-   end if
-end textSetScriptRaw
-
--- Sets the script within the undo queue.
-on textSetScript pScript
-   textReplace 1, the text of field "Script" of me, pScript
-end textSetScript
-
-# Description
-#   Performs an undo operation on the current script
-on textUndo
-   undoAvailable
-   if not the result then
-      exit textUndo
-   end if
-   
-   local tOperations
-   put sTextGroupLengths[sObjectId,sTextGroupIndex[sObjectId]] into tOperations
-   lock screen
-   repeat with tIndex = sTextOperationIndex[sObjectId] down to sTextOperationIndex[sObjectId] - tOperations + 1
-      local tNewText, tOldText
-      put sTextOperationNewTexts[sObjectId,tIndex] into tNewText
-      put sTextOperationOldTexts[sObjectId,tIndex] into tOldText
-      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tNewText, tOldText
-   end repeat
-   unlock screen
-   
-   subtract tOperations from sTextOperationIndex[sObjectId]
-   subtract 1 from sTextGroupIndex[sObjectId]
-   
-   revDebuggerSuspendBreakpoints sObjectId
-   seSetObjectState sObjectId, "edited"
-   textMark "Insert"
-end textUndo
-
-# Description
-#   Performs a redo operation on the current script
-on textRedo
-   redoAvailable
-   if not the result then
-      exit textRedo
-   end if
-   
-   add 1 to sTextGroupIndex[sObjectId]
-   
-   local tOperations
-   put sTextGroupLengths[sObjectId,sTextGroupIndex[sObjectId]] into tOperations
-   lock screen
-   repeat with tIndex = sTextOperationIndex[sObjectId] + 1 to sTextOperationIndex[sObjectId] + tOperations
-      local tNewText, tOldText
-      put sTextOperationOldTexts[sObjectId,tIndex] into tOldText
-      put sTextOperationNewTexts[sObjectId,tIndex] into tNewText
-      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tOldText, tNewText
-   end repeat
-   unlock screen
-   
-   add tOperations to sTextOperationIndex[sObjectId]
-   revDebuggerSuspendBreakpoints sObjectId
-   seSetObjectState sObjectId, "edited"
-   textMark "Insert"
-end textRedo
-
-# Description
-#   This is a debugging command used to print the status of the undo queue when investigating
-#   problems. It should not be called anywhere in the code.
-on textPrint
-   lock screen
-   
-   local tOperation
-   put 1 into tOperation
-   repeat with x = 1 to sTextGroupTop[sObjectId]
-      
-      put "Group(" & x & "):" && sTextGroupLabels[sObjectId,x] & return after message
-      repeat sTextGroupLengths[sObjectId,x] times
-         
-         local tOldText, tNewText
-         put sTextOperationOldTexts[sObjectId,tOperation] into tOldText
-         put sTextOperationNewTexts[sObjectId,tOperation] into tNewText
-         replace return with "\n" in tOldText
-         replace return with "\n" in tNewText
-         
-         put tab & "[" & tOperation & "]:" && sTextOperationOffsets[tOperation], tOldText, tNewText & return after message
-         
-         if tOperation is sTextOperationIndex[sObjectId] then
-            put tab & "--------" & return after message
-         end if
-         
-         add 1 to tOperation
-      end repeat
-      
-      if x is sTextGroupIndex[sObjectId] then
-         put "--------" & return after message
-      end if
-   end repeat
-   
-   unlock screen
-end textPrint
-
-# Stores the id of the last request to update the gutter, if there is one pending.
-local sGutterUpdateRequest
-
-# We also need to store whether the last update request involved text changing and 
-# whether it required the compilation errors to be updated. This is because it may be
-# cancelled by a subsequent request that didn't require these things, resulting in the update
-# being lost.
-local sGutterUpdateRequestDetails
-
-private command updateGutterMergeRequestDetails pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
-   # The offset and selected line are just overwritten providing they are not empty
-   if pOffset is not empty then
-      put pOffset into sGutterUpdateRequestDetails["offset"]
-   end if
-   
-   if pSelectedLine is not empty then
-      put pSelectedLine into sGutterUpdateRequestDetails["selectedLine"]
-   end if
-   
-   # The old number of lines is not changed, however if its empty, we put the new value in
-   if sGutterUpdateRequestDetails["oldLines"] is empty then
-      put pOldLines into sGutterUpdateRequestDetails["oldLines"]
-   end if
-   
-   # The new number of lines overwrites the previous setting, again providing that its not empty
-   if pNewLines is not empty then
-      put pNewLines into sGutterUpdateRequestDetails["newLines"]
-   end if
-   
-   # The new text changed value is the logical OR of the new and old values
-   # The same is done for the update compilation errors and the force breakpoint redraw 
-   put (pTextChanged or sGutterUpdateRequestDetails["textChanged"]) into sGutterUpdateRequestDetails["textChanged"]
-   put (pUpdateCompilationErrors or sGutterUpdateRequestDetails["updateCompilationErrors"]) into sGutterUpdateRequestDetails["updateCompilationErrors"]
-   put (pForceBreakpointRedraw or sGutterUpdateRequestDetails["forceBreakpointRedraw"]) into sGutterUpdateRequestDetails["forceBreakpointRedraw"]
-end updateGutterMergeRequestDetails
-
-# Parameters
-#   pOffset : the offset of the last text change
-#   pSelectedLine : the selected line at the point of the last text change
-#   pOldLines : the old number of lines in the script field at the point of the last text change
-#   pNewLines : the new number of liens in the script field after the last text change
-#   pTextChanged : whether text was changed or not since the last gutter update. If this is false, all the previous parameters are ignored.
-#   pUpdateCompilationErrors : whether to update the gutter's compilation errors
-# Description
-#   Sends a request to update the gutter. This is called whenever the current script is edited, or the field
-#   is scrolled etc. A request is sent using a short delay and any previous requests are cancelled.
-#  The gutter's scroll is updated immediately however. Also a message is sent to the gutter to hide its
-#  mutable objects (the breakpoint / compilation error images). These are show again when the update is
-#  actually carried out.
-command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
-   updateGutterMergeRequestDetails pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
-   if sGutterUpdateRequest is not empty then
-      cancel sGutterUpdateRequest
-   end if
-   
-   # We always update the gutter's scroll immediately, as otherwise it looks bad. Other stuff is delayed though.
-   send "updateScroll" to group "Gutter" of me
-   send "updateGutterDo" to me in 5 milliseconds
-   put the result into sGutterUpdateRequest
-end updateGutterRequest
-
 
 # Description
 #   Updates the gutter according to the specified parameters.
 command updateGutterDo
    local tOffset, tSelectedLine, tOldLines, tNewLines, tTextChanged
-   put sGutterUpdateRequestDetails["offset"] into tOffset
-   put sGutterUpdateRequestDetails["selectedLine"] into tSelectedLine
-   put sGutterUpdateRequestDetails["oldLines"] into tOldLines
-   put sGutterUpdateRequestDetails["newLines"] into tNewLines
-   put sGutterUpdateRequestDetails["textChanged"] into tTextChanged
+   
+   local tDetails
+   put getUpdateGutterRequestDetails() into tDetails
+   put tDetails["offset"] into tOffset
+   put tDetails["selectedLine"] into tSelectedLine
+   put tDetails["oldLines"] into tOldLines
+   put tDetails["newLines"] into tNewLines
+   put tDetails["textChanged"] into tTextChanged
    
    local tUpdateCompilationErrors
-   put sGutterUpdateRequestDetails["updateCompilationErrors"] into tUpdateCompilationErrors
-   
-   local tForceBreakpointRedraw
-   put sGutterUpdateRequestDetails["forceBreakpointRedraw"] into tForceBreakpointRedraw
+   put tDetails["updateCompilationErrors"] into tUpdateCompilationErrors
    
    send "update tOffset, tSelectedLine, tOldLines, tNewLines, tTextChanged, tUpdateCompilationErrors, tForceBreakpointRedraw" to group "Gutter" of me
    
    # Once an update has been carried out, we reset the sGutterUpdateRequestDetails array
-   delete variable sGutterUpdateRequestDetails
+   deleteUpdateGutterRequestDetails
 end updateGutterDo
 
 ################################################################################
-
-command actionCopy
-   copy
-end actionCopy
-
-command actionCut
-   if scriptLocked() then
-      exit actionCut
-   end if
-   
-   get the selectedChunk
-   
-   local tFrom, tTo
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   if tFrom <= tTo then -- something is selected
-      textBeginGroup "Cut"
-      copy -- set the clipboard (dont cut as we do not allow field modification here)
-      textReplace tFrom, char tFrom to tTo of field "Script" of me, empty
-      textEndGroup
-      
-      # OK-2009-01-19 : Update the handler list
-      selectionUpdateRequest
-   end if
-end actionCut
-
-command actionPaste
-   if scriptLocked() then
-      exit actionPaste
-   end if
-   
-   get the selectedChunk
-   
-   local tFrom, tTo
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   textBeginGroup "Paste"
-   textReplace tFrom, char tFrom to tTo of field "Script" of me, the clipboardData["text"]
-   textEndGroup
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end actionPaste
-
-command actionUndo
-   if scriptLocked() then
-      exit actionUndo
-   end if
-   textUndo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end actionUndo
-
-command actionRedo
-   if scriptLocked() then
-      exit actionRedo
-   end if
-   textRedo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end actionRedo
-
-command actionDeselectAll
-   lock messages
-   select empty
-   unlock messages
-end actionDeselectAll
-
-command actionSelectAll
-   lock messages
-   
-   if word 1 of the name of the focusedObject is "field" then
-      select char 1 to -1 of the focusedObject
-   end if
-   unlock messages
-end actionSelectAll
 
 # Description
 #   Called when the script editor is about to be closed.
 command finalize
    cancelPendingMessages
    
-   if there is a sObjectId then
+   if there is a getObjectID() then
       contextSave
    end if
    _internal script flush field "Script" of me
 end finalize
 
-# Stores requests to update the script editor in reponse to a selection changed
-local sSelectionUpdateRequest
-
-# Stores requests to update the script editor panes
-local sPaneUpdateRequest
-
-command cancelPendingMessages
-   if sGutterUpdateRequest is not empty then
-      cancel sGutterUpdateRequest
-   end if
-   
-   if sSelectionUpdateRequest is not empty then
-      cancel sSelectionUpdateRequest
-   end if
-   
-   if sPaneUpdateRequest is not empty then
-      cancel sPaneUpdateRequest
-   end if
-end cancelPendingMessages
-
--- This is sent by the engine
-on selectionChanged
-   handleSelectionChanged
-   -- Unmark found results when clicking on the SE
-   selectionUpdateRequest
-end selectionChanged
-
--- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
--- "selectionChangedByArrowKey pArrowKey"
-on handleSelectionChanged
-   if the selectedText of field "Script" of me is not empty then
-      put the selectedText of field "Script" of me into sLastNonEmptySelection
-   end if
-   
-   -- [[ Bug 18528 ]] We need this here otherwise the "it" var in the if block below is empty
-   get the selectedChunk
-   
-   # OK-2008-10-22 : Bug 7343 - Must save the last selection point as its lost
-   # when the user begins typing into the search field.
-   if the long id of the focusedObject is the long id of field "Script" of me then
-      put word 2 of it & comma & word 4 of it into sLastSelectedChunk
-   end if
-end handleSelectionChanged
-
-on selectionChangedByArrowKey pArrowKey
-   handleSelectionChanged
-   
-   -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
-   get the selectedChunk
-   
-   local tAt
-   if word 2 of it > word 4 of it then
-      put word 4 of it into tAt
-   else
-      -- It is a multiple selection, so we need to exit this.
-      exit selectionChangedByArrowKey
-   end if
-   
-   -- Single selection in the process of making a larger selection, so exit if shift is down.
-   if the shiftKey is "down" then
-      exit selectionChangedByArrowKey
-   end if
-   
-   local tLine
-   put word 2 of the selectedLine into tLine
-   
-   local tField
-   put the long id of the selectedField into tField
-   
-   local tScript
-   put the text of tField into tScript
-   
-   local tLineStart
-   switch pArrowKey
-      case "left"
-         put the number of chars of line 1 to (tLine - 1) of tScript + 1 into tLineStart
-         # OK-2008-03-03 : Only add offset of return if we are not on the first line of the script
-         if tLine is not 1 then
-            add 1 to tLineStart
-         end if
-         put caretPositionLeft(tLineStart, tAt + 1, tScript) into tAt
-         
-         lock messages
-         select after char tAt of tField
-         unlock messages
-         break
-      case "right"
-         caretUpdate tField, tScript
-         break
-         if char (tAt + 1) of tScript is return then
-            add 1 to tLine
-         end if
-         put the number of chars of line 1 to (tLine - 1) of tScript + 2 into tLineStart
-         get line tLine of tScript
-         put caretPositionRight(tLineStart, tAt + 1, it) into tAt
-         break
-      case "up"
-      case "down"
-         caretUpdate tField, tScript
-         break
-      case "empty"
-      default
-         caretUpdate tField, tScript
-         break
-   end switch
-   
-   textMark "Insert"
-   
-   selectionUpdateRequest
-end selectionChangedByArrowKey
-
-
-private command selectionUpdateRequest
-   if sSelectionUpdateRequest is not empty then
-      cancel sSelectionUpdateRequest
-   end if
-   
-   send "selectionUpdate" to me in 10 milliseconds
-   put the result into sSelectionUpdateRequest
-end selectionUpdateRequest
-
-command selectionUpdate
-   lock screen
-   findClearResults
-   if the lockText of field "Script" of me is false then
-      deSelectLastGoneToLine
-   end if
-   
-   # Tell the script editor to update its panes. This is called here in particular
-   # for the documentation pane to update itself when the user selects a new term.
-   paneUpdateRequest
-   
-   # Update the variables that store the last selected line and handler list
-   updateHandlerList
-   
-   updateSelectedHandler
-   
-   # Update the toolbar so that the handlers list can reflect the new selection. For efficiency we pass
-   # a parameter to the update command which tells it that the selected handler can be assumed to be
-   # up to date, so it doesn't need to evaluate it again (as we just updated it).
-   local tTrueString
-   put "true" into tTrueString
-   
-   # OK-2009-10-05: Optimized this a little. The previous call to update was doing quite a bit of stuff
-   # that is not required here. I factored out the stuff that we actually need into a new method, which
-   # is now called instead.
-   -- send "update tTrueString" to group "Toolbar" of stack (revTargetStack(the long id of me))
-   send "updateSelectedHandler tTrueString" to group "Toolbar" of stack (revTargetStack(the long id of me))
-   
-   # Update the left bar in the same way as the toolbar is updated
-   # OK-2009-10-05: Some more optimization here, the update method was doing a lot of stuff that is not
-   # needed, so I added a more specific method to handle this situation.
-   send "updateSelectedHandler" to group "Left Bar" of stack (revTargetStack(the long id of me))
-   unlock screen
-end selectionUpdate
-
-
-# Description
-#   Sends a request to the script editor to update the panes. Requests are sent
-#   only after a period of inactivity to prevent bombardment.
-command paneUpdateRequest
-   if sPaneUpdateRequest is not empty then
-      cancel sPaneUpdateRequest
-   end if
-   
-   send "paneUpdate" to me in sePrefGet("editor,paneupdatedelay") milliseconds
-   put the result into sPaneUpdateRequest
-end paneUpdateRequest
-
 # Description
 #   Sets some state variables that may be needed to update the script editor panes
 #   and calls the sePanesUpdate command to do the update.
 command paneUpdate
-   put empty into sPaneUpdateRequest
    sePanesUpdate
 end paneUpdate
 
@@ -2681,138 +971,6 @@ end deselectLastGoneToLine
 
 ################################################################################
 
--- This calculates the position of the caret based on pPosition where the caret is (hypothetically).
-function caretPositionRight pLineStartChar, pProposedPosition, pLine
-   local tFirstPosition
-   put pLineStartChar - 1 into tFirstPosition
-   repeat for each char tChar in pLine
-      if tChar is space then
-         add 1 to tFirstPosition
-      else
-         exit repeat
-      end if
-   end repeat
-   
-   return max(tFirstPosition, pProposedPosition)
-end caretPositionRight
-
--- On moving the caret/backspace left, this returns the correct char position.
-function caretPositionLeft pLineStartChar, pCurrentPosition, pScript
-   repeat with x = pCurrentPosition down to pLineStartChar
-      if char x of pScript is not space then
-         return (pCurrentPosition-1)
-         break
-      end if
-   end repeat
-   return pLineStartChar - 2
-end caretPositionLeft
-
-on caretUpdate pField, pScript
-   local tLine
-   put word 2 of the selectedLine into tLine
-   
-   local tField
-   if pField is empty then
-      put the long id of the selectedField into tField
-   else
-      put pField into tField
-   end if
-   
-   local tScript
-   if pScript is empty then
-      put the text of the selectedField into tScript
-   else
-      put pScript into tScript
-   end if
-   
-   # The current line is the first then its first char is char 1, otherwise it is the number of
-   # chars of all previous lines + 1 char for the return char and 1 for the first char of the line.
-   local tLineStart
-   if tLine is 1 then
-      put 1 into tLineStart
-   else
-      put the number of chars of line 1 to (tLine - 1) of tScript + 2 into tLineStart
-   end if
-   
-   lock messages -- dont cause selectionChanged loop
-   
-   select after char caretPositionRight(tLineStart, word 4 of the selectedChunk, line tLine of tScript) of tField
-   
-   unlock messages
-end caretUpdate
-
-
-# Offset between a field's top margin and the start of the text
-constant kFudge = "-4"
-
-# Parameters
-#   pLineNumber : a line number in the script of the current object
-# Returns
-#   The vertical location of that line in the gutter or 0 if the line is not visible
-function lineNumberToVerticalLoc pLineNumber
-   local tField
-   put getScriptField() into tField
-   
-   local tHeight
-   put (pLineNumber - 1) * the effective textHeight of getScriptField() into tHeight
-   
-   # If the breakpoint is on a line earlier than the first one in the visible area then don't render it
-   if tHeight < the vScroll of getScriptField() then
-      return 0
-   end if
-   
-   # If the breakpoint is on a line after the last one in the visible area the don't render it
-   if tHeight > (the vScroll of getScriptField() + the height of getScriptField()) then
-      return 0
-   end if
-   
-   # Adjust the height to take the vScroll into account
-   local tLoc
-   put tHeight - the vScroll of getScriptField() into tLoc
-   
-   # Adjust the height so its relative to the start of the gutter
-   add the top of me to tLoc
-   
-   # Adjust the the height to take the field's margins into account. This requires a little fudge...
-   if the number of items of the margins of getScriptField() = 4 then
-      add item 2 of the margins of getScriptField() + kFudge to tLoc
-   else
-      add the margins of getScriptField() + kFudge to tLoc
-   end if
-   
-   # Adjust to the middle of the line
-   add round(0.5 * the effective textHeight of getScriptField()) to tLoc
-   
-   return tLoc
-end lineNumberToVerticalLoc
-
-# Parameters
-#   pVerticalLoc : a vertical location within the gutter's area
-# Returns
-#   The line number in the current script that is associated with the specified location.
-#   If the location is beyond any lines in the script, or the line cannot have a breakpoint
-#   on it, then 0 is returned.
-function verticalLocToLineNumber pVerticalLoc
-   # Add the vScroll of the script field so that the location is relative to the start of the text
-   local tHeight
-   put the vScroll of getScriptField() + pVerticalLoc into tHeight
-   
-   # Make it relative to 0 rather than the top of the gutter
-   subtract the top of me from tHeight
-   
-   # Adjust the the height to take the field's margins into account. This requires a little fudge...
-   if the number of items of the margins of getScriptField() = 4 then
-      subtract item 2 of the margins of getScriptField() + kFudge from tHeight
-   else
-      subtract the margins of getScriptField() + kFudge from tHeight
-   end if
-   
-   # Divide to calculate which line number it falls nearest. Always round up.
-   local tLineNumber
-   put (tHeight div the effective textHeight of getScriptField()) + 1 into tLineNumber
-   return tLineNumber
-end verticalLocToLineNumber
-
 local sDefinitionMatches
 
 private command prepareContextMenu
@@ -2877,437 +1035,6 @@ end prepareContextMenu
 
 ################################################################################
 
-private function handleEvent pEvent, pTarget
-   if the long id of pTarget is the long id of field "Script" of me then
-      return true
-   else
-      return false
-   end if
-end handleEvent
-
-# OK-2009-03-02 : Bug 7773
-on optionKeyDown pKey
-   if not handleEvent("optionKey", the long id of the target) then
-      pass optionKeyDown
-   end if
-   
-   # Block this message on OS X as it can cause weird characters to be entered into the field
-   if the platform is not "MacOS" then
-      pass optionKeyDown
-   end if
-   
-   -- OK-2009-03-09 : But simulate the message as a normal keydown
-   keyDown pKey
-end optionKeyDown
-
-
-on scrollBarDrag
-   if the short name of the target is "Gutter" or the short name of the owner of the target is "Gutter" then
-      exit scrollBarDrag
-   end if
-   
-   updateGutterRequest empty, empty, empty, empty, false, true
-end scrollBarDrag
-
-on keyDown pChar
-   if not handleEvent("keydown", the long id of the target) then
-      pass keyDown
-   end if
-   
-   if scriptLocked() then
-      exit keyDown
-   end if
-   
-   get the selectedChunk
-   
-   local tFrom, tTo
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   local tAt, tLength
-   if tFrom > tTo then -- the caret is at the end
-      put 0 into tLength
-      put tFrom into tAt
-   else
-      put tFrom into tAt
-      put tTo - tFrom + 1 into tLength
-   end if
-   textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, pChar
-end keyDown
-
-on backspaceKey
-   if not handleEvent("backspaceKey", the long id of the target) then
-      pass backspaceKey
-   end if
-   
-   if scriptLocked() then
-      exit backspaceKey
-   end if
-   
-   get the selectedChunk
-   
-   local tFrom, tTo
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   local tAt, tLength
-   if tFrom > tTo then
-      -- Caret handling, for now, is only done for an "empty" selection.
-      local tLine
-      put word 2 of the selectedLine into tLine
-      
-      local tScript
-      put the text of the selectedField into tScript
-      
-      local tLineStart
-      put the number of chars of line 1 to (tLine - 1) of tScript + 1 into tLineStart
-      -- Only add offset of return if we are not on the first line of the script
-      if tLine is not 1 then
-         add 1 to tLineStart
-      end if
-      
-      # OK-2008-08-28 : Bug 6515 - Delete whole word with commandKey
-      if the commandKey is "down" then
-         local tWordFound
-         put false into tWordFound
-         repeat with x = tTo down to 1
-            if not matchText(char x of tScript, "\s") then
-               put true into tWordFound
-            else
-               if tWordFound then
-                  exit repeat
-               end if
-            end if
-         end repeat
-         
-         if x <> 1 then
-            put x + 1 into tAt
-         else
-            put x into tAt
-         end if
-         
-         put tTo - tAt + 1 into tLength
-      else
-         # OK-2008-08-05 : Bug 6867 - If autoformatting is turned off, simply delete the last selected character
-         if sePrefGet("editor,autoformat") then
-            put caretPositionLeft(tLineStart, tTo, tScript) + 1 into tAt
-         else
-            put tTo into tAt
-         end if
-         put tTo - tAt + 1 into tLength
-      end if
-   else
-      put tTo - tFrom + 1 into tLength
-      put tFrom into tAt
-   end if
-   
-   textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, empty
-   
-   # If the user has deleted a selection of text rather than a single character, they will
-   # expect this to be a single undoable operation. So we close the current group straight
-   # after the deletion. in this case.
-   if tTo > tFrom then
-      textEndGroup
-   end if
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end backspaceKey
-
-on deleteKey
-   if not handleEvent("deleteKey", the long id of the target) then
-      pass deleteKey
-   end if
-   
-   if scriptLocked() then
-      exit deleteKey
-   end if
-   
-   get the selectedChunk
-   
-   local tFrom, tTo
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   local tAt, tLength
-   if tFrom > tTo then
-      put tFrom into tAt
-      put 1 into tLength
-   else
-      put tFrom into tAt
-      put tTo - tFrom + 1 into tLength
-   end if
-   
-   textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, empty
-   
-   # If the user has deleted a selection of text rather than a single character, they will
-   # expect this to be a single undoable operation. So we close the current group straight
-   # after the deletion. in this case.
-   if tTo > tFrom then
-      textEndGroup
-   end if
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end deleteKey
-
-on tabKey
-   if not handleEvent("tabKey", the long id of the target) then
-      pass tabKey
-   end if
-   
-   # To prevent interference with the command+tab shortcut to cycle between tabs
-   if the commandKey is "down" then
-      pass tabKey
-   end if
-   
-   if scriptLocked() then
-      exit tabKey
-   end if
-   
-   if sePrefGet("editor,autoformat") then
-      scriptFormat "handler"
-   else
-      get the selectedChunk
-      
-      local tFrom, tTo
-      put word 2 of it into tFrom
-      put word 4 of it into tTo
-      
-      local tAt, tLength
-      if tFrom > tTo then
-         put tFrom into tAt
-         put 0 into tLength
-      else
-         put tFrom into tAt
-         put tTo - tFrom into tLength
-      end if
-      
-      textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tab
-   end if
-end tabKey
-
-# Key identifiers for a few important keys...
-constant kKeyHome = "65360"
-constant kKeyEnd = "65367"
-constant kKeyLeftArrow = "65361"
-constant kKeyRightArrow = "65363"
-constant kKeyUpArrow = "65362"
-constant kKeyDownArrow = "65364"
-constant kKeyF1 = "65470"
-constant kKeyF2 = "65471"
-constant kKeyF3 = "65472"
-constant kKeyF4 = "65473"
-constant kKeyF5 = "65474"
-constant kKeyF6 = "65475"
-constant kKeyF7 = "65476"
-constant kKeyF8 = "65477"
-constant kKeyF9 = "65478"
-constant kKeyF10 = "65479"
-constant kKeyF11 = "65480"
-constant kKeyF12 = "65481"
-constant kKeyF13 = "65482"
-constant kKeyNumLock = "65407"
-constant kKeyPageUp = "65365"
-constant kKeyPageDown = "65366"
-# constant kKeyMenu = "80"
-
-private command selectFromCurrentToLineStart
-   local tAt
-   put word 4 of the selectedChunk into tAt
-   
-   local tLineNumber
-   put word 2 of the selectedLine into tLineNumber
-   
-   local tLineStart
-   put the number of chars of line 1 to (tLineNumber - 1) of the text of getScriptField() + 1 into tLineStart
-   # Only add offset of return if we are not on the first line of the script
-   if tLineNumber is not 1 then
-      add 1 to tLineStart
-   end if
-   
-   select char tLineStart to tAt of field (the short name of getScriptField()) of me
-end selectFromCurrentToLineStart
-
-private command selectFromCurrentToLineEnd
-   local tAt
-   put word 4 of the selectedChunk into tAt
-   
-   local tLineNumber
-   put word 2 of the selectedLine into tLineNumber
-   
-   local tLineEnd
-   put the number of chars of line 1 to tLineNumber of the text of getScriptField() into tLineEnd
-   
-   select char (tAt + 1) to tLineEnd of field (the short name of getScriptField()) of me
-end selectFromCurrentToLineEnd
-
--- Description
---   Implements a basic page up functionality for OS X, as this is not default field behavior.
-private command pageUp
-   local tLineNumber
-   put word 2 of the selectedLine into tLineNumber
-   
-   -- Work out the number of lines in one "page" of the script editor field.
-   local tLineCount
-   put the height of getScriptField() div the textHeight of getScriptField() into tLineCount
-   
-   -- Work out which line number we need to scroll up to
-   local tNewLineNumber
-   put max(tLineNumber - tLineCount, 1) into tNewLineNumber
-   
-   -- Calculate the char that we need to reach to do the page up
-   local tStartChar
-   put the number of chars of line 1 to tNewLineNumber of the text of getScriptField() into tStartChar
-   
-   local tAt
-   put word 4 of the selectedChunk into tAt
-   
-   if shiftKey() is "down" then
-      select char tStartChar to tAt of field (the short name of getScriptField()) of me
-   else
-      select after char tStartChar of field (the short name of getScriptField()) of me
-   end if
-end pageUp
-
--- Description
---   Implements a basic page down functionality for OS X, as this is not default field behavior.
-private command pageDown
-   local tMultiSelection, tAt
-   get the selectedChunk
-   if word 4 of it > word 2 of it then
-      put true into tMultiSelection
-      put word 4 of it into tAt
-   else
-      put false into tMultiSelection
-      put word 2 of it into tAt
-   end if
-   
-   local tLineNumber
-   if tMultiSelection then
-      put word 4 of the selectedLine into tLineNumber
-   else
-      put word 2 of the selectedLine into tLineNumber
-   end if
-   
-   -- Work out the number of lines in one "page" of the script editor field.
-   local tLineCount
-   put the height of getScriptField() div the textHeight of getScriptField() into tLineCount
-   
-   -- Work out which line number we need to scroll down to
-   local tNewLineNumber
-   put min(tLineNumber + tLineCount, the number of lines of the text of getScriptField()) into tNewLineNumber
-   
-   -- Calculate the char that we need to reach to do the page down
-   local tEndChar
-   put the number of chars of line 1 to tNewLineNumber of the text of getScriptField() into tEndChar
-   
-   if shiftKey() is "down" then
-      select char tAt to tEndChar of field (the short name of getScriptField()) of me
-   else
-      select after char tEndChar of field (the short name of getScriptField()) of me
-   end if
-end pageDown
-
-
-# Description
-#   RawKeyDown is handled mainly because of the home and end keys. These need to be manually implemented on OS X
-#   and both platforms after pressing the home key we have to ensure the caret ends up in the right place.
-#   Other keys may be blocked here to prevent weird chars getting inserted into the script.
-on rawKeyDown pKey
-   if not handleEvent("rawKeyDown", the long id of the target) then
-      pass rawKeyDown
-   end if
-   
-   # For the beginning of line/paragraph action (there is no distinction in the S/E)
-   # make sure we update the caret position after the field has had its go.
-   
-   # For Windows: Home (Windows / Linux)
-   if pKey is kKeyHome and seGetPlatform() is not "macos" then
-      send "selectionChangedByArrowKey" to me in 0 milliseconds
-      pass rawKeyDown
-   end if
-   
-   # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
-   if (pKey is kKeyLeftArrow and (the controlKey is "down" or the commandKey is "down") or \
-         (pKey is 65 and the controlKey is "down" and the shiftKey is "up")) and seGetPlatform() is "macos" then
-      send "selectionChangedByArrowKey" to me in 0 milliseconds
-      pass rawKeyDown
-   end if
-   
-   # For actions where we need to skip back, we need to ensure the caret is at the
-   # start of the line if it is in the white-space prefix.
-   
-   # For Mac: Alt-Down
-   if (pKey is kKeyUpArrow) and (the optionKey is "down" and the shiftKey is "up") and seGetPlatform() is "macos" then
-      local tScript
-      put the text of the selectedField into tScript
-      
-      local tCaretChar
-      get the selectedChunk
-      put word 2 of it into tCaretChar
-      try
-         repeat while tCaretChar > 1 and (char (tCaretChar - 1) of tScript is space)
-            subtract 1 from tCaretChar
-         end repeat
-      catch tError
-         put tError
-      end try
-      if tCaretChar is not 1 and char tCaretChar - 1 of tScript is return then
-         lock messages
-         select before char tCaretChar of the selectedField
-         unlock messages
-      end if
-   end if
-   
-   pass rawKeyDown
-end rawKeyDown
-
-
-# Description
-#   RawKeyUp is handled to deal with the arrow keys. The script editor needs to update when these are pressed
-#   because they change the selection, however in order to do this efficiently, we have to only update when the key
-#   is actually released, not each repeat interval.
-on rawKeyUp pKey
-   if not handleEvent("rawKeyUp", the long id of the target) then
-      pass rawKeyUp
-   end if
-   
-   if pKey is not among the items of kKeyLeftArrow,kKeyRightArrow,kKeyUpArrow,kKeyDownArrow then
-      pass rawKeyUp
-   end if
-   
-   # Check to see if one of the arrow keys is still being held down. If so, don't do the selectionChanged update until they
-   # are all released as it will still be moving
-   local tDownKeys
-   put keysDown() into tDownKeys
-   if (kKeyLeftArrow is among the items of tDownKeys) or (kKeyRightArrow is among the items of tDownKeys) or (kKeyUpArrow is among the items of tDownKeys) or (kKeyDownArrow is among the items of tDownKeys) then
-      pass rawKeyUp
-   end if
-   
-   local tKeyName
-   switch pKey
-      case kKeyLeftArrow
-         put "left" into tKeyName
-         break
-      case kKeyRightArrow
-         put "right" into tKeyName
-         break
-      case kKeyUpArrow
-         put "up" into tKeyName
-         break
-      case kKeyDownArrow
-         put "down" into tKeyName
-         break
-   end switch
-   
-   if not scriptLocked() then
-      textMark "Insert"
-      send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
-   end if
-   pass rawKeyUp
-end rawKeyUp
-
 local sLastClickLine
 
 on mouseDown pButtonNumber
@@ -3345,8 +1072,8 @@ on menuPick pItemName
             local tLineNumber
             put revDebuggerNextAvailableBreakpoint(tScript, sLastClickLine - 1) into tLineNumber
             
-            revDebuggerAddBreakpoint sObjectId, tLineNumber
-            revDebuggerActivateBreakpoint sObjectId, tLineNumber
+            revDebuggerAddBreakpoint getObjectID(), tLineNumber
+            revDebuggerActivateBreakpoint getObjectID(), tLineNumber
             updateGutterRequest empty, empty, empty, empty, false, false
          end if
          break
@@ -3413,497 +1140,10 @@ private function getDisambiguatorObject
    return the long id of stack "revSEDisambiguator"
 end getDisambiguatorObject
 
---private command showDisambiguator
---   local tObject
---   put getDisambiguatorObject() into tObject
---   --set the topLeft of tObject to the selectedLoc
---   set the loc of 
---end showDisambiguator
-
---private command hideDisambigutator
---   set the right of getDisambiguatorObject() to the left of the long owner of getDisambiguatorObject() - 500
---end hideDisambigutator
-
---command disambiguatorPick pSymbol
---   hideDisambigutator
---   log "pSymbol: " & the cResult of getDisambiguatorObject()
---end disambiguatorPick
-
-private function getSelectedText
-   local tFrom, tTo
-   get the selectedChunk
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   local tText
-   if tTo < tFrom then
-      getCaretToken
-      put the result into tText
-   else
-      put char tFrom to tTo of textGetScript() into tText
-   end if
-   
-   return tText
-end getSelectedText
-
-# OK-2009-01-22 : Bug 7278 - Use the clickText instead of the selectedText for the context menu
-# Also modified getCaretToken by adding optional pUseClick parameter.
-private function getClickText
-   --   local tFrom, tTo
-   --   get the clickChunk
-   --   put word 2 of it into tFrom
-   --   put word 4 of it into tTo
-   
-   local tText
-   --   if tTo < tFrom then
-   getCaretToken true
-   put the result into tText
-   --else
-   --   put char tFrom to tTo of textGetScript() into tText
-   --end if
-   
-   return tText
-end getClickText
-
-# Parameters
-#   pLine : the line number we are inserting at (i.e word 2 of the selectedLine at the point which the return was pressed which triggered the autocomplete)
-#   xString : the string to put the completion after. This is the string that is about to be appended to the script as a result of pressing return
-# Description
-#   Calculates the correct completion according to what is already on line pLine, including formatting, and places it after xString,
-#   which can then be inserted into the script field.
-private command autoComplete pLine, @xString
-   local tScript
-   put textGetScript() into tScript
-   
-   local tCurrentLine
-   put line pLine of tScript into tCurrentLine
-   
-   # From the text in the current line, calculate what kind of structure the user is typing the start of (if any)
-   local tStructureType, tStructureName
-   get autoCompleteGetStructure(tCurrentLine)
-   put line 1 of it into tStructureType
-   put line 2 of it into tStructureName
-   
-   # Once we know what the structure is, lookup what the correct completion is for that structure.
-   local tCompletion
-   put autoCompleteGetCompletion(tStructureType, tStructureName) into tCompletion
-   if tCompletion is empty then
-      exit autoComplete
-   end if
-   
-   if tCompletion is empty then
-      exit autoComplete
-   end if
-   
-   # Look down the script and work out if we actually need to complete this structure, i.e. find out if its
-   # already been completed or not.
-   if not autoCompleteCompletionRequired(pLine, tStructureType, tStructureName, tCompletion) then
-      exit autoComplete
-   end if
-   
-   # Format the completion, this is easy because the indentation of the complete will always match
-   # that of pLine.
-   local tIndent
-   put textFormatGetLineIndent(tCurrentLine) before tCompletion
-   put return & tCompletion after xString
-end autoComplete
-
-private function autoCompleteSearchContext @pScript, pLineNumber, pStructureType, pStructureName, pCompletion
-   if pStructureName is not empty then
-      return 1
-   end if
-   
-   local tDepth
-   put 0 into tDepth
-   repeat with x = pLineNumber down to 1
-      local tLine
-      put line x of pScript into tLine
-      
-      if token 1 of tLine is "private" and token 2 of tLine is among the items of autoCompleteNamedStructures() then
-         exit repeat
-      else if token 1 of tLine is among the items of autoCompleteNamedStructures() then
-         exit repeat
-      end if
-      
-      if token 1 of tLine is pStructureType then
-         add 1 to tDepth
-      else if token 1 of tLine is "end" and token 2 of tLine is pStructureType then
-         subtract 1 from tDepth
-      end if
-   end repeat
-   
-   return tDepth
-end autoCompleteSearchContext
-
-# Parameters
-#   pLineNumber : the line that the structure to be completed starts on
-#   pStructureType : the type of the structure to be completed this is either one of autoCompleteNamedStructures() or autoCompleteUnnamedStructures()
-#   pStructureName : the name of the structure. (May be empty, not all structures have names, basically only handlers do)
-#   pCompletion : what the completion of the structure would be (this is needed in order to see if its already there).
-# Returns
-#   True if a completion is required for this specification, false otherwise.
-function autoCompleteCompletionRequired pLineNumber, pStructureType, pStructureName, pCompletion
-   local tScript
-   put textGetScript() into tScript
-   
-   local tInitialDepth
-   put autoCompleteSearchContext(tScript, pLineNumber, pStructureType, pStructureName, pCompletion) into tInitialDepth
-   put line pLineNumber + 1 to -1 of tScript into tScript
-   
-   # The nesting depth starts at 1 as we have just entered a structure
-   local tNestingDepth
-   put tInitialDepth into tNestingDepth
-   repeat for each line tLine in tScript
-      if token 1 of tLine is token 1 of pCompletion and token 2 of tLine is token 2 of pCompletion then
-         subtract 1 from tNestingDepth
-         if tNestingDepth = 0 then
-            # The structure is already completed
-            return false
-         end if
-      else if token 1 of tLine is "end" and token 2 of tLine is not among the items of autoCompleteUnnamedStructures() and token 2 of tLine is not "if" then
-         # If a named structure is ending, but it doesn't match the structure we are looking for
-         # then if the structure we're looking for is un-named, we return true
-         if pStructureName is empty then
-            return true
-         end if
-         
-         # Else if we are looking for a named structure, then don't do the completion, because
-         # its possible that the user is renaming a handler and we should be conservative here.
-         if pStructureName is not empty then
-            return false
-         end if
-      else
-         get autoCompleteGetStructure(tLine)
-         
-         # If we have a matching structure being opened, increment the nesting depth
-         if line 1 of it is pStructureType and line 2 of it is pStructureName then
-            add 1 to tNestingDepth
-         end if
-         
-         # If a new handler has started and we are completing an any structure then
-         # we should return true now.
-         if line 2 of it is not empty then
-            return true
-         end if
-      end if
-   end repeat
-   
-   return true
-end autoCompleteCompletionRequired
-
-# Returns
-#   A comma separated list of the autocompleteable structures that have names. This is currently just handlers.
-private function autoCompleteNamedStructures
-   return handlerTypes()
-end autoCompleteNamedStructures
-
-# Returns
-#   A comma separated list of the autocompleteable structures without names. Note that we don't complete IF statements
-#   because there are too many possibilities, (else, else if, end if) and its better to not complete than risk forcing the user to delete stuff.
-private function autoCompleteUnnamedStructures
-   return "repeat,try,switch"
-end autoCompleteUnnamedStructures
-
-# Parameters
-#   pLine : a line number in the current script
-# Returns
-#   A string describing the structure whose beginning is found on pLine. This is in the following format:
-#     Line 1 : The structure's type, e.g. command, repeat, try
-#     Line 2 : The structure's name if it has one, e.g. mouseUp
-#   If pLine does not represent the beginning of a completable structure then the structure type will be empty.
-private function autoCompleteGetStructure pLine
-   local tLine
-   put pLine into tLine
-   
-   # Disregard "private" if first token
-   if token 1 of tLine is "private" then
-      put token 2 to -1 of tLine into tLine
-   end if
-   
-   local tStructureType, tStructureName
-   
-   # Establish what the structure type and name (if appropriate) are. We autocomplete handler declarations,
-   # repeats, trys and switches, but not ifs (because they have too many different forms, might annoy the user).
-   if token 1 of tLine is among the items of autoCompleteNamedStructures() then
-      put token 1 of tLine into tStructureType
-      put token 2 of tLine into tStructureName
-   else if token 1 of tLine is among the items of autoCompleteUnnamedStructures() then
-      put token 1 of tLine into tStructureType
-      put empty into tStructureName
-   end if
-   
-   return tStructuretype & return & tStructureName
-end autoCompleteGetStructure
-
-# Parameters
-#   pStructureType : the type of a completeable structure
-#   pStructureName : the name of a compleatable structure (may be empty)
-# Returns
-#   The completion of the stucture if one is known. E.g if pStructureType is "on" and pStuctureName is "mouseUp",
-#   will return "end mouseUp"
-private function autoCompleteGetCompletion pStructureType, pStructureName
-   # Make sure we have something valid that can be completed
-   if pStructureType is empty then
-      return empty
-   end if
-   
-   # Work out the completion
-   local tCompletion
-   if pStructureType is among the items of handlerTypes() then
-      if pStructureName is not empty then
-         put "end " & pStructureName into tCompletion
-      end if
-   else
-      put "end " & pStructureType into tCompletion
-   end if
-   
-   return tCompletion
-end autoCompleteGetCompletion
-
-# Parameters
-# Description
-#   Returns the specification of replace operation that represents the inserting of a
-#   return character at the specified location in the current script. Includes formatting.
-#   This command will also remove indentation from the previous line.
-private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequired, @rAt, @rLength, @rString
-   local tReturnString
-   if pContinuationRequired then
-      put " \" & return into tReturnString
-   else
-      put return into tReturnString
-   end if
-   
-   # If there is a non-empty selection, the inserted return char will replace this
-   # and for now, no formatting is done.
-   if pFrom <= pTo then
-      put pFrom into rAt
-      put pTo - pFrom + (the length of tReturnString) into rLength
-      put tReturnString into rString
-      exit calculateReturnFormatting
-   end if
-   
-   # If the preference is not to use formatting, just return the specification of the basic 
-   # insertion of a return character.
-   if not sePrefGet("editor,autoformat") then
-      put pFrom into rAt
-      put 0 into rLength
-      put tReturnString into rString
-      exit calculateReturnFormatting
-   end if
-   
-   local tScript
-   put textGetScript() into tScript
-   
-   local tPreviousChars
-   repeat with x = pFrom - 1 down to 1
-      if char x of tScript is empty or char x of tScript is return then
-         exit repeat
-      end if
-      put char x of tScript after tPreviousChars
-   end repeat
-   
-   local tWhitespaceBefore
-   put matchText(tPreviousChars, "^\s*$") into tWhitespaceBefore
-   
-   if tWhitespaceBefore then
-      local tIndent
-      put textFormatGetLineIndent(line pLine of tScript) into tIndent
-      
-      # If the caret has somehow been placed in the middle of the indentation string we need to allow
-      # for this by subtracting from tIndent
-      local tCurrentChar
-      put pFrom into tCurrentChar
-      repeat until (char tCurrentChar of tScript is not space) or the number of chars of tIndent = 0
-         delete char 1 of tIndent
-         add 1 to tCurrentChar
-      end repeat
-      
-      local tLength
-      put 0 into tLength
-      
-      local tAt
-      put pFrom into tAt
-      
-      local tReturn
-      put return & tIndent into tReturn
-   else
-      local tFormatting
-      local tPreviousLine = 0
-      local tTextLines
-      put tScript into tTextLines
-      split tTextLines by return
-      
-      put textFormatLine(pLine, tTextLines, tPreviousLine) into tFormatting
-      
-      put (the number of chars of line 1 to (pLine - 1) of tScript) + 1 into tAt 
-      if pLine <> 1 then 
-         add 1 to tAt 
-      end if
-      
-      if item 1 of tFormatting > 0 then
-         repeat item 1 of tFormatting times
-            put space after tIndent
-         end repeat
-         textReplace tAt, empty, tIndent
-      else if item 1 of tFormatting < 0 then
-         textReplace tAt, char tAt to (tAt - item 1 of tFormatting - 1) of tScript, empty
-      end if
-      
-      put 0 into tLength
-      put pFrom into tAt
-      add item 1 of tFormatting to tAt
-      put tReturnString & item 2 of tFormatting into tReturn
-   end if
-   
-   put tAt into rAt
-   put tLength into rLength
-   put tReturn into rString
-end calculateReturnFormatting
-
-on returnInField
-   if the commandKey is "down" then
-      # Pass to prevent conflict with command + return keyboard shortcut
-      pass returnInField
-   end if
-   
-   if not handleEvent("returnInField", the long id of the target) then
-      pass returnInField
-   end if
-   
-   if scriptLocked() then
-      exit returnInField
-   end if
-   
-   local tFrom, tTo
-   get the selectedChunk
-   put word 2 of it into tFrom
-   put word 4 of it into tTo
-   
-   local tLine
-   put word 2 of the selectedLine into tLine
-   
-   # Option+Return places a continuation char on the current line before the return.
-   local tContinuationRequired
-   put (optionKey() is "down") into tContinuationRequired
-   
-   local tAt, tLength, tReturn
-   calculateReturnFormatting tTo, tFrom, tLine, tContinuationRequired, tAt, tLength, tReturn
-   
-   local tCaretOffset
-   put tAt + the length of tReturn - 1 into tCaretOffset
-   
-   local tLineEnd
-   put the number of chars of line 1 to tLine of textGetScript() + 1 into tLineEnd
-   
-   local tFollowingChars
-   put char tAt to tLineEnd of textGetScript() into tFollowingChars
-   
-   local tWhitespaceAfter
-   put matchText(tFollowingChars, "^\s*$") into tWhitespaceAfter
-   
-   if sePrefGet("editor,autocomplete") and tWhitespaceAfter then
-      autoComplete tLine, tReturn
-   end if
-   
-   # The return character should be grouped separately from the line that was entered before it (if there was one)
-   # This copies the behavior of MS Visual Studio.
-   if sTextGroupIndex[sObjectId] is not 0 then
-      # OK-2008-07-29 : Bug 6825
-      --textEndGroup
-      textMark "Insert"
-   end if
-   
-   textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tReturn
-   select after char tCaretOffset of field "Script" of me
-   textEndGroup
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
-end returnInField
-
--- Drag Drop Management
-local sDragMode
-
-on dragDrop
-   if not handleEvent("dragDrop", the long id of the target) then
-      pass dragDrop
-   end if
-   
-   if scriptLocked() then
-      exit dragDrop
-   end if
-   
-   lock screen
-   textBeginGroup "Drag"
-   
-   local tDropAt
-   get the dropChunk
-   put word 2 of it into tDropAt
-   
-   local tSelectFrom, tSelectTo
-   get the selectedChunk
-   put word 2 of it into tSelectFrom
-   put word 4 of it into tSelectTo
-   
-   if tDropAt >= tSelectFrom and tDropAt <= tSelectTo then
-      exit dragDrop
-   end if
-   
-   if sDragMode is "cut" then
-      -- Remove the selection. This will never happen on a drag that started outside the ScriptEditorPane.
-      
-      -- in this case, we cannot have tFrom > tTo
-      textReplace tSelectFrom, char tSelectFrom to tSelectTo of control "Script" of me, empty
-      
-      if tDropAt > tSelectTo then
-         subtract tSelectTo - tSelectFrom + 1 from tDropAt
-      end if
-   end if
-   
-   
-   local tDroppedText
-   put dragData["text"] into tDroppedText
-   -- There is an issue with the very last return character, for now it seams sufficient to remove this.
-   #  if char -1 of tDroppedText is return then
-   #    delete char -1 of tDroppedText
-   #  end if
-   
-   textReplace tDropAt, empty, tDroppedText
-   
-   textEndGroup
-   unlock screen
-end dragDrop
-
-on dragStart
-   if not handleEvent("dragStart", the long id of the target) then
-      pass dragStart
-   end if
-   
-   # OK-2008-08-01 : Bug 6709 - On Macs, the option key should result in a copying drag.
-   if seGetPlatform() is not "MacOS" then
-      if the controlKey is "down" then
-         put "copy" into sDragMode
-      else
-         put "cut" into sDragMode
-      end if
-   else
-      if the optionKey is "down" then
-         put "copy" into sDragMode
-      else
-         put "cut" into sDragMode
-      end if
-   end if
-   
-   pass dragStart
-end dragStart
-
-on dragEnd
-end dragEnd
-
 on exitField
    -- OK-2008-07-10 : Check that an object is loaded before attemping to save context,
    -- this is prevent annoying errors from ocurring when editing the IDE.
-   if sObjectId is not empty then
+   if getObjectID() is not empty then
       contextSave
    end if
    pass exitField
@@ -3912,7 +1152,7 @@ end exitField
 on closeField
    -- OK-2008-07-10 : Check that an object is loaded before attemping to save context,
    -- this is prevent annoying errors from ocurring when editing the IDE.
-   if sObjectId is not empty then
+   if getObjectID() is not empty then
       contextSave
    end if
    pass closeField
@@ -4117,7 +1357,7 @@ command findMarkResult pStart, pEnd, pInteractive
    end if
    
    if sFirstFindObject is empty then
-      put sObjectid into sFirstFindObject
+      put getObjectID() into sFirstFindObject
    end if
    
    if sFirstFindLocation is empty or pInteractive then
@@ -4134,7 +1374,7 @@ command findMarkResult pStart, pEnd, pInteractive
    put false into tFalseString
    send "update tFalseString" to group "Left Bar" of stack (revTargetStack(the long id of me))
    
-   put sObjectId into sLastFindObject
+   put getObjectID() into sLastFindObject
    put pStart & comma & pEnd into sLastFindLocation
 end findMarkResult
 
@@ -4165,7 +1405,7 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
          # Sort the object list so that tabs are cycled through in order, starting with current object
          local tLineNumber
          set the wholeMatches to true
-         put lineOffset(seGetRuggedId(sObjectId), tObjectList) into tLineNumber
+         put lineOffset(seGetRuggedId(getObjectID()), tObjectList) into tLineNumber
          set the wholeMatches to false
          
          local tReorderedObjectList
@@ -4183,26 +1423,26 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
    else if pTarget is "card" then
       # This will search the card of the script editor's current object. This means the card itself
       # and all objects on it.
-      put findListObjectsOnCard(sObjectId) into tObjectList
+      put findListObjectsOnCard(getObjectID()) into tObjectList
    else if pTarget is "stack" then
       # Searches the stack of the sript editor's current object. This means the stack script itself,
       # and all other objects in the stack, including all cards but not substacks.
-      put findListObjectsOnStack(sObjectId) into tObjectList
+      put findListObjectsOnStack(getObjectID()) into tObjectList
    else if pTarget is "stack file" then
       # As with "stack" except also searches all stacks in the same file.
-      put findListObjectsOnStackAndSubstacks(sObjectId, false, pCallback, pCallbackTarget, rCancelled) into tObjectList
+      put findListObjectsOnStackAndSubstacks(getObjectID(), false, pCallback, pCallbackTarget, rCancelled) into tObjectList
    else if pTarget is "all stacks" then
       # Searches all stacks and substacks in memory
       put findListObjectsOnAllStacksAndSubstacks(false, pCallback, pCallbackTarget, rCancelled) into tObjectList
    else if pTarget is "stack file and stackfiles" then
       # As for "stack file" except also searches all available stacks in the stackFiles property
-      put findListObjectsOnStackAndSubstacks(sObjectId, true, pCallback, pCallbackTarget, rCancelled) into tObjectList
+      put findListObjectsOnStackAndSubstacks(getObjectID(), true, pCallback, pCallbackTarget, rCancelled) into tObjectList
    else if pTarget is "all available stacks" then
       # Searches all stacks and substacks in memory and all stackFiles. Note this is not recursive at the moment, i.e
       # stackFiles of stackFiles are not searched.
       put findListObjectsOnAllAvailableStacks(pCallback, pCallbackTarget, rCancelled) into tObjectList
    else
-      put sObjectId into tObjectList
+      put getObjectID() into tObjectList
    end if
    
    return tObjectList
@@ -4481,10 +1721,6 @@ private function findDefaultSearch
    return tSearch
 end findDefaultSearch
 
-command getLastSelectedChunk
-   return sLastSelectedChunk
-end getLastSelectedChunk
-
 # Parameters
 #   (same as showNextFindResult and showPreviousFindResult) +:
 #   pDirection : forward or backward
@@ -4528,7 +1764,7 @@ private function findBuildSearch pQuery, pIsRegExp, pUseWildcard, pWholeMatch, p
    
    # Calculate the initial start and end for the search.
    local tLastFindLocation
-   if sLastFindObject is not empty and seGetRuggedId(sLastFindObject) is seGetRuggedId(sObjectId) then
+   if sLastFindObject is not empty and seGetRuggedId(sLastFindObject) is seGetRuggedId(getObjectID()) then
       put sLastFindLocation into tLastFindLocation
    end if
    
@@ -4637,7 +1873,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
    lock screen
    local tStart
    repeat for each line tObject in tObjectList
-      if seGetRuggedId(tObject) is not seGetRuggedId(sObjectId) then
+      if seGetRuggedId(tObject) is not seGetRuggedId(getObjectID()) then
          revSESetCurrentObject tObject, empty, true
          put 1 into tStart
       else
@@ -4646,7 +1882,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
             put tSearch["start"] into tStart
          else
             # Calculate a new search start
-            if sLastFindObject is not empty and seGetRuggedId(sLastFindObject) is seGetRuggedId(sObjectId) and sLastFindLocation is not empty then
+            if sLastFindObject is not empty and seGetRuggedId(sLastFindObject) is seGetRuggedId(getObjectID()) and sLastFindLocation is not empty then
                if pInteractive then
                   put item 1 of sLastFindLocation into tStart
                else
@@ -4664,7 +1900,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
          put the result into tResult
          unlock screen
          
-         if tResult is sFirstFindLocation and sObjectId is sFirstFindObject then
+         if tResult is sFirstFindLocation and getObjectID() is sFirstFindObject then
             --beep
          end if
          
@@ -4683,7 +1919,7 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
       findText textGetScript(), false, 1, tSearch["start"], tSearch
       put the result into tResult
       
-      if tResult is sFirstFindLocation and sObjectId is sFirstFindObject then
+      if tResult is sFirstFindLocation and getObjectID() is sFirstFindObject then
          --beep
       end if
       
@@ -5059,9 +2295,9 @@ command tooltipUpdate
    # Get the list of variables available for either the handler the mouse is in, or the script.
    local tVariables
    if tHandler is empty then
-      put the revAvailableVariables of sObjectId into tVariables
+      put the revAvailableVariables of getObjectID() into tVariables
    else
-      put the revAvailableVariables[tHandler] of sObjectId into tVariables
+      put the revAvailableVariables[tHandler] of getObjectID() into tVariables
    end if
    
    # "Flatten" the list of variables- we don't care if they are locals, parameters, globals etc.
@@ -5253,25 +2489,6 @@ private command tooltipUpdateCancel
    end if
    put empty into sTooltipUpdateRequest
 end tooltipUpdateCancel
-
-# Description
-## Returns a line stripped of comments at the end of the line
-private function lineStripComments pLine
-   local tOffset,tCommentChar
-   put offset("#", pLine) into tOffset
-   if tOffset = 0 then
-      put offset("--", pLine) into tOffset
-      put "--" into tCommentChar
-   else
-      put "#" into tCommentChar
-   end if
-   
-   if tCommentChar is empty then
-      return pLine
-   else
-      return char 1 to tOffset of pLine
-   end if
-end lineStripComments
 
 ----------------------------------------------------------------
 -- Editor field cache
