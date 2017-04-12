@@ -5545,6 +5545,8 @@ function revIDEScriptEditorBehavior pWhich
    local tPathToBehaviors
    put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
    switch pWhich
+      case "common editor"
+         return tPathToBehaviors & slash & "revsecommoneditorbehavior.livecodescript"
       case "editor"
          return tPathToBehaviors & slash & "revseeditorbehavior.livecodescript"
       case "handlerlist"
