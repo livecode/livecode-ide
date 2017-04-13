@@ -8659,7 +8659,7 @@ on revIDEToggle pProperty
       case "Rulers"
          put "rulers" into tToggleMessage
          if the mode of stack "revRulersH" is not 0 then
-            revInternal__UnloadLibrary "revRulersScript"
+            revInternal__UnloadLibrary "revRulersScriptLibrary"
             lock messages
             close stack "revRulersH"
             close stack "revRulersV"
