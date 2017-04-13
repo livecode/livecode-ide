@@ -248,23 +248,6 @@ on TestIntelligenceObjectPutFunctionWithParam
 	TestAssert "intelligence object put function with single segment param with spaces", msg is "hello world"
 end TestIntelligenceObjectPutFunctionWithParam
 
--- Bug 17241
-on TestIntelligenceObjectPutFunctionWithParamError
-	local tScript
-	put "function valueFunction pParam; return pParam; end valueFunction" into tScript
-
-	local tStack
-	create stack
-	put it into tStack
-	set the script of tStack to tScript
-
-	local tValidScript
-
-	ideExecuteScript "put valueFunction(hello world)", empty, tStack, false, tValidScript
-	TestAssert "intelligence object put function with multi-segment param error", the result contains "error"
-	TestAssert "intelligence object put function with multi-segment param invalid", tValidScript is empty
-end TestIntelligenceObjectPutFunctionWithParamError
-
 on TestIntelligenceObjectPropertyCompleted
 	local tButton, tButtonName
 	create button
@@ -315,18 +298,3 @@ on TestIntelligenceObjectCommandWithTwoParams
 	TestAssert "intelligence object command two params result", msg is 2
 	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
 end TestIntelligenceObjectCommandWithTwoParams
-
--- Bug 17863
-on TestIntelligenceObjectGetNonExistantFunction
-   local tStack
-	create stack
-	put it into tStack
-	
-   local tToExecute, tValidScript
-	put "get aNonExistantFunction()" into tToExecute
-	
-	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
-	
-	TestAssert "intelligence object non-existant function result", the result contains "error"
-	TestAssert "intelligence object non-existant function executed", tValidScript is empty
-end TestIntelligenceObjectGetNonExistantFunction

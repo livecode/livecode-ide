@@ -1,7 +1,4 @@
 ﻿script "revErrorDisplay"
-# AL-2015-07-07: Ensure LCB error code matches that of the engine.
-local sLCBErrorCode
-
 on moveStack
    updateStoredRect
 end moveStack
@@ -28,13 +25,7 @@ private command updateStoredRect
 end updateStoredRect
 
 # OK-2007-07-02: Bug 5203
-constant kExtensionError = "extension: error occured with domain"
 on preOpenStack
-   if sLCBErrorCode is empty then
-      # AL-2015-07-07: Calculate LCB error code
-      put lineOffset(kExtensionError, the scriptExecutionErrors) into sLCBErrorCode
-   end if
-   
    local tStoredRect
    put revIDEGetPreference("cErrorDisplayRect") into tStoredRect
    
@@ -152,6 +143,7 @@ constant kExternalHandlerError = 634
 constant kErrorTextColor = "64,64,64"
 constant kErrorYellowIconID = 202696
 constant kErrorGreyIconID = 202697
+constant kExtensionErrorCode = 863
 
 on preOpenCard
    global gREVMovingPalette, gREVDevelopment, gRevExit
@@ -255,14 +247,13 @@ on preOpenCard
       if tNumber is kExternalHandlerError then
          put item 4 to -1 of line 1 of tError after tErrorString
       else
-         put revIDELookupError("execution", tNumber) after tErrorString
+         put revIDELookupError("execution", tError) after tErrorString
       end if
       put return after tErrorString
    else if tScriptError is not empty then
       put tScriptError into tError
-      put item 1 of line 1 of tError into tNumber
       put "     " & tab & "compiling at" && the long time & return into tErrorString
-      put "Type" & tab & revIDELookupError("compilation", tNumber) after tErrorString
+      put "Type" & tab & revIDELookupError("compilation", tError) after tErrorString
       put return after tErrorString
    end if
    
@@ -282,7 +273,7 @@ on preOpenCard
       exit to top
    end if
    
-   if tNumber is sLCBErrorCode then
+   if tNumber is kExtensionErrorCode then
       put "LCB Error" & tab & item 4 to -1 of line 2 of tError into line 2 of tErrorString
       put "LCB File" & tab & item 4 to -1 of line 3 of tError & cr after tErrorString
       put "LCB Line" & tab & item 4 to -1 of line 4 of tError after tErrorString
@@ -443,9 +434,9 @@ setProp cCurrentObject pWhat
    local tParsedData
    repeat for each line l in (line 1 to -2 of pWhat)
       if tScriptError then 
-         put "     " & tab & revIDELookupError("compilation", (item 1 of l)) after tParsedData
+         put "     " & tab & revIDELookupError("compilation", l) after tParsedData
       else 
-         put "Type" & tab & revIDELookupError("execution", (item 1 of l)) after tParsedData
+         put "Type" & tab & revIDELookupError("execution", l) after tParsedData
       end if
       put return after tParsedData
       put word 1 to -1 of line (item 2 of l) of the script of tObject & cr after tParsedData
@@ -526,7 +517,7 @@ on mouseDoubleUp
       put the tKey of this stack into tError
       
       -- If it is an LCB Error there is no double-click behavior
-      if item 1 of line 1 of tError is sLCBErrorCode then
+      if item 1 of line 1 of tError is kExtensionErrorCode then
          exit mouseDoubleUp
       end if
       
