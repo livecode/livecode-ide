@@ -55,7 +55,8 @@ on TestMessageBoxExecutionError
    put "edit the script of stack nonexistent" into tScript
    
    ideExecuteScript tScript, empty, empty, false, tValidScript
-   TestAssert "execute script with script error result", line 1 of it is "91,11401,1"
+   TestAssert "execute script with script error result", \
+         matchText(line 1 of it, "^91,\d+,1$")
    TestAssert "execute script with script error script invalid", tValidScript is tScript
 end TestMessageBoxExecutionError
 
@@ -79,7 +80,8 @@ on TestIntelligenceObjectGetNonExistentFunction
 	
 	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
 	
-	TestAssert "intelligence object non-existent function result", line 1 of it is "219,11400,4,aNonExistentFunction"
+	TestAssert "intelligence object non-existent function result", \
+         matchText(line 1 of it, "^219,\d+,4,aNonExistentFunction$")
 	TestAssert "intelligence object non-existent function executed", tValidScript is tToExecute
 end TestIntelligenceObjectGetNonExistentFunction
 
