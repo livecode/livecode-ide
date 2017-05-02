@@ -882,7 +882,7 @@ on mouseUp pButtonNumber
    
    if the long id of the target is the long id of button "Close" of me then
       lock screen
-      revSERemoveTargetObject sTabMap[sSelectedTab]
+      deleteTab sSelectedTab
       unlock screen
       exit mouseUp
    end if
@@ -915,7 +915,7 @@ on mouseUp pButtonNumber
       
       # The icon on the left of the tabs is a close button
       if the short name of the target is "Tab Icon" then
-         revSERemoveTargetObject sTabMap[tClickedTabNumber]
+         deleteTab tClickedTabNumber
       else
          # Clicking anywhere else in the tab selects it
 
@@ -931,6 +931,10 @@ on mouseUp pButtonNumber
    end if
    unlock screen
 end mouseUp
+
+private command deleteTab pWhich
+   send "revSERemoveTargetObject sTabMap[pWhich]" to me in 0 millisecs
+end deleteTab
 
 private command updateToggleIcon
    local tMode
