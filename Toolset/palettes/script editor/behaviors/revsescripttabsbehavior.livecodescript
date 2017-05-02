@@ -759,7 +759,7 @@ private command contextMenuPick pItemName
    
    switch pItemName
       case "Close tab"
-         revSERemoveTargetObject sTabMap[tTabNumber]
+         deleteTab tTabNumber
          break
          
       case "Close other tabs"
@@ -807,7 +807,7 @@ private command contextMenuPick pItemName
          lock screen
          local tObjectToMove
          put sTabMap[tTabNumber] into tObjectToMove
-         revSERemoveTargetObject tObjectToMove
+         deleteTab tTabNumber
          revEditScriptInNewWindow tObjectToMove
          break
          
