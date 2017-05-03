@@ -2135,10 +2135,10 @@ private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpo
    local tSelectedLine
    put word 2 of the selectedLine into tSelectedLine
    
-   local tOldLength
-   put the length of pOldText into tOldLength
-   
-   _internal script replace char pOffset to pOffset + tOldLength - 1 of field "Script" of me with pNewText
+   local tEndOffset
+   put max(0, pOffset + the length of pOldText - 1) into tEndOffset
+
+   _internal script replace char pOffset to tEndOffset of field "Script" of me with pNewText
    
    --Do some work to update the gutter.
    local tOldLines, tNewLines
