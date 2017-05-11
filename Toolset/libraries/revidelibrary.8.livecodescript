@@ -11631,6 +11631,7 @@ function revIDEObjectIsOpen pLongID
 end revIDEObjectIsOpen
 
 constant kExtensionErrorCode = 863
+constant kExternalHandlerErrorCode = 634
 /**
 Returns the error description associated with the given 
 error code.
@@ -11654,6 +11655,8 @@ function revIDELookupError pType, pError
          put item 4 to -1 of line 3 of pError into tFile
          put item 4 to -1 of line 4 of pError into tLine
          return merge("LCB Error in file [[tFile]] at line [[tLine]]: [[tDesc]]")
+      else if tCode is kExternalHandlerErrorCode then
+         return "External handler execution error:" && item 4 to -1 of line 1 of pError
       end if
       return line tCode of the scriptExecutionErrors
    else if pType is "warning" then
