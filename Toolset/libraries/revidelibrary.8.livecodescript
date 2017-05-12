@@ -11104,11 +11104,18 @@ end revIDEGetGeometry
 
 private function __publicScriptHandlers pObject
    local tScript, tHandlers
+   repeat while pObject is not empty
    try
-      put the script of pObject into tScript
+         put the script of pObject & return after tScript
+         put the owner of pObject into pObject
    catch tError
-      return empty
+         exit repeat
    end try
+   end repeat
+   
+   if tScript is empty then
+      return empty
+   end if
    
    repeat for each line tLine in tScript
       if token 1 of tLine is among the items of "on,command" then
@@ -11121,7 +11128,7 @@ private function __publicScriptHandlers pObject
    return tHandlers
 end __publicScriptHandlers
 
-private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
+private command __TryToAutocompleteScript pObject, pScript, @rNewScript
    if pObject is empty then
       return empty
    end if
@@ -11138,20 +11145,20 @@ private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
    -- Check to see if any handler in the message path matches the executed script
    
    local tTargetHandler, tIsPutOrGet
-   put token 1 of pToDo into tTargetHandler
+   put token 1 of pScript into tTargetHandler
    put false into tIsPutOrGet
    if tTargetHandler is among the items of "put,get" then
       put true into tIsPutOrGet
-      if token 2 of pToDo is "the" then
-         put token 3 of pToDo into tTargetHandler
+      if token 2 of pScript is "the" then
+         put token 3 of pScript into tTargetHandler
       else
-         put token 2 of pToDo into tTargetHandler
+         put token 2 of pScript into tTargetHandler
       end if
    end if
    
-   local tDoScript
-   put pToDo into tDoScript
-   set the itemdelimiter to ";"
+   local tDoScript, tFound
+   put false into tFound
+   put pScript into tDoScript
    repeat for each line tLine in tHandlerList
       local tHandlerName, tHandlerType
       put segment 1 of tLine into tHandlerType
@@ -11163,68 +11170,61 @@ private command __tryToDoScriptInObject pObject, pToDo, @rValidScript
       local tParams
       if not tIsPutOrGet and tHandlerType is "M" then
          -- If this is a command that matches, just send the message
-         put pToDo into tDoScript
+         put pScript into tDoScript
+         put true into tFound
          exit repeat
       else if tHandlerType is "F" then
          -- otherwise this is a function that matches
          if tIsPutOrGet then
-            put pToDo into tDoScript
+            put pScript into tDoScript
          else
             -- autocomplete the 'put' if necessary
-            put "put" && pToDo into tDoScript
+            put "put" && pScript into tDoScript
          end if
+         put true into tFound
          exit repeat
       end if
    end repeat
 
-   local tCompileError
-   ideCompileCheck tDoScript
-   put the result into tCompileError
-   if tCompileError is not empty then
-      return tCompileError for error
-   end if
-   
-   local tScriptError
-   try
-      send "-- execute in object context" & return & tDoScript to pObject
-   catch tScriptError
-      return tScriptError for value
-   end try
-   
-   put tDoScript into rValidScript
-end __tryToDoScriptInObject
+   put tDoScript into rNewScript
+   return tFound
+end __TryToAutocompleteScript
 
-command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode, @rValidScript
-   local tOldDefault
-   put the defaultStack into tOldDefault
-   if pDefaultStack is not empty then
-      set the defaultStack to pDefaultStack
-   end if
+command ideExecuteScript pScript, pObject, pDebugMode, @rValidScript
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
    
    if pScript is empty then exit ideExecuteScript
    
-   local tCompileError
+   if pObject is empty then
+      put the long id of this card of the defaultStack into pObject
+   else if word 1 of pObject is "stack" then
+      set the defaultStack to the short name of pObject
+      put the long id of this card of pObject into pObject
+   end if
    
    -- check if word 1 of pScript is a handler in the intelligence object's script or the default stack's script
-   local tValidScript
-   __tryToDoScriptInObject pIntelligenceObject, pScript, tValidScript
-   if tValidScript is empty then
-      __tryToDoScriptInObject the long id of this card of the defaultStack, pScript, tValidScript
-   end if
+   local tScript, tValidScript, tCompileError, tOriginalCompileError
+   ideCompileCheck pScript
+   put the result into tOriginalCompileError
    
-   if tValidScript is not empty then
-      put tValidScript into rValidScript
-      return it for value
-   end if
-   put empty into tValidScript
-   
-   # Try executing as a command
-   if word 1 of pScript is among the lines of the commandNames then
-      ideDoMessage pScript, pDebugMode
+   __TryToAutocompleteScript pObject, pScript, tScript
+   -- If we found a handler already, just execute the script
+   if the result is true then
+      ideCompileCheck tScript
       put the result into tCompileError
       if tCompileError is empty then
-         put pScript into rValidScript
-         return it for value
+         put tScript into tValidScript
+      end if
+   end if
+   
+   # Try executing as a command
+   if tValidScript is empty and \ 
+         word 1 of tScript is among the lines of the commandNames then
+      ideCompileCheck tScript
+      put the result into tCompileError
+      if tCompileError is empty then
+         put tScript into tValidScript
       end if
    end if
    
@@ -11233,33 +11233,44 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
    --where the intelligence object has been set in the preferences (currently selected object or the object directly underneath the mouse) ;s
    lock screen
    
-   if not (token 1 of pScript is "get") then
+   if tValidScript is empty and not (token 1 of tScript is "get") then
       # Try executing as a function or property
       local tTryProperty
       
       # Build the string so that it starts with "put the"
-      if not (token 1 of pScript is "the") then
-         put "the" && pScript into tTryProperty 
+      if not (token 1 of tScript is "the") then
+         put "the" && tScript into tTryProperty 
       else
-         put pScript into tTryProperty
+         put tScript into tTryProperty
       end if
       if not (token 1 of tTryProperty is "put ") then
          put "put " before tTryProperty 
       end if
       
       set the wholeMatches to true
-      local tIsProperty
-      put word 3 of tTryProperty is among the lines of the propertyNames into tIsProperty
+      local tIsProperty, tToken
+      put word 3 of tTryProperty into tToken
+      put tToken is among the lines of the propertyNames into tIsProperty
       
-      # Try as an object property of the intelligence object
-      if tValidScript is empty and tIsProperty and pIntelligenceObject is not empty then
-         ideDoMessage tTryProperty && "of" && pIntelligenceObject, pDebugMode
+      # Try as a function or global property
+      if tIsProperty or tToken is among the lines of the functionNames then
+         ideCompileCheck tTryProperty
+         put the result into tCompileError
+         if tCompileError is empty then
+            put tTryProperty into tValidScript
+         end if
+      end if
+      
+      # If it wasn't valid as an object property of the intelligence object
+      # then try as an object property of the intelligence object
+      if tValidScript is empty and tIsProperty and pObject is not empty then
+         ideCompileCheck tTryProperty && "of" && pObject
          put the result into tCompileError
          if tCompileError is empty then
             local tName
             # pIntelligence object may be a bad reference or no longer exist
             try
-               put the name of pIntelligenceObject into tName
+               put the name of pObject into tName
             catch tError
             end try
             if tError is empty then
@@ -11268,52 +11279,29 @@ command ideExecuteScript pScript, pDefaultStack, pIntelligenceObject, pDebugMode
          end if
       end if
       
-      # If it wasn't valid as an object property of the intelligence object
-      # then try as a function or global property
-      if tValidScript is empty then
-         if tIsProperty or word 3 of tTryProperty is among the lines of the functionNames then
-            ideDoMessage tTryProperty, pDebugMode
-            put the result into tCompileError
-            if tCompileError is empty then
-               put tTryProperty into tValidScript
-            end if
-         end if
-      end if
-      
       ## If not a function, global property or object property then
       ## try as a boolean expression
+      if tValidScript is empty then     
       local tBooleanExpression
-      
       # Build the string so that it starts with "put"
-      put "put" && pScript into tBooleanExpression 
-      
-      # Try as a boolean expression
-      if tValidScript is empty then
-         ideDoMessage tBooleanExpression, pDebugMode
+         put "put" && tScript into tBooleanExpression 
+         ideCompileCheck tBooleanExpression
          put the result into tCompileError
          if tCompileError is empty then
             put tBooleanExpression into tValidScript
          end if
       end if
-      
-   end if
-   
-   # Otherwise just try as is and ensure we get the correct error
-   if tValidScript is empty then
-      ideDoMessage pScript, pDebugMode
-      put the result into tCompileError
-      if tCompileError is empty then 
-         put pScript into tValidScript
-      end if
    end if
    
    if tValidScript is empty then
-      return tCompileError for error
+      return tOriginalCompileError for error
    end if
    unlock screen
+   set the defaultStack to tDefaultStack
    
    put tValidScript into rValidScript
-   return it for value
+   ideDoMessage tValidScript, pDebugMode, pObject
+   return the result for value
 end ideExecuteScript
 
 /** 
@@ -11366,12 +11354,7 @@ private command __removeMessageBoxFromDebugContexts @xContexts
    delete line tFirst to tLast of xContexts
 end __removeMessageBoxFromDebugContexts
 
-command ideDoMessage pScript, pDebugMode
-   ideCompileCheck pScript
-   if the result is not empty then
-      return the result for error
-   end if
-   
+command ideDoMessage pScript, pDebugMode, pObject
    do "global" && the globals
    
    local tScriptError
@@ -11400,12 +11383,15 @@ command ideDoMessage pScript, pDebugMode
          put line 1 of tResult into tResult
          
       else
-         do pScript
+         if pObject is empty then
+            put the long id of this card of this stack into pObject
+         end if
+         send "-- execute in object context" & return & pScript to pObject
       end if
    catch tScriptError
    end try
    
-   return tScriptError for value
+   return tScriptError
 end ideDoMessage
 
 private function menuitemEscape pItem, pFirst

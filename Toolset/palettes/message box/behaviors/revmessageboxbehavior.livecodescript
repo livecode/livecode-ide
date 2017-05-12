@@ -70,8 +70,13 @@ on openStack
    set the revMessageBoxRedirect to the long id of me
    unlock messages
    
-   --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
-   revIDESetActiveStack
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   if tIntelligence is empty then
+      put "selectedObject" into tIntelligence
+   end if
+   revIDESetPreference "ideMessageBox_intelligenceobject", "selectedObject"
+   revIDEUpdateIntelligenceObject
    
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
@@ -438,6 +443,8 @@ on idePreferenceChanged pPreference, pValue
       case "cScriptEditor,editor,fontSize"
          __UpdateMessageFont
          break
+      default
+         break
    end switch
    unlock screen
 end idePreferenceChanged
@@ -581,11 +588,11 @@ command ideMessageBoxExecuteScript pScript
    try
       do "put the long id of the" && tIntelligencePref && "into tIntelligenceObject"
    catch tError
-      put empty into tIntelligenceObject
+      put the long id of stack tDefaultStack into tIntelligenceObject
    end try
    
    local tValidScript
-   ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, ideIsDebugging(), tValidScript
+   ideExecuteScript pScript, tIntelligenceObject, ideIsDebugging(), tValidScript
    if the result is not empty then
       put ideMessageBoxFormatErrorForDisplay(the result, "compile error") into field "results" of card lSelectedCard of me
    else if it is not empty then
@@ -613,16 +620,60 @@ function ideMessageBoxFormatErrorForDisplay pErrorTrace, pErrorType
    return tErrorDisplay
 end ideMessageBoxFormatErrorForDisplay
 
+private command __UpdateIntelligenceDisplay
+   lock screen
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   lock messages
+   try
+      do "get the long id of the" && tIntelligence
+   catch tError
+   end try
+   global gRevDevelopment
+   if it is empty or it begins with "stack" or \
+         (not gRevDevelopment and revIDEObjectIsOnIDEStack(it)) then
+      local tCard
+      put the short name of this card of me into tCard
+      if tCard is "Single Line" or tCard is "Multiple Lines" then
+         revIDESetActiveStack
+      end if
+   else
+      local tControl
+      put the name of it into tControl
+      set the label of button "Open Stacks" of group "Stacks" of me to tIntelligence & ": " & tControl
+      enable button "Open Stacks" of group "Stacks" of me
+   end if
+   positionOpenStacksButton
+   unlock messages
+   unlock screen
+end __UpdateIntelligenceDisplay
+
+on ideSelectedObjectChanged
+   __UpdateIntelligenceDisplay
+end ideSelectedObjectChanged
+
+on ideMouseMove
+   __UpdateIntelligenceDisplay
+end ideMouseMove
+
 command revIDEUpdateIntelligenceObject
-   set the cREVIntelligenceObject of me to revIDEGetPreference("ideMessageBox_intelligenceobject")
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   
+   if tIntelligence is "selectedObject" then 
+      revIDESubscribe "ideSelectedObjectChanged"
+      revIDEUnsubscribe "ideMouseMove"
+   else if tIntelligence is "mouseControl" then
+      revIDESubscribe "ideMouseMove"
+      revIDEUnsubscribe "ideSelectedObjectChanged"
+   end if
+   
+   set the cREVIntelligenceObject of me to tIntelligence
+   __UpdateIntelligenceDisplay
 end revIDEUpdateIntelligenceObject
 
 on ideActiveStacksChanged
-   local tCard
-   put the short name of this card of me into tCard
-   if tCard is "Single Line" or tCard is "Multiple Lines" then
-      revIDESetActiveStack
-   end if
+   __UpdateIntelligenceDisplay
 end ideActiveStacksChanged
 
 command revIDESetActiveStack
