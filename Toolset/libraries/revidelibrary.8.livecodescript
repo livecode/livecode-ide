@@ -11354,10 +11354,22 @@ private command __removeMessageBoxFromDebugContexts @xContexts
    delete line tFirst to tLast of xContexts
 end __removeMessageBoxFromDebugContexts
 
+function ideDeclaredGlobalVariables
+   -- Return globals without 'each' or any of the env vars
+   local tGlobals
+   put the globals into tGlobals
+   replace comma with return in tGlobals
+   filter tGlobals without "$*"
+   filter tGlobals without "each"
+   return tGlobals
+end ideDeclaredGlobalVariables
+
 command ideDoMessage pScript, pDebugMode, pObject
-   do "global" && the globals
+   local tScriptError, tGlobals
+   put ideDeclaredGlobalVariables() into tGlobals
+   replace return with comma in tGlobals
+   put "global" && tGlobals & return before pScript
    
-   local tScriptError
    try
       if pDebugMode then
          local tContext, tScriptEditor
@@ -11386,7 +11398,8 @@ command ideDoMessage pScript, pDebugMode, pObject
          if pObject is empty then
             put the long id of this card of this stack into pObject
          end if
-         send "-- execute in object context" & return & pScript to pObject
+         send "-- execute in object context" & return & \
+               pScript to pObject
       end if
    catch tScriptError
    end try
