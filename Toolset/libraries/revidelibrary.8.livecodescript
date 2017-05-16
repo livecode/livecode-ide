@@ -10387,10 +10387,10 @@ function revIDETutorialDonePercentage
 end revIDETutorialDonePercentage
 
 /*
-Lists the courses in the IDE tutorial folder
+Lists the courses in pLocation
 */
-function revIDETutorialListCourses
-   return revIDEFolderListing(revIDESpecialFolderPath("tutorial") & "/courses", false)
+function revIDETutorialListCourses pLocation
+   return revIDEFolderListing(pLocation & "/courses", false)
 end revIDETutorialListCourses
 
 /*
@@ -10411,9 +10411,9 @@ end revIDETutorialCourseDescription
 /*
 Lists the tutorials in the folder for the given course
 */
-function revIDETutorialListTutorials pCourse
+function revIDETutorialListTutorials pCourse, pLocation
    return revIDEFolderListing(revIDETutorialCoursePath(pCourse, \ 
-         revIDESpecialFolderPath("tutorial")) & slash & "tutorials", false)
+         pLocation) & slash & "tutorials", false)
 end revIDETutorialListTutorials
 
 /*
@@ -10468,8 +10468,9 @@ end revIDETutorialFixedCourses
 Returns a structured array representing the info of all of the currently available courses
 */
 function revIDETutorialCourseInfo
-   local tCourseList
-   put revIDETutorialListCourses() into tCourseList
+   local tCourseList, tLocation
+   put revIDESpecialFolderPath("tutorial") into tLocation
+   put revIDETutorialListCourses(tLocation) into tCourseList
    
    local tFixedCourses
    put revIDETutorialFixedCourses() into tFixedCourses
@@ -10487,9 +10488,9 @@ function revIDETutorialCourseInfo
    local tCourseDataA, tCount, tCourseProgress, tPercentage
    repeat for each line tCourse in tCourseList
       add 1 to tCount
-      put revIDETutorialInfo(tCourse) into tCourseDataA[tCount]["tutorials"]
+      put revIDETutorialInfo(tCourse, tLocation) into tCourseDataA[tCount]["tutorials"]
       put tCourse into tCourseDataA[tCount]["name"]
-      put revIDETutorialCourseDescription(tCourse) into tCourseDataA[tCount]["description"]
+      put revIDETutorialCourseDescription(tCourse, tLocation) into tCourseDataA[tCount]["description"]
       put 0 into tPercentage
       repeat for each element tTutorial in tCourseDataA[tCount]["tutorials"]
          add tTutorial["progress"] to tPercentage
@@ -10504,18 +10505,18 @@ end revIDETutorialCourseInfo
 /*
 Returns a structured array representing the info of all of the currently available tutorials in the given course
 */
-function revIDETutorialInfo pCourse
+function revIDETutorialInfo pCourse, pLocation
    local tTutorialList
-   put revIDETutorialListTutorials(pCourse) into tTutorialList
+   put revIDETutorialListTutorials(pCourse, pLocation) into tTutorialList
    
    sort tTutorialList ascending numeric
    
    local tTutorialDataA, tCount, tPercentage
    repeat for each line tTutorial in tTutorialList
       add 1 to tCount
-      put revIDETutorialLessonInfo(pCourse, tTutorial) into tTutorialDataA[tCount]["lessons"]
+      put revIDETutorialLessonInfo(pCourse, tTutorial, pLocation) into tTutorialDataA[tCount]["lessons"]
       put tTutorial into tTutorialDataA[tCount]["name"]
-      put revIDETutorialDescription(pCourse, tTutorial) into tTutorialDataA[tCount]["description"]
+      put revIDETutorialDescription(pCourse, tTutorial, pLocation) into tTutorialDataA[tCount]["description"]
       put 0 into tPercentage
       
       if tTutorialDataA[tCount]["lessons"] is not empty then
@@ -10533,9 +10534,9 @@ end revIDETutorialInfo
 /*
 Returns a structured array representing the info of all of the currently available lessons in the given tutorial of the given course
 */
-function revIDETutorialLessonInfo pCourse, pTutorial
+function revIDETutorialLessonInfo pCourse, pTutorial, pLocation
    local tLessonList
-   put revIDETutorialListLessons(pCourse, pTutorial) into tLessonList
+   put revIDETutorialListLessons(pCourse, pTutorial, pLocation) into tLessonList
    
    local tProgressInfoA
    put revIDETutorialSavedCourseProgress(pCourse) into tProgressInfoA
