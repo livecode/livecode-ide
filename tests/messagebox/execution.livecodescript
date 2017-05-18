@@ -44,12 +44,13 @@ on TestBug16281
 end TestBug16281
 
 on TestBug15832
-	local tStack
+	local tStack, tStackName
 	create stack
-	put the short name of it into tStack
+	put it into tStack
+	put the short name of tStack into tStackName
 	
 	-- Create button and field on the stack
-	set the defaultStack to tStack
+	set the defaultStack to tStackName
 	create button
 	create field
 	
@@ -66,10 +67,9 @@ end TestBug15832
 on TestBug16863
    local tStack
    create stack
-   put the short name of it into tStack
+   put it into tStack
+   set the defaultStack to the short name of it
    
-   ## Create a button on the stack
-   set the defaultStack to tStack
    create button
    set the name of it to "test"
    
