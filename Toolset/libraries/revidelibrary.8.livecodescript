@@ -11297,11 +11297,13 @@ command ideExecuteScript pScript, pObject, pDebugMode, @rValidScript
       return tOriginalCompileError for error
    end if
    unlock screen
-   set the defaultStack to tDefaultStack
    
+   local tResult
    put tValidScript into rValidScript
    ideDoMessage tValidScript, pDebugMode, pObject
-   return the result for value
+   put the result into tResult
+   set the defaultStack to tDefaultStack
+   return tResult for value
 end ideExecuteScript
 
 /** 
