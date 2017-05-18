@@ -250,7 +250,7 @@ on TestIntelligenceObjectPutFunctionWithParam
 
 	local tValidScript
 
-	ideExecuteScript "put valueFunction(" & quote & "hello world" & quote & ")", empty, tStack, false, tValidScript
+	ideExecuteScript "put valueFunction(" & quote & "hello world" & quote & ")", tStack, false, tValidScript
 	TestAssert "intelligence object put function with single segment param with spaces", msg is "hello world"
 end TestIntelligenceObjectPutFunctionWithParam
 
