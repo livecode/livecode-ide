@@ -209,14 +209,15 @@ on updateSettings
    end if
    set the label of button "Supported Devices" to it
    
+   -- SC-2016-10-10: Set support for iOS 8.3 and later
    -- SN-2015-02-04: [[ Bug 14422 ]] We only support iOS 5.1.1 and later
    -- MM-2013-09-23: We only support iOS 4.3 and later
    --
-   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] <= "5.1" then
+   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] <= "8.3" then
       put empty into tSettings["ios,minimum version"]
    end if   
    
-   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "5.1.1") && "or later"
+   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "8.3") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
    set the hilite of button "Exits on Suspend" to computeDefault(tSettings["ios,exits on suspend"], "true")
@@ -383,7 +384,8 @@ on updateIosSettingState
    set the opaque of button "iOSChecked" to false
    -- SN-2015-03-30: [[ Bug 14794 ]] Add a checkbox for disable the 64-bit slice
    --  which is only valid for 5.1.1 built (for iPad 1).
-   set the enabled of button "32bit_only" to (the hilite of button "Build for iOS")
+   -- SC-2016-10-10: iOS8.3 and later do not support 32bit so LC8.1+ does not need this button.
+   set the enabled of button "32bit_only" to false
 end updateIosSettingState
 
 on chooseImageFile pType
