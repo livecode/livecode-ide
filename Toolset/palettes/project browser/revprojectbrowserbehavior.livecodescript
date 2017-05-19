@@ -1951,6 +1951,7 @@ on deleteStackFromProjectBrowser pTarget
    
    ## Only update if expanded
    put getRow(pTarget) into tRow
+   delete variable sLongIDToRow[pTarget]
    
    dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tRow,false
    put the result into tChildren
@@ -1996,6 +1997,7 @@ on deleteCardFromProjectBrowser pTarget
    if tParentRow is empty then exit deleteCardFromProjectBrowser
    
    put getRow(pTarget) into tRow
+   delete variable sLongIDToRow[pTarget]
    
    put sDisplayArray["objects"][tParentRow]["expanded"] into tParentExpanded
    if tParentExpanded is false then exit deleteCardFromProjectBrowser
@@ -2058,6 +2060,7 @@ on deleteControlFromProjectBrowser pTarget
    
    put getRow(pTarget) into tRow
    if tRow is empty then exit deleteControlFromProjectBrowser
+   delete variable sLongIDToRow[pTarget]
    
    put sDisplayArray["objects"][tParentRow]["children"] into tChildren
    
