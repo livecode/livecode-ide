@@ -1035,6 +1035,19 @@ end DataViewUpdated
 #######################################
 
 function getRow pLongID
+   if sLongIDToRow[pLongID] is not empty or \
+         there is not a pLongID then
+      return sLongIDToRow[pLongID]
+   end if
+   
+   -- if the stack was new or cloned the long id
+   -- may have the stack name rather than file name
+   -- so we try that before returning empty
+   
+   --!NOTE this should be considered a workaround until we have an
+   -- immutable object reference to use instead of long id
+   put quote & the short name of ideMainStackOfObject(pLongID) & quote into the last word of pLongID
+   
    return sLongIDToRow[pLongID]
 end getRow
 
@@ -1941,16 +1954,17 @@ on addControlToProjectBrowser pTarget
 end addControlToProjectBrowser   
 
 on deleteStackFromProjectBrowser pTarget
-   if getRow(pTarget) is empty then
+   local tRow
+   put getRow(pTarget) into tRow
+   if tRow is empty then
       return false
    end if
    
-   local tVisibleRows, tRow, tChildren, tChildOffset
+   local tVisibleRows, tChildren, tChildOffset
    
    put sDisplayArray["visible object keys"] into tVisibleRows
    
    ## Only update if expanded
-   put getRow(pTarget) into tRow
    delete variable sLongIDToRow[pTarget]
    
    dispatch function "TreeDescendantNodesOfNode" to group "objectList" with sDisplayArray, tRow,false
