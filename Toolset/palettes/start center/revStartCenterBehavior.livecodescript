@@ -15,52 +15,61 @@ on openStack
    ## Recent Files
    recentFilesInitialise
    recentFilesSet
-   set the dgHilitedLine of group "recentFiles" to 1
+   set the dgHilitedLine of group "recentFiles"  of card "interface" of me to 1
    
    ## Tiles
    tilesInitialise
    
    ## First Run Controls
-   set the backgroundColor of button "startTour" to uiColor("edition")
-   set the filename of image "firstRunImage" of group "firstRun" to resourcesPath("images/firstRunImage.PNG")
+   set the backgroundColor of button "startTour"  of card "interface" of me to uiColor("edition")
+   set the filename of image "firstRunImage" of group "firstRun"  of card "interface" of me to resourcesPath("images/firstRunImage.PNG")
    set the itemdelimiter to "."
    get item 1 to 2 of the version
-   put merge("Welcome to LiveCode [[it]]!") into field "firstRunTitle" of me
+   put merge("Welcome to LiveCode [[it]]!") into field "firstRunTitle"  of card "interface" of me
    
    ## Set folder icon
-   set the foregroundColor of widget "openIcon" to uiColor("dark grey")
-   set the iconPresetName of widget "openIcon" to "folder open alt"
+   set the foregroundColor of widget "openIcon"  of card "interface" of me to uiColor("dark grey")
+   set the iconPresetName of widget "openIcon"  of card "interface" of me to "folder open alt"
+   
+   ## Tutorial Chooser
+   tutorialChooserInitialise
    
    ## Show the banner
    --bannerInitialise
    
    ## Show at startup preference
-   set the foregroundColor of widget "startupCheckbox" to uiColor("dark grey")
+   set the foregroundColor of widget "startupCheckbox"  of card "interface" of me to uiColor("dark grey")
    if revIDEGetPreference("cStartPageShow") is true then
-      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-checked"
+      set the iconPresetName of widget "startupCheckbox"  of card "interface" of me to "lc-checkbox-checked"
    else
-      set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-unchecked"
+      set the iconPresetName of widget "startupCheckbox"  of card "interface" of me to "lc-checkbox-unchecked"
    end if
    
    ## First run
    if revIDEGetPreference("StartCenterClassic") is true then
       ## Not first run
-      hide group "firstRun"
-      show group"topPanel"
+      hide group "firstRun" of card "interface" of me
+      show group"topPanel" of card "interface" of me
       --show group "tiles"
-      set the top of group "recentFiles" to 0
+      set the top of group "recentFiles"  of card "interface" of me to 0
    else
       ## First run
-      hide group "banner"
-      hide group "topPanel"
+      hide group "banner" of card "interface" of me
+      hide group "topPanel" of card "interface" of me
       --hide group "tiles"
       
-      set the top of group "recentFiles" to 0
+      set the top of group "recentFiles"  of card "interface" of me to 0
       
-      set the layer of group "firstRun" to top
-      show group "firstRun"
+      set the layer of group "firstRun" of card "interface" of me  to top
+      show group "firstRun" of card "interface" of me
    end if
+   
+   go to card "interface"
 end openStack
+
+on preOpenCard
+   tutorialChooserInitialise
+end preOpenCard
 
 on desktopChanged
    set the loc of me to revIDEStackScreenLoc(the short name of me)
@@ -86,27 +95,27 @@ end startCenterClose
 
 command logoInitialise
    ## Set the logo to the correct logo for the version
-   set the iconPresetName of widget "logo" of me to "lc-logo"
-   set the foregroundColor of widget "logo" of me to uiColor("logo")
+   set the iconPresetName of widget "logo" of card "interface" of me to "lc-logo"
+   set the foregroundColor of widget "logo" of card "interface" of me to uiColor("logo")
    
    ## Set the title to contain the correct version string
    local tMajorVersion
    set the itemDelimiter to "."
    put item 1 to 2 of the version into tMajorVersion
-   put merge("Welcome to LiveCode [[tMajorVersion]]") into field "title" of me
+   put merge("Welcome to LiveCode [[tMajorVersion]]") into field "title" of card "interface" of me
 end logoInitialise
 
 command socialMediaInitialise   
    ## Set the images
    local tWidget
    repeat for each item tMedia in kAllSocialMedia
-      put the long id of widget tMedia of group "socialMedia" into tWidget
+      put the long id of widget tMedia of group "socialMedia" of card "interface" of me into tWidget
       hide tWidget
       set the iconPresetName of tWidget to ("lc-" & tMedia)
       set the foregroundColor of tWidget to uiColor(tMedia)
       set the fillrule of tWidget to "even odd"
       set the blendLevel of tWidget to 50
-      set the behavior of tWidget to the long id of button "socialBehavior" of me
+      set the behavior of tWidget to the long id of button "socialBehavior" of card "interface" of me
    end repeat
 end socialMediaInitialise
 
@@ -114,7 +123,7 @@ command socialMediaSet
    local tCenterLoc, tMediaCount, tPadding, tWidth, tTotalWidth, tLeft
    
    ## Show the chosen social media
-   put item 1 of the loc of group "socialMedia" into tCenterLoc
+   put item 1 of the loc of group "socialMedia" of card "interface" into tCenterLoc
    put the number of items in kSocialMedia into tMediaCount
    put 20 into tPadding
    put 20 into tWidth
@@ -123,28 +132,28 @@ command socialMediaSet
    put tCenterLoc - round(tTotalWidth / 2) into tLeft
    
    repeat with x = 1 to tMediaCount
-      show widget (item x of kSocialMedia)
-      set the left of widget (item x of kSocialMedia) to tLeft
+      show widget (item x of kSocialMedia) of card "interface" of me
+      set the left of widget (item x of kSocialMedia) of card "interface" of me to tLeft
       add tWidth + tPadding to tLeft
    end repeat
 end socialMediaSet
 
 command socialMediaHilite pName, pValue
    if pValue is true then
-      set the blendLevel of widget pName of group "socialMedia" to 0
+      set the blendLevel of widget pName of group "socialMedia" of card "interface" of me to 0
    else
-      set the blendLevel of widget pName of group "socialMedia" to 50
+      set the blendLevel of widget pName of group "socialMedia" of card "interface" of me to 50
    end if
 end socialMediaHilite
 
 command socialMediaUnhiliteAll
-   repeat with x = 1 to the number of widgets of group "socialMedia"
-       set the blendLevel of widget x of group "socialMedia" to 50
+   repeat with x = 1 to the number of widgets of group "socialMedia" of card "interface" of me
+      set the blendLevel of widget x of group "socialMedia" of card "interface" of me to 50
    end repeat
 end socialMediaUnhiliteAll
 
 command recentFilesInitialise
-   set the dgProps["hilite color"] of group "recentFiles" to uiColor("edition")
+   set the dgProps["hilite color"] of group "recentFiles" of card "interface" of me to uiColor("edition")
    set the linkColor to uiColor("edition")
    set the underlineLinks to false
 end recentFilesInitialise
@@ -152,13 +161,13 @@ end recentFilesInitialise
 command recentFilesSet
    local tRecentStacks
    put revIDERecentStacks() into tRecentStacks
-   set the dgData of group "recentFiles" to tRecentStacks
+   set the dgData of group "recentFiles" of card "interface" of me to tRecentStacks
 end recentFilesSet
 
 command recentFileOpen
    local tLine, tFileData
-   put the dgHilitedLine of group "recentFiles" into tLine
-   put the dgDataOfLine[tLine] of group "recentFiles" into tFileData
+   put the dgHilitedLine of group "recentFiles" of card "interface" of me into tLine
+   put the dgDataOfLine[tLine] of group "recentFiles" of card "interface" of me into tFileData
    revIDEOpenStack tFileData["filename"]
 end recentFileOpen
 
@@ -178,23 +187,23 @@ command tilesInitialise
    
    repeat with tTileNumber = 1 to 8
       add 1 to tColorStep      
-      set the bgColor of widget ("tile" & tTileNumber) to tileColor(tSourceColor,tColorStep)
-      set the bgHoverColor of widget ("tile" & tTileNumber) to uiColor("tileBGHover")
+      set the bgColor of widget ("tile" & tTileNumber) of card "interface" of me to tileColor(tSourceColor,tColorStep)
+      set the bgHoverColor of widget ("tile" & tTileNumber) of card "interface" of me to uiColor("tileBGHover")
       
-      set the fgColor of widget ("tile" & tTileNumber) to uiColor("tileFG")
-      set the fgHoverColor of widget ("tile" & tTileNumber) to uiColor("tileFGHover")
+      set the fgColor of widget ("tile" & tTileNumber) of card "interface" of me to uiColor("tileFG")
+      set the fgHoverColor of widget ("tile" & tTileNumber) of card "interface" of me to uiColor("tileFGHover")
       
-      set the hoverState of widget ("tile" & tTileNumber) to false
-      set the behavior of widget ("tile" & tTileNumber) to the long id of button "tileBehavior"
+      set the hoverState of widget ("tile" & tTileNumber) of card "interface" of me to false
+      set the behavior of widget ("tile" & tTileNumber) of card "interface" of me to the long id of button "tileBehavior" of card "interface" of me
    end repeat
    
    ## Breadcrumb
-   put empty into field "breadcrumb"
-   set the textStyle of word 1 of field "breadcrumb" to empty
+   put empty into field "breadcrumb" of card "interface" of me
+   set the textStyle of word 1 of field "breadcrumb" of card "interface" of me to empty
    
    put tilesArray("home") into tArray
    repeat with x = 1 to 8
-      show widget ("tile" & x)
+      show widget ("tile" & x) of card "interface" of me
    end repeat
    tilesSet tArray
 end tilesInitialise
@@ -205,15 +214,15 @@ command tilesSet pArray
    
    repeat with x = 1 to 8
       if tArray[x]["tag"] is not empty then
-         set the tileLabel of widget ("tile" & x) of me to tArray[x]["label"]
-         set the iconName of widget ("tile" & x) of me to tArray[x]["icon"]
-         set the hoverIconName of widget ("tile" & x) of me to tArray[x]["hoverIcon"]
-         set the cTag of widget ("tile" & x) of me to tArray[x]["tag"]
-         set the hoverState of widget ("tile" & x) of me to false
+         set the tileLabel of widget ("tile" & x) of card "interface" of me to tArray[x]["label"]
+         set the iconName of widget ("tile" & x) of card "interface" of me to tArray[x]["icon"]
+         set the hoverIconName of widget ("tile" & x) of card "interface" of me to tArray[x]["hoverIcon"]
+         set the cTag of widget ("tile" & x) of card "interface" of me to tArray[x]["tag"]
+         set the hoverState of widget ("tile" & x) of card "interface" of me to false
       else
-         set the tileLabel of widget ("tile" & x) of me to empty
-         set the tileIcon of widget ("tile" & x) of me to empty
-         set the cTag of widget ("tile" & x) of me to empty
+         set the tileLabel of widget ("tile" & x) of card "interface" of me to empty
+         set the tileIcon of widget ("tile" & x) of card "interface" of me to empty
+         set the cTag of widget ("tile" & x) of card "interface" of me to empty
       end if
    end repeat
 end tilesSet
@@ -304,70 +313,70 @@ end tilesArray
 command startCenterSetState pStateID, pArray
    switch pStateID
       case 1
-         hide widget "tile8"
+         hide widget "tile8" of card "interface" of me
          break
       case 2
-         hide widget "tile7"
+         hide widget "tile7" of card "interface" of me
          break
       case 3
-         hide widget "tile6"
+         hide widget "tile6" of card "interface" of me
          break
       case 4
-         hide widget "tile5"
+         hide widget "tile5" of card "interface" of me
          break
       case 5
-         hide widget "tile4"
+         hide widget "tile4" of card "interface" of me
          break
       case 6
-         hide widget "tile3"
+         hide widget "tile3" of card "interface" of me
          break
       case 7
-         hide widget "tile2"
+         hide widget "tile2" of card "interface" of me
          break
       case 8
-         hide widget "tile1"
+         hide widget "tile1" of card "interface" of me
          break
       case 9
          tilesSet pArray
          break
       case 10
          if 1 is among the keys of pArray then
-            show widget "tile1"
+            show widget "tile1" of card "interface" of me
          end if
          break
       case 11
          if 2 is among the keys of pArray then
-            show widget "tile2"
+            show widget "tile2" of card "interface" of me
          end if
          break
       case 12
          if 3 is among the keys of pArray then
-            show widget "tile3"
+            show widget "tile3" of card "interface" of me
          end if
          break
       case 13
          if 4 is among the keys of pArray then
-            show widget "tile4"
+            show widget "tile4" of card "interface" of me
          end if
          break
       case 14
          if 5 is among the keys of pArray then
-            show widget "tile5"
+            show widget "tile5" of card "interface" of me
          end if
          break
       case 15
          if 6 is among the keys of pArray then
-            show widget "tile6"
+            show widget "tile6" of card "interface" of me
          end if
          break
       case 16
          if 7 is among the keys of pArray then
-            show widget "tile7"
+            show widget "tile7" of card "interface" of me
          end if
          break
       case 17
          if 8 is among the keys of pArray then
-            show widget "tile8"
+            show widget "tile8" of card "interface" of me
          end if
          break
    end switch
@@ -384,7 +393,18 @@ on startCenterAction pAction
    local tStackName, tArray
    switch pAction
       case "interactive_welcome" 
-         tourStart
+         --tourStart
+         goToTutorialChoose
+         break
+      case "interactive_tutorial_select"
+         local tCourse, tTutorial, tLesson
+         put the selectedText of field "course" of card "tutorialChooser" into tCourse
+         put the selectedText of field "tutorial" of card "tutorialChooser" into tTutorial
+         put the selectedText of field "lesson" of card "tutorialChooser" into tLesson
+         
+         revIDEStartTutorial tCourse, tTutorial, tLesson
+         revIDESetPreference "StartCenterClassic", "true"
+         startCenterClose
          break
       case "new"
          put "Home / New" into field "breadcrumb"
@@ -468,8 +488,8 @@ command setStateHome
    local tArray
    put tilesArray("home") into tArray
    
-   put empty into field "breadcrumb"
-   set the textStyle of word 1 of field "breadcrumb" to empty
+   put empty into field "breadcrumb" of card "interface" of me
+   set the textStyle of word 1 of field "breadcrumb" of card "interface" of me to empty
    
    tilesUpdate tArray
 end setStateHome
@@ -478,14 +498,14 @@ command firstRunVisible pValue
    lock screen
    
    if pValue is true then
-      show group "firstRun"
-      hide group"topPanel"
+      show group "firstRun" of card "interface" of me
+      hide group"topPanel" of card "interface" of me
       --hide group "tiles"
    else if pValue is false then
-      hide group "firstRun"
-      show group"topPanel"
+      hide group "firstRun" of card "interface" of me
+      show group"topPanel" of card "interface" of me
       repeat with x = 1 to 8
-         set the hoverState of widget ("tile" & x) to false
+         set the hoverState of widget ("tile" & x)  of card "interface" of me to false
       end repeat
       --show group "tiles"
       
@@ -497,7 +517,7 @@ end firstRunVisible
 
 command tourStart
    lock screen
-   revIDEStartTutorial "First Run", "BMI Calculator", "App Lesson"
+   revIDEStartTutorial "First Run", "To Do List", "App Lesson"
    revIDESetPreference "StartCenterClassic", "true"
    startCenterClose
    unlock screen
@@ -505,10 +525,129 @@ end tourStart
 
 ## Banner 
 command bannerInitialise
-   set the top of group "recentFiles" to 0 
+   set the top of group "recentFiles"  of card "interface" of me to 0 
    hide group "banner"
    --load url "http://elanorb.on-rev.com/startcenter/banner2.txt" with message "bannerComplete"
 end bannerInitialise
+
+## Tutorial Choose
+command tutorialChooserInitialise
+   local tCourses, tTutorials, tLessons
+   
+   set the dgProps["hilite color"] of group "course" of card "tutorialChooser" to uiColor("edition")
+   set the dgProps["hilite color"] of group "tutorial" of card "tutorialChooser" to uiColor("edition")
+   set the dgProps["hilite color"] of group "lesson" of card "tutorialChooser" to uiColor("edition")
+   
+   put  getTutorialArray("course") into tCourses
+   
+   set the dgData of group "course" of card "tutorialChooser" to tCourses
+   set the height of group "course" of card "tutorialChooser" to the dgFormattedheight of group "course" of card "tutorialChooser"
+   set the topLeft of group "course" of card "tutorialChooser" to 0,48
+   
+   set the dgHilitedLine of group "course" of card "tutorialChooser" to 1
+   tutorialSelectCourse      
+end tutorialChooserInitialise
+
+command tutorialSelectCourse 
+   local tTutorials
+   
+   lock screen
+   put getTutorialArray("tutorial",selectedCourse()) into tTutorials
+   
+   set the dgData of group "tutorial" of card "tutorialChooser" to tTutorials
+   set the height of group "tutorial" of card "tutorialChooser" to the dgFormattedheight of group "tutorial" of card "tutorialChooser"
+   set the top of group "tutorial" of card "tutorialChooser" to 48
+   
+   set the dgHilitedLine of group "tutorial" of card "tutorialChooser" to 1   
+   tutorialSelectTutorial
+   
+   unlock screen
+end tutorialSelectCourse
+
+command tutorialSelectTutorial
+   local tLessons
+   
+   lock screen   
+   put getTutorialArray("lesson",selectedCourse(),selectedTutorial()) into tLessons
+   set the dgData of group "lesson" of card "tutorialChooser" to tLessons
+   set the height of group "lesson" of card "tutorialChooser" to the dgFormattedheight of group "lesson" of card "tutorialChooser"
+   set the top of group "lesson" of card "tutorialChooser" to 48
+   set the dgHilitedLine of group "lesson" of card "tutorialChooser" to 1  
+   unlock screen
+end tutorialSelectTutorial
+
+command tutorialSelectLesson   
+   if the short name of the target is "start" then      
+      lock screen
+      revIDEStartTutorial selectedCourse(),selectedTutorial(),selectedLesson()
+      revIDESetPreference "StartCenterClassic", "true"
+      startCenterClose
+   end if
+end tutorialSelectLesson
+
+function getTutorialArray pType, pCourse, pTutorial
+   local tList, tArray, tProgress, tProgressPercent
+   local tCourseName, tTutorialName, tLessonName
+   
+   put revIDETutorialListCourses() into tList
+   repeat for each line tCourseName in tList
+      put revIDETutorialSavedCourseProgress(tCourseName) into tProgress
+      repeat for each line tTutorialName in the keys of tProgress
+         repeat for each line tLessonName in the keys of tProgress[tTutorialName]
+            put tProgress[tTutorialName][tLessonName]["progress"] into tProgressPercent[tCourseName][tTutorialName][tLessonName]["progress"]
+            add tProgress[tTutorialName][tLessonName]["progress"] to tProgressPercent[tCourseName][tTutorialName]["progress"]
+            add tProgress[tTutorialName][tLessonName]["progress"] to tProgressPercent[tCourseName]["progress"]
+         end repeat
+      end repeat
+   end repeat
+   
+   if pType is "course" then
+      put revIDETutorialListCourses() into tList
+      repeat with x = 1 to the number of lines in tList
+         put line x of tList into tCourseName
+         put tCourseName into tArray[x]["name"]
+         put round(tProgressPercent[tCourseName]["progress"]) into tArray[x]["progress"]
+      end repeat
+   else if pType is "tutorial" then
+      put revIDETutorialListTutorials(pCourse) into tList
+      repeat with x = 1 to the number of lines in tList
+         put line x of tList into tArray[x]["name"]
+         put round(tProgressPercent[pCourse][line x of tList]["progress"]) into tArray[x]["progress"]
+      end repeat
+   else if pType is "lesson" then
+      put revIDETutorialListLessons(pCourse,pTutorial,revIDESpecialFolderPath("tutorial")) into tList
+      repeat with x = 1 to the number of lines in tList
+         put line x of tList into tArray[x]["name"]
+         put round(tProgressPercent[pCourse][pTutorial][line x of tList]["progress"]) into tArray[x]["progress"]
+      end repeat
+   end if
+   
+   return tArray
+end getTutorialArray
+
+function selectedCourse
+   local tSelectedLine, tData
+   
+   put the dgHilitedLine of group "course" of card "tutorialChooser" into tSelectedLine
+   put the dgDataOfLine[tSelectedLine] of group "course" of card "tutorialChooser" into tData
+   return tData["name"]
+end selectedCourse
+
+function selectedTutorial
+   local tSelectedLine, tData
+   
+   put the dgHilitedLine of group "tutorial" of card "tutorialChooser" into tSelectedLine
+   put the dgDataOfLine[tSelectedLine] of group "tutorial" of card "tutorialChooser" into tData
+   return tData["name"]
+end selectedTutorial
+
+function selectedLesson
+   local tSelectedLine, tData
+   
+   put the dgHilitedLine of group "lesson" of card "tutorialChooser" into tSelectedLine
+   put the dgDataOfLine[tSelectedLine] of group "lesson" of card "tutorialChooser" into tData
+   return tData["name"]
+end selectedLesson
 
 ## Social Media 
 
@@ -628,3 +767,14 @@ function textProperty pType, pStyle
    end switch
    
 end textProperty
+
+## Navigation
+command goToMenu
+   visual effect "push right" very fast
+   go to card "interface"
+end goToMenu
+
+command goToTutorialChoose
+   visual effect "push left" very fast
+   go to card "tutorialChooser"
+end goToTutorialChoose
