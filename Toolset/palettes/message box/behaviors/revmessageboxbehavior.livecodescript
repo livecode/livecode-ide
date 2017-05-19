@@ -291,7 +291,11 @@ end removeAll
 
 on revIDEFocusOnMessageBox pChar
    if lSelectedCard is among the items of "Single Line,Multiple Lines" then
-      focus on field "message" of card lSelectedCard
+      if there is a field "message" of card lSelectedCard then
+         focus on field "message" of card lSelectedCard
+      else
+         focus on field "script" of card lSelectedCard
+      end if
       put pChar into the selectedChunk
    end if
 end revIDEFocusOnMessageBox
@@ -469,10 +473,10 @@ private command __UpdateMessageFont
    put revIDEGetPreference("cScriptEditor,editor,font") into tFont
    put revIDEGetPreference("cScriptEditor,editor,fontSize") into tSize
    
-   set the textFont of field "message" of card "Multiple Lines" of me to tFont
+   set the textFont of field "script" of card "Multiple Lines" of me to tFont
    set the textFont of field "message" of card "Single Line" of me to tFont
    set the textFont of field "auto complete" of card "Single Line" of me to tFont
-   set the textSize of field "message" of card "Multiple Lines" of me to tSize
+   set the textSize of field "script" of card "Multiple Lines" of me to tSize
    set the textSize of field "message" of card "Single Line" of me to tSize
    set the textSize of field "auto complete" of card "Single Line" of me to tSize
    
@@ -483,7 +487,7 @@ private command __UpdateMessageColors
    local tColor
    put revIDEGetPreference("cScriptEditor,editor,backgroundcolor") into tColor
    set the backgroundColor of field "auto complete" of card "Single Line" of me to tColor
-   set the backgroundColor of field "message" of card "Multiple Lines" of me to tColor
+   set the backgroundColor of field "script" of card "Multiple Lines" of me to tColor
 end __UpdateMessageColors
 
 command positionOpenStacksButton

@@ -19,6 +19,7 @@ on setBehaviors
    set the behavior of group "Interactive Find" of group "Editor" of me to the long id of stack revIDEScriptEditorBehavior("interactive find")
    set the behavior of stack "revSEEditBreakpoint" of me to the long id of stack revIDEScriptEditorBehavior("edit breakpoint")
    set the behavior of group "Error Template" of card "Templates" of me to the long id of stack revIDEScriptEditorBehavior("error template")
+   set the behavior of stack revIDEScriptEditorBehavior("editor") to the long id of stack revIDEScriptEditorBehavior("common editor")
 end setBehaviors
 
 # Which metadata type to store the script editor data as.

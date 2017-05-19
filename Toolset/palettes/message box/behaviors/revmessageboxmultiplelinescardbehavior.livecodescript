@@ -9,25 +9,26 @@ on preOpenCard
    if revIDEGetPreference("IDELockedToStack") is true 
    then showFrameItem "unlockDefaultStack"
    else showFrameItem "lockDefaultStack"
-
-   send "revInitialise" to field "message" of me
+   
+   send "revInitialise" to field "script" of me
    
    if revIDEGetPreference("IDEMultipleLinesMessageHistory") is not empty then
       put line 1 of revIDEGetPreference("IDEMultipleLinesMessageHistory") into tMessage
       replace "\n" with return in tMessage
-      put tMessage into field "message"
+      put tMessage into field "script"
    else
-      put empty into field "message"
+      put empty into field "script"
    end if
    
-   focus field "message"
-   select the text of field "message"
+   focus field "script"
+   select the text of field "script"
+   dispatch "scriptFormat" to the owner of field "script" with "script"
    
    put revIDEGetPreference("IDEActiveStack") into tActiveStack
    revUpdateActiveStack tActiveStack, tActiveStack
    set the label of button "Open Stacks" to tActiveStack
    
-   set the cREVMinHeight of field "message" of this card to 50
+   set the cREVMinHeight of field "script" of this card to 50
    set the cREVMinHeight of field "results" of this card to 50
    set the loc of graphic "line" to the cREVLineLoc of this card
    send "resizeStack" to me
@@ -88,11 +89,11 @@ command dragLine
    put item 2 of the mouseLoc into tMouseYLoc
    
    put the rect of field "results" into tResultsRect
-   put the rect of field "message" into tMessageRect
+   put the rect of field "script" into tMessageRect
    
    if lMoving is true then
-      if tMouseYLoc < (the cREVMinHeight of field "message" + the top of field "message") 
-      then put (the cREVMinHeight of field "message" + the top of field "message") into tMouseYLoc
+      if tMouseYLoc < (the cREVMinHeight of field "script" + the top of field "script") 
+      then put (the cREVMinHeight of field "script" + the top of field "script") into tMouseYLoc
       if tMouseYLoc > (the bottom of field "results" - the cREVMinHeight of field "results")
       then put (the bottom of field "results" - the cREVMinHeight of field "results") into tMouseYLoc
       
@@ -105,7 +106,7 @@ command dragLine
       lock screen
       set the loc of graphic "line" to tLineXLoc,tMouseYLoc
       set the rect of field "results" to tResultsRect
-      set the rect of field "message" to tMessageRect
+      set the rect of field "script" to tMessageRect
       unlock screen
    end if
 end dragLine
