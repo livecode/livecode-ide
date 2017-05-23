@@ -38,18 +38,19 @@ on TestBug16281
 	create button
 	put the long id of it into tButton
 	
-	ideExecuteScript "hilite" && tButton, empty, empty, false, tValidScript
+	ideExecuteScript "hilite" && tButton, empty, false, tValidScript
 	
 	TestAssert "hilite command in msg box", the hilite of tButton
 end TestBug16281
 
 on TestBug15832
-	local tStack
+	local tStack, tStackName
 	create stack
-	put the short name of it into tStack
+	put it into tStack
+	put the short name of tStack into tStackName
 	
 	-- Create button and field on the stack
-	set the defaultStack to tStack
+	set the defaultStack to tStackName
 	create button
 	create field
 	
@@ -58,7 +59,7 @@ on TestBug15832
 	set the defaultStack to the short name of it
 	
 	local tValidScript
-	ideExecuteScript "put the name of button 1; put the name of control 2;", tStack, empty, false, tValidScript
+	ideExecuteScript "put the name of button 1; put the name of control 2;", tStack, false, tValidScript
 
 	TestAssert "; in single line message box", word 1 of msg is "field"
 end TestBug15832
@@ -66,31 +67,30 @@ end TestBug15832
 on TestBug16863
    local tStack
    create stack
-   put the short name of it into tStack
+   put it into tStack
+   set the defaultStack to the short name of it
    
-   ## Create a button on the stack
-   set the defaultStack to tStack
    create button
    set the name of it to "test"
    
    local tValidScript, tScript
    put "there is a button" && quote & "test" & quote into tScript
    
-   ideExecuteScript tScript, tStack, empty, false, tValidScript
+   ideExecuteScript tScript, tStack, false, tValidScript
    TestAssert "boolean expression value with 'put' prepended", msg is "true"
    TestAssert "boolean expression executed with 'put' prepended", tValidScript is ("put" && tScript)
 end TestBug16863
 
 on TestGlobalPropertyCompleted
 	local tValidScript
-	ideExecuteScript "backdrop", empty, empty, false, tValidScript
+	ideExecuteScript "backdrop", empty, false, tValidScript
 
 	TestAssert "global prop value with 'put the' prepended", msg is "none"
 	TestAssert "global prop executed with 'put the' prepended", tValidScript is "put the backdrop"
 
 	put empty into msg
 
-	ideExecuteScript "the backdrop", empty, empty, false, tValidScript
+	ideExecuteScript "the backdrop", empty, false, tValidScript
 
 	TestAssert "global prop value with 'put' prepended", msg is "none"
 	TestAssert "global prop executed with 'put' prepended", tValidScript is "put the backdrop"
@@ -106,7 +106,10 @@ on TestIntelligenceObjectMultilineCommand
 	set the script of tStack to tScript
 	
 	local tValidScript
-	ideExecuteScript "valueCommand; put the result", empty, tStack, false, tValidScript
+	ideExecuteScript "valueCommand; put the result", tStack, false, tValidScript
+	
+	TestDiagnostic "msg" && msg
+	TestDiagnostic "valid script:" && tValidScript
 	
 	TestAssert "intelligence object multiple command result", msg is "value"
 	TestAssert "intelligence object multiple command executed", tValidScript is "valueCommand; put the result"
@@ -122,7 +125,7 @@ on TestIntelligenceObjectMultilineFunction
 	set the script of tStack to tScript
 	
 	local tValidScript	
-	ideExecuteScript "put valueFunction(); put msg", empty, tStack, false, tValidScript
+	ideExecuteScript "put valueFunction(); put msg", tStack, false, tValidScript
 
 	TestAssert "intelligence object multiple function result", msg is "value"
 	TestAssert "intelligence object multiple function executed", tValidScript is "put valueFunction(); put msg"
@@ -139,14 +142,17 @@ on TestIntelligenceObject
 	set the script of tStack to tScript
 	
 	local tValidScript
-	ideExecuteScript "valueCommand", empty, tStack, false, tValidScript
+	ideExecuteScript "valueCommand", tStack, false, tValidScript
+	
+	TestDiagnostic "cValue:" && the cValue of tStack
+	TestDiagnostic "valid script:" && tValidScript
 	
 	TestAssert "intelligence object command result", the cValue of tStack is "value"
 	TestAssert "intelligence object command executed", tValidScript is "valueCommand"
 	
 	put empty into msg
 	
-	ideExecuteScript "valueFunction()", empty, tStack, false, tValidScript
+	ideExecuteScript "valueFunction()", tStack, false, tValidScript
 	
 	TestAssert "intelligence object function in msg box", msg is "value"
 	TestAssert "intelligence object function executed", tValidScript is "put valueFunction()"
@@ -163,14 +169,14 @@ on TestIntelligenceObjectMultipleCommand
 	set the script of tStack to tScript
 	
 	local tValidScript
-	ideExecuteScript "firstCommand; secondCommand", empty, tStack, false, tValidScript
+	ideExecuteScript "firstCommand; secondCommand", tStack, false, tValidScript
 	
 	TestAssert "intelligence object mutiple commands", the cValue of tStack is "value"
 end TestIntelligenceObjectMultipleCommand
 
 on TestDefaultStackCardScript
 	local tScript
-	put "on preOpenCard; set the cValue of this stack to" && quote & "value" & quote && "; end preOpenCard" into tScript
+	put "on preOpenCard; set the cValue of this stack of me to" && quote & "value" & quote && "; end preOpenCard" into tScript
 
 	local tStack
 	create stack
@@ -178,7 +184,7 @@ on TestDefaultStackCardScript
 	set the script of card 1 of tStack to tScript
 	
 	local tValidScript
-	ideExecuteScript "preOpenCard", tStack, empty, false, tValidScript
+	ideExecuteScript "preOpenCard", tStack, false, tValidScript
 	
 	TestAssert "intelligence object command result", the cValue of tStack is "value"
 	TestAssert "intelligence object command executed", tValidScript is "preOpenCard"
@@ -195,7 +201,7 @@ on TestIntelligenceObjectPutFunction
 	set the script of tStack to tScript
 
 	local tValidScript
-	ideExecuteScript "put valueFunction()", empty, tStack, false, tValidScript
+	ideExecuteScript "put valueFunction()", tStack, false, tValidScript
 	
 	TestAssert "intelligence object put function", msg is "value"
 end TestIntelligenceObjectPutFunction
@@ -211,7 +217,7 @@ on TestIntelligenceObjectGetFunction
 
 	local tValidScript
 
-	ideExecuteScript "get valueFunction(); put it", empty, tStack, false, tValidScript
+	ideExecuteScript "get valueFunction(); put it", tStack, false, tValidScript
 	TestAssert "intelligence object get function result", msg is "value"
 end TestIntelligenceObjectGetFunction
 
@@ -226,7 +232,7 @@ on TestCustomCommandWithStringLiteral
 	
 	local tValidScript, tToExecute
 	put "valueCommand" && quote & "value" & quote into tToExecute
-	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	ideExecuteScript tToExecute, tStack, false, tValidScript
 	
 	TestAssert "command with string literal result", the cValue of tStack is "value"
 	TestAssert "command with string literal executed", tValidScript is tToExecute
@@ -244,7 +250,7 @@ on TestIntelligenceObjectPutFunctionWithParam
 
 	local tValidScript
 
-	ideExecuteScript "put valueFunction(" & quote & "hello world" & quote & ")", empty, tStack, false, tValidScript
+	ideExecuteScript "put valueFunction(" & quote & "hello world" & quote & ")", tStack, false, tValidScript
 	TestAssert "intelligence object put function with single segment param with spaces", msg is "hello world"
 end TestIntelligenceObjectPutFunctionWithParam
 
@@ -255,7 +261,7 @@ on TestIntelligenceObjectPropertyCompleted
 	put the name of tButton into tButtonName
 	
 	local tValidScript
-	ideExecuteScript "width", empty, tButton, false, tValidScript
+	ideExecuteScript "width", tButton, false, tValidScript
 	TestAssert "intelligence object property autocomplete result", the result is empty
 	TestAssert "intelligence object property autocomplete executed", tValidScript is "put the width of" && tButtonName
 end TestIntelligenceObjectPropertyCompleted
@@ -275,7 +281,7 @@ on TestIntelligenceObjectFunctionNotFirstLine
 	put return & "put 1 into z" after tToExecute
 	put return & "put incr(z)" after tToExecute
 	
-	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	ideExecuteScript tToExecute, tStack, false, tValidScript
 	
 	TestAssert "intelligence object command result", msg is 2
 	TestAssert "intelligence object command executed", tValidScript is tToExecute
@@ -293,7 +299,7 @@ on TestIntelligenceObjectCommandWithTwoParams
 	local tToExecute, tValidScript
 	put "testParameters 1, 2" into tToExecute
 	
-	ideExecuteScript tToExecute, empty, tStack, false, tValidScript
+	ideExecuteScript tToExecute, tStack, false, tValidScript
 	
 	TestAssert "intelligence object command two params result", msg is 2
 	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
