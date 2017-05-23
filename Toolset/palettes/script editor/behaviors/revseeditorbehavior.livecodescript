@@ -4019,6 +4019,7 @@ private function escapeString pString, pUseWildCard
    replace ")" with "\)" in pString
    replace "(" with "\(" in pString
    replace "|" with "\|" in pString
+   replace "-" with "\-" in pString
    
    # OK-2009-01-17 : Bug 7611 - Periods must be replaced as they match any char otherwise
    replace "." with "\." in pString
