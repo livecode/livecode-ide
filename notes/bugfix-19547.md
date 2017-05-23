@@ -1,0 +1,1 @@
+# Fixed bug preventing users from finding | in the script editor
