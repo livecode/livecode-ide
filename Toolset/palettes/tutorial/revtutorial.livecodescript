@@ -1129,9 +1129,9 @@ command revTutorialSetWindowShape pContentWidth, pContentHeight, pPointVertical,
    create graphic "Shape" in tGroup
    put it into tGraphic
    set the style of it to "rectangle"
-   set the width of it to pContentWidth * the screenpixelscale
-   set the height of it to pContentHeight * the screenpixelscale
-   
+   set the width of it to pContentWidth
+   set the height of it to pContentHeight
+
    create graphic "Pointer" in tGroup
    put it into tPointer
    set the style of tPointer to "regular"
