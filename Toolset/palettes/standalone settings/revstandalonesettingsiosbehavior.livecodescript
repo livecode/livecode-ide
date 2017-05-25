@@ -65,6 +65,7 @@ on updateSettings
    put computeDefault(tSettings["ios,display name"], tSettings["name"]) into field "Display Name"
    put computeDefault(tSettings["ios,bundle id"], "com.yourcompany.yourapp") into field "Bundle Id"
    put computeDefault(tSettings["ios,bundle version"], "1.0.0") into field "Bundle Version"
+   put computeDefault(tSettings["ios,bundle build"],"1") into field "Build Number"
    
    -- SN-2015-03-30: [[ Bug 14794 ]] Initialise the value for 32-bit only build
    if tSettings["ios,32-bit only"] then
