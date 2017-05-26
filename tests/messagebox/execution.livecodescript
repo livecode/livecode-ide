@@ -262,7 +262,7 @@ on TestIntelligenceObjectPropertyCompleted
 	
 	local tValidScript
 	ideExecuteScript "width", tButton, false, tValidScript
-	TestAssert "intelligence object property autocomplete result", the result is empty
+	TestAssert "intelligence object property autocomplete result", msg is the width of tButton
 	TestAssert "intelligence object property autocomplete executed", tValidScript is "put the width of" && tButtonName
 end TestIntelligenceObjectPropertyCompleted
 
@@ -304,3 +304,25 @@ on TestIntelligenceObjectCommandWithTwoParams
 	TestAssert "intelligence object command two params result", msg is 2
 	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
 end TestIntelligenceObjectCommandWithTwoParams
+
+on TestReferenceControlOnActiveStack
+	local tStack, tField
+	create stack
+	put it into tStack
+
+	set the defaultStack to the short name of tStack
+	
+	create field
+	put it into tField
+	
+	-- change the default stack
+	create stack
+	set the defaultStack to the short name of it
+	
+	local tToExecute
+	put "put bar into field 1" into tToExecute
+	ideExecuteScript tToExecute, tStack, false, tValidScript
+	
+	TestAssert "intelligence object command two params result", the text of tField is "bar"
+	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
+end TestReferenceControlOnActiveStack
