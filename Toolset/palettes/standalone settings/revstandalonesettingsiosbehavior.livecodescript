@@ -25,7 +25,7 @@ on initialize
       updateSettings
    else
       set the enabled of button "Build for iOS" to false
-      set the enabled of group "iOS Settings" to false
+      -- set the enabled of group "iOS Settings" to false
    end if
    
    updateIosSettingState
@@ -220,11 +220,21 @@ on updateSettings
    set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "5.1.1") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
-   set the hilite of button "Exits on Suspend" to computeDefault(tSettings["ios,exits on suspend"], "true")
+   set the hilite of button "Location Update" to computeDefault(tSettings["ios,background location update"], "false")
+   set the hilite of button "VoIP" to computeDefault(tSettings["ios,background voip"], "false")
+   set the hilite of button "Newsstand Downloads" to computeDefault(tSettings["ios,background newsstand downloads"], "false")
+   set the hilite of button "ExAcComn" to computeDefault(tSettings["ios,external acc comn"], "false")
+   set the hilite of button "UseBTLE" to computeDefault(tSettings["ios,use bt le"], "false")
+   set the hilite of button "Acts as BT LE Acc" to computeDefault(tSettings["ios,acts as bt le"], "false")
+   set the hilite of button "Background Fetch" to computeDefault(tSettings["ios,background fetch"], "false")
+   set the hilite of button "Remote Notifications" to computeDefault(tSettings["ios,remote notifications"], "false")
+   set the hilite of button "Exits on Suspend" to computeDefault(tSettings["ios,exits on suspend"], "false")
    set the hilite of button "File Sharing" to computeDefault(tSettings["ios,file sharing"], "false")
    set the hilite of button "Prerendered Icon" to computeDefault(tSettings["ios,prerendered icon"], "false")
    set the hilite of button "Disable ATS" to computeDefault(tSettings["ios,disable ATS"], "false")
    set the label of button "Build Type" to computeDefault(tSettings["ios,build type"], "Universal")
+   
+   put computeDefault(tSettings["ios,urlwhitelist"],"") into fld "urlwhitelist"
    
    repeat with i = 1 to 18
       get tSettings["ios,device capabilities"][the short name of group i of group "Device Capabilities"]
@@ -379,12 +389,17 @@ function getProfiles
 end getProfiles
 
 on updateIosSettingState
-   set the enabled of group "iOS Settings" of me to (the hilite of button "Build for iOS" of me)
-   set the visible of button "iOSChecked" to (the hilite of button "Build for iOS" of me)
-   set the opaque of button "iOSChecked" to false
    -- SN-2015-03-30: [[ Bug 14794 ]] Add a checkbox for disable the 64-bit slice
    --  which is only valid for 5.1.1 built (for iPad 1).
    set the enabled of button "32bit_only" to (the hilite of button "Build for iOS")
+   set the enabled of button "iOSTabMenu" to (the hilite of button "Build for iOS")
+   set the disabled of group "Basic Settings" to (not the hilite of button "Build for iOS")
+   set the disabled of group "Requirements" to (not the hilite of button "Build for iOS")
+   set the disabled of group "Background Modes" to (not the hilite of button "Exits on Suspend")
+   set the disabled of group "Icons" to (not the hilite of button "Build for iOS")
+   set the disabled of group "Splash" to (not the hilite of button "Build for iOS")
+   set the enabled of button "Supported Devices" to (the hilite of button "Build for iOS")
+   set the enabled of button "Minimum iOS Version" to (the hilite of button "Build for iOS")
 end updateIosSettingState
 
 on chooseImageFile pType
@@ -419,13 +434,11 @@ end chooseImageFileWithDimension
 
 on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
-      set the topLeft of group "iosBuild" to 12,136
-      set the topLeft of group "iOS Settings" to -1,136
-      set the cSize of this card to 1024,726
+      set the topLeft of group "iosBuild" to 5,57
+      set the cSize of this card to 754,600
    else 
-      set the topLeft of group "iOS Settings" to -1,67
-      set the topLeft of group "iosBuild" to 12,68
-      set the cSize of this card to 1024,676
+      set the topLeft of group "iosBuild" to 5,57
+      set the cSize of this card to 754,600
    end if
    updateCardSize
 end tipDisplayUpdate
