@@ -3,7 +3,11 @@
 // sLoadedLibraries["library name"] = true
 local sLoadedLibraries
 
-command revInternal__LoadLibrary pLibrary
+private command addSearchPath pPath, @xArray
+	put pPath into xArray[the number of elements in xArray + 1]
+end addSearchPath
+
+command revInternal__LoadLibrary pLibrary, pFullPath
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
    
@@ -12,33 +16,44 @@ command revInternal__LoadLibrary pLibrary
    put toLower(pLibrary) into pLibrary
    
    if sLoadedLibraries[pLibrary] is not empty then
-     return empty
+      return empty
    end if
    
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
    if the environment begins with "development" then
       local tPaths
       
-      local tToolsetPath
-      put revEnvironmentToolsetPath() into tToolsetPath
-      
       local tLibSuffix
       set the itemDelimiter to "."
       put the last item of pLibrary into tLibSuffix
       
-      put merge("[[tToolsetPath]]/libraries/[[pLibrary]]") into tPaths[1]
-      put merge("[[tToolsetPath]]/libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[2]
+      if pFullPath is not empty then
+         addSearchPath item 1 to -2 of pFullPath, tPaths
+      end if
+      
+      local tToolsetPath
+      put revEnvironmentToolsetPath() into tToolsetPath
+      
+      addSearchPath merge("[[tToolsetPath]]/libraries/[[pLibrary]]"), \
+            tPaths
+      addSearchPath merge("[[tToolsetPath]]/libraries/[[tLibSuffix]]/[[tLibSuffix]]"), \
+            tPaths
       
       if not revEnvironmentIsInstalled() then
          local tRepoPath
          put revEnvironmentRepositoryPath() into tRepoPath
          
-         put merge("[[tRepoPath]]/ide-support/[[pLibrary]]") into tPaths[3]
-         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[4]
+         addSearchPath merge("[[tRepoPath]]/ide-support/[[pLibrary]]"), \
+               tPaths
+         addSearchPath merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]"), \
+               tPaths
+         
          set the itemDelimiter to slash
          delete the last item of tRepoPath
-         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[5]
-         put merge("[[tRepoPath]]/ide/libraries/[[tLibSuffix]]") into tPaths[6]
+         addSearchPath merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]"), \
+               tPaths
+         addSearchPath merge("[[tRepoPath]]/ide/libraries/[[tLibSuffix]]"), \
+               tPaths
       end if
       
       local tLibraryPath

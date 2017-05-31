@@ -12,6 +12,7 @@ on preOpenStack
    # Navigation
    addFrameItem "widget","header", "navigation", "Widgets", "", "","showList", the long id of me,"widget"
    addFrameItem "library","header", "navigation", "Libraries", "", "","showList", the long id of me,"library"
+   addFrameItem "script-library","header", "navigation", "Script Libraries", "", "","showList", the long id of me,"script-library"
    addFrameItem "store","header", "navigation", "Store", "", "","showExtensionStore", the long id of me,"store"
    addFrameItem "install", "header", "action", "Install extension", "plus", "","installNew", the long id of me
    
