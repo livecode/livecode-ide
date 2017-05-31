@@ -838,36 +838,55 @@ end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
    local tDataA
-   revIDEPushDefaultFolder
-   
    # Fetch all the available data about extensions in the search paths
-   local tFoldersA, tExtensionFolder, tPath
+   local tFoldersA, tExtensionFolder
    put revIDEExtensionFolders() into tFoldersA
    set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
-      set the defaultfolder to tExtensionFolder
-      repeat for each line tFolder in the folders
+      repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
-         local tExtensionModulePath, tArray
-         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tPath
-         if there is a file tPath then
-            put __fetchModuleData(tPath) into tArray
-            if tKey is "ide" then
-               put true into tArray["ide"]
-            else
-               put false into tArray["ide"]
-            end if
-            local tTypeID
-            if tArray["name"] is empty then
-               put tFolder into tTypeID
-            else
-               put tArray["name"] into tTypeID
-            end if
-            put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
+         local tExtSource, tArray, tFiles, tExtFolder
+         put tExtensionFolder & slash & tFolder into tExtFolder
+         put files(tExtFolder) into tFiles
+         
+         local tExtFile, tType
+         filter tFiles with "*.lcb" into tExtFile
+         put "lcb" into tType
+         if tExtFile is empty then
+            put "lcs" into tType
+            filter tFiles with "*.livecodescript" into tExtFile
          end if
+         if the number of lines in tExtFile is not 1 then
+            get __revIDEError("Invalid extension folder" && tExtFolder & ": require exactly one extension per folder")
+            next repeat
+         end if
+         
+         put tExtFolder & slash & tExtFile into tExtSource
+         if tType is "lcb" then
+            put __fetchModuleData(tExtSource) into tArray
+         else
+            put empty into tArray
+            --put __fetchScriptLibraryData(tExtSource) into tArray
+         end if
+         
+         put tExtFile into tArray["source_file"]
+         
+         put tType into tArray["source_type"]
+         if tKey is "ide" then
+            put true into tArray["ide"]
+         else
+            put false into tArray["ide"]
+         end if
+         local tTypeID
+         if tArray["name"] is empty then
+            put tFolder into tTypeID
+         else
+            put tArray["name"] into tTypeID
+         end if
+         put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
       end repeat
    end repeat
    
@@ -903,8 +922,6 @@ on __extensionsLoad
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
-   
-   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -942,16 +959,17 @@ private command __extensionLoad pID, pExtensionDataA
    # Only try to load the first copy in the load order
    put pExtensionDataA["copies"][1] into tToLoadA
    
-   local tFolder, tVersion, tStatus, tError, tIDEExtension
+   local tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile
    put tToLoadA["install_path"] into tFolder
    put tToLoadA["version"] into tVersion
    put tToLoadA["status"] into tStatus
    put tToLoadA["error"] into tError
    put tToLoadA["ide"] into tIDEExtension
-   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension
+   put tToLoadA["source_file"] into tSourceFile
+   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile
 end __extensionLoad
 
-command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
+private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile
    local tStatus, tError
    if pError is empty then
       local tResources, tModule
@@ -1011,10 +1029,74 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
    if not revEnvironmentIsInstalled() and not there is a file (pFolder & slash & "api.lcdoc") then
-      revIDEExtensionUpdateAPI pFolder
+      revIDEExtensionUpdateAPI pFolder, pSourceFile
    end if
    
    return tError
+end __revIDELCBExtensionLoad
+
+private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile
+   local tStatus, tError
+   set the itemdelimiter to "."
+   if pError is empty then
+      # If we have a resources folder then load with resource path
+      revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
+      if the result is not true then
+         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
+         put "error" into tStatus
+      else
+         put "installed" into tStatus
+      end if
+   else
+      put pStatus into tStatus
+      put pError into tError
+   end if
+   
+   # Find entry in the cache if it exists
+   local tCacheIndex
+   put __extensionCacheID("install_path", pFolder) into tCacheIndex
+   
+   # If no entry is in the cache, create one
+   if tCacheIndex is not a number then
+      put the number of elements of sExtensions + 1 into tCacheIndex
+      __extensionPropertySet tCacheIndex, "install_path", pFolder
+   end if
+   
+   # Update name, status, error, and whether the extension comes with the IDE
+   __extensionPropertySet tCacheIndex, "name", pID
+   __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
+   __extensionPropertySet tCacheIndex, "status", tStatus
+   __extensionPropertySet tCacheIndex, "error", tError
+   __extensionPropertySet tCacheIndex, "ide", pIDEExtension
+   
+   # Store the extension's property metadata
+ --  revIDEExtensionSetInfo pID
+   
+   # Deal with the various icon possibilities
+   if sExtensionProperties[pID]["svgIconPath"] is empty then
+      local tIconPath
+      put pFolder & "/support/icon.png" into tIconPath
+      if there is a file tIconPath then
+         __extensionPropertySet tCacheIndex, "icon", tIconPath
+      end if
+   end if
+   
+   # Generate extension API from source if there is not one present in the folder
+   # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+   if not revEnvironmentIsInstalled() and not there is a file (pFolder & slash & "api.lcdoc") then
+      revIDEExtensionUpdateAPI pFolder, pSourceFile
+   end if
+   
+   return tError
+end __revIDELCSExtensionLoad
+
+command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile
+   set the itemdel to "."
+   if item -1 of pSourceFile  is "lcb" then
+      __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile
+   else if item -1 of pSourceFile is "livecodescript" then
+      __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile
+   end if
 end revIDEExtensionLoad
 
 function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
@@ -1138,25 +1220,24 @@ function revIDEExtensionDocsData
 end revIDEExtensionDocsData
 
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
-   if pExtensionSource is empty then
-      local tFiles
-      revIDEPushDefaultFolder pFolder
-      put the files into tFiles
-      filter tFiles with "*.lcb"
-      if tFiles is empty then exit revIDEExtensionUpdateAPI
-      put line 1 of tFiles into pExtensionSource
-      revIDEPopDefaultFolder
-   end if
-   
    # Check timestamps to see if API  is out of date.
-   local tNeedUpdate, tError
-   put revIDEIsFilesetStale(pFolder & slash & pExtensionSource, \
-      pFolder & slash & "api.lcdoc", false, tError) into tNeedUpdate
+   local tNeedUpdate, tError, tSource
+   put pFolder & slash & pExtensionSource into tSource
+   put revIDEIsFilesetStale(tSource, \
+         pFolder & slash & "api.lcdoc", false, tError) into tNeedUpdate
    if tNeedUpdate is empty then put true into tNeedUpdate
    
    if tNeedUpdate then
+      local tText
+      if there is a stack tSource then
+         put the long id of stack tSource into tSource
+         put the script of stack tSource into tText
+      else
+         put textDecode(url("binfile:" & tSource), "utf-8") into tText
+      end if
+      
       local tAPI
-      dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with (pFolder & slash & pExtensionSource) 
+      dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with tText, tSource
       put the result into tAPI 
       put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
       return "updated"
