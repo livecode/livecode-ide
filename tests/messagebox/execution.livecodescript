@@ -176,7 +176,7 @@ end TestIntelligenceObjectMultipleCommand
 
 on TestDefaultStackCardScript
 	local tScript
-	put "on preOpenCard; set the cValue of this stack of me to" && quote & "value" & quote && "; end preOpenCard" into tScript
+	put "on preOpenCard; set the cValue of this stack to" && quote & "value" & quote && "; end preOpenCard" into tScript
 
 	local tStack
 	create stack
