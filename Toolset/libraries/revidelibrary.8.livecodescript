@@ -11285,8 +11285,12 @@ command ideExecuteScript pScript, pObject, pDebugMode, @rValidScript
    
    if pObject is empty then
       put the long id of this card of the defaultStack into pObject
-   else if word 1 of pObject is "stack" then
-      set the defaultStack to the short name of pObject
+   else 
+      set the defaultStack to the short name of ideStackOfObject(pObject)
+   end if
+   
+   -- Need to target 'this card' if a stack is selected
+   if word 1 of pObject is "stack" then
       put the long id of this card of pObject into pObject
    end if
    

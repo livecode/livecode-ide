@@ -965,6 +965,13 @@ on revDeleteFolder pSrcFolder
    return the result
 end revDeleteFolder
 
+on revDeleteFile pWhich
+   close file pWhich
+   if the platform is "MacOS" then put empty into URL ("resfile:"&pWhich)
+   put empty into URL ("binfile:"&pWhich)
+   delete file pWHich
+end revDeleteFile
+
 on revMoveFolder pSrcFolder, pDestFolder
    if the platform is "Win32" then
       revSetWindowsShellCommand
