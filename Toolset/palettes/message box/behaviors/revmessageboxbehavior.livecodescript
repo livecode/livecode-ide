@@ -70,10 +70,6 @@ on openStack
    
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
    revIDESetActiveStack
-
-   lock messages
-   set the revMessageBoxRedirect to the long id of me
-   unlock messages
    
    local tIntelligence
    put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
