@@ -674,6 +674,17 @@ on revTutorialParseWait pTokens, @rData
          return empty
       end if
       
+      revTutorialParseSubexpression "the <token> of <object> is changed with default <token>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         put "property" into rData["wait condition"]
+         put tCondition[1] into rData["property"]
+         put tCondition[2] into rData["object"]
+         put tCondition[3] into rData["default"]
+         put true into rData["is not"]
+         return empty
+      end if
+      
       revTutorialParseSubexpression "the <token> of <object> is <value>", pTokens, tToken, tCondition
       
       if the result is empty then
@@ -681,6 +692,8 @@ on revTutorialParseWait pTokens, @rData
          put tCondition[1] into rData["property"]
          put tCondition[2] into rData["object"]
          put tCondition[3] into rData["value"]
+         put false into rData["is not"]
+         return empty
       end if
       
       return the result
@@ -2049,7 +2062,7 @@ function revTutorialCheckWaitCondition pActionData
             put pActionData["value"] into tValue
          end if
          
-         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue) then
+         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue, pActionData["is not"]) then
             return true
          end if
          break
@@ -2163,6 +2176,9 @@ end revTutorialWaitUntilTheToolIs
 on revTutorialWaitUntilObjectPropertyHasValue pTaggedObject
    local tObjID
    put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   if sWait["is not"] then
+      put the sWait["property"] of tObjID into sWait["value"]
+   end if
    revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectPropertyHasValue
 
@@ -3031,22 +3047,22 @@ function revTutorialThereIsAPalette pPalette
    return false
 end revTutorialThereIsAPalette
 
-function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
+function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue, pIsNot
    repeat for each line tObject in pObjectIDs
       if pProperty ends with "color" then
-         if revTutorialColorIs(the pProperty of tObject, pValue) is false then
+         if revTutorialColorIs(the pProperty of tObject, pValue) is pIsNot then
             return false
          end if
       else if pProperty is "script" then
-         if revTutorialScriptIs(the script of tObject, pValue) is false then
+         if revTutorialScriptIs(the script of tObject, pValue) is pIsNot then
             return false
          end if
       else if pProperty is "name" then
-         if the short name of tObject is not pValue then
+         if (the short name of tObject is pValue) is pIsNot then
             return false
          end if
       else 
-         if the pProperty of tObject is not pValue then
+         if (the pProperty of tObject is pValue) is pIsNot then
             return false
          end if
       end if
@@ -3228,7 +3244,7 @@ on revTutorialRunAction pActionData
          break
       case "property"  
          # Set the property of the objects
-         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"], tWaitData["is not"], tWaitData["default"]
          break
       case "fits" 
          # Set the rect of the objects
@@ -3367,10 +3383,14 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
    end if
 end revTutorialCreateAndCaptureObjects
 
-on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
+on revTutorialSetPropertyOfObjects pObjects, pProp, pValue, pIsNot, pDefault
    # If the step specified a value then we set this instead of the string "value"
    if pValue is "value" and sStepContextA["value"] is not empty then
       put sStepContextA["value"] into pValue
+   end if
+   
+   if pIsNot then
+      put pDefault into pValue
    end if
    
    if the environment begins with "development" then
