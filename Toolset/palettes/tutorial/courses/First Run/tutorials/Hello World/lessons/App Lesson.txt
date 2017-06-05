@@ -1,0 +1,295 @@
+tutorial "Hello World"
+
+prologue
+	Welcome to LiveCode, to help you get started this Interactive Tutorial will
+	show you how to create a simple 'Hello World' app.
+end prologue
+
+step "Tutorial Intro I"
+	In creating this app you will learn:
+
+	- How to build the user interface(UI) of an app by dragging and dropping objects
+
+	- The basics of coding in LiveCode to add user interactivity to your app
+
+	- How to use the features of the LiveCode Integrated Development Environment (IDE)
+action
+	interlude
+	go to step "Tutorials Intro"
+end step
+
+step "Tutorials Intro"
+	You can keep track of how much of the tutorial you have completed
+	with this progress bar, and exit the tutorial at any time by
+	clicking on the stop button.
+
+	Clicking the fast-forward button will skip to the next important
+	concept being introduced in the tutorial. Use this if you've got the
+	idea about something or don't want to have to create every last
+	part of the user interface, for example.
+
+	The tutorial will also help you out by disabling the parts of the IDE you
+	don't need for the current step.
+action
+	interlude
+	highlight toolbar "tutorial"
+	go to step "Stack Interlude"
+end step
+
+skip point
+
+step "Stack Interlude"
+	In this first section of the tutorial, we will create the User
+	Interface (UI) for the Hello World app.
+
+	The first step in creating a LiveCode application is creating a
+	stack. A stack is the canvas for your app. Every window you see in LiveCode
+	is a stack.
+
+	In this tutorial we will create our stack at the default size.
+action
+	interlude
+	go to step "Create Mainstack"
+end step
+
+step "Create Mainstack"
+		Click on the File menu, and select 'New Stack' → 'Default Size'.
+action
+    highlight menu item "Default Size" of menu item "New Stack" of menu "File"
+    capture the next new stack as "Mainstack"
+    capture the next new card of stack "Mainstack" as "HelloWorld"
+    wait until there is a stack "Mainstack"
+		go to step "Properties interlude"
+end step
+
+skip point
+
+step "Properties interlude"
+	Every object in LiveCode has a set of properties associated with it. These
+	properties control the appearance, location and behavior of the objects
+	in your app.
+
+	The Property Inspector is a window that allows you to control these properties.
+action
+	interlude
+		go to step "Set Stack Properties"
+end step
+
+step "Set Stack Properties"
+	Click on the Inspector icon on the toolbar to open the Property
+	Inspector.
+action
+	highlight toolbar "Inspector"
+	wait until there is an inspector for stack "Mainstack"
+	go to step "Property Inspector Interlude"
+end step
+
+step "Property Inspector Interlude"
+	Properties of objects are grouped into sections. You can hover over
+	the icons at the top of the Property Inspector to see what each section is
+	called.
+action
+	interlude
+	highlight inspector for stack "Mainstack"
+	go to step "Set Stack Title"
+end step
+
+skip point
+
+step "Set Stack Title"
+	The first property we will set is the 'Title' of the stack. You will see the
+	title of the stack change after you set the property.
+
+	Set the 'Title' of the stack to "Hello World".
+action
+	highlight property "title" of section "basic"
+	wait until the title of stack "Mainstack" is "Hello World"
+	go to step "Tools Palette Interlude"
+end step
+
+skip point
+
+step "Tools Palette Interlude"
+	The next step is to add some objects to your stack.
+
+	This is the Tools Palette. It contains all the built-in objects that
+	you can drag out onto your stack, such as buttons, text fields and
+	scrollbars. It also contains more complex controls including a header bar,
+	navigation bar, browser and line graph.
+action
+	interlude
+	highlight tools
+	go to step "Create Button"
+end step
+
+step "Create Button"
+	The first object we will add is a button icon. Clicking on this button will
+	show a message to the user.
+
+	Drag a button from the tools palette onto your stack.
+action
+	highlight tool "Create Button"
+	capture the next new button of stack "Mainstack" as "hello"
+	wait until there is a button "hello"
+	go to step "Set Button Location"
+end step
+
+step "Set Button Location"
+	Position the button, as shown.
+action
+	add guide "buttonLoc" with rect "159,119,241,142" to stack "Mainstack"
+	highlight guide "buttonLoc"
+	wait until button "hello" fits guide "buttonLoc" with tolerance 5
+	go to step "Open Property Inspector"
+end step
+
+step "Open Property Inspector"
+	Next we need to set some properties of the button. Remember that properties
+	control how objects look and behave and can be set using the Property Inspector.
+
+	Click on the "Inspector" button in the toolbar to open the Property Inspector
+	for the button.
+action
+	highlight toolbar "Inspector"
+	wait until there is an inspector for button "hello"
+	go to step "Set button name"
+end step
+
+step "Set button name"
+	The 'Name' property is what we use when we want to refer to objects in the code we write.
+
+	We want to use short, unique, descriptive names to make it easier when we start writing code.
+
+	Set the name property of the button to "Say Hello". You will see the Name appear on the button.
+action
+	highlight property "name" of section "Basic"
+	wait until the name of button "Hello" is "Say Hello"
+	go to step "Events and messages interlude"
+end step
+
+skip point
+
+step "Events and messages interlude"
+	Now that the UI is complete the next stage is to add code to the app
+	to make it interactive.
+
+	LiveCode apps work by responding to 'messages', which are usually triggered by
+	some kind of user action. A message might tell the app that the user has
+	clicked on a button or typed in a field. You add code to tell the app what
+	to do when a message is received.
+
+	Each object has it's own individual code, so different buttons can respond to
+	messages in different ways.
+action
+	interlude
+	go to step "Open Add Script"
+end step
+
+step "Open Add Script"
+	Select the button and click the Code button in the Toolbar.
+action
+	highlight toolbar "Code"
+	wait until there is a script editor for button "Hello"
+	go to step "Script Editor Interlude"
+end step
+
+step "Script Editor Interlude"
+	The Script Editor is a window that allows you to add code to the
+	objects on your stack.
+
+	Some objects have a default script associated with then when you first open
+	the Script Editor.
+action
+	interlude
+	highlight script editor for button "Hello"
+	go to step "Script Editor Apply"
+end step
+
+step "Script Editor Apply"
+	Any code you have added in the Script Editor does not become live
+	until you click on the 'Apply' button. When this is clicked, you will
+	get feedback about whether the code you have written has any
+	errors in it or not.
+action
+	interlude
+	highlight "Apply" of script editor for button "Hello"
+	go to step "mouseUp message"
+end step
+
+skip point
+
+step "mouseUp message"
+	The message we will respond to is 'mouseUp'. This message is sent when the
+	user clicks on the button.
+
+	We will add code to display a message to the user saying "Hello World!"
+
+	Add this handler to the button script.
+
+	Don't forget to click the 'Apply' button when you have finished.
+script
+	on mouseUp
+			answer "Hello World!"
+	end mouseUp
+action
+	highlight script editor for button "Hello"
+	wait until button "Hello" is scripted
+	go to step "Edit Tool Interlude"
+end step
+
+skip point
+
+step "Edit Tool Interlude"
+	LiveCode has two modes: Edit mode and Run mode.
+
+	Up until now you have been in Edit mode all the time. In Edit mode
+	you can add, edit and move objects on your stack. You can also select objects
+	to change their properties or add code to them.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Run Tool Interlude"
+end step
+
+step "Run Tool Interlude"
+	In Run mode your app is live - objects will behave as they would for
+	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
+
+	To test the code you have just added, we are going to enter Run mode and click the button.
+action
+		interlude
+    highlight tool "Run Mode"
+	  go to step "Run Mode"
+end step
+
+step "Run Mode"
+	Select 'Run mode' in the Tools Palette.
+action
+    highlight tool "Run Mode"
+    wait until the tool is run
+	  go to step "Test Button"
+end step
+
+step "Test Button"
+		Click on the 'Say Hello' button to see the message.
+action
+	interlude
+	highlight button "hello"
+	go to step "Next Steps"
+end step
+
+step "Next Steps"
+	That's it, you have finished your app.
+
+	Why don't you try customizing it by changing the message or adding multiple buttons that display different messages.
+
+	To learn more about LiveCode development why not try a more advanced tutorial or take a look at some of the lessons in our Lessons portal.
+action
+		interlude
+    highlight toolbar "Tutorials"
+    go to step "Using in FileMaker"
+end step
+
+epilogue
+	Congratulations on completing your first LiveCode app.
+end epilogue
