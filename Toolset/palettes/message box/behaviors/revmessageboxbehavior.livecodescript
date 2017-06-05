@@ -71,6 +71,14 @@ on openStack
    --if there is a stack currently being debugged then the debug mode is true, if no stack is currently being debugged then the debug mode is false
    revIDESetActiveStack
    
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   if tIntelligence is empty then
+      put "selectedObject" into tIntelligence
+   end if
+   revIDESetPreference "ideMessageBox_intelligenceobject", "selectedObject"
+   revIDEUpdateIntelligenceObject
+   
    revIDESubscribe "idePreferenceChanged:cShowRevolutionStacks"
    revIDESubscribe "idePreferenceChanged:revPaletteFrameSize"
    revIDESubscribe "idePreferenceChanged:cScriptEditor,editor,backgroundcolor"
@@ -80,8 +88,6 @@ on openStack
    revIDESubscribe "ideActiveStacksChanged"
    
    if revIDEGetPreference("revPaletteFrameSize") is empty then revIDESetPreference "revPaletteFrameSize", "small"
-   
-   revIDEUpdateIntelligenceObject
    
    local tMinHeight
    put 4*kHalfMessageFieldHeight + the headerHeight of me + the footerHeight of me into tMinHeight
@@ -464,6 +470,8 @@ on idePreferenceChanged pPreference, pValue
       case "cScriptEditor,editor,fontSize"
          __UpdateMessageFont
          break
+      default
+         break
    end switch
    unlock screen
 end idePreferenceChanged
@@ -607,11 +615,11 @@ command ideMessageBoxExecuteScript pScript
    try
       do "put the long id of the" && tIntelligencePref && "into tIntelligenceObject"
    catch tError
-      put empty into tIntelligenceObject
+      put the long id of stack tDefaultStack into tIntelligenceObject
    end try
    
    local tValidScript
-   ideExecuteScript pScript, tDefaultStack, tIntelligenceObject, ideIsDebugging(), tValidScript
+   ideExecuteScript pScript, tIntelligenceObject, ideIsDebugging(), tValidScript
    if the result is not empty then
       put ideMessageBoxFormatErrorForDisplay(the result, "compile error") into field "results" of card lSelectedCard of me
    else if it is not empty then
@@ -627,18 +635,11 @@ function ideMessageBoxFormatErrorForDisplay pErrorTrace, pErrorType
    local tError, tErrorDisplay, tLineNum
    put line 1 of pErrorTrace into tError
    if item 1 of tError is a number and item 1 of tError >= 0 then
-      if tErrorType is "compile error" then
-         --put revIDELocalisedConstructedString("Script compile error:" & cr & "Error description: [error]",revIDELookupError("compilation",tLineNum)) into tErrorDisplay
-         put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", tError) into tErrorDisplay
+      if pErrorType is "compile error" then
+         put "Script compile error:" & cr & "Error description:" && revIDELookupError("compilation", pErrorTrace) into tErrorDisplay
       else
-         if item 1 of tError is kExternalErrorCode then
-            --put revIDELocalisedConstructedString("External execution error:" & cr & "Error description: [error]",item 4 to -1 of line 1 of tError) into tErrorDisplay
-            put "External execution error:" & cr & "Error description:" && item 4 to -1 of line 1 of tError into tErrorDisplay
-         else 
-            --put revIDELocalisedConstructedString("Message execution error:" & cr & "Error description: [error]" & cr & "Hint: [hint]",revIDELookupError("execution", (item 1 of line 1 of tError)),item 4 to -1 of line 1 of tError) into tErrorDisplay
-            put "Message execution error:" & cr & "Error description:" && revIDELookupError("execution", tError)  & cr & \
-                  "Hint:" && item 4 to -1 of line 1 of tError into tErrorDisplay
-         end if
+         put "Message execution error:" & cr & "Error description:" && revIDELookupError("execution", pErrorTrace)  & cr & \
+               "Hint:" && item 4 to -1 of line 1 of tError into tErrorDisplay
       end if
    else
       put tError into tErrorDisplay
@@ -646,16 +647,60 @@ function ideMessageBoxFormatErrorForDisplay pErrorTrace, pErrorType
    return tErrorDisplay
 end ideMessageBoxFormatErrorForDisplay
 
+private command __UpdateIntelligenceDisplay
+   lock screen
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   lock messages
+   try
+      do "get the long id of the" && tIntelligence
+   catch tError
+   end try
+   global gRevDevelopment
+   if it is empty or it begins with "stack" or \
+         (not gRevDevelopment and revIDEObjectIsOnIDEStack(it)) then
+      local tCard
+      put the short name of this card of me into tCard
+      if tCard is "Single Line" or tCard is "Multiple Lines" then
+         revIDESetActiveStack
+      end if
+   else
+      local tControl
+      put the name of it into tControl
+      set the label of button "Open Stacks" of group "Stacks" of me to tIntelligence & ": " & tControl
+      enable button "Open Stacks" of group "Stacks" of me
+   end if
+   positionOpenStacksButton
+   unlock messages
+   unlock screen
+end __UpdateIntelligenceDisplay
+
+on ideSelectedObjectChanged
+   __UpdateIntelligenceDisplay
+end ideSelectedObjectChanged
+
+on ideMouseMove
+   __UpdateIntelligenceDisplay
+end ideMouseMove
+
 command revIDEUpdateIntelligenceObject
-   set the cREVIntelligenceObject of me to revIDEGetPreference("ideMessageBox_intelligenceobject")
+   local tIntelligence
+   put revIDEGetPreference("ideMessageBox_intelligenceobject") into tIntelligence
+   
+   if tIntelligence is "selectedObject" then 
+      revIDESubscribe "ideSelectedObjectChanged"
+      revIDEUnsubscribe "ideMouseMove"
+   else if tIntelligence is "mouseControl" then
+      revIDESubscribe "ideMouseMove"
+      revIDEUnsubscribe "ideSelectedObjectChanged"
+   end if
+   
+   set the cREVIntelligenceObject of me to tIntelligence
+   __UpdateIntelligenceDisplay
 end revIDEUpdateIntelligenceObject
 
 on ideActiveStacksChanged
-   local tCard
-   put the short name of this card of me into tCard
-   if tCard is "Single Line" or tCard is "Multiple Lines" then
-      revIDESetActiveStack
-   end if
+   __UpdateIntelligenceDisplay
 end ideActiveStacksChanged
 
 command revIDESetActiveStack
