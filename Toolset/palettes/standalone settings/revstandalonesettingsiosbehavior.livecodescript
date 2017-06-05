@@ -25,7 +25,7 @@ on initialize
       updateSettings
    else
       set the enabled of button "Build for iOS" to false
-      -- set the enabled of group "iOS Settings" to false
+      set the enabled of group "iOS Settings" to false
    end if
    
    updateIosSettingState
@@ -434,10 +434,28 @@ end chooseImageFileWithDimension
 
 on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
-      set the topLeft of group "iosBuild" to 5,57
-      set the cSize of this card to 754,600
+      set the topLeft of group "buildbutton" to 50,127
+      set the topLeft of group "iosSettings" to 5,127
+      repeat for each line tLine in the text of button "iOSTabMenu"
+         local tName
+         put tLine into tName
+         if tName is "Requirements" then
+            put "Requirement" into tName
+         end if
+         set the topLeft of group tName to 12,178
+      end repeat 
+      set the cSize of this card to 754,670
    else 
-      set the topLeft of group "iosBuild" to 5,57
+      set the topLeft of group "buildbutton" to 50,60
+      set the topLeft of group "iosSettings" to 5,57
+      repeat for each line tLine in the text of button "iOSTabMenu"
+         local tName2
+         put tLine into tName2
+         if tName is "Requirements" then
+            put "Requirement" into tName2
+         end if
+         set the topLeft of group tName2 to 12,108
+      end repeat 
       set the cSize of this card to 754,600
    end if
    updateCardSize
