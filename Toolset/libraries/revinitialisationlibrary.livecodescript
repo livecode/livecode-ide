@@ -135,3 +135,26 @@ command revInternal__SetSmallAppIcon pSmallAppIcon
    set the paintCompression to "png" -- match the engine
    put pSmallAppIcon into gRevSmallAppIcon
 end revInternal__SetSmallAppIcon
+
+command revInternal_SetJAVA_HOME
+   if $JAVA_HOME is empty then
+      local tPath
+      switch the platform
+         case "MacOS"
+            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+            break
+         case "Linux"
+            local tJAVAC
+            put "/bin/javac" into tJAVAC
+            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+            if there is a file tPath and tPath ends with tJAVAC then
+               set the itemDelimiter to slash
+               delete item -2 to -1 of tPath
+            end if
+            break
+      end switch
+      if there is a folder tPath then
+         put tPath into $JAVA_HOME
+      end if
+   end if
+end revInternal_SetJAVA_HOME

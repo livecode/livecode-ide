@@ -1186,7 +1186,9 @@ command revInternal__InitialiseLibraries
    catch tError 	 	
       revInternal__Log "Error", "Error loading initialisation library" & return & tError 	 	
    end try
-
+   
+   revInternal_SetJAVA_HOME
+   
    local tLoadList
    put "revIDEDocumentationLibrary" into tLoadList
    put return & "revideextensionlibrary" after tLoadList
