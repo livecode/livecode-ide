@@ -62,6 +62,25 @@ on updateSettings
    local tSettings
    put getSettings() into tSettings
    
+   local tScreen
+   put computeDefault(tSettings["ios,active menu"], "Basic Settings") into tScreen
+   repeat for each line tLine in the text of button "iOSTabMenu"
+      if tLine is tScreen then
+         if tScreen is "Requirements" then
+            put "Requirement" into tScreen
+         end if
+         show group tScreen
+         set the menuHistory of button "iOSTabMenu" to lineOffset(tScreen, the text of button "iOSTabMenu")
+      else
+         local tToHide
+         put tLine into tToHide
+         if tToHide is "Requirements" then
+            put "Requirement" into tToHide
+         end if
+         hide group tToHide
+      end if
+   end repeat
+   
    put computeDefault(tSettings["ios,display name"], tSettings["name"]) into field "Display Name"
    put computeDefault(tSettings["ios,bundle id"], "com.yourcompany.yourapp") into field "Bundle Id"
    put computeDefault(tSettings["ios,bundle version"], "1.0.0") into field "Bundle Version"
@@ -392,9 +411,11 @@ on updateIosSettingState
    -- SN-2015-03-30: [[ Bug 14794 ]] Add a checkbox for disable the 64-bit slice
    --  which is only valid for 5.1.1 built (for iPad 1).
    set the enabled of button "32bit_only" to (the hilite of button "Build for iOS")
+   set the enabled of group "iOS Settings" of me to (the hilite of button "Build for iOS" of me)
+   set the visible of button "iOSChecked" to (the hilite of button "Build for iOS" of me)
    set the enabled of button "iOSTabMenu" to (the hilite of button "Build for iOS")
    set the disabled of group "Basic Settings" to (not the hilite of button "Build for iOS")
-   set the disabled of group "Requirements" to (not the hilite of button "Build for iOS")
+   set the disabled of group "Requirement" to (not the hilite of button "Build for iOS")
    set the disabled of group "Background Modes" to (not the hilite of button "Exits on Suspend")
    set the disabled of group "Icons" to (not the hilite of button "Build for iOS")
    set the disabled of group "Splash" to (not the hilite of button "Build for iOS")
@@ -435,7 +456,7 @@ end chooseImageFileWithDimension
 on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
       set the topLeft of group "buildbutton" to 50,127
-      set the topLeft of group "iosSettings" to 5,127
+      set the topLeft of group "iOS Settings" to 5,127
       repeat for each line tLine in the text of button "iOSTabMenu"
          local tName
          put tLine into tName
@@ -447,11 +468,11 @@ on tipDisplayUpdate
       set the cSize of this card to 754,670
    else 
       set the topLeft of group "buildbutton" to 50,60
-      set the topLeft of group "iosSettings" to 5,57
+      set the topLeft of group "iOS Settings" to 5,57
       repeat for each line tLine in the text of button "iOSTabMenu"
          local tName2
          put tLine into tName2
-         if tName is "Requirements" then
+         if tName2 is "Requirements" then
             put "Requirement" into tName2
          end if
          set the topLeft of group tName2 to 12,108
