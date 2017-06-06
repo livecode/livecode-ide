@@ -6651,6 +6651,9 @@ pWorking (boolean): If true return the loc relative to OS screen furniture rathe
 Returns: The screenRect of the screen the stack is on
 */
 function revIDEStackScreenRect pStackName, pWorking
+   if the environment is "development command line" then
+      return "0,0,0,0"
+   end if
    if pWorking then
       return line (the screen of stack pStackName) of the working screenRects
    else
