@@ -80,24 +80,74 @@ on mouseUp
          revIDEAnswerFile "stack"
          
          # Get the path of to the file
-         local tStackFilePath
-         put the result into tStackFilePath
+         local tStackFilePaths
+         put the result into tStackFilePaths
          
-         if tStackFilePath is not empty then
-            local tEditorValue, tNewLine
-            put the short name of stack tStackFilePath & comma & tStackFilePath into tNewLine
-            put the editorValue of me into tEditorValue
-            if tEditorValue is empty then
-               put tNewLine into tEditorValue
-            else
-               put return & tNewLine after tEditorValue
-            end if
-            set the editorValue of me to tEditorValue
-            updateProperty
+         if tStackFilePaths is not empty AND tStackFilePaths is not "cancel" then
+            addStacks tStackFilePaths
          end if
          break
    end switch
 end mouseUp
+
+
+on dragEnter
+   if the short name of the target is "stackFilesField" then
+      if the dragData["files"] is not empty then
+         local tExtensions, tFile
+         
+         set the wholematches to true
+         put revIDEAcceptedTypes("stack") into tExtensions
+         repeat for each line tFile in the dragData["files"]
+            if fileExtension(tFile) is among the items of tExtensions then
+               set the dragAction to "copy"
+               exit repeat
+            end if
+         end repeat
+      end if
+   else
+      pass dragEnter
+   end if
+end dragEnter
+
+
+on dragDrop
+   if the short name of the target is "stackFilesField" then
+      addStacks the dragData["files"]
+   else
+      pass dragDrop
+   end if
+end dragDrop
+
+
+private command addStacks pStackFilePaths
+   local tEditorValue, tNewLine
+   
+   put the editorValue of me into tEditorValue
+   
+   repeat for each line tStackFilePath in pStackFilePaths
+      put the short name of stack tStackFilePath & comma & tStackFilePath into tNewLine
+      if tEditorValue is empty then
+         put tNewLine into tEditorValue
+      else
+         put return & tNewLine after tEditorValue
+      end if
+   end repeat
+   set the editorValue of me to tEditorValue
+   updateProperty
+end addStacks
+
+private function fileExtension pFilename
+   set the itemDelimiter to "/"
+   put the last item of pFilename into pFilename
+   set the itemDelimiter to "."
+   if the number of items of pFilename > 1 then
+      return the last item of pFilename
+   else
+      return empty
+   end if
+end fileExtension
+
 
 on valueChanged
    local tValue
