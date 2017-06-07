@@ -238,6 +238,7 @@ on updateSettings
    
    set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "5.1.1") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
+   set the hilite of button "Enable Background Execution" to computeDefault(tSettings["ios,enable background execution"],"false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
    set the hilite of button "Location Update" to computeDefault(tSettings["ios,background location update"], "false")
    set the hilite of button "VoIP" to computeDefault(tSettings["ios,background voip"], "false")
@@ -247,7 +248,6 @@ on updateSettings
    set the hilite of button "Acts as BT LE Acc" to computeDefault(tSettings["ios,acts as bt le"], "false")
    set the hilite of button "Background Fetch" to computeDefault(tSettings["ios,background fetch"], "false")
    set the hilite of button "Remote Notifications" to computeDefault(tSettings["ios,remote notifications"], "false")
-   set the hilite of button "Enable Background Execution" to computeDefault(tSettings["ios,exits on suspend"], "false")
    set the hilite of button "File Sharing" to computeDefault(tSettings["ios,file sharing"], "false")
    set the hilite of button "Prerendered Icon" to computeDefault(tSettings["ios,prerendered icon"], "false")
    set the hilite of button "Disable ATS" to computeDefault(tSettings["ios,disable ATS"], "false")
