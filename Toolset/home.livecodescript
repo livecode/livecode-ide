@@ -1212,6 +1212,7 @@ command revInternal__InitialiseLibraries
    put return & "getopt" after tLoadList
    put return & "mime" after tLoadList
    put return & "diff" after tLoadList
+   put return & "messageauthentication" after tLoadList
  
    if the editionType is "professional" then
       put return & "remotedebugger" after tLoadList 
