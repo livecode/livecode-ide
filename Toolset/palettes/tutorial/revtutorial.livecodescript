@@ -869,6 +869,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    if the text of tScriptFieldID is empty then
       put false into tHasScript
       hide tScriptFieldID
+      hide tCopyButtonID
    else
       put true into tHasScript
       show tScriptFieldID
