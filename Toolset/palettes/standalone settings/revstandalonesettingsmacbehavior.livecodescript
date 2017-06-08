@@ -7,12 +7,12 @@ on preOpenCard
    --   and replace with Intel.
    if tStandaloneSettingsA["MacOSX"] then
       delete variable tStandaloneSettingsA["MacOSX"]
-      put true into tStandaloneSettingsA["MacOSX x86-32"]
+      put true into tStandaloneSettingsA["MacOSX x86-64"]
    end if
    
    if tStandaloneSettingsA["MacOSX PowerPC-32"] then
       delete variable tStandaloneSettingsA["MacOSX PowerPC-32"]
-      put true into tStandaloneSettingsA["MacOSX x86-32"]
+      put true into tStandaloneSettingsA["MacOSX x86-64"]
    end if
    
    setSettings tStandaloneSettingsA
