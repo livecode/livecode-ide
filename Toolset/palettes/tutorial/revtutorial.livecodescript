@@ -1360,7 +1360,11 @@ on revInitialiseTutorial
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
-   set the textsize of stack "revTutorial" to 15
+   if the platform is "win32" then
+      set the textsize of stack "revTutorial" to 18
+   else
+      set the textsize of stack "revTutorial" to 16
+   end if
    
    -- Create fields
    set the lockText of the templateField to true
@@ -1379,6 +1383,8 @@ on revInitialiseTutorial
    
    create field "Script"
    set the dontWrap of it to true
+   set the opaque of it to true
+   set the backcolor of it to "white"
    
    if revIDEBrowserWidgetUnavailable() then
       create field "Url"
