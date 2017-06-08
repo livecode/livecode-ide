@@ -5,19 +5,6 @@ prologue
 	show you how to create a simple 'Hello World' app.
 end prologue
 
-step "Tutorial Intro I"
-	In creating this app you will learn:
-
-	- How to build the user interface(UI) of an app by dragging and dropping objects
-
-	- The basics of coding in LiveCode to add user interactivity to your app
-
-	- How to use the features of the LiveCode Integrated Development Environment (IDE)
-action
-	interlude
-	go to step "Tutorials Intro"
-end step
-
 step "Tutorials Intro"
 	You can keep track of how much of the tutorial you have completed
 	with this progress bar, and exit the tutorial at any time by
@@ -28,7 +15,7 @@ step "Tutorials Intro"
 	idea about something or don't want to have to create every last
 	part of the user interface, for example.
 
-	The tutorial will also help you out by disabling the parts of the IDE you
+	The tutorial will also help you out by disabling any options you
 	don't need for the current step.
 action
 	interlude
@@ -39,27 +26,17 @@ end step
 skip point
 
 step "Stack Interlude"
-	In this first section of the tutorial, we will create the User
-	Interface (UI) for the Hello World app.
+	We start by creating the User Interface (UI) for the Hello World app.
 
-	The first step in creating a LiveCode application is creating a
-	stack. A stack is the canvas for your app. Every window you see in LiveCode
-	is a stack.
+	The first step is to create a new LiveCode app at the default size.
 
-	In this tutorial we will create our stack at the default size.
+	Click on the File menu, and select 'New Stack' → 'Default Size'.
 action
-	interlude
-	go to step "Create Mainstack"
-end step
-
-step "Create Mainstack"
-		Click on the File menu, and select 'New Stack' → 'Default Size'.
-action
-    highlight menu item "Default Size" of menu item "New Stack" of menu "File"
-    capture the next new stack as "Mainstack"
-    capture the next new card of stack "Mainstack" as "HelloWorld"
-    wait until there is a stack "Mainstack"
-		go to step "Properties interlude"
+	highlight menu item "Default Size" of menu item "New Stack" of menu "File"
+	capture the next new stack as "Mainstack"
+	capture the next new card of stack "Mainstack" as "HelloWorld"
+	wait until there is a stack "Mainstack"
+	go to step "Properties interlude"
 end step
 
 skip point
@@ -72,35 +49,22 @@ step "Properties interlude"
 	The Property Inspector is a window that allows you to control these properties.
 action
 	interlude
-		go to step "Set Stack Properties"
+	go to step "Set Stack Properties"
 end step
 
 step "Set Stack Properties"
-	Click on the Inspector icon on the toolbar to open the Property
+	Click on the 'Inspector' icon on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for stack "Mainstack"
-	go to step "Property Inspector Interlude"
-end step
-
-step "Property Inspector Interlude"
-	Properties of objects are grouped into sections. You can hover over
-	the icons at the top of the Property Inspector to see what each section is
-	called.
-action
-	interlude
-	highlight inspector for stack "Mainstack"
 	go to step "Set Stack Title"
 end step
 
-skip point
-
 step "Set Stack Title"
-	The first property we will set is the 'Title' of the stack. You will see the
-	title of the stack change after you set the property.
+	Set the 'Title' property of the stack to "Hello World" and press 'Enter'.
 
-	Set the 'Title' of the stack to "Hello World".
+	You will see the title of the stack change after you set the property.
 action
 	highlight property "title" of section "basic"
 	wait until the title of stack "Mainstack" is "Hello World"
@@ -123,7 +87,7 @@ action
 end step
 
 step "Create Button"
-	The first object we will add is a button icon. Clicking on this button will
+	The first object we will add is a button. Clicking on this button will
 	show a message to the user.
 
 	Drag a button from the tools palette onto your stack.
@@ -144,11 +108,10 @@ action
 end step
 
 step "Open Property Inspector"
-	Next we need to set some properties of the button. Remember that properties
-	control how objects look and behave and can be set using the Property Inspector.
-
-	Click on the "Inspector" button in the toolbar to open the Property Inspector
+	Click on the 'Inspector' icon in the Toolbar to open the Property Inspector
 	for the button.
+
+	Remember that properties control how objects look and behave and can be set using the Property Inspector.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for button "hello"
@@ -156,11 +119,7 @@ action
 end step
 
 step "Set button name"
-	The 'Name' property is what we use when we want to refer to objects in the code we write.
-
-	We want to use short, unique, descriptive names to make it easier when we start writing code.
-
-	Set the name property of the button to "Say Hello". You will see the Name appear on the button.
+	Set the 'Name' property of the button to "Say Hello" and press 'Enter'. You will see the Name appear on the button.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of button "Hello" is "Say Hello"
@@ -173,8 +132,7 @@ step "Events and messages interlude"
 	Now that the UI is complete the next stage is to add code to the app
 	to make it interactive.
 
-	LiveCode apps work by responding to 'messages', which are usually triggered by
-	some kind of user action. A message might tell the app that the user has
+	LiveCode apps work by responding to 'messages', which are usually triggered by some kind of user action. A message might tell the app that the user has
 	clicked on a button or typed in a field. You add code to tell the app what
 	to do when a message is received.
 
@@ -186,7 +144,7 @@ action
 end step
 
 step "Open Add Script"
-	Select the button and click the Code button in the Toolbar.
+	Select the button and click the 'Code' button in the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for button "Hello"
@@ -197,15 +155,6 @@ step "Script Editor Interlude"
 	The Script Editor is a window that allows you to add code to the
 	objects on your stack.
 
-	Some objects have a default script associated with then when you first open
-	the Script Editor.
-action
-	interlude
-	highlight script editor for button "Hello"
-	go to step "Script Editor Apply"
-end step
-
-step "Script Editor Apply"
 	Any code you have added in the Script Editor does not become live
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the code you have written has any
@@ -256,25 +205,19 @@ step "Run Tool Interlude"
 	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
 
 	To test the code you have just added, we are going to enter Run mode and click the button.
-action
-		interlude
-    highlight tool "Run Mode"
-	  go to step "Run Mode"
-end step
 
-step "Run Mode"
 	Select 'Run mode' in the Tools Palette.
 action
-    highlight tool "Run Mode"
-    wait until the tool is run
-	  go to step "Test Button"
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test Button"
 end step
 
 step "Test Button"
-		Click on the 'Say Hello' button to see the message.
+	Click on the 'Say Hello' button to see the message.
 action
-	interlude
 	highlight button "hello"
+	wait until button "hello" pops up answer dialog
 	go to step "Next Steps"
 end step
 
@@ -291,5 +234,11 @@ action
 end step
 
 epilogue
-	Congratulations on completing your first LiveCode app.
+	Congratulations on completing your first LiveCode app. You have learned
+
+	- How to build the User Interface(UI) of an app by dragging and dropping objects
+
+	- The basics of coding in LiveCode to add interactivity to your app
+
+	- How to use the features of the LiveCode Integrated Development Environment (IDE)
 end epilogue
