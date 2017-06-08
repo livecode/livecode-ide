@@ -674,7 +674,7 @@ on revTutorialParseWait pTokens, @rData
          return empty
       end if
       
-      revTutorialParseSubexpression "the <token> of <object> is changed with default <token>", pTokens, tToken, tCondition
+      revTutorialParseSubexpression "the <token> of <object> is changed with default <value>", pTokens, tToken, tCondition
       
       if the result is empty then
          put "property" into rData["wait condition"]
