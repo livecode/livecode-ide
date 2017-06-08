@@ -1,0 +1,1 @@
+# The IDE is now 64-bit by default on Mac
