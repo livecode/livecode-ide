@@ -1,4 +1,4 @@
-tutorial "FM Plugin"
+tutorial "To Do List"
 
 prologue
 	In this tutorial we will create a simple To Do List.
@@ -76,11 +76,11 @@ step "Properties interlude"
 	The Property Inspector is a window that allows you to control these properties.
 action
 	interlude
-		go to step "Set Stack Properties"
+	go to step "Set Stack Properties"
 end step
 
 step "Set Stack Properties"
-	Click on the Inspector icon on the toolbar to open the Property
+	Click on the Inspector icon on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
@@ -90,7 +90,7 @@ end step
 
 step "Property Inspector Interlude"
 	Properties of objects are grouped into sections. You can hover over
-	the icons at the top of the inspector to see what each section is
+	the icons at the top of the Property Inspector to see what each section is
 	called.
 action
 	interlude
@@ -104,7 +104,7 @@ step "Set Stack Title"
 	The first property we will set is the 'Title' of the stack. You will see the
 	title of the stack change after you set the property.
 
-	Set the 'Title' of the stack to "To Do List".
+	Set the 'Title' of the stack to "To Do List" and press Enter.
 action
 	highlight property "title" of section "basic"
 	wait until the title of stack "Mainstack" is "To Do List"
@@ -130,7 +130,7 @@ step "Create Add Icon"
 	The first object we will add is an 'add' icon. The user will click on this to
 	add a new item to the list.
 
-	Drag an SVG Icon from the tools palette onto your stack.
+	Drag an SVG Icon from the Tools Palette onto your stack.
 action
 	highlight tool "Create com.livecode.widget.svgpath"
 	capture the next new widget of stack "Mainstack" as "add"
@@ -139,7 +139,7 @@ action
 end step
 
 step "Set Add Location"
-	Position the icon, as shown.
+	Resize and position the icon, as shown.
 action
 	add guide "addLoc" with rect "280,10,310,40" to stack "Mainstack"
 	highlight guide "addLoc"
@@ -150,7 +150,7 @@ end step
 step "Open Property Inspector"
 	Next we need to set some properties of the icon.
 
-	Click on the toolbar icon to open the Property Inspector for the
+	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
 	icon.
 action
 	highlight toolbar "Inspector"
@@ -159,11 +159,11 @@ action
 end step
 
 step "Set add name"
+	Set the name property of the SVG Icon to "Add" and press Enter.
+
 	The 'Name' property is used when we refer to an object in the code. We want to
 	use short, unique, descriptive names to make it easier when we start writing
 	code.
-
-	Set the name property of the SVG Icon to "Add".
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "add" is "Add"
@@ -176,7 +176,7 @@ step "Set add icon"
 
 	Click on the 'Preset' property where it shows a star. This will pop up a
 	set of icons for you to choose from. Choose the plus icon, its name in the
-	list is 'plus'.
+	list is 'plus'. You might need to scroll the list of icons to find the one you want.
 action
 	highlight property "iconPresetName" of section "Basic"
 	wait until the iconPresetName of widget "add" is "plus"
@@ -187,6 +187,8 @@ skip point
 
 step "Create task list"
 	Next we want to add a list field. This will be used to display the list of tasks.
+
+	Drag a list field from the Tools Palette onto your stack.
 action
 	highlight tool "Create list field"
 	capture the next new field of stack "Mainstack" as "TaskList"
@@ -195,7 +197,7 @@ action
 end step
 
 step "Set task list Location"
-	Position the field, as shown.
+	Resize and position the field, as shown.
 action
 	add guide "taskListLoc" with rect "0,60,320,568" to stack "Mainstack"
 	highlight guide "taskListLoc"
@@ -206,7 +208,7 @@ end step
 step "Task List PI"
 	As before we need to set some properties of the field.
 
-	Click on the toolbar icon to open the property inspector for the
+	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
 	field.
 action
 	highlight toolbar "Inspector"
@@ -215,10 +217,10 @@ action
 end step
 
 step "Set task list name"
-	As before we want to give the field a short descriptive name, to make things
+	Again, we want to give the field a short descriptive name to make things
 	easier when we write code.
 
-	Set the name of the field to "TaskList".
+	Set the name of the field to "TaskList" and press Enter.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of field "taskList" is "TaskList"
@@ -229,7 +231,7 @@ skip point
 
 step "Set task list contents"
 	We want the task list to start off empty. Delete the default contents from
-	the field.
+	the field and click away to allow the change to take effect.
 action
 	highlight property "styledText" of section "contents"
 	wait until the text of field "taskList" is ""
@@ -266,15 +268,6 @@ step "Script Editor Interlude"
 	The Script Editor is a window that allows you to add code to the
 	objects on your stack.
 
-	Some objects have a default script associated with then when you first open
-	the Script Editor.
-action
-	interlude
-	highlight script editor for widget "add"
-	go to step "Script Editor Apply"
-end step
-
-step "Script Editor Apply"
 	The code you have added in the Script Editor does not become live
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the code you have written has any
@@ -300,8 +293,17 @@ step "mouseUp message"
 	Don't forget to click the 'Apply' button when you have finished.
 script
 	on mouseUp
+			local tList
+
 			ask "Please enter a task"
-			put it & return after field "taskList"
+
+			put the text of field "TaskList" into tList
+			if field "TaskList" is empty then
+				put it into tList
+			else
+				put return & it after tList
+			end if
+			set the text of field "TaskList" to tList
 	end mouseUp
 action
 	highlight script editor for widget "add"
@@ -359,14 +361,11 @@ end step
 skip point
 
 step "Add task"
-	Click the 'Add' icon and enter "Buy milk" as a task, it will appear at the
+	Click the 'Add' icon and enter the task "Buy milk", it will appear at the
 	bottom of the list.
-value
-	Buy milk
-
 action
 	highlight widget "add"
-	wait until the text of field "taskList" is value
+	wait until the text of field "taskList" is "Buy milk"
 	go to step "Return to Edit Mode"
 end step
 
@@ -392,7 +391,7 @@ action
 end step
 
 step "Create delete Icon"
-	To create the 'Delete' icon drag another SVG Icon from the tools palette onto your stack.
+	To create the 'Delete' icon drag another SVG Icon from the Tools Palette onto your stack.
 action
 	highlight tool "Create com.livecode.widget.svgpath"
 	capture the next new widget of stack "Mainstack" as "delete"
@@ -401,7 +400,7 @@ action
 end step
 
 step "Set Delete Location"
-	Position the icon, as shown.
+	Resize and position the icon, as shown.
 action
 	add guide "deleteLoc" with rect "240,10,270,40" to stack "Mainstack"
 	highlight guide "deleteLoc"
@@ -412,7 +411,7 @@ end step
 step "Open Delete Property Inspector"
 	Next we need to set the properties of the 'Delete' icon.
 
-	Click on the toolbar icon to open the Property Inspector for the
+	Click on the Inspector icon on the Toolbar to open the Property Inspector for the
 	SVG icon.
 action
 	highlight toolbar "Inspector"
@@ -421,7 +420,7 @@ action
 end step
 
 step "Set delete name"
-	Set the name property of the SVG Icon to "Delete".
+	Set the name property of the SVG Icon to "Delete" and press Enter.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "delete" is "Delete"
@@ -440,7 +439,7 @@ action
 end step
 
 step "Open Delete Script"
-	Select the 'Delete' icon then click the Code button in the Toolbar.
+	Select the 'Delete' icon then click the Code icon in the Toolbar to open the Script Editor for the icon.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "delete"
@@ -457,9 +456,13 @@ step "Delete mouseUp"
 	Don't forget to click the 'Apply' button when you have added the code.
 script
 	on mouseUp
+		local tList
+
 		answer "Do you want to delete this task?" with "Yes" and "No"
 		if it is "Yes" then
-		 	delete line (the hilitedLine of field "taskList") of field "taskList"
+			put the text of field "TaskList" into tList
+		 	delete line (the hilitedLine of field "taskList") of tList
+			set the text of field "TaskList" to tList
 			end if
 	end mouseUp
 action
@@ -469,7 +472,7 @@ action
 end step
 
 step "Run mode 2"
-	To test the code you have just added enter Run mode and delete the 'Buy milk'
+	To test the code you have just added enter Run mode and delete the first
 	task by selecting the line in the list and clicking on the 'Delete' icon.
 
 	Start by entering Run mode.
@@ -480,7 +483,7 @@ action
 end step
 
 step "Test Delete Task"
-	Select the 'Buy milk' task and click the 'Delete' icon. Answer 'Yes' when presented with the delete options.
+	Select the first task and click the 'Delete' icon. Answer 'Yes' when presented with the delete options.
 
 	The task will be deleted from the list.
 action
@@ -503,43 +506,56 @@ step "Saving Data Interlude"
 	We want the tasks we add to be saved when we close the app so we need to save the task list when the app is closed and read it in when the app is opened.
 action
 	interlude
-	go to step "preOpenStack message"
+	go to step "closeStack handler"
 end step
 
-step "preOpenStack message"
-	When a stack is opened it receives a 'PreOpenStack' message. Any set up can
-	be done in this handler, before the stack becomes visible to the user.
+step "closeStack handler"
+	When a stack is closed it receives a 'CloseStack' message. Any clean up can
+	be done in this handler.
+
+	In this app we will save the list of tasks before the app is closed. The contents
+	of the 'TaskList' field are saved to a text file in the 'Documents' folder, ready
+	to be loaded in the next time the app is opened. There is a 'Documents' folder on all platforms so this code will work on desktop and mobile.
+action
+	interlude
+	go to step "Open Stack Script"
+end step
+
+step "Open Stack Script"
+	Just like the SVG icons and other objects a Stack can have code associated with it and receive messages.
+
+	The CloseStack message is sent to the stack so will be handled on the Stack Script.
 
 	Click on the Object menu, and select 'Stack Script' to open the Script Editor for the stack.
 action
 	highlight menu item "Stack Script" of menu "Object"
 	wait until there is a script editor for stack "Mainstack"
-	go to step "preOpenStack code"
+	go to step "closeStack code"
 end step
 
-step "preOpenStack code"
-	When the stack is opened we will load in the saved tasks. The list of tasks is saved in a text file in the 'Documents' folder. There is a 'Documents' folder on all platforms so this code will work on desktop and mobile.
+step "closeStack code"
+	In the closeStack handler we work out the full path to the text file that will be user to store the To To list and save the contents of the field to the text file.
 
-	We get the contents of the file and place the list into the 'taskList' field.
+	Add this handler to the Stack Script and press 'Apply'.
 script
-	on preOpenStack
+	on closeStack
 		local tFile
 		put specialFolderPath("documents") & "/ToDoList.txt" into tFile
-		put url ("file:" & tFile) into field "taskList"
-	end preOpenStack
+		put field "TaskList" into url ("file:" & tFile)
+	end closeStack
 action
 	highlight script editor for stack "Mainstack"
 	wait until stack "Mainstack" is scripted
-	go to step "closeStack message"
+	go to step "Test step"
 end step
 
-step "closeStack message"
-	When a stack is closed it receives a 'CloseStack' message. Any clean up can
-	be done in this handler.
+step "preOpenStack code"
+	When a stack is opened it receives a 'PreOpenStack' message. Any set up can
+	be done in this handler, before the stack becomes visible to the user.
 
-	In this app we will save the list of tasks before the app is closed. The contents
-	of the 'TaskList' field and saved to the text file in the 'Documents' folder, ready
-	to be loaded in the next time the app is opened.
+	When the stack is opened we will load in the saved tasks form the text file in the 'Documents' folder.
+
+	Add this handler to the Stack Script and press 'Apply'.
 script
 	on preOpenStack
 		local tFile
@@ -561,8 +577,7 @@ end step
 step "Save Standalone"
 	Before you can prepare your app for sharing you need to set is up to build as a self contained, or 'standalone' app.
 
-	You set up this up by selecting the platforms you want to build for and setting 	the properties for the application. You then choose "Save As Standalone Application..."
-	from the File menu. This will build the executable files for the selected platforms.
+	You set up this up by selecting the platforms you want to build for and setting some properties for the app. You then choose "Save As Standalone Application..." from the File menu. This will build the executable files for the selected platforms.
 
 	For more details see this lesson
 url
@@ -578,7 +593,7 @@ epilogue
 	That's it, you have finished your app. Switch back to 'Run' mode and try it out.
 
 	Why don't you try customizing it by changing some properties such as the
-	icon colours or task list font and text size.
+	icon colors or task list font and text size.
 image
 		ToDoListScreenshot2.png
 end epilogue
