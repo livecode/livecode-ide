@@ -260,6 +260,20 @@ function tilesArray pState
          put "lc-person" into tArray[8]["icon"]
          put "lc-person-filled" into tArray[8]["hoverIcon"]
          break
+      case "interactive_welcome"
+         put "1. Hello World" into tArray[1]["label"]
+         put "tutorial_hello_world" into tArray[1]["tag"]
+         put "lc-hello-world" into tArray[1]["icon"]
+         put "lc-hello-world-filled" into tArray[1]["hoverIcon"]
+         put "2. To Do List" into tArray[2]["label"]
+         put "tutorial_todo_list" into tArray[2]["tag"]
+         put "lc-todo-list" into tArray[2]["icon"]
+         put "lc-todo-list-filled" into tArray[2]["hoverIcon"]
+         put "3. BMI Calculator" into tArray[3]["label"]
+         put "tutorial_bmi_calculator" into tArray[3]["tag"]   
+         put "lc-bmi-calculator" into tArray[3]["icon"]
+         put "lc-bmi-calculator-filled" into tArray[3]["hoverIcon"]
+         break
       case "new"
          put "New Stack" into tArray[1]["label"]
          put "newStackDefault" into tArray[1]["tag"]
@@ -384,7 +398,20 @@ on startCenterAction pAction
    local tStackName, tArray
    switch pAction
       case "interactive_welcome" 
-         tourStart
+         --tourStart
+         put "Home / Interactive Welcome" into field "breadcrumb"
+         set the textStyle of word 1 of field "breadcrumb" to "link"
+         put tilesArray(pAction) into tArray
+         tilesUpdate tArray
+         break
+      case "tutorial_hello_world"
+         tutorialStart "Hello World"
+         break
+      case "tutorial_todo_list"
+         tutorialStart "To Do List"
+         break
+      case "tutorial_bmi_calculator"
+         tutorialStart "BMI Calculator"
          break
       case "new"
          put "Home / New" into field "breadcrumb"
@@ -497,11 +524,17 @@ end firstRunVisible
 
 command tourStart
    lock screen
-   revIDEStartTutorial "First Run", "BMI Calculator", "App Lesson"
+   tutorialStart "Hello World", "App Lesson"
+   unlock screen
+end tourStart
+
+command tutorialStart pTutorial
+   lock screen
+   revIDEStartTutorial "First Run", pTutorial, "App Lesson"
    revIDESetPreference "StartCenterClassic", "true"
    startCenterClose
    unlock screen
-end tourStart
+end tutorialStart
 
 ## Banner 
 command bannerInitialise
