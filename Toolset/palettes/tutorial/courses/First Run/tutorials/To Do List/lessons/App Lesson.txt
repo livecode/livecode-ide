@@ -293,17 +293,13 @@ step "mouseUp message"
 	Don't forget to click the 'Apply' button when you have finished.
 script
 	on mouseUp
-			local tList
-
 			ask "Please enter a task"
 
-			put the text of field "TaskList" into tList
 			if field "TaskList" is empty then
-				put it into tList
+				put it into field "TaskList"
 			else
-				put return & it after tList
+				put return & it after field "TaskList"
 			end if
-			set the text of field "TaskList" to tList
 	end mouseUp
 action
 	highlight script editor for widget "add"
@@ -361,11 +357,10 @@ end step
 skip point
 
 step "Add task"
-	Click the 'Add' icon and enter the task "Buy milk", it will appear at the
-	bottom of the list.
+	Click the 'Add' icon and enter a task, it will appear at the bottom of the list.
 action
 	highlight widget "add"
-	wait until the text of field "taskList" is "Buy milk"
+	wait until the text of field "taskList" is changed with default "Buy milk"
 	go to step "Return to Edit Mode"
 end step
 
@@ -456,14 +451,12 @@ step "Delete mouseUp"
 	Don't forget to click the 'Apply' button when you have added the code.
 script
 	on mouseUp
-		local tList
 
 		answer "Do you want to delete this task?" with "Yes" and "No"
+
 		if it is "Yes" then
-			put the text of field "TaskList" into tList
-		 	delete line (the hilitedLine of field "taskList") of tList
-			set the text of field "TaskList" to tList
-			end if
+		 	delete line (the hilitedLine of field "TaskList") of field "TaskList"
+		end if
 	end mouseUp
 action
 	highlight script editor for widget "delete"
@@ -488,7 +481,7 @@ step "Test Delete Task"
 	The task will be deleted from the list.
 action
 	highlight widget "delete"
-	wait until the text of field "taskList" is ""
+	wait until the text of field "taskList" is changed
 	go to step "Return to Edit Mode 2"
 end step
 
@@ -546,7 +539,7 @@ script
 action
 	highlight script editor for stack "Mainstack"
 	wait until stack "Mainstack" is scripted
-	go to step "Test step"
+	go to step "preOpenStack code"
 end step
 
 step "preOpenStack code"
