@@ -481,7 +481,7 @@ step "Test Delete Task"
 	The task will be deleted from the list.
 action
 	highlight widget "delete"
-	wait until the text of field "taskList" is changed
+	wait until the text of field "taskList" is changed with default ""
 	go to step "Return to Edit Mode 2"
 end step
 
