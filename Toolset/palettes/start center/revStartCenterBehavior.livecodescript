@@ -532,9 +532,20 @@ command tutorialStart pTutorial
    lock screen
    revIDEStartTutorial "First Run", pTutorial, "App Lesson"
    revIDESetPreference "StartCenterClassic", "true"
+   revIDESubscribe "ideTutorialProgressChanged"
    startCenterClose
    unlock screen
 end tutorialStart
+
+on ideTutorialProgressChanged
+   if revIDETutorialInProgress() is empty then
+      revIDEUnsubscribe "ideTutorialProgressChanged"
+      lock screen
+      revIDEOpenPalette "start center"
+      startCenterAction "interactive_welcome"
+      unlock screen
+   end if
+end ideTutorialProgressChanged
 
 ## Banner 
 command bannerInitialise
