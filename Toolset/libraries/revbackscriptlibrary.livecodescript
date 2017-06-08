@@ -964,7 +964,8 @@ on revSaveAs pShortName, pSubstackOnly
       end if
    end if
    
-   put revFixPath(pShortName) into tStackName
+   // revFixPath expects to get the actual filename, not the stack's short name
+   put revFixPath(the filename of stack pShortName) into tStackName
    
    // MM-2012-03-09: Added new 5.5 stack file format to drop down.
    local tType
