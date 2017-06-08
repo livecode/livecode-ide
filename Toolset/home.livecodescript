@@ -1212,11 +1212,15 @@ command revInternal__InitialiseLibraries
    put return & "getopt" after tLoadList
    put return & "mime" after tLoadList
    put return & "diff" after tLoadList
- 
-   if the editionType is "professional" then
-      put return & "remotedebugger" after tLoadList 
-      put return & "scriptprofiler" after tLoadList 
-   end if
+   put return & "messageauthentication" after tLoadList
+   
+   switch the editionType
+      case "professional"
+         put return & "remotedebugger" after tLoadList 
+         put return & "scriptprofiler" after tLoadList 
+      case "commercial"
+         put return & "aws" after tLoadList 
+   end switch
    
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
