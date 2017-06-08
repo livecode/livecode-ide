@@ -2089,7 +2089,7 @@ function revTutorialCheckWaitCondition pActionData
                if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
                   break
                end if
-               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
+               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"], false) then
                   return true
                else if sWait["current script"] is not empty then
                   add 1 to sWait["incorrect attempts"]
