@@ -1382,6 +1382,8 @@ on revInitialiseTutorial
    
    create field "Script"
    set the dontWrap of it to true
+   set the opaque of it to true
+   set the backcolor of it to "white"
    
    if revIDEBrowserWidgetUnavailable() then
       create field "Url"
