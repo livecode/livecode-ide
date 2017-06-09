@@ -659,6 +659,14 @@ action
 	add guide "Label" with rect "112,254,212,284" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Results Label" fits guide "Label" with tolerance 3
+	go to step "Select Results Label"
+end step
+
+step "Select Results Label"
+	Click on "Results" label to select it.
+action
+	highlight field "Results Label"
+	wait until field "Results Label" is selected
 	go to step "Set Results Label Properties"
 end step
 
@@ -710,6 +718,14 @@ action
 	add guide "Label" with rect "22,287,300,325" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Results" fits guide "Label" with tolerance 3
+	go to step "Select the Results Field"
+end step
+
+step "Select the Results Field"
+	Click on "Results" field to select it.
+action
+	highlight field "Results"
+	wait until field "Results" is selected
 	go to step "Set Results Properties"
 end step
 
@@ -1197,6 +1213,7 @@ step "Set Stack Script"
 	button:
 script
 	function getBMI pHeight, pWeight
+	   local tURL, tJSON, tArray
 	   put "http://api.clinicalcalculator.org/bmi?" & \
 		   "height_in_m=" & pHeight & "&weight_in_kg=" & pWeight into tURL
 	   
@@ -1380,6 +1397,7 @@ step "Set Calculator Card Script"
 	button:
 script
 	command calculateBMI
+	    local tHeight, tWeight, tBMI
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
 
@@ -1625,6 +1643,7 @@ step "Set Chart Card Script"
 script
 	on preOpenCard
 		if the cBMI of this stack is a number then
+		    local tCoordinates
 			put the cHeight of this stack, the cWeight of this stack into tCoordinates
 			set the hilitedCoordinates of widget "chart" to tCoordinates
 		else
@@ -1798,6 +1817,7 @@ script
 	end preOpenCard
 	
 	command calculateBMI
+	    local tHeight, tWeight, tBMI
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
 
