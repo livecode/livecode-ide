@@ -29,6 +29,7 @@ on commandKeyDown pKey
    end if
    if pKey is "V" then 
       put clipboardData["text"] into the selectedChunk
+      scriptFormat "script"
    else
       pass commandKeyDown
    end if
