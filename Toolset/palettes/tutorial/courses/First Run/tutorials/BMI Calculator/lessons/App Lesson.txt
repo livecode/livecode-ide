@@ -163,6 +163,14 @@ action
 	add guide "Header" with rect "1,1,319,64" to stack "Mainstack"
 	highlight guide "Header"
 	wait until widget "Header" fits guide "Header" with tolerance 5
+	go to step "Select Header Rect"
+end step
+
+step "Select Header Rect"
+	Click on the header bar to select it.
+action
+	highlight widget "Header"
+	wait until widget "Header" is selected
 	go to step "Open Property Inspector"
 end step
 
