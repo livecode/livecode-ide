@@ -877,7 +877,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    end if
    
    # If this is a non-script action step, show the 'Do It For Me' button
-   if sIsInterlude or tHasScript then
+   if sIsInterlude or tHasScript or \
+         revTutorialCanSkipStep() is not true then
       hide tDoItButtonID
    else
       put tDoItButtonID into tActionButton
@@ -1935,7 +1936,16 @@ on revTutorialSetContextualStepData pStepDataA
    put pStepDataA["file"] into sStepContextA["file"]
    put pStepDataA["value"] into sStepContextA["value"]
    put pStepDataA["image"] into sStepContextA["image"]
+   if pStepDataA["actions"]["wait"]["wait condition"] is "pops up" then
+      put false into sStepContextA["can skip"]
+   else
+      put true into sStepContextA["can skip"]
+   end if
 end revTutorialSetContextualStepData
+
+function revTutorialCanSkipStep
+   return sStepContextA["can skip"]
+end revTutorialCanSkipStep
 
 ##############################################################################
 #
