@@ -59,13 +59,22 @@ action
 end step
 
 step "Create Mainstack"
-		Click on the File menu, and select 'New Stack' → 'iPhone 5 (320x568)'.
+	Click on the File menu, and select 'New Stack' → 'iPhone 5 (320x568)'.
 action
     highlight menu item "iPhone 5 (320x568)" of menu item "New Stack" of menu "File"
     capture the next new stack as "Mainstack"
     capture the next new card of stack "Mainstack" as "ToDoList"
     wait until there is a stack "Mainstack"
-		go to step "Properties interlude"
+	go to step "Set Stack Rect"
+end step
+
+step "Set Stack Rect"
+	Resize the stack so that it has width 320 and height 568.
+action
+	add guide "Stack" with rect "0,0,320,568" to stack "Mainstack"
+	highlight guide "Stack"
+	wait until stack "Mainstack" fits guide "Stack" with tolerance 5
+	go to step "Properties interlude"
 end step
 
 step "Properties interlude"
