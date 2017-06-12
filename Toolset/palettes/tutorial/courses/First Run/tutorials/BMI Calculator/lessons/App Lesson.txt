@@ -154,6 +154,15 @@ action
 	highlight tool "Create com.livecode.widget.headerBar"
 	capture the next new widget of stack "Mainstack" as "Header"
 	wait until there is a widget "Header"
+	go to step "Select Header 1"
+end step
+
+step "Select Header 1"
+	Select the header bar widget by clicking on it.
+
+	The selection handles will show around the widget.
+action
+	wait until widget "Header" is selected
 	go to step "Set Header Rect"
 end step
 
@@ -237,6 +246,15 @@ action
 	highlight tool "Create com.livecode.widget.navbar"
 	capture the next new widget of stack "Mainstack" as "Footer"
 	wait until there is a widget "Footer"
+	go to step "Select Footer 1"
+end step
+
+step "Select Footer 1"
+	Select the navigation bar widget by clicking on it.
+
+	The selection handles will show around the widget.
+action
+	wait until widget "Footer" is selected
 	go to step "Set Footer Rect"
 end step
 
@@ -298,6 +316,15 @@ action
 	highlight tool "Create Round Rect Graphic"
 	capture the next new graphic of stack "Mainstack" as "Entry Background"
 	wait until there is a graphic "Entry Background"
+	go to step "Select Entry Background 1"
+end step
+
+step "Select Entry Background 1"
+	Select the graphic by clicking on it.
+
+	The selection handles will show around the graphic.
+action
+	wait until graphic "Entry Background" is selected
 	go to step "Set Entry Background Rect"
 end step
 
@@ -351,6 +378,13 @@ action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Height Label"
 	wait until there is a field "Height Label"
+	go to step "Select Height Label 1"
+end step
+
+step "Select Height Label 1"
+	Select the field by clicking on it.
+action
+	wait until field "Height Label" is selected
 	go to step "Set Height Label Rect"
 end step
 
@@ -386,6 +420,13 @@ action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Weight Label"
 	wait until there is a field "Weight Label"
+	go to step "Select Weight Label 1"
+end step
+
+step "Select Weight Label 1"
+	Select the field by clicking on it.
+action
+	wait until field "Weight Label" is selected
 	go to step "Set Weight Label Rect"
 end step
 
@@ -421,6 +462,13 @@ action
 	highlight tool "Create Field"
 	capture the next new field of stack "Mainstack" as "Height Field"
 	wait until there is a field "Height Field"
+	go to step "Select Height Field 1"
+end step
+
+step "Select Height Field 1"
+	Select the field by clicking on it.
+action
+	wait until field "Height Field" is selected
 	go to step "Set Height Field Rect"
 end step
 
@@ -469,6 +517,13 @@ action
 	highlight tool "Create Field"
 	capture the next new field of stack "Mainstack" as "Weight Field"
 	wait until there is a field "Weight Field"
+	go to step "Select Weight Field 1"
+end step
+
+step "Select Weight Field 1"
+	Select the field by clicking on it.
+action
+	wait until field "Weight Field" is selected
 	go to step "Set Weight Field Rect"
 end step
 
@@ -499,12 +554,19 @@ action
 end step
 
 step "Create Calculate Graphic"
-	Drag a rounded rectangle graphic from the tools palette onto your 
+	Drag a rounded rectangle graphic from the tools palette onto your
 	stack.
 action
 	highlight tool "Create Round Rect Graphic"
 	capture the next new graphic of stack "Mainstack" as "Calculate Background"
 	wait until there is a graphic "Calculate Background"
+	go to step "Select Calculate Graphic 1"
+end step
+
+step "Select Calculate Graphic 1"
+	Select the graphic by clicking on it.
+action
+	wait until graphic "Calculate Background" is selected
 	go to step "Set Calculate Graphic Rect"
 end step
 
@@ -539,6 +601,13 @@ action
 	highlight tool "Create Button"
 	capture the next new button of stack "Mainstack" as "Calculate"
 	wait until there is a button "Calculate"
+	go to step "Select Calculate Button 1"
+end step
+
+step "Select Calculate Button 1"
+	Select the button by clicking on it.
+action
+	wait until button "Calculate" is selected
 	go to step "Set Calculate Button Rect"
 end step
 
@@ -591,6 +660,13 @@ action
 	highlight tool "Create Round Rect Graphic"
 	capture the next new graphic of stack "Mainstack" as "Results Background"
 	wait until there is a graphic "Results Background"
+	go to step "Select Results Background 1"
+end step
+
+step "Select Results Background 1"
+	Select the graphic by clicking on it.
+action
+	wait until graphic "Results Background" is selected
 	go to step "Set Results Background Rect"
 end step
 
@@ -642,6 +718,13 @@ action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Results Label"
 	wait until there is a field "Results Label"
+	go to step "Select Results Label 1"
+end step
+
+step "Select Results Label 1"
+	Select the field by clicking on it.
+action
+	wait until field "Results Label" is selected
 	go to step "Set Results Label Rect"
 end step
 
@@ -693,6 +776,13 @@ action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Results"
 	wait until there is a field "Results"
+	go to step "Select Results Field 1"
+end step
+
+step "Select Results Field 1"
+	Select the field by clicking on it.
+action
+	wait until field "Results" is selected
 	go to step "Set Results Rect"
 end step
 
@@ -745,6 +835,13 @@ action
 	highlight menu item "Duplicate Objects" of menu "Edit"
 	capture the next new field of stack "Mainstack" as "Advice"
 	wait until there is a field "Advice"
+	go to step "Select Advice Field 1"
+end step
+
+step "Select Advice Field 1"
+	Select the field.
+action
+	wait until field "Advice" is selected
 	go to step "Set Advice Rect"
 end step
 
@@ -1971,6 +2068,13 @@ action
 	highlight tool "Create com.livecode.widget.browser"
 	capture the next new widget of stack "Mainstack" as "Browser"
 	wait until there is a widget "Browser"
+	go to step "Select Browser 1"
+end step
+
+step "Select Browser 1"
+	Select the browser widget.
+action
+	wait until widget "Browser" is selected
 	go to step "Set Browser Rect"
 end step
 

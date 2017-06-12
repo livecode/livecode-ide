@@ -95,6 +95,15 @@ action
 	highlight tool "Create Button"
 	capture the next new button of stack "Mainstack" as "hello"
 	wait until there is a button "hello"
+	go to step "Select Button 1"
+end step
+
+step "Select Button 1"
+	Select the button by clicking on it.
+
+	The selection handles should show around the button.
+action
+	wait until button "hello" is selected
 	go to step "Set Button Location"
 end step
 
