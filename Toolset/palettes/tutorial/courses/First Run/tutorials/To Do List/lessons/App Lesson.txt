@@ -59,13 +59,22 @@ action
 end step
 
 step "Create Mainstack"
-		Click on the File menu, and select 'New Stack' → 'iPhone 5 (320x568)'.
+	Click on the File menu, and select 'New Stack' → 'iPhone 5 (320x568)'.
 action
     highlight menu item "iPhone 5 (320x568)" of menu item "New Stack" of menu "File"
     capture the next new stack as "Mainstack"
     capture the next new card of stack "Mainstack" as "ToDoList"
     wait until there is a stack "Mainstack"
-		go to step "Properties interlude"
+	go to step "Set Stack Rect"
+end step
+
+step "Set Stack Rect"
+	Resize the stack so that it has width 320 and height 568.
+action
+	add guide "Stack" with rect "0,0,320,568" to stack "Mainstack"
+	highlight guide "Stack"
+	wait until stack "Mainstack" fits guide "Stack" with tolerance 5
+	go to step "Properties interlude"
 end step
 
 step "Properties interlude"
@@ -135,6 +144,15 @@ action
 	highlight tool "Create com.livecode.widget.svgpath"
 	capture the next new widget of stack "Mainstack" as "add"
 	wait until there is a widget "add"
+	go to step "Select SVG Icon 1"
+end step
+
+step "Select SVG Icon 1"
+	Select the SVG Icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	wait until widget "add" is selected
 	go to step "Set Add Location"
 end step
 
@@ -159,11 +177,11 @@ action
 end step
 
 step "Set add name"
-	Set the name property of the SVG Icon to "Add" and press Enter.
-
 	The 'Name' property is used when we refer to an object in the code. We want to
 	use short, unique, descriptive names to make it easier when we start writing
 	code.
+
+	Set the name property of the SVG Icon to "Add" and press Enter.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "add" is "Add"
@@ -193,6 +211,15 @@ action
 	highlight tool "Create list field"
 	capture the next new field of stack "Mainstack" as "TaskList"
 	wait until there is a field "TaskList"
+	go to step "Select Field 1"
+end step
+
+step "Select Field 1"
+	Select the field by clicking on it.
+
+	The selection handles will show around the field.
+action
+	wait until field "TaskList" is selected
 	go to step "Set task list Location"
 end step
 
@@ -391,6 +418,15 @@ action
 	highlight tool "Create com.livecode.widget.svgpath"
 	capture the next new widget of stack "Mainstack" as "delete"
 	wait until there is a widget "delete"
+	go to step "Select SVG Icon 2"
+end step
+
+step "Select SVG Icon 2"
+	Select the icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	wait until widget "delete" is selected
 	go to step "Set Delete Location"
 end step
 
