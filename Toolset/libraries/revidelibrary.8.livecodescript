@@ -5446,10 +5446,6 @@ function revIDEPaletteResourcePath pFilename, pTarget
    return  tPalettePath & slash  & pFilename
 end revIDEPaletteResourcePath
 
-on logChanged pLog
-   ideMessageSend "ideExtensionLog", pLog
-end logChanged
-
 function revIDELastModifiedTimeOfFile pFolder, pFile
    local tDetailedFiles
    revIDEPushDefaultFolder pFolder
