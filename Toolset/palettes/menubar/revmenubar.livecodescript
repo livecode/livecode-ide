@@ -15,6 +15,7 @@ on preOpenStack
    revMenubarBuildMenus
    updateMenubarPreference
    layoutMenu
+   revIDEPositionPalette the short name of me
    # Since the menubar is topleveled on Linux and Windows, set the cantModify to true
    # to prevent users being able to alter the menubar stack.
    set the cantModify of me to true
@@ -216,6 +217,7 @@ on moveStack
       put revIDEStackScreenRect(the short name of this stack, true) into tScreenRect
       set the topLeft of this stack to item 1 to 2 of tScreenRect
    end if
+   revIDESetPaletteRectPreference the short name of me
    pass moveStack
 end moveStack
 

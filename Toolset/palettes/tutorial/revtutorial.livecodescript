@@ -674,6 +674,17 @@ on revTutorialParseWait pTokens, @rData
          return empty
       end if
       
+      revTutorialParseSubexpression "the <token> of <object> is changed with default <value>", pTokens, tToken, tCondition
+      
+      if the result is empty then
+         put "property" into rData["wait condition"]
+         put tCondition[1] into rData["property"]
+         put tCondition[2] into rData["object"]
+         put tCondition[3] into rData["default"]
+         put true into rData["is not"]
+         return empty
+      end if
+      
       revTutorialParseSubexpression "the <token> of <object> is <value>", pTokens, tToken, tCondition
       
       if the result is empty then
@@ -681,6 +692,8 @@ on revTutorialParseWait pTokens, @rData
          put tCondition[1] into rData["property"]
          put tCondition[2] into rData["object"]
          put tCondition[3] into rData["value"]
+         put false into rData["is not"]
+         return empty
       end if
       
       return the result
@@ -820,10 +833,12 @@ constant kMaxScriptHeight = 200
 local sDontShow
 local sLastShape
 on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
-   local tGotItButtonID, tCopyButtonID
+   local tGotItButtonID, tCopyButtonID, tDoItButtonID
    local tMsgFieldID, tScriptFieldID, tImageID
+   local tActionButton
    
    put the long id of button "Got It" of stack "revTutorial" into tGotItButtonID
+   put the long id of button "Do It For Me" of stack "revTutorial" into tDoItButtonID
    put the long id of button "Copy Script" of stack "revTutorial" into tCopyButtonID
    put the long id of field "Message" of stack "revTutorial" into tMsgFieldID
    put the long id of field "Script" of stack "revTutorial" into tScriptFieldID
@@ -844,9 +859,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    put the defaultStack into tDefaultStack
    set the defaultstack to "revTutorial"
    if sIsInterlude then
-      show tGotItButtonID
-      set the height of tGotItButtonID to the formattedHeight of tGotItButtonID
-      set the width of tGotItButtonID to the formattedWidth of tGotItButtonID
+      put tGotItButtonID into tActionButton
       put max(pWidthOverride, 460) into pWidthOverride
    else
       hide tGotItButtonID
@@ -856,12 +869,18 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    if the text of tScriptFieldID is empty then
       put false into tHasScript
       hide tScriptFieldID
+      hide tCopyButtonID
    else
       put true into tHasScript
       show tScriptFieldID
-      set the height of tCopyButtonID to the formattedHeight of tCopyButtonID
-      set the width of tCopyButtonID to the formattedWidth of tCopyButtonID
-      show tCopyButtonID
+      put tCopyButtonID into tActionButton
+   end if
+   
+   # If this is a non-script action step, show the 'Do It For Me' button
+   if sIsInterlude or tHasScript then
+      hide tDoItButtonID
+   else
+      put tDoItButtonID into tActionButton
    end if
    
    local tHasImage
@@ -945,10 +964,11 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       put max(tWidth, the width of tUrlControlID + kMargin * 2) into tWidth
    end if
    
-   if sIsInterlude then
-      add the height of tGotItButtonID + kMargin to tHeight
-   else if tHasScript then
-      add the height of tCopyButtonID + kMargin to tHeight
+   if tActionButton is not empty then
+      set the height of tActionButton to the formattedHeight of tActionButton
+      set the width of tActionButton to the formattedWidth of tActionButton
+      show tActionButton
+      add the height of tActionButton + kMargin to tHeight
    end if
    
    if tHasImage then
@@ -1013,15 +1033,18 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the topleft of stack "revTutorial" to tStackLeft, tStackTop
    else
-      if sIsInterlude then
-         set the bottomright of tGotItButtonID to tWidth - kMargin, tHeight - kMargin
-      else if tHasScript then
-         set the bottomright of tCopyButtonID to tWidth - kMargin, tHeight - kMargin
-      end if
       set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
-   
+   if tActionButton is not empty then
+      local tButtonBottom, tButtonRight
+      put tWidth - kMargin into tButtonRight
+      put tHeight - kMargin into tButtonBottom
+      if tHasPointer and not tPointerLeft and not tPointVertical then
+         subtract kPointerWidth / 2 from tButtonRight
+      end if
+      set the bottomright of tActionButton to tButtonRight,tButtonBottom
+   end if
    if sIsInterlude then
       set the backColor of stack "revTutorial" to revTutorialInterludeColor()
    else
@@ -1313,6 +1336,10 @@ on revInitialiseTutorial
       delete button "Got It" of stack "revTutorial"
    end if
    
+   if there is a button "Do It For Me" of stack "revTutorial" then
+      delete button "Do It For Me" of stack "revTutorial"
+   end if
+   
    if there is a button "Copy Script" of stack "revTutorial" then
       delete button "Copy Script" of stack "revTutorial"
    end if
@@ -1333,7 +1360,11 @@ on revInitialiseTutorial
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
-   set the textsize of stack "revTutorial" to 15
+   if the platform is "win32" then
+      set the textsize of stack "revTutorial" to 18
+   else
+      set the textsize of stack "revTutorial" to 16
+   end if
    
    -- Create fields
    set the lockText of the templateField to true
@@ -1352,6 +1383,8 @@ on revInitialiseTutorial
    
    create field "Script"
    set the dontWrap of it to true
+   set the opaque of it to true
+   set the backcolor of it to "white"
    
    if revIDEBrowserWidgetUnavailable() then
       create field "Url"
@@ -1382,6 +1415,10 @@ on revInitialiseTutorial
    create button "Copy Script"
    set the backColor of it to revTutorialMessageAltColor()
    set the label of it to "Copy Script To Editor"
+   
+   create button "Do It For Me"
+   set the backColor of it to revTutorialMessageAltColor()
+   set the label of it to "Do It For Me"
    
    reset the templateButton
    
@@ -1533,14 +1570,11 @@ on revTutorialStartAtStep pCourse, pTutorial, pLesson, pLocation, pStepName
    revTutorialStartWithState pStepName, sTaggedObjects
 end revTutorialStartAtStep
 
+command revTutorialSkipCurrentStep
+   revTutorialSkipStep sStepName
+end revTutorialSkipCurrentStep
+
 on revTutorialSkip
-   local tTutorialInfo
-   put revIDETutorialInProgress() into tTutorialInfo
-   
-   if tTutorialInfo is empty then
-      exit revTutorialSkip
-   end if
-   
    # Calculate the skip point
    local tSkipPoint
    put sStepName into tSkipPoint
@@ -1548,18 +1582,27 @@ on revTutorialSkip
       put sSteps[tSkipPoint]["actions"]["go"]["step"] into tSkipPoint
    end repeat
    
-   local tRunUntil
-   put sSteps[tSkipPoint]["actions"]["go"]["step"] into tRunUntil
+   revTutorialSkipStep tSkipPoint
+end revTutorialSkip
+
+command revTutorialSkipStep pStep
+   local tTutorialInfo
+   put revIDETutorialInProgress() into tTutorialInfo
+   
+   if tTutorialInfo is empty then
+      exit revTutorialSkipStep
+   end if
    
    # Run from the current step to the next skip point
    revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], \ 
-         tTutorialInfo["lesson"], tTutorialInfo["location"], sStepName, tRunUntil
+         tTutorialInfo["lesson"], tTutorialInfo["location"], sStepName, pStep
+   
    revTutorialInitialiseStep
    
    # Due to how the run loop works, we need to continue from the step
    # *prior* to the next executed step
-   revTutorialContinueFromStep tSkipPoint
-end revTutorialSkip
+   revTutorialContinueFromStep pStep
+end revTutorialSkipStep
 
 on revTutorialStop
    revTutorialClearHighlights
@@ -2026,7 +2069,7 @@ function revTutorialCheckWaitCondition pActionData
             put pActionData["value"] into tValue
          end if
          
-         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue) then
+         if revTutorialObjectPropertyIsValue(tObject, pActionData["property"], tValue, pActionData["is not"]) then
             return true
          end if
          break
@@ -2053,7 +2096,7 @@ function revTutorialCheckWaitCondition pActionData
                if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
                   break
                end if
-               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"]) then
+               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"], false) then
                   return true
                else if sWait["current script"] is not empty then
                   add 1 to sWait["incorrect attempts"]
@@ -2140,6 +2183,9 @@ end revTutorialWaitUntilTheToolIs
 on revTutorialWaitUntilObjectPropertyHasValue pTaggedObject
    local tObjID
    put revTutorialResolveObjectToLongID(pTaggedObject) into tObjID
+   if sWait["is not"] then
+      put the sWait["property"] of tObjID into sWait["value"]
+   end if
    revIDESubscribe "idePropertyChanged", tObjID
 end revTutorialWaitUntilObjectPropertyHasValue
 
@@ -2706,6 +2752,10 @@ on mouseUp pWhich
       revTutorialCopyScriptToEditor
    end if
    
+   if tObject is the long id of button "Do It For Me" of stack "revTutorial" then
+      revTutorialSkipCurrentStep
+   end if
+   
    if word 1 of tObject is "button" then
       revTutorialSetUnpressedState tObject
    end if
@@ -3004,22 +3054,22 @@ function revTutorialThereIsAPalette pPalette
    return false
 end revTutorialThereIsAPalette
 
-function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue
+function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue, pIsNot
    repeat for each line tObject in pObjectIDs
       if pProperty ends with "color" then
-         if revTutorialColorIs(the pProperty of tObject, pValue) is false then
+         if revTutorialColorIs(the pProperty of tObject, pValue) is pIsNot then
             return false
          end if
       else if pProperty is "script" then
-         if revTutorialScriptIs(the script of tObject, pValue) is false then
+         if revTutorialScriptIs(the script of tObject, pValue) is pIsNot then
             return false
          end if
       else if pProperty is "name" then
-         if the short name of tObject is not pValue then
+         if (the short name of tObject is pValue) is pIsNot then
             return false
          end if
       else 
-         if the pProperty of tObject is not pValue then
+         if (the pProperty of tObject is pValue) is pIsNot then
             return false
          end if
       end if
@@ -3155,12 +3205,11 @@ on revTutorialRunSteps pSteps, pFromStep, pUntilStep
    local tStep, tStepNum
    put pFromStep into tStep
    repeat until tStep is empty
+      revTutorialSetContextualStepData pSteps[tStep]
+      revTutorialRunStep pSteps[tStep]["actions"]
       if tStep is pUntilStep then
          exit repeat
       end if
-      
-      revTutorialSetContextualStepData pSteps[tStep]
-      revTutorialRunStep pSteps[tStep]["actions"]
       put pSteps[tStep]["actions"]["go"]["step"] into tStep
    end repeat
    unlock screen
@@ -3202,7 +3251,7 @@ on revTutorialRunAction pActionData
          break
       case "property"  
          # Set the property of the objects
-         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"]
+         revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), tWaitData["property"], tWaitData["value"], tWaitData["is not"], tWaitData["default"]
          break
       case "fits" 
          # Set the rect of the objects
@@ -3341,10 +3390,14 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
    end if
 end revTutorialCreateAndCaptureObjects
 
-on revTutorialSetPropertyOfObjects pObjects, pProp, pValue
+on revTutorialSetPropertyOfObjects pObjects, pProp, pValue, pIsNot, pDefault
    # If the step specified a value then we set this instead of the string "value"
    if pValue is "value" and sStepContextA["value"] is not empty then
       put sStepContextA["value"] into pValue
+   end if
+   
+   if pIsNot then
+      put pDefault into pValue
    end if
    
    if the environment begins with "development" then

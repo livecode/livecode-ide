@@ -1189,6 +1189,7 @@ step "Set Stack Script"
 	button:
 script
 	function getBMI pHeight, pWeight
+	   local tURL, tJSON, tArray
 	   put "http://api.clinicalcalculator.org/bmi?" & \
 		   "height_in_m=" & pHeight & "&weight_in_kg=" & pWeight into tURL
 	   
@@ -1372,6 +1373,7 @@ step "Set Calculator Card Script"
 	button:
 script
 	command calculateBMI
+	    local tHeight, tWeight, tBMI
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
 
@@ -1790,6 +1792,7 @@ script
 	end preOpenCard
 	
 	command calculateBMI
+	    local tHeight, tWeight, tBMI
 		put field "height" into tHeight
 		set the cHeight of this stack to tHeight
 
