@@ -7,7 +7,7 @@ name
 title	
 mainStack		
 decorations												
-style							Toplevel,Modeless,Modal,Palette
+style							Toplevel	Toplevel,Modeless,Modal,Palette
 windowShape												
 scaleFactor							1					
 shadow		Basic					true					
