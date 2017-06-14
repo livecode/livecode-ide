@@ -358,6 +358,41 @@ command loadScript
    selectionUpdate
 end loadScript
 
+command selectionUpdate
+   lock screen
+   findClearResults
+   if the lockText of field "Script" of me is false then
+      deSelectLastGoneToLine
+   end if
+    
+   # Tell the script editor to update its panes. This is called here in particular
+   # for the documentation pane to update itself when the user selects a new term.
+   paneUpdateRequest
+    
+   # Update the variables that store the last selected line and handler list
+   updateHandlerList
+    
+   updateSelectedHandler
+    
+   # Update the toolbar so that the handlers list can reflect the new selection. For efficiency we pass
+   # a parameter to the update command which tells it that the selected handler can be assumed to be
+   # up to date, so it doesn't need to evaluate it again (as we just updated it).
+   local tTrueString
+   put "true" into tTrueString
+     
+   # OK-2009-10-05: Optimized this a little. The previous call to update was doing quite a bit of stuff
+   # that is not required here. I factored out the stuff that we actually need into a new method, which
+   # is now called instead.
+   -- send "update tTrueString" to group "Toolbar" of stack (revTargetStack(the long id of me))
+   send "updateSelectedHandler tTrueString" to group "Toolbar" of stack (revTargetStack(the long id of me))
+   # Update the left bar in the same way as the toolbar is updated
+   # OK-2009-10-05: Some more optimization here, the update method was doing a lot of stuff that is not
+   # needed, so I added a more specific method to handle this situation.
+   send "updateSelectedHandler" to group "Left Bar" of stack (revTargetStack(the long id of me))
+   unlock screen
+   pass selectionUpdate
+end selectionUpdate
+
 # Parameters
 #   pObjectId : reference to the object to set the script to. Must be one of the target objects of the script editor.
 # Description
