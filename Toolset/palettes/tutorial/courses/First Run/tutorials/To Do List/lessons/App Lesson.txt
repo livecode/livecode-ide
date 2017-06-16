@@ -542,9 +542,12 @@ action
 end step
 
 step "Delete mouseUp"
-	Just like for the 'Add' icon the 'Delete' icon will respond to the 'mouseUp' message.
+	Just like for the 'Add' icon the 'Delete' icon will respond to the 
+	'mouseUp' message.
 
-	When the user clicks on the 'Delete' icon the task that is selected in the list will be deleted. We will confirm the deletion with the user before deleting the task.
+	When the user clicks on the 'Delete' icon the task that is selected 
+	in the list will be deleted. We will confirm the deletion with the 
+	user before deleting the task.
 
 	Add this handler to the script of the 'Delete' icon.
 
@@ -576,7 +579,8 @@ action
 end step
 
 step "Test Delete Task"
-	Select the first task and click the 'Delete' icon. Answer 'Yes' when presented with the delete options.
+	Select the first task and click the 'Delete' icon. Answer 'Yes' when 
+	presented with the delete options.
 
 	The task will be deleted from the list.
 action
@@ -594,21 +598,27 @@ action
 end step
 
 step "Saving Data Interlude"
-	Once you have built your app into a standalone it can't be changed, so any data that should persist between uses of the app has to be saved outside the app itself.
+	Once you have built your app into a standalone it can't be changed, 
+	so any data that should persist between uses of the app has to be 
+	saved outside the app itself.
 
-	We want the tasks we add to be saved when we close the app so we need to save the task list when the app is closed and read it in when the app is opened.
+	We want the tasks we add to be saved when we close the app so we 
+	need to save the task list when the app is closed and read it in 
+	when the app is opened.
 action
 	interlude
 	go to step "closeStack handler"
 end step
 
 step "closeStack handler"
-	When a stack is closed it receives a 'CloseStack' message. Any clean up can
-	be done in this handler.
+	When a stack is closed it receives a 'CloseStack' message. Any 
+	clean-up can be done in this handler.
 
-	In this app we will save the list of tasks before the app is closed. The contents
-	of the 'TaskList' field are saved to a text file in the 'Documents' folder, ready
-	to be loaded in the next time the app is opened. There is a 'Documents' folder on all platforms so this code will work on desktop and mobile.
+	In this app we will save the list of tasks before the app is closed. 
+	The contents of the 'TaskList' field are saved to a text file in the 
+	'Documents' folder, ready to be loaded in the next time the app is 
+	opened. There is a 'Documents' folder on all platforms so this code 
+	will work on desktop and mobile.
 action
 	interlude
 	go to step "Select Stack For Editor"
@@ -623,11 +633,14 @@ action
 end step
 
 step "Open Stack Script"
-	Just like the SVG icons and other objects a Stack can have code associated with it and receive messages.
+	Just like the SVG icons and other objects a Stack can have code 
+	associated with it and receive messages.
 
-	The CloseStack message is sent to the stack so will be handled on the Stack Script.
+	The CloseStack message is sent to the stack so will be handled on 
+	the Stack Script.
 
-	Click on the Object menu, and select 'Stack Script' to open the Script Editor for the stack.
+	Click on the Object menu, and select 'Stack Script' to open the 
+	Script Editor for the stack.
 action
 	highlight menu item "Stack Script" of menu "Object"
 	wait until there is a script editor for stack "Mainstack"
@@ -635,7 +648,9 @@ action
 end step
 
 step "closeStack code"
-	In the closeStack handler we work out the full path to the text file that will be user to store the To To list and save the contents of the field to the text file.
+	In the closeStack handler we work out the full path to the text 
+	file that will be used to store the To Do list and save the 
+	contents of the field to the text file.
 
 	Add this handler to the Stack Script and press 'Apply'.
 script
@@ -651,10 +666,12 @@ action
 end step
 
 step "preOpenStack code"
-	When a stack is opened it receives a 'PreOpenStack' message. Any set up can
-	be done in this handler, before the stack becomes visible to the user.
+	When a stack is opened it receives a 'PreOpenStack' message. Any 
+	set-up can be done in this handler, before the stack becomes visible 
+	to the user.
 
-	When the stack is opened we will load in the saved tasks form the text file in the 'Documents' folder.
+	When the stack is opened we will load in the saved tasks form the 
+	text file in the 'Documents' folder.
 
 	Add this handler to the Stack Script and press 'Apply'.
 script
@@ -676,9 +693,13 @@ action
 end step
 
 step "Save Standalone"
-	Before you can prepare your app for sharing you need to set is up to build as a self contained, or 'standalone' app.
+	Before you can prepare your app for sharing you need to set is up to 
+	build as a self contained, or 'standalone' app.
 
-	You set up this up by selecting the platforms you want to build for and setting some properties for the app. You then choose "Save As Standalone Application..." from the File menu. This will build the executable files for the selected platforms.
+	You set up this up by selecting the platforms you want to build for 
+	and setting some properties for the app. You then choose "Save As 
+	Standalone Application..." from the File menu. This will build the 
+	executable files for the selected platforms.
 
 	For more details see this lesson
 url
