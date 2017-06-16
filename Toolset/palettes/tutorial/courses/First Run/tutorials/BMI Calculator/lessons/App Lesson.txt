@@ -1107,7 +1107,7 @@ action
 end step
 
 step "Set Item Icon"
-	Click the grey icon on the new row of the Navigation Data, to bring
+	Click the left hand icon on the new row of the Navigation Data, to bring
 	up the icon picker, and set the icon of the new navigation item to 
 	the "bar chart" icon.
 action 
