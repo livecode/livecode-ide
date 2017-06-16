@@ -54,7 +54,7 @@ command getDirty pObject
 end getDirty
 
 command setObjectID pObjectID
-   put revRuggedId(pObjectID) into sObjectID
+   put pObjectID into sObjectID
 end setObjectID
 
 function getObjectID
