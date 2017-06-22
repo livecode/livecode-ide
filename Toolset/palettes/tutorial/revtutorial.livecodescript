@@ -920,7 +920,7 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       put true into tHasPointer
    end if
    
-   local tWidth, tHeight 
+   local tContentWidth, tContentHeight 
    local tMessageHeight, tMessageWidth
    if pWidthOverride is not empty then
       put max(kMessageWidth, pWidthOverride) into tMessageWidth
@@ -932,8 +932,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    
    set the height of tMsgFieldID to tMessageHeight
    
-   put tMessageHeight + kMargin * 2 into tHeight
-   put the formattedWidth of tMsgFieldID + kMargin * 2 into tWidth
+   put tMessageHeight + kMargin * 2 into tContentHeight
+   put the formattedWidth of tMsgFieldID + kMargin * 2 into tContentWidth
    
    if tHasScript then
       local tScriptHeight
@@ -951,26 +951,26 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       end if
       
       set the height of tScriptFieldID to tScriptHeight
-      add tScriptHeight + kMargin * 2 to tHeight
+      add tScriptHeight + kMargin * 2 to tContentHeight
       
-      put max(tWidth, the width of tScriptFieldID + kMargin * 2) into tWidth
+      put max(tContentWidth, the width of tScriptFieldID + kMargin * 2) into tContentWidth
    end if
    
    if tHasUrl then
-      add the height of tUrlControlID + kMargin * 2 to tHeight
-      put max(tWidth, the width of tUrlControlID + kMargin * 2) into tWidth
+      add the height of tUrlControlID + kMargin * 2 to tContentHeight
+      put max(tContentWidth, the width of tUrlControlID + kMargin * 2) into tContentWidth
    end if
    
    if tActionButton is not empty then
       set the height of tActionButton to the formattedHeight of tActionButton
       set the width of tActionButton to the formattedWidth of tActionButton
       show tActionButton
-      add the height of tActionButton + kMargin to tHeight
+      add the height of tActionButton + kMargin to tContentHeight
    end if
    
    if tHasImage then
-      add the formattedheight of tImageID + kMargin * 2 to tHeight
-      put max(tWidth, the formattedwidth of tImageID + kMargin * 2) into tWidth
+      add the formattedheight of tImageID + kMargin * 2 to tContentHeight
+      put max(tContentWidth, the formattedwidth of tImageID + kMargin * 2) into tContentWidth
    end if
    
    # Work out what screen the tutorial stack should be on
@@ -985,14 +985,14 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    
    local tPointer
    if tHasPointer then
-      put revTutorialPointerCompute(tWidth, tHeight, tScreenRect, tRect, tPointVertical) \ 
+      put revTutorialPointerCompute(tContentWidth, tContentHeight, tScreenRect, tRect, tPointVertical) \ 
             into tPointer
    end if
    
    if tPointer is not empty then
       if revTutorialPointerDifferent(tPointer) then
          // Create the windowshape for the stack and pointer
-         revTutorialCreateStack tWidth, tHeight, tPointer
+         revTutorialCreateStack tContentWidth, tContentHeight, tPointer
       end if
    else
       set the windowshape of stack "revTutorial" to empty
@@ -1004,12 +1004,16 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    local tMessageLeft, tMessageTop
    put kMargin into tMessageLeft
    put kMargin into tMessageTop
+   
+   local tWidth, tHeight
    if tPointer is not empty then
-      revTutorialPositionStackAndPointer tWidth, tHeight, tRect, tPointer
+      revTutorialPositionStackAndPointer tContentWidth, tContentHeight, tRect, tPointer, tWidth, tHeight
       add revTutorialPointerLeftOverhang(tPointer) to tMessageLeft
       add revTutorialPointerTopOverhang(tPointer) to tMessageTop
    else
-      set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
+      put tContentWidth into tWidth
+      put tContentHeight into tHeight
+      set the rect of stack "revTutorial" to 0, 0, tContentWidth, tContentHeight
       set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
    end if
    
@@ -1018,8 +1022,8 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       put tWidth - kMargin into tButtonRight
       put tHeight - kMargin into tButtonBottom
       
-      subtract revTutorialPointerRightOverhang(tPointer) from tButtonRight
-      subtract revTutorialPointerBottomOverhang(tPointer) from tButtonBottom
+      subtract revTutorialPointerRightOverhang(tPointer, tContentWidth) from tButtonRight
+      subtract revTutorialPointerBottomOverhang(tPointer, tContentHeight) from tButtonBottom
       set the bottomright of tActionButton to tButtonRight,tButtonBottom
    end if
    
@@ -1047,12 +1051,15 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    unlock screen
 end revTutorialPositionStack
 
-command revTutorialPositionStackAndPointer @xContentWidth, @xContentHeight, pHighlightRect, pPointer
+command revTutorialPositionStackAndPointer pContentWidth, pContentHeight, pHighlightRect, pPointer, @rWidth, @rHeight
    local tStackLeft, tStackTop, tWidth, tHeight
-   revTutorialPointerStackPosition xContentWidth, xContentHeight, pHighlightRect, pPointer, tStackLeft, tStackTop
-   revTutorialPointerStackSize xContentWidth, xContentHeight, pPointer
-   set the rect of stack "revTutorial" to 0, 0, xContentWidth, xContentHeight
+   revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, tStackLeft, tStackTop
+   revTutorialPointerStackSize pContentWidth, pContentHeight, pPointer, tWidth, tHeight
+   set the rect of stack "revTutorial" to 0, 0, tWidth, tHeight
    set the topleft of stack "revTutorial" to tStackLeft, tStackTop
+   
+   put tWidth into rWidth
+   put tHeight into rHeight
 end revTutorialPositionStackAndPointer   
 
 constant kPointerHeight = 30
@@ -1124,12 +1131,12 @@ end revTutorialCreateStack
 
 private function revTutorialPointerSide pPointer
    set the itemdelimiter to "-"
-   return item 1 of pPointer
+   return item 1 of pPointer["position"]
 end revTutorialPointerSide
 
 private function revTutorialPointerPositionOnSide pPointer
    set the itemdelimiter to "-"
-   return item 2 of pPointer
+   return item 2 of pPointer["position"]
 end revTutorialPointerPositionOnSide
 
 private function revTutorialPointerVertical pPointer
@@ -1144,7 +1151,7 @@ private function revTutorialPointerLeft pPointer
 end revTutorialPointerLeft
 
 private function revTutorialPointerSource pPointer, pStackWidth, pStackHeight
-   switch pPointer
+   switch pPointer["position"]
       case "top-left"
          return kPointerOffset, 0
       case "top-right"
@@ -1174,37 +1181,52 @@ command revTutorialSetPointer pPointer
 end revTutorialSetPointer
 
 function revTutorialPointerDifferent pPointer
-   return revTutorialPointerSide(pPointer) is not \ 
-         revTutorialPointerSide(sPointer)
+   return pPointer is not sPointer
 end revTutorialPointerDifferent
 
 function revTutorialPointerLeftOverhang pPointer
-   if revTutorialPointerSide(pPointer) is "left" then
-      return kPointerWidth / 2
+   if pPointer["style"] is "original" then
+      if revTutorialPointerSide(pPointer) is "left" then
+         return kPointerWidth / 2
+      end if  
+   else if pPointer["end"]["x"] < 0 then
+      return -(pPointer["end"]["x"])
    end if
    
    return 0
 end revTutorialPointerLeftOverhang
 
 function revTutorialPointerTopOverhang pPointer
-   if revTutorialPointerSide(pPointer) is "top" then
-      return kPointerWidth / 2
+   if pPointer["style"] is "original" then
+      if revTutorialPointerSide(pPointer) is "top" then
+         return kPointerWidth / 2
+      end if  
+   else if pPointer["end"]["y"] < 0 then
+      return -(pPointer["end"]["y"])
    end if
    
    return 0
 end revTutorialPointerTopOverhang
 
-function revTutorialPointerRightOverhang pPointer
-   if revTutorialPointerSide(pPointer) is "right" then
-      return kPointerWidth / 2
+function revTutorialPointerRightOverhang pPointer, pWidth
+   if pPointer["style"] is "original" then
+      if revTutorialPointerSide(pPointer) is "right" then
+         return kPointerWidth / 2
+      end if  
+   else if pPointer["end"]["x"] > pWidth then
+      return pPointer["end"]["x"] - pWidth
    end if
    
    return 0
 end revTutorialPointerRightOverhang
 
-function revTutorialPointerBottomOverhang pPointer
-   if revTutorialPointerSide(pPointer) is "bottom" then
-      return kPointerWidth / 2
+function revTutorialPointerBottomOverhang pPointer, pHeight
+   if pPointer["style"] is "original" then
+      if revTutorialPointerSide(pPointer) is "bottom" then
+         return kPointerWidth / 2
+      end if  
+   else if pPointer["end"]["y"] > pHeight then
+      return pPointer["end"]["y"] - pHeight
    end if
    
    return 0
@@ -1302,7 +1324,11 @@ private function revTutorialPointerCompute pContentWidth, pContentHeight, pScree
    if not tCanFit then
       return empty
    end if
-   return revTutorialPointerPositionCompute(tPointerVertical, tPointerLeft, tPointerTop)
+   local tPointer
+   put revTutorialPointerPositionCompute(tPointerVertical, tPointerLeft, tPointerTop) \
+         into tPointer["position"]
+   put "original" into tPointer["style"]
+   return tPointer
 end revTutorialPointerCompute
 
 private command revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
@@ -1342,11 +1368,13 @@ private command revTutorialPointerStackPosition pContentWidth, pContentHeight, p
    put tStackLeft into rStackLeft
 end revTutorialPointerStackPosition
 
-command revTutorialPointerStackSize @xWidth, @xHeight, pPointer
+command revTutorialPointerStackSize pContentWidth, pContentHeight, pPointer, @rWidth, @rHeight
    if revTutorialPointerVertical(pPointer) then
-      add kPointerWidth / 2 to xHeight
+      put pContentHeight + kPointerWidth / 2 into rHeight
+      put pContentWidth into rWidth
    else
-      add kPointerWidth / 2 to xWidth
+      put pContentWidth + kPointerWidth / 2 into rWidth
+      put pContentHeight into rHeight
    end if
 end revTutorialPointerStackSize
 
