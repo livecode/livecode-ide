@@ -1090,26 +1090,35 @@ command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
    
    create graphic "Pointer" in tGroup
    put it into tPointer
-   set the style of tPointer to "regular"
-   set the polysides of tPointer to 4
    
-   local tSide, tPos
+   local tSide, tPos, tSource
    put revTutorialPointerSide(pPointer) into tSide
    put revTutorialPointerPositionOnSide(pPointer) into tPos
-   
-   if revTutorialPointerVertical(pPointer) then
-      set the width of tPointer to kPointerHeight
-      set the height of tPointer to kPointerWidth
-   else
-      set the width of tPointer to kPointerWidth
-      set the height of tPointer to kPointerHeight
-   end if
-   
-   local tSource
    put revTutorialPointerSource(pPointer, pContentWidth, pContentHeight) into tSource
-   set the loc of tPointer to \ 
-         the left of tGraphic + item 1 of tSource, \
-         the top of tGraphic + item 2 of tSource
+   
+   if pPointer["style"] is "original" then
+      set the style of tPointer to "regular"
+      set the polysides of tPointer to 4
+      
+      if revTutorialPointerVertical(pPointer) then
+         set the width of tPointer to kPointerHeight
+         set the height of tPointer to kPointerWidth
+      else
+         set the width of tPointer to kPointerWidth
+         set the height of tPointer to kPointerHeight
+      end if
+      
+      set the loc of tPointer to \ 
+            the left of tGraphic + item 1 of tSource, \
+            the top of tGraphic + item 2 of tSource
+   else
+      set the style of tPointer to "line"
+      set the lineSize of tPointer to 3
+      
+      local tTarget
+      put tPointer["end"]["x"], tPointer["end"]["y"] into tTarget
+      set the points of tPointer to tTarget & return & tSource
+   end if
    
    reset the templateGraphic
    set the properties of the templategraphic to tProps
@@ -1170,6 +1179,44 @@ private function revTutorialPointerSource pPointer, pStackWidth, pStackHeight
          return 0, kPointerOffset
    end switch
 end revTutorialPointerSource
+
+private command revTutorialPointerComputeTarget pContentWidth, pContentHeight, pHighlightRect, pStackTopLeft, @xPointer
+   local tLeft, tTop, tRight, tBottom
+   put item 1 of pHighlightRect into tLeft
+   put item 2 of pHighlightRect into tTop
+   put item 3 of pHighlightRect into tRight
+   put item 4 of pHighlightRect into tBottom
+   
+   local tSide
+   put revTutorialPointerSide(xPointer) into tSide
+   
+   local tSource
+   put revTutorialPointerSource(xPointer, pContentWidth, pContentHeight) into tSource
+   
+   local tAbsoluteX, tAbsoluteY
+   switch tSide
+      case "top"
+         put tBottom + kPointerPadding into tAbsoluteY
+         put (tRight + tLeft) / 2 into tAbsoluteX
+         break
+      case "bottom"
+         put tTop - pContentHeight - kPointerPadding into tAbsoluteY
+         put (tRight + tLeft) / 2 into tAbsoluteX
+         break
+      case "left"
+         put tRight + kPointerPadding into tAbsoluteX
+         put (tTop + tBottom) / 2 into tAbsoluteY
+         break
+      case "right"
+         put tLeft - pContentWidth - kPointerPadding into tAbsoluteX
+         put (tTop + tBottom) / 2 into tAbsoluteY
+         break
+   end switch
+   
+   put tAbsoluteX - item 1 of tSource into xPointer["end"]["x"]
+   put tAbsoluteY - item 2 of tSource into xPointer["end"]["y"]
+   put pStackTopLeft into xPointer["stacktopleft"]
+end revTutorialPointerComputeTarget
 
 local sPointer
 function revTutorialStackHasPointer
@@ -1308,6 +1355,29 @@ private command revTutorialTryToFitWithPointer pContentWidth, pContentHeight, pS
    put true into rCanFit
 end revTutorialTryToFitWithPointer
 
+private function revTutorialPointerComputeForTopLeft pWidth, pHeight, pTargetRect, pStackTopLeft
+   # Determine where the target rect is wrt the new stack position
+   local tLeftOffset, tTopOffset
+   put item 1 of pStackTopLeft - item 1 of pTargetRect into tLeftOffset
+   put item 2 of pStackTopLeft - item 2 of pTargetRect into tTopOffset
+   
+   local tPointerVertical, tPointerLeft, tPointerTop
+   if tLeftOffset >= -(pWidth / 2) then
+      put true into tPointerLeft
+   end if
+   if tTopOffset >= -(pHeight / 2) then
+      put true into tPointerTop
+   end if
+   put tTopOffset >= tLeftOffset into tPointerVertical
+   
+   local tPointer
+   put revTutorialPointerPositionCompute(tPointerVertical, tPointerLeft, tPointerTop) \
+         into tPointer["position"]
+   revTutorialPointerComputeTarget pWidth, pHeight, pTargetRect, pStackTopLeft, tPointer
+   put "override" into tPointer["style"]
+   return tPointer
+end revTutorialPointerComputeForTopLeft
+
 private function revTutorialPointerCompute pContentWidth, pContentHeight, pScreenRect, pHighlightRect, pPointerVertical
    local tPointerVertical, tPointerLeft, tPointerTop, tCanFit
    put pPointerVertical into tPointerVertical
@@ -1331,7 +1401,7 @@ private function revTutorialPointerCompute pContentWidth, pContentHeight, pScree
    return tPointer
 end revTutorialPointerCompute
 
-private command revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
+private command revTutorialPointerStackPositionOriginal pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
    local tLeft, tTop, tRight, tBottom
    put item 1 of pHighlightRect into tLeft
    put item 2 of pHighlightRect into tTop
@@ -1366,16 +1436,36 @@ private command revTutorialPointerStackPosition pContentWidth, pContentHeight, p
    
    put tStackTop into rStackTop
    put tStackLeft into rStackLeft
+end revTutorialPointerStackPositionOriginal
+
+private command revTutorialPointerStackPositionOverride pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
+   local tTopLeftOverride
+   put pPointer["stacktopleft"] into tTopLeftOverride
+   
+   put item 1 of tTopLeftOverride - revTutorialPointerLeftOverhang(pPointer) into rStackLeft
+   put item 2 of tTopLeftOverride - revTutorialPointerTopOverhang(pPointer) into rStackTop
+end revTutorialPointerStackPositionOverride
+
+private command revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
+   if pPointer["style"] is "original" then
+      revTutorialPointerStackPositionOriginal pContentWidth, pContentHeight, pHighlightRect, pPointer, rStackLeft, rStackTop
+   else
+      revTutorialPointerStackPositionOverride pContentWidth, pContentHeight, pHighlightRect, pPointer, rStackLeft, rStackTop
+   end if
 end revTutorialPointerStackPosition
 
 command revTutorialPointerStackSize pContentWidth, pContentHeight, pPointer, @rWidth, @rHeight
-   if revTutorialPointerVertical(pPointer) then
-      put pContentHeight + kPointerWidth / 2 into rHeight
-      put pContentWidth into rWidth
-   else
-      put pContentWidth + kPointerWidth / 2 into rWidth
-      put pContentHeight into rHeight
-   end if
+   local tWidth, tHeight
+   put pContentWidth into tWidth
+   put pContentHeight into tHeight
+   
+   add revTutorialPointerLeftOverhang(pPointer) to tWidth
+   add revTutorialPointerRightOverhang(pPointer, pContentWidth) to tWidth
+   add revTutorialPointerTopOverhang(pPointer) to tHeight
+   add revTutorialPointerBottomOverhang(pPointer, pContentHeight) to tHeight
+   
+   put tWidth into rWidth
+   put tHeight into rHeight
 end revTutorialPointerStackSize
 
 ##############################################################################
