@@ -828,7 +828,11 @@ constant kMaxScriptHeight = 200
 
 local sDontShow
 local sLastShape
-on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
+on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical, pTopLeftOverride
+   if pTopLeftOverride is not empty then
+      revTutorialSetTopLeftOverride true
+   end if
+   
    local tGotItButtonID, tCopyButtonID, tDoItButtonID
    local tMsgFieldID, tScriptFieldID, tImageID
    local tActionButton
@@ -985,18 +989,28 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    
    local tPointer
    if tHasPointer then
-      put revTutorialPointerCompute(tContentWidth, tContentHeight, tScreenRect, tRect, tPointVertical) \ 
-            into tPointer
+      if not revTutorialIsDraggingWindow() then
+         if pTopLeftOverride is empty then
+            put revTutorialPointerCompute(tContentWidth, tContentHeight, tScreenRect, tRect, tPointVertical) \ 
+                  into tPointer
+         else
+            put revTutorialPointerComputeForTopLeft(tContentWidth, tContentHeight, tRect, pTopLeftOverride) \ 
+                  into tPointer
+         end if
+      else
+         put revTutorialGetPointer() into tPointer
+         revTutorialSetPointer empty
+      end if
    end if
    
-   if tPointer is not empty then
-      if revTutorialPointerDifferent(tPointer) then
+   if revTutorialPointerDifferent(tPointer) then
+      if tPointer is not empty then
          // Create the windowshape for the stack and pointer
          revTutorialCreateStack tContentWidth, tContentHeight, tPointer
+      else      
+         set the windowshape of stack "revTutorial" to empty
+         set the decorations of stack "revTutorial" to empty
       end if
-   else
-      set the windowshape of stack "revTutorial" to empty
-      set the decorations of stack "revTutorial" to empty
    end if
    
    revTutorialSetPointer tPointer
@@ -1014,7 +1028,12 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       put tContentWidth into tWidth
       put tContentHeight into tHeight
       set the rect of stack "revTutorial" to 0, 0, tContentWidth, tContentHeight
-      set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
+      if pTopLeftOverride is empty then
+         set the loc of stack "revTutorial" to item 3 of tScreenRect / 2, item 4 of tScreenRect / 2
+      else
+         set the topleft of stack "revTutorial" to pTopLeftOverride
+      end if
+      revTutorialSetEffectiveTopLeft the topleft of stack "revTutorial"
    end if
    
    if tActionButton is not empty then
@@ -1033,7 +1052,6 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
       set the backColor of stack "revTutorial" to revTutorialMessageColor()
    end if
    
-   
    set the topleft of tMsgFieldID to tMessageLeft, tMessageTop
    local tOtherTop
    put kMargin + the bottom of tMsgFieldID into tOtherTop
@@ -1051,6 +1069,28 @@ on revTutorialPositionStack pStack, pObject, pWidthOverride, pForceVertical
    unlock screen
 end revTutorialPositionStack
 
+local sEffectiveTopLeft
+private command revTutorialSetEffectiveTopLeft pStackTopLeft
+   put pStackTopLeft into sEffectiveTopLeft
+end revTutorialSetEffectiveTopLeft
+
+private function revTutorialGetEffectiveTopLeft
+   return sEffectiveTopLeft
+end revTutorialGetEffectiveTopLeft
+
+local sTopLeftOverride
+private function revTutorialTopLeftOverride
+   if sTopLeftOverride then
+      return revTutorialGetEffectiveTopLeft()
+   end if
+   
+   return empty
+end revTutorialTopLeftOverride
+
+private command revTutorialSetTopLeftOverride pValue
+   put pValue into sTopLeftOverride
+end revTutorialSetTopLeftOverride
+
 command revTutorialPositionStackAndPointer pContentWidth, pContentHeight, pHighlightRect, pPointer, @rWidth, @rHeight
    local tStackLeft, tStackTop, tWidth, tHeight
    revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, tStackLeft, tStackTop
@@ -1062,11 +1102,11 @@ command revTutorialPositionStackAndPointer pContentWidth, pContentHeight, pHighl
    put tHeight into rHeight
 end revTutorialPositionStackAndPointer   
 
-constant kPointerHeight = 30
-constant kPointerWidth = 40
-constant kPointerOffset = 40
-constant kPointerPadding = 5
 command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
+   if the platform is "win32" then
+      set the windowshape of stack "revTutorial" to empty
+   end if
+   
    # Store templategraphic props (in case we have a graphic tool selected)
    local tProps
    put the properties of the templategraphic into tProps
@@ -1078,6 +1118,7 @@ command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
    set the opaque of the templateGraphic to true
+   
    create group "Group"
    put it into tGroup
    set the margins of it to 0
@@ -1087,49 +1128,33 @@ command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
    set the style of it to "rectangle"
    set the width of it to pContentWidth
    set the height of it to pContentHeight
+   set the topleft of it to 0,0
    
    create graphic "Pointer" in tGroup
    put it into tPointer
    
-   local tSide, tPos, tSource
-   put revTutorialPointerSide(pPointer) into tSide
-   put revTutorialPointerPositionOnSide(pPointer) into tPos
-   put revTutorialPointerSource(pPointer, pContentWidth, pContentHeight) into tSource
+   revTutorialPointerSetGraphicProps tPointer, tGraphic, pPointer, pContentWidth, pContentHeight
    
-   if pPointer["style"] is "original" then
-      set the style of tPointer to "regular"
-      set the polysides of tPointer to 4
-      
-      if revTutorialPointerVertical(pPointer) then
-         set the width of tPointer to kPointerHeight
-         set the height of tPointer to kPointerWidth
-      else
-         set the width of tPointer to kPointerWidth
-         set the height of tPointer to kPointerHeight
-      end if
-      
-      set the loc of tPointer to \ 
-            the left of tGraphic + item 1 of tSource, \
-            the top of tGraphic + item 2 of tSource
-   else
-      set the style of tPointer to "line"
-      set the lineSize of tPointer to 3
-      
-      local tTarget
-      put tPointer["end"]["x"], tPointer["end"]["y"] into tTarget
-      set the points of tPointer to tTarget & return & tSource
+   set the rect of stack "revTutorial" to the formattedRect of tGroup
+   if revTutorialIsDraggingWindow() then
+      set the visible of tPointer to false
    end if
+   
+   set the topleft of tGroup to 0,0
    
    reset the templateGraphic
    set the properties of the templategraphic to tProps
    
    import snapshot from rect (the rect of tGroup) of tGroup
+   
    set the id of the last image to the id of stack "revIcons"
    put the long id of the last image into tWindowShape
+   set the topleft of tWindowShape to 0,0
    delete tGroup
    
    set the windowshape of stack "revTutorial" to the id of tWindowShape
    delete tWindowShape
+   
 end revTutorialCreateStack
 
 ##############################################################################
@@ -1137,6 +1162,41 @@ end revTutorialCreateStack
 #                     POINTER MANAGEMENT
 #
 ##############################################################################
+
+constant kPointerHeight = 30
+constant kPointerWidth = 40
+constant kPointerOffset = 40
+constant kPointerPadding = 5
+private command revTutorialPointerSetGraphicProps pPointerObj, pContentGraphic, pPointer, pContentWidth, pContentHeight
+   local tSide, tPos, tSource
+   put revTutorialPointerSide(pPointer) into tSide
+   put revTutorialPointerPositionOnSide(pPointer) into tPos
+   put revTutorialPointerSource(pPointer, pContentWidth, pContentHeight) into tSource
+   
+   if pPointer["style"] is "original" then
+      set the style of pPointerObj to "regular"
+      set the polysides of pPointerObj to 4
+      
+      if revTutorialPointerVertical(pPointer) then
+         set the width of pPointerObj to kPointerHeight
+         set the height of pPointerObj to kPointerWidth
+      else
+         set the width of pPointerObj to kPointerWidth
+         set the height of pPointerObj to kPointerHeight
+      end if
+      
+      set the loc of pPointerObj to \ 
+            the left of pContentGraphic + item 1 of tSource, \
+            the top of pContentGraphic + item 2 of tSource
+   else
+      set the style of pPointerObj to "line"
+      set the lineSize of pPointerObj to 3
+      
+      local tTarget
+      put pPointer["end"]["x"], pPointer["end"]["y"] into tTarget
+      set the points of pPointerObj to tTarget & return & tSource
+   end if
+end revTutorialPointerSetGraphicProps
 
 private function revTutorialPointerSide pPointer
    set the itemdelimiter to "-"
@@ -1200,7 +1260,7 @@ private command revTutorialPointerComputeTarget pContentWidth, pContentHeight, p
          put (tRight + tLeft) / 2 into tAbsoluteX
          break
       case "bottom"
-         put tTop - pContentHeight - kPointerPadding into tAbsoluteY
+         put tTop - kPointerPadding into tAbsoluteY
          put (tRight + tLeft) / 2 into tAbsoluteX
          break
       case "left"
@@ -1208,13 +1268,13 @@ private command revTutorialPointerComputeTarget pContentWidth, pContentHeight, p
          put (tTop + tBottom) / 2 into tAbsoluteY
          break
       case "right"
-         put tLeft - pContentWidth - kPointerPadding into tAbsoluteX
+         put tLeft - kPointerPadding into tAbsoluteX
          put (tTop + tBottom) / 2 into tAbsoluteY
          break
    end switch
    
-   put tAbsoluteX - item 1 of tSource into xPointer["end"]["x"]
-   put tAbsoluteY - item 2 of tSource into xPointer["end"]["y"]
+   put tAbsoluteX - item 1 of pStackTopLeft into xPointer["end"]["x"]
+   put tAbsoluteY - item 2 of pStackTopLeft into xPointer["end"]["y"]
    put pStackTopLeft into xPointer["stacktopleft"]
 end revTutorialPointerComputeTarget
 
@@ -1223,15 +1283,23 @@ function revTutorialStackHasPointer
    return sPointer is not empty
 end revTutorialStackHasPointer
 
-command revTutorialSetPointer pPointer
+private command revTutorialSetPointer pPointer
    put pPointer into sPointer
 end revTutorialSetPointer
+
+private function revTutorialGetPointer pPointer
+  return sPointer
+end revTutorialGetPointer
 
 function revTutorialPointerDifferent pPointer
    return pPointer is not sPointer
 end revTutorialPointerDifferent
 
 function revTutorialPointerLeftOverhang pPointer
+   if revTutorialIsDraggingWindow() then
+      return 0
+   end if
+   
    if pPointer["style"] is "original" then
       if revTutorialPointerSide(pPointer) is "left" then
          return kPointerWidth / 2
@@ -1244,6 +1312,10 @@ function revTutorialPointerLeftOverhang pPointer
 end revTutorialPointerLeftOverhang
 
 function revTutorialPointerTopOverhang pPointer
+   if revTutorialIsDraggingWindow() then
+      return 0
+   end if
+   
    if pPointer["style"] is "original" then
       if revTutorialPointerSide(pPointer) is "top" then
          return kPointerWidth / 2
@@ -1256,6 +1328,10 @@ function revTutorialPointerTopOverhang pPointer
 end revTutorialPointerTopOverhang
 
 function revTutorialPointerRightOverhang pPointer, pWidth
+   if revTutorialIsDraggingWindow() then
+      return 0
+   end if
+   
    if pPointer["style"] is "original" then
       if revTutorialPointerSide(pPointer) is "right" then
          return kPointerWidth / 2
@@ -1268,6 +1344,10 @@ function revTutorialPointerRightOverhang pPointer, pWidth
 end revTutorialPointerRightOverhang
 
 function revTutorialPointerBottomOverhang pPointer, pHeight
+   if revTutorialIsDraggingWindow() then
+      return 0
+   end if
+   
    if pPointer["style"] is "original" then
       if revTutorialPointerSide(pPointer) is "bottom" then
          return kPointerWidth / 2
@@ -1292,7 +1372,7 @@ private function revTutorialPointerPositionCompute pPointerVertical, pPointerLef
    else
       put "right" into tLeftRight
    end if
-   
+
    if pPointerVertical then
       return tTopBottom & "-" & tLeftRight
    else
@@ -1357,18 +1437,24 @@ end revTutorialTryToFitWithPointer
 
 private function revTutorialPointerComputeForTopLeft pWidth, pHeight, pTargetRect, pStackTopLeft
    # Determine where the target rect is wrt the new stack position
+   local tStackLoc, tTargetLoc
+   put item 1 of pStackTopLeft + pWidth / 2,  \ 
+         item 2 of pStackTopLeft + pHeight / 2 into tStackLoc
+   put (item 1 of pTargetRect + item 3 of pTargetRect) / 2, \
+         (item 2 of pTargetRect + item 4 of pTargetRect) / 2 into tTargetLoc
+   
    local tLeftOffset, tTopOffset
-   put item 1 of pStackTopLeft - item 1 of pTargetRect into tLeftOffset
-   put item 2 of pStackTopLeft - item 2 of pTargetRect into tTopOffset
+   put item 1 of tTargetLoc - item 1 of tStackLoc into tLeftOffset
+   put item 2 of tTargetLoc - item 2 of tStackLoc into tTopOffset
    
    local tPointerVertical, tPointerLeft, tPointerTop
-   if tLeftOffset >= -(pWidth / 2) then
+   if tLeftOffset <= 0 then
       put true into tPointerLeft
    end if
-   if tTopOffset >= -(pHeight / 2) then
+   if tTopOffset <= 0 then
       put true into tPointerTop
    end if
-   put tTopOffset >= tLeftOffset into tPointerVertical
+   put abs(tTopOffset) >= abs(tLeftOffset) into tPointerVertical
    
    local tPointer
    put revTutorialPointerPositionCompute(tPointerVertical, tPointerLeft, tPointerTop) \
@@ -1414,7 +1500,7 @@ private command revTutorialPointerStackPositionOriginal pContentWidth, pContentH
    local tSource
    put revTutorialPointerSource(pPointer, pContentWidth, pContentHeight) into tSource
    
-   local tStackTop, tStackLeft
+   local tStackTop, tStackLeft, tEffectiveTop, tEffectiveLeft
    switch tSide
       case "top"
          put tBottom + kPointerPadding into tStackTop
@@ -1434,6 +1520,10 @@ private command revTutorialPointerStackPositionOriginal pContentWidth, pContentH
          break
    end switch
    
+   put tStackLeft - revTutorialPointerLeftOverhang(pPointer) into tEffectiveLeft
+   put tStackTop - revTutorialPointerTopOverhang(pPointer) into tEffectiveTop
+   
+   revTutorialSetEffectiveTopLeft (tEffectiveLeft, tEffectiveTop)
    put tStackTop into rStackTop
    put tStackLeft into rStackLeft
 end revTutorialPointerStackPositionOriginal
@@ -1444,6 +1534,8 @@ private command revTutorialPointerStackPositionOverride pContentWidth, pContentH
    
    put item 1 of tTopLeftOverride - revTutorialPointerLeftOverhang(pPointer) into rStackLeft
    put item 2 of tTopLeftOverride - revTutorialPointerTopOverhang(pPointer) into rStackTop
+   
+   revTutorialSetEffectiveTopLeft tTopLeftOverride
 end revTutorialPointerStackPositionOverride
 
 private command revTutorialPointerStackPosition pContentWidth, pContentHeight, pHighlightRect, pPointer, @rStackLeft, @rStackTop
@@ -1545,6 +1637,7 @@ on revInitialiseTutorial
    end if
    
    set the windowShape of stack "revTutorial" to empty
+   set the decorations of stack "revTutorial" to empty
    
    set the textStyle of stack "revTutorial" to "bold"
    set the textColor of stack "revTutorial" to "white"
@@ -1635,6 +1728,7 @@ on revTutorialInitialiseStep
    put false into sWaiting
    put false into sIsInterlude
    put 0 into sActionNumber
+   revTutorialSetTopLeftOverride false
 end revTutorialInitialiseStep
 
 on revFinaliseTutorial
@@ -2491,7 +2585,7 @@ on revTutorialHighlightPalette pPaletteName
    put pPaletteName into sHighlight["stack"]
    
    revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName(pPaletteName)
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightPalette
 
 function revTutorialPaletteForObject pPaletteName, pObject
@@ -2531,7 +2625,7 @@ on revTutorialHighlightObjectByID pObjID
    end if
    revIDESubscribe "ideStackMoved", revIDEStackOfObject(pObjID)
    revIDESubscribe "idePropertyChanged", pObjID
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightObjectByID
 
 on revTutorialHighlightItemOfPaletteForObject pPalette, pItem, pObject
@@ -2556,7 +2650,7 @@ on revTutorialHighlightItemOfStack pStackID, pItem
    put pItem into sHighlight["object"]
    put "object" into sHighlight["type"]
    revIDESubscribe "ideStackMoved", pStackID
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightItemOfStack
    
    
@@ -2577,7 +2671,7 @@ on revTutorialHighlightTool pTool
    revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("tools")
    put "tool" into sHighlight["type"]
    put pTool into sHighlight["tool"]
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightTool
 
 function revTutorialHighlightedPalette pPalette
@@ -2617,7 +2711,7 @@ on revTutorialHighlightInspector pSection, pGroup
    put "property" into sHighlight["type"]
    put pGroup into sHighlight["group"]
    put sLastObjects["inspector"] into sHighlight["object"]
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
    put false into sDismissA["inspector"]
 end revTutorialHighlightInspector
 
@@ -2629,7 +2723,7 @@ on revTutorialHighlightMenuItem pMenu, pItem
    revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("menubar")
    put "menu" into sHighlight["type"]
    put pMenu into sHighlight["menu"]
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightMenuItem
 
 on revTutorialHighlightToolbarItem pItem
@@ -2637,7 +2731,7 @@ on revTutorialHighlightToolbarItem pItem
    revIDESubscribe "ideStackMoved", the long id of stack revIDEPaletteToStackName("menubar")
    put "toolbar" into sHighlight["type"]
    put pItem into sHighlight["item"]
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightToolbarItem
 
 on disableToolsPalette
@@ -2700,7 +2794,7 @@ on revTutorialHighlightGuide pGuide
    revIDESubscribe "ideStackMoved", revIDEStackOfObject(sGuides[pGuide])
    put "guide" into sHighlight["type"]
    put pGuide into sHighlight["guide"]
-   revTutorialPositionStackForHighlight
+   revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
 end revTutorialHighlightGuide
 
 on revTutorialClearGuides
@@ -2872,7 +2966,7 @@ end ideNewCard
 on idePropertyChanged pObject
    # If a highlighted object moved then reposition the tutorial step pointer
    if not pObject begins with "stack" and revTutorialObjectIsHighlighted(pObject) then
-      revTutorialPositionStackForHighlight
+      revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
    end if
    
    if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
@@ -2894,7 +2988,7 @@ on ideStackMoved pStack
    put revIDEStackOfObject(pStack) into tStack
    # If the highlighted stack is moved, then reposition the tutorial step pointer
    if revTutorialObjectIsHighlighted(tStack) then
-      revTutorialPositionStackForHighlight
+      revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
    end if
 end ideStackMoved
 
@@ -2904,7 +2998,7 @@ on ideResumeStack pStack
    if not revTutorialObjectIsHighlighted(tStack) then
       # If the target stack is not highlighted then react accordingly
    else
-      revTutorialPositionStackForHighlight
+      revTutorialPositionStackForHighlight revTutorialTopLeftOverride()
    end if
 end ideResumeStack
 
@@ -2928,6 +3022,8 @@ on mouseDown
    put the long id of the target into tObject
    if word 1 of tObject is "button" then
       revTutorialSetPressedState tObject
+   else
+      revTutorialDragWindow
    end if
 end mouseDown
 
@@ -2937,6 +3033,8 @@ on mouseRelease
    if word 1 of tObject is "button" then
       revTutorialSetUnpressedState tObject
    end if
+   
+   revTutorialDragStop
 end mouseRelease
 
 on mouseUp pWhich
@@ -2960,7 +3058,67 @@ on mouseUp pWhich
    if word 1 of tObject is "button" then
       revTutorialSetUnpressedState tObject
    end if
+   
+   revTutorialDragStop
 end mouseUp
+
+on mouseMove
+   if revTutorialIsDraggingWindow() then
+      revTutorialTrackToMouse
+   end if
+end mouseMove
+
+local sMouseLoc, sMoved
+command revTutorialDragWindow
+   if sMouseLoc is not empty or the mouse is not "down" then
+      exit revTutorialDragWindow
+   end if
+   put the screenmouseloc into sMouseLoc
+end revTutorialDragWindow
+
+command revTutorialDragStart
+   lock screen
+   lock messages
+   local tTopLeft
+   put revTutorialGetEffectiveTopLeft() into tTopLeft
+   revTutorialOverrideLocation tTopLeft
+   unlock messages
+   unlock screen
+   
+   put true into sMoved
+end revTutorialDragStart
+
+command revTutorialDragStop
+   lock screen
+   lock messages
+   put empty into sMouseLoc
+   if sMoved then
+      revTutorialOverrideLocation the topleft of stack "revTutorial"
+   end if
+   put false into sMoved
+   unlock messages
+   unlock screen
+end revTutorialDragStop
+
+private function revTutorialIsDraggingWindow
+   return sMouseLoc is not empty
+end revTutorialIsDraggingWindow
+
+private command revTutorialTrackToMouse
+   if not sMoved then
+      revTutorialDragStart
+   end if
+   local tNewLoc, tNewTopLeft
+   put the screenmouseloc into tNewLoc
+   
+   local tTopLeft
+   put revTutorialGetEffectiveTopLeft() into tTopLeft
+   repeat with x = 1 to 2
+      put item x of tTopLeft + (item x of tNewLoc - item x of sMouseLoc) \ 
+            into item x of tNewTopLeft
+   end repeat
+   set the topleft of stack "revTutorial" to tNewTopLeft
+end revTutorialTrackToMouse
 
 on ideMouseDoubleUp pWhich, pTarget
    if sWait["wait condition"] is "state" and sWait["state"] is "double clicked" then
@@ -3104,33 +3262,40 @@ function revTutorialObjectIsHighlighted pObject
    return false
 end revTutorialObjectIsHighlighted
 
-on revTutorialPositionStackForHighlight
+on revTutorialPositionStackForHighlight pTopLeft
    lock screen
    switch sHighlight["type"]
       case "guide"
-         revTutorialPositionStack "", sGuides[sHighlight["guide"]]
+         revTutorialPositionStack "", sGuides[sHighlight["guide"]], "", "", pTopLeft
          break
       case "property"        
-         revTutorialPositionStack "inspector", sHighlight
+         revTutorialPositionStack "inspector", sHighlight, "", "", pTopLeft
          break
       case "menu"
-         revTutorialPositionStack "menubar", sHighlight["menu"]
+         revTutorialPositionStack "menubar", sHighlight["menu"], "", "", pTopLeft
          break
       case "toolbar"
-         revTutorialPositionStack "menubar", sHighlight["item"]
+         revTutorialPositionStack "menubar", sHighlight["item"], "", "", pTopLeft
          break
       case "tool"
-         revTutorialPositionStack "tools", sHighlight["tool"]
+         revTutorialPositionStack "tools", sHighlight["tool"], "", "", pTopLeft
          break
       case "object"  
-         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], "", sHighlight["line"] is not empty
+         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], "", sHighlight["line"] is not empty, pTopLeft
          break
       case "stack"
-         revTutorialPositionStack sHighlight["stack"], ""
+         revTutorialPositionStack sHighlight["stack"], "", "", "", pTopLeft
+         break
+      default
+         revTutorialPositionStack "", "", "", "", pTopLeft
          break
    end switch
    unlock screen
 end revTutorialPositionStackForHighlight
+
+on revTutorialOverrideLocation pTopLeft
+      revTutorialPositionStackForHighlight pTopLeft
+end revTutorialOverrideLocation
 
 on revTutorialClearHighlights
    switch sHighlight["type"]
