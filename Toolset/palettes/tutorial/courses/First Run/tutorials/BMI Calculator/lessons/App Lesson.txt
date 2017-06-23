@@ -90,6 +90,14 @@ action
 	add guide "Stack" with rect "0,0,320,480" to stack "Mainstack"
 	highlight guide "Stack"
 	wait until stack "Mainstack" fits guide "Stack" with tolerance 5
+	go to step "Select Stack For Inspector"
+end step
+
+step "Select Stack For Inspector"
+	Ensure this is the active stack, by clicking on it.
+action
+	highlight stack "Mainstack"
+	wait until stack "Mainstack" is selected
 	go to step "Set Stack Properties"
 end step
 
@@ -162,6 +170,7 @@ step "Select Header 1"
 
 	The selection handles will show around the widget.
 action
+	highlight widget "Header"
 	wait until widget "Header" is selected
 	go to step "Set Header Rect"
 end step
@@ -172,6 +181,16 @@ action
 	add guide "Header" with rect "1,1,319,64" to stack "Mainstack"
 	highlight guide "Header"
 	wait until widget "Header" fits guide "Header" with tolerance 5
+	go to step "Select Header For Inspector"
+end step
+
+step "Select Header For Inspector"
+	Select the header bar widget by clicking on it.
+
+	The selection handles will show around the widget.
+action
+	highlight widget "Header"
+	wait until widget "Header" is selected
 	go to step "Open Property Inspector"
 end step
 
@@ -254,6 +273,7 @@ step "Select Footer 1"
 
 	The selection handles will show around the widget.
 action
+	highlight widget "Footer"
 	wait until widget "Footer" is selected
 	go to step "Set Footer Rect"
 end step
@@ -265,6 +285,16 @@ action
 	add guide "Footer" with rect "1,430,319,479" to stack "Mainstack"
 	highlight guide "Footer"
 	wait until widget "Footer" fits guide "Footer" with tolerance 5
+	go to step "Select Footer For Inspector"
+end step
+
+step "Select Footer For Inspector"
+	Select the navigation bar widget by clicking on it.
+
+	The selection handles will show around the widget.
+action
+	highlight widget "Footer"
+	wait until widget "Footer" is selected
 	go to step "Set Footer Properties"
 end step
 
@@ -324,6 +354,7 @@ step "Select Entry Background 1"
 
 	The selection handles will show around the graphic.
 action
+	highlight graphic "Entry Background"
 	wait until graphic "Entry Background" is selected
 	go to step "Set Entry Background Rect"
 end step
@@ -334,6 +365,16 @@ action
 	add guide "Background" with rect "14,74,308,228" to stack "Mainstack"
 	highlight guide "Background"
 	wait until graphic "Entry Background" fits guide "Background" with tolerance 5
+	go to step "Select Entry Background For Inspector"
+end step
+
+step "Select Entry Background For Inspector"
+	Select the graphic by clicking on it.
+
+	The selection handles will show around the graphic.
+action
+	highlight graphic "Entry Background"
+	wait until graphic "Entry Background" is selected
 	go to step "Set Entry Background Properties"
 end step
 
@@ -384,6 +425,7 @@ end step
 step "Select Height Label 1"
 	Select the field by clicking on it.
 action
+	highlight field "Height Label"
 	wait until field "Height Label" is selected
 	go to step "Set Height Label Rect"
 end step
@@ -394,6 +436,14 @@ action
 	add guide "Label" with rect "28,87,164,117" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Height Label" fits guide "Label" with tolerance 3
+	go to step "Select Height Label For Inspector"
+end step
+
+step "Select Height Label For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Height Label"
+	wait until field "Height Label" is selected
 	go to step "Set Height Label Properties"
 end step
 
@@ -426,6 +476,7 @@ end step
 step "Select Weight Label 1"
 	Select the field by clicking on it.
 action
+	highlight field "Weight Label"
 	wait until field "Weight Label" is selected
 	go to step "Set Weight Label Rect"
 end step
@@ -436,6 +487,14 @@ action
 	add guide "Label" with rect "28,127,164,157" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Weight Label" fits guide "Label" with tolerance 3
+	go to step "Select Weight Label For Inspector"
+end step
+
+step "Select Weight Label For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Weight Label"
+	wait until field "Weight Label" is selected
 	go to step "Set Weight Label Properties"
 end step
 
@@ -468,6 +527,7 @@ end step
 step "Select Height Field 1"
 	Select the field by clicking on it.
 action
+	highlight field "Height Field"
 	wait until field "Height Field" is selected
 	go to step "Set Height Field Rect"
 end step
@@ -491,6 +551,14 @@ step "Name Interlude"
 	name that's descriptive of what it represents.
 action
 	interlude
+	go to step "Select Height Field For Inspector"
+end step
+
+step "Select Height Field For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Height Field"
+	wait until field "Height Field" is selected
 	go to step "Set Height Field Properties"
 end step
 
@@ -523,6 +591,7 @@ end step
 step "Select Weight Field 1"
 	Select the field by clicking on it.
 action
+	highlight field "Weight Field"
 	wait until field "Weight Field" is selected
 	go to step "Set Weight Field Rect"
 end step
@@ -533,6 +602,14 @@ action
 	add guide "Entry Field" with rect "185,127,253,157" to stack "Mainstack"
 	highlight guide "Entry Field"
 	wait until field "Weight Field" fits guide "Entry Field" with tolerance 3
+	go to step "Select Weight Field For Inspector"
+end step
+
+step "Select Weight Field For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Weight Field"
+	wait until field "Weight Field" is selected
 	go to step "Set Weight Field Properties"
 end step
 
@@ -566,6 +643,7 @@ end step
 step "Select Calculate Graphic 1"
 	Select the graphic by clicking on it.
 action
+	highlight graphic "Calculate Background"
 	wait until graphic "Calculate Background" is selected
 	go to step "Set Calculate Graphic Rect"
 end step
@@ -576,6 +654,14 @@ action
 	add guide "Calculate Graphic" with rect "23,178,300,216" to stack "Mainstack"
 	highlight guide "Calculate Graphic"
 	wait until graphic "Calculate Background" fits guide "Calculate Graphic" with tolerance 5
+	go to step "Select Calculate Graphic For Inspector"
+end step
+
+step "Select Calculate Graphic For Inspector"
+	Select the graphic by clicking on it.
+action
+	highlight graphic "Calculate Background"
+	wait until graphic "Calculate Background" is selected
 	go to step "Set Calculate Graphic Properties"
 end step
 
@@ -607,6 +693,7 @@ end step
 step "Select Calculate Button 1"
 	Select the button by clicking on it.
 action
+	highlight button "Calculate"
 	wait until button "Calculate" is selected
 	go to step "Set Calculate Button Rect"
 end step
@@ -617,6 +704,14 @@ action
 	add guide "Calculate" with rect "23,178,300,216" to stack "Mainstack"
 	highlight guide "Calculate"
 	wait until button "Calculate" fits guide "Calculate" with tolerance 3
+	go to step "Select Calculate Button For Inspector"
+end step
+
+step "Select Calculate Button For Inspector"
+	Select the button by clicking on it.
+action
+	highlight button "Calculate"
+	wait until button "Calculate" is selected
 	go to step "Set Calculate Button Properties"
 end step
 
@@ -666,6 +761,7 @@ end step
 step "Select Results Background 1"
 	Select the graphic by clicking on it.
 action
+	highlight graphic "Results Background"
 	wait until graphic "Results Background" is selected
 	go to step "Set Results Background Rect"
 end step
@@ -676,6 +772,14 @@ action
 	add guide "Background" with rect "14,240,308,422" to stack "Mainstack"
 	highlight guide "Background"
 	wait until graphic "Results Background" fits guide "Background" with tolerance 5
+	go to step "Select Results Background For Inspector"
+end step
+
+step "Select Results Background For Inspector"
+	Select the graphic by clicking on it.
+action
+	highlight graphic "Results Background"
+	wait until graphic "Results Background" is selected
 	go to step "Set Results Background Properties"
 end step
 
@@ -724,6 +828,7 @@ end step
 step "Select Results Label 1"
 	Select the field by clicking on it.
 action
+	highlight field "Results Label"
 	wait until field "Results Label" is selected
 	go to step "Set Results Label Rect"
 end step
@@ -734,6 +839,14 @@ action
 	add guide "Label" with rect "112,254,212,284" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Results Label" fits guide "Label" with tolerance 3
+	go to step "Set Results Label Properties"
+end step
+
+step "Select Results Label For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Results Label"
+	wait until field "Results Label" is selected
 	go to step "Set Results Label Properties"
 end step
 
@@ -782,6 +895,7 @@ end step
 step "Select Results Field 1"
 	Select the field by clicking on it.
 action
+	highlight field "Results"
 	wait until field "Results" is selected
 	go to step "Set Results Rect"
 end step
@@ -792,6 +906,14 @@ action
 	add guide "Label" with rect "22,287,300,325" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Results" fits guide "Label" with tolerance 3
+	go to step "Select Results Field For Inspector"
+end step
+
+step "Select Results Field For Inspector"
+	Select the field by clicking on it.
+action
+	highlight field "Results"
+	wait until field "Results" is selected
 	go to step "Set Results Properties"
 end step
 
@@ -841,6 +963,7 @@ end step
 step "Select Advice Field 1"
 	Select the field.
 action
+	highlight field "Advice"
 	wait until field "Advice" is selected
 	go to step "Set Advice Rect"
 end step
@@ -851,6 +974,14 @@ action
 	add guide "Label" with rect "22,327,300,417" to stack "Mainstack"
 	highlight guide "Label"
 	wait until field "Advice" fits guide "Label" with tolerance 3
+	go to step "Select Advice Field For Inspector"
+end step
+
+step "Select Advice Field For Inspector"
+	Select the field.
+action
+	highlight field "Advice"
+	wait until field "Advice" is selected
 	go to step "Set Advice Properties"
 end step
 
@@ -952,6 +1083,14 @@ action
 	capture the next new group of stack "Mainstack" as "Background Group"
 	capture set widget "Header", widget "Footer" as "Shared Controls"
 	wait until set "Shared Controls" is grouped
+	go to step "Select Group For Inspector"
+end step
+
+step "Select Group For Inspector"
+	Select the new group.
+action
+	highlight group "Background Group"
+	wait until group "Background Group" is selected
 	go to step "Set Group Properties"
 end step
 
@@ -1012,6 +1151,14 @@ action
 	highlight menu item "Graph from CSV File" of menu item "Import As Control" of menu "File"
 	capture the next new widget of stack "Mainstack" as "BMI Chart"
 	wait until there is a widget "BMI Chart"
+	go to step "Select Chart For Inspector"
+end step
+
+step "Select Chart For Inspector"
+	Select the new chart widget.
+action
+	highlight widget "BMI Chart"
+	wait until widget "BMI Chart" is selected
 	go to step "Set Chart Properties"
 end step
 
@@ -1133,6 +1280,14 @@ step "Navigation Bar Script Interlude"
 	user to navigate between the Chart and Calculator cards.
 action
 	interlude
+	go to step "Select Navigation Bar For Editor"
+end step
+
+step "Select Navigation Bar For Editor"
+	Select the navigation bar.
+action
+	highlight widget "Footer"
+	wait until widget "Footer" is selected
 	go to step "Open Navigation Bar Script Editor"
 end step
 
@@ -1270,6 +1425,14 @@ step "Function Interlude"
 	corresponding BMI.
 action
 	interlude 	
+	go to step "Select Stack For Editor"
+end step
+
+step "Select Stack For Editor"
+	Ensure this is the active stack, by clicking on it.
+action
+	highlight stack "Mainstack"
+	wait until stack "Mainstack" is selected
 	go to step "Open Stack Script"
 end step
 
@@ -2071,6 +2234,7 @@ end step
 step "Select Browser 1"
 	Select the browser widget.
 action
+	highlight widget "Browser"
 	wait until widget "Browser" is selected
 	go to step "Set Browser Rect"
 end step
@@ -2081,6 +2245,14 @@ action
 	add guide "Browser" with rect "0,62,320,432" to stack "Mainstack"
 	highlight guide "Browser"
 	wait until widget "Browser" fits guide "Browser" with tolerance 5
+	go to step "Select Browser For Inspector"
+end step
+
+step "Select Browser For Inspector"
+	Select the browser widget.
+action
+	highlight widget "Browser"
+	wait until widget "Browser" is selected
 	go to step "Open Browser Inspector"
 end step
 
