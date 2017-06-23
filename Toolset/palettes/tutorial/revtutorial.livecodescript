@@ -1571,6 +1571,17 @@ on revTutorialStartAtStep pCourse, pTutorial, pLesson, pLocation, pStepName
    revTutorialStartWithState pStepName, sTaggedObjects
 end revTutorialStartAtStep
 
+command revTutorialGoBackToSelectStep
+   // At the moment it should be a safe assumption that the relevant
+   // 'select' step is the previous one
+   local tPreviousStep
+   put revTutorialPreviousStep() into tPreviousStep
+   if sSteps[tPreviousStep]["actions"]["wait"]["wait condition"] is "state" and \
+         sSteps[tPreviousStep]["actions"]["wait"]["state"] is "selected" then
+      revTutorialGoBackToPreviousStep
+   end if
+end revTutorialGoBackToSelectStep
+
 command revTutorialSkipCurrentStep
    revTutorialSkipStep sStepName
 end revTutorialSkipCurrentStep
@@ -1686,7 +1697,7 @@ on revTutorialClearAllPalettes
    end repeat
 end revTutorialClearAllPalettes
 
-on revTutorialContinue
+on revTutorialContinue pBack
    repeat forever
       if sWaiting then
          exit repeat
@@ -1698,7 +1709,7 @@ on revTutorialContinue
       else if sSteps[sStepName]["actions"]["go"] is empty then
          revTutorialFinish
          exit repeat
-      else
+      else if not pBack then
          // Otherwise we're here after a wait, so go to the next step
          revTutorialExecuteAction sSteps[sStepName]["actions"]["go"]
       end if
@@ -1953,7 +1964,23 @@ end revTutorialCanSkipStep
 #
 ##############################################################################
 
-on revTutorialDoGoToStep pStep
+local sPreviousStep
+private function revTutorialPreviousStep
+   return sPreviousStep
+end revTutorialPreviousStep
+
+command revTutorialGoBackToPreviousStep
+   if sPreviousStep is empty then
+      exit revTutorialGoBackToPreviousStep
+   end if
+   revTutorialDoGoToStep sPreviousStep, true
+   send "revTutorialContinue true" to stack "revTutorial" in 0 millisecs
+end revTutorialGoBackToPreviousStep
+
+on revTutorialDoGoToStep pStep, pBack
+   if not pBack then
+      put sStepName into sPreviousStep
+   end if
    revTutorialInitialiseStep
    revTutorialClearHighlights
    revTutorialClearGuides
@@ -2184,6 +2211,7 @@ on revTutorialWaitUntilThereIsAPaletteForObject pPalette
       revIDEHighlightPaletteObject "menubar", "standard"
       revIDESubscribe "ideEditScript"
    end if
+   revIDESubscribe "ideSelectedObjectChanged"
 end revTutorialWaitUntilThereIsAPaletteForObject
 
 on revTutorialWaitUntilTheToolIs
@@ -2549,6 +2577,20 @@ end revTutorialReShow
 
 on ideActiveStacksChanged
    revTutorialReShow
+   
+   local tObject
+   put revIDESelectedObjects() into tObject
+   if sWait["wait condition"] is "there is a palette for object" then
+      -- If the object became deselected, go back a step
+      if not revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+         revTutorialGoBackToSelectStep
+      end if
+   else if sWait["wait condition"] is "state" and sWait["state"] is "selected" then
+      if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+         revIDEUnsubscribe "ideSelectedObjectChanged"
+         revTutorialWaitConditionSatisfied
+      end if
+   end if
 end ideActiveStacksChanged
 
 on ideCloseStackRequest pStack
@@ -2780,11 +2822,17 @@ on ideMouseDoubleUp pWhich, pTarget
 end ideMouseDoubleUp
 
 on ideSelectedObjectChanged 
+   local tObject
+   put revIDESelectedObjects() into tObject
    if sWait["wait condition"] is "state" and sWait["state"] is "selected" then
-      local tObject
-      put revIDESelectedObjects() into tObject
       if revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+         revIDEUnsubscribe "ideSelectedObjectChanged"
          revTutorialWaitConditionSatisfied
+      end if
+   else if sWait["wait condition"] is "there is a palette for object" then
+      -- If the object became deselected, go back a step
+      if not revTutorialObjectIsTaggedObject(tObject, sWait["object"]) then
+         revTutorialGoBackToSelectStep
       end if
    end if
 end ideSelectedObjectChanged
@@ -2793,6 +2841,7 @@ on ideInspectObjects pObjects
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "inspector" then
       if revTutorialObjectIsTaggedObject(pObjects, sWait["object"]) then
          revIDEUnsubscribe "ideInspectObjects"
+         revIDEUnsubscribe "ideSelectedObjectChanged"
          put pObjects into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
@@ -2803,6 +2852,7 @@ on ideEditScript pObject
    if sWait["wait condition"] is "there is a palette for object" and sWait["palette"] is "script editor" then
       if revTutorialObjectIsTaggedObject(the long id of pObject, sWait["object"]) then
          revIDEUnsubscribe "ideEditScript"
+         revIDEUnsubscribe "ideSelectedObjectChanged"
          put pObject into sLastObjects[sWait["palette"]]
          revTutorialWaitConditionSatisfied
       end if
