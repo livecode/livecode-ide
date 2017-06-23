@@ -54,7 +54,11 @@ command getDirty pObject
 end getDirty
 
 command setObjectID pObjectID
-   put pObjectID into sObjectID
+   if pObjectID is not empty then
+      put revRuggedId(pObjectID) into sObjectID
+   else
+      put empty into sObjectID
+   end if
 end setObjectID
 
 function getObjectID
