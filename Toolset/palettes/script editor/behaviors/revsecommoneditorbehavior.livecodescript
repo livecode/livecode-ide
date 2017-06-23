@@ -775,12 +775,18 @@ end textReplaceNewGroupNeeded
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
 command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
+   __ClearHighlights
+   
    local tObject
    if pObject is empty then
       put sObjectId into tObject
    else
       put pObject into tObject
    end if
+   
+   local tBracketCompletionType
+   __BracketCompletion  pOffset, pOldText, pNewText
+   put it into tBracketCompletionType
    
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
       textBeginGroup sTextMark[tObject], tObject
@@ -804,6 +810,9 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    # script cache stored for the object.
    if tObject is empty or revRuggedId(tObject) is sObjectId then
       textReplaceRaw pOffset, pOldText, pNewText
+      if tBracketCompletionType is "pair" then
+         select after char pOffset of field "script" of me
+      end if
    else
       local tCache
       put sScriptCache[revRuggedId(tObject)] into tCache
@@ -1215,6 +1224,9 @@ end selectionUpdateRequest
 
 #selection update stubs
 on selectionUpdate
+   lock screen
+   __CheckHighlights
+   unlock screen
 end selectionUpdate
 
 -- This calculates the position of the caret based on pPosition where the caret is (hypothetically).
@@ -2917,3 +2929,179 @@ end scriptGetField
 command scriptGetCurrentHandler
    # Waiting for engine support for this function...
 end scriptGetCurrentHandler
+
+
+private command __BracketCompletion pOffset, pOldText, @xNewText
+   try
+      if sePrefGet("editor,autocomplete") is not true then
+         return empty for value
+      end if
+   end try
+   
+   local tCompletionChar
+   switch xNewText
+      case quote
+         if pOldText is empty then
+            -- ensure we really want to insert an extra quote
+            local tLine
+            put the last line of (char 1 to pOffset of field "script" of me) & space into tLine
+            split tLine by quote
+            if (the number of elements in tLine -1) mod 2 is 0 then
+               put space & the first line of (char pOffset to -1 of field "script" of me) into tLine
+               split tLine by quote
+               if (the number of elements in tLine -1) mod 2 is 0 then
+                  put quote into tCompletionChar
+               end if
+            end if
+         else
+            put quote into tCompletionChar
+         end if
+         break
+      case "["
+         put "]" into tCompletionChar
+         break
+      case "("
+         put ")" into tCompletionChar
+         break
+   end switch
+   
+   if tCompletionChar is not empty then
+      if pOldText is empty then
+         put tCompletionChar after xNewText
+         return "pair" for value
+      else
+         put pOldText & tCompletionChar after xNewText
+         return "wrap" for value
+      end if
+   end if
+   return empty for value
+end __BracketCompletion
+
+constant kBracketBackgroundColor = "255,200,200"
+
+local sHighlightedBrackets
+
+private command __ClearHighlights
+   if sHighlightedBrackets["open"] is not empty then
+      set the backgroundColor of char sHighlightedBrackets["open"] of field "script" of me to empty
+      set the backgroundColor of char sHighlightedBrackets["close"] of field "script" of me to empty
+      delete variable sHighlightedBrackets
+   end if
+end __ClearHighlights
+
+private command __CheckHighlights
+   lock screen
+   __ClearHighlights
+   
+   local tChunk
+   put the selectedChunk into tChunk
+   if word 4 of tChunk < word 2 of tChunk then
+      local tChar, tCharNum
+      put word 2 of tChunk into tCharNum
+      put char tCharNum of field "script" of me into tChar
+      if tChar is in "([])" then
+         __HighlightBrackets tCharNum, tChar
+      else
+         put word 4 of tChunk into tCharNum
+         put char tCharNum of field "script" of me into tChar
+         if tChar is in "([])" then
+            __HighlightBrackets tCharNum, tChar
+         end if
+      end if
+   end if
+   
+   unlock screen
+end __CheckHighlights
+
+private command __HighlightBrackets pCharNum, pChar
+   local tMatchedCharNum
+   put pCharNum into tMatchedCharNum
+   switch pChar
+      case "["
+         __LookForPair "]", "[", 1, tMatchedCharNum
+         break
+      case "("
+         __LookForPair  ")", "(", 1, tMatchedCharNum
+         break
+      case "]"
+         __LookForPair "[", "]", -1, tMatchedCharNum
+         break
+      case ")"
+         __LookForPair "(",")", -1, tMatchedCharNum
+         break
+   end switch
+   
+   if it and pCharNum is not tMatchedCharNum then
+      put pCharNum into sHighlightedBrackets["open"]
+      set the backgroundColor of char pCharNum of field "script" of me to kBracketBackgroundColor
+      put tMatchedCharNum into sHighlightedBrackets["close"]
+      set the backgroundColor of char tMatchedCharNum of field "script" of me to kBracketBackgroundColor
+   end if
+end __HighlightBrackets
+
+private command __LookForPair pChar, pPairChar, pStep, @xCharNum
+   local tBracketCount = 0
+   local tEndCondition
+   
+   local tScript
+   local tScriptLine
+   local tCharNum
+   local tIndex
+   if pStep < 0 then
+      put 1 into tEndCondition
+      put char 1 to xCharNum of field "script" of me into tScript
+      split tScript by return
+      put tScript[the number of elements of tScript] into tScriptLine
+      
+      repeat with tIndex = the number of elements in tScript-1 down to 1
+         if lineIsContinued(tScript[tIndex]) then
+            put tScript[tIndex] & return before tScriptLine
+         else
+            exit repeat
+         end if
+      end repeat
+      
+      put the length of tScriptLine into tCharNum
+   else
+      put char xCharNum+1 to -1 of field "script" of me into tScript
+      split tScript by return
+      put tScript[1] into tScriptLine
+      
+      repeat with tIndex = 1 to the number of elements in tScript
+         if lineIsContinued(tScript[tIndex]) then
+            put return & tScript[tIndex+1] after tScriptLine
+         else
+            exit repeat
+         end if
+      end repeat
+      
+      put the length of tScriptLine into tEndCondition
+      put 0 into tCharNum
+   end if
+   
+   if tScriptLine is empty then
+      return false for value
+   end if
+   
+   repeat
+      add pStep to tCharNum
+      add pStep to xCharNum
+      local tChar
+      put codepoint tCharNum of tScriptLine into tChar
+      switch
+         case tChar is pChar and tBracketCount is 0
+            return true for value
+            break
+         case tChar is pPairChar
+            add 1 to tBracketCount
+            break
+         case tChar is pChar
+            subtract 1 from tBracketCount
+            break
+      end switch
+      
+      if tCharNum is tEndCondition then
+         return false for value
+      end if
+   end repeat
+end __LookForPair
