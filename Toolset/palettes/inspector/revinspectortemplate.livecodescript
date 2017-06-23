@@ -8,6 +8,7 @@ on preOpenStack
    put ideObjectTypesFromObjectList(sSelectedObjects) into sObjectTypes
    revIDESubscribe "idePropertyChanged",sSelectedObjects
    inspectorTitleUpdate
+   inspectorSetLabelsPreference
    
    # Set the inspector behaviour
    dispatch "setAsBehavior" to revIDEInspectorBehavior() with the long id of me
@@ -238,18 +239,21 @@ on editorStoreValue pProperty, pValue
 end editorStoreValue
 
 on idePreferenceChanged pPreference
-   local tValue
-   put revIDEGetPreference(pPreference) into tValue
    switch pPreference
       case "idePropertyInspector_labels"
-         global gRevLanguageNames
-         put tValue into gRevLanguageNames
-         set the cLanguageNames of cd 1 of stack "revPreferences" to tValue
+         inspectorSetLabelsPreference
          inspectorChanged
          break
    end switch
 end idePreferenceChanged
    
+command inspectorSetLabelsPreference
+   local tValue
+   put revIDEGetPreference("idePropertyInspector_labels") into tValue
+   global gRevLanguageNames
+   put tValue into gRevLanguageNames
+   set the cLanguageNames of cd 1 of stack "revPreferences" to tValue
+end inspectorSetLabelsPreference
 
 # Sent by the IDE when a property has changed
 on revIDEPropertyChanged
