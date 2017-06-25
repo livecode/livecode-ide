@@ -62,8 +62,7 @@ action
 end step
 
 step "Set Stack Title"
-	Set the 'Title' property of the stack to "Hello World" and press 
-	the <Return> key.
+	Set the 'Title' property of the stack to "Hello World" and press 'Enter'.
 
 	You will see the title of the stack change after you set the property.
 action
@@ -129,8 +128,7 @@ action
 end step
 
 step "Set button name"
-	Set the 'Name' property of the button to "Say Hello" and press 
-	the <Return> key. You will see the Name appear on the button.
+	Set the 'Name' property of the button to "Say Hello" and press 'Enter'. You will see the Name appear on the button.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of button "Hello" is "Say Hello"
