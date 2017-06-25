@@ -277,10 +277,11 @@ action
 end step
 
 step "Set Footer Label"
-	Remove all but one of the lines of the navigation bar's 'Navigation
-	Data' by clicking on the delete icons.
+	Delete the second, third and fourth lines of the navigation bar's 
+	'Navigation Data' by clicking on the delete icons.
 	
-	Then change the label of the remaining one to "Calculator".
+	Then change the label of the remaining one from "Contacts" to 
+	"Calculator".
 action 
 	highlight property "itemArray" of section "Basic"
 	wait until the itemLabels of widget "Footer" is "Calculator"
@@ -1117,8 +1118,8 @@ action
 end step
 
 step "Set Item Name" 
-	Set the name of the new item by changing the 'Navigation Names' of 
-	the navigation bar from "Calculator,new item" to "Calculator,Chart", 
+	Change the name of the new item in the second field of the 	
+	'Navigation Names' property of the navigation bar to "Chart",
 	and press <Return>.
 action
 	highlight property "itemNames" of section "Basic"
