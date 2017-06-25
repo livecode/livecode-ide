@@ -113,7 +113,8 @@ step "Set Stack Title"
 	The first property we will set is the 'Title' of the stack. You will see the
 	title of the stack change after you set the property.
 
-	Set the 'Title' of the stack to "To Do List" and press Enter.
+	Set the 'Title' of the stack to "To Do List" and press the 
+	<Return> key.
 action
 	highlight property "title" of section "basic"
 	wait until the title of stack "Mainstack" is "To Do List"
@@ -181,7 +182,8 @@ step "Set add name"
 	use short, unique, descriptive names to make it easier when we start writing
 	code.
 
-	Set the name property of the SVG Icon to "Add" and press Enter.
+	Set the name property of the SVG Icon to "Add" and press the 
+	<Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "add" is "Add"
@@ -247,7 +249,7 @@ step "Set task list name"
 	Again, we want to give the field a short descriptive name to make things
 	easier when we write code.
 
-	Set the name of the field to "TaskList" and press Enter.
+	Set the name of the field to "TaskList" and press the <Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of field "taskList" is "TaskList"
@@ -451,7 +453,8 @@ action
 end step
 
 step "Set delete name"
-	Set the name property of the SVG Icon to "Delete" and press Enter.
+	Set the name property of the SVG Icon to "Delete" and press the 
+	<Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "delete" is "Delete"
