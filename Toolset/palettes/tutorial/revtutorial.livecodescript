@@ -1103,10 +1103,6 @@ command revTutorialPositionStackAndPointer pContentWidth, pContentHeight, pHighl
 end revTutorialPositionStackAndPointer   
 
 command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
-   if the platform is "win32" then
-      set the windowshape of stack "revTutorial" to empty
-   end if
-   
    # Store templategraphic props (in case we have a graphic tool selected)
    local tProps
    put the properties of the templategraphic into tProps
@@ -1118,6 +1114,9 @@ command revTutorialCreateStack pContentWidth, pContentHeight, pPointer
    set the lineSize of the templateGraphic to 0
    set the backColor of the templateGraphic to "black"
    set the opaque of the templateGraphic to true
+   
+   # Ensure the window does not have a 1-bit mask
+   set the blendlevel of the templateGraphic to 1
    
    create group "Group"
    put it into tGroup
