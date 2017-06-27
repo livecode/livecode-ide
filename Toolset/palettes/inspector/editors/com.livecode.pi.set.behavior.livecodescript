@@ -51,7 +51,10 @@ on editorResize
    lock screen
    lock messages
    set the lockLoc of me to true
-   set the rect of field 1 of me to the rect of me
+   local tRect
+   put the rect of me into tRect
+   put item 2 of tRect + the formattedHeight of field 1 of me into item 4 of tRect
+   set the rect of field 1 of me to tRect
    unlock messages
    unlock screen
 end editorResize
