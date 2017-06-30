@@ -49,6 +49,14 @@ step "Properties interlude"
 	The Property Inspector is a window that allows you to control these properties.
 action
 	interlude
+	go to step "Select Stack"
+end step
+
+step "Select Stack"
+	Ensure this is the active stack, by clicking on it.
+action
+	highlight stack "Mainstack"
+	wait until stack "Mainstack" is selected
 	go to step "Set Stack Properties"
 end step
 
@@ -104,6 +112,7 @@ step "Select Button 1"
 
 	The selection handles should show around the button.
 action
+	highlight button "hello"
 	wait until button "hello" is selected
 	go to step "Set Button Location"
 end step
@@ -114,6 +123,16 @@ action
 	add guide "buttonLoc" with rect "159,119,241,142" to stack "Mainstack"
 	highlight guide "buttonLoc"
 	wait until button "hello" fits guide "buttonLoc" with tolerance 5
+	go to step "Select Button For Inspector"
+end step
+
+step "Select Button For Inspector"
+	Select the button by clicking on it.
+
+	The selection handles should show around the button.
+action
+	highlight button "hello"
+	wait until button "hello" is selected
 	go to step "Open Property Inspector"
 end step
 
@@ -151,6 +170,16 @@ step "Events and messages interlude"
 	messages in different ways.
 action
 	interlude
+	go to step "Select Button For Editor"
+end step
+
+step "Select Button For Editor"
+	Select the button by clicking on it.
+
+	The selection handles should show around the button.
+action
+	highlight button "hello"
+	wait until button "hello" is selected
 	go to step "Open Add Script"
 end step
 
