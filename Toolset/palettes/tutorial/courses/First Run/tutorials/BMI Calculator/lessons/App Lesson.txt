@@ -365,7 +365,7 @@ end step
 step "Set Entry Background Blend Level"
 	Set the 'Blend Level' of the graphic to "50". The blend level 
 	determines how opaque the background of the graphic is, with 0 
-	begin fully opaque and 100 being fully transparent. 
+	being fully opaque and 100 being fully transparent. 
 action
 	highlight property "blendLevel" of section "Colors"
 	wait until the blendLevel of graphic "Entry Background" is "50"
@@ -1452,7 +1452,7 @@ end step
 
 step "Open Calculator Card Script"
 	We are going to store the calculated BMI using a custom property on
-	out stack, called 'cBMI'. We are also going to store the height and 
+	our stack, called 'cBMI'. We are also going to store the height and 
 	weight in custom properties 'cHeight' and 'cWeight'.
 	
 	To do this we will add a custom command to the card script which 
@@ -1794,7 +1794,7 @@ skip point
 
 step "Dictionary Interlude"
 	The dictionary contains information about all the syntax available
-	in LiveCode. There is also a guides tab which contains all the user
+	in LiveCode. There is also a Guide tab which contains all the user
 	guides available.
 action
 	interlude
