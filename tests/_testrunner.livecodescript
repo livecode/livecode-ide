@@ -193,7 +193,7 @@ private command invokeAllTests
       put TesterTapCombine(tAnalysis, the result) into tAnalysis
    end repeat
    
-   TestRunnerRunPrintSummary tAnalysis
+   TesterRunPrintSummary tAnalysis
    quit 0
 end invokeAllTests
 
@@ -295,6 +295,6 @@ private command runAllTests pInfo
    TestRunnerProcessOutput "IDE", "All IDE tests", tTestOutput
    
    put TesterTapCombine(tAnalysis, the result) into tAnalysis
-   TestRunnerRunPrintSummary tAnalysis
+   TesterRunPrintSummary tAnalysis
    return tAnalysis
 end runAllTests
