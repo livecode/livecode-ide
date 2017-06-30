@@ -52,6 +52,7 @@ textStyle							empty
 textAlign							empty					
 margins		Basic					8					
 lockLoc							false					
+clipsToRect							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension									
 height::revIDESetRectProperty			com.livecode.pi.dimension																				
 dropShadow												
