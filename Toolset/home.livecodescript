@@ -1213,6 +1213,7 @@ command revInternal__InitialiseLibraries
    put return & "mime" after tLoadList
    put return & "diff" after tLoadList
    put return & "messageauthentication" after tLoadList
+   put return & "dropbox" after tLoadList
    
    switch the editionType
       case "professional"
