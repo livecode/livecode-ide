@@ -1059,6 +1059,7 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
       revIDENewScriptOnlyStack tExpectedName
       if the result is empty then
          put it into tTargetStack
+         save stack tExpectedName as tDefaultScript
       else
          answer error the result
       end if
