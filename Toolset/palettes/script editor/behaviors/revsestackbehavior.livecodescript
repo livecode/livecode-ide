@@ -2949,42 +2949,46 @@ private command appendToList @xList, pValue
 end appendToList
 
 local sHandlersA
+private function getHandlerList pObjType
+   get the keys of sHandlersA[pObjType]
+   sort it 
+   return it
+end getHandlerList
+
 private function revSEDefaultHandlerInfoForObjectType pObjType
    if sHandlersA[pObjType] is not empty then
-      return sHandlersA[pObjType]
+      return getHandlerList (pObjType)
    end if
    
    local tMessages
    put ideDocsFetchLCSElementsOfType("message") into tMessages
-
+   
    local tMessageList
    repeat for each element tElement in tMessages
       local tAssociations
       put tElement["Associations"] into tAssociations
       filter elements of tAssociations with pObjType
       if tAssociations is not empty then
-         appendToList tMessageList, tElement["display name"]
+         put tElement into tMessageList[tElement["display name"]]
       end if
    end repeat
-   sort tMessageList
    put tMessageList into sHandlersA[pObjType]
-   return tMessageList
+   return getHandlerList(pObjType)
 end revSEDefaultHandlerInfoForObjectType
 
 private function revSEDefaultHandlerInfoForWidget pWidgetKind
    if sHandlersA[pWidgetKind] is not empty then
-      return sHandlersA[pWidgetKind]
+      return getHandlerList(pWidgetKind)
    end if
    local tMessages
    put ideDocsFetchExtensionElementsOfType(pWidgetKind, "message") into tMessages
    
    local tMessageList
    repeat for each element tElement in tMessages
-      appendToList tMessageList, tElement["display name"]
+      put tElement into tMessageList[tElement["display name"]]
    end repeat
-   sort tMessageList
    put tMessageList into sHandlersA[pWidgetKind]
-   return tMessageList
+   return getHandlerList(pWidgetKind)
 end revSEDefaultHandlerInfoForWidget
 
 function revSEDefaultHandlers
@@ -3009,19 +3013,39 @@ function revSEDefaultHandlersForObject pObj
    return revSEDefaultHandlerInfoForObjectType(tType)
 end revSEDefaultHandlersForObject
 
-private function revSEDefaultScriptOfHandler pHandler
-   // At the moment, don't try to find default scripts anywhere
-   local tDefaultHandler
-   put "on" && pHandler & return into tDefaultHandler
-   put return after tDefaultHandler
-   put "end" && pHandler after tDefaultHandler
+function revSEConstructDefaultScript pObj, pHandler
+   local tType
+   put word 1 of the name of pObj into tType
+   if tType is "widget" then
+      put the kind of pObj into tType
+   end if
    
-   return tDefaultHandler
-end revSEDefaultScriptOfHandler
+   local tInfo
+   put sHandlersA[tType][pHandler] into tInfo
+   
+   local tScript
+   -- Don't include summary for now as it has some docs specific markup
+   --put "--" && tInfo["Summary"] & return into tScript
+   put "on" && pHandler after tScript
+   repeat with x = 1 to the number of elements in tInfo["params"]
+      if x is not 1 then
+         put "," after tScript
+      end if
+      put " " & tInfo["params"][x]["name"] after tScript
+   end repeat
+   put return & return & "end" && pHandler after tScript
+   return tScript
+end revSEConstructDefaultScript
 
 command revSEAddDefaultHandler pHandler
-   local tDefaultScript
-   put revSEDefaultScriptOfHandler(pHandler) into tDefaultScript
+   local tDefaultScript, tObject
+   revSEGetCurrentObject
+   put the result into tObject
+   put revIDEDefaultScript(tObject, pHandler) into tDefaultScript
+   
+   if tDefaultScript is empty then
+      put revSEConstructDefaultScript(tObject, pHandler) into tDefaultScript
+   end if
    
    local tNewScript
    put revSEGetScript() into tNewScript
