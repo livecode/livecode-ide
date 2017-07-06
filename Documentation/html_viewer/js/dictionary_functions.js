@@ -48,7 +48,7 @@
 	// as a (matchable) string
 	function collectSyntax(pEntry)
 	{
-		var tSyntax = '';
+		var tSyntax = pEntry["display name"];
 		$.each(pEntry["display syntax"], function (index, value) 
 		{
 			if (tSyntax != '')
