@@ -1059,6 +1059,12 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
       revIDENewScriptOnlyStack tExpectedName
       if the result is empty then
          put it into tTargetStack
+         set the itemDel to slash
+         local tSupportFolder
+         put item 1 to -2 of tDefaultScript into tSupportFolder
+         if there is not a folder tSupportFolder then
+            create folder tSupportFolder
+         end if
          save stack tExpectedName as tDefaultScript
       else
          answer error the result
