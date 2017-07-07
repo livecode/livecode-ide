@@ -85,6 +85,14 @@ step "Properties interlude"
 	The Property Inspector is a window that allows you to control these properties.
 action
 	interlude
+	go to step "Select Stack For Inspector"
+end step
+
+step "Select Stack For Inspector"
+	Ensure this is the active stack, by clicking on it.
+action
+	highlight stack "Mainstack"
+	wait until stack "Mainstack" is selected
 	go to step "Set Stack Properties"
 end step
 
@@ -113,7 +121,8 @@ step "Set Stack Title"
 	The first property we will set is the 'Title' of the stack. You will see the
 	title of the stack change after you set the property.
 
-	Set the 'Title' of the stack to "To Do List" and press Enter.
+	Set the 'Title' of the stack to "To Do List" and press the 
+	<Return> key.
 action
 	highlight property "title" of section "basic"
 	wait until the title of stack "Mainstack" is "To Do List"
@@ -152,6 +161,7 @@ step "Select SVG Icon 1"
 
 	The selection handles will show around the icon.
 action
+	highlight widget "add"
 	wait until widget "add" is selected
 	go to step "Set Add Location"
 end step
@@ -162,6 +172,16 @@ action
 	add guide "addLoc" with rect "280,10,310,40" to stack "Mainstack"
 	highlight guide "addLoc"
 	wait until widget "add" fits guide "addLoc" with tolerance 5
+	go to step "Select SVG Icon For Inspector"
+end step
+
+step "Select SVG Icon For Inspector"
+	Select the SVG Icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	highlight widget "add"
+	wait until widget "add" is selected
 	go to step "Open Property Inspector"
 end step
 
@@ -181,7 +201,8 @@ step "Set add name"
 	use short, unique, descriptive names to make it easier when we start writing
 	code.
 
-	Set the name property of the SVG Icon to "Add" and press Enter.
+	Set the name property of the SVG Icon to "Add" and press the 
+	<Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "add" is "Add"
@@ -219,6 +240,7 @@ step "Select Field 1"
 
 	The selection handles will show around the field.
 action
+	highlight field "TaskList"
 	wait until field "TaskList" is selected
 	go to step "Set task list Location"
 end step
@@ -229,6 +251,16 @@ action
 	add guide "taskListLoc" with rect "0,60,320,568" to stack "Mainstack"
 	highlight guide "taskListLoc"
 	wait until field "taskList" fits guide "taskListLoc" with tolerance 5
+	go to step "Select Field For Inspector"
+end step
+
+step "Select Field For Inspector"
+	Select the field by clicking on it.
+
+	The selection handles will show around the field.
+action
+	highlight field "TaskList"
+	wait until field "TaskList" is selected
 	go to step "Task List PI"
 end step
 
@@ -247,7 +279,7 @@ step "Set task list name"
 	Again, we want to give the field a short descriptive name to make things
 	easier when we write code.
 
-	Set the name of the field to "TaskList" and press Enter.
+	Set the name of the field to "TaskList" and press the <Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of field "taskList" is "TaskList"
@@ -280,6 +312,16 @@ step "Events and messages interlude"
 	messages in different ways.
 action
 	interlude
+	go to step "Select SVG Icon For Editor"
+end step
+
+step "Select SVG Icon For Editor"
+	Select the SVG Icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	highlight widget "add"
+	wait until widget "add" is selected
 	go to step "Open Add Script"
 end step
 
@@ -426,6 +468,7 @@ step "Select SVG Icon 2"
 
 	The selection handles will show around the icon.
 action
+	highlight widget "delete"
 	wait until widget "delete" is selected
 	go to step "Set Delete Location"
 end step
@@ -436,6 +479,16 @@ action
 	add guide "deleteLoc" with rect "240,10,270,40" to stack "Mainstack"
 	highlight guide "deleteLoc"
 	wait until widget "delete" fits guide "deleteLoc" with tolerance 5
+	go to step "Select Delete For Inspector"
+end step
+
+step "Select Delete For Inspector"
+	Select the icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	highlight widget "delete"
+	wait until widget "delete" is selected
 	go to step "Open Delete Property Inspector"
 end step
 
@@ -451,7 +504,8 @@ action
 end step
 
 step "Set delete name"
-	Set the name property of the SVG Icon to "Delete" and press Enter.
+	Set the name property of the SVG Icon to "Delete" and press the 
+	<Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of widget "delete" is "Delete"
@@ -466,6 +520,16 @@ step "Set delete icon"
 action
 	highlight property "iconPresetName" of section "Basic"
 	wait until the iconPresetName of widget "delete" is "trash"
+	go to step "Select Delete For Editor"
+end step
+
+step "Select Delete For Editor"
+	Select the icon by clicking on it.
+
+	The selection handles will show around the icon.
+action
+	highlight widget "delete"
+	wait until widget "delete" is selected
 	go to step "Open Delete script"
 end step
 
@@ -557,6 +621,14 @@ step "closeStack handler"
 	will work on desktop and mobile.
 action
 	interlude
+	go to step "Select Stack For Editor"
+end step
+
+step "Select Stack For Editor"
+	Ensure this is the active stack, by clicking on it.
+action
+	highlight stack "Mainstack"
+	wait until stack "Mainstack" is selected
 	go to step "Open Stack Script"
 end step
 
