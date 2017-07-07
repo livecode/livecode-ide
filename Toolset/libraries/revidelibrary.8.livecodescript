@@ -11403,8 +11403,7 @@ command ideDoMessage pScript, pDebugMode, pObject
          if pObject is empty then
             put the long id of this card of this stack into pObject
          end if
-         send "-- execute in object context" & return & \
-               pScript to pObject
+         send script pScript to pObject
       end if
    catch tScriptError
    end try
