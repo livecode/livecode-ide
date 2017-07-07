@@ -1055,8 +1055,9 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
 end __revIDEDeveloperExtensionAddSpecifiedFilesToPackage
 
 on revIDEDeveloperExtensionEditDefaultScript pFolder
-   local tDefaultScript, tTargetStack
-   put pFolder & "/support/defaultscript.livecodescript" into tDefaultScript
+   local tSupportFolder, tDefaultScript, tTargetStack
+   put pFolder & "/support" into tSupportFolder
+   put tSupportFolder & "/defaultscript.livecodescript" into tDefaultScript
    
    local tExpectedName
    put sExtensionDetailsA[pFolder]["id"] & ".__DefaultScript" into tExpectedName
@@ -1083,6 +1084,10 @@ on revIDEDeveloperExtensionEditDefaultScript pFolder
       revIDENewScriptOnlyStack tExpectedName
       if the result is empty then
          put it into tTargetStack
+         if there is not a folder tSupportFolder then
+            create folder tSupportFolder
+         end if
+         save stack tExpectedName as tDefaultScript
       else
          answer error the result
       end if
