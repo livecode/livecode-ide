@@ -238,6 +238,7 @@ private command valueChangedOnPath pPath
    fetchArrayDataOnPath pPath, tArray, tExisting
    
    local tChanged
+   set the caseSensitive to true
    if tExisting is an array then
       put tValue is not empty into tChanged
    else
