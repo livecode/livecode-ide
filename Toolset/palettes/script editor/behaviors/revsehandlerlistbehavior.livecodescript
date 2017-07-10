@@ -259,7 +259,7 @@ command resize
    unlock screen
 end resize
 
-command jumpToHandler pHandler
+command jumpToHandler pHandler, pAdded
    local tLineNumber
    put word 3 of pHandler into tLineNumber
    
@@ -268,7 +268,7 @@ command jumpToHandler pHandler
    set the cChoice of me to tLineNumber & comma & word 2 of pHandler & comma & word 1 of pHandler
    
    if the cCallback of me is not empty then
-      send the cCallback of me to the cCallbackTarget of me
+      send the cCallback of me && pAdded to the cCallbackTarget of me
    end if
    
    hideGroup
@@ -279,7 +279,10 @@ command closeAccept
    local tHandler
    put line (the hilitedLine of field "Handlers" of me) of the cHandlers of field "Handlers" of me into tHandler
    
+   local tAdded
+   put false into tAdded
    if the number of words in tHandler is 1 then
+      put true into tAdded
       -- Adding a default handler
       revSEAddDefaultHandler tHandler
       update
@@ -291,7 +294,7 @@ command closeAccept
    end if
    
    -- Select the (now) extant handler
-   jumpToHandler tHandler
+   jumpToHandler tHandler, tAdded
    
    unlock screen
 end closeAccept

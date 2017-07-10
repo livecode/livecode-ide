@@ -98,7 +98,7 @@ end updateSelectedHandler
 # Description
 #   Callback for the handler list object. This is called when the stack is closed
 #   which either means the user has chosen a handler, or dismissed the stack.
-on handlerSelected
+on handlerSelected pNewlyAdded
    local tObject
    put the long id of group "Left Handler List" of me into tObject
    
@@ -114,6 +114,11 @@ on handlerSelected
    # list may be wrong because its the last known location of the handler when the script was compiled. To try and locate
    # the handler correctly we call this function which will check if tLine is wrong, and attempt to adjust it.
    put seLocateHandler(tHandler, tLine, tType) into tLine
+   
+   -- If we just added this handler, select at the (empty) line after the handler decl.
+   if pNewlyAdded then
+      add 1 to tLine
+   end if
    
    send "goLine tLine, true" to group "Editor"
    seUpdateToolbar
