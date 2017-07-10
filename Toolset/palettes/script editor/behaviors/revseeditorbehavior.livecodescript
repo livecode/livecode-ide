@@ -330,16 +330,14 @@ command loadScript
       # If there is a cached script, this means that the user is coming back to this object from another tab.
       textSetScriptRaw tCachedScript
    else
-      # If the object has no script, get the default script for it, otherwise the current script is used
-      if the script of sObjectId is not empty then
-         local tScript
-         put the script of sObjectId into tScript
-         
-         textSetScriptRaw tScript
-         
-         # OK-2008-07-07 : Bug 6746
-         seUpdateCheckSum sObjectId, tScript
-      else
+      local tScript
+      put the script of sObjectId into tScript
+      
+      textSetScriptRaw tScript
+      
+      # OK-2008-07-07 : Bug 6746
+      seUpdateCheckSum sObjectId, tScript
+      if tScript is empty then   
          select before field "Script" of me
       end if
    end if
