@@ -4135,6 +4135,9 @@ function revIDESpecialFolderPath pKey
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/property_definitions"
          break
+      case "Object Default Scripts"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/default_scripts"
+         break
       case "Standalone Settings Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/standalone_settings"
          break
@@ -5495,6 +5498,52 @@ function revIDEDefaultExtensionIcon pType, pRetina
          end if
    end switch
 end revIDEDefaultExtensionIcon
+
+function revIDEDefaultScript pObject, pHandler
+   local tDefaultScript, tType
+   put ideObjectTypeFromObject(pObject) into tType
+   if word 1 of the name of pObject is "widget" then
+      put revIDEWidgetDefaultScript(tType) into tDefaultScript
+   else
+      put revIDEClassicObjectDefaultScript(tType) into tDefaultScript
+   end if
+   
+   lock screen
+   lock messages
+   create invisible stack "revDefaultScriptHolder"
+   try
+      set the script of it to tDefaultScript
+   catch tError
+   end try
+   local tHandlers
+   put the revAvailableHandlers of it into tHandlers
+   delete stack "revDefaultScriptHolder"
+   local tHandlerStart, tHandlerEnd, tHandlerInfo, tHandlerInfoLine
+   set the wholematches to false
+   -- Ensure we don't accidentally match a substring by putting
+   -- spaces around the handler name
+   put lineOffset(" " & pHandler & " ", tHandlers) into tHandlerInfoLine
+   put line tHandlerInfoLine of tHandlers into tHandlerInfo
+   -- We want to include any comments before the handler declaration
+   -- so find the previous handler 
+   put word 3 of tHandlerInfo into tHandlerStart
+   put word 4 of tHandlerInfo into tHandlerEnd
+   repeat while word 1 of line tHandlerStart of tDefaultScript is not empty
+      subtract 1 from tHandlerStart
+   end repeat
+   unlock messages
+   unlock screen
+   return line tHandlerStart to tHandlerEnd of tDefaultScript
+end revIDEDefaultScript
+
+function revIDEClassicObjectDefaultScript pType
+   local tFolder
+   put revIDESpecialFolderPath("Object Default Scripts") into tFolder
+   if there is a stack (tFolder & slash & pType & ".livecodescript") then
+      return the script of stack (tFolder & slash & pType & ".livecodescript")
+   end if
+   return empty
+end revIDEClassicObjectDefaultScript
 
 function revIDEWidgetDefaultScript pKind
    return revIDEExtensionProperty(pKind, "defaultScript")

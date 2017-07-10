@@ -2931,6 +2931,130 @@ on revSESetScript pScript
    dispatch "textSetScript" to field "Script" of me with pScript
 end revSESetScript
 
+function revSEGetScript pScript
+   dispatch function "textGetScript" to field "Script" of me
+   return the result
+end revSEGetScript
+
 on revSEIndentScript
    dispatch "scriptFormat" to field "Script" of me with "script"
 end revSEIndentScript
+
+private command appendToList @xList, pValue
+   if xList is not empty then
+      put return & pValue after xList
+   else
+      put pValue into xList
+   end if
+end appendToList
+
+local sHandlersA
+private function getHandlerList pObjType
+   get the keys of sHandlersA[pObjType]
+   sort it 
+   return it
+end getHandlerList
+
+private function revSEDefaultHandlerInfoForObjectType pObjType
+   if sHandlersA[pObjType] is not empty then
+      return getHandlerList (pObjType)
+   end if
+   
+   local tMessages
+   put ideDocsFetchLCSElementsOfType("message") into tMessages
+   
+   local tMessageList
+   repeat for each element tElement in tMessages
+      local tAssociations
+      put tElement["Associations"] into tAssociations
+      filter elements of tAssociations with pObjType
+      if tAssociations is not empty then
+         put tElement into tMessageList[tElement["display name"]]
+      end if
+   end repeat
+   put tMessageList into sHandlersA[pObjType]
+   return getHandlerList(pObjType)
+end revSEDefaultHandlerInfoForObjectType
+
+private function revSEDefaultHandlerInfoForWidget pWidgetKind
+   if sHandlersA[pWidgetKind] is not empty then
+      return getHandlerList(pWidgetKind)
+   end if
+   local tMessages
+   put ideDocsFetchExtensionElementsOfType(pWidgetKind, "message") into tMessages
+   
+   local tMessageList
+   repeat for each element tElement in tMessages
+      put tElement into tMessageList[tElement["display name"]]
+   end repeat
+   put tMessageList into sHandlersA[pWidgetKind]
+   return getHandlerList(pWidgetKind)
+end revSEDefaultHandlerInfoForWidget
+
+function revSEDefaultHandlers
+   local tObject
+   revSEGetCurrentObject
+   put the result into tObject
+   if tObject is empty then
+      return empty
+   end if
+   return revSEDefaultHandlersForObject(tObject)
+end revSEDefaultHandlers
+
+function revSEDefaultHandlersForObject pObj
+   local tType
+   put word 1 of the name of pObj into tType
+   if tType is "widget" then
+      local tKind
+      put the kind of pObj into tKind
+      return revSEDefaultHandlerInfoForWidget(tKind)
+   end if
+   
+   return revSEDefaultHandlerInfoForObjectType(tType)
+end revSEDefaultHandlersForObject
+
+function revSEConstructDefaultScript pObj, pHandler
+   local tType
+   put word 1 of the name of pObj into tType
+   if tType is "widget" then
+      put the kind of pObj into tType
+   end if
+   
+   local tInfo
+   put sHandlersA[tType][pHandler] into tInfo
+   
+   local tScript
+   -- Don't include summary for now as it has some docs specific markup
+   --put "--" && tInfo["Summary"] & return into tScript
+   put "on" && pHandler after tScript
+   repeat with x = 1 to the number of elements in tInfo["params"]
+      if x is not 1 then
+         put "," after tScript
+      end if
+      put " " & tInfo["params"][x]["name"] after tScript
+   end repeat
+   put return & return & "end" && pHandler after tScript
+   return tScript
+end revSEConstructDefaultScript
+
+command revSEAddDefaultHandler pHandler
+   local tDefaultScript, tObject
+   revSEGetCurrentObject
+   put the result into tObject
+   put revIDEDefaultScript(tObject, pHandler) into tDefaultScript
+   
+   if tDefaultScript is empty then
+      put revSEConstructDefaultScript(tObject, pHandler) into tDefaultScript
+   end if
+   
+   local tNewScript
+   put revSEGetScript() into tNewScript
+   if tNewScript is not empty then
+      if the last line of tNewScript is not empty then
+         put return after tNewScript
+      end if
+      put return after tNewScript
+   end if
+   put tDefaultScript after tNewScript
+   revSESetScript(tNewScript)
+end revSEAddDefaultHandler
