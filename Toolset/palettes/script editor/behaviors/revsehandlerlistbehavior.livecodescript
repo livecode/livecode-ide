@@ -31,6 +31,11 @@ command initializeWithoutGrabbingFocus
 end initializeWithoutGrabbingFocus
 
 command updateSelectedHandler
+   if the cSelectedHandler of me is empty then
+      set the hilitedLines of field "Handlers" of me to empty
+      exit updateSelectedHandler
+   end if
+   
    local tLineNumber
    put 1 into tLineNumber
    
@@ -133,6 +138,22 @@ command update
    call "revSEGetHandlerList" to the cCaller of me
    put the result into tHandlers
    
+   local tDefaultHandlers, tIndex
+   put revSEDefaultHandlers() into tDefaultHandlers
+   set the wholematches to false
+   
+   local tCanAdd
+   repeat for each line tLine in tDefaultHandlers
+      if lineOffset(tLine, tHandlers) is not 0 then
+         next repeat
+      end if
+      if tCanAdd is empty then
+         put tLine into tCanAdd
+      else
+         put return & tLine after tCanAdd
+      end if
+   end repeat
+   
    filterHandlerNames tHandlers
    
    if sePrefGet("editor,sortHandlerList") is "alphabetical" then
@@ -148,11 +169,21 @@ command update
       sort tHandlers by handlerTypeSortCallback(word 1 of each) & word 2 of each
    end if
    
+   if tHandlers is not empty then
+      put return &return after tHandlers
+   end if
+   put tCanAdd after tHandlers
+   
    # Populate the handlers field with the formatted list of handlers
    local tText, tIcon
    repeat for each line tHandler in tHandlers
-      local tParseHandler
+      local tParseHandler, tHandlerExists
+      put true into tHandlerExists
       put word 1 to 2 of tHandler into tParseHandler
+      
+      if the number of words in tHandler is 1 then
+         put false into tHandlerExists
+      end if
       
       put "<p>" after tText
       
@@ -162,12 +193,19 @@ command update
          put true into tIsPrivate
          delete char 1 of tParseHandler
       end if
-
-      put getIcon(char 1 of tParseHandler, tIsPrivate) into tIcon
+      
+      if tHandlerExists then
+         put getIcon(char 1 of tParseHandler, tIsPrivate) into tIcon
+         if tIcon is not empty then
+            delete char 1 of tParseHandler
+         end if
+      else
+         put the id of image "icon-add.png" of stack "revIcons" into tIcon
+      end if
+      
       if tIcon is not empty then
          put merge("<sup shift=2><img src=[[tICon]]></img></sup>") after tText
       end if
-      delete char 1 of tParseHandler
       
       put tParseHandler & "</p>" after tText
    end repeat
@@ -221,23 +259,43 @@ command resize
    unlock screen
 end resize
 
+command jumpToHandler pHandler, pAdded
+   local tLineNumber
+   put word 3 of pHandler into tLineNumber
+   
+   # OK-2009-03-03: Bug 7450 - Also return the handler type, this will allow us to detect 
+   # if the handler line number is wrong (due to uncompiling script). 
+   set the cChoice of me to tLineNumber & comma & word 2 of pHandler & comma & word 1 of pHandler
+   
+   if the cCallback of me is not empty then
+      send the cCallback of me && pAdded to the cCallbackTarget of me
+   end if
+   
+   hideGroup
+end jumpToHandler
+
 command closeAccept
    lock screen
    local tHandler
    put line (the hilitedLine of field "Handlers" of me) of the cHandlers of field "Handlers" of me into tHandler
    
-   local tLineNumber
-   put word 3 of tHandler into tLineNumber
-   
-   # OK-2009-03-03: Bug 7450 - Also return the handler type, this will allow us to detect 
-   # if the handler line number is wrong (due to uncompiling script). 
-   set the cChoice of me to tLineNumber & comma & word 2 of tHandler & comma & word 1 of tHandler
-   
-   if the cCallback of me is not empty then
-      send the cCallback of me to the cCallbackTarget of me
+   local tAdded
+   put false into tAdded
+   if the number of words in tHandler is 1 then
+      put true into tAdded
+      -- Adding a default handler
+      revSEAddDefaultHandler tHandler
+      update
+      set the wholematches to false
+      local tLine
+      put lineOffset(tHandler, the cHandlers of field "Handlers" of me) into tLine
+      select line tLine of field "Handlers" of me
+      put line tLine of the cHandlers of field "Handlers" of me into tHandler
    end if
    
-   hideGroup
+   -- Select the (now) extant handler
+   jumpToHandler tHandler, tAdded
+   
    unlock screen
 end closeAccept
 
