@@ -171,7 +171,7 @@ command update
    end if
    
    if tHandlers is not empty then
-      put return &return after tHandlers
+      put return & return & return after tHandlers
    end if
    put tCanAdd after tHandlers
    
@@ -184,6 +184,8 @@ command update
       
       if the number of words in tHandler is 1 then
          put false into tHandlerExists
+         -- Existing handler names have a space after the icon
+         put " " before tParseHandler
       end if
       
       put "<p>" after tText
