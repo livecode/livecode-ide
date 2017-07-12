@@ -1985,6 +1985,8 @@ function revMenubarStackContextMenu pStack, pIndent
    
    local tText
    put tIndent & "Edit Script" & return after tText
+   put tIndent & enableMenuItem("Edit Behavior Script", \
+         exists(the behavior of stack pStack)) & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Stack Mode" & return after tText
@@ -2042,7 +2044,7 @@ function revMenuBarCardContextMenu pCard, pIndent
    put revIDEStackOfObject(pCard) into tTargetStack
    
    local tText
-   put revMenuBarStandardContextMenu(pIndent) & return into tText
+   put revMenuBarStandardContextMenu(pCard, pIndent) & return into tText
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
    put tIndent & "-" & return after tText
@@ -2061,7 +2063,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    end repeat
    
    local tText
-   put revMenuBarStandardContextMenu(pIndent, pSelectable) & return into tText
+   put revMenuBarStandardContextMenu(pObject, pIndent, pSelectable) & return into tText
    repeat for each line tLine in pExtraText
       put tIndent & tLine & return after tText
    end repeat
@@ -2071,7 +2073,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    return tText
 end revMenuBarObjectContextMenu
 
-function revMenuBarStandardContextMenu pIndent, pSelectable
+function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
    local tIndent
    repeat pIndent
       put tab after tIndent
@@ -2079,6 +2081,8 @@ function revMenuBarStandardContextMenu pIndent, pSelectable
    
    local tText
    put tIndent & "Edit Script" & return after tText
+   put tIndent & enableMenuItem("Edit Behavior Script", \
+         exists(the behavior of pObject)) & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
@@ -2474,6 +2478,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       ######## OBJECTS #########
       case "Edit Script"
          revIDEEditScriptOfObjects pTarget
+         break
+      case "Edit Behavior Script"
+         revIDEEditScriptOfObjects the behavior of pTarget
          break
       case "Property Inspector"
          revIDEOpenInspectorForObjects pTarget
