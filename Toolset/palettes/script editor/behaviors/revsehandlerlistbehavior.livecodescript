@@ -189,7 +189,7 @@ command update
       
       local tIsPrivate
       put false into tIsPrivate
-      if char 1 of tParseHandler is "P" then
+      if tHandlerExists and char 1 of tParseHandler is "P" then
          put true into tIsPrivate
          delete char 1 of tParseHandler
       end if
