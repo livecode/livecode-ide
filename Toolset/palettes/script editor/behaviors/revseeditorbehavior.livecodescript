@@ -295,61 +295,16 @@ command loadScript
          # OK-2008-07-07 : Bug 6746
          seUpdateCheckSum getObjectID(), tScript
       else
-         # AL-2015-09-21: Tweaked logic for default script
-         local tType, tStyle
-         put word 1 of the name of getObjectID() into tType
-         if tType is among the items of "button,field,stack,graphic,scrollbar" then
-            put the style of getObjectID() into tStyle
-         else if tType is "widget" then
-            put the kind of getObjectID() into tStyle
-         else -- groups, cards, images and players have no style property so just pass empty
-            put empty into tStyle
-         end if
-         
-         local tDefaultScript
-         put seDefaultScript(tType, tStyle) into tDefaultScript
-         textSetScriptRaw tDefaultScript
-         
-         local tDefaultSelection
-         put seDefaultScriptSelection(tType, tStyle) into tDefaultSelection
-         
-         # OK-2008-08-19 : When a default script is put into an object, the object should be marked as modified
-         # in the script editor, as the script in the field is not the same as the object's actual script.
-         if tDefaultScript is not empty then
-            seSetObjectState getObjectID(), "edited"
-         end if
-         
-         # OK-2008-07-07 : Bug 6746 - When a default script was loaded, it means the object's actual script was empty,
-         # therefore the checksum should represent this. 
-         local tEmpty
-         put empty into tEmpty
-         seUpdateChecksum getObjectID(), tEmpty
-         
-         if tDefaultSelection is not empty then
-            # Try is needed here to allow the IDE to add objects to a script editor before opening it
-            try
-               select char (item 1 of tDefaultSelection) to (item 2 of tDefaultSelection) of field "Script" of me
-               
-               # OK-2009-01-17 : Bug 7601 - When a script is first loaded, slastSelectedChunk may be empty
-               # or incorrect as the user has not yet done a selection to trigger selectedChanged and update it.
-               setLastSelectedChunk tDefaultSelection
-            end try
-         else
-            select before field "Script" of me
-         end if
+         select before field "Script" of me
       end if
    end if
    
-   # Only load the previous context if we didn't use the default script and default selection,
-   # otherwise these will get overriden and the selection will be wrong.
-   if tDefaultSelection is empty then
-      # The lock messages is required, because otherwise an exitField is received before the contextLoad
-      # can execute, causing the context to be overwritten just before we load it. Not currently sure why 
-      # this happens...
-      lock messages
-      contextLoad
-      unlock messages
-   end if
+   # The lock messages is required, because otherwise an exitField is received before the contextLoad
+   # can execute, causing the context to be overwritten just before we load it. Not currently sure why 
+   # this happens...
+   lock messages
+   contextLoad
+   unlock messages
    
    # As we have changed the selection, update the rest of the script editor to reflect this
    --selectionUpdateRequest

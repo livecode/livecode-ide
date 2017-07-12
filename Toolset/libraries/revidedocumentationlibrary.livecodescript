@@ -191,6 +191,17 @@ function ideDocsFetchLCSElementOfType pEntryName, pType, pElement
 end ideDocsFetchLCSElementOfType
 
 /* 
+Fetch all docs element of the given type in the LiveCode script dictionary.
+
+Returns:
+A numerically keyed array of data, each element of which is an array of data
+pertaining to a LiveCode script dictionary entry with the given type.
+*/
+function ideDocsFetchLCSElementsOfType pType
+   return __ideDocsFetchData("", "LiveCode Script", pType)
+end ideDocsFetchLCSElementsOfType
+
+/* 
 Fetch the data for LiveCode builder dictionary entries with name <pEntryName>
 
 Returns:
@@ -227,6 +238,17 @@ pertaining to the LiveCode builder dictionary entry with the given name and type
 function ideDocsFetchLCBElementOfType pEntryName, pType, pElement
    return ideDocsFetchElementOfType(pEntryName, "LiveCode Builder", pType, pElement)
 end ideDocsFetchLCBElementOfType
+
+/* 
+Fetch all docs element of the given type in the LiveCode builder dictionary.
+
+Returns:
+A numerically keyed array of data, each element of which is an array of data
+pertaining to a LiveCode builder dictionary entry with the given type.
+*/
+function ideDocsFetchLCBElementsOfType pType
+   return __ideDocsFetchData("", "LiveCode Builder", pType)
+end ideDocsFetchLCBElementsOfType
 
 /* 
 Fetch the data for entries in the API for extension <pID> with name <pEntryName>
@@ -271,6 +293,19 @@ function ideDocsFetchExtensionElementOfType pID, pEntryName, pType, pElement
    put revIDEExtensionProperty(pID, "title") into tLibraryName	
    return ideDocsFetchElementOfType(pEntryName, tLibraryName, pType, pElement)
 end ideDocsFetchExtensionElementOfType
+
+/* 
+Fetch all docs element of the given type in the LiveCode script dictionary.
+
+Returns:
+A numerically keyed array of data, each element of which is an array of data
+pertaining to a LiveCode script dictionary entry with the given type.
+*/
+function ideDocsFetchExtensionElementsOfType pID, pType
+   local tLibraryName
+   put revIDEExtensionProperty(pID, "title") into tLibraryName
+   return __ideDocsFetchData("", tLibraryName, pType)
+end ideDocsFetchExtensionElementsOfType
 
 /*
 Returns a list of library names, one per line, which have API entries in the dictionary.

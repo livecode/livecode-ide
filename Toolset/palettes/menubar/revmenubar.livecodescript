@@ -1866,6 +1866,8 @@ private function revMenubarDevelopmentMenu pContext
    put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
    
    local tDevelopment
+   put "Object Library" & return after tDevelopment
+   put "Image Library" & return after tDevelopment
    put "Plugins" & return after tDevelopment
    if sPluginMenuText is not empty then
       put sPluginMenuText & return after tDevelopment
@@ -2989,6 +2991,18 @@ on revMenubarDevelopmentMenuPick pWhich
          break
       case "Simulator Version"
          revIDESetTestTarget item 2 of pWhich
+         break
+      case "Object Library"
+         go cd 1 of stack "revImageLibrary" as modeless
+         lock messages
+         set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 1
+         unlock messages
+         break
+      case "Image Library"
+         go cd 2 of stack "revImageLibrary" as modeless
+         lock messages
+         set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 2
+         unlock messages
          break
       case "Plugins"
          local tPicked
