@@ -129,6 +129,7 @@ function handlerTypeSortCallback pItem
    end switch
 end handlerTypeSortCallback
 
+constant kDefaultHandlerTextColor = "#777777"
 
 # Description
 #   Called when the group might need to be updated. Updates the handler list. Also resizes the group.
@@ -205,6 +206,11 @@ command update
       
       if tIcon is not empty then
          put merge("<sup shift=2><img src=[[tICon]]></img></sup>") after tText
+      end if
+      
+      if not tHandlerExists then
+         put merge("<font color='[[kDefaultHandlerTextColor]]'>[[tParseHandler]]</font>") \
+               into tParseHandler
       end if
       
       put tParseHandler & "</p>" after tText
