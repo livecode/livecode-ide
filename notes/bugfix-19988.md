@@ -1,1 +1,1 @@
-i# Add Edit Behavior Script contextul menu item
+# Add Edit Behavior Script contextual menu item
