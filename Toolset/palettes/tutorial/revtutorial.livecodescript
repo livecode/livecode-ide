@@ -1720,8 +1720,18 @@ on revInitialiseTutorial
    revIDESetPreference "cToolbarIcons", true
    revIDESetPreference "idePropertyInspector_labels", false
    
+   -- Ensure we know when stack names change
+   revIDESubscribe "ideNameChanged"
+   
    unlock screen
 end revInitialiseTutorial
+
+on ideNameChanged pOldName, pNewName, pTarget
+   if word 1 of pTarget is "stack" then
+      -- Update all our long IDs if we're tracking this stack
+      revTutorialStackNameChanged pOldName, pNewName
+   end if
+end ideNameChanged
 
 on revTutorialInitialiseStep
    put false into sWaiting
@@ -3400,6 +3410,24 @@ function revTutorialReparentChild pObject
    delete word tCardSegment to tCardSegment + 3 of pObject
    return the long id of pObject
 end revTutorialReparentChild
+
+command revTutorialStackNameChanged pOldName, pNewName
+   -- Update the tagged objects
+   repeat for each key tType in sTaggedObjects
+      repeat for each key tTag in sTaggedObjects[tType]
+         replace "stack" && quote & pOldName & quote \ 
+               with  "stack" && quote & pNewName & quote \
+               in sTaggedObjects[tType][tTag]
+      end repeat
+   end repeat
+   
+   -- Update any wait state if we are waiting. Now that the tagged objects 
+   -- are updated just call DoWait again with the current wait state.The 
+   -- type/tag in the sWait array will resolve to the updated long ID
+   if sWait is not empty then
+      revTutorialDoWait sWait
+   end if
+end revTutorialStackNameChanged
 
 # Take a tutorial tagged object (an array with 'type' and 'tag' keys)
 # and return the corresponding long ID (or list of long IDs for 'set' types)
