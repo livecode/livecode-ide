@@ -3425,7 +3425,13 @@ command revTutorialStackNameChanged pOldName, pNewName
    -- are updated just call DoWait again with the current wait state.The 
    -- type/tag in the sWait array will resolve to the updated long ID
    if sWait is not empty then
+      -- if new condition is immediately satisified (i.e. if we are waiting for a
+      -- stack name change) then sWaiting will still be false after revTutorialDoWait
+      put false into sWaiting
       revTutorialDoWait sWait
+      if not sWaiting then
+         revTutorialWaitConditionSatisfied
+      end if
    end if
 end revTutorialStackNameChanged
 
