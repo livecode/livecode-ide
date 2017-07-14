@@ -1,13 +1,14 @@
 ﻿script "revTools"
 constant BLOCK_SIZE = 20
 
+constant kToolsColumnCountDefault = 3
 on preOpenStack
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of me
    
    set the title of me to "Tools"
    
    # Preferences
-   if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", 2
+   if revIDEGetPreference("revTools_columns") is not a number then revIDESetPreference "revTools_columns", kToolsColumnCountDefault
    addFrameItem "revTools_columns", "header", "preference", "View Columns", "enum","2,3,4", "framePreferenceSelected", the long id of me
    addFrameItem "add_widget","header", "action", "Find More Widgets", "plus", "plus","findMoreWidgets", the long id of me
    
