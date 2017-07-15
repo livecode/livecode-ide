@@ -140,7 +140,9 @@ command update
    put the result into tHandlers
    
    local tDefaultHandlers, tIndex
-   put revSEDefaultHandlers() into tDefaultHandlers
+   if sePrefGet("editor,showDefaultHandlers") then
+      put revSEDefaultHandlers() into tDefaultHandlers
+   end if
    set the wholematches to false
    
    local tCanAdd
@@ -282,28 +284,30 @@ command jumpToHandler pHandler, pAdded
    hideGroup
 end jumpToHandler
 
+command handlerPicked pHandler
+   local tAdded
+   put false into tAdded
+   if the number of words in pHandler is 1 then
+      put true into tAdded
+      -- Adding a default handler
+      revSEAddDefaultHandler pHandler
+      update
+      set the wholematches to false
+      local tLine
+      put lineOffset(pHandler, the cHandlers of field "Handlers" of me) into tLine
+      select line tLine of field "Handlers" of me
+      put line tLine of the cHandlers of field "Handlers" of me into pHandler
+   end if
+   
+   -- Select the (now) extant handler
+   jumpToHandler pHandler, tAdded
+end handlerPicked
+
 command closeAccept
    lock screen
    local tHandler
    put line (the hilitedLine of field "Handlers" of me) of the cHandlers of field "Handlers" of me into tHandler
-   
-   local tAdded
-   put false into tAdded
-   if the number of words in tHandler is 1 then
-      put true into tAdded
-      -- Adding a default handler
-      revSEAddDefaultHandler tHandler
-      update
-      set the wholematches to false
-      local tLine
-      put lineOffset(tHandler, the cHandlers of field "Handlers" of me) into tLine
-      select line tLine of field "Handlers" of me
-      put line tLine of the cHandlers of field "Handlers" of me into tHandler
-   end if
-   
-   -- Select the (now) extant handler
-   jumpToHandler tHandler, tAdded
-   
+   handlerPicked tHandler
    unlock screen
 end closeAccept
 
