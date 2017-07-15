@@ -2104,7 +2104,7 @@ on revTutorialSetText pStep
    revTutorialConfigureMessage sSteps[pStep]
 end revTutorialSetText
 
-on revTutorialConfigureMessage pData
+on revTutorialConfigureMessage pData, pTopLeft
    local tWidthOverride
    put kMessageWidth into tWidthOverride
    set the width of field "Message" of stack "revTutorial" to kMessageWidth
@@ -2159,7 +2159,7 @@ on revTutorialConfigureMessage pData
       end if
    end if
    
-   revTutorialPositionStack "", "", tWidthOverride, false
+   revTutorialPositionStackForHighlight pTopLeft, tWidthOverride
 end revTutorialConfigureMessage
 
 function revTutorialScriptRetry pCurrent
@@ -2413,21 +2413,26 @@ function revTutorialCheckWaitCondition pActionData
                end if
                break
             case "scripted"
-               # If the script hasn't changed then don't do anything.
-               if revTutorialScriptIs(the script of tObject, sWait["current script"]) then
+               # This code path is triggered by any propertyChanged message,
+               # so if the script hasn't changed then don't do anything.
+               local tScript
+               put the script of tObject into tScript
+               if tScript is sWait["current script"] then
                   break
                end if
-               if revTutorialObjectPropertyIsValue(tObject, "script", pActionData["script"], false) then
+               local tMistake
+               revTutorialCompareScript tScript, pActionData["script"]
+               put the result into tMistake
+               if tMistake is empty then
                   return true
-               else if sWait["current script"] is not empty then
-                  add 1 to sWait["incorrect attempts"]
-                  put the script of tObject into sWait["current script"]
-                  # Show the current script and the target script in the tip stack
-                  local tData
-                  put revTutorialScriptRetry(sWait["current script"]) into tData["text"]
-                  put pActionData["script"] into tData["script"]
-                  revTutorialConfigureMessage tData
                end if
+               put tScript into sWait["current script"]
+               add 1 to sWait["incorrect attempts"]
+               # Show the current script and the target script in the tip stack
+               local tData
+               put revTutorialScriptRetry(tMistake) into tData["text"]
+               put pActionData["script"] into tData["script"]
+               revTutorialConfigureMessage tData, revTutorialGetEffectiveTopLeft()
                break
          end switch
          break
@@ -3311,32 +3316,32 @@ function revTutorialObjectIsHighlighted pObject
    return false
 end revTutorialObjectIsHighlighted
 
-on revTutorialPositionStackForHighlight pTopLeft
+on revTutorialPositionStackForHighlight pTopLeft, pWidthOverride
    lock screen
    switch sHighlight["type"]
       case "guide"
-         revTutorialPositionStack "", sGuides[sHighlight["guide"]], "", "", pTopLeft
+         revTutorialPositionStack "", sGuides[sHighlight["guide"]], pWidthOverride, "", pTopLeft
          break
       case "property"        
-         revTutorialPositionStack "inspector", sHighlight, "", "", pTopLeft
+         revTutorialPositionStack "inspector", sHighlight, pWidthOverride, "", pTopLeft
          break
       case "menu"
-         revTutorialPositionStack "menubar", sHighlight["menu"], "", "", pTopLeft
+         revTutorialPositionStack "menubar", sHighlight["menu"], pWidthOverride, "", pTopLeft
          break
       case "toolbar"
-         revTutorialPositionStack "menubar", sHighlight["item"], "", "", pTopLeft
+         revTutorialPositionStack "menubar", sHighlight["item"], pWidthOverride, "", pTopLeft
          break
       case "tool"
-         revTutorialPositionStack "tools", sHighlight["tool"], "", "", pTopLeft
+         revTutorialPositionStack "tools", sHighlight["tool"], pWidthOverride, "", pTopLeft
          break
       case "object"  
-         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], "", sHighlight["line"] is not empty, pTopLeft
+         revTutorialPositionStack sHighlight["stack"], sHighlight["object"], pWidthOverride, sHighlight["line"] is not empty, pTopLeft
          break
       case "stack"
-         revTutorialPositionStack sHighlight["stack"], "", "", "", pTopLeft
+         revTutorialPositionStack sHighlight["stack"], "", pWidthOverride, "", pTopLeft
          break
       default
-         revTutorialPositionStack "", "", "", "", pTopLeft
+         revTutorialPositionStack "", "", pWidthOverride, "", pTopLeft
          break
    end switch
    unlock screen
@@ -3476,7 +3481,8 @@ function revTutorialObjectPropertyIsValue pObjectIDs, pProperty, pValue, pIsNot
             return false
          end if
       else if pProperty is "script" then
-         if revTutorialScriptIs(the script of tObject, pValue) is pIsNot then
+         revTutorialCompareScript the script of tObject, pValue
+         if (the result is empty) is pIsNot then
             return false
          end if
       else if pProperty is "name" then
@@ -3537,19 +3543,61 @@ on revTutorialSnapObjectToGuide pObject, pGuide
    unlock screen
 end revTutorialSnapObjectToGuide
 
+private function revTutorialGetMistake pObjScript, pTokenNum, pReadToken, pTargetToken
+   lock messages
+   local tDefaultStack
+   put the defaultStack into tDefaultStack
+   set the defaultStack to "revTutorial"
+   create invisible field "script_tester"
+   put pObjScript into field "script_tester"
+   
+   local tCharIndex, tLineIndex, tLineChars
+   put the lineIndex of token pTokenNum of field "script_tester" into tLineIndex
+   put the charIndex of token pTokenNum of field "script_tester" into tCharIndex
+   put the number of chars in line 0 to tLineIndex - 1 \ 
+         of field "script_tester" into tLineChars
+   subtract tLineChars from tCharIndex
+   
+   local tMistake
+   if pTargetToken is not empty then 
+      put merge(quote & "[[pReadToken]]" & quote && \
+            "instead of" && quote & "[[pTargetToken]]" & quote && \
+            "at char [[tCharIndex]] of line [[tLineIndex]]") into tMistake
+   else
+      put merge("Unexpected additional script" && \
+            quote & "[[pReadToken]]" & quote && \
+            "at char [[tCharIndex]] of line [[tLineIndex]]") into tMistake
+   end if
+   delete field "script_tester"
+   set the defaultStack to tDefaultStack
+   unlock messages
+   return tMistake
+end revTutorialGetMistake
+
 // In the future we might want to add a bit more "approximity" to this.
-function revTutorialScriptIs pObjScript, pTargetScript
-   local tObjTokens, tTargetTokens
-   repeat for each token tToken in pObjScript
-      put tToken & " " after tObjTokens
+command revTutorialCompareScript pObjScript, pTargetScript
+   local tTokenNum, tMistake, tToken
+   repeat for each token tTargetToken in pTargetScript
+      add 1 to tTokenNum
+      put token tTokenNum of pObjScript into tToken
+      if tTargetToken is not tToken then
+         put revTutorialGetMistake(pObjScript, tTokenNum, tToken, tTargetToken) \
+               into tMistake
+         exit repeat
+      end if
    end repeat
    
-   repeat for each token tToken in pTargetScript
-      put tToken & " " after tTargetTokens
-   end repeat
+   if tMistake is empty then
+      add 1 to tTokenNum
+      put token tTokenNum of pObjScript into tToken
+      if tToken is not empty then
+         put revTutorialGetMistake(pObjScript, tTokenNum, tToken, empty) \
+               into tMistake
+      end if
+   end if
    
-   return tObjTokens is tTargetTokens
-end revTutorialScriptIs
+   return tMistake
+end revTutorialCompareScript
 
 constant kColorTolerance = 10
 function revTutorialColorIs pColor, pTarget
