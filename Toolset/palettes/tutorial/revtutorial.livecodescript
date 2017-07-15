@@ -2100,8 +2100,8 @@ on revTutorialDoLoad pLesson
    revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson, tTutorialInfo["location"]
 end revTutorialDoLoad
 
-on revTutorialSetText pStep
-   revTutorialConfigureMessage sSteps[pStep]
+on revTutorialSetText pStep, pTopLeft
+   revTutorialConfigureMessage sSteps[pStep], pTopLeft
 end revTutorialSetText
 
 on revTutorialConfigureMessage pData, pTopLeft
@@ -2454,6 +2454,7 @@ on revTutorialWaitUntilObjectIsScripted pTaggedObject
    revTutorialSetSEPreference "explicitVariables", false
    
    revIDESubscribe "idePropertyChanged", tObjID
+   revIDESubscribe "ideScriptEdited"
 end revTutorialWaitUntilObjectIsScripted
 
 on revTutorialWaitUntilObjectIsClicked
@@ -3028,6 +3029,52 @@ on idePropertyChanged pObject
       end if
    end if
 end idePropertyChanged
+
+local sScriptCheck
+on revTutorialCheckScript pScript, pObject
+   if revTutorialObjectIsTaggedObject(pObject, sWait["object"]) then
+      if sWait["wait condition"] is "state" and \
+            sWait["state"] is "scripted" then
+         revTutorialCompareScript pScript, sWait["script"]
+         lock screen
+         if the result is empty and sWait["correct script"] is not true then
+            -- If the currently typed script is correct, then
+            -- remind about clicking Apply
+            -- Remember the chosen location
+            put revTutorialGetEffectiveTopLeft() into sScriptCheck["topleft"]
+            put true into sScriptCheck["correct script"]
+            put "Apply" into sHighlight["object"]
+            put "object" into sHighlight["type"]
+            local tData
+            put "Click 'Apply' to apply the script" into tData["text"]
+            revTutorialConfigureMessage tData
+         else if sScriptCheck["correct script"] is true then
+            -- Otherwise, the script has been changed from the correct one
+            put false into sScriptCheck["correct script"]
+            -- Reset the highlight
+            put "stack" into sHighlight["type"]
+            -- Reset the text
+            revTutorialSetText sStepName, sScriptCheck["topleft"]
+         end if
+         unlock screen
+      end if
+   end if
+end revTutorialCheckScript
+
+local sCheckScriptMsg
+constant kCheckBufferMS = 800
+on ideScriptEdited pScript, pObject
+   -- In order to mitigate against forgetting to press the
+   -- apply button, we subscribe to ideScriptEdited and check
+   -- to see if the script entered is correct. However, we 
+   -- don't want to interrupt the flow of typing, so add a
+   -- buffer
+   if sCheckScriptMsg is not empty then
+      cancel sCheckScriptMsg
+   end if
+   send "revTutorialCheckScript pScript, pObject" to me in kCheckBufferMS millisecs
+   put the result into sCheckScriptMsg
+end ideScriptEdited
 
 on ideStackMoved pStack
    local tStack
