@@ -3791,7 +3791,7 @@ on revTutorialCreateAndCaptureObjects pWaitData, pCaptureData, pHighlightData
       else
          if pHighlightData["tool"] is not empty then
             dispatch function "toolObjectName" to stack "revTools" with pHighlightData["tool"]
-            revIDECreateObject the result, sTaggedObjects["stack"][tCapture["target stack"]["tag"]], "0,0"
+            revIDECreateObject the result, sTaggedObjects["stack"][tCapture["target stack"]["tag"]]
             put the result into sTaggedObjects[tType][tCapture["tag"]]
          else if pHighlightData["item"][1] contains "Import" then
             # Deal with 'import'
