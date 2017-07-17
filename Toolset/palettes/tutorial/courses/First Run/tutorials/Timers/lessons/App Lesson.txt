@@ -239,7 +239,7 @@ end step
 step "Test 1"
 	Click on the 'Start' button. You will see the seconds hand start to tick around the clock. Click it again to stop the clock.
 action
-	highlight button "create"
+	highlight button "start"
 	wait until the label of button "start" is "Stop"
 end step
 
