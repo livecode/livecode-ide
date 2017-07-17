@@ -161,9 +161,9 @@ script
 
 	on updateClock
 		set the itemDel to ":"
-		put word 1 of item 3 of the long time into theSeconds
-		put 360 - (theSeconds - 15) * 6 into theAngle
-		set the startAngle of graphic "seconds" to theAngle
+		put word 1 of item 3 of the long time into tSeconds
+		put 360 - (tSeconds - 15) * 6 into tAngle
+		set the startAngle of graphic "seconds" to tAngle
 
 		send "updateClock" to me in 1 second
 		put the result into sTimerID
@@ -183,7 +183,7 @@ action
 end step
 
 step "Start button code 13"
-	Then we put word 1 of item 3 of the long time (fetched from the system) into a variable, 'theSeconds'. The long time is formatted as
+	Then we put word 1 of item 3 of the long time (fetched from the system) into a variable, 'tSeconds'. The long time is formatted as
 
 	12:50:15 PM
 
@@ -195,15 +195,15 @@ action
 end step
 
 step "Start button code 14"
-	Next we calculate the angle to set the hand to, based on the seconds variable. We put this into 'theAngle' variable.
+	Next we calculate the angle to set the hand to, based on the seconds variable. We put this into 'tAngle' variable.
 action
 	interlude
-	highlight line "put 360 - (theSeconds - 15)" of script editor for button "start"
+	highlight line "put 360 - (tSeconds - 15)" of script editor for button "start"
 	go to step "Start button code 15"
 end step
 
 step "Start button code 15"
-	Then we set the start angle - which exact slice of our graphic we are showing - to 'theAngle'.
+	Then we set the start angle - which exact slice of our graphic we are showing - to 'tAngle'.
 action
 	interlude
 	highlight line "set the startAngle of graphic" of script editor for button "start"
@@ -214,7 +214,7 @@ step "Start button code 16"
 	We want to update the timer every second so we send the 'updateClock' message again in 1 second, creating a loop.
 action
 	interlude
-	highlight "send" of script editor for button "start"
+	highlight line "send" of script editor for button "start"
 	go to step "Start button code 17"
 end step
 
@@ -222,7 +222,7 @@ step "Start button code 17"
 	Finally, we put the result of all this work into a local variable, 'sTimerID', which we declared at the top of the script. This means we can use it again in the first mouseUp handler, to stop the timer as well as start it.
 action
 	interlude
-	highlight "put the result into sTimerID" of script editor for button "start"
+	highlight line "put the result into sTimerID" of script editor for button "start"
 	go to step "Run mode"
 end step
 

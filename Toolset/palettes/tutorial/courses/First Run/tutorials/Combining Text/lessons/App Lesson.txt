@@ -79,9 +79,9 @@ step "Address by name 4"
 script
 	on mouseUp
 		put field "template" into field "output"
-		put field "record" into theRecord
-		put line 2 of theRecord && word -1 of line 1 of theRecord & comma into theName
-		put theName after line 1 of field "output"
+		put field "record" into tRecord
+		put line 2 of tRecord && word -1 of line 1 of tRecord & comma into tName
+		put tName after line 1 of field "output"
 	end mouseUp
 action
 	highlight script editor for button "Create"
@@ -98,15 +98,15 @@ action
 end step
 
 step "Address by name 6"
-	The second line of code puts the contents of the "record" field into a variable we're calling 'theRecord' - this makes it easier to work with.
+	The second line of code puts the contents of the "record" field into a variable we're calling 'tRecord' - this makes it easier to work with.
 action
 	interlude
-	highlight line "into theRecord" of script editor for button "create"
+	highlight line "into tRecord" of script editor for button "create"
 	go to step "Address by name 7"
 end step
 
 step "Address by name 7"
-	The third line of code combines 3 pieces of text and puts them into another variable, 'theName'.
+	The third line of code combines 3 pieces of text and puts them into another variable, 'tName'.
 
 	- the whole of line 2 of our record (Mr)
 
@@ -117,15 +117,15 @@ step "Address by name 7"
 	A single ampersand '&' tells LiveCode to combine text together and a double ampersand '&& tells it insert a space when it does so.
 action
 	interlude
-	highlight line "put line 2 of theRecord" of script editor for button "create"
+	highlight line "put line 2 of tRecord" of script editor for button "create"
 	go to step "Address by name 8"
 end step
 
 step "Address by name 8"
-	Finally, we put 'theName' into the "output" field, after line 1.
+	Finally, we put 'tName' into the "output" field, after line 1.
 action
 	interlude
-	highlight line "put theName after" of script editor for button "create"
+	highlight line "put tName after" of script editor for button "create"
 	go to step "Run mode 1"
 end step
 
@@ -173,6 +173,7 @@ end step
 step "Video choice 2a"
 	Select the "Create email" button.
 action
+	highlight button "create"
 	wait until button "create" is selected
 	go to step "Video choice 3"
 end step
@@ -192,13 +193,13 @@ step "Video choice 4"
 script
 	on mouseUp
 		put field "template" into field "output"
-		put field "record" into theRecord
-		put line 2 of theRecord && word -1 of line 1 of theRecord & comma into theName
-		put theName after line 1 of field "output"
+		put field "record" into tRecord
+		put line 2 of tRecord && word -1 of line 1 of tRecord & comma into tName
+		put tName after line 1 of field "output"
 
-		if line 5 of theRecord > 0 then
+		if line 5 of tRecord > 0 then
 			delete line 9 to 12 of field "output"
-			put line 5 of theRecord into word 5 of line 5 of field "output"
+			put line 5 of tRecord into word 5 of line 5 of field "output"
 		else
 			delete line 5 to 8 of field "output"
 		end if
@@ -222,7 +223,7 @@ action
 end step
 
 step "Video choice 7"
-	If line 5 of 'theRecord' is greater than zero we know that the customer has watched some videos, so we delete lines 9 to 12 of the email, which say "We notice you haven't watched any videos so far".
+	If line 5 of 'tRecord' is greater than zero we know that the customer has watched some videos, so we delete lines 9 to 12 of the email, which say "We notice you haven't watched any videos so far".
 action
 	interlude
 	highlight line "delete line 9 to 12" of script editor for button "create"
@@ -230,17 +231,17 @@ action
 end step
 
 step "Video choice 8"
-	Then we put line 5 of 'theRecord', the number of videos watched, into word 5 of line 5 of our email, replacing the placeholder "X" in "We noticed you watched X videos so far".
+	Then we put line 5 of 'tRecord', the number of videos watched, into word 5 of line 5 of our email, replacing the placeholder "X" in "We noticed you watched X videos so far".
 action
 	interlude
-	highlight line "put line 5 of theRecord" of script editor for button "create"
+	highlight line "put line 5 of tRecord" of script editor for button "create"
 	go to step "Video choice 9"
 end step
 
 skip point
 
 step "Video choice 9"
-	If line 5 of 'theRecord' is 0 (or less), we delete line 5 to 8 of the output email.
+	If line 5 of 'tRecord' is 0 (or less), we delete line 5 to 8 of the output email.
 action
 	interlude
 	highlight line "delete line 5 to 8" of script editor for button "create"
