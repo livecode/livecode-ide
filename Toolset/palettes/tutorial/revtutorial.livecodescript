@@ -2009,7 +2009,7 @@ on revTutorialContinue pBack
       if sSteps[sStepName]["actions"]["wait"] is not empty then
          # Add guide in case wait is 'fits guide'
          revTutorialExecuteAction sSteps[sStepName]["actions"]["add guide"]
-         if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"]) then
+         if revTutorialCheckWaitCondition(sSteps[sStepName]["actions"]["wait"], true) then
             put false into sDontShow
             next repeat
          end if
@@ -2310,7 +2310,7 @@ end revTutorialReturnFromInterlude
 on revTutorialDoWait pActionData
    put empty into sWait
    // Check to see if wait condition is immediately satisfied
-   if revTutorialCheckWaitCondition(pActionData) then
+   if revTutorialCheckWaitCondition(pActionData, true) then
       exit revTutorialDoWait
    end if
    
@@ -2364,7 +2364,7 @@ on revTutorialDoWait pActionData
    end switch
 end revTutorialDoWait
 
-function revTutorialCheckWaitCondition pActionData
+function revTutorialCheckWaitCondition pActionData, pBeforeDisplay
    # Deal with non-object wait conditions
    switch pActionData["wait condition"]
       case "there is a palette"
@@ -2381,6 +2381,12 @@ function revTutorialCheckWaitCondition pActionData
    
    switch pActionData["wait condition"]
       case "property"
+         # If we are waiting for the property to be 'changed' then don't try and
+         # shortcut the step
+         if pBeforeDisplay and pActionData["is not"] then
+            break
+         end if
+         
          local tValue
          # If the step specified a value then we want to compare with this instead
          # of the string "value"
