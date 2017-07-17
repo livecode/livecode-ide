@@ -1800,6 +1800,7 @@ private function revMenubarHelpMenu pContext
    # AL-2015-07-10: Temporarily remove welcome screen option from help menu
    //put "Welcome Screen/|Welcome" & return after tHelp
    put "Start Center/|Start Center" & return after tHelp
+   put "User Guide" & return after tHelp
    put "Dictionary (API)/|Dictionary" & return after tHelp
    
    put "-" & return  after tHelp
@@ -1810,7 +1811,6 @@ private function revMenubarHelpMenu pContext
    put "Beginners Guide" & return after tHelp
    put "All Guides" & return after tHelp
    put "Tutorials" & return after tHelp
-   put "User Guide" & return after tHelp
    put "-" & return after tHelp
    put "Forums" & return after tHelp
    put "Technical Questions" & return after tHelp
