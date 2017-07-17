@@ -32,16 +32,25 @@ step "Start button code 1"
 	The stack consists of a clock background image, a graphic used as the "seconds" hand and a "Start/Stop" button to start the seconds hand ticking.
 
 	We will be creating the motion of the second hand by adjusting the Start angle on the "seconds" graphic to give us the effect of movement.
+
+	To start the seconds hand ticking we will add code to the "Start" button.
 action
 	interlude
 	go to step "Start button code 2"
 end step
 
 step "Start button code 2"
-	To start the seconds hand ticking we will add code to the "Start" button.
-
-	Ensure you are in 'Edit' mode and select the "Create email" button .
+	To make changes select 'Edit' mode.
 action
+	highlight tool "Edit Mode"
+	wait until the tool is edit
+	go to step "Start button code 2b"
+end step
+
+step "Start button code 2b"
+	Select the "Start" button .
+action
+	highlight button "start"
 	wait until button "start" is selected
 	go to step "Start button code 3"
 end step
@@ -59,14 +68,14 @@ step "Start button code 4"
 
 	Don't forget to click the 'Apply' button when you have finished.
 script
-	local lTimerID
+	local sTimerID
 
 	on mouseUp
 		if the label of me is "Start" then
 			updateClock
 			set the label of me to "Stop"
 		else
-			cancel lTimerID
+			cancel sTimerID
 			set the label of me to "Start"
 		end if
 	end mouseUp
@@ -104,7 +113,7 @@ step "Start button code 8"
 	If the button label is not already "Start", then we must be stopping the clock, so we cancel the timer.
 action
 	interlude
-	highlight line "cancel lTimerID" of script editor for button "start"
+	highlight line "cancel sTimerID" of script editor for button "start"
 	go to step "Start button code 9"
 end step
 
@@ -116,6 +125,7 @@ action
 	go to step "Start button code 10"
 end step
 
+skip point
 
 step "Start button code 10"
 	Next we need to implement the updateClock message. This handler will
@@ -124,7 +134,7 @@ step "Start button code 10"
 
 	- Calculate the angle to set the hands to
 
-	- Set the angle of the hands
+	- Set the angle of the second hand
 
 	- Tell the clock to update again in 1 second
 action
@@ -137,14 +147,14 @@ step "Start button code 11"
 
 	Don't forget to click the 'Apply' button when you have finished.
 script
-	local lTimerID
+	local sTimerID
 
 	on mouseUp
 		if the label of me is "Start" then
 			updateClock
 			set the label of me to "Stop"
 		else
-			cancel lTimerID
+			cancel sTimerID
 			set the label of me to "Start"
 		end if
 	end mouseUp
@@ -156,7 +166,7 @@ script
 		set the startAngle of graphic "seconds" to theAngle
 
 		send "updateClock" to me in 1 second
-		put the result into lTimerID
+		put the result into sTimerID
 	end updateClock
 action
 	highlight script editor for button "start"
@@ -177,7 +187,7 @@ step "Start button code 13"
 
 	12:50:15 PM
 
-	Item 3 is "15 PM", so word 1 of item 2 gives us the seconds part.
+	Item 3 is "15 PM", so word 1 of item 3 gives us the seconds part.
 action
 	interlude
 	highlight line "put word 1 of item 3" of script editor for button "start"
@@ -185,7 +195,7 @@ action
 end step
 
 step "Start button code 14"
-	Next we calculate the angle to set the hands to, based on the seconds variable. We put this into 'theAngle' variable.
+	Next we calculate the angle to set the hand to, based on the seconds variable. We put this into 'theAngle' variable.
 action
 	interlude
 	highlight line "put 360 - (theSeconds - 15)" of script editor for button "start"
@@ -209,10 +219,10 @@ action
 end step
 
 step "Start button code 17"
-	Finally, we put the result of all this work into a local variable, 'lTimerID', which we declared at the top of the script. This means we can use it again in the first mouseUp handler, to stop the timer as well as start it.
+	Finally, we put the result of all this work into a local variable, 'sTimerID', which we declared at the top of the script. This means we can use it again in the first mouseUp handler, to stop the timer as well as start it.
 action
 	interlude
-	highlight "put the result into lTimerID" of script editor for button "start"
+	highlight "put the result into sTimerID" of script editor for button "start"
 	go to step "Run mode"
 end step
 
@@ -223,7 +233,7 @@ step "Run mode"
 action
 	highlight tool "Run Mode"
 	wait until the tool is run
-	go to step "Test"
+	go to step "Test 1"
 end step
 
 step "Test 1"

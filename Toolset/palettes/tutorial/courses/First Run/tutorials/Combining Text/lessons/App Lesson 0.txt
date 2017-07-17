@@ -47,7 +47,7 @@ action
 end step
 
 step "Set Stack Color"
-	Resize the stack so that it has width 700 and height 500.
+	We want the stack to have a white background so set the 'Background fill' of the stack to white (255,255,255).
 action
 	highlight property "backgroundColor" of section "colors"
 	wait until the backgroundColor of stack "mainstack" is "255,255,255"

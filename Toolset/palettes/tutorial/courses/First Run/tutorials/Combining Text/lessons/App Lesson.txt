@@ -41,16 +41,25 @@ end step
 
 step "Address by name 1"
 	We want to create a personalized email by combining the email template with the personal details in the "record" field.
+
+	The first step is to start our email with "Dear Mr Miller". To do this we need to add some code to the button.
 action
 	interlude
 	go to step "Address by name 2"
 end step
 
 step "Address by name 2"
-	The first step is to start our email with "Dear Mr Miller". To do this we need to add some code to the button.
-
-	Ensure you are in 'Edit' mode and select the "Create email" button .
+	To make changes first ensure you are in 'Edit' mode.
 action
+	highlight tool "Edit Mode"
+	wait until the tool is edit
+	go to step "Address by name 2b"
+end step
+
+step "Address by name 2b"
+	Select the "Create email" button.
+action
+	highlight button "create"
 	wait until button "create" is selected
 	go to step "Address by name 3"
 end step
