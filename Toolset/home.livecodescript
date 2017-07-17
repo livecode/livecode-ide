@@ -744,7 +744,7 @@ command revInternal__ResetPreferences
    put "false" into tPropsArray["cShowRevolutionStacks"]
    put "22" into tPropsArray["cMenuHeight"]
    put "1067,251,1882,827" into tPropsArray["cRevDocsRect"]
-   put "Black" into tPropsArray["cBackDropColor"]
+   put "Gray88" into tPropsArray["cBackDropColor"]
    put "false" into tPropsArray["cREVMsgShowUIFrontScripts"]
    put "false" into tPropsArray["revstack"]
    put "100" into tPropsArray["cMacOSProgressScrollbarWidth"]
@@ -1393,6 +1393,18 @@ end revInternal__InitialiseDefaults
 
 command revInternal__InitialiseOptions
    revInternal__Log "Enter", "Options Initialisation"
+   
+   if the StartCenterClassic of stack "revPreferences" is not "true" then
+      set the cBackDrop of stack "revPreferences" to "Gray88"
+      set the cBackDropColor of stack "revPreferences" to "Gray88"
+   end if
+   local tBackdrop
+   put the cBackDrop of stack "revPreferences" into tBackdrop
+   if tBackdrop is "none" then
+      set the backdrop to tBackdrop
+   else
+      set the backdrop to the cBackDropColor of stack "revPreferences"
+   end if
    
    set the selectGroupedControls to the cSelectGrouped of stack "revPreferences"
    set the tooltipDelay to the cREVToolTipDelay of stack "revPreferences"
