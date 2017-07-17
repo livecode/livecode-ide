@@ -282,7 +282,7 @@ private command updateCurrentLine pContext
       put tArray["line number"] into tDebugLine
    end if
    
-   if (the long id of pContext["object"] is not the long id of tDebugObject) then
+   if (seGetRuggedId(pContext["object"]) is not seGetRuggedId(tDebugObject)) then
       exit updateCurrentLine
    end if
    
@@ -330,55 +330,56 @@ command addLines pNumberToAdd
 end addLines
 
 command updateCompilationErrors pContext
-  local tObject
-  if pContext["object"] is not empty then
-    put pContext["object"] into tObject
-  else
-    getObject
-    put the result into tObject
-  end if
-  if tObject is empty then
-    exit updateCompilationErrors
-  end if
+   local tObject
+   if pContext["object"] is not empty then
+      put pContext["object"] into tObject
+   else
+      getObject
+      put the result into tObject
+   end if
    
-  # Remove previous compilation errors
-  if pContext["errorImages"] is not empty then
-    repeat for each line tImageId in pContext["errorImages"]
-      delete image id tImageId of me
-    end repeat
-  else
-    clearCompilationErrors  
-  end if
+   if there is not a tObject then
+      return "object does not exist" for error
+   end if
    
-  local tHorizontal
-  put item 1 of the loc of me into tHorizontal
+   # Remove previous compilation errors
+   if pContext["errorImages"] is not empty then
+      repeat for each line tImageId in pContext["errorImages"]
+         delete image id tImageId of me
+      end repeat
+   else
+      clearCompilationErrors  
+   end if
    
-  local tErrorNumber
-  put 1 into tErrorNumber
+   local tHorizontal
+   put item 1 of the loc of me into tHorizontal
    
-  local tVertical
-  local tDescription, tLine, tToken
-  repeat for each line tError in sErrors[seGetRuggedId(tObject)]
-    put seErrorDescription("compilation", item 1 of tError) into tDescription
-    put item 2 of tError into tLine
-    put item 4 to -1 of tError into tToken
-    put lineNumberToVerticalLoc(tLine) into tVertical
-    if tVertical is 0 then
-      # If 0 it means that the line number of the error is not within the gutter's current bounds
-      next repeat
-    end if
-     
-    local tImage
-    copy getErrorImageId() to group "Mutables" of me
-    put the long id of it into tImage
-    set the cError of tImage to true
-    set the cLine of tImage to tLine
-    set the tooltip of tImage to "Error (line " & tLine & "): " & tDescription
-    set the loc of tImage to tHorizontal, tVertical
-    set the name of tImage to "Error " & tErrorNumber
-     
-    add 1 to tErrorNumber
-  end repeat
+   local tErrorNumber
+   put 1 into tErrorNumber
+   
+   local tVertical
+   local tDescription, tLine, tToken
+   repeat for each line tError in sErrors[seGetRuggedId(tObject)]
+      put seErrorDescription("compilation", item 1 of tError) into tDescription
+      put item 2 of tError into tLine
+      put item 4 to -1 of tError into tToken
+      put lineNumberToVerticalLoc(tLine) into tVertical
+      if tVertical is 0 then
+         # If 0 it means that the line number of the error is not within the gutter's current bounds
+         next repeat
+      end if
+      
+      local tImage
+      copy getErrorImageId() to group "Mutables" of me
+      put the long id of it into tImage
+      set the cError of tImage to true
+      set the cLine of tImage to tLine
+      set the tooltip of tImage to "Error (line " & tLine & "): " & tDescription
+      set the loc of tImage to tHorizontal, tVertical
+      set the name of tImage to "Error " & tErrorNumber
+      
+      add 1 to tErrorNumber
+   end repeat
 end updateCompilationErrors
 
 
@@ -477,6 +478,10 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
       put the result into tObject
    end if
    
+   if there is not a tObject then
+      return "object does not exist" for error
+   end if
+   
    if pTextChanged then
       updateBreakpointPositions tObject, pOffset, pSelectedLine, pOldNumber, pNewNumber
    end if
@@ -485,6 +490,9 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
    local tBreakpoints
    put revDebuggerListBreakpoints(tObject) into tBreakpoints
    
+   local tConditions
+   put revDebuggerListBreakpointConditions(tObject) into tConditions
+
    local tHorizontal, tVertical
    put item 1 of the loc of me into tHorizontal
    
@@ -540,6 +548,8 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
       set the cState of tImage to tState
       set the loc of tImage to tHorizontal, tVertical
       
+      set the cCondition of tImage to line tLineNumber of tConditions
+      
       add 1 to tLineNumber
    end repeat
 end updateBreakpoints
@@ -593,7 +603,7 @@ command updateContextMenu pContext
   end if
   put "Remove" & return after tText
   put "-" & return after tText
-  put "Condition..." after tText
+  put "Edit..." after tText
   
   set the text of button "Breakpoint Context Menu" of me to tText
   set the cTarget of button "Breakpoint Context Menu" of me to line 4 of pContext
@@ -754,10 +764,8 @@ on menuPick pItemName
       case "Remove"
          revDebuggerRemoveBreakpoint tObject, (the cLine of tImage)
          break
-      case "Condition..."
-         set the cObject of stack "revSEBreakpointCondition" to tObject
-         set the cLine of stack "revSEBreakpointCondition" to (the cLine of tImage)
-         modal stack "revSEBreakpointCondition"
+      case "Edit..."
+         seEditBreakpointDialog "breakpoint", the cLine of tImage,,, the cCondition of tImage, tObject
          exit menuPick
          break
    end switch

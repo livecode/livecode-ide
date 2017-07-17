@@ -62,9 +62,29 @@ on updateSettings
    local tSettings
    put getSettings() into tSettings
    
+   local tScreen
+   put computeDefault(tSettings["ios,active menu"], "Basic Settings") into tScreen
+   repeat for each line tLine in the text of button "iOSTabMenu"
+      if tLine is tScreen then
+         if tScreen is "Requirements" then
+            put "Requirement" into tScreen
+         end if
+         show group tScreen
+         set the menuHistory of button "iOSTabMenu" to lineOffset(tScreen, the text of button "iOSTabMenu")
+      else
+         local tToHide
+         put tLine into tToHide
+         if tToHide is "Requirements" then
+            put "Requirement" into tToHide
+         end if
+         hide group tToHide
+      end if
+   end repeat
+   
    put computeDefault(tSettings["ios,display name"], tSettings["name"]) into field "Display Name"
    put computeDefault(tSettings["ios,bundle id"], "com.yourcompany.yourapp") into field "Bundle Id"
    put computeDefault(tSettings["ios,bundle version"], "1.0.0") into field "Bundle Version"
+   put computeDefault(tSettings["ios,bundle build"],"1") into field "Build Number"
    
    -- SN-2015-03-30: [[ Bug 14794 ]] Initialise the value for 32-bit only build
    if tSettings["ios,32-bit only"] then
@@ -209,20 +229,31 @@ on updateSettings
    end if
    set the label of button "Supported Devices" to it
    
-   -- We only support iOS 6.0 and later
+   -- SN-2015-02-04: [[ Bug 14422 ]] We only support iOS 5.1.1 and later
+   -- MM-2013-09-23: We only support iOS 4.3 and later
    --
-   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] < "6.0" then
+   if tSettings["ios,minimum version"] is not empty and tSettings["ios,minimum version"] <= "5.1" then
       put empty into tSettings["ios,minimum version"]
    end if   
    
-   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "6.0") && "or later"
+   set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "5.1.1") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
+   set the hilite of button "Enable Background Execution" to computeDefault(tSettings["ios,enable background execution"],"false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
-   set the hilite of button "Exits on Suspend" to computeDefault(tSettings["ios,exits on suspend"], "true")
+   set the hilite of button "Location Update" to computeDefault(tSettings["ios,background location update"], "false")
+   set the hilite of button "VoIP" to computeDefault(tSettings["ios,background voip"], "false")
+   set the hilite of button "Newsstand Downloads" to computeDefault(tSettings["ios,background newsstand downloads"], "false")
+   set the hilite of button "ExAcComn" to computeDefault(tSettings["ios,external acc comn"], "false")
+   set the hilite of button "UseBTLE" to computeDefault(tSettings["ios,use bt le"], "false")
+   set the hilite of button "Acts as BT LE Acc" to computeDefault(tSettings["ios,acts as bt le"], "false")
+   set the hilite of button "Background Fetch" to computeDefault(tSettings["ios,background fetch"], "false")
+   set the hilite of button "Remote Notifications" to computeDefault(tSettings["ios,remote notifications"], "false")
    set the hilite of button "File Sharing" to computeDefault(tSettings["ios,file sharing"], "false")
    set the hilite of button "Prerendered Icon" to computeDefault(tSettings["ios,prerendered icon"], "false")
    set the hilite of button "Disable ATS" to computeDefault(tSettings["ios,disable ATS"], "false")
    set the label of button "Build Type" to computeDefault(tSettings["ios,build type"], "Universal")
+   
+   put computeDefault(tSettings["ios,urlwhitelist"],"") into fld "urlwhitelist"
    
    repeat with i = 1 to 18
       get tSettings["ios,device capabilities"][the short name of group i of group "Device Capabilities"]
@@ -377,12 +408,19 @@ function getProfiles
 end getProfiles
 
 on updateIosSettingState
-   set the enabled of group "iOS Settings" of me to (the hilite of button "Build for iOS" of me)
-   set the visible of button "iOSChecked" to (the hilite of button "Build for iOS" of me)
-   set the opaque of button "iOSChecked" to false
    -- SN-2015-03-30: [[ Bug 14794 ]] Add a checkbox for disable the 64-bit slice
    --  which is only valid for 5.1.1 built (for iPad 1).
    set the enabled of button "32bit_only" to (the hilite of button "Build for iOS")
+   set the enabled of group "iOS Settings" of me to (the hilite of button "Build for iOS" of me)
+   set the visible of button "iOSChecked" to (the hilite of button "Build for iOS" of me)
+   set the enabled of button "iOSTabMenu" to (the hilite of button "Build for iOS")
+   set the enabled of group "Basic Settings" to (the hilite of button "Build for iOS")
+   set the enabled of group "Requirement" to (the hilite of button "Build for iOS")
+   set the enabled of group "Background Modes" to (the hilite of button "Enable Background Execution")
+   set the enabled of group "Icons" to (the hilite of button "Build for iOS")
+   set the enabled of group "Splash" to (the hilite of button "Build for iOS")
+   set the enabled of button "Supported Devices" to (the hilite of button "Build for iOS")
+   set the enabled of button "Minimum iOS Version" to (the hilite of button "Build for iOS")
 end updateIosSettingState
 
 on chooseImageFile pType
@@ -417,13 +455,29 @@ end chooseImageFileWithDimension
 
 on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
-      set the topLeft of group "iosBuild" to 12,136
-      set the topLeft of group "iOS Settings" to -1,136
-      set the cSize of this card to 1024,726
+      set the topLeft of group "buildbutton" to 50,127
+      set the topLeft of group "iOS Settings" to 5,127
+      repeat for each line tLine in the text of button "iOSTabMenu"
+         local tName
+         put tLine into tName
+         if tName is "Requirements" then
+            put "Requirement" into tName
+         end if
+         set the topLeft of group tName to 12,178
+      end repeat 
+      set the cSize of this card to 754,670
    else 
-      set the topLeft of group "iOS Settings" to -1,67
-      set the topLeft of group "iosBuild" to 12,68
-      set the cSize of this card to 1024,676
+      set the topLeft of group "buildbutton" to 50,60
+      set the topLeft of group "iOS Settings" to 5,57
+      repeat for each line tLine in the text of button "iOSTabMenu"
+         local tName2
+         put tLine into tName2
+         if tName2 is "Requirements" then
+            put "Requirement" into tName2
+         end if
+         set the topLeft of group tName2 to 12,108
+      end repeat 
+      set the cSize of this card to 754,600
    end if
    updateCardSize
 end tipDisplayUpdate

@@ -466,7 +466,7 @@ on __extensionUninstallCheckInUse pCacheIndex
    __extensionSendProgressUpdate pCacheIndex, "Checking if extension is in use", 20
    
    # Next step
-   send "__extensionUninstallDeleteFiles" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallDeleteFiles pCacheIndex
 end __extensionUninstallCheckInUse
 
 # Delete the files associated to the extension
@@ -491,7 +491,7 @@ on __extensionUninstallDeleteFiles pCacheIndex
    end if
    
    # Next step
-   send "__extensionUninstallUnload" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallUnload pCacheIndex
 end __extensionUninstallDeleteFiles
 
 # Unload the extension
@@ -505,7 +505,7 @@ on __extensionUninstallUnload pCacheIndex
    revIDEExtensionUnload tName
    
    # Next step
-   send "__extensionUninstallDocs" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallDocs pCacheIndex
 end __extensionUninstallUnload
 
 # Remove the guide from the IDE
@@ -515,7 +515,7 @@ on __extensionUninstallDocs pCacheIndex
    
    revIDERegenerateBuiltDictionaryData
    
-   send "__extensionUninstallComplete" && pCacheIndex to me in 0 milliseconds
+   __extensionUninstallComplete pCacheIndex
 end __extensionUninstallDocs
 
 on __extensionUninstallComplete pCacheIndex
@@ -757,6 +757,8 @@ private function __extensionIsBuiltin pID
       case "com.livecode.type"
       case "com.livecode.typeconvert"
       case "com.livecode.extensions.libbrowser"
+      case "com.livecode.java"
+      case "com.livecode.objc"
          return true
       default
          return false
@@ -837,17 +839,14 @@ function revIDEExtensionsOrderByDependency pExtensions
 end revIDEExtensionsOrderByDependency
 
 on __extensionsLoad
-   local tDataA
-   revIDEPushDefaultFolder
-   
+   local tDataA   
    # Fetch all the available data about extensions in the search paths
    local tFoldersA, tExtensionFolder, tPath
    put revIDEExtensionFolders() into tFoldersA
    set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
-      set the defaultfolder to tExtensionFolder
-      repeat for each line tFolder in the folders
+      repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
@@ -903,8 +902,6 @@ on __extensionsLoad
    repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
-   
-   revIDEPopDefaultFolder
 end __extensionsLoad
 
 # Returns: List of the packages that are in the directory but not installed
@@ -1140,12 +1137,10 @@ end revIDEExtensionDocsData
 on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    if pExtensionSource is empty then
       local tFiles
-      revIDEPushDefaultFolder pFolder
-      put the files into tFiles
+      put files(pFolder) into tFiles
       filter tFiles with "*.lcb"
       if tFiles is empty then exit revIDEExtensionUpdateAPI
       put line 1 of tFiles into pExtensionSource
-      revIDEPopDefaultFolder
    end if
    
    # Check timestamps to see if API  is out of date.

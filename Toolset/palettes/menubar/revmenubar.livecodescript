@@ -1450,8 +1450,6 @@ end revMenubarToolsMenu
 ################################################################################
 
 private function revMenubarTextMenu pContext
-   global gREVDisabledText, gREVTextMenu
-   
    local tText,tFont,tSize,tAlign,tStyle,tColor
    
    if not pContext["enableText"] then
@@ -1863,6 +1861,10 @@ end revMenubarViewMenu
 
 private function revMenubarDevelopmentMenu pContext
    global gREVSuppressErrors, gREVSuppressMessages
+   
+   local tIsUserTarget
+   put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
+   
    local tDevelopment
    put "Object Library" & return after tDevelopment
    put "Image Library" & return after tDevelopment
@@ -1875,6 +1877,18 @@ private function revMenubarDevelopmentMenu pContext
    put "-" & return after tDevelopment
    put revMenubarSimulatorSubmenu() after tDevelopment
    put "-" & return after tDevelopment   
+   
+   if there is a stack "com.livecode.script-library.scriptprofiler" then
+      local tProfiler
+      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      if tProfiler is among the lines of the backScripts then
+         put enableMenuItem("Start Profiling Scripts", tIsUserTarget) & return after tDevelopment
+      else
+         put enableMenuItem("Stop Profiling Scripts...", tIsUserTarget) & return after tDevelopment
+      end if
+      put "-" & return after tDevelopment
+   end if
+   
    put toggleMenuItem("Script Debug Mode", revDebuggerEnabled()) & return after tDevelopment
    put"Clear All Breakpoints" & return after tDevelopment
    put "Message Watcher" & return after tDevelopment
@@ -1971,6 +1985,8 @@ function revMenubarStackContextMenu pStack, pIndent
    
    local tText
    put tIndent & "Edit Script" & return after tText
+   put tIndent & enableMenuItem("Edit Behavior Script", \
+         exists(the behavior of stack pStack)) & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & "Stack Mode" & return after tText
@@ -2000,6 +2016,18 @@ function revMenubarStackContextMenu pStack, pIndent
    put tIndent & "Standalone Application Settings..." & return after tText
    put tIndent & "Save As Standalone Application..." & return after tText
    put tIndent & "-" & return after tText
+   
+   if there is a stack "com.livecode.script-library.scriptprofiler" then
+      local tProfiler
+      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      if tProfiler is among the lines of the backScripts then
+         put tIndent & "Start Profiling Scripts" & return after tText
+      else
+         put tIndent & "Stop Profiling Scripts..." & return after tText
+      end if
+      put tIndent & "-" & return after tText
+   end if
+   
    put revMenubarSendContextMenu(pStack, pIndent) after tText
    put revMenubarAdditionalContextMenu(pIndent) after tText
    
@@ -2016,7 +2044,7 @@ function revMenuBarCardContextMenu pCard, pIndent
    put revIDEStackOfObject(pCard) into tTargetStack
    
    local tText
-   put revMenuBarStandardContextMenu(pIndent) & return into tText
+   put revMenuBarStandardContextMenu(pCard, pIndent) & return into tText
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
    put tIndent & "-" & return after tText
@@ -2035,7 +2063,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    end repeat
    
    local tText
-   put revMenuBarStandardContextMenu(pIndent, pSelectable) & return into tText
+   put revMenuBarStandardContextMenu(pObject, pIndent, pSelectable) & return into tText
    repeat for each line tLine in pExtraText
       put tIndent & tLine & return after tText
    end repeat
@@ -2045,7 +2073,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    return tText
 end revMenuBarObjectContextMenu
 
-function revMenuBarStandardContextMenu pIndent, pSelectable
+function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
    local tIndent
    repeat pIndent
       put tab after tIndent
@@ -2053,6 +2081,8 @@ function revMenuBarStandardContextMenu pIndent, pSelectable
    
    local tText
    put tIndent & "Edit Script" & return after tText
+   put tIndent & enableMenuItem("Edit Behavior Script", \
+         exists(the behavior of pObject)) & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
@@ -2371,7 +2401,7 @@ end unIconifyStack
 
 on iconifyStack
    local tOpenStackslist, tMaxlist
-   global gREVBackDropRestore, gREVMenutopLeft, gREVRestore
+   global gREVBackDropRestore, gREVRestore
    put the windowBoundingRect into gREVRestore["windowBoundingRect"]
    set the windowBoundingRect to 0,0,item 3 to 4 of the windowBoundingRect
    lock messages
@@ -2448,6 +2478,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       ######## OBJECTS #########
       case "Edit Script"
          revIDEEditScriptOfObjects pTarget
+         break
+      case "Edit Behavior Script"
+         revIDEEditScriptOfObjects the behavior of pTarget
          break
       case "Property Inspector"
          revIDEOpenInspectorForObjects pTarget
@@ -2557,6 +2590,12 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone tTargetStack
+         break
+      case "Start Profiling Scripts" 
+         scriptprofilerStartProfiler the short name of tTargetStack
+         break
+      case "Stop Profiling Scripts..." 
+         scriptprofilerStopProfiler
          break
          ######## MULTI OBJECT SPECIFIC #########
       case "Align"
@@ -2691,7 +2730,6 @@ on revMenubarFileMenuPick pWhich
 end revMenubarFileMenuPick
 
 on revMenubarEditMenuPick pWhich
-   global gREVChunkStore, gREVUndoList
    switch pWhich
       case "Undo"
          revIDEUndo
@@ -2936,8 +2974,6 @@ end revMenubarTextMenuPick
 
 local lRestore
 on revMenubarDevelopmentMenuPick pWhich
-   global gREVSuppressErrors, gREVSuppressMessages, gREVRestore, gREVOldScriptDebugMode
-   
    local tWhich
    set the itemDelimiter to "|"
    put item 1 of pWhich into tWhich
@@ -2989,11 +3025,16 @@ on revMenubarDevelopmentMenuPick pWhich
                break
          end switch
          break
+      case "Start Profiling Scripts" 
+         scriptprofilerStartProfiler the short name of the topStack
+         break
+      case "Stop Profiling Scripts..." 
+         scriptprofilerStopProfiler
+         break
    end switch
 end revMenubarDevelopmentMenuPick
 
 on revMenubarViewMenuPick pWhich
-   global gREVSuppressErrors, gREVSuppressMessages, gREVPalettes, gREVShowStacks
    switch pWhich
       case "Show IDE Stacks In Lists"
       case "Show Invisible Objects"

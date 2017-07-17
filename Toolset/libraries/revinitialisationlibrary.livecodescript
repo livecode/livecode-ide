@@ -10,19 +10,54 @@ command revInternal__LoadLibrary pLibrary
    -- SN-2015-02-20: Linux uses case-sensitive filenames, so we
    --  follow the lower-case naming of the library names
    put toLower(pLibrary) into pLibrary
-
+   
    if sLoadedLibraries[pLibrary] is not empty then
-     return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
+     return empty
    end if
-
+   
    // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
    if the environment begins with "development" then
+      local tPaths
+      
+      local tToolsetPath
+      put revEnvironmentToolsetPath() into tToolsetPath
+      
+      local tLibSuffix
+      set the itemDelimiter to "."
+      put the last item of pLibrary into tLibSuffix
+      
+      put merge("[[tToolsetPath]]/libraries/[[pLibrary]]") into tPaths[1]
+      put merge("[[tToolsetPath]]/libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[2]
+      
+      if not revEnvironmentIsInstalled() then
+         local tRepoPath
+         put revEnvironmentRepositoryPath() into tRepoPath
+         
+         put merge("[[tRepoPath]]/ide-support/[[pLibrary]]") into tPaths[3]
+         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[4]
+         set the itemDelimiter to slash
+         delete the last item of tRepoPath
+         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[5]
+         put merge("[[tRepoPath]]/ide/libraries/[[tLibSuffix]]") into tPaths[6]
+      end if
+      
       local tLibraryPath
-      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
-      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
-      else answer "no file for library" && pLibrary
+      local tIndex
+      repeat with tIndex = 1 to the number of elements in tPaths
+         local tExtension
+         repeat for each word tExtension in "livecodescript livecode"
+            if there is a file (tPaths[tIndex]& "." & tExtension) then
+               put tPaths[tIndex]& "." & tExtension into tLibraryPath
+               exit repeat
+            end if
+         end repeat
+      end repeat
+      
+      set the itemDelimiter to comma
+      
+      if tLibraryPath is empty then
+         return "no file for library" && pLibrary
+      end if
       
       try
          // Get its name
@@ -30,18 +65,20 @@ command revInternal__LoadLibrary pLibrary
          put the name of stack tLibraryPath into tStackName
          send "revLoadLibrary" to stack tStackName
          put tStackName into sLoadedLibraries[pLibrary]
-         return true
       catch tError
-         answer "Error while loading stack:" && tLibraryPath
+         return "Error while loading stack:" && tLibraryPath & return & tError
       end try
       
    else
       try
          send "revLoadLibrary" to stack pLibrary
       catch tError
-         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
+         put "Error" && tError && "while loading stack:" && pLibrary into tError
+         write tError to stderr
+         return tError
       end try
    end if
+   return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
@@ -98,3 +135,26 @@ command revInternal__SetSmallAppIcon pSmallAppIcon
    set the paintCompression to "png" -- match the engine
    put pSmallAppIcon into gRevSmallAppIcon
 end revInternal__SetSmallAppIcon
+
+command revInternal_SetJAVA_HOME
+   if $JAVA_HOME is empty then
+      local tPath
+      switch the platform
+         case "MacOS"
+            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+            break
+         case "Linux"
+            local tJAVAC
+            put "/bin/javac" into tJAVAC
+            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+            if there is a file tPath and tPath ends with tJAVAC then
+               set the itemDelimiter to slash
+               delete item -2 to -1 of tPath
+            end if
+            break
+      end switch
+      if there is a folder tPath then
+         put tPath into $JAVA_HOME
+      end if
+   end if
+end revInternal_SetJAVA_HOME

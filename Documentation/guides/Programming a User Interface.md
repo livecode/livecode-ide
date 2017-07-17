@@ -210,6 +210,49 @@ any group), you must either specify the group (as in the second and third exampl
 refer to the button by its **ID** property, to be sure you're referring to the correct 
 button.
 
+### Avoid using numbers as object names
+
+It is dangerous to set the **name** property of an object to a number.
+
+For example, create three fields on a new card, naming the first one
+"3", the second one "2", and the third one "1".  In other words, the
+creation order of those three fields is the reverse of the numerical
+names you've given them.  Now use the message box to:
+
+    put "This is field 3" into field 3
+
+The third field created, the one named "1", has its text set.  The
+number of the field, _not_ the **name** set by you, was used by
+LiveCode as the object reference.
+
+This shows the perils of using a number as the **name** of an object.
+There are built-in properties of controls (the **layer** and the
+**number**) that are based on integers, and to use integers in yet
+another way, in the **name** property, will likely cause unexpected
+behaviour at best.
+
+This applies to cards as well.  The card order supersedes any
+numerical card **name**.
+
+You can, however, use a name which includes a number safely.  For
+example, you could call you fields "field1", "field2" and "field3".
+
+Now there is no conflict when you use the message box to:
+
+    put "This is field 3" into field "field3"
+
+You could also construct numerical field names:
+
+    on mouseUp
+       repeat with y = 1 to 3
+          put y into field ("field" & y)
+       end repeat
+    end mouseUp
+
+This will put the values "1", "2" and "3" into the fields named
+"field1", "field2" and "field3".  The "field", concatenated with the
+number, removes the conflict with the control number.
+
 ## Properties
 
 A property is an attribute of a LiveCode object. Each type of object has many built-in 
@@ -2108,7 +2151,7 @@ A stack, then, can be in any of four states:
 is visible.
 
 **Open and hidden:**The stack is loaded into memory, its window is open, but the window 
-is hidden. The stack is listed in the Window menu and in the Application Browser.
+is hidden. The stack is listed in the Window menu and in the Project Browser.
 
 **Closed but loaded into memory:**The stack is loaded into memory, but its window is not 
 open and it is not listed by the **openStacks** function or in the Window menu. However, 

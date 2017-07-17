@@ -55,7 +55,7 @@ Open the "Extension Builder" from the tools menu:
 3. Console: Shows status, error and log messages.
 4. Test: Creates a stack, compiles the extensions and creates an instance.
 5. Script: Opens the lcb script in an external default editor.
-6. Insall: Installs the extension into the IDE
+6. Install: Installs the extension into the IDE
 7. Uninstall: Uninstalls the extension from the IDE
 8. Package: Creates a .lce package which can uploaded to the extension store. It is placed in the extension directory
 
@@ -582,6 +582,55 @@ A valid package can be built from a minimum set of files:
 	widget.lcb // Widget source file
 	support/icon.png // 20x40 png image
 	support/icon@extra-high.png // 40x80 png image
+
+## The Extension Store
+
+Once you have created and packaged your extension you can make it available to the LiveCode Community via the [Extension Store](https://livecode.com/products/extensions), in the [widgets](https://livecode.com/products/widgets/) section.
+
+### Registering as an Extension Developer
+
+The first step is to [register](https://livecode.com/account/developer/register) as an Extension Developer.
+
+- Log in to your LiveCode Account
+- Select the Register option under the Developer section
+
+![enter image description here](images/extensions-developer_id.png)
+
+LiveCode Extensions must have unique identifiers. These identifiers use reverse domain notation.
+
+You can sign up on this page for a LiveCode Community Developer ID. Having a developer ID will allow you to use extension identifiers of the form: `community.livecode.developerID.extensionName`.
+
+Choose the Developer ID you want to use here. If your chosen ID is already in use you will be asked to choose a different one.
+
+### Uploading Extensions to the Store
+
+To upload a packaged extension to the store log in to your LiveCode account and go to the [Extensions](https://livecode.com/account/developer/extensions) section of the Developer area.
+
+Any extensions you have uploaded will be shown here, and you have the option to add new extensions.
+
+- Click the "Add New Extension" button (if available)
+- Drag your packaged extension (`.lce`) file into the upload area
+- When the extension has uploaded it will appear in your list
+
+![enter image description here](images/extensions-upload.png)
+
+### Activating your Extension
+
+When an extension is first uploaded it is not active so will not show in the Extension Store.
+
+To activate your extension click "activate" under Status. At this stage you will be warned if any information is missing and you can add it by clicking the "Edit" button.
+
+![enter image description here](images/extensions-activate.png)
+
+Once your extension is activated its status will change to "Active".
+
+### The Extension Store in the Extension Manager
+
+You can view and downlaod extensions via the Extension Store. To see the extensions that are available to download open the Extension Manager from the LiveCode Tools menu and select the "Store" tab.
+
+![enter image description here](images/extensions-store.png)
+
+You can also download extensions from the [Widget Store](https://livecode.com/products/widgets/) on the LiveCode website then install the downloaded extension using the Extension Manager.
 
 ## Other ways to extend the Built-in Capabilities
 

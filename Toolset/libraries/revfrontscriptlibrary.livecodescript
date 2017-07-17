@@ -234,26 +234,18 @@ end revSetActiveStacks
 # handler that deals with the opening of new stacks.
 on preOpenStack
    revIDEHandleNewStack the long id of the target
-
+   
    local tScaleFactor
    put the cREVGeneral["scalefactor"] of this stack into tScaleFactor
    if tScaleFactor is a number and tScaleFactor is not 1 then
       set the scalefactor of this stack to tScaleFactor
    end if 
-  
-   # CW-2015-10-05: [[ Bug 16079 ] Activate breakpoints now in case there are any in preOpenStack handlers
-
+   
    local tTarget
    put the long id of the target into tTarget
    
    local tStack
    put revTargetStack(tTarget) into tStack
-  
-   if tTarget is not the long id of me then
-      if revDebuggerEnabled() then
-         revDebuggerActivateBreakpoints the long id of stack tStack
-      end if
-   end if
    
    if revIDEObjectIsOnIDEStack(tTarget) then
       # IM-2016-03-01: [[ Bug 16244 ]] IDE stacks should always hide invisible objects
@@ -403,7 +395,7 @@ on closeStack
             local tFileName
             # OK-2008-08-05 : Bug 6562 - Bug where the user was being prompted to delete the home stack on startup,
             # caused by revIDEStack returning true/false instead of empty/non-empty.
-            if tAllClosed and not revIDEStack(the effective filename of stack tStackName) then
+            if tAllClosed and not revIDEStackNameIsIDEStack(tStackName) then
                put the effective fileName of gREVTargetStack into tFileName
 
                # TH - 7689 improved wording of warning message
@@ -431,10 +423,6 @@ on closeStack
    repeat for each line l in gREVMessageDispatch["revCloseStack"]
       send "revCloseStack" to this cd of stack l
    end repeat
-
-   # LG-2008-04-22
-   revIDEStartCenterCheckOnStackClose tStack
-   --------------------------------------------------
 
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass closeStack
 end closeStack
@@ -515,10 +503,6 @@ on mouseDown pWhich
     end if
   end switch
 end mouseDown
-
-on revSetEdited pWhich
-   revIDESetEdited pWhich
-end revSetEdited
 
 on mouseUp pWhich
   local tTarget

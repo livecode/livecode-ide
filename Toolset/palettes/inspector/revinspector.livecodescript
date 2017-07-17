@@ -87,10 +87,7 @@ on ideInspectObjects pObjects
       local tNewInspectorName
       put sInspectorMax + 1 into tIndex
       put inspectorStackName(tIndex) into tNewInspectorName
-      set the _ideoverride of stack "revInspectorTemplate" to true
-      clone invisible stack "revInspectorTemplate"
-      set the name of it to tNewInspectorName
-      
+      inspectorCloneTemplate tNewInspectorName
       put tNewInspectorName into tTargetInspector
       addInspectorToList tIndex
    end if
@@ -104,6 +101,13 @@ on ideInspectObjects pObjects
   
    unlock screen
 end ideInspectObjects
+
+private command inspectorCloneTemplate pNewName
+   set the _ideoverride of stack "revInspectorTemplate" to true
+   clone invisible stack "revInspectorTemplate"
+   set the cIDETransient of it to true
+   set the name of it to pNewName
+end inspectorCloneTemplate
 
 function inspectorStackName pIndex
    return kPropertyInspectorPrefix && pIndex

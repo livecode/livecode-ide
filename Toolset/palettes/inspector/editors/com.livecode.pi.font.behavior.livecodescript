@@ -46,3 +46,7 @@ on valueChanged
    set the editorValue of me to the label of button 1 of me
    updateProperty
 end valueChanged
+
+on closeField
+   valueChanged
+end closeField

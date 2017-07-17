@@ -714,15 +714,6 @@ end newEPS
 
 
 on newGraphic
-   if the width of the target < 9 and the height of the target < 9 then
-      local tOrigLoc
-      put the loc of the target into tOrigLoc
-      if the style of the target is in "polygon,curve" then set the points of the target to 0,0,100,100,100,50,50,100
-      if the style of the target is "line" then set the points of the target to 0,0,120,120
-      set the width of the target to the cREVGraphicWidth of stack "revPreferences"
-      set the height of the target to the cREVGraphicHeight of stack "revPreferences"
-      set the loc of the target to tOrigLoc
-   end if
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
    // PM-2015-09-17: [[ Bug 13826 ]] Allow a new graphic to appear offscreen
    revUpdateAOControls
@@ -1407,6 +1398,8 @@ command revEditScriptInNewWindow pObject, pSpecial
       set the behavior of stack tNewEditorName to the long id of stack revIDEScriptEditorBehavior("stack")
    end if
    
+   set the cIDETransient of it to true
+   
    put the long id of it into tEditor
    send "setBehaviors" to tEditor
    
@@ -1539,6 +1532,10 @@ function revMenuManagerGroup pGroups
 end revMenuManagerGroup
 
 on errorDialog pWhatError, pWhatError2
+   if revTestEnvironment() then
+      pass errorDialog
+   end if
+   
    ######################
    close printing
    global gREVSuppressErrors, gREVDevelopment
@@ -1836,21 +1833,6 @@ on revClearAllBreakPoints
    end repeat
 end revClearAllBreakPoints
 
-setProp cREVScriptDebugMode pWhat
-   _setScriptDebugModeNew pWhat
-   pass cREVScriptDebugMode
-end cREVScriptDebugMode
-
-private command _setScriptDebugModeNew pMode
-   lock messages
-   set the cREVScriptDebugMode of stack "revPreferences" to pMode
-   unlock messages
-   
-   if pMode is not "true" then
-      revDebuggerRun
-   end if
-end _setScriptDebugModeNew
-
 function revAllSameType pObjects
    --first line true or false
    --second line the object type
@@ -1938,100 +1920,6 @@ end revReturnSelectionDescription
 ------------------------------------------
 # Script Editor functions
 ------------------------------------------
-
-# Parameters
-#   pObject : either a long id or a valid reference to an object.
-# Returns
-#   The "rugged" id of the object. This can be used the same as a long id,
-#   but is slightly more resistant to stuff like objects being grouped, renamed etc.
-#   The script editor uses rugged ids to store object ids when there is a chance that the object
-#   could be renamed or grouped etc. 
-function revRuggedId pObject
-   # First get the long id of our object. If pObject is a valid object reference we just get the 
-   # object's long id. If its not a valid reference, this does not always mean the object doesn't
-   # exist (because of edit group mode), in this case we assume that pObject is the long id of the object
-   # we want, and parse it directly to obtain the rugged id, without needing to refer to the actual
-   # object at all.
-   local tObject
-   if there is a pObject then
-      put the long id of pObject into tObject
-   else
-      put pObject into tObject
-      # MDW-2015-08-21: [[ bugfix_revRuggedId ]] pObject is empty when creating a new object
-      if tObject is empty then
-         put the long id of the target into tObject
-      end if
-   end if
-   
-   # Find out what the name of the stack owning the object is. We are only interested in the 
-   # stack that immediately owns the object, which could be a substack. To find this we can
-   # simply search from the front and find the first ocurrence of "of stack".
-   local tSubStack, tMainstack
-   local tStackFound
-   local tWordNumber
-   put 1 into tWordNumber
-   repeat for each word tWord in tObject
-      # The first match is always the substack, the second (and last) match is always the mainstack
-      if tWord is "stack" then
-         if tStackFound then
-            put tMainStack into tSubStack
-            put word (tWordNumber + 1) of tObject into tMainStack
-            exit repeat
-         else
-            put word (tWordNumber + 1) of tObject into tMainStack
-         end if
-         put true into tStackFound
-      end if
-      add 1 to tWordNumber
-   end repeat
-   
-   try
-      local tStack
-      if tSubStack is not empty then
-         put "stack " & tSubStack & " of " & (the name of stack (char 2 to -2 of tMainStack)) into tStack
-      else
-         put (the name of stack (char 2 to -2 of tMainStack)) into tStack
-      end if
-   catch tError
-      
-   end try
-   
-   # MW-2008-09-08: [[ Bug 7142 ]] If the hcAddressing of the stack is true, then the long id
-   #    is in a different form than this expects. Thus we temporarily fetch it while hcAddressing
-   #    is false.
-   if the hcAddressing of tStack then
-      set the hcAddressing of tStack to false
-      put the long id of pObject into tObject
-      set the hcAddressing of tStack to true
-   end if
-   
-   local tType
-   put word 1 of tObject into tType
-   
-   local tId
-   if tType is "stack" then
-      # With stacks, the name is the most robust way to refer to them. We assume that the stack exists...
-      put tStack into tId
-   else if tType is "audioclip" then
-      put "audioclip id" && word 3 of tObject & " of " & tStack into tId
-   else if tType is "videoclip" then
-      put "videoclip id" && word 3 of tObject & " of " & tStack into tId
-   else
-      # With any other object, the safest thing is to return the object id and the name of its owning stack.
-      # For cards we use "card id..." for other objects "control id..". This is significant because when in
-      # edit group mode, the group being edited can be referred to as "control id.." but *not* "group id..."
-      
-      local tPrefix
-      if tType is "card" then
-         put "card" into tPrefix
-      else
-         put "control" into tPrefix
-      end if
-      put tPrefix & " id " & word 3 of tObject & " of " & tStack into tId
-   end if
-   
-   return tId
-end revRuggedId
 
 function revScriptEditor pObject
    if exists(pObject) then
@@ -2370,17 +2258,9 @@ function revExternalVersion pExternal
    
    local tExternalList
    put empty into tExternalList
-   if (the platform is "MacOS") and (char 1 of the systemVersion is not "1") then
-      --MacOS 9+
-      local tOS9HomePath
-      put the fileName of stack "home" into tOS9HomePath
-      
-      local tCheckExternals
-      put getResources(tOS9HomePath,"CODE") into tCheckExternals
-   else
-      -- Win,OSX and Unix
-      put the externals of stack "home" into tCheckExternals
-   end if
+   -- Win,OSX and Unix
+   local tCheckExternals
+   put the externals of stack "home" into tCheckExternals
    
    local tExternals
    repeat for each line i in tCheckExternals
@@ -3526,3 +3406,10 @@ on ideMouseMove pX, pY, pTarget
       unlock cursor
    end if
 end ideMouseMove
+
+on msgChanged pHandler, pLine
+   global gRevDevelopment
+   if gRevDevelopment then
+      pass msgChanged
+   end if
+end msgChanged

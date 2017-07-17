@@ -1502,9 +1502,11 @@ on revIDEInitialiseIDELibrary
    put "scriptlines" & return & "scriptstatus" & return & "short name" & return & "behavior" & return & "behavior scriptlines" & return & "long id" into sStackPropertiesToRead
    
    ## Load Extensions
+   revInternal__LoadLibrary "revideextensionlibrary"
    revIDEInitialiseExtensions
    
    ## Regenerate dictionary data
+   revInternal__LoadLibrary "revDatabaseLibrary"
    revIDERegenerateBuiltDictionaryData
    
    ## Initialise property library
@@ -1750,35 +1752,35 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
       end repeat
    end repeat
    
+   # Send the message!
+   set the itemdel to ":"
+   local tMessage
+   put item 1 of pMessage into tMessage
+   
+   # Construct a dispatch command with all the desired parameters
+   local tDoString, tParams, tErrors
+   put "dispatch tMessage to tObjectID" into tDoString
+   
+   # If this is a parameterised message, add the parameter as the first arg
+   if the number of items of pMessage > 1 then
+      put " with item 2 of pMessage" into tParams
+   end if
+   
+   repeat with tParam = 1 to the number of elements in pParamsArray
+      if tParams is empty then
+         put " with pParamsArray[" & tParam & "]" into tParams
+      else
+         put ", pParamsArray[" & tParam & "]" after tParams
+      end if
+   end repeat
+   put tParams after tDoString
+   
    repeat for each line tObjectID in tSubscriptionList
       # if the callback object doesn't exist, don't send message
       if not exists(tObjectID) then
          revIDEUnsubscribeAll tObjectID
          next repeat
       end if
-      
-      # Send the message!
-      set the itemdel to ":"
-      local tMessage
-      put item 1 of pMessage into tMessage
-      
-      # Construct a dispatch command with all the desired parameters
-      local tDoString, tParams, tErrors
-      put "dispatch tMessage to tObjectID" into tDoString
-      
-      # If this is a parameterised message, add the parameter as the first arg
-      if the number of items of pMessage > 1 then
-         put " with item 2 of pMessage" into tParams
-      end if
-      
-      repeat with tParam = 1 to the number of elements in pParamsArray
-         if tParams is empty then
-            put " with pParamsArray[" & tParam & "]" into tParams
-         else
-            put ", pParamsArray[" & tParam & "]" after tParams
-         end if
-      end repeat
-      put tParams after tDoString
       
       # Ensure any error doesn't prevent subsequent subscribers from receiving messages
       try
@@ -2173,10 +2175,6 @@ function revIDEGlobalPropertyContinuousRange pProperty
    return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
-function revIDEMainStacks
-   return ideMainStacks()
-end revIDEMainStacks
-
 /**
 Used by the PI to make a substack into a mainstack
 **/
@@ -2456,9 +2454,7 @@ function revIDEGetPreference pPreferenceName
 end revIDEGetPreference
 
 command __DevPreference pPreferenceName, @rValue
-   global gREVDevelopment
-   
-   if gREVDevelopment then
+   if not revEnvironmentIsInstalled() then
       switch pPreferenceName
          case "cScriptEditor,explicitVariables"
          case "cScriptEditor,preserveVariables"
@@ -3749,6 +3745,7 @@ on revIDEEditScriptOfObject pObject
    put revScriptEditor(tObject) into tExistingEditor
    if tExistingEditor is not empty then
       send "revSESetCurrentObject tObject" to stack tExistingEditor
+      toplevel stack tExistingEditor
       exit revIDEEditScriptOfObject
    end if
 
@@ -4874,18 +4871,11 @@ A stack is considered part of the IDE if any of the following are satisfied:
 * It was loaded by the initialisation library
 * Its name begins with "com.livecode."
 * Its name is "message box, answer dialog, ask dialog, or home"
+* Its _ideoverride property is true
 **/
 function revIDEStackNameIsIDEStack pStackName
-   ## Special cases of IDE stacks that don't begin with rev
-   if pStackName is among the items of "message box,answer dialog,ask dialog,home" then
-      return true
-   else if pStackName begins with "com.livecode." then
-      return true
-   else if pStackName is among the lines of revInternal__ListLoadedLibraries() then
-      return true
-   else
-      return pStackName begins with "rev"
-   end if   
+   -- call revStackNameIsIDEStack in revcommonlibrary
+   return revStackNameIsIDEStack(pStackName)
 end revIDEStackNameIsIDEStack
 
 function revIDEItemiseArray pArray
@@ -5557,6 +5547,8 @@ function revIDEScriptEditorBehavior pWhich
    local tPathToBehaviors
    put revIDESpecialFolderPath("Toolset") & slash & "palettes" & slash & "script editor" & slash & "behaviors" into tPathToBehaviors
    switch pWhich
+      case "common editor"
+         return tPathToBehaviors & slash & "revsecommoneditorbehavior.livecodescript"
       case "editor"
          return tPathToBehaviors & slash & "revseeditorbehavior.livecodescript"
       case "handlerlist"
@@ -5573,6 +5565,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsevariablespanebehavior.livecodescript"
       case "documentationpane"
          return tPathToBehaviors & slash & "revsedocumentationpanebehavior.livecodescript"
+      case "breakpointpane"
+         return tPathToBehaviors & slash & "revsebreakpointpanebehavior.livecodescript"
       case "errorspane"
          return tPathToBehaviors & slash & "revseerrorspanebehavior.livecodescript"	
       case "filterfield"
@@ -5587,8 +5581,12 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revsegutterbehavior.livecodescript"
       case "interactive find"
          return tPathToBehaviors & slash & "revseinteractivefindbehavior.livecodescript"
-       case "variable visualizer"
+      case "variable visualizer"
          return tPathToBehaviors & slash & "revsevariablevisualizerstackbehavior.livecodescript"
+      case "edit breakpoint"
+         return tPathToBehaviors & slash & "revseeditbreakpointstackbehavior.livecodescript"
+      case "error template"
+         return tPathToBehaviors & slash & "revseerrortemplatebehavior.livecodescript"
       default
          return empty
    end switch
@@ -6250,31 +6248,94 @@ on revIDESetGradientProperty pObject, pProperty, pValue
 end revIDESetGradientProperty
 
 private function __resolveStackFilePath pBasePath, pOtherPath
-   -- First absolutize other path (if possible)
-   local tOldFolder
-   put the folder into tOldFolder
-   set the itemDelimiter to slash
+   set the itemdelimiter to "/"
+   put __resolveRelativeFilenameReference(pOtherPath, item 1 to -2 of pBasePath) into pOtherPath
    
-   local tFolderResult
-   set the folder to item 1 to -2 of pOtherPath
-   put the result into tFolderResult
-   if tFolderResult is not empty then
-      set the folder to tOldFolder
-      return pOtherPath
-   end if
-   put the folder & slash & item -1 of pOtherPath into pOtherPath
-   set the folder to tOldFolder
-   
-   -- At this point tOtherPath should be absolute, so if its
+   -- At this point pOtherPath should be absolute, so if its
    -- (component-wise) prefix is pBasePath we relativize again.
    local tBasePathFolder
-   put item 1 to -2 of pBasePath & slash into tBasePathFolder
-   if pOtherPath begins with tBasePathFolder then
-      delete char 1 to (the number of chars in tBasePathFolder) of pOtherPath
-   end if
+   put item 1 to -2 of pBasePath into tBasePathFolder
+   put __makePathRelative(pOtherPath, tBasePathFolder) into pOtherPath
    
    return pOtherPath
 end __resolveStackFilePath
+
+private function __resolveRelativeFilenameReference pFilename, pRootFolder
+   local tNewFilename
+   
+   set the itemdelimiter to "/"
+   
+   if not (pFilename begins with "../") then
+      if pFilename begins with "/" or item 1 of pFilename contains ":" then
+         return pFilename
+      else
+         return pRootFolder & "/" & pFilename
+      end if
+   end if
+   
+   put pFilename into tNewFilename
+   
+   repeat while tNewFilename begins with "../"
+      if pRootFolder is empty then
+         return "out of bounds" for error
+      else
+         delete the last item of pRootFolder
+         delete char 1 to 3 of tNewFilename
+      end if
+   end repeat
+   
+   if tNewFilename is empty then
+      return pRootFolder for value
+   else
+      return pRootFolder & "/" & tNewFilename for value
+   end if
+end __resolveRelativeFilenameReference
+
+private function __makePathRelative pFilename, pRootFolder
+   local tIndex
+   local tMatchCount = 0
+   local tNonMatchCount =0
+
+   # Normalize
+   if char 1 of pFilename is slash then delete char 1 of pFilename
+   if char 1 of pRootFolder is slash then delete char 1 of pRootFolder
+   if the last char of pFilename is slash then delete the last char of pFilename
+   if the last char of pRootFolder is slash then delete the last char of pRootFolder
+   set the itemdelimiter to slash
+
+   if pFilename is empty then return empty
+   if pRootFolder is empty then return pFilename
+
+   # Is pFilename a child directory of pRootFolder?
+   if pRootFolder is item 1 to (the number of items of pRootFolder) of pFilename then
+      delete char 1 to length(pRootFolder) + 1 of pFilename
+   else if pFilename is char 1 to length(pFilename) of pRootFolder then
+      delete char 1 to length(pFilename) + 1 of pRootFolder
+      put empty into pFilename
+      repeat with tIndex = 1 to the number of items of pRootFolder
+         put "../" after pFilename
+      end repeat
+   else
+      # determine where paths diverge
+      repeat with tIndex = 1 to the number of items of pFilename
+         if item tIndex of pFilename is not item tIndex of pRootFolder then
+            put tIndex - 1 into tMatchCount
+            put the number of items of pRootFolder - tIndex + 1 into tNonMatchCount
+            exit repeat
+         end if
+      end repeat
+
+      if tMatchCount > 0 then
+         delete item 1 to tMatchCount of pFilename
+      end if
+
+      repeat with tIndex = 1 to tNonMatchCount
+         put "../" before pFilename
+      end repeat
+   end if
+
+   return pFilename
+end __makePathRelative
 
 command revIDESetStackFilesProperty pObject, pProperty, pValue
    local tProcessedValue
@@ -6700,14 +6761,17 @@ pWorking (boolean): If true return the loc relative to OS screen furniture rathe
 Returns: The screenRect of the screen the stack is on
 */
 function revIDEStackScreenRect pStackName, pWorking
-   if the environment is "development command line" then
-      return "0,0,0,0"
-   end if
+   local tRect
    if pWorking then
-      return line (the screen of stack pStackName) of the working screenRects
+      put line (the screen of stack pStackName) of the working screenRects into tRect
    else
-      return line (the screen of stack pStackName) of the screenRects
+      put line (the screen of stack pStackName) of the screenRects into tRect
    end if
+   if tRect is empty then
+      return 0,0,0,0
+   end if
+   
+   return tRect
 end revIDEStackScreenRect
 
 on revIDEActionNewMainstack pStackType
@@ -7489,26 +7553,39 @@ private function ideDispatchSaveStackRequest pStackName
    return tDispatchStatus
 end ideDispatchSaveStackRequest
 
+local sStackEdited
 command revIDESetEdited pStackName
-   if revIDEStackNameIsIDEStack(pStackName) then
+   # Don't set edited on a transient IDE stack (i.e. SE or PI generated)
+   if there is a stack pStackName and  \
+         the cIDETransient of stack pStackName then
       exit revIDESetEdited
    end if
    
    # Don't set edited on a stack if it is currently saving
-   if the mode of stack "revSaving" is 0 then 
-      global gRevStackStatus
-      put "edited" into gRevStackStatus[pStackName]
+   if pStackName is "revSaving" or the mode of stack "revSaving" is 0 then 
+      put true into sStackEdited[pStackName]
    end if
 end revIDESetEdited
 
 command revIDESetUnedited pStackName
-   global gRevStackStatus
-   put empty into gRevStackStatus[pStackName]
+   put false into sStackEdited[pStackName]
 end revIDESetUnedited
 
 function revIDEStackIsEdited pStackName
-   global gRevStackStatus
-   return gRevStackStatus[pStackName] is "edited"
+   if revIDEStackNameIsIDEStack(pStackName) then
+      global gRevDevelopment
+      # Ignore status of IDE stacks if gRevDevelopment is false
+      if not gRevDevelopment then
+         return false
+      end if
+      
+      # Ignore status of IDE stacks that are not toplevel
+      if the mode of stack pStackName is not 1 then
+         return false
+      end if
+   end if
+   
+   return sStackEdited[pStackName] is true
 end revIDEStackIsEdited
 
 on revIDESaveStack pStackID
@@ -8685,19 +8762,7 @@ on revIDEToggle pProperty
          put "selectionMode" into tToggleMessage
          break
       case "Script Debug Mode"
-         if revDebuggerEnabled() then
-            revDebuggerDisable
-         else
-            revDebuggerEnable
-         end if
-         
-         # OK-2010-01-18: Update any open script editors so that the breakpoints are shown correctly,
-         # they should all be grey when script debug mode is off, otherwise their color depends on their
-         # exact circumstances.
-         local tPrefsChanged
-         put false into tPrefsChanged
-         send "revSEUpdateEditors tPrefsChanged" to revScriptEditorMain()
-         
+         revIDESetPreference "cREVScriptDebugMode", not revIDEGetPreference("cREVScriptDebugMode")
          put "scriptDebugMode" into tToggleMessage
          break
       case "Show IDE Stacks In Lists"
@@ -9578,11 +9643,9 @@ command revIDESuspendDevelopmentTools
    global gREVRestore
    
    -- Store the old setting of scriptdebugmode and disable it
-   put the cREVScriptDebugMode of stack "revPreferences" into gREVRestore["scriptdebugmode"]
+   put revIDEGetPreference("cREVScriptDebugMode") into gREVRestore["scriptdebugmode"]
    
-   -- As cREVScriptDebugMode is a virtual custom property handler present in the revBackScript
-   -- we need to do this before removing the backscripts!
-   revIDESetScriptDebugMode false
+   revIDESetPreference "cREVScriptDebugMode",false
    
    # OK-2008-05-23 : Suspend any script editors.
    send "revSESuspendEditors" to revScriptEditorMain()
@@ -9728,7 +9791,7 @@ command revIDERestoreDevelopmentTools
    choose gREVRestore["tool"]
    
    -- Restore the script debug mode
-   revIDESetScriptDebugMode gREVRestore["scriptdebugmode"]
+   revIDESetPreference "cREVScriptDebugMode", gREVRestore["scriptdebugmode"]
    
    # OK-2008-05-23 : Restore any script editors.
    send "revSERestoreEditors" to revScriptEditorMain()
@@ -11002,8 +11065,9 @@ private command revIDEGenerateDistributedAPI
    put tFolder & slash & "datagrid.lcdoc" into tInputs[1]
    put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
    # Regenerate if necessary
+   local tLibA
+   
    if tNeedUpdate then
-      local tLibA
       put revDocsParseDocFileToLibraryArray(tFolder & slash & tDatagridDoc, "Data Grid", "LiveCode") into tLibA
       # Update the database
       ideDocsUpdateDatabase tLibA
@@ -11019,6 +11083,35 @@ private command revIDEGenerateDistributedAPI
          & slash & "builder.js") after tDictionaryData
    put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "dg.js") after tDictionaryData
+   
+   
+   local tExtractedDocsFolder
+   put revEnvironmentBinariesPath() & slash & "extracted_docs" into tExtractedDocsFolder
+   
+   local tFiles
+   put files(tExtractedDocsFolder) into tFiles
+   filter tFiles with "*.lcdoc"
+   
+   set the itemDelimiter to "."
+   local tFile
+   repeat for each line tFile in tFiles
+      # Check to see if we need to regenerate the docs
+      put empty into tInputs
+      put revIDESpecialFolderPath("api") & slash & toLower(item 1 to -2 of tFile) & ".js" into tOutput
+      put the effective filename of stack "revDocsParser" into tInputs[0]
+      put tExtractedDocsFolder & slash & tFile into tInputs[1]
+      put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
+      # Regenerate if necessary
+      if tNeedUpdate then
+         put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
+         # Update the database
+         ideDocsUpdateDatabase tLibA
+         put revDocsFormatLibraryArrayAsJSON(tLibA) into tJSON
+         revIDESetUTF8FileContents tOutput, tJSON
+      end if
+      
+      put comma & revIDEUTF8FileContents(tOutput) after tDictionaryData
+   end repeat
    
    revIDESetUTF8FileContents revIDESpecialFolderPath("api") \ 
          & slash & "distributed_api.js", tDictionaryData
@@ -11081,29 +11174,20 @@ end revIDEGenerateDictionaryHTML
 
 local sNamesToColorsA, sColorsToNamesA
 
-private function __colorsResourcePath
-   set the itemdelimiter to slash
-   return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/colors"
-end __colorsResourcePath
-
-private function fetchMapping pFile
-   local tData, tMappingA
-   put url ("file:" & __colorsResourcePath() & slash & pFile) into tData
-   repeat for each line tLine in tData
-      if token 1 of tLine is empty then
-         next repeat
-      end if
-      put item 2 to -1 of tLine into tMappingA[item 1 of tLine]
-   end repeat
-   return tMappingA
-end fetchMapping
-
 private on __fetchNamesToColors
-   put fetchMapping("namesToColors.txt") into sNamesToColorsA
+   local tColorRGB
+   
+   repeat for each line tColorName in the colorNames
+   	  set the colorOverlay["color"] of the templateGraphic to tColorName
+   	  put the colorOverlay["color"] of the templateGraphic into tColorRGB
+  		put tColorRGB into sNamesToColorsA[tColorName]
+   end repeat
 end __fetchNamesToColors
 
 private on __fetchColorsToNames
-   put fetchMapping("colorsToNames.txt") into sColorsToNamesA
+    repeat for each line tColor in the colorNames
+  	   put tColor into sColorsToNamesA[revIDENamedColorToRGB(tColor)]
+	end repeat
 end __fetchColorsToNames
 
 function revIDENamedColorToRGB pName
@@ -12022,7 +12106,3 @@ on revIDEFindMoreWidgets
          stack revIDEPaletteToStackName("extension manager")
    unlock screen
 end revIDEFindMoreWidgets
-
-command revIDESetEdited pStackName
-   revSetEdited pStackName
-end revIDESetEdited

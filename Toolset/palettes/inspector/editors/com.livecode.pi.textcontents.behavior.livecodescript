@@ -9,6 +9,8 @@ on editorInitialize
    
    set the itemdelimiter to "."
    put item -1 of the editorProperty["editor"] of me into sTextType
+   
+   set the editorExpandVertical of me to true
 end editorInitialize
 
 on editorUpdate
@@ -35,7 +37,7 @@ on editorUpdate
 end editorUpdate
 
 constant kControlGap = 6
-constant kMaxHeight = 500
+constant kMaxHeight = 800
 on editorResize
    lock screen
    lock messages
@@ -54,6 +56,8 @@ on editorResize
    
    unlock messages
    set the editorHeight of me to tHeight + kControlGap + the height of group "controls" of me
+   
+   set the editorExpandVertical of me to (the height of me < kMaxHeight)
    unlock screen
 end editorResize
 

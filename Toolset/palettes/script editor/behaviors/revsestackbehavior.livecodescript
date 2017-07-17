@@ -10,12 +10,16 @@ on setBehaviors
    set the behavior of field "Filter" of group "Left Bar" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablespane")
    set the behavior of group "Documentation" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("documentationpane")
+   set the behavior of group "Breakpoints" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("breakpointpane")
    set the behavior of group "Errors" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("errorspane")
    set the behavior of field "Filter" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("filterfield")
    set the behavior of button "Show Globals" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
    set the behavior of button "Show Environment Vars" of group "Variables" of group "Panes" of me to the long id of stack revIDEScriptEditorBehavior("variablescheckbox")
    set the behavior of group "Gutter" of group "Editor" of me to the long id of stack revIDEScriptEditorBehavior("gutter")
    set the behavior of group "Interactive Find" of group "Editor" of me to the long id of stack revIDEScriptEditorBehavior("interactive find")
+   set the behavior of stack "revSEEditBreakpoint" of me to the long id of stack revIDEScriptEditorBehavior("edit breakpoint")
+   set the behavior of group "Error Template" of card "Templates" of me to the long id of stack revIDEScriptEditorBehavior("error template")
+   set the behavior of stack revIDEScriptEditorBehavior("editor") to the long id of stack revIDEScriptEditorBehavior("common editor")
 end setBehaviors
 
 # Which metadata type to store the script editor data as.
@@ -910,17 +914,7 @@ end seErrorDescription
 # Description
 #   Returns a friendly form of the object name suitable for displaying on tabs, etc.
 function seFriendlyObject pObject
-   local tFriendlyName
-   put word 1 of the name of pObject & space into tFriendlyName
-   
-   # This means that the object essentially has no name, eg its name is: card id 1002 or similar.
-   if the name of pObject is the short name of pObject then
-      put word -1 of the short name of pObject after tFriendlyName
-   else
-      put quote & the short name of pObject & quote after tFriendlyName
-   end if
-   
-   return tFriendlyName
+   return revDebuggerObjectName(pObject)
 end seFriendlyObject
 
 # Parameters
@@ -1549,7 +1543,7 @@ private command applyScript pObject, pIgnoreErrors, @rCompilationErrors
       
       local tStack
       put revTargetStack(pObject) into tStack
-      revSetEdited tStack
+      revIDESetEdited tStack
       
       # OK-2008-08-19 : Bug 6947 - The script checksum is updated regardless of whether or not the compilation succeeded,
       # as the script is still set if it failed. If there was an execution error of course, it won't have been set. This is typically
@@ -1933,12 +1927,6 @@ command actionPreviousScriptTab
 end actionPreviousScriptTab
 
 # Description
-#   Launches the message box
-command actionLaunchMessageBox
-   revIDEShowMessageBox
-end actionLaunchMessageBox
-
-# Description
 #   Sends the current window to the back.
 command actionSendWindowToBack
    revIDESendCurrentWindowToBack
@@ -2312,6 +2300,8 @@ command seFinalize
    seFindHistorySave
    sePrefSave
    seHistorySave
+   
+   put empty into sDebugContext
 end seFinalize
 
 # Returns
@@ -2560,6 +2550,8 @@ command revSEInitialize pDontCheckTarget
       exit revSEInitialize
    end if
    
+   dispatch "ideSubscribe" to me with "idePreferenceChanged:cREVScriptDebugMode"
+   
    # Initialize the preferences
    sePrefInit
    
@@ -2613,7 +2605,14 @@ command revSEInitialize pDontCheckTarget
    
    set the showInvisibles of me to false
 end revSEInitialize
-  
+
+on idePreferenceChanged pPreference, pValue
+   switch pPreference
+      case "cREVScriptDebugMode"
+         revSEUpdate true
+         break
+   end switch
+end idePreferenceChanged
 
 on closeStackRequest
    if the long id of the target is not the long id of this card of me then
@@ -2807,7 +2806,7 @@ end seUpdateWindowTitle
 #   The title that the script editor window should have if pObject is the current object
 #   being edited.
 function seCreateWindowTitle pObject
-   return the long name of pObject & " - Code Editor"
+   return revDebuggerObjectLongName(pObject) & " - Code Editor"
 end seCreateWindowTitle
 
 command seUpdateCheckSum pObject, @pScript

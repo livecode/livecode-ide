@@ -5,7 +5,6 @@ on enterInField
    ideMessageBoxExecuteScript(the text of me)
    if the result is not empty then
       put the result into me
-      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
       local tMessage
       put the text of me into tMessage
       replace return with "\n" in tMessage
@@ -30,7 +29,7 @@ on commandKeyDown pKey
    end if
    if pKey is "V" then 
       put clipboardData["text"] into the selectedChunk
-      dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
+      scriptFormat "script"
    else
       pass commandKeyDown
    end if
@@ -45,6 +44,8 @@ on arrowKey which
 end arrowKey
 
 command revInitialise
+   textInitialize
+   
    local tInHistory, tLine
    
    put revIDEGetPreference("IDEMultipleLinesMessageHistory") into lHistory
@@ -62,6 +63,7 @@ command revInitialise
    else
       put 0 into lHistoryIndex
    end if
+   scriptFormat "script"
 end revInitialise
 
 command revNextLine
@@ -70,8 +72,8 @@ command revNextLine
    if lHistoryIndex > lNumInHistory then put 1 into lHistoryIndex
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
-   put tMessage into field "message"
-   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
+   set the text of me to tMessage
+   scriptFormat "script"
 end revNextLine
 
 command revPrevLine
@@ -80,10 +82,6 @@ command revPrevLine
    if lHistoryIndex < 1 then put lNumInHistory into lHistoryIndex
    put line lHistoryIndex of lHistory into tMessage
    replace "\n" with return in tMessage
-   put tMessage into field "message"
-   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
+   set the text of me to tMessage
+   scriptFormat "script"
 end revPrevLine
-
-on textChanged
-    dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
-end textChanged
