@@ -1214,6 +1214,7 @@ command revInternal__InitialiseLibraries
    put return & "diff" after tLoadList
    put return & "messageauthentication" after tLoadList
    put return & "dropbox" after tLoadList
+   put return & "httpd" after tLoadList
    put return & "qr" after tLoadList
    
    switch the editionType
