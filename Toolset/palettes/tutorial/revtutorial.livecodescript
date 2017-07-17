@@ -2135,7 +2135,7 @@ on revTutorialConfigureMessage pData
    local tImageFile
    if pData["image"] is not empty then
       local tImageWidth
-      put revIDETutorialInternalResource(pData["image"]) into tImageFile
+      put revTutorialImageForScreenSize(pData["image"]) into tImageFile
       set the filename of image "Image" of stack "revTutorial" to tImageFile
       put the formattedWidth of image "Image" of stack "revTutorial" + 2 * kMargin into tImageWidth
       put max(tWidthOverride, tImageWidth) into tWidthOverride
@@ -2172,6 +2172,23 @@ on revTutorialConfigureMessage pData
    
    revTutorialPositionStack "", "", tWidthOverride, false
 end revTutorialConfigureMessage
+
+function revTutorialImageForScreenSize pImage
+   local tScreen, tScreenRect
+   put the screen of stack "revTutorial" into tScreen
+   put line tScreen of the the screenrects into tScreenRect
+   if item 4 of tScreenRect - item 2 of tScreenRect <= 1080 then
+      local tSmallImage, tFile
+      put pImage into tSmallImage
+      set the itemdelimiter to "."
+      put "_small" after item -2 of tSmallImage
+      put revIDETutorialInternalResource(tSmallImage) into tFile
+      if there is a file tFile then
+         return tFile
+      end if
+   end if
+   return revIDETutorialInternalResource(pImage)
+end revTutorialImageForScreenSize
 
 function revTutorialScriptRetry pCurrent
    local tText
