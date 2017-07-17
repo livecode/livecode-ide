@@ -1,0 +1,377 @@
+tutorial "Combining Text"
+
+prologue
+	LiveCode's uniquely powerful text handling capabilities comes in handy for a wide range of applications. Common tasks include:
+
+	- Mail merging a form email
+
+	- Creating a leaflet for print
+
+	- Building an invoice
+end prologue
+
+step "Create Mainstack"
+
+action
+    highlight menu item "Default size" of menu item "New Stack" of menu "File"
+    capture the next new stack as "Mainstack"
+    capture the next new card of stack "Mainstack" as "home"
+    wait until there is a stack "Mainstack"
+		go to step "Set Stack Properties"
+end step
+
+step "Set Stack Properties"
+	Click on the Inspector icon on the toolbar to open the property
+	inspector.
+action
+	highlight toolbar "Inspector"
+	wait until there is an inspector for stack "Mainstack"
+	go to step "Set Stack Title"
+end step
+
+step "Set Stack Title"
+	Set the 'Title' of the stack to "Combine Text".
+action
+	highlight property "title" of section "basic"
+	wait until the title of stack "Mainstack" is "Combine Text"
+	go to step "Set Stack Rect"
+end step
+
+step "Set Stack Rect"
+	Resize the stack so that it has width 700 and height 500.
+action
+	add guide "Stack" with rect "0,0,700,500" to stack "Mainstack"
+	highlight guide "Stack"
+	wait until stack "Mainstack" fits guide "Stack" with tolerance 5
+	go to step "Set Stack Color"
+end step
+
+step "Set Stack Color"
+	We want the stack to have a white background so set the 'Background fill' of the stack to white (255,255,255).
+action
+	highlight property "backgroundColor" of section "colors"
+	wait until the backgroundColor of stack "mainstack" is "255,255,255"
+	go to step "Create template label"
+end step
+
+step "Create template label"
+	Drag a label field from the tools palette onto your stack.
+action
+	highlight tool "Create Label Field"
+	capture the next new field of stack "Mainstack" as "TemplateLabel"
+	wait until there is a field "TemplateLabel"
+	go to step "Set TemplateLabel Location"
+end step
+
+step "Set TemplateLabel Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "TemplateLabelLoc" with rect "8,7,108,31" to stack "Mainstack"
+	highlight guide "TemplateLabelLoc"
+	wait until field "TemplateLabel" fits guide "TemplateLabelLoc" with tolerance 5
+	go to step "TemplateLabel Property Inspector"
+end step
+
+step "TemplateLabel Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "TemplateLabel"
+	wait until there is an inspector for field "TemplateLabel"
+	go to step "Set TemplateLabel name"
+end step
+
+step "Set TemplateLabel name"
+	Set the 'Name' of the field to "TemplateLabel".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "TemplateLabel" is "TemplateLabel"
+	go to step "Set TemplateLabel Text"
+end step
+
+step "Set TemplateLabel Text"
+	Set the 'Name' of the field to "TemplateLabel".
+action
+	wait until the text of field "TemplateLabel" is "Template"
+	go to step "Set TemplateLabel Text Size"
+end step
+
+step "Set TemplateLabel text size"
+	Set the 'Text Size' of the field to 16.
+action
+	highlight property "textSize" of section "Text"
+	wait until the textSize of field "TemplateLabel" is "16"
+	go to step "Set TemplateLabel text align"
+end step
+
+step "Set TemplateLabel text align"
+	Set the 'Text Align' of the field to left.
+action
+	highlight property "textAlign" of section "Text"
+	wait until the textAlign of field "TemplateLabel" is "left"
+	go to step "Create template field"
+end step
+
+step "Create template field"
+	Import the "template" text file onto your stack.
+file
+		template.txt
+action
+	highlight menu item "Text File..." of menu item "Import as Control" of menu "File"
+	capture the next new field of stack "Mainstack" as "template"
+	wait until there is a field "template"
+	go to step "Set template Location"
+end step
+
+step "Set template Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "templateLoc" with rect "10,34,345,232" to stack "Mainstack"
+	highlight guide "templateLoc"
+	wait until field "template" fits guide "templateLoc" with tolerance 5
+	go to step "Template Property Inspector"
+end step
+
+step "Template Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "template"
+	wait until there is an inspector for field "template"
+	go to step "Set template name"
+end step
+
+step "Set template name"
+	Set the 'Name' of the field to "template".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "template" is "template"
+	go to step "Create record label field"
+end step
+
+step "Create record label field"
+	Drag a label field from the tools palette onto your stack.
+action
+  highlight tool "Create Label Field"
+	capture the next new field of stack "Mainstack" as "RecordLabel"
+	wait until there is a field "RecordLabel"
+	go to step "Set RecordLabel Location"
+end step
+
+step "Set RecordLabel Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "RecordLabelLoc" with rect "355,7,455,30" to stack "Mainstack"
+	highlight guide "RecordLabelLoc"
+	wait until field "RecordLabel" fits guide "RecordLabelLoc" with tolerance 5
+	go to step "RecordLabel Property Inspector"
+end step
+
+step "RecordLabel Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "RecordLabel"
+	wait until there is an inspector for field "RecordLabel"
+	go to step "Set RecordLabel name"
+end step
+
+step "Set RecordLabel name"
+	Set the 'Name' of the field to "RecordLabel".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "RecordLabel" is "RecordLabel"
+	go to step "Set RecordLabel Text"
+end step
+
+step "Set RecordLabel Text"
+	Set the 'Name' of the field to "RecordLabel".
+action
+	wait until the text of field "RecordLabel" is "Record"
+	go to step "Set RecordLabel Text Size"
+end step
+
+step "Set RecordLabel text size"
+	Set the 'Text Size' of the field to 16.
+action
+	highlight property "textSize" of section "Text"
+	wait until the textSize of field "RecordLabel" is "16"
+	go to step "Set RecordLabel text align"
+end step
+
+step "Set RecordLabel text align"
+	Set the 'Text Align' of the field to left.
+action
+	highlight property "textAlign" of section "Text"
+	wait until the textAlign of field "RecordLabel" is "left"
+	go to step "Create record field"
+end step
+
+step "Create record field"
+	Import the "record" text file onto your stack.
+file
+	record.txt
+action
+	highlight menu item "Text File..." of menu item "Import as Control" of menu "File"
+	capture the next new field of stack "Mainstack" as "record"
+	wait until there is a field "record"
+	go to step "Set record Location"
+end step
+
+step "Set record Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "recordLoc" with rect "355,33,690,232" to stack "Mainstack"
+	highlight guide "recordLoc"
+	wait until field "record" fits guide "recordLoc" with tolerance 5
+	go to step "Record Property Inspector"
+end step
+
+step "Record Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "record"
+	wait until there is an inspector for field "record"
+	go to step "Set record name"
+end step
+
+step "Set record name"
+	Set the 'Name' of the field to "record".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "record" is "record"
+	go to step "Create OutputLabel field"
+end step
+
+step "Create OutputLabel field"
+	Drag a label field from the tools palette onto your stack.
+action
+  highlight tool "Create Label Field"
+	capture the next new field of stack "Mainstack" as "OutputLabel"
+	wait until there is a field "OutputLabel"
+	go to step "Set OutputLabel Location"
+end step
+
+step "Set OutputLabel Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "OutputLabelLoc" with rect "8,265,108,289" to stack "Mainstack"
+	highlight guide "OutputLabelLoc"
+	wait until field "OutputLabel" fits guide "OutputLabelLoc" with tolerance 5
+	go to step "OutputLabel Property Inspector"
+end step
+
+step "OutputLabel Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "OutputLabel"
+	wait until there is an inspector for field "OutputLabel"
+	go to step "Set OutputLabel name"
+end step
+
+step "Set OutputLabel name"
+	Set the 'Name' of the field to "OutputLabel".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "OutputLabel" is "OutputLabel"
+	go to step "Set OutputLabel Text"
+end step
+
+step "Set OutputLabel Text"
+	Set the 'Name' of the field to "OutputLabel".
+action
+	wait until the text of field "OutputLabel" is "Output"
+	go to step "Set OutputLabel Text Size"
+end step
+
+step "Set OutputLabel text size"
+	Set the 'Text Size' of the field to 16.
+action
+	highlight property "textSize" of section "Text"
+	wait until the textSize of field "OutputLabel" is "16"
+	go to step "Set OutputLabel text align"
+end step
+
+step "Set OutputLabel text align"
+	Set the 'Text Align' of the field to left.
+action
+	highlight property "textAlign" of section "Text"
+	wait until the textAlign of field "OutputLabel" is "left"
+	go to step "Create output field"
+end step
+
+step "Create output field"
+	Drag a field from the tools palette onto your stack.
+action
+	highlight tool "Create Field"
+	capture the next new field of stack "Mainstack" as "output"
+	wait until there is a field "output"
+	go to step "Set output Location"
+end step
+
+step "Set output Location"
+	Resize and position the field, as shown by dragging the resize handle.
+action
+	add guide "outputLoc" with rect "10,290,690,490" to stack "Mainstack"
+	highlight guide "outputLoc"
+	wait until field "output" fits guide "outputLoc" with tolerance 5
+	go to step "Output Property Inspector"
+end step
+
+step "Output Property Inspector"
+	Select the field and open the Inspector from the Menubar.
+action
+	highlight field "output"
+	wait until there is an inspector for field "output"
+	go to step "Set output name"
+end step
+
+step "Set output name"
+	Set the 'Name' of the field to "output".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of field "output" is "output"
+	go to step "Create create button"
+end step
+
+step "Create create button"
+	Drag a button from the tools palette onto your stack.
+action
+	highlight tool "Create button"
+	capture the next new button of stack "Mainstack" as "Create"
+	wait until there is a button "create"
+	go to step "Set create Location"
+end step
+
+step "Set create Location"
+	Resize and position the button, as shown by dragging the resize handle.
+action
+	add guide "createLoc" with rect "565,237,691,262" to stack "Mainstack"
+	highlight guide "createLoc"
+	wait until button "create" fits guide "createLoc" with tolerance 5
+	go to step "Open Button Property Inspector"
+end step
+
+step "Open Button Property Inspector"
+	Select the button and open the Inspector from the Menubar.
+action
+	highlight button "Create"
+	wait until there is an inspector for button "Create"
+	go to step "Set Create Button Name"
+end step
+
+step "Set Create button Name"
+	Set the 'Name' of the button to "Create email".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of button "Create" is "Create email"
+end step
+
+epilogue
+	Congratulations. You have learned how to
+
+	- Work with words and lines
+
+	- Combine texts together
+
+	- Make decisions
+
+	- Insert variables into your output
+end epilogue
