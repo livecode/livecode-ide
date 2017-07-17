@@ -1961,6 +1961,7 @@ end revTutorialPrologue
 
 on revTutorialEpilogue
    if sSteps["epilogue"] is not empty then
+      revTutorialClearHighlights
       revTutorialDoInterlude true
       revTutorialSetText "epilogue"
       revTutorialShow
