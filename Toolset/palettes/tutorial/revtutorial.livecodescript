@@ -2450,11 +2450,17 @@ function revTutorialCheckWaitCondition pActionData, pBeforeDisplay
                end if
                break
             case "scripted"
+               # Don't try and shortcut this step
+               if pBeforeDisplay then
+                  break
+               end if
+               
                # This code path is triggered by any propertyChanged message,
                # so if the script hasn't changed then don't do anything.
                local tScript
                put the script of tObject into tScript
-               if tScript is sWait["current script"] then
+               revTutorialCompareScript tScript, sWait["current script"]
+               if the result is empty then
                   break
                end if
                local tMistake
