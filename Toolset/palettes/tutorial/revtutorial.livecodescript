@@ -2247,6 +2247,9 @@ on revTutorialEnsureState pStep
       case "palette for object"
          revTutorialEnsurePaletteForObject tHighlightDataA["palette"], tHighlightDataA["object"]
          break
+      case "script line"
+         revTutorialEnsurePaletteForObject "script editor", tHighlightDataA["object"]
+         break
       case "item of palette"
       case "palette"
          revTutorialEnsurePalette tHighlightDataA["palette"]
