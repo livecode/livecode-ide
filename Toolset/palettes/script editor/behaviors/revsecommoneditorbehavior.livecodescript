@@ -1971,6 +1971,12 @@ on tabKey
       pass tabKey
    end if
    
+   # bhall2001-2017-07-18: Bug 18366 On MacOS, to prevent interference
+   # with the use of control+tab to cycle between tabs
+   if (the platform is "MacOS") and (the controlKey is "down") then
+      pass tabKey
+   end if 
+
    if scriptLocked() then
       exit tabKey
    end if
