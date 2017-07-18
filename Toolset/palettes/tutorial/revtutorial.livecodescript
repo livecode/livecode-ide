@@ -2247,6 +2247,9 @@ on revTutorialEnsureState pStep
       case "palette for object"
          revTutorialEnsurePaletteForObject tHighlightDataA["palette"], tHighlightDataA["object"]
          break
+      case "script line"
+         revTutorialEnsurePaletteForObject "script editor", tHighlightDataA["object"]
+         break
       case "item of palette"
       case "palette"
          revTutorialEnsurePalette tHighlightDataA["palette"]
@@ -2447,11 +2450,17 @@ function revTutorialCheckWaitCondition pActionData, pBeforeDisplay
                end if
                break
             case "scripted"
+               # Don't try and shortcut this step
+               if pBeforeDisplay then
+                  break
+               end if
+               
                # This code path is triggered by any propertyChanged message,
                # so if the script hasn't changed then don't do anything.
                local tScript
                put the script of tObject into tScript
-               if tScript is sWait["current script"] then
+               revTutorialCompareScript tScript, sWait["current script"]
+               if the result is empty then
                   break
                end if
                local tMistake
@@ -3834,11 +3843,22 @@ on revTutorialRunAction pActionData
       case "state"
          switch tWaitData["state"]
             case "scripted"
-               # Everything becomes extremely sad if we already have a tab open for this script 
-               # and try to run a scripting step. So close the palette first.
-               revTutorialClearPalette "script editor"
-               # Set the script of the objects
-               revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
+               # See if the object has a script editor open
+               local tPalette, tObject
+               put revTutorialResolveObjectToLongID(tWaitData["object"]) into tObject
+               put revScriptEditor(tObject) into tPalette
+               if tPalette is not empty then
+                  # If so, check the script. If correct, apply the script
+                  if sScriptCheck["correct script"] then
+                     dispatch "revSEApply" to stack tPalette with true
+                  else
+                     # Otherwise set the script
+                     dispatch "revSESetScript" to stack tPalette with tWaitData["script"]
+                  end if
+               else
+                  # If there is no SE, just set the script of the objects directly
+                  revTutorialSetPropertyOfObjects tObject, "script", tWaitData["script"]
+               end if
                break
             case "selected"
                put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
