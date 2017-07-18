@@ -2951,6 +2951,10 @@ on revSEIndentScript
    dispatch "scriptFormat" to field "Script" of me with "script"
 end revSEIndentScript
 
+on revSEApply pIgnoreErrors
+   actionCompile pIgnoreErrors
+end revSEApply
+
 private command appendToList @xList, pValue
    if xList is not empty then
       put return & pValue after xList

@@ -3834,11 +3834,22 @@ on revTutorialRunAction pActionData
       case "state"
          switch tWaitData["state"]
             case "scripted"
-               # Everything becomes extremely sad if we already have a tab open for this script 
-               # and try to run a scripting step. So close the palette first.
-               revTutorialClearPalette "script editor"
-               # Set the script of the objects
-               revTutorialSetPropertyOfObjects revTutorialResolveObjectToLongID(tWaitData["object"]), "script", tWaitData["script"]
+               # See if the object has a script editor open
+               local tPalette, tObject
+               put revTutorialResolveObjectToLongID(tWaitData["object"]) into tObject
+               put revScriptEditor(tObject) into tPalette
+               if tPalette is not empty then
+                  # If so, check the script. If correct, apply the script
+                  if sScriptCheck["correct script"] then
+                     dispatch "revSEApply" to stack tPalette with true
+                  else
+                     # Otherwise set the script
+                     dispatch "revSESetScript" to stack tPalette with tWaitData["script"]
+                  end if
+               else
+                  # If there is no SE, just set the script of the objects directly
+                  revTutorialSetPropertyOfObjects tObject, "script", tWaitData["script"]
+               end if
                break
             case "selected"
                put revTutorialResolveObjectToLongID(tWaitData["object"]) into sSelected
