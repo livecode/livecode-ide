@@ -124,6 +124,10 @@ function revInternal__ListLoadedLibraries
    return tLibs
 end revInternal__ListLoadedLibraries
 
+function revInternal__LoadedLibraryStackName pLibName
+   return sLoadedLibraries[pLibName]
+end revInternal__LoadedLibraryStackName
+
 command revInternal__SetAppIcon pAppIcon
    global gRevAppIcon
    set the paintCompression to "png" -- match the engine
