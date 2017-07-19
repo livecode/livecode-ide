@@ -263,7 +263,7 @@ private command runAllTests pInfo
    end repeat
    
    -- Add the target stack (this one)
-   put tCommand && pInfo["self-script"] into tCommand
+   put tCommand && pInfo["self-script"] && "2>/dev/null" into tCommand
 
    -- Execute the shell command   
    put shell(tCommand) into tTestOutput
