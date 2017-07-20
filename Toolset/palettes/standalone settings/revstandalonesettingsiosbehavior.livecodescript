@@ -502,7 +502,7 @@ function getIosProvisioningProfiles
    
    local tProfiles
    repeat for each line tProfile in tProfileFiles
-      local tContents, tAppId, tIsDist, tName, tId
+      local tContents, tAppId, tIsDist, tName, tId, tExpirationDate
       put url ("file:" & tProfile) into tContents
       
       set the itemDelimiter to "."
@@ -531,10 +531,24 @@ function getIosProvisioningProfiles
       get word 1 to -1 of line it + 1 of tContents
       put char 9 to -10 of it into tName
       
+      get lineOffset("<key>ExpirationDate</key>", tContents)
+      if it is 0 then
+         next repeat
+      end if
+      get word 1 to -1 of line it + 1 of tContents
+      // "it" is of the form e.g <date>2013-12-31T00:20:45Z</date>
+      put char 7 to 16 of it into tExpirationDate
+      local tDaysLeft
+      put getProfileDaysRemaining(tExpirationDate) into tDaysLeft
+      if tDaysLeft is 0 then
+         next repeat
+      end if
+      
       put tId into tProfiles[tId]["id"]
       put tName into tProfiles[tId]["name"]
       put tAppId into tProfiles[tId]["appid"]
       put tIsDist into tProfiles[tId]["store"]
+      put tDaysLeft into tProfiles[tId]["days remaining"]
    end repeat
    
    local tIndex
@@ -549,3 +563,30 @@ function getIosProvisioningProfiles
    
    return tProfiles
 end getIosProvisioningProfiles
+
+// Calculates if the Provisioning Profile is valid
+// pExpirationDate is fetched from the .mobileprovision file, in YYYY-MM-DD format
+function getProfileDaysRemaining pExpirationDate
+   local tToday, tExpires
+   put the date into tToday
+   convert tToday to seconds
+   
+   put pExpirationDate into tExpires
+   // tExpires is of YYYY-MM-DD format
+   // Convert this to english format ( MM/DD/YY)
+   set the itemdel to "-"
+   put item 2 of tExpires & slash & item 3 of tExpires & slash & char 3 to 4 of item 1 of tExpires into tExpires
+   convert tExpires from english date to seconds
+   
+   if tToday > tExpires then
+      -- "Expired"
+      return 0
+   else 
+      -- "Valid" 
+      local tSecondsLeft, tDaysLeft
+      put tExpires - tToday into tSecondsLeft
+      set numberFormat to "#."
+      put round (tSecondsLeft/86400) into tDaysLeft
+      return tDaysLeft
+   end if
+end getProfileDaysRemaining
