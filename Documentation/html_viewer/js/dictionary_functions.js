@@ -91,6 +91,7 @@
 			return 0;
 		});
 	
+		$(window).scrollTop(0);
 		return tState . searched . data;
 	}
 	
@@ -1040,8 +1041,7 @@
 	}
 	
 	function library_set(pLibraryID){
-		var tChooserLabel = 'Choose API: ';
-		tChooserLabel += library_id_to_name(pLibraryID);
+		var tChooserLabel = library_id_to_name(pLibraryID);
 
 		$("#lcdoc_library_chooser_text").html(tChooserLabel);
 	
@@ -1202,14 +1202,6 @@
 		var tResizerMargin;
 		tResizerMargin = parseInt($resizer.css('margin'));
 		
-		function update_lcdoc_margin()
-		{			
-			var tHeaderHeight;
-			tHeaderHeight = parseInt($('#header_panel_holder').css('height'));
-			
-			$('#lcdoc_body').css('margin-top', tHeaderHeight + 20);
-		}
-		
 		function doTableResize()
 		{
 			var $textarea = $('#header_panel_holder');
@@ -1237,7 +1229,7 @@
 				tNewHeight = Math.max(tHeaderMinHeight, tNewHeight);
 				
 				var tContainerHeight;
-				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin;
+				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin + 5;
 				$('#table_container').css('height', tContainerHeight);
 
 				if (tContainerHeight < 5)
@@ -1251,7 +1243,6 @@
 					$('#table_header').css('display', '');
 				}
 				
-				update_lcdoc_margin();
 			});
 			
 			$window.on('mouseup', function () {
@@ -1285,8 +1276,6 @@
 		}
 		preventScrollBubble($("#lcdoc_list"), $("#table_container"));
 		preventScrollBubble($("#filters_panel"), $("#filters_options"));
-		
-		update_lcdoc_margin();
 		
 		$(document).keydown(function(e) {
 		   switch(e.which) {

@@ -13,26 +13,66 @@
 </head>
 <body>
 
-<div class="container bs-docs-container" >
-<div style="height:25px; z-index:200; background-color:#ffffff"></div>
+<nav class="navbar navbar-default navbar-fixed-top" id="lcnavbar">
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<!--<div class="navbar-brand">API</div>-->
+	</div>
+	<div class="collapse navbar-collapse" id="navbar">
+		<ul class="nav navbar-nav col-md-5">
+			<li>
+				<p class="navbar-text">Choose API:</p>
+			</li>
+			<li class="dropdown">
+				<button class="btn btn-default btn-sm dropdown-toggle navbar-btn" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+					<span id="lcdoc_library_chooser_text"></span>
+					<span class="caret"></span>
+				</button>
+			<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
+			</ul>
+			</li>
+		</ul>
+		<ul class="nav navbar-nav col-md-3">
+			<li id="lcdoc_history_back">
+				<a href="#">
+					<span aria-hidden="true" class="glyphicon glyphicon-chevron-left"></span>
+					<span class="sr-only">Previous</span>
+				</a>
+			</li>
+			<li id="lcdoc_history_forward">
+				<a href="#">
+					<span aria-hidden="true" class="glyphicon glyphicon-chevron-right"></span>
+					<span class="sr-only">Next</span>
+				</a>
+			</li>
+			<li id="lcdoc_history" class="dropdown">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+					<span class="glyphicon glyphicon-time" id="dropdownMenu2" aria-expanded="true"></span>
+				</a>
+				<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2" id="lcdoc_history_list">
+				</ul>
+			</li>
+		</ul>
+		<form class="navbar-form navbar-right col-md-4">
+			<div class="form-group" id="filter_box">
+			  <input id="ui_filer" type="text" class="form-control input-sm" placeholder="Search">
+			</div>
+			<button type="button" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-search"></span></button>
+		</form>
+	</div><!-- /.navbar-collapse -->
+</nav>
+
+<div class="container-fluid bs-docs-container" >
+<div style="height:15px; z-index:200; background-color:#ffffff"></div>
 
 	<div class="row">
 		<div class="col-md-3">
-			<div class="affix bs-sidebar" id="lcdoc_sidebar">
-			    <div class="panel panel-default">
-					<div class="panel-heading">
-						<div class="btn-group" style="width:100%" id="lcdoc_library_chooser">
-							<div class="dropdown">
-				  				<button class="btn btn-default btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-									<span id="lcdoc_library_chooser_text"></span>
-									<span class="caret"></span>
-				  				</button>
-				  				<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="lcdoc_library_chooser_list">
-								</ul>
-							</div>
-						</div>					
-					</div>
-				</div>
+			<div class="bs-sidebar" id="lcdoc_sidebar">
             	<div class="panel panel-default" id="filters_panel">
 					<div class="panel-heading">Filters</div>
 					<div class="panel-body" id="filters_container">
@@ -44,49 +84,8 @@
     	</div>
  
         <div class="col-md-9">
-        	<div id="header_panel_holder" class="affix_right">
-				<div class="panel panel-default affix_right" id="lcdoc_list">
-				  <div class="panel-heading " >
-					  <div class="row">
-						<div class="col-md-3">
-							<nav>
-							  <ul class="pagination pagination-sm" id="breadcrumb">
-							  	<li id="lcdoc_history_back">
-							  		<a href="#">
-							  			<span aria-hidden="true" class="glyphicon glyphicon-chevron-left"></span>
-							  			<span class="sr-only">Previous</span>
-							  		</a>
-							  	</li>
-							  	<li id="lcdoc_history_forward">
-							  		<a href="#">
-							  			<span aria-hidden="true" class="glyphicon glyphicon-chevron-right"></span>
-							  			<span class="sr-only">Next</span>
-							  		</a>
-							  	</li>
-							  	<li id="lcdoc_history" class="dropdown">
-							  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-							  			<span class="glyphicon glyphicon-time" id="dropdownMenu2" aria-expanded="true"></span>
-							  		</a>
-							  		<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2" id="lcdoc_history_list">
-									</ul>
-								</li>
-							</ul>
-							<nav>
-						</div>
-						
-					  	<div class="col-md-6">
-						</div>
-
-						<div class="col-md-3">
-							<div class="input-group" id="filter_box">
-								<input id="ui_filer" type="text" class="form-control input-sm">
-								<span class="input-group-btn">
-									<button class="btn btn-default btn-sm" type="button"><span class="glyphicon glyphicon-search"></span></button>
-								</span>
-							</div>
-						</div><!-- /input-group -->
-					  </div>
-					</div>
+        	<div id="header_panel_holder">
+				<div class="panel panel-default" id="lcdoc_list">
 					<div id="table_header">
 						<table class="table table-hover table-condensed" id="table_list_header">
 						</table>
@@ -96,10 +95,10 @@
 						</table>
 					</div>
 					<!-- header panel resizer -->
-					<div id="resizer" class="affix_right">
+					<div id="resizer">
 					</div>   
 				</div>            
-            </div><!-- /Affix -->
+            </div>
 
             <div class="panel panel-default" id="lcdoc_body">
               <div class="panel-body" id="api_entry">
