@@ -690,7 +690,7 @@ on mouseDown pButton
    
    unlock messages
    
-   # Check if mouse up occured over a valid drop stack
+   # Check if mouse up occurred over a valid drop stack
    local tLeft, tTop, tCreateObjectID
    repeat with x = 1 to the number of elements in tValidDropStacks
       if tDropScreenLocation is within tValidDropStacks[x]["rect"] then
