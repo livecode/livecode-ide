@@ -11072,11 +11072,65 @@ private command revIDEGenerateDistributedAPI
             tJSON
    end if
    
+   local tIDELibsFolder, tIdeSupportFolder
+   put tRepoPath & "/ide-support" into tIdeSupportFolder
+   put tRepoPath & "/ide/Toolset/libraries" into tIDELibsFolder
+   
+   # Check to see if we need to regenerate the ide dictionary
+   put empty into tInputs
+   put the effective filename of stack "revDocsParser" into tInputs[0]
+   put tIdeSupportFolder into tInputs[1]
+   put tIDELibsFolder into tInputs[2]
+   put revIDESpecialFolderPath("api") & slash & "ide.js" into tOutput
+   
+   put revIDEIsFilesetStale(tInputs, tOutput, true, tError) into tNeedUpdate
+   # Regenerate dictionary if necessary
+   if tNeedUpdate then
+      local tIDELibs, tIDEA, tIDECount, tIDEParsedA
+      put 1 into tIDECount
+      put revInternal__ListLoadedLibraries() into tIDELibs
+      filter tIDELibs with "rev*"
+      repeat for each line tLine in tIDELibs
+         local tStackName
+         put revInternal__LoadedLibraryStackName(tLine) into tStackName
+         get revDocsGenerateDocsFileFromText(the script of stack tStackName, \
+               the long id of stack tStackName)
+         if it is not empty then
+            put it into tIDEA[tIDECount]
+            add 1 to tIDECount
+         end if
+      end repeat
+      
+      local tIDELibraryA
+      put 1 into tIDECount
+      repeat for each element tElement in tIDEA
+         put revDocsParseDocText(tElement) into tIDEParsedA
+         repeat for each key tEntry in tIDEParsedA["doc"]
+            put tIDEParsedA["doc"][tEntry] into tIDELibraryA["doc"][tIDECount]
+            add 1 to tIDECount
+         end repeat
+         put empty into tIDEParsedA
+      end repeat
+      put "LiveCode IDE" into tIDELibraryA["display name"]
+      put revDocsModifyForUrl(tIDELibraryA["display name"]) into tIDELibraryA["name"]
+      put "LiveCode" into tIDELibraryA["author"]
+      put "dictionary" into tIDELibraryA["type"]
+      
+      # Update the database
+      ideDocsUpdateDatabase tIDELibraryA
+      
+      put revDocsFormatLibraryArrayAsJSON(tIDELibraryA) into tJSON
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api") & slash & "ide.js", \
+            tJSON
+   end if
+   
    local tDictionaryData
    put revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "script.js") into tDictionaryData
    put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "builder.js") after tDictionaryData
+   put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
+         & slash & "ide.js") after tDictionaryData
    put comma & revIDEUTF8FileContents(revIDESpecialFolderPath("api") \ 
          & slash & "dg.js") after tDictionaryData
    
