@@ -245,6 +245,7 @@ on tabKey
       else 
          revIDESetTool "pointer"
       end if
+      unlock cursor
       exit tabKey
    end if
    
