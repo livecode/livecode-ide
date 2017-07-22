@@ -3474,7 +3474,7 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
 end revIDECreateObject
 
 on revIDECloneObject pLongID
-   if word 1 of pLongID is "card" or word 1 of pLongID is "stack"then
+   if word 1 of pLongID is "card" or word 1 of pLongID is "stack" then
       clone pLongID
    else
       
@@ -3485,12 +3485,10 @@ on revIDECloneObject pLongID
       add 20 to item 1 of tLoc
       add 20 to item 2 of tLoc
       
-      put revIDECardOfObject(pLongID) into tTarget
-      if not exists(tTarget) then return __revIDEError("Cannot create object. Target does not exist:" && tTarget)
-      
-      
+      if not exists(pLongID) then return __revIDEError("Cannot create object. Target does not exist:" && pLongID)
+            
       clone pLongID
-      put the long ID of the last control into tCreatedControlID
+      put the long ID of it into tCreatedControlID
       set the loc of tCreatedControlID to tLoc
    end if
 end revIDECloneObject
