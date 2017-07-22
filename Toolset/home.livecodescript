@@ -745,6 +745,7 @@ command revInternal__ResetPreferences
    put "22" into tPropsArray["cMenuHeight"]
    put "1067,251,1882,827" into tPropsArray["cRevDocsRect"]
    put "Gray88" into tPropsArray["cBackDropColor"]
+   put "Gray88" into tPropsArray["cBackdrop"]
    put "false" into tPropsArray["cREVMsgShowUIFrontScripts"]
    put "false" into tPropsArray["revstack"]
    put "100" into tPropsArray["cMacOSProgressScrollbarWidth"]
@@ -802,7 +803,6 @@ command revInternal__ResetPreferences
    put "selectedObject" into tPropsArray["cREVMsgIntelligenceObject"]
    put "false" into tPropsArray["cSEHideErrors"]
    put "56" into tPropsArray["cFieldHeight"]
-   put "none" into tPropsArray["cBackDrop"]
    put "300" into tPropsArray["cREVUnmaximizedScriptHeight"]
    put "13,125" into tPropsArray["cToolsTopLeft"]
    put "--" into tPropsArray["cCommentCharacter"]
@@ -1394,18 +1394,6 @@ end revInternal__InitialiseDefaults
 command revInternal__InitialiseOptions
    revInternal__Log "Enter", "Options Initialisation"
    
-   if the StartCenterClassic of stack "revPreferences" is not "true" then
-      set the cBackDrop of stack "revPreferences" to "Gray88"
-      set the cBackDropColor of stack "revPreferences" to "Gray88"
-   end if
-   local tBackdrop
-   put the cBackDrop of stack "revPreferences" into tBackdrop
-   if tBackdrop is "none" then
-      set the backdrop to tBackdrop
-   else
-      set the backdrop to the cBackDropColor of stack "revPreferences"
-   end if
-   
    set the selectGroupedControls to the cSelectGrouped of stack "revPreferences"
    set the tooltipDelay to the cREVToolTipDelay of stack "revPreferences"
    set the grid to the cGrid of stack "revPreferences"
@@ -1678,9 +1666,9 @@ command revInternal__InitialiseFinalSteps
    revInternal__Log "Message", "Setting up verbose debugging"
    send "revVerboseDebug" && the cVerboseDebug of stack "revPreferences" to stack "revFrontScriptLibrary"
    
-   if the cBackDrop of stack "revPreferences" is not "none" and the cBackDrop of stack "revPreferences" is not empty then
+   if the cBackDrop of stack "revPreferences" is not "none" then
       revInternal__Log "Message", "Setting up backdrop"
-      set the backdrop to the cBackDrop of stack "revPreferences"
+      set the backdrop to the cBackDropColor of stack "revPreferences"
    end if
    
    revInternal__Log "Message", "Closing Splash"
