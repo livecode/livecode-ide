@@ -11,7 +11,7 @@
 		
 		//sort API dictionaries, leave LiveCode Script/LiveCode Builder as first 2 entries
 		if(tState.selected_api_id == ""){
-			dictionary_data.docs = dictionary_data.docs.sort(compareDictionaryObject);
+			dictionary_data.docs.sort(compareDictionaryObject);
 		}
 
 		if(!dictionary_data.docs.hasOwnProperty(tState.selected_api_id)){
