@@ -9,6 +9,11 @@
 	function dataGet(){
 		//console.log(dictionary_data.docs);
 		
+		//sort API dictionaries, leave LiveCode Script/LiveCode Builder as first 2 entries
+		if(tState.selected_api_id == ""){
+			dictionary_data.docs = dictionary_data.docs.sort(compareDictionaryObject);
+		}
+
 		if(!dictionary_data.docs.hasOwnProperty(tState.selected_api_id)){
 			
 			$.each(dictionary_data.docs, function(index, libraryData){
@@ -25,6 +30,29 @@
 		return tState.data;
 	}
 	
+
+	//customized sort for API dictionaries
+	function compareDictionaryObject(entryObject1,entryObject2) {
+		if(entryObject1["display name"] == "LiveCode Script" && entryObject2["display name"] == "LiveCode Builder")
+			return -1;
+		if(entryObject2["display name"] == "LiveCode Script" && entryObject1["display name"] == "LiveCode Builder")
+			return 1;
+		if(entryObject1["display name"] == "LiveCode Script")
+			return -3;
+		if(entryObject2["display name"] == "LiveCode Script")
+			return 3;
+		if(entryObject1["display name"] == "LiveCode Builder")
+			return -2;
+		if(entryObject2["display name"] == "LiveCode Builder")
+			return 2;
+		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
+			return -1;
+		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
+			return 1;
+		return 0;
+	}
+
+
 	// Return all the syntax associated with an entry
 	// as a (matchable) string
 	function collectSyntax(pEntry)
