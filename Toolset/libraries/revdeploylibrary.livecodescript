@@ -74,7 +74,7 @@ command revIDEDeployAction
       put "Unknown deployment platform - " & tPlatform into tError
    end if
    
-   -- Report an error if one occured
+   -- Report an error if one occurred
    if tError is not empty then
       if revTestEnvironment() then
          return tError

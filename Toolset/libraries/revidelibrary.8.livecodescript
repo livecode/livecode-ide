@@ -6886,7 +6886,7 @@ on revIDEActionNewScriptOnlyStack
    # Create script only
    revIDENewScriptOnlyStack it
 
-   # If an error occured, tell the use
+   # If an error occurred, tell the user
    if the result is not empty then
       answer the result
    end if

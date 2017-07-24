@@ -1595,7 +1595,7 @@ private command compileScript pObject, pIgnoreErrors
       send "setCompilationErrors line 1 of tCompilationResult, pObject" to group "Editor" of me
       
       # If there were errors and the errors pane is folded down, expand it to make the errors clear.
-      # Don't do this is there weren't any as the "no error occured" message is less important.
+      # Don't do this is there weren't any as the "no error occurred" message is less important.
       if sePrefGet("showerrors") then
          send "expandCurrentPane" to group "Panes" of me
       end if
