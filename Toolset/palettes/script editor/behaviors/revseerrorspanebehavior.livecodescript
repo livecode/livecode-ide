@@ -125,7 +125,7 @@ private command updateList
    local tData
    put the cData of me into tData
    
-   # Show a nice green tick etc if no errors occured
+   # Show a nice green tick etc if no errors occurred
    if tData is empty then
       local tObject
       revSEGetCurrentObject
