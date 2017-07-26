@@ -10367,6 +10367,10 @@ private function __fetchAndRemoveControlTags pCard
    return tTags
 end __fetchAndRemoveControlTags
 
+command revIDETutorialUpdateAndRemoveTags pStackName, @xTags
+      union xTags with __fetchAndRemoveTags(pStackName)
+end revIDETutorialUpdateAndRemoveTags
+
 on revIDETutorialLoad pCourse, pTutorial, pLesson
    local tLocation
    put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
@@ -10393,7 +10397,7 @@ on revIDETutorialLoad pCourse, pTutorial, pLesson
          put return & tStackName after tStackList
       end if
       
-      union tTags with __fetchAndRemoveTags(tStackName)
+      revIDETutorialUpdateAndRemoveTags tStackName, tTags
    end repeat
    
    dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]

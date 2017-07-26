@@ -432,12 +432,20 @@ end revTutorialParseInterlude
 on revTutorialParseLoad pTokens, @rData
    local tData
    revTutorialParseLine "load lesson <token>", pTokens, tData
-   if the result is not empty then
-      return the result
+   if the result is empty then
+      put "load" into rData["type"]
+      put tData[1] into rData["lesson"]
+      return empty
    end if
-   put "load" into rData["type"]
-   put tData[1] into rData["lesson"]
-   return empty
+   
+   revTutorialParseLine "load stack <token>", pTokens, tData
+   if the result is empty then
+      put "load" into rData["type"]
+      put tData[1] into rData["stack"]
+      return empty
+   end if
+   
+   return the result
 end revTutorialParseLoad
 
 on revTutorialParseCapture pTokens, @rData
@@ -2086,18 +2094,39 @@ on revTutorialExecuteAction pActionData
          revTutorialDoCreateSet pActionData["objects"], pActionData["tag"]
          break
       case "load"
-         revTutorialDoLoad pActionData["lesson"]
+         revTutorialDoLoad pActionData
          break
    end switch
 end revTutorialExecuteAction
 
-on revTutorialDoLoad pLesson
+command revTutorialDoLoadLesson pLesson
    # Check to see if the stack from the specified lesson is complete
    local tTutorialInfo
    put revIDETutorialInProgress() into tTutorialInfo
    
    # Simply run the lesson that is to be loaded
    revTutorialRunTutorial tTutorialInfo["course"], tTutorialInfo["tutorial"], pLesson, tTutorialInfo["location"]
+end revTutorialDoLoadLesson
+
+command revTutorialDoLoadStackResource pFile
+   local tFileName, tStackName
+   put revIDETutorialInternalResource(pFile) into tFileName
+   lock screen
+   lock messages
+   go stack tFileName
+   put the name of stack tFileName into tStackName
+   set the filename of stack tStackName to empty
+   revIDETutorialUpdateAndRemoveTags tStackName, sTaggedObjects
+   unlock messages
+   unlock screen
+end revTutorialDoLoadStackResource
+
+on revTutorialDoLoad pActionData
+   if pActionData["lesson"] is not empty then
+      revTutorialDoLoadLesson pActionData["lesson"]
+   else if pActionData["stack"] is not empty then
+      revTutorialDoLoadStackResource pActionData["stack"]
+   end if
 end revTutorialDoLoad
 
 on revTutorialSetText pStep
