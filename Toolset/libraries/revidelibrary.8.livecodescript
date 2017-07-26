@@ -3474,30 +3474,22 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
 end revIDECreateObject
 
 on revIDECloneObject pLongID
-   local tTarget, tLoc, tControlType
-   local tCreatedControlID
-
-   put the loc of pLongID into tLoc
-   add 20 to item 1 of tLoc
-   add 20 to item 2 of tLoc
-
-   put revIDECardOfObject(pLongID) into tTarget
-   if not exists(tTarget) then return __revIDEError("Cannot create object. Target does not exist:" && tTarget)
-
-   --   # Set the default stack to the target we're creating the object on
-   --   set the defaultstack to the owner of tTarget
-
-   --   # Create the object
-   --   lock screen
-   -- lock messages
-   --do "clone" && pLongID
-   clone pLongID
-   put the long ID of the last control into tCreatedControlID
-   set the loc of tCreatedControlID to tLoc
-
-   --   unlock messages
-   --   unlock screen
-   --   return tCreatedControlID
+   if not exists(pLongID) then return __revIDEError("Cannot create object. Target does not exist:" && pLongID)
+   
+   if word 1 of pLongID is "card" or word 1 of pLongID is "stack" then
+      clone pLongID
+   else
+      local tTarget, tLoc, tControlType
+      local tCreatedControlID
+      
+      put the loc of pLongID into tLoc
+      add 20 to item 1 of tLoc
+      add 20 to item 2 of tLoc
+            
+      clone pLongID
+      put it into tCreatedControlID
+      set the loc of tCreatedControlID to tLoc
+   end if
 end revIDECloneObject
 
 on revIDECloneObjectWithDefaults pLongID

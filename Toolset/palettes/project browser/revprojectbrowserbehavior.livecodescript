@@ -885,12 +885,16 @@ on cloneControls
    put pbSelectedObjects() into tControlList
    
    lock screen
+   local tOldDefaultStack
+   put the defaultStack into tOldDefaultStack
+   set the defaultStack to revIDEStackOfObject(line 1 of tControlList)
    repeat for each line tControlID in tControlList
       revIDECloneObject tControlID
       put the result & return after tClonedIDs
    end repeat
    
    selectObjects tClonedIDs
+   set the defaultStack to tOldDefaultStack
    unlock screen
 end cloneControls
 
