@@ -33,18 +33,14 @@
 
 	//customized sort for API dictionaries
 	function compareDictionaryObject(entryObject1,entryObject2) {
-		if(entryObject1["display name"] == "LiveCode Script" && entryObject2["display name"] == "LiveCode Builder")
-			return -1;
-		if(entryObject2["display name"] == "LiveCode Script" && entryObject1["display name"] == "LiveCode Builder")
-			return 1;
 		if(entryObject1["display name"] == "LiveCode Script")
-			return -3;
+			return -1;
 		if(entryObject2["display name"] == "LiveCode Script")
-			return 3;
+			return 1;
 		if(entryObject1["display name"] == "LiveCode Builder")
-			return -2;
+			return -1;
 		if(entryObject2["display name"] == "LiveCode Builder")
-			return 2;
+			return 1;
 		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
 			return -1;
 		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
