@@ -565,6 +565,102 @@ Choose a handler to go to that handler in the script.
 
 The Window menu contains the names of open script editor windows.
 
+### Autocomplete
+
+> **Note:** Autocomplete is only available in commercial versions of
+LiveCode
+
+#### Using Autocomplete
+
+While typing in the script editor a filtered list of available completions
+will appear below the selection. Use the following keys to navigate the
+completion list:
+
+- tab - apply the completion
+- up arrow - move up the list
+- down arrow - move down the list
+
+Moving the mouse will hide the completion list to avoid it remaining in
+place over an area you would like to select. Completions include
+placeholder fields which you can navigate with the tab key. Some
+completions may have multiple placeholders with the same name which
+will be edited together. Clicking within a placeholder will select it.
+
+The current automatic completion of control structures has not changed.
+
+Autocomplete provides the following features:
+
+- Completions generated from the LiveCode documentation
+- Completions generated dynamically by introspecting
+the object being edited and its message path
+- An Autocomplete Snippet Manager dialog is accessible from the script
+editor menubar to manage a custom set of completions.
+
+#### Autocomplete Snippet Manager
+
+An autocomplete snippet provides the information required to match and
+complete some code in the script editor. The Autocomplete Snippet Manager
+allows the user to manage a custom set of completion snippets.
+
+Create a new completion snippet by clicking the **+** icon and delete the
+currently selected snippet by clicking the **-** icon.
+
+The dialog allows entry of the following:
+
+**Display Name** - choose a completion snippet to edit or change the
+display name of the current snippet.
+
+**Priority** - A value between 1 and 100 indicating the order the
+completions should be matched in. Higher priorities will be listed
+before lower priorities.
+
+**Match Scope** - Choose whether the completion should try and match when
+the selection is outside a handler, inside a handler or anywhere. A
+comment completion might be anywhere, a statement completion (unless
+local, global or constant) would be only inside a handler and a handler
+completion would be outside a handler.
+
+**Match Words** - Choose whether to match only all the words of a line,
+just the word being written or either. A statement would be all the words
+on a line, an expression would be just the current word and a comment
+would be either.
+
+**Alternate Match String** - When matching completion snippets the text
+of the completion is matched first but in some cases that is not suitable
+or another string would be better to match. Enter a string to try matching
+if the completion fails to match.
+
+**Summary** - This field is optional and provides some detail below the
+completion in the script editor.
+
+**Completion** - This is the string to be used when replacing the
+selection after choosing a completion. The completion may be any script
+and any length. Add placeholders to the completion in the following form:
+
+    ${<name>:<type>}
+
+Where:
+
+- name - is the text seen in the script editor
+- type - is used to filter the completions presented for the placeholder
+one of:
+
+  - statement - any LiveCode command
+  - expression - any LiveCode expression
+  - identifier - a variable or handler name
+
+Additionally, it is possible to include multiple placeholders with the
+same name. When a multiple placeholder is selected they are edited
+at the same time. In this example completion as the user enters the
+condition a comment is appended to the `end if` with the condition text.
+Once the condition is complete the user may tab to the `-- code` line
+and enter a statement. The tab order is always top to bottom and left to
+right:
+
+    if ${condition:expression} then
+        ${-- code:statement}
+    end if # ${condition}
+
 ## The Message Box
 
 The Message Box is a command line tool that allows you to run scripts or

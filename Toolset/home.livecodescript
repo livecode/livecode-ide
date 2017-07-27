@@ -509,9 +509,7 @@ function revInternal__StackFiles
    end repeat
    
    put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
-   if revEnvironmentIsInstalled() then
-      put return & revEnvironmentToolsetPath() after tFolders
-   else
+   if not revEnvironmentIsInstalled() then
       put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
       
       -- legacy from commercial repo
@@ -556,19 +554,7 @@ function revInternal__StackFiles
             end if
          end if
          
-         if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
-         else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
-         else if tStackName is "revcolorchooser" then put "Color Chooser" into tStackName
-         else if tStackName is "revfileselector" then put "File Selector" into tStackName
-         else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
-         else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
-         else if tStackName is "revmessagebox" then put "Message Box" into tStackName
-         else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
-         # AL-2015-03-12: [[ Bug ]] Make sure Linux stacks included in standalones have the correct name
-         else if tStackName is "revprinterchooser" then put "Printer Chooser" into tStackName
-         else if tStackName is "revpagesetup" then put "Page Setup" into tStackName
-         # AL-2015-09-25: [[ Bug 16000 ]] Don't load stack "revPreferences" into memory - causes issues with actual prefs.
-         else if tStackName is "revpreferences" then next repeat
+         if tStackName is "revpreferences" then next repeat
          
          // AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
          local tExistingVersion
@@ -580,9 +566,17 @@ function revInternal__StackFiles
       end repeat
    end repeat
    
+   lock messages
    repeat for each key tKey in tStackFilesA
-      put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+      try
+         put the short name of stack tStackFilesA[tKey]["file"] into tStackName
+         delete stack tStackName
+         put tStackName & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+      catch e
+         revInternal__Log "Error", "Could not load stack:" && tStackFilesA[tKey]["file"]
+      end try
    end repeat
+   unlock messages
    delete the last char of tStackFiles
    return tStackFiles
 end revInternal__StackFiles
@@ -1200,6 +1194,11 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revProfilesLibrary"
    revInternal__LoadLibrary "revDatabaseLibrary"
    revInternal__LoadLibrary "revTableLibrary"
+   
+   if the editionType is not "community" then
+      revInternal__LoadLibrary "autocomplete-plus"
+      revInternal__LoadLibrary "autocomplete"
+   end if
    
    // EJB - New IDE Libraries
    

@@ -695,7 +695,12 @@ command scriptCompile pObject
    put the result into tResult
    
    if tResult is empty then
+      --! TODO remove use of revAvailableHandlers here (quite invasive)
       put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
+      get getObjectID()
+      if exists(it) then
+         ideAutocompleteIntrospectObject it, the long id of button "revCompileObject" of me
+      end if
    end if
    
    set the preserveVariables to tOldPreserveVariables
@@ -2241,10 +2246,12 @@ on mouseMove
    tooltipReset
    send "tooltipUpdate" to me in kTooltipUpdateDelay milliseconds
    put the result into sTooltipUpdateRequest
+   pass mouseMove
 end mouseMove
 
 on mouseLeave
    tooltipUpdateCancel
+   pass mouseLeave
 end mouseLeave
 
 # Description

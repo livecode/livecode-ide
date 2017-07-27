@@ -117,16 +117,20 @@ private command buildEditMenu pContext
    end if
    
    put "Paste/V" & return & \
-          "Select All/A" & return & \
-          "Revert" & return & \
-          "-" & return & \
-          "Comment/-" & return & \
-          "Uncomment/_" & return & \
-          "-" & return & \
-          "Quick Find/F" & return & \
-          "Find and Replace.../^@F" & return & \
-          "Find Selection/^#F" & return & \
-          "Go.../L" & return after tEdit
+         "Select All/A" & return & \
+         "Revert" & return & \
+         "-" & return & \
+         "Comment/-" & return & \
+         "Uncomment/_" & return & \
+         "-" & return & \
+         "Quick Find/F" & return & \
+         "Find and Replace.../^@F" & return & \
+         "Find Selection/^#F" & return & \
+         "Go.../L" & return after tEdit
+   
+   if there is a stack "com.livecode.palette.autocomplete-plus" then
+      put "Autocomplete Snippets..." & return after tEdit
+   end if
    
    if sePrefGet("explicitVariables") then
       put "!cVariable Checking" & return after tEdit
@@ -447,6 +451,9 @@ private command handleEditMenuPick pItemName
          break
       case "Preferences"
          actionShowPreferences
+         break
+      case "Autocomplete Snippets..."
+         actionAutocompleteSnippetManager
          break
    end switch
 end handleEditMenuPick

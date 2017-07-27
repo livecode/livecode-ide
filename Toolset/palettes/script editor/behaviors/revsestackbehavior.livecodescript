@@ -2199,6 +2199,10 @@ command actionQuit
    quit
 end actionQuit
 
+command actionAutocompleteSnippetManager
+   modeless "com.livecode.palette.autocomplete-plus"
+end actionAutocompleteSnippetManager
+
 ################################################################################
 #
 # Keyboard shortcut handling
