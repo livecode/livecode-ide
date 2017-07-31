@@ -50,8 +50,15 @@
 		tState.searched.term = pTerm;
 		tState.searched.data = [];
 		
+		// Escape leading special characters:  \ ^ $ [
+		var tTerm = pTerm;
+		if(pTerm.search(/^[\\\^\$\[]/) == 0)
+		{
+			tTerm = "\\" + pTerm;
+		}
+
 		// Get a list of space-delimited search terms				
-   		var tokensOfTerm = pTerm.match(/\S+/g);
+   		var tokensOfTerm = tTerm.match(/\S+/g);
 		
 		
 		// Generate two regexes - one that matches all syntax that 

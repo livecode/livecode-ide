@@ -1,0 +1,1 @@
+# Searching the Dictionary for $
