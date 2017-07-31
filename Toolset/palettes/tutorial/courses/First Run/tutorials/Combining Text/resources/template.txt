@@ -1,0 +1,19 @@
+Dear 
+
+Thank you for participating in the LiveCode Business Academy.
+
+We notice you've watched X videos so far.
+
+We really value your feedback. Please tell us what you think of the course so far by visiting:
+
+We notice you haven't watched any videos so far.
+
+Please tell us why you haven't viewed any videos so far by visiting:
+
+http://www.livecode.com/feedback/academy?a=
+
+Best regards,
+
+The LiveCode Team
+
+This email was sent by LiveCode Ltd. 

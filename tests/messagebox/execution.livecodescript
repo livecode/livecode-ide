@@ -85,14 +85,14 @@ on TestGlobalPropertyCompleted
 	local tValidScript
 	ideExecuteScript "backdrop", empty, false, tValidScript
 
-	TestAssert "global prop value with 'put the' prepended", msg is "none"
+	TestAssert "global prop value with 'put the' prepended", msg is the backdrop
 	TestAssert "global prop executed with 'put the' prepended", tValidScript is "put the backdrop"
 
 	put empty into msg
 
 	ideExecuteScript "the backdrop", empty, false, tValidScript
 
-	TestAssert "global prop value with 'put' prepended", msg is "none"
+	TestAssert "global prop value with 'put' prepended", msg is the backdrop
 	TestAssert "global prop executed with 'put' prepended", tValidScript is "put the backdrop"
 end TestGlobalPropertyCompleted
 

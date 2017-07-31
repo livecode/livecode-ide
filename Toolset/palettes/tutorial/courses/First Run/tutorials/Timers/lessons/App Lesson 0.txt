@@ -1,0 +1,147 @@
+tutorial "Using Timers"
+
+prologue
+	text
+end prologue
+
+step "Create Mainstack"
+
+action
+    highlight menu item "Default size" of menu item "New Stack" of menu "File"
+    capture the next new stack as "Mainstack"
+    capture the next new card of stack "Mainstack" as "home"
+    wait until there is a stack "Mainstack"
+		go to step "Set Stack Properties"
+end step
+
+step "Set Stack Properties"
+	Click on the Inspector icon on the toolbar to open the property
+	inspector.
+action
+	highlight toolbar "Inspector"
+	wait until there is an inspector for stack "Mainstack"
+	go to step "Set Stack Title"
+end step
+
+step "Set Stack Title"
+	Set the 'Title' of the stack to "Timer".
+action
+	highlight property "title" of section "basic"
+	wait until the title of stack "Mainstack" is "Timer"
+	go to step "Set stack color"
+end step
+
+step "Set stack color"
+	Set the 'Background fill' of the graphic to white (255,255,255).
+action
+	highlight property "backgroundColor" of section "Colors"
+	wait until the backgroundColor of stack "Mainstack" is "255,255,255"
+	go to step "Create start button"
+end step
+
+step "Create start button"
+	Drag a button from the tools palette onto your stack.
+action
+	highlight tool "Create Button"
+	capture the next new button of stack "Mainstack" as "start"
+	wait until there is a button "start"
+	go to step "Set start location"
+end step
+
+step "Set start Location"
+	Resize and position the button, as shown.
+action
+	add guide "startLoc" with rect "159,39,241,62" to stack "Mainstack"
+	highlight guide "startLoc"
+	wait until button "start" fits guide "startLoc" with tolerance 5
+	go to step "Start Property Inspector"
+end step
+
+step "Start Property Inspector"
+	Select the button and open the Inspector from the Menubar.
+action
+	highlight button "start"
+	wait until there is an inspector for button "start"
+	go to step "Set start name"
+end step
+
+step "Set start name"
+	Set the 'Name' of the button to "Start".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of button "start" is "Start"
+	go to step "Create clock background"
+end step
+
+step "Create clock background"
+	Import the clock background image file onto your stack.
+file
+	clockBackground.png
+action
+	highlight menu item "Image File..." of menu item "Import as Control" of menu "File"
+	capture the next new image of stack "Mainstack" as "background"
+	wait until there is a image "background"
+	go to step "Create seconds graphic"
+end step
+
+step "Create seconds graphic"
+	Drag an oval graphic from the tools palette onto your stack.
+action
+	highlight tool "Create Oval Graphic"
+	capture the next new graphic of stack "Mainstack" as "seconds"
+	wait until there is a graphic "seconds"
+	go to step "Set seconds Location"
+end step
+
+step "Set seconds Location"
+	Resize and position the graphic, as shown by dragging the resize handle.
+action
+	add guide "secondsLoc" with rect "142,143,256,257" to stack "Mainstack"
+	highlight guide "secondsLoc"
+	wait until graphic "seconds" fits guide "secondsLoc" with tolerance 5
+	go to step "Seconds Property Inspector"
+end step
+
+step "Seconds Property Inspector"
+	Select the graphic and open the Inspector from the Menubar.
+action
+	highlight graphic "seconds"
+	wait until there is an inspector for graphic "seconds"
+	go to step "Set seconds name"
+end step
+
+step "Set seconds name"
+	Set the 'Name' of the graphic to "seconds".
+action
+	highlight property "name" of section "Basic"
+	wait until the name of graphic "seconds" is "seconds"
+	go to step "Set seconds line thickness"
+end step
+
+step "Set seconds line thickness"
+	Set the 'Line thickness' of the graphic to 0.
+action
+	highlight property "lineSize" of section "Basic"
+	wait until the lineSize of graphic "seconds" is "0"
+	go to step "Set seconds color"
+end step
+
+step "Set seconds color"
+	Set the 'Background fill' of the graphic to purple (127,127,255).
+action
+	highlight property "backgroundColor" of section "Colors"
+	wait until the backgroundColor of graphic "seconds" is "127,127,255"
+	go to step "Set seconds arc"
+end step
+
+step "Set seconds arc"
+	Set the 'Arc' of the graphic to 6.
+action
+	highlight property "arcAngle" of section "Basic"
+	wait until the arcAngle of graphic "seconds" is "8"
+	go to step "Start button code 1"
+end step
+
+epilogue
+	epilogue
+end epilogue

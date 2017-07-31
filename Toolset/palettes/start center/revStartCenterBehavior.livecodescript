@@ -260,7 +260,17 @@ function tilesArray pState
          put "lc-person" into tArray[8]["icon"]
          put "lc-person-filled" into tArray[8]["hoverIcon"]
          break
-      case "interactive_welcome"
+      case "interactive_welcome"         
+         put "1. User Interface" into tArray[1]["label"]
+         put "tutorial_list_ui" into tArray[1]["tag"]
+         put "tablet" into tArray[1]["icon"]
+         put "tablet" into tArray[1]["hoverIcon"]
+         put "2. Coding" into tArray[2]["label"]
+         put "tutorial_list_coding" into tArray[2]["tag"]
+         put "terminal" into tArray[2]["icon"]
+         put "terminal" into tArray[2]["hoverIcon"]
+         break
+      case "tutorial_list_ui"
          put "1. Hello World" into tArray[1]["label"]
          put "tutorial_hello_world" into tArray[1]["tag"]
          put "lc-hello-world" into tArray[1]["icon"]
@@ -273,6 +283,24 @@ function tilesArray pState
          put "tutorial_bmi_calculator" into tArray[3]["tag"]   
          put "lc-bmi-calculator" into tArray[3]["icon"]
          put "lc-bmi-calculator-filled" into tArray[3]["hoverIcon"]
+         put "1. Hello World" into tArray[1]["label"]
+         put "tutorial_hello_world" into tArray[1]["tag"]
+         put "lc-hello-world" into tArray[1]["icon"]
+         put "lc-hello-world-filled" into tArray[1]["hoverIcon"]
+         put "2. To Do List" into tArray[2]["label"]
+         put "tutorial_todo_list" into tArray[2]["tag"]
+         put "lc-todo-list" into tArray[2]["icon"]
+         put "lc-todo-list-filled" into tArray[2]["hoverIcon"]
+         break
+      case "tutorial_list_coding"
+         put "1. Combining Text" into tArray[1]["label"]
+         put "tutorial_combining_text" into tArray[1]["tag"]
+         put "font" into tArray[1]["icon"]
+         put "font" into tArray[1]["hoverIcon"]
+         put "2. Timers" into tArray[2]["label"]
+         put "tutorial_timers" into tArray[2]["tag"]
+         put "hourglass" into tArray[2]["icon"]
+         put "hourglass" into tArray[2]["hoverIcon"]
          break
       case "new"
          put "New Stack" into tArray[1]["label"]
@@ -404,6 +432,20 @@ on startCenterAction pAction
          put tilesArray(pAction) into tArray
          tilesUpdate tArray
          break
+      case "tutorial_list_ui"
+         put "Home / Interactive Welcome / User Interface" into field "breadcrumb"
+         set the textStyle of word 1 of field "breadcrumb" to "link"
+         set the textStyle of word 3 to 4 of field "breadcrumb" to "link"
+         put tilesArray(pAction) into tArray
+         tilesUpdate tArray
+         break
+      case "tutorial_list_coding"
+         put "Home / Interactive Welcome / Coding" into field "breadcrumb"
+         set the textStyle of word 1 of field "breadcrumb" to "link"
+         set the textStyle of word 3 to 4 of field "breadcrumb" to "link"
+         put tilesArray(pAction) into tArray
+         tilesUpdate tArray
+         break
       case "tutorial_hello_world"
          tutorialStart "Hello World"
          break
@@ -412,6 +454,12 @@ on startCenterAction pAction
          break
       case "tutorial_bmi_calculator"
          tutorialStart "BMI Calculator"
+         break
+      case "tutorial_combining_text"
+         tutorialStart "Combining Text"
+         break
+      case "tutorial_timers"
+         tutorialStart "Timers"
          break
       case "new"
          put "Home / New" into field "breadcrumb"
@@ -491,15 +539,21 @@ on startCenterAction pAction
    end switch
 end startCenterAction
 
-command setStateHome
+command setState pState
    local tArray
-   put tilesArray("home") into tArray
+   
+   put tilesArray(pState) into tArray
    
    put empty into field "breadcrumb"
-   set the textStyle of word 1 of field "breadcrumb" to empty
    
+   if pState is "home " then
+      set the textStyle of word 1 of field "breadcrumb" to empty
+   else if pState is "interactive_welcome" then
+      put "Home / Interactive Welcome" into field "breadcrumb"
+      set the textStyle of word 1 of field "breadcrumb" to "link"
+   end if
    tilesUpdate tArray
-end setStateHome
+end setState
 
 command firstRunVisible pValue
    lock screen
