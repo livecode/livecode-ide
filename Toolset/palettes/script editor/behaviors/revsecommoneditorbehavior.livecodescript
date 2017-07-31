@@ -35,6 +35,9 @@ local sPaneUpdateRequest
 # Stores the id of the last request to update the gutter, if there is one pending.
 local sGutterUpdateRequest
 
+# Stores the id of the last autocomplete find request
+local sLastFindMessageID
+
 # We also need to store whether the last update request involved text changing and 
 # whether it required the compilation errors to be updated. This is because it may be
 # cancelled by a subsequent request that didn't require these things, resulting in the update
@@ -43,6 +46,15 @@ local sGutterUpdateRequestDetails
 
 # Stores that an arrowKey is pressed from rawKeyDown
 local sArrowKeyPressed
+
+local sProviders
+local sProvidersIncludingMsgPath
+local sRegisteredProviders
+local sProviderNames
+local sPlaceholders
+local sEditChunks
+local sFoundProviders
+local sScriptDescription
 
 # OK-2009-01-17 : Bug 7169
 command setDirty pObject, pValue
@@ -158,7 +170,21 @@ private command updateMultiItemArrayKey @pArray, pOldKey, pNewKey, pDelimiter, p
    end repeat
 end updateMultiItemArrayKey
 
+command ResetProviders
+   __AutoCompleteClearProviders
+   __GenerateProvidersFromDocs
+   put sRegisteredProviders into sProvidersIncludingMsgPath
+   if exists(sObjectId) then
+      __GenerateProvidersByIntrospectingMessagePath sObjectId, sProvidersIncludingMsgPath
+   end if
+end ResetProviders
+
 command textInitialize
+   if the number of elements of sRegisteredProviders is 0 and \
+         "development" is in the environment then
+      __GenerateProvidersFromDocs
+   end if
+   
    put empty into sTextOperationOffsets
    put empty into sTextOperationNewTexts
    put empty into sTextOperationOldTexts
@@ -788,9 +814,19 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       put pObject into tObject
    end if
    
+   local tUUID
+   put the linkText of char pOffset of field "Script" of me into tUUID
+   
    local tBracketCompletionType
    __BracketCompletion  pOffset, pOldText, pNewText
    put it into tBracketCompletionType
+   
+   local tSelection
+   if tBracketCompletionType is "wrap" then
+      put the selectedChunk into tSelection
+      add 1 to word 2 of tSelection
+      add 1 to word 4 of tSelection
+   end if
    
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
       textBeginGroup sTextMark[tObject], tObject
@@ -816,6 +852,8 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       textReplaceRaw pOffset, pOldText, pNewText
       if tBracketCompletionType is "pair" then
          select after char pOffset of field "script" of me
+      else if tBracketCompletionType is "wrap" then
+         select tSelection
       end if
    else
       local tCache
@@ -837,6 +875,8 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       # the script.
       setDirty tObject, true
    end if
+   
+   __UpdateAutoCompleteList  tUUID
 end textReplace
 
 # Parameters
@@ -912,6 +952,11 @@ on textSetScriptRaw pScript
    put the text of field "Script" of me into tOldText
    if tOldText is not pScript then
       textReplaceRaw 1, tOldText, pScript, true
+      
+      put sRegisteredProviders into sProvidersIncludingMsgPath
+      if exists(sObjectId) then
+         __GenerateProvidersByIntrospectingMessagePath sObjectId, sProvidersIncludingMsgPath
+      end if
    end if
 end textSetScriptRaw
 
@@ -1027,6 +1072,10 @@ command cancelPendingMessages
    if sPaneUpdateRequest is not empty then
       cancel sPaneUpdateRequest
    end if
+   
+   if sLastFindMessageID is not empty then
+      cancel sLastFindMessageID
+   end if
 end cancelPendingMessages
 
 
@@ -1090,6 +1139,8 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
    end if
    send "updateGutterDo" to me in 5 milliseconds
    put the result into sGutterUpdateRequest
+   
+   __UpdateAutoCompleteList
 end updateGutterRequest
 
 # update gutter stubs
@@ -1119,6 +1170,9 @@ end paneUpdate
 
 -- This is sent by the engine
 on selectionChanged
+   if not handleEvent("selectionChanged", the long id of the target) then
+      pass selectionChanged
+   end if
    if not (sArrowKeyPressed) then
       handleSelectionChanged
    end if
@@ -1126,8 +1180,35 @@ on selectionChanged
    selectionUpdateRequest
 end selectionChanged
 
+on arrowKey pArrowKey
+   local tHighlightedLine
+   if the visible of field "completions" of me then
+      put the hilitedLine of field "completions" of me into tHighlightedLine
+      switch pArrowKey
+         case "up"
+            __DisplayCompletions max(1,tHighlightedLine-1)
+            break
+         case "down"
+            __DisplayCompletions min(the number of lines of field "completions" of me,tHighlightedLine+1)
+            break
+         case "right"
+            __SelectNextPlaceholder
+            if the result is false then
+               caretUpdate the long id of the selectedField, the text of the selectedField
+            end if
+            -- continue
+         case "left"
+            __CancelFindProviders
+            break
+      end switch 
+   else
+      pass arrowKey
+   end if
+end arrowKey
+
 on selectionChangedByArrowKey pArrowKey
    saveLastSelections
+   put false into sArrowKeyPressed
    
    -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
    get the selectedChunk
@@ -1189,12 +1270,13 @@ on selectionChangedByArrowKey pArrowKey
    end switch
    
    textMark "Insert"
-   put false into sArrowKeyPressed
    selectionUpdateRequest
 end selectionChangedByArrowKey
-
--- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
-      -- "selectionChangedByArrowKey pArrowKey"
+   
+   
+   
+   -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
+         -- "selectionChangedByArrowKey pArrowKey"
 on handleSelectionChanged
    saveLastSelections
    
@@ -1217,6 +1299,10 @@ private command saveLastSelections
 end saveLastSelections
 
 private command selectionUpdateRequest
+   if not handleEvent("selectionUpdateRequest", the long id of the target) then
+      exit selectionUpdateRequest
+   end if
+   
    if sSelectionUpdateRequest is not empty then
       cancel sSelectionUpdateRequest
    end if
@@ -1230,8 +1316,16 @@ end selectionUpdateRequest
 on selectionUpdate
    lock screen
    __CheckHighlights
+   __UpdateAutoCompleteList
    unlock screen
 end selectionUpdate
+
+on mouseMove
+   lock screen
+   __CancelFindProviders
+   unlock screen
+   pass mouseMove
+end mouseMove
 
 -- This calculates the position of the caret based on pPosition where the caret is (hypothetically).
 private function caretPositionRight pLineStartChar, pProposedPosition, pLine
@@ -1804,10 +1898,9 @@ on optionKeyDown pKey
    keyDown pKey
 end optionKeyDown
 
-
 on scrollBarDrag
-   if the short name of the target is "Gutter" or the short name of the owner of the target is "Gutter" then
-      exit scrollBarDrag
+   if not handleEvent("scrollBarDrag", the long id of the target) then
+      pass scrollBarDrag
    end if
    
    updateGutterRequest empty, empty, empty, empty, false, true
@@ -1919,7 +2012,7 @@ on backspaceKey
    if tTo > tFrom then
       textEndGroup
    end if
-   
+    
    # OK-2009-01-19 : Update the handler list
    selectionUpdateRequest
 end backspaceKey
@@ -1981,10 +2074,21 @@ on tabKey
       put sePrefGet("editor,autoformat") into tAutoFormat
    end try
    if tAutoFormat then
-      if the shiftKey is "down" then
-         scriptFormat "script"
-      else
-         scriptFormat "handler"
+      if the number of elements of sFoundProviders > 0 then
+         __SetCompletionString sFoundProviders[the hilitedLine of field "completions"]
+      else if the number of elements of sPlaceholders > 0 then
+         __ClearCurrentPlaceholder
+         
+         local tChar, tLineChar, tLine, tToken, tLineTokens
+         __CurrentTokens tToken, tLineTokens, tChar, tLine, tLineChar
+         
+         __SelectNextPlaceholder tLineChar, tLine
+      else 
+         if the shiftKey is "down" then
+            scriptFormat "script"
+         else
+            scriptFormat "handler"
+         end if
       end if
    else
       get the selectedChunk
@@ -3109,3 +3213,1422 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
       end if
    end repeat
 end __LookForPair
+
+-- autocompletion
+
+constant kAutocompletePlaceholderStart = "${"
+constant kAutocompletePlaceholderEnd = "}"
+constant kAutocompleteNameDelimiter = ":"
+constant kAutocompleteClassDelimiter = "|"
+
+constant kAutocompleteMaxProviders = 10
+constant kAutocompleteVisibleProviders = 5
+
+constant kAutocompleteScriptLocalPriority = "95"
+constant kAutocompleteHandlerLocalPriority = "100"
+constant kAutocompleteAvailableHandlerPriority = "80"
+constant kAutocompleteScriptHandlerPriority = "90"
+constant kAutocompleteDocsPriority = "50"
+
+constant kAutocompleteMatchAny = 0
+constant kAutocompleteMatchLine = 1
+constant kAutocompleteMatchToken = 2
+
+constant kAutocompleteScopeAny = 0
+constant kAutocompleteScopeScript = 1
+constant kAutocompleteScopeHandler = 2
+
+constant kAutocompleteBackgroundColor = "240,240,240"
+
+private command __AutoCompleteClearProviders
+   put empty into sRegisteredProviders
+   put empty into sProvidersIncludingMsgPath
+   put empty into sProviders
+   put empty into sFoundProviders
+   put empty into sProviderNames
+end __AutoCompleteClearProviders
+
+/*
+
+Summary: Register autocomplete providers
+
+Parameters:
+
+pProviders (array):A numerically indexed array of providers
+{
+index (integer): The array index 1...N. each element is a provider specification array
+{
+"displayname" (string): the name to display to the user - should be one line
+"symbolclass" (string): providers are prefiltered based on the symbol class required
+"regex" (string): a regular expression for matching the provider
+"completion" (optional string): completion strings are specified under the Completion Strings subsection
+"list" (optional string): In some instances the provider may just be a list of variations or enum values. This would be the case for the statement.command.open.file.mode example above and possibly statement.command.open.for.
+"priority" (optional integer): An integer in the range 0 to 100. Default value is 50. Where the number of autocompletion options that can be presented to the user is limited the options are sorted by priority. The framework would also only attempt to match providers with lower priority if there weren't enough matches from the higher priorities.
+AutoCompleteProviderCallback
+}
+}
+
+Description:
+The AutoCompleteProviderCallback is the specified command name in the provider dispatched to the object ID in the provider or otherwise dispatched in the script editor scope.
+It should return a completion string and is dispatched with the following parameters:
+
+- pScript: the script being edited
+- pCaret: the current caret offset
+- pProvider: the provider array as specified as an element in the AutoCompleteRegisterProviders providers parameter.
+
+*/
+command AutoCompleteRegisterProviders pProviders
+   repeat with tIndex =1 to the number of elements in pProviders
+      local tHandler
+      if pProviders[tIndex]["symbolclass"] contains "message" then
+         put token 1 of pProviders[tIndex]["displayname"] into tHandler
+      else
+         put pProviders[tIndex]["displayname"] into tHandler
+      end if
+      
+      if not sProviderNames[tHandler] then
+         if pProviders[tIndex]["priority"] is not a number then next repeat
+         if pProviders[tIndex]["symbolclass"] is empty then next repeat
+         
+         local tElementIndex
+         put the number of elements of sRegisteredProviders[pProviders[tIndex]["priority"]][pProviders[tIndex]["symbolclass"]] + 1 into tElementIndex
+         put pProviders[tIndex] into sRegisteredProviders[pProviders[tIndex]["priority"]][pProviders[tIndex]["symbolclass"]][tElementIndex]
+         
+         put true into sProviderNames[tHandler]
+      end if
+   end repeat
+end AutoCompleteRegisterProviders
+
+/*
+
+Summary: Find the best matching providers. If no limit is specified a default limit will be applied.
+
+Parameters:
+
+pObject (string): The long ID of the object for introspection
+
+pToken (string): The characters the user has typed. Likeley a minimum of 3 (perhaps a user preference option).
+
+pLineTokens (string): The characters the user has typed. Likeley a minimum of 3 (perhaps a user preference option).
+
+pCaret (string): The cursor offset in the script
+
+pSymbolClass (optional string): The class or classes to search for
+
+pUUID (optional string): A placeholder UUID if the caret is within a placeholder.
+
+pCallbackObject (string): the long ID of an object to sent the callback to.
+
+Description:
+
+When complete AutoCompleteFoundProviders will be sent to the callbackObject with a numerically indexed array of provider arrays. 
+If AutoCompleteFindProviders is called again before AutoCompleteFoundProviders is complete then the find will be cancelled and replaced.
+
+
+*/
+
+private command __AutoCompleteFindProviders pObject, pToken, pLineTokens, pLine, pSymbolClasses, pCallbackObject
+   __AutoCompleteCancelFind
+   send "__AutoCompleteFindProvidersDo pObject, pToken, pLineTokens, pLine, pSymbolClasses, pCallbackObject" to me in 200 milliseconds
+   put the result into sLastFindMessageID
+end __AutoCompleteFindProviders
+
+private function __CurrentScope pObject, pLine
+   if not exists(pObject) then
+      return kAutocompleteScopeHandler
+   end if
+   
+   local tScope
+   if exists(pObject) then
+      repeat for each key tHandler in sScriptDescription["handlers"]
+         if pLine >= sScriptDescription["handlers"][tHandler]["start_line"] and \
+               pLine <= sScriptDescription["handlers"][tHandler]["end_line"] then
+            return kAutocompleteScopeHandler
+         end if
+      end repeat
+   end if
+   
+   return kAutocompleteScopeScript
+end __CurrentScope
+
+command __AutoCompleteFindProvidersDo pObject, pToken, pLineTokens, pLine, pSymbolClasses, pCallbackObject
+   local tScope
+   put __CurrentScope(pObject, pLine) into tScope
+   
+   local tMessageID
+   if sLastFindMessageID is empty then
+      exit __AutoCompleteFindProvidersDo
+   else
+      put sLastFindMessageID into tMessageID
+   end if
+   
+   local tPriorities
+   put the keys of sProviders into tPriorities
+   sort tPriorities numeric descending
+   
+   repeat for each line tPriority in tPriorities
+      local tClassList
+      if pSymbolClasses is not an array then
+         put the keys of sProviders[tPriority] into tClassList
+         split tClassList by return
+      else
+         put pSymbolClasses into tClassList
+      end if
+      
+      repeat for each element tClass in tClassList
+         local tProvider
+         repeat for each element tProvider in sProviders[tPriority][tClass]
+            if tProvider["scope"] is not tScope and \
+                  tProvider["scope"] is not kAutocompleteScopeAny then
+               next repeat
+            end if
+            
+            put false into tProvider["match_only_token"]
+            
+            local tMatches
+            put false into tMatches
+            
+            if tProvider["matchtoken"] is kAutocompleteMatchLine then
+               put tProvider["completion"] begins with pLineTokens and \
+                     pLineTokens is not tProvider["completion"] into tMatches
+            else
+               local tMatchAny
+               if tProvider["matchtoken"] is not kAutocompleteMatchAny then
+                  put pToken is not pLineTokens into tMatchAny
+               else
+                  put tProvider["completion"] begins with pLineTokens into tMatches
+                  put true into tMatchAny
+               end if
+               
+               if not tMatches then
+                  put tProvider["completion"] begins with pToken and \
+                        tMatchAny and \
+                        pToken is not tProvider["completion"] into tMatches
+               end if
+               
+               if not tMatches then
+                  put tProvider["completion"] begins with the last token of pToken and \
+                        tMatchAny and \
+                        pToken is not tProvider["completion"] into tMatches
+                  
+                  if tMatches then
+                     put true into tProvider["match_only_token"]
+                  end if
+               end if
+               
+               if not tMatches and tProvider["synonyms"] is an array then
+                  repeat for each element tSynonym in tProvider["synonyms"]
+                     put tSynonym begins with pToken into tMatches
+                     if tMatches then
+                        exit repeat
+                     end if
+                  end repeat
+               end if
+            end if
+            
+            if tMatches then
+               local tFoundProviders
+               __Push tProvider, tFoundProviders
+               if the result is kAutocompleteMaxProviders then
+                  dispatch "__AutoCompleteFoundProviders" to pCallbackObject with tFoundProviders
+                  exit __AutoCompleteFindProvidersDo
+               end if
+            end if
+            
+            if sLastFindMessageID is not tMessageID then
+               exit __AutoCompleteFindProvidersDo
+            end if
+            wait 0 with messages
+         end repeat
+      end repeat
+   end repeat
+   
+   dispatch "__AutoCompleteFoundProviders" to pCallbackObject with tFoundProviders
+end __AutoCompleteFindProvidersDo
+
+private command __Push pElement, @xList
+   local tSize
+   put the number of elements of xList + 1 into tSize
+   put pElement into xList[tSize]
+   return tSize
+end __Push
+
+private command __ParseParams pParams, @xDisplayName, @xCompletion
+   if the number of elements of pParams > 0 then
+      repeat with tIndex = 1 to the number of elements of pParams
+         put pParams[tIndex] & ", " after xDisplayName
+         put "${" & pParams[tIndex] & ":expression}, " after xCompletion
+      end repeat
+      delete char -2 to -1 of xCompletion
+      delete char -2 to -1 of xDisplayName
+   end if
+end __ParseParams
+
+private command __GenerateProvidersByIntrospectingMessagePath pObject, @xProviders
+   global gRevDevelopment
+   
+   local tProviders, tHandler, tVariable
+   local tFound, tDescription
+   put the effective revScriptDescription of pObject into tDescription
+   repeat with tDescriptionIndex = 1 to the number of elements of tDescription
+      if tDescription[tDescriptionIndex]["object"] is the long id of pObject or \
+            ("development" is in the environment and \
+            not gRevDevelopment and \
+            revIDEObjectIsOnIDEStack(pObject)) then
+         next repeat
+      end if
+      
+      repeat for each key tHandler in tDescription[tDescriptionIndex]["description"]["handlers"]
+         if tFound[tHandler] then
+            next repeat
+         end if
+         
+         put true into tFound[tHandler]
+         
+         __AddHandlerProvider \
+               tHandler, \
+               tDescription[tDescriptionIndex]["description"]["handlers"][tHandler], \
+               kAutocompleteAvailableHandlerPriority, \
+               xProviders
+      end repeat
+      
+   end repeat
+end __GenerateProvidersByIntrospectingMessagePath
+
+command AutoCompleteUpdateIntrospectedProviders pObject
+   put sProvidersIncludingMsgPath into sProviders
+   __GenerateProvidersByIntrospection pObject, word 2 of the selectedLine, sProviders
+end AutoCompleteUpdateIntrospectedProviders
+
+private command __GenerateProvidersByIntrospection pObject, pLine, @xProviders
+   local tProviders, tHandler, tVariable
+   
+   put the revScriptDescription of pObject into sScriptDescription
+   
+   local tClass, tNames, tIndex
+   
+   repeat for each item tType in "local,global"
+      put "expression.variable.script." & tType into tClass
+      
+      put sScriptDescription[tType&"s"] into tNames
+      
+      repeat for each element tName in tNames
+         put the number of elements of xProviders[kAutocompleteScriptHandlerPriority][tClass] + 1 into tIndex
+         put tName into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["displayname"]
+         put tName into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["completion"]
+         put tClass into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["symbolclass"]
+         put kAutocompleteScopeHandler into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["scope"]
+         put kAutocompleteMatchToken into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["matchtoken"]
+      end repeat
+   end repeat
+   
+   -- script constants are key -> value
+   put "expression.variable.script.constant" into tClass
+   
+   put sScriptDescription["constants"] into tNames
+   
+   repeat for each key tName in tNames
+      put the number of elements of xProviders[kAutocompleteScriptHandlerPriority][tClass] + 1 into tIndex
+      put tName into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["displayname"]
+      put tName into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["completion"]
+      put tClass into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["symbolclass"]
+      put kAutocompleteScopeHandler into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["scope"]
+      put kAutocompleteMatchToken into xProviders[kAutocompleteScriptHandlerPriority][tClass][tIndex]["matchtoken"]
+   end repeat
+   
+   repeat for each key tHandler in sScriptDescription["handlers"]
+      local tHandlerInfo
+      put sScriptDescription["handlers"][tHandler] into tHandlerInfo
+      
+      if tHandlerInfo["start_line"] <= pLine and \
+            tHandlerInfo["end_line"] >= pLine then
+         
+         repeat for each item tType in "parameter,local,global,constant"
+            put "expression.variable.handler." & tType into tClass
+            
+            put tHandlerInfo[tType & "s"] into tNames
+            
+            repeat for each element tName in tNames
+               put the number of elements of xProviders[kAutocompleteHandlerLocalPriority][tClass] + 1 into tIndex
+               put tName into xProviders[kAutocompleteHandlerLocalPriority][tClass][tIndex]["displayname"]
+               put tName into xProviders[kAutocompleteHandlerLocalPriority][tClass][tIndex]["completion"]
+               put tClass into xProviders[kAutocompleteHandlerLocalPriority][tClass][tIndex]["symbolclass"]
+               put kAutocompleteScopeHandler into xProviders[kAutocompleteHandlerLocalPriority][tClass][tIndex]["scope"]
+               put kAutocompleteMatchToken into xProviders[kAutocompleteHandlerLocalPriority][tClass][tIndex]["matchtoken"]
+            end repeat
+         end repeat
+         
+         -- special case exit and pass <handler>
+         put the number of elements of xProviders[kAutocompleteHandlerLocalPriority]["statement.command"] + 1 into tIndex
+         put "exit" && tHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["displayname"]
+         put "exit" && tHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["completion"]
+         put "statement.command" into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["symbolclass"]
+         put kAutocompleteMatchLine into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["matchtoken"]
+         put kAutocompleteScopeHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["scope"]
+         
+         add 1 to tIndex
+         put "pass" && tHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["displayname"]
+         put "pass" && tHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["completion"]
+         put "statement.command" into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["symbolclass"]
+         put kAutocompleteMatchLine into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["matchtoken"]
+         put kAutocompleteScopeHandler into xProviders[kAutocompleteHandlerLocalPriority]["statement.command"][tIndex]["scope"]
+      else
+         __AddHandlerProvider \
+               tHandler, \
+               tHandlerInfo, \
+               kAutocompleteScriptHandlerPriority, \
+               xProviders
+      end if
+   end repeat
+end __GenerateProvidersByIntrospection
+
+private command __AddHandlerProvider pHandler, pHandlerInfo, pPriority, @xProviders
+   local tCompletion, tMatchToken, tParams, tIndex, tClass, tDisplayName
+   
+   put pHandler into tDisplayName
+   switch pHandlerInfo["type"]
+      case "setprop"
+      case "getprop"
+         put "expression.property.custom" into tClass
+         put pHandler && "of ${object:expression.chunk.object}" into tCompletion
+         put kAutocompleteMatchToken into tMatchToken
+         break
+      case "function"
+         put "expression.function.script" into tClass
+         put pHandler & "(" into tCompletion
+         put "(" after tDisplayName
+         __ParseParams pHandlerInfo["parameters"], tDisplayName, tCompletion
+         put ")" after tDisplayName
+         put ")" after tCompletion
+         put kAutocompleteMatchToken into tMatchToken
+         break
+      default
+         put "statement.command.script" into tClass
+         put pHandler & space into tCompletion
+         put space after tDisplayName
+         __ParseParams pHandlerInfo["parameters"], tDisplayName, tCompletion
+         put kAutocompleteMatchLine into tMatchToken
+         break
+   end switch
+   
+   if pHandlerInfo["is_private"] then
+      put ".private" after tClass
+   end if
+   
+   if not sProviderNames[pHandler] then
+      put the number of elements of xProviders[pPriority][tClass] + 1 into tIndex
+      put tDisplayName into xProviders[pPriority][tClass][tIndex]["displayname"]
+      put tCompletion into xProviders[pPriority][tClass][tIndex]["completion"]
+      put tClass into xProviders[pPriority][tClass][tIndex]["symbolclass"]
+      put tMatchToken into xProviders[pPriority][tClass][tIndex]["matchtoken"]
+      put kAutocompleteScopeHandler into xProviders[pPriority][tClass][tIndex]["scope"]
+   end if
+end __AddHandlerProvider
+
+/*
+
+Summary: Cancel the current provider search 
+
+*/
+
+private command __AutoCompleteCancelFind
+   if sLastFindMessageID is not empty then
+      cancel sLastFindMessageID
+      put empty into sLastFindMessageID
+   end if
+end __AutoCompleteCancelFind
+
+private command __CurrentTokens @rToken, @rLineTokens, @rChar, @rLine, @rLineChar
+   put word 4 of the selectedChunk into rChar
+   put word 2 of the selectedLine into rLine
+   local tLine
+   put the last line of (char 1 to rChar of field "Script" me) into tLine
+   put the last word of tLine into rToken
+   put word 1 to -1 of tLine into rLineTokens
+   put the number of chars of tLine into rLineChar
+end __CurrentTokens
+
+private command __CancelFindProviders
+   if there is a field "completions" of me then
+      hide field "completions" of me
+   end if
+   __AutoCompleteCancelFind
+   delete variable sFoundProviders
+end __CancelFindProviders
+
+private command __UpdateAutoCompleteList pUUID
+   local tChar, tLineChar, tLine, tToken, tLineTokens
+   __CurrentTokens tToken, tLineTokens, tChar, tLine, tLineChar
+   
+   if tLineTokens is not empty and char 1 of tToken is not quote then
+      local tSymbolClasses
+      put sPlaceholders[pUUID]["classes"] into tSymbolClasses
+      __AutoCompleteFindProviders \
+            sObjectID, \
+            tToken, \
+            tLineTokens, \
+            tLine, \
+            tSymbolClasses, \
+            the long id of me 
+   else
+      __CancelFindProviders
+   end if
+end __UpdateAutoCompleteList
+
+private function __IconForSymbolClass pSymbolClass
+   switch
+      case pSymbolClass contains "command"
+         return "<b>C</b>"
+      case pSymbolClass contains "function"
+         return "<b>F</b>"
+      case pSymbolClass contains "property"
+         return "<b>P</b>"
+      case pSymbolClass contains "operator"
+         return "<b>?</b>"
+      case pSymbolClass contains "comment"
+         return "<b>~</b>"
+      case pSymbolClass contains "constant"
+         return "<b><i>k</i></b>"
+      case pSymbolClass contains "variable.handler.parameter"
+         return "<b><i>p</i></b>"
+      case pSymbolClass contains "variable.handler.local"
+         return "<b><i>t</i></b>"
+      case pSymbolClass contains "variable.script.local"
+         return "<b><i>s</i></b>"
+      case pSymbolClass contains "global"
+         return "<b><i>g</i></b>"
+      case pSymbolClass contains "object"
+         return "<b>O</b>"
+      default
+         return "<b>" & toUpper(char 1 of pSymbolClass) & "</b>"
+   end switch
+end __IconForSymbolClass
+
+on __AutoCompleteFoundProviders pProviders
+   if the number of elements of pProviders is 0 then
+      __CancelFindProviders
+      exit __AutoCompleteFoundProviders
+   end if
+   
+   if there is not a field "completions" of me then
+      create invisible field "completions" in me
+      set the listBehavior of it to true
+      set the lockText of it to true
+      set the dontWrap of it to true
+      set the autoHilite of it to true
+      set the backColor of it to 245,245,245
+      set the borderColor of it to 235,235,235
+      set the tabStops of it to 16
+   end if
+   
+   local tList
+   repeat for each element tProvider in pProviders
+      put "<p>" & __IconForSymbolClass(tProvider["symbolclass"]) & tab & tProvider["displayname"] & "</p>" & return after tList
+   end repeat
+   lock screen
+   set the htmlText of field "completions" of me to tList
+   put pProviders into sFoundProviders
+   __DisplayCompletions 1
+   unlock screen
+   
+end __AutoCompleteFoundProviders
+
+private command __DisplayCompletions pIndex
+   lock screen
+   
+   local tChar, tLineChar, tLine, tToken, tLineTokens
+   __CurrentTokens tToken, tLineTokens, tChar, tLine, tLineChar
+   
+   local tRect
+   local tTokenNum
+   if sFoundProviders[pIndex]["match_only_token"] then
+      put the number of tokens of tLineTokens into tTokenNum
+      put the formattedRect of token tTokenNum of line tLine of field "script" of me into tRect
+   else
+      put the number of words of tLineTokens into tTokenNum
+      put the formattedRect of word tTokenNum of line tLine of field "script" of me into tRect
+   end if
+   
+   local tHeight
+   if the number of elements of sFoundProviders > kAutocompleteVisibleProviders then
+      put the formattedHeight of field "completions" of me / \
+            the number of elements of sFoundProviders * kAutocompleteVisibleProviders + 4 into tHeight
+   else
+      put the formattedHeight of field "completions" of me into tHeight
+   end if
+   
+   set the rect of field "completions" of me to item 1 of tRect - 4, \
+         item 4 of tRect, \
+         the right of field "script" of me - the scrollbarWidth of field "script" of me,  \
+         min(item 4 of tRect + tHeight, \
+         the bottom of field "script" of me - the scrollbarWidth of field "script" of me)
+   
+   set the hilitedLine of field "completions" of me to pIndex
+   show field "completions" of me
+   
+   unlock screen
+end __DisplayCompletions
+
+private command __DeleteCurrentSelection
+   lock screen
+   lock messages
+   -- loop over sEditChunks and delete matching chunk updating sEditChunks to the new value
+   local tChunk
+   put the selectedChunk into tChunk
+   
+   local tFirstChar
+   put word 2 of tChunk into tFirstChar
+   local tLastChar
+   put word 4 of tChunk into tLastChar
+   
+   local tUUID
+   put the linkText of char tLastChar of field "script" of me into tUUID
+   if tUUID is empty then
+      put the linkText of char tFirstChar of field "script" of me into tUUID
+   end if
+   
+   if sEditChunks is an array and tUUID is not empty then
+      put true into sPlaceholders[tUUID]["edited"]
+      -- are we deleting the whole paceholder or just part of it
+      
+      local tFirstCharOffset, tLastCharOffset
+      put tFirstChar-sEditChunks[1]["start"] into tFirstCharOffset
+      put sEditChunks[1]["end"]-tLastChar into tLastCharOffset
+      
+      local tSelectOffset
+      
+      local tToSubtract = 0
+      local tIndex
+      repeat with tIndex = 1 to the number of elements of sEditChunks
+         subtract tToSubtract from sEditChunks[tIndex]["start"]
+         subtract tToSubtract from sEditChunks[tIndex]["end"]
+         
+         local tToAddToSubtract
+         if tLastChar < tFirstChar then
+            delete char sEditChunks[tIndex]["end"]-tLastCharOffset of field "script" of me
+            put 1 into tToAddToSubtract
+         else
+            delete char sEditChunks[tIndex]["start"]+tFirstCharOffset to sEditChunks[tIndex]["end"]-tLastCharOffset of field "script" of me
+            put sEditChunks[tIndex]["end"]-tLastCharOffset-sEditChunks[tIndex]["start"]+tFirstCharOffset into tToAddToSubtract
+         end if
+         if tIndex is 1 then
+            put sEditChunks[tIndex]["end"]-tLastCharOffset into tSelectOffset
+         end if
+         add tToAddToSubtract to tToSubtract
+         subtract tToAddToSubtract from sEditChunks[tIndex]["end"]
+      end repeat
+      select before char tSelectOffset of field "script" of me
+   else
+      -- deleting with just an inserton point -> delete previous char from all
+      if tLastChar < tFirstChar then
+         if tLastChar is 0 then 
+            set the backgroundColor of the selectedChunk to empty
+            set the linkText of the selectedChunk to empty
+            __CancelFindProviders
+            exit __DeleteCurrentSelection
+         end if
+         delete char tLastChar of field "script" of me
+         select before char tLastChar of field "script" of me
+      else
+         delete char tFirstChar to tLastChar of field "script" of me
+         select after char tLastChar of field "script" of me
+      end if
+   end if
+   
+   __ClearDeletedPlaceholders
+   
+   __UpdateAutoCompleteList tUUID
+   
+   __CheckHighlights
+end __DeleteCurrentSelection
+
+private command __ClearCurrentPlaceholder
+   lock screen
+   
+   local tUUID
+   put the linkText of the selectedChunk into tUUID
+   
+   local tChunk
+   if the number of elements of sEditChunks > 0 then
+      lock messages
+      put the selectedChunk into tChunk
+      put word 4 of tChunk + 1 into word 2 of tChunk
+      select tChunk
+      unlock messages
+      
+      repeat for each element tChunk in sEditChunks
+         set the linkText of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+         set the backgroundColor of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+      end repeat
+      delete variable sEditChunks
+   end if
+   
+   __ClearDeletedPlaceholders
+   __CancelFindProviders
+   unlock screen
+end __ClearCurrentPlaceholder
+
+private command __SetCompletionString pProvider
+   local tChar, tLineChar, tLine, tToken, tLineTokens
+   __CurrentTokens tToken, tLineTokens, tChar, tLine, tLineChar
+   
+   if the number of lines of pProvider["completion"] > 1 then
+      -- add the current line indent to the lines
+      local tIndent
+      put textFormatGetLineIndent(line tLine of field "script" of me) into tIndent
+      repeat with tIndex = 2 to the number of lines of pProvider["completion"]
+         put tIndent before line tIndex of pProvider["completion"]
+      end repeat
+   end if
+   lock screen
+   lock messages
+   
+   local tPlaceholders
+   local tPlaceholder
+   
+   local tStartOffset = 0
+   repeat forever
+      local tOffset
+      put offset(kAutocompletePlaceholderStart, pProvider["completion"], tStartOffset) into tOffset
+      if tOffset is 0 then
+         exit repeat
+      end if
+      
+      add tOffset to tStartOffset
+      
+      local tEndOffset
+      put offset(kAutocompletePlaceholderEnd, pProvider["completion"], tStartOffset+1) into tOffset
+      if tOffset is 0 then
+         -- error start but no end...
+         exit repeat
+      end if
+      put tOffset + tStartOffset+1 into tEndOffset
+      
+      put character tStartOffset + 2 to (tEndOffset - 1) of pProvider["completion"] into tPlaceholder
+      
+      split tPlaceholder with kAutocompleteNameDelimiter
+      if tPlaceholder[2] is not empty then
+         split tPlaceholder[2] with kAutocompleteClassDelimiter
+      end if
+      
+      local tLength
+      put the length of tPlaceholder[1] into tLength
+      
+      put tPlaceholder[1] into character tStartOffset to tEndOffset of pProvider["completion"]
+      
+      local tPlaceholderNum
+      put the number of elements of tPlaceholders[tPlaceholder[1]]["instances"] + 1 into tPlaceholderNum
+      
+      if tPlaceholderNum is 1 then
+         put uuid() into tPlaceholders[tPlaceholder[1]]["uuid"]
+         put tPlaceholder[2] into sPlaceholders[tPlaceholders[tPlaceholder[1]]["uuid"]]["classes"]
+      end if
+      
+      put tStartOffset into tPlaceholders[tPlaceholder[1]]["instances"][tPlaceholderNum]["start"]
+      add tLength-1 to tStartOffset
+      put tStartOffset into tPlaceholders[tPlaceholder[1]]["instances"][tPlaceholderNum]["end"]
+   end repeat
+   
+   set the linkText of the selectedChunk to empty
+   
+   local tChunkOffset
+   if pProvider["matchtoken"] is kAutocompleteMatchLine then
+      put tChar - the length of tLineTokens + 1 into tChunkOffset
+      
+      textReplace tChunkOffset, tLineTokens, pProvider["completion"]
+   else
+      if pProvider["match_only_token"] then
+         put the last token of tToken into tToken
+         put tChar - the length of tToken + 1 into tChunkOffset
+      else
+         put tChar - the length of tToken + 1 into tChunkOffset
+      end if
+      textReplace tChunkOffset, tToken, pProvider["completion"]
+   end if
+   
+   local tPlaceholderType
+   repeat for each element tPlaceholderType in tPlaceholders
+      repeat for each element tPlaceholder in tPlaceholderType["instances"]
+         set the linkText of character tPlaceholder["start"] +tChunkOffset-1 \
+               to tPlaceholder["end"]+tChunkOffset-1 of field "script" of me to tPlaceholderType["uuid"]
+         set the backgroundColor of character tPlaceholder["start"] +tChunkOffset-1 \
+               to tPlaceholder["end"]+tChunkOffset-1 of field "script" of me to kAutocompleteBackgroundColor
+      end repeat
+   end repeat
+   
+   __SelectNextPlaceholder tLineChar, tLine
+   __CancelFindProviders
+end __SetCompletionString
+
+
+private command __SelectNextPlaceholder pChar, pParagraph
+   local tStyle
+   
+   put the styledText of line pParagraph to -1 of field "script" of me into tStyle
+   local tParagraphIndex
+   repeat with tParagraphIndex = 1 to the number of elements of tStyle
+      local tRunOffset
+      put 0 into tRunOffset
+      local tRunIndex
+      repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
+         if tParagraphIndex > 1 or (tParagraphIndex is 1 and (tRunOffset + 1) >= pChar) then
+            if tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty then
+               __SelectPlaceholder tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"], tParagraphIndex
+               return true
+            end if
+         end if
+         add the length of tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] to tRunOffset
+      end repeat
+   end repeat
+   return false
+end __SelectNextPlaceholder
+
+private command __SelectPlaceholder pUUID, pParagraph
+   local tScroll
+   put the vScroll of field "script" of me into tScroll["v"]
+   put the hScroll of field "script" of me into tScroll["h"]
+   lock screen
+   
+   local tStyle
+   put the styledText of field "script" of me into tStyle
+   
+   delete variable sEditChunks
+   
+   local tParagraphIndex
+   local tOffset
+   put 0 into tOffset
+   
+   repeat with tParagraphIndex = 1 to the number of elements of tStyle
+      local tRunIndex
+      repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
+         if pUUID is tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]  then
+            put the hiliteColor into tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
+            local tPlaceholderNum
+            put the number of elements of sEditChunks + 1 into tPlaceholderNum
+            put tOffset+1 into sEditChunks[tPlaceholderNum]["start"]
+            put tOffset+the length of tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] into sEditChunks[tPlaceholderNum]["end"]
+         end if
+         add the length of tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] to tOffset
+      end repeat
+      add 1 to tOffset
+   end repeat
+
+   set the styledText of field "script" of me to tStyle
+   set the vScroll of field "script" of me to tScroll["v"]
+   set the hScroll of field "script" of me to tScroll["h"]
+   
+   if the number of elements of sEditChunks > 0 then
+      -- select the first chunk
+      select char sEditChunks[1]["start"] to sEditChunks[1]["end"] of field "script" of me
+   end if
+end __SelectPlaceholder
+
+private command __ClearDeletedPlaceholders
+   local tHTML
+   put the htmlText of field "script" of me into tHTML
+   
+   local tUUID, tUUIDs
+   put the keys of sPlaceholders into tUUIDs
+   repeat for each line tUUID in tUUIDs
+      if tUUID is not in tHTML then
+         delete variable sPlaceholders[tUUID]
+      end if
+   end repeat
+end __ClearDeletedPlaceholders
+
+private command __ClearSelection pChunk, pUUID, pEdited
+   local tStyle
+   put the styledText of field "script" of me into tStyle
+   
+   delete variable sEditChunks
+   local tParagraphIndex
+   repeat with tParagraphIndex = 1 to the number of elements of tStyle
+      local tRunIndex
+      repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
+         if pUUID is empty or tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is pUUID or \
+               (pEdited and sPlaceholders[tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]]["edited"]) then
+            delete variable sPlaceholders[tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]]
+            delete variable tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]
+            delete variable tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
+         end if
+      end repeat
+   end repeat
+   
+   set the styledText of field "script" of me to tStyle
+   
+   if pChunk is not empty then
+      select pChunk
+   end if
+end __ClearSelection
+
+private command __UpdateSelection
+   lock screen
+   lock messages
+   local tChunk
+   put the selectedChunk into tChunk
+   if tChunk is empty then exit __UpdateSelection
+   local tUUID
+   put the linkText of tChunk into tUUID
+   if tUUID is not empty then
+      __SelectPlaceholder tUUID, 1
+   else
+      __ClearSelection tChunk,,true
+   end if
+end __UpdateSelection
+
+private command __GenerateProvidersFromDocs
+   if "development" is not in the environment then
+      exit __GenerateProvidersFromDocs
+   end if
+   
+   local tProviders
+   
+   #functions
+   local theDocs
+   put ideDocsFetchLCSElementsOfType("function") into theDocs
+   
+   local theDoc
+   repeat for each element theDoc in theDocs
+      local theSyntax
+      repeat for each element theSyntax in theDoc["syntax"]
+         replace "[" with empty in theSyntax
+         replace "]" with empty in theSyntax
+         replace "{" with empty in theSyntax
+         replace "}" with empty in theSyntax
+         
+         -- parameters
+         local theFunctionName, theParameters
+         put empty into theFunctionName
+         put empty into theParameters
+         if theSyntax contains "(" then
+            if MatchText(theSyntax,"(?i)^(.*)\((<.*)\)",theFunctionName,theParameters) then
+               put replaceText(theParameters, "\(.*\)", "") into theParameters
+               
+               put "(" after theFunctionName
+               
+               local theBody
+               put theFunctionName into theBody
+               
+               if theParameters is not empty then
+                  replace "<" with "" in theParameters
+                  replace ">" with "" in theParameters
+                  split theParameters with comma
+                  repeat with theIndex = 1 to the number of elements of theParameters
+                     split theParameters[theIndex] with "|"
+                     replace space with empty in theParameters[theIndex][1]
+                     put "${"&theParameters[theIndex][1]&":expression}, "  after theBody
+                     put theParameters[theIndex][1] & ", " after theFunctionName
+                  end repeat
+                  put ")" into char -2 to -1 of theFunctionName
+                  put ")" into char -2 to -1 of theBody
+               else
+                  put ")" after theBody
+               end if
+               __AddProvider \
+                     tProviders, \
+                     theFunctionName, \
+                     theBody, \
+                     "expression.function.global", \
+                     kAutocompleteScopeHandler, \
+                     kAutocompleteDocsPriority
+            else
+               __AddProvider \
+                     tProviders, \
+                     theSyntax, \
+                     theSyntax, \
+                     "expression.function.global", \
+                     kAutocompleteScopeHandler, \
+                     kAutocompleteDocsPriority
+            end if
+            
+         else
+            
+            local theOptions, theParameter
+            
+            if theSyntax contains "of" then
+               put word 2 to -4 of theSyntax into theOptions
+               put word -3 of theSyntax into theFunctionName
+               put word -1 of theSyntax into theParameter
+               replace "<" with "" in theParameter
+               replace ">" with "" in theParameter
+               put " of ${"&theParameter&":expression}"  into theParameter
+            else
+               put empty into theParameter
+               put word 2 to -2 of theSyntax into theOptions
+               put word -1 of theSyntax into theFunctionName
+            end if
+            
+            if theOptions contains "|" then
+               split theOptions with "|"
+               repeat with theIndex = 1 to the number of elements of theOptions
+                  -- trim
+                  put word 1 to -1 of theOptions[theIndex] into theOptions[theIndex]
+                  if theOptions[theIndex] is not empty then
+                     put space after theOptions[theIndex]
+                  end if
+                  __AddProvider \
+                        tProviders, \
+                        theOptions[theIndex] & theFunctionName, \
+                        theOptions[theIndex] & theFunctionName & theParameter, \
+                        "expression.function.global", \
+                        kAutocompleteScopeHandler, \
+                        kAutocompleteDocsPriority
+               end repeat
+            end if
+         end if
+      end repeat
+   end repeat
+   
+   # messages
+   put ideDocsFetchLCSElementsOfType("message") into theDocs
+   
+   local tTabDepth = 3
+   try
+      put sePrefGet("editor,tabdepth") into tTabDepth
+   end try
+   
+   local tIndent
+   repeat for tTabDepth
+      put space after tIndent
+   end repeat
+   
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntax in theDoc["syntax"]
+         replace "<" with "" in theSyntax
+         replace ">" with "" in theSyntax
+         
+         local theMessageName
+         put word 1 of theSyntax into theMessageName
+         put word 2 to -1 of theSyntax into theParameters
+         put theMessageName into theSyntax
+         split theParameters by comma
+         repeat with theIndex = 1 to the number of elements of theParameters
+            if theParameters[theIndex] contains "|" then
+               -- unfortunately some of the syntax definitions describe a set of possible values
+               -- or parameter types and this simplifies things considerably...
+               put "Value" into theParameter
+            else
+               -- trim
+               put word 1 of theParameters[theIndex] into theParameter
+            end if
+            put space & theParameter & comma after theSyntax
+         end repeat
+         if the last char of theSyntax is comma then
+            delete the last char of theSyntax
+         end if
+         
+         put "on" && theSyntax & return & tIndent & "${-- code:statement}" & return & "end" && theMessageName into theBody
+         __AddProvider \
+               tProviders, \
+               theSyntax, \
+               theBody, \
+               "message", \
+               kAutocompleteScopeScript, \
+               kAutocompleteDocsPriority, \
+               kAutocompleteMatchLine
+      end repeat
+   end repeat
+   
+   # properties
+   put ideDocsFetchLCSElementsOfType("property") into theDocs
+   
+   repeat for each element theDoc in theDocs
+      
+      local tClass
+      if theDoc["associations"] is an array then
+         put "expression.property.object" into tClass
+      else
+         put "expression.property.global" into tClass
+      end if
+      
+      repeat for each element theSyntax in theDoc["syntax"]
+         -- strip off set|put the
+         replace "[" with "" in theSyntax
+         replace "]" with "" in theSyntax
+         
+         local theSnippet
+         put theSyntax into theSnippet
+         
+         replace "<" with "" in theSyntax
+         replace ">" with "" in theSyntax
+         
+         local tStartChar, tEndChar
+         repeat while matchChunk(theSnippet, "(\{.*?\})", tStartChar, tEndChar)
+            local tOptions
+            put char tStartChar+1 to tEndChar-1 of theSnippet into tOptions
+            local tNewOptions
+            put empty into tNewOptions
+            repeat for each word tOption in tOptions
+               if tOption is "|" then
+                  next repeat
+               end if
+               
+               if tNewOptions is not empty then
+                  put "OR" after tNewOptions
+               end if
+               if tOption begins with "<" then
+                  put char 2 to -2 of tOption after tNewOptions
+               else
+                  put tOption after tNewOptions
+               end if
+            end repeat
+            put "$<" & tNewOptions & ":expression>" into char tStartChar to tEndChar of theSnippet
+         end repeat
+         
+         replace "$<" with "${" in theSnippet
+         replace ":expression>" with ":expression}" in theSnippet
+         
+         repeat while matchChunk(theSnippet, "(\<.*?\>)", tStartChar, tEndChar)
+            put "${" & char tStartChar+1 to tEndChar-1 of theSnippet & ":expression}" into char tStartChar to tEndChar of theSnippet
+         end repeat
+         
+         __AddProvider \
+               tProviders, \
+               theSyntax, \
+               theSnippet, \
+               tClass, \
+               kAutocompleteScopeHandler, \
+               kAutocompleteDocsPriority, \
+               kAutocompleteMatchLine, \
+               theDoc["synonyms"]
+      end repeat
+   end repeat
+   
+   # keywords
+   put ideDocsFetchLCSElementsOfType("keyword") into theDocs
+   
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntax in theDoc["syntax"]
+         -- strip off set|put the
+         put word 2 to -1 of theSyntax into theSyntax
+         if theSyntax is "[]" then next repeat
+         if theSyntax is "\" then next repeat
+         __AddProvider \
+               tProviders, \
+               theSyntax, \
+               theSyntax, \
+               "keyword", \
+               kAutocompleteScopeHandler, \
+               kAutocompleteDocsPriority, \
+               kAutocompleteMatchToken, theDoc["synonyms"]
+      end repeat
+   end repeat
+   
+   # constants
+   put ideDocsFetchLCSElementsOfType("constant") into theDocs
+   
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntax in theDoc["syntax"]
+         -- strip off set|put the
+         put word 2 to -1 of theSyntax into theSyntax
+         __AddProvider \
+               tProviders, \
+               theSyntax, \
+               theSyntax, \
+               "constant", \
+               kAutocompleteDocsPriority, \
+               kAutocompleteMatchToken, \
+               theDoc["synonyms"]
+      end repeat
+   end repeat
+   
+   # objects
+   put ideDocsFetchLCSElementsOfType("object") into theDocs
+   
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntax in theDoc["syntax"]
+         if theSyntax begins with "ios" or theSyntax begins with "Android" then
+            next repeat
+         end if
+         
+         __AddProvider \
+               tProviders, \
+               theSyntax, \
+               theSyntax, \
+               "expression.chunk.object", \
+               kAutocompleteScopeHandler, \
+               kAutocompleteDocsPriority, \
+               kAutocompleteMatchToken, \
+               theDoc["synonyms"]
+      end repeat
+   end repeat
+   
+   # operators
+   put ideDocsFetchLCSElementsOfType("operator") into theDocs
+   
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntax in theDoc["syntax"]
+         replace "&gt;" with ">" in theSyntax
+         replace "&lt:" with "<" in theSyntax
+         
+         if the number of chars of word 1 of theSyntax is 1 then
+            next repeat
+         end if
+         if the number of chars of word 1 of theSyntax < 5 and the number of words in theSyntax is 2 then
+            next repeat
+         end if
+         repeat for each line theSnippet in __ParseSyntaxDefinition(theSyntax)
+            if theSnippet is empty then next repeat
+            
+            local checkAn
+            put 2 into checkAn
+            if word checkAn of theSnippet is "not" then
+               add 1 to checkAn
+            end if
+            if word checkAn of theSnippet is "an" and char 1 of word checkAn+1 of theSnippet is not among the chars of "aeiou" then
+               next repeat
+            end if
+            if word checkAn of theSnippet is "a" and char 1 of word checkAn+1 of theSnippet is among the chars of "aeiou" then
+               next repeat
+            end if
+            
+            local theParsedSyntax
+            put theSnippet into theParsedSyntax
+            replace "<" with "" in theParsedSyntax
+            replace ">" with "" in theParsedSyntax
+            
+            replace "<" with "${" in theSnippet
+            replace ">" with "}" in theSnippet
+            
+            set the itemDelimiter to "}"
+            repeat with theIndex = 1 to the number of items of theSnippet-1
+               put ":expression" after item theIndex of theSnippet
+            end repeat
+            
+            __AddProvider \
+                  tProviders, \
+                  theParsedSyntax, \
+                  theSnippet, \
+                  "operator", \
+                  kAutocompleteScopeHandler, \
+                  kAutocompleteDocsPriority, \
+                  kAutocompleteMatchToken
+         end repeat
+      end repeat
+   end repeat
+   
+   # commands
+   put ideDocsFetchLCSElementsOfType("command") into theDocs
+   
+   set the itemDelimiter to comma
+   repeat for each element theDoc in theDocs
+      repeat for each element theSyntaxDefinition in theDoc["syntax"]
+         local tScope
+         if word 1 of theSyntaxDefinition is among the items of "local,constant,global" then
+            put kAutocompleteScopeAny into tScope
+         else
+            put kAutocompleteScopeHandler into tScope
+         end if
+         
+         repeat for each line theSyntax in __ParseSyntaxDefinition(theSyntaxDefinition)
+            if theSyntax is empty then next repeat -- not sure why we are geting empty lines
+            put theSyntax into theParameters
+            replace "<" with "" in theSyntax
+            replace ">" with "" in theSyntax
+            
+            split theParameters with "<"
+            repeat with theIndex = 1 to the number of elements of theParameters
+               if theIndex is 1 then
+                  put theParameters[theIndex] into theBody
+               else
+                  split theParameters[theIndex] with ">"
+                  put "${"&theParameters[theIndex][1]&":expression}"&theParameters[theIndex][2] after theBody
+               end if
+            end repeat
+            __AddProvider \
+                  tProviders, \
+                  theSyntax, \
+                  theBody, \
+                  "statement.command", \
+                  tScope, \
+                  kAutocompleteDocsPriority, \
+                  kAutocompleteMatchLine
+         end repeat
+      end repeat
+   end repeat
+   
+   -- extra stuff
+   __AddProvider \
+         tProviders, \
+         "-- comment", \
+         "-- ${comment:expression}", \
+         "comment.line", \
+         kAutocompleteScopeAny, \
+         kAutocompleteDocsPriority, \
+         kAutocompleteMatchAny
+   
+   __AddProvider \
+         tProviders, \
+         "/* block comment */", \
+         "/*" & return & "${comment:expression}" & return & "*/", \
+         "comment.block", \
+         kAutocompleteScopeAny, \
+         kAutocompleteDocsPriority, \
+         kAutocompleteMatchLine 
+   
+   __AddProvider \
+         tProviders, \
+         "/* comment */", \
+         "/* ${comment:expression} */", \
+         "comment.block", \
+         kAutocompleteScopeHandler, \
+         kAutocompleteDocsPriority, \
+         kAutocompleteMatchToken
+   
+   __AddProvider \
+         tProviders, \
+         "// comment", \
+         "// ${comment:expression}", \
+         "comment.line", \
+         kAutocompleteScopeAny, \
+         kAutocompleteDocsPriority, \
+         kAutocompleteMatchAny
+   
+   local tLCDoc
+   put "/**" & return & \
+         "Summary: ${summary:expression}" & \
+         return & return & \
+         "Example:" & return & "${example:expression}" & \
+         return & return & \
+         "Description:" & return &"${description:expression}" & \
+         return & return & \
+         "Parameters:"& return & "${parameters:expression}" & \
+         return & return & \
+         "Returns:"& return & "${returns:expression}" & \
+         return & return & \
+         "Tags: ${tags:expression}" & \
+         return & "**/" into tLCDoc
+   
+   __AddProvider \
+         tProviders, \
+         "/** lcdoc comment **/", \
+         tLCDoc, \
+         "comment.block.lcdoc", \
+         kAutocompleteScopeScript, \
+         kAutocompleteDocsPriority, \
+         kAutocompleteMatchAny
+   
+   AutoCompleteRegisterProviders tProviders
+end __GenerateProvidersFromDocs
+
+private function __ParseOptionalSyntax pSyntaxDefinition
+   local foundStartChar, foundEndChar
+   put 0 into foundStartChar
+   put 0 into foundEndChar
+   put offset("[",pSyntaxDefinition,foundStartChar) into foundStartChar
+   -- answer files broken and making me hit recurstion limits
+   if char 1 to foundStartChar of pSyntaxDefinition contains "]" then
+      replace "]" with empty in char 1 to foundStartChar of pSyntaxDefinition
+      put offset("[",pSyntaxDefinition,0) into foundStartChar
+   end if
+   if foundStartChar > 0 then
+      repeat
+         local theChar
+         put offset("]",pSyntaxDefinition,foundEndChar) into theChar
+         put foundEndChar + theChar into foundEndChar
+         if foundEndChar = 0 then
+            -- unmatched pairs
+            replace "[" with "" in pSyntaxDefinition
+            exit repeat
+         end if
+         
+         local theOption
+         put char foundStartChar+1 to foundEndChar-1 of pSyntaxDefinition into theOption
+         -- nested optional syntax...
+         if "[" is not in theOption then
+            exit repeat
+         else
+            local theBracketCount
+            -- check for matching pairs
+            put 0 into theBracketCount
+            repeat with X = 1 to the number of chars of theOption
+               if char X of theOption is "[" then
+                  add 1 to theBracketCount
+               else if char X of theOption is "]" then
+                  subtract 1 from theBracketCount
+               end if
+            end repeat
+            if theBracketCount is 0 then
+               exit repeat
+            end if
+         end if
+      end repeat
+
+      if foundEndChar <> 0 then
+         -- we found some optional syntax so we need to split the syntax defintion into two
+         local theOption1, theOption2
+         put pSyntaxDefinition into theOption1
+         delete char foundEndChar of theOption1
+         delete char foundStartChar of theOption1
+         put pSyntaxDefinition into theOption2
+         delete char foundStartChar to foundEndChar of theOption2
+         put __ParseOptionalSyntax(theOption1) into theOption1
+         put __ParseOptionalSyntax(theOption2) into theOption2
+         return theOption1 & cr & theOption2
+      end if
+   end if
+
+   return pSyntaxDefinition
+end __ParseOptionalSyntax
+
+private function __ParseVariationSyntax pSyntaxDefinition
+   local foundStartChar, foundEndChar
+   put 0 into foundStartChar
+   put 0 into foundEndChar
+
+   put offset("{",pSyntaxDefinition,foundStartChar) into foundStartChar
+   if foundStartChar <> 0 then
+      put offset("}",pSyntaxDefinition,foundEndChar) into foundEndChar
+      if foundEndChar = 0 then
+         exit repeat
+      end if
+      
+      local theVariations
+      put char foundStartChar+1 to foundEndChar-1 of pSyntaxDefinition into theVariations
+
+      if foundEndChar <> 0 then
+         -- we found an array of variable syntax
+         set the itemDelimiter to "|"
+         repeat for each item theVariation in theVariations
+            local theSyntax, theSyntaxes
+            put pSyntaxDefinition into theSyntax
+            put theVariation into char foundStartChar to foundEndChar of theSyntax
+            put __ParseVariationSyntax(theSyntax) & cr after theSyntaxes
+         end repeat
+         return theSyntaxes
+      end if
+   end if
+    
+   return pSyntaxDefinition
+end __ParseVariationSyntax
+
+private function __ParseSyntaxDefinition pSyntaxDefinition
+   local theSyntaxes
+   replace ", ..." with "" in pSyntaxDefinition
+   replace "..." with "" in pSyntaxDefinition
+   
+   put __ParseOptionalSyntax(pSyntaxDefinition) into theSyntaxes
+   local theParsedSyntaxes
+   repeat for each line theSyntax in theSyntaxes
+      put __ParseVariationSyntax(theSyntax) & cr after theParsedSyntaxes
+   end repeat
+   
+   return theParsedSyntaxes
+end __ParseSyntaxDefinition
+
+private command __AddProvider @xProviders, pName, pCompletion, pSymbolClass, pScope, pPriority, pMatchToken, pSynonyms
+   local tIndex
+   put the number of elements of xProviders + 1 into tIndex
+   if pPriority is empty then put 50 into pPriority
+   put pPriority into xProviders[tIndex]["priority"]
+   put replaceText(pName," +"," ") into xProviders[tIndex]["displayname"]
+   put replaceText(pCompletion," +"," ") into xProviders[tIndex]["completion"]
+   put pSymbolClass into xProviders[tIndex]["symbolclass"]
+   put pScope into xProviders[tIndex]["scope"]
+   if pMatchToken is empty then 
+      put kAutocompleteMatchToken into xProviders[tIndex]["matchtoken"]
+   else
+      put pMatchToken into xProviders[tIndex]["matchtoken"]
+   end if
+   put pSynonyms into xProviders[tIndex]["synonyms"]
+end __AddProvider
