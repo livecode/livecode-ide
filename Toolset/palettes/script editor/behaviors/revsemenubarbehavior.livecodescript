@@ -539,6 +539,7 @@ private command handleHelpMenuPick pItemName
       case "Resource Center"
       case "Start Center"
          revIDEOpenPalette pItemName
+         break
       case "User Guide"
          revIDELaunchResource pItemName
          break
