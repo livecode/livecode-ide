@@ -797,6 +797,17 @@ end seGetObjectState
 #   Stores the specified state for the object for later use. And updates any
 #   script editor components that may depend on this information.
 command seSetObjectState pObject, pState
+   if pState is "edited" then
+      local tObj
+      put the long id of pObject into tObj
+      if not revIDEObjectIsOnIDEStack(tObj) then
+         local tParams
+         put the text of field "Script" into tParams[1]
+         put tObj into tParams[2]
+         send "ideMessageSendWithParameters" && "ideScriptEdited, tObj, tParams" to stack "revIDELibrary" in 0 milliseconds
+      end if
+   end if
+   
    # Small optimization, if pState is equal to the current state, don't do anything
    if pState is sObjectStates[seGetRuggedId(pObject)] then
       exit seSetObjectState
@@ -2939,6 +2950,10 @@ end revSEGetScript
 on revSEIndentScript
    dispatch "scriptFormat" to field "Script" of me with "script"
 end revSEIndentScript
+
+on revSEApply pIgnoreErrors
+   actionCompile pIgnoreErrors
+end revSEApply
 
 private command appendToList @xList, pValue
    if xList is not empty then

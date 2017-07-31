@@ -3389,7 +3389,11 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if sClassicObjectProperties is empty then __objectPropertiesRead
    # Set the default stack to the target we're creating the object on
    set the defaultstack to revIDEStackOfObject(pTarget)
-
+   
+   if pLoc is empty then
+      put the loc of this card of the defaultStack into pLoc
+   end if
+   
    # Create the object
    lock screen
    lock messages
@@ -8716,9 +8720,6 @@ on revIDEToggle pProperty
          break
       case "Backdrop"
          if the backDrop is "none" then
-            if revIDEGetPreference("cBackDropColor") is empty then 
-               revIDESetPreference "cBackDropColor", "black"
-            end if
             set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else

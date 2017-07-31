@@ -744,7 +744,8 @@ command revInternal__ResetPreferences
    put "false" into tPropsArray["cShowRevolutionStacks"]
    put "22" into tPropsArray["cMenuHeight"]
    put "1067,251,1882,827" into tPropsArray["cRevDocsRect"]
-   put "Black" into tPropsArray["cBackDropColor"]
+   put "Gray88" into tPropsArray["cBackDropColor"]
+   put "Gray88" into tPropsArray["cBackdrop"]
    put "false" into tPropsArray["cREVMsgShowUIFrontScripts"]
    put "false" into tPropsArray["revstack"]
    put "100" into tPropsArray["cMacOSProgressScrollbarWidth"]
@@ -802,7 +803,6 @@ command revInternal__ResetPreferences
    put "selectedObject" into tPropsArray["cREVMsgIntelligenceObject"]
    put "false" into tPropsArray["cSEHideErrors"]
    put "56" into tPropsArray["cFieldHeight"]
-   put "none" into tPropsArray["cBackDrop"]
    put "300" into tPropsArray["cREVUnmaximizedScriptHeight"]
    put "13,125" into tPropsArray["cToolsTopLeft"]
    put "--" into tPropsArray["cCommentCharacter"]
@@ -1666,9 +1666,9 @@ command revInternal__InitialiseFinalSteps
    revInternal__Log "Message", "Setting up verbose debugging"
    send "revVerboseDebug" && the cVerboseDebug of stack "revPreferences" to stack "revFrontScriptLibrary"
    
-   if the cBackDrop of stack "revPreferences" is not "none" and the cBackDrop of stack "revPreferences" is not empty then
+   if the cBackDrop of stack "revPreferences" is not "none" then
       revInternal__Log "Message", "Setting up backdrop"
-      set the backdrop to the cBackDrop of stack "revPreferences"
+      set the backdrop to the cBackDropColor of stack "revPreferences"
    end if
    
    revInternal__Log "Message", "Closing Splash"
