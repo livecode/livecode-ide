@@ -1216,6 +1216,7 @@ command revInternal__InitialiseLibraries
    put return & "dropbox" after tLoadList
    put return & "httpd" after tLoadList
    put return & "qr" after tLoadList
+   put return & "revhtml5urllibrary" after tLoadList
    
    switch the editionType
       case "professional"
