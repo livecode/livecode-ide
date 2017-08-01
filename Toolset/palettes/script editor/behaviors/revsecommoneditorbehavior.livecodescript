@@ -2439,7 +2439,7 @@ on rawKeyDown pKey
          # 2017-JUL-28 bhall2001
          # when scrolling on up arrow, scrollBarDrag is sent twice. Set
          # flag to update on every other up arrow message
-         put not sSkipUpArrow into sKeyUpArrow
+         put not sSkipUpArrow into sSkipUpArrow
          put "up" into tKeyName
          break
       case kKeyDownArrow
