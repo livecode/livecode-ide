@@ -51,6 +51,14 @@ local sEditPlaceholder
 constant kPlaceholderDefaultSearchLines = 20
 constant kPlaceholderDefaultBackgroundColor = "240,240,240"
 
+# 2017-08-01 bhall2001 previous vScroll position of the Editor field
+local sVScroll
+
+# 2017-08-01 bhall2001 Toggles between true/false on each up arrow key pressed
+# Note: up arrow key sends 2 scrollBarDrag messages. Used as flag
+# to process only 1 of the messages.
+local sSkipUpArrow = false
+
 # OK-2009-01-17 : Bug 7169
 command setDirty pObject, pValue
    put pValue into sDirty[pObject]
@@ -1999,8 +2007,6 @@ on optionKeyDown pKey
    keyDown pKey
 end optionKeyDown
 
-local sVScroll
-
 on scrollBarDrag
    if not handleEvent("scrollBarDrag", the long id of the target) then
       pass scrollBarDrag
@@ -2346,9 +2352,6 @@ private command pageDown
       select after char tEndChar of field (the short name of getScriptField()) of me
    end if
 end pageDown
-
-
-local sSkipUpArrow = false
 
 # Description
 #   RawKeyDown is handled mainly because of the home and end keys. These need to be manually implemented on OS X
