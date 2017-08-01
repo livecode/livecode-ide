@@ -33,9 +33,12 @@ local sErrors
 #   Causes the gutter to update itself.
 command update pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
    local tContext, tUpdateRequired
+   
+   lock screen
    put updateGetContext(pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw, tContext) into tUpdateRequired
    
    if not tUpdateRequired then
+      unlock screen
       exit update
    end if
    
@@ -50,8 +53,6 @@ command update pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUp
    if tContext["object"] is not empty then
       put tContext["object"] into sLastObject
    end if
-   
-   lock screen
    
    updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, tContext
    updateLineNumbers pTextChanged, pOldNumber, pNewNumber, tContext
@@ -310,6 +311,10 @@ end updateCurrentLine
 # Description
 #   If there are not enough line numbers to add to the field
 command updateLineNumbers pTextEdited, pOldNumber, pNewNumber, pContext
+   
+   # only update if there's work to be done
+   if pContext["numberOfAdditions"] <= 0 then exit updateLineNumbers
+   
    # Add the lines in a non-locking manner, and after we've finished adding lines, the scroll
    # of the line numbers field should be updated.
    repeat pContext["numberOfAdditions"] times
@@ -775,6 +780,10 @@ end menuPick
 on rawKeyDown
   # Block this message as the gutter must only be scrolled in response to the main script field
 end rawKeyDown
+
+on scrollBarDrag
+  # Block this message as the gutter must only be scrolled in response to the main script field
+end scrollBarDrag
 
 # Returns
 #   A random name used for naming mutable controls. In particular, breakpoint images.

@@ -1,4 +1,4 @@
-﻿script "com.livecode.scripteditor.behavior.editorcommon"
+script "com.livecode.scripteditor.behavior.editorcommon"
 local sObjectId
 
 # The following variables store information used for the undo / redo system.
@@ -1200,8 +1200,8 @@ end getUpdateGutterRequestDetails
 #   pUpdateCompilationErrors : whether to update the gutter's compilation errors
 # Description
 #   Sends a request to update the gutter. This is called whenever the current script is edited, or the field
-#   is scrolled etc. A request is sent using a short delay and any previous requests are cancelled.
-#  The gutter's scroll is updated immediately however. Also a message is sent to the gutter to hide its
+#   is scrolled etc. 
+#  The gutter's scroll is updated immediately. Also a message is sent to the gutter to hide its
 #  mutable objects (the breakpoint / compilation error images). These are show again when the update is
 #  actually carried out.
 command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
@@ -1210,11 +1210,16 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
       cancel sGutterUpdateRequest
    end if
    
-   # We always update the gutter's scroll immediately, as otherwise it looks bad. Other stuff is delayed though.
-   if there is a group "Gutter" of me then
-      send "updateScroll" to group "Gutter" of me
-   end if
-   send "updateGutterDo" to me in 5 milliseconds
+   # BUGFIX-20140
+   # 2017-JUL-28 bhall2001
+   # We always update the gutter's scroll immediately, as otherwise it looks bad.   
+   # For best scroll performance, we set the Gutter scroll directly.
+   set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of group "Editor"
+   
+   # BUGFIX-20140
+   # 2017-JUL-28 bhall2001 Due to blocking nature of scrolling and key presses, don't send in time.
+   # UI effect is Gutter lags behind scrolling of Script Editor   
+   updateGutterDo
    put the result into sGutterUpdateRequest
 end updateGutterRequest
 
@@ -1994,12 +1999,27 @@ on optionKeyDown pKey
    keyDown pKey
 end optionKeyDown
 
+local sVScroll
+
 on scrollBarDrag
    if not handleEvent("scrollBarDrag", the long id of the target) then
       pass scrollBarDrag
    end if
+
+   local tVScroll
+   
+   # 2017-JUL-28 bhall2001
+   # update only when vScroll changes. Mouse wheel scrolling sends
+   # vScrolls that don't change. Up arrow causes 2 scrollBarDrag message
+   # so we skip the message when up arrow flag is set.
+   put the vScroll of the target into tVScroll
+   if (tVScroll = sVScroll) or sSkipUpArrow then exit scrollBarDrag
+   
+   lock screen
+   put tVScroll into sVScroll
    
    updateGutterRequest empty, empty, empty, empty, false, true
+   unlock screen
 end scrollBarDrag
 
 on keyDown pChar
@@ -2328,6 +2348,8 @@ private command pageDown
 end pageDown
 
 
+local sSkipUpArrow = false
+
 # Description
 #   RawKeyDown is handled mainly because of the home and end keys. These need to be manually implemented on OS X
 #   and both platforms after pressing the home key we have to ensure the caret ends up in the right place.
@@ -2411,6 +2433,10 @@ on rawKeyDown pKey
          put "right" into tKeyName
          break
       case kKeyUpArrow
+         # 2017-JUL-28 bhall2001
+         # when scrolling on up arrow, scrollBarDrag is sent twice. Set
+         # flag to update on every other up arrow message
+         put not sSkipUpArrow into sKeyUpArrow
          put "up" into tKeyName
          break
       case kKeyDownArrow
