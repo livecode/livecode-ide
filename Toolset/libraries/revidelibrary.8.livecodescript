@@ -2173,10 +2173,6 @@ function revIDEGlobalPropertyContinuousRange pProperty
    return sContinuousRangeArray[pProperty]
 end revIDEGlobalPropertyContinuousRange
 
-function revIDEMainStacks
-   return ideMainStacks()
-end revIDEMainStacks
-
 /**
 Used by the PI to make a substack into a mainstack
 **/
