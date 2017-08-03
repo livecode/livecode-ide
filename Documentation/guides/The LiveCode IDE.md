@@ -784,6 +784,8 @@ Figure 12 – Find and Replace
 | Find next                                      | Control-g                               | Command-g                               |
 | Find selected text                             | Control-Option-f                        | Command-Option-f                        |
 | Format current handler                         | Tab                                     | Tab                                     |
+| Next tab in Editor                             | Control-tab                             | Control-tab                             |
+| Previous tab in Editor                         | Control-shift-tab                       | Control-shift-tab                       |
 
 | **The Message Box** |  **Windows / Linux** | **Mac OS X**|
 |------|--------|-------|

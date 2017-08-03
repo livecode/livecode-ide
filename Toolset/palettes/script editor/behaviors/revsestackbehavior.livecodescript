@@ -2639,7 +2639,12 @@ end closeStackRequest
 #   This handles tabKey based keyboard shortcuts. The only one by default is to switch between tabs
 #   Note that only command + tab shortcuts are allowed to prevent interference with other functions.
 on tabKey
-   if the commandKey is not "down" then
+   # bhall2001-2017-07-18: Bug 18366 On MacOS, Use control+tab to cycle between tabs
+   if (the commandKey is not "down") and (the platform is not "MacOS") then
+      pass tabKey
+   end if
+
+   if (the platform is "MacOS") and (the controlKey is not "down") then
       pass tabKey
    end if
    
