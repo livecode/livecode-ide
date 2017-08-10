@@ -38,7 +38,7 @@ command revInternal__LoadLibrary pLibrary
          set the itemDelimiter to slash
          delete the last item of tRepoPath
          put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[5]
-         put merge("[[tRepoPath]]/ide/libraries/[[tLibSuffix]]") into tPaths[6]
+         put merge("[[tRepoPath]]/ide/Toolset/libraries/[[tLibSuffix]]") into tPaths[6]
       end if
       
       local tLibraryPath
