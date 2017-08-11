@@ -517,8 +517,13 @@ function revInternal__StackFiles
       put return & revEnvironmentToolsetPath() after tFolders
    else
       put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
+      put return & revEnvironmentRepositoryPath() & "/../ide/Toolset/libraries" after tFolders
+      put revEnvironmentRepositoryPath() & "/../ide/Toolset/palettes" into tPaletteFolder
+      repeat for each line tFolder in folders(tPaletteFolder)
+         if tFolder begins with "." then next repeat
+         put return & tPaletteFolder & slash & tFolder after tFolders
+      end repeat
    end if	
-   
    
    local tStackFiles, tStackName
    local tStackFilesA, tIDEVersion
