@@ -509,7 +509,8 @@ on layoutFrame pForceRecalculate
    end if
    unlock messages
    if pForceRecalculate then
-      dispatch "resizeStack" to this card of me
+      dispatch "resizeStack" to this card of me with \
+            the width of this card of me, the height of this card of me
    end if
    
    unlock screen
