@@ -480,11 +480,11 @@ on layoutFrame pForceRecalculate
       local tHeaderWidth, tFooterWidth
       if there is a widget "header_background" of group "background" of me then
          set the height of widget "header_background" of group "background" of me to BAR_HEIGHT
-         put the formattedWidth of widget "header_background" of group "background" of me into tHeaderWidth
+         put the minWidth of widget "header_background" of group "background" of me into tHeaderWidth
       end if
       if there is a widget "footer_background" of group "background" of me then 
          set the height of widget "footer_background" of group "background" of me to BAR_HEIGHT
-         put the formattedWidth of widget "footer_background" of group "background" of me into tFooterWidth 
+         put the minWidth of widget "footer_background" of group "background" of me into tFooterWidth 
       end if
       
       local tMinWidth
@@ -514,6 +514,11 @@ on layoutFrame pForceRecalculate
    
    unlock screen
 end layoutFrame
+
+# Sent when the tab navigation is clicked
+on navChanged
+   layoutFrame true
+end navChanged
 
 # Sent when the preference changes
 on displayPreferenceChanged pPreference, pValue
