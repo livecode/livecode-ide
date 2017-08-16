@@ -1,0 +1,252 @@
+tutorial "Using Timers"
+
+prologue
+	In this tutorial we're going to look at using timers to update the screen. You might want to
+
+	- Check and display the progress of a task
+
+	- Set events and reminders
+
+	- Draw animation
+end prologue
+
+step "Introduction"
+	You'll learn to
+
+	- Use a timer to move the seconds hand on a clock
+
+	- Cancel timers
+action
+	interlude
+	go to step "Load stack"
+end step
+
+step "Load stack"
+
+action
+	load lesson "App Lesson 0"
+	go to step "Start button code 1"
+end step
+
+step "Start button code 1"
+	The stack consists of a clock background image, a graphic used as the "seconds" hand and a "Start/Stop" button to start the seconds hand ticking.
+
+	We will be creating the motion of the second hand by adjusting the Start angle on the "seconds" graphic to give us the effect of movement.
+
+	To start the seconds hand ticking we will add code to the "Start" button.
+action
+	interlude
+	go to step "Start button code 2"
+end step
+
+step "Start button code 2"
+	To make changes select 'Edit' mode.
+action
+	highlight tool "Edit Mode"
+	wait until the tool is edit
+	go to step "Start button code 2b"
+end step
+
+step "Start button code 2b"
+	Select the "Start" button .
+action
+	highlight button "start"
+	wait until button "start" is selected
+	go to step "Start button code 3"
+end step
+
+step "Start button code 3"
+		Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+action
+		highlight toolbar "Code"
+		wait until there is a script editor for button "start"
+		go to step "Start button code 4"
+end step
+
+step "Start button code 4"
+	Add this handler to the button script. We'll go through the code one line at a time next.
+
+	Don't forget to click the 'Apply' button when you have finished.
+script
+	local sTimerID
+
+	on mouseUp
+		if the label of me is "Start" then
+			updateClock
+			set the label of me to "Stop"
+		else
+			cancel sTimerID
+			set the label of me to "Start"
+		end if
+	end mouseUp
+action
+	highlight script editor for button "start"
+	wait until button "start" is scripted
+	go to step "Start button code 5"
+end step
+
+step "Start button code 5"
+	When the mouse is clicked, first we check that the timer isn't already running by checking the label of the button.
+action
+	interlude
+	highlight line "if the label of me" of script editor for button "start"
+	go to step "Start button code 6"
+end step
+
+step "Start button code 6"
+	If the label of the button is "Start" we send a message 'updateClock'.
+action
+	interlude
+	highlight line "updateClock" of script editor for button "start"
+	go to step "Start button code 7"
+end step
+
+step "Start button code 7"
+	We then set the label of the button to "Stop".
+action
+	interlude
+	highlight line "set the label of me to" of script editor for button "start"
+	go to step "Start button code 8"
+end step
+
+step "Start button code 8"
+	If the button label is not already "Start", then we must be stopping the clock, so we cancel the timer.
+action
+	interlude
+	highlight line "cancel sTimerID" of script editor for button "start"
+	go to step "Start button code 9"
+end step
+
+step "Start button code 9"
+	Then we change the label of the button back to "Start".
+action
+	interlude
+	highlight line "end if" of script editor for button "start"
+	go to step "Start button code 10"
+end step
+
+skip point
+
+step "Start button code 10"
+	Next we need to implement the updateClock message. This handler will
+
+	- Get the seconds part of the current time
+
+	- Calculate the angle to set the hands to
+
+	- Set the angle of the second hand
+
+	- Tell the clock to update again in 1 second
+action
+	interlude
+	go to step "Start button code 11"
+end step
+
+step "Start button code 11"
+	Add this handler to the button script. We'll go through the code one line at a time next.
+
+	Don't forget to click the 'Apply' button when you have finished.
+script
+	local sTimerID
+
+	on mouseUp
+		if the label of me is "Start" then
+			updateClock
+			set the label of me to "Stop"
+		else
+			cancel sTimerID
+			set the label of me to "Start"
+		end if
+	end mouseUp
+
+	on updateClock
+		set the itemDel to ":"
+		put word 1 of item 3 of the long time into tSeconds
+		put 360 - (tSeconds - 15) * 6 into tAngle
+		set the startAngle of graphic "seconds" to tAngle
+
+		send "updateClock" to me in 1 second
+		put the result into sTimerID
+	end updateClock
+action
+	highlight script editor for button "start"
+	wait until button "start" is scripted
+	go to step "Start button code 12"
+end step
+
+step "Start button code 12"
+	 First, we set the item delimiter - the character used to separate items in our string - to colon. This is because time is formatted separated by a colon e.g.
+action
+	interlude
+	highlight line "set the itemDel to" of script editor for button "start"
+	go to step "Start button code 13"
+end step
+
+step "Start button code 13"
+	Then we put word 1 of item 3 of the long time (fetched from the system) into a variable, 'tSeconds'. The long time is formatted as
+
+	12:50:15 PM
+
+	Item 3 is "15 PM", so word 1 of item 3 gives us the seconds part.
+action
+	interlude
+	highlight line "put word 1 of item 3" of script editor for button "start"
+	go to step "Start button code 14"
+end step
+
+step "Start button code 14"
+	Next we calculate the angle to set the hand to, based on the seconds variable. We put this into 'tAngle' variable.
+action
+	interlude
+	highlight line "put 360 - (tSeconds - 15)" of script editor for button "start"
+	go to step "Start button code 15"
+end step
+
+step "Start button code 15"
+	Then we set the start angle - which exact slice of our graphic we are showing - to 'tAngle'.
+action
+	interlude
+	highlight line "set the startAngle of graphic" of script editor for button "start"
+	go to step "Start button code 16"
+end step
+
+step "Start button code 16"
+	We want to update the timer every second so we send the 'updateClock' message again in 1 second, creating a loop.
+action
+	interlude
+	highlight line "send" of script editor for button "start"
+	go to step "Start button code 17"
+end step
+
+step "Start button code 17"
+	Finally, we put the result of all this work into a local variable, 'sTimerID', which we declared at the top of the script. This means we can use it again in the first mouseUp handler, to stop the timer as well as start it.
+action
+	interlude
+	highlight line "put the result into sTimerID" of script editor for button "start"
+	go to step "Run mode"
+end step
+
+step "Run mode"
+	Try is out by switching into 'Run' mode on the Tools palette.
+
+	Select 'Run mode' in the Tools Palette.
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test 1"
+end step
+
+step "Test 1"
+	Click on the 'Start' button. You will see the seconds hand start to tick around the clock. Click it again to stop the clock.
+action
+	highlight button "start"
+	wait until the label of button "start" is "Stop"
+end step
+
+epilogue
+	Congratulations. You have learned how to
+
+	- Use a timer to move the seconds hand on a clock
+
+	- Cancel timers
+end epilogue

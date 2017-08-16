@@ -63,6 +63,7 @@ The possible actions are as follows:
 	  | "go" "to" "step" <Name: STRING>
 	  | "add" "guide" <Name: STRING> "with" "rect" <Rect: RECT> "to" <Target: Object>
 	  | “interlude”
+	  | "load" ("lesson" | "stack") <Source: STRING>
 
 The highlight action causes the tutorial stack to point at the relevant
 object on the screen. If there is no highlight action, the tutorial stack
@@ -139,3 +140,13 @@ satisfied before continuing.
 	  | "the" <Property: PROPERTY> "of" <Target: Object> "is" "changed" "with" "default" <Value: STRING>
 	  | <Target: Object> "pops" "up" "answer" "dialog"
 	  | "this" "card" "is" <Card: STRING>
+
+The load action causes tutorial state to be loaded. If the "lesson" Source
+is used, the tutorial runner will find the lesson with name Source in the
+same lessons folder as the current tutorial, and run it to completion. The
+resulting stack will then be available to use in the current tutorial.
+
+If the "stack" Source is used, a stack will be loaded from the internal 
+resources folder of the tutorial (_resources/). Any `cTutorialTag` custom
+property of objects on the stack will be converted to tags for objects 
+which can subsequently be used in the current tutorial.

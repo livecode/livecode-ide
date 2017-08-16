@@ -275,18 +275,41 @@ private command buildHandlerMenu pContext
    
    local tFormattedHandlers
    repeat for each line tHandler in tHandlers
-      put word 2 of tHandler & return after tFormattedHandlers
+      put tab & word 2 of tHandler & return after tFormattedHandlers
    end repeat
    delete the last char of tFormattedHandlers
    
-   if the number of lines of tHandlers = 0 then
-      put "(No Handlers" into tFormattedHandlers
-      set the cHandlers of me to empty
-   else
-      set the cHandlers of me to tHandlers
-   end if
+   local tDefaultHandlers
+   put revSEDefaultHandlers() into tDefaultHandlers
    
-   set the text of button "Handler" of me to modifyMenu("Handler", tFormattedHandlers)
+   local tFormattedDefaultHandlers
+   repeat for each line tHandler in tDefaultHandlers
+      put tab & tHandler & return after tFormattedDefaultHandlers
+   end repeat
+   delete the last char of tFormattedDefaultHandlers
+   
+   local tShowDefaultHandlers
+   dispatch function "sePrefGet" to me with "editor,showDefaultHandlers"
+   put the result into tShowDefaultHandlers
+   
+   local tMenu
+   if tHandlers is not empty then
+      put enableMenuItem("Go to handler...", true) into tMenu
+      put return & tFormattedHandlers after tMenu
+   else
+      put enableMenuItem("Go to handler...", false) into tMenu
+   end if
+   if tDefaultHandlers is not empty then
+      put return & enableMenuItem("Add default handler...", true) after tMenu
+      put return & tFormattedDefaultHandlers after tMenu
+   else
+      put return & enableMenuItem("Add default handler...", false) after tMenu
+   end if
+   put return & toggleMenuItem("Show default handlers", tShowDefaultHandlers) after tMenu
+   
+   set the cHandlers of me to tHandlers
+   
+   set the text of button "Handler" of me to modifyMenu("Handler", tMenu)
 end buildHandlerMenu
 
 on menuPick pItemName
@@ -321,15 +344,31 @@ private command handleHandlerMenuPick pItemName
       exit handleHandlerMenuPick
    end if
    
-   local tLineNumber
-   put the menuHistory of button "Handler" of me into tLineNumber
+   set the itemdelimiter to "|"
+   switch item 1 of pItemName
+      case "Go to handler..."
+         local tPick, tHandlerInfo
+         put item 2 of pItemName into tPick
+         if not matchText(the cHandlers of me, "(.* " & tPick & " .*)", \
+               tHandlerInfo) then
+            exit handleHandlerMenuPick
+         end if
+
+         dispatch "handlerPicked" to group "Left Handler List" \
+               with tHandlerInfo
+         break
+      case "Add default handler..."
+         dispatch "handlerPicked" to group "Left Handler List" \
+               with item 2 of pItemName
+         break
+      case "Show default handlers"
+         local tShowDefaultHandlers
+         dispatch function "sePrefGet" to me with "editor,showDefaultHandlers"
+         put the result into tShowDefaultHandlers
+         dispatch "sePrefSet" to me with "editor,showDefaultHandlers", not tShowDefaultHandlers
+         break
+   end switch
    
-   local tHandler
-   put line tLineNumber of the cHandlers of me into tHandler
-   
-   local tScriptLineNumber
-   put word 3 of tHandler into tScriptLineNumber
-   send "goLine tScriptLineNumber, true" to group "Editor"
    seUpdateLeftBar
    seUpdateToolbar
 end handleHandlerMenuPick
@@ -500,6 +539,7 @@ private command handleHelpMenuPick pItemName
       case "Resource Center"
       case "Start Center"
          revIDEOpenPalette pItemName
+         break
       case "User Guide"
          revIDELaunchResource pItemName
          break
@@ -510,6 +550,20 @@ private command handleHelpMenuPick pItemName
 end handleHelpMenuPick
 
 #########
+
+private function toggleMenuItem pItem, pHilited
+   if pHilited then
+      return "!c" & pItem
+   end if
+   return "!n" & pItem
+end toggleMenuItem
+
+private function enableMenuItem pItem, pEnabled
+   if pEnabled then
+      return pItem
+   end if
+   return "(" & pItem
+end enableMenuItem
 
 private function modifyMenu pMenuName, pMenu
    if the last char of pMenu is not return then

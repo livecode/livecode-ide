@@ -1445,6 +1445,10 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
       combine tObjectList with return as set
    end if
    
+   if tObjectList is an array then
+      combine tObjectList with return as set
+   end if
+   
    return tObjectList
 end findObjectList
 

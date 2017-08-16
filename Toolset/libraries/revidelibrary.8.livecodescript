@@ -3385,7 +3385,11 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    if sClassicObjectProperties is empty then __objectPropertiesRead
    # Set the default stack to the target we're creating the object on
    set the defaultstack to revIDEStackOfObject(pTarget)
-
+   
+   if pLoc is empty then
+      put the loc of this card of the defaultStack into pLoc
+   end if
+   
    # Create the object
    lock screen
    lock messages
@@ -3470,30 +3474,22 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
 end revIDECreateObject
 
 on revIDECloneObject pLongID
-   local tTarget, tLoc, tControlType
-   local tCreatedControlID
-
-   put the loc of pLongID into tLoc
-   add 20 to item 1 of tLoc
-   add 20 to item 2 of tLoc
-
-   put revIDECardOfObject(pLongID) into tTarget
-   if not exists(tTarget) then return __revIDEError("Cannot create object. Target does not exist:" && tTarget)
-
-   --   # Set the default stack to the target we're creating the object on
-   --   set the defaultstack to the owner of tTarget
-
-   --   # Create the object
-   --   lock screen
-   -- lock messages
-   --do "clone" && pLongID
-   clone pLongID
-   put the long ID of the last control into tCreatedControlID
-   set the loc of tCreatedControlID to tLoc
-
-   --   unlock messages
-   --   unlock screen
-   --   return tCreatedControlID
+   if not exists(pLongID) then return __revIDEError("Cannot create object. Target does not exist:" && pLongID)
+   
+   if word 1 of pLongID is "card" or word 1 of pLongID is "stack" then
+      clone pLongID
+   else
+      local tTarget, tLoc, tControlType
+      local tCreatedControlID
+      
+      put the loc of pLongID into tLoc
+      add 20 to item 1 of tLoc
+      add 20 to item 2 of tLoc
+            
+      clone pLongID
+      put it into tCreatedControlID
+      set the loc of tCreatedControlID to tLoc
+   end if
 end revIDECloneObject
 
 on revIDECloneObjectWithDefaults pLongID
@@ -8789,9 +8785,6 @@ on revIDEToggle pProperty
          break
       case "Backdrop"
          if the backDrop is "none" then
-            if revIDEGetPreference("cBackDropColor") is empty then 
-               revIDESetPreference "cBackDropColor", "black"
-            end if
             set the backDrop to revIDEGetPreference("cBackDropColor")
             revIDESetPreference "cBackDrop", the backDrop
          else
@@ -10430,6 +10423,10 @@ private function __fetchAndRemoveControlTags pCard
    return tTags
 end __fetchAndRemoveControlTags
 
+command revIDETutorialUpdateAndRemoveTags pStackName, @xTags
+      union xTags with __fetchAndRemoveTags(pStackName)
+end revIDETutorialUpdateAndRemoveTags
+
 on revIDETutorialLoad pCourse, pTutorial, pLesson
    local tLocation
    put __findTutorialLocation(pCourse, pTutorial, pLesson) into tLocation
@@ -10456,7 +10453,7 @@ on revIDETutorialLoad pCourse, pTutorial, pLesson
          put return & tStackName after tStackList
       end if
       
-      union tTags with __fetchAndRemoveTags(tStackName)
+      revIDETutorialUpdateAndRemoveTags tStackName, tTags
    end repeat
    
    dispatch "revTutorialResume" to stack "revTutorial" with tStackList, tTags, tLessonDataA["step"]

@@ -129,6 +129,7 @@ function handlerTypeSortCallback pItem
    end switch
 end handlerTypeSortCallback
 
+constant kDefaultHandlerTextColor = "#777777"
 
 # Description
 #   Called when the group might need to be updated. Updates the handler list. Also resizes the group.
@@ -139,7 +140,9 @@ command update
    put the result into tHandlers
    
    local tDefaultHandlers, tIndex
-   put revSEDefaultHandlers() into tDefaultHandlers
+   if sePrefGet("editor,showDefaultHandlers") then
+      put revSEDefaultHandlers() into tDefaultHandlers
+   end if
    set the wholematches to false
    
    local tCanAdd
@@ -170,7 +173,7 @@ command update
    end if
    
    if tHandlers is not empty then
-      put return &return after tHandlers
+      put return & return & return after tHandlers
    end if
    put tCanAdd after tHandlers
    
@@ -183,13 +186,15 @@ command update
       
       if the number of words in tHandler is 1 then
          put false into tHandlerExists
+         -- Existing handler names have a space after the icon
+         put " " before tParseHandler
       end if
       
       put "<p>" after tText
       
       local tIsPrivate
       put false into tIsPrivate
-      if char 1 of tParseHandler is "P" then
+      if tHandlerExists and char 1 of tParseHandler is "P" then
          put true into tIsPrivate
          delete char 1 of tParseHandler
       end if
@@ -205,6 +210,11 @@ command update
       
       if tIcon is not empty then
          put merge("<sup shift=2><img src=[[tICon]]></img></sup>") after tText
+      end if
+      
+      if not tHandlerExists then
+         put merge("<font color='[[kDefaultHandlerTextColor]]'>[[tParseHandler]]</font>") \
+               into tParseHandler
       end if
       
       put tParseHandler & "</p>" after tText
@@ -274,28 +284,30 @@ command jumpToHandler pHandler, pAdded
    hideGroup
 end jumpToHandler
 
+command handlerPicked pHandler
+   local tAdded
+   put false into tAdded
+   if the number of words in pHandler is 1 then
+      put true into tAdded
+      -- Adding a default handler
+      revSEAddDefaultHandler pHandler
+      update
+      set the wholematches to false
+      local tLine
+      put lineOffset(pHandler, the cHandlers of field "Handlers" of me) into tLine
+      select line tLine of field "Handlers" of me
+      put line tLine of the cHandlers of field "Handlers" of me into pHandler
+   end if
+   
+   -- Select the (now) extant handler
+   jumpToHandler pHandler, tAdded
+end handlerPicked
+
 command closeAccept
    lock screen
    local tHandler
    put line (the hilitedLine of field "Handlers" of me) of the cHandlers of field "Handlers" of me into tHandler
-   
-   local tAdded
-   put false into tAdded
-   if the number of words in tHandler is 1 then
-      put true into tAdded
-      -- Adding a default handler
-      revSEAddDefaultHandler tHandler
-      update
-      set the wholematches to false
-      local tLine
-      put lineOffset(tHandler, the cHandlers of field "Handlers" of me) into tLine
-      select line tLine of field "Handlers" of me
-      put line tLine of the cHandlers of field "Handlers" of me into tHandler
-   end if
-   
-   -- Select the (now) extant handler
-   jumpToHandler tHandler, tAdded
-   
+   handlerPicked tHandler
    unlock screen
 end closeAccept
 
