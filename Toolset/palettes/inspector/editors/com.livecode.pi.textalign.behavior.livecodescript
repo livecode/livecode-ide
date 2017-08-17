@@ -4,19 +4,16 @@ on editorInitialize
    set the editorMaxWidth of me to 90
 end editorInitialize
 
-local sConflictLock
 on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled, tConflicted
    put the editorValue of me into tValue
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
-   put the editorConflicted of me into sConflictLock
+   put the editorConflicted of me into tConflicted
    lock messages
-   if sConflictLock then
+   if tConflicted then
       set the hilitedItemNames of widget 1 of me to empty
-      wait 0 millisecs with messages
-      put false into sConflictLock
    else
       set the hilitedItemNames of widget 1 of me to tValue
    end if
@@ -36,14 +33,14 @@ on editorResize
 end editorResize
 
 on hiliteChanged
-   if not sConflictLock then
-      valueChanged
-   end if
+   valueChanged
 end hiliteChanged
 
 on valueChanged
-   local tNames
+   local tNames, tValue
    put the hilitedItemNames of widget 1 of me into tNames
-   set the editorValue of me to tNames
+   if the editorValue of me is not tNames then
+      set the editorValue of me to tNames
+   end if
    updateProperty
 end valueChanged
