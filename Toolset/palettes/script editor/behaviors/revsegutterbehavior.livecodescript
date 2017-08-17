@@ -676,9 +676,9 @@ on mouseUp pButtonNumber
    local tTarget, tClickLoc
    put the long id of the target into tTarget
    put the clickloc into tClickLoc
-   -- We might delete the target if it is a breakpoint, so do mouseUp
-   -- handling with a send.
-   send "gutterMouseUp tTarget, tClickLoc" to me in 0 millisecs
+   # 2017-08-01 bhall2001
+   # bugfix 20214 handle changes to gutter directly
+   gutterMouseUp tTarget, tClickLoc
 end mouseUp
 
 on gutterMouseUp pTarget, pClickLoc
