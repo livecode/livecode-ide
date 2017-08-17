@@ -1,0 +1,280 @@
+tutorial "Combining Text"
+
+prologue
+	LiveCode's uniquely powerful text handling capabilities comes in handy for a wide range of applications. Common tasks include:
+
+	- Mail merging a form email
+
+	- Creating a leaflet for print
+
+	- Building an invoice
+end prologue
+
+step "Tutorial Intro 1"
+	In this tutorial, you'll learn how to:
+
+	- Work with words and lines
+
+	- Combine texts together
+
+	- Make decisions
+
+	- Insert variables into your output
+action
+	interlude
+	go to step "Load stack"
+end step
+
+step "Load stack"
+	Some text
+action
+	load lesson "App Lesson 0"
+	go to step "Tutorial Intro 2"
+end step
+
+step "Tutorial Intro 2"
+	In this tutorial, we will have a template email, which is placed in a field called "template", a record, which is placed in a field called "record", and an output field, which is called "output". We also have a button called "Create email".
+action
+	interlude
+	go to step "Address by name 1"
+end step
+
+step "Address by name 1"
+	We want to create a personalized email by combining the email template with the personal details in the "record" field.
+
+	The first step is to start our email with "Dear Mr Miller". To do this we need to add some code to the button.
+action
+	interlude
+	go to step "Address by name 2"
+end step
+
+step "Address by name 2"
+	To make changes first ensure you are in 'Edit' mode.
+action
+	highlight tool "Edit Mode"
+	wait until the tool is edit
+	go to step "Address by name 2b"
+end step
+
+step "Address by name 2b"
+	Select the "Create email" button.
+action
+	highlight button "create"
+	wait until button "create" is selected
+	go to step "Address by name 3"
+end step
+
+step "Address by name 3"
+	Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+action
+		highlight toolbar "Code"
+		wait until there is a script editor for button "Create"
+	go to step "Address by name 4"
+end step
+
+step "Address by name 4"
+	Add this handler to the button script. We will explain this line by line in a moment.
+
+	Don't forget to click the 'Apply' button when you have finished.
+script
+	on mouseUp
+		put field "template" into field "output"
+		put field "record" into tRecord
+		put line 2 of tRecord && word -1 of line 1 of tRecord & comma into tName
+		put tName after line 1 of field "output"
+	end mouseUp
+action
+	highlight script editor for button "Create"
+	wait until button "Create" is scripted
+	go to step "Address by name 5"
+end step
+
+step "Address by name 5"
+	The first line of code puts the contents of the "template" field (our email text) into the "output" field.
+action
+	interlude
+	highlight line "into field" of script editor for button "create"
+	go to step "Address by name 6"
+end step
+
+step "Address by name 6"
+	The second line of code puts the contents of the "record" field into a variable we're calling 'tRecord' - this makes it easier to work with.
+action
+	interlude
+	highlight line "into tRecord" of script editor for button "create"
+	go to step "Address by name 7"
+end step
+
+step "Address by name 7"
+	The third line of code combines 3 pieces of text and puts them into another variable, 'tName'.
+
+	- the whole of line 2 of our record (Mr)
+
+	- then the last word of line 1 of our record (Miller)
+
+	- then a comma
+
+	A single ampersand '&' tells LiveCode to combine text together and a double ampersand '&& tells it insert a space when it does so.
+action
+	interlude
+	highlight line "put line 2 of tRecord" of script editor for button "create"
+	go to step "Address by name 8"
+end step
+
+step "Address by name 8"
+	Finally, we put 'tName' into the "output" field, after line 1.
+action
+	interlude
+	highlight line "put tName after" of script editor for button "create"
+	go to step "Run mode 1"
+end step
+
+step "Run mode 1"
+	Take a look at what this does by switching into 'Run' mode on the Tools palette. You will see a personalized email to Mr Miller in the "output" field.
+
+	Select 'Run mode' in the Tools Palette.
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test 1"
+end step
+
+step "Test 1"
+	Click on the 'Create email' button to see the customized message.
+action
+	highlight button "create"
+	wait until the text of field "output" is changed with default "Dear Mr Miller"
+	go to step "Video choice 1"
+end step
+
+step "Video choice 1"
+	Next we will add some more personal information to the final email.
+
+	We want to decide whether to show section (1) or section (2) of the email. Do we want to say "We noticed you watched X videos so far" or do we want to say "We notice you haven't watched any videos so far"?
+
+	The number of videos watched is the fifth line of the record.
+image
+	videoChoice.png
+action
+	interlude
+	go to step "Video choice 2"
+end step
+
+step "Video choice 2"
+	To do this we need to add some more code to the button.
+
+	Select 'Edit' mode in the Tools Palette.
+action
+	highlight tool "Edit Mode"
+	wait until the tool is edit
+	go to step "Video choice 2a"
+end step
+
+step "Video choice 2a"
+	Select the "Create email" button.
+action
+	highlight button "create"
+	wait until button "create" is selected
+	go to step "Video choice 3"
+end step
+
+step "Video choice 3"
+	Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+action
+		highlight toolbar "Code"
+		wait until there is a script editor for button "Create"
+		go to step "Video choice 4"
+end step
+
+step "Video choice 4"
+	Add this handler to the button script. We will explain this line by line in a moment.
+
+	Don't forget to click the 'Apply' button when you have finished.
+script
+	on mouseUp
+		put field "template" into field "output"
+		put field "record" into tRecord
+		put line 2 of tRecord && word -1 of line 1 of tRecord & comma into tName
+		put tName after line 1 of field "output"
+
+		if line 5 of tRecord > 0 then
+			delete line 9 to 12 of field "output"
+			put line 5 of tRecord into word 5 of line 5 of field "output"
+		else
+			delete line 5 to 8 of field "output"
+		end if
+	end mouseUp
+action
+	highlight script editor for button "Create"
+	wait until button "Create" is scripted
+	go to step "Video choice 5"
+end step
+
+step "Video choice 5"
+	The first step is to check how many videos have been watched, and use an 'if statement' to execute different blocks of code depending on the number.
+
+	- If at least one video has been watched we will use the first block of text from the template, and put the correct number of videos in the text.
+
+	- If no videos have been watched we will use the second block of text from the template.
+action
+	interlude
+	highlight line "if line 5 of theRecord" of script editor for button "create"
+	go to step "Video choice 7"
+end step
+
+step "Video choice 7"
+	If line 5 of 'tRecord' is greater than zero we know that the customer has watched some videos, so we delete lines 9 to 12 of the email, which say "We notice you haven't watched any videos so far".
+action
+	interlude
+	highlight line "delete line 9 to 12" of script editor for button "create"
+	go to step "Video choice 8"
+end step
+
+step "Video choice 8"
+	Then we put line 5 of 'tRecord', the number of videos watched, into word 5 of line 5 of our email, replacing the placeholder "X" in "We noticed you watched X videos so far".
+action
+	interlude
+	highlight line "put line 5 of tRecord" of script editor for button "create"
+	go to step "Video choice 9"
+end step
+
+skip point
+
+step "Video choice 9"
+	If line 5 of 'tRecord' is 0 (or less), we delete line 5 to 8 of the output email.
+action
+	interlude
+	highlight line "delete line 5 to 8" of script editor for button "create"
+	go to step "Run mode 2"
+end step
+
+step "Run mode 2"
+	Take a look at what this does by switching into 'Run' mode on the Tools palette.
+
+	Select 'Run mode' in the Tools Palette.
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test 2"
+end step
+
+step "Test 2"
+	Click on the 'Create email' button to see the updated message.
+
+	You will see that the "output" field now displays the relevant message for the number of watched videos stored in the profile.
+action
+	highlight button "create"
+	wait until the text of field "output" is changed with default "We notice you've watched 3 videos so far."
+end step
+
+epilogue
+	Congratulations. You have learned how to
+
+	- Work with words and lines
+
+	- Combine texts together
+
+	- Make decisions
+
+	- Insert variables into your output
+end epilogue

@@ -659,6 +659,8 @@ command sePrefGetDefaults
    
    put 7 into tPrefs["print,textSize"]
    
+   put true into tPrefs["editor,showDefaultHandlers"]
+   
    return tPrefs
 end sePrefGetDefaults
  
