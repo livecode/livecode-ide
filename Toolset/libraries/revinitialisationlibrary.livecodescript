@@ -3,6 +3,8 @@
 // sLoadedLibraries["library name"] = true
 local sLoadedLibraries
 
+constant kLCLibraryPrefix = "com.livecode.script-library"
+
 command revInternal__LoadLibrary pLibrary
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
@@ -15,68 +17,16 @@ command revInternal__LoadLibrary pLibrary
       return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
    end if
    
-   // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
-   if the environment begins with "development" then
-      local tPaths
-      
-      local tToolsetPath
-      put revEnvironmentToolsetPath() into tToolsetPath
-      
-      local tLibSuffix
-      set the itemDelimiter to "."
-      put the last item of pLibrary into tLibSuffix
-      
-      put merge("[[tToolsetPath]]/libraries/[[pLibrary]]") into tPaths[1]
-      put merge("[[tToolsetPath]]/libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[2]
-      
-      if not revEnvironmentIsInstalled() then
-         local tRepoPath
-         put revEnvironmentRepositoryPath() into tRepoPath
-         
-         put merge("[[tRepoPath]]/ide-support/[[pLibrary]]") into tPaths[3]
-         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[4]
-         set the itemDelimiter to slash
-         delete the last item of tRepoPath
-         put merge("[[tRepoPath]]/extensions/script-libraries/[[tLibSuffix]]/[[tLibSuffix]]") into tPaths[5]
-         put merge("[[tRepoPath]]/ide/Toolset/libraries/[[tLibSuffix]]") into tPaths[6]
-      end if
-      
-      local tLibraryPath
-      local tIndex
-      repeat with tIndex = 1 to the number of elements in tPaths
-         local tExtension
-         repeat for each word tExtension in "livecodescript livecode"
-            if there is a file (tPaths[tIndex]& "." & tExtension) then
-               put tPaths[tIndex]& "." & tExtension into tLibraryPath
-               exit repeat
-            end if
-         end repeat
-      end repeat
-      
-      set the itemDelimiter to comma
-      
-      if tLibraryPath is empty then
-         answer "no file for library" && pLibrary
-      end if
-      
-      try
-         // Get its name
-         local tStackName
-         put the name of stack tLibraryPath into tStackName
-         send "revLoadLibrary" to stack tStackName
-         put tStackName into sLoadedLibraries[pLibrary]
-         return true
-      catch tError
-         answer "Error while loading stack:" && tLibraryPath
-      end try
-      
-   else
-      try
+   try
+      if there is a stack pLibrary then
          send "revLoadLibrary" to stack pLibrary
-      catch tError
-         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
-      end try
-   end if
+      else
+         put kLCLibraryPrefix & "." before pLibrary
+         send "revLoadLibrary" to stack pLibrary
+      end if
+   catch tError
+      write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
+   end try
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary

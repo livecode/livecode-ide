@@ -499,15 +499,11 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
    local tPaletteFolder, tFolders
    put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
    put tPaletteFolder into tFolders
    
-   set the defaultfolder to tPaletteFolder
-   repeat for each line tFolder in the folders
+   repeat for each line tFolder in folders(tPaletteFolder)
       if char 1 of tFolder is "." then next repeat
       put return & tPaletteFolder & slash & tFolder after tFolders
    end repeat
@@ -517,11 +513,21 @@ function revInternal__StackFiles
       put return & revEnvironmentToolsetPath() after tFolders
    else
       put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
-      put return & revEnvironmentRepositoryPath() & "/../ide/Toolset/libraries" after tFolders
-      put revEnvironmentRepositoryPath() & "/../ide/Toolset/palettes" into tPaletteFolder
+      
+      -- legacy from commercial repo
+      put return & revEnvironmentCommercialRepositoryPath() & "/ide/Toolset/libraries" after tFolders
+      put revEnvironmentCommercialRepositoryPath() & "/ide/Toolset/palettes" into tPaletteFolder
       repeat for each line tFolder in folders(tPaletteFolder)
          if tFolder begins with "." then next repeat
          put return & tPaletteFolder & slash & tFolder after tFolders
+      end repeat
+      
+      -- components
+      local tComponentFolder
+      put revEnvironmentCommercialRepositoryPath() & "/components" into tComponentFolder
+      repeat for each line tFolder in folders(tComponentFolder)
+         if tFolder begins with "." then next repeat
+         put return & tComponentFolder & slash & tFolder after tFolders
       end repeat
    end if	
    
@@ -531,9 +537,7 @@ function revInternal__StackFiles
    
    put item 1 of the version into tIDEVersion
    repeat for each line tPath in tFolders
-      set the defaultfolder to tPath
-      
-      repeat for each line tFile in the files
+      repeat for each line tFile in files(tPath)
          if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
          
          put item 1 to -2 of tFile into tStackName
@@ -541,7 +545,7 @@ function revInternal__StackFiles
          local tVersion
          put empty into tVersion
          // AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
-         if the number of items in tFile > 2 then
+         if not (tFile begins with "revidelibrary") and the number of items in tFile > 2 then
             get item -2 of tFile 
             if it is a number then 
                put it into tVersion
@@ -575,8 +579,6 @@ function revInternal__StackFiles
          end if	
       end repeat
    end repeat
-   
-   set the defaultFolder to tDefaultFolder
    
    repeat for each key tKey in tStackFilesA
       put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
@@ -1169,7 +1171,7 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revIDEDocumentationLibrary"
    
    try 	 	
-      revInternal__LoadLibrary "revIDELibrary.8"	 
+      revInternal__LoadLibrary "revIDELibrary"	 
       revInternal__LoadLibrary "revidemessagehandlerlibrary" 	
    catch tError 	 	
       answer "Error loading main IDE" & return & tError 	 	
@@ -1188,7 +1190,7 @@ command revInternal__InitialiseLibraries
    # OK-2008-11-25 : revOnline library
    insert the script of stack "revOnlineLibrary" into back
    
-   revInternal__LoadLibrary "revIdeLibrary"
+   revInternal__LoadLibrary "revOldIdeLibrary"
    revInternal__LoadLibrary "revLibUrl"
    revInternal__LoadLibrary "revCommonLibrary"
    revInternal__LoadLibrary "revPrintLibrary"
@@ -2031,6 +2033,10 @@ function revEnvironmentRepositoryPath
    return sRepositoryPath
 end revEnvironmentRepositoryPath
 
+function revEnvironmentCommercialRepositoryPath
+   set the itemDelimiter to slash
+   return item 1 to -2 of sRepositoryPath
+end revEnvironmentCommercialRepositoryPath
 
 -- Deprecated Path Functions
 
