@@ -203,6 +203,9 @@ after editorPopup pClickLoc
    dispatch "inspectorLayoutGroups" to stack tStackName with sPropertyInfo["popup"]
    dispatch "inspectorFillGroups" to stack tStackName with sPopupData
    set the editorTarget of stack tStackName to the long id of me
+   // In LC 9.0 DP-7 you can resize the inspector window, by putting all the contents in a group "inspector" and adding a vScrollbar to the group
+   // but 'modeless stack X' breaks the vScrollbar of groups, so ensure the popup stack has the correct height before going 'modeless'
+   set the height of stack tStackName to the formattedHeight of group "inspector"
    set the title of stack tStackName to the rowLabel of the owner of me
    modeless stack tStackName
 end editorPopup
