@@ -73,11 +73,13 @@ command addError pType, pError, pObject
 end addError
 
 command clearErrors
-  delete variable sData
-  ensureListObject
-  call "itemPurgeAll" to listObject()
-  set the cData of me to empty
-  set the cData of listObject() to empty
+   delete variable sData
+   ensureListObject
+   call "itemPurgeAll" to listObject()
+   set the cData of me to empty
+   set the cData of listObject() to empty
+   
+   updateList
 end clearErrors
 
 # Parameters
