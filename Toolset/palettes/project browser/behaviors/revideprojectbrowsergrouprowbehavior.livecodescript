@@ -75,23 +75,8 @@ on FillInData pDataA, pRow
       enable group "disclosure" of me 
    end if
    
-   ## Visibility
-   if pDataA["visible"] is true then
-      set the icon of button "visible" of me to the id of image "visible_on" of card "templates" of this stack
-      set the tooltip of button "visible" of me to "Hide"
-   else if pDataA["visible"] is false then
-      set the icon of button "visible" of me to the id of image "visible_off" of card "templates" of this stack
-      set the tooltip of button "visible" of me to "Show"
-   end if  
-   
-   ## Can't select
-   if pDataA["cantSelect"] is true then
-      set the icon of button "cantSelect" of me to the id of image "cantSelect_on" of card "templates" of this stack
-      set the tooltip of button "cantSelect" of me to "Hide"
-   else if pDataA["cantSelect"] is false then
-      set the icon of button "cantSelect" of me to the id of image "cantSelect_off" of card "templates" of this stack
-      set the tooltip of button "cantSelect" of me to "Show"
-   end if  
+   __SetBoolProp "visible", pDataA["visible"]
+   __SetBoolProp "cantSelect", pDataA["cantSelect"]
    
    if revIDEGetPreference("pb_indicator") is "text" then
       show field "type" of me
@@ -336,24 +321,24 @@ on mouseDown pButton
 end mouseDown
 
 on toggleVisible
-   if the icon of button "visible" of me is the id of image "visible_on" of card "templates" of this stack then
-      set the icon of button "visible" of me to the id of image "visible_off" of card "templates" of this stack
-      updateProperty the cObjectLongID of me, "visible", "false"
-   else
-      set the icon of button "visible" of me to the id of image "visible_on" of card "templates" of this stack
-      updateProperty the cObjectLongID of me, "visible", "true"
-   end if  
+   __SetBoolProp "visible", the icon of button "visible" of me is the id of image "visible_off" of card "templates" of this stack, true
 end toggleVisible
 
 on toggleCantSelect
-   if the icon of button "cantSelect" of me is the id of image "cantSelect_on" of card "templates" of this stack then
-      set the icon of button "cantSelect" of me to the id of image "cantSelect_off" of card "templates" of this stack
-      updateProperty the cObjectLongID of me, "cantSelect", "false"
-   else
-      set the icon of button "cantSelect" of me to the id of image "cantSelect_on" of card "templates" of this stack
-      updateProperty the cObjectLongID of me, "cantSelect", "true"
-   end if  
+   __SetBoolProp "cantSelect", the icon of button "cantSelect" of me is the id of image "cantSelect_off" of card "templates" of this stack, true
 end toggleCantSelect
+
+private command __SetBoolProp pProp, pValue, pUpdate
+   if pValue then
+      set the icon of button pProp of me to the id of image (pProp & "_on") of card "templates" of this stack
+   else
+      set the icon of button pProp of me to the id of image (pProp & "_off") of card "templates" of this stack
+   end if
+   set the tooltip of button pProp of me to "Set" && pProp && "to" && not pValue
+   if pUpdate then
+      updateProperty the cObjectLongID of me, pProp, pValue
+   end if
+end __SetBoolProp
 
 on mouseDoubleUp 
    if the short name of the target is "name" then
