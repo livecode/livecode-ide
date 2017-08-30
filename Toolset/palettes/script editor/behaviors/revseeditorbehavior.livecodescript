@@ -694,6 +694,15 @@ command scriptCompile pObject
    set the script of button "revCompileObject" of me to tScript
    put the result into tResult
    
+   local tLiveErrors
+   put sePrefGet("editor,liveerrors") into tLiveErrors
+   if tLiveErrors is empty then 
+      put true into tLiveErrors
+   end if
+   
+   if tLiveErrors then
+      send "clearErrors" to group "Errors" of the owner of me
+   end if
    if tResult is empty then
       --! TODO remove use of revAvailableHandlers here (quite invasive)
       put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
@@ -701,6 +710,21 @@ command scriptCompile pObject
       if exists(it) then
          ideAutocompleteIntrospectObject it, the long id of button "revCompileObject" of me
       end if
+      if tLiveErrors then
+         
+         setCompilationErrors empty, pObject
+         
+         getDirty pObject
+         if the result then
+            seSetObjectState pObject, "edited"
+         else
+            seSetObjectState pObject, "applied"
+         end if
+      end if
+   else if tLiveErrors then
+      send "addError compilation, line 1 of tResult, pObject" to group "Errors" of the owner of me
+      setCompilationErrors line 1 of tResult, pObject
+      seSetObjectState pObject, "error"
    end if
    
    set the preserveVariables to tOldPreserveVariables

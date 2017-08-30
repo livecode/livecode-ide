@@ -945,9 +945,6 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    
    set the caseSensitive to true
    if pOldText is not pNewText then
-      try
-         seSetObjectState tObject, "edited"
-      end try
       # OK-2009-01-17 : Bug 7169 - Flag the object as dirty when it is modifed by this method only.
       # The textReplaceRaw etc functions should not do this as they do not represent a user modifying
       # the script.
