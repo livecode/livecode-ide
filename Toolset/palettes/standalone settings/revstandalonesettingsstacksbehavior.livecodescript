@@ -8,7 +8,7 @@ on preOpenCard
    set the enabled of group "Advanced Options" to tEnabled
    
    -- Disable the stack encryption options in Community edition
-   put (tEnabled and revLicenseType() is not "community") into tEnabled
+   put (tEnabled and revEnvironmentEditionProperty("password_protection")) into tEnabled
    set the enabled of button "encrypt" to tEnabled
    set the enabled of field "encrypt" to tEnabled
    
