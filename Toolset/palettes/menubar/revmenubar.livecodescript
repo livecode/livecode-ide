@@ -227,10 +227,7 @@ on setMenuProperties
    
    local tTitle
    set the itemDelimiter to "-"
-   put "LiveCode" into tTitle
-   if revLicenseType() is "community" then
-      put space & "Community" after tTitle
-   end if
+   put "LiveCode" && revEnvironmentEditionProperty("name") into tTitle
    if item 1 of the version ends with ".0" then
       put space & char 1 to -3 of item 1 of the version after tTitle
    else

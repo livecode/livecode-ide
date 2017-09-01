@@ -163,18 +163,11 @@ command recentFileOpen
 end recentFileOpen
 
 command tilesInitialise
-   local tArray, tSourceColor, tEdition, tColorStep, tTileNumber
+   local tArray, tSourceColor, tColorStep, tTileNumber
    
    ## Set the colors of the tiles
    put uiColor("edition") into tSourceColor
-   put revLicenseType() into tEdition
-   
-   ## The Start Color depends on the edition
-   if tEdition is "commercial" or tEdition is "professional" then
-      put 0 into tColorStep
-   else
-      put -9 into tColorStep
-   end if
+   put revEnvironmentEditionProperty("start_center_tile_color_step") into tColorStep
    
    repeat with tTileNumber = 1 to 8
       add 1 to tColorStep      
@@ -673,12 +666,9 @@ function uiColor pColor
          return "255,255,255"
          break
       case "tileFGHover"
-         --return "128,128,128"
-         if tEdition is "commercial" or tEdition is "professional" then
-            return revIDEColor("edition_color")
-         else
-            return tileColor(revIDEColor("edition_color"), -8)
-         end if
+         local tColorStep
+         put revEnvironmentEditionProperty("start_center_tile_color_step") into tColorStep
+         return tileColor(revIDEColor("edition_color"), tColorStep)
          break
    end switch   
 end uiColor

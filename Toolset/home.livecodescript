@@ -1,5 +1,8 @@
 ﻿script "home"
 constant kImportantTextColor = "#569e54"
+local sComponents
+-- once found we can hang on to the edition component to save time
+local sEditionComponent
 
 on startup
    -- MW-2011-03-13: Make sure the externals are empty on startup
@@ -1838,6 +1841,15 @@ function revEnvironmentToolsetPath
   return hookToolsPath("toolset", sToolsPath & "/Toolset")
 end revEnvironmentToolsetPath
 
+function revEnvironmentEditionProperty pProp
+   __EnsureEditionComponent
+   if sEditionComponent[pProp] is not empty then
+      return sEditionComponent[pProp]
+   else
+      return sEditionComponent["metadata"][pProp]
+   end if
+end revEnvironmentEditionProperty
+
 function revEnvironmentPluginsPath
    return hookToolsPath("plugins", sToolsPath & "/Plugins")
 end revEnvironmentPluginsPath
@@ -2026,6 +2038,10 @@ function revEnvironmentRepositoryPath
    return sRepositoryPath
 end revEnvironmentRepositoryPath
 
+function revEnvironmentCommercialRepositoryPath
+   set the itemDelimiter to slash
+   return item 1 to -2 of sRepositoryPath
+end revEnvironmentCommercialRepositoryPath
 
 -- Deprecated Path Functions
 
@@ -2116,26 +2132,138 @@ end revEnvironmentGuessRepositoryPath
 --
 
 function revEnvironmentPlatform
-  local tPlatform
-  
-  switch the platform
-  case "Linux"
-    put "Linux" into tPlatform
-    break
-  case "MacOS"
-    if char 1 of the systemVersion is 1 then
-      put "MacOS X" into tPlatform
-    else
-      put "MacOS Classic" into tPlatform
-    end if
-    break
-  case "Win32"
-    put "Windows" into tPlatform
-    break
-  default
-    put "Unsupported" into tPlatform
-    break
-  end switch
-  
-  return tPlatform
+   local tPlatform
+   
+   switch the platform
+      case "Linux"
+         put "Linux" into tPlatform
+         break
+      case "MacOS"
+         if char 1 of the systemVersion is 1 then
+            put "MacOS X" into tPlatform
+         else
+            put "MacOS Classic" into tPlatform
+         end if
+         break
+      case "Win32"
+         put "Windows" into tPlatform
+         break
+      default
+         put "Unsupported" into tPlatform
+         break
+   end switch
+   
+   return tPlatform
 end revEnvironmentPlatform
+
+command __EnsureEditionComponent
+   if sEditionComponent is an array then
+      return empty
+   end if
+   
+   if revEnvironmentIsInstalled() then
+      put sToolsPath & "/Toolset/resources/edition" into sEditionComponent["folder"]
+      local tPath
+      put sEditionComponent["folder"] & "/component.yml" into tPath
+      
+      local tYAML
+      put __FileGetContents(tPath, "UTF-8") into tYAML
+      put __YAMLToArray(tYAML) into sEditionComponent["metadata"]
+   else
+      __EnsureComponents
+      
+      local tEdition
+      put __FileGetContents(sToolsPath & "/edition.txt", "UTF-8") into tEdition
+      put word 1 to -1 of tEdition into tEdition
+      
+      if tEdition is empty then
+         switch the editionType
+            case "community"
+               put "Community" into tEdition
+               break
+            case "community plus"
+               put "Community Plus" into tEdition
+               break
+            case "commercial"
+               put "Indy" into tEdition
+               break
+            case "professional"
+               put "Business" into tEdition
+               break
+         end switch
+      end if
+      
+      repeat for each element tComponent in sComponents
+         if tComponent["metadata"]["type"] is "edition" and tComponent["metadata"]["name"] is tEdition then
+            put tComponent into sEditionComponent
+         end if
+      end repeat
+   end if
+end __EnsureEditionComponent
+
+--!TODO make a shared library for managing components
+private command __EnsureComponents
+   local tComponentFolders
+   repeat for each line tFolder in revEnvironmentRepositoryPath() & return & revEnvironmentCommercialRepositoryPath()
+      repeat for each line tComponent in folders(tFolder & "/components")
+         if tComponent begins with "." then
+            next repeat
+         end if
+         
+         local tPath
+         put tFolder & "/components/" & tComponent & "/component.yml" into tPath
+         if there is not a file tPath then
+            next repeat
+         end if
+         
+         local tIndex
+         put the number of elements of tComponentFolders + 1 into tIndex
+         
+         local tYAML
+         put __FileGetContents(tPath, "UTF-8") into tYAML
+         put __YAMLToArray(tYAML) into tComponentFolders[tIndex]["metadata"]
+         put tFolder & "/components/" & tComponent into tComponentFolders[tIndex]["folder"]
+      end repeat
+   end repeat
+   
+   put tComponentFolders into sComponents
+end __EnsureComponents
+
+private function __YAMLToArray pYAML
+   --!TODO Add YAMLToArray script-library so we can have more
+   -- complex metadata structures here if necessary
+   local tLine
+   set the itemdelimiter to colon
+   
+   local tArray
+   repeat for each line tLine in pYAML
+      put word 1 to -1 of (item 2 to -1 of tLine) into tArray[item 1 of tLine]
+   end repeat
+   return tArray
+end __YAMLToArray
+
+private function __FileGetContents pPath, pEncoding
+   local tContents, tResult
+   
+   put url("binfile:" & pPath) into tContents
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to read [[pPath]]: [[tResult]]")
+   end if
+   
+   if pEncoding is not empty then
+      __DeleteByteOrderMarks tContents, pEncoding
+      put textDecode(tContents, pEncoding) into tContents
+   end if
+   
+   return tContents
+end __FileGetContents
+
+private command __DeleteByteOrderMarks @xEncoded, pEncoding
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), pEncoding) into tBom
+   
+   if xEncoded begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xEncoded
+   end if
+end __DeleteByteOrderMarks
