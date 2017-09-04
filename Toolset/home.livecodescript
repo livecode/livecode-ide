@@ -1838,6 +1838,117 @@ function revEnvironmentToolsetPath
   return hookToolsPath("toolset", sToolsPath & "/Toolset")
 end revEnvironmentToolsetPath
 
+function revEnvironmentEditionProperty pProp
+   if pProp is "skin" then
+      return revEnvironmentToolsetPath() & "/resources/" & the editionType & "/ideSkin"
+   end if
+   
+   switch the editionType
+      case "community"
+         switch pProp
+            case "name"
+               return "Community"
+            case "color"
+               return 173,208,54
+            case "pb_line_selected_color"
+               return 226,238,185
+            case "revonline_hilite_color"
+               return 156,199,45
+            case "revabout_hilite_color"
+               return 106,139,15
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return -9
+            case "password_protection"
+               return false
+            case "open_source_required"
+               return true
+            case "splash_strap"
+               return empty
+         end switch
+         break
+      case "communityplus"
+         switch pProp
+            case "name"
+               return "Community Plus"
+            case "color"
+               return 49,163,102
+            case "pb_line_selected_color"
+               return 226,238,185
+            case "revonline_hilite_color"
+               return 156,199,45
+            case "revabout_hilite_color"
+               return 106,139,15
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return -9
+            case "password_protection"
+               return false
+            case "open_source_required"
+               return true
+            case "splash_strap"
+               return empty
+         end switch
+         break
+      case "commercial"
+         switch pProp
+            case "name"
+               return "Indy"
+            case "color"
+               return 28,154,206
+            case "pb_line_selected_color"
+               return 222,243,255
+            case "revonline_hilite_color"
+               return 124,193,222
+            case "revabout_hilite_color"
+               return 44,113,170
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return 0
+            case "password_protection"
+               return true
+            case "open_source_required"
+               return false
+            case "splash_strap"
+               if revLicenseInfo["com.livecode.norevenuelimit"] is not empty then
+                  return empty
+               else
+                  return "<p>This Indy license is only valid for organizations with annual revenues of $500,000 USD or less</p>"
+               end if
+         end switch
+         break
+      case "professional"
+         switch pProp
+            case "name"
+               return "Business"
+            case "color"
+               return 82,82,82
+            case "pb_line_selected_color"
+               return 222,243,255
+            case "revonline_hilite_color"
+               return 124,193,222
+            case "revabout_hilite_color"
+               return 44,113,170
+            case "revsplash_text_color"
+               return 255,255,255
+            case "start_center_tile_color_step"
+               return 0
+            case "password_protection"
+               return true
+            case "open_source_required"
+               return false
+            case "splash_strap"
+               return empty
+         end switch
+         break
+   end switch
+   
+   throw "Unknown edition property"
+end revEnvironmentEditionProperty
+
 function revEnvironmentPluginsPath
    return hookToolsPath("plugins", sToolsPath & "/Plugins")
 end revEnvironmentPluginsPath
