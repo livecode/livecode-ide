@@ -3,6 +3,8 @@
 // sLoadedLibraries["library name"] = true
 local sLoadedLibraries
 
+constant kLCLibraryPrefix = "com.livecode.script-library"
+
 command revInternal__LoadLibrary pLibrary
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
@@ -10,38 +12,21 @@ command revInternal__LoadLibrary pLibrary
    -- SN-2015-02-20: Linux uses case-sensitive filenames, so we
    --  follow the lower-case naming of the library names
    put toLower(pLibrary) into pLibrary
-
+   
    if sLoadedLibraries[pLibrary] is not empty then
-     return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
+      return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
    end if
-
-   // AL-2015-02-20: [[ IDE Restructure ]] Look for libraries in the correct locations.
-   if the environment begins with "development" then
-      local tLibraryPath
-      if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
-      else if not revEnvironmentIsInstalled() and there is a file (revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript") then put revEnvironmentRepositoryPath() & slash & "ide-support" & slash & pLibrary & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & "/" & pLibrary & ".livecodescript" into tLibraryPath
-      else if there is a file (revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript") then put revEnvironmentToolsetPath() & "/libraries/" & pLibrary & ".livecodescript" into tLibraryPath
-      else answer "no file for library" && pLibrary
-      
-      try
-         // Get its name
-         local tStackName
-         put the name of stack tLibraryPath into tStackName
-         send "revLoadLibrary" to stack tStackName
-         put tStackName into sLoadedLibraries[pLibrary]
-         return true
-      catch tError
-         answer "Error while loading stack:" && tLibraryPath
-      end try
-      
-   else
-      try
+   
+   try
+      if there is a stack pLibrary then
          send "revLoadLibrary" to stack pLibrary
-      catch tError
-         write ("Error" && tError && "while loading stack:" && pLibrary) to stderr
-      end try
-   end if
+      else
+         put kLCLibraryPrefix & "." before pLibrary
+         send "revLoadLibrary" to stack pLibrary
+      end if
+   catch tError
+      write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
+   end try
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
