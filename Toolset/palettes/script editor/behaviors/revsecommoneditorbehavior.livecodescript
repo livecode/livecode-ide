@@ -1850,10 +1850,10 @@ private function autoCompleteNamedStructures
 end autoCompleteNamedStructures
 
 # Returns
-#   A comma separated list of the autocompleteable structures without names. Note that we don't complete IF statements
+#   A comma separated list of the autocompleteable structures without names. Note that we only complete IF statements when the last token is then
 #   because there are too many possibilities, (else, else if, end if) and its better to not complete than risk forcing the user to delete stuff.
 private function autoCompleteUnnamedStructures
-   return "repeat,try,switch"
+   return "repeat,try,switch,case"
 end autoCompleteUnnamedStructures
 
 # Parameters
@@ -1882,6 +1882,9 @@ private function autoCompleteGetStructure pLine
    else if token 1 of tLine is among the items of autoCompleteUnnamedStructures() then
       put token 1 of tLine into tStructureType
       put empty into tStructureName
+   else if token 1 of tLine is "if" and the last token of tLine is "then" then
+      put "if" into tStructureType
+      put empty into tStructureName
    end if
    
    return tStructuretype & return & tStructureName
@@ -1905,6 +1908,14 @@ private function autoCompleteGetCompletion pStructureType, pStructureName
       if pStructureName is not empty then
          put "end " & pStructureName into tCompletion
       end if
+   else if pStructureType is "case" then
+      local tTabDepth
+      put __GetPreference("editor,tabdepth", 3) into tTabDepth
+      
+      repeat for tTabDepth
+         put space after tCompletion
+      end repeat
+      put "break" after tCompletion
    else
       put "end " & pStructureType into tCompletion
    end if
