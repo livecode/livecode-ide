@@ -35,7 +35,7 @@ on initialize
    put the cIDE_SAIOSTipShow of stack "revPreferences" into tShowTip
    put the cIDE_SAIOSTipLastShown of stack "revPreferences" into tTipLastShown
    
-   if revLicenseType() is "commercial" or revLicenseType() is "professional" then
+   if revLicenseType() is not "community" then
       put false into tShowTip
       set the cIDE_SAGeneralTipShow of stack "revPreferences" to false
    end if

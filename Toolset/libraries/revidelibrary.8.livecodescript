@@ -2597,7 +2597,9 @@ function revIDEPlatformVersion
 end revIDEPlatformVersion
 
 function revIDEColor pTag
-   if pTag is "edition_color" then return ideCoreEditionColour()
+   if pTag is "edition_color" then
+      return revEnvironmentEditionProperty("color")
+   end if
    
    switch pTag
       case "text_1"
