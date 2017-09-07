@@ -262,11 +262,11 @@ on setMenuProperties
 end setMenuProperties
 
 on ideSelectedObjectChanged
-   layoutMenu
+   updateButtonState
 end ideSelectedObjectChanged
 
 on ideActiveStacksChanged
-   layoutMenu
+   updateButtonState
 end ideActiveStacksChanged
 
 on ideTutorialProgressChanged
@@ -409,6 +409,18 @@ on generateMenubarUI
    set the hilitedIcon of the templatebutton to 0
    set the disabledIcon of the templatebutton to 0
    
+   generateTutorialGroup
+   generateUpgradeGroup
+   
+   reset the templategraphic
+   reset the templatebutton
+   reset the templateimage
+   reset the templatefield
+   
+   unlock messages
+end generateMenubarUI
+
+private command generateTutorialGroup
    if there is a group "tutorial" of me then
       delete group "tutorial" of me
    end if
@@ -444,14 +456,35 @@ on generateMenubarUI
    set the traversalOn of it to false
    
    hide group "tutorial" of me
+end generateTutorialGroup
+
+private command generateUpgradeGroup
+   if there is a group "upgrade" of me then
+      delete group "upgrade" of me
+   end if
    
-   reset the templategraphic
-   reset the templatebutton
-   reset the templateimage
-   reset the templatefield
+   create group "upgrade"
+   set the margins of it to 0
    
-   unlock messages
-end generateMenubarUI
+   create graphic "bg" in group "upgrade" of me
+   set the opaque of it to true
+   set the style of it to "roundRect"
+   set the lineSize of it to 0
+   
+   local tUpgradeEdition
+   put revEnvironmentEditionProperty("upgrade_edition") into tUpgradeEdition
+   set the backcolor of it to revEnvironmentEditionProperty("color", tUpgradeEdition)
+   set the roundRadius of it to 8
+   
+   create field "label" in group "upgrade" of me
+   set the margins of it to 4
+   set the traversalOn of it to false
+   set the text of it to "Upgrade Options"
+   set the textStyle["bold"] of it to true
+   set the textColor of it to "white"
+   
+   hide group "upgrade" of me
+end generateUpgradeGroup
 
 on generateMenuGroup
    lock messages
@@ -532,6 +565,8 @@ constant kDividerWidth = 2
 constant kDividerHeight = 41
 constant kMenuBarHeight = 26
 constant kMenuBarTop = 3
+constant kUpgradeButtonMarginVertical = 8
+constant kUpgradeButtonMarginHorizontal = 15
 on layoutMenu
    lock screen
    lock messages
@@ -570,16 +605,18 @@ on layoutMenu
       end if
    end repeat
    
-   local tTutorial
+   local tTutorial, tLabelWidth
    put revIDETutorialInProgress() into tTutorial
    if tTutorial is not empty then
+      hide group "upgrade" of me
+      
       add kPadding/2 to tLeft
       show group "tutorial" of me
       show tLastDivide
       set the text of field "label" of group "tutorial" of me to tTutorial["lesson"] 
       set the width of field "label" of group "tutorial" of me to 1000
       set the height of field "label" of group "tutorial" of me to the formattedHeight of field "label" of group "tutorial" of me
-      local tLabelWidth
+      
       put the formattedwidth of field "label" of group "tutorial" of me into tLabelWidth
       set the width of field "label" of group "tutorial" of me to tLabelWidth
       set the topleft of field "label" of group "tutorial" of me to 0, 0
@@ -603,9 +640,36 @@ on layoutMenu
       set the left of group "tutorial" of me to tLeft
       
       add the width of group "tutorial" of me + kPadding to tLeft
+   else if ideShouldShowUpgradeOptions() then
+      hide group "tutorial" of me
+      
+      add kPadding/2 to tLeft
+      show group "upgrade" of me
+      show tLastDivide
+      set the width of field "label" of group "upgrade" of me to 1000
+      set the height of field "label" of group "upgrade" of me to the formattedHeight of field "label" of group "upgrade" of me
+      
+      put the formattedwidth of field "label" of group "upgrade" of me into tLabelWidth
+      set the width of field "label" of group "upgrade" of me to tLabelWidth
+      set the loc of field "label" of group "upgrade" of me to 0,0
+      
+      local tRect
+      put the rect of field "label" of group "upgrade" of me into tRect
+      put item 1 of tRect - kUpgradeButtonMarginHorizontal, \
+            item 2 of tRect - kUpgradeButtonMarginVertical, \
+            item 3 of tRect + kUpgradeButtonMarginHorizontal, \
+            item 4 of tRect + kUpgradeButtonMarginVertical into tRect
+      set the rect of graphic "bg" of group "upgrade" of me to tRect
+      
+      set the rect of group "upgrade" of me to the formattedRect of group "upgrade" of me
+      set the loc of group "upgrade" of me to the loc of this card of me
+      set the left of group "upgrade" of me to tLeft
+      
+      add the width of group "upgrade" of me + kPadding to tLeft
    else
       hide tLastDivide
       hide group "tutorial" of me
+      hide group "upgrade" of me
    end if	
    
    set the width of me to tLeft
@@ -931,6 +995,8 @@ on mouseUp
       else if tTarget is "skip" then
          revIDETutorialSkipToNextSkipPoint
       end if
+   else if the short name of the owner of the target is "upgrade" then
+      ideShowUpgradeOptions
    else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
       revMenubarMenuButtonClicked the short name of the target
       setButtonReleased the long id of the target
@@ -1018,7 +1084,7 @@ on highlightObject pObject
    else if pObject is "tutorial" then
       // HIghlight tutorial progress group
    end if
-   layoutMenu
+   updateButtonState
 end highlightObject
 
 on revMenubarMenuButtonClicked pWhich

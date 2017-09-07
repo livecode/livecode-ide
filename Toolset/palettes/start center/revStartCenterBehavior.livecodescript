@@ -3,7 +3,11 @@ constant kAllSocialMedia = "facebook,twitter,github,linkedin,youtube,stackoverfl
 constant kSocialMedia = "github,stackoverflow,youtube,facebook,twitter,linkedin"
 
 on openStack
+   set the url of widget "Upgrade" of me to empty
+   set the url of widget "UpgradeMini" of me to empty
+   
    ## Set up the Start Center UI   
+   initialiseInterface
    
    ## Logo
    logoInitialise
@@ -41,14 +45,20 @@ on openStack
    else
       set the iconPresetName of widget "startupCheckbox" to "lc-checkbox-unchecked"
    end if
+end openStack
+
+command initialiseInterface
+   hide group "Upgrade" of me
    
    ## First run
    if revIDEGetPreference("StartCenterClassic") is true then
       ## Not first run
       hide group "firstRun"
-      show group"topPanel"
+      show group "topPanel"
       --show group "tiles"
       set the top of group "recentFiles" to 0
+      
+      showUpgradeMini
    else
       ## First run
       hide group "banner"
@@ -59,8 +69,10 @@ on openStack
       
       set the layer of group "firstRun" to top
       show group "firstRun"
+      hide group "UpgradeMini" of me
+      hide widget "UpgradeMini" of me
    end if
-end openStack
+end initialiseInterface
 
 on desktopChanged
    set the loc of me to revIDEStackScreenLoc(the short name of me)
@@ -415,6 +427,14 @@ command tilesUpdate pArray
    send "startCenterSetState 1, pArray" to me in 0 milliseconds
 end tilesUpdate
 
+on breadcrumbLinkClicked pLink
+   if pLink is "home" then
+      setState "home"
+   else if pLink is "Interactive Welcome" then
+      setState "interactive_welcome"      
+   end if
+end breadcrumbLinkClicked
+
 on startCenterAction pAction
    local tStackName, tArray
    switch pAction
@@ -424,6 +444,7 @@ on startCenterAction pAction
          set the textStyle of word 1 of field "breadcrumb" to "link"
          put tilesArray(pAction) into tArray
          tilesUpdate tArray
+         hideUpgradeBrowser
          break
       case "tutorial_list_ui"
          put "Home / Interactive Welcome / User Interface" into field "breadcrumb"
@@ -431,6 +452,7 @@ on startCenterAction pAction
          set the textStyle of word 3 to 4 of field "breadcrumb" to "link"
          put tilesArray(pAction) into tArray
          tilesUpdate tArray
+         hideUpgradeBrowser
          break
       case "tutorial_list_coding"
          put "Home / Interactive Welcome / Coding" into field "breadcrumb"
@@ -438,6 +460,7 @@ on startCenterAction pAction
          set the textStyle of word 3 to 4 of field "breadcrumb" to "link"
          put tilesArray(pAction) into tArray
          tilesUpdate tArray
+         hideUpgradeBrowser
          break
       case "tutorial_hello_world"
          tutorialStart "Hello World"
@@ -539,35 +562,16 @@ command setState pState
    
    put empty into field "breadcrumb"
    
-   if pState is "home " then
+   if pState is "home" then
       set the textStyle of word 1 of field "breadcrumb" to empty
+      showUpgradeMini
    else if pState is "interactive_welcome" then
+      hideUpgradeBrowser
       put "Home / Interactive Welcome" into field "breadcrumb"
       set the textStyle of word 1 of field "breadcrumb" to "link"
    end if
    tilesUpdate tArray
 end setState
-
-command firstRunVisible pValue
-   lock screen
-   
-   if pValue is true then
-      show group "firstRun"
-      hide group"topPanel"
-      --hide group "tiles"
-   else if pValue is false then
-      hide group "firstRun"
-      show group"topPanel"
-      repeat with x = 1 to 8
-         set the hoverState of widget ("tile" & x) to false
-      end repeat
-      --show group "tiles"
-      
-      revIDESetPreference "StartCenterClassic", "true"
-   end if
-   
-   unlock screen
-end firstRunVisible
 
 command tourStart
    lock screen
@@ -577,6 +581,7 @@ end tourStart
 
 command tutorialStart pTutorial
    lock screen
+   set the cTutorialOverride of me to true
    revIDEStartTutorial "First Run", pTutorial, "App Lesson"
    revIDESetPreference "StartCenterClassic", "true"
    revIDESubscribe "ideTutorialProgressChanged"
@@ -701,7 +706,7 @@ function textProperty pType, pStyle
          end if
          break
       case "stackLabel"
-             if pStyle is "font" then
+         if pStyle is "font" then
             
          else if pStyle is "size" then 
             
@@ -716,3 +721,74 @@ function textProperty pType, pStyle
    end switch
    
 end textProperty
+
+-- Actions triggered by the browser widgets related to upgrade
+on ideAction pAction, pUrl
+   switch pAction
+      case "launchAdWithUrl"
+         launchUpgradeBrowserWithUrl revEnvironmentEditionProperty("upgrade_url")
+         break
+      case "closeBrowser"
+         hide widget "Upgrade" of me
+         hide group "Upgrade" of me
+         showBrowser "UpgradeMini", \
+               revEnvironmentEditionProperty("upgrade_mini_url")
+         break
+      case "launchExternalUrl"
+         launch url pUrl
+         break
+   end switch
+end ideAction
+
+private command showUpgradeMini
+   if ideCanShowUpgradeOptions() and \ 
+         the cTutorialOverride of me is not true then
+      showBrowser "UpgradeMini", \
+            revEnvironmentEditionProperty("upgrade_mini_url")
+   else
+      set the cTutorialOverride of me to false
+      hide group "UpgradeMini" of me
+      hide widget "UpgradeMini" of me
+   end if
+end showUpgradeMini
+
+command showBrowser pBrowserName, pUrl
+   local tBrowser
+   put the long id of widget pBrowserName of me into tBrowser
+   if the url of tBrowser is empty then
+      -- show the browser's loading placeholder
+      show group pBrowserName of me
+      hide tBrowser
+      set the javascripthandlers of tBrowser to "ideAction"
+      set the cLoading of tBrowser to true
+      set the url of tBrowser to pUrl
+   else
+      show tBrowser
+   end if
+end showBrowser
+
+command launchUpgradeBrowserWithUrl pUrl
+   hideUpgradeBrowser
+   showBrowser "Upgrade", pUrl
+end launchUpgradeBrowserWithUrl
+
+on browserNavigateComplete
+   if the cLoading of the target is true then
+      show the target
+      set the cLoading of the target to false
+   end if
+end browserNavigateComplete
+
+on browserLoadFailed
+   set the cLoading of the target to false
+   hide group "Upgrade" of me
+   hide group "UpgradeMini" of me
+end browserLoadFailed
+
+private command hideUpgradeBrowser
+   -- Don't auto-show the mini upgrade browser when the 
+   -- upgrade browser is launched from elsewhere
+   hide widget "UpgradeMini" of me
+   hide group "UpgradeMini" of me
+   set the cLoading of widget "UpgradeMini" of me to false
+end hideUpgradeBrowser

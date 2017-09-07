@@ -1844,12 +1844,16 @@ function revEnvironmentToolsetPath
   return hookToolsPath("toolset", sToolsPath & "/Toolset")
 end revEnvironmentToolsetPath
 
-function revEnvironmentEditionProperty pProp
-   if pProp is "skin" then
-      return revEnvironmentToolsetPath() & "/resources/" & the editionType & "/ideSkin"
+function revEnvironmentEditionProperty pProp, pEdition
+   if pEdition is empty then
+      put the editionType into pEdition
    end if
    
-   switch the editionType
+   if pProp is "skin" then
+      return revEnvironmentToolsetPath() & "/resources/" & pEdition & "/ideSkin"
+   end if
+   
+   switch pEdition
       case "community"
          switch pProp
             case "name"
@@ -1872,6 +1876,15 @@ function revEnvironmentEditionProperty pProp
                return true
             case "splash_strap"
                return empty
+            case "upgrade_mini_url"
+               return "https://livecode.com/products/community-plus-ide-2/"
+            case "upgrade_url"
+               return "https://livecode.com/products/community-plus-ide/"  
+            case "upgrade_edition"
+               return "communityplus"
+            case "edition_external_url"
+               return "https://livecode.com/products/community-edition/"
+               break        
          end switch
          break
       case "communityplus"
@@ -1896,6 +1909,14 @@ function revEnvironmentEditionProperty pProp
                return true
             case "splash_strap"
                return empty
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return "commercial"
+            case "edition_external_url"
+               return "https://livecode.com/products/community-plus-edition/"
          end switch
          break
       case "commercial"
@@ -1924,6 +1945,14 @@ function revEnvironmentEditionProperty pProp
                else
                   return "<p>This Indy license is only valid for organizations with annual revenues of $500,000 USD or less</p>"
                end if
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return "professional"
+            case "edition_external_url"
+               return "https://livecode.com/products/indy-edition/"
          end switch
          break
       case "professional"
@@ -1948,6 +1977,14 @@ function revEnvironmentEditionProperty pProp
                return false
             case "splash_strap"
                return empty
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return empty
+            case "edition_external_url"
+               return "https://livecode.com/products/business-edition/"
          end switch
          break
    end switch
