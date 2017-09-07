@@ -326,6 +326,8 @@ command selectionUpdate
    updateHandlerList
     
    updateSelectedHandler
+   
+   contextSave
     
    # Update the toolbar so that the handlers list can reflect the new selection. For efficiency we pass
    # a parameter to the update command which tells it that the selected handler can be assumed to be
