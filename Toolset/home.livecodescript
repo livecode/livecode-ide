@@ -1883,7 +1883,7 @@ function revEnvironmentEditionProperty pProp
             case "pb_line_selected_color"
                return 226,238,185
             case "revonline_hilite_color"
-               return 156,199,45
+               return 49,163,102
             case "revabout_hilite_color"
                return 106,139,15
             case "revsplash_text_color"
