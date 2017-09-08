@@ -3269,7 +3269,7 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
       put 0 into tCharNum
    end if
    
-   if tScriptLine is empty then
+   if tScriptLine is empty or tCharNum is tEndCondition then
       return false for value
    end if
    
