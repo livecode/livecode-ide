@@ -1292,6 +1292,22 @@
 		tState.edition = pEdition;
 	}
 	
+	// Returns a function, that, as long as it continues to be invoked, will not
+	// be triggered. The function will be called after it stops being called for
+	// N milliseconds.  Used to make search more responsive.
+	var debounce = function(func, wait) {
+		var timeout;
+		return function() {
+			var context = this, args = arguments;
+			var later = function() {
+				timeout = null;
+				func.apply(context, args);
+			};
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	};
+
 	function setActions()
 	{	
 		breadcrumb_draw();
@@ -1309,12 +1325,11 @@
 			}
  		});
 
-		$('#ui_filer').keyup(function() {
-		  displayEntryListGrep(this.value);
-		  if(tState.cached_search_data.data.hasOwnProperty(0))
-		  	   displayEntry(tState.cached_search_data.data[0]["id"]);
-		})
-
+		// Delay search until 250ms after last character typed
+		$('#ui_filer').keyup( debounce( function() {
+			displayEntryListGrep(this.value);
+		}, 250));
+		
 		$("body").on( "click", ".load_entry", function() {
 			var tEntryIndex = $(this).attr("entryindex");
 			if (typeof tEntryIndex !== typeof undefined && tEntryIndex !== false) {
