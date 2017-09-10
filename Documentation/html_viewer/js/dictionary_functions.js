@@ -76,27 +76,27 @@
 			tTerm = "\\" + pTerm;
 		}
 
-		// Get a list of space-delimited search terms				
-   		var tokensOfTerm = tTerm.match(/\S+/g);
+		// Get a list of space-delimited search terms
+		var tokensOfTerm = tTerm.match(/\S+/g);
 		
 		// Generate three regexes - one that matches all syntax that 
 		// contains each search term, and one that matches all syntax that
 		// contains a word beginning with each search term. This way we 
 		// can prioritize matches that start with the search terms.
-        // Third regex will match full words.
-        var matchExp = '';
-        var priorityMatch = '';
-        var wordMatch = '';
-        $.each(tokensOfTerm, function(index, matchToken)
-        {
-            matchExp += '(?=.*' + matchToken + ')';
-            priorityMatch += '(?=.*\\b' + matchToken + ')';
-            wordMatch += '(?=.*\\b' + matchToken + '\\b)';
-        });
+		// Third regex will match full words.
+		var matchExp = '';
+		var priorityMatch = '';
+		var wordMatch = '';
+		$.each(tokensOfTerm, function(index, matchToken)
+		{
+			matchExp += '(?=.*' + matchToken + ')';
+			priorityMatch += '(?=.*\\b' + matchToken + ')';
+			wordMatch += '(?=.*\\b' + matchToken + '\\b)';
+		});
 
-        var regex = new RegExp(matchExp, "i");
-        var priorityRegex = new RegExp(priorityMatch, "i");
-        var wordRegex = new RegExp(wordMatch, "i");
+		var regex = new RegExp(matchExp, "i");
+		var priorityRegex = new RegExp(priorityMatch, "i");
+		var wordRegex = new RegExp(wordMatch, "i");
 		
 		// Grep for the general search term
 		tState . cached_search_data . data = $.grep(tState.filtered_data, function (e) 
@@ -109,32 +109,43 @@
         // Sort the priority matches to the top
 	tState . cached_search_data . data . sort(function(a, b) 
         {
-            var tNameA = a["display name"].toLowerCase();
-            var tNameB = b["display name"].toLowerCase();
+			var tNameA, tNameB, tMatchA, tMatchB
 
-            // full word matches in display name sort to the top
-            var tWordA = wordRegex.test(tNameA);
-            var tWordB = wordRegex.test(tNameB);
-            if (tWordA && !tWordB)
-                return -1;
-            if (tWordB && !tWordA)
-                return 1;
+			tNameA = a["display name"].toLowerCase();
+			tNameB = b["display name"].toLowerCase();
 
-            // display names with words that start with terms prioritized
-            var tPriorityA = priorityRegex.test(tNameA);
-            var tPriorityB = priorityRegex.test(tNameB);
-            if (tPriorityA && !tPriorityB)
-                return -1;
-            if (tPriorityB && !tPriorityA)
-                return 1;
+			// full word matches in display name sort to the top
+			tMatchA = wordRegex.test(tNameA);
+			tMatchB = wordRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
 
-            // alphabetical sort by display name for everything else
-            if (tNameA < tNameB)
-                return -1;
-            if (tNameA > tNameB)
-                return 1;
-            return 0;
-        });
+			// display names with words that start with terms next
+			tMatchA = priorityRegex.test(tNameA);
+			tMatchB = priorityRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// display name contains search terms next
+			tMatchA = regex.test(tNameA);
+			tMatchB = regex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// alphabetical sort by display name for everything else
+			if (tNameA < tNameB)
+				return -1;
+			if (tNameA > tNameB)
+				return 1;
+			return 0;
+		});
+		//console.timeEnd("Search");
 	
 		$(window).scrollTop(0);
 		return tState . cached_search_data . data;
