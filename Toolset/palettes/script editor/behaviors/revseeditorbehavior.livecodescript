@@ -517,13 +517,7 @@ command getHandlerList
 end getHandlerList
 
 private command updateHandlerList
-   # The script is compiled before updating the handler list. We temporarily turn off
-   # variable checking before this.
-   local tOldVarChecking
-   put sePrefGet("explicitVariables") into tOldVarChecking
-   sePrefSet "explicitVariables", "false"
    scriptCompile getObjectID()
-   sePrefSet "explicitVariables", tOldVarChecking
 end updateHandlerList
 
 # Parameters
@@ -693,8 +687,26 @@ command scriptCompile pObject
    put the result into tScript
    
    local tResult
+   local tDoUpdateDescription
    set the script of button "revCompileObject" of me to tScript
    put the result into tResult
+   -- if setting the script failed with explicit vars try without
+   if tResult is not empty and the explicitVariables then
+      set the explicitVariables to false
+      set the script of button "revCompileObject" of me to tScript
+      put the result is empty into tDoUpdateDescription
+   else
+      put tResult is empty into tDoUpdateDescription
+   end if
+   
+   if tDoUpdateDescription then
+      --! TODO remove use of revAvailableHandlers here (quite invasive)
+      put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
+      get getObjectID()
+      if exists(it) and there is a stack "com.livecode.script-library.autocomplete" then
+         ideAutocompleteUpdateScriptDescription it, the revScriptDescription of button "revCompileObject" of me
+      end if
+   end if
    
    local tLiveErrors
    put sePrefGet("editor,liveerrors") into tLiveErrors
@@ -704,16 +716,7 @@ command scriptCompile pObject
    
    if tLiveErrors then
       send "clearErrors" to group "Errors" of the owner of me
-   end if
-   if tResult is empty then
-      --! TODO remove use of revAvailableHandlers here (quite invasive)
-      put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
-      get getObjectID()
-      if exists(it) and there is a stack "com.livecode.script-library.autocomplete" then
-         ideAutocompleteUpdateScriptDescription it, the revScriptDescription of button "revCompileObject" of me
-      end if
-      if tLiveErrors then
-         
+      if tResult is empty then
          setCompilationErrors empty, pObject
          
          getDirty pObject
@@ -722,11 +725,11 @@ command scriptCompile pObject
          else
             seSetObjectState pObject, "applied"
          end if
+      else
+         send "addError compilation, line 1 of tResult, pObject" to group "Errors" of the owner of me
+         setCompilationErrors line 1 of tResult, pObject
+         seSetObjectState pObject, "error"
       end if
-   else if tLiveErrors then
-      send "addError compilation, line 1 of tResult, pObject" to group "Errors" of the owner of me
-      setCompilationErrors line 1 of tResult, pObject
-      seSetObjectState pObject, "error"
    end if
    
    set the preserveVariables to tOldPreserveVariables
