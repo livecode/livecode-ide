@@ -477,12 +477,18 @@ private function textFormatGetLineIndent pLine
    return tResult
 end textFormatGetLineIndent
 
+-- all chars after a continuation are treated as a comment
+-- this will work fine until someone uses format with multiple
+-- \"\" but there's not much getting around that
 private function lineIsContinued pLine
-   if word -1 of pLine is "\" then
-      return true
-   else
-      return false
-   end if
+   put lineStripComments(pLine) into pLine
+   split pLine by quote
+   repeat with tIndex = 1 to the number of elements of pLine step 2
+      if pLine[tIndex] contains "\" then
+         return true
+      end if
+   end repeat
+   return false
 end lineIsContinued
 
 private function textFormatGetContinuationIndent pLastLineNumber
@@ -493,7 +499,7 @@ end textFormatGetContinuationIndent
 
 private function combineContinuedLine pLastLineNumber, @pTextLines
    local tContinuation
-   put pTextLines[pLastLineNumber] into tContinuation
+   put lineStripComments(pTextLines[pLastLineNumber]) into tContinuation
    
    local tIndex
    repeat with tIndex = (pLastLineNumber - 1) down to 1
@@ -501,7 +507,7 @@ private function combineContinuedLine pLastLineNumber, @pTextLines
          exit repeat
       end if
       
-      put pTextLines[tIndex] before tContinuation
+      put lineStripComments(pTextLines[tIndex]) before tContinuation
    end repeat
    replace "\" with empty in tContinuation
    return tContinuation
@@ -537,10 +543,12 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
    end if
    
    local tPreviousLine
+   local tPreviousLineWasCombined = false
    if xPreviousLine > 0 then
       # This is the case where we have reached the end of a continued line. Here, we treat the continued line
       # as a single entity in order to calculate its indentation properties correctly for the line after it.
       if lineIsContinued(pTextLines[xPreviousLine - 1]) then
+         put true into tPreviousLineWasCombined
          put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
       else
          put pTextLines[xPreviousLine] into tPreviousLine
@@ -571,7 +579,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
-      put textFormatIndentLineAdds(pTextLines[xPreviousLine]) into tIndentPreviousLineAdds
+      put textFormatIndentLineAdds(tPreviousLine) into tIndentPreviousLineAdds
    end if
    
    local tCurrentIndent
@@ -579,7 +587,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       put space after tCurrentIndent
    end repeat
    
-   put ((the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds) - the number of chars of tCurrentLineIndent) & comma into tResult
+   put ((the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds) - the number of chars of tCurrentLineIndent) into tResult
    
    -- Finally, calculate the expected next indent.
    local tNewIndent
@@ -596,6 +604,13 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       put textFormatIndentLineAdds(pTextLines[pLine]) into tIndentCurrentLineAdds
    end if
    
+   if tPreviousLineWasContinued then
+      local tCombinedLine
+      put tPreviousLine && pTextLines[pLine] into tCombinedLine
+      replace "\" with empty in tCombinedLine
+      add textFormatIndentLineAdds(tCombinedLine) to tIndentCurrentLineAdds
+   end if
+   
    if tIndentCurrentLineAdds < 0 then
       repeat -tIndentCurrentLineAdds times
          delete char 1 of tNewIndent
@@ -606,7 +621,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       end repeat
    end if
    
-   put tNewIndent after tResult
+   put comma & tNewIndent after tResult
    
    if token 1 of pTextLines[pLine] is not empty then
       put pLine into xPreviousLine
@@ -2505,21 +2520,33 @@ end dragEnd
 # Description
 ## Returns a line stripped of comments at the end of the line
 private function lineStripComments pLine
-   local tOffset,tCommentChar
-   put offset("#", pLine) into tOffset
-   if tOffset = 0 then
-      put offset("--", pLine) into tOffset
-      put "--" into tCommentChar
-   else
-      put "#" into tCommentChar
-   end if
+   local tLine
+   split pLine by quote
    
-   if tCommentChar is empty then
-      return pLine
-   else
-      return char 1 to tOffset of pLine
-   end if
+   repeat with tIndex = 1 to the number of elements of pLine step 2
+      local tDecommented
+      put __StripComment(pLine[tIndex]) into tDecommented
+      put tDecommented after tLine
+      if pLine[tIndex] is tDecommented and \
+            tIndex is not the number of elements of pLine then
+         put quote & pLine[tIndex+1] & quote after tLine
+      end if
+   end repeat
+   
+   return tLine
 end lineStripComments
+
+private function __StripComment pLine
+   local tOffset
+   repeat for each word tComment in "# -- // /*"
+      put offset(tComment, pLine) into tOffset
+      if tOffset is not 0 then
+         delete char tOffset to -1 of pLine
+      end if
+   end repeat
+   
+   return pLine
+end __StripComment
 
 ################################################################################
 
