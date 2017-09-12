@@ -2009,6 +2009,10 @@ private command debuggerUpdateScriptEditor pObject, pHandler, pLine, pState
    local tFalseString
    put "false" into tFalseString
    
+   -- force the context to be that which we want to be displayed otherwise when gRevDevelopment
+   -- is true the other contexts are returned
+   put line 1 of sLastDisplayedContexts into sContext
+   
    # These must be sent in time to allow the script editor a chance to set its current object,
    # otherwise an infinite loop could occur.
    send "revSEGoExecutionPoint pObject, pLine, true" to stack tScriptEditor in 0 milliseconds
