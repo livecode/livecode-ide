@@ -81,24 +81,28 @@
 			tTerm = "\\" + pTerm;
 		}
 
-		// Get a list of space-delimited search terms				
-   		var tokensOfTerm = tTerm.match(/\S+/g);
+		// Get a list of space-delimited search terms
+		var tokensOfTerm = tTerm.match(/\S+/g);
 		
 		
-		// Generate two regexes - one that matches all syntax that 
+		// Generate three regexes - one that matches all syntax that 
 		// contains each search term, and one that matches all syntax that
 		// contains a word beginning with each search term. This way we 
-		// can prioritise matches that start with the search terms.
-    	var matchExp = '';
-    	var priorityMatch = '';
-    	$.each(tokensOfTerm, function(index, matchToken)
-    	{
-       		matchExp += '(?=.*' + matchToken + ')';
-       		priorityMatch += '(?=.*\\b' + matchToken + ')';
-   		});
+		// can prioritize matches that start with the search terms.
+		// Third regex will match full words.
+		var matchExp = '';
+		var priorityMatch = '';
+		var wordMatch = '';
+		$.each(tokensOfTerm, function(index, matchToken)
+		{
+			matchExp += '(?=.*' + matchToken + ')';
+			priorityMatch += '(?=.*\\b' + matchToken + ')';
+			wordMatch += '(?=.*\\b' + matchToken + '\\b)';
+		});
 
 		var regex = new RegExp(matchExp, "i");
 		var priorityRegex = new RegExp(priorityMatch, "i");
+		var wordRegex = new RegExp(wordMatch, "i");
 		
 		// Grep for the general search term
 		tState . searched . data = $.grep(tState.filtered_data, function (e) 
@@ -108,19 +112,48 @@
 			return tMatched;
 		});
 
+		//console.log(pTerm);
+		//console.time("Search");
 		// Sort the priority matches to the top
 		tState . searched . data . sort(function(a, b) 
 		{
-			var tToMatch = collectSyntax(a);		
-			if (priorityRegex.test(tToMatch))
+			var tNameA, tNameB, tMatchA, tMatchB
+
+			tNameA = a["display name"].toLowerCase();
+			tNameB = b["display name"].toLowerCase();
+
+			// full word matches in display name sort to the top
+			tMatchA = wordRegex.test(tNameA);
+			tMatchB = wordRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
 				return -1;
-			
-			tToMatch = collectSyntax(b);
-			if (priorityRegex.test(tToMatch))
+			if (tMatchB && !tMatchA)
 				return 1;
-				
+
+			// display names with words that start with terms next
+			tMatchA = priorityRegex.test(tNameA);
+			tMatchB = priorityRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// display name contains search terms next
+			tMatchA = regex.test(tNameA);
+			tMatchB = regex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// alphabetical sort by display name for everything else
+			if (tNameA < tNameB)
+				return -1;
+			if (tNameA > tNameB)
+				return 1;
 			return 0;
 		});
+		//console.timeEnd("Search");
 	
 		$(window).scrollTop(0);
 		return tState . searched . data;
@@ -501,7 +534,7 @@
 		
 		pEntryID = tEntryObject.id;
 		
-		console.log(tEntryObject);
+		//console.log(tEntryObject);
 		
 		if(tState.selected == pEntryID) return 1;
 		tState.selected = pEntryID;
