@@ -941,6 +941,9 @@ command goLine pLine, pHighlightMode, pPosition
       select char tStart to tEnd of line pLine of field "Script" of me
       get the selectedChunk
       put word 2 of it & comma & word 4 of it into sLastSelectedGoneToChunk
+   else if pHighlightMode is "after" then
+      put empty into sLastSelectedGoneToChunk
+      select after line pLine of field "Script" of me
    else
       put empty into sLastSelectedGoneToChunk
       select before line pLine of field "Script" of me
