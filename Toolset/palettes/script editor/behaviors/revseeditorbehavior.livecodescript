@@ -713,6 +713,7 @@ command scriptCompile pObject
    if tLiveErrors is empty then 
       put true into tLiveErrors
    end if
+   put tLiveErrors and not the lockText of field "script" of me into tLiveErrors
    
    if tLiveErrors then
       send "clearErrors" to group "Errors" of the owner of me
