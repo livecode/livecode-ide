@@ -3053,7 +3053,11 @@ function revSEConstructDefaultScript pObj, pHandler
       end if
       put " " & tInfo["params"][x]["name"] after tScript
    end repeat
-   put return & return & "end" && pHandler after tScript
+   local tIndent
+   repeat for sePrefGet("editor,tabdepth")
+      put space after tIndent
+   end repeat
+   put return & tIndent & return & "end" && pHandler after tScript
    return tScript
 end revSEConstructDefaultScript
 
