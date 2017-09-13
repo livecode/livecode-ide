@@ -2121,7 +2121,7 @@ end revBrowserTopStack
 ------------------------------------
 local sPalettesMsgID
 
-constant kDontHide = "revMenuBar,revErrorDisplay,revVariableWatcher,revMessageWatcher,revDocsLanguageQuickref"
+constant kDontHide = "revMenuBar,revErrorDisplay,revVariableWatcher,revMessageWatcher,revDocsLanguageQuickref,com.livecode.palette.autocomplete.completions"
 
 # OK-2008-05-12 : Added to fix problem with script editor dialogs not being recognized as part of the script editor
 # and palettes consequently being reshown when they are invoked.
