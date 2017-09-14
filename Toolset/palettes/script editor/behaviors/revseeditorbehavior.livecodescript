@@ -710,28 +710,28 @@ command scriptCompile pObject
    
    local tLiveErrors
    put sePrefGet("editor,liveerrors") into tLiveErrors
-   if tLiveErrors is empty then 
-      put true into tLiveErrors
-   end if
    put tLiveErrors and not the lockText of field "script" of me into tLiveErrors
+   
+   local tState
+   getDirty pObject
+   if the result then
+      put "edited" into tState
+   else
+      put "applied" into tState
+   end if
    
    if tLiveErrors then
       send "clearErrors" to group "Errors" of the owner of me
       if tResult is empty then
          setCompilationErrors empty, pObject
-         
-         getDirty pObject
-         if the result then
-            seSetObjectState pObject, "edited"
-         else
-            seSetObjectState pObject, "applied"
-         end if
       else
          send "addError compilation, line 1 of tResult, pObject" to group "Errors" of the owner of me
          setCompilationErrors line 1 of tResult, pObject
-         seSetObjectState pObject, "error"
+         put "error" into tState
       end if
    end if
+   
+   seSetObjectState pObject, tState
    
    set the preserveVariables to tOldPreserveVariables
    set the explicitVariables to tOldExplicitVariables

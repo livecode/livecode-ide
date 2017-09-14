@@ -2169,12 +2169,12 @@ on tabKey
    local tAutoFormat
    put __GetPreference("editor,autoformat", true) into tAutoFormat
    
-   local tAutoComplete
-   put __GetPreference("editor,autocomplete", true) into tAutoComplete
+   local tProviderCompletion
+   put __GetPreference("editor,providercompletion", true) into tProviderCompletion
    
    local tDoFormat = true
    
-   if tAutoComplete and \
+   if tProviderCompletion and \
          there is a stack "com.livecode.script-library.autocomplete" then
       ideAutocompleteHandleTab the long id of me, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tDoFormat
@@ -3149,9 +3149,9 @@ end scriptGetCurrentHandler
 
 
 private command __BracketCompletion pOffset, pOldText, @xNewText
-   local tAutoComplete
-   put __GetPreference("editor,autocomplete", true) into tAutoComplete
-   if tAutoComplete is not true then
+   local tBracketCompletion
+   put __GetPreference("editor,bracketcompletion", true) into tBracketCompletion
+   if tBracketCompletion is not true then
       return empty for value
    end if
    
@@ -3194,8 +3194,6 @@ private command __BracketCompletion pOffset, pOldText, @xNewText
    return empty for value
 end __BracketCompletion
 
-constant kBracketBackgroundColor = "255,200,200"
-
 local sHighlightedBrackets
 
 private command __ClearHighlights
@@ -3209,6 +3207,13 @@ end __ClearHighlights
 private command __CheckHighlights
    lock screen
    __ClearHighlights
+   
+   local tBracketHighlighting
+   put __GetPreference("editor,brackethighlighting", true) into tBracketHighlighting
+   
+   if not tBracketHighlighting then
+      exit __CheckHighlights
+   end if
    
    local tChunk
    put the selectedChunk into tChunk
@@ -3249,10 +3254,14 @@ private command __HighlightBrackets pCharNum, pChar
    end switch
    
    if it and pCharNum is not tMatchedCharNum then
+      
+      local tColor
+      put __GetPreference("editor,brackethighlightcolor", "255,200,200") into tColor
+      
       put pCharNum into sHighlightedBrackets["open"]
-      set the backgroundColor of char pCharNum of field "script" of me to kBracketBackgroundColor
+      set the backgroundColor of char pCharNum of field "script" of me to tColor
       put tMatchedCharNum into sHighlightedBrackets["close"]
-      set the backgroundColor of char tMatchedCharNum of field "script" of me to kBracketBackgroundColor
+      set the backgroundColor of char tMatchedCharNum of field "script" of me to tColor
    end if
 end __HighlightBrackets
 
@@ -3326,7 +3335,9 @@ end __LookForPair
 -- autocompletion
 
 private command __UpdateAutoCompleteList pUUID
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   local tProviderCompletion
+   put __GetPreference("editor,providercompletion", true) into tProviderCompletion
+   if tProviderCompletion and there is a stack "com.livecode.script-library.autocomplete" then
       ideAutocompleteUpdate the long id of me, sObjectID, sPlaceholders[pUUID]["classes"]
    end if
 end __UpdateAutoCompleteList

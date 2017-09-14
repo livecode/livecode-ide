@@ -132,10 +132,15 @@ private command buildEditMenu pContext
       put "Autocomplete Snippets..." & return after tEdit
    end if
    
-   if sePrefGet("explicitVariables") then
-      put "!cVariable Checking" & return after tEdit
-   else
-      put "!nVariable Checking" & return after tEdit
+   put "Options" & return after tEdit
+   put tab & toggleMenuItem("Variable Checking", sePrefGet("explicitVariables")) & return after tEdit
+   put tab & toggleMenuItem("Live Errors", sePrefGet("editor,liveerrors")) & return after tEdit
+   put tab & toggleMenuItem("Bracket Completion", sePrefGet("editor,bracketcompletion")) & return after tEdit
+   put tab & toggleMenuItem("Bracket Highlighting", sePrefGet("editor,brackethighlighting")) & return after tEdit
+   put tab & toggleMenuItem("Control Structure Completion", sePrefGet("editor,autocomplete")) & return after tEdit
+   
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      put tab & toggleMenuItem("Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
    end if
    
    put "-" & return & \
@@ -446,8 +451,23 @@ private command handleEditMenuPick pItemName
       case "Revert"
          actionRevert
          break
-      case "Variable Checking"
+      case "Options|Variable Checking"
          sePrefSet "explicitVariables", (not sePrefGet("explicitVariables"))
+         break
+      case "Options|Live Errors"
+         sePrefSet "editor,liveerrors", (not sePrefGet("editor,liveerrors"))
+         break
+      case "Options|Bracket Completion"
+         sePrefSet "editor,bracketcompletion", (not sePrefGet("editor,bracketcompletion"))
+         break
+      case "Options|Bracket Highlighting"
+         sePrefSet "editor,brackethighlighting", (not sePrefGet("editor,brackethighlighting"))
+         break
+      case "Options|Control Structure Completion"
+         sePrefSet "editor,autocomplete", (not sePrefGet("editor,autocomplete"))
+         break
+      case "Options|Autocomplete"
+         sePrefSet "editor,providercompletion", (not sePrefGet("editor,providercompletion"))
          break
       case "Preferences"
          actionShowPreferences
