@@ -3,6 +3,8 @@ constant kAllSocialMedia = "facebook,twitter,github,linkedin,youtube,stackoverfl
 constant kSocialMedia = "github,stackoverflow,youtube,facebook,twitter,linkedin"
 
 on openStack
+   revIDESubscribe "ideDesktopChanged"
+   
    set the url of widget "Upgrade" of me to empty
    set the url of widget "UpgradeMini" of me to empty
    
@@ -74,9 +76,9 @@ command initialiseInterface
    end if
 end initialiseInterface
 
-on desktopChanged
+on ideDesktopChanged
    set the loc of me to revIDEStackScreenLoc(the short name of me)
-end desktopChanged
+end ideDesktopChanged
 
 on ideNewStack
    startCenterClose

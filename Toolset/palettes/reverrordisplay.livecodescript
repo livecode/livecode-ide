@@ -3,9 +3,9 @@ on moveStack
    updateStoredRect
 end moveStack
 
-on desktopChanged
+on ideDesktopChanged
    revIDEEnsureOnScreen the short name of this stack
-end desktopChanged
+end ideDesktopChanged
 
 on resizeStack
    revUpdateGeometry
@@ -26,6 +26,8 @@ end updateStoredRect
 
 # OK-2007-07-02: Bug 5203
 on preOpenStack
+   revIDESubscribe "ideDesktopChanged"
+   
    local tStoredRect
    put revIDEGetPreference("cErrorDisplayRect") into tStoredRect
    
@@ -94,8 +96,9 @@ on openStack
 end openStack
 
 on closeStack
-  updateStoredRect
-  pass closeStack
+   revIDEUnsubscribeAll
+   updateStoredRect
+   pass closeStack
 end closeStack
 
 # OK-2007-11-26

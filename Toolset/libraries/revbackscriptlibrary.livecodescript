@@ -3132,17 +3132,6 @@ function revAbsoluteFolderListing pDirectory
    return tOutput
 end revAbsoluteFolderListing
 
-local lExecutingDesktopChanged
-
-on deskTopChanged
-  if lExecutingDesktopChanged then exit deskTopChanged
-  put true into lExecutingDesktopChanged
-  repeat for each line l in the openStacks
-    send "deskTopChanged" to cd 1 of stack l
-  end repeat
-  put false into lExecutingDesktopChanged
-end deskTopChanged
-
 function revCalculateRelativePath pRoot, pFile
   local tResult, tCount
   set the itemDel to "/"
