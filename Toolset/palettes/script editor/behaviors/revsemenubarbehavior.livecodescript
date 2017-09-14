@@ -2,7 +2,15 @@
 # Description
 #   Sent by the parent when the menubar group may need to resize itself
 command resize
-   # Nothing to do at the moment
+   lock screen
+   local tTopLeft
+   put the topLeft of button "File" of me into tTopLeft
+   repeat for each item tButton in "File,Edit,Debug,Handler,Window,Help"
+      set the width of button tButton of me to the formattedWidth of button tButton of me
+      set the topLeft of button tButton of me to tTopLeft
+      put the topRight of button tButton of me into tTopLeft
+   end repeat
+   unlock screen
 end resize
 
 # Description
