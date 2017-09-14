@@ -540,9 +540,9 @@ after resizeStack
    end if
 end resizeStack
 
-on desktopChanged
+on ideDesktopChanged
    revIDEEnsureOnScreen the short name of this stack
-end desktopChanged
+end ideDesktopChanged
 
 after openCard
    generateFrame
@@ -555,6 +555,7 @@ before preOpenStack
 end preOpenStack
 
 after preOpenStack
+   revIDESubscribe "ideDesktopChanged"
    if sHideFrame is not true then
       put revIDEColor("edition_color") into TAB_SELECTED_TEXT_COLOR
       put revIDEColor("edition_color") into TAB_HOVER_TEXT_COLOR

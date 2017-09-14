@@ -1691,7 +1691,7 @@ function revIDEMessages
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
          & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged," \
-         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove" \
+         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove,ideDesktopChanged" \
          )
 end revIDEMessages
 
