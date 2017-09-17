@@ -2172,39 +2172,39 @@ on tabKey
    local tProviderCompletion
    put __GetPreference("editor,providercompletion", true) into tProviderCompletion
    
-   local tDoFormat = true
+   local tDoTab = true
    
    if tProviderCompletion and \
          there is a stack "com.livecode.script-library.autocomplete" then
       ideAutocompleteHandleTab the long id of me, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
-      put the result into tDoFormat
+      put the result into tDoTab
    end if
    
-   if tAutoFormat then
-      if tDoFormat then
+   if tDoTab then
+      if tAutoFormat then
          if the shiftKey is "down" then
             scriptFormat "script"
          else
             scriptFormat "handler"
          end if
-      end if
-   else
-      get the selectedChunk
-      
-      local tFrom, tTo
-      put word 2 of it into tFrom
-      put word 4 of it into tTo
-      
-      local tAt, tLength
-      if tFrom > tTo then
-         put tFrom into tAt
-         put 0 into tLength
       else
-         put tFrom into tAt
-         put tTo - tFrom into tLength
+         get the selectedChunk
+         
+         local tFrom, tTo
+         put word 2 of it into tFrom
+         put word 4 of it into tTo
+         
+         local tAt, tLength
+         if tFrom > tTo then
+            put tFrom into tAt
+            put 0 into tLength
+         else
+            put tFrom into tAt
+            put tTo - tFrom into tLength
+         end if
+         
+         textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tab
       end if
-      
-      textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, tab
    end if
 end tabKey
 
