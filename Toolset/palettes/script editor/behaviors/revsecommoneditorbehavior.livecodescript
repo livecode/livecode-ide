@@ -44,6 +44,13 @@ local sGutterUpdateRequestDetails
 # Stores that an arrowKey is pressed from rawKeyDown
 local sArrowKeyPressed
 
+local sPlaceholders
+local sEditChunks
+local sEditPlaceholder
+
+constant kPlaceholderDefaultSearchLines = 20
+constant kPlaceholderDefaultBackgroundColor = "240,240,240"
+
 # OK-2009-01-17 : Bug 7169
 command setDirty pObject, pValue
    put pValue into sDirty[pObject]
@@ -55,10 +62,21 @@ end getDirty
 
 command setObjectID pObjectID
    if pObjectID is not empty then
-      put revRuggedId(pObjectID) into sObjectID
+      local tRuggedID
+      put revRuggedId(pObjectID) into tRuggedID
+      if tRuggedID is not sObjectID then
+         put tRuggedID into sObjectID
+         if exists(sObjectId) and \
+               there is a stack "com.livecode.script-library.autocomplete" then
+            ideAutocompleteIntrospectMessagePath sObjectId
+         end if
+      end if
    else
       put empty into sObjectID
    end if
+   delete variable sPlaceholders
+   delete variable sEditChunks
+   delete variable sEditPlaceholder
 end setObjectID
 
 function getObjectID
@@ -100,6 +118,10 @@ command clearCache pObject, pDontCheckId
       put revRuggedId(pObject) into tObject
    end if
    delete variable sScriptCache[tObject]
+
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteClearObjectCache tObject
+   end if
 end clearCache
 
 # Parameters
@@ -291,14 +313,22 @@ on textEndGroup
    textMark "Insert"
 end textEndGroup
 
+private function __GetPreference pPreference, pDefault
+   try
+      dispatch function "sePrefGet" to stack "revNewScriptEditor" with pPreference
+      if the result is not empty then
+         return the result
+      end if
+   end try
+   
+   return pDefault
+end __GetPreference
 
 -- Text Formatting Code
 command textFormatInitialize
    -- permit use in environment witn no dependencies
-   local tTabDepth = 3
-   try
-      put sePrefGet("editor,tabdepth") into tTabDepth
-   end try
+   local tTabDepth
+   put __GetPreference("editor,tabdepth", 3) into tTabDepth
    
    put "0," & tTabDepth into sTextFormatKeywordMap["try"]
    put "0," & tTabDepth into sTextFormatKeywordMap["switch"]
@@ -362,10 +392,8 @@ private function textFormatIndentLineAdds pLine
       --else if token 1 of pLine is not "else" and "else" is among the words of pLine then
    else if token 1 of pLine is not "else" and "else" is among the words of lineStripComments(pLine) then
       -- permit use in environment witn no dependencies
-      local tTabDepth = 3
-      try
-         put sePrefGet("editor,tabdepth") into tTabDepth
-      end try
+      local tTabDepth
+      put __GetPreference("editor,tabdepth", 3) into tTabDepth
       return -tTabDepth
    else if token -1 of pLine is "then" then
       # Either a weirdly formatted if structure, or the condition of the if contained a line continuation character.
@@ -449,12 +477,18 @@ private function textFormatGetLineIndent pLine
    return tResult
 end textFormatGetLineIndent
 
+-- all chars after a continuation are treated as a comment
+-- this will work fine until someone uses format with multiple
+-- \"\" but there's not much getting around that
 private function lineIsContinued pLine
-   if word -1 of pLine is "\" then
-      return true
-   else
-      return false
-   end if
+   put lineStripComments(pLine) into pLine
+   split pLine by quote
+   repeat with tIndex = 1 to the number of elements of pLine step 2
+      if pLine[tIndex] contains "\" then
+         return true
+      end if
+   end repeat
+   return false
 end lineIsContinued
 
 private function textFormatGetContinuationIndent pLastLineNumber
@@ -465,7 +499,7 @@ end textFormatGetContinuationIndent
 
 private function combineContinuedLine pLastLineNumber, @pTextLines
    local tContinuation
-   put pTextLines[pLastLineNumber] into tContinuation
+   put lineStripComments(pTextLines[pLastLineNumber]) into tContinuation
    
    local tIndex
    repeat with tIndex = (pLastLineNumber - 1) down to 1
@@ -473,7 +507,7 @@ private function combineContinuedLine pLastLineNumber, @pTextLines
          exit repeat
       end if
       
-      put pTextLines[tIndex] before tContinuation
+      put lineStripComments(pTextLines[tIndex]) before tContinuation
    end repeat
    replace "\" with empty in tContinuation
    return tContinuation
@@ -509,10 +543,12 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
    end if
    
    local tPreviousLine
+   local tPreviousLineWasCombined = false
    if xPreviousLine > 0 then
       # This is the case where we have reached the end of a continued line. Here, we treat the continued line
       # as a single entity in order to calculate its indentation properties correctly for the line after it.
       if lineIsContinued(pTextLines[xPreviousLine - 1]) then
+         put true into tPreviousLineWasCombined
          put combineContinuedLine(xPreviousLine, pTextLines) into tPreviousLine
       else
          put pTextLines[xPreviousLine] into tPreviousLine
@@ -543,7 +579,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       # we always add the continuation indent because we combined the continued lines
       put kContinuationIndent into tIndentPreviousLineAdds
    else
-      put textFormatIndentLineAdds(pTextLines[xPreviousLine]) into tIndentPreviousLineAdds
+      put textFormatIndentLineAdds(tPreviousLine) into tIndentPreviousLineAdds
    end if
    
    local tCurrentIndent
@@ -551,7 +587,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       put space after tCurrentIndent
    end repeat
    
-   put ((the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds) - the number of chars of tCurrentLineIndent) & comma into tResult
+   put ((the number of chars of tPreviousLineIndent + tIndentCurrentLineRemoves + tIndentPreviousLineAdds) - the number of chars of tCurrentLineIndent) into tResult
    
    -- Finally, calculate the expected next indent.
    local tNewIndent
@@ -568,6 +604,13 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       put textFormatIndentLineAdds(pTextLines[pLine]) into tIndentCurrentLineAdds
    end if
    
+   if tPreviousLineWasContinued then
+      local tCombinedLine
+      put tPreviousLine && pTextLines[pLine] into tCombinedLine
+      replace "\" with empty in tCombinedLine
+      add textFormatIndentLineAdds(tCombinedLine) to tIndentCurrentLineAdds
+   end if
+   
    if tIndentCurrentLineAdds < 0 then
       repeat -tIndentCurrentLineAdds times
          delete char 1 of tNewIndent
@@ -578,7 +621,7 @@ private function textFormatLine pLine, pTextLines, @xPreviousLine
       end repeat
    end if
    
-   put tNewIndent after tResult
+   put comma & tNewIndent after tResult
    
    if token 1 of pTextLines[pLine] is not empty then
       put pLine into xPreviousLine
@@ -779,7 +822,7 @@ end textReplaceNewGroupNeeded
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
 command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
-   __ClearHighlights
+   lock screen
    
    local tObject
    if pObject is empty then
@@ -788,9 +831,19 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       put pObject into tObject
    end if
    
+   local tUUID
+   put the linkText of char pOffset of field "Script" of me into tUUID
+   
    local tBracketCompletionType
    __BracketCompletion  pOffset, pOldText, pNewText
    put it into tBracketCompletionType
+   
+   local tSelection
+   if tBracketCompletionType is "wrap" then
+      put the selectedChunk into tSelection
+      add 1 to word 2 of tSelection
+      add 1 to word 4 of tSelection
+   end if
    
    if pDontGroup is not true and textReplaceNewGroupNeeded(pOldText, pNewText) then
       textBeginGroup sTextMark[tObject], tObject
@@ -799,9 +852,28 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    add 1 to sTextOperationIndex[tObject]
    add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
    
-   put pOffset into sTextOperationOffsets[tObject,sTextOperationIndex[tObject]]
-   put pOldText into sTextOperationOldTexts[tObject,sTextOperationIndex[tObject]]
-   put pNewText into sTextOperationNewTexts[tObject,sTextOperationIndex[tObject]]
+   local tEditPlaceholder
+   put sEditChunks is an array and tUUID is not empty and \
+         pOffset >= sEditChunks[1]["start"] and \
+         pOffset + length(pOldText) - 1 <= sEditChunks[1]["end"] and \
+         return is not in pNewText into tEditPlaceholder
+   
+   if tEditPlaceholder and \
+         sPlaceholders[tUUID]["classes"][1] is "identifier" then
+      put comma is not in pNewText and \
+            ";" is not in pNewText and \
+            space is not in pNewText and \
+            quote is not in pNewText into tEditPlaceholder
+   end if
+   
+   if not tEditPlaceholder then
+      put pOffset into sTextOperationOffsets[tObject,sTextOperationIndex[tObject]]
+      put pOldText into sTextOperationOldTexts[tObject,sTextOperationIndex[tObject]]
+      put pNewText into sTextOperationNewTexts[tObject,sTextOperationIndex[tObject]]
+      if sEditPlaceholder is not empty then
+         __ClearCurrentPlaceholder true
+      end if
+   end if
    
    # When the script has been edited, the breakpoints should be suspended until it is applied again.
    # Because this command is called as the user types, we could a send in time for this, as its not that urgent.
@@ -813,9 +885,68 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    # directly on the script editing field using textReplaceRaw. Otherwise we perform it on the
    # script cache stored for the object.
    if tObject is empty or revRuggedId(tObject) is sObjectId then
-      textReplaceRaw pOffset, pOldText, pNewText
-      if tBracketCompletionType is "pair" then
-         select after char pOffset of field "script" of me
+      local tSelectedLength, tNewLength
+      put length(pOldText) into tSelectedLength
+      put length(pNewText) into tNewLength
+      
+      if tEditPlaceholder then
+         local tFirstCharOffset, tLastCharOffset
+         
+         put pOffset-sEditChunks[1]["start"] into tFirstCharOffset
+         put sEditChunks[1]["end"]-pOffset + tSelectedLength into tLastCharOffset
+         
+         local tToAdd = 0
+         local tIndex
+         repeat with tIndex = 1 to the number of elements of sEditChunks
+            add tToAdd to sEditChunks[tIndex]["start"]
+            add tToAdd to sEditChunks[tIndex]["end"]
+            
+            textReplaceRaw sEditChunks[tIndex]["start"]+tFirstCharOffset, pOldText, pNewText
+            
+            add tNewLength - tSelectedLength to tToAdd
+            add tNewLength - tSelectedLength to sEditChunks[tIndex]["end"]
+            set the linkText of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to tUUID
+            if tIndex is 1 then
+               set the backgroundColor of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to empty
+            else
+               set the backgroundColor of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to \
+                     the effective hiliteColor of field "script" of me
+            end if
+            put sEditChunks[tIndex]["start"]+tFirstCharOffset into sTextOperationOffsets[tObject,sTextOperationIndex[tObject]]
+            put pOldText into sTextOperationOldTexts[tObject,sTextOperationIndex[tObject]]
+            put pNewText into sTextOperationNewTexts[tObject,sTextOperationIndex[tObject]]
+            
+            add 1 to sTextOperationIndex[tObject]
+            add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
+         end repeat
+         put true into sPlaceholders[tUUID]["edited"]
+         set the linkText of char pOffset to pOffset + max(1,tNewLength - 1) of field "script" of me to tUUID
+         
+         if tSelection is not empty then
+            select tSelection
+         else if pNewText is empty then
+            select char pOffset to pOffset-1 of field "script" of me
+         else if the length of pNewText is 1 then
+            select char pOffset+1 to pOffset of field "script" of me
+         else if tBracketCompletionType is "pair" then
+            select after char pOffset of field "script" of me
+         end if
+      else
+         -- clear highlighted bracket background color
+         __ClearHighlights
+         textReplaceRaw pOffset, pOldText, pNewText
+         if tSelection is not empty then
+            select tSelection
+         else if tBracketCompletionType is "pair" then
+            select after char pOffset of field "script" of me
+         end if
+      end if
+      
+      selectionUpdateRequest
+      
+      -- when formatting or pasting we don't want autocomplete to pop up
+      if the number of lines of pNewText <= 1 then
+         __UpdateAutoCompleteList tUUID
       end if
    else
       local tCache
@@ -829,14 +960,12 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    
    set the caseSensitive to true
    if pOldText is not pNewText then
-      try
-         seSetObjectState tObject, "edited"
-      end try
       # OK-2009-01-17 : Bug 7169 - Flag the object as dirty when it is modifed by this method only.
       # The textReplaceRaw etc functions should not do this as they do not represent a user modifying
       # the script.
       setDirty tObject, true
    end if
+   unlock screen
 end textReplace
 
 # Parameters
@@ -1105,10 +1234,8 @@ command paneUpdateRequest
    end if
    
    -- allow environment with no dependencies
-   local tDelay = 500
-   try
-      put sePrefGet("editor,paneupdatedelay") into tDelay
-   end try
+   local tDelay
+   put __GetPreference("editor,paneupdatedelay", 500) into tDelay
    send "paneUpdate" to me in tDelay milliseconds
    put the result into sPaneUpdateRequest
 end paneUpdateRequest
@@ -1119,6 +1246,9 @@ end paneUpdate
 
 -- This is sent by the engine
 on selectionChanged
+   if not handleEvent("selectionChanged", the long id of the target) then
+      pass selectionChanged
+   end if
    if not (sArrowKeyPressed) then
       handleSelectionChanged
    end if
@@ -1128,6 +1258,7 @@ end selectionChanged
 
 on selectionChangedByArrowKey pArrowKey
    saveLastSelections
+   put false into sArrowKeyPressed
    
    -- [[ Bug 18595 ]] We need this here otherwise the "it" var in the if block below is empty
    get the selectedChunk
@@ -1189,7 +1320,6 @@ on selectionChangedByArrowKey pArrowKey
    end switch
    
    textMark "Insert"
-   put false into sArrowKeyPressed
    selectionUpdateRequest
 end selectionChangedByArrowKey
 
@@ -1217,12 +1347,16 @@ private command saveLastSelections
 end saveLastSelections
 
 private command selectionUpdateRequest
+   if not handleEvent("selectionUpdateRequest", the long id of the target) then
+      exit selectionUpdateRequest
+   end if
+   
    if sSelectionUpdateRequest is not empty then
       cancel sSelectionUpdateRequest
    end if
    
    -- handled by child behavior
-   send "selectionUpdate" to me in 10 milliseconds
+   send "selectionUpdate" to me in 200 milliseconds
    put the result into sSelectionUpdateRequest
 end selectionUpdateRequest
 
@@ -1230,8 +1364,37 @@ end selectionUpdateRequest
 on selectionUpdate
    lock screen
    __CheckHighlights
+   __ClearCurrentPlaceholder
    unlock screen
 end selectionUpdate
+
+on mouseMove
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteCancelFind the long id of me
+   end if
+   pass mouseMove
+end mouseMove
+
+on closeField
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteCancelFind the long id of me
+   end if
+   pass closeField
+end closeField
+
+on exitField
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteCancelFind the long id of me
+   end if
+   pass exitField
+end exitField
+
+on escapeKey
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteCancelFind the long id of me
+   end if
+   pass escapeKey
+end escapeKey
 
 -- This calculates the position of the caret based on pPosition where the caret is (hypothetically).
 private function caretPositionRight pLineStartChar, pProposedPosition, pLine
@@ -1260,14 +1423,33 @@ private function caretPositionLeft pLineStartChar, pCurrentPosition, pScript
 end caretPositionLeft
 
 private command caretUpdate pField, pScript
-   get the selectedChunk
-   -- a text selection
-   if word 2 of it <= word 4 of it then
-      exit caretUpdate
-   end if
+   lock screen
+   local tChunk
+   put the selectedChunk into tChunk
    
    local tLine
    put word 2 of the selectedLine into tLine
+   
+   local tSearchLines
+   put __GetPreference("editor,placeholdersearchlines", kPlaceholderDefaultSearchLines) into tSearchLines
+   
+   if tChunk is not empty and exists(tChunk) then
+      get the linkText of tChunk
+      if it is not empty then
+         __ClearCurrentPlaceholder true
+         __SelectPlaceholder \
+               it, \
+               tLine, \
+               tLine + tSearchLines
+         unlock screen
+         exit caretUpdate
+      end if
+   end if
+   
+   -- a text selection
+   if word 2 of tChunk <= word 4 of tChunk then
+      exit caretUpdate
+   end if
    
    local tField
    if pField is empty then
@@ -1297,6 +1479,7 @@ private command caretUpdate pField, pScript
    select after char caretPositionRight(tLineStart, word 4 of the selectedChunk, line tLine of tScript) of tField
    
    unlock messages
+   unlock screen
 end caretUpdate
 
 
@@ -1391,6 +1574,10 @@ on returnInField
       exit returnInField
    end if
    
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteCancelFind the long id of me
+   end if
+   
    local tFrom, tTo
    get the selectedChunk
    put word 2 of it into tFrom
@@ -1419,10 +1606,8 @@ on returnInField
    put matchText(tFollowingChars, "^\s*$") into tWhitespaceAfter
    
    -- allow environment with no dependencies
-   local tAutoComplete = true
-   try 
-      put sePrefGet("editor,autocomplete") into tAutoComplete
-   end try
+   local tAutoComplete
+   put __GetPreference("editor,autocomplete", true) into tAutoComplete
    
    if tAutoComplete and tWhitespaceAfter then
       autoComplete tLine, tReturn
@@ -1469,10 +1654,8 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
    # If the preference is not to use formatting, just return the specification of the basic 
    # insertion of a return character.
    -- allow environment with no dependencies
-   local tAutoComplete = true
-   try 
-      put sePrefGet("editor,autocomplete") into tAutoComplete
-   end try
+   local tAutoComplete
+   put __GetPreference("editor,autocomplete", true) into tAutoComplete
    
    if not tAutoComplete then
       put pFrom into rAt
@@ -1683,10 +1866,10 @@ private function autoCompleteNamedStructures
 end autoCompleteNamedStructures
 
 # Returns
-#   A comma separated list of the autocompleteable structures without names. Note that we don't complete IF statements
+#   A comma separated list of the autocompleteable structures without names. Note that we only complete IF statements when the last token is then
 #   because there are too many possibilities, (else, else if, end if) and its better to not complete than risk forcing the user to delete stuff.
 private function autoCompleteUnnamedStructures
-   return "repeat,try,switch"
+   return "repeat,try,switch,case"
 end autoCompleteUnnamedStructures
 
 # Parameters
@@ -1715,6 +1898,9 @@ private function autoCompleteGetStructure pLine
    else if token 1 of tLine is among the items of autoCompleteUnnamedStructures() then
       put token 1 of tLine into tStructureType
       put empty into tStructureName
+   else if token 1 of tLine is "if" and the last token of tLine is "then" then
+      put "if" into tStructureType
+      put empty into tStructureName
    end if
    
    return tStructuretype & return & tStructureName
@@ -1738,6 +1924,14 @@ private function autoCompleteGetCompletion pStructureType, pStructureName
       if pStructureName is not empty then
          put "end " & pStructureName into tCompletion
       end if
+   else if pStructureType is "case" then
+      local tTabDepth
+      put __GetPreference("editor,tabdepth", 3) into tTabDepth
+      
+      repeat for tTabDepth
+         put space after tCompletion
+      end repeat
+      put "break" after tCompletion
    else
       put "end " & pStructureType into tCompletion
    end if
@@ -1803,7 +1997,6 @@ on optionKeyDown pKey
    -- OK-2009-03-09 : But simulate the message as a normal keydown
    keyDown pKey
 end optionKeyDown
-
 
 on scrollBarDrag
    if the short name of the target is "Gutter" or the short name of the owner of the target is "Gutter" then
@@ -1894,10 +2087,8 @@ on backspaceKey
       else
          # OK-2008-08-05 : Bug 6867 - If autoformatting is turned off, simply delete the last selected character
          -- allow environment with no dependencies
-         local tAutoFormat = true
-         try 
-            put sePrefGet("editor,autoformat") into tAutoFormat
-         end try
+         local tAutoFormat
+         put __GetPreference("editor,autoformat", true) into tAutoFormat
          
          if tAutoFormat then
             put caretPositionLeft(tLineStart, tTo, tScript) + 1 into tAt
@@ -1919,7 +2110,7 @@ on backspaceKey
    if tTo > tFrom then
       textEndGroup
    end if
-   
+
    # OK-2009-01-19 : Update the handler list
    selectionUpdateRequest
 end backspaceKey
@@ -1982,15 +2173,27 @@ on tabKey
    end if
    
    -- allow environment with no dependencies
-   local tAutoFormat = true
-   try 
-      put sePrefGet("editor,autoformat") into tAutoFormat
-   end try
+   local tAutoFormat
+   put __GetPreference("editor,autoformat", true) into tAutoFormat
+   
+   local tProviderCompletion
+   put __GetPreference("editor,providercompletion", true) into tProviderCompletion
+   
+   local tDoFormat = true
+   
+   if tProviderCompletion and \
+         there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteHandleTab the long id of me, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
+      put the result into tDoFormat
+   end if
+   
    if tAutoFormat then
-      if the shiftKey is "down" then
-         scriptFormat "script"
-      else
-         scriptFormat "handler"
+      if tDoFormat then
+         if the shiftKey is "down" then
+            scriptFormat "script"
+         else
+            scriptFormat "handler"
+         end if
       end if
    else
       get the selectedChunk
@@ -2225,12 +2428,21 @@ on rawKeyDown pKey
          break
    end switch
    
-   if not scriptLocked() then
+   local tPass = true
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteHandleArrow the long id of me, tKeyName
+      put the result into tPass
+   end if
+   
+   if not scriptLocked() and tPass then
       textMark "Insert"
       put true into sArrowKeyPressed
       send "selectionChangedByArrowKey tKeyName" to me in 0 milliseconds
    end if
-   pass rawKeyDown
+   
+   if tPass then
+      pass rawKeyDown
+   end if
 end rawKeyDown
 
 -- Drag Drop Management
@@ -2315,21 +2527,33 @@ end dragEnd
 # Description
 ## Returns a line stripped of comments at the end of the line
 private function lineStripComments pLine
-   local tOffset,tCommentChar
-   put offset("#", pLine) into tOffset
-   if tOffset = 0 then
-      put offset("--", pLine) into tOffset
-      put "--" into tCommentChar
-   else
-      put "#" into tCommentChar
-   end if
+   local tLine
+   split pLine by quote
    
-   if tCommentChar is empty then
-      return pLine
-   else
-      return char 1 to tOffset of pLine
-   end if
+   repeat with tIndex = 1 to the number of elements of pLine step 2
+      local tDecommented
+      put __StripComment(pLine[tIndex]) into tDecommented
+      put tDecommented after tLine
+      if pLine[tIndex] is tDecommented and \
+            tIndex is not the number of elements of pLine then
+         put quote & pLine[tIndex+1] & quote after tLine
+      end if
+   end repeat
+   
+   return tLine
 end lineStripComments
+
+private function __StripComment pLine
+   local tOffset
+   repeat for each word tComment in "# -- // /*"
+      put offset(tComment, pLine) into tOffset
+      if tOffset is not 0 then
+         delete char tOffset to -1 of pLine
+      end if
+   end repeat
+   
+   return pLine
+end __StripComment
 
 ################################################################################
 
@@ -2374,10 +2598,8 @@ command actionPaste
    textBeginGroup "Paste"
    textReplace tFrom, char tFrom to tTo of field "Script" of me, the clipboardData["text"]
    -- allow environment with no dependencies
-   local tAutoFormat = true
-   try 
-      put sePrefGet("editor,autoformat") into tAutoFormat
-   end try
+   local tAutoFormat
+   put __GetPreference("editor,autoformat", true) into tAutoFormat
    
    if tAutoFormat then
       scriptFormat "handler", true
@@ -2563,11 +2785,9 @@ command scriptComment
    lock screen
    
    -- allow environment with no dependencies
-   local tCommentChar = "--"
-   try 
-      put sePrefGet("editor,commentchar") & space into tCommentChar
-   end try
-   
+   local tCommentChar
+   put __GetPreference("editor,commentchar", "--") into tCommentChar
+
    local tCommentedText
    repeat for each line tLine in tText
       # Don't comment out empty lines as it looks messy
@@ -2588,10 +2808,8 @@ command scriptComment
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
    -- allow environment with no dependencies
-   local tAutoFormat = true
-   try 
-      put sePrefGet("editor,autoformat") into tAutoFormat
-   end try
+   local tAutoFormat
+   put __GetPreference("editor,autoformat", true) into tAutoFormat
    
    if tAutoFormat then
       scriptFormat "handler"
@@ -2611,10 +2829,8 @@ command scriptUncomment
    
    lock screen
    -- allow environment with no dependencies
-   local tCommentChar = "--"
-   try 
-      put sePrefGet("editor,commentchar") into tCommentChar
-   end try
+   local tCommentChar
+   put __GetPreference("editor,commentchar", "--") into tCommentChar
    
    local tUncommentedText
    
@@ -2655,10 +2871,8 @@ command scriptUncomment
    # OK-2009-03-03 : Bug 7537 - Reformat the handler after commenting, this may be flawed,
    # but the proper solution is rather time-consuming.
    -- allow environment with no dependencies
-   local tAutoFormat = true
-   try 
-      put sePrefGet("editor,autoformat") into tAutoFormat
-   end try
+   local tAutoFormat
+   put __GetPreference("editor,autoformat", true) into tAutoFormat
    
    if tAutoFormat then
       scriptFormat "handler"
@@ -2942,11 +3156,11 @@ end scriptGetCurrentHandler
 
 
 private command __BracketCompletion pOffset, pOldText, @xNewText
-   try
-      if sePrefGet("editor,autocomplete") is not true then
-         return empty for value
-      end if
-   end try
+   local tBracketCompletion
+   put __GetPreference("editor,bracketcompletion", true) into tBracketCompletion
+   if tBracketCompletion is not true then
+      return empty for value
+   end if
    
    local tCompletionChar
    switch xNewText
@@ -2987,8 +3201,6 @@ private command __BracketCompletion pOffset, pOldText, @xNewText
    return empty for value
 end __BracketCompletion
 
-constant kBracketBackgroundColor = "255,200,200"
-
 local sHighlightedBrackets
 
 private command __ClearHighlights
@@ -3002,6 +3214,13 @@ end __ClearHighlights
 private command __CheckHighlights
    lock screen
    __ClearHighlights
+   
+   local tBracketHighlighting
+   put __GetPreference("editor,brackethighlighting", true) into tBracketHighlighting
+   
+   if not tBracketHighlighting then
+      exit __CheckHighlights
+   end if
    
    local tChunk
    put the selectedChunk into tChunk
@@ -3042,10 +3261,13 @@ private command __HighlightBrackets pCharNum, pChar
    end switch
    
    if it and pCharNum is not tMatchedCharNum then
+      local tColor
+      put __GetPreference("editor,brackethighlightcolor", "255,200,200") into tColor
+      
       put pCharNum into sHighlightedBrackets["open"]
-      set the backgroundColor of char pCharNum of field "script" of me to kBracketBackgroundColor
+      set the backgroundColor of char pCharNum of field "script" of me to tColor
       put tMatchedCharNum into sHighlightedBrackets["close"]
-      set the backgroundColor of char tMatchedCharNum of field "script" of me to kBracketBackgroundColor
+      set the backgroundColor of char tMatchedCharNum of field "script" of me to tColor
    end if
 end __HighlightBrackets
 
@@ -3089,7 +3311,7 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
       put 0 into tCharNum
    end if
    
-   if tScriptLine is empty then
+   if tScriptLine is empty or tCharNum is tEndCondition then
       return false for value
    end if
    
@@ -3115,3 +3337,163 @@ private command __LookForPair pChar, pPairChar, pStep, @xCharNum
       end if
    end repeat
 end __LookForPair
+
+
+-- autocompletion
+
+private command __UpdateAutoCompleteList pUUID
+   local tProviderCompletion
+   put __GetPreference("editor,providercompletion", true) into tProviderCompletion
+   if tProviderCompletion and there is a stack "com.livecode.script-library.autocomplete" then
+      ideAutocompleteUpdate the long id of me, sObjectID, sPlaceholders[pUUID]["classes"]
+   end if
+end __UpdateAutoCompleteList
+
+-- placeholders
+
+private command __ClearCurrentPlaceholder pForce
+   if not pForce then
+      local tChunk
+      put the selectedChunk into tChunk
+      if exists(tChunk) then
+         local tUUID
+         put the linkText of tChunk into tUUID
+         if tUUID is sEditPlaceholder then
+            exit __ClearCurrentPlaceholder
+         end if
+      end if
+   end if
+   
+   delete variable sPlaceholders[sEditPlaceholder]
+   
+   if the number of elements of sEditChunks > 0 then
+      repeat for each element tChunk in sEditChunks
+         set the linkText of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+         set the backgroundColor of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+      end repeat
+      delete variable sEditChunks
+   end if
+   delete variable sEditPlaceholder
+end __ClearCurrentPlaceholder
+
+private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyledText
+   if pFromParagraph is empty then
+      put 1 into pFromParagraph
+   end if
+   
+   if pToParagraph is empty then
+      put -1 into pToParagraph
+   end if
+   
+   local tUUID, tChunk
+   put the selectedChunk into tChunk
+   if exists(tChunk) then
+      put the linkText of tChunk into tUUID
+   end if
+   
+   local tOffset
+   put the number of chars of line 1 to pFromParagraph-1 of field "script" of me into tOffset
+   if pFromParagraph is not 1 then
+      add 1 to tOffset
+   end if
+   
+   if pStyledText is empty then
+      put the styledText of line pFromParagraph to pToParagraph of field "script" of me into pStyledText
+   end if
+   
+   local tScroll
+   put the vScroll of field "script" of me into tScroll["v"]
+   put the hScroll of field "script" of me into tScroll["h"]
+   lock screen
+   
+   delete variable sEditChunks
+   put pUUID into sEditPlaceholder
+   
+   local tColor
+   put __GetPreference("editor,placeholdercolor", kPlaceholderDefaultBackgroundColor) into tColor
+  
+   local tParagraphIndex
+   repeat with tParagraphIndex = 1 to the number of elements of pStyledText
+      local tRunIndex
+      repeat with tRunIndex = 1 to the number of elements of pStyledText[tParagraphIndex]["runs"]
+         if pUUID is pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]  then
+            put the effective hiliteColor of field "Script" of me \
+                  into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
+            local tPlaceholderNum
+            put the number of elements of sEditChunks + 1 into tPlaceholderNum
+            put tOffset+1 into sEditChunks[tPlaceholderNum]["start"]
+            put tOffset+the length of pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] into sEditChunks[tPlaceholderNum]["end"]
+         else if pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty then
+            if pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] is space or \
+                  pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is tUUID then
+               delete variable sPlaceholders[pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]]
+               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]
+               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
+            else
+               put tColor into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
+            end if
+         end if
+         add the length of pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] to tOffset
+      end repeat
+      add 1 to tOffset
+   end repeat
+   
+   set the styledText of line pFromParagraph to pToParagraph of field "script" of me to pStyledText
+   set the vScroll of field "script" of me to tScroll["v"]
+   set the hScroll of field "script" of me to tScroll["h"]
+   
+   if the number of elements of sEditChunks > 0 then
+      -- select the first chunk
+      select char sEditChunks[1]["start"] to sEditChunks[1]["end"] of field "script" of me
+   end if
+end __SelectPlaceholder
+
+command SelectNextPlaceholder pChar, pFromParagraph, pToParagraph
+   local tStyle
+   
+   local tPlaceholdersToDelete
+   
+   put the styledText of line pFromParagraph to pToParagraph of field "script" of me into tStyle
+   local tParagraphIndex
+   repeat with tParagraphIndex = 1 to the number of elements of tStyle
+      local tRunOffset
+      put 0 into tRunOffset
+      local tRunIndex
+      repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
+         if tParagraphIndex > 1 or (tParagraphIndex is 1 and (tRunOffset + 1) >= pChar) then
+            if tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty and \
+                  tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not sEditPlaceholder then
+               if tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] is not space then
+                  __SelectPlaceholder \
+                        tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"], \
+                        pFromParagraph, \
+                        pToParagraph, \
+                        tStyle
+                  selectionUpdate
+                  return true
+               else
+                  get the number of elements of tPlaceholdersToDelete
+                  put tRunOffset + 1,pFromParagraph + tParagraphIndex - 1 into \
+                        tPlaceholdersToDelete[it + 1]
+               end if
+            end if
+         end if
+         add the length of tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] to tRunOffset
+      end repeat
+   end repeat
+   
+   repeat for each key tUUID in tPlaceholdersToDelete
+      repeat for each element tRange in tPlaceholdersToDelete[tUUID]
+         set the linkText of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
+         set the backgroundColor of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
+      end repeat
+      delete variable sPlaceholders[tUUID]
+   end repeat
+   
+   -- if we get here we thought there were placeholders and there weren't
+   -- so select after the line and clear the placeholder variable
+   select after line pFromParagraph of field "script" of me
+   selectionUpdate
+   
+   return false
+end SelectNextPlaceholder

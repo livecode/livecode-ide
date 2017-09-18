@@ -577,7 +577,6 @@ command sePrefGetDefaults
    put "166,202,240" into tPrefs["editor,selectbackgroundcolor"]
    put "255,255,255" into tPrefs["editor,backgroundcolor"]
    put "255,255,255" into tPrefs["editor,debugBackgroundcolor"]
-   put "true" into tPrefs["editor,autocomplete"]
    put "true" into tPrefs["editor,hscrollbar"]
    put "false" into tPrefs["editor,useInteractiveFind"]
    
@@ -660,6 +659,15 @@ command sePrefGetDefaults
    put 7 into tPrefs["print,textSize"]
    
    put true into tPrefs["editor,showDefaultHandlers"]
+   
+   put true into tPrefs["editor,liveerrors"]
+   put true into tPrefs["editor,bracketcompletion"]
+   put true into tPrefs["editor,brackethighlighting"]
+   put "255,200,200" into tPrefs["editor,brackethighlightcolor"]
+   -- autocomplete is legacy control structure completion
+   put true into tPrefs["editor,autocomplete"]
+   -- autocomplete is completions list
+   put true into tPrefs["editor,providercompletion"]
    
    return tPrefs
 end sePrefGetDefaults

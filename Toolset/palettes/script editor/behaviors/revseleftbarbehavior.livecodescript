@@ -118,8 +118,10 @@ on handlerSelected pNewlyAdded
    -- If we just added this handler, select at the (empty) line after the handler decl.
    if pNewlyAdded then
       add 1 to tLine
+      send "goLine tLine, after" to group "Editor"
+   else
+      send "goLine tLine, true" to group "Editor"
    end if
    
-   send "goLine tLine, true" to group "Editor"
    seUpdateToolbar
 end handlerSelected

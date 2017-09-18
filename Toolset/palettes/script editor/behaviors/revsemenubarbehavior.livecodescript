@@ -2,7 +2,15 @@
 # Description
 #   Sent by the parent when the menubar group may need to resize itself
 command resize
-   # Nothing to do at the moment
+   lock screen
+   local tTopLeft
+   put the topLeft of button "File" of me into tTopLeft
+   repeat for each item tButton in "File,Edit,Debug,Handler,Window,Help"
+      set the width of button tButton of me to the formattedWidth of button tButton of me
+      set the topLeft of button tButton of me to tTopLeft
+      put the topRight of button tButton of me into tTopLeft
+   end repeat
+   unlock screen
 end resize
 
 # Description
@@ -117,21 +125,30 @@ private command buildEditMenu pContext
    end if
    
    put "Paste/V" & return & \
-          "Select All/A" & return & \
-          "Revert" & return & \
-          "-" & return & \
-          "Comment/-" & return & \
-          "Uncomment/_" & return & \
-          "-" & return & \
-          "Quick Find/F" & return & \
-          "Find and Replace.../^@F" & return & \
-          "Find Selection/^#F" & return & \
-          "Go.../L" & return after tEdit
+         "Select All/A" & return & \
+         "Revert" & return & \
+         "-" & return & \
+         "Comment/-" & return & \
+         "Uncomment/_" & return & \
+         "-" & return & \
+         "Quick Find/F" & return & \
+         "Find and Replace.../^@F" & return & \
+         "Find Selection/^#F" & return & \
+         "Go.../L" & return after tEdit
    
-   if sePrefGet("explicitVariables") then
-      put "!cVariable Checking" & return after tEdit
-   else
-      put "!nVariable Checking" & return after tEdit
+   if there is a stack "com.livecode.palette.autocomplete-plus" then
+      put "Autocomplete Snippets..." & return after tEdit
+   end if
+   
+   put "Options" & return after tEdit
+   put tab & toggleMenuItem("Variable Checking", sePrefGet("explicitVariables")) & return after tEdit
+   put tab & toggleMenuItem("Live Errors", sePrefGet("editor,liveerrors")) & return after tEdit
+   put tab & toggleMenuItem("Bracket Completion", sePrefGet("editor,bracketcompletion")) & return after tEdit
+   put tab & toggleMenuItem("Bracket Highlighting", sePrefGet("editor,brackethighlighting")) & return after tEdit
+   put tab & toggleMenuItem("Control Structure Completion", sePrefGet("editor,autocomplete")) & return after tEdit
+   
+   if there is a stack "com.livecode.script-library.autocomplete" then
+      put tab & toggleMenuItem("Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
    end if
    
    put "-" & return & \
@@ -442,11 +459,29 @@ private command handleEditMenuPick pItemName
       case "Revert"
          actionRevert
          break
-      case "Variable Checking"
+      case "Options|Variable Checking"
          sePrefSet "explicitVariables", (not sePrefGet("explicitVariables"))
+         break
+      case "Options|Live Errors"
+         sePrefSet "editor,liveerrors", (not sePrefGet("editor,liveerrors"))
+         break
+      case "Options|Bracket Completion"
+         sePrefSet "editor,bracketcompletion", (not sePrefGet("editor,bracketcompletion"))
+         break
+      case "Options|Bracket Highlighting"
+         sePrefSet "editor,brackethighlighting", (not sePrefGet("editor,brackethighlighting"))
+         break
+      case "Options|Control Structure Completion"
+         sePrefSet "editor,autocomplete", (not sePrefGet("editor,autocomplete"))
+         break
+      case "Options|Autocomplete"
+         sePrefSet "editor,providercompletion", (not sePrefGet("editor,providercompletion"))
          break
       case "Preferences"
          actionShowPreferences
+         break
+      case "Autocomplete Snippets..."
+         actionAutocompleteSnippetManager
          break
    end switch
 end handleEditMenuPick

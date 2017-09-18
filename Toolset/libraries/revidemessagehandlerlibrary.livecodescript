@@ -413,3 +413,7 @@ on logChanged pLog
    send "ideMessageSend ideExtensionLog, pLog" to stack "revIDELibrary" in 0 milliseconds
 end logChanged
 
+on desktopChanged
+   send "ideMessageSend ideDesktopChanged" to stack "revIDELibrary" in 0 milliseconds
+   pass desktopChanged
+end desktopChanged

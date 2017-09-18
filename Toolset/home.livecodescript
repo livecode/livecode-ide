@@ -497,46 +497,35 @@ command revInternal__SetupCustomizationPath
 end revInternal__SetupCustomizationPath
 
 function revInternal__StackFiles
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   
    local tPaletteFolder, tFolders
    put revEnvironmentToolsetPath() & slash & "palettes" into tPaletteFolder
    put tPaletteFolder into tFolders
    
-   set the defaultfolder to tPaletteFolder
-   repeat for each line tFolder in the folders
+   repeat for each line tFolder in folders(tPaletteFolder)
       if char 1 of tFolder is "." then next repeat
       put return & tPaletteFolder & slash & tFolder after tFolders
    end repeat
    
    put return & revEnvironmentToolsetPath() & slash & "libraries" after tFolders
-   if revEnvironmentIsInstalled() then
-      put return & revEnvironmentToolsetPath() after tFolders
-   else
-      local tRepoPath
-      put revEnvironmentRepositoryPath() into tRepoPath
-      put return & tRepoPath & slash & "ide-support" after tFolders
+   if not revEnvironmentIsInstalled() then
+      put return & revEnvironmentRepositoryPath() & slash & "ide-support" after tFolders
       
-      set the itemDelimiter to slash
-      put "ide/Toolset" into the last item of tRepoPath
+      -- legacy from commercial repo
+      put return & revEnvironmentCommercialRepositoryPath() & "/ide/Toolset/libraries" after tFolders
+      put revEnvironmentCommercialRepositoryPath() & "/ide/Toolset/palettes" into tPaletteFolder
+      repeat for each line tFolder in folders(tPaletteFolder)
+         if tFolder begins with "." then next repeat
+         put return & tPaletteFolder & slash & tFolder after tFolders
+      end repeat
       
-      if there is a folder tRepoPath then
-         
-         put tRepoPath & slash & "palettes" into tPaletteFolder
-         if there is a folder tPaletteFolder then
-            put return & tPaletteFolder after tFolders
-            
-            repeat for each line tFolder in folders(tPaletteFolder)
-               if char 1 of tFolder is "." then next repeat
-               put return & tPaletteFolder & slash & tFolder after tFolders
-            end repeat
-         end if
-      
-         put return & tRepoPath & slash & "libraries" after tFolders
-      end if
+      -- components
+      local tComponentFolder
+      put revEnvironmentCommercialRepositoryPath() & "/components" into tComponentFolder
+      repeat for each line tFolder in folders(tComponentFolder)
+         if tFolder begins with "." then next repeat
+         put return & tComponentFolder & slash & tFolder after tFolders
+      end repeat
    end if	
-   
    
    local tStackFiles, tStackName
    local tStackFilesA, tIDEVersion
@@ -544,9 +533,7 @@ function revInternal__StackFiles
    
    put item 1 of the version into tIDEVersion
    repeat for each line tPath in tFolders
-      set the defaultfolder to tPath
-      
-      repeat for each line tFile in the files
+      repeat for each line tFile in files(tPath)
          if the last item of tFile is not among the items of "rev.livecode.livecodescript" then next repeat
          
          put item 1 to -2 of tFile into tStackName
@@ -554,7 +541,7 @@ function revInternal__StackFiles
          local tVersion
          put empty into tVersion
          // AL-2015-02-18: [[ Named Stack Versions ]] Check if this stack should be loaded in this version.
-         if the number of items in tFile > 2 then
+         if not (tFile begins with "revidelibrary") and the number of items in tFile > 2 then
             get item -2 of tFile 
             if it is a number then 
                put it into tVersion
@@ -565,19 +552,7 @@ function revInternal__StackFiles
             end if
          end if
          
-         if tStackName is "revpagesetupdialog" then put "Page Setup Dialog" into tStackName
-         else if tStackName is "revprintdialog" then put "Print Dialog" into tStackName
-         else if tStackName is "revcolorchooser" then put "Color Chooser" into tStackName
-         else if tStackName is "revfileselector" then put "File Selector" into tStackName
-         else if tStackName is "revanswerdialog" then put "Answer Dialog" into tStackName
-         else if tStackName is "revaskdialog" then put "Ask Dialog" into tStackName
-         else if tStackName is "revmessagebox" then put "Message Box" into tStackName
-         else if tStackName is "revscripteditor" then put "revNewScriptEditor" into tStackName
-         # AL-2015-03-12: [[ Bug ]] Make sure Linux stacks included in standalones have the correct name
-         else if tStackName is "revprinterchooser" then put "Printer Chooser" into tStackName
-         else if tStackName is "revpagesetup" then put "Page Setup" into tStackName
-         # AL-2015-09-25: [[ Bug 16000 ]] Don't load stack "revPreferences" into memory - causes issues with actual prefs.
-         else if tStackName is "revpreferences" then next repeat
+         if tStackName is "revpreferences" then next repeat
          
          // AL-2015-02-18: [[ Named Stack Versions ]] Choose a versioned stack file name over an unversioned one, and a later version over an earlier one. 
          local tExistingVersion
@@ -589,11 +564,17 @@ function revInternal__StackFiles
       end repeat
    end repeat
    
-   set the defaultFolder to tDefaultFolder
-   
+   lock messages
    repeat for each key tKey in tStackFilesA
-      put tKey & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+      try
+         put the short name of stack tStackFilesA[tKey]["file"] into tStackName
+         delete stack tStackName
+         put tStackName & comma & tStackFilesA[tKey]["file"] & return after tStackFiles
+      catch e
+         revInternal__Log "Error", "Could not load stack:" && tStackFilesA[tKey]["file"]
+      end try
    end repeat
+   unlock messages
    delete the last char of tStackFiles
    return tStackFiles
 end revInternal__StackFiles
@@ -1180,8 +1161,8 @@ end revInternal__FilterHandlerList
 
 command revInternal__InitialiseLibraries
    revInternal__Log "Enter", "Libraries Initialisation"
-   
-   try	
+   	    	 	
+   try 	 	
       insert script of stack "revInitialisationLibrary" into back 	 
    catch tError 	 	
       revInternal__Log "Error", "Error loading initialisation library" & return & tError 	 	
@@ -1192,7 +1173,7 @@ command revInternal__InitialiseLibraries
    local tLoadList
    put "revIDEDocumentationLibrary" into tLoadList
    put return & "revideextensionlibrary" after tLoadList
-   put return & "revIDELibrary.8" after tLoadList
+   put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList
    put return & "revBackScriptLibrary" after tLoadList 
    put return & "revSBLibrary" after tLoadList
@@ -1223,7 +1204,10 @@ command revInternal__InitialiseLibraries
          put return & "remotedebugger" after tLoadList 
          put return & "scriptprofiler" after tLoadList 
       case "commercial"
-         put return & "aws" after tLoadList 
+         put return & "aws" after tLoadList
+         put return & "autocomplete-plus" after tLoadList
+      case "communityplus"
+         put return & "autocomplete" after tLoadList
    end switch
    
    local tBackList
@@ -1877,6 +1861,154 @@ function revEnvironmentToolsetPath
   return hookToolsPath("toolset", sToolsPath & "/Toolset")
 end revEnvironmentToolsetPath
 
+function revEnvironmentEditionProperty pProp, pEdition
+   if pEdition is empty then
+      put the editionType into pEdition
+   end if
+   
+   if pProp is "skin" then
+      return revEnvironmentToolsetPath() & "/resources/" & pEdition & "/ideSkin"
+   end if
+   
+   switch pEdition
+      case "community"
+         switch pProp
+            case "name"
+               return "Community"
+            case "color"
+               return 173,208,54
+            case "pb_line_selected_color"
+               return 226,238,185
+            case "revonline_hilite_color"
+               return 156,199,45
+            case "revabout_hilite_color"
+               return 106,139,15
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return -9
+            case "password_protection"
+               return false
+            case "open_source_required"
+               return true
+            case "splash_strap"
+               return empty
+            case "upgrade_mini_url"
+               return "https://livecode.com/products/community-plus-ide-2/"
+            case "upgrade_url"
+               return "https://livecode.com/products/community-plus-ide/"  
+            case "upgrade_edition"
+               return "communityplus"
+            case "edition_external_url"
+               return "https://livecode.com/products/community-edition/"
+               break        
+         end switch
+         break
+      case "communityplus"
+         switch pProp
+            case "name"
+               return "Community Plus"
+            case "color"
+               return 49,163,102
+            case "pb_line_selected_color"
+               return 226,238,185
+            case "revonline_hilite_color"
+               return 49,163,102
+            case "revabout_hilite_color"
+               return 49,163,102
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return -9
+            case "password_protection"
+               return false
+            case "open_source_required"
+               return true
+            case "splash_strap"
+               return empty
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return "commercial"
+            case "edition_external_url"
+               return "https://livecode.com/products/community-plus-edition/"
+         end switch
+         break
+      case "commercial"
+         switch pProp
+            case "name"
+               return "Indy"
+            case "color"
+               return 28,154,206
+            case "pb_line_selected_color"
+               return 222,243,255
+            case "revonline_hilite_color"
+               return 124,193,222
+            case "revabout_hilite_color"
+               return 44,113,170
+            case "revsplash_text_color"
+               return 0,0,0
+            case "start_center_tile_color_step"
+               return 0
+            case "password_protection"
+               return true
+            case "open_source_required"
+               return false
+            case "splash_strap"
+               if revLicenseInfo["com.livecode.norevenuelimit"] is not empty then
+                  return empty
+               else
+                  return "<p>This Indy license is only valid for organizations with annual revenues of $500,000 USD or less</p>"
+               end if
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return "professional"
+            case "edition_external_url"
+               return "https://livecode.com/products/indy-edition/"
+         end switch
+         break
+      case "professional"
+         switch pProp
+            case "name"
+               return "Business"
+            case "color"
+               return 82,82,82
+            case "pb_line_selected_color"
+               return 222,243,255
+            case "revonline_hilite_color"
+               return 124,193,222
+            case "revabout_hilite_color"
+               return 44,113,170
+            case "revsplash_text_color"
+               return 255,255,255
+            case "start_center_tile_color_step"
+               return 0
+            case "password_protection"
+               return true
+            case "open_source_required"
+               return false
+            case "splash_strap"
+               return empty
+            case "upgrade_mini_url"
+               return empty
+            case "upgrade_url"
+               return empty
+            case "upgrade_edition"
+               return empty
+            case "edition_external_url"
+               return "https://livecode.com/products/business-edition/"
+         end switch
+         break
+   end switch
+   
+   throw "Unknown edition property"
+end revEnvironmentEditionProperty
+
 function revEnvironmentPluginsPath
    return hookToolsPath("plugins", sToolsPath & "/Plugins")
 end revEnvironmentPluginsPath
@@ -2065,6 +2197,10 @@ function revEnvironmentRepositoryPath
    return sRepositoryPath
 end revEnvironmentRepositoryPath
 
+function revEnvironmentCommercialRepositoryPath
+   set the itemDelimiter to slash
+   return item 1 to -2 of sRepositoryPath
+end revEnvironmentCommercialRepositoryPath
 
 -- Deprecated Path Functions
 

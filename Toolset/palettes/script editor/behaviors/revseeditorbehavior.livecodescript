@@ -326,6 +326,8 @@ command selectionUpdate
    updateHandlerList
     
    updateSelectedHandler
+   
+   contextSave
     
    # Update the toolbar so that the handlers list can reflect the new selection. For efficiency we pass
    # a parameter to the update command which tells it that the selected handler can be assumed to be
@@ -515,13 +517,7 @@ command getHandlerList
 end getHandlerList
 
 private command updateHandlerList
-   # The script is compiled before updating the handler list. We temporarily turn off
-   # variable checking before this.
-   local tOldVarChecking
-   put sePrefGet("explicitVariables") into tOldVarChecking
-   sePrefSet "explicitVariables", "false"
    scriptCompile getObjectID()
-   sePrefSet "explicitVariables", tOldVarChecking
 end updateHandlerList
 
 # Parameters
@@ -668,7 +664,6 @@ private function convertTypeCodeToSyntax pTypeCode
    end switch
 end convertTypeCodeToSyntax
 
-
 # Parameters
 #   pObject : reference to the object to compile the script of. Must be one of the target objects.
 # Description
@@ -692,12 +687,51 @@ command scriptCompile pObject
    put the result into tScript
    
    local tResult
+   local tDoUpdateDescription
    set the script of button "revCompileObject" of me to tScript
    put the result into tResult
-   
-   if tResult is empty then
-      put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
+   -- if setting the script failed with explicit vars try without
+   if tResult is not empty and the explicitVariables then
+      set the explicitVariables to false
+      set the script of button "revCompileObject" of me to tScript
+      put the result is empty into tDoUpdateDescription
+   else
+      put tResult is empty into tDoUpdateDescription
    end if
+   
+   if tDoUpdateDescription then
+      --! TODO remove use of revAvailableHandlers here (quite invasive)
+      put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
+      get getObjectID()
+      if exists(it) and there is a stack "com.livecode.script-library.autocomplete" then
+         ideAutocompleteUpdateScriptDescription it, the revScriptDescription of button "revCompileObject" of me
+      end if
+   end if
+   
+   local tLiveErrors
+   put sePrefGet("editor,liveerrors") into tLiveErrors
+   put tLiveErrors and not the lockText of field "script" of me into tLiveErrors
+   
+   local tState
+   getDirty pObject
+   if the result then
+      put "edited" into tState
+   else
+      put "applied" into tState
+   end if
+   
+   if tLiveErrors then
+      send "clearErrors" to group "Errors" of the owner of me
+      if tResult is empty then
+         setCompilationErrors empty, pObject
+      else
+         send "addError compilation, line 1 of tResult, pObject" to group "Errors" of the owner of me
+         setCompilationErrors line 1 of tResult, pObject
+         put "error" into tState
+      end if
+   end if
+   
+   seSetObjectState pObject, tState
    
    set the preserveVariables to tOldPreserveVariables
    set the explicitVariables to tOldExplicitVariables
@@ -911,6 +945,9 @@ command goLine pLine, pHighlightMode, pPosition
       select char tStart to tEnd of line pLine of field "Script" of me
       get the selectedChunk
       put word 2 of it & comma & word 4 of it into sLastSelectedGoneToChunk
+   else if pHighlightMode is "after" then
+      put empty into sLastSelectedGoneToChunk
+      select after line pLine of field "Script" of me
    else
       put empty into sLastSelectedGoneToChunk
       select before line pLine of field "Script" of me
@@ -1439,10 +1476,6 @@ private function findObjectList pTarget, pDirection, pCallback, pCallbackTarget,
       put findListObjectsOnAllAvailableStacks(pCallback, pCallbackTarget, rCancelled) into tObjectList
    else
       put getObjectID() into tObjectList
-   end if
-   
-   if tObjectList is an array then
-      combine tObjectList with return as set
    end if
    
    if tObjectList is an array then
@@ -2249,10 +2282,12 @@ on mouseMove
    tooltipReset
    send "tooltipUpdate" to me in kTooltipUpdateDelay milliseconds
    put the result into sTooltipUpdateRequest
+   pass mouseMove
 end mouseMove
 
 on mouseLeave
    tooltipUpdateCancel
+   pass mouseLeave
 end mouseLeave
 
 # Description
