@@ -1693,7 +1693,7 @@ function revIDEMessages
          "ideAnswerDialogClosed,ideControlDeleted,ideCardDeleted,ideEditScript,ideExtensionLog,ideExtensionsChanged,ideExtensionStatusChanged,ideFindMoreWidgets," \
          & "ideInspectedObjectsChanged,ideLibraryStack,ideNewCard,ideNewStack,ideNewControl,revIDENameChanged,ideObjectSelectionStarted,ideOpenStack," \
          & "idePluginsChanged,idePreferenceChanged,idePropertyChanged,ideReleaseStack,ideResumeStack,ideSelectedObjectChanged,ideStackDeleted,ideToolChanged," \
-         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove" \
+         & "ideTutorialProgressChanged,ideWindowsChanged,ideMouseMove,ideDesktopChanged" \
          )
 end revIDEMessages
 
@@ -2597,7 +2597,9 @@ function revIDEPlatformVersion
 end revIDEPlatformVersion
 
 function revIDEColor pTag
-   if pTag is "edition_color" then return ideCoreEditionColour()
+   if pTag is "edition_color" then
+      return revEnvironmentEditionProperty("color")
+   end if
    
    switch pTag
       case "text_1"
@@ -12153,3 +12155,38 @@ on revIDEFindMoreWidgets
          stack revIDEPaletteToStackName("extension manager")
    unlock screen
 end revIDEFindMoreWidgets
+
+command revIDESetEdited pStackName
+   revSetEdited pStackName
+end revIDESetEdited
+
+command ideShowUpgradeOptions
+   if ideCanShowUpgradeOptions() then
+      lock screen
+      if the mode of stack revIDEPaletteToStackName("start center") is 0 then
+         revIDEOpenPalette "start center"
+      end if
+      dispatch "ideAction" to stack revIDEPaletteToStackName("start center") with "launchAdWithUrl"
+      unlock screen
+   else if ideShouldShowUpgradeOptions() then
+      local tUpgradeEdition
+      put revEnvironmentEditionProperty("upgrade_edition") into tUpgradeEdition
+      launch url revEnvironmentEditionProperty("edition_external_url", tUpgradeEdition)
+   end if
+end ideShowUpgradeOptions
+
+function ideCanShowUpgradeOptions
+   return ideShouldShowUpgradeOptions() \
+         and hasConnection() \
+         and not revIDEBrowserWidgetUnavailable()
+end ideCanShowUpgradeOptions
+
+function ideShouldShowUpgradeOptions
+   return \
+         revEnvironmentEditionProperty("upgrade_mini_url") is not empty \
+         and revEnvironmentEditionProperty("upgrade_edition") is not empty
+end ideShouldShowUpgradeOptions
+
+private function hasConnection
+   return url("http://google.com/") is not empty
+end hasConnection
