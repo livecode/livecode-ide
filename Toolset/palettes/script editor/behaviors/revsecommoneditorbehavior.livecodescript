@@ -3435,6 +3435,8 @@ private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyled
    if the number of elements of sEditChunks > 0 then
       -- select the first chunk
       select char sEditChunks[1]["start"] to sEditChunks[1]["end"] of field "script" of me
+   else if exists(tChunk) then
+      select tChunk
    end if
 end __SelectPlaceholder
 
