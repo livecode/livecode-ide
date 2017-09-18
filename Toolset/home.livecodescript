@@ -1196,7 +1196,7 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revTableLibrary"
    
    if the editionType is not "community" then
-      revInternal__LoadLibrary "autocomplete-plus"
+      revInternal__LoadLibrary "autocomplete-pro"
       revInternal__LoadLibrary "autocomplete"
    end if
    
