@@ -831,9 +831,6 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       put pObject into tObject
    end if
    
-   local tUUID
-   put the linkText of char pOffset of field "Script" of me into tUUID
-   
    local tBracketCompletionType
    __BracketCompletion  pOffset, pOldText, pNewText
    put it into tBracketCompletionType
@@ -853,13 +850,13 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
    add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
    
    local tEditPlaceholder
-   put sEditChunks is an array and tUUID is not empty and \
+   put sEditChunks is an array and sEditPlaceholder is not empty and \
          pOffset >= sEditChunks[1]["start"] and \
          pOffset + length(pOldText) - 1 <= sEditChunks[1]["end"] and \
          return is not in pNewText into tEditPlaceholder
    
    if tEditPlaceholder and \
-         sPlaceholders[tUUID]["classes"][1] is "identifier" then
+         sPlaceholders[sEditPlaceholder]["classes"][1] is "identifier" then
       put comma is not in pNewText and \
             ";" is not in pNewText and \
             space is not in pNewText and \
@@ -905,7 +902,7 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             
             add tNewLength - tSelectedLength to tToAdd
             add tNewLength - tSelectedLength to sEditChunks[tIndex]["end"]
-            set the linkText of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to tUUID
+            set the linkText of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to sEditPlaceholder
             if tIndex is 1 then
                set the backgroundColor of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to empty
             else
@@ -919,8 +916,8 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             add 1 to sTextOperationIndex[tObject]
             add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
          end repeat
-         put true into sPlaceholders[tUUID]["edited"]
-         set the linkText of char pOffset to pOffset + max(1,tNewLength - 1) of field "script" of me to tUUID
+         put true into sPlaceholders[sEditPlaceholder]["edited"]
+         set the linkText of char pOffset to pOffset + max(1,tNewLength - 1) of field "script" of me to sEditPlaceholder
          
          if tSelection is not empty then
             select tSelection
@@ -946,7 +943,7 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
       
       -- when formatting or pasting we don't want autocomplete to pop up
       if the number of lines of pNewText <= 1 then
-         __UpdateAutoCompleteList tUUID
+         __UpdateAutoCompleteList sEditPlaceholder
       end if
    else
       local tCache
