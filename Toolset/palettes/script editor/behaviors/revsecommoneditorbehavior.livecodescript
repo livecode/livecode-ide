@@ -2420,7 +2420,7 @@ on rawKeyDown pKey
    
    local tPass = true
    if there is a stack "com.livecode.script-library.autocomplete" then
-      ideAutocompleteHandleArrow the long id of me, tKeyName
+      ideAutocompleteHandleArrow the long id of me, tKeyName, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tPass
    end if
    
