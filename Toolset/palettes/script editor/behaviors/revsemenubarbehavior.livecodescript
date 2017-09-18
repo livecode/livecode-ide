@@ -136,7 +136,7 @@ private command buildEditMenu pContext
          "Find Selection/^#F" & return & \
          "Go.../L" & return after tEdit
    
-   if there is a stack "com.livecode.palette.autocomplete-plus" then
+   if there is a stack "com.livecode.palette.autocomplete-pro" then
       put "Autocomplete Snippets..." & return after tEdit
    end if
    
