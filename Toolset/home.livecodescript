@@ -1205,7 +1205,7 @@ command revInternal__InitialiseLibraries
          put return & "scriptprofiler" after tLoadList 
       case "commercial"
          put return & "aws" after tLoadList
-         put return & "autocomplete-plus" after tLoadList
+         put return & "autocomplete-pro" after tLoadList
       case "communityplus"
          put return & "autocomplete" after tLoadList
    end switch

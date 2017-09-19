@@ -2187,7 +2187,7 @@ command actionQuit
 end actionQuit
 
 command actionAutocompleteSnippetManager
-   modeless "com.livecode.palette.autocomplete-plus"
+   modeless "com.livecode.palette.autocomplete-pro"
 end actionAutocompleteSnippetManager
 
 ################################################################################
