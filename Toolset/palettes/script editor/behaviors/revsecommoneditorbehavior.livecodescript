@@ -1346,10 +1346,6 @@ private command saveLastSelections
 end saveLastSelections
 
 private command selectionUpdateRequest
-   if not handleEvent("selectionUpdateRequest", the long id of the target) then
-      exit selectionUpdateRequest
-   end if
-   
    if sSelectionUpdateRequest is not empty then
       cancel sSelectionUpdateRequest
    end if
@@ -2106,9 +2102,6 @@ on backspaceKey
    if tTo > tFrom then
       textEndGroup
    end if
-    
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end backspaceKey
 
 on deleteKey
@@ -2143,9 +2136,6 @@ on deleteKey
    if tTo > tFrom then
       textEndGroup
    end if
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end deleteKey
 
 on tabKey
@@ -2567,9 +2557,6 @@ command actionCut
       copy -- set the clipboard (dont cut as we do not allow field modification here)
       textReplace tFrom, char tFrom to tTo of field "Script" of me, empty
       textEndGroup
-      
-      # OK-2009-01-19 : Update the handler list
-      selectionUpdateRequest
    end if
 end actionCut
 
@@ -2596,9 +2583,6 @@ command actionPaste
    end if
    textEndGroup
    unlock screen
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionPaste
 
 command actionUndo
@@ -2606,8 +2590,6 @@ command actionUndo
       exit actionUndo
    end if
    textUndo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionUndo
 
 command actionRedo
@@ -2615,8 +2597,6 @@ command actionRedo
       exit actionRedo
    end if
    textRedo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionRedo
 
 command actionDeselectAll
