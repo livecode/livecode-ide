@@ -25,7 +25,7 @@ end revUnloadLibrary
 -- history for which the stack is configured. This is then used to pick the last chosen
 -- target for this platform.
 
-constant kSupportedPlatforms = "iOS Android Desktop"
+constant kSupportedPlatforms = "iOS Android Desktop Emscripten"
 
 -- The mapping from deploy target to platform
 local sDeployTargetPlatforms
