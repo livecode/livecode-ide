@@ -1222,8 +1222,9 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
    # 2017-JUL-28 bhall2001
    # We always update the gutter's scroll immediately, as otherwise it looks bad.   
    # For best scroll performance, we set the Gutter scroll directly.
-   set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of group "Editor"
-   
+   if exists(field "Numbers" of group "Gutter") then
+      set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of me
+   end if
    # BUGFIX-20140
    # 2017-JUL-28 bhall2001 Due to blocking nature of scrolling and key presses, don't send in time.
    # UI effect is Gutter lags behind scrolling of Script Editor   
