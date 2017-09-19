@@ -141,14 +141,14 @@ private command buildEditMenu pContext
    end if
    
    put "Options" & return after tEdit
-   put tab & toggleMenuItem("Variable Checking", sePrefGet("explicitVariables")) & return after tEdit
-   put tab & toggleMenuItem("Live Errors", sePrefGet("editor,liveerrors")) & return after tEdit
-   put tab & toggleMenuItem("Bracket Completion", sePrefGet("editor,bracketcompletion")) & return after tEdit
-   put tab & toggleMenuItem("Bracket Highlighting", sePrefGet("editor,brackethighlighting")) & return after tEdit
-   put tab & toggleMenuItem("Control Structure Completion", sePrefGet("editor,autocomplete")) & return after tEdit
+   put toggleMenuItem(tab & "Variable Checking", sePrefGet("explicitVariables")) & return after tEdit
+   put toggleMenuItem(tab & "Live Errors", sePrefGet("editor,liveerrors")) & return after tEdit
+   put toggleMenuItem(tab & "Bracket Completion", sePrefGet("editor,bracketcompletion")) & return after tEdit
+   put toggleMenuItem(tab & "Bracket Highlighting", sePrefGet("editor,brackethighlighting")) & return after tEdit
+   put toggleMenuItem(tab & "Control Structure Completion", sePrefGet("editor,autocomplete")) & return after tEdit
    
    if there is a stack "com.livecode.script-library.autocomplete" then
-      put tab & toggleMenuItem("Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
+      put toggleMenuItem(tab & "Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
    end if
    
    put "-" & return & \
