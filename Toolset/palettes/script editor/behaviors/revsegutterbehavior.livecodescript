@@ -33,9 +33,12 @@ local sErrors
 #   Causes the gutter to update itself.
 command update pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
    local tContext, tUpdateRequired
+   
+   lock screen
    put updateGetContext(pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw, tContext) into tUpdateRequired
    
    if not tUpdateRequired then
+      unlock screen
       exit update
    end if
    
@@ -50,8 +53,6 @@ command update pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUp
    if tContext["object"] is not empty then
       put tContext["object"] into sLastObject
    end if
-   
-   lock screen
    
    updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, tContext
    updateLineNumbers pTextChanged, pOldNumber, pNewNumber, tContext
@@ -310,6 +311,10 @@ end updateCurrentLine
 # Description
 #   If there are not enough line numbers to add to the field
 command updateLineNumbers pTextEdited, pOldNumber, pNewNumber, pContext
+   
+   # only update if there's work to be done
+   if pContext["numberOfAdditions"] <= 0 then exit updateLineNumbers
+   
    # Add the lines in a non-locking manner, and after we've finished adding lines, the scroll
    # of the line numbers field should be updated.
    repeat pContext["numberOfAdditions"] times
@@ -402,42 +407,22 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
    
    if pOldNumber < pNewNumber then
       repeat for each line tBreakpoint in tBreakpoints
-         # In the case that the line that contained the breakpoint was where the text replacement
-         # started, we have to check for one of three options. This is slow :(
          if item -1 of tBreakpoint = pLine then
-            local tContext
-            put char 1 to pOffset of getScriptField() into tContext
-            local tNextChar
-            put char -1 of tContext into tNextChar
+            local tLineIndex
+            put the lineIndex of char pOffset of getScriptField() into tLineIndex
             
-            local tPreviousChars
-            repeat with x = the number of chars of tContext - 1 down to 1
-               if char x of tContext is empty or char x of tContext is return then
-                  exit repeat
-               end if
-               put char x of tContext after tPreviousChars
-            end repeat
+            local tCharIndex
+            put the charIndex of line tLineIndex of getScriptField() into tCharIndex
             
-            local tWhitespaceBefore
-            put matchText(tPreviousChars, "^\s*$") into tWhitespaceBefore
+            local tLine
+            put the text of line tLineIndex of getScriptField() into tLine
             
-            local tEndofLine
-            put (tNextChar is return or tNextChar is empty) into tEndofLine
-            
-            # This means the user has split the line containing the breakpoint, in this case we leave the breakpoint as it was
-            if (not tWhitespaceBefore) and (not tEndofLine) then
-               next repeat
-            end if
-            
-            # This means that the user has added a return to the end of the line containing the breakpoint, again we ignore this
-            #if (tPreviousChar is not return and tPreviousChar is not empty) and (tNextChar is return or tNextChar is empty) then
-            if (not tWhitespaceBefore) and tEndofLine then
-               next repeat
-            end if
+            local tBefore
+            put char 1 to (pOffset - tCharIndex) of tLine into tBefore
             
             # This means that the user has added a return before the beginning of the line containing the breakpoint. We move the breakpoint
             # to follow the line.
-            if tWhitespaceBefore then
+            if word 1 of tBefore is empty then
                revDebuggerMoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint, item 1 to -2 of tBreakpoint, item -1 of tBreakpoint + (pNewNumber - pOldNumber)
             end if
          end if
@@ -457,7 +442,7 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
       local tScript
       put textGetScript() into tScript
       repeat for each line tBreakpoint in tBreakpoints
-         if (item -1 of tBreakpoint >= pLine and item -1 of tBreakpoint < (pLine - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
+         if (item -1 of tBreakpoint >= pLine and item -1 of tBreakpoint < (pLine - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint - 1 + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
             revDebuggerRemoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint
          else if item -1 of tBreakpoint > (pLine + pNewNumber - pOldNumber) then
             # If the breakpoint was below the removed lines, move it up
@@ -783,6 +768,10 @@ end menuPick
 on rawKeyDown
   # Block this message as the gutter must only be scrolled in response to the main script field
 end rawKeyDown
+
+on scrollBarDrag
+  # Block this message as the gutter must only be scrolled in response to the main script field
+end scrollBarDrag
 
 # Returns
 #   A random name used for naming mutable controls. In particular, breakpoint images.
