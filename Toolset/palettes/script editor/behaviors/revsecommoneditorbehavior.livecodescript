@@ -1,4 +1,4 @@
-﻿script "com.livecode.scripteditor.behavior.editorcommon"
+script "com.livecode.scripteditor.behavior.editorcommon"
 local sObjectId
 
 # The following variables store information used for the undo / redo system.
@@ -50,6 +50,14 @@ local sEditPlaceholder
 
 constant kPlaceholderDefaultSearchLines = 20
 constant kPlaceholderDefaultBackgroundColor = "240,240,240"
+
+# 2017-08-01 bhall2001 previous vScroll position of the Editor field
+local sVScroll
+
+# 2017-08-01 bhall2001 Toggles between true/false on each up arrow key pressed
+# Note: up arrow key sends 2 scrollBarDrag messages. Used as flag
+# to process only 1 of the messages.
+local sSkipUpArrow = false
 
 # OK-2009-01-17 : Bug 7169
 command setDirty pObject, pValue
@@ -902,7 +910,7 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             
             add tNewLength - tSelectedLength to tToAdd
             add tNewLength - tSelectedLength to sEditChunks[tIndex]["end"]
-            set the linkText of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to sEditPlaceholder
+            set the metadata of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to sEditPlaceholder
             if tIndex is 1 then
                set the backgroundColor of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to empty
             else
@@ -917,7 +925,6 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
          end repeat
          put true into sPlaceholders[sEditPlaceholder]["edited"]
-         set the linkText of char pOffset to pOffset + max(1,tNewLength - 1) of field "script" of me to sEditPlaceholder
          
          if tSelection is not empty then
             select tSelection
@@ -1200,8 +1207,8 @@ end getUpdateGutterRequestDetails
 #   pUpdateCompilationErrors : whether to update the gutter's compilation errors
 # Description
 #   Sends a request to update the gutter. This is called whenever the current script is edited, or the field
-#   is scrolled etc. A request is sent using a short delay and any previous requests are cancelled.
-#  The gutter's scroll is updated immediately however. Also a message is sent to the gutter to hide its
+#   is scrolled etc. 
+#  The gutter's scroll is updated immediately. Also a message is sent to the gutter to hide its
 #  mutable objects (the breakpoint / compilation error images). These are show again when the update is
 #  actually carried out.
 command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
@@ -1210,11 +1217,17 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
       cancel sGutterUpdateRequest
    end if
    
-   # We always update the gutter's scroll immediately, as otherwise it looks bad. Other stuff is delayed though.
-   if there is a group "Gutter" of me then
-      send "updateScroll" to group "Gutter" of me
+   # BUGFIX-20140
+   # 2017-JUL-28 bhall2001
+   # We always update the gutter's scroll immediately, as otherwise it looks bad.   
+   # For best scroll performance, we set the Gutter scroll directly.
+   if exists(field "Numbers" of group "Gutter") then
+      set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of me
    end if
-   send "updateGutterDo" to me in 5 milliseconds
+   # BUGFIX-20140
+   # 2017-JUL-28 bhall2001 Due to blocking nature of scrolling and key presses, don't send in time.
+   # UI effect is Gutter lags behind scrolling of Script Editor   
+   updateGutterDo
    put the result into sGutterUpdateRequest
 end updateGutterRequest
 
@@ -1344,10 +1357,6 @@ private command saveLastSelections
 end saveLastSelections
 
 private command selectionUpdateRequest
-   if not handleEvent("selectionUpdateRequest", the long id of the target) then
-      exit selectionUpdateRequest
-   end if
-   
    if sSelectionUpdateRequest is not empty then
       cancel sSelectionUpdateRequest
    end if
@@ -1431,7 +1440,7 @@ private command caretUpdate pField, pScript
    put __GetPreference("editor,placeholdersearchlines", kPlaceholderDefaultSearchLines) into tSearchLines
    
    if tChunk is not empty and exists(tChunk) then
-      get the linkText of tChunk
+      get the metadata of tChunk
       if it is not empty then
          __ClearCurrentPlaceholder true
          __SelectPlaceholder \
@@ -1999,8 +2008,21 @@ on scrollBarDrag
    if the short name of the target is "Gutter" or the short name of the owner of the target is "Gutter" then
       exit scrollBarDrag
    end if
+
+   local tVScroll
+   
+   # 2017-JUL-28 bhall2001
+   # update only when vScroll changes. Mouse wheel scrolling sends
+   # vScrolls that don't change. Up arrow causes 2 scrollBarDrag message
+   # so we skip the message when up arrow flag is set.
+   put the vScroll of the target into tVScroll
+   if (tVScroll = sVScroll) or sSkipUpArrow then exit scrollBarDrag
+   
+   lock screen
+   put tVScroll into sVScroll
    
    updateGutterRequest empty, empty, empty, empty, false, true
+   unlock screen
 end scrollBarDrag
 
 on keyDown pChar
@@ -2107,9 +2129,6 @@ on backspaceKey
    if tTo > tFrom then
       textEndGroup
    end if
-
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end backspaceKey
 
 on deleteKey
@@ -2144,9 +2163,6 @@ on deleteKey
    if tTo > tFrom then
       textEndGroup
    end if
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end deleteKey
 
 on tabKey
@@ -2334,7 +2350,6 @@ private command pageDown
    end if
 end pageDown
 
-
 # Description
 #   RawKeyDown is handled mainly because of the home and end keys. These need to be manually implemented on OS X
 #   and both platforms after pressing the home key we have to ensure the caret ends up in the right place.
@@ -2418,6 +2433,10 @@ on rawKeyDown pKey
          put "right" into tKeyName
          break
       case kKeyUpArrow
+         # 2017-JUL-28 bhall2001
+         # when scrolling on up arrow, scrollBarDrag is sent twice. Set
+         # flag to update on every other up arrow message
+         put not sSkipUpArrow into sSkipUpArrow
          put "up" into tKeyName
          break
       case kKeyDownArrow
@@ -2574,9 +2593,6 @@ command actionCut
       copy -- set the clipboard (dont cut as we do not allow field modification here)
       textReplace tFrom, char tFrom to tTo of field "Script" of me, empty
       textEndGroup
-      
-      # OK-2009-01-19 : Update the handler list
-      selectionUpdateRequest
    end if
 end actionCut
 
@@ -2603,9 +2619,6 @@ command actionPaste
    end if
    textEndGroup
    unlock screen
-   
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionPaste
 
 command actionUndo
@@ -2613,8 +2626,6 @@ command actionUndo
       exit actionUndo
    end if
    textUndo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionUndo
 
 command actionRedo
@@ -2622,8 +2633,6 @@ command actionRedo
       exit actionRedo
    end if
    textRedo
-   # OK-2009-01-19 : Update the handler list
-   selectionUpdateRequest
 end actionRedo
 
 command actionDeselectAll
@@ -3354,7 +3363,7 @@ private command __ClearCurrentPlaceholder pForce
       put the selectedChunk into tChunk
       if exists(tChunk) then
          local tUUID
-         put the linkText of tChunk into tUUID
+         put the metadata of tChunk into tUUID
          if tUUID is sEditPlaceholder then
             exit __ClearCurrentPlaceholder
          end if
@@ -3365,7 +3374,7 @@ private command __ClearCurrentPlaceholder pForce
    
    if the number of elements of sEditChunks > 0 then
       repeat for each element tChunk in sEditChunks
-         set the linkText of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+         set the metadata of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
          set the backgroundColor of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
       end repeat
       delete variable sEditChunks
@@ -3385,7 +3394,7 @@ private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyled
    local tUUID, tChunk
    put the selectedChunk into tChunk
    if exists(tChunk) then
-      put the linkText of tChunk into tUUID
+      put the metadata of tChunk into tUUID
    end if
    
    local tOffset
@@ -3413,18 +3422,18 @@ private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyled
    repeat with tParagraphIndex = 1 to the number of elements of pStyledText
       local tRunIndex
       repeat with tRunIndex = 1 to the number of elements of pStyledText[tParagraphIndex]["runs"]
-         if pUUID is pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]  then
+         if pUUID is pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]  then
             put the effective hiliteColor of field "Script" of me \
                   into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
             local tPlaceholderNum
             put the number of elements of sEditChunks + 1 into tPlaceholderNum
             put tOffset+1 into sEditChunks[tPlaceholderNum]["start"]
             put tOffset+the length of pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] into sEditChunks[tPlaceholderNum]["end"]
-         else if pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty then
+         else if pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not empty then
             if pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] is space or \
-                  pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is tUUID then
-               delete variable sPlaceholders[pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]]
-               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]
+                  pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"] is tUUID then
+               delete variable sPlaceholders[pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]]
+               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]
                delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
             else
                put tColor into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
@@ -3460,11 +3469,11 @@ command SelectNextPlaceholder pChar, pFromParagraph, pToParagraph
       local tRunIndex
       repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
          if tParagraphIndex > 1 or (tParagraphIndex is 1 and (tRunOffset + 1) >= pChar) then
-            if tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty and \
-                  tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not sEditPlaceholder then
+            if tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not empty and \
+                  tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not sEditPlaceholder then
                if tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] is not space then
                   __SelectPlaceholder \
-                        tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"], \
+                        tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"], \
                         pFromParagraph, \
                         pToParagraph, \
                         tStyle
@@ -3483,7 +3492,7 @@ command SelectNextPlaceholder pChar, pFromParagraph, pToParagraph
    
    repeat for each key tUUID in tPlaceholdersToDelete
       repeat for each element tRange in tPlaceholdersToDelete[tUUID]
-         set the linkText of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
+         set the metadata of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
          set the backgroundColor of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
       end repeat
       delete variable sPlaceholders[tUUID]

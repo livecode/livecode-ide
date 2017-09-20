@@ -36,11 +36,16 @@ private command startTestRunner
    put getTestRunnerBehavior() into tTestRunner
    set the behavior of me to tTestRunner
    if the environment begins with "development" then
-	  send "TestRunnerImpl_DoInvoke" to me in 0
+      if not sTestsRun then
+	     send "TestRunnerImpl_DoInvoke" to me in 0
+	  end if  
+	  put true into sTestsRun
    else
 	  send "TestRunnerMain" to me in 0
    end if
 end startTestRunner
+
+local sTestsRun = false
 
 on startup
    local tTarget
@@ -53,7 +58,7 @@ on startup
    if tTarget is the long id of me then 
       startTestRunner
    end if
-end startup
+end startup 
 
 on openStack
    if the long id of the target is the long id of this card of me then
@@ -249,14 +254,14 @@ end invokeTestCommand
 -- Launch this stack in the IDE
 private command runAllTests pInfo
    local tAnalysis
-	
+   	
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
    local tTestOutput, tTestExitStatus, tCommand
    
    -- First put the target engine into the command to run
    put pInfo["args"][2] into tCommand
-
+   
    -- Add the command line args
    repeat with x = 3 to the number of elements in pInfo["args"]
       put tCommand && pInfo["args"][x] into tCommand
@@ -266,32 +271,44 @@ private command runAllTests pInfo
    put tCommand && pInfo["self-script"] && "2>/dev/null" into tCommand
 
    -- Execute the shell command   
-   put shell(tCommand) into tTestOutput
-   put the result into tTestExitStatus
+   open process tCommand for text read
+   set the itemDelimiter to ":"
+   repeat
+      if tCommand is not among the lines of the openProcesses then
+         exit repeat
+      end if
+      
+      read from process tCommand for 1 line
+      local tOutput
+      -- The output from the subprocesses will be native encoded utf-8.
+      put textDecode(it, "utf8") into tOutput
+      
+      if item 1 of tOutput is "PASS" or \
+            item 1 of tOutput is "XPASS" or \
+            item 1 of tOutput is "FAIL" or \
+            item 1 of tOutput is "XFAIL" then
+         write logHighlight(item 1 of tOutput) & ":" & item 2 to -1 of tOutput to stdout
+      else if tOutput begins with "not ok" then
+         write tOutput to stdout
+      end if
+      
+      put tOutput after tTestOutput
+      if the result is not empty then
+         exit repeat
+      end if
+   end repeat
+   set the itemDelimiter to comma
+   close process tCommand
    
-   -- The output from the subprocesses will be native encoded utf-8.
-   put textDecode(tTestOutput, "utf8") into tTestOutput
-
    -- Check the exit status.  If it suggests failure, add a "not ok" stanza
    -- to the tail of the TAP output
+   --!TODO Can't get exit status from open process
    if tTestExitStatus is not empty then
       put return after tTestOutput
       put "not ok # Subprocess exited with status" && \
             tTestExitStatus & return after tTestOutput
    end if
-   
-   local tUsefulOutput
-   repeat for each line tLine in tTestOutput
-	   if tLine begins with "PASS:" then
-		  put tLine & return after tUsefulOutput
-	   else if tLine begins with "FAIL:" then
-		  put tLine & return after tUsefulOutput
-	   else if tLine begins with "not ok" then
-		  put tLine & return after tUsefulOutput
-	   end if
-   end repeat
-   write tUsefulOutput to stdout
-   
+      
    TestRunnerProcessOutput "IDE", "All IDE tests", tTestOutput
    
    put TesterTapCombine(tAnalysis, the result) into tAnalysis
