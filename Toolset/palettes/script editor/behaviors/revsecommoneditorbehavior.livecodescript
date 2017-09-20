@@ -917,7 +917,6 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             add 1 to sTextGroupLengths[tObject,sTextGroupIndex[tObject]]
          end repeat
          put true into sPlaceholders[sEditPlaceholder]["edited"]
-         set the linkText of char pOffset to pOffset + max(1,tNewLength - 1) of field "script" of me to sEditPlaceholder
          
          if tSelection is not empty then
             select tSelection
