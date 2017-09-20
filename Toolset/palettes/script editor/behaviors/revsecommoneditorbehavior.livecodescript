@@ -902,7 +902,7 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
             
             add tNewLength - tSelectedLength to tToAdd
             add tNewLength - tSelectedLength to sEditChunks[tIndex]["end"]
-            set the linkText of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to sEditPlaceholder
+            set the metadata of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to sEditPlaceholder
             if tIndex is 1 then
                set the backgroundColor of char sEditChunks[tIndex]["start"] to sEditChunks[tIndex]["end"] of field "script" of me to empty
             else
@@ -1428,7 +1428,7 @@ private command caretUpdate pField, pScript
    put __GetPreference("editor,placeholdersearchlines", kPlaceholderDefaultSearchLines) into tSearchLines
    
    if tChunk is not empty and exists(tChunk) then
-      get the linkText of tChunk
+      get the metadata of tChunk
       if it is not empty then
          __ClearCurrentPlaceholder true
          __SelectPlaceholder \
@@ -3326,7 +3326,7 @@ private command __ClearCurrentPlaceholder pForce
       put the selectedChunk into tChunk
       if exists(tChunk) then
          local tUUID
-         put the linkText of tChunk into tUUID
+         put the metadata of tChunk into tUUID
          if tUUID is sEditPlaceholder then
             exit __ClearCurrentPlaceholder
          end if
@@ -3337,7 +3337,7 @@ private command __ClearCurrentPlaceholder pForce
    
    if the number of elements of sEditChunks > 0 then
       repeat for each element tChunk in sEditChunks
-         set the linkText of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
+         set the metadata of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
          set the backgroundColor of char tChunk["start"] to tChunk["end"] of field "script" of me to empty
       end repeat
       delete variable sEditChunks
@@ -3357,7 +3357,7 @@ private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyled
    local tUUID, tChunk
    put the selectedChunk into tChunk
    if exists(tChunk) then
-      put the linkText of tChunk into tUUID
+      put the metadata of tChunk into tUUID
    end if
    
    local tOffset
@@ -3385,18 +3385,18 @@ private command __SelectPlaceholder pUUID, pFromParagraph, pToParagraph, pStyled
    repeat with tParagraphIndex = 1 to the number of elements of pStyledText
       local tRunIndex
       repeat with tRunIndex = 1 to the number of elements of pStyledText[tParagraphIndex]["runs"]
-         if pUUID is pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]  then
+         if pUUID is pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]  then
             put the effective hiliteColor of field "Script" of me \
                   into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
             local tPlaceholderNum
             put the number of elements of sEditChunks + 1 into tPlaceholderNum
             put tOffset+1 into sEditChunks[tPlaceholderNum]["start"]
             put tOffset+the length of pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] into sEditChunks[tPlaceholderNum]["end"]
-         else if pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty then
+         else if pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not empty then
             if pStyledText[tParagraphIndex]["runs"][tRunIndex]["text"] is space or \
-                  pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is tUUID then
-               delete variable sPlaceholders[pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]]
-               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"]
+                  pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"] is tUUID then
+               delete variable sPlaceholders[pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]]
+               delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["metadata"]
                delete variable pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
             else
                put tColor into pStyledText[tParagraphIndex]["runs"][tRunIndex]["style"]["backgroundColor"]
@@ -3432,11 +3432,11 @@ command SelectNextPlaceholder pChar, pFromParagraph, pToParagraph
       local tRunIndex
       repeat with tRunIndex = 1 to the number of elements of tStyle[tParagraphIndex]["runs"]
          if tParagraphIndex > 1 or (tParagraphIndex is 1 and (tRunOffset + 1) >= pChar) then
-            if tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not empty and \
-                  tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"] is not sEditPlaceholder then
+            if tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not empty and \
+                  tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"] is not sEditPlaceholder then
                if tStyle[tParagraphIndex]["runs"][tRunIndex]["text"] is not space then
                   __SelectPlaceholder \
-                        tStyle[tParagraphIndex]["runs"][tRunIndex]["style"]["linkText"], \
+                        tStyle[tParagraphIndex]["runs"][tRunIndex]["metadata"], \
                         pFromParagraph, \
                         pToParagraph, \
                         tStyle
@@ -3455,7 +3455,7 @@ command SelectNextPlaceholder pChar, pFromParagraph, pToParagraph
    
    repeat for each key tUUID in tPlaceholdersToDelete
       repeat for each element tRange in tPlaceholdersToDelete[tUUID]
-         set the linkText of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
+         set the metadata of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
          set the backgroundColor of char (item 1 of tRange) of line (item 2 of tRange) of field "script" of me to empty
       end repeat
       delete variable sPlaceholders[tUUID]
