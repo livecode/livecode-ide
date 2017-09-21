@@ -5,9 +5,6 @@ constant kSocialMedia = "github,stackoverflow,youtube,facebook,twitter,linkedin"
 on openStack
    revIDESubscribe "ideDesktopChanged"
    
-   set the url of widget "Upgrade" of me to empty
-   set the url of widget "UpgradeMini" of me to empty
-   
    ## Set up the Start Center UI   
    initialiseInterface
    
@@ -72,7 +69,9 @@ command initialiseInterface
       set the layer of group "firstRun" to top
       show group "firstRun"
       hide group "UpgradeMini" of me
-      hide widget "UpgradeMini" of me
+      if there is a widget "UpgradeMini" of me then
+         hide widget "UpgradeMini" of me
+      end if
    end if
 end initialiseInterface
 
@@ -750,17 +749,27 @@ private command showUpgradeMini
    else
       set the cTutorialOverride of me to false
       hide group "UpgradeMini" of me
-      hide widget "UpgradeMini" of me
+      if there is a widget "UpgradeMini" of me then
+         hide widget "UpgradeMini" of me
+      end if
    end if
 end showUpgradeMini
 
 command showBrowser pBrowserName, pUrl
    local tBrowser
+   if there is no widget pBrowserName then
+      create invisible widget pBrowserName as "com.livecode.widget.browser"
+   end if
    put the long id of widget pBrowserName of me into tBrowser
    if the url of tBrowser is empty then
       -- show the browser's loading placeholder
       show group pBrowserName of me
       hide tBrowser
+      if pBrowserName is "UpgradeMini" then
+         set the rect of tBrowser to "-1,-1,504,320"
+      else
+         set the rect of tBrowser to "-1,0,800,572"
+      end if
       set the javascripthandlers of tBrowser to "ideAction"
       set the cLoading of tBrowser to true
       set the url of tBrowser to pUrl
