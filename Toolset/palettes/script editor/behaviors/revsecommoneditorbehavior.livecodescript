@@ -3161,29 +3161,24 @@ command scriptGetCurrentHandler
 end scriptGetCurrentHandler
 
 
-private command __BracketCompletion pOffset, pOldText, @xNewText
+private command __BracketCompletion pOffset, @xOldText, @xNewText
    local tBracketCompletion
    put __GetPreference("editor,bracketcompletion", true) into tBracketCompletion
    if tBracketCompletion is not true then
       return empty for value
    end if
    
+   if the length of xNewText is not 1 then
+      return empty for value
+   end if
+   
+   local tNextChar
+   put char pOffset of field "script" of me into tNextChar
+   
    local tCompletionChar
    switch xNewText
       case quote
-         if pOldText is empty then
-            -- ensure we really want to insert an extra quote
-            local tLine
-            put the last line of (char 1 to pOffset of field "script" of me) & space into tLine
-            split tLine by quote
-            if (the number of elements in tLine -1) mod 2 is 0 then
-               put space & the first line of (char pOffset to -1 of field "script" of me) into tLine
-               split tLine by quote
-               if (the number of elements in tLine -1) mod 2 is 0 then
-                  put quote into tCompletionChar
-               end if
-            end if
-         else
+         if tNextChar is not quote then
             put quote into tCompletionChar
          end if
          break
@@ -3196,12 +3191,17 @@ private command __BracketCompletion pOffset, pOldText, @xNewText
    end switch
    
    if tCompletionChar is not empty then
-      if pOldText is empty then
+      if xOldText is empty then
          put tCompletionChar after xNewText
          return "pair" for value
       else
-         put pOldText & tCompletionChar after xNewText
+         put xOldText & tCompletionChar after xNewText
          return "wrap" for value
+      end if
+   else if xOldText is empty then
+      if xNewText is in quote & "])" and \
+            xNewText is tNextChar then
+         put xNewText into xOldText
       end if
    end if
    return empty for value
