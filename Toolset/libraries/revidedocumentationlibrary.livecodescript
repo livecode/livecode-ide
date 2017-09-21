@@ -20,7 +20,7 @@ end ideDocsEnsureDatabase
 
 local sConnection
 on ideDocsInitialize
-   if sConnection is not empty then
+   if sConnection is among the items of revOpenDatabases() then
       exit ideDocsInitialize
    end if
    

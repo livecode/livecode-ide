@@ -5242,6 +5242,12 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
                set the name of tStack to tOldName
                exit revIDEPropertySet
             end if
+            if pValue contains quote then 
+               beep
+               answer error revIDELocalise("The name of the stack cannot contain quotes")
+               set the name of tStack to tOldName
+               exit revIDEPropertySet
+            end if
             put pValue into tStackName
          else
             put the short name of tStack into tStackName
