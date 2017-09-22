@@ -75,7 +75,7 @@ command setObjectID pObjectID
       if tRuggedID is not sObjectID then
          put tRuggedID into sObjectID
          if exists(sObjectId) and \
-               there is a stack "com.livecode.script-library.autocomplete" then
+               revEnvironmentEditionProperty("autocomplete") then
             ideAutocompleteIntrospectMessagePath sObjectId
          end if
       end if
@@ -126,7 +126,7 @@ command clearCache pObject, pDontCheckId
       put revRuggedId(pObject) into tObject
    end if
    delete variable sScriptCache[tObject]
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteClearObjectCache tObject
    end if
 end clearCache
@@ -1377,28 +1377,28 @@ on selectionUpdate
 end selectionUpdate
 
 on mouseMove
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass mouseMove
 end mouseMove
 
 on closeField
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass closeField
 end closeField
 
 on exitField
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass exitField
 end exitField
 
 on escapeKey
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass escapeKey
@@ -1582,7 +1582,7 @@ on returnInField
       exit returnInField
    end if
    
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    
@@ -2188,7 +2188,7 @@ on tabKey
    local tDoTab = true
    
    if tProviderCompletion and \
-         there is a stack "com.livecode.script-library.autocomplete" then
+         revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteHandleTab the long id of me, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tDoTab
    end if
@@ -2438,7 +2438,7 @@ on rawKeyDown pKey
    end switch
    
    local tPass = true
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteHandleArrow the long id of me, tKeyName, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tPass
    end if
@@ -3343,7 +3343,7 @@ end __LookForPair
 private command __UpdateAutoCompleteList pUUID
    local tProviderCompletion
    put __GetPreference("editor,providercompletion", true) into tProviderCompletion
-   if tProviderCompletion and there is a stack "com.livecode.script-library.autocomplete" then
+   if tProviderCompletion and revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteUpdate the long id of me, sObjectID, sPlaceholders[pUUID]["classes"]
    end if
 end __UpdateAutoCompleteList
