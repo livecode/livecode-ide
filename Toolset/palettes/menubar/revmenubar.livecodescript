@@ -646,24 +646,18 @@ on layoutMenu
       add kPadding/2 to tLeft
       show group "upgrade" of me
       show tLastDivide
-      set the width of field "label" of group "upgrade" of me to 1000
-      set the height of field "label" of group "upgrade" of me to the formattedHeight of field "label" of group "upgrade" of me
       
-      put the formattedwidth of field "label" of group "upgrade" of me into tLabelWidth
-      set the width of field "label" of group "upgrade" of me to tLabelWidth
-      set the loc of field "label" of group "upgrade" of me to 0,0
+      put the height of me into tHeight
       
-      local tRect
-      put the rect of field "label" of group "upgrade" of me into tRect
-      put item 1 of tRect - kUpgradeButtonMarginHorizontal, \
-            item 2 of tRect - kUpgradeButtonMarginVertical, \
-            item 3 of tRect + kUpgradeButtonMarginHorizontal, \
-            item 4 of tRect + kUpgradeButtonMarginVertical into tRect
-      set the rect of graphic "bg" of group "upgrade" of me to tRect
+      local tMenuBarHeight = 0
+      if the platform is not "MacOS" then
+         subtract kMenuBarHeight from tHeight
+         put kMenuBarHeight into tMenuBarHeight
+      end if
       
-      set the rect of group "upgrade" of me to the formattedRect of group "upgrade" of me
-      set the loc of group "upgrade" of me to the loc of this card of me
-      set the left of group "upgrade" of me to tLeft
+      set the topLeft of group "upgrade" of me to \
+            tLeft, \
+            tMenuBarHeight + (tHeight - the height of group "upgrade" of me) / 2
       
       add the width of group "upgrade" of me + kPadding to tLeft
    else
@@ -750,6 +744,38 @@ on updateMenubarPreference
          set the height of me to 75
       end if
    end if
+   
+   set the width of field "label" of group "upgrade" of me to 1000
+   set the height of field "label" of group "upgrade" of me to the formattedHeight of field "label" of group "upgrade" of me
+   local tLabelWidth
+   put the formattedwidth of field "label" of group "upgrade" of me into tLabelWidth
+   set the width of field "label" of group "upgrade" of me to tLabelWidth
+   set the loc of field "label" of group "upgrade" of me to 0,0
+   
+   if tShowIcons is false then
+      set the visible of graphic "bg" of group "upgrade" of me to false
+      set the textColor of field "label" of group "upgrade" of me to "black"
+   else
+      set the visible of graphic "bg" of group "upgrade" of me to true
+      set the textColor of field "label" of group "upgrade" of me to "white"
+      
+      local tHeight
+      put the height of me - kPadding into tHeight
+      
+      if the platform is not "MacOS" then
+         subtract kMenuBarHeight from tHeight
+      end if
+      
+      local tRect
+      put the rect of field "label" of group "upgrade" of me into tRect
+      put item 1 of tRect - kUpgradeButtonMarginHorizontal, \
+            -tHeight div 2, \
+            item 3 of tRect + kUpgradeButtonMarginHorizontal, \
+            tHeight div 2 into tRect
+      
+      set the rect of graphic "bg" of group "upgrade" of me to tRect
+   end if
+   set the rect of group "upgrade" of me to the formattedRect of group "upgrade" of me
    
    set the topleft of me to tTopLeft
    unlock messages
