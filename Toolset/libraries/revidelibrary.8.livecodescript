@@ -1493,8 +1493,12 @@ end __unescapeString
 
 on revIDEInitialiseIDELibrary
    # Load fonts
-   start using font file (revIDESpecialFolderPath("fonts") & slash & "lcideicons.ttf")
-   start using font file (revIDESpecialFolderPath("fonts") & slash & "fontawesome.ttf")
+   local tFonts
+   put files(revIDESpecialFolderPath("fonts")) into tFonts
+   filter lines of tFonts with "*.ttf"
+   repeat for each line tFont in tFonts
+      start using font file (revIDESpecialFolderPath("fonts") & slash & tFont)
+   end repeat
    
    # Setup the default lists of properties to read from objects when reading the structure of a stack
    put "name" & return & "visible" & return & "cantselect" & return & "layer" & return & "long id" & return & "label" & return & "behavior" & return & "scriptlines" & return & "scriptstatus" & return & "short name" & return & "owner" & return & "behavior" & return & "behavior scriptlines" & return & "type" & return & "custom control" into sControlPropertiesToRead
@@ -2446,6 +2450,12 @@ function revIDEGetPreference pPreferenceName
    
    if tValue is empty and there is a stack "revPreferences" then
       put the pPreferenceName of stack "revPreferences" into tValue
+   end if
+   
+   if pPreferenceName is "cScriptEditor,editor,font" and \
+         tValue is empty and \
+         "Source Code Pro" is among the lines of the fontNames then
+      return "Source Code Pro"
    end if
    
    return tValue
