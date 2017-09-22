@@ -278,7 +278,10 @@ private command runAllTests pInfo
          exit repeat
       end if
       
+      local tResult
       read from process tCommand for 1 line
+      put the result into tResult
+      
       local tOutput
       -- The output from the subprocesses will be native encoded utf-8.
       put textDecode(it, "utf8") into tOutput
@@ -293,7 +296,7 @@ private command runAllTests pInfo
       end if
       
       put tOutput after tTestOutput
-      if the result is not empty then
+      if tResult is not empty then
          exit repeat
       end if
    end repeat
