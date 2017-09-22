@@ -72,13 +72,13 @@ private command __RecursiveTest pObject
             __RecursiveTest the long id of card id tID of pObject
          end repeat
          repeat for each line tID in the sharedGroupIDs of pObject
-            __RecursiveTest the long id of group id tID of pObject
+            __RecursiveTest the long id of control id tID of pObject
          end repeat
          break
       case "card"
          repeat for each line tID in the childControlIDs of pObject
             if word 1 of the name of control id tID of pObject is "group" and \
-                  the sharedBehavior of pObject then
+                  the sharedBehavior of control id tID of pObject then
                next repeat
             end if
             __RecursiveTest the long id of control id tID of pObject
