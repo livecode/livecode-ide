@@ -26,6 +26,7 @@ private function getTestRunnerBehavior
 end getTestRunnerBehavior
 
 local sStarted
+local sTestsRun = false
 private command startTestRunner
    if sStarted then
       exit startTestRunner
@@ -44,8 +45,6 @@ private command startTestRunner
 	  send "TestRunnerMain" to me in 0
    end if
 end startTestRunner
-
-local sTestsRun = false
 
 on startup
    local tTarget
