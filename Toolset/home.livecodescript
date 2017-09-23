@@ -1183,7 +1183,8 @@ command revInternal__InitialiseLibraries
    revInternal_SetJAVA_HOME
    
    local tLoadList
-   put "revIDEDocumentationLibrary" into tLoadList
+   put "revDatabaseLibrary" into tLoadList 
+   put return & "revIDEDocumentationLibrary" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList
@@ -1199,7 +1200,6 @@ command revInternal__InitialiseLibraries
    put return & "revGeometryLibrary" after tLoadList 
    put return & "revXMLRPCLibrary" after tLoadList 
    put return & "revProfilesLibrary" after tLoadList 
-   put return & "revDatabaseLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
