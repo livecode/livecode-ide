@@ -289,7 +289,7 @@ private command runAllTests pInfo
             item 1 of tOutput is "XPASS" or \
             item 1 of tOutput is "FAIL" or \
             item 1 of tOutput is "XFAIL" then
-         write logHighlight(item 1 of tOutput) & ":" & item 2 to -1 of tOutput to stdout
+         TesterLog item 1 of tOutput, item 2 to -1 of line 1 of tOutput
       else if tOutput begins with "not ok" then
          write tOutput to stdout
       end if
