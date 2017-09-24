@@ -49,19 +49,55 @@
 	}
 
 
-	// Return all the syntax associated with an entry
+	// Return all the syntax and synonyms associated with an entry
 	// as a (matchable) string
 	function collectSyntax(pEntry)
 	{
 		var tSyntax = pEntry["display name"];
 		$.each(pEntry["display syntax"], function (index, value) 
 		{
-			if (tSyntax != '')
-				tSyntax += ' ';
-				
-			tSyntax += value;
+			tSyntax += ' ' + value;
 		});
+		if(pEntry.hasOwnProperty("synonyms"))
+		{
+			$.each(pEntry["synonyms"], function (index, value) 
+			{
+				tSyntax += ' ' + value;
+			});
+		}
+		tSyntax = removeHtmlEntityEscapes(tSyntax);
 		return tSyntax;
+	}
+	
+	// Replace HTML entity escape sequences with native characters for
+	// searching and highlighting syntax and synonyms.
+	function removeHtmlEntityEscapes(pTerm)
+	{
+		var tTerm = pTerm;
+		tTerm = tTerm.replace(/&amp;/g,"&");
+		tTerm = tTerm.replace(/&lt;/g,"<");
+		tTerm = tTerm.replace(/&gt;/g,">");
+		tTerm = tTerm.replace(/&quot;/g,'"');
+		return tTerm;
+	}
+	
+	// Replace characters with their HTML entity escape sequences after
+	// processing is completed.
+	function addHtmlEntityEscapes(pTerm)
+	{
+		var tTerm = pTerm;
+		tTerm = tTerm.replace(/&/g,"&amp;");
+		tTerm = tTerm.replace(/\</g,"&lt;");
+		tTerm = tTerm.replace(/\>/g,"&gt;");
+		tTerm = tTerm.replace(/\"/g,"&quot;");
+		return tTerm;
+	}
+	
+	// Escape RegExp special characters for use in searching
+	var kSpecialCharacters = /[.*+?|()\[\]{}\\$^]/g; // .*+?|()[]{}\$^
+	RegExp.escape = function(pText)
+	{
+		return pText.replace(kSpecialCharacters, "\\$&");
 	}
 	
 	// Return a list of matched search terms
@@ -73,23 +109,27 @@
 			
 		tState.searched.term = pTerm;
 		tState.searched.data = [];
-		
-		// Escape leading special characters:  \ ^ $ [
-		var tTerm = pTerm;
-		if(pTerm.search(/^[\\\^\$\[]/) == 0)
-		{
-			tTerm = "\\" + pTerm;
-		}
 
+		//console.log(pTerm);
+		//console.time("Search");
+		
+		// Escape RegExp special characters:  \ ^ $ [
+		// A leading space will enable full RegExp support
+		var tTerm = '';
+		if(pTerm.startsWith(' '))
+			tTerm = pTerm.trim();
+		else
+			tTerm = RegExp.escape(pTerm);
+		
 		// Get a list of space-delimited search terms
 		var tokensOfTerm = tTerm.match(/\S+/g);
 		
 		
 		// Generate three regexes - one that matches all syntax that 
 		// contains each search term, and one that matches all syntax that
-		// contains a word beginning with each search term. This way we 
-		// can prioritize matches that start with the search terms.
-		// Third regex will match full words.
+		// contains a word beginning with each search term, one that will
+		// match full words of each search term. This way we can prioritize
+		// full word matches and matches that start with the search terms.
 		var matchExp = '';
 		var priorityMatch = '';
 		var wordMatch = '';
@@ -99,6 +139,19 @@
 			priorityMatch += '(?=.*\\b' + matchToken + ')';
 			wordMatch += '(?=.*\\b' + matchToken + '\\b)';
 		});
+
+		// Special case sorting for terms considered word break
+		// characters that would not get sorted properly.
+		switch(pTerm){
+			case '-':
+			case '/':
+			case ';':
+			case '[':
+			case '(':
+			case '()':
+				wordMatch = '(^' + tTerm + ')';
+				break;
+		}
 
 		var regex = new RegExp(matchExp, "i");
 		var priorityRegex = new RegExp(priorityMatch, "i");
@@ -112,15 +165,28 @@
 			return tMatched;
 		});
 
-		//console.log(pTerm);
-		//console.time("Search");
 		// Sort the priority matches to the top
 		tState . searched . data . sort(function(a, b) 
 		{
 			var tNameA, tNameB, tMatchA, tMatchB
 
 			tNameA = a["display name"].toLowerCase();
+			if(a.hasOwnProperty("synonyms"))
+			{
+				$.each(a["synonyms"], function (index, value) 
+				{
+					tNameA += ' ' + value.toLowerCase();
+				});
+			}
+
 			tNameB = b["display name"].toLowerCase();
+			if(b.hasOwnProperty("synonyms"))
+			{
+				$.each(b["synonyms"], function (index, value) 
+				{
+					tNameB += ' ' + value.toLowerCase();
+				});
+			}
 
 			// full word matches in display name sort to the top
 			tMatchA = wordRegex.test(tNameA);
@@ -156,6 +222,7 @@
 		//console.timeEnd("Search");
 	
 		$(window).scrollTop(0);
+		$("#table_container").scrollTop(0);
 		return tState . searched . data;
 	}
 	
@@ -527,6 +594,35 @@
 		return tSection;
 	}
 	
+	// Add a background highlight to search terms found in syntax and synonyms
+	var kSpanStartMarker = String.fromCharCode(2);
+	var kSpanEndMarker = String.fromCharCode(3);
+	var kSpanStartRegex = new RegExp(kSpanStartMarker, "g");
+	var kSpanEndRegex = new RegExp(kSpanEndMarker, "g");
+	function highlightSearchTerms(pText)
+	{
+		var tText = removeHtmlEntityEscapes(pText);
+		
+		if($("#ui_filer").val() != "")
+		{
+			var tTerm = $("#ui_filer").val();
+			var tokensOfTerm = tTerm.match(/\S+/g);
+			$.each(tokensOfTerm, function(index, matchToken)
+			{
+				var match_regex = new RegExp('(' + RegExp.escape(matchToken) + ')', "gi")
+				tText = tText.replace(match_regex, function($1){
+					// Need to use placeholders since we need to remove HTML
+					// entities once done with adding hilighting.
+					return kSpanStartMarker + $1 + kSpanEndMarker;
+				});
+			});
+		}
+		tText = addHtmlEntityEscapes(tText);
+		tText = tText.replace(kSpanStartRegex, "<span style='background-color: yellow;'>");
+		tText = tText.replace(kSpanEndRegex, "</span>");
+		return tText;
+	}
+
 	function displayEntry(pEntryID)
 	{		
 		var tEntryObject = entryData(pEntryID);
@@ -611,16 +707,14 @@
 				
 					break;
 				case "syntax":
-					var tSyntaxHTML = "";
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
 						$.each(value, function(index2, value2) {
-							tHTML += '<pre><code>' + remove_link_placeholders(value2) + '</code></pre>';
+							tHTML += '<pre><code>' + highlightSearchTerms(remove_link_placeholders(value2)) + '</code></pre>';
 						});
 					} else {
-						tSyntaxHTML += 'Malformed syntax in JSON';	
+						tHTML += 'Malformed syntax in JSON';	
 					}
-					tHTML += tSyntaxHTML;
 					tHTML += '</div>';
 					break;
 				case "associations":
@@ -666,7 +760,6 @@
 				case "changes":
 					break;
 					
-				
 					
 				default:
 					
@@ -681,7 +774,10 @@
 								tOutput += ', ';
 							tOutput += content;
 						});
-						tHTML += tOutput;
+						if(index=="synonyms")
+							tHTML += highlightSearchTerms(tOutput);
+						else
+							tHTML += tOutput;
 					}
 					else
 						tHTML += value;
@@ -1214,6 +1310,8 @@
 		// Delay search until 250ms after last character typed
 		$('#ui_filer').keyup( debounce( function() {
 			displayEntryListGrep(this.value);
+			if(tState.searched.data.hasOwnProperty(0))
+				displayEntry(tState.searched.data[0]["id"]);
 		}, 250));
 		
 		$("body").on( "click", ".load_entry", function() {
