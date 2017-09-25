@@ -919,10 +919,12 @@ end __revInternal_SavePreferences
 private command revInternal__EnsureFolder pFolder
   revInternal__Log "Enter", "Ensuring Folder '" & pFolder & "'"
   
-  local tPath, tComponent
+  local tPath
+  local tComponent
   
   set the itemDelimiter to "/"
-  repeat for each item tComponent in pFolder
+  put item 1 of pFolder & "/" into tPath
+  repeat for each item tComponent in item 2 to -1 of pFolder
     put tComponent & "/" after tPath
     if there is no folder (char 1 to -2 of tPath) then
       create folder char 1 to -2 of tPath
@@ -1181,7 +1183,8 @@ command revInternal__InitialiseLibraries
    revInternal_SetJAVA_HOME
    
    local tLoadList
-   put "revIDEDocumentationLibrary" into tLoadList
+   put "revDatabaseLibrary" into tLoadList 
+   put return & "revIDEDocumentationLibrary" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList
@@ -1197,7 +1200,6 @@ command revInternal__InitialiseLibraries
    put return & "revGeometryLibrary" after tLoadList 
    put return & "revXMLRPCLibrary" after tLoadList 
    put return & "revProfilesLibrary" after tLoadList 
-   put return & "revDatabaseLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
    put return & "oauth2" after tLoadList
    put return & "getopt" after tLoadList
