@@ -911,10 +911,12 @@ end __revInternal_SavePreferences
 private command revInternal__EnsureFolder pFolder
   revInternal__Log "Enter", "Ensuring Folder '" & pFolder & "'"
   
-  local tPath, tComponent
+  local tPath
+  local tComponent
   
   set the itemDelimiter to "/"
-  repeat for each item tComponent in pFolder
+  put item 1 of pFolder & "/" into tPath
+  repeat for each item tComponent in item 2 to -1 of pFolder
     put tComponent & "/" after tPath
     if there is no folder (char 1 to -2 of tPath) then
       create folder char 1 to -2 of tPath

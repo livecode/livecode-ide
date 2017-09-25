@@ -26,7 +26,9 @@ command revInternal__LoadLibrary pLibrary
       end if
    catch tError
       write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
+      return "Error loading" && pLibrary
    end try
+   return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
