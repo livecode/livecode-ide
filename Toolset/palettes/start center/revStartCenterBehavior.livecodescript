@@ -76,6 +76,11 @@ command initialiseInterface
    end if
 end initialiseInterface
 
+on firstRunVisible pVisible
+   revIDESetPreference "StartCenterClassic", not pVisible
+   initialiseInterface
+end firstRunVisible
+
 on ideDesktopChanged
    set the loc of me to revIDEStackScreenLoc(the short name of me)
 end ideDesktopChanged
