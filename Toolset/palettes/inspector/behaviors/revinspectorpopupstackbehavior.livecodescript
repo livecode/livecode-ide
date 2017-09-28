@@ -17,7 +17,12 @@ on preOpenStack
    set the default of the templatebutton to true
    create button "OK"
    
-   set the topright of button "OK" to the width of me -  tMargin, the height of me
+   // In LC 9.0 DP-7 you can resize the inspector window, by putting all the contents in a group "inspector" 
+   // and adding a vScrollbar to the group
+   // but 'modeless stack X' breaks the vScrollbar of groups, so ensure the popup stack has the correct 
+   // height before going 'modeless'
+   set the height of me to the formattedHeight of group "inspector" of me + 2 * tMargin
+   set the topright of button "OK" to the width of me -  tMargin, the height of me 
    set the resizable of me to false
    set the height of me to the height of me + the height of button "OK" of me + tMargin
    
