@@ -28,11 +28,7 @@
 	
 	library_set(tState.selected_api_id);
 
-	function dataGet(){
-		//sort API dictionaries, leave LiveCode Script/LiveCode Builder as first 2 entries
-		if (tState.selected_api_id == ""){
-			dictionary_data.docs.sort(compareDictionaryObject);
-		}
+	function dataGet() {		
 		if(!dictionary_data.docs.hasOwnProperty(tState.selected_api_id)){
 			$.each(dictionary_data.docs, function(index, libraryData) {
 				tState.selected_api_id = index;
@@ -47,7 +43,7 @@
 		
 		return tState.data;
 	}
-	
+
 	// Return all the syntax associated with an entry
 	// as a (matchable) string
 	function collectSyntax(pEntry)
