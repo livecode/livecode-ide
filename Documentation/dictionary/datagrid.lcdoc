@@ -1686,23 +1686,40 @@ false then each item of each line in pText will be named "Label X"
 When retrieving the dgText property, setting the pIncludeColumnNames to true
 will cause the column names to be included in the first line.
 
-Name: dgHilitedIndexes synonyms: dgHilitedIndex type: property
+
+Name: dgHilitedIndexes 
+
+synonyms: dgHilitedIndex 
+
+type: property
+
 Associations: datagrid
 
-syntax: set the dgHilitedIndexes of group "DataGrid" to pIndex summary:
-Returns a comma delimited list of the indexes that are currently
-selected. Description:
+syntax: set the dgHilitedIndexes of group "DataGrid" to pIndex 
+
+summary: Returns a comma delimited list of the indexes that are currently
+selected. 
+
+Description:
 
 Returns a comma delimited list of the indexes that are currently
 selected.
 
 
-Name: dgHilitedLines synonyms: dgHilitedLine type: property
+Name: dgHilitedLines 
+
+synonyms: dgHilitedLine 
+
+type: property
+
 Associations: datagrid
 
-syntax: set the dgHilitedLines of group "DataGrid" to pLine summary:
-Returns a comma delimited list of the line numbers that are currently
-selected. Description:
+syntax: set the dgHilitedLines of group "DataGrid" to pLine 
+
+summary: Returns a comma delimited list of the line numbers that are currently
+selected. 
+
+Description:
 
 Returns a comma delimited list of the line numbers that are currently
 selected.
