@@ -1448,13 +1448,25 @@ private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
    return empty
 end revIDEExtensionFetchMetadata
 
-function revIDEExtensionModuleFile pKind
+function revIDEExtensionFileData pID 
    # Get the internal cache index
    local tCacheIndex
-   put __extensionCacheID("name", pKind) into tCacheIndex
+   put __extensionCacheID("name", pID) into tCacheIndex
    
-   return __extensionPropertyGet(tCacheIndex, "install_path") & slash & "module.lcm"
-end revIDEExtensionModuleFile
+   local tSourceType, tFolder, tSourceFile
+   put __extensionPropertyGet(tCacheIndex, "install_path") into tFolder
+   put __extensionPropertyGet(tCacheIndex, "source_type") into tSourceType
+   put __extensionPropertyGet(tCacheIndex, "source_file") into tSourceFile
+   
+   local tDataA
+   put tSourceType into tDataA["type"]
+   if tSourceType is "lcb" then
+      put tFolder & slash & "module.lcm" into tDataA["file"]
+   else
+      put tFolder & slash & tSourceFile into tDataA["file"]
+   end if
+   return tDataA
+end revIDEExtensionFileData
 
 command revIDEExtensionUnload pKind
    local tCacheIndex
