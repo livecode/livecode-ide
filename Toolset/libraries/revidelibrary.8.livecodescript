@@ -10759,10 +10759,10 @@ private function revIDEGetExtensionDocsData pAPI
       put tExtensionData["folder"] into tFolder
       
       local tSource
-      put __getLCBSourceFile(tFolder) into tSource
+      put tExtensionData["source_file"] into tSource
       
       # Check if the lcdoc file is out of date
-      put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
+      put revEnvironmentUserDocsPath() & slash & tExtensionData["name"] into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
       
       local tInputs
@@ -10780,11 +10780,32 @@ private function revIDEGetExtensionDocsData pAPI
             tAPIDoc, false, tError) \
             into tNeedUpdate
       
+      # If there is an up-to-date api.lcdoc in the source folder, just copy that across
+      local tSourceAPI
+      put tFolder & slash & "api.lcdoc" into tSourceAPI
+      if tNeedUpdate is true and there is a file tSourceAPI then
+         if revIDEIsFilesetStale(tInputs, \
+               tSourceAPI, false, tError) \
+               is false then 
+            
+            revIDESetUTF8FileContents tAPIDoc, revIDEUTF8FileContents(tSourceAPI)
+            put false into tNeedUpdate
+         end if
+      end if
+      
       # Regenerate the lcdoc file if required
       if tNeedUpdate is true then
          # Generate the docs text in lcdoc format 
          local tDoc
-         dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with tFolder & slash & tSource
+         if tExtensionData["source_type"] is "lcb" then
+            dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with \
+                  tFolder & slash & tSource
+         else
+            local tStack
+            put the long id of stack (tFolder & slash & tSource) into tStack
+            dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with \
+                  the script of tStack, tStack
+         end if
          put the result into tDoc
          
          # Output the lcdoc file
@@ -11132,11 +11153,9 @@ private command revIDEGenerateDistributedAPI
    if tNeedUpdate then
       local tIDELibs, tIDEA, tIDECount, tIDEParsedA
       put 1 into tIDECount
-      put revInternal__ListLoadedLibraries() into tIDELibs
-      filter tIDELibs with "rev*"
-      repeat for each line tLine in tIDELibs
-         local tStackName
-         put revInternal__LoadedLibraryStackName(tLine) into tStackName
+      put the stackfiles of stack "home" into tIDELibs
+      split tIDELibs by return and comma
+      repeat for each key tStackName in tIDELibs
          get revDocsGenerateDocsFileFromText(the script of stack tStackName, \
                the long id of stack tStackName)
          if it is not empty then

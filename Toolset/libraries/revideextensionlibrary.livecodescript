@@ -1326,14 +1326,23 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
    
    # Check timestamps to see if API  is out of date.
-   local tNeedUpdate, tError
-   put revIDEIsFilesetStale(pFolder & slash & pExtensionSource, \
-      pFolder & slash & "api.lcdoc", false, tError) into tNeedUpdate
+   local tNeedUpdate, tError, tSource
+   put pFolder & slash & pExtensionSource into tSource
+   put revIDEIsFilesetStale(tSource, \
+         pFolder & slash & "api.lcdoc", false, tError) into tNeedUpdate
    if tNeedUpdate is empty then put true into tNeedUpdate
    
    if tNeedUpdate then
+      local tText
+      if there is a stack tSource then
+         put the long id of stack tSource into tSource
+         put the script of stack tSource into tText
+      else
+         put textDecode(url("binfile:" & tSource), "utf-8") into tText
+      end if
+      
       local tAPI
-      dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with (pFolder & slash & pExtensionSource) 
+      dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with tText, tSource
       put the result into tAPI 
       put textEncode(tAPI, "utf-8") into url ("binfile:" & pFolder & slash & "api.lcdoc")
       return "updated"
