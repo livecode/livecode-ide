@@ -8,7 +8,8 @@ on FillInData pDataA, pRow
    local tLabel, tAuthor
    if pDataA["title"] is not empty then put pDataA["title"] into tLabel
    else if pDataA["label"] is not empty then put pDataA["label"] into tLabel
-   if tLabel is empty then put "Extension Title" into tLabel
+   else if pDataA["display name"] is not empty then put pDataA["display name"] into tLabel
+   else put pDataA["name"] into tLabel
    
    if pDataA["author"] is not empty then put pDataA["author"] into tAuthor
    if tAuthor is empty then put "Unknown Author" into tAuthor
@@ -49,6 +50,8 @@ on FillInData pDataA, pRow
    set the cIDE of me to (pDataA["ide"] is true)
    if pDataA["ide"] is true then
       hide button "uninstall" of me
+   else
+      show button "uninstall" of me
    end if
    
    switch pDataA["status"]
