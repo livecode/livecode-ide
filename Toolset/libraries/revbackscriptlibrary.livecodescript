@@ -2972,46 +2972,6 @@ on revShutDown
   
 end revShutDown
 
-function revCombineFilePaths pPaths, pPaths2
-   -- combines file paths based on last item, where duplicates keeps list 1
-   set the itemDel to slash
-   
-   local tPaths
-   repeat for each line l in pPaths2
-      if the number of words in l is 0 then next repeat
-      put l into tPaths[item -1 of l]
-   end repeat
-   repeat for each line l in pPaths
-      if the number of words in l is 0 then next repeat
-      put l into tPaths[item -1 of l]
-   end repeat
-   
-   local tReturn
-   repeat for each element e in tPaths
-      put e & cr after tReturn
-   end repeat
-   delete last char of tReturn
-   return tReturn
-end revCombineFilePaths
-
-function revAbsoluteFolderListing pDirectory
-   local tReturn
-   if there is no directory pDirectory then return empty
-   put the directory into tReturn
-   set the directory to pDirectory
-   
-   local tFiles
-   put the files into tFiles
-   
-   local tOutput
-   repeat for each line l in tFiles
-      put the directory & slash & l & cr after tOutput
-   end repeat
-   delete last char of tOutput
-   set the directory to tReturn
-   return tOutput
-end revAbsoluteFolderListing
-
 function revCalculateRelativePath pRoot, pFile
   local tResult, tCount
   set the itemDel to "/"

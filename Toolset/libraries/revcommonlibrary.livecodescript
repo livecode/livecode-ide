@@ -1573,3 +1573,40 @@ function revRuggedId pObject
    
    return tId
 end revRuggedId
+
+function revAbsoluteFolderListing pDirectory
+   if there is no directory pDirectory then return empty
+
+   local tFiles
+   put files(pDirectory) into tFiles
+   
+   local tOutput
+   repeat for each line tFile in tFiles
+      put the directory & slash & tFile & return after tOutput
+   end repeat
+   delete last char of tOutput
+
+   return tOutput
+end revAbsoluteFolderListing
+
+function revCombineFilePaths pPaths, pPaths2
+   -- combines file paths based on last item, where duplicates keeps list 1
+   set the itemDel to slash
+   
+   local tPaths
+   repeat for each line l in pPaths2
+      if the number of words in l is 0 then next repeat
+      put l into tPaths[item -1 of l]
+   end repeat
+   repeat for each line l in pPaths
+      if the number of words in l is 0 then next repeat
+      put l into tPaths[item -1 of l]
+   end repeat
+   
+   local tReturn
+   repeat for each element e in tPaths
+      put e & cr after tReturn
+   end repeat
+   delete last char of tReturn
+   return tReturn
+end revCombineFilePaths

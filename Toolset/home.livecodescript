@@ -1173,18 +1173,18 @@ command revInternal__InitialiseLibraries
    revInternal_SetJAVA_HOME
    
    local tLoadList
-   put "revDatabaseLibrary" into tLoadList 
+   put "revCommonLibrary" into tLoadList 
+   put return & "revDatabaseLibrary" after tLoadList 
    put return & "revIDEDocumentationLibrary" after tLoadList
+   put return & "revSBLibrary" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList
    put return & "revBackScriptLibrary" after tLoadList 
-   put return & "revSBLibrary" after tLoadList
    put return & "revDeployLibrary" after tLoadList
    put return & "revDebuggerLibrary" after tLoadList 
    put return & "revMetadataLibrary" after tLoadList
    put return & "revLibUrl" after tLoadList 
-   put return & "revCommonLibrary" after tLoadList 
    put return & "revPrintLibrary" after tLoadList 
    put return & "revAnimationLibrary" after tLoadList 
    put return & "revGeometryLibrary" after tLoadList 
@@ -1214,7 +1214,8 @@ command revInternal__InitialiseLibraries
    put return & "revIDEProjectBrowserLibrary" after tBackList
    
    local tLib
-   repeat for each line tLib in tLoadList	 	
+   repeat for each line tLib in tLoadList	 
+      revInternal__Log "Message", "Loading library" && tLib	
       revInternal__LoadLibrary tLib
 	  if the result is not empty then
 	     revInternal__Log "Error", the result 
