@@ -2037,12 +2037,21 @@ function revEnvironmentExternalsPath
 end revEnvironmentExternalsPath
 
 function revEnvironmentExtensionsPath
+   return line 1 of revEnvironmentExtensionsPaths()
+end revEnvironmentExtensionsPath
+
+function revEnvironmentExtensionsPaths
    if revEnvironmentIsInstalled() then
       return hookToolsPath("extensions", sToolsPath & "/Extensions")
    else
-      return revEnvironmentBinariesPath() & slash & "packaged_extensions"
+      -- Load the real extensions rather than the packaged versions
+      local tPaths
+      put revEnvironmentRepositoryPath() & slash & "extensions" into tPaths
+      put return & revEnvironmentCommercialRepositoryPath() \
+            & slash & "extensions" after tPaths
+      return tPaths
    end if
-end revEnvironmentExtensionsPath
+end revEnvironmentExtensionsPaths
 
 function revEnvironmentRuntimePath
   return hookToolsPath("runtime", sToolsPath & "/Runtime")

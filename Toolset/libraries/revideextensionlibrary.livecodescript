@@ -738,7 +738,8 @@ private function __fetchScriptLibraryData pExtensionFile
    put item -1 of pExtensionFile into tFile
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
-   if not revEnvironmentIsInstalled() then
+   if not revEnvironmentIsInstalled() or \
+         not tFolder begins with revEnvironmentExtensionsPath() then
       revIDEExtensionUpdateAPI tFolder, tFile
    end if
    
@@ -863,6 +864,69 @@ function revIDEExtensionsOrderByDependency pExtensions
    return __dependencyOrder(tDependencies, pExtensions)
 end revIDEExtensionsOrderByDependency
 
+command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rType
+   local tFiles
+   put files(pFolder) into tFiles
+   
+   local tExtFile, tType
+   filter tFiles with "*.lcb" into tExtFile
+   put "lcb" into tType
+   if tExtFile is empty then
+      put "lcs" into tType
+      filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
+   end if
+
+   put tExtFile into rSource
+   put tType into rType
+end revIDEExtensionFetchSourceFromFolder
+
+private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xDataA
+   local tExtSource, tArray, tFiles, tExtFile, tType
+   revIDEExtensionFetchSourceFromFolder pFolder, tExtFile, tType
+   
+   local tNumExtensions
+   put the number of lines in tExtFile into tNumExtensions
+   if tNumExtensions > 1 then
+      get __revIDEError("Invalid extension folder" && pFolder & ": require exactly one extension per folder")
+      exit __FindExtensionsInFolderRecursive
+   end if
+   
+   -- If we found no extensions, recurse
+   if tNumExtensions is 0 then
+      repeat for each line tSubFolder in folders(pFolder)
+         if tSubFolder begins with "." then next repeat
+         __FindExtensionsInFolderRecursive pFolder & slash & tSubFolder, pIsUserFolder, xDataA
+      end repeat
+      exit __FindExtensionsInFolderRecursive
+   end if
+   
+   put pFolder & slash & tExtFile into tExtSource
+   if tType is "lcb" then
+      put __fetchModuleData(tExtSource) into tArray
+   else
+      put __fetchScriptLibraryData(tExtSource) into tArray
+   end if
+   
+   put tExtFile into tArray["source_file"]
+   put tType into tArray["source_type"]
+   put not pIsUserFolder into tArray["ide"]
+   
+   local tTypeID
+   if tArray["name"] is empty then
+      put pFolder into tTypeID
+   else
+      put tArray["name"] into tTypeID
+   end if
+   put tArray into xDataA[tTypeID][pFolder]
+end __FindExtensionsInFolderRecursive
+
+private function isUserExtension pData
+   if pData["ide"] then 
+      return 1
+   end if
+   return 0
+end isUserExtension
+
 on __extensionsLoad
    local tDataA   
    # Fetch all the available data about extensions in the search paths
@@ -873,51 +937,9 @@ on __extensionsLoad
       repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
-         
-         local tExtSource, tArray, tFiles, tExtFolder
+         local tExtFolder
          put tExtensionFolder & slash & tFolder into tExtFolder
-         put files(tExtFolder) into tFiles
-         
-         local tExtFile, tType
-         filter tFiles with "*.lcb" into tExtFile
-         put "lcb" into tType
-         if tExtFile is empty then
-            put "lcs" into tType
-            filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
-         end if
-         
-         local tNumExtensions
-         put the number of lines in tExtFile into tNumExtensions
-         if tNumExtensions > 1 then
-            get __revIDEError("Invalid extension folder" && tExtFolder & ": require exactly one extension per folder")
-            next repeat
-         end if
-         if tNumExtensions is 0 then
-            next repeat
-         end if
-         
-         put tExtFolder & slash & tExtFile into tExtSource
-         if tType is "lcb" then
-            put __fetchModuleData(tExtSource) into tArray
-         else
-            put __fetchScriptLibraryData(tExtSource) into tArray
-         end if
-         
-         put tExtFile into tArray["source_file"]
-         
-         put tType into tArray["source_type"]
-         if tKey is "ide" then
-            put true into tArray["ide"]
-         else
-            put false into tArray["ide"]
-         end if
-         local tTypeID
-         if tArray["name"] is empty then
-            put tFolder into tTypeID
-         else
-            put tArray["name"] into tTypeID
-         end if
-         put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
+         __FindExtensionsInFolderRecursive tExtFolder, tKey is "user", tDataA
       end repeat
    end repeat
    
@@ -931,12 +953,16 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each element tLocation in tFoldersA
-         repeat for each key tFolder in tDataA[tTypeID][tLocation]
-            put tDataA[tTypeID][tLocation][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
-            put tLocation & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
-            add 1 to tExtensionCopyCount
-         end repeat
+      local tCopyFolders
+      put the keys of tDataA[tTypeID] into tCopyFolders
+      -- give priority to user extensions. If there are multiple
+      -- then further resolve by alphabetical order of full filename
+      sort tCopyFolders
+      sort tCopyFolders ascending numeric by isUserExtension(tDataA[tTypeID][each])
+      repeat for each key tFolder in tDataA[tTypeID]
+         put tDataA[tTypeID][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+         put tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
+         add 1 to tExtensionCopyCount
       end repeat
       put tExtensionDataA into tToLoadA[tTypeID]
       # Accumulate an array of dependencies
@@ -1002,7 +1028,7 @@ private command __extensionLoad pID, pExtensionDataA
    revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tToLoadA
 end __extensionLoad
 
-private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pSourceLocation, pSourceFile, pAdditionalInfoA
+private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA
    local tStatus, tError
    if pError is empty then
       local tResources, tModule
@@ -1040,7 +1066,7 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
    __extensionPropertySet tCacheIndex, "status", tStatus
    __extensionPropertySet tCacheIndex, "error", tError
-   __extensionPropertySet tCacheIndex, "ide", pSourceLocation is not "user"
+   __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
    __extensionPropertySet tCacheIndex, "source_type", "lcb"
    
@@ -1088,7 +1114,7 @@ private function __UseTypeToKey pUseType
    end switch
 end __UseTypeToKey
 
-private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pSourceLocation, pSourceFile, pAdditionalInfoA
+private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA
    local tStatus, tError
    set the itemdelimiter to "."
    if pError is empty then
@@ -1138,7 +1164,7 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
    __extensionPropertySet tCacheIndex, "status", tStatus
    __extensionPropertySet tCacheIndex, "error", tError
-   __extensionPropertySet tCacheIndex, "ide", pSourceLocation is not "user"
+   __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_type", "lcs"
    __extensionPropertySet tCacheIndex, "type", "library"
    __extensionPropertySet tCacheIndex, "uservisible", true

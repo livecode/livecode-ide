@@ -5484,7 +5484,12 @@ end revIDELastModifiedTimeOfFilesInFolder
 function revIDEExtensionFolders
    local tFoldersA
    put revIDESpecialFolderPath("user extensions") into tFoldersA["user"]
-   put revIDESpecialFolderPath("extensions") into tFoldersA["ide"]
+   
+   local tCount = 0
+   repeat for each line tFolder in revEnvironmentExtensionsPaths()
+      add 1 to tCount
+      put tFolder into tFoldersA["ide" && tCount]
+   end repeat
    return tFoldersA
 end revIDEExtensionFolders
 
