@@ -15,10 +15,24 @@ on FillInData pDataA, pRow
    
    put tLabel & return & tAuthor  into field "description" of me
    
-   if pDataA["icon"] is not empty then
+   local tShowSVGIcon, tSVGIcon, tDefaultName
+   put true into tShowSVGIcon
+   revIDEExtensionIconFromType pDataA["type"], pDataA["name"], tDefaultName, tSVGIcon
+   if tSVGIcon is not empty then
+      set the iconPath of widget "svgicon" of me to pDataA["svgicon"]
+   else if pDataA["icon"] is not empty then
+      put false into tShowSVGIcon
       set the filename of image "icon" of me to pDataA["icon"] 
    else
-      set the filename of image "icon" of me to revIDEDefaultExtensionIcon(pDataA["type"])
+      set the iconPresetName of widget "svgicon" of me to tDefaultName
+   end if
+   
+   if tShowSVGIcon then
+      show widget "svgicon" of me
+      hide image "icon" of me
+   else
+      hide widget "svgicon" of me
+      show image "icon" of me
    end if
    
    ## Is an update available
@@ -82,14 +96,14 @@ on LayoutControl pControlRect
    set the width of graphic "border" of me to (item 3 of pControlRect - item 1 of pControlRect)
    set the bottomLeft of graphic "border" of me to item 1 of pControlRect, item 4 of pControlRect
    put the loc of me into tIconLoc
-   put item 1 of pControlRect + (17 + tMargin) into item 1 of tIconLoc
-   set the loc of image "icon" of me to tIconLoc  
-   
+   set the loc of widget "svgicon" of me to tIconLoc
+   set the left of widget "svgicon" of me to item 1 of pControlRect + tMargin
+   set the loc of image "icon" of me to the loc of widget "svgicon" of me  
    --set the width of field "description" of me to (item 3  of pControlRect - item 1 of pControlRect) - the width of image "icon" of me - the width of button "uninstall" of me
    set the width of field "description" of me to the formattedWidth of field "description" of me
    set the height of field "description" of me to the formattedHeight of field "description" of me
    set the loc of field "description" of me to the loc of me
-   set the left of field "description" of me to the right of image "icon" of me + tPadding
+   set the left of field "description" of me to the right of widget "svgicon" of me + tPadding
    
    set the textColor of line 1 of field "description" of me to revIDEColor("text_1")
    set the textColor of line 2 of field "description" of me to revIDEColor("text_2")

@@ -79,33 +79,29 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
    # No type passed so return all extensions
    
    # Repeat over the extension array looking for elements with matching type
-   local tExtensions
+   local tExtensions, tExtension
    repeat for each key tExtensionKey in sExtensions
-      if sExtensions[tExtensionKey]["name"] is empty then 
+      put sExtensions[tExtensionKey] into tExtension
+      if tExtension["name"] is empty then 
          delete variable sExtensions[tExtensionKey]
          next repeat
       end if
-      if pType is not empty and sExtensions[tExtensionKey]["type"] is not pType then next repeat
+      if pType is not empty and tExtension["type"] is not pType then next repeat
       if pStatus is "installed" then
-         if sExtensions[tExtensionKey]["status"] is "uninstalled" then
+         if tExtension["status"] is "uninstalled" then
             next repeat
          end if
       else if pStatus is not empty then
-         if sExtensions[tExtensionKey]["status"] is not pStatus then 
+         if tExtension["status"] is not pStatus then 
             next repeat
          end if
       end if
       
-      if pWithoutInvisible and not sExtensions[tExtensionKey]["uservisible"] then
+      if pWithoutInvisible and not tExtension["uservisible"] then
          next repeat
       end if
       
-      local tIconPath
-      if there is not a file sExtensions[tExtensionKey]["icon"] then 
-         put revIDEDefaultExtensionIcon(pType) into sExtensions[tExtensionKey]["icon"]
-      end if
-      
-      put sExtensions[tExtensionKey] into tExtensions[sExtensions[tExtensionKey]["name"]]
+      put tExtension into tExtensions[tExtension["name"]]
    end repeat
    return tExtensions
 end revIDEExtensions
@@ -1486,3 +1482,31 @@ function revIDEExtensionLibraryHandlers pLibraryID
    
    return __extensionPropertyGet(tCacheIndex, "handlers")
 end revIDEExtensionLibraryHandlers
+
+command revIDEExtensionIconFromType pType, pID, @rIconName, @rIconPath         
+   put revIDEExtensionProperty(pID, "svgIcon") into rIconPath
+   switch pType
+      case "widget"
+         put "wrench" into rIconName
+         break
+      case "library"
+         put "book" into rIconName
+         break
+      case "external"
+         put "external link" into rIconName
+         break
+      case "inclusion"
+      case "resource"
+         put "puzzle piece" into rIconName
+         break
+      case "database driver"
+         put "database" into rIconName
+         break
+      case "script library"
+         put "file text alt" into rIconName
+         break
+      default
+         put "circle" into rIconName
+         break
+   end switch
+end revIDEExtensionIconFromType
