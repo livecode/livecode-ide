@@ -3,7 +3,7 @@
 // sLoadedLibraries["library name"] = true
 local sLoadedLibraries
 
-constant kLCLibraryPrefix = "com.livecode.script-library"
+constant kLCLibraryPrefix = "com.livecode.library"
 
 command revInternal__LoadLibrary pLibrary, pFullPath
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
