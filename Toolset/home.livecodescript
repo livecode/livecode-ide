@@ -525,16 +525,6 @@ function revInternal__StackFiles
          if tFolder begins with "." then next repeat
          put return & tComponentFolder & slash & tFolder after tFolders
       end repeat
-      
-      -- script libraries
-      repeat for each item tRepo in (revEnvironmentCommercialRepositoryPath() & comma & revEnvironmentRepositoryPath())
-         local tScriptLibrariesFolder
-         put tRepo & "/extensions/script-libraries" into tScriptLibrariesFolder
-         repeat for each line tFolder in folders(tScriptLibrariesFolder)
-            if tFolder begins with "." then next repeat
-            put return & tScriptLibrariesFolder & slash & tFolder after tFolders
-         end repeat
-      end repeat
    end if	
    
    local tStackFiles, tStackName
@@ -1201,14 +1191,6 @@ command revInternal__InitialiseLibraries
    put return & "revXMLRPCLibrary" after tLoadList 
    put return & "revProfilesLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
-   put return & "oauth2" after tLoadList
-   put return & "getopt" after tLoadList
-   put return & "mime" after tLoadList
-   put return & "diff" after tLoadList
-   put return & "messageauthentication" after tLoadList
-   put return & "dropbox" after tLoadList
-   put return & "httpd" after tLoadList
-   put return & "qr" after tLoadList
    put return & "revhtml5urllibrary" after tLoadList
 
    if revEnvironmentEditionProperty("autocomplete_pro") then
@@ -1218,14 +1200,6 @@ command revInternal__InitialiseLibraries
    if revEnvironmentEditionProperty("autocomplete") then
       put return & "autocomplete" after tLoadList
    end if
-
-   switch the editionType
-      case "professional"
-         put return & "remotedebugger" after tLoadList 
-         put return & "scriptprofiler" after tLoadList 
-      case "commercial"
-         put return & "aws" after tLoadList
-   end switch
    
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
