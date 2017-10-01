@@ -753,7 +753,9 @@ private function __fetchScriptLibraryData pExtensionFile
    repeat for each item tKey in "title,author,version,name,display name,requires,uses,svgicon"
       put tDocA[tKey] into tDataA[tKey]
    end repeat
-
+   if tDataA["title"] is empty then
+      put tDataA["display name"] into tDataA["title"]
+   end if
    return tDataA
 end __fetchScriptLibraryData
 
@@ -1371,7 +1373,19 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-private on revIDEExtensionFetchMetadata pManifestPath, @rDataA
+command revIDEExtensionMetadata pFolder, pFile, pType, @rDataA
+   local tDataA, tResult
+   if pType is "lcb" then
+      revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
+      put the result into tResult
+   else
+      put __fetchScriptLibraryData(pFolder & slash & pFile) into tDataA
+   end if
+   put tDataA into rDataA
+   return tResult
+end revIDEExtensionMetadata
+
+private command revIDEExtensionFetchMetadata pManifestPath, @rDataA
    local tDataA
    
    local tManifestContents, tTreeID
