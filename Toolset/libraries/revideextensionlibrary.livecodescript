@@ -735,6 +735,31 @@ private function __fetchModuleData pExtensionFile
    return tDataA
 end __fetchModuleData
 
+private function __fetchScriptLibraryData pExtensionFile
+   local tDataA, tFolder, tFile
+   set the itemdelimiter to slash
+   put item 1 to -2 of pExtensionFile into tFolder
+   put item -1 of pExtensionFile into tFile
+   # Generate extension API from source if there is not one present in the folder
+   # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
+   if not revEnvironmentIsInstalled() then
+      revIDEExtensionUpdateAPI tFolder, tFile
+   end if
+   
+   # Get library metadata from the docs, in lieu of a manifest
+   local tDocA
+   dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" \
+         with (tFolder & slash & "api.lcdoc")
+   put the result into tDocA 
+   
+   set the itemdelimiter to comma
+   repeat for each item tKey in "title,author,version,name,display name,requires,uses,svgicon"
+      put tDocA[tKey] into tDataA[tKey]
+   end repeat
+
+   return tDataA
+end __fetchScriptLibraryData
+
 private function __extensionIsBuiltin pID
    switch pID
       case "com.livecode.widget"
@@ -845,32 +870,58 @@ end revIDEExtensionsOrderByDependency
 on __extensionsLoad
    local tDataA   
    # Fetch all the available data about extensions in the search paths
-   local tFoldersA, tExtensionFolder, tPath
+   local tFoldersA, tExtensionFolder
    put revIDEExtensionFolders() into tFoldersA
-   set the itemdel to "."
    repeat for each key tKey in tFoldersA
       put tFoldersA[tKey] into tExtensionFolder
       repeat for each line tFolder in folders(tExtensionFolder)
          if tFolder begins with "." then next repeat
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          
-         local tExtensionModulePath, tArray
-         put  tExtensionFolder & slash & tFolder & slash & "module.lcm" into tPath
-         if there is a file tPath then
-            put __fetchModuleData(tPath) into tArray
-            if tKey is "ide" then
-               put true into tArray["ide"]
-            else
-               put false into tArray["ide"]
-            end if
-            local tTypeID
-            if tArray["name"] is empty then
-               put tFolder into tTypeID
-            else
-               put tArray["name"] into tTypeID
-            end if
-            put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
+         local tExtSource, tArray, tFiles, tExtFolder
+         put tExtensionFolder & slash & tFolder into tExtFolder
+         put files(tExtFolder) into tFiles
+         
+         local tExtFile, tType
+         filter tFiles with "*.lcb" into tExtFile
+         put "lcb" into tType
+         if tExtFile is empty then
+            put "lcs" into tType
+            filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
          end if
+         
+         local tNumExtensions
+         put the number of lines in tExtFile into tNumExtensions
+         if tNumExtensions > 1 then
+            get __revIDEError("Invalid extension folder" && tExtFolder & ": require exactly one extension per folder")
+            next repeat
+         end if
+         if tNumExtensions is 0 then
+            next repeat
+         end if
+         
+         put tExtFolder & slash & tExtFile into tExtSource
+         if tType is "lcb" then
+            put __fetchModuleData(tExtSource) into tArray
+         else
+            put __fetchScriptLibraryData(tExtSource) into tArray
+         end if
+         
+         put tExtFile into tArray["source_file"]
+         
+         put tType into tArray["source_type"]
+         if tKey is "ide" then
+            put true into tArray["ide"]
+         else
+            put false into tArray["ide"]
+         end if
+         local tTypeID
+         if tArray["name"] is empty then
+            put tFolder into tTypeID
+         else
+            put tArray["name"] into tTypeID
+         end if
+         put tArray into tDataA[tTypeID][tExtensionFolder][tFolder]
       end repeat
    end repeat
    
@@ -884,10 +935,10 @@ on __extensionsLoad
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
       put 1 into tExtensionCopyCount
-      repeat for each item tItem in "user,ide"
-         repeat for each key tFolder in tDataA[tTypeID][tFoldersA[tItem]]
-            put tDataA[tTypeID][tFoldersA[tItem]][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
-            put tFoldersA[tItem] & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
+      repeat for each element tLocation in tFoldersA
+         repeat for each key tFolder in tDataA[tTypeID][tLocation]
+            put tDataA[tTypeID][tLocation][tFolder] into tExtensionDataA["copies"][tExtensionCopyCount]
+            put tLocation & slash & tFolder into tExtensionDataA["copies"][tExtensionCopyCount]["install_path"]
             add 1 to tExtensionCopyCount
          end repeat
       end repeat
@@ -903,7 +954,9 @@ on __extensionsLoad
    end repeat
    
    # Perform topological sort on list of dependencies so that they are loaded in the correct order
-   repeat for each line tLine in __dependencyOrder(tDependencies, the keys of tToLoadA)
+   local tLoadOrder
+   put __dependencyOrder(tDependencies, the keys of tToLoadA) into tLoadOrder
+   repeat for each line tLine in tLoadOrder
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
 end __extensionsLoad
@@ -943,16 +996,17 @@ private command __extensionLoad pID, pExtensionDataA
    # Only try to load the first copy in the load order
    put pExtensionDataA["copies"][1] into tToLoadA
    
-   local tFolder, tVersion, tStatus, tError, tIDEExtension
+   local tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile
    put tToLoadA["install_path"] into tFolder
    put tToLoadA["version"] into tVersion
    put tToLoadA["status"] into tStatus
    put tToLoadA["error"] into tError
    put tToLoadA["ide"] into tIDEExtension
-   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension
+   put tToLoadA["source_file"] into tSourceFile
+   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tToLoadA
 end __extensionLoad
 
-command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension
+private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pSourceLocation, pSourceFile, pAdditionalInfoA
    local tStatus, tError
    if pError is empty then
       local tResources, tModule
@@ -990,13 +1044,15 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
    __extensionPropertySet tCacheIndex, "status", tStatus
    __extensionPropertySet tCacheIndex, "error", tError
-   __extensionPropertySet tCacheIndex, "ide", pIDEExtension
+   __extensionPropertySet tCacheIndex, "ide", pSourceLocation is not "user"
+   __extensionPropertySet tCacheIndex, "source_file", pSourceFile
+   __extensionPropertySet tCacheIndex, "source_type", "lcb"
    
    # Store the extension's property metadata
    revIDEExtensionSetInfo pID
    
    # Deal with the various icon possibilities
-   if sExtensionProperties[pID]["svgIconPath"] is empty then
+   if sExtensionProperties[pID]["svgicon"] is empty then
       local tIconPath
       put pFolder & "/support/icon.png" into tIconPath
       if there is a file tIconPath then
@@ -1012,10 +1068,107 @@ command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtensi
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
    if not revEnvironmentIsInstalled() and not there is a file (pFolder & slash & "api.lcdoc") then
-      revIDEExtensionUpdateAPI pFolder
+      revIDEExtensionUpdateAPI pFolder, pSourceFile
    end if
    
    return tError
+end __revIDELCBExtensionLoad
+
+private command addToStringList @xList, pValue, pDel
+   if pDel is empty then put return into pDel
+   if xList is empty then
+      put pValue into xList
+   else
+      put pDel & pValue after xList
+   end if
+end addToStringList
+
+private function __UseTypeToKey pUseType
+   switch pUseType
+      case "android permission"
+         return "android.permissions"
+      case "android feature"
+         return "android.features"
+   end switch
+end __UseTypeToKey
+
+private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pSourceLocation, pSourceFile, pAdditionalInfoA
+   local tStatus, tError
+   set the itemdelimiter to "."
+   if pError is empty then
+      revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
+      if the result is not empty then
+         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
+         put "error" into tStatus
+      else
+         put "installed" into tStatus
+      end if
+   else
+      put pStatus into tStatus
+      put pError into tError
+   end if
+   
+   # Find entry in the cache if it exists
+   local tCacheIndex
+   put __extensionCacheID("install_path", pFolder) into tCacheIndex
+   
+   # If no entry is in the cache, create one
+   if tCacheIndex is not a number then
+      put the number of elements of sExtensions + 1 into tCacheIndex
+      __extensionPropertySet tCacheIndex, "install_path", pFolder
+   end if
+   
+   if pAdditionalInfoA is empty then
+      put __fetchScriptLibraryData(pFolder & slash & pSourceFile) into pAdditionalInfoA
+   end if
+   
+   # Update name, status, error, and whether the extension comes with the IDE
+   __extensionPropertySet tCacheIndex, "name", pID
+   __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
+   
+   __extensionPropertySet tCacheIndex, "author", pAdditionalInfoA["author"]
+   __extensionPropertySet tCacheIndex, "title", pAdditionalInfoA["display name"]
+   __extensionPropertySet tCacheIndex, "svgicon", pAdditionalInfoA["svgicon"]
+   repeat for each key tKey in pAdditionalInfoA["uses"]
+      local tSettingString
+      put empty into tSettingString
+      -- store info about settings (android permissions etc)            
+      repeat for each element tSetting in pAdditionalInfoA["uses"][tKey]
+         addToStringList tSettingString, tSetting, ","
+      end repeat
+      __extensionPropertySet tCacheIndex, __UseTypeToKey(tKey), tSettingString
+   end repeat
+   
+   __extensionPropertySet tCacheIndex, "source_file", pSourceFile
+   __extensionPropertySet tCacheIndex, "status", tStatus
+   __extensionPropertySet tCacheIndex, "error", tError
+   __extensionPropertySet tCacheIndex, "ide", pSourceLocation is not "user"
+   __extensionPropertySet tCacheIndex, "source_type", "lcs"
+   __extensionPropertySet tCacheIndex, "type", "library"
+   __extensionPropertySet tCacheIndex, "uservisible", true
+   
+   # Store the extension's property metadata
+   --  revIDEExtensionSetInfo pID
+   
+   # Deal with the various icon possibilities
+   if sExtensionProperties[pID]["svgicon"] is empty then
+      local tIconPath
+      put pFolder & "/support/icon.png" into tIconPath
+      if there is a file tIconPath then
+         __extensionPropertySet tCacheIndex, "icon", tIconPath
+      end if
+   end if
+   
+   return tError
+end __revIDELCSExtensionLoad
+
+command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+   set the itemdel to "."
+   if item -1 of pSourceFile  is "lcb" then
+      __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+   else if item -1 of pSourceFile begins with "livecode" then
+      __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+   end if
 end revIDEExtensionLoad
 
 function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
@@ -1156,6 +1309,9 @@ function revIDEExtensionDocsData pForAPI
       put tExtension["install_path"] into tDataA[tCount]["folder"]
       put tExtension["title"] into tDataA[tCount]["title"]
       put tExtension["author"] into tDataA[tCount]["author"]
+      put tExtension["source_file"] into tDataA[tCount]["source_file"]      
+      put tExtension["source_type"] into tDataA[tCount]["source_type"]
+      put tExtension["name"] into tDataA[tCount]["name"]
    end repeat
    return tDataA
 end revIDEExtensionDocsData

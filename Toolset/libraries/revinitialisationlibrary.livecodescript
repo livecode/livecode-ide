@@ -5,7 +5,7 @@ local sLoadedLibraries
 
 constant kLCLibraryPrefix = "com.livecode.script-library"
 
-command revInternal__LoadLibrary pLibrary
+command revInternal__LoadLibrary pLibrary, pFullPath
    // Create the path to the library file. Assumption is made that the directory, file and stack name are all the same.
    //set the itemdel to "/"
    
@@ -17,17 +17,26 @@ command revInternal__LoadLibrary pLibrary
       return "Library" && pLibrary && "already loaded as" && sLoadedLibraries[pLibrary]
    end if
    
+   local tStackName
    try
       if there is a stack pLibrary then
-         send "revLoadLibrary" to stack pLibrary
-      else
-         put kLCLibraryPrefix & "." before pLibrary
-         send "revLoadLibrary" to stack pLibrary
+         put pLibrary into tStackName
+      else if there is a stack (kLCLibraryPrefix & "." & pLibrary) then
+         put kLCLibraryPrefix & "." & pLibrary into tStackName
+      else if the environment begins with "development" then
+         if there is not a stack pFullPath then
+            throw "no file for library" && pLibrary
+         end if
+         
+         put the name of stack pFullPath into tStackName
       end if
    catch tError
       write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
       return "Error loading" && pLibrary
    end try
+   
+   send "revLoadLibrary" to stack tStackName   
+   put tStackName into sLoadedLibraries[pLibrary]
    return empty
 end revInternal__LoadLibrary
 
