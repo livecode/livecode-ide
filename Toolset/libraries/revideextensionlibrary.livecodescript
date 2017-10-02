@@ -1124,11 +1124,33 @@ end __extensionManifestValueFromFile
 on extensionUpdateDataReceived
 end extensionUpdateDataReceived
 
-function revIDEExtensionDocsData
+-- At the moment, if the extension is of type module then assume
+-- it provides an LCB API, and otherwise it provides an LCS API.
+function __TypeToAPI pType
+   switch pType
+      case "module"
+         return "lcb"
+         break
+      case "plugin"
+         return "ide"
+         break
+      case "library"
+      case "widget"
+      default
+         return "lcs"
+         break
+   end switch
+end __TypeToAPI
+
+function revIDEExtensionDocsData pForAPI
    local tExtensionsA
    put revIDEExtensions("", "installed", true) into tExtensionsA
    local tDataA, tCount
    repeat for each element tExtension in tExtensionsA
+      if pForAPI is not empty and \
+            __TypeToAPI(tExtension["type"]) is not pForAPI then
+         next repeat
+      end if
       add 1 to tCount
       put tExtension["install_path"] into tDataA[tCount]["folder"]
       put tExtension["title"] into tDataA[tCount]["title"]

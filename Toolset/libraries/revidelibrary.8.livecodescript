@@ -10675,15 +10675,14 @@ private function revIDEGetDocsAPIData pWhich
    return tData
 end revIDEGetDocsAPIData 
 
-private function revIDEGetLCSDocsAPIData 
-   local tData
-   put revIDEGetDocsAPIData("lcs") into tData
-   
+private function revIDEGetExtensionDocsData pAPI
    local tExtensionDocsDataA
-   put revIDEExtensionDocsData() into tExtensionDocsDataA
+   put revIDEExtensionDocsData(pAPI) into tExtensionDocsDataA
    
    local tFolder, tCachedDataFolder
    set the itemdelimiter to slash
+   
+   local tData
    repeat for each element tExtensionData in tExtensionDocsDataA
       local tExtensionAPI
       put tExtensionData["folder"] into tFolder
@@ -10694,7 +10693,7 @@ private function revIDEGetLCSDocsAPIData
       # Check if the lcdoc file is out of date
       put revEnvironmentUserDocsPath() & slash & the last item of tFolder into tCachedDataFolder
       revIDEEnsurePath tCachedDataFolder
-
+      
       local tInputs
       put tFolder & slash & tSource into tInputs[1]
       
@@ -10750,19 +10749,35 @@ private function revIDEGetLCSDocsAPIData
       end if
       
       if tExtensionAPI is not empty then
-         put comma & tExtensionAPI after tData
+         if tData is not empty then
+            put comma & tExtensionAPI after tData
+         else
+            put tExtensionAPI into tData
+         end if
       end if
    end repeat
-   
+   return tData
+end revIDEGetExtensionDocsData
+
+private function revIDEGetLCSDocsAPIData 
+   local tData
+   put revIDEGetDocsAPIData("lcs") into tData
+   put comma & revIDEGetExtensionDocsData("lcs") after tData
    return tData
 end revIDEGetLCSDocsAPIData
 
 private function revIDEGetLCBDocsAPIData 
-   return revIDEGetDocsAPIData("lcb")
+   local tData
+   put revIDEGetDocsAPIData("lcb") into tData
+   put comma & revIDEGetExtensionDocsData("lcb") after tData
+   return tData
 end revIDEGetLCBDocsAPIData 
 
 private function revIDEGetIDEDocsAPIData 
-   return revIDEGetDocsAPIData("ide")
+   local tData
+   put revIDEGetDocsAPIData("ide") into tData
+   put comma & revIDEGetExtensionDocsData("ide") after tData
+   return tData
 end revIDEGetIDEDocsAPIData 
 
 private function revIDEGetDocsGuideData
