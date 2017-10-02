@@ -1197,8 +1197,11 @@ command revInternal__InitialiseLibraries
    revInternal__LoadLibrary "revDatabaseLibrary"
    revInternal__LoadLibrary "revTableLibrary"
    
-   if the editionType is not "community" then
+   if revEnvironmentEditionProperty("autocomplete_pro") then
       revInternal__LoadLibrary "autocomplete-pro"
+   end if
+   
+   if revEnvironmentEditionProperty("autocomplete") then
       revInternal__LoadLibrary "autocomplete"
    end if
    
@@ -1886,7 +1889,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "communityplus"
             case "edition_external_url"
                return "https://livecode.com/products/community-edition/"
-               break        
+            case "autocomplete"
+            case "autocomplete_pro"
+               return false
          end switch
          break
       case "communityplus"
@@ -1919,6 +1924,10 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "commercial"
             case "edition_external_url"
                return "https://livecode.com/products/community-plus-edition/"
+            case "autocomplete"
+               return true
+            case "autocomplete_pro"
+               return false
          end switch
          break
       case "commercial"
@@ -1955,6 +1964,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "professional"
             case "edition_external_url"
                return "https://livecode.com/products/indy-edition/"
+            case "autocomplete"
+            case "autocomplete_pro"
+               return true
          end switch
          break
       case "professional"
@@ -1987,6 +1999,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return empty
             case "edition_external_url"
                return "https://livecode.com/products/business-edition/"
+            case "autocomplete"
+            case "autocomplete_pro"
+               return true
          end switch
          break
    end switch
