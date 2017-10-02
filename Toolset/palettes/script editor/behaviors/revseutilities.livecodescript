@@ -400,7 +400,12 @@ end seSendCallbacks
 # Returns
 #   The value of the preference setting, or empty if not found.
 function sePrefGet pTag
-    return sPrefs[pTag]
+   if pTag is "editor,font" and \
+         sPrefs[pTag] is empty and \
+         "Source Code Pro" is among the lines of the fontNames then
+      return "Source Code Pro"
+   end if
+   return sPrefs[pTag]
 end sePrefGet
 
 # Parameters
