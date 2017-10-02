@@ -492,6 +492,17 @@
 	    displayEntryAtIndex(tIndex);
 	}
 	
+	function syntax_to_string(pSyntax)
+	{
+	    var tHtml = '';
+	    $.each(pSyntax, function(index, value) {
+	        if (index > 0)
+	            tHtml += '<br>';
+	        tHtml += replace_link_placeholders_with_param(value).replace(/[\n\r]/g, '<br>');
+	    });
+	    return tHtml;
+	}
+	
 	function displayEntryAtIndex(pIndex)
 	{
 		var tEntryObject = tState.data[pIndex];
@@ -715,7 +726,7 @@
 					tHTML += '<tr>';
 					tHTML += '<td>' + click_text_from_entry_data('', entry_data) +'</a></td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.summary)+'</td>';
-					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.syntax[0])+'</td>';
+					tHTML += '<td>'+syntax_to_string(entry_data.syntax)+'</td>';
 					tHTML += '</tr>';
 				});
 				tHTML += '</tbody></table>';
