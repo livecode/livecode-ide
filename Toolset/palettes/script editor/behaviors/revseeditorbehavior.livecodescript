@@ -703,7 +703,7 @@ command scriptCompile pObject
       --! TODO remove use of revAvailableHandlers here (quite invasive)
       put the revAvailableHandlers of button "revCompileObject" of me into sHandlerList
       get getObjectID()
-      if exists(it) and there is a stack "com.livecode.script-library.autocomplete" then
+      if exists(it) and revEnvironmentEditionProperty("autocomplete") then
          ideAutocompleteUpdateScriptDescription it, the revScriptDescription of button "revCompileObject" of me
       end if
    end if

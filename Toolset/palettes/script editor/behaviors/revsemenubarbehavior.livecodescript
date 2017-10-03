@@ -136,7 +136,7 @@ private command buildEditMenu pContext
          "Find Selection/^#F" & return & \
          "Go.../L" & return after tEdit
    
-   if there is a stack "com.livecode.palette.autocomplete-pro" then
+   if revEnvironmentEditionProperty("autocomplete_pro") then
       put "Autocomplete Snippets..." & return after tEdit
    end if
    
@@ -147,7 +147,7 @@ private command buildEditMenu pContext
    put toggleMenuItem(tab & "Bracket Highlighting", sePrefGet("editor,brackethighlighting")) & return after tEdit
    put toggleMenuItem(tab & "Control Structure Completion", sePrefGet("editor,autocomplete")) & return after tEdit
    
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       put toggleMenuItem(tab & "Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
    end if
    
