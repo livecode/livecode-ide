@@ -75,7 +75,7 @@ command setObjectID pObjectID
       if tRuggedID is not sObjectID then
          put tRuggedID into sObjectID
          if exists(sObjectId) and \
-               there is a stack "com.livecode.script-library.autocomplete" then
+               revEnvironmentEditionProperty("autocomplete") then
             ideAutocompleteIntrospectMessagePath sObjectId
          end if
       end if
@@ -127,7 +127,7 @@ command clearCache pObject, pDontCheckId
    end if
    delete variable sScriptCache[tObject]
 
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteClearObjectCache tObject
    end if
 end clearCache
@@ -1375,28 +1375,28 @@ on selectionUpdate
 end selectionUpdate
 
 on mouseMove
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass mouseMove
 end mouseMove
 
 on closeField
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass closeField
 end closeField
 
 on exitField
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass exitField
 end exitField
 
 on escapeKey
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    pass escapeKey
@@ -1580,7 +1580,7 @@ on returnInField
       exit returnInField
    end if
    
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteCancelFind the long id of me
    end if
    
@@ -2195,7 +2195,7 @@ on tabKey
    local tDoTab = true
    
    if tProviderCompletion and \
-         there is a stack "com.livecode.script-library.autocomplete" then
+         revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteHandleTab the long id of me, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tDoTab
    end if
@@ -2362,49 +2362,68 @@ on rawKeyDown pKey
    # For the beginning of line/paragraph action (there is no distinction in the S/E)
    # make sure we update the caret position after the field has had its go.
    
-   # For Windows: Home (Windows / Linux)
-   if pKey is kKeyHome and the platform is not "macos" then
-      put true into sArrowKeyPressed
-      send "selectionChangedByArrowKey" to me in 0 milliseconds
-      pass rawKeyDown
-   end if
-   
-   # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
-   if (pKey is kKeyLeftArrow and (the controlKey is "down" or the commandKey is "down") or \
-         (pKey is 65 and the controlKey is "down" and the shiftKey is "up")) and the platform is "macos" then
-      put true into sArrowKeyPressed
-      send "selectionChangedByArrowKey" to me in 0 milliseconds
-      pass rawKeyDown
-   end if
-   
-   # For actions where we need to skip back, we need to ensure the caret is at the
-   # start of the line if it is in the white-space prefix.
-   
-   # For Mac: Alt-Down
-   if (pKey is kKeyUpArrow) and (the optionKey is "down" and the shiftKey is "up") and the platform is "macos" then
-      local tScript
-      put the text of the selectedField into tScript
-      
-      local tCaretChar
-      get the selectedChunk
-      put word 2 of it into tCaretChar
-      try
-         repeat while tCaretChar > 1 and (char (tCaretChar - 1) of tScript is space)
-            subtract 1 from tCaretChar
-         end repeat
-      catch tError
-         put tError
-      end try
-      if tCaretChar is not 1 and char tCaretChar - 1 of tScript is return then
-         lock messages
-         select before char tCaretChar of the selectedField
-         unlock messages
+   if the platform is not "macos" then
+      # For Windows: Home (Windows / Linux)
+      if pKey is kKeyHome then
+         put true into sArrowKeyPressed
+         send "selectionChangedByArrowKey" to me in 0 milliseconds
+         pass rawKeyDown
       end if
+   else
+      # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
+      if (pKey is kKeyUpArrow and \
+            (the eventCommandKey is down or \
+            the eventControlKey is down) and \
+            the eventShiftKey is up and \
+            the eventOptionkey is up) or \
+            (pKey is 65 and \
+            the eventCommandKey is up and \
+            the eventControlKey is down and \
+            the eventShiftKey is up and \
+            the eventOptionkey is up) then
+         put true into sArrowKeyPressed
+         send "selectionChangedByArrowKey" to me in 0 milliseconds
+         pass rawKeyDown
+      end if
+      
+      # For actions where we need to skip back, we need to ensure the caret is at the
+      # start of the line if it is in the white-space prefix.
+      
+      # For Mac: Alt-Down
+      if (pKey is kKeyUpArrow) and \
+            the eventCommandKey is up and \
+            the eventControlKey is up and \
+            the eventShiftKey is up and \
+            the eventOptionkey is down then
+         local tScript
+         put the text of the selectedField into tScript
+         
+         local tCaretChar
+         get the selectedChunk
+         put word 2 of it into tCaretChar
+         try
+            repeat while tCaretChar > 1 and (char (tCaretChar - 1) of tScript is space)
+               subtract 1 from tCaretChar
+            end repeat
+         catch tError
+            put tError
+         end try
+         if tCaretChar is not 1 and char tCaretChar - 1 of tScript is return then
+            lock messages
+            select before char tCaretChar of the selectedField
+            unlock messages
+         end if
+      end if
+      
    end if
    
    # optionKey is down
    local tKeyName
-   if (pKey is kKeyLeftArrow or pKey is kKeyRightArrow) and the optionkey is down then
+   if (pKey is kKeyLeftArrow or pKey is kKeyRightArrow) and \
+         the eventCommandKey is up and \
+         the eventShiftKey is up and \
+         the eventOptionkey is down and \
+         the eventControlKey is up then
       put true into sArrowKeyPressed
       if pKey is kkeyRightArrow then
          send "selectionChangedByArrowKey" to me in 0 milliseconds
@@ -2445,7 +2464,7 @@ on rawKeyDown pKey
    end switch
    
    local tPass = true
-   if there is a stack "com.livecode.script-library.autocomplete" then
+   if revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteHandleArrow the long id of me, tKeyName, sObjectId, sPlaceholders, sEditPlaceholder, sEditChunks
       put the result into tPass
    end if
@@ -3350,7 +3369,7 @@ end __LookForPair
 private command __UpdateAutoCompleteList pUUID
    local tProviderCompletion
    put __GetPreference("editor,providercompletion", true) into tProviderCompletion
-   if tProviderCompletion and there is a stack "com.livecode.script-library.autocomplete" then
+   if tProviderCompletion and revEnvironmentEditionProperty("autocomplete") then
       ideAutocompleteUpdate the long id of me, sObjectID, sPlaceholders[pUUID]["classes"]
    end if
 end __UpdateAutoCompleteList

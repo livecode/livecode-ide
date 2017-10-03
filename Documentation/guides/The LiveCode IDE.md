@@ -567,8 +567,7 @@ The Window menu contains the names of open script editor windows.
 
 ### Autocomplete
 
-> **Note:** Autocomplete is only available in commercial versions of
-LiveCode
+> **Note:** Autocomplete is available in LiveCode CommunityPlus and above
 
 #### Using Autocomplete
 
@@ -576,7 +575,8 @@ While typing in the script editor a filtered list of available completions
 will appear below the selection. Use the following keys to navigate the
 completion list:
 
-- tab - apply the completion
+- right arrow - apply the completion or enter group of completions
+- left arrow - leave group of completions
 - up arrow - move up the list
 - down arrow - move down the list
 
@@ -586,11 +586,12 @@ placeholder fields which you can navigate with the tab key. Some
 completions may have multiple placeholders with the same name which
 will be edited together. Clicking within a placeholder will select it.
 
-The current automatic completion of control structures has not changed.
+#### Autocomplete Pro
 
-Autocomplete provides the following features:
+> **Note:** Autocomplete Pro is available in LiveCode Indy and above
 
-- Completions generated from the LiveCode documentation
+Autocomplete Pro provides the following additional features:
+
 - Completions generated dynamically by introspecting
 the object being edited and its message path
 - An Autocomplete Snippet Manager dialog is accessible from the script
@@ -879,9 +880,10 @@ Figure 12 – Find and Replace
 | Switch to find mode                            | Control-f                               | Command-f                               |
 | Find next                                      | Control-g                               | Command-g                               |
 | Find selected text                             | Control-Option-f                        | Command-Option-f                        |
-| Format current handler                         | Tab                                     | Tab                                     |
+| Format handler or move to next placeholder     | Tab                                     | Tab                                     |
 | Next tab in Editor                             | Control-tab                             | Control-tab                             |
 | Previous tab in Editor                         | Control-shift-tab                       | Control-shift-tab                       |
+| Show completions palette                       | Control-alt-right                       | Command-option-right                    |
 
 | **The Message Box** |  **Windows / Linux** | **Mac OS X**|
 |------|--------|-------|

@@ -1210,16 +1210,21 @@ command revInternal__InitialiseLibraries
    put return & "httpd" after tLoadList
    put return & "qr" after tLoadList
    put return & "revhtml5urllibrary" after tLoadList
+
+   if revEnvironmentEditionProperty("autocomplete_pro") then
+      put return & "autocomplete-pro" after tLoadList
+   end if
    
+   if revEnvironmentEditionProperty("autocomplete") then
+      put return & "autocomplete" after tLoadList
+   end if
+
    switch the editionType
       case "professional"
          put return & "remotedebugger" after tLoadList 
          put return & "scriptprofiler" after tLoadList 
       case "commercial"
          put return & "aws" after tLoadList
-         put return & "autocomplete-pro" after tLoadList
-      case "communityplus"
-         put return & "autocomplete" after tLoadList
    end switch
    
    local tBackList
@@ -1913,7 +1918,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "communityplus"
             case "edition_external_url"
                return "https://livecode.com/products/community-edition/"
-               break        
+            case "autocomplete"
+            case "autocomplete_pro"
+               return false
          end switch
          break
       case "communityplus"
@@ -1946,6 +1953,10 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "commercial"
             case "edition_external_url"
                return "https://livecode.com/products/community-plus-edition/"
+            case "autocomplete"
+               return true
+            case "autocomplete_pro"
+               return false
          end switch
          break
       case "commercial"
@@ -1982,6 +1993,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "professional"
             case "edition_external_url"
                return "https://livecode.com/products/indy-edition/"
+            case "autocomplete"
+            case "autocomplete_pro"
+               return true
          end switch
          break
       case "professional"
@@ -2014,6 +2028,9 @@ function revEnvironmentEditionProperty pProp, pEdition
                return empty
             case "edition_external_url"
                return "https://livecode.com/products/business-edition/"
+            case "autocomplete"
+            case "autocomplete_pro"
+               return true
          end switch
          break
    end switch
