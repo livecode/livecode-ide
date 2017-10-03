@@ -1994,14 +1994,11 @@ on optionKeyDown pKey
       pass optionKeyDown
    end if
    
-   # Block this message on OS X as it can cause weird characters to be entered into the field
-   if the platform is not "MacOS" then
-      pass optionKeyDown
+   if pKey is not an integer or pKey <= 9 then
+      __DoKeyDown pKey
    end if
-   
-   -- OK-2009-03-09 : But simulate the message as a normal keydown
-   keyDown pKey
 end optionKeyDown
+
 
 on scrollBarDrag
    if not handleEvent("scrollBarDrag", the long id of the target) then
@@ -2033,6 +2030,10 @@ on keyDown pChar
       exit keyDown
    end if
    
+   __DoKeyDown pChar
+end keyDown
+
+private command __DoKeyDown pChar
    get the selectedChunk
    
    local tFrom, tTo
@@ -2048,7 +2049,7 @@ on keyDown pChar
       put tTo - tFrom + 1 into tLength
    end if
    textReplace tAt, char tAt to tAt + tLength - 1 of field "Script" of me, pChar
-end keyDown
+end __DoKeyDown
 
 on backspaceKey
    if not handleEvent("backspaceKey", the long id of the target) then
