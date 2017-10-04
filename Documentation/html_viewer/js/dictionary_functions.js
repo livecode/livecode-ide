@@ -593,7 +593,7 @@
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
 							var tReference, tIndex;
-							tIndex = entryNameToIndex(reference_name, reference_type);
+							tIndex = entryNameToIndex(reference_name, reference_type, tEntryObject.library);
 							if (tIndex == 0)
 								tReference = reference_name;
 							else
@@ -634,7 +634,7 @@
 							
 							var tIndex;
 							$.each(tTypes, function(tTypeIndex, tType) {
-								tIndex = entryNameToIndex(value2, tType)
+								tIndex = entryNameToIndex(value2, tType, tEntryObject.library)
 								if (tIndex != 0)
 									return;
 							});
@@ -804,10 +804,10 @@
              	if(return_text == matched_whole){
              		var resolved = resolve_link_placeholder(matched_text);
              		
-             		var resolved_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
+             		var resolved_index = resolve_link(pEntryObject, resolved[1], resolved[2]);
              		
-             		if (resolved_id != 0)
-             	   		return_text = click_text(resolved[0], resolved_id)
+             		if (resolved_index != 0)
+             	   		return_text = click_text_from_index(resolved[0], resolved_index)
              		else
              			return_text = resolved[0];
              	}
@@ -878,10 +878,10 @@
 	
 	// Return an entry ID from the target name and optional type
 	function resolve_link(pEntryObject, pTargetName, pTargetType) {
-        var entry_id;
+        var tIndex = 0;
         if(pTargetType){
 	        // Know name and type so lookup id
-             entry_id = entryNameToIndex(pTargetName,pTargetType);
+             tIndex = entryNameToIndex(pTargetName,pTargetType,pEntryObject.library);
         } else {
         	// Work out the type from the reference
 			if(pEntryObject.hasOwnProperty("references")) {
@@ -889,18 +889,18 @@
 					$.each(reference_array, function(reference_index, reference_name) {
 						if (reference_name == pTargetName)
 						{
-							entry_id = entryNameToIndex(reference_name,reference_type);
+							tIndex = entryNameToIndex(reference_name,reference_type,pEntryObject.library);
 							return;
 						}
 					});
 					// Just find the first one if no type was specified.
-					if (entry_id)
+					if (tIndex)
 						return;
 				});
 			}
         }
 	        
-	    return entry_id;
+	    return tIndex;
 	}
 	
 	function entryData(pEntryID){
@@ -917,15 +917,55 @@
 		return tData;
 	}
 	
-	function entryNameToIndex(pName,pType){
+	function entryNameToIndex(pName,pType,pPriorityLibrary){
 		var tIndex = 0;
-	
 		$.each(dataGet(), function(index, value) {
-			if((value.name == pName || value["display name"] == pName) && value.type == pType){
-				tIndex = index;
-				return false;
+			if(value.name != pName && value["display name"] != pName)
+			{
+				// Continue loop
+				return true;
 			}
 			
+			if (pType != '')
+			{
+				if (value.type != pType)
+				{
+					// Continue loop				
+					return true;
+				}
+			}
+
+			// Make sure we always 'fall back' to the lcs syntax
+			if (value.library == 'livecode_script')
+			{
+				tIndex = index;		
+				// If no library was specified, assume lcs syntax
+				if (pPriorityLibrary == '')
+				{
+					// We're done
+					return false;
+				}
+				
+				// Otherwise, this index is now a candidate in case
+				// there is no entry found in the given library				
+			}
+			
+			if (pPriorityLibrary == '')
+			{
+				// If no library was specified, this index is a 
+				// candidate.
+				tIndex = index
+				return true;
+			}
+			else if (value.library != pPriorityLibrary)
+			{
+				// Continue loop				
+				return true;
+			}
+			
+			// We have a perfect match!
+			tIndex = index;
+			return false;
 		});
 		return tIndex;
 	}
@@ -1198,11 +1238,21 @@
 	{
 		var tLibraryID = library_name_to_id(pLibraryName);
 		library_set(tLibraryID);
-		
-		var tID = entryNameToIndex(pEntryName, pEntryType);
-		if (tID == 0)
+
+		var tID;
+		if (pEntryName == '')
 			tID = 1;
-		displayEntryAtIndex(tID);
+		else
+			tID = entryNameToIndex(pEntryName, pEntryType, pLibraryName);
+			
+		if (tID != 0)
+		{
+			displayEntryAtIndex(tID);
+		} 
+		else 
+		{
+			displayEntryListGrep(pEntryName);
+		}
 	}
 	
 	function isRunningInLiveCodeBrowser()
