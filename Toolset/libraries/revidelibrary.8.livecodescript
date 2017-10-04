@@ -10660,7 +10660,7 @@ private function __getLCBSourceFile pFolder
    return tSource
 end __getLCBSourceFile
 
-private function revIDEGetDocsAPIData pWhich
+private function revIDEGetBaseDocsData pWhich
    local tData
    
    local tAPIPath, tLibs
@@ -10673,7 +10673,7 @@ private function revIDEGetDocsAPIData pWhich
    end repeat
    delete the last char of tData
    return tData
-end revIDEGetDocsAPIData 
+end revIDEGetBaseDocsData 
 
 private function revIDEGetExtensionDocsData pAPI
    local tExtensionDocsDataA
@@ -10759,26 +10759,15 @@ private function revIDEGetExtensionDocsData pAPI
    return tData
 end revIDEGetExtensionDocsData
 
-private function revIDEGetLCSDocsAPIData 
-   local tData
-   put revIDEGetDocsAPIData("lcs") into tData
-   put comma & revIDEGetExtensionDocsData("lcs") after tData
+private function revIDEGetDocsAPIData pWhich
+   local tData, tExtensions
+   put revIDEGetBaseDocsData(pWhich) into tData
+   put revIDEGetExtensionDocsData(pWhich) into tExtensions
+   if tExtensions is not empty then 
+      put comma & tExtensions after tData
+   end if
    return tData
-end revIDEGetLCSDocsAPIData
-
-private function revIDEGetLCBDocsAPIData 
-   local tData
-   put revIDEGetDocsAPIData("lcb") into tData
-   put comma & revIDEGetExtensionDocsData("lcb") after tData
-   return tData
-end revIDEGetLCBDocsAPIData 
-
-private function revIDEGetIDEDocsAPIData 
-   local tData
-   put revIDEGetDocsAPIData("ide") into tData
-   put comma & revIDEGetExtensionDocsData("ide") after tData
-   return tData
-end revIDEGetIDEDocsAPIData 
+end revIDEGetDocsAPIData 
 
 private function revIDEGetDocsGuideData
    local tData
@@ -10858,23 +10847,23 @@ on revIDERegenerateBuiltAPIs
    local tData, tAPIData
    put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
    
-   put revIDEGetLCSDocsAPIData() into tAPIData
+   put revIDEGetDocsAPIData("lcs") into tAPIData
    
    dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-      with "LiveCode Script", "livecode_script", "", tAPIData
+         with "LiveCode Script", "livecode_script", "", tAPIData
    put the result after tData
    
-   put revIDEGetLCBDocsAPIData() into tAPIData
+   put revIDEGetDocsAPIData("lcb") into tAPIData
    
    dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-      with "LiveCode Builder", "livecode_builder", "", tAPIData
+         with "LiveCode Builder", "livecode_builder", "", tAPIData
    put comma & the result after tData
    
    if not revEnvironmentIsInstalled() then
-      put revIDEGetIDEDocsAPIData() into tAPIData
-
+      put revIDEGetDocsAPIData("ide") into tAPIData
+      
       dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-         with "LiveCode IDE", "livecode_ide", "", tAPIData    
+            with "LiveCode IDE", "livecode_ide", "", tAPIData    
       put comma & the result after tData
    end if
    
@@ -10974,7 +10963,7 @@ private command revIDEGenerateDistributedAPI
       ideDocsUpdateDatabase tScriptA
       
       local tJSON
-      put revDocsFormatLibraryDocArrayAsJSON(tScriptA["name"], tScriptA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON("livecode_script", tScriptA["doc"]) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcs") & slash & "script.js", \
             tJSON
    end if
@@ -11031,7 +11020,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase tBuilderA
       
-      put revDocsFormatLibraryDocArrayAsJSON(tBuilderA["name"], tBuilderA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON("livecode_builder", tBuilderA["doc"]) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcb") & slash & "builder.js", \
             tJSON
    end if
@@ -11051,7 +11040,7 @@ private command revIDEGenerateDistributedAPI
 
       # Update the database
       ideDocsUpdateDatabase tLibA
-      put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON("datagrid", tLibA["doc"]) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcs") & slash & "dg.js", \
             tJSON
    end if
@@ -11103,7 +11092,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase tIDELibraryA
       
-      put revDocsFormatLibraryDocArrayAsJSON(tIDELibraryA["name"], tIDELibraryA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON("livecode_ide", tIDELibraryA["doc"]) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api-ide") & slash & "ide.js", \
             tJSON
    end if
