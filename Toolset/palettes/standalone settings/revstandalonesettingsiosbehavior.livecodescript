@@ -360,8 +360,23 @@ command enableDeviceSpecificSettings pDevices
 end enableDeviceSpecificSettings
 
 on storeSetting pName, pValue
+   checkSettingsCompatible pName, pValue
    setSetting "ios," & pName, pValue
 end storeSetting
+
+on checkSettingsCompatible pName, pValue
+   if pName is "minimum version" and pValue > 10.3 then
+      if getSetting("ios,32-bit only") is true then 
+         answer error "32-bit only apps are not supported on iOS 11.0 and above"
+      end if
+   end if
+   
+   if pName is "32-bit only" and pValue is true then
+      if getSetting("ios,minimum version") > 10.3 then 
+         answer error "32-bit only apps are not supported on iOS 11.0 and above"
+      end if
+   end if
+end checkSettingsCompatible
 
 function fetchSetting pName
    return getSetting("ios," & pName)
