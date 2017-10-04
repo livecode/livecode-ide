@@ -548,9 +548,12 @@
 		tHTML += '</h1><div class="row">';
 	
 		$.each(tEntryObject, function(index, value) {
-			if(index == "id" || index == "name") return;
-			
 			switch(index){
+				case "id":
+				case "name":
+				case "library":
+				// These are for 'meta' information, not for display
+					return;
 				case "examples":
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
