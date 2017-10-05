@@ -59,7 +59,7 @@ step "Start button code 3"
 		Open the Script Editor for the button by clicking the 'Code' button in the Toolbar.
 action
 		highlight toolbar "Code"
-		wait until there is a script editor for button "start"
+		wait until there is a Script Editor for button "start"
 		go to step "Start button code 4"
 end step
 
@@ -67,6 +67,8 @@ step "Start button code 4"
 	Add this handler to the button script. We'll go through the code one line at a time next.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	local sTimerID
 
@@ -146,6 +148,8 @@ step "Start button code 11"
 	Add this handler to the button script. We'll go through the code one line at a time next.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	local sTimerID
 

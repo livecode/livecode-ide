@@ -199,6 +199,8 @@ step "Script Editor Interlude"
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the code you have written has any
 	errors in it or not.
+
+	You can also use Cmd-<Return> or <Enter> to apply your code.
 action
 	interlude
 	highlight "Apply" of script editor for button "Hello"

@@ -449,7 +449,7 @@ action
 end step
 
 step "Set Height Label Properties"
-	Open the property inspector for the label field.
+	Open the Property Inspector for the label field.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for field "Height Label"
@@ -1321,6 +1321,8 @@ step "Script Editor Apply"
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the script you have written has any
 	errors in it or not.
+
+	You can also use Cmd-<Return> or <Enter> to apply your code.
 action
 	interlude
 	highlight "Apply" of Script Editor for widget "Footer"
@@ -1539,8 +1541,7 @@ action
 end step
 
 step "Open Calculate Button Script"
-	Open the script editor for the button, by clicking the 'Code' 
-	toolbar icon.
+	Open the Script Editor for the button, by clicking the 'Code' button on the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for button "Calculate"
