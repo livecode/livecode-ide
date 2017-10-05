@@ -97,7 +97,7 @@ action
 end step
 
 step "Set Stack Properties"
-	Click on the Inspector icon on the Toolbar to open the Property
+	Click on the 'Inspector' button on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
@@ -145,7 +145,7 @@ action
 end step
 
 step "Create Add Icon"
-	The first object we will add is an 'add' icon. The user will click on this to
+	The first object we will add is an 'Add' icon. The user will click on this to
 	add a new item to the list.
 
 	Drag an SVG Icon from the Tools Palette onto your stack.
@@ -188,7 +188,7 @@ end step
 step "Open Property Inspector"
 	Next we need to set some properties of the icon.
 
-	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector for the
 	icon.
 action
 	highlight toolbar "Inspector"
@@ -267,7 +267,7 @@ end step
 step "Task List PI"
 	As before we need to set some properties of the field.
 
-	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector for the
 	field.
 action
 	highlight toolbar "Inspector"
@@ -289,8 +289,9 @@ end step
 skip point
 
 step "Set task list contents"
-	We want the task list to start off empty. Delete the default contents from
-	the field and click away to allow the change to take effect.
+	We want the task list to start off empty.
+
+	Delete the default contents from the field.
 action
 	highlight property "styledText" of section "contents"
 	wait until the text of field "taskList" is ""
@@ -326,7 +327,7 @@ action
 end step
 
 step "Open Add Script"
-	Select the Add icon then click the Code button in the Toolbar.
+	Select the Add icon then click the 'Code' button in the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "add"
@@ -393,9 +394,19 @@ skip point
 step "Edit Tool Interlude"
 	LiveCode has two modes: Edit mode and Run mode.
 
+	You can switch between Edit and Run mode by choosing the corresponding tool in the Tools Palette.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Edit Tool Interlude 2"
+end step
+
+step "Edit Tool Interlude 2"
 	Up until now you have been in Edit mode all the time. In Edit mode
 	you can add, edit and move objects on your stack. You can also select objects
 	to change their properties or add code to them.
+
+	Choose the 'Pointer' tool to go into Edit mode.
 action
 	interlude
 	highlight tool "Edit Mode"
@@ -404,23 +415,33 @@ end step
 
 step "Run Tool Interlude"
 	In Run mode your app is live - objects will behave as they would for
-	the app user. For example, clicking on the 'Add' button will allow you to add
-	a task to the list.
+	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
 
-	To test the code you have just added, we are going to enter Run mode and try
-	adding a task to the list.
+	Choose the 'Browse' tool to go into Run mode.
 action
-		interlude
-    highlight tool "Run Mode"
-	  go to step "Test Task List"
+	interlude
+	highlight tool "Run Mode"
+	go to step "Run Tool Interlude 2"
 end step
 
-step "Test Task List"
-	Select 'Run mode' in the Tools Palette.
+step "Run Tool Interlude 2"
+	To test the code you have just added, we are going to choose the 'Browse' tool and click the button.
+
+	Choose the 'Browse' tool in the Tools Palette to see your changes in action.
 action
-    highlight tool "Run Mode"
-    wait until the tool is run
-	  go to step "Add task"
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test Task List"
+end step
+
+skip point
+
+step "Test Task List"
+	Choose the 'Browse' tool in the Tools Palette.
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Add task"
 end step
 
 skip point
@@ -436,7 +457,7 @@ end step
 skip point
 
 step "Return to Edit Mode"
-	Change back to Edit mode to continue working on the app.
+	Choose the 'Pointer' tool to continue working on the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -495,7 +516,7 @@ end step
 step "Open Delete Property Inspector"
 	Next we need to set the properties of the 'Delete' icon.
 
-	Click on the Inspector icon on the Toolbar to open the Property Inspector for the
+	Click on the 'Inspector' button on the Toolbar to open the Property Inspector for the
 	SVG icon.
 action
 	highlight toolbar "Inspector"
@@ -534,7 +555,7 @@ action
 end step
 
 step "Open Delete Script"
-	Select the 'Delete' icon then click the Code icon in the Toolbar to open the Script Editor for the icon.
+	Select the 'Delete' icon then click the 'Code' button in the Toolbar to open the Script Editor for the icon.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "delete"
@@ -568,10 +589,9 @@ action
 end step
 
 step "Run mode 2"
-	To test the code you have just added enter Run mode and delete the first
-	task by selecting the line in the list and clicking on the 'Delete' icon.
+	Now test the deletion code you have just added.
 
-	Start by entering Run mode.
+	Choose the 'Browse' tool in the Tools Palette.
 action
     highlight tool "Run Mode"
 		wait until the tool is run
@@ -590,7 +610,7 @@ action
 end step
 
 step "Return to Edit Mode 2"
-	Change back to 'Edit' mode to continue working on the app.
+	Choose the 'Pointer' tool to continue working on the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit

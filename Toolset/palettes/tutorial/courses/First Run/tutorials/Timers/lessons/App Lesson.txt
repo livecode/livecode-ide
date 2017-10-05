@@ -40,7 +40,7 @@ action
 end step
 
 step "Start button code 2"
-	To make changes select 'Edit' mode.
+	To make changes first ensure the 'Pointer' tool is selected.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -56,7 +56,7 @@ action
 end step
 
 step "Start button code 3"
-		Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+		Open the Script Editor for the button by clicking the 'Code' button in the Toolbar.
 action
 		highlight toolbar "Code"
 		wait until there is a script editor for button "start"
@@ -227,9 +227,7 @@ action
 end step
 
 step "Run mode"
-	Try is out by switching into 'Run' mode on the Tools palette.
-
-	Select 'Run mode' in the Tools Palette.
+	To try it out choose the 'Browse' tool on the Tools Palette.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run

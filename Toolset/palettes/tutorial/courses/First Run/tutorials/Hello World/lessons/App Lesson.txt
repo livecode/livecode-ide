@@ -61,7 +61,7 @@ action
 end step
 
 step "Set Stack Properties"
-	Click on the 'Inspector' icon on the Toolbar to open the Property
+	Click on the 'Inspector' button on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
@@ -137,7 +137,7 @@ action
 end step
 
 step "Open Property Inspector"
-	Click on the 'Inspector' icon in the Toolbar to open the Property Inspector
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector
 	for the button.
 
 	Remember that properties control how objects look and behave and can be set using the Property Inspector.
@@ -231,9 +231,19 @@ skip point
 step "Edit Tool Interlude"
 	LiveCode has two modes: Edit mode and Run mode.
 
+	You can switch between Edit and Run mode by choosing the corresponding tool in the Tools Palette.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Edit Tool Interlude 2"
+end step
+
+step "Edit Tool Interlude 2"
 	Up until now you have been in Edit mode all the time. In Edit mode
 	you can add, edit and move objects on your stack. You can also select objects
 	to change their properties or add code to them.
+
+	Choose the 'Pointer' tool to go into Edit mode.
 action
 	interlude
 	highlight tool "Edit Mode"
@@ -244,14 +254,22 @@ step "Run Tool Interlude"
 	In Run mode your app is live - objects will behave as they would for
 	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
 
-	To test the code you have just added, we are going to enter Run mode and click the button.
+	Choose the 'Browse' tool to go into Run mode.
+action
+	interlude
+	highlight tool "Run Mode"
+	go to step "Run Tool Interlude 2"
+end step
 
-	Select 'Run mode' in the Tools Palette.
+step "Run Tool Interlude 2"
+	Choose the 'Browse' tool in the Tools Palette to see your changes in action.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run
 	go to step "Test Button"
 end step
+
+skip point
 
 step "Test Button"
 	Click on the 'Say Hello' button to see the message.
