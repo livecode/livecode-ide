@@ -65,8 +65,11 @@ local sLockDrawing -- todo: add set/get. When locked we don't redraw when data i
 ## for tables
 local sTableObjectsA
 
---> Messages (engine)
+local sScrollerId
+local sPollID
 
+
+--> Messages (engine)
 
 before preopenControl
    if the target is not me then pass preopencontrol
@@ -89,22 +92,38 @@ end preopenControl
 
 
 before closeControl
-    if the target is not me then pass closeControl
-    
-    DeleteFieldEditor
-    put false into sControlIsOpen
-    put true into sFocusLeftMe
-    pass closeControl
+   if the target is not me then pass closeControl
+   
+   DeleteFieldEditor
+   put false into sControlIsOpen
+   put true into sFocusLeftMe
+   
+   if the environment is "mobile" then
+      mobileControlDelete sScrollerId
+      put empty into sScrollerId
+   end if
+   
+   cancel sPollID
+   pass closeControl
 end closeControl
 
 
 before newGroup
-    if the target is not me then pass newGroup
-    _Initialize
-    pass newGroup
+   if the target is not me then pass newGroup
+   _Initialize
+   pass newGroup
 end newGroup
 
-
+on __PollVisibility
+   cancel sPollID
+   if __HasMobileScroller() then
+      send "__PollVisibility" to me in 300 milliseconds
+      put the result into sPollID
+      
+      mobileControlSet sScrollerId, "visible", the effective visible of me
+   end if
+end __PollVisibility
+ 
 private command _Initialize
    if not sInit then
       set the wholeMatches to true
@@ -139,16 +158,37 @@ private command _Initialize
          _RestorePersistentData
       end if
       
-      set the traversalOn of scrollbar "dgScrollbar" of me to false ## take out of tabbing
-      set the traversalOn of scrollbar "dgHScrollbar" of me to false ## take out of tabbing
-      set the visible of scrollbar "dgScrollbar" of me to the dgProps["show vscrollbar"] of me is not false
-      
-      if _ControlType() is "table" then
-         set the visible of group "dgHorizontalComponents" of me to the dgProps["show hscrollbar"] of me is not false
+      if the environment is not "mobile" then
+         set the traversalOn of scrollbar "dgScrollbar" of me to false ## take out of tabbing
+         set the traversalOn of scrollbar "dgHScrollbar" of me to false ## take out of tabbing
+         set the visible of scrollbar "dgScrollbar" of me to the dgProps["show vscrollbar"] of me is not false
+         
+         if _ControlType() is "table" then
+            set the visible of group "dgHorizontalComponents" of me to the dgProps["show hscrollbar"] of me is not false
+         end if
+         
+         set the borderWidth of scrollbar "dgScrollbar" of me to 0 ## For Windows 2000
+         set the borderWidth of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0 ## For Windows 2000
+         
+         _SetScrollbarWidth
+      else
+         set the visible of scrollbar "dgScrollbar" of me to false
+         set the visible of scrollbar "dgHScrollbar" of me to false
+         if the dgProps["show vscrollbar"] of me is not false or \
+               (_ControlType() is "table" and \
+               the dgProps["show hscrollbar"] of me is not false) then
+            if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
+               mobileControlCreate "scroller"
+               put the result into sScrollerId
+            end if
+            mobileControlSet sScrollerId, "canBounce", "true"
+            mobileControlSet sScrollerId, "pagingEnabled", "false"
+            mobileControlSet sScrollerId, "canScrollToTop", "true"
+            mobileControlSet sScrollerId, "delayTouches", "true"
+            mobileControlSet sScrollerId, "canCancelTouches", "true"
+            __PollVisibility
+         end if
       end if
-      
-      set the borderWidth of scrollbar "dgScrollbar" of me to 0 ## For Windows 2000
-      set the borderWidth of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0 ## For Windows 2000
       
       ## Set props which didn't come with original Data Grid
       if the dgProps["header divider color"] of me is not a color then
@@ -157,8 +197,6 @@ private command _Initialize
       if the dgProps["header divider threeD color"] of me is not a color then
          set the dgProps["header divider threeD color"] of me to kHeaderDividerThreeDColor
       end if
-      
-      _SetScrollbarWidth
       
       if _ControlType() is "table" then
          _table.CreateColumns
@@ -1648,20 +1686,26 @@ command ResizeToFit
       if _ControlType() is "table" then
          _table.LayoutDataArea
       else
-         if the visible of scrollbar "dgScrollbar" of me then subtract the width of scrollbar "dgScrollbar" of me from item 3 of theRect
+         if the environment is not "mobile" then
+            if the visible of scrollbar "dgScrollbar" of me then 
+               subtract the width of scrollbar "dgScrollbar" of me from item 3 of theRect
+            end if
+            if the visible of scrollbar "dgScrollbar" of me then
+               set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect, \
+                     item 2 of theRect, item 3 of theRect + the width of scrollbar "dgScrollbar" of me, \
+                     item 4 of theRect - the dgProps["scrollbar corner offset"] of me
+            else
+               set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
+                     item 2 of theRect, item 3 of theRect, \
+                     item 4 of theRect - the dgProps["scrollbar corner offset"] of me
+            end if
+         else if __HasMobileScroller() then
+            mobileControlSet sScrollerId, "rect", theRect
+         end if
          set the rect of group "dgListMask" of me to theRect
          set the rect of group "dgAlternatingRowsMask" of me to theRect
          set the topLeft of group "dgList" of me to item 1 to 2 of theRect ## Shift all children of group along with group
          set the rect of group "dgList" of me to theRect
-         if the visible of scrollbar "dgScrollbar" of me then
-            set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect, \
-                  item 2 of theRect, item 3 of theRect + the width of scrollbar "dgScrollbar" of me, \
-                  item 4 of theRect - the dgProps["scrollbar corner offset"] of me
-         else
-            set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-                  item 2 of theRect, item 3 of theRect, \
-                  item 4 of theRect - the dgProps["scrollbar corner offset"] of me
-         end if
       end if
       
       ## Redo calculations
@@ -1904,7 +1948,8 @@ command ScrollIndexIntoView pIndex
    ## Work off of a 0 based rect, not actual position on card
    local theMaskHeight, theOffset, theMaskRect
    put the height of group "dgListMask" of me into theMaskHeight
-   put round(the thumbPosition of scrollbar "dgScrollbar" of me) into theOffset -- round needed for engine bug
+   
+   put the dgVScroll of me into theOffset -- round needed for engine bug
    put "0," & theOffset & ",0," & theMaskHeight + theOffset into theMaskRect
    
    local theSequence
@@ -2115,6 +2160,9 @@ private command _ResetAllControls
    local msgsAreLocked
    put the lockMessages into msgsAreLocked
    lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
    set the lockMessages to msgsAreLocked
    unlock screen
@@ -2122,21 +2170,27 @@ end _ResetAllControls
 
 
 private command _ResetScrollbarsAndRows
-    ## This will call scrollbardrag. We set all structures before this happens.
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    if _ControlType() is "table" then
-        set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
-    end if
-    
-    _ConfigureScrollbar
-    _ConfigureHScrollbar
-     
-    if the dgProps["fixed row height"] of me then
-        _AutoHideVScrollbar ## only works for fixed height
-    end if
-     
-    _DrawAlternatingRows
-    _ShowAlternatingRows
+   ## This will call scrollbardrag. We set all structures before this happens.
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   if _ControlType() is "table" then
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", 0
+      end if
+      set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
+   end if
+   
+   _ConfigureScrollbar
+   _ConfigureHScrollbar
+   
+   if the dgProps["fixed row height"] of me then
+      _AutoHideVScrollbar ## only works for fixed height
+   end if
+   
+   _DrawAlternatingRows
+   _ShowAlternatingRows
 end _ResetScrollbarsAndRows
 
 
@@ -2161,44 +2215,50 @@ end _ResetControls
 
 
 private command _ResetData
-    
-    ## In case developer redraws while editor is open
-    DeleteFieldEditor true
-    
-    lock screen
-    ## So we don't confuse the engine
-    if the long ID of me is in the long ID of the focusedObject then focus on graphic "dgBackground" of me
-    
-    ## Time intensive start
-    -- _ResetAllControls
-    _DeleteDataControls ## Replaced with above in 1.0.2 build 6. No more errors when deleting control running script!
-    
-    put empty into sDataArray
-    ## time intensive end
-    put empty into sIndexSequencing
-    
-    _StorePersistentData
-    
-    _ResetInternalCaches
-    _DataCanBeRepresentedAsText true
-    
-    ## This will call scrollbardrag. We set all structures before this happens.
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    if _ControlType() is "table" then
-        set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
-    end if
-    
-    _ConfigureScrollbar
-    _ConfigureHScrollbar
-     
-    if the dgProps["fixed row height"] of me then
-        _AutoHideVScrollbar ## only works for fixed height
-    end if
-     
-    _DrawAlternatingRows
-    _ShowAlternatingRows
-    
-    unlock screen
+   
+   ## In case developer redraws while editor is open
+   DeleteFieldEditor true
+   
+   lock screen
+   ## So we don't confuse the engine
+   if the long ID of me is in the long ID of the focusedObject then focus on graphic "dgBackground" of me
+   
+   ## Time intensive start
+   -- _ResetAllControls
+   _DeleteDataControls ## Replaced with above in 1.0.2 build 6. No more errors when deleting control running script!
+   
+   put empty into sDataArray
+   ## time intensive end
+   put empty into sIndexSequencing
+   
+   _StorePersistentData
+   
+   _ResetInternalCaches
+   _DataCanBeRepresentedAsText true
+   
+   ## This will call scrollbardrag. We set all structures before this happens.
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   if _ControlType() is "table" then
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", 0
+      end if
+      set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
+   end if
+   
+   _ConfigureScrollbar
+   _ConfigureHScrollbar
+   
+   if the dgProps["fixed row height"] of me then
+      _AutoHideVScrollbar ## only works for fixed height
+   end if
+   
+   _DrawAlternatingRows
+   _ShowAlternatingRows
+   
+   unlock screen
 end _ResetData
 
 
@@ -2459,6 +2519,9 @@ private command _DeleteDataControls
    local msgsAreLocked
    put the lockMessages into msgsAreLocked
    lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
    set the lockMessages to msgsAreLocked
    unlock screen
@@ -3326,6 +3389,9 @@ private command _table.ScrollColumnIntoView pColumn
       local msgsAreLocked
       put the lockMessages into msgsAreLocked
       unlock messages
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", mobileControlGet(sScrollerId, "hScroll") + theDiff
+      end if
       set the thumbPosition of scrollbar "dgHScrollbar" of me to the thumbPosition of scrollbar "dgHScrollbar" of me + theDiff
       set the lockMessages to msgsAreLocked
    end if
@@ -4265,7 +4331,7 @@ private function _table.AreColumnsVisibleWithinMask
    put _table.GetEffectiveColumnWidths() into theWidths
    
    local theMinX, theRect, theVisibleWidth, theMaxX, theItemNo, theTotalWidth
-   put the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theMinX
+   put the dgHScroll of me into theMinX
    put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
    put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theVisibleWidth
    put theMinX + theVisibleWidth into theMaxX
@@ -6724,7 +6790,10 @@ end dgControl
  
  
 getprop dgVScroll
-    return round(the thumbPosition of scrollbar "dgScrollbar" of me)
+   if __HasMobileScroller() then
+      return mobileControlGet(sScrollerId, "vScroll")
+   end if
+   return round(the thumbPosition of scrollbar "dgScrollbar" of me)
 end dgVScroll
  
  
@@ -6740,6 +6809,11 @@ private command _SetVScroll pValue
    lock messages
    set the thumbPosition of scrollbar "dgScrollbar" of me to pValue
    put the thumbPosition of scrollbar "dgScrollbar" of me into pValue
+   
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", pValue
+   end if
+   
    set the lockMessages to msgsAreLocked
    
    if not msgsAreLocked and the visible of scrollbar "dgScrollbar" of me then
@@ -6762,8 +6836,11 @@ end dgVScrollPercent
 
 private function _GetVScrollPercent
    local theWorkingEndValue
-   put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
+   put __WorkingScrollVEndValue() into theWorkingEndValue
    if theWorkingEndValue > 0 then
+      if __HasMobileScroller() then
+         return mobileControlGet(sScrollerId, "vScroll") / theWorkingEndValue
+      end if
       return round(the thumbPosition of scrollbar "dgScrollbar" of me) / theWorkingEndValue
    else
       return 0
@@ -6775,16 +6852,31 @@ setprop dgVScrollPercent pPercent
     _SetVScrollPercent pPercent
 end dgVScrollPercent
 
+private function __WorkingScrollVEndValue
+   local theWorkingEndValue
+   if the environment is not "mobile" then
+      put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
+   else if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put item 4 of tContentRect - the height of group "dgList" of me into theWorkingEndValue
+   else
+      put 0 into theWorkingEndValue
+   end if
+   return theWorkingEndValue
+end __WorkingScrollVEndValue
 
 private command _SetVScrollPercent pPercent
-   local theWorkingEndValue
-   put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
-   _SetVScroll round(theWorkingEndValue * pPercent)
+   _SetVScroll round(__WorkingScrollVEndValue() * pPercent)
 end _SetVScrollPercent
 
 
 getprop dgHScroll
-    return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me)
+   if __HasMobileScroller() then
+      return mobileControlGet(sScrollerId, "hScroll")
+   else
+      return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me)
+   end if
 end dgHScroll
  
  
@@ -6800,6 +6892,10 @@ private command _SetHScroll pValue
    lock messages
    set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to pValue
    put the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into pValue
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "hScroll", pValue
+   end if
+   
    set the lockMessages to msgsAreLocked
    
    if not msgsAreLocked and the visible of group "dgHorizontalComponents" of me then
@@ -6827,10 +6923,27 @@ getprop dgHScrollPercent
 end dgHScrollPercent
 
 
+private function __WorkingScrollHEndValue
+   local theWorkingEndValue
+   if the environment is not "mobile" then
+      put the endValue of scrollbar "dgHScrollbar" of me - the thumbSize of scrollbar "dgHScrollbar" of me into theWorkingEndValue
+   else if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put item 3 of tContentRect - the width of group "dgList" of me into theWorkingEndValue
+   else
+      put 0 into theWorkingEndValue
+   end if
+   return theWorkingEndValue
+end __WorkingScrollHEndValue
+
 private function _GetHScrollPercent
    local theWorkingEndValue
-   put the endValue of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me - the thumbSize of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theWorkingEndValue
+   put __WorkingScrollHEndValue() into theWorkingEndValue
    if theWorkingEndValue > 0 then
+      if __HasMobileScroller() then
+         return mobileControlGet(sScrollerId, "hScroll") / theWorkingEndValue
+      end if
       return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) / theWorkingEndValue
    else
       return 0
@@ -6854,6 +6967,9 @@ private command _ResetVScrollToZero
    put the lockMessages into msgsAreLocked
    set the lockMessages to true
    
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
    set the vScroll of group "dgList" of group "dgListMask" of me to 0
    
@@ -6866,6 +6982,9 @@ private command _ResetHScrollToZero
    put the lockMessages into msgsAreLocked
    set the lockMessages to true
    
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "hScroll", 0
+   end if
    set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
    set the hScroll of group "dgHeaderMask" of group "dgHeaderComponents" of me to 0
    set the hScroll of group "dgListMask" of me to 0
@@ -6875,10 +6994,7 @@ end _ResetHScrollToZero
 
 
 private command _SetHScrollPercent pPercent
-   local theWorkingEndValue
-   put the endValue of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me - \
-         the thumbSize of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theWorkingEndValue
-   _SetHScroll round(theWorkingEndValue * pPercent)
+   _SetHScroll round(__WorkingScrollHEndValue() * pPercent)
 end _SetHScrollPercent
  
  
@@ -7099,6 +7215,21 @@ private command _SetGraphicGradient pGraphic, pStartColor, pEndColor
    return empty
 end _SetGraphicGradient
 
+on scrollerBeginDrag
+   _UserStartedVScrolling
+   pass scrollerBeginDrag
+end scrollerBeginDrag
+
+on scrollerEndDrag
+   _UserStoppedVScrolling
+   pass scrollerEndDrag
+end scrollerEndDrag
+
+on scrollerDidScroll pHScroll, pVScroll
+   dgScrollbarDragV max(0,pVScroll)
+   dgScrollbarDragH max(0,pHScroll)
+   pass scrollerDidScroll
+end scrollerDidScroll
 
 ## This handler is called from the vscroll bar when user releases mouse.
 ## It draws any columns not currently visible within the mask area.
@@ -7493,6 +7624,13 @@ private command _ConfigureScrollbar
       set the lineIncrement of scrollbar "dgScrollbar" of me to round(the pageIncrement of scrollbar "dgScrollbar" of me / 16)
    end if
    
+   if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put max(the height of group "dgList" of me, theEndValue) into item 4 of tContentRect
+      mobileControlSet sScrollerId, "contentrect", tContentRect
+   end if
+   
    ## in lock messages so no redrawing occurs
    _SetVScrollPercent thePercent
    
@@ -7517,6 +7655,13 @@ private command _ConfigureHScrollbar
       set the endValue of theScrollBar to max(sFormattedWidth, theViewWidth)
       set the thumbSize of theScrollBar to theViewWidth
       set the pageIncrement of theScrollBar to the thumbSize of theScrollBar
+      
+      if __HasMobileScroller() then
+         local tContentRect
+         put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+         put max(sFormattedWidth, theViewWidth) into item 3 of tContentRect
+         mobileControlSet sScrollerId, "contentrect", tContentRect
+      end if
       
       ## Show/hide last column divider shadow
       _SetVisibilityOfColumnDividers
@@ -7554,6 +7699,10 @@ end _SetVisibilityOfColumnDividers
 
 
 private command _AutoHideVScrollbar
+   if the environment is "mobile" then
+      return empty
+   end if
+   
    ## Determine scrollbars
    ## Doesn't work without fixed control height. We trap for this when setting prop but developer
    ## could lock messages and set dgProps["autohide scrollbar"].
@@ -7580,6 +7729,10 @@ end _AutoHideVScrollbar
 
 ## Call whenever width of all columns changes
 private command _AutoHideHScrollbar
+   if the environment is "mobile" then
+      return empty
+   end if
+   
    if _ControlType() is "table" then
       local msgsAreLocked
       put the lockMessages into msgsAreLocked
@@ -7808,7 +7961,9 @@ command _ScrollListV pVScroll, pForceRefresh
    
    try
       if sFormattedHeight > 0 then
-         if pVScroll is not an integer then put round(the thumbPosition of scrollbar "dgScrollbar" of me) into pVScroll
+         if pVScroll is not an integer then 
+            put the dgVScroll of me into pVScroll
+         end if
          
          ## Sequence can't be too high
          local theMaxStartingSequence
@@ -8343,7 +8498,7 @@ command StartScrollAnimation pScrollTo
    put true into sIsAnimating
    local rightNow, scrollFrom
    put the milliseconds into rightNow
-   put round(the thumbPosition of scrollbar "dgScrollbar" of me) into scrollFrom
+   put the dgVScroll of me into scrollFrom
    
    ScheduleScrollAnimation scrollFrom, pScrollTo, rightNow, "ease in out", rightNow, rightNow + kAnimationLength
 end StartScrollAnimation
@@ -8401,6 +8556,9 @@ command UpdateScrollAnimation pScrollFrom, pScrollTo, pLastTime, pPhase, pPhaseS
    put the lockMessages into msgsAreLocked
    
    if not msgsAreLocked then lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", theValue
+   end if
    set the thumbPosition of scrollbar "dgScrollbar" of me to theValue
    if not msgsAreLocked then unlock messages
    
@@ -9229,3 +9387,9 @@ private command _CreateAlternatingColorImage pDestImg, pColor1, pColor2, pRowHei
    
    return empty
 end _CreateAlternatingColorImage
+
+private function __HasMobileScroller
+   return the environment is "mobile" and \
+         sScrollerId is not empty and \
+         sScrollerId is among the lines of mobileControls()
+end __HasMobileScroller
