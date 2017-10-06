@@ -316,7 +316,7 @@ private function renderDocDictionary pTag, pType
    local tResult, tData
    
    # Get the required info from the doc
-   put ideDocsFetchLCSData(pTag) into tData
+   put ideDocsFetchScriptData(pTag) into tData
 
    if pType is empty then
       put sTypesA[pTag] into pType

@@ -863,7 +863,7 @@ command sePanesUpdate
    # OK-2008-09-11 : Refactored to prevent direct interaction with the Documentation pane. This needs further work
    # as it will soon be possible to have multiple panes open.
    if tToken is not empty then
-      if ideDocsFetchLCSData(tToken) is not empty then
+      if ideDocsFetchScriptData(tToken) is not empty then
          sePrefSet "documentation,lastLoadedDoc", tToken
          sePrefSet "documentation,lastMatchingSearch", tToken
          sePrefSet "documentation,lastLoadedAlternativeDocs", tToken

@@ -162,6 +162,18 @@ private function ideDocsFetchData pAPI, pLibraryName, pEntryName
 end ideDocsFetchData
 
 /* 
+Fetch the data for LCS entries with name <pEntryName>, including extensions
+
+Returns:
+A numerically keyed array, each element of which is the array
+of data 
+pertaining to a LiveCode Script API entry with the given name.
+*/
+function ideDocsFetchScriptData pEntryName
+   return ideDocsFetchData("livecode_script", "", pEntryName)
+end ideDocsFetchScriptData
+
+/* 
 Fetch the data for LiveCode script dictionary entries with name <pEntryName>
 
 Returns:
