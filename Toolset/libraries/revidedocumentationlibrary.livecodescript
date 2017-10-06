@@ -50,7 +50,7 @@ command ideDocsInitialize pDistributed
    return tConnection
 end ideDocsInitialize
 
-private function __fetchDocsData pEntryName, pLibraryName, pType
+private function __fetchDocsData pAPI, pLibraryName, pEntryName, pType
    # Ensure we have a connection
    local tConnection
    try
@@ -60,20 +60,15 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
       return tError
    end try
    
-   # Find the library id
-   local tSQL, tLibraryID, tResult
-   if pLibraryName is not empty then
-      # Get the library's escaped name
-      local tLibName
-      dispatch function "revDocsModifyForUrl" to stack "revDocsParser" with pLibraryName
-      put the result into tLibName
-      
-      put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
-      put revDataFromQuery(comma, return, sConnection, tSQL, "tLibName") into tLibraryID
+   # Find the api id
+   local tSQL, tAPIID, tResult
+   if pAPI is not empty then
+      put "SELECT api_id FROM apis WHERE api_name = :1" into tSQL
+      put revDataFromQuery(comma, return, tConnection, tSQL, "pAPI") into tAPIID
       
       put the result into tResult
       if tResult is not a number then
-         return "error finding library id for" && pLibraryName & return & tResult
+         return "error finding api id for" && pAPI & return & tResult
       end if
    end if
    
@@ -82,36 +77,37 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
    put "SELECT entry_data from dictionary_data" into tSQL
    
    local tWhere
-   if pEntryName is not empty then
-      put "entry_name" into tWhere[1]
-   end if
-   if pType is not empty then
-      put "entry_type" into tWhere[2]
+   if pAPI is not empty then
+      put "api_id" into tWhere[1]
    end if
    if pLibraryName is not empty then
-      put "library_id" into tWhere[3]
+      put "library_name" into tWhere[2]
+   end if
+   if pEntryName is not empty then
+      put "entry_name" into tWhere[3]
+   end if
+   if pType is not empty then
+      put "entry_type" into tWhere[4]
    end if
    
    local tWhereString
-   repeat with x = 1 to 3
+   repeat with x = 1 to 4
       if tWhere[x] is not empty then
          if tWhereString is empty then
             put " WHERE" && tWhere[x] & "=:" & x into tWhereString
          else
             put " AND" && tWhere[x] & "=:" & x after tWhereString
          end if
+         put " COLLATE NOCASE" after tWhereString
       end if
    end repeat
    
    put tWhereString after tSQL
-   
-   local tEntryName
-   put tolower(pEntryName) into tEntryName
-   
+
    # Execute the query, keeping the record set ID.
-   put revQueryDatabase(sConnection, tSql, "tEntryName", "pType", "tLibraryID") into tRecordSet
+   put revQueryDatabase(tConnection, tSql, "tAPIID", "pLibraryName", "pEntryName", "pType") into tRecordSet
    if the result is not a number then
-      return "entry" && tEntryName && "not found" & return & the result
+      return "entry" && pEntryName && "not found" & return & the result
    end if
    
    # Get the docs data from the record set
@@ -131,10 +127,10 @@ private function __fetchDocsData pEntryName, pLibraryName, pType
    return tDataSet
 end __fetchDocsData
 
-private function __ideDocsFetchData pEntryName, pLibraryName, pType
+private function __ideDocsFetchData pAPI, pLibraryName, pEntryName, pType
    # Fetch the data
    local tData
-   put __fetchDocsData(pEntryName, pLibraryName, pType) into tData
+   put __fetchDocsData(pAPI, pLibraryName, pEntryName, pType) into tData
    
    if tData[1] is empty then
       return empty
@@ -148,21 +144,21 @@ private function __ideDocsFetchData pEntryName, pLibraryName, pType
    return tData
 end __ideDocsFetchData
 
-private function ideDocsFetchElementOfType pEntryName, pLibraryName, pType, pElement
+private function ideDocsFetchElementOfType pAPI, pLibraryName, pEntryName, pType, pElement
    local tDataA
-   put __ideDocsFetchData(pEntryName, pLibraryName, pType) into tDataA
+   put __ideDocsFetchData(pAPI, pLibraryName, pEntryName, pType) into tDataA
    
    return tDataA[1][pElement]
 end ideDocsFetchElementOfType
 
-private function ideDocsFetchDataOfType pEntryName, pLibraryName, pType
+private function ideDocsFetchDataOfType pAPI, pLibraryName, pEntryName, pType
    local tDataA
-   put  __ideDocsFetchData(pEntryName, pLibraryName, pType) into tDataA
+   put  __ideDocsFetchData(pAPI, pLibraryName, pEntryName, pType) into tDataA
    return tDataA[1]
 end ideDocsFetchDataOfType
 
-private function ideDocsFetchData pEntryName, pLibraryName
-   return __ideDocsFetchData(pEntryName, pLibraryName)
+private function ideDocsFetchData pAPI, pLibraryName, pEntryName
+   return __ideDocsFetchData(pAPI, pLibraryName, pEntryName)
 end ideDocsFetchData
 
 /* 
@@ -174,7 +170,7 @@ of data
 pertaining to a  LiveCode script dictionary entry with the given name.
 */
 function ideDocsFetchLCSData pEntryName
-   return ideDocsFetchData(pEntryName, "LiveCode Script")
+   return ideDocsFetchData("livecode_script", "LiveCode Script", pEntryName)
 end ideDocsFetchLCSData
 
 /* 
@@ -187,7 +183,7 @@ of data pertaining to the unique LiveCode script dictionary entry with the
 given name and type.
 */
 function ideDocsFetchLCSDataOfType pEntryName, pType
-   return ideDocsFetchDataOfType(pEntryName, "LiveCode Script", pType)
+   return ideDocsFetchDataOfType("livecode_script", "LiveCode Script", pEntryName, pType)
 end ideDocsFetchLCSDataOfType
 
 /* 
@@ -200,7 +196,7 @@ of data describing the element of the array of data
 pertaining to the LiveCode script dictionary entry with the given name and type.
 */
 function ideDocsFetchLCSElementOfType pEntryName, pType, pElement
-   return ideDocsFetchElementOfType(pEntryName, "LiveCode Script", pType, pElement)
+   return ideDocsFetchElementOfType("livecode_script", "LiveCode Script", pEntryName, pType, pElement)
 end ideDocsFetchLCSElementOfType
 
 /* 
@@ -211,7 +207,7 @@ A numerically keyed array of data, each element of which is an array of data
 pertaining to a LiveCode script dictionary entry with the given type.
 */
 function ideDocsFetchLCSElementsOfType pType
-   return __ideDocsFetchData("", "LiveCode Script", pType)
+   return __ideDocsFetchData("livecode_script", "LiveCode Script", "", pType)
 end ideDocsFetchLCSElementsOfType
 
 /* 
@@ -223,7 +219,7 @@ of data
 pertaining to a LiveCode builder dictionary entry with the given name.
 */
 function ideDocsFetchLCBData pEntryName
-   return ideDocsFetchData(pEntryName, "LiveCode Builder")
+   return ideDocsFetchData("livecode_builder", "LiveCode Builder", pEntryName)
 end ideDocsFetchLCBData
 
 /* 
@@ -236,7 +232,7 @@ of data pertaining to the unique LiveCode builder dictionary entry with the
 given name and type.
 */
 function ideDocsFetchLCBDataOfType pEntryName, pType
-   return ideDocsFetchDataOfType(pEntryName, "LiveCode Builder", pType)
+   return ideDocsFetchDataOfType("livecode_builder", "LiveCode Builder", pEntryName, pType)
 end ideDocsFetchLCBDataOfType
 
 /* 
@@ -249,7 +245,7 @@ of data describing the element of the array of data
 pertaining to the LiveCode builder dictionary entry with the given name and type.
 */
 function ideDocsFetchLCBElementOfType pEntryName, pType, pElement
-   return ideDocsFetchElementOfType(pEntryName, "LiveCode Builder", pType, pElement)
+   return ideDocsFetchElementOfType("livecode_builder", "LiveCode Builder", pEntryName, pType, pElement)
 end ideDocsFetchLCBElementOfType
 
 /* 
@@ -260,7 +256,7 @@ A numerically keyed array of data, each element of which is an array of data
 pertaining to a LiveCode builder dictionary entry with the given type.
 */
 function ideDocsFetchLCBElementsOfType pType
-   return __ideDocsFetchData("", "LiveCode Builder", pType)
+   return __ideDocsFetchData("livecode_builder", "LiveCode Builder", "", pType)
 end ideDocsFetchLCBElementsOfType
 
 /* 
@@ -272,9 +268,10 @@ of data
 pertaining to an entry in the API for the given extension with the given name.
 */
 function ideDocsFetchExtensionData pID, pEntryName
-   local tLibraryName
+   local tLibraryName, tAPI
    put revIDEExtensionProperty(pID, "title") into tLibraryName
-   return ideDocsFetchData(pEntryName, tLibraryName)
+   put revIDEExtensionProperty(pID, "api") into tAPI
+   return ideDocsFetchData(tAPI, tLibraryName, pEntryName)
 end ideDocsFetchExtensionData
 
 /* 
@@ -287,9 +284,10 @@ of data pertaining to the unique entry in the API for the given extension with t
 given name and type.
 */
 function ideDocsFetchExtensionDataOfType pID, pEntryName, pType
-   local tLibraryName
+   local tLibraryName, tAPI
    put revIDEExtensionProperty(pID, "title") into tLibraryName
-   return ideDocsFetchDataOfType(pEntryName, tLibraryName, pType)
+   put revIDEExtensionProperty(pID, "api") into tAPI
+   return ideDocsFetchDataOfType(tAPI, tLibraryName, pEntryName, pType)
 end ideDocsFetchExtensionDataOfType
 
 /* 
@@ -302,9 +300,10 @@ of data describing the element of the array of data
 pertaining to the entry in the API for the given extension with the given name and type.
 */
 function ideDocsFetchExtensionElementOfType pID, pEntryName, pType, pElement
-   local tLibraryName
-   put revIDEExtensionProperty(pID, "title") into tLibraryName	
-   return ideDocsFetchElementOfType(pEntryName, tLibraryName, pType, pElement)
+   local tLibraryName, tAPI
+   put revIDEExtensionProperty(pID, "title") into tLibraryName
+   put revIDEExtensionProperty(pID, "api") into tAPI
+   return ideDocsFetchElementOfType(tAPI, tLibraryName, pEntryName, pType, pElement)
 end ideDocsFetchExtensionElementOfType
 
 /* 
@@ -315,9 +314,10 @@ A numerically keyed array of data, each element of which is an array of data
 pertaining to a LiveCode script dictionary entry with the given type.
 */
 function ideDocsFetchExtensionElementsOfType pID, pType
-   local tLibraryName
+   local tLibraryName, tAPI
    put revIDEExtensionProperty(pID, "title") into tLibraryName
-   return __ideDocsFetchData("", tLibraryName, pType)
+   put revIDEExtensionProperty(pID, "api") into tAPI
+   return __ideDocsFetchData(tAPI, tLibraryName, "", pType)
 end ideDocsFetchExtensionElementsOfType
 
 /*
@@ -334,8 +334,8 @@ function ideDocsFetchLibraryNames
    end try
    
    local tRecordSet, tData, tDataSet, tSQL
-   put "SELECT library_name FROM libraries" into tSQL
-   put revQueryDatabase(sConnection, tSQL) into tRecordSet
+   put "SELECT library_name FROM dictionary_data" into tSQL
+   put revQueryDatabase(tConnection, tSQL) into tRecordSet
    if the result is not a number then
       return "error fetching library names" & return & the result
    end if

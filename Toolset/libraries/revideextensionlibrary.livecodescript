@@ -143,6 +143,10 @@ function revIDEExtensionProperty pKind, pProperty
    local tExtensionID
    put __extensionCacheID("name", pKind) into tExtensionID
    
+   if pProperty is "api" then
+      return __TypeToAPI(__extensionPropertyGet(tExtensionID, "type"))
+   end if
+   
    return __extensionPropertyGet(tExtensionID, pProperty)
 end revIDEExtensionProperty
 
@@ -1126,18 +1130,18 @@ end extensionUpdateDataReceived
 
 -- At the moment, if the extension is of type module then assume
 -- it provides an LCB API, and otherwise it provides an LCS API.
-function __TypeToAPI pType
+private function __TypeToAPI pType
    switch pType
       case "module"
-         return "lcb"
+         return "livecode_builder"
          break
       case "plugin"
-         return "ide"
+         return "livecode_ide"
          break
       case "library"
       case "widget"
       default
-         return "lcs"
+         return "livecode_script"
          break
    end switch
 end __TypeToAPI

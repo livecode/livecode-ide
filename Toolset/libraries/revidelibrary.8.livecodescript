@@ -4123,7 +4123,7 @@ Example:
 local tIDEFolder
 put revIDESpecialFolderPath("IDE") into tIDEFolder
 */
-function revIDESpecialFolderPath pKey
+function revIDESpecialFolderPath pKey, pParam
    local tPath
    set the itemdel to "/"
    switch pKey
@@ -4191,10 +4191,11 @@ function revIDESpecialFolderPath pKey
          revIDEEnsurePath tPath
          return tPath
          break
-      case "api-ide"
-      case "api-lcs"
-      case "api-lcb"
+      case "api"
       case "guide"
+         if pParam is not empty then
+            put "_" & pParam after pKey
+         end if
          put item 1 to -3 of the filename of stack "home" & "/Documentation/html_viewer/resources/data/" & tolower(pKey) into tPath
          if not revEnvironmentIsInstalled() then
             revIDEEnsurePath tPath
@@ -10664,14 +10665,19 @@ private function revIDEGetBaseDocsData pWhich
    local tData
    
    local tAPIPath, tLibs
-   put revIDESpecialFolderPath("api-" & pWhich) into tAPIPath
+   put revIDESpecialFolderPath("api", pWhich) into tAPIPath
    put files(tAPIPath) into tLibs
    filter tLibs with "*.js"
+   local tDoc
    repeat for each line tLibraryJS in tLibs
-      put revIDEUTF8FileContents(tAPIPath & slash & tLibraryJS) \
-            & comma after tData
+      put revIDEUTF8FileContents(tAPIPath & slash & tLibraryJS) into tDoc
+      if tData is empty then
+         put tDoc into tData
+      else
+         put comma & tDoc after tData
+      end if
    end repeat
-   delete the last char of tData
+   
    return tData
 end revIDEGetBaseDocsData 
 
@@ -10763,7 +10769,7 @@ private function revIDEGetDocsAPIData pWhich
    local tData, tExtensions
    put revIDEGetBaseDocsData(pWhich) into tData
    put revIDEGetExtensionDocsData(pWhich) into tExtensions
-   if tExtensions is not empty then 
+   if tExtensions is not empty then
       put comma & tExtensions after tData
    end if
    return tData
@@ -10843,35 +10849,35 @@ on revIDERegenerateBuiltGuides
    revIDESetUTF8FileContents tDocsCache & slash & "built_guide.js", tData
 end revIDERegenerateBuiltGuides
 
+constant kAPIs = "LiveCode Script,livecode_script|LiveCode Builder,livecode_builder|LiveCode IDE,livecode_ide"
 on revIDERegenerateBuiltAPIs
    local tData, tAPIData
-   put "var dictionary_data =" & CR & "{" & CR & tab & quote & "docs" & quote & ":[" after tData
-   
-   put revIDEGetDocsAPIData("lcs") into tAPIData
-   
-   dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-         with "LiveCode Script", "livecode_script", "", tAPIData
-   put the result after tData
-   
-   put revIDEGetDocsAPIData("lcb") into tAPIData
-   
-   dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-         with "LiveCode Builder", "livecode_builder", "", tAPIData
-   put comma & the result after tData
-   
-   if not revEnvironmentIsInstalled() then
-      put revIDEGetDocsAPIData("ide") into tAPIData
+   set the lineDelimiter to "|"
+   repeat for each line tAPI in kAPIs
+      -- For now, the IDE API is BFS only
+      if item 2 of tAPI is "livecode_ide" and revEnvironmentIsInstalled() then
+         next repeat
+      end if
       
+      put revIDEGetDocsAPIData(item 2 of tAPI) into tAPIData
       dispatch function "revDocsCreateAPIJSON" to stack "revDocsParser" \
-            with "LiveCode IDE", "livecode_ide", "", tAPIData    
-      put comma & the result after tData
-   end if
+            with item 1 of tAPI, item 2 of tAPI, "", tAPIData
+      if tData is empty then
+         put the result into tData
+      else
+         put comma & the result after tData
+      end if
+   end repeat
    
-   put CR & tab & "]" & CR & "}" after tData
+   local tDictionaryData
+   put "var dictionary_data =" & return & "{" & return & \
+         tab & quote & "docs" & quote & ":[" & \
+         tData & return & tab & "]" & return & "}" \
+         into tDictionaryData
    
    local tDocsCache
    put revIDESpecialFolderPath("documentation cache") into tDocsCache
-   revIDESetUTF8FileContents tDocsCache & slash & "built_api.js", tData
+   revIDESetUTF8FileContents tDocsCache & slash & "built_api.js", tDictionaryData
 end revIDERegenerateBuiltAPIs
 
 on revIDERegenerateBuiltDictionaryData
@@ -10945,7 +10951,7 @@ private command revIDEGenerateDistributedAPI
    put the effective filename of stack "revDocsParser" into tInputs[0]
    put tDocsFolder & slash & "dictionary" into tInputs[1]
    put tDocsFolder & slash & "glossary" into tInputs[2]
-   put revIDESpecialFolderPath("api-lcs") & slash & "script.js" into tOutput
+   put revIDESpecialFolderPath("api", "livecode_script") & slash & "script.js" into tOutput
    
    put revIDEIsFilesetStale(tInputs, tOutput, true, tError) into tNeedUpdate
    
@@ -10960,11 +10966,11 @@ private command revIDEGenerateDistributedAPI
       put revDocsParseDictionaryToLibraryArray(tDocsFolder) into tScriptA["doc"]
       
       # Update the database
-      ideDocsUpdateDatabase tScriptA
+      ideDocsUpdateDatabase "livecode_script", tScriptA, true
       
       local tJSON
       put revDocsFormatLibraryDocArrayAsJSON("livecode_script", tScriptA["doc"]) into tJSON
-      revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcs") & slash & "script.js", \
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "script.js", \
             tJSON
    end if
    
@@ -10974,7 +10980,7 @@ private command revIDEGenerateDistributedAPI
    
    set the itemdelimiter to slash
    put empty into tInputs
-   put revIDESpecialFolderPath("api-lcb") & slash & "builder.js" into tOutput
+   put revIDESpecialFolderPath("api", "livecode_builder") & slash & "builder.js" into tOutput
    put the effective filename of stack "revDocsParser" into tInputs[0]
    local tCount
    put 1 into tCount
@@ -11018,16 +11024,16 @@ private command revIDEGenerateDistributedAPI
       put "dictionary" into tBuilderA["type"]
       
       # Update the database
-      ideDocsUpdateDatabase tBuilderA
+      ideDocsUpdateDatabase "livecode_builder", tBuilderA, true
       
       put revDocsFormatLibraryDocArrayAsJSON("livecode_builder", tBuilderA["doc"]) into tJSON
-      revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcb") & slash & "builder.js", \
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_builder") & slash & "builder.js", \
             tJSON
    end if
    
    # Check to see if we need to regenerate the datagrid docs
    put empty into tInputs
-   put revIDESpecialFolderPath("api-lcs") & slash & "dg.js" into tOutput
+   put revIDESpecialFolderPath("api", "livecode_script") & slash & "dg.js" into tOutput
    put the effective filename of stack "revDocsParser" into tInputs[0]
    local tDatagridDoc, tFolder
    put revIDESpecialFolderPath("Documentation") &"/dictionary" into tFolder
@@ -11039,9 +11045,9 @@ private command revIDEGenerateDistributedAPI
       put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "Data Grid", "LiveCode") into tLibA
 
       # Update the database
-      ideDocsUpdateDatabase tLibA
+      ideDocsUpdateDatabase "livecode_script", tLibA, true
       put revDocsFormatLibraryDocArrayAsJSON("datagrid", tLibA["doc"]) into tJSON
-      revIDESetUTF8FileContents revIDESpecialFolderPath("api-lcs") & slash & "dg.js", \
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "dg.js", \
             tJSON
    end if
    
@@ -11054,7 +11060,7 @@ private command revIDEGenerateDistributedAPI
    put the effective filename of stack "revDocsParser" into tInputs[0]
    put tIdeSupportFolder into tInputs[1]
    put tIDELibsFolder into tInputs[2]
-   put revIDESpecialFolderPath("api-ide") & slash & "ide.js" into tOutput
+   put revIDESpecialFolderPath("api", "livecode_ide") & slash & "ide.js" into tOutput
    
    put revIDEIsFilesetStale(tInputs, tOutput, true, tError) into tNeedUpdate
    # Regenerate dictionary if necessary
@@ -11090,10 +11096,10 @@ private command revIDEGenerateDistributedAPI
       put "dictionary" into tIDELibraryA["type"]
       
       # Update the database
-      ideDocsUpdateDatabase tIDELibraryA
+      ideDocsUpdateDatabase "livecode_ide", tIDELibraryA, true
       
       put revDocsFormatLibraryDocArrayAsJSON("livecode_ide", tIDELibraryA["doc"]) into tJSON
-      revIDESetUTF8FileContents revIDESpecialFolderPath("api-ide") & slash & "ide.js", \
+      revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_ide") & slash & "ide.js", \
             tJSON
    end if
    
@@ -11109,7 +11115,7 @@ private command revIDEGenerateDistributedAPI
    repeat for each line tFile in tFiles
       # Check to see if we need to regenerate the docs
       put empty into tInputs
-      put revIDESpecialFolderPath("api-lcs") & slash & toLower(item 1 to -2 of tFile) & ".js" into tOutput
+      put revIDESpecialFolderPath("api", "livecode_script") & slash & toLower(item 1 to -2 of tFile) & ".js" into tOutput
       put the effective filename of stack "revDocsParser" into tInputs[0]
       put tExtractedDocsFolder & slash & tFile into tInputs[1]
       put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
@@ -11117,7 +11123,7 @@ private command revIDEGenerateDistributedAPI
       if tNeedUpdate then
          put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
          # Update the database
-         ideDocsUpdateDatabase tLibA
+         ideDocsUpdateDatabase "livecode_script", tLibA, true
          put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
          revIDESetUTF8FileContents tOutput, tJSON
       end if
