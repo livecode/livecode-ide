@@ -10743,7 +10743,7 @@ private function revIDEGetExtensionDocsData pAPI
          put the result into tExtensionAPI
          
          # Update the dictionary database
-         ideDocsUpdateDatabase tLibraryArray
+         ideDocsUpdateDatabase pAPI, tLibraryArray, false
          
          revIDESetUTF8FileContents tAPIJS, tExtensionAPI
       end if

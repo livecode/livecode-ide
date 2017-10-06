@@ -18,31 +18,44 @@ private on ideDocsEnsureDatabase pLocation
    end if
 end ideDocsEnsureDatabase
 
-local sConnection
-on ideDocsInitialize
-   if sConnection is among the items of revOpenDatabases() then
-      exit ideDocsInitialize
+local sConnectionsA
+command ideDocsInitialize pDistributed
+   If pDistributed is true and revEnvironmentIsInstalled() then
+      ideThrow "can't write to installed IDE"
+      return empty
    end if
    
-   local tCopyLocation
-   put revIDESpecialFolderPath("documentation cache") into tCopyLocation
-   ideDocsEnsureDatabase tCopyLocation
+   local tConnection, tLocation, tKey
+   if pDistributed is true then
+      put "ide" into tKey
+      put revIDESpecialFolderPath("API") into tLocation
+   else
+      put "cache" into tKey
+      put revIDESpecialFolderPath("documentation cache") into tLocation
+      ideDocsEnsureDatabase tLocation
+   end if
+   put sConnectionsA[tKey] into tConnection
    
-   local tConnection
-   dispatch "revDocsOpenAPIDatabase" to stack "revDocsParser" with revIDESpecialFolderPath("documentation cache")
+   if tConnection is among the items of revOpenDatabases() then
+      return tConnection
+   end if
+   
+   dispatch "revDocsOpenAPIDatabase" to stack "revDocsParser" with tLocation
    put the result into tConnection
    if tConnection is not a number then
       ideThrow "unable to open database", tConnection
    end if
    
-   put tConnection into sConnection
-   return empty
+   put tConnection into sConnectionsA[tKey]
+   return tConnection
 end ideDocsInitialize
 
 private function __fetchDocsData pEntryName, pLibraryName, pType
    # Ensure we have a connection
+   local tConnection
    try
       ideDocsInitialize
+      put the result into tConnection
    catch tError
       return tError
    end try
@@ -312,8 +325,10 @@ Returns a list of library names, one per line, which have API entries in the dic
 */
 function ideDocsFetchLibraryNames
    # Ensure we have a connection
+   local tConnection
    try
       ideDocsInitialize
+      put the result into tConnection
    catch tError
       return tError
    end try
@@ -380,24 +395,31 @@ of data
 pertaining to an entry in the API for the given extension.
 */
 function ideDocsFetchExtensionEntries pID
-   local tLibraryName
-   put revIDEExtensionProperty(pID, "title") into tLibraryName	
-   return ideDocsFetchLibraryEntries(tLibraryName)
+   local tLibraryName, tAPI
+   put revIDEExtensionProperty(pID, "title") into tLibraryName
+   put revIDEExtensionProperty(pID, "api") into tAPI
+   return ideDocsFetchLibraryEntries(tAPI, tLibraryName)
 end ideDocsFetchExtensionEntries
 
-on ideDocsUpdateDatabase pLibraryA
-   ideDocsInitialize
+on ideDocsUpdateDatabase pAPI, pLibraryA, pDistributed
+   if pDistributed is true and revEnvironmentIsInstalled() then
+      exit ideDocsUpdateDatabase
+   end if
+   
+   local tConnection
+   ideDocsInitialize pDistributed
+   put the result into tConnection
    
    local tResult
-   revExecuteSQL sConnection,"BEGIN TRANSACTION"
-   dispatch "revDocsUpdateDatabase" to stack "revDocsParser" with sConnection, pLibraryA
+   revExecuteSQL tConnection,"BEGIN TRANSACTION"
+   dispatch "revDocsUpdateDatabase" to stack "revDocsParser" with tConnection, pAPI, pLibraryA
    put the result into tResult
    
    if tResult is not empty then
-      revExecuteSQL sConnection,"ROLLBACK"
+      revExecuteSQL tConnection,"ROLLBACK"
       return tResult
    end if
-    
-   revExecuteSQL sConnection, "COMMIT"
+   
+   revExecuteSQL tConnection, "COMMIT"
    return empty
 end ideDocsUpdateDatabase
