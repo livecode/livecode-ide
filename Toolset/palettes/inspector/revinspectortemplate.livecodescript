@@ -297,3 +297,38 @@ end inspectorPropLabelsPrefChanged
 getProp showMultiPropLabels
    return false
 end showMultiPropLabels
+
+on rawKeyDown pKeyNum
+   switch pKeyNum
+      case "65360"
+         ## home
+         set the vScroll of group "inspector" of me to 0
+         break
+      case "65367"
+         ## end
+         set the vScroll of group "inspector" of me to \
+               the formattedHeight of group "inspector" of me - the height of group "inspector" of me 
+         break
+      case "65365"
+         set the vScroll of group "inspector" of me to \
+               max(0, the vScroll of group "inspector" of me - 50)
+         break
+      case "65366"
+         set the vScroll of group "inspector" of me to \
+               min(the formattedHeight of group "inspector" of me - the height of group "inspector" of me, \
+               the vScroll of group "inspector" of me + 50)
+         break
+      case "65309"
+         set the vScroll of group "inspector" of me to \
+               max(0, the vScroll of group "inspector" of me - 5)
+         break
+      case "65308"
+         set the vScroll of group "inspector" of me to \
+               min(the formattedHeight of group "inspector" of me - the height of group "inspector" of me, \
+               the vScroll of group "inspector" of me + 5)
+         break
+      default
+         pass rawKeyDown
+   end switch
+end rawKeyDown
+
