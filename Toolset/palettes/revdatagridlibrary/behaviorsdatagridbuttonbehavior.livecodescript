@@ -65,8 +65,11 @@ local sLockDrawing -- todo: add set/get. When locked we don't redraw when data i
 ## for tables
 local sTableObjectsA
 
---> Messages (engine)
+local sScrollerId
+local sPollID
 
+
+--> Messages (engine)
 
 before preopenControl
    if the target is not me then pass preopencontrol
@@ -89,22 +92,38 @@ end preopenControl
 
 
 before closeControl
-    if the target is not me then pass closeControl
-    
-    DeleteFieldEditor
-    put false into sControlIsOpen
-    put true into sFocusLeftMe
-    pass closeControl
+   if the target is not me then pass closeControl
+   
+   DeleteFieldEditor
+   put false into sControlIsOpen
+   put true into sFocusLeftMe
+   
+   if the environment is "mobile" then
+      mobileControlDelete sScrollerId
+      put empty into sScrollerId
+   end if
+   
+   cancel sPollID
+   pass closeControl
 end closeControl
 
 
 before newGroup
-    if the target is not me then pass newGroup
-    _Initialize
-    pass newGroup
+   if the target is not me then pass newGroup
+   _Initialize
+   pass newGroup
 end newGroup
 
-
+on __PollVisibility
+   cancel sPollID
+   if __HasMobileScroller() then
+      send "__PollVisibility" to me in 300 milliseconds
+      put the result into sPollID
+      
+      mobileControlSet sScrollerId, "visible", the effective visible of me
+   end if
+end __PollVisibility
+ 
 private command _Initialize
    if not sInit then
       set the wholeMatches to true
@@ -139,16 +158,37 @@ private command _Initialize
          _RestorePersistentData
       end if
       
-      set the traversalOn of scrollbar "dgScrollbar" of me to false ## take out of tabbing
-      set the traversalOn of scrollbar "dgHScrollbar" of me to false ## take out of tabbing
-      set the visible of scrollbar "dgScrollbar" of me to the dgProps["show vscrollbar"] of me is not false
-      
-      if _ControlType() is "table" then
-         set the visible of group "dgHorizontalComponents" of me to the dgProps["show hscrollbar"] of me is not false
+      if the environment is not "mobile" then
+         set the traversalOn of scrollbar "dgScrollbar" of me to false ## take out of tabbing
+         set the traversalOn of scrollbar "dgHScrollbar" of me to false ## take out of tabbing
+         set the visible of scrollbar "dgScrollbar" of me to the dgProps["show vscrollbar"] of me is not false
+         
+         if _ControlType() is "table" then
+            set the visible of group "dgHorizontalComponents" of me to the dgProps["show hscrollbar"] of me is not false
+         end if
+         
+         set the borderWidth of scrollbar "dgScrollbar" of me to 0 ## For Windows 2000
+         set the borderWidth of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0 ## For Windows 2000
+         
+         _SetScrollbarWidth
+      else
+         set the visible of scrollbar "dgScrollbar" of me to false
+         set the visible of scrollbar "dgHScrollbar" of me to false
+         if the dgProps["show vscrollbar"] of me is not false or \
+               (_ControlType() is "table" and \
+               the dgProps["show hscrollbar"] of me is not false) then
+            if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
+               mobileControlCreate "scroller"
+               put the result into sScrollerId
+            end if
+            mobileControlSet sScrollerId, "canBounce", "true"
+            mobileControlSet sScrollerId, "pagingEnabled", "false"
+            mobileControlSet sScrollerId, "canScrollToTop", "true"
+            mobileControlSet sScrollerId, "delayTouches", "true"
+            mobileControlSet sScrollerId, "canCancelTouches", "true"
+            __PollVisibility
+         end if
       end if
-      
-      set the borderWidth of scrollbar "dgScrollbar" of me to 0 ## For Windows 2000
-      set the borderWidth of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0 ## For Windows 2000
       
       ## Set props which didn't come with original Data Grid
       if the dgProps["header divider color"] of me is not a color then
@@ -157,8 +197,6 @@ private command _Initialize
       if the dgProps["header divider threeD color"] of me is not a color then
          set the dgProps["header divider threeD color"] of me to kHeaderDividerThreeDColor
       end if
-      
-      _SetScrollbarWidth
       
       if _ControlType() is "table" then
          _table.CreateColumns
@@ -354,6 +392,8 @@ private command _CreateDragImageFromIndex pIndex
          export snapshot from rect theRect of this card to image "dgDragImage" of me as PNG
          
          set the dragImage to the ID of image "dgDragImage" of me
+         
+         local theImageOffset
          put the clickH - item 1 of theRect & comma & \
                the clickV - item 2 of theRect into theImageOffset
          set the dragImageOffset to theImageOffset
@@ -401,24 +441,28 @@ end dgDragEnd
 
 
 on dgDragDrop
-    ## Cache before we clean up
-    put the visible of group "dgDropIndicator" of me into processTheDrop
-    put sDropStructure into theDropStructure
-     
-    ## If some other control displays a dialog during dragDrop, dragMove will still be sent
-    ## if the mouse moves within the dialog. We don't want to process those any longer at this point.
-    set the dgTrackDragReorder of me to false 
-     
-    if processTheDrop then        
-        put the dgLineOfIndex[ theDropStructure["originating index"] ] of me into theStartLine
-        put max(0, the dgLineOfIndex[ theDropStructure["dropped after index"] ] of me) into theDroppedAfterLine
-        put theDroppedAfterLine into theDroppedOnLine
-         
-        if theDroppedAfterLine < theStartLine then add 1 to theDroppedOnLine
-         
-        dispatch "DragReorderDrop" with theDropStructure["originating index"], \
-                theStartLine, theDroppedOnLine
-    end if
+   ## Cache before we clean up
+   local processTheDrop
+   put the visible of group "dgDropIndicator" of me into processTheDrop
+   
+   local theDropStructure
+   put sDropStructure into theDropStructure
+   
+   ## If some other control displays a dialog during dragDrop, dragMove will still be sent
+   ## if the mouse moves within the dialog. We don't want to process those any longer at this point.
+   set the dgTrackDragReorder of me to false 
+   
+   if processTheDrop then
+      local theStartLine, theDroppedAfterLine, theDroppedOnLine
+      put the dgLineOfIndex[ theDropStructure["originating index"] ] of me into theStartLine
+      put max(0, the dgLineOfIndex[ theDropStructure["dropped after index"] ] of me) into theDroppedAfterLine
+      put theDroppedAfterLine into theDroppedOnLine
+      
+      if theDroppedAfterLine < theStartLine then add 1 to theDroppedOnLine
+      
+      dispatch "DragReorderDrop" with theDropStructure["originating index"], \
+            theStartLine, theDroppedOnLine
+   end if
 end dgDragDrop
 
 
@@ -451,169 +495,172 @@ end dgDragMove
 
 
 private function _VisibleDataRect
-    put the rect of group "dgListMask" of me into theRect
-    if _ControlType() is "table" then
-        if the visible of scrollbar "dgScrollbar" of me then 
-            put the left of scrollbar "dgScrollbar" of me into item 3 of theRect
-        else
-            put the right of group "dgHeaderComponents" of me into item 3 of theRect
-        end if
-    end if
-    
-    return theRect
+   local theRect
+   put the rect of group "dgListMask" of me into theRect
+   if _ControlType() is "table" then
+      if the visible of scrollbar "dgScrollbar" of me then 
+         put the left of scrollbar "dgScrollbar" of me into item 3 of theRect
+      else
+         put the right of group "dgHeaderComponents" of me into item 3 of theRect
+      end if
+   end if
+   
+   return theRect
 end _VisibleDataRect
 
 
 private command _PositionDropIndicator pMouseH, pMouseV
-    -----
-    local i,theX,theY
-    local index, theIndex
-    local showDropIndicator, theDropIndicatorOffset
-    local theControl, theControlIndex
-    local theControlsToCheck
-    local theCorralRect
-    local theEndControl
-    local theHeight
-    local theSequence
-    local theStartControl
-    local theTargetControl
-    -----
-    put the lockMessages into msgsAreLocked
-    set the wholeMatches to true
-    put false into showDropIndicator
-     
-    if pMouseH,pMouseV is within _VisibleDataRect() then --the rect of group "dgListMask" of me then
-        put true into showDropIndicator
-         
-        if the mouseControl is not empty then
-            if not (the long ID of the mouseControl contains the long ID of me) then
-                put false into showDropIndicator ## control over the list but not part of the list
-            else
-                put the dgDataControl of the mouseControl into theTargetControl
-                 
-                ## Check for drags in empty columns of tables.
-                if theTargetControl is empty then
-                    if the target is not the name of scrollbar "dgScrollbar" of me then        
-                        ## Perhaps no column in clicked area or no mouse receiving controls in column
-                        repeat for each line thePotentialControl in _ListOfVisibleControls()
-                            put the rect of thePotentialControl into theRect
-                            if pMouseV >= item 2 of theRect and pMouseV <= item 4 of theRect then
-                                put the dgIndex of thePotentialControl into theIndex
-                                put thePotentialControl into theTargetControl
-                                exit repeat
-                            end if
-                        end repeat
-                    end if
-                     
-                    ## Still no control
-                    ## Assume we are below the last control
-                    if theTargetControl is empty then
-                        put the last line of _ListOfVisibleControls() into theTargetControl ## explicitly draw on only visible controls
-                    end if
-                end if
-                 
-                if theTargetControl is not empty then
-                     
-                    -- put true into showDropIndicator
-                     
-                    ## Determine offset of control in list
-                    put _LineNoOfControlInListControls(theTargetControl, the dgColumn of theTargetControl) into theControlIndex
-                    -- put "ControlIndex:" && theControlIndex
-                     
-                    ## Look for next/prev control that is not filtered out
-                    ## Direction we look depends on position of mouse
-                    ## relative to Y of control
-                    put item 2 of the loc of theTargetControl into theY
-                     
-                    ## Look for start/end controls in our drop                
-                    if the dgAcceptsDrop of theTargetControl is false then
-                        ## Look for next control that accepts a drop
-                        put line theControlIndex to -1 of sTableObjectsA["visible row controls"] into theControlsToCheck
-                        repeat for each line theControl in theControlsToCheck
-                            if the dgAcceptsDrop of theControl is false then next repeat
-                            else
-                                put theControl into theEndControl
-                                exit repeat
-                            end if
-                        end repeat
-                         
-                        ## Look for preceding control that accepts a drop
-                        repeat with i = theControlIndex down to 1
-                            put line i of sTableObjectsA["visible row controls"] into theControl
-                            if the dgAcceptsDrop of theControl is false then next repeat
-                            else
-                                put theControl into theStartControl
-                                exit repeat
-                            end if
-                        end repeat
-                    else
-                        put theTargetControl into theStartControl
-                        put theTargetControl into theEndControl
-                    end if
-                     
-                    ## What is height of drop area as defined by start/end controls?                
-                    if theStartControl is empty and theEndControl is empty then
-                        ## No drop. Hide the drop indicator
-                        put false into showDropIndicator
-                    else
-                        if theStartControl is empty then put theEndControl into theStartControl
-                        else if theEndControl is empty then put theStartControl into theEndControl
-                         
-                        put the bottom of theEndControl - the top of theStartControl into theHeight
-                        if pMouseV < (the top of theStartControl + round(theHeight / 2)) then
-                            ## if start/end control are same OR the mouse is above theStartControl then use
-                            ## the top of control as reference
-                            if theStartControl is theEndControl or pMouseV < the top of theStartControl then
-                                put the top of theStartControl into theY
-                                put the dgIndex of theStartControl into theIndex
-                                put itemOffset(theIndex, sIndexSequencing) into theSequence
-                                put max(item (theSequence - 1) of sIndexSequencing, 0) into sDropStructure["dropped after index"]
-                            else
-                                put the bottom of theStartControl into theY
-                                put the dgIndex of theStartControl into sDropStructure["dropped after index"]
-                            end if
-                        else
-                            ## If start/end control are same OR the mouse below theEndControl then use
-                            ## bottom of control as reference
-                            if theEndControl is theStartControl or pMouseV > the bottom of theEndControl then
-                                put the bottom of theEndControl into theY
-                                put the dgIndex of theEndControl into sDropStructure["dropped after index"]
-                            else                                
-                                put the top of theEndControl into theY
-                                put the dgIndex of theEndControl into theIndex
-                                put itemOffset(theIndex, sIndexSequencing) into theSequence
-                                put max(item (theSequence - 1) of sIndexSequencing, 0) into sDropStructure["dropped after index"]
-                            end if
-                        end if
-                         
-                        ## Position drop indicator
-                        put _VisibleDataRect() into theCorralRect
-                        put (item 4 of sDefaultDropIndicatorRect - item 2 of sDefaultDropIndicatorRect) / 2 div 1 into theDropIndicatorOffset ## div 1 = floor
-                         
-                        lock screen
-                        lock messages
-                        put item 1 of sDefaultDropIndicatorRect into theX
-                        put min(item 4 of theCorralRect, max(item 2 of theCorralRect - theDropIndicatorOffset, theY)) into theY ## don't let outside of the List group
-                        put theY - theDropIndicatorOffset into theY 
-                        set the topLeft of group "dgDropIndicator" of me to theX, theY
-                        set the visible of group "dgDropIndicator" of me to true
-                        unlock messages
-                        dispatch "PositionDropIndicator" to group "dgDropIndicator" of me
-                        unlock screen
-                    end if
-                end if
-            end if ## mousecontrol is part of list group control
-        else
-            ## mousecontrol is empty
-        end if 
-         
-    end if ## within rect of list
-     
-    set the lockMessages to msgsAreLocked
-     
-    if not showDropIndicator then
-        set the visible of group "dgDropIndicator" of me to false
-    end if
+   -----
+   local i,theX,theY
+   local index, theIndex
+   local showDropIndicator, theDropIndicatorOffset
+   local theControl, theControlIndex
+   local theControlsToCheck
+   local theCorralRect
+   local theEndControl
+   local theHeight
+   local theSequence
+   local theStartControl
+   local theTargetControl
+   -----
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   set the wholeMatches to true
+   put false into showDropIndicator
+   
+   if pMouseH,pMouseV is within _VisibleDataRect() then --the rect of group "dgListMask" of me then
+      put true into showDropIndicator
+      
+      if the mouseControl is not empty then
+         if not (the long ID of the mouseControl contains the long ID of me) then
+            put false into showDropIndicator ## control over the list but not part of the list
+         else
+            put the dgDataControl of the mouseControl into theTargetControl
+            
+            ## Check for drags in empty columns of tables.
+            if theTargetControl is empty then
+               if the target is not the name of scrollbar "dgScrollbar" of me then        
+                  ## Perhaps no column in clicked area or no mouse receiving controls in column
+                  repeat for each line thePotentialControl in _ListOfVisibleControls()
+                     local theRect
+                     put the rect of thePotentialControl into theRect
+                     if pMouseV >= item 2 of theRect and pMouseV <= item 4 of theRect then
+                        put the dgIndex of thePotentialControl into theIndex
+                        put thePotentialControl into theTargetControl
+                        exit repeat
+                     end if
+                  end repeat
+               end if
+               
+               ## Still no control
+               ## Assume we are below the last control
+               if theTargetControl is empty then
+                  put the last line of _ListOfVisibleControls() into theTargetControl ## explicitly draw on only visible controls
+               end if
+            end if
+            
+            if theTargetControl is not empty then
+               
+               -- put true into showDropIndicator
+               
+               ## Determine offset of control in list
+               put _LineNoOfControlInListControls(theTargetControl, the dgColumn of theTargetControl) into theControlIndex
+               -- put "ControlIndex:" && theControlIndex
+               
+               ## Look for next/prev control that is not filtered out
+               ## Direction we look depends on position of mouse
+               ## relative to Y of control
+               put item 2 of the loc of theTargetControl into theY
+               
+               ## Look for start/end controls in our drop                
+               if the dgAcceptsDrop of theTargetControl is false then
+                  ## Look for next control that accepts a drop
+                  put line theControlIndex to -1 of sTableObjectsA["visible row controls"] into theControlsToCheck
+                  repeat for each line theControl in theControlsToCheck
+                     if the dgAcceptsDrop of theControl is false then next repeat
+                     else
+                        put theControl into theEndControl
+                        exit repeat
+                     end if
+                  end repeat
+                  
+                  ## Look for preceding control that accepts a drop
+                  repeat with i = theControlIndex down to 1
+                     put line i of sTableObjectsA["visible row controls"] into theControl
+                     if the dgAcceptsDrop of theControl is false then next repeat
+                     else
+                        put theControl into theStartControl
+                        exit repeat
+                     end if
+                  end repeat
+               else
+                  put theTargetControl into theStartControl
+                  put theTargetControl into theEndControl
+               end if
+               
+               ## What is height of drop area as defined by start/end controls?                
+               if theStartControl is empty and theEndControl is empty then
+                  ## No drop. Hide the drop indicator
+                  put false into showDropIndicator
+               else
+                  if theStartControl is empty then put theEndControl into theStartControl
+                  else if theEndControl is empty then put theStartControl into theEndControl
+                  
+                  put the bottom of theEndControl - the top of theStartControl into theHeight
+                  if pMouseV < (the top of theStartControl + round(theHeight / 2)) then
+                     ## if start/end control are same OR the mouse is above theStartControl then use
+                     ## the top of control as reference
+                     if theStartControl is theEndControl or pMouseV < the top of theStartControl then
+                        put the top of theStartControl into theY
+                        put the dgIndex of theStartControl into theIndex
+                        put itemOffset(theIndex, sIndexSequencing) into theSequence
+                        put max(item (theSequence - 1) of sIndexSequencing, 0) into sDropStructure["dropped after index"]
+                     else
+                        put the bottom of theStartControl into theY
+                        put the dgIndex of theStartControl into sDropStructure["dropped after index"]
+                     end if
+                  else
+                     ## If start/end control are same OR the mouse below theEndControl then use
+                     ## bottom of control as reference
+                     if theEndControl is theStartControl or pMouseV > the bottom of theEndControl then
+                        put the bottom of theEndControl into theY
+                        put the dgIndex of theEndControl into sDropStructure["dropped after index"]
+                     else                                
+                        put the top of theEndControl into theY
+                        put the dgIndex of theEndControl into theIndex
+                        put itemOffset(theIndex, sIndexSequencing) into theSequence
+                        put max(item (theSequence - 1) of sIndexSequencing, 0) into sDropStructure["dropped after index"]
+                     end if
+                  end if
+                  
+                  ## Position drop indicator
+                  put _VisibleDataRect() into theCorralRect
+                  put (item 4 of sDefaultDropIndicatorRect - item 2 of sDefaultDropIndicatorRect) / 2 div 1 into theDropIndicatorOffset ## div 1 = floor
+                  
+                  lock screen
+                  lock messages
+                  put item 1 of sDefaultDropIndicatorRect into theX
+                  put min(item 4 of theCorralRect, max(item 2 of theCorralRect - theDropIndicatorOffset, theY)) into theY ## don't let outside of the List group
+                  put theY - theDropIndicatorOffset into theY 
+                  set the topLeft of group "dgDropIndicator" of me to theX, theY
+                  set the visible of group "dgDropIndicator" of me to true
+                  unlock messages
+                  dispatch "PositionDropIndicator" to group "dgDropIndicator" of me
+                  unlock screen
+               end if
+            end if
+         end if ## mousecontrol is part of list group control
+      else
+         ## mousecontrol is empty
+      end if 
+      
+   end if ## within rect of list
+   
+   set the lockMessages to msgsAreLocked
+   
+   if not showDropIndicator then
+      set the visible of group "dgDropIndicator" of me to false
+   end if
 end _PositionDropIndicator
 
 
@@ -621,6 +668,7 @@ private function _LineNoOfControlInListControls pControl, pColumn
     -----
     local theLineNo = 0
     local theListControl
+    local i
     -----
     if _ControlType() is "form" then
         repeat for each line theListControl in sTableObjectsA["visible row controls"]       
@@ -632,7 +680,8 @@ private function _LineNoOfControlInListControls pControl, pColumn
                 exit repeat
             end if
         end repeat
-    else
+     else
+        local theShortID
         put the short ID of pControl into theShortID 
         repeat for each line theListControl in sTableObjectsA["columns"][ pColumn ]["row controls"]  
             add 1 to i
@@ -725,172 +774,181 @@ end arrowKey
  
  
 command dgArrowKey pDirection
-    ## Look for cases where we pass arrowkey
-    if the selectedField is not empty and not the lockText of the selectedField then return true
-    if the dgProps["auto hilite"] of me is false then return true
-    
-    ## Don't let queue of key repeats build up or list might keep scrolling after user releases arrow key 
-    ## Mac needs 'autokey'. Windows needs 'keyDown'.
-    get flushEvents("autokey")
-    get flushEvents("keyDown")
-    
-    put false into theSelectionChanged
-    
-    lock screen
-    
-    if sHilitedIndexes is not empty then
-        set the wholeMatches to true
-        put sHilitedIndexes into thePreviouslyHilitedIndexes
-         
-        switch pDirection
-            case "up"
-                put itemOffset(item 1 of sHilitedIndexes, sIndexSequencing) into theItemNo
-                
-                if _IsThisModifierSetActive("shift") and the dgProps["multiple lines"] of me then
-                    if theItemNo > 1 then
-                        put max(1, item (theItemNo - 1) of sIndexSequencing) into theNewIndex
-                        put itemOffset(theNewIndex, thePreviouslyHilitedIndexes) into theItemNo
-                        if theItemNo is 0 then
-                            put comma & theNewIndex after thePreviouslyHilitedIndexes
-                            set the dgHilitedIndexes of me to thePreviouslyHilitedIndexes
-                            put true into theSelectionChanged
-                        end if
-                    end if
-                else
-                    put max(1, item (theItemNo - 1) of sIndexSequencing) into theNewIndex
-                    if theItemNo > 1 then
-                        set the dgHilitedIndexes of me to theNewIndex
-                        put true into theSelectionChanged
-                    else if theItemNo is 1 and sHilitedIndexes is not theNewIndex then
-                        ## Case for multiple selections going all the way to top
-                        set the dgHilitedIndexes of me to item 1 of sIndexSequencing 
-                        put true into theSelectionChanged
-                    end if
-                end if
-                break
-                
-            case "down"
-                put itemOffset(the last item of sHilitedIndexes, sIndexSequencing) into theItemNo       
-                
-                if _IsThisModifierSetActive("shift") and the dgProps["multiple lines"] of me then
-                    if theItemNo > 0 and theItemNo < the number of items of sIndexSequencing then
-                        put item (theItemNo + 1) of sIndexSequencing into theNewIndex
-                        put itemOffset(theNewIndex, thePreviouslyHilitedIndexes) into theItemNo
-                        if theItemNo is 0 then
-                            put comma & theNewIndex after thePreviouslyHilitedIndexes
-                            put _SortIndexesSequentially(thePreviouslyHilitedIndexes) into thePreviouslyHilitedIndexes
-                            put thePreviouslyHilitedIndexes into sHilitedIndexes   
-                            ScrollIndexIntoView theNewIndex
-                            _HiliteIndexesInVisibleControls
-                            put true into theSelectionChanged
-                        end if 
-                    end if
-                else
-                    put the number of items of sIndexSequencing into theIndexCount
-                    put item (theItemNo + 1) of sIndexSequencing into theNewIndex
-                    if theItemNo > 0 and theItemNo < theIndexCount then
-                        set the dgHilitedIndexes of me to theNewIndex
-                        put true into theSelectionChanged
-                    else if theItemNo is theIndexCount and sHilitedIndexes is not theNewIndex then
-                        ## Case for multiple selections going all the way to bottom
-                        set the dgHilitedIndexes of me to the last item of sIndexSequencing 
-                        put true into theSelectionChanged
-                    end if
-                end if
-                break
-        end switch
-         
-    else if the dgNumberOfRecords of me > 0 then
-        set the dgHilitedIndexes of me to 1
-    end if
-     
-    if theSelectionChanged then _SelectionChanged thePreviouslyHilitedIndexes
-    
-    unlock screen
-     
-    return false
+   ## Look for cases where we pass arrowkey
+   if the selectedField is not empty and not the lockText of the selectedField then return true
+   if the dgProps["auto hilite"] of me is false then return true
+   
+   ## Don't let queue of key repeats build up or list might keep scrolling after user releases arrow key 
+   ## Mac needs 'autokey'. Windows needs 'keyDown'.
+   get flushEvents("autokey")
+   get flushEvents("keyDown")
+   
+   local theSelectionChanged
+   put false into theSelectionChanged
+   
+   lock screen
+   
+   if sHilitedIndexes is not empty then
+      set the wholeMatches to true
+      local thePreviouslyHilitedIndexes
+      put sHilitedIndexes into thePreviouslyHilitedIndexes
+      
+      switch pDirection
+         case "up"
+            local theItemNo
+            put itemOffset(item 1 of sHilitedIndexes, sIndexSequencing) into theItemNo
+            
+            if _IsThisModifierSetActive("shift") and the dgProps["multiple lines"] of me then
+               if theItemNo > 1 then
+                  local theNewIndex
+                  put max(1, item (theItemNo - 1) of sIndexSequencing) into theNewIndex
+                  put itemOffset(theNewIndex, thePreviouslyHilitedIndexes) into theItemNo
+                  if theItemNo is 0 then
+                     put comma & theNewIndex after thePreviouslyHilitedIndexes
+                     set the dgHilitedIndexes of me to thePreviouslyHilitedIndexes
+                     put true into theSelectionChanged
+                  end if
+               end if
+            else
+               put max(1, item (theItemNo - 1) of sIndexSequencing) into theNewIndex
+               if theItemNo > 1 then
+                  set the dgHilitedIndexes of me to theNewIndex
+                  put true into theSelectionChanged
+               else if theItemNo is 1 and sHilitedIndexes is not theNewIndex then
+                  ## Case for multiple selections going all the way to top
+                  set the dgHilitedIndexes of me to item 1 of sIndexSequencing 
+                  put true into theSelectionChanged
+               end if
+            end if
+            break
+            
+         case "down"
+            put itemOffset(the last item of sHilitedIndexes, sIndexSequencing) into theItemNo       
+            
+            if _IsThisModifierSetActive("shift") and the dgProps["multiple lines"] of me then
+               if theItemNo > 0 and theItemNo < the number of items of sIndexSequencing then
+                  put item (theItemNo + 1) of sIndexSequencing into theNewIndex
+                  put itemOffset(theNewIndex, thePreviouslyHilitedIndexes) into theItemNo
+                  if theItemNo is 0 then
+                     put comma & theNewIndex after thePreviouslyHilitedIndexes
+                     put _SortIndexesSequentially(thePreviouslyHilitedIndexes) into thePreviouslyHilitedIndexes
+                     put thePreviouslyHilitedIndexes into sHilitedIndexes   
+                     ScrollIndexIntoView theNewIndex
+                     _HiliteIndexesInVisibleControls
+                     put true into theSelectionChanged
+                  end if 
+               end if
+            else
+               local theIndexCount
+               put the number of items of sIndexSequencing into theIndexCount
+               put item (theItemNo + 1) of sIndexSequencing into theNewIndex
+               if theItemNo > 0 and theItemNo < theIndexCount then
+                  set the dgHilitedIndexes of me to theNewIndex
+                  put true into theSelectionChanged
+               else if theItemNo is theIndexCount and sHilitedIndexes is not theNewIndex then
+                  ## Case for multiple selections going all the way to bottom
+                  set the dgHilitedIndexes of me to the last item of sIndexSequencing 
+                  put true into theSelectionChanged
+               end if
+            end if
+            break
+      end switch
+      
+   else if the dgNumberOfRecords of me > 0 then
+      set the dgHilitedIndexes of me to 1
+   end if
+   
+   if theSelectionChanged then _SelectionChanged thePreviouslyHilitedIndexes
+   
+   unlock screen
+   
+   return false
 end dgArrowKey
  
  
 ## Scrolls the group vertically when using the scroll wheel
 before rawKeyDown pKeyNum
-    ## exit immediately if an editable field is the target and action isn't scroll wheel.
-    set the wholeMatches to true
-    if word 1 of the target is "field" and not the lockText of the target and pKeyNum is not among the items of "65308,65309,65310,65311" then pass rawkeydown
-    
-    -- 65308 - Mouse wheel down
-    -- 65309 - Mouse wheel up
-    -- 65310 - Mouse wheel right
-    -- 65311 - Mouse wheel left
-    -- 65365 - page up
-    -- 65366 - page down
-    -- 65360 - home
-    -- 65367 - end
-    
-    ## Note: Messages are locked when setting thumbpostion and we call scrolling code directly.
-    ##          This is done so that scrolling works when scrollbars are hidden.
-    switch pKeyNum
-        case "65360"
-            ## home
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                _SetVScroll 0
-            end if
-            break
-        case "65367"
-            ## end
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                _SetVScroll the endValue of scrollbar "dgScrollbar" of me
-            end if
-            break
-        case "65365"
-            ## scroll page up
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                _SetVScroll the thumbPosition of scrollbar "dgScrollbar" of me - \
-                        the pageIncrement of scrollbar "dgScrollbar" of me
-            end if
-            break
-        case "65366"
-            ## scroll page down
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                _SetVScroll the thumbPosition of scrollbar "dgScrollbar" of me + \
-                        the pageIncrement of scrollbar "dgScrollbar" of me
-            end if
-            break
-        case "65309"	# scroll up
-            ## mouse wheel up
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                put the height of group "dgListMask" of me into theAvailHeight
-                put round(theAvailHeight * .1) into theScroll
-                _SetVScroll round(the thumbPosition of scrollbar "dgScrollbar" of me) - theScroll
-            end if
-            break
-        case "65308"	# scroll down
-            ## mouse wheel down
-            if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
-                put the height of group "dgListMask" of me into theAvailHeight
-                put round(theAvailHeight * .1) into theScroll
-                _SetVScroll round(the thumbPosition of scrollbar "dgScrollbar" of me) + theScroll
-            end if
-            break
-        case "65310"
-            ## mouse wheel right
-            if _ControlType() is "table" and (the visible of group "dgHorizontalComponents" of me or the dgProps["scroll when hScrollbar is hidden"] of me) then
-                put the width of group "dgList" of me into theAvailWidth
-                put round(theAvailWidth * .1) into theScroll
-                _SetHScroll round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) + theScroll
-            end if
-            break
-        case "65311"
-            ## mouse wheel left
-            if _ControlType() is "table" and (the visible of group "dgHorizontalComponents" of me or the dgProps["scroll when hScrollbar is hidden"] of me) then
-                put the width of group "dgList" of me into theAvailWidth
-                put round(theAvailWidth * .1) into theScroll
-                _SetHScroll round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) - theScroll
-            end if
-            break
-        default
-            pass rawKeyDown
-    end SWITCH
+   ## exit immediately if an editable field is the target and action isn't scroll wheel.
+   set the wholeMatches to true
+   if word 1 of the target is "field" and not the lockText of the target and pKeyNum is not among the items of "65308,65309,65310,65311" then pass rawkeydown
+   
+   -- 65308 - Mouse wheel down
+   -- 65309 - Mouse wheel up
+   -- 65310 - Mouse wheel right
+   -- 65311 - Mouse wheel left
+   -- 65365 - page up
+   -- 65366 - page down
+   -- 65360 - home
+   -- 65367 - end
+   
+   ## Note: Messages are locked when setting thumbpostion and we call scrolling code directly.
+   ##          This is done so that scrolling works when scrollbars are hidden.
+   switch pKeyNum
+      case "65360"
+         ## home
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            _SetVScroll 0
+         end if
+         break
+      case "65367"
+         ## end
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            _SetVScroll the endValue of scrollbar "dgScrollbar" of me
+         end if
+         break
+      case "65365"
+         ## scroll page up
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            _SetVScroll the thumbPosition of scrollbar "dgScrollbar" of me - \
+                  the pageIncrement of scrollbar "dgScrollbar" of me
+         end if
+         break
+      case "65366"
+         ## scroll page down
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            _SetVScroll the thumbPosition of scrollbar "dgScrollbar" of me + \
+                  the pageIncrement of scrollbar "dgScrollbar" of me
+         end if
+         break
+      case "65309"	# scroll up
+         ## mouse wheel up
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            local theAvailHeight
+            put the height of group "dgListMask" of me into theAvailHeight
+            
+            local theScroll
+            put round(theAvailHeight * .1) into theScroll
+            _SetVScroll round(the thumbPosition of scrollbar "dgScrollbar" of me) - theScroll
+         end if
+         break
+      case "65308"	# scroll down
+         ## mouse wheel down
+         if the visible of scrollbar "dgScrollbar" of me or the dgProps["scroll when vScrollbar is hidden"] of me then
+            put the height of group "dgListMask" of me into theAvailHeight
+            put round(theAvailHeight * .1) into theScroll
+            _SetVScroll round(the thumbPosition of scrollbar "dgScrollbar" of me) + theScroll
+         end if
+         break
+      case "65310"
+         ## mouse wheel right
+         if _ControlType() is "table" and (the visible of group "dgHorizontalComponents" of me or the dgProps["scroll when hScrollbar is hidden"] of me) then
+            local theAvailWidth
+            put the width of group "dgList" of me into theAvailWidth
+            put round(theAvailWidth * .1) into theScroll
+            _SetHScroll round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) + theScroll
+         end if
+         break
+      case "65311"
+         ## mouse wheel left
+         if _ControlType() is "table" and (the visible of group "dgHorizontalComponents" of me or the dgProps["scroll when hScrollbar is hidden"] of me) then
+            put the width of group "dgList" of me into theAvailWidth
+            put round(theAvailWidth * .1) into theScroll
+            _SetHScroll round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) - theScroll
+         end if
+         break
+      default
+         pass rawKeyDown
+   end SWITCH
 end rawKeyDown
 
 
@@ -909,6 +967,7 @@ end touchStart
 
 
 getprop dgClickLine
+   local theIndex
    put the dgClickIndex of me into theIndex
    if theIndex > 0 then return the dgLineOfIndex[theIndex] of me
    else return empty
@@ -917,6 +976,7 @@ end dgClickLine
 
 getprop dgClickIndex
    ## figure out the index clicked on
+   local theIndex, theControl
    put empty into theIndex
    put _RowControlClickedOn() into theControl
    
@@ -931,11 +991,11 @@ getprop dgClickedInDataView
    ## Note that Rev doesn't report scrollbars as mousecontrol if thumb is not
    ## showing. Hence the checks for visibility and click not within of vertical scrollbar 
    ## (dglist overlaps with rect of vertical scrollbar)
-   
+   local theClickLoc
    put the clickLoc into theClickLoc
    return theClickLoc is within the rect of group "dgListMask" of me \
-          and (not the visible of scrollbar "dgScrollbar" of me \
-          or (the visible of scrollbar "dgScrollbar" of me and theClickLoc is not within the rect of scrollbar "dgScrollbar" of me))
+         and (not the visible of scrollbar "dgScrollbar" of me \
+         or (the visible of scrollbar "dgScrollbar" of me and theClickLoc is not within the rect of scrollbar "dgScrollbar" of me))
 end dgClickedInDataView
  
  
@@ -945,6 +1005,7 @@ private function _RowControlClickedOn
    ## figure out the index clicked on
    put the dgDataControl of the target into theControl
    
+   local theY, theRect
    ## Make sure user clicked in valid area.
    if theControl is empty and the dgClickedInDataView of me then
       ## Perhaps no column in clicked area or no mouse receiving controls in column
@@ -964,6 +1025,7 @@ end _RowControlClickedOn
  
 command dgMouseDown pMouseBtnNum   
    ## figure out the index clicked on
+   local theIndex, theControl
    put empty into theIndex
    put _RowControlClickedOn() into theControl   
    if theControl is not empty then
@@ -974,7 +1036,7 @@ command dgMouseDown pMouseBtnNum
    if theIndex is not empty then
       ## Clicked on a control. Bring focus into control but away from scrollbar.
       if the long ID of me is not in the long ID of the focusedObject or word 1 of the target is "scrollbar" or \
-             (sFieldEditor is not empty and sFieldEditor is the long ID of the focusedObject) then
+            (sFieldEditor is not empty and sFieldEditor is the long ID of the focusedObject) then
          focus on graphic "dgBackground" of me
       end if 
    else
@@ -983,7 +1045,11 @@ command dgMouseDown pMouseBtnNum
    end if
    
    if the dgProps["auto hilite"] of me is false then return empty
+   
+   local theSelectionChanged
    put false into theSelectionChanged
+   
+   local unlockTheScreen
    put true into unlockTheScreen
    
    lock screen
@@ -996,6 +1062,7 @@ command dgMouseDown pMouseBtnNum
    
    ## No do what we need to do
    if theIndex is not empty then
+      local theHilitedIndexes, thePreviouslyHilitedIndexes
       put sHilitedIndexes into theHilitedIndexes
       put sHilitedIndexes into thePreviouslyHilitedIndexes
       
@@ -1003,6 +1070,7 @@ command dgMouseDown pMouseBtnNum
          // Mikey-2015-05-19: [[ Bug 15240 ]] for mobile, if "multiple lines", then every tap selects/deselects a line
          if (_IsThisModifierSetActive("command") or the environment is "mobile") and the dgProps["multiple lines"] of me then
             ## Add or remove hilite
+            local theItemNo
             put itemOffset(theIndex, theHilitedIndexes) into theItemNo
             if theItemNo > 0 then
                delete item theItemNo of theHilitedIndexes
@@ -1031,6 +1099,7 @@ command dgMouseDown pMouseBtnNum
                put theIndex into sFirstIndexClickedWithShiftKeyDown
             end if
             
+            local theIndexItemNo, theShiftKeyIndexItemNo
             put itemOffset(theIndex, sIndexSequencing) into theIndexItemNo
             put itemOffset(sFirstIndexClickedWithShiftKeyDown, sIndexSequencing) into theShiftKeyIndexItemNo
             
@@ -1076,7 +1145,7 @@ command dgMouseDown pMouseBtnNum
       ## moved to top in 1.0.0 b4
       -- ## Clicked on a control. Bring focus into control but away from scrollbar.
       -- if the long id of me is not in the long id of the focusedobject or word 1 of the target is "scrollbar" or \
-             -- (sFieldEditor is not empty and sFieldEditor is the long id of the focusedObject) then
+            -- (sFieldEditor is not empty and sFieldEditor is the long id of the focusedObject) then
       -- focus on graphic "dgBackground" of me
       -- end if 
    else
@@ -1129,25 +1198,26 @@ end dgMouseRelease
 
 
 command SelectAll
-    put sHilitedIndexes into thePreviouslyHilitedIndexes
-    
-    put the dgProps["scroll selections into view"] of me is not false into theOrigValue
-    set the dgProps["scroll selections into view"] of me to false
-    try
-        local theError
-        
-        set the dgHilitedIndexes of me to sIndexSequencing
-        put the result into theSelectionWasChanged
-    catch e
-        put e into theError
-    end try
-    set the dgProps["scroll selections into view"] of me to theOrigValue
-    
-    if theError is not empty then throw theError
-    
-    if theSelectionWasChanged then
-        _SelectionChanged thePreviouslyHilitedIndexes
-    end if
+   local thePreviouslyHilitedIndexes, theOrigValue, theSelectionWasChanged
+   put sHilitedIndexes into thePreviouslyHilitedIndexes
+   
+   put the dgProps["scroll selections into view"] of me is not false into theOrigValue
+   set the dgProps["scroll selections into view"] of me to false
+   try
+      local theError
+      
+      set the dgHilitedIndexes of me to sIndexSequencing
+      put the result into theSelectionWasChanged
+   catch e
+      put e into theError
+   end try
+   set the dgProps["scroll selections into view"] of me to theOrigValue
+   
+   if theError is not empty then throw theError
+   
+   if theSelectionWasChanged then
+      _SelectionChanged thePreviouslyHilitedIndexes
+   end if
 end SelectAll
 
 
@@ -1184,6 +1254,8 @@ end GetDataOfLine
 
 command SetDataOfLine pLine, pKey, pValue
    set the wholematches to true
+   
+   local theIndex
    put item pLine of sIndexSequencing into theIndex
    repeat with i = 2 to the paramcount
       put param(i) into pKey
@@ -1201,56 +1273,62 @@ end SetDataOfLine
 
 
 private command _DataCanBeRepresentedAsText pBoolean
-    put the lockMessages into msgsAreLocked
-    lock messages
-    set the dgProps["data can be represented as text"] of me to pBoolean is true
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   set the dgProps["data can be represented as text"] of me to pBoolean is true
+   set the lockMessages to msgsAreLocked
 end _DataCanBeRepresentedAsText
 
 
 command EditCell pColumn, pLineNo
-    put the dgIndexOfLine[pLineNo] of me into theIndex
-    EditCellOfIndex pColumn, theIndex
-    if the result is not empty then
-        return "no control exists for line column"
-    else
-        return empty
-    end if
+   local theIndex
+   put the dgIndexOfLine[pLineNo] of me into theIndex
+   EditCellOfIndex pColumn, theIndex
+   if the result is not empty then
+      return "no control exists for line column"
+   else
+      return empty
+   end if
 end EditCell
 
 
 command EditCellOfIndex pColumn, pIndex
-    lock screen
-    ScrollIndexIntoView pIndex
-    put ColumnControlOfIndex(pColumn, pIndex) into theControl
-     
-    if _ControlType() is "table" then _table.ScrollColumnIntoView pColumn
-     
-    if theControl is not empty then
-        dispatch "EditValue" to theControl with pColumn
-        unlock screen
-        return empty
-    else
-        unlock screen
-        return "no control exists for index column"
-    end if
+   lock screen
+   ScrollIndexIntoView pIndex
+   
+   local theControl
+   put ColumnControlOfIndex(pColumn, pIndex) into theControl
+   
+   if _ControlType() is "table" then _table.ScrollColumnIntoView pColumn
+   
+   if theControl is not empty then
+      dispatch "EditValue" to theControl with pColumn
+      unlock screen
+      return empty
+   else
+      unlock screen
+      return "no control exists for index column"
+   end if
 end EditCellOfIndex
 
 
 command EditKey pKey, pLineNo
-    put the dgIndexOfLine[pLineNo] of me into theIndex
-    EditKeyOfIndex pKey, theIndex
-    if the result is not empty then
-        return "no control exists for line"
-    else
-        return empty
-    end if
+   local theIndex
+   put the dgIndexOfLine[pLineNo] of me into theIndex
+   EditKeyOfIndex pKey, theIndex
+   if the result is not empty then
+      return "no control exists for line"
+   else
+      return empty
+   end if
 end EditKey
 
 
 command EditKeyOfIndex pKey, pIndex
     lock screen
     ScrollIndexIntoView pIndex
+    local theControl
     put the dgDataControlOfIndex[pIndex] of me into theControl
     
     if theControl is not empty then
@@ -1479,53 +1557,56 @@ end SortDataByKey
 
 ## Reverses order of current sequence of data
 command ReverseSort pColumn
-    lock screen
-    
-    if sIndexSequencing is not empty then
-        repeat for each item theIndex in sIndexSequencing 
-            put comma & theIndex before theNewSequence
-        end repeat
-        delete the first char of theNewSequence
-        put theNewSequence into sIndexSequencing 
-        
-        _ResetIndexesOnControls
-        _RedrawList
-    end if
-    
-    if pColumn is not empty then
-        HiliteAndStoreSortByColumn pColumn
-    end if
-    
-    unlock screen
-    
-    return empty
+   lock screen
+   
+   if sIndexSequencing is not empty then
+      local theNewSequence
+      repeat for each item theIndex in sIndexSequencing 
+         put comma & theIndex before theNewSequence
+      end repeat
+      delete the first char of theNewSequence
+      put theNewSequence into sIndexSequencing 
+      
+      _ResetIndexesOnControls
+      _RedrawList
+   end if
+   
+   if pColumn is not empty then
+      HiliteAndStoreSortByColumn pColumn
+   end if
+   
+   unlock screen
+   
+   return empty
 end ReverseSort
 
 
 command HiliteAndStoreSortByColumn pColumn
-    put the lockMessages into msgsAreLocked
-    unlock messages
-    
-    lock screen
-    
-    put the dgProps["sort by column"] of me into theOldSortKey
-    
-    if theOldSortKey is not empty and there is a sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] then
-        set the dgHilite of sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] to false
-        dispatch "LayoutControl" to sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] \
-                with the rect of sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] 
-    end if
-    
-    if pColumn is not empty and there is a sTableObjectsA["columns"][ pColumn ]["header"]["group"] then
-        set the dgHilite of sTableObjectsA["columns"][ pColumn ]["header"]["group"] to true
-        dispatch "LayoutControl" to sTableObjectsA["columns"][ pColumn ]["header"]["group"] \
-                with the rect of sTableObjectsA["columns"][ pColumn ]["header"]["group"]
-    end if
-     
-    lock messages
-    set the dgProps["sort by column"] of me to pColumn
-    unlock screen
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   unlock messages
+   
+   lock screen
+   
+   local theOldSortKey
+   put the dgProps["sort by column"] of me into theOldSortKey
+   
+   if theOldSortKey is not empty and there is a sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] then
+      set the dgHilite of sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] to false
+      dispatch "LayoutControl" to sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] \
+            with the rect of sTableObjectsA["columns"][ theOldSortKey ]["header"]["group"] 
+   end if
+   
+   if pColumn is not empty and there is a sTableObjectsA["columns"][ pColumn ]["header"]["group"] then
+      set the dgHilite of sTableObjectsA["columns"][ pColumn ]["header"]["group"] to true
+      dispatch "LayoutControl" to sTableObjectsA["columns"][ pColumn ]["header"]["group"] \
+            with the rect of sTableObjectsA["columns"][ pColumn ]["header"]["group"]
+   end if
+   
+   lock messages
+   set the dgProps["sort by column"] of me to pColumn
+   unlock screen
+   set the lockMessages to msgsAreLocked
 end HiliteAndStoreSortByColumn
 
 
@@ -1541,25 +1622,26 @@ end _SortByColumn
 
 
 command SortByColumn pColumn
-    if _ControlType() is not "table" then _ThrowError kErrPropDoesntExist, "only tables can be sorted by columns"
-    
-    put the dgProps["column properties"] of me into theColPropsA
-    
-    if pColumn is not empty and pColumn is not among the keys of theColPropsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-     
-    lock screen
-    
-    ## sort and hilite
-    SortDataByKey pColumn, theColPropsA[pColumn]["sort type"], \
-            theColPropsA[pColumn]["sort direction"], theColPropsA[pColumn]["sort is case sensitive"]
-    
-    HiliteAndStoreSortByColumn pColumn
-    
-    unlock screen
-    
-    return empty
+   if _ControlType() is not "table" then _ThrowError kErrPropDoesntExist, "only tables can be sorted by columns"
+   
+   local theColPropsA
+   put the dgProps["column properties"] of me into theColPropsA
+   
+   if pColumn is not empty and pColumn is not among the keys of theColPropsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   
+   lock screen
+   
+   ## sort and hilite
+   SortDataByKey pColumn, theColPropsA[pColumn]["sort type"], \
+         theColPropsA[pColumn]["sort direction"], theColPropsA[pColumn]["sort is case sensitive"]
+   
+   HiliteAndStoreSortByColumn pColumn
+   
+   unlock screen
+   
+   return empty
 end SortByColumn
 
 
@@ -1570,117 +1652,125 @@ local sResendResizeToFit
 
 
 command ResizeToFit
-    -----
-    local theError
-    local theLockLoc
-    local theOffset
-    local theRect
-    -----
-    ## Throttle just in case developer tries to call this from different timers
-    if sResizingToFit then
-        put true into sResendResizeToFit
-        return empty
-    end if
-    
-    put true into sResizingToFit
-    
-    lock screen
-    put the lockloc of me into theLockLoc
-    set the lockloc of me to true
-    put the lockMessages into msgsAreLocked
-    set the lockMessages to true
-     
-    try ## Try so we don't leave group locked
-        ## Clear cache
-        put empty into sControlsRequiredToFillSpace
-         
-        put _WorkingGroupRect(the long ID of me) into theRect
-        
-        set the rect of button "dgEventCatcher" of me to theRect
-        set the rect of graphic "dgBackground" of me to theRect
-        
-        ## Account for table elements
-        if _ControlType() is "table" then
-            _table.LayoutDataArea
-        else
-            if the visible of scrollbar "dgScrollbar" of me then subtract the width of scrollbar "dgScrollbar" of me from item 3 of theRect
-            set the rect of group "dgListMask" of me to theRect
-            set the rect of group "dgAlternatingRowsMask" of me to theRect
-            set the topLeft of group "dgList" of me to item 1 to 2 of theRect ## Shift all children of group along with group
-            set the rect of group "dgList" of me to theRect
-            if the visible of scrollbar "dgScrollbar" of me then
-                set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect, \
-                        item 2 of theRect, item 3 of theRect + the width of scrollbar "dgScrollbar" of me, \
-                        item 4 of theRect - the dgProps["scrollbar corner offset"] of me
-            else
-                set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-                        item 2 of theRect, item 3 of theRect, \
-                        item 4 of theRect - the dgProps["scrollbar corner offset"] of me
+   -----
+   local theError
+   local theLockLoc
+   local theOffset
+   local theRect
+   -----
+   ## Throttle just in case developer tries to call this from different timers
+   if sResizingToFit then
+      put true into sResendResizeToFit
+      return empty
+   end if
+   
+   put true into sResizingToFit
+   
+   lock screen
+   put the lockloc of me into theLockLoc
+   set the lockloc of me to true
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   set the lockMessages to true
+   
+   try ## Try so we don't leave group locked
+      ## Clear cache
+      put empty into sControlsRequiredToFillSpace
+      
+      put _WorkingGroupRect(the long ID of me) into theRect
+      
+      set the rect of button "dgEventCatcher" of me to theRect
+      set the rect of graphic "dgBackground" of me to theRect
+      
+      ## Account for table elements
+      if _ControlType() is "table" then
+         _table.LayoutDataArea
+      else
+         if the environment is not "mobile" then
+            if the visible of scrollbar "dgScrollbar" of me then 
+               subtract the width of scrollbar "dgScrollbar" of me from item 3 of theRect
             end if
-        end if
-         
-        ## Redo calculations
-        if the dgProps["cache controls"] of me then
-            _ResizeCachedControls
-        else if sFormattedHeight is empty or not the dgProps["fixed row height"] of me then
-            # Only recalculate if not fixed height or formatted height hasn't been calculated
-            # since teal-time drawing adjusts rect every time anyway.
-            _CalculateFormattedHeight
-        else
-            _AutoHideVScrollbar ## only works for fixed height
-        end if
-        
-        _ConfigureScrollbar
-        _ConfigureHScrollbar
-        
-        _RedrawList
-        
-    catch e
-        put e into theError
-        -- put e
-    finally
-        set the lockloc of me to theLockLoc
-    end try
-     
-    set the lockMessages to msgsAreLocked
-    unlock screen
-    
-    put false into sResizingToFit
-    
-    if theError is not empty then throw theError
-    
-    if sResendResizeToFit then
-        send "ResizeToFit" to me in 0 seconds
-        put false into sResendResizeToFit
-    end if
+            if the visible of scrollbar "dgScrollbar" of me then
+               set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect, \
+                     item 2 of theRect, item 3 of theRect + the width of scrollbar "dgScrollbar" of me, \
+                     item 4 of theRect - the dgProps["scrollbar corner offset"] of me
+            else
+               set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
+                     item 2 of theRect, item 3 of theRect, \
+                     item 4 of theRect - the dgProps["scrollbar corner offset"] of me
+            end if
+         else if __HasMobileScroller() then
+            mobileControlSet sScrollerId, "rect", theRect
+         end if
+         set the rect of group "dgListMask" of me to theRect
+         set the rect of group "dgAlternatingRowsMask" of me to theRect
+         set the topLeft of group "dgList" of me to item 1 to 2 of theRect ## Shift all children of group along with group
+         set the rect of group "dgList" of me to theRect
+      end if
+      
+      ## Redo calculations
+      if the dgProps["cache controls"] of me then
+         _ResizeCachedControls
+      else if sFormattedHeight is empty or not the dgProps["fixed row height"] of me then
+         # Only recalculate if not fixed height or formatted height hasn't been calculated
+         # since teal-time drawing adjusts rect every time anyway.
+         _CalculateFormattedHeight
+      else
+         _AutoHideVScrollbar ## only works for fixed height
+      end if
+      
+      _ConfigureScrollbar
+      _ConfigureHScrollbar
+      
+      _RedrawList
+      
+   catch e
+      put e into theError
+      -- put e
+   finally
+      set the lockloc of me to theLockLoc
+   end try
+   
+   set the lockMessages to msgsAreLocked
+   unlock screen
+   
+   put false into sResizingToFit
+   
+   if theError is not empty then throw theError
+   
+   if sResendResizeToFit then
+      send "ResizeToFit" to me in 0 seconds
+      put false into sResendResizeToFit
+   end if
 end ResizeToFit
  
  
 private command _DrawList
-    lock screen
-    
-    put the keys of sDataArray is not empty into weHaveSomethingToDraw
-    if weHaveSomethingToDraw and sFormattedHeight is empty then
-        if the dgProps["cache controls"] of me then
-            _CacheControls
-        else
-            _CalculateFormattedHeight
-        end if
-    end if
-    
-    ## Update column control cache each time drawing is specifically called
-    if _ControlType() is "table" then
-        _table.CacheCustomTemplateUsage
-    end if
-     
-    if weHaveSomethingToDraw then
-        _DrawListWithProperties empty, empty, true
-        _DrawAlternatingRows
-        _ShowAlternatingRows
-        
-    end if
-    
-    unlock screen
+   lock screen
+   
+   local weHaveSomethingToDraw
+   put the keys of sDataArray is not empty into weHaveSomethingToDraw
+   if weHaveSomethingToDraw and sFormattedHeight is empty then
+      if the dgProps["cache controls"] of me then
+         _CacheControls
+      else
+         _CalculateFormattedHeight
+      end if
+   end if
+   
+   ## Update column control cache each time drawing is specifically called
+   if _ControlType() is "table" then
+      _table.CacheCustomTemplateUsage
+   end if
+   
+   if weHaveSomethingToDraw then
+      _DrawListWithProperties empty, empty, true
+      _DrawAlternatingRows
+      _ShowAlternatingRows
+      
+   end if
+   
+   unlock screen
 end _DrawList
 
 
@@ -1701,6 +1791,7 @@ command dgResetList
    ## For cases where user copied/pasted
    if not sInit then _Initialize
    
+   local theOrigVScroll, theOrigHScroll
    put _GetVScrollPercent() into theOrigVScroll
    put _GetHScrollPercent() into theOrigHScroll
    _ResetScrollsToZero
@@ -1753,8 +1844,9 @@ end RefreshIndex
 
 
 command RefreshLine pLine
-    put the dgIndexOfLine [pLine] of me into theIndex
-    if theIndex > 0 then _RefreshIndexes theIndex
+   local theIndex
+   put the dgIndexOfLine [pLine] of me into theIndex
+   if theIndex > 0 then _RefreshIndexes theIndex
 end RefreshLine
 
 
@@ -1815,31 +1907,32 @@ end _ResetControlsOfIndex
 
 
 private command _RedrawList pVScrollPercent
-    -----
-    local thePercent
-    -----
-    
-    if the keys of sDataArray is not empty then
-        if pVScrollPercent is empty then
-            put _GetVScrollPercent() into pVScrollPercent
-        end if
-        put round(pVScrollPercent * (the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me)) into theVScroll
-         
-        if sFormattedHeight is empty then
-            if the dgProps["cache controls"] of me then
-                _CacheControls
-            else
-                _CalculateFormattedHeight
-            end if
-        end if
-        
-        _ScrollListV theVScroll, true
-        _ShowAlternatingRows
-    else
-        _ShowAlternatingRows
-    end if
-    
-    return empty
+   -----
+   local thePercent
+   -----
+   
+   if the keys of sDataArray is not empty then
+      if pVScrollPercent is empty then
+         put _GetVScrollPercent() into pVScrollPercent
+      end if
+      local theVScroll
+      put round(pVScrollPercent * (the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me)) into theVScroll
+      
+      if sFormattedHeight is empty then
+         if the dgProps["cache controls"] of me then
+            _CacheControls
+         else
+            _CalculateFormattedHeight
+         end if
+      end if
+      
+      _ScrollListV theVScroll, true
+      _ShowAlternatingRows
+   else
+      _ShowAlternatingRows
+   end if
+   
+   return empty
 end _RedrawList
 
 
@@ -1850,162 +1943,169 @@ end ScrollLineIntoView
  
  
 command ScrollIndexIntoView pIndex
-    local theError
-    
-    ## Work off of a 0 based rect, not actual position on card
-    put the height of group "dgListMask" of me into theMaskHeight
-    put round(the thumbPosition of scrollbar "dgScrollbar" of me) into theOffset -- round needed for engine bug
-    put "0," & theOffset & ",0," & theMaskHeight + theOffset into theMaskRect
-    
-    put the dgLineOfIndex[pIndex] of me into theSequence
-    if theSequence is 0 then put "index not found" into theError
-    
-    if theError is empty then
-        ## Determine top and bottom of control
-        if the dgProps["fixed row height"] of me then
-            put (theSequence - 1) * sControlHeights into theTopOfControl
-            put theSequence * sControlHeights into theBottomOfControl             
-        else
-            ## Random sized Controls
-            repeat for each item theIndex in sIndexSequencing                 
-                add sControlHeights[theIndex] to theFormattedHeight
-                
-                if pIndex is theIndex then
-                    put theFormattedHeight - sControlHeights[theIndex] into theTopOfControl
-                    put theFormattedHeight into theBottomOfControl
-                    exit repeat
-                end if
-            end repeat
-        end if
-        
-        ## If index is off the top then scroll to top of group
-        ## else if index is off the bottom then scroll to the bottom
-        
-        ## We lock messages so no scrollbarDrag message is sent. scrollbarDrag may use a slight delay when
-        ## drawing so that fast scrolling doesn't cue up redraws. We bypass the message
-        ## and call _ScrollListV directly so that screen is updated immediately regardless of how
-        ## scrollbarDrag is finally implemented.
+   local theError
+   
+   ## Work off of a 0 based rect, not actual position on card
+   local theMaskHeight, theOffset, theMaskRect
+   put the height of group "dgListMask" of me into theMaskHeight
+   
+   put the dgVScroll of me into theOffset -- round needed for engine bug
+   put "0," & theOffset & ",0," & theMaskHeight + theOffset into theMaskRect
+   
+   local theSequence
+   put the dgLineOfIndex[pIndex] of me into theSequence
+   if theSequence is 0 then put "index not found" into theError
+   
+   local theTopOfControl, theBottomOfControl, theFormattedHeight
+   if theError is empty then
+      ## Determine top and bottom of control
+      if the dgProps["fixed row height"] of me then
+         put (theSequence - 1) * sControlHeights into theTopOfControl
+         put theSequence * sControlHeights into theBottomOfControl             
+      else
+         ## Random sized Controls
+         repeat for each item theIndex in sIndexSequencing                 
+            add sControlHeights[theIndex] to theFormattedHeight
+            
+            if pIndex is theIndex then
+               put theFormattedHeight - sControlHeights[theIndex] into theTopOfControl
+               put theFormattedHeight into theBottomOfControl
+               exit repeat
+            end if
+         end repeat
+      end if
+      
+      ## If index is off the top then scroll to top of group
+      ## else if index is off the bottom then scroll to the bottom
+      
+      ## We lock messages so no scrollbarDrag message is sent. scrollbarDrag may use a slight delay when
+      ## drawing so that fast scrolling doesn't cue up redraws. We bypass the message
+      ## and call _ScrollListV directly so that screen is updated immediately regardless of how
+      ## scrollbarDrag is finally implemented.
+      
+      -- ======================
+      local scrollTheList, theNewVScroll, theControlIsAtLeastAsTallAsMask
+      put false into scrollTheList
+      
+      if theBottomOfControl <= item 2 of theMaskRect or theTopOfControl < item 2 of theMaskRect then
+         ## control is off the top of view OR top edge is clipped off
+         put theTopOfControl into theNewVScroll
+         put true into scrollTheList
          
-        -- ======================
-        put false into scrollTheList
-        
-        if theBottomOfControl <= item 2 of theMaskRect or theTopOfControl < item 2 of theMaskRect then
-            ## control is off the top of view OR top edge is clipped off
+      else if theTopOfControl >= item 4 of theMaskRect or theBottomOfControl > item 4 of theMaskRect then
+         ## control is off the bottom of view or bottom edge is clipped off      
+         put theBottomOfControl - theMaskHeight into theNewVScroll
+         put true into scrollTheList
+      end if         
+      
+      if scrollTheList then
+         ## If as tall as mask group then scroll top into view.
+         ## Otherwise follow regular rules
+         put theBottomOfControl - theTopOfControl >= theMaskHeight into theControlIsAtLeastAsTallAsMask
+         if theControlIsAtLeastAsTallAsMask then
             put theTopOfControl into theNewVScroll
-            put true into scrollTheList
-             
-        else if theTopOfControl >= item 4 of theMaskRect or theBottomOfControl > item 4 of theMaskRect then
-            ## control is off the bottom of view or bottom edge is clipped off      
-            put theBottomOfControl - theMaskHeight into theNewVScroll
-            put true into scrollTheList
-        end if         
+         end if
          
-        if scrollTheList then
-            ## If as tall as mask group then scroll top into view.
-            ## Otherwise follow regular rules
-            put theBottomOfControl - theTopOfControl >= theMaskHeight into theControlIsAtLeastAsTallAsMask
-            if theControlIsAtLeastAsTallAsMask then
-                put theTopOfControl into theNewVScroll
-            end if
-             
-            if the dgProps["animate selections"] of me and sPendingMsgsA["UpdateScrollAnimation"] is empty then
-                StartScrollAnimation theNewVScroll
-            else
-                cancel sPendingMsgsA["UpdateScrollAnimation"]
-                put empty into sPendingMsgsA["UpdateScrollAnimation"]
-                put false into sIsAnimating
-                 
-                _SetVScroll theNewVScroll
-            end if
-        end if
-    end if
-    
-    return theError
+         if the dgProps["animate selections"] of me and sPendingMsgsA["UpdateScrollAnimation"] is empty then
+            StartScrollAnimation theNewVScroll
+         else
+            cancel sPendingMsgsA["UpdateScrollAnimation"]
+            put empty into sPendingMsgsA["UpdateScrollAnimation"]
+            put false into sIsAnimating
+            
+            _SetVScroll theNewVScroll
+         end if
+      end if
+   end if
+   
+   return theError
 end ScrollIndexIntoView
 
 
 ## See dgRectOfIndex in order to get rect of a control in the data grid.
 command ScrollRectIntoView pRect, pPadding
-    -----
-    local theItemNo
-    local theMaskRect
-    local theScrollToOffset, theVScroll
-    -----
-    
-    if pPadding is an integer then
-        put pPadding & comma & pPadding & comma & pPadding into item 2 of pPadding
-    else if pPadding is not empty and pPadding is not a rect then
-        _ThrowError kErrInvalidRect, pPadding && "is not a valid margins value"
-    else if pPadding is empty then
-        put 0,0,0,0 into pPadding
-    end if
-    
-    ## Mask rect is rect of this group with vscroll taken into account
-    put the rect of group "dgListMask" of me into theMaskRect
-    put the dgVScroll of me into theCurrentVScroll
-    
-    ## left,right are ignored right now
-    add item 1 of pPadding to item 1 of theMaskRect
-    add item 2 of pPadding to item 2 of theMaskRect
-    subtract item 3 of pPadding from item 3 of theMaskRect
-    subtract item 4 of pPadding from item 4 of theMaskRect
-    
-    ## If mask height is less than rect height than we focus on top of pRect.
-    ## Otherwise we focus on bottom of pRect.
-    if item 4 of theMaskRect - item 2 of theMaskRect < item 4 of pRect - item 2 of pRect then
-        put 2 into theItemNo
-        put item 4 of theMaskRect - item 2 of theMaskRect into theScrollToOffset
-    else
-        put 4 into theItemNo
-        put 0 into theScrollToOffset
-    end if
-    
-    -- Debugging
-    -- put "theMaskRect:" && theMaskRect & cr & \
-            -- "pRect:" && pRect & cr & \
-            -- "theItemNo:" && theItemNo & cr & \
-            -- "theScrollToOffset:" && theScrollToOffset & cr & \
-            -- "theCurrentVScroll:" && theCurrentVScroll
-    
-    if _RectIsAtLeastAsTallAsMask(pRect, theMaskRect) then
-        if _RectCoversMask(pRect, theMaskRect) then
-            ## Rect covers entire visible area. Do nothing.
-        else
-            ## If rect top or bottom is visible then do nothing. Otherwise scroll top in.
-            if _TopIsVisible(pRect, theMaskRect) or _BottomIsVisible(pRect, theMaskRect) then
-                ## Nothing
-            else
-                ## Scroll up to top of control
-                put theCurrentVScroll - abs(item 2 of theMaskRect - item 2 of pRect) into theVScroll
-            end if
-        end if
-    else if _TopIsClipped(pRect, theMaskRect) then
-        ## Scroll up to top of control
-        put theCurrentVScroll - abs(item 2 of theMaskRect - item 2 of pRect) into theVScroll
-         
-    else if _BottomIsClipped(pRect, theMaskRect) then
-        ## scroll down to bottom of control
-        put theCurrentVScroll - (item 4 of theMaskRect - item theItemNo of pRect) into theVScroll
-        add theScrollToOffset to theVScroll
-        
-    else if _TopAndBottomAreClipped(pRect, theMaskRect) then
-        if item 2 of pRect >= item 4 of theMaskRect then
-            ## scroll down so bottom to bottom of control
-            put theCurrentVScroll - (item 4 of theMaskRect - item theItemNo of pRect) into theVScroll
-            add theScrollToOffset to theVScroll
-        else
-            ## scroll up to top of control
+   -----
+   local theItemNo
+   local theMaskRect
+   local theScrollToOffset, theVScroll
+   -----
+   
+   if pPadding is an integer then
+      put pPadding & comma & pPadding & comma & pPadding into item 2 of pPadding
+   else if pPadding is not empty and pPadding is not a rect then
+      _ThrowError kErrInvalidRect, pPadding && "is not a valid margins value"
+   else if pPadding is empty then
+      put 0,0,0,0 into pPadding
+   end if
+   
+   ## Mask rect is rect of this group with vscroll taken into account
+   put the rect of group "dgListMask" of me into theMaskRect
+   
+   local theCurrentVScroll
+   put the dgVScroll of me into theCurrentVScroll
+   
+   ## left,right are ignored right now
+   add item 1 of pPadding to item 1 of theMaskRect
+   add item 2 of pPadding to item 2 of theMaskRect
+   subtract item 3 of pPadding from item 3 of theMaskRect
+   subtract item 4 of pPadding from item 4 of theMaskRect
+   
+   ## If mask height is less than rect height than we focus on top of pRect.
+   ## Otherwise we focus on bottom of pRect.
+   if item 4 of theMaskRect - item 2 of theMaskRect < item 4 of pRect - item 2 of pRect then
+      put 2 into theItemNo
+      put item 4 of theMaskRect - item 2 of theMaskRect into theScrollToOffset
+   else
+      put 4 into theItemNo
+      put 0 into theScrollToOffset
+   end if
+   
+   -- Debugging
+   -- put "theMaskRect:" && theMaskRect & cr & \
+         -- "pRect:" && pRect & cr & \
+         -- "theItemNo:" && theItemNo & cr & \
+         -- "theScrollToOffset:" && theScrollToOffset & cr & \
+         -- "theCurrentVScroll:" && theCurrentVScroll
+   
+   if _RectIsAtLeastAsTallAsMask(pRect, theMaskRect) then
+      if _RectCoversMask(pRect, theMaskRect) then
+         ## Rect covers entire visible area. Do nothing.
+      else
+         ## If rect top or bottom is visible then do nothing. Otherwise scroll top in.
+         if _TopIsVisible(pRect, theMaskRect) or _BottomIsVisible(pRect, theMaskRect) then
+            ## Nothing
+         else
+            ## Scroll up to top of control
             put theCurrentVScroll - abs(item 2 of theMaskRect - item 2 of pRect) into theVScroll
-        end if
-    end if
-    
-    if theVScroll is not empty then         
-        if the dgProps["animate selections"] of me then
-            StartScrollAnimation theVScroll
-        else
-            set the dgVScroll of me to theVScroll
-        end if
-    end if
+         end if
+      end if
+   else if _TopIsClipped(pRect, theMaskRect) then
+      ## Scroll up to top of control
+      put theCurrentVScroll - abs(item 2 of theMaskRect - item 2 of pRect) into theVScroll
+      
+   else if _BottomIsClipped(pRect, theMaskRect) then
+      ## scroll down to bottom of control
+      put theCurrentVScroll - (item 4 of theMaskRect - item theItemNo of pRect) into theVScroll
+      add theScrollToOffset to theVScroll
+      
+   else if _TopAndBottomAreClipped(pRect, theMaskRect) then
+      if item 2 of pRect >= item 4 of theMaskRect then
+         ## scroll down so bottom to bottom of control
+         put theCurrentVScroll - (item 4 of theMaskRect - item theItemNo of pRect) into theVScroll
+         add theScrollToOffset to theVScroll
+      else
+         ## scroll up to top of control
+         put theCurrentVScroll - abs(item 2 of theMaskRect - item 2 of pRect) into theVScroll
+      end if
+   end if
+   
+   if theVScroll is not empty then         
+      if the dgProps["animate selections"] of me then
+         StartScrollAnimation theVScroll
+      else
+         set the dgVScroll of me to theVScroll
+      end if
+   end if
 end ScrollRectIntoView
 
  
@@ -2032,115 +2132,133 @@ end ResetControl
 
 -- Resets all controls in the data grid
 private command _ResetAllControls
-    lock screen
-    
-    if _ControlType() is "table" then
-        repeat for each key theColumn in sTableObjectsA["columns"]
-            if sTableObjectsA["columns"][theColumn]["row controls"] is not empty then
-                put sTableObjectsA["columns"][theColumn]["row controls"] & cr after theControls
-            end if
-        end repeat
-        delete the last char of theControls
-    else
-        put sTableObjectsA["all row controls"] into theControls
-    end if
-    
-    ## Make sure controls exist
-    repeat for each line theControl in theControls
-        if there is a theControl then
-            put theControl & cr after theCleansedControls
-        end if
-    end repeat
-    
-    _ResetControls theCleansedControls
-    
-    put empty into sTableObjectsA["current"]
-    
-    put the lockMessages into msgsAreLocked
-    lock messages
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    set the lockMessages to msgsAreLocked
-    unlock screen
+   lock screen
+   local theControls
+   if _ControlType() is "table" then
+      repeat for each key theColumn in sTableObjectsA["columns"]
+         if sTableObjectsA["columns"][theColumn]["row controls"] is not empty then
+            put sTableObjectsA["columns"][theColumn]["row controls"] & cr after theControls
+         end if
+      end repeat
+      delete the last char of theControls
+   else
+      put sTableObjectsA["all row controls"] into theControls
+   end if
+   
+   local theCleansedControls
+   ## Make sure controls exist
+   repeat for each line theControl in theControls
+      if there is a theControl then
+         put theControl & cr after theCleansedControls
+      end if
+   end repeat
+   
+   _ResetControls theCleansedControls
+   
+   put empty into sTableObjectsA["current"]
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   set the lockMessages to msgsAreLocked
+   unlock screen
 end _ResetAllControls
 
 
 private command _ResetScrollbarsAndRows
-    ## This will call scrollbardrag. We set all structures before this happens.
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    if _ControlType() is "table" then
-        set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
-    end if
-    
-    _ConfigureScrollbar
-    _ConfigureHScrollbar
-     
-    if the dgProps["fixed row height"] of me then
-        _AutoHideVScrollbar ## only works for fixed height
-    end if
-     
-    _DrawAlternatingRows
-    _ShowAlternatingRows
+   ## This will call scrollbardrag. We set all structures before this happens.
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   if _ControlType() is "table" then
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", 0
+      end if
+      set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
+   end if
+   
+   _ConfigureScrollbar
+   _ConfigureHScrollbar
+   
+   if the dgProps["fixed row height"] of me then
+      _AutoHideVScrollbar ## only works for fixed height
+   end if
+   
+   _DrawAlternatingRows
+   _ShowAlternatingRows
 end _ResetScrollbarsAndRows
 
 
 -- Send ResetControl message to any controls that aren't visible.
 -- Reset dgIndex
 private command _ResetControls pControls
-    put the lockMessages into msgsAreLocked
-    lock messages
-    
-    ## Hide any controls in "all row controls" that aren't part of "visible list controls"
-    repeat for each line theControl in pControls
-        if the visible of theControl then
-            dispatch "ResetData" to theControl
-            set the visible of theControl to false
-            set the dgIndex of theControl to empty
-        end if
-    end repeat
-     
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   ## Hide any controls in "all row controls" that aren't part of "visible list controls"
+   repeat for each line theControl in pControls
+      if the visible of theControl then
+         dispatch "ResetData" to theControl
+         set the visible of theControl to false
+         set the dgIndex of theControl to empty
+      end if
+   end repeat
+   
+   set the lockMessages to msgsAreLocked
 end _ResetControls
 
 
 private command _ResetData
-    
-    ## In case developer redraws while editor is open
-    DeleteFieldEditor true
-    
-    lock screen
-    ## So we don't confuse the engine
-    if the long ID of me is in the long ID of the focusedObject then focus on graphic "dgBackground" of me
-    
-    ## Time intensive start
-    -- _ResetAllControls
-    _DeleteDataControls ## Replaced with above in 1.0.2 build 6. No more errors when deleting control running script!
-    
-    put empty into sDataArray
-    ## time intensive end
-    put empty into sIndexSequencing
-    
-    _StorePersistentData
-    
-    _ResetInternalCaches
-    _DataCanBeRepresentedAsText true
-    
-    ## This will call scrollbardrag. We set all structures before this happens.
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    if _ControlType() is "table" then
-        set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
-    end if
-    
-    _ConfigureScrollbar
-    _ConfigureHScrollbar
-     
-    if the dgProps["fixed row height"] of me then
-        _AutoHideVScrollbar ## only works for fixed height
-    end if
-     
-    _DrawAlternatingRows
-    _ShowAlternatingRows
-    
-    unlock screen
+   
+   ## In case developer redraws while editor is open
+   DeleteFieldEditor true
+   
+   lock screen
+   ## So we don't confuse the engine
+   if the long ID of me is in the long ID of the focusedObject then focus on graphic "dgBackground" of me
+   
+   ## Time intensive start
+   -- _ResetAllControls
+   _DeleteDataControls ## Replaced with above in 1.0.2 build 6. No more errors when deleting control running script!
+   
+   put empty into sDataArray
+   ## time intensive end
+   put empty into sIndexSequencing
+   
+   _StorePersistentData
+   
+   _ResetInternalCaches
+   _DataCanBeRepresentedAsText true
+   
+   ## This will call scrollbardrag. We set all structures before this happens.
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   if _ControlType() is "table" then
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", 0
+      end if
+      set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
+   end if
+   
+   _ConfigureScrollbar
+   _ConfigureHScrollbar
+   
+   if the dgProps["fixed row height"] of me then
+      _AutoHideVScrollbar ## only works for fixed height
+   end if
+   
+   _DrawAlternatingRows
+   _ShowAlternatingRows
+   
+   unlock screen
 end _ResetData
 
 
@@ -2159,21 +2277,23 @@ end _ResetInternalCaches
 
 ## pKey can be a string or an array keyed index.
 function GetKeyValuesOfIndexes pIndexes, pDelimiter, pKey --, ...
-    local theIndex,theValues
-    
-    if pDelimiter is empty then put comma into pDelimiter    
-    put the paramCount into theParamCount
-    put length(pDelimiter) into theDelimLength
-     
-    repeat for each item theIndex in pIndexes
-        repeat with i = 3 to theParamCount
-            put sDataArray[theIndex][param(i)] & pDelimiter after theValues
-        end repeat
-        delete char -theDelimLength to -1 of theValues
-        put cr after theValues
-    end repeat
-    delete the last char of theValues
-    return theValues
+   local theIndex,theValues
+   
+   if pDelimiter is empty then put comma into pDelimiter 
+   
+   local theParamCount, theDelimLength
+   put the paramCount into theParamCount
+   put length(pDelimiter) into theDelimLength
+   
+   repeat for each item theIndex in pIndexes
+      repeat with i = 3 to theParamCount
+         put sDataArray[theIndex][param(i)] & pDelimiter after theValues
+      end repeat
+      delete char -theDelimLength to -1 of theValues
+      put cr after theValues
+   end repeat
+   delete the last char of theValues
+   return theValues
 end GetKeyValuesOfIndexes
 
 
@@ -2233,6 +2353,7 @@ private command _ToggleVScrollBarVisibility pBoolean
    
    switch _ControlType()
       case "table"
+         local theOrigHScroll
          put _GetHScrollPercent() into theOrigHScroll
          _ResetHScrollToZero
          _AutoHideHScrollbar
@@ -2247,6 +2368,7 @@ private command _ToggleVScrollBarVisibility pBoolean
          
       case "form"
       default
+         local theRect
          put the rect of group "dgList" of me into theRect
          if the visible of scrollbar "dgScrollbar" of me then
             put the left of scrollbar "dgScrollbar" of me into item 3 of theRect
@@ -2269,33 +2391,35 @@ end _ToggleVScrollBarVisibility
 
 
 private command _ToggleHScrollBarVisibility pBoolean
-    lock screen
-    ## todo: can we only perform actions if visible of scrollbar is different than pBoolean?
-    set the visible of group "dgHorizontalComponents" of me to pBoolean
-    
-    switch _ControlType()
-        case "table"
-            put _GetVScrollPercent() into theOrigVScroll
-            _ResetVScrollToZero
-            
+   lock screen
+   ## todo: can we only perform actions if visible of scrollbar is different than pBoolean?
+   set the visible of group "dgHorizontalComponents" of me to pBoolean
+   
+   switch _ControlType()
+      case "table"
+         local theOrigVScroll
+         put _GetVScrollPercent() into theOrigVScroll
+         _ResetVScrollToZero
+         
+         _table.LayoutDataArea
+         
+         local theSetting
+         put the visible of scrollbar "dgScrollbar" of me into theSetting
+         _AutoHideVScrollbar
+         if the visible of scrollbar "dgScrollbar" of me is not theSetting then
             _table.LayoutDataArea
-            
-            put the visible of scrollbar "dgScrollbar" of me into theSetting
-            _AutoHideVScrollbar
-            if the visible of scrollbar "dgScrollbar" of me is not theSetting then
-                _table.LayoutDataArea
-            end if
-            
-            _ShowAlternatingRows
-            _ConfigureScrollbar
-            RefreshList
-            
-            _SetVScrollPercent theOrigVScroll
-            break
-        case "form"
-        default
-    end switch
-    unlock screen
+         end if
+         
+         _ShowAlternatingRows
+         _ConfigureScrollbar
+         RefreshList
+         
+         _SetVScrollPercent theOrigVScroll
+         break
+      case "form"
+      default
+   end switch
+   unlock screen
 end _ToggleHScrollBarVisibility
 
 
@@ -2307,8 +2431,10 @@ private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForce
     
     DeleteFieldEditor
     
+    local theControl
     put the long ID of the focusedObject into theControl
     
+    local msgsAreLocked, theStart
     put the lockMessages into msgsAreLocked
     put the milliseconds into theStart
     
@@ -2348,52 +2474,57 @@ end _DrawListWithProperties
 
 
 private command _DeleteControls
-    local i,theControl,theMsgsAreLocked
-     
-    lock screen
-     
-    switch _ControlType()
-        case "table"
-            _table.DeleteColumnControls
-            break
-        case "form"
-        default
-    end switch
-     
-    _DeleteDataControls
-    _ResetScrollsToZero
-     
-    ## In case one gets left around
-    if there is a field kFieldEditorName of group "dgListMask" of me then
-        lock messages
-        delete field kFieldEditorName of group "dgListMask" of me
-        set the lockMessages to msgsAreLocked
-    end if
-     
-    unlock screen
+   local i,theControl,msgsAreLocked
+   
+   lock screen
+   
+   switch _ControlType()
+      case "table"
+         _table.DeleteColumnControls
+         break
+      case "form"
+      default
+   end switch
+   
+   _DeleteDataControls
+   _ResetScrollsToZero
+   
+   ## In case one gets left around
+   if there is a field kFieldEditorName of group "dgListMask" of me then
+      put the lockMessages into msgsAreLocked
+      lock messages
+      delete field kFieldEditorName of group "dgListMask" of me
+      set the lockMessages to msgsAreLocked
+   end if
+   
+   unlock screen
 end _DeleteControls
 
 
 private command _DeleteDataControls
-    lock screen
-    
-    switch _ControlType()
-        case "table"
-            _table.DeleteDataControls
-            break
-        case "form"
-        default
-            _list.DeleteControls
-    end switch
-    
-    put empty into sTableObjectsA["current"]
-    put 0 into sTableObjectsA["row control count"]
-    
-    put the lockMessages into msgsAreLocked
-    lock messages
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    set the lockMessages to msgsAreLocked
-    unlock screen
+   lock screen
+   
+   switch _ControlType()
+      case "table"
+         _table.DeleteDataControls
+         break
+      case "form"
+      default
+         _list.DeleteControls
+   end switch
+   
+   put empty into sTableObjectsA["current"]
+   put 0 into sTableObjectsA["row control count"]
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   set the lockMessages to msgsAreLocked
+   unlock screen
 end _DeleteDataControls
 
 
@@ -2426,21 +2557,22 @@ end _CalculateFormattedHeight
 ## Makes sure that enough controls exist to fill up the visible space
 ## Returns true if the number of controls required to display all records increased.
 private command _FillListWithJustEnoughControls
-    lock screen
-    
-    switch _ControlType()
-        case "table"
-            _table.FillListWithJustEnoughControls
-            break
-        case "form"
-        default
-            _list.FillListWithJustEnoughControls
-    end switch
-    put the result into theControlCountChanged
-    
-    unlock screen
-    
-    return theControlCountChanged
+   lock screen
+   
+   switch _ControlType()
+      case "table"
+         _table.FillListWithJustEnoughControls
+         break
+      case "form"
+      default
+         _list.FillListWithJustEnoughControls
+   end switch
+   local theControlCountChanged
+   put the result into theControlCountChanged
+   
+   unlock screen
+   
+   return theControlCountChanged
 end _FillListWithJustEnoughControls 
 
 
@@ -2499,119 +2631,122 @@ end _list.GetText
 
 
 private command _list.SetText pText, pKeys
-    -----
-    local theColNum
-    local theDataA
-    local theItem
-    local theLine
-    local theSequencing
-    -----
-    lock screen
-    set the itemDelimiter to tab
-    
-    if pKeys is not empty then
-        ## Developer specified item to key mapping
-        put the number of lines of pKeys into theColCount
-        
-        put 0 into theColNum
-        repeat for each line theColumn in pKeys
-            add 1 to theColNum
-            put theColumn into theColLookupA[theColNum]
-        end repeat
-        
-        repeat for each line theLine in pText
-            add 1 to theRow
-            put 0 into theColNum
-            put theRow & comma after theSequencing
-            if theLine is empty then
-                ## Fill in empty records for empty lines
-                repeat for each line theColumn in pKeys
-                    put empty into theDataA[theRow][theColumn]
-                end repeat
-            else
-                repeat for each item theItem in theLine
-                    add 1 to theColNum
-                    put theItem into theDataA[theRow][ theColLookupA[theColNum] ]
-                    if theColNum is theColCount then exit repeat
-                end repeat
-            end if
-        end repeat
-        
-    else
-        ## No columns provided. We just create columns named "Label COL_NUM"
-        repeat for each line theLine in pText
-            add 1 to theRow
-            put 0 into theColNum
-            put theRow & comma after theSequencing
-            if theLine is empty then
-                ## Fill in empty value for one key
-                put empty into theDataA[theRow][ "Label 1"]
-            else
-                repeat for each item theItem in theLine
-                    add 1 to theColNum
-                    put theItem into theDataA[theRow][ "Label" && theColNum ]
-                end repeat
-            end if
-        end repeat
-    end if
-    delete the last char of theSequencing
-    
-    set the dgData [theSequencing] of me to theDataA
-    
-    unlock screen
-    return empty
+   -----
+   local theColNum
+   local theDataA
+   local theItem
+   local theLine
+   local theSequencing
+   -----
+   lock screen
+   set the itemDelimiter to tab
+   
+   if pKeys is not empty then
+      ## Developer specified item to key mapping
+      local theColCount, theColLookupA
+      put the number of lines of pKeys into theColCount
+      
+      put 0 into theColNum
+      repeat for each line theColumn in pKeys
+         add 1 to theColNum
+         put theColumn into theColLookupA[theColNum]
+      end repeat
+      
+      local theRow
+      repeat for each line theLine in pText
+         add 1 to theRow
+         put 0 into theColNum
+         put theRow & comma after theSequencing
+         if theLine is empty then
+            ## Fill in empty records for empty lines
+            repeat for each line theColumn in pKeys
+               put empty into theDataA[theRow][theColumn]
+            end repeat
+         else
+            repeat for each item theItem in theLine
+               add 1 to theColNum
+               put theItem into theDataA[theRow][ theColLookupA[theColNum] ]
+               if theColNum is theColCount then exit repeat
+            end repeat
+         end if
+      end repeat
+      
+   else
+      ## No columns provided. We just create columns named "Label COL_NUM"
+      repeat for each line theLine in pText
+         add 1 to theRow
+         put 0 into theColNum
+         put theRow & comma after theSequencing
+         if theLine is empty then
+            ## Fill in empty value for one key
+            put empty into theDataA[theRow][ "Label 1"]
+         else
+            repeat for each item theItem in theLine
+               add 1 to theColNum
+               put theItem into theDataA[theRow][ "Label" && theColNum ]
+            end repeat
+         end if
+      end repeat
+   end if
+   delete the last char of theSequencing
+   
+   set the dgData [theSequencing] of me to theDataA
+   
+   unlock screen
+   return empty
 end _list.SetText
 
 
 private command _list.AddLine pText, pKeys, pLineNo
-    -----
-    local theColNum
-    local theDataA
-    local theItem
-    local theLine,theResult
-    -----
-    lock screen
-    set the itemDelimiter to tab
-     
-    if pKeys is not empty then
-        ## Developer specified mapping of data to keys
-        put the number of lines of pKeys into theColCount
-         
-        put 0 into theColNum
-        repeat for each line theColumn in pKeys
+   -----
+   local theColNum
+   local theDataA
+   local theItem
+   local theLine,theResult
+   -----
+   lock screen
+   set the itemDelimiter to tab
+   
+   if pKeys is not empty then
+      ## Developer specified mapping of data to keys
+      local theColCount, theColLookupA
+      put the number of lines of pKeys into theColCount
+      
+      put 0 into theColNum
+      repeat for each line theColumn in pKeys
+         add 1 to theColNum
+         put theColumn into theColLookupA[theColNum]
+      end repeat
+      
+      repeat for each line theLine in pText
+         put 0 into theColNum
+         repeat for each item theItem in theLine
             add 1 to theColNum
-            put theColumn into theColLookupA[theColNum]
-        end repeat
+            put theItem into theDataA[ theColLookupA[theColNum] ]
+            if theColNum is theColCount then exit repeat
+         end repeat
          
-        repeat for each line theLine in pText
-            put 0 into theColNum
-            repeat for each item theItem in theLine
-                add 1 to theColNum
-                put theItem into theDataA[ theColLookupA[theColNum] ]
-                if theColNum is theColCount then exit repeat
-            end repeat
-             
-            AddData theDataA, pLineNo
-            put the result into theResult
-            if pLineNo is not empty then add 1 to pLineNo
-        end repeat
-    else
-        ## No columns provided. We just create columns named "Label COL_NUM"
-        repeat for each line theLine in pText
-            put 0 into theColNum
-            repeat for each item theItem in theLine
-                add 1 to theColNum
-                put theItem into theDataA[ "Label" && theColNum ]
-            end repeat
-             
-            AddData theDataA, pLineNo
-            put the result into theResult
-            if pLineNo is not empty then add 1 to pLineNo
-        end repeat
-    end if
-     
-    unlock screen
-    return theResult
+         AddData theDataA, pLineNo
+         put the result into theResult
+         if pLineNo is not empty then add 1 to pLineNo
+      end repeat
+   else
+      ## No columns provided. We just create columns named "Label COL_NUM"
+      repeat for each line theLine in pText
+         put 0 into theColNum
+         repeat for each item theItem in theLine
+            add 1 to theColNum
+            put theItem into theDataA[ "Label" && theColNum ]
+         end repeat
+         
+         AddData theDataA, pLineNo
+         put the result into theResult
+         if pLineNo is not empty then add 1 to pLineNo
+      end repeat
+   end if
+   
+   unlock screen
+   return theResult
 end _list.AddLine
 
 
@@ -2670,81 +2805,84 @@ end _list.DeleteControls
 
 
 private command _list.FillListWithJustEnoughControls
-    local controlCountChanged,i
-    local theControl,theCurrentControlCount,theMsgsAreLocked,theRequiredControlCount
-    local theTemplateGroup
-    
-    put the lockMessages into msgsAreLocked
-    
-    put false into controlCountChanged
-    put the dgProps["row template"] of me into theTemplateGroup
-    
-    ## Determine required control count
-    put _ControlsRequiredToFillSpace() into theRequiredControlCount
-     
-    ## Make sure we have enough controls to fill visible space
-    put sTableObjectsA["row control count"] into theCurrentControlCount
-    
-    if theRequiredControlCount > theCurrentControlCount then
-        if sTableObjectsA["all row controls"] is not empty then put cr after sTableObjectsA["all row controls"]
+   local controlCountChanged,i
+   local theControl,theCurrentControlCount,theMsgsAreLocked,theRequiredControlCount
+   local theTemplateGroup
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   
+   put false into controlCountChanged
+   put the dgProps["row template"] of me into theTemplateGroup
+   
+   ## Determine required control count
+   put _ControlsRequiredToFillSpace() into theRequiredControlCount
+   
+   ## Make sure we have enough controls to fill visible space
+   put sTableObjectsA["row control count"] into theCurrentControlCount
+   
+   if theRequiredControlCount > theCurrentControlCount then
+      if sTableObjectsA["all row controls"] is not empty then put cr after sTableObjectsA["all row controls"]
+      
+      ## Create enough controls
+      lock messages ## for speed
+      repeat with i = theCurrentControlCount + 1 to theRequiredControlCount
+         copy theTemplateGroup to group "dgList" of me
+         put it into theControl
+         set the name of theControl to the short name of theControl && format("%04d", i)
+         put "control id" && word 3 of theControl && "of me" & cr after sTableObjectsA["all row controls"]
          
-        ## Create enough controls
-        lock messages ## for speed
-        repeat with i = theCurrentControlCount + 1 to theRequiredControlCount
-            copy theTemplateGroup to group "dgList" of me
-            put it into theControl
-            set the name of theControl to the short name of theControl && format("%04d", i)
-            put "control id" && word 3 of theControl && "of me" & cr after sTableObjectsA["all row controls"]
-            
-            ## take over geometry
-            set the lockloc of theControl to true
-        end repeat
-        unlock messages
-        
-        delete the last char of sTableObjectsA["all row controls"]
-        put the number of lines of sTableObjectsA["all row controls"] into sTableObjectsA["row control count"]
-        
-        put true into controlCountChanged
-        
-    else if theRequiredControlCount < theCurrentControlCount then
-        ## To many controls. That is okay. They just hang around invisible.
-    else
-        ## We have just enough controls
-    end if
-    
-    set the lockMessages to msgsAreLocked
-    
-    return controlCountChanged
+         ## take over geometry
+         set the lockloc of theControl to true
+      end repeat
+      unlock messages
+      
+      delete the last char of sTableObjectsA["all row controls"]
+      put the number of lines of sTableObjectsA["all row controls"] into sTableObjectsA["row control count"]
+      
+      put true into controlCountChanged
+      
+   else if theRequiredControlCount < theCurrentControlCount then
+      ## To many controls. That is okay. They just hang around invisible.
+   else
+      ## We have just enough controls
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   return controlCountChanged
 end _list.FillListWithJustEnoughControls
 
 
 private command _list.UpdateAlternatingRowColors
-    lock screen
-    
-    put _GetEffectiveColor("row color") into theRow1Color
-    put _GetEffectiveColor("alternate row color") into theRow2Color
-    
-    set the wholeMatches to true 
-     
-    repeat for each line theControl in sTableObjectsA["visible row controls"]
-        put the dgDataControl of theControl into theControl
-        if there is a graphic "Background" of theControl then
-            put the dgIndex of theControl into theIndex
-            
-            ## don't color hilited lines
-            if theIndex is among the items of sHilitedIndexes then next repeat
-            
-            put itemOffset(theIndex, sIndexSequencing) into theLine
-            if theLine mod 2 is kAlternatingRowModValue then
-                set the backgroundColor of graphic "Background" of theControl to theRow2Color
-            else
-                set the backgroundColor of graphic "Background" of theControl to theRow1Color
-            end if
-        end if
-    end repeat
-     
-    unlock screen
-    return empty
+   lock screen
+   
+   local theRow1Color, theRow2Color, theControl, theIndex
+   put _GetEffectiveColor("row color") into theRow1Color
+   put _GetEffectiveColor("alternate row color") into theRow2Color
+   
+   set the wholeMatches to true 
+   
+   repeat for each line theControl in sTableObjectsA["visible row controls"]
+      put the dgDataControl of theControl into theControl
+      if there is a graphic "Background" of theControl then
+         put the dgIndex of theControl into theIndex
+         
+         ## don't color hilited lines
+         if theIndex is among the items of sHilitedIndexes then next repeat
+         
+         local theLine
+         put itemOffset(theIndex, sIndexSequencing) into theLine
+         if theLine mod 2 is kAlternatingRowModValue then
+            set the backgroundColor of graphic "Background" of theControl to theRow2Color
+         else
+            set the backgroundColor of graphic "Background" of theControl to theRow1Color
+         end if
+      end if
+   end repeat
+   
+   unlock screen
+   return empty
 end _list.UpdateAlternatingRowColors
 
 
@@ -2782,399 +2920,410 @@ end _GenerateReorderedControlList
 
 
 private command _list.DrawControlsInRealTime pForceRefresh
-    -----
-    local controlCountWasModified
-    local i
-    local msgsAreLocked
-    local noRedrawNeeded
-    local theControl, theControlIndex
-    local theEffectiveControl
-    local theIndex
-    local theIndexesInSequence
-    local theListGroupRect
-    local theMaxControlNumber
-    local theRect
-    local theRowColor
-    local theSequence
-    local theTopLeft
-    -----
-    ## Get geometry properties
-    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-    put item 1 to 2 of theListGroupRect into theTopLeft
-    put 0 into theControlIndex
-     
-    ## Make sure there are enough controls
-    _FillListWithJustEnoughControls
-    put the result into controlCountWasModified
-    
-    ## We use sequencing to draw, not indexes
-    set the wholeMatches to true
-    put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
-    put _ControlsRequiredToFillSpace() into theMaxControlNumber
-    
-    ## filter the list of sequences
-    put item 1 to theMaxControlNumber of theIndexesInSequence into theIndexesInSequence
-    
-    ## Get lookup table for indexes that already have controls with correct data
-    put _GenerateReorderedControlList(sTableObjectsA["all row controls"], theIndexesInSequence) into theMasterControlList
-    
-    put the lockMessages into msgsAreLocked
-    
-    put not controlCountWasModified and sTableObjectsA["current"]["indexes"] is theIndexesInSequence into noRedrawNeeded
-    -- put theIndexesInSequence && the milliseconds & cr into msg
-    
-    if not noRedrawNeeded or pForceRefresh then
-        put empty into sTableObjectsA["visible row controls"]
-        
-        put _GetEffectiveColor("row color") into theRow1Color
-        put _GetEffectiveColor("alternate row color") into theRow2Color
+   -----
+   local controlCountWasModified
+   local i
+   local msgsAreLocked
+   local noRedrawNeeded
+   local theControl, theControlIndex
+   local theEffectiveControl
+   local theIndex
+   local theIndexesInSequence
+   local theListGroupRect
+   local theMaxControlNumber
+   local theRect
+   local theRowColor
+   local theSequence
+   local theTopLeft
+   -----
+   ## Get geometry properties
+   put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+   put item 1 to 2 of theListGroupRect into theTopLeft
+   put 0 into theControlIndex
+   
+   ## Make sure there are enough controls
+   _FillListWithJustEnoughControls
+   put the result into controlCountWasModified
+   
+   ## We use sequencing to draw, not indexes
+   set the wholeMatches to true
+   put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
+   put _ControlsRequiredToFillSpace() into theMaxControlNumber
+   
+   ## filter the list of sequences
+   put item 1 to theMaxControlNumber of theIndexesInSequence into theIndexesInSequence
+   
+   ## Get lookup table for indexes that already have controls with correct data
+   local theMasterControlList
+   put _GenerateReorderedControlList(sTableObjectsA["all row controls"], theIndexesInSequence) into theMasterControlList
+   
+   put the lockMessages into msgsAreLocked
+   
+   put not controlCountWasModified and sTableObjectsA["current"]["indexes"] is theIndexesInSequence into noRedrawNeeded
+   -- put theIndexesInSequence && the milliseconds & cr into msg
+   
+   if not noRedrawNeeded or pForceRefresh then
+      put empty into sTableObjectsA["visible row controls"]
+      
+      local theRow1Color, theRow2Color, controlHeightIsFixed
+      put _GetEffectiveColor("row color") into theRow1Color
+      put _GetEffectiveColor("alternate row color") into theRow2Color
+      
+      put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
+      put the dgProps["fixed row height"] of me into controlHeightIsFixed
+      
+      repeat for each item theIndex in theIndexesInSequence
+         ## Get control reference
+         add 1 to theControlIndex
+         add 1 to theSequence
          
-        put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
-        put the dgProps["fixed row height"] of me into controlHeightIsFixed
-        
-        repeat for each item theIndex in theIndexesInSequence
-            ## Get control reference
-            add 1 to theControlIndex
-            add 1 to theSequence
-             
-            ## This will speed things up and keep us from experiencing visual lag
-            lock messages
-            
-            put line theControlIndex of theMasterControlList into theControl
-            if there is not a theControl then _ThrowError kErrCantFindObject, "control not found when drawing form:" && theControl
-            
-            unlock messages
-            set the visible of theControl to true
-            put theControl & cr after sTableObjectsA["visible row controls"]
-            put the dgDataControl of theControl into theEffectiveControl
-            lock messages
-             
-            ## Set geometry
-            if controlHeightIsFixed then 
-                put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + sControlHeights into theRect
+         ## This will speed things up and keep us from experiencing visual lag
+         lock messages
+         
+         put line theControlIndex of theMasterControlList into theControl
+         if there is not a theControl then _ThrowError kErrCantFindObject, "control not found when drawing form:" && theControl
+         
+         unlock messages
+         set the visible of theControl to true
+         put theControl & cr after sTableObjectsA["visible row controls"]
+         put the dgDataControl of theControl into theEffectiveControl
+         lock messages
+         
+         ## Set geometry
+         if controlHeightIsFixed then 
+            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + sControlHeights into theRect
+         else
+            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
+         end if
+         
+         ## Set row color
+         if there is a graphic "Background" of theEffectiveControl then
+            if theSequence mod 2 is kAlternatingRowModValue then
+               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow2Color
             else
-                put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
+               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow1Color
             end if
-             
-            ## Set row color
-            if there is a graphic "Background" of theEffectiveControl then
-                if theSequence mod 2 is kAlternatingRowModValue then
-                    set the backgroundColor of graphic "Background" of theEffectiveControl to theRow2Color
-                else
-                    set the backgroundColor of graphic "Background" of theEffectiveControl to theRow1Color
-                end if
+         end if
+         
+         ## If control index is not the index we are working on then
+         ## Load new data
+         local theCurrentIndex
+         put the dgIndex of theControl into theCurrentIndex
+         if theCurrentIndex is not theIndex then
+            ## Allow developer to do something if unloading control
+            if theCurrentIndex is not empty then
+               unlock messages
+               dispatch "PreFillInData" to theControl ## standardized and documented in 1.0.2 build 6
+               -- dispatch "ResetDataGridControl" to theControl
+               lock messages
             end if
             
-            ## If control index is not the index we are working on then
-            ## Load new data
-            put the dgIndex of theControl into theCurrentIndex
-            if theCurrentIndex is not theIndex then
-                ## Allow developer to do something if unloading control
-                if theCurrentIndex is not empty then
-                    unlock messages
-                    dispatch "PreFillInData" to theControl ## standardized and documented in 1.0.2 build 6
-                    -- dispatch "ResetDataGridControl" to theControl
-                    lock messages
-                end if
-                 
-                set the dgIndex of theControl to theIndex
-                 
-                if sDataArray[theIndex] is NULL then
-                    unlock messages
-                    GetDataForLine theSequence, theDataA
-                    dispatch "FillInData" to theControl with theDataA
-                    lock messages
-                else
-                    unlock messages
-                    dispatch "FillInData" to theControl with sDataArray[theIndex]
-                    lock messages
-                end if
+            set the dgIndex of theControl to theIndex
+            
+            local theDataA
+            if sDataArray[theIndex] is NULL then
+               unlock messages
+               GetDataForLine theSequence, theDataA
+               dispatch "FillInData" to theControl with theDataA
+               lock messages
             else
-                -- put "not drawing index:" && theIndex & cr after msg
+               unlock messages
+               dispatch "FillInData" to theControl with sDataArray[theIndex]
+               lock messages
             end if
-             
-            ## Set the rect AFTER filling in data in case filling in data causes the group to resize
-            unlock messages
-            set the topLeft of theControl to theTopLeft ## So developer can always count on topleft of controls in template code
+         else
+            -- put "not drawing index:" && theIndex & cr after msg
+         end if
+         
+         ## Set the rect AFTER filling in data in case filling in data causes the group to resize
+         unlock messages
+         set the topLeft of theControl to theTopLeft ## So developer can always count on topleft of controls in template code
+         lock messages
+         set the rect of theControl to theRect
+         unlock messages
+         dispatch "LayoutControl" to theControl with theRect
+         
+         ## Resize to fit height
+         if not controlHeightIsFixed then
             lock messages
+            put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
             set the rect of theControl to theRect
             unlock messages
-            dispatch "LayoutControl" to theControl with theRect
-             
-            ## Resize to fit height
-            if not controlHeightIsFixed then
-                lock messages
-                put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
-                set the rect of theControl to theRect
-                unlock messages
-            end if
-             
-            put the bottom of theControl into item 2 of theTopLeft
-             
-            ## Hilited index?
-            if theIndex is among the items of sHilitedIndexes then
-                _HiliteControl theEffectiveControl, true
-            else
-                _HiliteControl theEffectiveControl, false
-            end if
-        end repeat
+         end if
          
-        ## Store current sequences in list
-        put theIndexesInSequence into sTableObjectsA["current"]["indexes"]
-    end if
-     
-    ## Filter control list and reset controls that aren't part of visible list
-    put line (the number of lines of sTableObjectsA["visible row controls"] + 1) to -1 of theMasterControlList into theMasterControlList
-    _ResetControls theMasterControlList
-    
-    return empty
+         put the bottom of theControl into item 2 of theTopLeft
+         
+         ## Hilited index?
+         if theIndex is among the items of sHilitedIndexes then
+            _HiliteControl theEffectiveControl, true
+         else
+            _HiliteControl theEffectiveControl, false
+         end if
+      end repeat
+      
+      ## Store current sequences in list
+      put theIndexesInSequence into sTableObjectsA["current"]["indexes"]
+   end if
+   
+   ## Filter control list and reset controls that aren't part of visible list
+   put line (the number of lines of sTableObjectsA["visible row controls"] + 1) to -1 of theMasterControlList into theMasterControlList
+   _ResetControls theMasterControlList
+   
+   return empty
 end _list.DrawControlsInRealTime
 
 
 private command _list.DrawCachedControlList pForceRefresh
-    -----
-    local isVisible
-    local msgsAreLocked
-    local noRedrawNeeded
-    local theControl
-    local theFirstControlHeight
-    local theIndex
-    local theIndexesInSequence
-    local theListGroupRect, theListGroupWidth
-    local theOldListControls
-    local theRowColor
-    local theSequence
-    local theTopLeft
-    -----
-    put false into noRedrawNeeded
-    put empty into theFirstControlHeight
-    
-    put the lockMessages into msgsAreLocked
-    
-    ## Get geometry properties
-    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-    put item 1 to 2 of theListGroupRect into theTopLeft
-    put item 3 of theListGroupRect - item 1 of theListGroupRect into theListGroupWidth
-     
-    ## We use sequencing to draw, not indexes
-    set the wholeMatches to true
-    put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
-    
-    ## Do we need to redraw?
-    put line 1 of sTableObjectsA["visible row controls"] into theControl
-     
-    if there is a theControl then
-        put the dgIndex of theControl is item 1 of theIndexesInSequence into noRedrawNeeded
-    end if
-    
-    if not noRedrawNeeded or pForceRefresh then  
-        -- put "calling " & param(0) & cr after msg ## important log
-        
-        ## Cache currently visible controls
-        put sTableObjectsA["visible row controls"] into theOldListControls
-        put empty into sTableObjectsA["visible row controls"]
-        put empty into sTableObjectsA["current"]["indexes"]
-        
-        put _GetEffectiveColor("row color") into theRow1Color
-        put _GetEffectiveColor("alternate row color") into theRow2Color
+   -----
+   local isVisible
+   local msgsAreLocked
+   local noRedrawNeeded
+   local theControl
+   local theFirstControlHeight
+   local theIndex
+   local theIndexesInSequence
+   local theListGroupRect, theListGroupWidth
+   local theOldListControls
+   local theRowColor
+   local theSequence
+   local theTopLeft
+   -----
+   put false into noRedrawNeeded
+   put empty into theFirstControlHeight
+   
+   put the lockMessages into msgsAreLocked
+   
+   ## Get geometry properties
+   put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+   put item 1 to 2 of theListGroupRect into theTopLeft
+   put item 3 of theListGroupRect - item 1 of theListGroupRect into theListGroupWidth
+   
+   ## We use sequencing to draw, not indexes
+   set the wholeMatches to true
+   put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
+   
+   ## Do we need to redraw?
+   put line 1 of sTableObjectsA["visible row controls"] into theControl
+   
+   if there is a theControl then
+      put the dgIndex of theControl is item 1 of theIndexesInSequence into noRedrawNeeded
+   end if
+   
+   if not noRedrawNeeded or pForceRefresh then  
+      -- put "calling " & param(0) & cr after msg ## important log
+      
+      ## Cache currently visible controls
+      put sTableObjectsA["visible row controls"] into theOldListControls
+      put empty into sTableObjectsA["visible row controls"]
+      put empty into sTableObjectsA["current"]["indexes"]
+      
+      local theRow1Color, theRow2Color
+      put _GetEffectiveColor("row color") into theRow1Color
+      put _GetEffectiveColor("alternate row color") into theRow2Color
+      
+      put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
+      
+      ## This will speed things up and keep us from experiencing visual lag
+      lock messages
+      
+      -- put "theIndexesInSequence:" && theIndexesInSequence & cr after msg ## important log
+      repeat for each item theIndex in theIndexesInSequence
+         add 1 to theSequence
+         put theIndex & comma after sTableObjectsA["current"]["indexes"]
          
-        put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
+         ## Get control reference
+         -- put "control (" & theIndex & "):" && theControl & cr after msg ## important log
+         put sControlOfIndexA[theIndex] into theControl
+         put theControl & cr after sTableObjectsA["visible row controls"]
          
-        ## This will speed things up and keep us from experiencing visual lag
-        lock messages
-        
-        -- put "theIndexesInSequence:" && theIndexesInSequence & cr after msg ## important log
-        repeat for each item theIndex in theIndexesInSequence
-            add 1 to theSequence
-            put theIndex & comma after sTableObjectsA["current"]["indexes"]
-             
-            ## Get control reference
-            -- put "control (" & theIndex & "):" && theControl & cr after msg ## important log
-            put sControlOfIndexA[theIndex] into theControl
-            put theControl & cr after sTableObjectsA["visible row controls"]
-            unlock messages
-            put the dgDataControl of theControl into theEffectiveControl
-            lock messages
-            
-            ## Set row color
-            if there is a graphic "Background" of theEffectiveControl then
-                if theSequence mod 2 is kAlternatingRowModValue then
-                    set the backgroundColor of graphic "Background" of theEffectiveControl to theRow2Color
-                else
-                    set the backgroundColor of graphic "Background" of theEffectiveControl to theRow1Color
-                end if
-            end if
-             
-            unlock messages
-            put the visible of theControl into isVisible
-            set the visible of theControl to true
-            if not isVisible then
-                dispatch "ShowDataGridControl" to theControl
-            end if
-            
-            ## Set coordinates
-            set the topLeft of theControl to theTopLeft             
-            put the bottom of theControl into item 2 of theTopLeft
-             
-            ## Hilited index?
-            if theIndex is among the items of sHilitedIndexes then
-                _HiliteControl theEffectiveControl, true
+         unlock messages
+         local theEffectiveControl
+         put the dgDataControl of theControl into theEffectiveControl
+         lock messages
+         
+         ## Set row color
+         if there is a graphic "Background" of theEffectiveControl then
+            if theSequence mod 2 is kAlternatingRowModValue then
+               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow2Color
             else
-                _HiliteControl theEffectiveControl, false
+               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow1Color
             end if
-            lock messages
-             
-            ## We need to know the height of first control as it must be able to scroll off screen
-            if theFirstControlHeight is empty then
-                put the height of theControl into theFirstControlHeight
-            end if
-            
-            ## Check for exit
-            if item 2 of theTopLeft >= item 4 of theListGroupRect + theFirstControlHeight then
-                exit repeat
-            end if
-        end repeat
-        delete the last char of sTableObjectsA["visible row controls"]
-        delete the last char of sTableObjectsA["current"]["indexes"]
-        -- put "----" & cr after msg ## important log
+         end if
          
-        ## We end repeat loop with locked messages
-        unlock messages
+         unlock messages
+         put the visible of theControl into isVisible
+         set the visible of theControl to true
+         if not isVisible then
+            dispatch "ShowDataGridControl" to theControl
+         end if
          
-        ## Hide previously visible list controls that are no longer visible.
-        ## This is performed after we know which controls are visible this time around so
-        ## that controls that are visible are not hid then shown again.
-        repeat for each line theControl in theOldListControls
-            if theControl is not among the lines of sTableObjectsA["visible row controls"] then
-                try
-                    set the visible of theControl to false
-                catch e
-                    -- put theOrigListControls
-                    -- put cr & "---" & cr & the short name of the me & cr & "can't set visible of:" && theControl & cr & theIndexesInSequence after msg
-                end try
-                -- dispatch "HideDataGridControl" to theControl
-                dispatch "HideControl" to theControl ## standardized in 1.0.2 build 6
-            end if
-        end repeat
-    end if
-    
-    set the lockMessages to msgsAreLocked
-     
-    return empty
+         ## Set coordinates
+         set the topLeft of theControl to theTopLeft             
+         put the bottom of theControl into item 2 of theTopLeft
+         
+         ## Hilited index?
+         if theIndex is among the items of sHilitedIndexes then
+            _HiliteControl theEffectiveControl, true
+         else
+            _HiliteControl theEffectiveControl, false
+         end if
+         lock messages
+         
+         ## We need to know the height of first control as it must be able to scroll off screen
+         if theFirstControlHeight is empty then
+            put the height of theControl into theFirstControlHeight
+         end if
+         
+         ## Check for exit
+         if item 2 of theTopLeft >= item 4 of theListGroupRect + theFirstControlHeight then
+            exit repeat
+         end if
+      end repeat
+      delete the last char of sTableObjectsA["visible row controls"]
+      delete the last char of sTableObjectsA["current"]["indexes"]
+      -- put "----" & cr after msg ## important log
+      
+      ## We end repeat loop with locked messages
+      unlock messages
+      
+      ## Hide previously visible list controls that are no longer visible.
+      ## This is performed after we know which controls are visible this time around so
+      ## that controls that are visible are not hid then shown again.
+      repeat for each line theControl in theOldListControls
+         if theControl is not among the lines of sTableObjectsA["visible row controls"] then
+            try
+               set the visible of theControl to false
+            catch e
+               -- put theOrigListControls
+               -- put cr & "---" & cr & the short name of the me & cr & "can't set visible of:" && theControl & cr & theIndexesInSequence after msg
+            end try
+            -- dispatch "HideDataGridControl" to theControl
+            dispatch "HideControl" to theControl ## standardized in 1.0.2 build 6
+         end if
+      end repeat
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   return empty
 end _list.DrawCachedControlList
 
 
 private command _list.CalculateFormattedHeight
-    -----
-    local msgsAreLocked
-    local theControl
-    local theIndex
-    local theListGroupRect
-    local theRect
-    local theTemplateGroup
-    local theTopLeft
-    local theDataA
-    -----
-    
-    ## If height is not fixed then we calculate height by looping through data and drawing controls.
-    put the dgProps["row template"] of me into theTemplateGroup
-    if theTemplateGroup is empty then return empty
-     
-    ## This handler loops through all records and gets the height of each one. The total height is then stored
-    lock screen
-    put the lockMessages into msgsAreLocked
-     
-    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-     
-    lock messages
-    copy theTemplateGroup to group "dgList" of me
-    put it into theControl
-    unlock messages
-     
-    try ## Watch for user errors
-         
-        put item 1 to 2 of theListGroupRect into theTopLeft
-        put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theListGroupRect + the height of theControl into theRect
-        lock messages
-        set the rect of theControl to theRect ## Only do this once.
-        unlock messages
-         
-        if the dgProps["fixed row height"] of me then
-            put the dgProps["row height"] of me into sControlHeights
-            if sControlHeights is not an integer or sControlHeights < 1 then
-                if sDataArray[1] is NULL then
-                    GetDataForLine 1, theDataA
-                    dispatch "FillInData" to theControl with theDataA
-                else
-                    dispatch "FillInData" to theControl with sDataArray[1]
-                end if
-                 
-                dispatch "LayoutControl" to theControl with theRect
-                put the formattedHeight of theControl into sControlHeights
+   -----
+   local msgsAreLocked
+   local theControl
+   local theIndex
+   local theListGroupRect
+   local theRect
+   local theTemplateGroup
+   local theTopLeft
+   local theDataA
+   local theError
+   -----
+   
+   ## If height is not fixed then we calculate height by looping through data and drawing controls.
+   put the dgProps["row template"] of me into theTemplateGroup
+   if theTemplateGroup is empty then return empty
+   
+   ## This handler loops through all records and gets the height of each one. The total height is then stored
+   lock screen
+   put the lockMessages into msgsAreLocked
+   
+   put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+   
+   lock messages
+   copy theTemplateGroup to group "dgList" of me
+   put it into theControl
+   unlock messages
+   
+   try ## Watch for user errors
+      
+      put item 1 to 2 of theListGroupRect into theTopLeft
+      put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theListGroupRect + the height of theControl into theRect
+      lock messages
+      set the rect of theControl to theRect ## Only do this once.
+      unlock messages
+      
+      if the dgProps["fixed row height"] of me then
+         put the dgProps["row height"] of me into sControlHeights
+         if sControlHeights is not an integer or sControlHeights < 1 then
+            if sDataArray[1] is NULL then
+               GetDataForLine 1, theDataA
+               dispatch "FillInData" to theControl with theDataA
+            else
+               dispatch "FillInData" to theControl with sDataArray[1]
             end if
-            put sControlHeights * the number of elements of sDataArray into sFormattedHeight
-        else
-           repeat for each key theIndex in sDataArray               
-              add 1 to theSequence  
-                ## Get height
-                if sDataArray[theIndex] is NULL then
-                    GetDataForLine theSequence, theDataA
-                     
-                    dispatch "CalculateFormattedHeight" to theControl with theDataA
-                    if it is "not handled" or it is "unhandled" then
-                        dispatch "FillInData" to theControl with theDataA
-                         
-                        set the topLeft of theControl to theTopLeft ## So developer can rely on topleft of controls in template code.
-                        lock messages
-                        set the rect of theControl to theRect
-                        unlock messages
-                        dispatch "LayoutControl" to theControl with theRect
-                        put the formattedHeight of theControl into sControlHeights[theIndex]
-                    else
-                        put the result into sControlHeights[theIndex]
-                    end if
-                     
-                else
-                    dispatch "CalculateFormattedHeight" to theControl with sDataArray[theIndex]
-                    if it is "not handled" or it is "unhandled" then
-                        dispatch "FillInData" to theControl with sDataArray[theIndex]
-                         
-                        set the topLeft of theControl to theTopLeft ## So developer can rely on topleft of controls in template code.
-                        lock messages
-                        set the rect of theControl to theRect
-                        unlock messages
-                        dispatch "LayoutControl" to theControl with theRect
-                        put the formattedHeight of theControl into sControlHeights[theIndex]
-                    else
-                        put the result into sControlHeights[theIndex]
-                    end if
-                end if
-                 
-                add sControlHeights[theIndex] to sFormattedHeight
-            end repeat
-        end if
-         
-    catch e
-        put e into theError
-    end try
-     
-    lock messages
-    delete theControl
-    unlock messages
-    
-    unlock screen
-    set the lockMessages to msgsAreLocked
-     
-    if theError is not empty then throw theError
+            
+            dispatch "LayoutControl" to theControl with theRect
+            put the formattedHeight of theControl into sControlHeights
+         end if
+         put sControlHeights * the number of elements of sDataArray into sFormattedHeight
+      else
+         repeat for each key theIndex in sDataArray 
+            local theSequence              
+            add 1 to theSequence  
+            ## Get height
+            if sDataArray[theIndex] is NULL then
+               GetDataForLine theSequence, theDataA
+               
+               dispatch "CalculateFormattedHeight" to theControl with theDataA
+               if it is "not handled" or it is "unhandled" then
+                  dispatch "FillInData" to theControl with theDataA
+                  
+                  set the topLeft of theControl to theTopLeft ## So developer can rely on topleft of controls in template code.
+                  lock messages
+                  set the rect of theControl to theRect
+                  unlock messages
+                  dispatch "LayoutControl" to theControl with theRect
+                  put the formattedHeight of theControl into sControlHeights[theIndex]
+               else
+                  put the result into sControlHeights[theIndex]
+               end if
+               
+            else
+               dispatch "CalculateFormattedHeight" to theControl with sDataArray[theIndex]
+               if it is "not handled" or it is "unhandled" then
+                  dispatch "FillInData" to theControl with sDataArray[theIndex]
+                  
+                  set the topLeft of theControl to theTopLeft ## So developer can rely on topleft of controls in template code.
+                  lock messages
+                  set the rect of theControl to theRect
+                  unlock messages
+                  dispatch "LayoutControl" to theControl with theRect
+                  put the formattedHeight of theControl into sControlHeights[theIndex]
+               else
+                  put the result into sControlHeights[theIndex]
+               end if
+            end if
+            
+            add sControlHeights[theIndex] to sFormattedHeight
+         end repeat
+      end if
+      
+   catch e
+      put e into theError
+   end try
+   
+   lock messages
+   delete theControl
+   unlock messages
+   
+   unlock screen
+   set the lockMessages to msgsAreLocked
+   
+   if theError is not empty then throw theError
 end _list.CalculateFormattedHeight
 
 
 private command _list.HiliteIndexesInVisibleControls
    lock screen
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    set the lockMessages to false
    set the wholeMatches to true
    repeat for each line theControl in sTableObjectsA["visible row controls"]
+      local theBoolean
       put the dgIndex of theControl is among the items of sHilitedIndexes into theBoolean
       _HiliteControl the dgDataControl of theControl, theBoolean      
    end repeat
@@ -3188,11 +3337,13 @@ end _list.HiliteIndexesInVisibleControls
 
 private command _table.UpdateHeaderLabel pColumn, pLabel, pEncoding
    if the paramCount is 1 then
+      local theColsA
       put the dgProps["column properties"] of me into theColsA
       put theColsA[pColumn]["label"] into pLabel
       put theColsA[pColumn]["encoding"] into pEncoding
    end if
    
+   local theGroup
    put sTableObjectsA["columns"][pColumn]["header"]["group"] into theGroup
    if theGroup is not empty then
       if pLabel is empty then put pColumn into pLabel
@@ -3202,48 +3353,55 @@ end _table.UpdateHeaderLabel
 
 
 private command _table.UpdateHeaderTooltip pColumn, pTooltip
-    if the paramCount is 1 then
-        put the dgProps["column properties"] of me into theColsA
-        put theColsA[pColumn]["tooltip"] into pTooltip
-    end if
-    
-    put sTableObjectsA["columns"][pColumn]["header"]["group"] into theGroup
-    if theGroup is not empty then
-        set the dgTooltip of theGroup to pTooltip
-    end if
+   local theColsA, theGroup
+   if the paramCount is 1 then
+      put the dgProps["column properties"] of me into theColsA
+      put theColsA[pColumn]["tooltip"] into pTooltip
+   end if
+   
+   put sTableObjectsA["columns"][pColumn]["header"]["group"] into theGroup
+   if theGroup is not empty then
+      set the dgTooltip of theGroup to pTooltip
+   end if
 end _table.UpdateHeaderTooltip
 
 
 private command _table.ScrollColumnIntoView pColumn
-    put sTableObjectsA["columns"][pColumn]["group"] into theColGroup
-    if theColGroup is empty then return empty
-    
-    put the rect of theColGroup into theColRect
-    put the rect of group "dgListMask" into theMaskRect
-    if the visible of scrollbar "dgScrollbar" of me then
-        put the left of scrollbar "dgScrollbar" of me into item 3 of theMaskRect
-    end if
-    
-    put item 1 of theColRect - item 1 of theMaskRect into theDiff
-    if theDiff > 0 then
-        put item 3 of theColRect - item 3 of theMaskRect into theDiff
-        if theDiff < 0 then
-            put 0 into theDiff
-        end if
-    end if
-    
-    if theDiff is not 0 then
-        put the lockMessages into msgsAreLocked
-        unlock messages
-        set the thumbPosition of scrollbar "dgHScrollbar" of me to the thumbPosition of scrollbar "dgHScrollbar" of me + theDiff
-        set the lockMessages to msgsAreLocked
-    end if
-     
-    return empty
+   local theColGroup, theColRect, theMaskRect, theDiff
+   put sTableObjectsA["columns"][pColumn]["group"] into theColGroup
+   if theColGroup is empty then return empty
+   
+   put the rect of theColGroup into theColRect
+   put the rect of group "dgListMask" into theMaskRect
+   if the visible of scrollbar "dgScrollbar" of me then
+      put the left of scrollbar "dgScrollbar" of me into item 3 of theMaskRect
+   end if
+   
+   put item 1 of theColRect - item 1 of theMaskRect into theDiff
+   if theDiff > 0 then
+      put item 3 of theColRect - item 3 of theMaskRect into theDiff
+      if theDiff < 0 then
+         put 0 into theDiff
+      end if
+   end if
+   
+   if theDiff is not 0 then
+      local msgsAreLocked
+      put the lockMessages into msgsAreLocked
+      unlock messages
+      if __HasMobileScroller() then
+         mobileControlSet sScrollerId, "hScroll", mobileControlGet(sScrollerId, "hScroll") + theDiff
+      end if
+      set the thumbPosition of scrollbar "dgHScrollbar" of me to the thumbPosition of scrollbar "dgHScrollbar" of me + theDiff
+      set the lockMessages to msgsAreLocked
+   end if
+   
+   return empty
 end _table.ScrollColumnIntoView
 
 
 private command _table.LayoutDataArea
+   local theViewRect, theRect, theRootGroup
    put _WorkingGroupRect(the long ID of me) into theViewRect
    put theViewRect into theRect
    put the long ID of group "dgHeaderComponents" of me into theRootGroup
@@ -3252,13 +3410,14 @@ private command _table.LayoutDataArea
    set the topLeft of theRootGroup to item 1 to 2 of theRect
    
    ## Reposition bottom element
+   local theSBWidth
    if the visible of scrollbar "dgScrollbar" of me then put the width of scrollbar "dgScrollbar" of me into theSBWidth
    else put the dgProps["scrollbar corner offset"] of me into theSBWidth
    set the visible of graphic "dgCornerPiece" of group "dgHorizontalComponents" of me to the visible of scrollbar "dgScrollbar" of me
    
    set the rect of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to \
-          item 1 of theRect, item 4 of theRect - the height of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, \
-          item 3 of theRect - theSBWidth, item 4 of theRect
+         item 1 of theRect, item 4 of theRect - the height of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, \
+         item 3 of theRect - theSBWidth, item 4 of theRect
    
    ## Header mask
    put the bottom of group "dgHeaderMask" of theRootGroup into item 4 of theRect            
@@ -3277,13 +3436,13 @@ private command _table.LayoutDataArea
    
    ## V Scrollbar and corner piece    
    set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-          item 2 of theRect, item 3 of theRect, \
-          item 4 of theRect
+         item 2 of theRect, item 3 of theRect, \
+         item 4 of theRect
    
    set the rect of graphic "dgCornerPiece" of group "dgHorizontalComponents" of me to \
-          item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-          the top of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, item 3 of theRect, \
-          the bottom of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me
+         item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
+         the top of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, item 3 of theRect, \
+         the bottom of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me
    
    ## Masks
    ## AL-2013-07-30 [[ Bug 10108 ]]  Thumb and scrollbar appear over top of DataGrid
@@ -3301,30 +3460,32 @@ end _table.LayoutDataArea
 
 
 private command _table.SetHeaderBkgrndHiliteColor pColor
-    repeat for each line theColumn in the dgProps["columns"] of me
-        put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
-        if there is a theGroup then
-            _table.HiliteHeaderBackground theGroup, pColor
-        end if
-    end repeat
+   repeat for each line theColumn in the dgProps["columns"] of me
+      local theGroup
+      put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
+      if there is a theGroup then
+         _table.HiliteHeaderBackground theGroup, pColor
+      end if
+   end repeat
 end _table.SetHeaderBkgrndHiliteColor
 
 
 private command _table.HiliteHeaderBackground pHeaderGroup, pColor
-    put pColor is an array into setFillGradient
-    put the number of lines of pColor is 2 into useAGradient
-    
-    if there is a graphic "Background" of pHeaderGroup then
-        if setFillGradient then
-            repeat for each key theKey in pColor
-                set the fillGradient[theKey] of graphic "Background" of pHeaderGroup to pColor[theKey]
-            end repeat
-        else if useAGradient then
-            _SetGraphicGradient the long ID of graphic "Background" of pHeaderGroup, line 1 of pColor, line 2 of pColor
-        else
-            set the backgroundColor of graphic "Background" of pHeaderGroup to pColor
-        end if
-    end if
+   local setFillGradient, useAGradient
+   put pColor is an array into setFillGradient
+   put the number of lines of pColor is 2 into useAGradient
+   
+   if there is a graphic "Background" of pHeaderGroup then
+      if setFillGradient then
+         repeat for each key theKey in pColor
+            set the fillGradient[theKey] of graphic "Background" of pHeaderGroup to pColor[theKey]
+         end repeat
+      else if useAGradient then
+         _SetGraphicGradient the long ID of graphic "Background" of pHeaderGroup, line 1 of pColor, line 2 of pColor
+      else
+         set the backgroundColor of graphic "Background" of pHeaderGroup to pColor
+      end if
+   end if
 end _table.HiliteHeaderBackground
 
 
@@ -3336,13 +3497,14 @@ end _table.SetHeaderBkgrndGradient
 
 
 private command _table.UpdateHeaderDividerColors
-    repeat for each line theColumn in the dgProps["columns"] of me
-        put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
-        if there is a theGroup then
-            set the foregroundColor of graphic "RightHilite" of theGroup to the dgProps["header divider color"] of me
-            set the foregroundColor of graphic "LeftHilite" of theGroup to the dgProps["header divider threeD color"] of me
-        end if
-    end repeat
+   repeat for each line theColumn in the dgProps["columns"] of me
+      local theGroup
+      put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
+      if there is a theGroup then
+         set the foregroundColor of graphic "RightHilite" of theGroup to the dgProps["header divider color"] of me
+         set the foregroundColor of graphic "LeftHilite" of theGroup to the dgProps["header divider threeD color"] of me
+      end if
+   end repeat
 end _table.UpdateHeaderDividerColors
 
 
@@ -3372,125 +3534,128 @@ end _table.GetText
 
 
 private command _table.SetText pText, pColumns
-    -----
-    local i
-    local theColNum, theColumn, theColumns, theItemNoColumnA
-    local theDataA
-    local theItem
-    local theLine
-    local theSequencing
-    -----
-    lock screen
-    
-    set the itemDelimiter to tab
-    if pColumns is empty then
-        put the dgProps["columns"] of me into pColumns
-         
-        ## Make sure we have some columns defined
-        put the number of lines of pColumns into theColCount
-        if the number of lines of pColumns < the number of items of line 1 of pText then
-            if pColumns is not empty then put cr after pColumns
-            repeat with i = 1 to the number of items of line 1 of pText
-                if i > theColCount then
-                    put "Col" && i & cr after pColumns
-                end if
-            end repeat
-            delete the last char of pColumns
-            set the dgProps["columns"] of me to pColumns
-        end if
-    end if
-    put the number of lines of pColumns into theColCount
-    
-    ## Store column item no's and total column count
-    put 0 into i
-    repeat for each line theColumn in pColumns
-        add 1 to i
-        put theColumn into theItemNoColumnA[i]
-    end repeat
-    
-    repeat for each line theLine in pText
-        add 1 to theRow
-        put 0 into theColNum
-        put theRow & comma after theSequencing
-        if theLine is empty then
-            ## Fill in empty records for empty lines
-            repeat for each line theColumn in pColumns
-                put empty into theDataA[theRow][theColumn]
-            end repeat
-        else
-            repeat for each item theItem in theLine
-                add 1 to theColNum
-                put theItem into theDataA[theRow][ theItemNoColumnA[theColNum] ]
-                 
-                if theColNum is theColCount then exit repeat
-            end repeat
-        end if
-    end repeat
-    delete the last char of theSequencing
-    
-    set the dgData [theSequencing] of me to theDataA
-    
-    unlock screen
+   -----
+   local i
+   local theColNum, theColumn, theColumns, theItemNoColumnA
+   local theDataA
+   local theItem
+   local theLine
+   local theSequencing
+   -----
+   lock screen
+   
+   set the itemDelimiter to tab
+   if pColumns is empty then
+      put the dgProps["columns"] of me into pColumns
+      
+      ## Make sure we have some columns defined
+      local theColCount
+      put the number of lines of pColumns into theColCount
+      if the number of lines of pColumns < the number of items of line 1 of pText then
+         if pColumns is not empty then put cr after pColumns
+         repeat with i = 1 to the number of items of line 1 of pText
+            if i > theColCount then
+               put "Col" && i & cr after pColumns
+            end if
+         end repeat
+         delete the last char of pColumns
+         set the dgProps["columns"] of me to pColumns
+      end if
+   end if
+   put the number of lines of pColumns into theColCount
+   
+   ## Store column item no's and total column count
+   put 0 into i
+   repeat for each line theColumn in pColumns
+      add 1 to i
+      put theColumn into theItemNoColumnA[i]
+   end repeat
+   
+   repeat for each line theLine in pText
+      local theRow
+      add 1 to theRow
+      put 0 into theColNum
+      put theRow & comma after theSequencing
+      if theLine is empty then
+         ## Fill in empty records for empty lines
+         repeat for each line theColumn in pColumns
+            put empty into theDataA[theRow][theColumn]
+         end repeat
+      else
+         repeat for each item theItem in theLine
+            add 1 to theColNum
+            put theItem into theDataA[theRow][ theItemNoColumnA[theColNum] ]
+            
+            if theColNum is theColCount then exit repeat
+         end repeat
+      end if
+   end repeat
+   delete the last char of theSequencing
+   
+   set the dgData [theSequencing] of me to theDataA
+   
+   unlock screen
 end _table.SetText
 
 
 private command _table.AddLine pText, pColumns, pLineNo
-    -----
-    local i
-    local theColNum, theColumn, theColumns, theItemNoColumnA
-    local theDataA
-    local theItem
-    local theLine,theResult
-    -----
-    lock screen
-     
-    set the itemDelimiter to tab
-    if pColumns is empty then
-        put the dgProps["columns"] of me into pColumns
-         
-        ## Make sure we have some columns defined
-        put the number of lines of pColumns into theColCount
-        if the number of lines of pColumns < the number of items of line 1 of pText then
-            if pColumns is not empty then put cr after pColumns
-            repeat with i = 1 to the number of items of line 1 of pText
-                if i > theColCount then
-                    put "Col" && i & cr after pColumns
-                end if
-            end repeat
-            delete the last char of pColumns
-            set the dgProps["columns"] of me to pColumns
-        end if
-    end if
-    put the number of lines of pColumns into theColCount
-     
-    ## Store column item no's and total column count
-    put 0 into i
-    repeat for each line theColumn in pColumns
-        add 1 to i
-        put theColumn into theItemNoColumnA[i]
-    end repeat
-     
-    ## add lines
-    repeat for each line theLine in pText
-        put 0 into theColNum
-        put empty into theDataA
-        repeat for each item theItem in theLine
-            add 1 to theColNum
-            put theItem into theDataA[ theItemNoColumnA[theColNum] ]
-            if theColNum is theColCount then exit repeat
-        end repeat
-         
-        ## Note: This redraws list each time. Officially we only support one line of text right
-        ## now but we could bring the logic of AddData inline and not redraw until the end.
-        AddData theDataA, pLineNo
-        put the result into theResult
-         
-        if pLineNo is not empty then add 1 to pLineNo
-    end repeat
-     
-    unlock screen
-     
-    return theResult
+   -----
+   local i
+   local theColNum, theColumn, theColumns, theItemNoColumnA
+   local theDataA
+   local theItem
+   local theLine,theResult
+   -----
+   lock screen
+   
+   set the itemDelimiter to tab
+   if pColumns is empty then
+      put the dgProps["columns"] of me into pColumns
+      
+      ## Make sure we have some columns defined
+      local theColCount
+      put the number of lines of pColumns into theColCount
+      if the number of lines of pColumns < the number of items of line 1 of pText then
+         if pColumns is not empty then put cr after pColumns
+         repeat with i = 1 to the number of items of line 1 of pText
+            if i > theColCount then
+               put "Col" && i & cr after pColumns
+            end if
+         end repeat
+         delete the last char of pColumns
+         set the dgProps["columns"] of me to pColumns
+      end if
+   end if
+   put the number of lines of pColumns into theColCount
+   
+   ## Store column item no's and total column count
+   put 0 into i
+   repeat for each line theColumn in pColumns
+      add 1 to i
+      put theColumn into theItemNoColumnA[i]
+   end repeat
+   
+   ## add lines
+   repeat for each line theLine in pText
+      put 0 into theColNum
+      put empty into theDataA
+      repeat for each item theItem in theLine
+         add 1 to theColNum
+         put theItem into theDataA[ theItemNoColumnA[theColNum] ]
+         if theColNum is theColCount then exit repeat
+      end repeat
+      
+      ## Note: This redraws list each time. Officially we only support one line of text right
+      ## now but we could bring the logic of AddData inline and not redraw until the end.
+      AddData theDataA, pLineNo
+      put the result into theResult
+      
+      if pLineNo is not empty then add 1 to pLineNo
+   end repeat
+   
+   unlock screen
+   
+   return theResult
 end _table.AddLine
 
 
@@ -3512,6 +3677,7 @@ private command _table.DeleteColumn pColumn
     -----
     local msgsAreLocked
     local theColPropsA
+    local theControl
     -----
     lock screen
     put sTableObjectsA["columns"][pColumn]["header"]["group"] into theControl
@@ -3626,222 +3792,234 @@ end _table.DeleteDataControls
 
 
 private command _table.LayoutRowHilites
-    put the lockMessages into msgsAreLocked
-    lock messages
-    
-    put the rect of group "dgList" of group "dgListMask" of me into theRect
-    put item 2 of theRect + sControlHeights into item 4 of theRect
-    repeat for each line theControl in sTableObjectsA["row hilite controls"]
-        set the rect of theControl to theRect
-        put item 4 of theRect into theTop
-        put theTop into item 2 of theRect
-        put theTop + sControlHeights  into item 4 of theRect
-        set the backgroundColor of theControl to _GetHiliteColor()
-    end repeat    
-    
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   local theRect
+   put the rect of group "dgList" of group "dgListMask" of me into theRect
+   put item 2 of theRect + sControlHeights into item 4 of theRect
+   repeat for each line theControl in sTableObjectsA["row hilite controls"]
+      set the rect of theControl to theRect
+      local theTop
+      put item 4 of theRect into theTop
+      put theTop into item 2 of theRect
+      put theTop + sControlHeights  into item 4 of theRect
+      set the backgroundColor of theControl to _GetHiliteColor()
+   end repeat    
+   
+   set the lockMessages to msgsAreLocked
 end _table.LayoutRowHilites
 
 
 private command _table.FillListWithJustEnoughControls
-     
-    put the lockMessages into msgsAreLocked
-     
-    put false into controlCountChanged
-    put the dgProps["row template"] of me into theTemplateGroup
-    put _table.VisibleColumns() into theColumns
-    put _ResourceStack() into theResourceStack
-     
-    ## Determine required control count
-    put _ControlsRequiredToFillSpace() into theRequiredControlCount
-     
-    ## Make sure we have enough controls to fill visible space
-    put sTableObjectsA["row control count"] into theCurrentControlCount
-    -- put the number of lines of (sTableObjectsA["columns"][line 1 of theColumns]["row controls"]) into theCurrentControlCount
-     
-    lock messages ## for speed
-     
-    if theRequiredControlCount > theCurrentControlCount then     
-        ##
-        ## Create highlight graphics
-        ##
-        reset the templategraphic
-        set the opaque of the templategraphic to true
-        set the lineSize of the templategraphic to 0
-        set the antialiased of the templategraphic to false
-         
-        --      put _CardOf() into theDGCard
-         
-        if sTableObjectsA["row hilite controls"] is not empty then put cr after sTableObjectsA["row hilite controls"]
-         
-        repeat with i = theCurrentControlCount + 1 to theRequiredControlCount
-            create graphic ("hilite" && format("%04d", i)) in group "dgHighlights" of group "dgListMask" of me
-            put "control id" && word 3 of it && "of me" & cr after sTableObjectsA["row hilite controls"]
-            set the visible of it to false
-        end repeat
-        delete the last char of sTableObjectsA["row hilite controls"]
-        reset the templategraphic
-         
-        _table.LayoutRowHilites
-         
-        ##
-        ## Create column controls
-        ##
-        _table.CreateControlsForColumns theColumns, theRequiredControlCount
-         
-        ## Store first column in list of all controls so other handler can use it for information purposes
-        put true into controlCountChanged
-         
-    else if theRequiredControlCount < theCurrentControlCount then
-        ## To many controls: Leave as is for later. //Delete them as this makes management much easier with controls spread across multiple columns.
-    else
-        ## We have just enough controls
-    end if
-     
-    set the lockMessages to msgsAreLocked
-     
-    return controlCountChanged
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   
+   local controlCountChanged, theTemplateGroup, theColumns, theResourceStack, theRequiredControlCount, theCurrentControlCount
+   put false into controlCountChanged
+   put the dgProps["row template"] of me into theTemplateGroup
+   put _table.VisibleColumns() into theColumns
+   put _ResourceStack() into theResourceStack
+   
+   ## Determine required control count
+   put _ControlsRequiredToFillSpace() into theRequiredControlCount
+   
+   ## Make sure we have enough controls to fill visible space
+   put sTableObjectsA["row control count"] into theCurrentControlCount
+   -- put the number of lines of (sTableObjectsA["columns"][line 1 of theColumns]["row controls"]) into theCurrentControlCount
+   
+   lock messages ## for speed
+   
+   if theRequiredControlCount > theCurrentControlCount then     
+      ##
+      ## Create highlight graphics
+      ##
+      reset the templategraphic
+      set the opaque of the templategraphic to true
+      set the lineSize of the templategraphic to 0
+      set the antialiased of the templategraphic to false
+      
+      --      put _CardOf() into theDGCard
+      
+      if sTableObjectsA["row hilite controls"] is not empty then put cr after sTableObjectsA["row hilite controls"]
+      
+      repeat with i = theCurrentControlCount + 1 to theRequiredControlCount
+         create graphic ("hilite" && format("%04d", i)) in group "dgHighlights" of group "dgListMask" of me
+         put "control id" && word 3 of it && "of me" & cr after sTableObjectsA["row hilite controls"]
+         set the visible of it to false
+      end repeat
+      delete the last char of sTableObjectsA["row hilite controls"]
+      reset the templategraphic
+      
+      _table.LayoutRowHilites
+      
+      ##
+      ## Create column controls
+      ##
+      _table.CreateControlsForColumns theColumns, theRequiredControlCount
+      
+      ## Store first column in list of all controls so other handler can use it for information purposes
+      put true into controlCountChanged
+      
+   else if theRequiredControlCount < theCurrentControlCount then
+      ## To many controls: Leave as is for later. //Delete them as this makes management much easier with controls spread across multiple columns.
+   else
+      ## We have just enough controls
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   return controlCountChanged
 end _table.FillListWithJustEnoughControls
 
 
 private command _table.CreateControlsForColumns pColumns, pRequiredControlCount
-    -----
-    local i
-    local msgsAreLocked
-    local theColPropsA, theColumn, theColWidth
-    local theControl
-    local theCurrentControlCount
-    local theResourceStack
-    local theTemplateGroup
-    local theTopLeft
-    -----
-    put the lockMessages into msgsAreLocked
-    unlock messages
-    put the dgProps["column margins"] of me into theMargins
-    lock messages
-     
-    if sTableObjectsA["row control count"] is not an integer then put 0 into sTableObjectsA["row control count"]
-    if pRequiredControlCount is not an integer or pRequiredControlCount < 0 then put sTableObjectsA["row control count"] into pRequiredControlCount
-     
-    ## Initialize
-    put the dgProps["row template"] of me into theTemplateGroup
-    put _ResourceStack() into theResourceStack
-    --    put _CardOf() into theDGCard
-    put the dgProps["column properties"] of me into theColPropsA
-     
-    ## Create
-    repeat for each line theColumn in pColumns
-        put the number of lines of sTableObjectsA["columns"][theColumn]["row controls"] into theCurrentControlCount
-        if theCurrentControlCount >= pRequiredControlCount then next repeat
-         
-        ## We store each column's controls in separate list
-        ## Initialize geometry vars for this column
-        if sTableObjectsA["columns"][theColumn]["row controls"] is not empty then
-            put the bottomLeft of (the last line of sTableObjectsA["columns"][theColumn]["row controls"]) into theTopLeft
-            put cr after sTableObjectsA["columns"][theColumn]["row controls"]
-        else
-            put the topLeft of group theColumn of group "dgList" of me into theTopLeft
-        end if
-        put the width of group theColumn of group "dgList" of me into theColWidth
-         
-        repeat with i = theCurrentControlCount + 1 to pRequiredControlCount
-            if sTableObjectsA["columns"][theColumn]["uses custom template"] then
-                copy control theColumn of theTemplateGroup to group theColumn of group "dgList" of me
-                ## Use default behavior if control doesn't have one assigned.
-                if the behavior of it is empty then
-                    if the dgProps["default column behavior"] of me is empty then
-                        set the behavior of it to the long ID of button "Default Column" of theResourceStack
-                    else
-                        set the behavior of it to the dgProps["default column behavior"] of me
-                    end if
-                end if
-            else
-                _table.ConfigureTemplateFieldForColumn line 1 of pColumns
-                create field in group theColumn of group "dgList" of me
-                set the textAlign of it to theColPropsA[theColumn]["alignment"]
-                set the margins of it to theMargins
-                if the dgProps["default column behavior"] of me is empty then
-                    set the behavior of it to the long ID of button "Default Column" of theResourceStack
-                else
-                    set the behavior of it to the dgProps["default column behavior"] of me
-                end if
+   -----
+   local i
+   local msgsAreLocked
+   local theColPropsA, theColumn, theColWidth
+   local theControl
+   local theCurrentControlCount
+   local theResourceStack
+   local theTemplateGroup
+   local theTopLeft
+   local theMargins
+   -----
+   put the lockMessages into msgsAreLocked
+   unlock messages
+   put the dgProps["column margins"] of me into theMargins
+   lock messages
+   
+   if sTableObjectsA["row control count"] is not an integer then put 0 into sTableObjectsA["row control count"]
+   if pRequiredControlCount is not an integer or pRequiredControlCount < 0 then put sTableObjectsA["row control count"] into pRequiredControlCount
+   
+   ## Initialize
+   put the dgProps["row template"] of me into theTemplateGroup
+   put _ResourceStack() into theResourceStack
+   --    put _CardOf() into theDGCard
+   put the dgProps["column properties"] of me into theColPropsA
+   
+   ## Create
+   repeat for each line theColumn in pColumns
+      put the number of lines of sTableObjectsA["columns"][theColumn]["row controls"] into theCurrentControlCount
+      if theCurrentControlCount >= pRequiredControlCount then next repeat
+      
+      ## We store each column's controls in separate list
+      ## Initialize geometry vars for this column
+      if sTableObjectsA["columns"][theColumn]["row controls"] is not empty then
+         put the bottomLeft of (the last line of sTableObjectsA["columns"][theColumn]["row controls"]) into theTopLeft
+         put cr after sTableObjectsA["columns"][theColumn]["row controls"]
+      else
+         put the topLeft of group theColumn of group "dgList" of me into theTopLeft
+      end if
+      put the width of group theColumn of group "dgList" of me into theColWidth
+      
+      repeat with i = theCurrentControlCount + 1 to pRequiredControlCount
+         if sTableObjectsA["columns"][theColumn]["uses custom template"] then
+            copy control theColumn of theTemplateGroup to group theColumn of group "dgList" of me
+            ## Use default behavior if control doesn't have one assigned.
+            if the behavior of it is empty then
+               if the dgProps["default column behavior"] of me is empty then
+                  set the behavior of it to the long ID of button "Default Column" of theResourceStack
+               else
+                  set the behavior of it to the dgProps["default column behavior"] of me
+               end if
             end if
-            put it into theControl
-            set the name of theControl to theColumn && format("%04d", i)
-             
-            ## Take control of geometry
-            set the lockloc of theControl to true
-             
-            put theTopLeft into theRect
-            put item 1 of theRect + theColWidth into item 3 of theRect
-            put item 2 of theRect + sControlHeights into item 4 of theRect
-             
-            set the topLeft of theControl to theTopLeft
-            set the rect of theControl to theRect
-            unlock messages
-            dispatch "LayoutControl" to theControl with theRect
-            lock messages
-            add sControlHeights to item 2 of theTopLeft
-             
-            ## We store each column's controls in separate list
-            put "control id" && word 3 of theControl && "of me" & cr after sTableObjectsA["columns"][theColumn]["row controls"]
-        end repeat
+         else
+            _table.ConfigureTemplateFieldForColumn line 1 of pColumns
+            create field in group theColumn of group "dgList" of me
+            set the textAlign of it to theColPropsA[theColumn]["alignment"]
+            set the margins of it to theMargins
+            if the dgProps["default column behavior"] of me is empty then
+               set the behavior of it to the long ID of button "Default Column" of theResourceStack
+            else
+               set the behavior of it to the dgProps["default column behavior"] of me
+            end if
+         end if
+         put it into theControl
+         set the name of theControl to theColumn && format("%04d", i)
          
-        delete the last char of sTableObjectsA["columns"][theColumn]["row controls"]
-    end repeat
-     
-    put the number of lines of sTableObjectsA["columns"][line 1 of pColumns]["row controls"] into sTableObjectsA["row control count"]
-     
-    unlock messages
-     
-    set the lockMessages to msgsAreLocked
-    return empty
+         ## Take control of geometry
+         set the lockloc of theControl to true
+         
+         local theRect
+         put theTopLeft into theRect
+         put item 1 of theRect + theColWidth into item 3 of theRect
+         put item 2 of theRect + sControlHeights into item 4 of theRect
+         
+         set the topLeft of theControl to theTopLeft
+         set the rect of theControl to theRect
+         unlock messages
+         dispatch "LayoutControl" to theControl with theRect
+         lock messages
+         add sControlHeights to item 2 of theTopLeft
+         
+         ## We store each column's controls in separate list
+         put "control id" && word 3 of theControl && "of me" & cr after sTableObjectsA["columns"][theColumn]["row controls"]
+      end repeat
+      
+      delete the last char of sTableObjectsA["columns"][theColumn]["row controls"]
+   end repeat
+   
+   put the number of lines of sTableObjectsA["columns"][line 1 of pColumns]["row controls"] into sTableObjectsA["row control count"]
+   
+   unlock messages
+   
+   set the lockMessages to msgsAreLocked
+   return empty
 end _table.CreateControlsForColumns
 
 
 private command _table.DrawControlsInRealTime pForceRefresh
-    put _table.AreColumnsVisibleWithinMask() into theColumnsA
-     
-    if the keys of sTableObjectsA["columns"] is empty or sTableObjectsA["columns"][line 1 of theColumnsA["visible"]]["group"] is empty then
-        _table.CreateColumns
-    end if
-     
-    ## Make sure there are enough controls
-    _table.FillListWithJustEnoughControls
-    put the result into controlCountWasModified
-    
-    ## We use sequencing to draw, not indexes
-    set the wholeMatches to true
-    put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
-    put 0 into theControlIndex
-     
-    ## Do we need to redraw?
-    put not controlCountWasModified and \
-            sTableObjectsA["base sequence for last rendering"] is sTableObjectsA["base sequence for visible controls"] into noRedrawNeeded
-     
-    if not noRedrawNeeded or pForceRefresh then  
-        if pForceRefresh then
-            ## force refresh should redraw all columns at once
-            _table.DrawColumns _table.VisibleColumns()
-            -- put "drawing all columns:" && the milliseconds
-        else
-            _table.DrawColumns theColumnsA["visible"] --the dgProps["columns"] of me
-            
-            ## If user is interacting with scrollbar then no need to throttle.
-            ## Just redraw on mouseUp
-            cancel sPendingMsgsA["draw hidden columns"]
-            if not sRunningActionsA["user is vscrolling"] then
-                put theColumnsA["hidden"] into theHiddenColumns
-                send "table.DrawColumns theHiddenColumns" to me in 200 milliseconds
-                put the result into sPendingMsgsA["draw hidden columns"]
-            end if
-        end if
+   local theColumnsA
+   put _table.AreColumnsVisibleWithinMask() into theColumnsA
+   
+   if the keys of sTableObjectsA["columns"] is empty or sTableObjectsA["columns"][line 1 of theColumnsA["visible"]]["group"] is empty then
+      _table.CreateColumns
+   end if
+   
+   ## Make sure there are enough controls
+   _table.FillListWithJustEnoughControls
+   local controlCountWasModified
+   put the result into controlCountWasModified
+   
+   ## We use sequencing to draw, not indexes
+   set the wholeMatches to true
+   local theIndexesInSequence
+   put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexesInSequence
+   local theControlIndex
+   put 0 into theControlIndex
+   
+   ## Do we need to redraw?
+   local noRedrawNeeded
+   put not controlCountWasModified and \
+         sTableObjectsA["base sequence for last rendering"] is sTableObjectsA["base sequence for visible controls"] into noRedrawNeeded
+   
+   if not noRedrawNeeded or pForceRefresh then  
+      if pForceRefresh then
+         ## force refresh should redraw all columns at once
+         _table.DrawColumns _table.VisibleColumns()
+         -- put "drawing all columns:" && the milliseconds
+      else
+         _table.DrawColumns theColumnsA["visible"] --the dgProps["columns"] of me
          
-        ## Cache what we started on last time
-        put sTableObjectsA["base sequence for visible controls"] into sTableObjectsA["base sequence for last rendering"]
-    end if
-     
-    return empty
+         ## If user is interacting with scrollbar then no need to throttle.
+         ## Just redraw on mouseUp
+         cancel sPendingMsgsA["draw hidden columns"]
+         if not sRunningActionsA["user is vscrolling"] then
+            local theHiddenColumns
+            put theColumnsA["hidden"] into theHiddenColumns
+            send "table.DrawColumns theHiddenColumns" to me in 200 milliseconds
+            put the result into sPendingMsgsA["draw hidden columns"]
+         end if
+      end if
+      
+      ## Cache what we started on last time
+      put sTableObjectsA["base sequence for visible controls"] into sTableObjectsA["base sequence for last rendering"]
+   end if
+   
+   return empty
 end _table.DrawControlsInRealTime
 
 
@@ -3852,167 +4030,179 @@ end table.DrawColumns
 
 
 private command _table.DrawColumns pColumns, pIndexesToDraw
-    put the milliseconds into theStart #####!!!!!
-    
-    if pColumns is empty then return empty
-    
-    lock screen
-    put the lockMessages into msgsAreLocked
-    set the wholeMatches to true
-    
-    ## Default is not to pass in value for pIndexes to draw in which case
-    ## we use the base sequence for visible controls to determine indexes to draw
-    if pIndexesToDraw is not empty then
-        put itemOffset(item 1 of pIndexesToDraw, sIndexSequencing) - 1 into theSequence
-    else
-        put item sTableObjectsA["base sequence for visible controls"] to \
-                (sTableObjectsA["base sequence for visible controls"] + sTableObjectsA["row control count"] - 1) of sIndexSequencing into pIndexesToDraw
-        put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
-    end if
-    
-    ## Initialize now as this is used regardless of whether or not we have indexes to draw
-    put 0 into theControlIndex
-    
-    if pIndexesToDraw is not empty then
-        ## Get geometry properties
-        put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-        put item 1 to 2 of theListGroupRect into theTopLeft
-        
-        ## How many vertical controls do we need to draw?
-        -- put _ControlsRequiredToFillSpace() into theMaxControlNumber
-        
-        repeat for each line theColumn in pColumns
-            ## Get lookup table for indexes that already have controls with correct data
-            put the topLeft of sTableObjectsA["columns"][theColumn]["group"] into theTopLeftA[theColumn]
-            put _GenerateReorderedControlList(sTableObjectsA["columns"][theColumn]["row controls"], pIndexesToDraw) into theMasterControlList[theColumn]
-             
-            ## Store line indexes
-            put empty into sTableObjectsA["columns"][theColumn]["control line numbers"]
-            repeat for each line theControl in theMasterControlList[theColumn]
-                put lineOffset(theControl, sTableObjectsA["columns"][theColumn]["row controls"]) & comma after sTableObjectsA["columns"][theColumn]["control line numbers"]
-            end repeat
-            delete the last char of sTableObjectsA["columns"][theColumn]["control line numbers"]
-        end repeat
-        -- PrintKeys theMasterControlList 
-        -- put cr & cr & the executioncontexts after msg
+   local theStart
+   put the milliseconds into theStart #####!!!!!
+   
+   if pColumns is empty then return empty
+   
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   set the wholeMatches to true
+   
+   ## Default is not to pass in value for pIndexes to draw in which case
+   ## we use the base sequence for visible controls to determine indexes to draw
+   if pIndexesToDraw is not empty then
+      local theSequence
+      put itemOffset(item 1 of pIndexesToDraw, sIndexSequencing) - 1 into theSequence
+   else
+      put item sTableObjectsA["base sequence for visible controls"] to \
+            (sTableObjectsA["base sequence for visible controls"] + sTableObjectsA["row control count"] - 1) of sIndexSequencing into pIndexesToDraw
+      put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
+   end if
+   
+   ## Initialize now as this is used regardless of whether or not we have indexes to draw
+   local theControlIndex
+   put 0 into theControlIndex
+   
+   if pIndexesToDraw is not empty then
+      ## Get geometry properties
+      local theListGroupRect, theTopLeft
+      put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+      put item 1 to 2 of theListGroupRect into theTopLeft
+      
+      ## How many vertical controls do we need to draw?
+      -- put _ControlsRequiredToFillSpace() into theMaxControlNumber
+      
+      repeat for each line theColumn in pColumns
+         ## Get lookup table for indexes that already have controls with correct data
+         local theTopLeftA, theMasterControlList
+         put the topLeft of sTableObjectsA["columns"][theColumn]["group"] into theTopLeftA[theColumn]
+         put _GenerateReorderedControlList(sTableObjectsA["columns"][theColumn]["row controls"], pIndexesToDraw) into theMasterControlList[theColumn]
          
-        ## Draw it
-        unlock messages
-        repeat for each item theIndex in pIndexesToDraw
-            add 1 to theControlIndex
-            add 1 to theSequence
-             
-            ## get row data
-            if sDataArray[theIndex] is NULL then
-                GetDataForLine theSequence, theDataA
-            end if
-             
-            ## Deal with rows controls
-            repeat for each line theColumn in pColumns
-                put line theControlIndex of theMasterControlList[theColumn] into theControl
-                
-                -- if there is not a theControl then
-                -- put "Control for index " & theControlIndex & " does not exist for column " & theColumn & cr & cr & \
-                        -- the executioncontexts & cr & cr &  \
-                        -- "theMasterControlList:" & cr & _PrintKeys(theMasterControlList) & cr & cr & \
-                        -- "sDataArray:" && _PrintKeys(sDataArray) after msg
-                -- end if
-                
-                put the dgIndex of theControl into theCurrentIndex
-                if theIndex is not theCurrentIndex then
-                    ## Allow developer to do something if unloading control
-                    if theCurrentIndex is not empty then
-                        unlock messages
-                        dispatch "PreFillInData" to theControl
-                        lock messages
-                    end if
-                     
-                    set the visible of theControl to true
-                    lock messages
-                    set the dgIndex of theControl to theIndex
-                    unlock messages
-                    if sDataArray[theIndex] is NULL then
-                        dispatch "FillInData" to theControl with theDataA[theColumn]
-                    else
-                        dispatch "FillInData" to theControl with sDataArray[theIndex][theColumn]
-                    end if
-                else
-                    -- put "not drawing index " & theIndex & " for column" && theColumn & cr after msg
-                    -- no need to redraw
-                end if
-                
-                set the topLeft of theControl to theTopLeftA[theColumn]
-                add sControlHeights to item 2 of theTopLeftA[theColumn]
-            end repeat
+         ## Store line indexes
+         put empty into sTableObjectsA["columns"][theColumn]["control line numbers"]
+         repeat for each line theControl in theMasterControlList[theColumn]
+            put lineOffset(theControl, sTableObjectsA["columns"][theColumn]["row controls"]) & comma after sTableObjectsA["columns"][theColumn]["control line numbers"]
+         end repeat
+         delete the last char of sTableObjectsA["columns"][theColumn]["control line numbers"]
+      end repeat
+      -- PrintKeys theMasterControlList 
+      -- put cr & cr & the executioncontexts after msg
+      
+      ## Draw it
+      unlock messages
+      repeat for each item theIndex in pIndexesToDraw
+         add 1 to theControlIndex
+         add 1 to theSequence
+         
+         ## get row data
+         local theDataA
+         if sDataArray[theIndex] is NULL then
+            GetDataForLine theSequence, theDataA
+         end if
+         
+         ## Deal with rows controls
+         repeat for each line theColumn in pColumns
+            put line theControlIndex of theMasterControlList[theColumn] into theControl
             
-            ## Hilited index?            
-            if theIndex is among the items of sHilitedIndexes then
-                _table.HiliteRow theControlIndex, true
+            -- if there is not a theControl then
+            -- put "Control for index " & theControlIndex & " does not exist for column " & theColumn & cr & cr & \
+                  -- the executioncontexts & cr & cr &  \
+            -- "theMasterControlList:" & cr & _PrintKeys(theMasterControlList) & cr & cr & \
+                  -- "sDataArray:" && _PrintKeys(sDataArray) after msg
+            -- end if
+            local theCurrentIndex
+            put the dgIndex of theControl into theCurrentIndex
+            if theIndex is not theCurrentIndex then
+               ## Allow developer to do something if unloading control
+               if theCurrentIndex is not empty then
+                  unlock messages
+                  dispatch "PreFillInData" to theControl
+                  lock messages
+               end if
+               
+               set the visible of theControl to true
+               lock messages
+               set the dgIndex of theControl to theIndex
+               unlock messages
+               if sDataArray[theIndex] is NULL then
+                  dispatch "FillInData" to theControl with theDataA[theColumn]
+               else
+                  dispatch "FillInData" to theControl with sDataArray[theIndex][theColumn]
+               end if
             else
-                _table.HiliteRow theControlIndex, false
+               -- put "not drawing index " & theIndex & " for column" && theColumn & cr after msg
+               -- no need to redraw
             end if
-        end repeat
-        
-        put pIndexesToDraw into sTableObjectsA["current"]["indexes"]
-    end if
-    
-    ## Reset hilites and hide any extra controls for columns
-    lock messages
-    repeat for each line theColumn in pColumns
-        _ResetControls line (theControlIndex + 1) to -1 of theMasterControlList[theColumn]
-    end repeat
-    repeat with theControlIndex = theControlIndex + 1 to the number of lines of theMasterControlList[line 1 of pColumns]
-        _table.HiliteRow theControlIndex, false         
-    end repeat
-    unlock messages
-     
-    -- put "time spent in" && param(0) & ":" && the milliseconds - theStart & cr --after msg
-     
-    set the lockMessages to msgsAreLocked
-    unlock screen    
-     
-    -- put theLog & cr after msg
-    return empty
+            
+            set the topLeft of theControl to theTopLeftA[theColumn]
+            add sControlHeights to item 2 of theTopLeftA[theColumn]
+         end repeat
+         
+         ## Hilited index?            
+         if theIndex is among the items of sHilitedIndexes then
+            _table.HiliteRow theControlIndex, true
+         else
+            _table.HiliteRow theControlIndex, false
+         end if
+      end repeat
+      
+      put pIndexesToDraw into sTableObjectsA["current"]["indexes"]
+   end if
+   
+   ## Reset hilites and hide any extra controls for columns
+   lock messages
+   repeat for each line theColumn in pColumns
+      _ResetControls line (theControlIndex + 1) to -1 of theMasterControlList[theColumn]
+   end repeat
+   repeat with theControlIndex = theControlIndex + 1 to the number of lines of theMasterControlList[line 1 of pColumns]
+      _table.HiliteRow theControlIndex, false         
+   end repeat
+   unlock messages
+   
+   -- put "time spent in" && param(0) & ":" && the milliseconds - theStart & cr --after msg
+   
+   set the lockMessages to msgsAreLocked
+   unlock screen    
+   
+   -- put theLog & cr after msg
+   return empty
 end _table.DrawColumns
 
 
 private command _table.HiliteIndexesInVisibleControls
-    put line 1 of _table.VisibleColumns() into theColumn
-    if theColumn is empty then return empty
-    
-    set the wholeMatches to true
-    lock screen
-    put 0 into i
-    put item sTableObjectsA["base sequence for visible controls"] to \
-            (sTableObjectsA["base sequence for visible controls"] + sTableObjectsA["row control count"]) of sIndexSequencing into theIndexes
-    repeat for each item theIndex in theIndexes
-        add 1 to i
-        put theIndex is among the items of sHilitedIndexes into theBoolean
-        _table.HiliteRow i, theBoolean
-    end repeat
-    unlock screen
+   local theColumn, i, theIndexes, theBoolean
+   put line 1 of _table.VisibleColumns() into theColumn
+   if theColumn is empty then return empty
+   
+   set the wholeMatches to true
+   lock screen
+   put 0 into i
+   put item sTableObjectsA["base sequence for visible controls"] to \
+         (sTableObjectsA["base sequence for visible controls"] + sTableObjectsA["row control count"]) of sIndexSequencing into theIndexes
+   repeat for each item theIndex in theIndexes
+      add 1 to i
+      put theIndex is among the items of sHilitedIndexes into theBoolean
+      _table.HiliteRow i, theBoolean
+   end repeat
+   unlock screen
 end _table.HiliteIndexesInVisibleControls
 
 
 private command _table.HiliteRow pRow, pBoolean
-    put line pRow of sTableObjectsA["row hilite controls"] into theControl
-    if theControl is empty then return empty
-    
-    put _table.VisibleColumns() into theColumns
-    put the lockMessages into msgsAreLocked
-    unlock messages
-    
-    lock screen
-    set the visible of theControl to pBoolean
-    
-    repeat for each line theColumn in theColumns
-        put item pRow of sTableObjectsA["columns"][theColumn]["control line numbers"] into theLineNo
-        put line theLineNo of sTableObjectsA["columns"][theColumn]["row controls"] into theControl
-        if theControl is empty then exit repeat
-        set the dgHilite of theControl to pBoolean
-    end repeat
-    unlock screen
-    set the lockMessages to msgsAreLocked
+   local theControl, theColumns
+   put line pRow of sTableObjectsA["row hilite controls"] into theControl
+   if theControl is empty then return empty
+   
+   put _table.VisibleColumns() into theColumns
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   unlock messages
+   
+   lock screen
+   set the visible of theControl to pBoolean
+   
+   repeat for each line theColumn in theColumns
+      local theLineNo
+      put item pRow of sTableObjectsA["columns"][theColumn]["control line numbers"] into theLineNo
+      put line theLineNo of sTableObjectsA["columns"][theColumn]["row controls"] into theControl
+      if theControl is empty then exit repeat
+      set the dgHilite of theControl to pBoolean
+   end repeat
+   unlock screen
+   set the lockMessages to msgsAreLocked
 end _table.HiliteRow
 
 
@@ -4036,23 +4226,24 @@ end _table.ConfigureTemplateFieldForColumn
 
 
 private command _table.CacheCustomTemplateUsage
-    put the dgProps["row template"] of me into theTemplateGroup
-    put the dgProps["columns"] of me into theColumns
-     
-    put there is a theTemplateGroup into templateExists
-    repeat for each line theColumn in theColumns
-        if templateExists then
-            put there is a control theColumn of theTemplateGroup \
-                    and the long ID of the owner of control theColumn of theTemplateGroup is the long ID of theTemplateGroup \
-                    into sTableObjectsA["columns"][theColumn]["uses custom template"]
-            put there is a control (theColumn && "[Header]") of theTemplateGroup \
-                    and the long ID of the owner of control (theColumn && "[Header]") of theTemplateGroup is the long ID of theTemplateGroup \
-                    into sTableObjectsA["columns"][theColumn]["header"]["uses custom template"]
-        else
-            put false into sTableObjectsA["columns"][theColumn]["uses custom template"]
-            put false into sTableObjectsA["columns"][theColumn]["header"]["uses custom template"]
-        end if
-    end repeat
+   local theTemplateGroup, theColumns, templateExists
+   put the dgProps["row template"] of me into theTemplateGroup
+   put the dgProps["columns"] of me into theColumns
+   
+   put there is a theTemplateGroup into templateExists
+   repeat for each line theColumn in theColumns
+      if templateExists then
+         put there is a control theColumn of theTemplateGroup \
+               and the long ID of the owner of control theColumn of theTemplateGroup is the long ID of theTemplateGroup \
+               into sTableObjectsA["columns"][theColumn]["uses custom template"]
+         put there is a control (theColumn && "[Header]") of theTemplateGroup \
+               and the long ID of the owner of control (theColumn && "[Header]") of theTemplateGroup is the long ID of theTemplateGroup \
+               into sTableObjectsA["columns"][theColumn]["header"]["uses custom template"]
+      else
+         put false into sTableObjectsA["columns"][theColumn]["uses custom template"]
+         put false into sTableObjectsA["columns"][theColumn]["header"]["uses custom template"]
+      end if
+   end repeat
 end _table.CacheCustomTemplateUsage
 
 
@@ -4082,19 +4273,20 @@ end _table.RegenerateColumns
 
 ## Return list of visible controls in proper order
 private function _ListOfVisibleControls
-    if _ControlType() is "table" then
-        ## list of controls for a column contains all visible controls.
-        ## There might be less data than controls.
-        repeat for each line theControl in sTableObjectsA["columns"][ _table.FirstVisibleColumn() ]["row controls"]
-            if the visible of theControl then
-                put theControl & cr after theControls
-            end if
-        end repeat
-        delete the last char of theControls
-        return _GenerateReorderedControlList(theControls, sTableObjectsA["current"]["indexes"])
-    else
-        return sTableObjectsA["visible row controls"]
-    end if
+   local theControls
+   if _ControlType() is "table" then
+      ## list of controls for a column contains all visible controls.
+      ## There might be less data than controls.
+      repeat for each line theControl in sTableObjectsA["columns"][ _table.FirstVisibleColumn() ]["row controls"]
+         if the visible of theControl then
+            put theControl & cr after theControls
+         end if
+      end repeat
+      delete the last char of theControls
+      return _GenerateReorderedControlList(theControls, sTableObjectsA["current"]["indexes"])
+   else
+      return sTableObjectsA["visible row controls"]
+   end if
 end _ListOfVisibleControls
 
 
@@ -4134,146 +4326,157 @@ end _table.VisibleColumns
 ## Returns array [hidden|visible] containing list of column
 ## names that are hidden and visible within the list mask
 private function _table.AreColumnsVisibleWithinMask
-    put _table.VisibleColumns() into theColumns
-    put _table.GetEffectiveColumnWidths() into theWidths
-     
-    put the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theMinX
-    put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
-    put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theVisibleWidth
-    put theMinX + theVisibleWidth into theMaxX
-    
-    put 0 into theItemNo
-    put 0 into theTotalWidth
-    repeat for each line theColumn in theColumns
-        if theTotalWidth > theMaxX then
+   local theColumns, theWidths
+   put _table.VisibleColumns() into theColumns
+   put _table.GetEffectiveColumnWidths() into theWidths
+   
+   local theMinX, theRect, theVisibleWidth, theMaxX, theItemNo, theTotalWidth
+   put the dgHScroll of me into theMinX
+   put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
+   put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theVisibleWidth
+   put theMinX + theVisibleWidth into theMaxX
+   
+   put 0 into theItemNo
+   put 0 into theTotalWidth
+   repeat for each line theColumn in theColumns
+      local theColumnsA
+      if theTotalWidth > theMaxX then
+         put theColumn & cr after theColumnsA["hidden"]
+      else
+         add 1 to theItemNo
+         local theColWidth
+         put item theItemNo of theWidths into theColWidth
+         if theTotalWidth + theColWidth < theMinX then
             put theColumn & cr after theColumnsA["hidden"]
-        else
-            add 1 to theItemNo
-            put item theItemNo of theWidths into theColWidth
-            if theTotalWidth + theColWidth < theMinX then
-                put theColumn & cr after theColumnsA["hidden"]
-                add theColWidth to theTotalWidth
-            else
-                put theColumn & cr after theColumnsA["visible"]
-                add theColWidth to theTotalWidth
-            end if
-        end if
-    end repeat
-     
-    return theColumnsA
+            add theColWidth to theTotalWidth
+         else
+            put theColumn & cr after theColumnsA["visible"]
+            add theColWidth to theTotalWidth
+         end if
+      end if
+   end repeat
+   
+   return theColumnsA
 end _table.AreColumnsVisibleWithinMask
 
 
 private command _table.CreateColumns
-    lock screen
-    put the lockMessages into msgsAreLocked
-    lock messages
-     
-    put _ResourceStack() into theResourceStack
-     
-    put _GetHScrollPercent() into theOrigHScroll
-    _ResetHScrollToZero
-     
-    ## Note: We generate a group for all columns whether visible or not
-    ## This is just easier for the time being. Perhaps change later.
-    put the dgProps["columns"] of me into theColumns
-    put item 1 to 2 of the rect of group "dgList" of me into theTopLeft
-     
-    ## Loop through existing columns and delete out those that are no
-    ## longer included
-    set the wholeMatches to true
-    repeat for each key theColumn in sTableObjectsA["columns"]
-        if theColumn is not among the lines of theColumns then
-            _table.DeleteColumn theColumn
-        end if
-    end repeat
-     
-    ## delete column props (I don't think this is necessary since
-    ## adding _table.deleteColumn but haven't tested yet)
-    put the dgProps["column properties"] of me into theColPropsA
-    repeat for each key theColumn in theColPropsA
-        if theColumn is not among the lines of theColumns then
-            delete local theColPropsA[theColumn]
-        end if
-    end repeat
-     
-    _table.CacheCustomTemplateUsage
-     
-    _table.CreateHeaders
-     
-    ## Prepare to create controls
-    reset the templategroup
-    set the lockloc of the templategroup to true
-    set the showBorder of the templategroup to false
-    set the margins of the templategroup to 0
-    set the borderWidth of the templategroup to 0
-    set the showName of the templategroup to false
-     
-    reset the templategraphic
-     
-    --    put _CardOf() into theDGCard
-     
-    ## Create controls
-    repeat for each line theColumn in theColumns
-        ## Set default values
-        if theColumn is not among the keys of theColPropsA then
-            put true into theColPropsA[theColumn]["visible"]
-            put "left" into theColPropsA[theColumn]["alignment"]
-            put "ascending" into theColPropsA[theColumn]["sort direction"]
-            put "text" into theColPropsA[theColumn]["sort type"]
-            put false into theColPropsA[theColumn]["sort is case sensitive"]
-            put 100 into theColPropsA[theColumn]["width"]
-            put 40 into theColPropsA[theColumn]["min width"]
-            put 1000 into theColPropsA[theColumn]["max width"]
-            put true into theColPropsA[theColumn]["resizable"]
-        end if
-         
-        ## Column
-        if sTableObjectsA["columns"][theColumn]["group"] is empty then
-            create group theColumn in group "dgList" of me
-            put "control id" && word 3 of it && "of me" into sTableObjectsA["columns"][theColumn]["group"]
-            set the topLeft of it to theTopLeft
-            set the visible of it to theColPropsA[theColumn]["visible"]
-            set the behavior of it to the long ID of button "Column Group" of group "Behaviors" of theResourceStack
-        end if
-         
-        ## column divider
-        if sTableObjectsA["columns"][theColumn]["divider control"] is empty then
-            create graphic in group "dgDividers" of group "dgListMask" of me
-            put "control id" && word 3 of it && "of me" into sTableObjectsA["columns"][theColumn]["divider control"]
-            set the enabled of it to false ## don't want it to get messages
-            set the foregroundColor of it to the dgProps["column divider color"] of me
-            set the rect of it to theTopLeft, item 1 of theTopLeft + 1, item 2 of theTopLeft + 1
-        end if
-    end repeat
-     
-    reset the templategroup
-    reset the templategraphic
-     
-    ## Toggle visibility controls
-    repeat for each line theColumn in theColumns
-        set the visible of sTableObjectsA["columns"][theColumn]["group"] to theColPropsA[theColumn]["visible"]
-        set the visible of sTableObjectsA["columns"][theColumn]["header"]["group"] to theColPropsA[theColumn]["visible"]
-    end repeat
-     
-    set the dgProps["column properties"] of me to theColPropsA
-     
-    _table.ResizeColumns
-     
-    unlock messages
-     
-    ## Outside of locked messages so content draws
-    _SetHScrollPercent theOrigHScroll
-     
-    set the lockMessages to msgsAreLocked
-     
-    unlock screen
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   local theResourceStack
+   put _ResourceStack() into theResourceStack
+   
+   local theOrigHScroll
+   put _GetHScrollPercent() into theOrigHScroll
+   _ResetHScrollToZero
+   
+   ## Note: We generate a group for all columns whether visible or not
+   ## This is just easier for the time being. Perhaps change later.
+   local theColumns, theTopLeft
+   put the dgProps["columns"] of me into theColumns
+   put item 1 to 2 of the rect of group "dgList" of me into theTopLeft
+   
+   ## Loop through existing columns and delete out those that are no
+   ## longer included
+   set the wholeMatches to true
+   repeat for each key theColumn in sTableObjectsA["columns"]
+      if theColumn is not among the lines of theColumns then
+         _table.DeleteColumn theColumn
+      end if
+   end repeat
+   
+   ## delete column props (I don't think this is necessary since
+   ## adding _table.deleteColumn but haven't tested yet)
+   local theColPropsA
+   put the dgProps["column properties"] of me into theColPropsA
+   repeat for each key theColumn in theColPropsA
+      if theColumn is not among the lines of theColumns then
+         delete local theColPropsA[theColumn]
+      end if
+   end repeat
+   
+   _table.CacheCustomTemplateUsage
+   
+   _table.CreateHeaders
+   
+   ## Prepare to create controls
+   reset the templategroup
+   set the lockloc of the templategroup to true
+   set the showBorder of the templategroup to false
+   set the margins of the templategroup to 0
+   set the borderWidth of the templategroup to 0
+   set the showName of the templategroup to false
+   
+   reset the templategraphic
+   
+   --    put _CardOf() into theDGCard
+   
+   ## Create controls
+   repeat for each line theColumn in theColumns
+      ## Set default values
+      if theColumn is not among the keys of theColPropsA then
+         put true into theColPropsA[theColumn]["visible"]
+         put "left" into theColPropsA[theColumn]["alignment"]
+         put "ascending" into theColPropsA[theColumn]["sort direction"]
+         put "text" into theColPropsA[theColumn]["sort type"]
+         put false into theColPropsA[theColumn]["sort is case sensitive"]
+         put 100 into theColPropsA[theColumn]["width"]
+         put 40 into theColPropsA[theColumn]["min width"]
+         put 1000 into theColPropsA[theColumn]["max width"]
+         put true into theColPropsA[theColumn]["resizable"]
+      end if
+      
+      ## Column
+      if sTableObjectsA["columns"][theColumn]["group"] is empty then
+         create group theColumn in group "dgList" of me
+         put "control id" && word 3 of it && "of me" into sTableObjectsA["columns"][theColumn]["group"]
+         set the topLeft of it to theTopLeft
+         set the visible of it to theColPropsA[theColumn]["visible"]
+         set the behavior of it to the long ID of button "Column Group" of group "Behaviors" of theResourceStack
+      end if
+      
+      ## column divider
+      if sTableObjectsA["columns"][theColumn]["divider control"] is empty then
+         create graphic in group "dgDividers" of group "dgListMask" of me
+         put "control id" && word 3 of it && "of me" into sTableObjectsA["columns"][theColumn]["divider control"]
+         set the enabled of it to false ## don't want it to get messages
+         set the foregroundColor of it to the dgProps["column divider color"] of me
+         set the rect of it to theTopLeft, item 1 of theTopLeft + 1, item 2 of theTopLeft + 1
+      end if
+   end repeat
+   
+   reset the templategroup
+   reset the templategraphic
+   
+   ## Toggle visibility controls
+   repeat for each line theColumn in theColumns
+      set the visible of sTableObjectsA["columns"][theColumn]["group"] to theColPropsA[theColumn]["visible"]
+      set the visible of sTableObjectsA["columns"][theColumn]["header"]["group"] to theColPropsA[theColumn]["visible"]
+   end repeat
+   
+   set the dgProps["column properties"] of me to theColPropsA
+   
+   _table.ResizeColumns
+   
+   unlock messages
+   
+   ## Outside of locked messages so content draws
+   _SetHScrollPercent theOrigHScroll
+   
+   set the lockMessages to msgsAreLocked
+   
+   unlock screen
 end _table.CreateColumns
 
 
 private command _table.CreateHeaders
+   local theResourceStack
    put _ResourceStack() into theResourceStack
    --   put _CardOf() into theDGCard
+   local theColumns, theHeaderGroup, theHeaderRect
    put the dgProps["columns"] of me into theColumns
    put the long ID of group "dgHeaderMask" of group "dgHeaderComponents" of me into theHeaderGroup
    
@@ -4284,6 +4487,7 @@ private command _table.CreateHeaders
    set the wholeMatches to true
    repeat for each key theColumn in sTableObjectsA["columns"]
       if theColumn is not among the lines of theColumns and sTableObjectsA["columns"][theColumn]["header"]["group"] is not empty then
+         local theControl
          put sTableObjectsA["columns"][theColumn]["header"]["group"] into theControl
          delete theControl
          delete local sTableObjectsA["columns"][theColumn]["header"]
@@ -4294,6 +4498,7 @@ private command _table.CreateHeaders
    put the dgProps["row template"] of me into theTemplateGroup
    
    ## Create header groups
+   local theColsA, sortByThisColumn
    put the dgProps["column properties"] of me into theColsA
    put the dgProps["sort by column"] of me into sortByThisColumn
    repeat for each line theColumn in theColumns
@@ -4303,10 +4508,12 @@ private command _table.CreateHeaders
                theTemplateGroup is not empty then
             ## Use custom template provided by user...
             copy control (theColumn && "[Header]") of theTemplateGroup to group "dgHeader" of me
+            local theGroup
             put it into theGroup
             set the name of theGroup to theColumn
             set the lockloc of theGroup to true
             put "control id" && word 3 of theGroup && "of me" into sTableObjectsA["columns"][theColumn]["header"]["group"]
+            local theRect
             put item 1 to 2 of theHeaderRect, item 1 of theHeaderRect + 10, item 4 of theHeaderRect into theRect
             set the rect of theGroup to theRect
          else
@@ -4336,6 +4543,7 @@ end _table.CreateHeaders
 
 
 private command _table.CreateDefaultHeaderGroup pColumn, pHeaderRect
+   local theHeaderGroup
    put the long ID of group "dgHeaderMask" of group "dgHeaderComponents" of me into theHeaderGroup
    
    reset the templategroup
@@ -4361,8 +4569,10 @@ private command _table.CreateDefaultHeaderGroup pColumn, pHeaderRect
    --    put _CardOf() into theDGCard
    
    create group pColumn in group "dgHeader" of theHeaderGroup
+   local theGroup
    put it into theGroup
    put "control id" && word 3 of theGroup && "of me" into sTableObjectsA["columns"][pColumn]["header"]["group"]
+   local theRect
    put item 1 to 2 of pHeaderRect, item 1 of pHeaderRect + 10, item 4 of pHeaderRect into theRect
    set the rect of theGroup to theRect
    
@@ -4381,6 +4591,7 @@ private command _table.CreateDefaultHeaderGroup pColumn, pHeaderRect
    ## Field
    set the width of the templatefield to item 3 of theRect - item 1 of theRect
    create field "HeaderLabel" in theGroup
+   local theField
    put it into theField
    
    ## EJB - fix for bug 9575 21/02/12
@@ -4396,7 +4607,7 @@ private command _table.CreateDefaultHeaderGroup pColumn, pHeaderRect
    else
       set the height of it to tHeight
    end if
-
+   
    set the topLeft of theField to item 1 to 2 of theRect
    
    ## left hilite
@@ -4434,210 +4645,230 @@ end _table.CreateDefaultHeaderGroup
 
 
 private command _table.RepositionHeadersAndColumns
-    lock screen
-    put the lockMessages into msgsAreLocked
-     
-    put _GetHScrollPercent() into theOrigHScrollPercent
-    _ResetHScrollToZero
-    
-    lock messages
-    
-    _table.ResizeColumns
-    _table.RepositionHeaders
-    _table.RepositionColumns    
-     
-    ## Restore H Scroll
-    _ConfigureHScrollbar
-    
-    set the lockMessages to msgsAreLocked
-    
-    ## Outside of lock messages so content redraws
-    _SetHScrollPercent theOrigHScrollPercent
-    
-    unlock screen
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   
+   local theOrigHScrollPercent
+   put _GetHScrollPercent() into theOrigHScrollPercent
+   _ResetHScrollToZero
+   
+   lock messages
+   
+   _table.ResizeColumns
+   _table.RepositionHeaders
+   _table.RepositionColumns    
+   
+   ## Restore H Scroll
+   _ConfigureHScrollbar
+   
+   set the lockMessages to msgsAreLocked
+   
+   ## Outside of lock messages so content redraws
+   _SetHScrollPercent theOrigHScrollPercent
+   
+   unlock screen
 end _table.RepositionHeadersAndColumns
 
 
 private command _table.ResizeColumns
-    ## in case it gets called before initialization
-    if the keys of sTableObjectsA["columns"] is empty then return empty
-    
-    put 0 into sFormattedWidth
-    lock screen
-    put the lockMessages into msgsAreLocked
-    
-    ## Start at 0 point
-    put _GetVScrollPercent() into theOrigVScrollPercent
-    put _GetHScrollPercent() into theOrigHScrollPercent
-    _ResetScrollsToZero
-    
-    lock messages
-    
-    ## First resize headers
-    _table.ResizeHeaders
-    
-    ## Now resize columns
-    put _table.VisibleColumns() into theColumns
-    
-    ## Get in column widths
-    put _table.GetEffectiveColumnWidths() into theColWidths
-    
-    ## Set rects
-    repeat for each line theColumn in theColumns
-        add 1 to theItemNo
-        put item theItemNo of theColWidths into theColWidth
-        add theColWidth to sFormattedWidth
-         
-        put sTableObjectsA["columns"][theColumn]["group"] into theGroup
-        put the rect of theGroup into theRect
-        put item 1 of theRect + theColWidth into item 3 of theRect
-        set the rect of theGroup to theRect
-        
-        put item 2 of theRect + sControlHeights into item 4 of theRect
-        repeat for each line theControl in sTableObjectsA["columns"][theColumn]["row controls"]
-            put the rect of theControl into theRect
-            put item 1 of theRect + theColWidth into item 3 of theRect
-            set the rect of theControl to theRect
-            unlock messages
-            dispatch "LayoutControl" to theControl with theRect
-            lock messages
-        end repeat
-    end repeat
-    
-    _AutoHideHScrollbar
-    
-    _table.LayoutDataArea
-    ## Old methods below. Didn't deal with auto hiding hscrollbar though.
-    -- _table.RepositionColumns
-    -- _table.ResizeList
-    -- _table.LayoutRowHilites
-     
-    ## Restore H Scroll
-    _ConfigureHScrollbar
-    _ConfigureScrollbar
-     
-    set the lockMessages to msgsAreLocked
-    
-    ## Outside of lockmessages so they redraw 
-    _SetHScrollPercent theOrigHScrollPercent
-    _SetVScrollPercent theOrigVScrollPercent
-     
-    unlock screen
+   ## in case it gets called before initialization
+   if the keys of sTableObjectsA["columns"] is empty then return empty
+   
+   put 0 into sFormattedWidth
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   
+   ## Start at 0 point
+   local theOrigVScrollPercent, theOrigHScrollPercent
+   put _GetVScrollPercent() into theOrigVScrollPercent
+   put _GetHScrollPercent() into theOrigHScrollPercent
+   _ResetScrollsToZero
+   
+   lock messages
+   
+   ## First resize headers
+   _table.ResizeHeaders
+   
+   ## Now resize columns
+   local theColumns
+   put _table.VisibleColumns() into theColumns
+   
+   ## Get in column widths
+   local theColWidths
+   put _table.GetEffectiveColumnWidths() into theColWidths
+   
+   ## Set rects
+   local theItemNo, theColWidth, theGroup, theRect
+   repeat for each line theColumn in theColumns
+      add 1 to theItemNo
+      put item theItemNo of theColWidths into theColWidth
+      add theColWidth to sFormattedWidth
+      
+      put sTableObjectsA["columns"][theColumn]["group"] into theGroup
+      put the rect of theGroup into theRect
+      put item 1 of theRect + theColWidth into item 3 of theRect
+      set the rect of theGroup to theRect
+      
+      put item 2 of theRect + sControlHeights into item 4 of theRect
+      repeat for each line theControl in sTableObjectsA["columns"][theColumn]["row controls"]
+         put the rect of theControl into theRect
+         put item 1 of theRect + theColWidth into item 3 of theRect
+         set the rect of theControl to theRect
+         unlock messages
+         dispatch "LayoutControl" to theControl with theRect
+         lock messages
+      end repeat
+   end repeat
+   
+   _AutoHideHScrollbar
+   
+   _table.LayoutDataArea
+   ## Old methods below. Didn't deal with auto hiding hscrollbar though.
+   -- _table.RepositionColumns
+   -- _table.ResizeList
+   -- _table.LayoutRowHilites
+   
+   ## Restore H Scroll
+   _ConfigureHScrollbar
+   _ConfigureScrollbar
+   
+   set the lockMessages to msgsAreLocked
+   
+   ## Outside of lockmessages so they redraw 
+   _SetHScrollPercent theOrigHScrollPercent
+   _SetVScrollPercent theOrigVScrollPercent
+   
+   unlock screen
 end _table.ResizeColumns
 
 
 private command _table.ResizeList
-    put the rect of group "dgList" of me into theRect
-    put the top of group "dgListMask" of me into item 2 of theRect
-    put item 1 of theRect + the width of graphic "dgBackground" of group "dgHeaderMask" of group "dgHeaderComponents" of me into item 3 of theRect
-    put the bottom of group "dgListMask" of me into item 4 of theRect
-    set the rect of group "dgList" of me to theRect
+   local theRect
+   put the rect of group "dgList" of me into theRect
+   put the top of group "dgListMask" of me into item 2 of theRect
+   put item 1 of theRect + the width of graphic "dgBackground" of group "dgHeaderMask" of group "dgHeaderComponents" of me into item 3 of theRect
+   put the bottom of group "dgListMask" of me into item 4 of theRect
+   set the rect of group "dgList" of me to theRect
 end _table.ResizeList
 
 
 private command _table.ResizeHeaders
-    put _GetHScrollPercent() into theOrigHScroll
-    _ResetHScrollToZero   
-    
-    put the lockMessages into msgsAreLocked
-    lock messages
-    
-    put the dgProps["columns"] of me into theColumns
-    put true into includeAllColumns
-    put _table.GetEffectiveColumnWidths(includeAllColumns) into theColWidths
-    put the height of group "dgHeaderMask" of me into theGroupHeight
-    put item 1 to 2 of the rect of group "dgHeaderComponents" of me into theTopLeft
-    
-    put 0 into theHeaderWidth
-    put 0 into theReduction
-    
-    repeat for each line theColumn in theColumns
-        add 1 to theItemNo
-        put item theItemNo of theColWidths into theColWidth
-        
-        put theTopLeft into theRect
-        put item 1 of theRect + (theColWidth- theReduction) into item 3 of theRect 
-        put item 2 of theRect + theGroupHeight into item 4 of theRect
-        
-        put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
-        set the rect of theGroup to theRect
-         
-        unlock messages
-        dispatch "LayoutControl" to theGroup with theRect
-        lock messages
-        
-        put item 3 of theRect & "," & item 2 of theRect into theTopLeft
-        
-        add theColWidth to theHeaderWidth
-        
-        ## all columns after 1 need to be reduced in width in order to make room for divider
-        -- put 1 into theReduction
-    end repeat
-    
-    _table.ResizeHeaderBackground    
-    _table.RepositionHeaders
-    
-    unlock messages
-    _SetHScrollPercent theOrigHScroll
-    
-    set the lockMessages to msgsAreLocked
+   local theOrigHScroll
+   put _GetHScrollPercent() into theOrigHScroll
+   _ResetHScrollToZero   
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   local theColumns, includeAllColumns, theColWidths, theGroupHeight, theTopLeft
+   put the dgProps["columns"] of me into theColumns
+   put true into includeAllColumns
+   put _table.GetEffectiveColumnWidths(includeAllColumns) into theColWidths
+   put the height of group "dgHeaderMask" of me into theGroupHeight
+   put item 1 to 2 of the rect of group "dgHeaderComponents" of me into theTopLeft
+   
+   local theHeaderWidth, theReduction
+   put 0 into theHeaderWidth
+   put 0 into theReduction
+   
+   repeat for each line theColumn in theColumns
+      local theItemNo, theColWidth, theRect
+      add 1 to theItemNo
+      put item theItemNo of theColWidths into theColWidth
+      
+      put theTopLeft into theRect
+      put item 1 of theRect + (theColWidth- theReduction) into item 3 of theRect 
+      put item 2 of theRect + theGroupHeight into item 4 of theRect
+      
+      local theGroup
+      put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
+      set the rect of theGroup to theRect
+      
+      unlock messages
+      dispatch "LayoutControl" to theGroup with theRect
+      lock messages
+      
+      put item 3 of theRect & "," & item 2 of theRect into theTopLeft
+      
+      add theColWidth to theHeaderWidth
+      
+      ## all columns after 1 need to be reduced in width in order to make room for divider
+      -- put 1 into theReduction
+   end repeat
+   
+   _table.ResizeHeaderBackground    
+   _table.RepositionHeaders
+   
+   unlock messages
+   _SetHScrollPercent theOrigHScroll
+   
+   set the lockMessages to msgsAreLocked
 end _table.ResizeHeaders
 
 
 private command _table.ResizeHeaderBackground
-    ## Resize Background to fill visible space. Covers at least width of list group
-    if the width of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me > \
-            the width of group "dgHeaderMask" of group "dgHeaderComponents" of me then
-        put the rect of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me into theRect
-    else
-        put the rect of group "dgHeaderMask" of group "dgHeaderComponents" of me into theRect
-    end if
-    put item 3 of theRect - item 1 of theRect into theHeaderWidth
-    
-    if the visible of scrollbar "dgScrollbar" of me then put the width of scrollbar "dgScrollbar" of me into theSBWidth
-    else put 0 into theSBWidth
-    
-    put item 1 of theRect + max(the width of me, theHeaderWidth + theSBWidth) into item 3 of theRect
-    put item 2 of theRect + the height of group "dgHeaderMask" of group "dgHeaderComponents" of me into item 4 of theRect
-    set the rect of graphic "dgBackground" of group "dgHeaderMask" of group "dgHeaderComponents" of me to theRect
-    set the rect of graphic "dgHeaderBottomBorder" of group "dgHeaderMask" of group "dgHeaderComponents" of me to item 1 of theRect, \
-            item 4 of theRect - 1, item 3 of theRect, item 4 of theRect
+   local theRect, theHeaderWidth, theSBWidth
+   ## Resize Background to fill visible space. Covers at least width of list group
+   if the width of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me > \
+         the width of group "dgHeaderMask" of group "dgHeaderComponents" of me then
+      put the rect of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me into theRect
+   else
+      put the rect of group "dgHeaderMask" of group "dgHeaderComponents" of me into theRect
+   end if
+   put item 3 of theRect - item 1 of theRect into theHeaderWidth
+   
+   if the visible of scrollbar "dgScrollbar" of me then put the width of scrollbar "dgScrollbar" of me into theSBWidth
+   else put 0 into theSBWidth
+   
+   put item 1 of theRect + max(the width of me, theHeaderWidth + theSBWidth) into item 3 of theRect
+   put item 2 of theRect + the height of group "dgHeaderMask" of group "dgHeaderComponents" of me into item 4 of theRect
+   set the rect of graphic "dgBackground" of group "dgHeaderMask" of group "dgHeaderComponents" of me to theRect
+   set the rect of graphic "dgHeaderBottomBorder" of group "dgHeaderMask" of group "dgHeaderComponents" of me to item 1 of theRect, \
+         item 4 of theRect - 1, item 3 of theRect, item 4 of theRect
 end _table.ResizeHeaderBackground
 
 
 private command _table.RepositionHeaders
-    put _table.VisibleColumns() into theColumns
-    put the long ID of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me into theHeaderGroup
-    
-    put item 1 of the rect of group "dgHeaderComponents" of me into theTopLeft
-    put the top of theHeaderGroup into item 2 of theTopLeft
-    
-    repeat for each line theColumn in theColumns
-        add 1 to theItemNo
-         
-        ## Headers
-        put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
-        if the visible of theGroup then
-            set the topLeft of theGroup to theTopLeft
-            put the right of theGroup into item 1 of theTopLeft
-        end if
-    end repeat
+   local theColumns, theHeaderGroup, theTopLeft, theItemNo, theGroup
+   put _table.VisibleColumns() into theColumns
+   put the long ID of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me into theHeaderGroup
+   
+   put item 1 of the rect of group "dgHeaderComponents" of me into theTopLeft
+   put the top of theHeaderGroup into item 2 of theTopLeft
+   
+   repeat for each line theColumn in theColumns
+      add 1 to theItemNo
+      
+      ## Headers
+      put sTableObjectsA["columns"][theColumn]["header"]["group"] into theGroup
+      if the visible of theGroup then
+         set the topLeft of theGroup to theTopLeft
+         put the right of theGroup into item 1 of theTopLeft
+      end if
+   end repeat
 end _table.RepositionHeaders
 
 
 private command _table.RepositionColumns
    lock screen
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    lock messages
    
+   local theColumns
    put _table.VisibleColumns() into theColumns
    
+   local theOffset, theMasterRect, theTopLeft
    put the hScroll of group "dgListMask" of me into theOffset
    put the rect of group "dgListMask" of me into theMasterRect
    subtract theOffset from item 1 of theMasterRect
    subtract theOffset from item 3 of theMasterRect
    put item 1 to 2 of theMasterRect into theTopLeft
    
+   local theGroup, theGraphic
    repeat for each line theColumn in theColumns
       ## columns
       put sTableObjectsA["columns"][theColumn]["group"] into theGroup
@@ -4650,7 +4881,7 @@ private command _table.RepositionColumns
          ## Column dividers
          put sTableObjectsA["columns"][theColumn]["divider control"] into theGraphic
          set the rect of theGraphic to item 1 of theTopLeft - 1, item 2 of theTopLeft, \
-                item 1 of theTopLeft, item 4 of theMasterRect
+               item 1 of theTopLeft, item 4 of theMasterRect
       end if
    end repeat
    
@@ -4694,39 +4925,40 @@ end _table.GetEffectiveColumnWidths
 
 
 setprop dgText [pTextIncludesColumnNames] pText
-    -----
-    local theError
-    local theResult
-    -----
-    lock screen
-    try
-        if pTextIncludesColumnNames is true then
-            put line 1 of pText into theColumns
-            replace tab with cr in theColumns
-            put 2 into theStartLineNo
-        else
-            put empty into theColumns
-            put 1 into theStartLineNo
-        end if
-         
-        switch _ControlType()
-            case "table"
-                _table.SetText line theStartLineNo to -1 of pText, theColumns
-                break
-            case "form"
-            default
-                _list.SetText line theStartLineNo to -1 of pText, theColumns
-        end switch    
-        put the result into theResult
-        _DataCanBeRepresentedAsText true
-    catch e
-        put e into theError
-    end try
-    unlock screen
-    
-    if theError is not empty then throw theError
-    
-    return theResult
+   -----
+   local theError
+   local theResult
+   local theColumns, theStartLineNo
+   -----
+   lock screen
+   try
+      if pTextIncludesColumnNames is true then
+         put line 1 of pText into theColumns
+         replace tab with cr in theColumns
+         put 2 into theStartLineNo
+      else
+         put empty into theColumns
+         put 1 into theStartLineNo
+      end if
+      
+      switch _ControlType()
+         case "table"
+            _table.SetText line theStartLineNo to -1 of pText, theColumns
+            break
+         case "form"
+         default
+            _list.SetText line theStartLineNo to -1 of pText, theColumns
+      end switch    
+      put the result into theResult
+      _DataCanBeRepresentedAsText true
+   catch e
+      put e into theError
+   end try
+   unlock screen
+   
+   if theError is not empty then throw theError
+   
+   return theResult
 end dgText
 
 
@@ -4759,18 +4991,20 @@ end dgDataOfIndex
 
 
 getprop dgDataOfLine [pLine]
-    put the dgIndexOfLine [pLine] of me into theIndex
-    return sDataArray[theIndex]
+   local theIndex
+   put the dgIndexOfLine [pLine] of me into theIndex
+   return sDataArray[theIndex]
 end dgDataOfLine
 
 
 setprop dgDataOfLine [pLine] pDataArray
-    _DataCanBeRepresentedAsText false
-    
-    put the dgIndexOfLine [pLine] of me into theIndex
-    put pDataArray into sDataArray[theIndex]
-    _StorePersistentData
-    _RefreshIndexes theIndex
+   _DataCanBeRepresentedAsText false
+   
+   local theIndex
+   put the dgIndexOfLine [pLine] of me into theIndex
+   put pDataArray into sDataArray[theIndex]
+   _StorePersistentData
+   _RefreshIndexes theIndex
 end dgDataOfLine
 
 
@@ -4859,8 +5093,9 @@ end dgAnimating
 
 
 getprop uScriptLocal [pVarName]
-    put "return" && pVarName into theDo
-    do theDo
+   local theDo
+   put "return" && pVarName into theDo
+   do theDo
 end uScriptLocal
 
 
@@ -4879,13 +5114,14 @@ end dgFocus
 
 -- Returns column number of the target. Number is relative to visible columns.
 getprop dgColumnNumber
-    put the dgColumn of the target into theColumn
-    if theColumn is not empty then
-        set the wholeMatches to true
-        return lineOffset(theColumn, _table.VisibleColumns())
-    else
-        return 0
-    end if
+   local theColumn
+   put the dgColumn of the target into theColumn
+   if theColumn is not empty then
+      set the wholeMatches to true
+      return lineOffset(theColumn, _table.VisibleColumns())
+   else
+      return 0
+   end if
 end dgColumnNumber
 
 
@@ -4893,11 +5129,13 @@ end dgColumnNumber
 ## constantly update property as we add/delete controls
 ## The target is a list control
 getprop dgLine
-    put the dgDataControl of the target into theControl
-    if the long ID of theControl is not the long ID of the target then pass dgLine
-    
-    put the dgIndex of theControl into theIndex
-    return the dgLineOfIndex[theIndex] of me
+   local theControl
+   put the dgDataControl of the target into theControl
+   if the long ID of theControl is not the long ID of the target then pass dgLine
+   
+   local theIndex
+   put the dgIndex of theControl into theIndex
+   return the dgLineOfIndex[theIndex] of me
 end dgLine
 
 
@@ -4951,31 +5189,34 @@ end dgVisibleLines
 
 
 private function _VisibleSequences
-    put _ListOfVisibleControls() into theControls
-    if theControls is empty or the keys of sDataArray is empty then return "0,0"
-    
-    put the rect of group "dgList" of me into theMaskRect
-    
-    put empty into theFirstSequence
-    put empty into theLastSequence
-    
-    repeat for each line theControl in theControls
-        put the rect of theControl into theRect
-        ## When checking if opposite coordinate is in view don't use =. = does not mean visible in this case.
-        ## e.g. is top of control above the bottom of the mask rect?
-        if (item 2 of theRect >= item 2 of theMaskRect and item 2 of theRect < item 4 of theMaskRect) or \
-                (item 4 of theRect > item 2 of theMaskRect and item 4 of theRect <= item 4 of theMaskRect) then
-            put the dgLine of theControl into theLineNo
-            if theLineNo > 0 then
-                if theFirstSequence is empty then put theLineNo into theFirstSequence
-                else put min(theLineNo, theFirstSequence) into theFirstSequence
-                if theLastSequence is empty then put theLineNo into theLastSequence
-                else put max(theLineNo, theLastSequence) into theLastSequence
-            end if
-        end if
-    end repeat
-     
-    return theFirstSequence & comma & theLastSequence
+   local theControls
+   put _ListOfVisibleControls() into theControls
+   if theControls is empty or the keys of sDataArray is empty then return "0,0"
+   
+   local theMaskRect, theFirstSequence, theLastSequence
+   put the rect of group "dgList" of me into theMaskRect
+   
+   put empty into theFirstSequence
+   put empty into theLastSequence
+   
+   repeat for each line theControl in theControls
+      local theRect, theLineNo
+      put the rect of theControl into theRect
+      ## When checking if opposite coordinate is in view don't use =. = does not mean visible in this case.
+      ## e.g. is top of control above the bottom of the mask rect?
+      if (item 2 of theRect >= item 2 of theMaskRect and item 2 of theRect < item 4 of theMaskRect) or \
+            (item 4 of theRect > item 2 of theMaskRect and item 4 of theRect <= item 4 of theMaskRect) then
+         put the dgLine of theControl into theLineNo
+         if theLineNo > 0 then
+            if theFirstSequence is empty then put theLineNo into theFirstSequence
+            else put min(theLineNo, theFirstSequence) into theFirstSequence
+            if theLastSequence is empty then put theLineNo into theLastSequence
+            else put max(theLineNo, theLastSequence) into theLastSequence
+         end if
+      end if
+   end repeat
+   
+   return theFirstSequence & comma & theLastSequence
 end _VisibleSequences
 
 
@@ -5043,6 +5284,7 @@ setprop dgProps [pProp] pValue
          unlock messages
          
          lock screen
+         local theSortBy
          put the dgProps["sort by column"] of me into theSortBy
          repeat for each key theColumn in sTableObjectsA["columns"]
             repeat for each line theControl in sTableObjectsA["columns"][theColumn]["header"]["group"]
@@ -5112,6 +5354,7 @@ setprop dgProps [pProp] pValue
       case "header height"
          if pValue is not an integer or pValue < 0 then _ThrowError kErrInvalidInteger, pValue && "is not an integer >= 0"
          lock screen
+         local theOrigVScroll, theRect
          put _GetVScrollPercent() into theOrigVScroll
          put the rect of group "dgHeaderMask" of me into theRect
          put item 2 of theRect + pValue into item 4 of theRect
@@ -5122,6 +5365,7 @@ setprop dgProps [pProp] pValue
          # Attempt to fix bug 12427 - resizing a header vertically doesn't resize the column dividers (also called the leftHilite and rightHilight).
          # We do it here instead of _table.resizeHeader or _table.repositionHeaders b/c those handlers are designed to handle the user resizing the column by dragging
          # on it.  To resize the column dividers there would mess with performance.  _table.ResizeHeaderBackground does not touch the column headers.
+         local rectOfMe
          repeat for each line theColumn in the childControlNames of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me
             put the rect of graphic "leftHilite" of group theColumn of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me into rectOfMe
             put item 4 of theRect into item 4 of rectOfMe
@@ -5141,6 +5385,7 @@ setprop dgProps [pProp] pValue
          if pValue is empty then
             set the textFont of group "dgList" of me to pValue
          else
+            local theStyle, theSize
             put the textStyle of group "dgList" of me into theStyle
             put the textSize of group "dgList" of me into theSize
             set the textFont of group "dgList" of me to pValue
@@ -5229,6 +5474,7 @@ setprop dgProps [pProp] pValue
          break
          
       case "corner color"
+         local theGraphic
          put the long ID of graphic "dgCornerPiece" of group "dgHorizontalComponents" of me into theGraphic
          set the backgroundColor of theGraphic to empty
          
@@ -5578,6 +5824,7 @@ setprop dgProps [pProp] pValue
          put word 1 to -1 of pValue into pValue
          repeat for each line theLine in pValue
             if theLine is empty then _ThrowError kErrInvalidProperty, "column name cannot be empty'"
+            local theLinesA
             if theLinesA[theLine] is not empty then _ThrowError kErrInvalidProperty, "duplicate column name '" & theLine & "'"
             put 1 into theLinesA[theLine]
          end repeat
@@ -5611,6 +5858,7 @@ setprop dgProps [pProp] pValue
          
       case "column widths"
          lock screen
+         local theLastWidth, theWidth
          put item -1 of pValue into theLastWidth
          if theLastWidth is not an integer then
             _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
@@ -5802,10 +6050,11 @@ getprop dgProps [pProp]
          break
          
       case "background color"
-         if the dgProps[pProperty] of me is not a color then
+         local tColor
+         if the dgProps[pProp] of me is not a color then
             return the backgroundColor of graphic "dgBackground" of me
          else
-            return the dgProps[pProperty] of me
+            return the dgProps[pProp] of me
          end if
          break
          
@@ -5822,6 +6071,7 @@ getprop dgProps [pProp]
          break
          
       case "column widths"
+         local theColPropsA
          put the dgProps["column properties"] of me into theColPropsA
          repeat for each line theColumn in the dgProps["columns"] of me
             put theColPropsA[theColumn]["width"] & comma after theValue
@@ -5896,188 +6146,201 @@ end dgProps
 
 ## Renames a column
 setprop dgColumnName [pColumn] pValue
-    if word 1 to -1 of pValue is empty or char 1 of pValue is space or the last char of pValue is space then 
-        _ThrowError kErrInvalidProperty, quote & pValue & quote && "is not a valid column name" 
-    end if
-    
-    set the wholeMatches to true
-    
-    ## Update list of columns, replacing line with old name with new name
-    put the dgProps["columns"] of me into theColumns
-    put lineOffset(pColumn, theColumns) into theLineNo
-    
-    if theLineNo is 0 then _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    
-    put lineOffset(pValue, theColumns) into theBadLineNo
-    if theBadLineNo > 0 then _ThrowError kErrRenameErrorInDestination, "column '" & pValue & "' already exists"
-    
-    lock screen
-    
-    put the dgProps["sort by column"] of me into theSortByColumn
-    
-    ## Rename column
-    put pValue into line theLineNo of theColumns
-    lock messages
-    set the dgProps["columns"] of me to theColumns
-    
-    ## rename column properties
-    put the dgProps["column properties"] of me into theColPropsA
-    put theColPropsA[pColumn] into theColPropsA[pValue]
-    set the dgProps["column properties"] of me to theColPropsA
-    unlock messages
-    
-    ## Rename data keys
-    repeat for each key theKey in sDataArray        
-        put sDataArray[theKey][pColumn] into sDataArray[theKey][pValue]      
-        delete local sDataArray[theKey][pColumn]
-    end repeat
-    
-    _table.DeleteColumn pColumn
-    
-    ## refresh
-    _table.RegenerateColumns
-    _table.DrawColumns pValue
-    
-    if theSortByColumn is pColumn then
-        _SortByColumn pValue
-    end if
-    
-    _StorePersistentData
-     
-    unlock screen
+   if word 1 to -1 of pValue is empty or char 1 of pValue is space or the last char of pValue is space then 
+      _ThrowError kErrInvalidProperty, quote & pValue & quote && "is not a valid column name" 
+   end if
+   
+   set the wholeMatches to true
+   
+   ## Update list of columns, replacing line with old name with new name
+   local theColumns, theLineNo, theBadLineNo
+   put the dgProps["columns"] of me into theColumns
+   put lineOffset(pColumn, theColumns) into theLineNo
+   
+   if theLineNo is 0 then _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   
+   put lineOffset(pValue, theColumns) into theBadLineNo
+   if theBadLineNo > 0 then _ThrowError kErrRenameErrorInDestination, "column '" & pValue & "' already exists"
+   
+   lock screen
+   
+   local theSortByColumn
+   put the dgProps["sort by column"] of me into theSortByColumn
+   
+   ## Rename column
+   put pValue into line theLineNo of theColumns
+   lock messages
+   set the dgProps["columns"] of me to theColumns
+   
+   ## rename column properties
+   local theColPropsA
+   put the dgProps["column properties"] of me into theColPropsA
+   put theColPropsA[pColumn] into theColPropsA[pValue]
+   set the dgProps["column properties"] of me to theColPropsA
+   unlock messages
+   
+   ## Rename data keys
+   repeat for each key theKey in sDataArray        
+      put sDataArray[theKey][pColumn] into sDataArray[theKey][pValue]      
+      delete local sDataArray[theKey][pColumn]
+   end repeat
+   
+   _table.DeleteColumn pColumn
+   
+   ## refresh
+   _table.RegenerateColumns
+   _table.DrawColumns pValue
+   
+   if theSortByColumn is pColumn then
+      _SortByColumn pValue
+   end if
+   
+   _StorePersistentData
+   
+   unlock screen
 end dgColumnName
 
 
 setprop dgColumnSortType [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not among the items kSortTypes then
-        _ThrowError kErrInvalidProperty, "invalid column sort type value '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["sort type"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## Update sort if need be
-    if the dgProps["sort by column"] of me is pColumn then
-        _SortByColumn pColumn
-    end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not among the items kSortTypes then
+      _ThrowError kErrInvalidProperty, "invalid column sort type value '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["sort type"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## Update sort if need be
+   if the dgProps["sort by column"] of me is pColumn then
+      _SortByColumn pColumn
+   end if
 end dgColumnSortType
 
 getprop dgColumnSortType [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["sort type"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["sort type"]
 end dgColumnSortType
 
 
 setprop dgColumnSortDirection [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not among the items "ascending,descending" then
-        _ThrowError kErrInvalidProperty, "invalid column sort direction value '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["sort direction"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## Update sort if need be
-    if the dgProps["sort by column"] of me is pColumn then
-        _SortByColumn pColumn
-    end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not among the items "ascending,descending" then
+      _ThrowError kErrInvalidProperty, "invalid column sort direction value '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["sort direction"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## Update sort if need be
+   if the dgProps["sort by column"] of me is pColumn then
+      _SortByColumn pColumn
+   end if
 end dgColumnSortDirection
 
 getprop dgColumnSortDirection [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["sort direction"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["sort direction"]
 end dgColumnSortDirection
 
 
 setprop dgColumnSortIsCaseSensitive [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not a boolean then 
-        _ThrowError kErrInvalidBoolean, "invalid boolean value for column sort is case sensitive '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["sort is case sensitive"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## Update sort if need be
-    if the dgProps["sort by column"] of me is pColumn then
-        _SortByColumn pColumn
-    end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not a boolean then 
+      _ThrowError kErrInvalidBoolean, "invalid boolean value for column sort is case sensitive '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["sort is case sensitive"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## Update sort if need be
+   if the dgProps["sort by column"] of me is pColumn then
+      _SortByColumn pColumn
+   end if
 end dgColumnSortIsCaseSensitive
 
 getprop dgColumnSortIsCaseSensitive [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["sort is case sensitive"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["sort is case sensitive"]
 end dgColumnSortIsCaseSensitive
 
 
 setprop dgColumnIsVisible [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not a boolean then 
-        _ThrowError kErrInvalidBoolean, "invalid boolean value for column visibility '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["visible"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    if sTableObjectsA["columns"][pColumn]["group"] is not empty then
-        lock screen
-        set the visible of sTableObjectsA["columns"][pColumn]["group"] to pValue
-        set the visible of sTableObjectsA["columns"][pColumn]["header"]["group"] to pValue
-        set the visible of sTableObjectsA["columns"][pColumn]["divider control"] to pValue
-        
-        _table.RepositionHeadersAndColumns
-        
-        if sTableObjectsA["row control count"] > 0 then
-            _table.CreateControlsForColumns pColumn
-            _table.DrawColumns pColumn
-            
-            ## check for scrollbar show/hide
-            if the dgProps["show hscrollbar"] of me is "auto" then
-                ## todo: optimize so we don't toggle unless we need to
-                put the visible of group "dgHorizontalComponents" of me into theSetting
-                _AutoHideHScrollbar     
-                if the visible of group "dgHorizontalComponents" of me is not theSetting then
-                    _ToggleHScrollBarVisibility the visible of group "dgHorizontalComponents" of me
-                end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not a boolean then 
+      _ThrowError kErrInvalidBoolean, "invalid boolean value for column visibility '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["visible"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   if sTableObjectsA["columns"][pColumn]["group"] is not empty then
+      lock screen
+      set the visible of sTableObjectsA["columns"][pColumn]["group"] to pValue
+      set the visible of sTableObjectsA["columns"][pColumn]["header"]["group"] to pValue
+      set the visible of sTableObjectsA["columns"][pColumn]["divider control"] to pValue
+      
+      _table.RepositionHeadersAndColumns
+      
+      if sTableObjectsA["row control count"] > 0 then
+         _table.CreateControlsForColumns pColumn
+         _table.DrawColumns pColumn
+         
+         ## check for scrollbar show/hide
+         if the dgProps["show hscrollbar"] of me is "auto" then
+            ## todo: optimize so we don't toggle unless we need to
+            local theSetting
+            put the visible of group "dgHorizontalComponents" of me into theSetting
+            _AutoHideHScrollbar     
+            if the visible of group "dgHorizontalComponents" of me is not theSetting then
+               _ToggleHScrollBarVisibility the visible of group "dgHorizontalComponents" of me
             end if
-        end if
-        unlock screen
-    end if
+         end if
+      end if
+      unlock screen
+   end if
 end dgColumnIsVisible
 
 
 getprop dgColumnIsVisible [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["visible"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["visible"]
 end dgColumnIsVisible
 
 
 setprop dgColumnLabel [pColumn] pValue
+   local theColsA
    put the dgProps["column properties"] of me into theColsA
    if pColumn is not among the keys of theColsA then
       _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
@@ -6096,140 +6359,152 @@ end dgColumnLabel
 
 
 getprop dgColumnLabel [pColumn]
+   local theColsA
    put the dgProps["column properties"] of me into theColsA
    return theColsA[pColumn]["label"]
 end dgColumnLabel
 
 
 getprop dgColumnLabelEncoding [pColumn]
+   local theColsA
    put the dgProps["column properties"] of me into theColsA
    return theColsA[pColumn]["encoding"]
 end dgColumnLabelEncoding
 
 
 setprop dgColumnTooltip [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    
-    put pValue into theColsA[pColumn]["tooltip"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    _table.UpdateHeaderTooltip pColumn, pValue
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   
+   put pValue into theColsA[pColumn]["tooltip"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   _table.UpdateHeaderTooltip pColumn, pValue
 end dgColumnTooltip
 
 
 getprop dgColumnTooltip [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["tooltip"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["tooltip"]
 end dgColumnTooltip
 
 
 setprop dgColumnIsEditable [pColumn] pBoolean
-    put the dgProps["column properties"] of me into theColsA
-    put pBoolean is true into theColsA[pColumn]["editable"]
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    return empty
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   put pBoolean is true into theColsA[pColumn]["editable"]
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   return empty
 end dgColumnIsEditable
 
  
 getprop dgColumnIsEditable [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["editable"] is not false ## default is true
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["editable"] is not false ## default is true
 end dgColumnIsEditable
 
 
 setprop dgColumnIsResizable [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not a boolean then 
-        _ThrowError kErrInvalidBoolean, "invalid boolean value for column is resizable '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["resizable"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    return empty
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not a boolean then 
+      _ThrowError kErrInvalidBoolean, "invalid boolean value for column is resizable '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["resizable"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   return empty
 end dgColumnIsResizable
 
 
 getprop dgColumnIsResizable [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["resizable"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["resizable"]
 end dgColumnIsResizable
 
 
 setprop dgColumnAlignment [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not among the items "left,right,center" then 
-        _ThrowError kErrInvalidProperty, "invalid column alignment value '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["alignment"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## Update alignment
-    lock screen
-    if not sTableObjectsA["columns"][pColumn]["uses custom template"] then
-        repeat for each line theControl in sTableObjectsA["columns"][pColumn]["row controls"]
-            set the textAlign of theControl to pValue 
-        end repeat
-    end if
-    unlock screen
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not among the items "left,right,center" then 
+      _ThrowError kErrInvalidProperty, "invalid column alignment value '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["alignment"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## Update alignment
+   lock screen
+   if not sTableObjectsA["columns"][pColumn]["uses custom template"] then
+      repeat for each line theControl in sTableObjectsA["columns"][pColumn]["row controls"]
+         set the textAlign of theControl to pValue 
+      end repeat
+   end if
+   unlock screen
 end dgColumnAlignment
 
 
 getprop dgColumnAlignment [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["alignment"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["alignment"]
 end dgColumnAlignment
 
 
 setprop dgHeaderAlignment [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not among the items "left,right,center" then 
-        _ThrowError kErrInvalidProperty, "invalid header alignment value '" & pValue & "'"
-    end if
-    
-    put toLower(pValue) into theColsA[pColumn]["header"]["alignment"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## Update alignment
-    lock screen
-    if sTableObjectsA["columns"][pColumn]["header"]["group"] is not empty then
-        set the dgAlignment of sTableObjectsA["columns"][pColumn]["header"]["group"] to pValue
-    end if
-    unlock screen
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not among the items "left,right,center" then 
+      _ThrowError kErrInvalidProperty, "invalid header alignment value '" & pValue & "'"
+   end if
+   
+   put toLower(pValue) into theColsA[pColumn]["header"]["alignment"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## Update alignment
+   lock screen
+   if sTableObjectsA["columns"][pColumn]["header"]["group"] is not empty then
+      set the dgAlignment of sTableObjectsA["columns"][pColumn]["header"]["group"] to pValue
+   end if
+   unlock screen
 end dgHeaderAlignment
 
 
 getprop dgHeaderAlignment [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    return theColsA[pColumn]["header"]["alignment"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   return theColsA[pColumn]["header"]["alignment"]
 end dgHeaderAlignment
 
 
@@ -6240,29 +6515,31 @@ end dgColumnWidth
 
 
 private command _StoreColWidth pColumn, pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not an integer then
-        _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
-    end if
-    
-    if theColsA[pColumn]["min width"] is empty then put 40 into theColsA[pColumn]["min width"]
-    if theColsA[pColumn]["max width"] is empty then put 1000 into theColsA[pColumn]["max width"]
-    
-    put max(theColsA[pColumn]["min width"], min(pValue, theColsA[pColumn]["max width"])) into theColsA[pColumn]["width"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not an integer then
+      _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
+   end if
+   
+   if theColsA[pColumn]["min width"] is empty then put 40 into theColsA[pColumn]["min width"]
+   if theColsA[pColumn]["max width"] is empty then put 1000 into theColsA[pColumn]["max width"]
+   
+   put max(theColsA[pColumn]["min width"], min(pValue, theColsA[pColumn]["max width"])) into theColsA[pColumn]["width"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
 end _StoreColWidth
 
 
 getprop dgColumnWidth [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    if theColsA[pColumn]["width"] is empty then return 100
-    else return theColsA[pColumn]["width"]
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if theColsA[pColumn]["width"] is empty then return 100
+   else return theColsA[pColumn]["width"]
 end dgColumnWidth
 
 
@@ -6272,68 +6549,72 @@ end _ColumnHeaderGroup
 
 
 setprop dgColumnMinWidth [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not an integer then
-        _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
-    end if
-    
-    put pValue into theColsA[pColumn]["min width"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## current size must be at least min size
-    if theColsA[pColumn]["width"] is empty or theColsA[pColumn]["min width"] > theColsA[pColumn]["width"] then
-        set the dgColumnWidth[pColumn] of me to theColsA[pColumn]["min width"]
-    end if
-    return empty
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not an integer then
+      _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
+   end if
+   
+   put pValue into theColsA[pColumn]["min width"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## current size must be at least min size
+   if theColsA[pColumn]["width"] is empty or theColsA[pColumn]["min width"] > theColsA[pColumn]["width"] then
+      set the dgColumnWidth[pColumn] of me to theColsA[pColumn]["min width"]
+   end if
+   return empty
 end dgColumnMinWidth
 
 
 getprop dgColumnMinWidth [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    if theColsA[pColumn]["min width"] is not empty then
-        return theColsA[pColumn]["min width"]
-    else
-        return 40
-    end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if theColsA[pColumn]["min width"] is not empty then
+      return theColsA[pColumn]["min width"]
+   else
+      return 40
+   end if
 end dgColumnMinWidth
 
 
 setprop dgColumnMaxWidth [pColumn] pValue
-    put the dgProps["column properties"] of me into theColsA
-    if pColumn is not among the keys of theColsA then
-        _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
-    end if
-    if pValue is not an integer then
-        _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
-    end if
-    
-    put pValue into theColsA[pColumn]["max width"]
-    
-    lock messages
-    set the dgProps["column properties"] of me to theColsA
-    unlock messages
-    
-    ## current size must be at least min size
-    if theColsA[pColumn]["width"] is empty or theColsA[pColumn]["width"] > theColsA[pColumn]["max width"] then
-        set the dgColumnWidth[pColumn] of me to theColsA[pColumn]["max width"]
-    end if
-    return empty
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if pColumn is not among the keys of theColsA then
+      _ThrowError kErrInvalidProperty, "column '" & pColumn & "' does not exist"
+   end if
+   if pValue is not an integer then
+      _ThrowError kErrInvalidInteger, "invalid column width value '" & pValue & "'"
+   end if
+   
+   put pValue into theColsA[pColumn]["max width"]
+   
+   lock messages
+   set the dgProps["column properties"] of me to theColsA
+   unlock messages
+   
+   ## current size must be at least min size
+   if theColsA[pColumn]["width"] is empty or theColsA[pColumn]["width"] > theColsA[pColumn]["max width"] then
+      set the dgColumnWidth[pColumn] of me to theColsA[pColumn]["max width"]
+   end if
+   return empty
 end dgColumnMaxWidth
 
 
 getprop dgColumnMaxWidth [pColumn]
-    put the dgProps["column properties"] of me into theColsA
-    if theColsA[pColumn]["max width"] is not empty then
-        return theColsA[pColumn]["max width"]
-    else
-        return 1000
-    end if
+   local theColsA
+   put the dgProps["column properties"] of me into theColsA
+   if theColsA[pColumn]["max width"] is not empty then
+      return theColsA[pColumn]["max width"]
+   else
+      return 1000
+   end if
 end dgColumnMaxWidth
 
 
@@ -6344,22 +6625,24 @@ end dgColumnCustomControl
 
 
 getprop dgColumnTemplate [pColumn]
-    put the dgProps["row template"] of me into theTemplateGroup
-    if there is a control pColumn of theTemplateGroup then
-        return the long ID of control pColumn of theTemplateGroup
-    else
-        return empty
-    end if
+   local theTemplateGroup
+   put the dgProps["row template"] of me into theTemplateGroup
+   if there is a control pColumn of theTemplateGroup then
+      return the long ID of control pColumn of theTemplateGroup
+   else
+      return empty
+   end if
 end dgColumnTemplate
 
 
 getprop dgColumnHeaderTemplate [pColumn]
-    put the dgProps["row template"] of me into theTemplateGroup
-    if there is a control (pColumn && "[Header]") of theTemplateGroup then
-        return the long ID of control (pColumn && "[Header]") of theTemplateGroup
-    else
-        return empty
-    end if
+   local theTemplateGroup
+   put the dgProps["row template"] of me into theTemplateGroup
+   if there is a control (pColumn && "[Header]") of theTemplateGroup then
+      return the long ID of control (pColumn && "[Header]") of theTemplateGroup
+   else
+      return empty
+   end if
 end dgColumnHeaderTemplate
  
  
@@ -6405,12 +6688,13 @@ end dgFindIndex
 
 
 getprop dgFindLine [pKeyValues]
-    put the dgFindIndex [pKeyValues] of me into theFoundIndex
-    if theFoundIndex > 0 then
-        return the dgLineOfIndex[theFoundIndex] of me
-    else
-        return 0
-    end if
+   local theFoundIndex
+   put the dgFindIndex [pKeyValues] of me into theFoundIndex
+   if theFoundIndex > 0 then
+      return the dgLineOfIndex[theFoundIndex] of me
+   else
+      return 0
+   end if
 end dgFindLine
 
 
@@ -6445,14 +6729,16 @@ end ColumnControlOfIndex
 
 
 function ColumnControlOfLine pColumn, pLine
-    put the dgIndexOfLine [pLine] of me into theIndex
-    return ColumnControlOfIndex(pColumn, theIndex)
+   local theIndex
+   put the dgIndexOfLine [pLine] of me into theIndex
+   return ColumnControlOfIndex(pColumn, theIndex)
 end ColumnControlOfLine
 
 
 getprop dgDataControlOfLine [pLine]
-    put the dgIndexOfLine [pLine] of me into theIndex
-    return the dgDataControlOfIndex [theIndex] of me
+   local theIndex
+   put the dgIndexOfLine [pLine] of me into theIndex
+   return the dgDataControlOfIndex [theIndex] of me
 end dgDataControlOfLine
 
 
@@ -6460,39 +6746,41 @@ end dgDataControlOfLine
 ## is relative to this group but takes into account current vscroll.
 ## This may not prove very useful if you don't have control caching on.
 getprop dgRectOfIndex [pIndex]
-    put the dgDataControlOfIndex[pIndex] of me into theControl
-    if theControl is not empty then
-        put the rect of theControl into theRect
-        
-        if the dgProps["fixed row height"] of me then
-            put the dgLineOfIndex[pIndex] of me into theSequence
-            put sControlHeights * theSequence into item 4 of theRect
-            put item 4 of theRect - sControlHeights into item 2 of theRect         
-        else
-            put 0 into theControlBottom
-            repeat for each item theIndex in sIndexSequencing                 
-                add sControlHeights[theIndex] to theControlBottom
-                
-                if theIndex is pIndex then
-                    exit repeat
-                end if
-            end repeat
+   local theControl, theRect, theSequence, theControlBottom
+   put the dgDataControlOfIndex[pIndex] of me into theControl
+   if theControl is not empty then
+      put the rect of theControl into theRect
+      
+      if the dgProps["fixed row height"] of me then
+         put the dgLineOfIndex[pIndex] of me into theSequence
+         put sControlHeights * theSequence into item 4 of theRect
+         put item 4 of theRect - sControlHeights into item 2 of theRect         
+      else
+         put 0 into theControlBottom
+         repeat for each item theIndex in sIndexSequencing                 
+            add sControlHeights[theIndex] to theControlBottom
             
-            put theControlBottom into item 4 of theRect
-            put theControlBottom - sControlHeights[theIndex] into item 2 of theRect
-        end if
-        
-        ## Adjust for vscroll
-        put the dgVScroll of me into theVScroll
-        subtract theVScroll from item 2 of theRect
-        subtract theVScroll from item 4 of theRect
-        
-        ## Now adjust for position of control
-        add the top of group "dgListMask" of me to item 2 of theRect
-        add the top of group "dgListMask" of me to item 4 of theRect
-    end if
-    
-    return theRect
+            if theIndex is pIndex then
+               exit repeat
+            end if
+         end repeat
+         
+         put theControlBottom into item 4 of theRect
+         put theControlBottom - sControlHeights[theIndex] into item 2 of theRect
+      end if
+      
+      ## Adjust for vscroll
+      local theVScroll
+      put the dgVScroll of me into theVScroll
+      subtract theVScroll from item 2 of theRect
+      subtract theVScroll from item 4 of theRect
+      
+      ## Now adjust for position of control
+      add the top of group "dgListMask" of me to item 2 of theRect
+      add the top of group "dgListMask" of me to item 4 of theRect
+   end if
+   
+   return theRect
 end dgRectOfIndex
 
 
@@ -6502,7 +6790,10 @@ end dgControl
  
  
 getprop dgVScroll
-    return round(the thumbPosition of scrollbar "dgScrollbar" of me)
+   if __HasMobileScroller() then
+      return mobileControlGet(sScrollerId, "vScroll")
+   end if
+   return round(the thumbPosition of scrollbar "dgScrollbar" of me)
 end dgVScroll
  
  
@@ -6512,22 +6803,28 @@ end dgVScroll
 
 
 private command _SetVScroll pValue
-    lock screen
-    put the lockMessages into msgsAreLocked
-    lock messages
-    set the thumbPosition of scrollbar "dgScrollbar" of me to pValue
-    put the thumbPosition of scrollbar "dgScrollbar" of me into pValue
-    set the lockMessages to msgsAreLocked
-    
-    if not msgsAreLocked and the visible of scrollbar "dgScrollbar" of me then
-        send "scrollbarDrag  pValue" to scrollbar "dgScrollbar" of me
-        ## dispatch slows things down terribly here
-        -- dispatch "scrollbarDrag" to scrollbar "dgScrollbar" of me with pValue
-    else
-        _ScrollListV pValue
-    end if
-    
-    unlock screen
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   set the thumbPosition of scrollbar "dgScrollbar" of me to pValue
+   put the thumbPosition of scrollbar "dgScrollbar" of me into pValue
+   
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", pValue
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   if not msgsAreLocked and the visible of scrollbar "dgScrollbar" of me then
+      send "scrollbarDrag  pValue" to scrollbar "dgScrollbar" of me
+      ## dispatch slows things down terribly here
+      -- dispatch "scrollbarDrag" to scrollbar "dgScrollbar" of me with pValue
+   else
+      _ScrollListV pValue
+   end if
+   
+   unlock screen
 end _SetVScroll
 
 
@@ -6538,12 +6835,16 @@ end dgVScrollPercent
 
 
 private function _GetVScrollPercent
-    put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
-    if theWorkingEndValue > 0 then
-        return round(the thumbPosition of scrollbar "dgScrollbar" of me) / theWorkingEndValue
-    else
-        return 0
-    end if
+   local theWorkingEndValue
+   put __WorkingScrollVEndValue() into theWorkingEndValue
+   if theWorkingEndValue > 0 then
+      if __HasMobileScroller() then
+         return mobileControlGet(sScrollerId, "vScroll") / theWorkingEndValue
+      end if
+      return round(the thumbPosition of scrollbar "dgScrollbar" of me) / theWorkingEndValue
+   else
+      return 0
+   end if
 end _GetVScrollPercent
 
 
@@ -6551,15 +6852,31 @@ setprop dgVScrollPercent pPercent
     _SetVScrollPercent pPercent
 end dgVScrollPercent
 
+private function __WorkingScrollVEndValue
+   local theWorkingEndValue
+   if the environment is not "mobile" then
+      put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
+   else if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put item 4 of tContentRect - the height of group "dgList" of me into theWorkingEndValue
+   else
+      put 0 into theWorkingEndValue
+   end if
+   return theWorkingEndValue
+end __WorkingScrollVEndValue
 
 private command _SetVScrollPercent pPercent
-    put the endValue of scrollbar "dgScrollbar" of me - the thumbSize of scrollbar "dgScrollbar" of me into theWorkingEndValue
-    _SetVScroll round(theWorkingEndValue * pPercent)
+   _SetVScroll round(__WorkingScrollVEndValue() * pPercent)
 end _SetVScrollPercent
 
 
 getprop dgHScroll
-    return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me)
+   if __HasMobileScroller() then
+      return mobileControlGet(sScrollerId, "hScroll")
+   else
+      return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me)
+   end if
 end dgHScroll
  
  
@@ -6569,22 +6886,27 @@ end dgHScroll
 
 
 private command _SetHScroll pValue
-    lock screen
-    put the lockMessages into msgsAreLocked
-    lock messages
-    set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to pValue
-    put the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into pValue
-    set the lockMessages to msgsAreLocked
-     
-    if not msgsAreLocked and the visible of group "dgHorizontalComponents" of me then
-        send "scrollbarDrag  pValue" to scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me
-        ## dispatch slows things down terribly here
-        --  dispatch "scrollbarDrag" to scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me with pValue
-    else
-        _ScrollListH pValue
-    end if
-    
-    unlock screen
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to pValue
+   put the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into pValue
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "hScroll", pValue
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   if not msgsAreLocked and the visible of group "dgHorizontalComponents" of me then
+      send "scrollbarDrag  pValue" to scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me
+      ## dispatch slows things down terribly here
+      --  dispatch "scrollbarDrag" to scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me with pValue
+   else
+      _ScrollListH pValue
+   end if
+   
+   unlock screen
 end _SetHScroll
 
 
@@ -6601,13 +6923,31 @@ getprop dgHScrollPercent
 end dgHScrollPercent
 
 
+private function __WorkingScrollHEndValue
+   local theWorkingEndValue
+   if the environment is not "mobile" then
+      put the endValue of scrollbar "dgHScrollbar" of me - the thumbSize of scrollbar "dgHScrollbar" of me into theWorkingEndValue
+   else if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put item 3 of tContentRect - the width of group "dgList" of me into theWorkingEndValue
+   else
+      put 0 into theWorkingEndValue
+   end if
+   return theWorkingEndValue
+end __WorkingScrollHEndValue
+
 private function _GetHScrollPercent
-    put the endValue of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me - the thumbSize of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theWorkingEndValue
-    if theWorkingEndValue > 0 then
-        return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) / theWorkingEndValue
-    else
-        return 0
-    end if
+   local theWorkingEndValue
+   put __WorkingScrollHEndValue() into theWorkingEndValue
+   if theWorkingEndValue > 0 then
+      if __HasMobileScroller() then
+         return mobileControlGet(sScrollerId, "hScroll") / theWorkingEndValue
+      end if
+      return round(the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me) / theWorkingEndValue
+   else
+      return 0
+   end if
 end _GetHScrollPercent
 
 
@@ -6623,52 +6963,59 @@ end _ResetScrollsToZero
 
 
 private command _ResetVScrollToZero
-    put the lockMessages into msgsAreLocked
-    set the lockMessages to true
-    
-    set the thumbPosition of scrollbar "dgScrollbar" of me to 0
-    set the vScroll of group "dgList" of group "dgListMask" of me to 0
-    
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   set the lockMessages to true
+   
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to 0
+   set the vScroll of group "dgList" of group "dgListMask" of me to 0
+   
+   set the lockMessages to msgsAreLocked
 end _ResetVScrollToZero
 
 
 private command _ResetHScrollToZero
-    put the lockMessages into msgsAreLocked
-    set the lockMessages to true
-    
-    set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
-    set the hScroll of group "dgHeaderMask" of group "dgHeaderComponents" of me to 0
-    set the hScroll of group "dgListMask" of me to 0
-    
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   set the lockMessages to true
+   
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "hScroll", 0
+   end if
+   set the thumbPosition of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to 0
+   set the hScroll of group "dgHeaderMask" of group "dgHeaderComponents" of me to 0
+   set the hScroll of group "dgListMask" of me to 0
+   
+   set the lockMessages to msgsAreLocked
 end _ResetHScrollToZero
 
 
 private command _SetHScrollPercent pPercent
-    put the endValue of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me - \
-            the thumbSize of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theWorkingEndValue
-    _SetHScroll round(theWorkingEndValue * pPercent)
+   _SetHScroll round(__WorkingScrollHEndValue() * pPercent)
 end _SetHScrollPercent
  
  
 getprop dgDataControls
-    if _ControlType() is "form" then
-        if the dgProps["cache controls"] of me then
-            ## sTableObjectsA["visible row controls"] only contains visible controls but all controls are valid.
-            put sTableObjectsA["all row controls"] into theControls       
-        else
-            put sTableObjectsA["visible row controls"] into theControls
-        end if
-        
-        repeat for each line theControl in theControls
-            put the long ID of theControl & cr after theList
-        end repeat
-        delete the last char of theList
-        return theList
-    else
-        return empty
-    end if
+   local theControls, theList
+   if _ControlType() is "form" then
+      if the dgProps["cache controls"] of me then
+         ## sTableObjectsA["visible row controls"] only contains visible controls but all controls are valid.
+         put sTableObjectsA["all row controls"] into theControls       
+      else
+         put sTableObjectsA["visible row controls"] into theControls
+      end if
+      
+      repeat for each line theControl in theControls
+         put the long ID of theControl & cr after theList
+      end repeat
+      delete the last char of theList
+      return theList
+   else
+      return empty
+   end if
 end dgDataControls
  
  
@@ -6698,26 +7045,26 @@ end dgHilitedIndexes
 
 
 private command _SetHilitedIndexes pIndexes
-    put _SortIndexesSequentially(pIndexes) into pIndexes
-    
-    lock screen
-    
-    if pIndexes is not sHilitedIndexes then
-        put pIndexes into sHilitedIndexes
-        if the dgProps["scroll selections into view"] of me is not false then
-            ScrollIndexIntoView item 1 of sHilitedIndexes
-        end if
-        
-        _HiliteIndexesInVisibleControls
-        put true into theReturnValue
-         
-    else
-        put false into theReturnValue
-    end if
-     
-    unlock screen     
-    
-    return theReturnValue
+   put _SortIndexesSequentially(pIndexes) into pIndexes
+   
+   lock screen
+   local theReturnValue
+   if pIndexes is not sHilitedIndexes then
+      put pIndexes into sHilitedIndexes
+      if the dgProps["scroll selections into view"] of me is not false then
+         ScrollIndexIntoView item 1 of sHilitedIndexes
+      end if
+      
+      _HiliteIndexesInVisibleControls
+      put true into theReturnValue
+      
+   else
+      put false into theReturnValue
+   end if
+   
+   unlock screen     
+   
+   return theReturnValue
 end _SetHilitedIndexes
 
 
@@ -6761,23 +7108,24 @@ end dgHilitedLines
 
 
 private command _SetHilitedSequences pSequences
-    local theIndex,theSequence
-    local theHilitedIndexes
-    
-    ## We want indexes to be in order of selection
-    sort items of pSequences numeric
-    put the number of items of sIndexSequencing into theMaxSequence
-    
-    repeat for each item theSequence in pSequences
-        put item min(theSequence, theMaxSequence) of sIndexSequencing into theIndex
-        if theIndex is not empty then
-            put theIndex & comma after theHilitedIndexes
-        end if
-    end repeat
-    delete the last char of theHilitedIndexes
-    
-    set the dgHilitedIndexes of me to theHilitedIndexes
-    return the result
+   local theIndex,theSequence
+   local theHilitedIndexes
+   local theMaxSequence
+   
+   ## We want indexes to be in order of selection
+   sort items of pSequences numeric
+   put the number of items of sIndexSequencing into theMaxSequence
+   
+   repeat for each item theSequence in pSequences
+      put item min(theSequence, theMaxSequence) of sIndexSequencing into theIndex
+      if theIndex is not empty then
+         put theIndex & comma after theHilitedIndexes
+      end if
+   end repeat
+   delete the last char of theHilitedIndexes
+   
+   set the dgHilitedIndexes of me to theHilitedIndexes
+   return the result
 end _SetHilitedSequences
  
  
@@ -6800,70 +7148,88 @@ end _CardOf
 
 
 private command _RefreshIndexes pIndexes
-    put false into redrawTheList
-    
-    lock screen
-    put _GetVScrollPercent() into theVScroll
-    put _VisibleIndexes() into theVisibleIndexes
-    
-    repeat for each item theIndex in pIndexes
-        _UpdateIndexWithNewData theIndex
-         
-        set the wholeMatches to true
-        
-        if theIndex is among the items of theVisibleIndexes then
-            _ResetControlsOfIndex theIndex
-            put true into redrawTheList
-        end if
-         
-    end repeat
-    
-    if redrawTheList then
-        _RedrawList theVScroll
-    end if
-    
-    unlock screen
+   local redrawTheList, theVScroll, theVisibleIndexes
+   put false into redrawTheList
+   
+   lock screen
+   put _GetVScrollPercent() into theVScroll
+   put _VisibleIndexes() into theVisibleIndexes
+   
+   repeat for each item theIndex in pIndexes
+      _UpdateIndexWithNewData theIndex
+      
+      set the wholeMatches to true
+      
+      if theIndex is among the items of theVisibleIndexes then
+         _ResetControlsOfIndex theIndex
+         put true into redrawTheList
+      end if
+      
+   end repeat
+   
+   if redrawTheList then
+      _RedrawList theVScroll
+   end if
+   
+   unlock screen
 end _RefreshIndexes
 
 
 private function _ColorToRGB pColor
-    if pColor is a color then
-        if the number of items of pColor is not 3 then
-            lock screen
-            put the long ID of graphic "dgBackground" of me into theGraphic
-            put the backColor of theGraphic into theOrigColor
-            set the backColor of theGraphic to pColor
-            set the backpixel of theGraphic to the effective backpixel of theGraphic
-            put the backColor of theGraphic into pColor
-            set the backColor of theGraphic to theOrigColor
-            unlock screen
-        end if
-    end if
-    
-    return pColor
+   if pColor is a color then
+      if the number of items of pColor is not 3 then
+         lock screen
+         local theGraphic, theOrigColor
+         put the long ID of graphic "dgBackground" of me into theGraphic
+         put the backColor of theGraphic into theOrigColor
+         set the backColor of theGraphic to pColor
+         set the backpixel of theGraphic to the effective backpixel of theGraphic
+         put the backColor of theGraphic into pColor
+         set the backColor of theGraphic to theOrigColor
+         unlock screen
+      end if
+   end if
+   
+   return pColor
 end _ColorToRGB
 
 
 private command _SetGraphicGradient pGraphic, pStartColor, pEndColor
-    put the rect of pGraphic into theRect
-    set the backgroundColor of pGraphic to empty
-    set the fillgradient["quality"] of pGraphic to "normal"
-    set the fillgradient["repeat"] of pGraphic to  1
-    set the fillgradient["mirror"] of pGraphic to false
-    set the fillgradient["wrap"] of pGraphic to true
-    set the fillgradient["type"] of pGraphic to "linear"
-    set the fillGradient["ramp"] of pGraphic to "0.00000," & pStartColor & cr & "1.00000," & pEndColor
-    put item 1 of theRect into theX
-    put item 2 of theRect into theY
-    ## take gradient from the top to the bottom. 
-    ## Spread it out via the X
-    set the fillgradient["from"] of pGraphic to theX, theY
-    set the fillgradient["to"] of pGraphic to theX, theY + (item 4 of theRect - item 2 of theRect)
-    set the fillGradient["via"] of pGraphic to theX + 40, theY
-     
-    return empty
+   local theRect, theX, theY
+   put the rect of pGraphic into theRect
+   set the backgroundColor of pGraphic to empty
+   set the fillgradient["quality"] of pGraphic to "normal"
+   set the fillgradient["repeat"] of pGraphic to  1
+   set the fillgradient["mirror"] of pGraphic to false
+   set the fillgradient["wrap"] of pGraphic to true
+   set the fillgradient["type"] of pGraphic to "linear"
+   set the fillGradient["ramp"] of pGraphic to "0.00000," & pStartColor & cr & "1.00000," & pEndColor
+   put item 1 of theRect into theX
+   put item 2 of theRect into theY
+   ## take gradient from the top to the bottom. 
+   ## Spread it out via the X
+   set the fillgradient["from"] of pGraphic to theX, theY
+   set the fillgradient["to"] of pGraphic to theX, theY + (item 4 of theRect - item 2 of theRect)
+   set the fillGradient["via"] of pGraphic to theX + 40, theY
+   
+   return empty
 end _SetGraphicGradient
 
+on scrollerBeginDrag
+   _UserStartedVScrolling
+   pass scrollerBeginDrag
+end scrollerBeginDrag
+
+on scrollerEndDrag
+   _UserStoppedVScrolling
+   pass scrollerEndDrag
+end scrollerEndDrag
+
+on scrollerDidScroll pHScroll, pVScroll
+   dgScrollbarDragV max(0,pVScroll)
+   dgScrollbarDragH max(0,pHScroll)
+   pass scrollerDidScroll
+end scrollerDidScroll
 
 ## This handler is called from the vscroll bar when user releases mouse.
 ## It draws any columns not currently visible within the mask area.
@@ -6871,12 +7237,12 @@ end _SetGraphicGradient
 ## so if the user clicked an released without scrolling we would still redraw. If this becomes
 ## a problem then add a flag in mouseDown.
 command _UserStoppedVScrolling
-    put false into sRunningActionsA["user is vscrolling"]
-    
-    if _ControlType() is "table" then
-        put _table.AreColumnsVisibleWithinMask() into theColumnsA
-        _table.DrawColumns theColumnsA["hidden"]
-    end if
+   put false into sRunningActionsA["user is vscrolling"]
+   local theColumnsA
+   if _ControlType() is "table" then
+      put _table.AreColumnsVisibleWithinMask() into theColumnsA
+      _table.DrawColumns theColumnsA["hidden"]
+   end if
 end _UserStoppedVScrolling
 
 
@@ -6892,33 +7258,35 @@ end PrintKeys
 
 
 private function _ResourceStack
-    put the behavior of me into theStack
-    if theStack is not empty then
-        put offset(" of stack", theStack) into theCharNo
-        delete char 1 to (theCharNo + 3) of theStack
-    end if
-    
-    return theStack
+   local theStack, theCharNo
+   put the behavior of me into theStack
+   if theStack is not empty then
+      put offset(" of stack", theStack) into theCharNo
+      delete char 1 to (theCharNo + 3) of theStack
+   end if
+   
+   return theStack
 end _ResourceStack
 
 
 private function _PrintKeys @pArray, pDimension
-    if pDimension is empty then put 0 into pDimension
-     
-    put the keys of pArray into theKeys
-    sort theKeys numeric
-     
-    repeat for each line theKey in theKeys
-        if pArray[theKey] is an array then
-            put _printCharXTimes(space, pDimension * 5) & theKey & cr after theText
-            put pArray[theKey] into theTempArray
-            put _PrintKeys(theTempArray, pDimension + 1) after theText
-        else
-            put _printCharXTimes(space, pDimension * 5) &  theKey & ":" && "`" & pArray[theKey] & "`" & cr after theText
-        end if
-    end repeat
-     
-    return theText
+   if pDimension is empty then put 0 into pDimension
+   
+   local theKeys, theText, theTempArray
+   put the keys of pArray into theKeys
+   sort theKeys numeric
+   
+   repeat for each line theKey in theKeys
+      if pArray[theKey] is an array then
+         put _printCharXTimes(space, pDimension * 5) & theKey & cr after theText
+         put pArray[theKey] into theTempArray
+         put _PrintKeys(theTempArray, pDimension + 1) after theText
+      else
+         put _printCharXTimes(space, pDimension * 5) &  theKey & ":" && "`" & pArray[theKey] & "`" & cr after theText
+      end if
+   end repeat
+   
+   return theText
 end _PrintKeys
 
 
@@ -6933,45 +7301,46 @@ end _printCharXTimes
 
 
 function _CustomControlReference pControl
-    -----
-    local theFirstCharToDelete
-    local theLastCharToDelete
-    local theOffset
-    local theStack
-    -----
-    put the long ID of pControl into pControl
-    ## Get id without hierarchy
-    if word 1 of pControl is not among the items of "card,stack" then
-        ## Strip any nested refs
-        if pControl contains "of group id" then
-            put length(word 1 to 4 of pControl) + 1 into theFirstCharToDelete
-            put offset(" card id", pControl) - 1 into theLastCharToDelete
-            delete char theFirstCharToDelete to theLastCharToDelete of pControl
-        end if
-        
-        put offset(" of stack ", pControl) into theStackOffset
-        put offset(" of stack ", pControl, theStackOffset) into theSecondStackOffset
-        if theSecondStackOffset > 0 then
-            ## Strip mainstack ref if substack.
-            ## We want user to move stacks around.
-            add theSecondStackOffset to theStackOffset
-            delete char theStackOffset to -1 of pControl
-        else
-            ## Shorten stack name
-            put char (theStackOffset + 4) to -1 of pControl into theStack
-            put the short name of theStack into theStack	# get stack short name
-            put quote & theStack & quote into char (theStackOffset + 10) to -1 of pControl
-        end if
-        
-        ## Strip card ref
-        ## Taken out so that one can locate the card of a stack that a reference is on
-        ## without looping through every card on the stack.
-        -- put offset(" of card ", pControl) into theFirstCharToDelete
-        -- put offset(" of stack ", pControl) into theLastCharToDelete
-        -- delete char theFirstCharToDelete + 1 to theLastCharToDelete of pControl
-    end if
-    
-    return pControl
+   -----
+   local theFirstCharToDelete
+   local theLastCharToDelete
+   local theOffset
+   local theStack
+   -----
+   put the long ID of pControl into pControl
+   ## Get id without hierarchy
+   if word 1 of pControl is not among the items of "card,stack" then
+      ## Strip any nested refs
+      if pControl contains "of group id" then
+         put length(word 1 to 4 of pControl) + 1 into theFirstCharToDelete
+         put offset(" card id", pControl) - 1 into theLastCharToDelete
+         delete char theFirstCharToDelete to theLastCharToDelete of pControl
+      end if
+      
+      local theStackOffset, theSecondStackOffset
+      put offset(" of stack ", pControl) into theStackOffset
+      put offset(" of stack ", pControl, theStackOffset) into theSecondStackOffset
+      if theSecondStackOffset > 0 then
+         ## Strip mainstack ref if substack.
+         ## We want user to move stacks around.
+         add theSecondStackOffset to theStackOffset
+         delete char theStackOffset to -1 of pControl
+      else
+         ## Shorten stack name
+         put char (theStackOffset + 4) to -1 of pControl into theStack
+         put the short name of theStack into theStack	# get stack short name
+         put quote & theStack & quote into char (theStackOffset + 10) to -1 of pControl
+      end if
+      
+      ## Strip card ref
+      ## Taken out so that one can locate the card of a stack that a reference is on
+      ## without looping through every card on the stack.
+      -- put offset(" of card ", pControl) into theFirstCharToDelete
+      -- put offset(" of stack ", pControl) into theLastCharToDelete
+      -- delete char theFirstCharToDelete + 1 to theLastCharToDelete of pControl
+   end if
+   
+   return pControl
 end _CustomControlReference
 
 
@@ -7043,155 +7412,160 @@ end _KeyedParametersToArray
 
 
 private function _SortIndexesSequentially pIndexes
-    local theIndex
-    local theItemNo
-    -----
-    set the wholeMatches to true
-    
-    ## Algorithm: Inserts indexes into same line as sequence then strips
-    ## empty lines. Seems like it would be faster then creating table of sequences/indexes,
-    ## performing a sort and then extracting the index column. Haven't timed though.
-    repeat for each item theIndex in pIndexes
-        put itemOffset(theIndex, sIndexSequencing) into theItemNo
-        if theItemNo > 0 then
-            put theIndex into line theItemNo of theIndexes         
-        end if
-    end repeat
-    
-    filter theIndexes without empty ## Get rid of empty lines
-    replace cr with comma in theIndexes
-    
-    return theIndexes
+   local theIndex
+   local theItemNo
+   local theIndexes
+   -----
+   set the wholeMatches to true
+   
+   ## Algorithm: Inserts indexes into same line as sequence then strips
+   ## empty lines. Seems like it would be faster then creating table of sequences/indexes,
+   ## performing a sort and then extracting the index column. Haven't timed though.
+   repeat for each item theIndex in pIndexes
+      put itemOffset(theIndex, sIndexSequencing) into theItemNo
+      if theItemNo > 0 then
+         put theIndex into line theItemNo of theIndexes         
+      end if
+   end repeat
+   
+   filter theIndexes without empty ## Get rid of empty lines
+   replace cr with comma in theIndexes
+   
+   return theIndexes
 end _SortIndexesSequentially
 
 
 private command _ProcessNewIndexData pIndex
-    -----
-    local theControl
-    local theTemplateGroup
-    -----
-    
-    put the lockMessages into msgsAreLocked
-    
-    ## Create cached control as needed
-    if the dgProps["cache controls"] of me and _ControlType() is "form" then
-        put the dgProps["row template"] of me into theTemplateGroup
-        lock messages
-        copy theTemplateGroup to group "dgList" of me
-        put it into theControl
-        put "control id" && word 3 of theControl && "of me" into sControlOfIndexA[pIndex]
-        set the visible of theControl to false
-        set the dgIndex of theControl to pIndex
-        unlock messages
-        
-        put sControlOfIndexA[pIndex] into line (the number of lines of sTableObjectsA["all row controls"] + 1) of sTableObjectsA["all row controls"]
-    end if
-    
-    ## Since number of records has changed we need to redraw alternating rows
-    _DrawAlternatingRows
-    
-    _UpdateIndexWithNewData pIndex
-    
-    ## We only need to update formattedheight when working with fixed control heights.
-    ## Otherwise the formatted height is adjusted when new data is updated.
-    if sFormattedHeight is not empty then
-        if the dgProps["fixed row height"] of me then
-            add sControlHeights to sFormattedHeight
-            _ConfigureScrollbar
-        else
-            _ConfigureScrollbar
-            _AutoHideVScrollbar ## this only works for fixed height
-        end if
-    end if
-    
-    set the lockMessages to msgsAreLocked
-    
-    return theControl
+   -----
+   local theControl
+   local theTemplateGroup
+   local msgsAreLocked
+   -----
+   
+   put the lockMessages into msgsAreLocked
+   
+   ## Create cached control as needed
+   if the dgProps["cache controls"] of me and _ControlType() is "form" then
+      put the dgProps["row template"] of me into theTemplateGroup
+      lock messages
+      copy theTemplateGroup to group "dgList" of me
+      put it into theControl
+      put "control id" && word 3 of theControl && "of me" into sControlOfIndexA[pIndex]
+      set the visible of theControl to false
+      set the dgIndex of theControl to pIndex
+      unlock messages
+      
+      put sControlOfIndexA[pIndex] into line (the number of lines of sTableObjectsA["all row controls"] + 1) of sTableObjectsA["all row controls"]
+   end if
+   
+   ## Since number of records has changed we need to redraw alternating rows
+   _DrawAlternatingRows
+   
+   _UpdateIndexWithNewData pIndex
+   
+   ## We only need to update formattedheight when working with fixed control heights.
+   ## Otherwise the formatted height is adjusted when new data is updated.
+   if sFormattedHeight is not empty then
+      if the dgProps["fixed row height"] of me then
+         add sControlHeights to sFormattedHeight
+         _ConfigureScrollbar
+      else
+         _ConfigureScrollbar
+         _AutoHideVScrollbar ## this only works for fixed height
+      end if
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   return theControl
 end _ProcessNewIndexData
 
 
 private command _UpdateIndexWithNewData pIndex
-    -----
-    local deleteTheControl, theControl, theLine, theRect
-    local theListGroupRect
-    local theTemplateGroup
-    -----
-    put the long ID of the focusedObject into theFocusedControl
-    
-    put the dgDataControlOfIndex[pIndex] of me into theControl
-    
-    put the lockMessages into msgsAreLocked
-    put the dgProps["fixed row height"] of me into heightIsFixed
-    
-    ## If not fixed height and no control exists then create one 
-    ## and mark it for deletion
-    if theControl is empty and not heightIsFixed then
-        put true into deleteTheControl
-        put the dgProps["row template"] of me into theTemplateGroup
-        lock messages
-        copy theTemplateGroup to group "dgList" of me
-        put it into theControl
-    end if
-     
-    ## Insert data into control
-    if theControl is not empty then
-        unlock messages
-        
-        put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-        put the dgLine of theControl into theLine ## passing this param is deprecated
-        put the rect of theControl into theRect
-        put item 1 of theRect + (item 3 of theListGroupRect - item 1 of theListGroupRect) into item 3 of theRect
-         
-        dispatch "FillInData" to theControl with sDataArray[pIndex]
-        lock messages
-        set the rect of theControl to theRect ## FillInData could possibly extend elements outside of the original rect
-        unlock messages
-        dispatch "LayoutControl" to theControl with theRect
-        
-        lock messages
-        if not heightIsFixed then
-            put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
-            set the rect of theControl to theRect
-        end if
-    end if
-     
-    ## Now update formatted height if we are not dealing with fixed control heights
-    if not the dgProps["fixed row height"] of me and sFormattedHeight is not empty then
-        ## First we need to subtract existing height from cached
-        if sControlHeights[pIndex] is an integer and sFormattedHeight is not empty then
-            subtract sControlHeights[pIndex] from sFormattedHeight
-        end if
-         
-        ## Now cache control height
-        put the height of theControl into sControlHeights[pIndex]
-        add sControlHeights[pIndex] to sFormattedHeight
-        
-        _ConfigureScrollbar
-    end if
-     
-    ## Note: fixed control height does NOT need formattedheight updated.
-     
-    ## Cleanup if not caching and not fixed control height
-    if deleteTheControl then 
-        lock messages
-        delete theControl
-    end if
-    
-    ## Make sure focus stays with us
-    if the long ID of me is in theFocusedControl then
-        
-        lock messages
-        if there is not a theFocusedControl then
-            focus on graphic "dgBackground" of me
-        else
-            focus on theFocusedControl
-        end if
-        unlock messages
-    end if
-    
-    set the lockMessages to msgsAreLocked
-     
-    return empty
+   -----
+   local deleteTheControl, theControl, theLine, theRect
+   local theListGroupRect
+   local theTemplateGroup
+   local theFocusedControl
+   local msgsAreLocked
+   local heightIsFixed
+   -----
+   put the long ID of the focusedObject into theFocusedControl
+   
+   put the dgDataControlOfIndex[pIndex] of me into theControl
+   
+   put the lockMessages into msgsAreLocked
+   put the dgProps["fixed row height"] of me into heightIsFixed
+   
+   ## If not fixed height and no control exists then create one 
+   ## and mark it for deletion
+   if theControl is empty and not heightIsFixed then
+      put true into deleteTheControl
+      put the dgProps["row template"] of me into theTemplateGroup
+      lock messages
+      copy theTemplateGroup to group "dgList" of me
+      put it into theControl
+   end if
+   
+   ## Insert data into control
+   if theControl is not empty then
+      unlock messages
+      
+      put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+      put the dgLine of theControl into theLine ## passing this param is deprecated
+      put the rect of theControl into theRect
+      put item 1 of theRect + (item 3 of theListGroupRect - item 1 of theListGroupRect) into item 3 of theRect
+      
+      dispatch "FillInData" to theControl with sDataArray[pIndex]
+      lock messages
+      set the rect of theControl to theRect ## FillInData could possibly extend elements outside of the original rect
+      unlock messages
+      dispatch "LayoutControl" to theControl with theRect
+      
+      lock messages
+      if not heightIsFixed then
+         put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
+         set the rect of theControl to theRect
+      end if
+   end if
+   
+   ## Now update formatted height if we are not dealing with fixed control heights
+   if not the dgProps["fixed row height"] of me and sFormattedHeight is not empty then
+      ## First we need to subtract existing height from cached
+      if sControlHeights[pIndex] is an integer and sFormattedHeight is not empty then
+         subtract sControlHeights[pIndex] from sFormattedHeight
+      end if
+      
+      ## Now cache control height
+      put the height of theControl into sControlHeights[pIndex]
+      add sControlHeights[pIndex] to sFormattedHeight
+      
+      _ConfigureScrollbar
+   end if
+   
+   ## Note: fixed control height does NOT need formattedheight updated.
+   
+   ## Cleanup if not caching and not fixed control height
+   if deleteTheControl then 
+      lock messages
+      delete theControl
+   end if
+   
+   ## Make sure focus stays with us
+   if the long ID of me is in theFocusedControl then
+      
+      lock messages
+      if there is not a theFocusedControl then
+         focus on graphic "dgBackground" of me
+      else
+         focus on theFocusedControl
+      end if
+      unlock messages
+   end if
+   
+   set the lockMessages to msgsAreLocked
+   
+   return empty
 end _UpdateIndexWithNewData
 
 
@@ -7217,292 +7591,335 @@ end _VisibleIndexes
 
 
 private command _ConfigureScrollbar
-    if sFormattedHeight > 0 then
-        put sFormattedHeight into theEndValue
-    else
-        put the height of group "dgList" of me into theEndValue
-    end if
-     
-    lock screen
-    
-    ## If messages are not locked then scrollbarDrag is sent when group height is increased.
-    put the lockMessages into msgsAreLocked
-    lock messages
-    
-    put _GetVScrollPercent() into thePercent
-    
-    ## Setting thumbsize 2nd is important because engine limits thumbsize based on endValue
-    set the endValue of scrollbar "dgScrollbar" of me to max(the height of group "dgList" of me, theEndValue)
-    set the thumbSize of scrollbar "dgScrollbar" of me to the height of group "dgList" of me
-    put the thumbSize of scrollbar "dgScrollbar" of me into thePageIncrement
-    if sControlHeights is an integer then subtract sControlHeights from thePageIncrement
-    else subtract 16 from thePageIncrement ## Why 16? Why not.
-    set the pageIncrement of scrollbar "dgScrollbar" of me to thePageIncrement
-    
-    if the dgProps["fixed row height"] of me and sControlHeights is an integer then
-        set the lineIncrement of scrollbar "dgScrollbar" of me to sControlHeights  
-    else
-        set the lineIncrement of scrollbar "dgScrollbar" of me to round(the pageIncrement of scrollbar "dgScrollbar" of me / 16)
-    end if
-    
-    ## in lock messages so no redrawing occurs
-    _SetVScrollPercent thePercent
-    
-    set the lockMessages to msgsAreLocked    
-    unlock screen
+   local theEndValue
+   if sFormattedHeight > 0 then
+      put sFormattedHeight into theEndValue
+   else
+      put the height of group "dgList" of me into theEndValue
+   end if
+   
+   lock screen
+   
+   ## If messages are not locked then scrollbarDrag is sent when group height is increased.
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   local thePercent
+   put _GetVScrollPercent() into thePercent
+   
+   ## Setting thumbsize 2nd is important because engine limits thumbsize based on endValue
+   set the endValue of scrollbar "dgScrollbar" of me to max(the height of group "dgList" of me, theEndValue)
+   set the thumbSize of scrollbar "dgScrollbar" of me to the height of group "dgList" of me
+   
+   local thePageIncrement
+   put the thumbSize of scrollbar "dgScrollbar" of me into thePageIncrement
+   if sControlHeights is an integer then subtract sControlHeights from thePageIncrement
+   else subtract 16 from thePageIncrement ## Why 16? Why not.
+   set the pageIncrement of scrollbar "dgScrollbar" of me to thePageIncrement
+   
+   if the dgProps["fixed row height"] of me and sControlHeights is an integer then
+      set the lineIncrement of scrollbar "dgScrollbar" of me to sControlHeights  
+   else
+      set the lineIncrement of scrollbar "dgScrollbar" of me to round(the pageIncrement of scrollbar "dgScrollbar" of me / 16)
+   end if
+   
+   if __HasMobileScroller() then
+      local tContentRect
+      put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+      put max(the height of group "dgList" of me, theEndValue) into item 4 of tContentRect
+      mobileControlSet sScrollerId, "contentrect", tContentRect
+   end if
+   
+   ## in lock messages so no redrawing occurs
+   _SetVScrollPercent thePercent
+   
+   set the lockMessages to msgsAreLocked    
+   unlock screen
 end _ConfigureScrollbar
 
 
 private command _ConfigureHScrollbar
-    if _ControlType() is "table" then
-        put the long ID of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theScrollBar
-        put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
-        if the visible of scrollbar "dgScrollbar" of me then
-            put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theViewWidth
-        else
-            put the right of group "dgListMask" of me - item 1 of theRect into theViewWidth
-        end if
-        
-        set the endValue of theScrollBar to max(sFormattedWidth, theViewWidth)
-        set the thumbSize of theScrollBar to theViewWidth
-        set the pageIncrement of theScrollBar to the thumbSize of theScrollBar
-         
-        ## Show/hide last column divider shadow
-        _SetVisibilityOfColumnDividers
-    end if
+   if _ControlType() is "table" then
+      local theScrollBar
+      put the long ID of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into theScrollBar
+      local theRect
+      put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
+      local theViewWidth
+      if the visible of scrollbar "dgScrollbar" of me then
+         put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theViewWidth
+      else
+         put the right of group "dgListMask" of me - item 1 of theRect into theViewWidth
+      end if
+      
+      set the endValue of theScrollBar to max(sFormattedWidth, theViewWidth)
+      set the thumbSize of theScrollBar to theViewWidth
+      set the pageIncrement of theScrollBar to the thumbSize of theScrollBar
+      
+      if __HasMobileScroller() then
+         local tContentRect
+         put mobileControlGet(sScrollerId, "contentrect") into tContentRect
+         put max(sFormattedWidth, theViewWidth) into item 3 of tContentRect
+         mobileControlSet sScrollerId, "contentrect", tContentRect
+      end if
+      
+      ## Show/hide last column divider shadow
+      _SetVisibilityOfColumnDividers
+   end if
 end _ConfigureHScrollbar
 
 
 private command _SetVisibilityOfColumnDividers
-    put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
-    put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theViewWidth
-     
-    ## Show/hide last column divider shadow
-    put _table.VisibleColumns() into theColumns
-    put the number of lines of theColumns into theColCount
-    repeat for each line theColumn in theColumns
-        add 1 to i
-        put sTableObjectsA["columns"][theColumn]["divider control"] into theControl
-        if there is not a theControl then next repeat
-         
-        if i < theColCount then
+   local theRect, theViewWidth, theColumns, theColCount, i, theControl
+   put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theRect
+   put the left of scrollbar "dgScrollbar" of me - item 1 of theRect into theViewWidth
+   
+   ## Show/hide last column divider shadow
+   put _table.VisibleColumns() into theColumns
+   put the number of lines of theColumns into theColCount
+   repeat for each line theColumn in theColumns
+      add 1 to i
+      put sTableObjectsA["columns"][theColumn]["divider control"] into theControl
+      if there is not a theControl then next repeat
+      
+      if i < theColCount then
+         set the visible of theControl to true
+      else
+         ## Special rules for last one
+         if the width of group "dgHeader" of group "dgHeaderMask" of me < theViewWidth - 1 then 
+            ## Show
             set the visible of theControl to true
-        else
-            ## Special rules for last one
-            if the width of group "dgHeader" of group "dgHeaderMask" of me < theViewWidth - 1 then 
-                ## Show
-                set the visible of theControl to true
-            else
-                ## Hide
-                set the visible of theControl to false
-            end if
-        end if
-    end repeat
+         else
+            ## Hide
+            set the visible of theControl to false
+         end if
+      end if
+   end repeat
 end _SetVisibilityOfColumnDividers
 
 
 private command _AutoHideVScrollbar
-    ## Determine scrollbars
-    ## Doesn't work without fixed control height. We trap for this when setting prop but developer
-    ## could lock messages and set dgProps["autohide scrollbar"].
-    if the dgProps["show vscrollbar"] of me is "auto" and the dgProps["fixed row height"] of me then
-        set the visible of scrollbar "dgScrollbar" of me to sFormattedHeight > the height of group "dgList" of me
-        put the rect of group "dgList" of me into theRect
-        if the visible of scrollbar "dgScrollbar" of me then
-            put the left of scrollbar "dgScrollbar" of me into item 3 of theRect
-        else
-            put the right of scrollbar "dgScrollbar" of me into item 3 of theRect
-        end if
-        
-        set the rect of group "dgListMask" of me to theRect
-        
-        if _ControlType() is "table" then
-            _table.ResizeList
-        else
-            set the rect of group "dgList" of me to theRect
-        end if
-    end if
+   if the environment is "mobile" then
+      return empty
+   end if
+   
+   ## Determine scrollbars
+   ## Doesn't work without fixed control height. We trap for this when setting prop but developer
+   ## could lock messages and set dgProps["autohide scrollbar"].
+   if the dgProps["show vscrollbar"] of me is "auto" and the dgProps["fixed row height"] of me then
+      set the visible of scrollbar "dgScrollbar" of me to sFormattedHeight > the height of group "dgList" of me
+      local theRect
+      put the rect of group "dgList" of me into theRect
+      if the visible of scrollbar "dgScrollbar" of me then
+         put the left of scrollbar "dgScrollbar" of me into item 3 of theRect
+      else
+         put the right of scrollbar "dgScrollbar" of me into item 3 of theRect
+      end if
+      
+      set the rect of group "dgListMask" of me to theRect
+      
+      if _ControlType() is "table" then
+         _table.ResizeList
+      else
+         set the rect of group "dgList" of me to theRect
+      end if
+   end if
 end _AutoHideVScrollbar
 
 
 ## Call whenever width of all columns changes
 private command _AutoHideHScrollbar
-    if _ControlType() is "table" then
-        put the lockMessages into msgsAreLocked
-        lock messages
-        if the dgProps["show hscrollbar"] of me is "auto" then
-            put sFormattedWidth into theWidth
-            ## list mask extends behind scrollbar so negate that space in calculation
-            if the visible of scrollbar "dgScrollbar" of me then
-                add the width of scrollbar "dgScrollbar" of me to theWidth
-            end if
-            set the visible of group "dgHorizontalComponents" of me to theWidth > the width of group "dgListMask" of me
-        end if
-        set the lockMessages to msgsAreLocked
-    end if
+   if the environment is "mobile" then
+      return empty
+   end if
+   
+   if _ControlType() is "table" then
+      local msgsAreLocked
+      put the lockMessages into msgsAreLocked
+      lock messages
+      if the dgProps["show hscrollbar"] of me is "auto" then
+         local theWidth
+         put sFormattedWidth into theWidth
+         ## list mask extends behind scrollbar so negate that space in calculation
+         if the visible of scrollbar "dgScrollbar" of me then
+            add the width of scrollbar "dgScrollbar" of me to theWidth
+         end if
+         set the visible of group "dgHorizontalComponents" of me to theWidth > the width of group "dgListMask" of me
+      end if
+      set the lockMessages to msgsAreLocked
+   end if
 end _AutoHideHScrollbar
 
 
 -- returns the rect where you can draw content in a group without making scrollbars appear
 private function _WorkingGroupRect pGroup
-    put the rect of pGroup into theRect
-    add the leftMargin of pGroup to item 1 of theRect
-    add the topMargin of pGroup to item 2 of theRect
-    subtract the rightMargin of pGroup from item 3 of theRect
-    subtract the bottomMargin of pGroup from item 4 of theRect
-    if the hScrollbar of pGroup then subtract the scrollbarWidth of pGroup from item 4 of theRect
-    if the vScrollbar of pGroup then subtract the scrollbarWidth of pGroup from item 3 of theRect
-    if the showBorder of pGroup then
-        put the borderWidth of pGroup into theWidth
-        add theWidth to item 1 of theRect
-        add theWidth to item 2 of theRect
-        subtract theWidth from item 3 of theRect
-        subtract theWidth from item 4 of theRect
-    end if
-    return theRect
+   local theRect, theWidth
+   put the rect of pGroup into theRect
+   add the leftMargin of pGroup to item 1 of theRect
+   add the topMargin of pGroup to item 2 of theRect
+   subtract the rightMargin of pGroup from item 3 of theRect
+   subtract the bottomMargin of pGroup from item 4 of theRect
+   if the hScrollbar of pGroup then subtract the scrollbarWidth of pGroup from item 4 of theRect
+   if the vScrollbar of pGroup then subtract the scrollbarWidth of pGroup from item 3 of theRect
+   if the showBorder of pGroup then
+      put the borderWidth of pGroup into theWidth
+      add theWidth to item 1 of theRect
+      add theWidth to item 2 of theRect
+      subtract theWidth from item 3 of theRect
+      subtract theWidth from item 4 of theRect
+   end if
+   return theRect
 end _WorkingGroupRect
 
 
 private function _MaxStartingSequence
-    if the dgProps["fixed row height"] of me then
-        put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
-        put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
-        put max(1, ((theListGroupHeight / sControlHeights) div 1)) into theMaxStartingSequence ## floor
-        ## This was returning one number too low in tests with tables. (0.9.8.5)
-        put _ControlsRequiredToFillSpace() into theRequiredControlCount
-    else
-        ## Start from the back and work our way down
-        put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
-        put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
-         
-        ## Add controls until we exceed the list group height
-        repeat with theItemNo = the number of items of sIndexSequencing down to 1
-            put item theItemNo of sIndexSequencing into theIndex
-            add 1 to theRequiredControlCount
-            add sControlHeights[theIndex] to theNecessaryHeight
-            if theNecessaryHeight >= theListGroupHeight then
-                exit repeat
-            end if
-        end repeat
-         
-        ## Get height of first control in list
-        put sControlHeights[theIndex] into theFirstControlHeight
-         
-        ## The list group should be able to scroll the first control in the list out of view
-        ## Add additional controls until we get to that number
-        repeat with theItemNo = theItemNo - 1 down to 1
-            -- answer theItemNo
-            -- repeat for each item theIndex in (item theRequiredControlCount + 1 to -1 of theIndexList)
-            add 1 to theRequiredControlCount
-            add sControlHeights[theIndex] to theHeight
-            if theHeight >= theFirstControlHeight then
-                exit repeat
-            end if
-        end repeat
-    end if
-    
-    put max(0, the number of elements of sDataArray) into theNumberOfRecords
-    put theNumberOfRecords - theRequiredControlCount + 1 into theMaxStartingSequence
-    return max(1, theMaxStartingSequence)
+   local theListGroupRect, theListGroupHeight, theMaxStartingSequence, theRequiredControlCount, theIndex
+   if the dgProps["fixed row height"] of me then
+      put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
+      put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
+      put max(1, ((theListGroupHeight / sControlHeights) div 1)) into theMaxStartingSequence ## floor
+      ## This was returning one number too low in tests with tables. (0.9.8.5)
+      put _ControlsRequiredToFillSpace() into theRequiredControlCount
+   else
+      ## Start from the back and work our way down
+      put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
+      put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
+      
+      ## Add controls until we exceed the list group height
+      repeat with theItemNo = the number of items of sIndexSequencing down to 1
+         put item theItemNo of sIndexSequencing into theIndex
+         add 1 to theRequiredControlCount
+         local theNecessaryHeight
+         add sControlHeights[theIndex] to theNecessaryHeight
+         if theNecessaryHeight >= theListGroupHeight then
+            exit repeat
+         end if
+      end repeat
+      local theFirstControlHeight, theHeight
+      ## Get height of first control in list
+      put sControlHeights[theIndex] into theFirstControlHeight
+      
+      ## The list group should be able to scroll the first control in the list out of view
+      ## Add additional controls until we get to that number
+      repeat with theItemNo = theItemNo - 1 down to 1
+         -- answer theItemNo
+         -- repeat for each item theIndex in (item theRequiredControlCount + 1 to -1 of theIndexList)
+         add 1 to theRequiredControlCount
+         add sControlHeights[theIndex] to theHeight
+         if theHeight >= theFirstControlHeight then
+            exit repeat
+         end if
+      end repeat
+   end if
+   
+   local theNumberOfRecords
+   put max(0, the number of elements of sDataArray) into theNumberOfRecords
+   put theNumberOfRecords - theRequiredControlCount + 1 into theMaxStartingSequence
+   return max(1, theMaxStartingSequence)
 end _MaxStartingSequence
 
 
 -- sTableObjectsA["base sequence for visible controls"] is only necessary if controls are not a fixed height
 private function _ControlsRequiredToFillSpace
-    local theFirstControlHeight,theIndex,theIndexList,theListGroupRect
-    local theNecessaryHeight,theRequiredControlCount
-    
-    ## Cached for performance
-    ## Reset when resized
-    put empty into sControlsRequiredToFillSpace
-    if sControlsRequiredToFillSpace is empty then
-        put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
-        
-        if the dgProps["fixed row height"] of me then
-            if _ControlType() is "table" then
-                ## Since tables scroll by row we only need number of controls to fill visible area.
-                ## Note: this could be updated if we add property for scrolling by row vs. pixel.
-                put item 4 of theListGroupRect - item 2 of theListGroupRect + sControlHeights into theNecessaryHeight
-                put ((theNecessaryHeight / sControlHeights) div 1) into sControlsRequiredToFillSpace ## floor + 1
-            else
-                ## We want to fill with number of controls to fill visible space + 1 control
-                put item 4 of theListGroupRect - item 2 of theListGroupRect + sControlHeights into theNecessaryHeight
-                put ((theNecessaryHeight / sControlHeights) div 1) + 1 into sControlsRequiredToFillSpace ## floor + 1
+   local theFirstControlHeight,theIndex,theIndexList,theListGroupRect
+   local theNecessaryHeight,theRequiredControlCount
+   
+   ## Cached for performance
+   ## Reset when resized
+   put empty into sControlsRequiredToFillSpace
+   if sControlsRequiredToFillSpace is empty then
+      put _WorkingGroupRect(the long ID of group "dgListMask" of me) into theListGroupRect
+      
+      if the dgProps["fixed row height"] of me then
+         if _ControlType() is "table" then
+            ## Since tables scroll by row we only need number of controls to fill visible area.
+            ## Note: this could be updated if we add property for scrolling by row vs. pixel.
+            put item 4 of theListGroupRect - item 2 of theListGroupRect + sControlHeights into theNecessaryHeight
+            put ((theNecessaryHeight / sControlHeights) div 1) into sControlsRequiredToFillSpace ## floor + 1
+         else
+            ## We want to fill with number of controls to fill visible space + 1 control
+            put item 4 of theListGroupRect - item 2 of theListGroupRect + sControlHeights into theNecessaryHeight
+            put ((theNecessaryHeight / sControlHeights) div 1) + 1 into sControlsRequiredToFillSpace ## floor + 1
+         end if
+      else
+         ## Beginning from the starting index add up control heights until we reach height of list group
+         put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexList
+         put sControlHeights[item 1 of theIndexList] into theFirstControlHeight
+         local theListGroupHeight
+         put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
+         
+         repeat for each item theIndex in theIndexList
+            add 1 to sControlsRequiredToFillSpace
+            add sControlHeights[theIndex] to theNecessaryHeight
+            if theNecessaryHeight >= theListGroupHeight then
+               exit repeat
             end if
-        else
-            ## Beginning from the starting index add up control heights until we reach height of list group
-            put item sTableObjectsA["base sequence for visible controls"] to -1 of sIndexSequencing into theIndexList
-            put sControlHeights[item 1 of theIndexList] into theFirstControlHeight
-            put item 4 of theListGroupRect - item 2 of theListGroupRect into theListGroupHeight
-             
-            repeat for each item theIndex in theIndexList
-                add 1 to sControlsRequiredToFillSpace
-                add sControlHeights[theIndex] to theNecessaryHeight
-                if theNecessaryHeight >= theListGroupHeight then
-                    exit repeat
-                end if
-            end repeat
-             
-            ## The list group should be able to scroll the first control in the list out of view
-            ## Add additional controls until we get to that number
-            repeat for each item theIndex in (item sControlsRequiredToFillSpace + 1 to -1 of theIndexList)
-                add 1 to sControlsRequiredToFillSpace
-                add sControlHeights[theIndex] to theHeight
-                if theHeight >= theFirstControlHeight then
-                    exit repeat
-                end if
-            end repeat
-        end if
-    end if
-    
-    return sControlsRequiredToFillSpace
+         end repeat
+         
+         ## The list group should be able to scroll the first control in the list out of view
+         ## Add additional controls until we get to that number
+         repeat for each item theIndex in (item sControlsRequiredToFillSpace + 1 to -1 of theIndexList)
+            add 1 to sControlsRequiredToFillSpace
+            
+            local theHeight
+            add sControlHeights[theIndex] to theHeight
+            if theHeight >= theFirstControlHeight then
+               exit repeat
+            end if
+         end repeat
+      end if
+   end if
+   
+   return sControlsRequiredToFillSpace
 end _ControlsRequiredToFillSpace
 
 
 private command _ResizeCachedControls
-    put the lockMessages into msgsAreLocked
-    
-    _AutoHideVScrollbar ## only works for fixed height
-    
-    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-    put item 1 to 2 of theListGroupRect into theTopLeft
-    
-    lock screen
-    if the dgProps["fixed row height"] of me then
-        ## Control heights and total height remain unchanged
-        repeat for each line theControl in sTableObjectsA["all row controls"]
-            put the dgIndex of theControl into theIndex
-            set the topLeft of theControl to theTopLeft ## This allows developer to always rely on top and left of controls in template code
-            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
-            lock messages
-            set the rect of theControl to theRect
-            unlock messages
-            dispatch "LayoutControl" to theControl with theRect
-        end repeat
-    else
-        put empty into sControlHeights
-        put 0 into sFormattedHeight
-        
-        repeat for each line theControl in sTableObjectsA["all row controls"]
-            put the dgIndex of theControl into theIndex
-            set the topLeft of theControl to theTopLeft ## This allows developer to always rely on top and left of controls in template code
-            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
-            lock messages
-            set the rect of theControl to theRect
-            unlock messages
-            dispatch "LayoutControl" to theControl with theRect
-            
-            lock messages
-            put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
-            set the rect of theControl to theRect
-            
-            put item 4 of theRect - item 2 of theRect into sControlHeights[theIndex]
-            add sControlHeights[theIndex] to sFormattedHeight
-        end repeat
-    end if
-    unlock screen
-    
-    set the lockMessages to msgsAreLocked
+   local msgsAreLocked, theListGroupRect, theTopLeft
+   put the lockMessages into msgsAreLocked
+   
+   _AutoHideVScrollbar ## only works for fixed height
+   
+   put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+   put item 1 to 2 of theListGroupRect into theTopLeft
+   
+   lock screen
+   if the dgProps["fixed row height"] of me then
+      ## Control heights and total height remain unchanged
+      repeat for each line theControl in sTableObjectsA["all row controls"]
+         local theIndex, theRect
+         put the dgIndex of theControl into theIndex
+         set the topLeft of theControl to theTopLeft ## This allows developer to always rely on top and left of controls in template code
+         put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
+         lock messages
+         set the rect of theControl to theRect
+         unlock messages
+         dispatch "LayoutControl" to theControl with theRect
+      end repeat
+   else
+      put empty into sControlHeights
+      put 0 into sFormattedHeight
+      
+      repeat for each line theControl in sTableObjectsA["all row controls"]
+         put the dgIndex of theControl into theIndex
+         set the topLeft of theControl to theTopLeft ## This allows developer to always rely on top and left of controls in template code
+         put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
+         lock messages
+         set the rect of theControl to theRect
+         unlock messages
+         dispatch "LayoutControl" to theControl with theRect
+         
+         lock messages
+         put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
+         set the rect of theControl to theRect
+         
+         put item 4 of theRect - item 2 of theRect into sControlHeights[theIndex]
+         add sControlHeights[theIndex] to sFormattedHeight
+      end repeat
+   end if
+   unlock screen
+   
+   set the lockMessages to msgsAreLocked
 end _ResizeCachedControls
 
 
@@ -7531,102 +7948,107 @@ end _SelectionChanged
 
 
 command _ScrollListV pVScroll, pForceRefresh
-    local theFraction,theGroupVScroll,theSequence
-    -- put the milliseconds & cr & the executioncontexts
-    
-    -- put false into sRunningActionsA["v scroll"]
-    if sRunningActionsA["v scroll"] then
-        put true into sRunningActionsA["resend _scrolllistv"]
-        return empty
-    end if
-     
-    put true into sRunningActionsA["v scroll"]
-     
-    try
-        if sFormattedHeight > 0 then
-            if pVScroll is not an integer then put round(the thumbPosition of scrollbar "dgScrollbar" of me) into pVScroll
-             
-            ## Sequence can't be too high
-            put _MaxStartingSequence() into theMaxStartingSequence
-             
-            if the dgProps["fixed row height"] of me then
-                put (pVScroll / sControlHeights) + 1 into theSequence
-                put theSequence mod 1 into theFraction
-                put theSequence div 1 into theSequence
-                put round(sControlHeights * theFraction) into theGroupVScroll
-                 
-                ## If sequence is too high then adjust group vscroll accordingly
-                repeat with i = 1 to theSequence - theMaxStartingSequence
-                    add sControlHeights to theGroupVScroll
-                end repeat
-                 
-                -- put "max sequence:" && theMaxStartingSequence && \
-                        -- "sequence:" && theSequence && "total records:" && the dgNumberOfRecords of me && \
-                        -- "fraction:" && theFraction && "group vscroll:" && theGroupVScroll & cr after msg
-                put min(theMaxStartingSequence, theSequence) into theSequence
-            else
-                ## Random sized records
-                put 0 into theFormattedHeight
-                put 0 into theSequence
-                repeat for each item theIndex in sIndexSequencing
-                    add 1 to theSequence
-                    add sControlHeights[theIndex] to theFormattedHeight
-                     
-                    if theFormattedHeight >= pVScroll then
-                        put pVScroll - (theFormattedHeight - sControlHeights[theIndex]) into theGroupVScroll
-                        exit repeat
-                    end if
-                end repeat
-            end if          
-             
-            _DrawListWithProperties theSequence, theGroupVScroll, pForceRefresh
-        end if
+   local theFraction,theGroupVScroll,theSequence, theError
+   -- put the milliseconds & cr & the executioncontexts
+   
+   -- put false into sRunningActionsA["v scroll"]
+   if sRunningActionsA["v scroll"] then
+      put true into sRunningActionsA["resend _scrolllistv"]
+      return empty
+   end if
+   
+   put true into sRunningActionsA["v scroll"]
+   
+   try
+      if sFormattedHeight > 0 then
+         if pVScroll is not an integer then 
+            put the dgVScroll of me into pVScroll
+         end if
          
-    catch e
-        put e into theError
-    end try
-     
-    put false into sRunningActionsA["v scroll"]
-     
-    if theError is not empty then
-        put false into sRunningActionsA["resend _scrolllistv"]
-        _ReportBehaviorError theError
-    end if
-     
-    if sRunningActionsA["resend _scrolllistv"] then
-        -- put empty into pVScroll ## ?? Do we want the next round to determine where to go based on position of sb at time?
-        ## I don't think so as little tests show that scrolling when dragging scrollbar is smoother if we keep value
-        if the keys of the dragData is empty then ## messages don't go during drag opeations. Don't send.
-            send "_ScrollListV pVScroll, pForceRefresh" to me in 0 milliseconds
-        end if
-        put false into sRunningActionsA["resend _scrolllistv"]
-    end if
+         ## Sequence can't be too high
+         local theMaxStartingSequence
+         put _MaxStartingSequence() into theMaxStartingSequence
+         
+         if the dgProps["fixed row height"] of me then
+            put (pVScroll / sControlHeights) + 1 into theSequence
+            put theSequence mod 1 into theFraction
+            put theSequence div 1 into theSequence
+            put round(sControlHeights * theFraction) into theGroupVScroll
+            
+            ## If sequence is too high then adjust group vscroll accordingly
+            repeat with i = 1 to theSequence - theMaxStartingSequence
+               add sControlHeights to theGroupVScroll
+            end repeat
+            
+            -- put "max sequence:" && theMaxStartingSequence && \
+                  -- "sequence:" && theSequence && "total records:" && the dgNumberOfRecords of me && \
+                  -- "fraction:" && theFraction && "group vscroll:" && theGroupVScroll & cr after msg
+            put min(theMaxStartingSequence, theSequence) into theSequence
+         else
+            ## Random sized records
+            local theFormattedHeight
+            put 0 into theFormattedHeight
+            put 0 into theSequence
+            repeat for each item theIndex in sIndexSequencing
+               add 1 to theSequence
+               add sControlHeights[theIndex] to theFormattedHeight
+               
+               if theFormattedHeight >= pVScroll then
+                  put pVScroll - (theFormattedHeight - sControlHeights[theIndex]) into theGroupVScroll
+                  exit repeat
+               end if
+            end repeat
+         end if          
+         
+         _DrawListWithProperties theSequence, theGroupVScroll, pForceRefresh
+      end if
+      
+   catch e
+      put e into theError
+   end try
+   
+   put false into sRunningActionsA["v scroll"]
+   
+   if theError is not empty then
+      put false into sRunningActionsA["resend _scrolllistv"]
+      _ReportBehaviorError theError
+   end if
+   
+   if sRunningActionsA["resend _scrolllistv"] then
+      -- put empty into pVScroll ## ?? Do we want the next round to determine where to go based on position of sb at time?
+      ## I don't think so as little tests show that scrolling when dragging scrollbar is smoother if we keep value
+      if the keys of the dragData is empty then ## messages don't go during drag opeations. Don't send.
+         send "_ScrollListV pVScroll, pForceRefresh" to me in 0 milliseconds
+      end if
+      put false into sRunningActionsA["resend _scrolllistv"]
+   end if
 end _ScrollListV
 
 
 private command _ReportBehaviorError pError
-    -- put the executioncontexts & cr & cr & pError
-    if the environment is "development" and revAppVersion() is not 0 then
-        if _ControlType() is "table" then put "column" into theBehaviorType
-        else put "row" into theBehaviorType
-        answer "An error has occurred in behavior for the " & theBehaviorType & " template:" & cr & \
-                revIDELookupError("execution", pError) with "OK" or "Edit Script" 
-        if it is "Edit Script" then
-            repeat for each line theLine in pError
-                if there is a (item 4 of theLine) then
-                    if theLastLineNo is not an integer then put item 2 of theLine into theLastLineNo
-                    showLineOfScript item 4 of theLine, theLastLineNo
-                    exit repeat
-                else
-                    put item 2 of theLine into theLastLineNo
-                end if
-            end repeat
-        end if
-         
-        throw empty
-    else
-        throw pError
-    end if
+   local theBehaviorType, theLastLineNo
+   -- put the executioncontexts & cr & cr & pError
+   if the environment is "development" and revAppVersion() is not 0 then
+      if _ControlType() is "table" then put "column" into theBehaviorType
+      else put "row" into theBehaviorType
+      answer "An error has occurred in behavior for the " & theBehaviorType & " template:" & cr & \
+            revIDELookupError("execution", pError) with "OK" or "Edit Script" 
+      if it is "Edit Script" then
+         repeat for each line theLine in pError
+            if there is a (item 4 of theLine) then
+               if theLastLineNo is not an integer then put item 2 of theLine into theLastLineNo
+               showLineOfScript item 4 of theLine, theLastLineNo
+               exit repeat
+            else
+               put item 2 of theLine into theLastLineNo
+            end if
+         end repeat
+      end if
+      
+      throw empty
+   else
+      throw pError
+   end if
 end _ReportBehaviorError
 
 
@@ -7688,157 +8110,160 @@ end _CancelMessage
 
 
 private command _CacheControls
-    -----
-    local i
-    local msgsAreLocked
-    local theControl
-    local theIndex
-    local theExtraControls
-    local theListGroupRect
-    local theRecordCount
-    local theRect
-    local theSequence
-    local theTemplateGroup
-    local theTopLeft
-    local theControlHeight
-    -----
-    lock screen
-    put the lockMessages into msgsAreLocked
-     
-    ## If auto hiding scrollbar then calculate height and hide scrollbar before 
-    ## caching controls.
-    ## Double check in case developer locked messages and set
-    ## the dgProps["autohide scrollbar"]
-    if the dgProps["show vscrollbar"] of me is "auto" and the dgProps["fixed row height"] of me then
-        _CalculateFormattedHeight
-        _AutoHideVScrollbar
-    end if
-     
-    put empty into sControlHeights
-    put 0 into sFormattedHeight
-    put the dgProps["fixed row height"] of me into controlHeightIsFixed
-     
-    ## Setup
-    put the dgProps["row template"] of me into theTemplateGroup
-    put max(0, the number of elements of sDataArray) into theRecordCount
-    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
-    put item 1 to 2 of theListGroupRect into theTopLeft
-     
-    ## Delete any extra controls
-    put line (theRecordCount + 1) to -1 of sTableObjectsA["all row controls"] into theExtraControls
-    
-    lock messages
-    repeat for each line theControl in theExtraControls
-        delete theControl
-    end repeat
-    delete line (theRecordCount + 1) to -1 of sTableObjectsA["all row controls"]
-     
-    ## Create controls as needed
-    repeat with i = the number of lines of sTableObjectsA["all row controls"]  + 1 to theRecordCount
-        copy theTemplateGroup to group "dgList" of me
-        put "control id" && word 3 of it && "of me" & cr after sTableObjectsA["all row controls"] 
-        set the name of it to the short name of it && format("%04d", i)
-         
-        ## Take over geometry
-        set the lockloc of it to true
-    end repeat
-    if the last char of sTableObjectsA["all row controls"] is cr then delete the last char of sTableObjectsA["all row controls"]
-    unlock messages
-     
-    ## Link each index with a control
-    put 0 into theSequence
-    repeat for each line theControl in sTableObjectsA["all row controls"]
-        add 1 to theSequence
-        put theControl into sControlOfIndexA[item theSequence of sIndexSequencing]
-    end repeat
-    
-    ## Fill in control data and resize
-    put 0 into theSequence
-    repeat for each item theIndex in sIndexSequencing
-        add 1 to theSequence
-        put sControlOfIndexA[theIndex] into theControl
-         
-        ## Set geometry
-        if controlHeightIsFixed then
-            if theControlHeight is empty then
-                ## Cache to speed things up
-                put the height of theControl into theControlHeight
+   -----
+   local i
+   local msgsAreLocked
+   local theControl
+   local theIndex
+   local theExtraControls
+   local theListGroupRect
+   local theRecordCount
+   local theRect
+   local theSequence
+   local theTemplateGroup
+   local theTopLeft
+   local theControlHeight
+   -----
+   lock screen
+   put the lockMessages into msgsAreLocked
+   
+   ## If auto hiding scrollbar then calculate height and hide scrollbar before 
+   ## caching controls.
+   ## Double check in case developer locked messages and set
+   ## the dgProps["autohide scrollbar"]
+   if the dgProps["show vscrollbar"] of me is "auto" and the dgProps["fixed row height"] of me then
+      _CalculateFormattedHeight
+      _AutoHideVScrollbar
+   end if
+   
+   put empty into sControlHeights
+   put 0 into sFormattedHeight
+   
+   local controlHeightIsFixed
+   put the dgProps["fixed row height"] of me into controlHeightIsFixed
+   
+   ## Setup
+   put the dgProps["row template"] of me into theTemplateGroup
+   put max(0, the number of elements of sDataArray) into theRecordCount
+   put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
+   put item 1 to 2 of theListGroupRect into theTopLeft
+   
+   ## Delete any extra controls
+   put line (theRecordCount + 1) to -1 of sTableObjectsA["all row controls"] into theExtraControls
+   
+   lock messages
+   repeat for each line theControl in theExtraControls
+      delete theControl
+   end repeat
+   delete line (theRecordCount + 1) to -1 of sTableObjectsA["all row controls"]
+   
+   ## Create controls as needed
+   repeat with i = the number of lines of sTableObjectsA["all row controls"]  + 1 to theRecordCount
+      copy theTemplateGroup to group "dgList" of me
+      put "control id" && word 3 of it && "of me" & cr after sTableObjectsA["all row controls"] 
+      set the name of it to the short name of it && format("%04d", i)
+      
+      ## Take over geometry
+      set the lockloc of it to true
+   end repeat
+   if the last char of sTableObjectsA["all row controls"] is cr then delete the last char of sTableObjectsA["all row controls"]
+   unlock messages
+   
+   ## Link each index with a control
+   put 0 into theSequence
+   repeat for each line theControl in sTableObjectsA["all row controls"]
+      add 1 to theSequence
+      put theControl into sControlOfIndexA[item theSequence of sIndexSequencing]
+   end repeat
+   
+   ## Fill in control data and resize
+   put 0 into theSequence
+   repeat for each item theIndex in sIndexSequencing
+      add 1 to theSequence
+      put sControlOfIndexA[theIndex] into theControl
+      
+      ## Set geometry
+      if controlHeightIsFixed then
+         if theControlHeight is empty then
+            ## Cache to speed things up
+            put the height of theControl into theControlHeight
+         end if
+         put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + theControlHeight into theRect
+      else
+         put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
+      end if
+      
+      lock messages
+      set the dgIndex of theControl to theIndex
+      unlock messages
+      
+      ## Get height
+      if sDataArray[theIndex] is NULL then
+         local theDataA
+         GetDataForLine theSequence, theDataA
+         dispatch "CalculateFormattedHeight" to theControl with theDataA
+         if it is "unhandled" then
+            dispatch "FillInData" to theControl with theDataA
+            
+            set the topLeft of theControl to theTopLeft  ## After in case FillInData moves stuff around
+            lock messages
+            set the rect of theControl to theRect
+            unlock messages
+            dispatch "LayoutControl" to theControl with theRect 
+            
+            if not controlHeightIsFixed then
+               ## LockLoc = true so resize to fit height
+               put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
+               lock messages
+               set the rect of theControl to theRect
+               unlock messages
             end if
-            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + theControlHeight into theRect
-        else
-            put theTopLeft & comma & item 3 of theListGroupRect & comma & item 2 of theTopLeft + the height of theControl into theRect
-        end if
-         
-        lock messages
-        set the dgIndex of theControl to theIndex
-        unlock messages
-         
-        ## Get height
-        if sDataArray[theIndex] is NULL then
-            GetDataForLine theSequence, theDataA
-            dispatch "CalculateFormattedHeight" to theControl with theDataA
-            if it is "unhandled" then
-                dispatch "FillInData" to theControl with theDataA
-                 
-                set the topLeft of theControl to theTopLeft  ## After in case FillInData moves stuff around
-                lock messages
-                set the rect of theControl to theRect
-                unlock messages
-                dispatch "LayoutControl" to theControl with theRect 
-                 
-                if not controlHeightIsFixed then
-                    ## LockLoc = true so resize to fit height
-                    put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
-                    lock messages
-                    set the rect of theControl to theRect
-                    unlock messages
-                end if
-                 
-                put the height of theControl into sControlHeights[theIndex]
-            else
-                put the result into sControlHeights[theIndex]
+            
+            put the height of theControl into sControlHeights[theIndex]
+         else
+            put the result into sControlHeights[theIndex]
+         end if
+      else
+         dispatch "CalculateFormattedHeight" to theControl with sDataArray[theIndex]
+         if it is "unhandled" then
+            dispatch "FillInData" to theControl with sDataArray[theIndex]
+            
+            set the topLeft of theControl to theTopLeft ## After in case FillInData moves stuff around
+            lock messages
+            set the rect of theControl to theRect
+            unlock messages
+            dispatch "LayoutControl" to theControl with theRect 
+            
+            if not controlHeightIsFixed then
+               ## LockLoc = true so resize to fit height
+               put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
+               lock messages
+               set the rect of theControl to theRect
+               unlock messages
             end if
-        else
-            dispatch "CalculateFormattedHeight" to theControl with sDataArray[theIndex]
-            if it is "unhandled" then
-                dispatch "FillInData" to theControl with sDataArray[theIndex]
-                 
-                set the topLeft of theControl to theTopLeft ## After in case FillInData moves stuff around
-                lock messages
-                set the rect of theControl to theRect
-                unlock messages
-                dispatch "LayoutControl" to theControl with theRect 
-                 
-                if not controlHeightIsFixed then
-                    ## LockLoc = true so resize to fit height
-                    put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
-                    lock messages
-                    set the rect of theControl to theRect
-                    unlock messages
-                end if
-                 
-                put the height of theControl into sControlHeights[theIndex]
-            else
-                put the result into sControlHeights[theIndex]
-            end if
-        end if
-         
-        ## Add to formattedheight
-        add sControlHeights[theIndex] to sFormattedHeight
-         
-        ## All controls start off hidden
-        set the visible of theControl to false
-    end repeat
-     
-    if the dgProps["fixed row height"] of me then
-        put sControlHeights[theIndex] into sControlHeights
-    end if
-     
-    _ConfigureScrollbar
-     
-    set the lockMessages to msgsAreLocked
-     
-    unlock screen
+            
+            put the height of theControl into sControlHeights[theIndex]
+         else
+            put the result into sControlHeights[theIndex]
+         end if
+      end if
+      
+      ## Add to formattedheight
+      add sControlHeights[theIndex] to sFormattedHeight
+      
+      ## All controls start off hidden
+      set the visible of theControl to false
+   end repeat
+   
+   if the dgProps["fixed row height"] of me then
+      put sControlHeights[theIndex] into sControlHeights
+   end if
+   
+   _ConfigureScrollbar
+   
+   set the lockMessages to msgsAreLocked
+   
+   unlock screen
 end _CacheControls
 
 
@@ -7846,15 +8271,19 @@ end _CacheControls
 ## Code is modified version of _CacheControls
 private command _LayoutCachedControls
    lock screen
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    
    put empty into sControlHeights
    put 0 into sFormattedHeight
+   
+   local controlHeightIsFixed, theListGroupRect, theTopLeft
    put the dgProps["fixed row height"] of me into controlHeightIsFixed
    put _WorkingGroupRect(the long ID of group "dgList" of me) into theListGroupRect
    put item 1 to 2 of theListGroupRect into theTopLeft
    
    repeat for each item theIndex in sIndexSequencing
+      local theControl, theControlHeight, theRect
       put sControlOfIndexA[theIndex] into theControl
       
       ## Set geometry
@@ -7906,6 +8335,7 @@ private command _HiliteControl pControl, pBoolean
          set the backgroundColor of graphic "Background" of pControl to _GetHiliteColor()
       else
          set the wholeMatches to true
+         local theLine
          put itemOffset(the dgIndex of pControl, sIndexSequencing) into theLine
          if theLine mod 2 is kAlternatingRowModValue then
             set the backgroundColor of graphic "Background" of pControl to _GetEffectiveColor("alternate row color")
@@ -7915,6 +8345,7 @@ private command _HiliteControl pControl, pBoolean
       end if
    end if
    
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    unlock messages
    set the dgHilite of pControl to pBoolean
@@ -7923,8 +8354,11 @@ end _HiliteControl
 
 
 private function _GetEffectiveColor pProperty
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    lock messages
+   
+   local theColor
    put the dgProps[pProperty] of me into theColor
    set the lockMessages to msgsAreLocked
    
@@ -7956,8 +8390,10 @@ private function _GetEffectiveColor pProperty
                -- Check the RGB values of the hiliteColor; add them
                -- up and average them - if the result >128 then show black text, and if it's
                -- <=128 then show white text. (Thanks Ken)
+               local theHiliteColor
                put _GetHiliteColor("hilite color") into theHiliteColor
                if the number of items of theHiliteColor is not 3 then put _ColorToRGB(theHiliteColor) into theHiliteColor
+               local theAvg
                put item 1 of theHiliteColor + item 2 of theHiliteColor + item 3 of theHiliteColor into theAvg
                put round(theAvg / 3) into theAvg
                if theAvg > 128 then return "0,0,0"
@@ -7972,76 +8408,78 @@ end _GetEffectiveColor
 
 
 private function _GetHiliteColor
-    ## changed in 1.0.0 b4
-    if the long ID of me is not in the long ID of the focusedObject and the dgProps["dim on focusOut"] of me is not false then
-        put _GetEffectiveColor("dimmed hilite color") into theColor
-        put the dgProps["dimmed hilite color"] of me into theColor
-        if theColor is empty then
-            put kDefaultDimmedHiliteColor into theColor
-        end if
-    else
-        put the dgProps["hilite color"] of me into theColor
-        if theColor is empty then
-            put the hiliteColor into theColor
-        end if
-    end if
-    return theColor
+   ## changed in 1.0.0 b4
+   if the long ID of me is not in the long ID of the focusedObject and the dgProps["dim on focusOut"] of me is not false then
+      local theColor
+      put _GetEffectiveColor("dimmed hilite color") into theColor
+      put the dgProps["dimmed hilite color"] of me into theColor
+      if theColor is empty then
+         put kDefaultDimmedHiliteColor into theColor
+      end if
+   else
+      put the dgProps["hilite color"] of me into theColor
+      if theColor is empty then
+         put the hiliteColor into theColor
+      end if
+   end if
+   return theColor
 end _GetHiliteColor
 
  
 private function _IsThisModifierSetActive pModifiers
-    replace "alt" with "option" in pModifiers
-    
-    set the wholeMatches to true
-    
-    put the optionKey into theState
-    if "option" is among the items of pModifiers then
-        if theState is "up" then
+   replace "alt" with "option" in pModifiers
+   
+   set the wholeMatches to true
+   
+   local theState
+   put the optionKey into theState
+   if "option" is among the items of pModifiers then
+      if theState is "up" then
+         return false
+      end if
+   else if theState is "down" then
+      return false
+   end if
+   
+   put the shiftKey into theState
+   if "shift" is among the items of pModifiers then
+      if theState is "up" then
+         return false
+      end if
+   else if theState is "down" then
+      return false
+   end if
+   
+   if the platform is "MacOS" then
+      put the commandKey into theState
+      if "command" is among the items of pModifiers then
+         if theState is "up" then
             return false
-        end if
-    else if theState is "down" then
-        return false
-    end if
-     
-    put the shiftKey into theState
-    if "shift" is among the items of pModifiers then
-        if theState is "up" then
+         end if
+      else if theState is "down" then
+         return false
+      end if
+      
+      put the controlKey into theState
+      if "control" is among the items of pModifiers then
+         if theState is "up" then
             return false
-        end if
-    else if theState is "down" then
-        return false
-    end if
-    
-    if the platform is "MacOS" then
-        put the commandKey into theState
-        if "command" is among the items of pModifiers then
-            if theState is "up" then
-                return false
-            end if
-        else if theState is "down" then
+         end if
+      else if theState is "down" then
+         return false
+      end if
+   else
+      put the commandKey into theState
+      if "command" is among the items of pModifiers or "control" is among the items of pModifiers then
+         if theState is "up" then
             return false
-        end if
-        
-        put the controlKey into theState
-        if "control" is among the items of pModifiers then
-            if theState is "up" then
-                return false
-            end if
-        else if theState is "down" then
-            return false
-        end if
-    else
-        put the commandKey into theState
-        if "command" is among the items of pModifiers or "control" is among the items of pModifiers then
-            if theState is "up" then
-                return false
-            end if
-        else if theState is "down" then
-            return false
-        end if
-    end if
-    
-    return true
+         end if
+      else if theState is "down" then
+         return false
+      end if
+   end if
+   
+   return true
 end _IsThisModifierSetActive
 
 
@@ -8052,16 +8490,17 @@ constant kFrameLength = 10
 constant kAnimationLength = 300
 
 command StartScrollAnimation pScrollTo
-    if sPendingMsgsA["UpdateScrollAnimation"] is not empty then
-        cancel sPendingMsgsA["UpdateScrollAnimation"]
-        put empty into sPendingMsgsA["UpdateScrollAnimation"]
-    end if
-    
-    put true into sIsAnimating
-    put the milliseconds into rightNow
-    put round(the thumbPosition of scrollbar "dgScrollbar" of me) into scrollFrom
-    
-    ScheduleScrollAnimation scrollFrom, pScrollTo, rightNow, "ease in out", rightNow, rightNow + kAnimationLength
+   if sPendingMsgsA["UpdateScrollAnimation"] is not empty then
+      cancel sPendingMsgsA["UpdateScrollAnimation"]
+      put empty into sPendingMsgsA["UpdateScrollAnimation"]
+   end if
+   
+   put true into sIsAnimating
+   local rightNow, scrollFrom
+   put the milliseconds into rightNow
+   put the dgVScroll of me into scrollFrom
+   
+   ScheduleScrollAnimation scrollFrom, pScrollTo, rightNow, "ease in out", rightNow, rightNow + kAnimationLength
 end StartScrollAnimation
 
 
@@ -8073,70 +8512,79 @@ end CancelAnimation
 
 
 command ScheduleScrollAnimation pScrollFrom, pScrollTo, pLastTime, pPhase, pPhaseStart, pPhaseEnd
-    if not sIsAnimating then return empty
-    
-    put the milliseconds into rightNow
-    ## Synchronize to the system clock.
-    put (rightNow - (rightNow mod kFrameLength)) + kFrameLength into theNextTime
-    
-    send "UpdateScrollAnimation pScrollFrom, pScrollTo, pLastTime, pPhase, pPhaseStart, pPhaseEnd" to me in theNextTime - rightNow milliseconds
-    put the result into sPendingMsgsA["UpdateScrollAnimation"]
+   if not sIsAnimating then return empty
+   
+   local rightNow, theNextTime
+   put the milliseconds into rightNow
+   ## Synchronize to the system clock.
+   put (rightNow - (rightNow mod kFrameLength)) + kFrameLength into theNextTime
+   
+   send "UpdateScrollAnimation pScrollFrom, pScrollTo, pLastTime, pPhase, pPhaseStart, pPhaseEnd" to me in theNextTime - rightNow milliseconds
+   put the result into sPendingMsgsA["UpdateScrollAnimation"]
 end ScheduleScrollAnimation
 
 
 command UpdateScrollAnimation pScrollFrom, pScrollTo, pLastTime, pPhase, pPhaseStart, pPhaseEnd
-    put empty into sPendingMsgsA["UpdateScrollAnimation"]
-    if not sIsAnimating then return empty
-    
-    put the milliseconds into rightNow
-    
-    put 2 into theExponent
-    
-    switch pPhase
-        case "ease in"
-            put round(aeEaseIn(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
-            break
-        case "ease in out"
-        case "ease in and out"
-            put round(aeEaseInOUt(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
-            break
-        case "ease out"
-        default
-            put round(aeEaseOut(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
-    end switch
-    
-    lock screen
-    
-    put the long ID of the focusedObject into theControl
-    put the lockMessages into msgsAreLocked
-    
-    if not msgsAreLocked then lock messages
-    set the thumbPosition of scrollbar "dgScrollbar" of me to theValue
-    if not msgsAreLocked then unlock messages
-    
-    _ScrollListV theValue
-    
-    ## Make sure focus stays with us
-    if the long ID of me is in theControl and (there is not a theControl or the long ID of me is not in the long ID of the focusedobject) then
-        focus on graphic "dgBackground" of me
-    end if
-    
-    unlock screen
-    
-    ## Schedule next animation
-    if pScrollFrom > pScrollTo then
-        if theValue > pScrollTo then
-            ScheduleScrollAnimation pScrollFrom, pScrollTo, rightNow, pPhase, pPhaseStart, pPhaseEnd
-        else
-            put false into sIsAnimating
-        end if
-    else
-        if theValue < pScrollTo then
-            ScheduleScrollAnimation pScrollFrom, pScrollTo, rightNow, pPhase, pPhaseStart, pPhaseEnd
-        else
-            put false into sIsAnimating
-        end if
-    end if
+   put empty into sPendingMsgsA["UpdateScrollAnimation"]
+   if not sIsAnimating then return empty
+   
+   local rightNow, theExponent
+   put the milliseconds into rightNow
+   
+   put 2 into theExponent
+   
+   local theValue
+   switch pPhase
+      case "ease in"
+         put round(aeEaseIn(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
+         break
+      case "ease in out"
+      case "ease in and out"
+         put round(aeEaseInOUt(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
+         break
+      case "ease out"
+      default
+         put round(aeEaseOut(pScrollFrom, pScrollTo, kAnimationLength, pLastTime - pPhaseStart, theExponent)) into theValue
+   end switch
+   
+   lock screen
+   
+   local theControl
+   put the long ID of the focusedObject into theControl
+   
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   
+   if not msgsAreLocked then lock messages
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "vScroll", theValue
+   end if
+   set the thumbPosition of scrollbar "dgScrollbar" of me to theValue
+   if not msgsAreLocked then unlock messages
+   
+   _ScrollListV theValue
+   
+   ## Make sure focus stays with us
+   if the long ID of me is in theControl and (there is not a theControl or the long ID of me is not in the long ID of the focusedobject) then
+      focus on graphic "dgBackground" of me
+   end if
+   
+   unlock screen
+   
+   ## Schedule next animation
+   if pScrollFrom > pScrollTo then
+      if theValue > pScrollTo then
+         ScheduleScrollAnimation pScrollFrom, pScrollTo, rightNow, pPhase, pPhaseStart, pPhaseEnd
+      else
+         put false into sIsAnimating
+      end if
+   else
+      if theValue < pScrollTo then
+         ScheduleScrollAnimation pScrollFrom, pScrollTo, rightNow, pPhase, pPhaseStart, pPhaseEnd
+      else
+         put false into sIsAnimating
+      end if
+   end if
 end UpdateScrollAnimation
 
 
@@ -8144,56 +8592,59 @@ end UpdateScrollAnimation
 
 
 private command _ThrowError pErrNum, pMsg
-    ## error number, line number, col number, message
-    if pErrNum is empty then put 567 into pErrNum ## external error
-     
-    ## Build error to throw using executionContexts 
-    put the executionContexts into theContexts
-     
-    ## don't want reference to self
-    delete the last line of theContexts
-     
-    put _ParseExecutionContexts(theContexts) into theContextsA
-     
-    put item 2 of line 1 of the extents of theContextsA into theCount
-    put format("%u,%u,%u,%s\n", pErrNum, theContextsA[theCount]["line number"], 0, pMsg) after theError 
-    repeat with i = theCount down to 1
-        put format("%u,%u,%u,%s\n", pErrNum, theContextsA[i]["line number"], 0, theContextsA[i]["handler"]) after theError 
-        put format("%u,%u,%u,%s\n", pErrNum, theContextsA[i]["line number"], 0, theContextsA[i]["object"]) after theError 
-    end repeat
-    delete the last char of theError
-    throw theError
+   ## error number, line number, col number, message
+   if pErrNum is empty then put 567 into pErrNum ## external error
+   
+   ## Build error to throw using executionContexts 
+   local theContexts
+   put the executionContexts into theContexts
+   
+   ## don't want reference to self
+   delete the last line of theContexts
+   
+   local theContextsA, theCount, theError
+   put _ParseExecutionContexts(theContexts) into theContextsA
+   
+   put item 2 of line 1 of the extents of theContextsA into theCount
+   put format("%u,%u,%u,%s\n", pErrNum, theContextsA[theCount]["line number"], 0, pMsg) after theError 
+   repeat with i = theCount down to 1
+      put format("%u,%u,%u,%s\n", pErrNum, theContextsA[i]["line number"], 0, theContextsA[i]["handler"]) after theError 
+      put format("%u,%u,%u,%s\n", pErrNum, theContextsA[i]["line number"], 0, theContextsA[i]["object"]) after theError 
+   end repeat
+   delete the last char of theError
+   throw theError
 end _ThrowError
 
 
 private function _ParseExecutionContexts pContexts
-    -----
-    local theContext
-    local theContextsA
-    local theItem
-    -----
-    ## Each line has object-long-id,handler-name,line-number,[parent script object][,]
-    ## Beware of quotes and commas in stack path name. They will get you.
-    ## How to properly parse?
-    
-    ## How many entries?
-    repeat for each line theContext in pContexts
-        add 1 to theIndex
-        put 0 into theItemNo
-        repeat for each item theItem in theContext
-            add 1 to theItemNo
-            if theItem is an integer then
-                ## found the line number
-                put theItem into theContextsA[theIndex]["line number"]
-                put item (theItemNo - 1) of theContext into theContextsA[theIndex]["handler"]
-                put item 1 to (theItemNo - 2) of theContext into theContextsA[theIndex]["object"]
-                 
-                put item (theItemNo + 1) to -1 of theContext into theContextsA[theIndex]["parents"]
-            end if
-        end repeat
-    end repeat
-    
-    return theContextsA
+   -----
+   local theContext
+   local theContextsA
+   local theItem
+   -----
+   ## Each line has object-long-id,handler-name,line-number,[parent script object][,]
+   ## Beware of quotes and commas in stack path name. They will get you.
+   ## How to properly parse?
+   
+   ## How many entries?
+   repeat for each line theContext in pContexts
+      local theIndex, theItemNo
+      add 1 to theIndex
+      put 0 into theItemNo
+      repeat for each item theItem in theContext
+         add 1 to theItemNo
+         if theItem is an integer then
+            ## found the line number
+            put theItem into theContextsA[theIndex]["line number"]
+            put item (theItemNo - 1) of theContext into theContextsA[theIndex]["handler"]
+            put item 1 to (theItemNo - 2) of theContext into theContextsA[theIndex]["object"]
+            
+            put item (theItemNo + 1) to -1 of theContext into theContextsA[theIndex]["parents"]
+         end if
+      end repeat
+   end repeat
+   
+   return theContextsA
 end _ParseExecutionContexts
 
 
@@ -8201,98 +8652,99 @@ end _ParseExecutionContexts
 
 
 command TruncateTail pFieldId, pTrailer
-    if pTrailer is empty then
-        put "..." into pTrailer
-    end if
-     
-    lock screen
-    put the lockMessages into msgsAreLocked
-    lock messages
-     
-    local tMaxWidth
-    put the width of field ID pFieldId - the leftMargin of field ID pFieldId into tMaxWidth
-     
-    if the formattedWidth of char 1 to -1 of field ID pFieldId <= tMaxWidth then
-        set the lockMessages to msgsAreLocked
-        unlock screen
-        return false
-    end if
-     
-    local tCharCount
-    put the number of chars of the text of field ID pFieldId into tCharCount
-     
-    local tFieldText
-    put the HTMLText of field ID pFieldId into tFieldText
-    set the text of field ID pFieldId to pTrailer
-     
-    local tTrailerWidth
-    put the formattedWidth of char 1 to -1 of field ID pFieldId into tTrailerWidth
-     
-    set the HTMLText of field ID pFieldId to tFieldText
-     
-    -- The 'linear' version requires n steps, where n is the average number of characters 
-    -- that will fit into the field up to tMaxWidth. That version will behave well for small
-    -- widths, but will degrade significantly as the width increases.
-     
-    -- This version requires log_2(n) steps, where n is the number of characters in the field
-    -- this will be much faster for larger widths, but slower for very small widths when the
-    -- line is very long.
-     
-    -- The maximum length of the string we want is tMaxWidth minus the trailer width
-    subtract tTrailerWidth from tMaxWidth
-     
-    -- These two vars store the number of characters before the string that is too small (tLow)
-    -- and the number of chars that makes the string too long (tHigh)
-    local tLow, tHigh
-    put 0 into tLow
-    put tCharCount into tHigh
-     
-    -- tMid contains the current number of characters we are 'guessing' will fit in tWidth.
-    -- We make a initial estimate based on the width of the trailer. This initial estimate should
-    -- virtually eliminate any advantage the linear algorithm has over the binary search in the
-    -- case of a long line fitting into a small width.
-    local tMid
-    put tMaxWidth div (tTrailerWidth div 2) into tMid
-     
-    -- We loop until they are one apart - in which case the char between positions tLow and tHigh
-    -- contains the break width.
-    repeat while tHigh - tLow > 1
-         
-        -- Compute the width of tMid characters.
-        local tWidth
-        put (the formattedWidth of char 1 to tMid + 1 of field ID pFieldId) into tWidth
-         
-        if tWidth > tMaxWidth then
-            -- If the new width is too much, bring down the high point
-            put tMid into tHigh
-        else if tWidth < tMaxWidth then
-            -- If the new width is too little, bring up the low point
-            put tMid into tLow
-        else
-            -- If we have reached the target width then exit, adjusting by one (we want
-            -- the number of chars that goes from too small, to too much)
-            put tMid into tLow
-            put tMid + 1 into tHigh
-            exit repeat
-        end if
-         
-        if tHigh - tLow <= 1 then
-            exit repeat
-        end if
-         
-        put tLow + (tHigh - tLow) div 2 into tMid
-    end repeat
-     
-    -- At this point tMid will contain the number of chars that causes a transition from too
-    -- short to too long.
-     
-    put pTrailer into char tMid to -1 of field ID pFieldId
-    set the textFont of char tMid to -1 of field ID pFieldId to the effective textFont of field ID pFieldId
-     
-    set the lockMessages to msgsAreLocked
-    unlock screen
-    
-    return true
+   if pTrailer is empty then
+      put "..." into pTrailer
+   end if
+   
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   local tMaxWidth
+   put the width of field ID pFieldId - the leftMargin of field ID pFieldId into tMaxWidth
+   
+   if the formattedWidth of char 1 to -1 of field ID pFieldId <= tMaxWidth then
+      set the lockMessages to msgsAreLocked
+      unlock screen
+      return false
+   end if
+   
+   local tCharCount
+   put the number of chars of the text of field ID pFieldId into tCharCount
+   
+   local tFieldText
+   put the HTMLText of field ID pFieldId into tFieldText
+   set the text of field ID pFieldId to pTrailer
+   
+   local tTrailerWidth
+   put the formattedWidth of char 1 to -1 of field ID pFieldId into tTrailerWidth
+   
+   set the HTMLText of field ID pFieldId to tFieldText
+   
+   -- The 'linear' version requires n steps, where n is the average number of characters 
+   -- that will fit into the field up to tMaxWidth. That version will behave well for small
+   -- widths, but will degrade significantly as the width increases.
+   
+   -- This version requires log_2(n) steps, where n is the number of characters in the field
+   -- this will be much faster for larger widths, but slower for very small widths when the
+   -- line is very long.
+   
+   -- The maximum length of the string we want is tMaxWidth minus the trailer width
+   subtract tTrailerWidth from tMaxWidth
+   
+   -- These two vars store the number of characters before the string that is too small (tLow)
+   -- and the number of chars that makes the string too long (tHigh)
+   local tLow, tHigh
+   put 0 into tLow
+   put tCharCount into tHigh
+   
+   -- tMid contains the current number of characters we are 'guessing' will fit in tWidth.
+   -- We make a initial estimate based on the width of the trailer. This initial estimate should
+   -- virtually eliminate any advantage the linear algorithm has over the binary search in the
+   -- case of a long line fitting into a small width.
+   local tMid
+   put tMaxWidth div (tTrailerWidth div 2) into tMid
+   
+   -- We loop until they are one apart - in which case the char between positions tLow and tHigh
+   -- contains the break width.
+   repeat while tHigh - tLow > 1
+      
+      -- Compute the width of tMid characters.
+      local tWidth
+      put (the formattedWidth of char 1 to tMid + 1 of field ID pFieldId) into tWidth
+      
+      if tWidth > tMaxWidth then
+         -- If the new width is too much, bring down the high point
+         put tMid into tHigh
+      else if tWidth < tMaxWidth then
+         -- If the new width is too little, bring up the low point
+         put tMid into tLow
+      else
+         -- If we have reached the target width then exit, adjusting by one (we want
+         -- the number of chars that goes from too small, to too much)
+         put tMid into tLow
+         put tMid + 1 into tHigh
+         exit repeat
+      end if
+      
+      if tHigh - tLow <= 1 then
+         exit repeat
+      end if
+      
+      put tLow + (tHigh - tLow) div 2 into tMid
+   end repeat
+   
+   -- At this point tMid will contain the number of chars that causes a transition from too
+   -- short to too long.
+   
+   put pTrailer into char tMid to -1 of field ID pFieldId
+   set the textFont of char tMid to -1 of field ID pFieldId to the effective textFont of field ID pFieldId
+   
+   set the lockMessages to msgsAreLocked
+   unlock screen
+   
+   return true
 end TruncateTail
 
 
@@ -8309,9 +8761,11 @@ end _ResetTemplateFieldEditor
 
 
 command DeleteFieldEditorAndOpenNext
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    unlock messages
    
+   local shiftKeyIsDown, theField, theColumn, theCurrentLineNo, theIndex
    put _IsThisModifierSetActive("shift") into shiftKeyIsDown
    
    put the dgTargetField of sFieldEditor into theField
@@ -8325,11 +8779,13 @@ command DeleteFieldEditorAndOpenNext
       put ColumnControlOfIndex(theColumn, theIndex) into theField ## This might not actually be a field. But what to do...
    end if
    
+   local theDirection, theColumns, theLineNo
    if shiftKeyIsDown then put "back" into theDirection
    else put "forward" into theDirection
    
    dispatch "OpenNextFieldEditor" to theField with theDirection
    
+   local theColNumList
    if it is not "handled" then
       ## For tables we cycle through columns in current row
       if _ControlType() is "table" then
@@ -8373,9 +8829,11 @@ command DeleteFieldEditorAndOpenNext
                end if
             end if
             
-            ## Look for next column that supports editing            
+            ## Look for next column that supports editing  
+            local jumpOutOfRepeat          
             put false into jumpOutOfRepeat
             repeat for each item theNextColNum in theColNumList 
+               local theNextColumn
                put line theNextColNum of theColumns into theNextColumn
                
                if the dgColumnIsEditable[theNextColumn] of me then
@@ -8410,6 +8868,7 @@ end DeleteFieldEditorAndOpenNext
 
 
 command DeleteFieldEditor pSaveContents
+   local msgsAreLocked
    put the lockMessages into msgsAreLocked
    
    if there is not a sFieldEditor then
@@ -8430,6 +8889,7 @@ command DeleteFieldEditor pSaveContents
    
    unlock messages
    
+   local theEditor, theResult, theField, theError
    put sFieldEditor into theEditor
    put empty into sFieldEditor
    put empty into theResult
@@ -8444,6 +8904,7 @@ command DeleteFieldEditor pSaveContents
    end if
    
    if pSaveContents and there is a theField then
+      local theIndex, theKey, contentHasChanged
       put the dgTargetIndex of theEditor into theIndex
       put the dgTargetKey of theEditor into theKey ## might be an array index
       
@@ -8463,6 +8924,7 @@ command DeleteFieldEditor pSaveContents
                end if
                
                if theResult is not "cancel" then
+                  local theDataA
                   put sDataArray[theIndex] into theDataA
                   
                   switch the dgTextType of theEditor
@@ -8568,143 +9030,144 @@ end dgTemplateFieldEditor
 ## Pass in pIndex and pKey to automatically update a record
 ## in the data grid. Otherwise update by hand in closeFieldEditor message.
 command EditFieldText pField, pIndex, pKey
-    -----
-    local i
-    local theBorderWidth
-    local theClickChunk, theClickField, theClickLine
-    local theError
-    local theMargins
-    local theText
-    -----
-    if there is not a pField then _ThrowError kErrCantFindObject, "could not find field to create field editor for"
-    lock screen
-    put the lockMessages into msgsAreLocked
-    lock messages
-    
-    ## Cache where the person clicked as this data will change if 
-    ## OpenInlineEditor changes position of the target
-    if the clickField is not empty then put the long ID of the clickField into theClickField
-    else put empty into theClickField
-    put the clickCharChunk into theClickChunk
-    put the clickLine into theClickLine
-    
-    focus on nothing
-    
-    ## Delete existing
-    DeleteFieldEditor
-    
-    reset the templatefield
-    
-    put the margins of pField into theMargins    
-    if the number of items of theMargins is 1 then
-        repeat with i = 1 to 3
-            put "," & item 1 of theMargins after theMargins
-        end repeat
-    end if
-    put the borderWidth of pField into theBorderWidth
-    if sTemplateFieldEditorA["text"] is NULL then
-        put the text of pField into sTemplateFieldEditorA["text"] ## default
-    end if
-    
-    set the autoTab of the templatefield to the autoTab of pField
-    set the dontWrap of the templatefield to the dontWrap of pField
-    set the tabStops of the templatefield to the tabStops of pField
-    set the margins of the templatefield to theMargins
-    set the borderWidth of the templatefield to theBorderWidth
-    set the textAlign of the templatefield to the effective textAlign of pField
-    set the textFont of the templatefield to the effective textFont of pField
-    set the textSize of the templatefield to the effective textSize of pField
-    set the textStyle of the templatefield to the effective textStyle of pField
-    set the fixedLineHeight of the templatefield to the fixedLineHeight of pField
-    set the opaque of the templatefield to true
-    set the threeD of the templatefield to true
-    
-    create field kFieldEditorName in group "dgListMask" of me
-    put the long ID of it into sFieldEditor
-    
-    set the behavior of sFieldEditor to the long ID of button "Field Editor" of _ResourceStack()
-    
-    set the rect of sFieldEditor  to the rect of pField ## so formattedHeight will be correct in _resizeFieldToFitContent
-    
-    switch sTemplateFieldEditorA["text type"]
-        case "rtf"
-            set the RTFText of sFieldEditor to sTemplateFieldEditorA["text"]
-            put the HTMLText of sFieldEditor into theText
-            break
-        case "unicode"
-            set the unicodeText of sFieldEditor to sTemplateFieldEditorA["text"]
-            put the HTMLText of sFieldEditor into theText
-            break
-        case "utf8"
-            set the unicodeText of sFieldEditor to uniEncode(sTemplateFieldEditorA["text"], "utf8")
-            put the HTMLText of sFieldEditor into theText
-            break       
-        case "html"
-            put sTemplateFieldEditorA["text"] into theText
-            break
-        case "text"
-            set the text of sFieldEditor to sTemplateFieldEditorA["text"]
-            put the HTMLText of sFieldEditor into theText
-            break
-    end switch
-    
-    set the HTMLText of sFieldEditor to theText
-    set the dgIsFieldEditor of sFieldEditor to true
-    set the dgOriginalHTMLText of sFieldEditor to theText
-    set the dgTextType of sFieldEditor to sTemplateFieldEditorA["text type"]
-    set the dgTargetField of sFieldEditor to pField
-    set the dgTargetIndex of sFieldEditor to pIndex	# hilited line can change on selectionchanged occasions
-    set the dgTargetKey of sFieldEditor to pKey
-    unlock messages
-    
-    ## Bug when editing right|center-aligned text that is wider than field.
-    if the textAlign of sFieldEditor is not "left" and the formattedWidth of sFieldEditor >= the width of sFieldEditor then
-        set the textAlign of sFieldEditor to "left"
-    end if
-     
-    ## Shout our existence out to the world
-    try
-        dispatch "preOpenFieldEditor" to pField with sFieldEditor
-    catch e
-        put e into theError
-        
-        lock messages
-        delete sFieldEditor
-        unlock messages
-    end try
-     
-    if theError is not empty then throw theError
-    
-    lock messages
-    focus on sFieldEditor
-    focus on sFieldEditor ## When tabbing through table cells engine would not focus on sFieldEditor without 2nd call
-    -- put sFieldEditor & cr  &&  the long id of the focusedobject
-    unlock messages
-     
-    if sTemplateFieldEditorA["select text"] is not false then
-        select char 1 to -1 of sFieldEditor
-    else
-        if theClickField is not empty and theClickField is the long ID of pField then
-            if theClickChunk is not empty then
-                select after char (word 2 of theClickChunk) of sFieldEditor
-            else if theClickLine is not empty then
-                select after line (word 2 of theClickLine) of sFieldEditor
-            else
-                select after char -1 of sFieldEditor
-            end if
-        else
+   -----
+   local i
+   local theBorderWidth
+   local theClickChunk, theClickField, theClickLine
+   local theError
+   local theMargins
+   local theText
+   -----
+   if there is not a pField then _ThrowError kErrCantFindObject, "could not find field to create field editor for"
+   lock screen
+   local msgsAreLocked
+   put the lockMessages into msgsAreLocked
+   lock messages
+   
+   ## Cache where the person clicked as this data will change if 
+   ## OpenInlineEditor changes position of the target
+   if the clickField is not empty then put the long ID of the clickField into theClickField
+   else put empty into theClickField
+   put the clickCharChunk into theClickChunk
+   put the clickLine into theClickLine
+   
+   focus on nothing
+   
+   ## Delete existing
+   DeleteFieldEditor
+   
+   reset the templatefield
+   
+   put the margins of pField into theMargins    
+   if the number of items of theMargins is 1 then
+      repeat with i = 1 to 3
+         put "," & item 1 of theMargins after theMargins
+      end repeat
+   end if
+   put the borderWidth of pField into theBorderWidth
+   if sTemplateFieldEditorA["text"] is NULL then
+      put the text of pField into sTemplateFieldEditorA["text"] ## default
+   end if
+   
+   set the autoTab of the templatefield to the autoTab of pField
+   set the dontWrap of the templatefield to the dontWrap of pField
+   set the tabStops of the templatefield to the tabStops of pField
+   set the margins of the templatefield to theMargins
+   set the borderWidth of the templatefield to theBorderWidth
+   set the textAlign of the templatefield to the effective textAlign of pField
+   set the textFont of the templatefield to the effective textFont of pField
+   set the textSize of the templatefield to the effective textSize of pField
+   set the textStyle of the templatefield to the effective textStyle of pField
+   set the fixedLineHeight of the templatefield to the fixedLineHeight of pField
+   set the opaque of the templatefield to true
+   set the threeD of the templatefield to true
+   
+   create field kFieldEditorName in group "dgListMask" of me
+   put the long ID of it into sFieldEditor
+   
+   set the behavior of sFieldEditor to the long ID of button "Field Editor" of _ResourceStack()
+   
+   set the rect of sFieldEditor  to the rect of pField ## so formattedHeight will be correct in _resizeFieldToFitContent
+   
+   switch sTemplateFieldEditorA["text type"]
+      case "rtf"
+         set the RTFText of sFieldEditor to sTemplateFieldEditorA["text"]
+         put the HTMLText of sFieldEditor into theText
+         break
+      case "unicode"
+         set the unicodeText of sFieldEditor to sTemplateFieldEditorA["text"]
+         put the HTMLText of sFieldEditor into theText
+         break
+      case "utf8"
+         set the unicodeText of sFieldEditor to uniEncode(sTemplateFieldEditorA["text"], "utf8")
+         put the HTMLText of sFieldEditor into theText
+         break       
+      case "html"
+         put sTemplateFieldEditorA["text"] into theText
+         break
+      case "text"
+         set the text of sFieldEditor to sTemplateFieldEditorA["text"]
+         put the HTMLText of sFieldEditor into theText
+         break
+   end switch
+   
+   set the HTMLText of sFieldEditor to theText
+   set the dgIsFieldEditor of sFieldEditor to true
+   set the dgOriginalHTMLText of sFieldEditor to theText
+   set the dgTextType of sFieldEditor to sTemplateFieldEditorA["text type"]
+   set the dgTargetField of sFieldEditor to pField
+   set the dgTargetIndex of sFieldEditor to pIndex	# hilited line can change on selectionchanged occasions
+   set the dgTargetKey of sFieldEditor to pKey
+   unlock messages
+   
+   ## Bug when editing right|center-aligned text that is wider than field.
+   if the textAlign of sFieldEditor is not "left" and the formattedWidth of sFieldEditor >= the width of sFieldEditor then
+      set the textAlign of sFieldEditor to "left"
+   end if
+   
+   ## Shout our existence out to the world
+   try
+      dispatch "preOpenFieldEditor" to pField with sFieldEditor
+   catch e
+      put e into theError
+      
+      lock messages
+      delete sFieldEditor
+      unlock messages
+   end try
+   
+   if theError is not empty then throw theError
+   
+   lock messages
+   focus on sFieldEditor
+   focus on sFieldEditor ## When tabbing through table cells engine would not focus on sFieldEditor without 2nd call
+   -- put sFieldEditor & cr  &&  the long id of the focusedobject
+   unlock messages
+   
+   if sTemplateFieldEditorA["select text"] is not false then
+      select char 1 to -1 of sFieldEditor
+   else
+      if theClickField is not empty and theClickField is the long ID of pField then
+         if theClickChunk is not empty then
+            select after char (word 2 of theClickChunk) of sFieldEditor
+         else if theClickLine is not empty then
+            select after line (word 2 of theClickLine) of sFieldEditor
+         else
             select after char -1 of sFieldEditor
-        end if
-    end if
-     
-    reset the templatefield
-    _ResetTemplateFieldEditor
-    
-    set the lockMessages to msgsAreLocked
-    
-    unlock screen
-     
-    return empty
+         end if
+      else
+         select after char -1 of sFieldEditor
+      end if
+   end if
+   
+   reset the templatefield
+   _ResetTemplateFieldEditor
+   
+   set the lockMessages to msgsAreLocked
+   
+   unlock screen
+   
+   return empty
 end EditFieldText
 
 
@@ -8713,35 +9176,38 @@ end EditFieldText
 
 ## updates data and sequence
 private command _StorePersistentData
-    if the dgProps["persistent data"] of me then
-        put the lockMessages into msgsAreLocked
-        lock messages
-        set the dgCache["data"] of me to sDataArray
-        set the dgCache["sequencing"] of me to sIndexSequencing
-        set the lockMessages to msgsAreLocked
-    end if
+   if the dgProps["persistent data"] of me then
+      local msgsAreLocked
+      put the lockMessages into msgsAreLocked
+      lock messages
+      set the dgCache["data"] of me to sDataArray
+      set the dgCache["sequencing"] of me to sIndexSequencing
+      set the lockMessages to msgsAreLocked
+   end if
 end _StorePersistentData
 
 
 ## Just updates the sequence
 private command _StorePersistentSequence
-    if the dgProps["persistent data"] of me then
-        put the lockMessages into msgsAreLocked
-        lock messages
-        set the dgCache["sequencing"] of me to sIndexSequencing
-        set the lockMessages to msgsAreLocked
-    end if
+   if the dgProps["persistent data"] of me then
+      local msgsAreLocked
+      put the lockMessages into msgsAreLocked
+      lock messages
+      set the dgCache["sequencing"] of me to sIndexSequencing
+      set the lockMessages to msgsAreLocked
+   end if
 end _StorePersistentSequence
 
 
 private command _RestorePersistentData
-    if the dgProps["persistent data"] of me then
-        put the lockMessages into msgsAreLocked
-        lock messages
-        put the dgCache["data"] of me into sDataArray
-        put the dgCache["sequencing"] of me into sIndexSequencing
-        set the lockMessages to msgsAreLocked
-    end if
+   if the dgProps["persistent data"] of me then
+      local msgsAreLocked
+      put the lockMessages into msgsAreLocked
+      lock messages
+      put the dgCache["data"] of me into sDataArray
+      put the dgCache["sequencing"] of me into sIndexSequencing
+      set the lockMessages to msgsAreLocked
+   end if
 end _RestorePersistentData
 
 
@@ -8749,39 +9215,40 @@ end _RestorePersistentData
 
 
 private command _ShowAlternatingRows
-    lock screen
-    
-    switch _ControlType()
-        case "table"
+   lock screen
+   
+   local theRect, theStartSequence
+   switch _ControlType()
+      case "table"
+         put the rect of group "dgListMask" of me into theRect
+         add sControlHeights to item 4 of theRect
+         set the rect of graphic "dgAlternatingRows" of me to theRect
+         put sTableObjectsA["base sequence for visible controls"] into theStartSequence
+         if theStartSequence is not an integer then put 1 into theStartSequence
+         
+         if theStartSequence mod 2 is kAlternatingRowModValue then
+            set the top of graphic "dgAlternatingRows" of me to the top of group "dgAlternatingRowsMask" of me - sControlHeights  
+         else
+            set the top of graphic "dgAlternatingRows" of me to the top of group "dgAlternatingRowsMask" of me
+         end if
+         set the visible of graphic "dgAlternatingRows" of me to the dgProps["alternate row colors"] of me
+         break
+         
+      case "form"
+      default
+         if the dgProps["alternate row colors"] of me and sFormattedHeight < the height of group "dgList" of me then
             put the rect of group "dgListMask" of me into theRect
-            add sControlHeights to item 4 of theRect
+            put item 2 of theRect + sFormattedHeight into item 2 of theRect
             set the rect of graphic "dgAlternatingRows" of me to theRect
-            put sTableObjectsA["base sequence for visible controls"] into theStartSequence
-            if theStartSequence is not an integer then put 1 into theStartSequence
-            
-            if theStartSequence mod 2 is kAlternatingRowModValue then
-                set the top of graphic "dgAlternatingRows" of me to the top of group "dgAlternatingRowsMask" of me - sControlHeights  
-            else
-                set the top of graphic "dgAlternatingRows" of me to the top of group "dgAlternatingRowsMask" of me
-            end if
-            set the visible of graphic "dgAlternatingRows" of me to the dgProps["alternate row colors"] of me
-            break
-            
-        case "form"
-        default
-            if the dgProps["alternate row colors"] of me and sFormattedHeight < the height of group "dgList" of me then
-                put the rect of group "dgListMask" of me into theRect
-                put item 2 of theRect + sFormattedHeight into item 2 of theRect
-                set the rect of graphic "dgAlternatingRows" of me to theRect
-                show graphic "dgAlternatingRows" of me
-            else
-                hide graphic "dgAlternatingRows" of me
-            end if
-    end switch
-    
-    unlock screen
-    
-    return empty
+            show graphic "dgAlternatingRows" of me
+         else
+            hide graphic "dgAlternatingRows" of me
+         end if
+   end switch
+   
+   unlock screen
+   
+   return empty
 end _ShowAlternatingRows
 
 
@@ -8799,120 +9266,130 @@ end _FillInEmptyRowHeight
 
 
 private command _DrawAlternatingRows
-    -----
-    local theOffset
-    local theOtherColor
-    local theRowColor, theRowHeight
-    local theTemplateGroup
-    -----
-    put sTableObjectsA["base sequence for visible controls"] into theStartSequence
-    if _ControlType() is "form" then
-        ## For forms the alternating lines draw from the bottom of displayed rows down.
-        ## That means we need to determine alternating row color from last record down.
-        ## Since the rows only show up if there aren't enough controls to fill the space
-        ## we can just use the extents of the data array. If it is too high then no big deal.
-        put max(1, the number of elements of sDataArray + 1) into theStartSequence
-    else
-        if theStartSequence is not an integer then
-            put 1 into theStartSequence
-        end if
-    end if
-    
-    _FillInEmptyRowHeight
-    put the dgProps["alternate row colors"] of me into alternateTheColors
-    
-    set the visible of graphic "dgAlternatingRows" of me to alternateTheColors
-    if alternateTheColors then
-        put _GetEffectiveColor("alternate row color") into theAlternateRowColor
-        put _GetEffectiveColor("row color") into theRowColor
-        put the dgProps["row height"] of me into theRowHeight
-        if theRowHeight is not an integer then put kDefaultRowHeight into theRowHeight
-        put 0 into theOffset
-        put 1 into theWidth
-        
-        if theStartSequence mod 2 is kAlternatingRowModValue then
-            put theAlternateRowColor into theFirstColor
-            put theRowColor into theSecondColor
-        else
-            put theRowColor into theFirstColor
-            put theAlternateRowColor into theSecondColor
-        end if
-        
-        _CreateAlternatingColorImage the long ID of image "dgAlternatingRows" of me, theFirstColor, theSecondColor, \
-                theRowHeight, theWidth, theOffset
-        set the backgroundPattern of graphic "dgAlternatingRows" of me to empty
-        set the backgroundPattern of graphic "dgAlternatingRows" of me to the ID of image "dgAlternatingRows" of me
-    else
-        set the backgroundPattern of graphic "dgAlternatingRows" of me to empty
-        set the text of image "dgAlternatingRows" of me to empty
-    end if
-    
-    return empty
+   -----
+   local theOffset
+   local theOtherColor
+   local theRowColor, theRowHeight
+   local theTemplateGroup
+   local theStartSequence
+   -----
+   put sTableObjectsA["base sequence for visible controls"] into theStartSequence
+   if _ControlType() is "form" then
+      ## For forms the alternating lines draw from the bottom of displayed rows down.
+      ## That means we need to determine alternating row color from last record down.
+      ## Since the rows only show up if there aren't enough controls to fill the space
+      ## we can just use the extents of the data array. If it is too high then no big deal.
+      put max(1, the number of elements of sDataArray + 1) into theStartSequence
+   else
+      if theStartSequence is not an integer then
+         put 1 into theStartSequence
+      end if
+   end if
+   
+   _FillInEmptyRowHeight
+   local alternateTheColors
+   put the dgProps["alternate row colors"] of me into alternateTheColors
+   
+   set the visible of graphic "dgAlternatingRows" of me to alternateTheColors
+   if alternateTheColors then
+      local theAlternateRowColor, theWidth, theFirstColor, theSecondColor
+      put _GetEffectiveColor("alternate row color") into theAlternateRowColor
+      put _GetEffectiveColor("row color") into theRowColor
+      put the dgProps["row height"] of me into theRowHeight
+      if theRowHeight is not an integer then put kDefaultRowHeight into theRowHeight
+      put 0 into theOffset
+      put 1 into theWidth
+      
+      if theStartSequence mod 2 is kAlternatingRowModValue then
+         put theAlternateRowColor into theFirstColor
+         put theRowColor into theSecondColor
+      else
+         put theRowColor into theFirstColor
+         put theAlternateRowColor into theSecondColor
+      end if
+      
+      _CreateAlternatingColorImage the long ID of image "dgAlternatingRows" of me, theFirstColor, theSecondColor, \
+            theRowHeight, theWidth, theOffset
+      set the backgroundPattern of graphic "dgAlternatingRows" of me to empty
+      set the backgroundPattern of graphic "dgAlternatingRows" of me to the ID of image "dgAlternatingRows" of me
+   else
+      set the backgroundPattern of graphic "dgAlternatingRows" of me to empty
+      set the text of image "dgAlternatingRows" of me to empty
+   end if
+   
+   return empty
 end _DrawAlternatingRows
 
 
 private command _CreateAlternatingColorImage pDestImg, pColor1, pColor2, pRowHeight, pWidth, pOffset
-    -----
-    local theColor1Pixel, theColor2Pixel
-    local theColor1Row, theColor1RowImgData, theColor2Row, theColor2RowImgData, theRow
-    local theOffsetRow
-    local thePixel
-    local theRect
-    -----
-    if pRowHeight is empty then put 18 into pRowHeight 
-    if pWidth is empty then put 500 into pWidth 
-    put max(0, pOffset) into pOffset 
-    
-    ## turn strings into arrays 
-    split pColor1 by comma 
-    split pColor2 by comma 
-    
-    ## Create a pixel for color 1 and 2 
-    put numToChar(0) into theColor1Pixel 
-    put numToChar(pColor1[1]) after theColor1Pixel 
-    put numToChar(pColor1[2]) after theColor1Pixel 
-    put numToChar(pColor1[3]) after theColor1Pixel 
-    
-    put numToChar(0) into theColor2Pixel 
-    put numToChar(pColor2[1]) after theColor2Pixel 
-    put numToChar(pColor2[2]) after theColor2Pixel 
-    put numToChar(pColor2[3]) after theColor2Pixel 
-    
-    ## build 1 complete row of using pixel 
-    repeat with thePixel = 1 to pWidth 
-        put theColor1Pixel after theColor1RowImgData 
-        put theColor2Pixel after theColor2RowImgData 
-    end REPEAT 
-    
-    ## if pOffset is set then build sliver of row 2 color 
-    repeat with theRow = 1 to pOffset 
-        put theColor2RowImgData after theOffsetRow 
-    end repeat 
-    
-    ## build color 1 row 
-    repeat with theRow = 1 to pRowHeight 
-        put theColor1RowImgData after theColor1Row 
-    end REPEAT 
-    
-    ## finish building row 2 color 
-    repeat with theRow = 1 to pRowHeight - pOffset 
-        put theColor2RowImgData after theColor2Row 
-    end repeat 
-    
-    put the rect of pDestImg into theRect 
-    put item 1 of theRect + pWidth into item 3 of theRect 
-    put item 2 of theRect + pRowHeight * 2 into item 4 of theRect 
-    
-    ## Worka round crash bug when "jpeg"
-    put the paintCompression into theOrigCompr
-    set the paintCompression to "rle"
-    
-    lock screen 
-    set the rect of pDestImg to theRect 
-    set the imageData of pDestImg to theOffsetRow & theColor1Row & theColor2Row 
-    unlock screen 
-    
-    set the paintCompression to theOrigCompr
-    
-    return empty
+   -----
+   local theColor1Pixel, theColor2Pixel
+   local theColor1Row, theColor1RowImgData, theColor2Row, theColor2RowImgData, theRow
+   local theOffsetRow
+   local thePixel
+   local theRect
+   -----
+   if pRowHeight is empty then put 18 into pRowHeight 
+   if pWidth is empty then put 500 into pWidth 
+   put max(0, pOffset) into pOffset 
+   
+   ## turn strings into arrays 
+   split pColor1 by comma 
+   split pColor2 by comma 
+   
+   ## Create a pixel for color 1 and 2 
+   put numToChar(0) into theColor1Pixel 
+   put numToChar(pColor1[1]) after theColor1Pixel 
+   put numToChar(pColor1[2]) after theColor1Pixel 
+   put numToChar(pColor1[3]) after theColor1Pixel 
+   
+   put numToChar(0) into theColor2Pixel 
+   put numToChar(pColor2[1]) after theColor2Pixel 
+   put numToChar(pColor2[2]) after theColor2Pixel 
+   put numToChar(pColor2[3]) after theColor2Pixel 
+   
+   ## build 1 complete row of using pixel 
+   repeat with thePixel = 1 to pWidth 
+      put theColor1Pixel after theColor1RowImgData 
+      put theColor2Pixel after theColor2RowImgData 
+   end REPEAT 
+   
+   ## if pOffset is set then build sliver of row 2 color 
+   repeat with theRow = 1 to pOffset 
+      put theColor2RowImgData after theOffsetRow 
+   end repeat 
+   
+   ## build color 1 row 
+   repeat with theRow = 1 to pRowHeight 
+      put theColor1RowImgData after theColor1Row 
+   end REPEAT 
+   
+   ## finish building row 2 color 
+   repeat with theRow = 1 to pRowHeight - pOffset 
+      put theColor2RowImgData after theColor2Row 
+   end repeat 
+   
+   put the rect of pDestImg into theRect 
+   put item 1 of theRect + pWidth into item 3 of theRect 
+   put item 2 of theRect + pRowHeight * 2 into item 4 of theRect 
+   
+   ## Worka round crash bug when "jpeg"
+   local theOrigCompr
+   put the paintCompression into theOrigCompr
+   set the paintCompression to "rle"
+   
+   lock screen 
+   set the rect of pDestImg to theRect 
+   set the imageData of pDestImg to theOffsetRow & theColor1Row & theColor2Row 
+   unlock screen 
+   
+   set the paintCompression to theOrigCompr
+   
+   return empty
 end _CreateAlternatingColorImage
+
+private function __HasMobileScroller
+   return the environment is "mobile" and \
+         sScrollerId is not empty and \
+         sScrollerId is among the lines of mobileControls()
+end __HasMobileScroller
