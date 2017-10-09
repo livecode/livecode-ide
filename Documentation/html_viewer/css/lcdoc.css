@@ -37,6 +37,53 @@
 	content: "\e107  ";
 }
 
+#table_list tr.indy > td:nth-child(1):before {
+	font-family: "Glyphicons Halflings";
+	content: "\e107  ";
+}
+
+#table_list tr.communityplus > td:nth-child(1):before {
+   content: url('../../../Toolset/resources/communityplus/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+#table_list tr.indy > td:nth-child(1):before {
+   content: url('../../../Toolset/resources/commercial/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+#table_list tr.business > td:nth-child(1):before {
+	content: url('../../../Toolset/resources/professional/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+div.community:before {
+	content: url('../../../Toolset/resources/community/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+div.communityplus:before {
+	content: url('../../../Toolset/resources/communityplus/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+div.indy:before {
+	content: url('../../../Toolset/resources/commercial/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
+div.business:before {
+	content: url('../../../Toolset/resources/professional/ideSkin/bubble.png');
+   display: inline-block;
+   width: 20px;
+}
+
 #table_list tr:after {
     content: ' ';
     display: block;

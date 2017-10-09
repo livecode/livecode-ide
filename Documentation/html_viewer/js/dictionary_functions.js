@@ -1,4 +1,4 @@
-	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:"", sort_type:""};
+	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:"", sort_type:"", edition:""};
 	
 	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
 	
@@ -353,6 +353,9 @@
 			if (value.hasOwnProperty("deprecated") && value.deprecated != '')
 				tClass = " deprecated";
 
+			if (value.hasOwnProperty("edition") && value.edition != '' && value.edition.toLowerCase() != 'community')
+				tClass = " "+value.edition.toLowerCase();
+
 			tHTML += '<tr class="entry_list_item load_entry'+tClass+'" ';
 			tHTML += 'entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
 			tHTML += '<td>'+value["display name"]+'</td>';
@@ -483,7 +486,30 @@
 		
 		var tHTML = "";
 		var references = [];
-		tHTML += '<h1 style="margin:0px 0px 30px 12px">'+tEntryObject["display name"]+'</h1><div class="row">';
+		
+		tHTML += '<h1 style="margin:0px 0px 30px 12px">'+tEntryObject["display name"];
+		
+		var tUpgrade = true;
+		if (!tEntryObject.hasOwnProperty("edition"))
+			tUpgrade = false;
+		else if (tState.edition == "professional")
+			tUpgrade = false;
+		else if (tState.edition == "commercial" && tEntryObject["edition"].toLowerCase() != "business")
+			tUpgrade = false;
+		else if (tState.edition == "communityplus" && (tEntryObject["edition"].toLowerCase() != "business" || tEntryObject["edition"].toLowerCase() != "indy"))
+			tUpgrade = false;
+		else if (tEntryObject["edition"].toLowerCase() == "community")
+			tUpgrade = false;
+		
+		if (tUpgrade)
+		{
+			tHTML += ' <a href="#" class="upgrade btn btn-default" edition="' + tEntryObject["edition"] 
+					+ '" display_name="' + tEntryObject["display name"] 
+					+ '">Upgrade to ' + tEntryObject["edition"] + '</a>';
+		}
+		
+		tHTML += '</h1><div class="row">';
+	
 		$.each(tEntryObject, function(index, value) {
 			if(index == "id" || index == "name") return;
 			
@@ -600,9 +626,13 @@
 				case "display syntax":
 				case "changes":
 					break;
-					
 				
-					
+				case "edition":
+					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10 '+value.toLowerCase()+'" style="margin-bottom:10px">';
+					tHTML += value;
+					tHTML += '</div>';
+					break;
+				
 				default:
 					
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -1127,9 +1157,27 @@
 		return (typeof liveCode !== 'undefined');
 	}
 	
+	function setEdition(pEdition)
+	{
+		tState.edition = pEdition;
+	}
+	
 	function setActions()
 	{	
 		breadcrumb_draw();
+		
+		$("body").on("click", ".upgrade", function() {
+			if (isRunningInLiveCodeBrowser())
+			{
+         	var tEdition = $(this).attr("edition");
+				var tDisplayName = $(this).attr("display_name");
+				liveCode.showUpgradeOptions(tEdition, tDisplayName);
+			}
+			else
+			{
+				window.location.href = 'https://livecode.com/products/livecode-platform/pricing/';
+			}
+ 		});
 				
 		$('#ui_filer').keyup(function() {
 		  displayEntryListGrep(this.value);
