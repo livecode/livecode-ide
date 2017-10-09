@@ -8614,30 +8614,34 @@ on revIDEToggle pProperty
       case "Suppress Messages"
          global gRevSuppressMessages
          put "suppressMessages" into tToggleMessage
+         
+         local tLine
          if not gREVSuppressMessages then
             put true into gREVSuppressMessages
             # Send the suppress messages toggle message before actually suppressing messages
             ideMessageSend "ideToggleChanged:" & tToggleMessage
             set the lockCursor to false
-            repeat for each line l in the pendingMessages
-               if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
-            end repeat
-            repeat for each line l in the frontScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["front"]
-                  remove script of l from front
+            repeat for each line tLine in the pendingMessages
+               if not revIDEObjectIsOnIDEStack(item 4 to -1 of tLine) then
+                  cancel (item 1 of tLine)
                end if
             end repeat
-            repeat for each line l in the backScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["back"]
-                  remove script of l from back
+            repeat for each line tLine in the frontScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["front"]
+                  remove script of tLine from front
                end if
             end repeat
-            repeat for each line l in the stacksInUse
-               if char 1 to 3 of l is not "rev" then
-                  put l & cr after sRestoreState["inUse"]
-                  stop using stack l
+            repeat for each line tLine in the backScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["back"]
+                  remove script of tLine from back
+               end if
+            end repeat
+            repeat for each line tLine in the stacksInUse
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["inUse"]
+                  stop using stack tLine
                end if
             end repeat
             revInternal__LoadLibrary "revNoMessagesLibrary"
@@ -8645,14 +8649,14 @@ on revIDEToggle pProperty
          else
             revInternal__UnloadLibrary "revNoMessagesLibrary"
             put false into gREVSuppressMessages
-            repeat for each line l in sRestoreState["front"]
-               insert script of l into front
+            repeat for each line tLine in sRestoreState["front"]
+               insert script of tLine into front
             end repeat
-            repeat for each line l in sRestoreState["back"]
-               insert script of l into back
+            repeat for each line tLine in sRestoreState["back"]
+               insert script of tLine into back
             end repeat
-            repeat for each line l in sRestoreState["inUse"]
-               start using stack l
+            repeat for each line tLine in sRestoreState["inUse"]
+               start using stack tLine
             end repeat
             delete variable sRestoreState
          end if
