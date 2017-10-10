@@ -1,7 +1,7 @@
 ﻿script "revSEDocumentationPaneBehavior"
 # String representing the last searched for doc, this is what the cDoc was last set to
 local sDoc = ""
-local sTypesA
+local sTypesA, sLibsA
 # String returned by the last Documentation search, this can be used to reload the last doc.
 local sLastFoundDoc = ""
 
@@ -135,6 +135,9 @@ private function renderDocDataShort pData, pIndex
    put tData["display name"] into tName
    put tData["syntax"] into tSyntax
    put tData["summary"] into tSummary
+   if tSummary is empty then
+      put tData["description"] into tSummary
+   end if
    put tData["type"] into tType
    
    local tResult
@@ -273,7 +276,7 @@ private function renderDocData pData, pIndex, pFull
    return tHtml
 end renderDocData
 
-private command renderDoc pType
+private command renderDoc pType, pLib
    if sLastFoundDoc is empty or sDoc is empty then
       renderEmpty
       exit renderDoc
@@ -281,7 +284,7 @@ private command renderDoc pType
    
    # Documentation library: Retrieve the summary from the docs database
    local tHTML
-   put renderDocDictionary(sDoc, pType) into tHTML
+   put renderDocDictionary(sDoc, pType, pLib) into tHTML
    set the htmlText of field "View" of me to tHTML
    
    scrollbarCheck
@@ -312,27 +315,33 @@ private function removeAngleBrackets pText, pIsSyntax
 end removeAngleBrackets
 
 # Returns HTML of that doc in the form required for this component
-private function renderDocDictionary pTag, pType
+private function renderDocDictionary pTag, pType, pLib
    local tResult, tData
    
    # Get the required info from the doc
    put ideDocsFetchScriptData(pTag) into tData
-
+   
    if pType is empty then
       put sTypesA[pTag] into pType
    end if
-   
-   put pType into sTypesA[pTag]
-   
-   if pType is not empty then
-      repeat for each key tIndex in tData
-         if tData[tIndex]["type"] is pType then
-            return renderDocEntry(tData, tIndex)
-         end if
-      end repeat
+   if pLib is empty then
+      put sLibsA[pTag] into pLib
    end if
    
+   put pType into sTypesA[pTag]
+   put pLib into sLibsA[pTag]
+   
+   repeat for each key tIndex in tData
+      if pType is not empty and \
+            tData[tIndex]["type"] is pType and \
+            pLib is not empty and \
+            tData[tIndex]["library"] is pLib then
+         return renderDocEntry(tData, tIndex)
+      end if
+   end repeat
+   
    put tData[1]["type"] into sTypesA[pTag]
+   put tData[1]["library"] into sLibsA[pTag]
    return renderDocEntry(tData, 1)
 end renderDocDictionary 
 
@@ -345,13 +354,18 @@ private function renderDocEntry pData, pIndex
 end renderDocEntry
 
 function renderDocAlternatives pAlternatives, pCurIndex
-   local tFormattedAlternatives, tAlternative
-   repeat for each key tAlternativeIndex in pAlternatives
+   local tFormattedAlternatives, tAlternative, tAlternativeIndices
+   put the keys of pAlternatives into tAlternativeIndices
+   sort tAlternativeIndices by pAlternatives[each]["type"]
+   sort tAlternativeIndices by pAlternatives[each]["library"]
+   repeat for each line tAlternativeIndex in tAlternativeIndices
       if tAlternativeIndex is pCurIndex then
          next repeat
       end if
       
-      put "<a>" & pAlternatives[tAlternativeIndex]["type"] & "</a>" into tAlternative
+      put "<a>" & pAlternatives[tAlternativeIndex]["library"] && \
+            "-" && pAlternatives[tAlternativeIndex]["type"] & "</a>" \
+            into tAlternative
       
       if tFormattedAlternatives is empty then
          put tAlternative into tFormattedAlternatives
@@ -372,7 +386,8 @@ private command scrollbarCheck
 end scrollbarCheck
 
 on linkClicked pLink
-   renderDoc pLink
+   set the itemdelimiter to "-"
+   renderDoc word 1 to -1 of item 2 of pLink, word 1 to -1 of item 1 of pLink
 end linkClicked
 
 function prefGet pTag
@@ -390,7 +405,7 @@ on mouseUp
          break
          
       case "LaunchDocs"
-         revIDEGoToLCSDictionaryEntry sDoc, sTypesA[sDoc]
+         revIDEGoToLCSDictionaryEntry sDoc, sTypesA[sDoc], sLibsA[sDoc]
          break
    end switch
 end mouseUp

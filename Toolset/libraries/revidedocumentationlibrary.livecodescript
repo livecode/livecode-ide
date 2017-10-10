@@ -72,9 +72,9 @@ private function __fetchDocsData pAPI, pLibraryName, pEntryName, pType
       end if
    end if
    
-   local tRecordSet, tData, tDataSet, tParamCount
+   local tRecordSet, tDataSet, tParamCount
    
-   put "SELECT entry_data from dictionary_data" into tSQL
+   put "SELECT entry_data, library_name FROM dictionary_data" into tSQL
    
    local tWhere
    if pAPI is not empty then
@@ -111,12 +111,16 @@ private function __fetchDocsData pAPI, pLibraryName, pEntryName, pType
    end if
    
    # Get the docs data from the record set
-   local tCount, tMoreRecords
+   local tCount, tMoreRecords, tData, tLibrary
    put true into tMoreRecords
    repeat while tMoreRecords
-      add 1 to tCount
       get revDatabaseColumnNamed(tRecordSet, "entry_data", "tData")
-      put tData into tDataSet[tCount]
+      if tData is not empty then 
+         get revDatabaseColumnNamed(tRecordSet, "library_name", "tLibrary")
+         add 1 to tCount
+         put tData into tDataSet[tCount]["data"]
+         put tLibrary into tDataSet[tCount]["library"]
+      end if
       revMoveToNextRecord tRecordSet
       put the result into tMoreRecords
    end repeat
@@ -129,19 +133,17 @@ end __fetchDocsData
 
 private function __ideDocsFetchData pAPI, pLibraryName, pEntryName, pType
    # Fetch the data
-   local tData
-   put __fetchDocsData(pAPI, pLibraryName, pEntryName, pType) into tData
+   local tDataA
+   put __fetchDocsData(pAPI, pLibraryName, pEntryName, pType) into tDataA
    
-   if tData[1] is empty then
-      return empty
-   end if
-   
-   repeat for each key tCount in tData
-      put arrayDecode(tData[tCount]) into tData[tCount]
+   local tDecodedDataA
+   repeat for each key tCount in tDataA
+      put arrayDecode(tDataA[tCount]["data"]) into tDecodedDataA[tCount]
+      put tDataA[tCount]["library"] into tDecodedDataA[tCount]["library"]
    end repeat
    
    # Return the decoded array
-   return tData
+   return tDecodedDataA
 end __ideDocsFetchData
 
 private function ideDocsFetchElementOfType pAPI, pLibraryName, pEntryName, pType, pElement
