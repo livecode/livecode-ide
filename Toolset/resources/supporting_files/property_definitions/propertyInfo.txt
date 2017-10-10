@@ -94,7 +94,7 @@ innerShadow	Inner shadow	Effects	com.livecode.pi.graphicEffect	true	false			popu
 kind	Kind	Basic	com.livecode.pi.string	true	true		no_default
 label	Label	Basic	com.livecode.pi.text	true	false			
 layer	Layer	Position	com.livecode.pi.integer	true	false		no_default			1		1
-layerMode	Layer mode	Advanced	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
+layerMode::revIDESetLayerMode	Layer mode	Advanced	com.livecode.pi.enum	true	false		Static	Static,Dynamic,Scrolling
 left::revIDESetRectProperty	Left	Position	com.livecode.pi.integer	true	false		no_default					1
 lineInc	Scroll distance on arrow click	Basic	com.livecode.pi.number	true	false		512	
 lineSize	Line thickness	Basic	com.livecode.pi.number	true	false		1	

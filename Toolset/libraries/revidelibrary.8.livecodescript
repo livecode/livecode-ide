@@ -8590,6 +8590,59 @@ on revIDESetTextAlign pAlign
       ideActionStyleText "align", pAlign
 end revIDESetTextAlign
 
+on revIDESetLayerMode pObject, pProperty, pValue
+   set the layerMode of pObject to pValue
+   
+   if the layerMode of pObject is not the effective layerMode of pObject then
+      local tMessage
+      put revIDELocalise("The effective layerMode of this " & \
+            word 1 of pObject & " is " & \
+            the effective layerMode of pObject & " instead of " & \
+            the layerMode of pObject & " because of the following incompatible properties:" & return) into tMessage
+      
+      local tStack
+      put ideStackOfObject(pObject) into tStack
+      
+      if the effective layerMode of pObject is "static" and \
+            the compositorType of tStack is empty then
+         put return & revIDELocalise(" - the compositorType of this stack is not set") after tMessage
+      end if
+      
+      if the effective layerMode of pObject is "dynamic" and \
+            the layerMode of pObject is "static" and \
+            the ink of pObject is not among the items of "srcCopy,blendSrcOver" then
+         put return & revIDELocalise(" - the ink is not srcCopy or blendSrcOver") after tMessage
+      end if
+      
+      if the layerMode of pObject is "scrolling" then
+         if word 1 of pObject is not among the items of "group,bkgnd" then
+            put return & revIDELocalise(" - only groups can have scrolling layerModes") after tMessage
+         else
+            if the hScrollbar of pObject or the vScrollbar of pObject then
+               put return & revIDELocalise(" - the group scrollbars are shown") after tMessage
+            end if
+            if the showName of pObject then
+               put return & revIDELocalise(" - the group name is shown") after tMessage
+            end if
+            if the showBorder of pObject then
+               put return & revIDELocalise(" - the group has a border") after tMessage
+            end if
+            if the opaque of pObject and \
+                  the effective backPattern of pObject is not empty then
+               put return & revIDELocalise(" - the group has a background pattern") after tMessage
+            end if
+            if the opaque of pObject and \
+                  (the unboundedHScroll of pObject or the unboundedVScroll of pObject) then
+               put return & revIDELocalise(" - the group as unbounded scrolling") after tMessage
+            end if
+         end if
+      end if
+      
+      answer warning tMessage with revIDELocalise("OK")
+      
+   end if
+end revIDESetLayerMode
+   
 on revIDEActionClearAllBreakpoints
    answer warning "Really clear all breakpoints from all open stacks?  This operation cannot be undone." with "Don't Clear" or "Clear"
    if it is "Clear" then 
