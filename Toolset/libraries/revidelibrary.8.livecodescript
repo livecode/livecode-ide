@@ -5048,7 +5048,7 @@ on revIDEInstallAPI pAPIFolder, pExtensionName, pAuthor
   revIDESetUTF8FileContents pAPIFolder & slash & "api.js", tAPIJSON
    
    # Now regenerate the built APIs
-   revIDEAddAPIAndRegenerate tAPIJSON
+   revIDERegenerateBuiltAPIs
 end revIDEInstallAPI
 
 on revIDEGoToLCSDictionaryEntry pTag, pType
