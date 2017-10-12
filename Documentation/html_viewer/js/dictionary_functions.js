@@ -44,19 +44,55 @@
 		return tState.data;
 	}
 
-	// Return all the syntax associated with an entry
+	// Return all the syntax and synonyms associated with an entry
 	// as a (matchable) string
 	function collectSyntax(pEntry)
 	{
-		var tSyntax = '';
+		var tSyntax = pEntry["display name"];
 		$.each(pEntry["display syntax"], function (index, value) 
 		{
-			if (tSyntax != '')
-				tSyntax += ' ';
-				
-			tSyntax += value;
+			tSyntax += ' ' + value;
 		});
+		if(pEntry.hasOwnProperty("synonyms"))
+		{
+			$.each(pEntry["synonyms"], function (index, value) 
+			{
+				tSyntax += ' ' + value;
+			});
+		}
+		tSyntax = removeHtmlEntityEscapes(tSyntax);
 		return tSyntax;
+	}
+	
+	// Replace HTML entity escape sequences with native characters for
+	// searching and highlighting syntax and synonyms.
+	function removeHtmlEntityEscapes(pTerm)
+	{
+		var tTerm = pTerm;
+		tTerm = tTerm.replace(/&amp;/g,"&");
+		tTerm = tTerm.replace(/&lt;/g,"<");
+		tTerm = tTerm.replace(/&gt;/g,">");
+		tTerm = tTerm.replace(/&quot;/g,'"');
+		return tTerm;
+	}
+	
+	// Replace characters with their HTML entity escape sequences after
+	// processing is completed.
+	function addHtmlEntityEscapes(pTerm)
+	{
+		var tTerm = pTerm;
+		tTerm = tTerm.replace(/&/g,"&amp;");
+		tTerm = tTerm.replace(/\</g,"&lt;");
+		tTerm = tTerm.replace(/\>/g,"&gt;");
+		tTerm = tTerm.replace(/\"/g,"&quot;");
+		return tTerm;
+	}
+	
+	// Escape RegExp special characters for use in searching
+	var kSpecialCharacters = /[.*+?|()\[\]{}\\$^]/g; // .*+?|()[]{}\$^
+	RegExp.escape = function(pText)
+	{
+		return pText.replace(kSpecialCharacters, "\\$&");
 	}
 	
 	// Return a list of matched search terms
@@ -69,23 +105,51 @@
 		tState.cached_search_data.term = pTerm;
 		tState.cached_search_data.data = [];
 		
-		// Get a list of space-delimited search terms				
-   		var tokensOfTerm = pTerm.match(/\S+/g);	
+		//console.log(pTerm);
+		//console.time("Search");
 		
-		// Generate two regexes - one that matches all syntax that 
+		// Escape RegExp special characters:  \ ^ $ [
+		// A leading space will enable full RegExp support
+		var tTerm = '';
+		if(pTerm.startsWith(' '))
+			tTerm = pTerm.trim();
+		else
+			tTerm = RegExp.escape(pTerm);
+		
+		// Get a list of space-delimited search terms
+		var tokensOfTerm = tTerm.match(/\S+/g);
+		
+		// Generate three regexes - one that matches all syntax that 
 		// contains each search term, and one that matches all syntax that
-		// contains a word beginning with each search term. This way we 
-		// can prioritise matches that start with the search terms.
-    	var matchExp = '';
-    	var priorityMatch = '';
-    	$.each(tokensOfTerm, function(index, matchToken)
-    	{
-       		matchExp += '(?=.*' + matchToken + ')';
-       		priorityMatch += '(?=.*\\b' + matchToken + ')';
-   		});
+		// contains a word beginning with each search term, one that will
+		// match full words of each search term. This way we can prioritize
+		// full word matches and matches that start with the search terms.
+		var matchExp = '';
+		var priorityMatch = '';
+		var wordMatch = '';
+		$.each(tokensOfTerm, function(index, matchToken)
+		{
+			matchExp += '(?=.*' + matchToken + ')';
+			priorityMatch += '(?=.*\\b' + matchToken + ')';
+			wordMatch += '(?=.*\\b' + matchToken + '\\b)';
+		});
+
+		// Special case sorting for terms considered word break
+		// characters that would not get sorted properly.
+		switch(pTerm){
+			case '-':
+			case '/':
+			case ';':
+			case '[':
+			case '(':
+			case '()':
+				wordMatch = '(^' + tTerm + ')';
+				break;
+		}
 
 		var regex = new RegExp(matchExp, "i");
 		var priorityRegex = new RegExp(priorityMatch, "i");
+		var wordRegex = new RegExp(wordMatch, "i");
 		
 		// Grep for the general search term
 		tState . cached_search_data . data = $.grep(tState.filtered_data, function (e) 
@@ -95,20 +159,64 @@
 			return tMatched;
 		});
 
-		// Sort the priority matches to the top
-		tState . cached_search_data . data . sort(function(a, b) 
-		{
-			var tToMatch = collectSyntax(a);		
-			if (priorityRegex.test(tToMatch))
+        // Sort the priority matches to the top
+	tState . cached_search_data . data . sort(function(a, b) 
+        {
+			var tNameA, tNameB, tMatchA, tMatchB
+
+			tNameA = a["display name"].toLowerCase();
+			if(a.hasOwnProperty("synonyms"))
+			{
+				$.each(a["synonyms"], function (index, value) 
+				{
+					tNameA += ' ' + value.toLowerCase();
+				});
+			}
+
+			tNameB = b["display name"].toLowerCase();
+			if(b.hasOwnProperty("synonyms"))
+			{
+				$.each(b["synonyms"], function (index, value) 
+				{
+					tNameB += ' ' + value.toLowerCase();
+				});
+			}
+
+			// full word matches in display name sort to the top
+			tMatchA = wordRegex.test(tNameA);
+			tMatchB = wordRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
 				return -1;
-			
-			tToMatch = collectSyntax(b);
-			if (priorityRegex.test(tToMatch))
+			if (tMatchB && !tMatchA)
 				return 1;
-				
+
+			// display names with words that start with terms next
+			tMatchA = priorityRegex.test(tNameA);
+			tMatchB = priorityRegex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// display name contains search terms next
+			tMatchA = regex.test(tNameA);
+			tMatchB = regex.test(tNameB);
+			if (tMatchA && !tMatchB)
+				return -1;
+			if (tMatchB && !tMatchA)
+				return 1;
+
+			// alphabetical sort by display name for everything else
+			if (tNameA < tNameB)
+				return -1;
+			if (tNameA > tNameB)
+				return 1;
 			return 0;
 		});
+		//console.timeEnd("Search");
 	
+		$(window).scrollTop(0);
+		$("#table_container").scrollTop(0);
 		return tState . cached_search_data . data;
 	}
 	
@@ -486,6 +594,35 @@
 		return tSection;
 	}
 	
+	// Add a background highlight to search terms found in syntax and synonyms
+	var kSpanStartMarker = String.fromCharCode(2);
+	var kSpanEndMarker = String.fromCharCode(3);
+	var kSpanStartRegex = new RegExp(kSpanStartMarker, "g");
+	var kSpanEndRegex = new RegExp(kSpanEndMarker, "g");
+	function highlightSearchTerms(pText)
+	{
+		var tText = removeHtmlEntityEscapes(pText);
+		
+		if($("#ui_filer").val() != "")
+		{
+			var tTerm = $("#ui_filer").val();
+			var tokensOfTerm = tTerm.match(/\S+/g);
+			$.each(tokensOfTerm, function(index, matchToken)
+			{
+				var match_regex = new RegExp('(' + RegExp.escape(matchToken) + ')', "gi")
+				tText = tText.replace(match_regex, function($1){
+					// Need to use placeholders since we need to remove HTML
+					// entities once done with adding hilighting.
+					return kSpanStartMarker + $1 + kSpanEndMarker;
+				});
+			});
+		}
+		tText = addHtmlEntityEscapes(tText);
+		tText = tText.replace(kSpanStartRegex, "<span style='background-color: yellow;'>");
+		tText = tText.replace(kSpanEndRegex, "</span>");
+		return tText;
+	}
+
 	function displayEntry(pEntryID)
 	{	
 		var tIndex = entryIdToIndex(pEntryID);
@@ -612,16 +749,14 @@
 				
 					break;
 				case "syntax":
-					var tSyntaxHTML = "";
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
 						$.each(value, function(index2, value2) {
-							tHTML += '<pre><code>' + remove_link_placeholders(value2) + '</code></pre>';
+							tHTML += '<pre><code>' + highlightSearchTerms(remove_link_placeholders(value2)) + '</code></pre>';
 						});
 					} else {
-						tSyntaxHTML += 'Malformed syntax in JSON';	
+						tHTML += 'Malformed syntax in JSON';	
 					}
-					tHTML += tSyntaxHTML;
 					tHTML += '</div>';
 					break;
 				case "associations":
@@ -686,7 +821,10 @@
 								tOutput += ', ';
 							tOutput += content;
 						});
-						tHTML += tOutput;
+						if(index=="synonyms")
+							tHTML += highlightSearchTerms(tOutput);
+						else
+							tHTML += tOutput;
 					}
 					else
 						tHTML += value;
@@ -1157,8 +1295,7 @@
 	}
 	
 	function library_set(pLibraryID){
-		var tChooserLabel = 'Choose API: ';
-		tChooserLabel += library_id_to_name(pLibraryID);
+		var tChooserLabel = library_id_to_name(pLibraryID);
 
 		$("#lcdoc_library_chooser_text").html(tChooserLabel);
 	
@@ -1265,6 +1402,22 @@
 		tState.edition = pEdition;
 	}
 	
+	// Returns a function, that, as long as it continues to be invoked, will not
+	// be triggered. The function will be called after it stops being called for
+	// N milliseconds.  Used to make search more responsive.
+	var debounce = function(func, wait) {
+		var timeout;
+		return function() {
+			var context = this, args = arguments;
+			var later = function() {
+				timeout = null;
+				func.apply(context, args);
+			};
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	};
+
 	function setActions()
 	{	
 		breadcrumb_draw();
@@ -1282,12 +1435,13 @@
 			}
  		});
 
-		$('#ui_filer').keyup(function() {
-		  displayEntryListGrep(this.value);
-		  if(tState.cached_search_data.data.hasOwnProperty(0))
-		  	   displayEntry(tState.cached_search_data.data[0]["id"]);
-		})
-
+		// Delay search until 250ms after last character typed
+		$('#ui_filer').keyup( debounce( function() {
+			displayEntryListGrep(this.value);
+			if(tState.searched.data.hasOwnProperty(0))
+				displayEntry(tState.searched.data[0]["id"]);
+		}, 250));
+		
 		$("body").on( "click", ".load_entry", function() {
 			var tEntryIndex = $(this).attr("entryindex");
 			if (typeof tEntryIndex !== typeof undefined && tEntryIndex !== false) {
@@ -1362,14 +1516,6 @@
 		var tResizerMargin;
 		tResizerMargin = parseInt($resizer.css('margin'));
 		
-		function update_lcdoc_margin()
-		{			
-			var tHeaderHeight;
-			tHeaderHeight = parseInt($('#header_panel_holder').css('height'));
-			
-			$('#lcdoc_body').css('margin-top', tHeaderHeight + 20);
-		}
-		
 		function doTableResize()
 		{
 			var $textarea = $('#header_panel_holder');
@@ -1397,7 +1543,7 @@
 				tNewHeight = Math.max(tHeaderMinHeight, tNewHeight);
 				
 				var tContainerHeight;
-				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin;
+				tContainerHeight = tNewHeight - tHeaderMinHeight - tTableHeaderHeight - tResizerMargin + 5;
 				$('#table_container').css('height', tContainerHeight);
 
 				if (tContainerHeight < 5)
@@ -1411,7 +1557,6 @@
 					$('#table_header').css('display', '');
 				}
 				
-				update_lcdoc_margin();
 			});
 			
 			$window.on('mouseup', function () {
@@ -1445,8 +1590,6 @@
 		}
 		preventScrollBubble($("#lcdoc_list"), $("#table_container"));
 		preventScrollBubble($("#filters_panel"), $("#filters_options"));
-		
-		update_lcdoc_margin();
 		
 		$(document).keydown(function(e) {
 		   switch(e.which) {

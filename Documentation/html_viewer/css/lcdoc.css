@@ -1,6 +1,15 @@
 @charset "UTF-8";
 /* CSS Document */
 
+html {					/* always show scroll bar on page   */
+	overflow-y: scroll; /* keeps nav elements from shifting */
+}
+
+#lcnavbar {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
 .lcdoc_parameterValue{ font-weight:bold}
 
 #table_list {
@@ -121,37 +130,32 @@ div.business:before {
 }
 
 #resizer {
-	content:url("../resources/media/vertical_resizer.png");
+	content:url("../resources/media/vertical_resizer_580.png");
 	cursor: ns-resize;
 	margin: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 75%;
 }
 
 #header_panel_holder {
 	background-color: #FFFFFF;
 	top: 0;
-	padding-top: 25px;
-	position: fixed;
+	padding-top: 56px;
 	min-height: 85px;
-	height: 353px;
 }
 
 #table_container {
 	width: 100%;
     height: 227px;;
-    overflow: scroll;   
+    overflow-y: scroll;   
 }
 
 #lcdoc_list {
-	position: fixed;
 }
 
 #lcdoc_body{
-}
-
-.affix_right
-{
-	width:848px;
-	z-index:100;
+	margin-top: 20px;
 }
 
 .lcdoc_section_title{ font-weight:bold; text-transform:capitalize}
@@ -179,54 +183,6 @@ div.business:before {
 
 #lcdoc_body blockquote {
     font-size: inherit;
-}
-
-@media (min-width: 768px) {
-  .affix_right{
-	width:90%;
-	margin-left:auto;
-	margin-right:auto;
-	}
-}
-
-@media (min-width: 992px) {
- .affix_right{
-	width:697px;
-	}
-}
-
-@media (min-width: 1200px) {
- .affix_right{
-	width:848px;
-	}
-}
-
-.bs-sidebar.affix {
-  width: 260px;
-  top: 25px;
-  display:none;
-}
-
-@media (min-width: 768px) {
-  .bs-sidebar.affix {
-    display:none;
-  }
-}
-
-@media (min-width: 992px) {
-  .bs-sidebar.affix {
-    width: 213px;
-    position: fixed;
-    top: 25px;
-    display:block;
-  }
-}
-
-@media (min-width: 1200px) {
-  .bs-sidebar.affix {
-    width: 263px;
-    display:block;
-  }
 }
 
 .lcdoc_description a.load_entry {
@@ -257,6 +213,10 @@ div.business:before {
 
 #lcdoc_sidebar {
 	height: 100%;
+	width: 25%;
+	top: 70px;
+	position: fixed;
+	padding-right: 15px;
 }
 
 #filters_options {
@@ -277,7 +237,7 @@ div.business:before {
 }
 
 #filters_panel {
-	height: 75%;
+	height: 80%;
 	overflow: hidden;
 }
 
@@ -287,4 +247,9 @@ div.business:before {
 
 #dropdownMenu1 {
 	width: 100%;
+}
+
+.dropdown-menu { /* lists may be too long to fit on the page */
+	overflow-y: auto;
+	max-height: 85vh;
 }
