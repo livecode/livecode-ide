@@ -249,10 +249,13 @@
 		return Object.keys(obj).sort();
 	}
 	
-	function filter_cell(pCategory, pValue)
+	function filter_cell(pCategory, pValue, pSpan)
 	{
 		var tHTML = '';
-		tHTML += '<td><a href="#" class="apply_filter" ';
+		tHTML += '<td';
+		if (pSpan)
+			tHTML += ' colspan="2"';
+		tHTML += '><a href="#" class="apply_filter" ';
 		tHTML += 'filter_category="'+pCategory+'" ';
 		tHTML += 'filter_value="'+pValue+'">';
 		tHTML += pValue;
@@ -276,17 +279,31 @@
 				tDisplayedFilters.push(value);
 		});
 		
-		// Display them in alphabetical order going down the table,
-		// rather than across
-		var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
-		var tOddNumber = tDisplayedFilters.length % 2 == 1;
-		for (i = 1; i <= tRowCount; i++)
+		if (pCategory == 'associations')
 		{
-			tHTML += '<tr>'
-			tHTML += filter_cell(pCategory, tDisplayedFilters[i-1]);
-			if (i != tRowCount || !tOddNumber)
-				tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount]);
-			tHTML += '</tr>';
+			// Display associations one per line
+			for (i = 1; i <= tDisplayedFilters.length; i++)
+			{
+				tHTML += '<tr>'
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i-1], true);
+				tHTML += '<td></td>';
+				tHTML += '</tr>';
+			}
+		}
+		else
+		{
+			// Display them in alphabetical order going down the table,
+			// rather than across
+			var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
+			var tOddNumber = tDisplayedFilters.length % 2 == 1;
+			for (i = 1; i <= tRowCount; i++)
+			{
+				tHTML += '<tr>'
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i-1], false);
+				if (i != tRowCount || !tOddNumber)
+					tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount], false);
+				tHTML += '</tr>';
+			}
 		}
 		tHTML += '</tbody>';
 		
