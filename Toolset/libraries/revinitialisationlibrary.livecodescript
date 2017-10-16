@@ -112,3 +112,22 @@ command revInternal_SetJAVA_HOME
       end if
    end if
 end revInternal_SetJAVA_HOME
+
+command revInternal_SetCLASSPATH
+   local tJarFiles, tFolder, tClasspath
+   put specialFolderPath("resources") & "/Externals/JVM" into tFolder
+   
+   put files(tFolder) into tJarFiles
+   filter tJarFiles with "*.jar"
+   
+   repeat for each line tJar in tJarFiles
+      put tFolder & slash before tJar
+      if tClasspath is empty then
+         put tJar into tClasspath
+      else
+         put ":" & tJar after tClasspath
+      end if
+   end repeat
+   
+   put tClasspath into $CLASSPATH
+end revInternal_SetCLASSPATH
