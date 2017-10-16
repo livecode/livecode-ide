@@ -122,6 +122,7 @@
 	
     $(document).ready(function(e)
 	{
+      setEdition('[[ the editionType]]');
 		setActions();		
 		dataFilter();		
 		displayLibraryChooser();

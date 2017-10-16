@@ -1959,6 +1959,7 @@ function revEnvironmentEditionProperty pProp, pEdition
                return false
          end switch
          break
+      case "indy"
       case "commercial"
          switch pProp
             case "name"
@@ -1998,6 +1999,7 @@ function revEnvironmentEditionProperty pProp, pEdition
                return true
          end switch
          break
+      case "business"
       case "professional"
          switch pProp
             case "name"

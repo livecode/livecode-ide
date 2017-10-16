@@ -1,53 +1,48 @@
-	var tState = {selected:"",history:{list:[],selected:-1},searched:{},filters:{},filtered_data:[],data:"",selected_api_id:"", sort_type:""};
+	var tState = { 	
+		selected_api_id:"",
+		selected_entry_index:{},
+		history:{
+			list:[],
+			selected_index:-1
+		},	
+		cached_search_data:{},
+		filters:{},
+		filtered_data:[],
+		data:"",
+		sort_type:"",
+		edition: ""
+	};
 	
-	if($.session.get("selected_api_id")) tState.selected = $.session.get("selected_api_id");
-	
-	if($.session.get("selected")) tState.selected = $.session.get("selected");
-	else tState.selected = 1;
+	if ($.session.get("selected_api_id")) {
+		tState.selected_api_id = $.session.get("selected_api_id");
+	} else {
+		tState.selected_api_id = 1;
+	}
 
-	
+	if ($.session.get("selected_entry_index")) {
+		var tIndexArray = $.session.get("selected_entry_index");
+		tState.selected_entry_index[tState.selected_api_id] = tIndexArray[tState.selected_api_id];
+	} else { 
+		tState.selected_entry_index[tState.selected_api_id] = 1;
+	}
+
+	library_set(tState.selected_api_id);	
+
 	function dataGet(){
-		//console.log(dictionary_data.docs);
-		
-		//sort API dictionaries, leave LiveCode Script/LiveCode Builder as first 2 entries
-		if(tState.selected_api_id == ""){
-			dictionary_data.docs.sort(compareDictionaryObject);
-		}
-
 		if(!dictionary_data.docs.hasOwnProperty(tState.selected_api_id)){
-			
-			$.each(dictionary_data.docs, function(index, libraryData){
+			$.each(dictionary_data.docs, function(index, libraryData) {
 				tState.selected_api_id = index;
 				return false;
 			});
 		}
 		
-		if(tState.dirtyData == true || tState.data == ""){
+		if (tState.dirtyData == true || tState.data == ""){
 			tState.data = dictionary_data.docs[tState.selected_api_id].doc.sort(compareEntryObject);
 			tState.dirtyData = false;
 		}
 		
 		return tState.data;
 	}
-	
-
-	//customized sort for API dictionaries
-	function compareDictionaryObject(entryObject1,entryObject2) {
-		if(entryObject1["display name"] == "LiveCode Script")
-			return -1;
-		if(entryObject2["display name"] == "LiveCode Script")
-			return 1;
-		if(entryObject1["display name"] == "LiveCode Builder")
-			return -1;
-		if(entryObject2["display name"] == "LiveCode Builder")
-			return 1;
-		if(entryObject1["display name"].toLowerCase() < entryObject2["display name"].toLowerCase())
-			return -1;
-		if (entryObject1["display name"].toLowerCase() > entryObject2["display name"].toLowerCase())
-			return 1;
-		return 0;
-	}
-
 
 	// Return all the syntax and synonyms associated with an entry
 	// as a (matchable) string
@@ -104,14 +99,11 @@
 	function dataSearch(pTerm)
 	{
 		// Check the cached search data
-		if (tState.searched.hasOwnProperty("term") && tState.searched.term == pTerm) 
-			return tState.searched.data;
+		if (tState.cached_search_data.hasOwnProperty("term") && tState.cached_search_data.term == pTerm) 
+			return tState.cached_search_data.data;
 			
-		tState.searched.term = pTerm;
-		tState.searched.data = [];
-
-		//console.log(pTerm);
-		//console.time("Search");
+		tState.cached_search_data.term = pTerm;
+		tState.cached_search_data.data = [];
 		
 		// Escape RegExp special characters:  \ ^ $ [
 		// A leading space will enable full RegExp support
@@ -120,10 +112,9 @@
 			tTerm = pTerm.trim();
 		else
 			tTerm = RegExp.escape(pTerm);
-		
+
 		// Get a list of space-delimited search terms
 		var tokensOfTerm = tTerm.match(/\S+/g);
-		
 		
 		// Generate three regexes - one that matches all syntax that 
 		// contains each search term, and one that matches all syntax that
@@ -158,16 +149,16 @@
 		var wordRegex = new RegExp(wordMatch, "i");
 		
 		// Grep for the general search term
-		tState . searched . data = $.grep(tState.filtered_data, function (e) 
+		tState . cached_search_data . data = $.grep(tState.filtered_data, function (e) 
 		{
 			var tToMatch = collectSyntax(e);
 			var tMatched = regex.test(tToMatch);
 			return tMatched;
 		});
 
-		// Sort the priority matches to the top
-		tState . searched . data . sort(function(a, b) 
-		{
+        // Sort the priority matches to the top
+		tState . cached_search_data . data . sort(function(a, b) 
+        {
 			var tNameA, tNameB, tMatchA, tMatchB
 
 			tNameA = a["display name"].toLowerCase();
@@ -223,10 +214,11 @@
 	
 		$(window).scrollTop(0);
 		$("#table_container").scrollTop(0);
-		return tState . searched . data;
+		return tState . cached_search_data . data;
 	}
 	
-	function dataFilter(){
+	// Return the data of the current API subject to the applied filters
+	function dataFilter() {
 		var filtered_data = [];
 		var tFound_data = []
 		
@@ -268,20 +260,22 @@
 				});
 			
 				var tMatch = true;
-				$.each(tState.filters, function(category, values){
-					if(tFound_data[category] == 0){
+				$.each(tState.filters, function(category, values) {
+					if (tFound_data[category] == 0) {
 						tMatch = false;
 					}
 				});
 			
-				if(tMatch == true) filtered_data.push(entryData);
+				if (tMatch == true) {
+					filtered_data.push(entryData);
+				}
 			});
 			
 			tState.filtered_data = filtered_data;
 		}
 		displayFilters();
 		
-		tState.searched = {};
+		tState.cached_search_data = {};
 		displayEntryListGrep($("#ui_filer").val());	
 	}
 	
@@ -297,12 +291,12 @@
 	function filterOptions(pCategories){
 		var tFilterOptionWithCount = {}
 		var tShowCatogories = pCategories.split(',');
-		$.each(tShowCatogories, function( index, category_name) {
+		$.each(tShowCatogories, function(index, category_name) {
 			tFilterOptionWithCount[category_name] = {}
 		});
 		
-		$.each(tState.filtered_data, function( entry_index, entry_data) {
-			$.each(tShowCatogories, function( category_index, category_name) {
+		$.each(tState.filtered_data, function(entry_index, entry_data) {
+			$.each(tShowCatogories, function(category_index, category_name) {
 				// If the category is already being filtered on then don't count
 				if(!tState.filters.hasOwnProperty(category_name)){
 					if(entry_data[category_name]){
@@ -485,6 +479,9 @@
 			if (value.hasOwnProperty("deprecated") && value.deprecated != '')
 				tClass = " deprecated";
 
+			if (value.hasOwnProperty("edition") && value.edition != '' && value.edition.toLowerCase() != 'community')
+				tClass = " "+value.edition.toLowerCase();
+
 			tHTML += '<tr class="entry_list_item load_entry'+tClass+'" ';
 			tHTML += 'entryid="'+value["id"]+'" id="entry_list_item_'+value["id"]+'">';
 			tHTML += '<td>'+value["display name"]+'</td>';
@@ -624,31 +621,73 @@
 	}
 
 	function displayEntry(pEntryID)
-	{		
-		var tEntryObject = entryData(pEntryID);
+	{	
+		var tIndex = entryIdToIndex(pEntryID);
+	    displayEntryAtIndex(tIndex);
+	}
+	
+	function syntax_to_string(pSyntax)
+	{
+	    var tHtml = '';
+	    $.each(pSyntax, function(index, value) {
+	        if (index > 0)
+	            tHtml += '<br>';
+	        tHtml += replace_link_placeholders_with_param(value).replace(/[\n\r]/g, '<br>');
+	    });
+	    return tHtml;
+	}
+	
+	function displayEntryAtIndex(pIndex)
+	{
+		var tEntryObject = tState.data[pIndex];
+
 		history_add(tEntryObject);
 		
-		pEntryID = tEntryObject.id;
+		var tEntryId = tEntryObject.id;
 		
-		//console.log(tEntryObject);
-		
-		if(tState.selected == pEntryID) return 1;
-		tState.selected = pEntryID;
-		$.session.set("selected", pEntryID);
-		
+		if (tState.selected_entry_index[tState.selected_api_id] == pIndex) return 1;
+		tState.selected_entry_index[tState.selected_api_id] = pIndex;
+		$.session.set("selected_entry_index", tState.selected_entry_index);
+
 		breadcrumb_draw();
 		
 		$(".entry_list_item").removeClass("active");
-		$("#entry_list_item_"+pEntryID).addClass("active");
-		selectedEntryEnsureInView(tEntryObject.id);
+		$("#entry_list_item_"+tEntryId).addClass("active");
+		selectedEntryEnsureInView(tEntryId);
 		
 		var tHTML = "";
 		var references = [];
-		tHTML += '<h1 style="margin:0px 0px 30px 12px">'+tEntryObject["display name"]+'</h1><div class="row">';
+		
+		tHTML += '<h1 style="margin:0px 0px 30px 12px">'+tEntryObject["display name"];
+		
+		var tUpgrade = true;
+		if (!tEntryObject.hasOwnProperty("edition"))
+			tUpgrade = false;
+		else if (tState.edition == "professional")
+			tUpgrade = false;
+		else if (tState.edition == "commercial" && tEntryObject["edition"].toLowerCase() != "business")
+			tUpgrade = false;
+		else if (tState.edition == "communityplus" && (tEntryObject["edition"].toLowerCase() != "business" || tEntryObject["edition"].toLowerCase() != "indy"))
+			tUpgrade = false;
+		else if (tEntryObject["edition"].toLowerCase() == "community")
+			tUpgrade = false;
+		
+		if (tUpgrade)
+		{
+			tHTML += ' <a href="#" class="upgrade btn btn-default" edition="' + tEntryObject["edition"] 
+					+ '" display_name="' + tEntryObject["display name"] 
+					+ '">Upgrade to ' + tEntryObject["edition"] + '</a>';
+		}
+		
+		tHTML += '</h1><div class="row">';
+	
 		$.each(tEntryObject, function(index, value) {
-			if(index == "id" || index == "name") return;
-			
 			switch(index){
+				case "id":
+				case "name":
+				case "library":
+				// These are for 'meta' information, not for display
+					return;
 				case "examples":
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';	
 					if($.isArray(value)){
@@ -687,12 +726,12 @@
 						tHTML += reference_type + ': ';
 						var reference_html = "";
 						$.each(reference_array, function(reference_index, reference_name) {
-							var tReference, tID;
-							tID = entryNameToID(reference_name, reference_type);
-							if (tID == 0)
+							var tReference, tIndex;
+							tIndex = entryNameToIndex(reference_name, reference_type, tEntryObject.library);
+							if (tIndex == 0)
 								tReference = reference_name;
 							else
-								tReference = click_text(reference_name, tID);
+								tReference = click_text_from_index(reference_name, tIndex);
 							
 							if (reference_html == "") 
 								reference_html = tReference;
@@ -725,18 +764,18 @@
 							var tTypes, tType;
 							tTypes = ["object","library","glossary"];
 							
-							var tID;
+							var tIndex;
 							$.each(tTypes, function(tTypeIndex, tType) {
-								tID = entryNameToID(value2, tType)
-								if (tID != 0)
+								tIndex = entryNameToIndex(value2, tType, tEntryObject.library)
+								if (tIndex != 0)
 									return;
 							});
 							
 							var tAssociation;
-							if (tID == 0)
+							if (tIndex == 0)
 								tAssociation = value2;
 							else
-								tAssociation = click_text(value2, tID);
+								tAssociation = click_text_from_index(value2, tIndex);
 							
 							if (association_html == "") 
 								association_html = tAssociation;
@@ -759,8 +798,13 @@
 				case "display syntax":
 				case "changes":
 					break;
-					
-					
+				
+				case "edition":
+					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10 '+value.toLowerCase()+'" style="margin-bottom:10px">';
+					tHTML += value;
+					tHTML += '</div>';
+					break;
+				
 				default:
 					
 					tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
@@ -820,7 +864,7 @@
 					tHTML += '<tr>';
 					tHTML += '<td>' + click_text_from_entry_data('', entry_data) +'</a></td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.summary)+'</td>';
-					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.syntax[0])+'</td>';
+					tHTML += '<td>'+syntax_to_string(entry_data.syntax)+'</td>';
 					tHTML += '</tr>';
 				});
 				tHTML += '</tbody></table>';
@@ -895,10 +939,10 @@
              	if(return_text == matched_whole){
              		var resolved = resolve_link_placeholder(matched_text);
              		
-             		var resolved_id = resolve_link(pEntryObject, resolved[1], resolved[2]);
+             		var resolved_index = resolve_link(pEntryObject, resolved[1], resolved[2]);
              		
-             		if (resolved_id != 0)
-             	   		return_text = click_text(resolved[0], resolved_id)
+             		if (resolved_index != 0)
+             	   		return_text = click_text_from_index(resolved[0], resolved_index)
              		else
              			return_text = resolved[0];
              	}
@@ -920,13 +964,19 @@
 			return click_text(pLink, pEntryData.id);
 	}
 	
-	function click_text(pText, pID)
+	function click_text_from_index(pText, pIndex)
 	{
 		var text;
 		text = '<a href="javascript:void(0)" class="load_entry"';
-		text += ' entryid="'+pID+'"'; 
+		text += ' entryindex="'+pIndex+'"'; 
 		text += '>' + pText + '</a>';
 		return text;
+	}
+		
+	function click_text(pText, pID)
+	{
+		var tIndex = entryIdToIndex(pID);
+		return click_text_from_index(pText, tIndex)
 	}
 	
 	function undo_link_replacement(pText)
@@ -963,10 +1013,10 @@
 	
 	// Return an entry ID from the target name and optional type
 	function resolve_link(pEntryObject, pTargetName, pTargetType) {
-        var entry_id;
+        var tIndex = 0;
         if(pTargetType){
 	        // Know name and type so lookup id
-             entry_id = entryNameToID(pTargetName,pTargetType);
+             tIndex = entryNameToIndex(pTargetName,pTargetType,pEntryObject.library);
         } else {
         	// Work out the type from the reference
 			if(pEntryObject.hasOwnProperty("references")) {
@@ -974,18 +1024,18 @@
 					$.each(reference_array, function(reference_index, reference_name) {
 						if (reference_name == pTargetName)
 						{
-							entry_id = entryNameToID(reference_name,reference_type);
+							tIndex = entryNameToIndex(reference_name,reference_type,pEntryObject.library);
 							return;
 						}
 					});
 					// Just find the first one if no type was specified.
-					if (entry_id)
+					if (tIndex)
 						return;
 				});
 			}
         }
 	        
-	    return entry_id;
+	    return tIndex;
 	}
 	
 	function entryData(pEntryID){
@@ -1002,41 +1052,82 @@
 		return tData;
 	}
 	
-	function entryNameToID(pName,pType){
-		var tID = 0;
-	
-		$.each(dataGet(), function( index, value) {
-			if((value.name == pName || value["display name"] == pName) && value.type == pType){
-				tID = value.id;
-				return false;
+	function entryNameToIndex(pName,pType,pPriorityLibrary){
+		var tIndex = 0;
+		$.each(dataGet(), function(index, value) {
+			if(value.name != pName && value["display name"] != pName)
+			{
+				// Continue loop
+				return true;
 			}
 			
+			if (pType != '')
+			{
+				if (value.type != pType)
+				{
+					// Continue loop				
+					return true;
+				}
+			}
+
+			// Make sure we always 'fall back' to the lcs syntax
+			if (value.library == 'livecode_script')
+			{
+				tIndex = index;		
+				// If no library was specified, assume lcs syntax
+				if (pPriorityLibrary == '')
+				{
+					// We're done
+					return false;
+				}
+				
+				// Otherwise, this index is now a candidate in case
+				// there is no entry found in the given library				
+			}
+			
+			if (pPriorityLibrary == '')
+			{
+				// If no library was specified, this index is a 
+				// candidate.
+				tIndex = index
+				return true;
+			}
+			else if (value.library != pPriorityLibrary)
+			{
+				// Continue loop				
+				return true;
+			}
+			
+			// We have a perfect match!
+			tIndex = index;
+			return false;
 		});
-		return tID;
+		return tIndex;
 	}
 	
-	function entryIDToArrayKey(pID){
-		var tID = 0;
-		$.each(dataGet(), function( index, value) {
-			if(value.id == pID){
-				tID = index;
+	function entryIdToIndex(pId){
+		var tIndex = 0;
+	
+		$.each(dataGet(), function(index, value) {
+			if(value.id == pId){
+				tIndex = index;
 				return false;
 			}
 			
 		});
-		return tID;
-	} 
+		return tIndex;
+	}
 	
 	function breadcrumb_draw()
 	{
 		var tHistory = tState.history.list;
 		
-		if (tState.history.selected > 0) 
+		if (tState.history.selected_index > 0) 
 			$('#lcdoc_history_back').removeClass('disabled');
 		else
 			$('#lcdoc_history_back').addClass('disabled');
 		
-		if (tState.history.selected < tHistory.length - 1) 
+		if (tState.history.selected_index < tHistory.length - 1) 
 			$('#lcdoc_history_forward').removeClass('disabled');
 		else
 			$('#lcdoc_history_forward').addClass('disabled');
@@ -1052,7 +1143,7 @@
 		var tHistoryList = '';	
 		$.each(tHistory, function(index, value) 
 		{
-			if (index == tState.history.selected)
+			if (index == tState.history.selected_index)
 				tHistoryList += '<li class="active"><a href="#">';
 			else
 			{
@@ -1136,12 +1227,12 @@
 	
 	function history_selected_entry()
 	{
-		return tState.history.list[tState.history.selected];
+		return tState.history.list[tState.history.selected_index];
 	}
 	
 	function history_add(pEntryObject)
 	{	
-		if (tState.history.selected != -1)
+		if (tState.history.selected_index != -1)
 		{
 			// If this is the currently selected item, don't do anything
 			if (history_selected_entry().id == pEntryObject.id)
@@ -1166,22 +1257,22 @@
 		tNewHistory.push(tObject);
 		
 		tState.history.list = tNewHistory;
-		tState.history.selected = tNewHistory . length - 1;
+		tState.history.selected_index = tNewHistory . length - 1;
 	}
 	
 	function history_back()
 	{
-		go_history(tState.history.selected - 1);
+		go_history(tState.history.selected_index - 1);
 	}
 	
 	function history_forward()
 	{
-		go_history(tState.history.selected + 1);
+		go_history(tState.history.selected_index + 1);
 	}
 	
 	function go_history(pHistoryID)
 	{
-		tState.history.selected = pHistoryID
+		tState.history.selected_index = pHistoryID
 		displayEntry(history_selected_entry().id);
 	}
 	
@@ -1211,15 +1302,21 @@
 			{
 				tState.selected_api_id = pLibraryID;
 				$.session.set("selected_api_id", pLibraryID);
-				tState.selected = ""
-				tState.history = {list:[], selected:-1};
-				tState.searched = {};
+				var tIndex = 1;
+				if (tState.selected_entry_index.hasOwnProperty(pLibraryID))
+				{
+					tIndex = tState.selected_entry_index[pLibraryID];
+				}
+				
+				tState.history = {list:[], selected_index:-1};
+				tState.cached_search_data = {};
 				tState.filters= {};
 				tState.filtered_data = [];
 				tState.data = "";
-			
+				tState.selected_entry_index[pLibraryID] = "";
+				
 				dataFilter();
-				displayEntry(1);
+				displayEntryAtIndex(tIndex);
 			}
 		}
 	}
@@ -1275,11 +1372,21 @@
 	{
 		var tLibraryID = library_name_to_id(pLibraryName);
 		library_set(tLibraryID);
-		
-		var tID = entryNameToID(pEntryName, pEntryType);
-		if (tID == 0)
+
+		var tID;
+		if (pEntryName == '')
 			tID = 1;
-		displayEntry(tID);
+		else
+			tID = entryNameToIndex(pEntryName, pEntryType, pLibraryName);
+			
+		if (tID != 0)
+		{
+			displayEntryAtIndex(tID);
+		} 
+		else 
+		{
+			displayEntryListGrep(pEntryName);
+		}
 	}
 	
 	function isRunningInLiveCodeBrowser()
@@ -1287,6 +1394,11 @@
 		return (typeof liveCode !== 'undefined');
 	}
 	
+	function setEdition(pEdition)
+	{
+		tState.edition = pEdition;
+	}
+
 	// Returns a function, that, as long as it continues to be invoked, will not
 	// be triggered. The function will be called after it stops being called for
 	// N milliseconds.  Used to make search more responsive.
@@ -1302,11 +1414,24 @@
 			timeout = setTimeout(later, wait);
 		};
 	};
-
+	
 	function setActions()
 	{	
 		breadcrumb_draw();
 		
+		$("body").on("click", ".upgrade", function() {
+			if (isRunningInLiveCodeBrowser())
+			{
+         	var tEdition = $(this).attr("edition");
+				var tDisplayName = $(this).attr("display_name");
+				liveCode.showUpgradeOptions(tEdition, tDisplayName);
+			}
+			else
+			{
+				window.location.href = 'https://livecode.com/products/livecode-platform/pricing/';
+			}
+ 		});
+
 		// Delay search until 250ms after last character typed
 		$('#ui_filer').keyup( debounce( function() {
 			displayEntryListGrep(this.value);
@@ -1315,8 +1440,15 @@
 		}, 250));
 		
 		$("body").on( "click", ".load_entry", function() {
-			var tEntryID = $(this).attr("entryid");
-			displayEntry(tEntryID);
+			var tEntryIndex = $(this).attr("entryindex");
+			if (typeof tEntryIndex !== typeof undefined && tEntryIndex !== false) {
+				displayEntryAtIndex(tEntryIndex);
+			}
+
+			var tEntryId = $(this).attr("entryid");			
+			if (typeof tEntryId !== typeof undefined && tEntryId !== false) {
+				displayEntry(tEntryId);
+			}
 		});
 		
 		$("body").on("click", ".list_sort", function() {
