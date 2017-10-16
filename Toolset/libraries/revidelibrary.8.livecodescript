@@ -11104,9 +11104,7 @@ private command revIDEGenerateDistributedAPI
    put revIDESpecialFolderPath("Documentation") &"/dictionary" into tFolder
    put tFolder & slash & "datagrid.lcdoc" into tInputs[1]
    put revIDEIsFilesetStale(tInputs, tOutput, false, tError) into tNeedUpdate
-   # Regenerate if necessary
-   local tLibA
-   
+   # Regenerate if necessary   
    if tNeedUpdate then
       local tLibA
       put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "Data Grid", "LiveCode") into tLibA
