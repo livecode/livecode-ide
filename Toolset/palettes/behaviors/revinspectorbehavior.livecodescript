@@ -366,6 +366,18 @@ private on inspectorGenerate
    end if
 end inspectorGenerate
 
+on tabKey
+   if the controlKey is down then
+      if sDataA[sSelectedSectionIndex+1] is an array then
+         inspectorSectionChanged sDataA[sSelectedSectionIndex+1]["label"]
+      else
+         inspectorSectionChanged sDataA[1]["label"]
+      end if
+   else
+      pass tabKey
+   end if
+end tabKey
+
 private command inspectorNoObject
    create group "noObjects"
    create field "noObjects" in group "noObjects"

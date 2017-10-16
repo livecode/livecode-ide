@@ -1435,8 +1435,9 @@
 		// Delay search until 250ms after last character typed
 		$('#ui_filer').keyup( debounce( function() {
 			displayEntryListGrep(this.value);
-			if(tState.searched.data.hasOwnProperty(0))
-				displayEntry(tState.searched.data[0]["id"]);
+			if(tState.cached_search_data.hasOwnProperty("data") && 
+			   tState.cached_search_data.data.hasOwnProperty(0))
+				displayEntry(tState.cached_search_data.data[0]["id"]);
 		}, 250));
 		
 		$("body").on( "click", ".load_entry", function() {
