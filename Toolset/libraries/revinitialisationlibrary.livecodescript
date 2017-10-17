@@ -24,6 +24,11 @@ command revInternal__LoadLibrary pLibrary
          put kLCLibraryPrefix & "." before pLibrary
          send "revLoadLibrary" to stack pLibrary
       end if
+      
+      local tStackName
+      put the name of stack pLibrary into tStackName
+      put tStackName into sLoadedLibraries[pLibrary]
+      
    catch tError
       write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
       return "Error loading" && pLibrary
