@@ -5060,10 +5060,10 @@ on revIDEGoToDictionaryEntry pLibrary, pTag, pType
 end revIDEGoToDictionaryEntry
 
 on revIDEGoToWidgetAPI pKind
-   local tLibraryName, tEntry
-   put revIDEExtensionProperty(pKind, "title") into tLibraryName
-   put tolower(pKind) into tEntry
-   revIDEGoToDictionaryEntry tLibraryName, tEntry, "widget"
+   local tName, tLibrary
+   put revIDEExtensionProperty(pKind, "title") into tName
+   put tolower(pKind) into tLibrary
+   revIDEGoToDictionaryEntry tLibrary, tName, "widget"
 end revIDEGoToWidgetAPI
 
 on revIDEGoToObjectAPI pObjectID
