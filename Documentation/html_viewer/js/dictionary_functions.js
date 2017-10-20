@@ -108,7 +108,7 @@
 		// Escape RegExp special characters:  \ ^ $ [
 		// A leading space will enable full RegExp support
 		var tTerm = '';
-		if(pTerm.startsWith(' '))
+		if(pTerm.charAt(0) == ' ')
 			tTerm = pTerm.trim();
 		else
 			tTerm = RegExp.escape(pTerm);
