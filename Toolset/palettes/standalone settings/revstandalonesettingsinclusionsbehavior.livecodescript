@@ -44,7 +44,15 @@ command setExtensionListData pFilter, pPlatformsA
    local tExtensionDataA, tDisplayedExtensionsA
    put revSBAvailableInclusions() into tExtensionDataA
    
-   repeat for each element tExtensionA in tExtensionDataA
+   local tKeys
+   put the keys of tExtensionDataA into tKeys
+   -- Secondary order by title
+   sort tKeys by tExtensionDataA[each]["title"]
+   -- Primary order by type
+   sort tKeys by tExtensionDataA[each]["type"]
+   repeat for each line tIndex in tKeys
+      local tExtensionA
+      put tExtensionDataA[tIndex] into tExtensionA
       if pFilter is not empty and not \
             (tExtensionA["title"] contains pFilter) then
          next repeat
