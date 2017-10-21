@@ -1,4 +1,4 @@
-﻿script "revSEFilterFieldBehavior"
+﻿script "revFilterFieldBehavior"
 
 /*
 The aim here is to display the text stored in the custom property

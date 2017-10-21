@@ -4264,16 +4264,34 @@ function revIDEWebPageURL pKey
    end switch
 end revIDEWebPageURL
 
+function revIDEBehavior pWhich
+   switch pWhich
+      case "filterfield"
+         return the long ID of stack "revFilterFieldBehavior"
+         break
+      case "palette"
+         return the long ID of stack "revPaletteBehavior"
+         break
+      case "inspector"
+         return the long ID of stack "revInspectorBehavior"
+         break
+      case "dataview"
+         return the long ID of button "DataView Behavior" \ 
+               of stack "revDataViewControl" of stack "revCore"
+         break
+   end switch
+end revIDEBehavior
+
 function revIDEFrameBehavior
-   return the long ID of stack "revPaletteBehavior"
+   return revIDEBehavior("palette")
 end revIDEFrameBehavior
 
 function revIDEInspectorBehavior
-   return the long ID of stack "revInspectorBehavior"
+   return revIDEBehavior("inspector")
 end revIDEInspectorBehavior
 
 function revIDEDataViewBehavior
-   return the long ID of button "DataView Behavior" of stack "revDataViewControl" of stack "revCore"
+   return revIDEBehavior("dataview")
 end revIDEDataViewBehavior
 
 local sMilliseconds
@@ -5583,7 +5601,7 @@ function revIDEScriptEditorBehavior pWhich
       case "errorspane"
          return tPathToBehaviors & slash & "revseerrorspanebehavior.livecodescript"	
       case "filterfield"
-         return tPathToBehaviors & slash & "revsefilterfieldbehavior.livecodescript"
+         return revIDEBehavior(pWhich)
       case "variablescheckbox"
          return tPathToBehaviors & slash & "revsevariablescheckboxbehavior.livecodescript"
       case "stack"
