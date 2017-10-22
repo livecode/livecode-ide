@@ -1,17 +1,17 @@
 ﻿script "revreshapelibrary"
 
-on revLoadLibrary
+on extensionInitialize
    // SN-2015-05-13: [[ Bug 15365 ]] Make sure that we don't catch
-   //  revLoadLibrary message if we are not the target
+   //  extensionInitialize message if we are not the target
    if the target is not me then
-      pass "revLoadLibrary"
+      pass "extensionInitialize"
    end if
    insert the script of me into front
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    remove the script of me from front
-end revUnloadLibrary
+end extensionFinalize
 
 on revNewTool
    if the long id of me is among the lines of the frontScripts then

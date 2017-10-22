@@ -35,15 +35,15 @@ command revInternal__LoadLibrary pLibrary, pFullPath
       return "Error loading" && pLibrary
    end try
    
-   send "revLoadLibrary" to stack tStackName   
+   send "extensionInitialize" to stack tStackName   
    put tStackName into sLoadedLibraries[pLibrary]
    return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
    try
-      if the revAvailableHandlers of stack pLibrary contains "revLoadLibrary" then
-         send "revLoadLibrary" to stack pLibrary
+      if the revAvailableHandlers of stack pLibrary contains "extensionInitialize" then
+         send "extensionInitialize" to stack pLibrary
          local tStackName
          put the name of stack pLibrary into tStackName
          put tStackName into sLoadedLibraries[pLibrary]
@@ -66,13 +66,13 @@ command revInternal__UnloadLibrary pLibraryName
    
    try
       // Request the library shuts down
-      send "revUnloadLibrary" to stack tStackName
+      send "extensionFinalize" to stack tStackName
       
       delete variable sLoadedLibraries[pLibraryName]
       
       return true
    catch tError
-      return "Error while unloading library. Library" && pLibraryName && "did not complete the reVUnloadLibrary request"
+      return "Error while unloading library. Library" && pLibraryName && "did not complete the extensionFinalize request"
    end try
 end revInternal__UnloadLibrary
 

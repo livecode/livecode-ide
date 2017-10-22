@@ -1,17 +1,17 @@
 ﻿script "revideextensionlibrary"
 local sExtensions, sExtensionProperties
 
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert script of me into back 
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 # Called at startup. Loads all the extensions ready for use
 on revIDEInitialiseExtensions

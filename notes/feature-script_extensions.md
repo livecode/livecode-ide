@@ -2,17 +2,17 @@
 Support has been added for installing script libraries contained
 in livecode extension packages (.lce files).
 
-## revLoadLibrary and revUnloadLibrary messages
+## extensionInitialize and extensionFinalize messages
 
-`revLoadLibrary` and `revUnloadLibrary` handlers should be implemented
+`extensionInitialize` and `extensionFinalize` handlers should be implemented
 to govern how the script library extension is loaded in the IDE and in
 a standalone.
 
 ### Example
 
-	on revLoadLibrary
+	on extensionInitialize
 	   if the target is not me then
-		  pass revLoadLibrary
+		  pass extensionInitialize
 	   end if
    
 	   insert the script of me into back
@@ -20,31 +20,31 @@ a standalone.
 	   if the environment contains "development" then
 		  -- Do IDE-specific initialisation
 	   end if
-	end revLoadLibrary
+	end extensionInitialize
 
-	on revUnloadLibrary
+	on extensionFinalize
 	   if the target is not me then
-		  pass revUnloadLibrary
+		  pass extensionFinalize
 	   end if
    
 	   remove the script of me from back
-	end revUnloadLibrary
+	end extensionFinalize
 
-## revLibraryStartupScript message
+## extensionStartupScript message
 
-A `revLibraryStartupScript` handler can be implemented to provide code 
+A `extensionStartupScript` handler can be implemented to provide code 
 which will be executed after the library is loaded in a standalone
 application.
 
 ### Example
 
-	on revLibraryStartupScript
+	on extensionStartupScript
 	   if the target is not me then
-		  pass revLibraryStartupScript
+		  pass extensionStartupScript
 	   end if
    
 	   -- Initialise library for use in standalone
-	end revLibraryStartupScript
+	end extensionStartupScript
 
 ## Metadata 
 Metadata for script libraries should be contained in the library
@@ -83,6 +83,6 @@ elements of the library's API.
 	Tags: networking
 	*/
 	
-	on revLoadLibrary
+	on extensionInitialize
 	...
 	

@@ -1,15 +1,15 @@
 ﻿script "revIDEDocumentationLibrary"
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 private on ideDocsEnsureDatabase pLocation
    if there is not a file (pLocation & slash & "api.sqlite") then

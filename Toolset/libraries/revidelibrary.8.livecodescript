@@ -20,18 +20,18 @@ References: revIDESubscribe (command)
 /**
 Called when loading the IDE library
 **/
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
    end if
    revIDEInitialiseIDELibrary
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 #############
 # Internal functions

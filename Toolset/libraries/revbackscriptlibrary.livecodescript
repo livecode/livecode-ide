@@ -1,18 +1,18 @@
 ﻿script "revbackscriptlibrary"
 
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
       revIDESubscribe "ideMouseMove"
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of me from back
       revIDEUnsubscribeAll
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 global gREVSuppressMessages
 

@@ -1,8 +1,8 @@
 script "revdatabaselibrary"
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass "revLoadLibrary"
+      pass "extensionInitialize"
    end if	
    insert the script of me into front
 
@@ -14,14 +14,14 @@ on revLoadLibrary
          revSetDatabaseDriverPath revEnvironmentBinariesPath()
       end if
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is not me then
-      pass "revUnloadLibrary"
+      pass "extensionFinalize"
    end if	
    remove the script of me from front
-end revUnloadLibrary
+end extensionFinalize
 
 ####################################################################################################
 # Original comment by J.S

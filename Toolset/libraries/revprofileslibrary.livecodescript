@@ -1,16 +1,16 @@
 ﻿script "revprofileslibrary"
 
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       insert the script of me into back
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of me from back
    end if
-end revUnloadLibrary
+end extensionFinalize
 
 # OK-2008-04-14 : Added variable declarations when investigating a bug
 
