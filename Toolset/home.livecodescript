@@ -1176,6 +1176,7 @@ command revInternal__InitialiseLibraries
    put "revCommonLibrary" into tLoadList 
    put return & "revDatabaseLibrary" after tLoadList 
    put return & "revIDEDocumentationLibrary" after tLoadList
+   put return & "revMetadataLibrary" after tLoadList   
    put return & "revSBLibrary" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
@@ -1183,7 +1184,6 @@ command revInternal__InitialiseLibraries
    put return & "revBackScriptLibrary" after tLoadList 
    put return & "revDeployLibrary" after tLoadList
    put return & "revDebuggerLibrary" after tLoadList 
-   put return & "revMetadataLibrary" after tLoadList
    put return & "revLibUrl" after tLoadList 
    put return & "revPrintLibrary" after tLoadList 
    put return & "revAnimationLibrary" after tLoadList 
