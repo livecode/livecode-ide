@@ -877,7 +877,11 @@ command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rType
       put "lcs" into tType
       filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
    end if
-
+   
+   if tExtFile is empty then
+      put "none" into tType
+   end if 
+   
    put tExtFile into rSource
    put tType into rType
 end revIDEExtensionFetchSourceFromFolder
