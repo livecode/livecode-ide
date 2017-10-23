@@ -18,37 +18,56 @@ command revInternal__LoadLibrary pLibrary, pFullPath
    end if
    
    local tStackName
-   try
-      if there is a stack pLibrary then
-         put pLibrary into tStackName
-      else if there is a stack (kLCLibraryPrefix & "." & pLibrary) then
-         put kLCLibraryPrefix & "." & pLibrary into tStackName
-      else if the environment begins with "development" then
-         if there is not a stack pFullPath then
-            throw "no file for library" && pLibrary
-         end if
-         
-         put the name of stack pFullPath into tStackName
-      end if
-   catch tError
-      write ("Error" && tError && "while loading stack:" && pLibrary) & return to stderr
-      return "Error loading" && pLibrary
-   end try
+   if there is a stack pLibrary then
+      put pLibrary into tStackName
+   else if there is a stack (kLCLibraryPrefix & "." & pLibrary) then
+      put kLCLibraryPrefix & "." & pLibrary into tStackName
+   else if the environment begins with "development" and \
+         there is a stack pFullPath then
+      put the name of stack pFullPath into tStackName
+   else
+      return "no stack for library" && pLibrary
+   end if
    
-   send "extensionInitialize" to stack tStackName   
+   local tError, tLegacyError
+   try
+      // TODO: Remove legacy message name	   
+      send "revLoadLibrary" to stack tStackName   
+   catch tLegacyError 
+   end try 
+   
+   if tLegacyError is not empty then
+      try
+         send "extensionInitialize" to stack tStackName   
+      catch tError
+      end try
+   end if
+   
+   if tError is not empty then
+      write ("Error" && tError && "while loading stack:" && pLibrary) \
+            & return to stderr
+      return "Error loading" && pLibrary
+   end if
+   
    put tStackName into sLoadedLibraries[pLibrary]
    return empty
 end revInternal__LoadLibrary
 
 command revInternal__LoadIfLibrary pLibrary
    try
-      if the revAvailableHandlers of stack pLibrary contains "extensionInitialize" then
-         send "extensionInitialize" to stack pLibrary
-         local tStackName
-         put the name of stack pLibrary into tStackName
-         put tStackName into sLoadedLibraries[pLibrary]
-         return true
+      local tAvailable, tMsg
+      put the revAvailableHandlers of stack pLibrary into tAvailable
+      if tAvailable contains "extensionInitialize" then
+         put "extensionInitialize" into tMsg
+         // TODO: Remove legacy message name	            
+      else if tAvailable contains "revLoadLibrary" then 
+         put "revLoadLibrary" into tMsg
       end if
+      send tMsg to stack pLibrary
+      local tStackName
+      put the name of stack pLibrary into tStackName
+      put tStackName into sLoadedLibraries[pLibrary]
+      return true
    end try
    delete stack pLibrary
    return false
@@ -64,16 +83,26 @@ command revInternal__UnloadLibrary pLibraryName
    put sLoadedLibraries[pLibraryName] into tStackName
    if there is not a stack tStackName then return "library not loaded"
    
+   local tError, tLegacyError
    try
-      // Request the library shuts down
-      send "extensionFinalize" to stack tStackName
-      
-      delete variable sLoadedLibraries[pLibraryName]
-      
-      return true
-   catch tError
-      return "Error while unloading library. Library" && pLibraryName && "did not complete the extensionFinalize request"
+      // TODO: Remove legacy message name	   
+      send "revUnloadLibrary" to stack tStackName
+   catch tLegacyError
    end try
+   
+   if tLegacyError is not empty then
+      try
+         // Request the library shuts down
+         send "extensionFinalize" to stack tStackName
+      catch tError
+      end try
+   end if
+   
+   if tError is not empty then
+      return "Error while unloading library. Library" && pLibraryName \
+            && "did not complete the extensionFinalize request"
+   end if     
+   return empty
 end revInternal__UnloadLibrary
 
 function revInternal__ListLoadedLibraries
