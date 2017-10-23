@@ -31,6 +31,7 @@ on revUnloadLibrary
    if the target is me then
       remove the script of me from back
    end if
+   revIDEFinaliseIDELibrary
 end revUnloadLibrary
 
 #############
@@ -1491,6 +1492,10 @@ function __unescapeString pString
    return pString
 end __unescapeString
 
+on revIDEFinaliseIDELibrary
+   revIDEUnsubscribeAll
+end revIDEFinaliseIDELibrary
+
 on revIDEInitialiseIDELibrary
    # Load fonts
    local tFonts
@@ -1513,7 +1518,13 @@ on revIDEInitialiseIDELibrary
    
    ## Initialise property library
    revIDEPropertyLibraryInitialise
+   
+   ideSubscribe "ideExtensionsChanged"
 end revIDEInitialiseIDELibrary
+
+on ideExtensionsChanged
+   revIDERegenerateBuiltDictionaryData
+end ideExtensionsChanged
 
 #############
 # Subscription
