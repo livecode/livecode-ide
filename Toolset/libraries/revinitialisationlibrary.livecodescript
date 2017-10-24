@@ -32,7 +32,10 @@ command revInternal__LoadLibrary pLibrary, pFullPath
    local tError, tLegacyError
    try
       // TODO: Remove legacy message name	   
-      send "revLoadLibrary" to stack tStackName   
+      dispatch "revLoadLibrary" to stack tStackName  
+      if it is not "handled" then
+      	throw "No revLoadLibrary handler found"
+      end if
    catch tLegacyError 
    end try 
    
@@ -86,7 +89,10 @@ command revInternal__UnloadLibrary pLibraryName
    local tError, tLegacyError
    try
       // TODO: Remove legacy message name	   
-      send "revUnloadLibrary" to stack tStackName
+      dispatch "revLoadLibrary" to stack tStackName  
+      if it is not "handled" then
+      	throw "No revUnloadLibrary handler found"
+      end if
    catch tLegacyError
    end try
    
