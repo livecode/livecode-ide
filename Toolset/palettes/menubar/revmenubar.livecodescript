@@ -1967,9 +1967,9 @@ private function revMenubarDevelopmentMenu pContext
    put revMenubarSimulatorSubmenu() after tDevelopment
    put "-" & return after tDevelopment   
    
-   if there is a stack "com.livecode.script-library.scriptprofiler" then
+   if there is a stack "com.livecode.library.scriptprofiler" then
       local tProfiler
-      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      put the long id of stack "com.livecode.library.scriptprofiler" into tProfiler
       if tProfiler is among the lines of the backScripts then
          put enableMenuItem("Start Profiling Scripts", tIsUserTarget) & return after tDevelopment
       else
@@ -2106,9 +2106,9 @@ function revMenubarStackContextMenu pStack, pIndent
    put tIndent & "Save As Standalone Application..." & return after tText
    put tIndent & "-" & return after tText
    
-   if there is a stack "com.livecode.script-library.scriptprofiler" then
+   if there is a stack "com.livecode.library.scriptprofiler" then
       local tProfiler
-      put the long id of stack "com.livecode.script-library.scriptprofiler" into tProfiler
+      put the long id of stack "com.livecode.library.scriptprofiler" into tProfiler
       if tProfiler is among the lines of the backScripts then
          put tIndent & "Start Profiling Scripts" & return after tText
       else
