@@ -56,13 +56,11 @@ command revInternal__UnloadLibrary pLibraryName
       return "Library not loaded"
    end if
    
-   local tStackName
-   put sLoadedLibraries[pLibraryName] into tStackName
-   if there is not a stack tStackName then return "library not loaded"
+   if there is not a stack pLibraryName then return "library not loaded"
    
    try
       // Request the library shuts down
-      send "revUnloadLibrary" to stack tStackName
+      send "revUnloadLibrary" to stack pLibraryName
       
       delete variable sLoadedLibraries[pLibraryName]
       
