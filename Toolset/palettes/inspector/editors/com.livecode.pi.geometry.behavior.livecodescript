@@ -402,8 +402,8 @@ on menuPick pWhich
          --proportional scaling
          put false into tValue[tKey & "Absolute"]
       end if
-      put tSide into tValue[tKey & "ObjectSide"] 
-      put pWhich into tValue[tKey & "ObjectRef"] 
+      put oppositeSide(tSide) into tValue[tKey & "ObjectSide"] 
+      put pWhich into tValue[tKey & "ObjectRef"]
       
       # Adjust menu text
       local tMenuText
@@ -488,3 +488,21 @@ on closeField
    
    setValue tValue
 end closeField
+
+function oppositeSide pSide
+   switch pSide
+      case "Top"
+         return "Bottom"
+         break
+      case "Bottom"
+         return "Top"
+         break
+      case "Right"
+         return "Left"
+         break
+      case "Left"
+      default
+         return "Right"
+         break
+   end switch
+end oppositeSide
