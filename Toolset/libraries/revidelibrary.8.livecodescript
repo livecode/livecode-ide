@@ -1492,6 +1492,8 @@ function __unescapeString pString
 end __unescapeString
 
 on revIDEInitialiseIDELibrary
+   revIDEInitialisePreferences
+   
    # Load fonts
    local tFonts
    put files(revIDESpecialFolderPath("fonts")) into tFonts
@@ -1744,23 +1746,34 @@ on ideMessageSendWithParameters pMessage, pTriggeringObjects, pParamsArray
    # Add all universal subscribers to the subscription list
    put sSubscriptions[pMessage]["callback targets"] into tSubscriptionList
    
+   # Allow generic subscription to parameterized msgs such as "idePreferenceChanged"
+   set the itemdel to ":"
+   local tMessage, tGenericSubscriptions
+   put item 1 of pMessage into tMessage
+   put sSubscriptions[tMessage]["callback targets"] into tGenericSubscriptions
+   if tGenericSubscriptions is not empty then
+      if tSubscriptionList is empty then
+         put tGenericSubscriptions into tSubscriptionList
+      else
+         put return & tGenericSubscriptions after tSubscriptionList
+      end if
+   end if
+   
    # Add any per-object subscriptions
+   local tPerObjectSubscriptions
    repeat for each line tLine in pTriggeringObjects
       put pMessage & "," & tLine into tSubscription
-      repeat for each line tTarget in sSubscriptions[tSubscription]["callback targets"]
+      put sSubscriptions[tSubscription]["callback targets"] into tPerObjectSubscriptions
+      if tPerObjectSubscriptions is not empty then
          if tSubscriptionList is empty then
-            put tTarget into tSubscriptionList
+            put tPerObjectSubscriptions into tSubscriptionList
          else
-            put return & tTarget after tSubscriptionList
+            put return & tPerObjectSubscriptions after tSubscriptionList
          end if
-      end repeat
+      end if
    end repeat
    
    # Send the message!
-   set the itemdel to ":"
-   local tMessage
-   put item 1 of pMessage into tMessage
-   
    # Construct a dispatch command with all the desired parameters
    local tDoString, tParams, tErrors
    put "dispatch tMessage to tObjectID" into tDoString
@@ -2434,7 +2447,7 @@ Returns (Any): The value of the preference
 on revIDESetPreference pPreferenceName, pValue
    set the pPreferenceName of stack "revpreferences" to pValue
    revInternal__SavePreferences
-   ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
+   ideMessageSend "idePreferenceChanged:" & pPreferenceName, pValue
 end revIDESetPreference
 
 /*
@@ -4146,6 +4159,9 @@ function revIDESpecialFolderPath pKey, pParam
       case "Standalone Settings Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/standalone_settings"
          break
+      case "Preference Definitions"
+         return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/preferences"
+         break
       case "Tool Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/tool_definitions"
          break
@@ -4502,7 +4518,7 @@ function revIDEPaletteToStackName pPalette
       case "search"
          return "revSearch"
       case "preferences"
-         return "revPreferencesGUI"
+         return "revPreferencesInspector"
       case "menu builder"
          return "revMenuManager"
       case "extension builder"
@@ -4747,10 +4763,10 @@ command revIDEOpenPalette pPaletteName
       case "standalone settings"
       case "message watcher"
       case "tools"
+      case "preferences"
          palette stack tStackName
          break
       case "search"
-      case "preferences"
       case "project browser"
       case "extension manager"
       case "menu builder"
@@ -8774,14 +8790,6 @@ on revIDEToggle pProperty
          end if
          put "selectionMode" into tToggleMessage
          break
-      case "Script Debug Mode"
-         revIDESetPreference "cREVScriptDebugMode", not revIDEGetPreference("cREVScriptDebugMode")
-         put "scriptDebugMode" into tToggleMessage
-         break
-      case "Show IDE Stacks In Lists"
-         put "ideStacksInLists" into tToggleMessage
-         revIDEToggleShowIDEStacksInLists
-         break
       case "Show Invisible Objects"
          put "showInvisibles" into tToggleMessage
          set the showInvisibles to not (the showInvisibles)
@@ -8803,32 +8811,18 @@ on revIDEToggle pProperty
             end if
             unlock messages
          end if
-         break
-      case "Backdrop"
-         if the backDrop is "none" then
-            set the backDrop to revIDEGetPreference("cBackDropColor")
-            revIDESetPreference "cBackDrop", the backDrop
-         else
-            set the backDrop to "none"
-            revIDESetPreference "cBackDrop", "none"
-         end if
-         # No need to send toggle message as idePreferenceChanged will be sent
-         exit revIDEToggle
-      case "Grid"
-         if the grid is false then
-            set the grid to true
-            revIDESetPreference "cGrid", true
-         else
-            set the grid to false
-            revIDESetPreference "cGrid", false
-         end if
-         # No need to send toggle message as idePreferenceChanged will be sent
-         exit revIDEToggle
+         break      
    end switch
    # Invisible objects
    # Ruler
    ideMessageSend "ideToggleChanged:" & tToggleMessage
 end revIDEToggle
+
+command revIDETogglePreference pPreference
+   local tValue
+   put revIDEGetPreference(pPreference) into tValue
+   revIDESetPreference pPreference, not tValue
+end revIDETogglePreference
 
 on revIDEToggleToolbar pWhich
    local tCurrentPref
@@ -8840,47 +8834,6 @@ on revIDEToggleToolbar pWhich
       revIDESetPreference "cToolbarIcons", not tCurrentPref
    end if
 end revIDEToggleToolbar
-
-on revIDEToggleShowIDEStacksInLists
-   global gREvShowStacks
-   lock screen
-   set the hilite of button "show revolution stacks" of card "general" of stack "revPreferencesGUI" to not gREVShowStacks
-   
-   local tOpenStacks
-   put the openStacks into tOpenStacks
-   
-   local tFrontStack
-   put empty into tFrontStack
-   repeat for each line tStack in tOpenStacks
-      if tStack is not "revMenubar" and the mode of stack tStack is among the items of "1,2,3" then
-         put tStack into tFrontStack
-         exit repeat
-      end if
-   end repeat
-   if tFrontStack is not empty then
-      set the wholeMatches to true
-      local tBringToFront
-      if lineOffset(tFrontStack, tOpenStacks) < lineOffset("revApplicationOverview", tOpenStacks) then
-         put true into tBringToFront
-      end if
-   end if
-   send "revToggleShowStacks" to button "show revolution stacks" of card "general" of stack "revPreferencesGUI"
-   unlock screen
-   
-   if tBringToFront then
-      lock messages
-      switch the mode of stack tFrontStack
-         case 1
-         case 2
-            toplevel tFrontStack
-            break
-         case 3
-            modeless tFrontStack
-            break
-      end switch
-      unlock messages 
-   end if
-end revIDEToggleShowIDEStacksInLists
 
 on revIDETogglePalette pPaletteName
    local tStackName
@@ -12219,3 +12172,234 @@ end ideShouldShowUpgradeOptions
 private function hasConnection
    return url("http://google.com/") is not empty
 end hasConnection
+
+local sPreferencesInfoA, sPreferencesA
+constant kPreferencesInfoFilename = "preferencesInfo.txt"
+private command __EnsurePreferencesInfo
+   if sPreferencesInfoA is not empty then
+      exit __EnsurePreferencesInfo
+   end if
+   
+   local tIDEPreferencesPath
+   put revIDESpecialFolderPath("Preference Definitions") into tIDEPreferencesPath
+   
+   put __propertyDataFromInfoFile(tIDEPreferencesPath & slash & kPreferencesInfoFilename) \
+         into sPreferencesA
+   
+   // Special case android JDK as we don't yet have per-platform prefs info
+   if the platform is "linux" then
+      put false into sPreferencesA["cMobileSupport[android.jdk]"]["read_only"]
+   end if
+   
+   put __orderPropArray(__organisePropertyInfo(sPreferencesA), \
+         revIDEPreferencesSections()) into sPreferencesInfoA
+end __EnsurePreferencesInfo
+
+function revIDEPreferencesSections
+   return "General,Files & Memory,Appearance,Mobile Support,Script Editor,Project Browser,Application Browser,Object Sizes,Updates"
+end revIDEPreferencesSections
+
+function revIDEPreferencesInfo
+   __EnsurePreferencesInfo
+   return sPreferencesInfoA
+end revIDEPreferencesInfo
+
+function __revIDEGetPreferences pGroupsA
+   local tPropMappingA, tProp, tPreferencesA
+   repeat for each element tGroup in pGroupsA
+      repeat for each element tPropInfo in tGroup["proplist"]
+         put tGroup["label"] into tPropMappingA[tPropInfo["property_name"]]["group"]
+         put tPropInfo["getter"] into tPropMappingA[tPropInfo["property_name"]]["getter"]
+      end repeat
+   end repeat
+   
+   local tDataA
+   repeat for each key tKey in tPropMappingA
+      if tPropMappingA["getter"] is not empty then
+         dispatch function tPropMappingA["getter"] with tKey
+         put the result into tDataA[tKey]
+      else
+         put revIDEGetPreference(tKey) into tDataA[tKey]
+      end if
+   end repeat
+   
+   local tValue
+   set the itemdelimiter to ":"
+   repeat for each key tKey in tDataA
+      put tDataA[tKey] into tValue
+      put tPropMappingA[tKey]["group"] into tGroup
+      if tPreferencesA[tGroup][tKey] is empty then
+         put pGroupsA[tGroup]["proplist"][tKey] into tPreferencesA[tGroup][tKey]
+      end if
+      put tValue into tPreferencesA[tGroup][tKey]["value"]
+   end repeat
+   return tPreferencesA
+end __revIDEGetPreferences
+
+function revIDEPreferencesOfSection pSection
+   __EnsurePreferencesInfo
+   repeat for each element tElement in sPreferencesInfoA
+      if tElement["label"] is pSection then
+         return __revIDEGetPreferences(tElement["grouplist"])
+      end if
+   end repeat
+   return empty
+end revIDEPreferencesOfSection
+
+private command __InitialisePreferences pToInitA
+   repeat for each key tKey in pToInitA
+      if sPreferencesA[tKey]["setter"] is not empty then
+         dispatch sPreferencesA[tKey]["setter"] with tKey, sPreferencesA[tKey]["default"]
+      else
+         revIDESetPreference tKey, sPreferencesA[tKey]["default"]
+      end if
+   end repeat
+end __InitialisePreferences
+
+command revIDEInitialisePreferences
+   __EnsurePreferencesInfo   
+   
+   ideSubscribe "idePreferenceChanged"
+   
+   // Find unset prefs
+   local tPrefs
+   put the customProperties of stack "revPreferences" into tPrefs
+   
+   // Hack a bit to get customproperties in other sets in the right form
+   repeat for each line tSet in the customPropertySets of stack "revPreferences"
+      repeat for each key tKey in the customProperties[tSet] of stack "revPreferences"
+         put empty into tPrefs[tSet & "[" & tKey & "]"]
+      end repeat
+   end repeat
+   
+   local tToSet
+   put sPreferencesA into tToSet
+   difference tToSet with tPrefs
+   
+   __InitialisePreferences tToSet
+   
+   // Ensure all globals are set as necessary
+   repeat for each key tKey in tPrefs
+      revIDESetPreference tKey, revIDEGetPreference(tKey)
+   end repeat
+end revIDEInitialisePreferences
+
+command revIDEPreferencesResetAll
+   set the customKeys of stack "revPreferences" to empty
+   set the customPropertySets of stack "revPreferences" to empty
+   __InitialisePreferences sPreferencesA
+end revIDEPreferencesResetAll
+
+command revIDEPreferencesResetSection pSection
+   local tPrefs, tToReset
+   put revIDEPreferencesOfSection(pSection) into tPrefs
+   repeat for each element tGroup in tPrefs
+      repeat for each key tPrefName in tGroup
+         put true into tToReset[tPrefName]
+      end repeat
+   end repeat
+   __InitialisePreferences tToReset
+end revIDEPreferencesResetSection
+
+on idePreferenceChanged pPreference, pValue
+   -- Ensure assoicated state is updated for relevant preferences
+   switch pPreference
+      // Preferences governing global properties
+      case "cBackDrop"
+         if pValue then
+            set the backDrop to revIDEGetPreference("cBackDropColor")
+         else
+            set the backDrop to "none"
+         end if
+         break
+      case "cBackDropColor"
+         if the backDrop is not "none" then
+            set the backdrop to pValue
+         end if
+         break
+      case "cGrid"
+         set the grid to pValue
+         break
+      case "cHTTPProxy"
+         set the httpProxy to pValue
+         break
+      case "cSelectGrouped"
+         set the selectGroupedControls to pValue
+         break
+      case "cREVToolTipDelay"
+         set the tooltipDelay to pValue
+         break
+      case "cREVScriptFont"
+         set the scriptTextFont to pValue
+         break
+      case "cREVScriptSize"
+         set the scriptTextSize to pValue
+         break
+      case "cGridSize"
+         set the gridSize to pValue
+         break
+      case "cSelectionHandleColor"
+         set the selectionHandleColor to pValue
+         break
+      case "cNavigationArrows"
+         set the navigationArrows to pValue
+         break
+      case "cGridSize"
+         set the gridSize to pValue
+         break
+      case "cTraceDelay"
+         set the traceDelay to pValue
+         break
+         // Preferences governing global variables
+      case "idePropertyInspector_labels"
+         global gRevLanguageNames
+         put pValue into gRevLanguageNames
+         break
+      case "cRevPopups"
+         global gREVPopups
+         put pValue into gREVPopups
+         break
+      case "cAutoFormat"
+         global gREVAutoFormat
+         put pValue into gREVAutoFormat
+         break
+      case "cREVUIScriptShortcut"
+         global gREVUIScriptShortcut
+         put pValue into gREVUIScriptShortcut
+         break      
+      case "cREVScriptShortcut"
+         global gREVScriptShortcut
+         put pValue into gREVScriptShortcut
+         break
+      case "cCommentCharacter"
+         global gREVCommentCharacter
+         put pValue into gREVCommentCharacter
+         break
+      case "cREVTemplateMasterName"
+         global gREVTemplateMasterName
+         put pValue into gREVTemplateMasterName
+         break
+      case "cREVAutoCreateProfiles"
+         global gREVAutoCreateProfiles
+         put pValue into gREVAutoCreateProfiles
+         break
+      case "cREVProfileReadOnly"
+         global gREVProfileReadOnly
+         put pValue into gREVProfileReadOnly
+         break
+      case "cShowRevolutionStacks"
+         global gRevShowStacks
+         put pValue into gRevShowStacks
+         break
+         // Preferences with more complex side-effects
+      case "cMobileSupport[android.sdk]"
+         revIDEDeployAndroidInitialize
+         break
+      case "cMobileSupport[android.jdk]"
+         revIDEDeployAndroidInitialize
+         break
+      case "cMobileSupport[ios.sdks]"
+         revIDEDeployIOSUpdateSDKs
+         break
+   end switch
+end idePreferenceChanged

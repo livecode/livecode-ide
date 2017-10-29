@@ -132,12 +132,6 @@ on revInternal__openStack
       end if
       
       if tSuccess then
-         revInternal__setSplashStatus "Setting Preferences..."
-         revInternal__InitialiseOptions
-         put the result into tSuccess
-      end if
-      
-      if tSuccess then
          revInternal__setSplashStatus "Loading Standard Icons..."
          set the visible of stack "revGeneralIcons" to false
          put true into tSuccess
@@ -648,9 +642,7 @@ private command revInternal__SetupPreferences
          create invisible stack "revpreferences"
       end if
       set the filename of stack "revpreferences" to tPreferencesStackFile7
-      revInternal__ResetPreferences
       unlock messages
-      
    end if
    
    -- ensure the script of stack preferences is empty
@@ -691,6 +683,7 @@ private command revInternal__SetupSplash
 	palette stack "revSplash"
 end revInternal__SetupSplash
 
+<<<<<<< HEAD
 command revInternal__ResetPreferences
    -- clear the preferences stack
    set the customKeys of stack "revPreferences" to empty
@@ -894,6 +887,8 @@ command revInternal__ResetPreferences
    revInternal__SavePreferences
 end revInternal__ResetPreferences
 
+=======
+>>>>>>> [[ Preferences ]] Set default prefs on IDE library load
 --------------------------------------------------------------------------------
 -- Internal Utility Functions
 --
@@ -1430,82 +1425,10 @@ command revInternal__InitialiseDefaults
          break
    end switch
    
-   set the traceDelay to the cTraceDelay of stack "revPreferences"
-   
    revInternal__Log "Leave", "Defaults Initialisation"
    
    return true
 end revInternal__InitialiseDefaults
-
-command revInternal__InitialiseOptions
-   revInternal__Log "Enter", "Options Initialisation"
-   
-   set the selectGroupedControls to the cSelectGrouped of stack "revPreferences"
-   set the tooltipDelay to the cREVToolTipDelay of stack "revPreferences"
-   set the grid to the cGrid of stack "revPreferences"
-   set the scriptTextFont to the cREVScriptFont of stack "revPreferences"
-   set the scriptTextSize to the cREVScriptSize of stack "revPreferences"
-   
-   if the cHttpProxy of stack "revPreferences" is not empty then
-      set the httpProxy to the cHttpProxy of stack "revPreferences"
-   end if
-   
-   set the gridSize to the cGridSize of stack "revPreferences"
-   
-   if the cSelectionHandleColor of stack "revPreferences" is empty then
-      set the selectionHandleColor to "Gray50"
-   else
-      set the selectionHandleColor to the cSelectionHandleColor of stack "revPreferences"
-   end if
-   
-   set the navigationArrows to the cNavigationArrows of stack "revPreferences"
-   
-   global gREVShowStacks, gREVDevelopment
-   if gREVDevelopment then
-      put true into gREVShowStacks
-   else if the cShowRevolutionStacks of stack "revPreferences" is empty then
-      put false into gREVShowStacks
-   else
-      put the cShowRevolutionStacks of stack "revPreferences" into gREVShowStacks
-   end if
-   
-   global gREVLanguageNames
-   put the cLanguageNames of card 1 of stack "revPreferences" into gREVLanguageNames
-   
-   revInternal__Log "Message", "Obtained preference languageNames = " & gREVLanguageNames
-   
-   global gREVPopups
-   put the cRevPopups of stack "revPreferences" into gREVPopups
-   
-   global gREVAutoFormat
-   put the cAutoFormat of stack "revPreferences" into gREVAutoFormat
-   
-   global gREVUIScriptShortcut
-   put the cREVUIScriptShortcut of stack "revPreferences" into gREVUIScriptShortcut
-   
-   global gREVScriptShortcut
-   put the cREVScriptShortcut of stack "revPreferences" into gREVScriptShortcut
-   
-   global gREVCommentCharacter
-   if the cCommentCharacter of stack "revPreferences" is not empty then
-      put the cCommentCharacter of stack "revPreferences" into gREVCommentCharacter
-   else
-      put "--" into gREVCommentCharacter
-   end if
-   
-   global gREVTemplateMasterName
-   put the cREVTemplateMasterName of stack "revPreferences" into gREVTemplateMasterName
-   
-   global gREVAutoCreateProfiles
-   put the cREVAutoCreateProfiles of stack "revPreferences" into gREVAutoCreateProfiles
-   
-   global gREVProfileReadOnly
-   put the cREVProfileReadOnly of stack "revPreferences" into gREVProfileReadOnly
-   
-   revInternal__Log "Leave", "Options Initialisation"
-   
-   return true
-end revInternal__InitialiseOptions
 
 command revInternal__InitialiseUserLibraries
   local tEnvironmentIcons, tUserIcons, tList
