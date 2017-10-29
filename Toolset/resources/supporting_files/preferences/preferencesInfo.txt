@@ -1,0 +1,234 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+---------------------------------------------------------------------------------------------------------------------
+idePropertyInspector_labels	Property Inspector labels are:	General	com.livecode.pi.enum	true	false		false	Description of option|false,Name of LiveCode property|true
+cShowRevolutionStacks	LiveCode IDE stacks appear in lists	General	com.livecode.pi.boolean	true	false		false			
+cNavigationArrows	Arrows navigate through card	General	com.livecode.pi.boolean	true	false		false
+cREVScriptShortcut	Cmd+Option or Ctrl+Alt edits script	General	com.livecode.pi.boolean	true	false
+cRevPopups	Contextual menus work in LiveCode windows	General	com.livecode.pi.boolean	true	false		false
+cHTTPProxy	HTTP Proxy	General	com.livecode.pi.string	true	false		
+cCrashReportStyle	Crash reporting on Windows	General	com.livecode.pi.enum	true	false		Small	None,Small,Medium
+cStartPageShow	Load Start Center on start-up	General	com.livecode.pi.boolean	true	false		true	
+cStartCenterClassic	Show classic start center	General	com.livecode.pi.boolean	true	false		false
+cReloadStartCenter	Load Start Center when last user stack is closed	General	com.livecode.pi.boolean	true	false		false
+
+cAskDestroy	If destroyStack is false, when closing last stack in file:	Files & Memory	com.livecode.pi.enum	true	false		don't remove	Don't close the file|don't remove,Close the file|remove,Ask|ask
+cDestroyStack	destroyStack property is set to true for new stacks	Files & Memory	com.livecode.pi.boolean	true	false		false
+cRevExtension	Add .livecode extension when saving files on MacOS	Files & Memory	com.livecode.pi.boolean	true	false		true
+cNumRecent	Number of recent files to store	Files & Memory	com.livecode.pi.integer	true	false		30			0		1
+cRecentSort	Sort recent files	Files & Memory	com.livecode.pi.enum	true	false		modification date	By date last opened|modification date,Alphabetically|alphabetically
+cImageFileRelative	Always use absolute file paths for images	Files & Memory	com.livecode.pi.boolean	true	false		false
+cCustomizationPath	User extensions	Files & Memory	com.livecode.pi.folder	true	false		execute:get revEnvironmentCustomizationPath()	
+cPreserveStackCreator	Preserve stack creator type	Files & Memory	com.livecode.pi.boolean	true	false		false	
+cPreserveStackVersion	Preserve stack file version on stacks saved in legacy format	Files & Memory	com.livecode.pi.boolean	true	false		false	
+
+cSelectionHandleColor	Selection handle color	Appearance	com.livecode.pi.color	true	false		Gray50	
+cRevRulerMeasurement	Ruler units	Appearance	com.livecode.pi.enum	true	false		pixels	Centimeters|centimeters,Inches|inches,Pixels|pixels
+cGridSize	Grid spacing in pixels	Appearance	com.livecode.pi.integer	true	false		2	
+cRevHelpHiliteColor	Documentation hypertext color	Appearance	com.livecode.pi.color	true	false		
+cBackDropColor	Backdrop color	Appearance	com.livecode.pi.color	true	false		Gray88
+cRevTooltipDelay	Display tooltips after (ms)	Appearance	com.livecode.pi.integer	true	false		500	
+
+cButtonWidth	Button width	Object Sizes	com.livecode.pi.integer	true	false	Button size	82			1		1
+cButtonHeight	Button height	Object Sizes	com.livecode.pi.integer	true	false	Button size	23			1		1
+cTabButtonWidth	Tab button width	Object Sizes	com.livecode.pi.integer	true	false	Tab button size	250			1		1
+cTabButtonHeight	Tab button height	Object Sizes	com.livecode.pi.integer	true	false	Tab button size	160			1		1
+cMenuWidth	Menu button width	Object Sizes	com.livecode.pi.integer	true	false	Menu button size	102			1		1
+cMenuHeight	Menu button height	Object Sizes	com.livecode.pi.integer	true	false	Menu button size	22			1		1
+cFieldWidth	Field width	Object Sizes	com.livecode.pi.integer	true	false	Field size	250			1		1
+cFieldHeight	Field height	Object Sizes	com.livecode.pi.integer	true	false	Field size	56			1		1
+cLabelFieldWidth	Label field width	Object Sizes	com.livecode.pi.integer	true	false	Label field size	100			1		1
+cLabelFieldHeight	Label field height	Object Sizes	com.livecode.pi.integer	true	false	Label field size	21			1		1
+cScrollbarWidth	Scrollbar width	Object Sizes	com.livecode.pi.integer	true	false	Scrollbar size	200			1		1
+cScrollbarHeight	Scrollbar height	Object Sizes	com.livecode.pi.integer	true	false	Scrollbar size	16			1		1
+cREVGraphicWidth	Graphic width	Object Sizes	com.livecode.pi.integer	true	false	Graphic size	120			1		1
+cREVGraphicHeight	Graphic height	Object Sizes	com.livecode.pi.integer	true	false	Graphic size	120			1		1
+cREVImageWidth	Image width	Object Sizes	com.livecode.pi.integer	true	false	Image size	120			1		1
+cREVImageHeight	Image height	Object Sizes	com.livecode.pi.integer	true	false	Image size	120			1		1
+cREVPlayerWidth	Player width	Object Sizes	com.livecode.pi.integer	true	false	Player size	155			1		1
+cREVPlayerHeight	Player height	Object Sizes	com.livecode.pi.integer	true	false	Player size	118			1		1
+
+cScriptEditor,editor,font	Font	Script Editor	com.livecode.pi.font	true	false		
+cScriptEditor,editor,fontsize	Size	Script Editor	com.livecode.pi.integer	true	false		12			0		1
+cScriptEditor,print,textsize	Print size	Script Editor	com.livecode.pi.integer	true	false		7			0		1
+cScriptEditor,editor,sorthandlerlist	Order handler list:	Script Editor	com.livecode.pi.enum	true	false		alphabetical	Alphabetically|alphabetical,In order of appearance|Order-by-appearence,By type|By type
+cScriptEditor,colorization,scheme	Colorization scheme	Script Editor	com.livecode.pi.enum	true	false		default	Default|default,Classic|Revolution classic,None|No Colorization
+cScriptEditor,editor,backgroundcolor	Background color	Script Editor	com.livecode.pi.color	true	false		white
+cScriptEditor,editor,debugBackgroundcolor	Background color when debugging	Script Editor	com.livecode.pi.color	true	false		white
+cScriptEditor,usetabs	Scripts open in:	Script Editor	com.livecode.pi.enum	true	false		true	New tab|true,New window|false
+cScriptEditor,editor,tabdepth	Number of indentation spaces	Script Editor	com.livecode.pi.integer	true	false		3			0		1
+cScriptEditor,preserveVariables	Preserve script local variables across compilation	Script Editor	com.livecode.pi.boolean	true	false
+cScriptEditor,explicitVariables	Error when using undeclared variables	Script Editor	com.livecode.pi.boolean	true	false		false
+cScriptEditor,editor,autoformat	Automatically format scripts	Script Editor	com.livecode.pi.boolean	true	false		true
+cScriptEditor,gutter,linenumbers	Show line numbers	Script Editor	com.livecode.pi.boolean	true	false		true
+cScriptEditor,editor,hscrollbar	Show horizontal scrollbar	Script Editor	com.livecode.pi.boolean	true	false		true
+cScriptEditor,editor,useInteractiveFind	Show interactive find	Script Editor	com.livecode.pi.boolean	true	false		false
+cScriptEditor,variables,showglobals	Show globals in variable list	Script Editor	com.livecode.pi.boolean	true	false		false
+cScriptEditor,variables,showenvvars	Show environment variables in variable list	Script Editor	com.livecode.pi.boolean	true	false		false
+cSEHidePalettes	Hide palettes when editing script	Script Editor	com.livecode.pi.boolean	true	false		false	
+cSEHideMessageBox	Hide message box when editing script	Script Editor	com.livecode.pi.boolean	true	false		false	
+cSEHideErrors	Hide errors when editing script	Script Editor	com.livecode.pi.boolean	true	false		false	
+cScriptEditor,editor,commentchar	Comment char	Script Editor	com.livecode.pi.enum	true	false		--	--,#,//
+
+pb_stackSort	Sort stacks by	Project Browser	com.livecode.pi.sort	true	false		name	Name|name,Window order|layer
+pb_cardSort	Sort cards by	Project Browser	com.livecode.pi.sort	true	false		layer	Name|name,Layer|layer
+pb_controlSort	Sort controls by	Project Browser	com.livecode.pi.sort	true	false		layer	Name|name,Layer|layer
+pb_textSize	Text size	Project Browser	com.livecode.pi.integer	true	false		12			0		1
+pb_sections	Show sections	Project Browser	com.livecode.pi.set	true	false		Stacks	Front scripts,Stacks,Back scripts,Stacks in use
+pb_indicator	Object type indicator	Project Browser	com.livecode.pi.enum	true	false		Icon	Icon,Text
+
+Double-click		Application Browser	com.livecode.pi.string	true	true	Double-click actions	Double-click
+Command + double-click		Application Browser	com.livecode.pi.string	true	true	Double-click actions	Command + double-click
+Option + double-click		Application Browser	com.livecode.pi.string	true	true	Double-click actions	Option + double-click
+cABDoubleClick[stacks]	Double-click	Application Browser	com.livecode.pi.enum	true	false	Stacks	Toplevel	Property Inspector,Edit Script,Toplevel
+cABCommandDoubleClick[stacks]	Command double-click	Application Browser	com.livecode.pi.enum	true	false	Stacks	Edit Script	Property Inspector,Edit Script,Toplevel
+cABOptionDoubleClick[stacks]	Option double-click	Application Browser	com.livecode.pi.enum	true	false	Stacks	Property Inspector	Property Inspector,Edit Script,Toplevel
+cABDoubleClick[cards]	Double-click	Application Browser	com.livecode.pi.enum	true	false	Cards	Go	Property Inspector,Edit Script,Go
+cABCommandDoubleClick[cards]	Command double-click	Application Browser	com.livecode.pi.enum	true	false	Cards	Edit Script	Property Inspector,Edit Script,Go
+cABOptionDoubleClick[cards]	Option double-click	Application Browser	com.livecode.pi.enum	true	false	Cards	Property Inspector	Property Inspector,Edit Script,Go
+cABDoubleClick[controls]	Double-click	Application Browser	com.livecode.pi.enum	true	false	Controls	Property Inspector	Property Inspector,Edit Script
+cABCommandDoubleClick[controls]	Command double-click	Application Browser	com.livecode.pi.enum	true	false	Controls	Edit Script	Property Inspector,Edit Script
+cABOptionDoubleClick[controls]	Option double-click	Application Browser	com.livecode.pi.enum	true	false	Controls	Property Inspector	Property Inspector,Edit Script
+cABDoubleClick[videoclips]	Double-click	Application Browser	com.livecode.pi.enum	true	false	Videoclips	Play	Property Inspector,Edit Script,Play
+cABCommandDoubleClick[videoclips]	Command double-click	Application Browser	com.livecode.pi.enum	true	false	Videoclips	Edit Script	Property Inspector,Edit Script,Play
+cABOptionDoubleClick[videoclips]	Option double-click	Application Browser	com.livecode.pi.enum	true	false	Videoclips	Property Inspector	Property Inspector,Edit Script,Play
+cABDoubleClick[audioclips]	Double-click	Application Browser	com.livecode.pi.enum	true	false	Audioclips	Play	Property Inspector,Edit Script,Play
+cABCommandDoubleClick[audioclips]	Command double-click	Application Browser	com.livecode.pi.enum	true	false	Audioclips	Edit Script	Property Inspector,Edit Script,Play
+cABOptionDoubleClick[audioclips]	Option double-click	Application Browser	com.livecode.pi.enum	true	false	Audioclips	Property Inspector	Property Inspector,Edit Script,Play
+cShowAudioclips	Show audio clips	Application Browser	com.livecode.pi.boolean	true	false		true
+cShowVideoclips	Show video clips	Application Browser	com.livecode.pi.boolean	true	false		true
+
+cMobileSupport[ios.sdks]	iOS SDKs	Mobile Support	com.livecode.pi.iossdk	true	false	
+cMobileSupport[android.sdk]	Android SDK	Mobile Support	com.livecode.pi.androidsdk	true	false	
+cMobileSupport[android.jdk]	Android JDK	Mobile Support	com.livecode.pi.folder	true	true	
+
+cNotifyMeOfBetaReleases	Notify me of beta releases	Updates	com.livecode.pi.boolean	true	false		true	
+cNotifyMeOfDevelopmentReleases	Notify me of development releases	Updates	com.livecode.pi.boolean	true	false		true	
+cNotifyMeOfMaintainenceReleases	Notify me of maintenance releases	Updates	com.livecode.pi.boolean	true	false		true	
+cNotifyMeOfStableReleases	Notify me of stable releases	Updates	com.livecode.pi.boolean	true	false		true
+
+# The following do not appear in the current prefs GUI
+revHelpListMethod		Other		false			filtering
+cREVMsgTabRectGlobalProperties		Other		false			417,113
+cShowProfileEditor		Other		false			true
+cREVMsgShowUIMessages		Other		false			false
+tooltip delay		Other		false			500
+cREVMsgShowUIBackScripts		Other		false			false
+cREVMsgTabRectSingle Line		Other		false			417,72
+cREVGeoTopLeft		Other		false			539,432
+cREVDBCode		Other		false			70378
+cREVScriptHeight		Other		false			276
+cVariableWatcherRect		Other		false			483,214,1015,476
+cShowrevProps		Other		false			false
+cMacOSScrollbarWidth		Other		false			100
+cControlTabs		Other		false			1,2,3,4,5,7
+cGoAlign		Other		false			true
+cREVRotatePrev2		Other		false			0
+cREVPropertyPaletteTopLeft		Other		false			993,712
+cLiveColor		Other		false			true
+cDocsFirstRun		Other		false			true
+cUpdate,MaxAutoPopupFrequency		Other		false			86400
+cREVMsgTabRectcard id 1147		Other		false			417,72
+cAppearanceTopLeft		Other		false			468,131
+cREVDefaultMenubar		Other		false			false
+cREVMsgTabRectbackScripts		Other		false			417,113
+cGrid		Other		false			true
+cShowAsHandlers		Other		false			false
+revDocsAlreadySeen		Other		false			false
+cREVProfileReadOnlyWarning		Other		false			true
+cCardTabs		Other		false			6,7,9
+cMacOSScrollbarHeight		Other		false			16
+cFirstRun		Other		false			true
+cMacOSProgressScrollbarHeight		Other		false			14
+suppressedMessages		Other		false			mouseMove
+cAutoFormat		Other		false			true
+cRevDocsRect		Other		false			1067,251,1882,827
+cREVMsgShowUIFrontScripts		Other		false			false
+revstack		Other		false			false
+cMacOSProgressScrollbarWidth		Other		false			100
+cREVUIScriptShortcut		Other		false			false
+cREVMenuBarTopLeft		Other		false			60,27
+cREVFieldFirstTabHeight		Other		false			322
+cTraceDelay		Other		false			500
+cREVRotatePrev1		Other		false			0
+cToolbarIcons		Other		false			true
+cShowAudioclipsclips		Other		false			true
+cAudioclipTabs		Other		false			1,2,3,4,5
+cREVMsgTabRectSingleLine		Other		false			620,235
+revHelpDefaultSection		Other		false			Sections List
+cCaseSensitive		Other		false			false
+cLargeFonts		Other		false			auto
+yellow		Other		false			Yellow
+cREVMsgTabRectGlobalVariables		Other		false			417,113
+cREVMsgTabRectpendingMessages		Other		false			417,113
+cABCommandDoubleClick		Other		false			Property Inspector
+cREVTipNumber		Other		false			1
+cREVMsgTabRectstacksInUse		Other		false			417,113
+cBuiltInColors		Other		false			blue,brown,darkorange,red
+cSelectionHandle		Other		false			Gray50
+cREVMaximizedScriptEditorTopLeft		Other		false			128,103
+suppressIDE		Other		false			true
+cREVRotatePrev5		Other		false			45
+cABOptionDoubleClick		Other		false			Property Inspector
+cPaletteTopLeft		Other		false			170,131
+cNOPICTWarning		Other		false			false
+cREVMsgTopLeft		Other		false			470,460
+cRevDocsCurrentCard		Other		false			Dictionary
+cREVScriptWidth		Other		false			385
+cREVUnmaximizedScriptWidth		Other		false			487
+cREVDontMaximizeScriptEditor		Other		false			false
+cREVToolsPaintToolsVisible		Other		false			true
+cDontWrap		Other		false			true
+cVariableChecking		Other		false			false
+cAppBrowserWidgetLeft		Other		false			302
+cUngroupWarning		Other		false			true
+resizeable		Other		false			false
+cMessageWatcherRect		Other		false			457,430,853,680
+cREVMsgTabRectrevbasic		Other		false			287,261
+cSort		Other		false			true
+cREVMsgAutoRefresh		Other		false			false
+cVariablePreservation		Other		false			true
+cREVMsgShowUIVariables		Other		false			false
+cHandlerList		Other		false			false
+red		Other		false			red
+cREVMsgIntelligenceObject		Other		false			selectedObject
+cBackDrop		Other		false			true
+cREVUnmaximizedScriptHeight		Other		false			300
+cToolsTopLeft		Other		false			13,125
+cCommentCharacter		Other		false			--
+cScriptEditorRect		Other		false			97,92,657,440
+cREVRotatePrev4		Other		false			11
+cREVSaveStacksAfterMoving		Other		false			false
+cREVMsgTabRectrevscript		Other		false			530,564
+cAppBrowserRect		Other		false			146,123,800,408
+cREVAutoCreateProfilesWarning		Other		false			true
+cREVAutoCreateProfiles		Other		false			false
+cREVMsgTabRectGlobal Variables		Other		false			417,113
+cWholeMatches		Other		false			false
+cVerboseDebug		Other		false			false
+cREVMsgTabRectMultipleLines		Other		false			417,99
+cBreakPoints		Other		false			true
+cREVGeoOpen		Other		false			false
+cREVAOTopLeft		Other		false			462,120
+cCustomColorsList		Other		false			blackgreen
+revHelpUnixReligion		Other		false			Penguin
+cSelectGrouped		Other		false			false
+cVideoclipTabs		Other		false			1,2,3,4,5
+cREVMacOSMenubar		Other		false			true
+cREVProfileReadOnly		Other		false			false
+cToolbarText		Other		false			true
+revHelpHiliteColor		Other		false			Yellow
+cREVScriptDebugMode		Other		false			true
+cREVMsgTabRectMultiple Lines		Other		false			417,99
+Num Recent Files		Other		false			30
+cREVProfileEditorTopLeft		Other		false			568,259
+cREVMsgTabRectfrontScripts		Other		false			417,113
+cREVRotatePrev3		Other		false			11
+cREVButtonSecondTabHeight		Other		false			338
+cREVHelpText		Other		false			true
+cREVMsgTabRectrevstack		Other		false			287,261
+cREVMsgTabRectGlobal Properties		Other		false			417,113
+cShowAudioclipclips		Other		false			true
+cREVDBName		Other		false			revolutionli
+cDocsQuickLinksVisible		Other		false			true
+cREVErrorsPaletteExpandedHeight		Other		false			278
+

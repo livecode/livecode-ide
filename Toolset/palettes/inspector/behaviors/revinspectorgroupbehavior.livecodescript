@@ -81,39 +81,46 @@ on rowReset
    unlock screen
 end rowReset
 
-setProp rowData pData
+command setRowData pData, pObjectInspector
    lock screen
    local tConflict, tValue
    repeat for each key tProperty in pData
       put false into tConflict
       put empty into tValue
       if there is a group tProperty of me then
-         local tKeys
-         put the keys of pData[tProperty]["value"] into tKeys
-         repeat for each line tLine in tKeys
-            if tValue is empty then
-               put pData[tProperty]["value"][tLine] into tValue
-               next repeat
+         # If this is a per-object inspector then there will
+         # be a value per long ID. Otherwise, the value will 
+         # just be a value.
+         if pObjectInspector then
+            local tKeys
+            put the keys of pData[tProperty]["value"] into tKeys
+            repeat for each line tLine in tKeys
+               if tValue is empty then
+                  put pData[tProperty]["value"][tLine] into tValue
+                  next repeat
+               end if
+               if tValue is not pData[tProperty]["value"][tLine] then
+                  put true into tConflict
+                  exit repeat
+               end if
+            end repeat
+            if tConflict then
+               set the editorConflicted of group tProperty of me to true
+               set the editorConflicts of group tProperty of me to pData[tProperty]["value"]
+            else
+               set the editorConflicted of group tProperty of me to false
+               set the editorConflicts of group tProperty of me to empty
+               set the editorValue of group tProperty of me to tValue
+               set the editorEffective of group tProperty of me to pData[tProperty]["effective"][line 1 of tKeys]
             end if
-            if tValue is not pData[tProperty]["value"][tLine] then
-               put true into tConflict
-               exit repeat
-            end if
-         end repeat
-         if tConflict then
-            set the editorConflicted of group tProperty of me to true
-            set the editorConflicts of group tProperty of me to pData[tProperty]["value"]
          else
-            set the editorConflicted of group tProperty of me to false
-            set the editorConflicts of group tProperty of me to empty
-            set the editorValue of group tProperty of me to tValue
-            set the editorEffective of group tProperty of me to pData[tProperty]["effective"][line 1 of tKeys]
+            set the editorValue of group tProperty of me to pData[tProperty]["value"]
          end if
          dispatch "editorUpdate" to group tProperty of me
       end if
    end repeat
    unlock screen
-end rowData
+end setRowData
 
 on rowFinalize
    repeat for each line tProperty in sOrder
@@ -155,6 +162,14 @@ getprop rowLabelWidth
       return 0
    end if
 end rowLabelWidth
+
+getprop rowLabelHeight
+   if sShowLabel is true then
+      return the formattedheight of field "rowlabel" of me
+   else
+      return 0
+   end if
+end rowLabelHeight
 
 # Dictates whether the editors act indipendently or overwrite each
 # others behaviour. For example, if you created a group called "background"
@@ -311,7 +326,7 @@ on rowResize pExpandableExtra
    put the right of me into tRight
    put the width of me into tWidth
    put rowLabelWidth() into tLabelWidth
-
+   
    # Position the label
    lock messages
    # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
@@ -320,7 +335,7 @@ on rowResize pExpandableExtra
    set the top of field "rowlabel" of me to tTop
    set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
-
+   
    # Calculate layout
    local tWidthsA
    put calculateLayout(sOrder) into tWidthsA
@@ -416,6 +431,11 @@ on rowResize pExpandableExtra
       add tHeightOfRow to tGroupHeight
       put tGroupLongID into tLastGroupLongID
    end repeat
+   local tRowLabelHeight
+   put the rowLabelHeight of me into tRowLabelHeight
+   if tRowLabelHeight > tGroupHeight then
+      put tRowLabelHeight into tGroupHeight
+   end if
    
    local tHeightDiff
    put the height of me - tGroupHeight into tHeightDiff
@@ -436,6 +456,8 @@ function propLabelWidth
       put sProperties[tProperty] into tElement
       if there is a field tElement["property"] of me then
          set the width of field tElement["property"] of me to the width of me
+         set the height of field tElement["property"] of me to \
+               the formattedHeight of field tElement["property"] of me
          if the formattedwidth of field tElement["property"] of me > tWidth then
             put the formattedwidth of field tElement["property"] of me into tWidth
          end if

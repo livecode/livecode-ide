@@ -16,7 +16,14 @@ on editorUpdate
    put the editorConflicted of me into tConflicted
    
    lock messages
-   set the locktext of field 1 of me to not tEnabled
+   -- If the property is read-only then make it a label
+   if not tEnabled then
+      set the opaque of field 1 of me to false
+      set the showborder of field 1 of me to false
+      set the locktext of field 1 of me to true
+      set the autohilite of field 1 of me to false
+   end if
+   
    if tEffective is true then
       if the focusedobject is not the long ID of field 1 of me then
          put tValue into field 1 of me
@@ -26,11 +33,6 @@ on editorUpdate
    else
       put tValue into field 1 of me
       set the textstyle of field 1 of me to empty
-      if not tEnabled then
-      	set the textcolor of field 1 of me to "108,108,108"
-      else
-      	set the textcolor of field 1 of me to empty
-      end if
    end if
    
    if tConflicted then

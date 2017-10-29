@@ -1,5 +1,5 @@
 ﻿script "revInspectorBehavior"
-constant kMaxLabelSize = 200
+constant kMaxLabelSize = 300
 
 # The inspector data
 local sDataA
@@ -37,6 +37,10 @@ before openStack
    set the stackfiles of me to tStackFiles
    revIDEPopDefaultFolder
 end openStack
+
+on resizeStack
+   resizeInspector
+end resizeStack
 
 on resizeInspector
    lock screen
@@ -596,10 +600,15 @@ on inspectorFill
 end inspectorFill
 
 on inspectorFillGroups pGroupData
+   local tObjectInspector
+   dispatch function "inspectorForObjects" to me
+   put the result into tObjectInspector
+   
    local tRow
    repeat for each key tRow in pGroupData
       if there is a group tRow of group "inspector" of me then
-         set the rowData of group tRow of group "inspector" of me to pGroupData[tRow]
+         dispatch "setRowData" to group tRow of group "inspector" of me \
+               with pGroupData[tRow], tObjectInspector
       end if
    end repeat
 end inspectorFillGroups

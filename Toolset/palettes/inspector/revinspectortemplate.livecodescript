@@ -37,10 +37,6 @@ on closeStack
    put false into sInspectorLock
 end closeStack
 
-on resizeStack
-   resizeInspector
-end resizeStack
-
 #####################
 #### PI PROPERTIES #####
 #####################
@@ -332,3 +328,6 @@ on rawKeyDown pKeyNum
    end switch
 end rawKeyDown
 
+function inspectorForObjects
+   return true
+end inspectorForObjects
