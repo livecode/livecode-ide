@@ -334,7 +334,7 @@ on mouseDown pButton
             default 
                break
          end switch
-         setValue tValue
+         setValue tValue, tKey
       end if  
    end if
 end mouseDown
@@ -419,7 +419,7 @@ on menuPick pWhich
       put the cCurrentButton of me into tButtonTemp
       set the cObjectList of tButtonTemp to tMenuText
       
-      setValue tValue
+      setValue tValue, tKey
    else if the short name of the target is "Squiggle Type" then
       lock screen
       local tScale
@@ -440,7 +440,30 @@ on menuPick pWhich
    end if
 end menuPick
 
-on setValue pValue
+on setValue pValue, pKey
+   --if move is set, it takes precidence over scale
+   --need to be sure opposite set is not enabled
+   local tTurnOffGeometries
+   switch pKey
+      case "scaleLeft"
+      case "scaleRight"
+         put "moveH" into tTurnOffGeometries
+         break
+      case "scaleTop"
+      case "scaleBottom"
+         put "moveV" into tTurnOffGeometries
+         break
+      case "moveH"
+         put "scaleLeft,scaleRight" into tTurnOffGeometries
+         break
+      case "moveV"
+         put "scaleTop,scaleBottom" into tTurnOffGeometries
+         break
+   end switch
+   repeat for each item tItem in tTurnOffGeometries
+      put false into pValue[tItem]
+   end repeat
+
    local tValue
    put the editorValue["geometry"] of me into tValue
    union pValue with tValue recursively
