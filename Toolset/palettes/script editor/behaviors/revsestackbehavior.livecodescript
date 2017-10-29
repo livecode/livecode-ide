@@ -2104,12 +2104,11 @@ end actionShowHandlerList
 # Description
 #   Shows the script editor preferences. For now this is a separate stack, It will be integrated into the Revolution prefs.
 command actionShowPreferences
-   modeless stack "revPreferencesGUI"
-   
-   local tSection
-   put "Script Editor" into tSection
-   
-   send "revPrefsGoSection tSection" to stack "revPreferencesGUI"
+   lock screen
+   revIDEOpenPalette "preferences"
+   dispatch "navSelected" to stack revIDEPaletteToStackName("preferences") \
+         with "Script Editor"
+   unlock screen
 end actionShowPreferences
 
 # Description

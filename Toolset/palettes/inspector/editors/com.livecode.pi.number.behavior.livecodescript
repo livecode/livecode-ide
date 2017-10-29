@@ -61,6 +61,13 @@ on editorUpdate
    lock screen
    local tValue, tEffective, tEnabled, tConflicted
    put the editorValue of me into tValue
+   -- Work around project browser default issue
+   if tValue is "default" then
+      put editorPropertyGet("default") into tValue
+   end if
+   if tValue is empty then
+      put 0 into tValue
+   end if
    put the editorEnabled of me into tEnabled
    put the editorEffective of me into tEffective
    put the editorConflicted of me into tConflicted

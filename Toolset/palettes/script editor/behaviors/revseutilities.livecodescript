@@ -9,6 +9,19 @@
 #
 ################################################################################
 
+local sInited
+command revSEUtilitiesInitialize
+   if sInited then 
+      exit revSEUtilitiesInitialize
+   end if
+   send "doSubscribe" to this me
+   put true into sInited
+end revSEUtilitiesInitialize
+
+on doSubscribe
+   ideSubscribe "idePreferenceChanged"
+end doSubscribe
+
 on preOpenStack
    set the behavior of stack "revSETemplate" of me to the long id of stack revIDEScriptEditorBehavior("stack")
    send "setBehaviors" to stack "revSETemplate" of me
@@ -339,12 +352,14 @@ end revSERestoreEditors
 #   Sends an update message to each active script editor. This causes the breakpoints and variables panes to update
 #   and will reload the script editor preferences in pPrefsChanged is true.
 command revSEUpdateEditors pPrefsChanged
+   lock screen
    local tEditors
    put revListScriptEditors() into tEditors
    
    repeat for each line tEditor in tEditors
-      send " revSEUpdate pPrefsChanged" to tEditor
+      send "revSEUpdate pPrefsChanged" to tEditor
    end repeat
+   unlock screen
 end revSEUpdateEditors
 
 local sPrefs
@@ -354,7 +369,7 @@ local sPrefs
 #   This is called when the Revolution preferences are reset.
 command revSEReloadPreferences
    delete variable sPrefs
-   sePrefInit
+   sePrefInit true
 end revSEReloadPreferences
 
 local sObjectCallbacks
@@ -394,6 +409,21 @@ command seSendCallbacks pObject, pScriptEditor
    delete variable sObjectCallbacks[pObject]
 end seSendCallbacks
 
+on idePreferenceChanged pPref, pValue
+   if pPref begins with "cScriptEditor" then
+      put pValue into sPrefs[item 2 to -1 of pPref]
+      doUpdateEditors
+   end if
+end idePreferenceChanged
+
+local sUpdateMsg
+on doUpdateEditors
+   if sUpdateMsg is not empty then
+      cancel sUpdateMsg
+   end if
+   send "revSEUpdateEditors" to me in 10 millisecs
+   put the result into sUpdateMsg
+end doUpdateEditors
 
 # Parameters
 #   pTag : the name of the preference setting to get
@@ -431,7 +461,14 @@ end sePrefList
 
 # Description
 #   Initialises the script editor preferences system.
-command sePrefInit
+local sPrefsInited
+command sePrefInit pForce
+   revSEUtilitiesInitialize
+   
+   if sPrefsInited and not pForce then
+      exit sePrefInit
+   end if
+      
    # Get the default preferences, which are returned in an array.
    local tPrefs
    sePrefGetDefaults
@@ -470,16 +507,12 @@ end sePrefInit
 # Description
 #   Saves the current script editor preferences in the Revolution preferences stack.
 command sePrefSave
-   local tDefaults
-   sePrefGetDefaults
-   put the result into tDefaults
-   
-   local tPropname
-   repeat for each key tKey in sPrefs
-      put "cScriptEditor," & tKey into tPropname
-      
-      revIDESetPreference tPropName, sPrefs[tKey]
+   local tPrefs
+   repeat for each key tPref in sPrefs
+      put sPrefs[tPref] into tPrefs["cScriptEditor," & tPref]
    end repeat
+   
+   revIDESetPreferences tPrefs
 end sePrefSave
 
 command log pMessage
@@ -1048,6 +1081,7 @@ command revSEColorizeField pField, pStart, pEnd
    end if
    
    sePrefInit
+   
    local tConfig
    put sePrefGet("colorization,config") into tConfig
    
