@@ -135,16 +135,6 @@ on editorUpdate
    set the hilite of button "horizontal scrollbar" of group "Clipping" of group "Geometry Options" of me to (tValue["showHScroll"] is true)
    set the hilite of button "vertical scrollbar" of group "Clipping" of group "Geometry Options" of me to (tValue["showVScroll"] is true)
    
-   repeat for each item tItem in "minWidth,maxWidth,minHeight,maxHeight"
-      if fld tItem of group "minmax" of group "Geometry Options" of me is not empty then
-         put true into tValue["limit"]
-         exit repeat
-      end if
-   end repeat
-   
-   set the hilite of button "limitsize" of group "Geometry Options" of me to (tValue["limit"] is true)
-   set the enabled of grp "minMax" of group "Geometry Options" of me to (tValue["limit"] is true)
-   
    if sMode is "scaling" then
       put tValue["minWidth"] into fld "minWidth" of group "minmax" of group "Geometry Options" of me
       put tValue["maxWidth"] into fld "maxWidth" of group "minmax" of group "Geometry Options" of me
@@ -156,6 +146,16 @@ on editorUpdate
       put tValue["minTop"] into fld "minHeight" of group "minmax" of group "Geometry Options" of me
       put tValue["maxBottom"] into fld "maxHeight" of group "minmax" of group "Geometry Options" of me
    end if
+   
+   repeat for each item tItem in "minWidth,maxWidth,minHeight,maxHeight"
+      if fld tItem of group "minmax" of group "Geometry Options" of me is not empty then
+         put true into tValue["limit"]
+         exit repeat
+      end if
+   end repeat
+   
+   set the hilite of button "limitsize" of group "Geometry Options" of me to (tValue["limit"] is true)
+   set the enabled of grp "minMax" of group "Geometry Options" of me to (tValue["limit"] is true)
    unlock messages
    unlock screen
 end editorUpdate
