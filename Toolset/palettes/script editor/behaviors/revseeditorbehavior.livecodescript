@@ -114,6 +114,7 @@ command initialize
    call "initialize" to group "Gutter" of me
    
    set the backgroundColor of field "Script" of me to sePrefGet("editor,backgroundcolor")
+   setHandlersFieldBackColor
    set the hScrollbar of field "Script" of me to (sePrefGet("editor,hscrollbar") is "true")
    
    -- See bug 16773. Mac likes an odd scrollbarwidth,
@@ -135,6 +136,14 @@ command initialize
    
    unlock screen
 end initialize
+
+private command setHandlersFieldBackColor
+   if there is a field "Handlers" of group "Left Handler List" of group "Left Bar" \
+         of card "Main" of this stack then
+      set the backgroundColor of  field "Handlers" of group "Left Handler List" of group "Left Bar" \
+            of card "Main" of this stack to sePrefGet("editor,backgroundcolor")
+   end if
+end setHandlersFieldBackColor
 
 private command initializeFonts
    local tFont, tFontSize
@@ -177,6 +186,7 @@ command reapplyPreferences
    scriptColorize "script"
    
    set the backgroundColor of field "Script" of me to sePrefGet("editor,backgroundcolor")
+   setHandlersFieldBackColor
    set the hScrollbar of field "Script" of me to (sePrefGet("editor,hscrollbar") is "true")
    
    updateGutterRequest empty, empty, empty, empty, false, false, true
@@ -542,6 +552,8 @@ end clearCache
 command scriptLock
    set the lockText of field "Script" of me to true
    set the backgroundColor of field "Script" of me to sePrefGet("editor,debugBackgroundcolor")
+   set the backgroundColor of  field "Handlers" of group "Left Handler List" of group "Left Bar" \
+         of card "Main" of this stack to sePrefGet("editor,debugBackgroundcolor")
 end scriptLock
 
 # Description
@@ -549,6 +561,7 @@ end scriptLock
 command scriptUnlock
    set the lockText of field "Script" of me to false
    set the backgroundColor of field "Script" of me to sePrefGet("editor,backgroundColor")
+   setHandlersFieldBackColor
 end scriptUnlock
 
 # Returns
