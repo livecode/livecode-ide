@@ -9589,36 +9589,36 @@ command revIDESuspendDevelopmentTools
    -- Remove front and back scripts that pertain to the IDE
    -- If the shift-key is down, we remove *all* 'rev' front and back scripts, including
    -- the library scripts.
-   local tScriptsList, tRemoveFrontList, tRemoveBackList
+   local tScriptsList, tRemoveFrontList, tRemoveBackList, tLine
    select empty
    if the shiftKey is down then
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    else
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is among the items of "revFrontScriptLibrary,revDebugger,revShortCutsLibrary" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is among the items of "revFrontScriptLibrary,revDebuggerLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is "revBackScriptLibrary,revShortCutsLibrary" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is "revBackScriptLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    end if
@@ -9630,7 +9630,7 @@ command revIDESuspendDevelopmentTools
    put the openStacks into tList
    lock messages
    repeat for each line tStack in tList
-      if char 1 to 3 of the short name of stack tStack is "rev" or the short name of stack tStack is among the items of "Message Box,Home,answer dialog,ask dialog" then
+      if revIDEStackNameIsIDEStack(tStack) then
          # OK-2008-05-23 : Compare the stack's mode to its style. If they are equal then we don't need to store the mode, as opening the 
          # stack will result in the default mode being that which matches its style.
          local tModeName
