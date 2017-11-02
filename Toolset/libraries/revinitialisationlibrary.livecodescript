@@ -90,3 +90,7 @@ command revInternal__SetSmallAppIcon pSmallAppIcon
    set the paintCompression to "png" -- match the engine
    put pSmallAppIcon into gRevSmallAppIcon
 end revInternal__SetSmallAppIcon
+
+function revInternal__LoadedLibraryStackName pLibraryName
+   return sLoadedLibraries[pLibraryName]
+end revInternal__LoadedLibraryStackName
