@@ -8614,30 +8614,34 @@ on revIDEToggle pProperty
       case "Suppress Messages"
          global gRevSuppressMessages
          put "suppressMessages" into tToggleMessage
+         
+         local tLine
          if not gREVSuppressMessages then
             put true into gREVSuppressMessages
             # Send the suppress messages toggle message before actually suppressing messages
             ideMessageSend "ideToggleChanged:" & tToggleMessage
             set the lockCursor to false
-            repeat for each line l in the pendingMessages
-               if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
-            end repeat
-            repeat for each line l in the frontScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["front"]
-                  remove script of l from front
+            repeat for each line tLine in the pendingMessages
+               if not revIDEObjectIsOnIDEStack(item 4 to -1 of tLine) then
+                  cancel (item 1 of tLine)
                end if
             end repeat
-            repeat for each line l in the backScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["back"]
-                  remove script of l from back
+            repeat for each line tLine in the frontScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["front"]
+                  remove script of tLine from front
                end if
             end repeat
-            repeat for each line l in the stacksInUse
-               if char 1 to 3 of l is not "rev" then
-                  put l & cr after sRestoreState["inUse"]
-                  stop using stack l
+            repeat for each line tLine in the backScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["back"]
+                  remove script of tLine from back
+               end if
+            end repeat
+            repeat for each line tLine in the stacksInUse
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["inUse"]
+                  stop using stack tLine
                end if
             end repeat
             revInternal__LoadLibrary "revNoMessagesLibrary"
@@ -8645,14 +8649,14 @@ on revIDEToggle pProperty
          else
             revInternal__UnloadLibrary "revNoMessagesLibrary"
             put false into gREVSuppressMessages
-            repeat for each line l in sRestoreState["front"]
-               insert script of l into front
+            repeat for each line tLine in sRestoreState["front"]
+               insert script of tLine into front
             end repeat
-            repeat for each line l in sRestoreState["back"]
-               insert script of l into back
+            repeat for each line tLine in sRestoreState["back"]
+               insert script of tLine into back
             end repeat
-            repeat for each line l in sRestoreState["inUse"]
-               start using stack l
+            repeat for each line tLine in sRestoreState["inUse"]
+               start using stack tLine
             end repeat
             delete variable sRestoreState
          end if
@@ -9585,36 +9589,36 @@ command revIDESuspendDevelopmentTools
    -- Remove front and back scripts that pertain to the IDE
    -- If the shift-key is down, we remove *all* 'rev' front and back scripts, including
    -- the library scripts.
-   local tScriptsList, tRemoveFrontList, tRemoveBackList
+   local tScriptsList, tRemoveFrontList, tRemoveBackList, tLine
    select empty
    if the shiftKey is down then
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    else
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is among the items of "revFrontScriptLibrary,revDebugger,revShortCutsLibrary" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is among the items of "revFrontScriptLibrary,revDebuggerLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is "revBackScriptLibrary,revShortCutsLibrary" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is "revBackScriptLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    end if
@@ -9626,7 +9630,7 @@ command revIDESuspendDevelopmentTools
    put the openStacks into tList
    lock messages
    repeat for each line tStack in tList
-      if char 1 to 3 of the short name of stack tStack is "rev" or the short name of stack tStack is among the items of "Message Box,Home,answer dialog,ask dialog" then
+      if revIDEStackNameIsIDEStack(tStack) then
          # OK-2008-05-23 : Compare the stack's mode to its style. If they are equal then we don't need to store the mode, as opening the 
          # stack will result in the default mode being that which matches its style.
          local tModeName
