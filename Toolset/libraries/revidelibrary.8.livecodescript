@@ -21,16 +21,20 @@ References: revIDESubscribe (command)
 Called when loading the IDE library
 **/
 on revLoadLibrary
-   if the target is me then
-      insert the script of me into back
+   if the target is not me then
+      pass revLoadLibrary
    end if
+   
+   insert the script of me into back
    revIDEInitialiseIDELibrary
 end revLoadLibrary
 
 on revUnloadLibrary
-   if the target is me then
-      remove the script of me from back
+   if the target is not me then
+      pass revUnloadLibrary
    end if
+    
+   remove the script of me from back
    revIDEFinaliseIDELibrary
 end revUnloadLibrary
 
