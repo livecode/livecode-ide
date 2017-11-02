@@ -2080,25 +2080,16 @@ command actionDebugRun
       revSEGetCurrentObject
       put the result into tObject
       
-      local tHandler
-      put revMetadataGet(tObject, "general", "debugEntryHandler") into tHandler
-      
-      local tHandlerList
-      revSEGetHandlerList
-      put the result into tHandlerList
-      
-      if tHandler is empty or (lineOffset((item 1 of tHandler & space & item 2 of tHandler), tHandlerList) = 0) then
-         actionEditDebugEntry
-         if the result is "cancelled" then
-            exit actionDebugRun
-         end if
+      actionEditDebugEntry
+      if the result is "cancelled" then
+         exit actionDebugRun
       end if
       
       # When clicking the run button, the user will expect the "browse" tool to be selected,
       # as otherwise the debugger won't trigger even if there are breakpoints
       choose browse tool
       
-      local tParameters
+      local tHandler, tParameters
       put revMetadataGet(tObject, "general", "debugEntryHandler") into tHandler
       put revMetadataGet(tObject, "general", "debugParameters") into tParameters
       
