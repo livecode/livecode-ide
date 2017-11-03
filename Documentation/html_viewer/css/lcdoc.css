@@ -224,10 +224,16 @@ div.business:before {
 	overflow-y: scroll;
 }
 
-#filters_options td {
-	padding-right: 10px;
+#filters_options td:nth-child(1) {
+	padding-right: 5px;
+}
+#filters_options td:nth-child(2) {
+	padding-left: 5px;
 }
 
+#filters_options td {
+	width: 50%;
+}
 #filters_options .category {
 	padding-top: 10px;
 }
