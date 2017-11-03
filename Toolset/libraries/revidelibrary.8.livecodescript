@@ -10760,7 +10760,7 @@ private function revIDEGetExtensionDocsData pAPI
          put the result into tLibraryArray
          
          dispatch function "revDocsFormatLibraryDocArrayAsJSON" to stack "revDocsParser" \
-               with tLibraryArray["name"], tLibraryArray["doc"]
+               with tLibraryArray
          put the result into tExtensionAPI
          
          # Update the dictionary database
@@ -10984,7 +10984,7 @@ private command revIDEGenerateDistributedAPI
       ideDocsUpdateDatabase "livecode_script", tScriptA, true
       
       local tJSON
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_script", tScriptA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tScriptA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "script.js", \
             tJSON
    end if
@@ -11041,7 +11041,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase "livecode_builder", tBuilderA, true
       
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_builder", tBuilderA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tBuilderA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_builder") & slash & "builder.js", \
             tJSON
    end if
@@ -11057,11 +11057,11 @@ private command revIDEGenerateDistributedAPI
    # Regenerate if necessary
    if tNeedUpdate then
       local tLibA
-      put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "Data Grid", "LiveCode") into tLibA
+      put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "DataGrid", "LiveCode") into tLibA
 
       # Update the database
       ideDocsUpdateDatabase "livecode_script", tLibA, true
-      put revDocsFormatLibraryDocArrayAsJSON("datagrid", tLibA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "dg.js", \
             tJSON
    end if
@@ -11113,7 +11113,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase "livecode_ide", tIDELibraryA, true
       
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_ide", tIDELibraryA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tIDELibraryA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_ide") & slash & "ide.js", \
             tJSON
    end if
@@ -11139,7 +11139,7 @@ private command revIDEGenerateDistributedAPI
          put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
          # Update the database
          ideDocsUpdateDatabase "livecode_script", tLibA, true
-         put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+         put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
          revIDESetUTF8FileContents tOutput, tJSON
       end if
    end repeat
