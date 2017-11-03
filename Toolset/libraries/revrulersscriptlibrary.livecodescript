@@ -92,12 +92,9 @@ on resumeStack
     pass resumeStack
   else
     put false into lPaused
-    if not the visible of stack "revRulersH" then
+    if not the visible of stack "revRulersH" and "revRulersH" is among the lines of the openstacks then
       show stack "revRulersH"
       show stack "revRulersV"
-    else
-      palette "revRulersV"
-      palette "revRulersH"
     end if
     revPartCalculateRulers
     unlock messages
