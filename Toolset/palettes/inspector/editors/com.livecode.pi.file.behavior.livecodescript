@@ -63,7 +63,12 @@ on mouseUp pButton
             if tStackPath is not empty then
                put revCalculateRelativePath(tStackPath, tResult) into tFilePath
                if tFilePath begins with "./" then delete char 1 to 2 of tFilePath
-               if there is a file (tStackPath & slash & tFilePath) then put tFilePath into tResult
+               if tFilePath ends with tResult then
+                  --full path contained in relative path, likely a different volume
+                  --in any case, need to return absolute path
+               else if there is a file (tStackPath & slash & tFilePath) then
+                  put tFilePath into tResult
+               end if
             end if
          end if
          put tResult into field 1 of me
