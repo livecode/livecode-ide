@@ -564,11 +564,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
 end __setPropertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
-   return "propertyInfo.txt"
+   return "propertyInfo.tsv"
 end __propertyInfoFilename
 
 private function __classicToolsOrderFilename
-   return "classicToolsOrder.txt"
+   return "classicToolsOrder.tsv"
 end __classicToolsOrderFilename 
 
 private on __orderClassicTools
@@ -606,7 +606,7 @@ private on __objectPropertiesRead
       put tFile into tObjectType
       # Get the name of the object
       set the itemdel to "."
-      if the last item of tObjectType is "txt" then delete the last item of tObjectType
+      if the last item of tObjectType is "tsv" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
       
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
@@ -6367,7 +6367,7 @@ on revIDEStandaloneSettingsForStack pStackID
 end revIDEStandaloneSettingsForStack
 
 private function __standaloneSettingsInfoFilename
-   return "standaloneSettings.txt"
+   return "standaloneSettings.tsv"
 end __standaloneSettingsInfoFilename
 
 function revIDEStandaloneSettings pStack, pSection
