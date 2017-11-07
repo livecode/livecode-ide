@@ -180,7 +180,14 @@ on cancelExtensionInstall pExtensionIdentifier
    revIDECancelInstallExtension pExtensionIdentifier
 end cancelExtensionInstall
 
-on ideExtensionStatusChanged pStatus
+on launchExtensionSampleStack pSampleStack
+   ## Open the sample stack
+   ## Clear the filename to force the user to choose save location if saving the stack
+   open stack pSampleStack
+   set the filename of stack pSampleStack to empty
+end launchExtensionSampleStack
+   
+   on ideExtensionStatusChanged pStatus
    local tElement, tRow, tIdentifier, tStatus, tProgress
    put item 1 of pStatus into tIdentifier
    put item 2 of pStatus into tStatus
