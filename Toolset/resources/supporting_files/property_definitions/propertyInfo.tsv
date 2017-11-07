@@ -12,10 +12,10 @@ backgroundColor	Fill color	Colors	com.livecode.pi.color	true	false	Background fi
 backgroundPattern	Fill pattern	Colors	com.livecode.pi.pattern	true	false	Background fill						
 basicTableObject:revIDEGetTableProperty:revIDESetTableProperty	Basic table object	Table	com.livecode.pi.boolean	true	false		false					
 behavior	Behavior	Advanced	com.livecode.pi.script	true	false							
-blendLevel	Blend level	Colors	com.livecode.pi.number	true	false					0	100	1	
+blendLevel	Blend level	Colors	com.livecode.pi.number	true	false					0	100	1
 borderColor	Border/grid color	Colors	com.livecode.pi.color	true	false	Border fill						
 borderPattern	Border/grid pattern	Colors	com.livecode.pi.pattern	true	false	Border fill						
-borderWidth	Border width	Basic	com.livecode.pi.integer	true	false					0		1	
+borderWidth	Border width	Basic	com.livecode.pi.integer	true	false					0		1
 bottom::revIDESetRectProperty	Bottom	Position	com.livecode.pi.integer	true	false		no_default					1
 bottomColor	Inset bevel color	Colors	com.livecode.pi.color	true	false	Bottom bevel fill						
 bottomPattern	Inset bevel pattern	Colors	com.livecode.pi.pattern	true	false	Bottom bevel fill						
@@ -28,7 +28,7 @@ cellEdit:revIDEGetTableProperty:revIDESetTableProperty	Cell editing	Table	com.li
 cellFormat:revIDEGetTableProperty:revIDESetTableProperty	Cell formatting	Table	com.livecode.pi.boolean	true	false		false					
 clickColor	Click color	Colors	com.livecode.pi.color	true	false							
 colorOverlay	Color overlay	Effects	com.livecode.pi.graphicEffect	true	false			popup:effectColor,effectBlendMode				
-currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1			1		1	
+currentFrame	Frame	Basic	com.livecode.pi.integer	true	false		1			1		1
 currentNode	Current node	Quicktime	com.livecode.pi.string	true	false							
 currentTime	Time	Basic	com.livecode.pi.integer	true	false		0			0		1
 customProperties:revIDECustomPropertiesGet:revIDECustomPropertiesSet	Custom Properties	Custom	com.livecode.pi.customprops	true	false		no_default					
@@ -52,12 +52,12 @@ effectSize	Size	Effects	com.livecode.pi.number	true	false		3			0	255	1
 effectSpread	Spread	Effects	com.livecode.pi.number	true	false		0			0	255	1
 enabledTracks	Track is enabled	Tracks	com.livecode.pi.text	true	true							
 endArrow	End arrow	Basic	com.livecode.pi.boolean	true	false		false					
-endTime	End	Basic	com.livecode.pi.integer	true	false					0		1	
-endValue	End value	Basic	com.livecode.pi.number	true	false		100					1	
+endTime	End	Basic	com.livecode.pi.integer	true	false					0		1
+endValue	End value	Basic	com.livecode.pi.number	true	false		100					1
 externals	External references	externalRefs	com.livecode.pi.text	true	false							
 filename	Source	Basic	com.livecode.pi.file	true	false							
 fillGradient::revIDESetGradientProperty	Fill gradient	Colors	com.livecode.pi.gradient	true	false			popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap				
-firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1	
+firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1
 fixedLineHeight	Fixed line height	Text	com.livecode.pi.boolean	true	false		false					
 focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false							
 focusColor	Focus color	Colors	com.livecode.pi.color	true	false	Focus fill						
@@ -114,7 +114,7 @@ markerPoints	Marker points	Basic	com.livecode.pi.text	true	false
 maxColumnCount:revIDEGetTableProperty:revIDESetTableProperty	Maximum editable column	Table	com.livecode.pi.number	true	false							
 maxHeight	Max height	Position	com.livecode.pi.number	true	false		65535					
 maxWidth	Max width	Position	com.livecode.pi.number	true	false		65535					
-menuLines	Number of lines to display	Basic	com.livecode.pi.integer	true	false		5			1		1	
+menuLines	Number of lines to display	Basic	com.livecode.pi.integer	true	false		5			1		1
 menuMode	Menu mode	basic	com.livecode.pi.string	false	false			cascade,combobox,option,popup,pulldown				
 menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false		1	1,2,3,0				
 menuName	Menu panel stack	Basic	com.livecode.pi.string	true	false							
@@ -123,7 +123,7 @@ minWidth	Min width	Position	com.livecode.pi.number	true	false		32
 multipleHilites	Multi-line	Basic	com.livecode.pi.boolean	true	false		false					
 name	Name	Basic	com.livecode.pi.string	true	false		no_default					
 nonContiguousHilites	Non-contiguous	Basic	com.livecode.pi.boolean	true	false							
-number	Number	Advanced	com.livecode.pi.integer	true	true		no_default			1		1	
+number	Number	Advanced	com.livecode.pi.integer	true	true		no_default			1		1
 numberFormat	Value format	Basic	com.livecode.pi.string	true	false							
 opaque	Opaque	Basic	com.livecode.pi.boolean	true	false							
 orientation	Orientation	Basic	com.livecode.pi.enum	true	true			Horizontal,Vertical				
@@ -131,14 +131,14 @@ outerGlow	Outer glow	Effects	com.livecode.pi.graphicEffect	true	false			popup:ef
 pageInc	Scroll distance on bar click	Basic	com.livecode.pi.number	true	false		8192					
 palindromeFrames	Repeat in reverse	Basic	com.livecode.pi.boolean	true	false							
 pan	Pan	Quicktime	com.livecode.pi.number	true	false							
-playLoudness	Volume	Basic	com.livecode.pi.integer	true	false					0	100	1	
+playLoudness	Volume	Basic	com.livecode.pi.integer	true	false					0	100	1
 playRate	Speed	Basic	com.livecode.pi.integer	true	false							
 playSelection	Play selection only	Basic	com.livecode.pi.boolean	true	false							
 points	Points	Basic	com.livecode.pi.text	true	false							
 polySides	Sides	Basic	com.livecode.pi.number	true	false		8					
 profile	Property profile	Profiles	com.livecode.pi.propertyProfile	true	false							
 radioBehavior	Hilite one radio button at a time	Basic	com.livecode.pi.boolean	true	false		true					
-repeatCount	Repeat	Basic	com.livecode.pi.integer	true	false					0		1	
+repeatCount	Repeat	Basic	com.livecode.pi.integer	true	false					0		1
 resizable	Resizable	Position	com.livecode.pi.boolean	true	false		true					
 resizeQuality	Resize quality	Basic	com.livecode.pi.enum	true	false		normal	best,good,normal				
 right::revIDESetRectProperty	Right	Position	com.livecode.pi.integer	true	false		no_default					1
@@ -164,9 +164,9 @@ showValue	Show value	Basic	com.livecode.pi.boolean	true	false		false
 stackFiles::revIDESetStackFilesProperty	Stack files	Stack Files	com.livecode.pi.stackfiles	true	false							
 startAngle	Start	Basic	com.livecode.pi.number	true	false							
 startArrow	Start arrow	Basic	com.livecode.pi.boolean	true	false							
-startTime	Start	Basic	com.livecode.pi.integer	true	false					0		1	
+startTime	Start	Basic	com.livecode.pi.integer	true	false					0		1
 startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false							
-startValue	Start value	Basic	com.livecode.pi.number	true	false		0					1	
+startValue	Start value	Basic	com.livecode.pi.number	true	false		0					1
 strokeGradient::revIDESetGradientProperty	Stroke gradient	Colors	com.livecode.pi.gradient	true	false			popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap				
 style	Style	Basic	com.livecode.pi.enum	true	false							
 styledText	Contents	Contents	com.livecode.pi.styledText	true	false		no_default					
@@ -176,13 +176,13 @@ tabStops	Tab stops	Table	com.livecode.pi.string	true	false
 text	Text	Basic	com.livecode.pi.text	false	false							
 textAlign	Text align	Text	com.livecode.pi.textalign	true	false							
 textFont	Font	Text	com.livecode.pi.font	true	false							
-textHeight	Text height	Text	com.livecode.pi.integer	true	false				4		1		
-textSize	Text size	Text	com.livecode.pi.integer	true	false					1		1	
+textHeight	Text height	Text	com.livecode.pi.integer	true	false				4		1	
+textSize	Text size	Text	com.livecode.pi.integer	true	false					1		1
 textStyle	Text style	Text	com.livecode.pi.textstyle	true	false							
 theme	Theme	Basic	com.livecode.pi.enum	true	false			Native|native,Legacy Look-and-Feel|legacy				
 themeclass	Theme as	Basic	com.livecode.pi.enum	true	false			Pushbutton|button,Checkbox|checkbox,Radio button|radiobutton,Tab button|tabbutton,Tab pane|tabpane,Label|label,Input field|inputfield,List|list,Menu|menu,Menu item|menuitem,Option menu|optionmenu,Pull-down menu|pulldownmenu,Combo box|combobox,Popup menu|popupmenu,Progress bar|progressbar,Scrollbar|scrollbar,Slider|slider,Spin arrows|spinarrows,Window|window,Message box|messagebox,Rich text|richtext,Tooltip|tooltip				
 threeD	3-D	Basic	com.livecode.pi.boolean	true	false							
-thumbPosition	Current value	Basic	com.livecode.pi.number	true	false		50					1	
+thumbPosition	Current value	Basic	com.livecode.pi.number	true	false		50					1
 thumbSize	Thumb size	Basic	com.livecode.pi.number	false	false		1					
 tilt	Tilt	Quicktime	com.livecode.pi.number	true	false							
 title	Title	Basic	com.livecode.pi.string	true	false							
@@ -199,6 +199,6 @@ visible	Visible	Basic	com.livecode.pi.boolean	true	false		true
 visitedColor	Visited color	Colors	com.livecode.pi.color	true	false							
 visitedIcon	Visited icon	Icons	com.livecode.pi.imageid	true	false		0					
 vScrollbar	Vertical scrollbar	Basic	com.livecode.pi.boolean	true	false		false					
-width	Width	Position	com.livecode.pi.integer	true	false					1		1	
+width	Width	Position	com.livecode.pi.integer	true	false					1		1
 windowShape	Shape	Basic	com.livecode.pi.imageID	true	false							
 zoom	Zoom	Quicktime	com.livecode.pi.number	true	false		0					
