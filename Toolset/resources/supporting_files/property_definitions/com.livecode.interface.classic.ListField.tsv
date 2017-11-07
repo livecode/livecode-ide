@@ -67,7 +67,7 @@ textHeight
 margins							8					
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				250					
-height::revIDESetRectProperty			com.livecode.pi.dimension				56						
+height::revIDESetRectProperty			com.livecode.pi.dimension				56					
 dropShadow												
 innerShadow												
 outerGlow												

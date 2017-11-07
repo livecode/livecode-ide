@@ -26,7 +26,7 @@ autoHilite							true
 listBehavior							false					
 multipleHilites							false					
 nonContiguousHilites							false					
-toggleHilites							false						
+toggleHilites							false					
 firstIndent							0					
 dontSearch							false					
 layerMode												

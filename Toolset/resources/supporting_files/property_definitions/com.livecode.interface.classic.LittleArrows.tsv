@@ -10,8 +10,8 @@ disabled							false
 traversalOn							true					
 focusBorder							horizontal	Horizontal,Vertical				
 startValue							empty					
-endValue							empty						
-thumbPosition							0						
+endValue							empty					
+thumbPosition							0					
 thumbSize							8192					
 lineInc												
 pageInc				false								
@@ -37,7 +37,7 @@ textAlign
 margins							8					
 lockLoc							false					
 width							15					
-height							23						
+height							23					
 dropShadow												
 innerShadow												
 outerGlow												

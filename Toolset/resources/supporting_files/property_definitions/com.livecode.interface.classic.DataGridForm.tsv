@@ -31,7 +31,7 @@ column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column 
 corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false							
 												
 text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false							
-text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false								
+text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false							
 text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false							
 												
 label												

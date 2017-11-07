@@ -52,10 +52,10 @@ column case sensitive:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnPro
 column behavior:revIDEGetDataGridColumnProperty:revIDESetDataGridColumnProperty	Column behavior	Columns	com.livecode.pi.dgcolumnbehavior	true	false		no_default					
 												
 text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false							
-text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false		empty						
+text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false		empty					
 text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false							
 header text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text font	Text	com.livecode.pi.font	true	false							
-header text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text size	Text	com.livecode.pi.integer	true	false		empty						
+header text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text size	Text	com.livecode.pi.integer	true	false		empty					
 header text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Header text style	Text	com.livecode.pi.textstyle	true	false							
 												
 label												
