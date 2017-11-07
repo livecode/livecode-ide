@@ -1,8 +1,8 @@
-type	field
-title	Scrolling Field
+type	field											
+title	Scrolling Field											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Field					
 styledText												
 tooltip												
@@ -20,7 +20,7 @@ showBorder							true
 borderWidth							2					
 hScrollbar							false					
 vScrollbar							true					
-scrollbarWidth											
+scrollbarWidth												
 autoHilite							true					
 listBehavior							false					
 multipleHilites							false					
@@ -31,7 +31,7 @@ dontSearch							false
 layerMode												
 behavior												
 basicTableObject							false					
-cellEdit							false
+cellEdit							false					
 maxColumnCount												
 cellFormat							false					
 showLines							false					

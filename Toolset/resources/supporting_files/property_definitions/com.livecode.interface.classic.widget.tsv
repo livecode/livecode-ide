@@ -1,7 +1,7 @@
-type	widget
+type	widget											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Widget					
 kind												
 tooltip												
@@ -15,6 +15,6 @@ blendLevel							0	0,100
 lockLoc							false					
 width							no_default					
 height							no_default					
-textFont																						
+textFont													
 textSize												
-traversalOn		Advanced					false	
+traversalOn		Advanced					false					

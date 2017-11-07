@@ -1,8 +1,8 @@
-type	graphic
-title	Round Rectangle Graphic
+type	graphic											
+title	Round Rectangle Graphic											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Round Rectangle					
 tooltip												
 style							roundrect	rectangle,roundrect,line,oval,regular,line,curve,polygon				
@@ -21,7 +21,7 @@ foregroundPattern						Border fill
 backgroundColor												
 backgroundPattern												
 fillGradient												
-strokeGradient
+strokeGradient												
 topColor												
 topPattern												
 bottomColor												
@@ -42,4 +42,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay	
+colorOverlay												

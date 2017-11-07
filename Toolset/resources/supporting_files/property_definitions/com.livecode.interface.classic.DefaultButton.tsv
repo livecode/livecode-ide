@@ -1,8 +1,8 @@
-type	button
-title	Default Button
+type	button											
+title	Default Button											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Button					
 label												
 tooltip												
@@ -61,9 +61,9 @@ textAlign							center
 margins							4					
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				82					
-height::revIDESetRectProperty			com.livecode.pi.dimension				22																
+height::revIDESetRectProperty			com.livecode.pi.dimension				22						
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
+colorOverlay												

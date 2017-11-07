@@ -1,8 +1,8 @@
-type	button
-title	Option Menu
+type	button											
+title	Option Menu											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Option Menu					
 label							Choice 1					
 tooltip												
@@ -13,7 +13,7 @@ visible							true
 opaque							true					
 showName							true					
 disabled							false					
-text	Menu Items			true			Choice 1\nChoice 2\nChoice 3	
+text	Menu Items			true			Choice 1\nChoice 2\nChoice 3					
 menuLines							5					
 menuName												
 layerMode												
@@ -26,11 +26,11 @@ armedIcon
 hoverIcon												
 threeD							true					
 showBorder							true					
-hiliteBorder							true		
-borderWidth							2		
-armBorder				false			false
-traversalOn				false			false
-autoHilite				false			false
+hiliteBorder							true					
+borderWidth							2					
+armBorder				false			false					
+traversalOn				false			false					
+autoHilite				false			false					
 shadow							false					
 shadowOffset							4					
 foregroundColor						Text fill						
@@ -65,4 +65,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
+colorOverlay												

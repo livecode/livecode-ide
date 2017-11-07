@@ -1,8 +1,8 @@
-type	field
-title	Table Field
+type	field											
+title	Table Field											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Table Field					
 styledText												
 text												
@@ -21,18 +21,18 @@ showBorder							true
 borderWidth							2					
 hScrollbar							false					
 vScrollbar							true					
-scrollbarWidth											
+scrollbarWidth												
 autoHilite							true					
 listBehavior							false					
 multipleHilites							false					
 nonContiguousHilites							false					
-toggleHilites							false																
+toggleHilites							false						
 firstIndent							0					
 dontSearch							false					
 layerMode												
 behavior												
 basicTableObject							true					
-cellEdit							true
+cellEdit							true					
 maxColumnCount												
 cellFormat							false					
 showLines							false					
@@ -72,4 +72,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
+colorOverlay												

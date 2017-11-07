@@ -1,8 +1,8 @@
-type	graphic tool
-title	Polygon Graphic
+type	graphic tool											
+title	Polygon Graphic											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Polygon					
 tooltip												
 style							polygon	rectangle,roundrect,line,oval,regular,line,curve,polygon				
@@ -27,11 +27,11 @@ foregroundPattern						Border fill
 backgroundColor												
 backgroundPattern												
 fillGradient												
-strokeGradient
-hiliteColor						Marker border fill
-hilitePattern						Marker border fill
-borderColor						Marker fill
-borderPattern						Marker fill
+strokeGradient												
+hiliteColor						Marker border fill						
+hilitePattern						Marker border fill						
+borderColor						Marker fill						
+borderPattern						Marker fill						
 topColor												
 topPattern												
 bottomColor												
@@ -51,4 +51,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay										
+colorOverlay												

@@ -1,8 +1,8 @@
-type	field
-title	Label Field
+type	field											
+title	Label Field											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Label Field					
 styledText												
 text				false			Label:					
@@ -31,7 +31,7 @@ dontSearch							false
 layerMode												
 behavior												
 basicTableObject							false					
-cellEdit							false
+cellEdit							false					
 maxColumnCount												
 cellFormat							false					
 showLines							false					

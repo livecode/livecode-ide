@@ -1,12 +1,12 @@
-type	stack
-title	 Substack
+type	stack											
+title	 Substack											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name												
-title	
-mainStack		
-makeMainstack::revIDEMakeSubstackMainstack	Make mainstack	Basic	com.livecode.pi.action	true	true
+title												
+mainStack												
+makeMainstack::revIDEMakeSubstackMainstack	Make mainstack	Basic	com.livecode.pi.action	true	true							
 decorations												
 windowShape												
 scaleFactor							1					
@@ -23,7 +23,7 @@ cantModify							false
 cantAbort							false					
 stackFiles					true							
 externals												
-behavior
+behavior												
 foregroundColor												
 foregroundPattern												
 backgroundColor												

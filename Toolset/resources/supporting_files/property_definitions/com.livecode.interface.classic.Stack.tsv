@@ -1,11 +1,11 @@
-type	stack
-title	 Stack
+type	stack											
+title	 Stack											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name												
-title	
-mainStack		
+title												
+mainStack												
 decorations												
 windowShape												
 scaleFactor							1					
@@ -22,7 +22,7 @@ cantModify							false
 cantAbort							false					
 stackFiles												
 externals												
-behavior
+behavior												
 foregroundColor												
 foregroundPattern												
 backgroundColor												

@@ -1,8 +1,8 @@
-type	image
-title	Image
+type	image											
+title	Image											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name												
 filename												
 id												
@@ -39,7 +39,7 @@ textAlign
 margins							8					
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				120					
-height::revIDESetRectProperty			com.livecode.pi.dimension				120																
+height::revIDESetRectProperty			com.livecode.pi.dimension				120						
 dropShadow												
 innerShadow												
 outerGlow												

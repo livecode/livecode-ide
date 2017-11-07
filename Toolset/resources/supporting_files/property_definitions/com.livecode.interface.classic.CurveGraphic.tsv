@@ -1,8 +1,8 @@
-type	graphic tool
-title	Curve Graphic
+type	graphic tool											
+title	Curve Graphic											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Curve					
 tooltip												
 style							curve	rectangle,roundrect,line,oval,regular,line,curve,polygon				
@@ -21,7 +21,7 @@ behavior							empty	long id
 foregroundColor						Border fill						
 foregroundPattern						Border fill						
 fillGradient												
-strokeGradient
+strokeGradient												
 topColor												
 topPattern												
 bottomColor												
@@ -36,9 +36,9 @@ textAlign							empty
 margins							8					
 lockLoc							false					
 width												
-height																								
+height													
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay										
+colorOverlay												

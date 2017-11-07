@@ -1,8 +1,8 @@
-type	card
-title	Card
+type	card											
+title	Card											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name												
 number												
 mark							false					
@@ -12,7 +12,7 @@ showBorder							true
 opaque							true					
 threeD							true					
 borderWidth							2					
-behavior
+behavior												
 foregroundColor												
 foregroundPattern												
 backgroundColor												
@@ -43,5 +43,5 @@ left					true
 top					true							
 right					true							
 bottom					true							
-layer		
-number					false											
+layer												
+number					false								

@@ -1,11 +1,11 @@
-type	field
-title	Scrolling List Field
+type	field											
+title	Scrolling List Field											
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Scrolling List Field					
 styledText												
-text				false			Choice 1\nChoice 2\nChoice 3	
+text				false			Choice 1\nChoice 2\nChoice 3					
 tooltip												
 disabled							false					
 visible							true					
@@ -21,7 +21,7 @@ showBorder							true
 borderWidth							2					
 hScrollbar							false					
 vScrollbar							true					
-scrollbarWidth											
+scrollbarWidth												
 autoHilite							true					
 listBehavior							true					
 multipleHilites							false					
@@ -32,7 +32,7 @@ dontSearch							false
 layerMode												
 behavior												
 basicTableObject							false					
-cellEdit							false
+cellEdit							false					
 maxColumnCount												
 cellFormat							false					
 showLines							false					
@@ -67,9 +67,9 @@ textHeight
 margins							8					
 lockLoc							false					
 width::revIDESetRectProperty			com.livecode.pi.dimension				250					
-height::revIDESetRectProperty			com.livecode.pi.dimension				56																
+height::revIDESetRectProperty			com.livecode.pi.dimension				56						
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
+colorOverlay												

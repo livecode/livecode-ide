@@ -1,8 +1,8 @@
-type	graphic
+type	graphic											
 title 							Rectangle Graphic					
 												
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name							Rectangle					
 tooltip												
 style							rectangle	rectangle,roundrect,line,oval,regular,line,curve,polygon				
@@ -20,7 +20,7 @@ foregroundPattern						Border fill
 backgroundColor												
 backgroundPattern												
 fillGradient												
-strokeGradient
+strokeGradient												
 topColor												
 topPattern												
 bottomColor												
@@ -40,4 +40,4 @@ dropShadow
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay	
+colorOverlay												

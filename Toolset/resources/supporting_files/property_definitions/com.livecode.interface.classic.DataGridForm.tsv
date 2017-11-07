@@ -1,54 +1,54 @@
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------												
 name												
-style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Style	Data Grid	com.livecode.pi.enum	true	false		no_default	table,form
-show hscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show hScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
-show vscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show vScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto
-allow editing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Allow text editing	Data Grid	com.livecode.pi.boolean	true	false		no_default
-alternate row colors:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row colors	Data Grid	com.livecode.pi.boolean	true	false		no_default
-auto hilite:revIDEGetDataGridProperty:revIDESetDataGridProperty	Auto-hilite rows	Data Grid	com.livecode.pi.boolean	true	false		no_default
-multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-row hilites	Data Grid	com.livecode.pi.boolean	true	false		no_default
-allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default
-cache controls:revIDEGetDataGridProperty:revIDESetDataGridProperty	Cache controls	Data Grid	com.livecode.pi.boolean	true	false		no_default
-persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default
-fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	true	false		no_default	
+style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Style	Data Grid	com.livecode.pi.enum	true	false		no_default	table,form				
+show hscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show hScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto				
+show vscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show vScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto				
+allow editing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Allow text editing	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+alternate row colors:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row colors	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+auto hilite:revIDEGetDataGridProperty:revIDESetDataGridProperty	Auto-hilite rows	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-row hilites	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+cache controls:revIDEGetDataGridProperty:revIDESetDataGridProperty	Cache controls	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data Grid	com.livecode.pi.number	true	false		21					1
 row behavior:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row behavior	Data Grid	com.livecode.pi.script	true	true		no_default					1
-
-row template::revIDEDataGridAction	Row Template...	Data Grid	com.livecode.pi.action	true	false	
-refresh::revIDEDataGridAction	Refresh Data Grid	Data Grid	com.livecode.pi.action	true	false
-
-text:revIDEGetDataGridProperty:revIDESetDataGridProperty	Contents	Contents	com.livecode.pi.textcontents	true	false		no_default
-first row header:revIDEGetDataGridProperty:revIDESetDataGridProperty	First row is header	Contents	com.livecode.pi.boolean	true	false		no_default
-
-text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text color	Colors	com.livecode.pi.color	true	false
-hilited text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Hilited text color	Colors	com.livecode.pi.color	true	false
-background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Background color	Colors	com.livecode.pi.color	true	false
-row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row color	Colors	com.livecode.pi.color	true	false
-alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row color	Colors	com.livecode.pi.color	true	false
-hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false
-column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false
-corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false
-
-text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false
-text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false										
-text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false
-
+												
+row template::revIDEDataGridAction	Row Template...	Data Grid	com.livecode.pi.action	true	false							
+refresh::revIDEDataGridAction	Refresh Data Grid	Data Grid	com.livecode.pi.action	true	false							
+												
+text:revIDEGetDataGridProperty:revIDESetDataGridProperty	Contents	Contents	com.livecode.pi.textcontents	true	false		no_default					
+first row header:revIDEGetDataGridProperty:revIDESetDataGridProperty	First row is header	Contents	com.livecode.pi.boolean	true	false		no_default					
+												
+text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text color	Colors	com.livecode.pi.color	true	false							
+hilited text color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Hilited text color	Colors	com.livecode.pi.color	true	false							
+background color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Background color	Colors	com.livecode.pi.color	true	false							
+row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row color	Colors	com.livecode.pi.color	true	false							
+alternate row color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Alternate row color	Colors	com.livecode.pi.color	true	false							
+hilite color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Selection hilite color	Colors	com.livecode.pi.color	true	false							
+column divider color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Column divider color	Colors	com.livecode.pi.color	true	false							
+corner color:revIDEGetDataGridProperty:revIDESetDataGridProperty	Corner color	Colors	com.livecode.pi.color	true	false							
+												
+text font:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text font	Text	com.livecode.pi.font	true	false							
+text size:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text size	Text	com.livecode.pi.integer	true	false								
+text style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Text style	Text	com.livecode.pi.textstyle	true	false							
+												
 label												
 tooltip												
 disabled												
-showBorder							true
-borderWidth							1
+showBorder							true					
+borderWidth							1					
 visible												
 customProperties												
 lockLoc							false					
 width							250					
 height							160					
-layerMode
+layerMode												
 blendLevel							0	0,100				
 ink												
 dropShadow												
 innerShadow												
 outerGlow												
 innerGlow												
-colorOverlay
+colorOverlay												
