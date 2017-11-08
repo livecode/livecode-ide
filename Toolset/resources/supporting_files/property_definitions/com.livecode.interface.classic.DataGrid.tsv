@@ -1,8 +1,8 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 type	data grid											
 title	Data Grid											
 												
-Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name												
 style:revIDEGetDataGridProperty:revIDESetDataGridProperty	Style	Data Grid	com.livecode.pi.enum	true	false		no_default	table,form				
 show hscrollbar:revIDEGetDataGridProperty:revIDESetDataGridProperty	Show hScrollbar	Data Grid	com.livecode.pi.enum	true	false		no_default	true,false,auto				

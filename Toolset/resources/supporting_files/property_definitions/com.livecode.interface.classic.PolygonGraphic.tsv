@@ -1,8 +1,8 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 type	graphic tool											
 title	Polygon Graphic											
 												
-Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Polygon					
 tooltip												
 style							polygon	rectangle,roundrect,line,oval,regular,line,curve,polygon				

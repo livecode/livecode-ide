@@ -1,8 +1,8 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 type	button											
 title	Rectangle Button											
 												
-Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Button					
 label												
 tooltip												

@@ -1,8 +1,8 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 type	scrollbar											
 title	Progress Bar											
 												
-Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Progress Scrollbar					
 style							progress	progress,scale,scrollbar				
 visible							true					

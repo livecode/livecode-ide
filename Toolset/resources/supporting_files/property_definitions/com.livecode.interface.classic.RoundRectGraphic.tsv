@@ -1,8 +1,8 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
 type	graphic											
 title	Round Rectangle Graphic											
 												
-Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
-----------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Round Rectangle					
 tooltip												
 style							roundrect	rectangle,roundrect,line,oval,regular,line,curve,polygon				

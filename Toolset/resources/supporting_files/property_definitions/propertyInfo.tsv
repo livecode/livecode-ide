@@ -1,5 +1,5 @@
 Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
----------------------------------------------------------------------------------------------------------------------												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 alwaysBuffer	Buffer	Basic	com.livecode.pi.boolean	true	false		false					
 angle	Rotation	Basic	com.livecode.pi.number	true	false		0			0	359	1
 antialiased	Antialiased	Basic	com.livecode.pi.boolean	true	false							
