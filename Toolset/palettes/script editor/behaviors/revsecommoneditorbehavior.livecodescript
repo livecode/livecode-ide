@@ -395,6 +395,10 @@ private function textFormatIndentLineAdds pLine
       
    else if token 1 of pLine is empty then
       return 0
+      
+   else if token 1 of pLine is "then" and "else" is among the tokens of pline then
+      return 0
+      
       ## Bug 10467 - else in a comment was causing incorrect indentation
       ## Check for "else" in line without comments
       --else if token 1 of pLine is not "else" and "else" is among the words of pLine then
@@ -426,6 +430,11 @@ private function textFormatIndentLineRemoves pPreviousLine, pLine
          end if
          
       else
+      
+         if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" and token 1 of pPreviousLine is "if" and token - 1 of pLine is "else" then
+            return item 1 of sTextFormatKeywordMap["else"]
+         end if
+         
          if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" then
             return 0
          else
