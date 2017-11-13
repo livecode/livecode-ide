@@ -1,8 +1,6 @@
-Name: Datagrid
+Library: Datagrid
 
 Type: object
-
-Syntax: Datagrid
 
 Summary: An object for forms or tables
 

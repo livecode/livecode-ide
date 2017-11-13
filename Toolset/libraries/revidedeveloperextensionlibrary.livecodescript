@@ -148,7 +148,7 @@ function revIDEDeveloperExtensions
          end if
          local tExtensionA
          # On first run, don't compile.
-         put  revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder)  into tExtensionA
+         put revIDEDeveloperExtensionNoCompile(tFolder & slash & tExtensionFolder)  into tExtensionA
          if tExtensionA is not empty then
             put tExtensionA into tExtensionDetailsA[tFolder & slash & tExtensionFolder]
             put true into tFolderHasModule
@@ -162,34 +162,38 @@ function revIDEDeveloperExtensions
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
-private function __revIDEDeveloperExtensionFetchModuleInFolder pFolder
-   local tFiles
-   put files(pFolder) into tFiles
-   filter tFiles with "*.lcb"
+private command __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, @rFile, @rType
+   local tExtFile, tType
+   revIDEExtensionFetchSourceFromFolder pFolder, tExtFile, tType
    
-   local tFile
-   # For now, if there are multiple lcb files in one folder, just use the first one.
-   if the number of lines of tFiles > 1 then
-      put replaceText(tFiles, return, ",") into tFiles
-      __revIDEDeveloperExtensionSendError "multiple lcb files in folder" && pFolder & ":" && tFiles
+   local tNumExtensions
+   put the number of lines in tExtFile into tNumExtensions
+   
+   # If there are multiple lcb files in one folder, it's an error.
+   if tNumExtensions > 1 then
+      put replaceText(tExtFile, return, ",") into tExtFile
+      __revIDEDeveloperExtensionSendError "multiple lcb files in folder" && pFolder & ":" && tExtFile
       return empty
-   else
-      put tFiles into tFile
    end if
-   return tFile
-end __revIDEDeveloperExtensionFetchModuleInFolder
+   
+   put tExtFile into rFile
+   put tType into rType
+end __revIDEDeveloperExtensionFetchExtensionSourceInFolder
 
 function revIDEDeveloperExtensionNoCompile pFolder
-   local tFile
-   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   local tFile, tType
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
    
    if tFile is empty then
       return empty
    end if
    
-   local tDataA
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tDataA
+   if tType is "lcs" then
+      return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tType)
+   end if
    
+   local tDataA
+   revIDEExtensionMetadata pFolder, tFile, tType, tDataA
    if the result is not empty then
       put tFile into tDataA["file"]
    end if
@@ -197,14 +201,14 @@ function revIDEDeveloperExtensionNoCompile pFolder
 end revIDEDeveloperExtensionNoCompile
 
 function revIDEDeveloperExtension pFolder
-   local tFile
-   put __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
+   local tFile, tType
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
    
    if tFile is empty then
       return empty
    end if
    
-   return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile)
+   return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tType)
 end revIDEDeveloperExtension
 
 private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
@@ -324,42 +328,45 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
-private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile
+private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
    local tDetailsA
    put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, pFile) into tDetailsA
    
-   put pFile into tDetailsA["file"]
-   if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
-      __revIDEDeveloperExtensionLog "Skipping recompilation of" && pFolder & slash & "module.lcm - module is up to date"
-      # The stored info is up to date.
-      if sExtensionDetailsA[pFolder] is not empty then
-         union tDetailsA with sExtensionDetailsA[pFolder]
-         put tDetailsA into sExtensionDetailsA[pFolder]
-         return sExtensionDetailsA[pFolder]
-      end if
-      # The compiled module and manifest are up to date, but we haven't fetched the information yet.
-   else
-      # The compiled module or manifest is not up to date, so compile.
-      __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
-      __revIDEDeveloperCompileModule pFolder & slash & pFile, pFolder
-      
-      if the result is not empty then
-         # This may be better as a warning, and try to parse info direct from the file.
-         __revIDEDeveloperExtensionSendError the result
-         return tDetailsA
+   put pFile into tDetailsA["file"]      
+   if pType is "lcb" then
+      if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
+         
+         __revIDEDeveloperExtensionLog "Skipping recompilation of" && \
+               pFolder & slash & "module.lcm - module is up to date"
+         # The stored info is up to date.
+         if sExtensionDetailsA[pFolder] is not empty then
+            union tDetailsA with sExtensionDetailsA[pFolder]
+            put tDetailsA into sExtensionDetailsA[pFolder]
+            return sExtensionDetailsA[pFolder]
+         end if
+         # The compiled module and manifest are up to date, but we haven't fetched the information yet.
+      else
+         # The compiled module or manifest is not up to date, so compile.
+         __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
+         __revIDEDeveloperCompileModule pFolder & slash & pFile, pFolder
+         if the result is not empty then
+            # This may be better as a warning, and try to parse info direct from the file.
+            __revIDEDeveloperExtensionSendError the result
+            return tDetailsA
+         end if
       end if
    end if
    
-   __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
    local tMetadataA
-   __revIDEDeveloperExtensionFetchMetadata (pFolder & slash & "manifest.xml"), tMetadataA
-   union tDetailsA with tMetadataA
-   
+   if pType is "lcb" then
+      __revIDEDeveloperExtensionLog "Fetching metadata from" && pFolder & slash & "manifest.xml"
+   end if
+   revIDEExtensionMetadata pFolder, pFile, pType, tMetadataA
    if the result is not empty then
       __revIDEDeveloperExtensionSendError the result
       return tDetailsA
    end if
-   
+   union tDetailsA with tMetadataA
    put tDetailsA into sExtensionDetailsA[pFolder]
    return sExtensionDetailsA[pFolder]
    
@@ -575,37 +582,46 @@ on revIDEDeveloperExtensionUninstall pPath
 end revIDEDeveloperExtensionUninstall
 
 on revIDEDeveloperExtensionEditScript pFolder
-   local tFile
-   put pFolder & slash & __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
-   
+   local tFile, tType
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
+   if tType is "lcb" then
+      __revIDEDeveloperExtensionEditLCBScript pFolder & slash & tFile
+   else if there is a stack (pFolder & slash & tFile) then
+      edit script of stack (pFolder & slash & tFile)
+   end if
+end revIDEDeveloperExtensionEditScript
+
+private command __revIDEDeveloperExtensionEditLCBScript pFile
    # AL-2015-04-01: [[ Bug 15130 ]] First check to see if there is an existing association
-   launch document tFile
+   launch document pFile
    if the result is not empty then
       # AL-2015-04-01: [[ Bug 15130 ]] Check to see if the text editor preference is set
       local tEditor
       put revIDEGetPreference("LCB_textEditor") into tEditor
       if tEditor is not empty then
-         launch tFile with tEditor
+         launch pFile with tEditor
       end if
    end if
    
    if the result is "no association" or the result is "request failed" then
       answer file "Select text editor..."
       if it is not empty then
-         launch tFile with it
+         launch pFile with it
       end if
    end if
    
    if the result is not empty then
-      __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && the result
+      __revIDEDeveloperExtensionSendError "Could not open" && pFile & ":" && the result
    else if it is not empty then
       # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
       revIDESetPreference "LCB_textEditor", it
    end if
-end revIDEDeveloperExtensionEditScript
+end __revIDEDeveloperExtensionEditLCBScript
 
 on revIDEDeveloperExtensionOpen pFolder
-   if __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) is empty then
+   local tFile, tType
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
+   if tFile is empty then
       exit revIDEDeveloperExtensionOpen
    end if
    
@@ -635,84 +651,6 @@ on revIDEDeveloperExtensionNew pDataA
    put merge(tTemplate) into url("file:" & pDataA["path"] & slash & pDataA["name"] & ".lcb")
 end revIDEDeveloperExtensionNew
 
-private on __revIDEDeveloperExtensionFetchMetadata pManifestPath, @rDataA
-   local tDataA
-   
-   local tManifestContents, tId
-   put url ("file:" & pManifestPath) into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tId
-   
-   if tId begins with "xmlerr" then
-      return "Error: invalid xml in manifest"
-   end if
-   
-   local tTargetType
-   put __fetchMetadatum(tId, "type") into tTargetType
-   
-   if tTargetType begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendError "couldn't retrieve extension type from manifest" && pManifestPath
-      exit __revIDEDeveloperExtensionFetchMetadata
-   end if
-   put tTargetType into tDataA["type"]
-   
-   local tTargetName
-   put __fetchMetadatum(tId, "name") into tTargetName
-   
-   if tTargetName begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendError "couldn't retrieve extension name from manifest" && pManifestPath
-      exit __revIDEDeveloperExtensionFetchMetadata
-   end if
-   
-   set the itemdelimiter to "."
-   if not tTargetName begins with "community.livecode" or the number of items of tTargetName < 4 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetName & ") - must be community.livecode.<yourId>.<extensionTitle>"
-   end if
-   put tTargetName into tDataA["id"]
-   
-   # If we have a library, we don't require various packaged elements
-   local tTargetTitle
-   put __fetchMetadatum(tId, "title") into tTargetTitle
-   
-   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve title from" && tTargetName && "manifest - ensure .lcb file has 'metadata title is " & quote & "<title>" & quote & "'"
-      put empty into tTargetTitle
-   end if
-   put tTargetTitle into tDataA["name"]
-   
-   local tTargetVersion
-   put __fetchMetadatum(tId, "version") into tTargetVersion
-   
-   if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve version from" && tTargetName && "manifest - ensure .lcb file has 'metadata version is " & quote & "<version>" & quote & "'"
-      put empty into tTargetVersion
-   end if
-   
-   if the number of items of tTargetVersion is not 3 then
-      __revIDEDeveloperExtensionSendWarning "extension name has invalid identifier (" & tTargetVersion & ") - must be <major>.<minor>.<revision>"
-   end if
-   put tTargetVersion into tDataA["version"]
-   
-   local tTargetAuthor
-   put __fetchMetadatum(tId, "author") into tTargetAuthor
-   
-   if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning "couldn't retrieve author from" && tTargetName && "manifest - ensure .lcb file has 'metadata author is " & quote & "<author_name>" & quote & "'"
-      put empty into tTargetAuthor
-   end if
-   put tTargetAuthor into tDataA["author"]
-   
-   local tTargetIcon
-   put __FetchMetadatum(tId, "svgicon") into tTargetIcon
-   if tTargetIcon begins with "xmlerr" then
-      __revIDEDeveloperExtensionSendWarning merge("couldn't retrieve SVG icon from [[tTargetName]] manifest")
-   else
-      put tTargetIcon into tDataA["svgicon"]
-   end if
-   
-   
-   put tDataA into rDataA
-   return empty
-end __revIDEDeveloperExtensionFetchMetadata
 
 private function __fetchMetadatum pXmlId, pKey
    local tNode
@@ -747,20 +685,20 @@ private function shellFormat pArg, pSwitch
    return tOutput & quote & pArg & quote & " "
 end shellFormat
 
-private function __revIDEDDeveloperExtensionResourcePath
+private function __revIDEDeveloperExtensionResourcePath
    if revEnvironmentIsInstalled() is false then
       return revEnvironmentBinariesPath()
    else
       return revIDESpecialFolderPath("Toolchain")
    end if
-end __revIDEDDeveloperExtensionResourcePath
+end __revIDEDeveloperExtensionResourcePath
 
 private function __revIDEDeveloperExtensionCompilerPath
    # The actual compile command
    if the platform is "win32" then
-      return __revIDEDDeveloperExtensionResourcePath() & slash & "lc-compile.exe"
+      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile.exe"
    else
-      return __revIDEDDeveloperExtensionResourcePath() & slash & "lc-compile"
+      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile"
    end if
 end __revIDEDeveloperExtensionCompilerPath
 
@@ -778,7 +716,7 @@ private command __revIDEDeveloperCompileModule pFile, pTargetFolder
    put shellFormat(pTargetFolder, "modulepath") after tShellCommand
    
    # The built-in module path
-   put shellFormat(__revIDEDDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
+   put shellFormat(__revIDEDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
    
    # Installed module path
    put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand

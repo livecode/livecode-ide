@@ -1,8 +1,8 @@
 ﻿script "revdebuggerlibrary"
 
-on revLoadLibrary
+on extensionInitialize
    if the target is not me then
-      pass "revLoadLibrary"
+      pass "extensionInitialize"
    end if
    insert the script of me into front
    
@@ -11,14 +11,14 @@ on revLoadLibrary
    end if
    
    __Initialize
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is not me then
-      pass "revUnloadLibrary"
+      pass "extensionFinalize"
    end if
    remove the script of me from front
-end revUnloadLibrary
+end extensionFinalize
 
 
 
@@ -203,7 +203,7 @@ function revDebuggerContexts
          #  debugger itself and anything that was called by the debugger, i.e. appears after a debugger
          #  call in the call stack.
          
-         if tStack is "revDebuggerLibrary" or tStack is "com.livecode.script-library.remotedebugger" then
+         if tStack is "revDebuggerLibrary" or tStack is "com.livecode.library.remotedebugger" then
             # No debugger stack contexts are placed onto the call stack, however we also need to remove
             # *any* contexts that appear after a trace, traceError or traceBreak (or traceDone although less important).
             --if item -2 of tContext is among the words of "trace traceError traceBreak traceDone" then
@@ -1992,7 +1992,7 @@ private function __StackAllowed pStack
    global gREVDevelopment
    if "development" is not in the environment or gREVDEvelopment then
       # With gREVDevelopment allow all stacks to be debugged except the debugger, as doing this will probably not work anyway.
-      if the short name of pStack is among the items of "revDebuggerLibrary,com.livecode.script-library.remotedebugger" then
+      if the short name of pStack is among the items of "revDebuggerLibrary,com.livecode.library.remotedebugger" then
          return false
       else
          return true

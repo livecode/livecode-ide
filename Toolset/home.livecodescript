@@ -525,16 +525,6 @@ function revInternal__StackFiles
          if tFolder begins with "." then next repeat
          put return & tComponentFolder & slash & tFolder after tFolders
       end repeat
-      
-      -- script libraries
-      repeat for each item tRepo in (revEnvironmentCommercialRepositoryPath() & comma & revEnvironmentRepositoryPath())
-         local tScriptLibrariesFolder
-         put tRepo & "/extensions/script-libraries" into tScriptLibrariesFolder
-         repeat for each line tFolder in folders(tScriptLibrariesFolder)
-            if tFolder begins with "." then next repeat
-            put return & tScriptLibrariesFolder & slash & tFolder after tFolders
-         end repeat
-      end repeat
    end if	
    
    local tStackFiles, tStackName
@@ -1183,32 +1173,24 @@ command revInternal__InitialiseLibraries
    revInternal_SetJAVA_HOME
    
    local tLoadList
-   put "revDatabaseLibrary" into tLoadList 
+   put "revCommonLibrary" into tLoadList 
+   put return & "revDatabaseLibrary" after tLoadList 
    put return & "revIDEDocumentationLibrary" after tLoadList
+   put return & "revMetadataLibrary" after tLoadList   
+   put return & "revSBLibrary" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList
    put return & "revBackScriptLibrary" after tLoadList 
-   put return & "revSBLibrary" after tLoadList
    put return & "revDeployLibrary" after tLoadList
    put return & "revDebuggerLibrary" after tLoadList 
-   put return & "revMetadataLibrary" after tLoadList
    put return & "revLibUrl" after tLoadList 
-   put return & "revCommonLibrary" after tLoadList 
    put return & "revPrintLibrary" after tLoadList 
    put return & "revAnimationLibrary" after tLoadList 
    put return & "revGeometryLibrary" after tLoadList 
    put return & "revXMLRPCLibrary" after tLoadList 
    put return & "revProfilesLibrary" after tLoadList 
    put return & "revTableLibrary" after tLoadList 
-   put return & "oauth2" after tLoadList
-   put return & "getopt" after tLoadList
-   put return & "mime" after tLoadList
-   put return & "diff" after tLoadList
-   put return & "messageauthentication" after tLoadList
-   put return & "dropbox" after tLoadList
-   put return & "httpd" after tLoadList
-   put return & "qr" after tLoadList
    put return & "revhtml5urllibrary" after tLoadList
 
    if revEnvironmentEditionProperty("autocomplete_pro") then
@@ -1218,14 +1200,6 @@ command revInternal__InitialiseLibraries
    if revEnvironmentEditionProperty("autocomplete") then
       put return & "autocomplete" after tLoadList
    end if
-
-   switch the editionType
-      case "professional"
-         put return & "remotedebugger" after tLoadList 
-         put return & "scriptprofiler" after tLoadList 
-      case "commercial"
-         put return & "aws" after tLoadList
-   end switch
    
    local tBackList
    put "revidedeveloperextensionlibrary" into tBackList
@@ -1240,7 +1214,8 @@ command revInternal__InitialiseLibraries
    put return & "revIDEProjectBrowserLibrary" after tBackList
    
    local tLib
-   repeat for each line tLib in tLoadList	 	
+   repeat for each line tLib in tLoadList	 
+      revInternal__Log "Message", "Loading library" && tLib	
       revInternal__LoadLibrary tLib
 	  if the result is not empty then
 	     revInternal__Log "Error", the result 
@@ -2062,12 +2037,21 @@ function revEnvironmentExternalsPath
 end revEnvironmentExternalsPath
 
 function revEnvironmentExtensionsPath
+   return line 1 of revEnvironmentExtensionsPaths()
+end revEnvironmentExtensionsPath
+
+function revEnvironmentExtensionsPaths
    if revEnvironmentIsInstalled() then
       return hookToolsPath("extensions", sToolsPath & "/Extensions")
    else
-      return revEnvironmentBinariesPath() & slash & "packaged_extensions"
+      -- Load the real extensions rather than the packaged versions
+      local tPaths
+      put revEnvironmentRepositoryPath() & slash & "extensions" into tPaths
+      put return & revEnvironmentCommercialRepositoryPath() \
+            & slash & "extensions" after tPaths
+      return tPaths
    end if
-end revEnvironmentExtensionsPath
+end revEnvironmentExtensionsPaths
 
 function revEnvironmentRuntimePath
   return hookToolsPath("runtime", sToolsPath & "/Runtime")

@@ -1,17 +1,17 @@
 ﻿script "revnomessageslibrary"
 
-on revLoadLibrary
+on extensionInitialize
    // SN-2015-05-13: [[ Bug 15365 ]] Make sure that we don't catch
-   //  revLoadLibrary message if we are not the target
+   //  extensionInitialize message if we are not the target
    if the target is not me then
-      pass "revLoadLibrary"
+      pass "extensionInitialize"
    end if
   insert the script of stack "revNoMessagesLibrary" into front
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
   remove the script of stack "revNoMessagesLibrary" from front
-end revUnloadLibrary
+end extensionFinalize
 
 --Bug 5765:  Added try/catches to handle errors.
 # OK-2008-03-13 : Bug 6009 and 6007, Added pass to metacard to mouseDown and all key messages. Added explicit
