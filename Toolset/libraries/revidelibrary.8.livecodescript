@@ -21,16 +21,21 @@ References: revIDESubscribe (command)
 Called when loading the IDE library
 **/
 on extensionInitialize
-   if the target is me then
-      insert the script of me into back
+   if the target is not me then
+      pass extensionInitialize
    end if
+   
+   insert the script of me into back
    revIDEInitialiseIDELibrary
 end extensionInitialize
 
 on extensionFinalize
-   if the target is me then
-      remove the script of me from back
+   if the target is not me then
+      pass extensionFinalize
    end if
+    
+   remove the script of me from back
+   revIDEFinaliseIDELibrary
 end extensionFinalize
 
 #############
@@ -1491,6 +1496,10 @@ function __unescapeString pString
    return pString
 end __unescapeString
 
+on revIDEFinaliseIDELibrary
+   revIDEUnsubscribeAll
+end revIDEFinaliseIDELibrary
+
 on revIDEInitialiseIDELibrary
    # Load fonts
    local tFonts
@@ -1515,7 +1524,13 @@ on revIDEInitialiseIDELibrary
    
    ## Initialise property library
    revIDEPropertyLibraryInitialise
+   
+   ideSubscribe "ideExtensionsChanged"
 end revIDEInitialiseIDELibrary
+
+on ideExtensionsChanged
+   revIDERegenerateBuiltDictionaryData
+end ideExtensionsChanged
 
 #############
 # Subscription
@@ -8711,30 +8726,34 @@ on revIDEToggle pProperty
       case "Suppress Messages"
          global gRevSuppressMessages
          put "suppressMessages" into tToggleMessage
+         
+         local tLine
          if not gREVSuppressMessages then
             put true into gREVSuppressMessages
             # Send the suppress messages toggle message before actually suppressing messages
             ideMessageSend "ideToggleChanged:" & tToggleMessage
             set the lockCursor to false
-            repeat for each line l in the pendingMessages
-               if char 1 to 3 of item 2 of l is not "rev" then cancel (item 1 of l)
-            end repeat
-            repeat for each line l in the frontScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["front"]
-                  remove script of l from front
+            repeat for each line tLine in the pendingMessages
+               if not revIDEObjectIsOnIDEStack(item 4 to -1 of tLine) then
+                  cancel (item 1 of tLine)
                end if
             end repeat
-            repeat for each line l in the backScripts
-               if char 1 to 3 of the short name of l is not "rev" then
-                  put l & cr after sRestoreState["back"]
-                  remove script of l from back
+            repeat for each line tLine in the frontScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["front"]
+                  remove script of tLine from front
                end if
             end repeat
-            repeat for each line l in the stacksInUse
-               if char 1 to 3 of l is not "rev" then
-                  put l & cr after sRestoreState["inUse"]
-                  stop using stack l
+            repeat for each line tLine in the backScripts
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["back"]
+                  remove script of tLine from back
+               end if
+            end repeat
+            repeat for each line tLine in the stacksInUse
+               if not revIDEObjectIsOnIDEStack(tLine) then
+                  put tLine & cr after sRestoreState["inUse"]
+                  stop using stack tLine
                end if
             end repeat
             revInternal__LoadLibrary "revNoMessagesLibrary"
@@ -8742,14 +8761,14 @@ on revIDEToggle pProperty
          else
             revInternal__UnloadLibrary "revNoMessagesLibrary"
             put false into gREVSuppressMessages
-            repeat for each line l in sRestoreState["front"]
-               insert script of l into front
+            repeat for each line tLine in sRestoreState["front"]
+               insert script of tLine into front
             end repeat
-            repeat for each line l in sRestoreState["back"]
-               insert script of l into back
+            repeat for each line tLine in sRestoreState["back"]
+               insert script of tLine into back
             end repeat
-            repeat for each line l in sRestoreState["inUse"]
-               start using stack l
+            repeat for each line tLine in sRestoreState["inUse"]
+               start using stack tLine
             end repeat
             delete variable sRestoreState
          end if
@@ -9668,36 +9687,36 @@ command revIDESuspendDevelopmentTools
    -- Remove front and back scripts that pertain to the IDE
    -- If the shift-key is down, we remove *all* 'rev' front and back scripts, including
    -- the library scripts.
-   local tScriptsList, tRemoveFrontList, tRemoveBackList
+   local tScriptsList, tRemoveFrontList, tRemoveBackList, tLine
    select empty
    if the shiftKey is down then
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if char 1 to 3 of the short name of l is "rev" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if revIDEObjectIsOnIDEStack(tLine) then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    else
       put the frontScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is among the items of "revFrontScriptLibrary,revDebugger,revShortCutsLibrary" then
-            put l & cr after tRemoveFrontList
-            remove script of l from front
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is among the items of "revFrontScriptLibrary,revDebuggerLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveFrontList
+            remove script of tLine from front
          end if
       end repeat
       put the backScripts into tScriptsList
-      repeat for each line l in tScriptsList
-         if the short name of l is "revBackScriptLibrary,revShortCutsLibrary" then
-            put l & cr after tRemoveBackList
-            remove script of l from back
+      repeat for each line tLine in tScriptsList
+         if the short name of tLine is "revBackScriptLibrary,revShortCutsLibrary" then
+            put tLine & cr after tRemoveBackList
+            remove script of tLine from back
          end if
       end repeat
    end if
@@ -9709,7 +9728,7 @@ command revIDESuspendDevelopmentTools
    put the openStacks into tList
    lock messages
    repeat for each line tStack in tList
-      if char 1 to 3 of the short name of stack tStack is "rev" or the short name of stack tStack is among the items of "Message Box,Home,answer dialog,ask dialog" then
+      if revIDEStackNameIsIDEStack(tStack) then
          # OK-2008-05-23 : Compare the stack's mode to its style. If they are equal then we don't need to store the mode, as opening the 
          # stack will result in the default mode being that which matches its style.
          local tModeName
@@ -10836,7 +10855,7 @@ private function revIDEGetExtensionDocsData pAPI
          put the result into tLibraryArray
          
          dispatch function "revDocsFormatLibraryDocArrayAsJSON" to stack "revDocsParser" \
-               with tLibraryArray["name"], tLibraryArray["doc"]
+               with tLibraryArray
          put the result into tExtensionAPI
          
          # Update the dictionary database
@@ -11060,7 +11079,7 @@ private command revIDEGenerateDistributedAPI
       ideDocsUpdateDatabase "livecode_script", tScriptA, true
       
       local tJSON
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_script", tScriptA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tScriptA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "script.js", \
             tJSON
    end if
@@ -11117,7 +11136,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase "livecode_builder", tBuilderA, true
       
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_builder", tBuilderA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tBuilderA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_builder") & slash & "builder.js", \
             tJSON
    end if
@@ -11133,11 +11152,11 @@ private command revIDEGenerateDistributedAPI
    # Regenerate if necessary   
    if tNeedUpdate then
       local tLibA
-      put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "Data Grid", "LiveCode") into tLibA
+      put revDocsParseDocFileToLibraryArray(tFolder & slash & "datagrid.lcdoc", "DataGrid", "LiveCode") into tLibA
 
       # Update the database
       ideDocsUpdateDatabase "livecode_script", tLibA, true
-      put revDocsFormatLibraryDocArrayAsJSON("datagrid", tLibA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_script") & slash & "dg.js", \
             tJSON
    end if
@@ -11187,7 +11206,7 @@ private command revIDEGenerateDistributedAPI
       # Update the database
       ideDocsUpdateDatabase "livecode_ide", tIDELibraryA, true
       
-      put revDocsFormatLibraryDocArrayAsJSON("livecode_ide", tIDELibraryA["doc"]) into tJSON
+      put revDocsFormatLibraryDocArrayAsJSON(tIDELibraryA) into tJSON
       revIDESetUTF8FileContents revIDESpecialFolderPath("api", "livecode_ide") & slash & "ide.js", \
             tJSON
    end if
@@ -11213,7 +11232,7 @@ private command revIDEGenerateDistributedAPI
          put revDocsParseDocFileToLibraryArray(tExtractedDocsFolder & slash & tFile, item -2 of tFile, "LiveCode") into tLibA
          # Update the database
          ideDocsUpdateDatabase "livecode_script", tLibA, true
-         put revDocsFormatLibraryDocArrayAsJSON(tLibA["name"], tLibA["doc"]) into tJSON
+         put revDocsFormatLibraryDocArrayAsJSON(tLibA) into tJSON
          revIDESetUTF8FileContents tOutput, tJSON
       end if
    end repeat

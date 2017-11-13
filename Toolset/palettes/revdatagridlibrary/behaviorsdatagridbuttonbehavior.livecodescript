@@ -172,22 +172,7 @@ private command _Initialize
          
          _SetScrollbarWidth
       else
-         set the visible of scrollbar "dgScrollbar" of me to false
-         set the visible of scrollbar "dgHScrollbar" of me to false
-         if the dgProps["show vscrollbar"] of me is not false or \
-               (_ControlType() is "table" and \
-               the dgProps["show hscrollbar"] of me is not false) then
-            if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
-               mobileControlCreate "scroller"
-               put the result into sScrollerId
-            end if
-            mobileControlSet sScrollerId, "canBounce", "true"
-            mobileControlSet sScrollerId, "pagingEnabled", "false"
-            mobileControlSet sScrollerId, "canScrollToTop", "true"
-            mobileControlSet sScrollerId, "delayTouches", "true"
-            mobileControlSet sScrollerId, "canCancelTouches", "true"
-            __PollVisibility
-         end if
+         _CreateMobileScroller
       end if
       
       ## Set props which didn't come with original Data Grid
@@ -210,10 +195,32 @@ private command _Initialize
       unlock messages
       
       put true into sInit
+   else if the environment is "mobile" then
+      _CreateMobileScroller
    end if
    
    ResizeToFit
 end _Initialize
+
+
+private command _CreateMobileScroller
+   set the visible of scrollbar "dgScrollbar" of me to false
+   set the visible of scrollbar "dgHScrollbar" of me to false
+   if the dgProps["show vscrollbar"] of me is not false or \
+         (_ControlType() is "table" and \
+         the dgProps["show hscrollbar"] of me is not false) then
+      if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
+         mobileControlCreate "scroller"
+         put the result into sScrollerId
+      end if
+      mobileControlSet sScrollerId, "canBounce", "true"
+      mobileControlSet sScrollerId, "pagingEnabled", "false"
+      mobileControlSet sScrollerId, "canScrollToTop", "true"
+      mobileControlSet sScrollerId, "delayTouches", "true"
+      mobileControlSet sScrollerId, "canCancelTouches", "true"
+      __PollVisibility
+   end if
+end _CreateMobileScroller
 
 
 command _SetScrollbarWidth pWidth

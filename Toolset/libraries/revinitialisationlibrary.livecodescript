@@ -175,3 +175,7 @@ command revInternal_SetCLASSPATH
    
    put tClasspath into $CLASSPATH
 end revInternal_SetCLASSPATH
+
+function revInternal__LoadedLibraryStackName pLibraryName
+   return sLoadedLibraries[pLibraryName]
+end revInternal__LoadedLibraryStackName

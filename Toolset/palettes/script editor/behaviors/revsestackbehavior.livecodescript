@@ -1254,106 +1254,59 @@ function seFriendlyShortcut pAction
 end seFriendlyShortcut
 
 # Parameters
-#   pText : the word to search for, note this is not necessarily a variable / handler name
+#   pText : the word to search for, note this is not necessarily a handler name
 #   pObject : reference to the object containing the text
 #   pHandler : the handler that the matching text was found in in the form <type>,<name> (or empty)
 # Returns
-#   A list, one per line, of the matching definitions (either variable declarations or handler names)
+#   A list, one per line, of the matching handler definitions
 #   for pText. Empty if none could be found.
 #   Note that for now, only handler definitions are returned.
 function seMatchingDefinitions pText, pObject, pHandler
-   # It is possible in Revolution to have variables and handlers with the same names, so we simply
-   # search both variable names and handler names for pText, and return the whole list, the user can
-   # then disambiguate from this.
-   --   local tVariables
-   --   if pHandler is not empty then
-   --      put the effective revAvailableVariables[pHandler] of pObject into tVariables
-   --   else
-   --      put the effective revAvailableVariables of pObject into tVariables
-   --   end if
+   local tObject
    
-   local tHandlers
-   put the effective revAvailableHandlers of pObject into tHandlers
+   local tUses
+   put the revBehaviorUses of pObject into tUses
+   if exists(tUses[1]) then
+      put tUses[1] into tObject
+   else
+      put pObject into tObject
+   end if
+   
+   local tDescription
+   put the effective revScriptDescription of tObject into tDescription
+   
+   local tObjectDescription
+   if pObject is not tObject then
+      put the revScriptDescription of pObject into tObjectDescription
+   end if
    
    local tMatches
-   
-   # First search the variables. Its not possible to have two variables with the same name, so we simply return the first
-   # one we find, after getting as much information as possible about it.
-   --   local tLineNumber, tItemNumber
-   --   set the wholeMatches to true
-   --   put 1 into tLineNumber
-   --   repeat for each line tLine in tVariables
-   
-   --      put itemOffset(pText, tLine) into tItemNumber
-   --      if tItemNumber <> 0 then
-   --         exit repeat
-   --      end if
-   
-   --      add 1 to tLineNumber
-   --   end repeat
-   
-   --   if tItemNumber is not empty and tItemNumber is not 0 then
-   --      put "variable," into tMatches
-   
-   --      if pHandler is not empty then
-   --         switch tLineNumber
-   --            case 1
-   --               put "parameter" after tMatches
-   --            break
-   --            case 2
-   --               put "local" after tMatches
-   --            break
-   --            case 3
-   --               put "script local" after tMatches
-   --            break
-   --            case 4
-   --               put "global" after tMatches
-   --            break
-   --         end switch
-   --      else
-   --         switch tLineNumber
-   --            case 1
-   --               return "script local"
-   --            break
-   --            case 2
-   --               return "global"
-   --            break
-   --         end switch
-   --      end if
-   --      put comma after tMatches
-   
-   --      put item tItemNumber of line tLineNumber of tVariables after tMatches
-   --      put comma & the long id of pObject after tMatches
-   --      put return after tMatches
-   --   end if
-   
-   # Next search the handlers. We return all applicable handlers, even if they have the same name, and let the user disambiguate.
-   local tObject, tResult
-   repeat for each line tHandler in tHandlers
-      if word 5 to -1 of tHandler is not empty then
-         put word 5 to -1 of tHandler into tObject
+   repeat with tIndex = 1 to the number of elements of tDescription
+      if pObject is not tObject then
+         if tDescription[tIndex]["object"] is the long id of tObject and \
+               tDescription[tIndex]["description"]["handlers"][pText]["is_private"] then
+            next repeat
+         end if
+         
+         if tDescription[tIndex]["object"] is the long id of pObject then
+            put tObjectDescription into tDescription[tIndex]["description"]
+         end if
       end if
       
-      if word 2 of tHandler is not pText then
-         next repeat
+      if tDescription[tIndex]["description"]["handlers"][pText] is an array then
+         local tType
+         if tDescription[tIndex]["description"]["handlers"][pText]["is_private"] then
+            put "private" && tDescription[tIndex]["description"]["handlers"][pText]["type"] into tType
+         else
+            put tDescription[tIndex]["description"]["handlers"][pText]["type"] into tType
+         end if
+         
+         put "handler", \
+               tType, \
+               pText, \
+               tDescription[tIndex]["description"]["handlers"][pText]["start_line"], \
+               tDescription[tIndex]["object"] & return after tMatches
       end if
-      
-      put "handler," into tResult
-      
-      local tIsPrivate, tType
-      if char 1 of word 1 of tHandler is "P" then
-         put true into tIsPrivate
-         put char 2 of word 1 of tHandler into tType
-      else
-         put false into tIsPrivate
-         put char 1 of word 1 of tHandler into tType
-      end if
-      
-      put seFriendlyHandlerType(tType, tIsPrivate) & comma after tResult
-      put word 2 of tHandler & comma after tResult
-      put word 3 of tHandler & comma after tResult
-      put tObject after tResult
-      put tResult & return after tMatches
    end repeat
    
    delete the last char of tMatches

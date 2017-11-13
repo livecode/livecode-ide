@@ -314,55 +314,13 @@ on __extensionInstallExtract pCacheIndex
    revZipCloseArchive tExtensionPackageFile
    
    # Next step
-   send "__extensionInstallGuide" && pCacheIndex to me in 0 milliseconds
+   send "__extensionInstallMakeLive" && pCacheIndex to me in 500 milliseconds
 end __extensionInstallExtract
-
-# Install the guide into the IDE
-on __extensionInstallGuide pCacheIndex
-   # Update progress
-   __extensionSendProgressUpdate pCacheIndex, "Adding user guide to documentation", 30
-   
-   # Path to user guide
-   local tUserGuideFolder
-   put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pCacheIndex, "type_id") & slash & "docs/guide" into tUserGuideFolder
-   
-   # Get the name and author required by user guide install function
-   local tExtensionName, tExtensionAuthor
-   put __extensionPropertyGet(pCacheIndex, "name") into tExtensionName
-   put __extensionPropertyGet(pCacheIndex, "author") into tExtensionAuthor
-   
-   # Install user guide into the IDE
-   revIDEInstallUserGuide tUserGuideFolder, tExtensionName, tExtensionAuthor
-   
-   send "__extensionInstallAPI" && pCacheIndex to me in 500 milliseconds
-end __extensionInstallGuide
-
-# Install the extension API into the IDE
-on __extensionInstallAPI pCacheIndex
-   # Update progress
-   __extensionSendProgressUpdate pCacheIndex, "Adding API to documentation", 45
-   
-   # Path to user guide
-   local tUserAPIFolder
-   put revIDESpecialFolderPath("temp extensions") & slash & __extensionPropertyGet(pCacheIndex, "type_id") & slash & "docs/api" into tUserAPIFolder
-   
-   # Get the name and author required by API install function
-   local tExtensionName, tExtensionAuthor
-   put __extensionPropertyGet(pCacheIndex, "name") into tExtensionName
-   put __extensionPropertyGet(pCacheIndex, "author") into tExtensionAuthor
-   
-   # Install API into the IDE
-   // revIDEInstallAPI tUserAPIFolder, tExtensionName, tExtensionAuthor
-   revIDEInstallAPI tUserAPIFolder, tExtensionName, tExtensionAuthor
-   
-   # Next step
-   send "__extensionInstallMakeLive" && pCacheIndex to me in 0 milliseconds
-end __extensionInstallAPI
 
 # Moves to temp extracted files into their final live location
 on __extensionInstallMakeLive pCacheIndex
    # Update progress
-   __extensionSendProgressUpdate pCacheIndex, "Copying extension into install location", 60
+   __extensionSendProgressUpdate pCacheIndex, "Copying extension into install location", 50
    
    # Get path the directories
    local tTempInstallPath, tFinalPath
@@ -505,18 +463,8 @@ on __extensionUninstallUnload pCacheIndex
    revIDEExtensionUnload tName
    
    # Next step
-   __extensionUninstallDocs pCacheIndex
+   send "__extensionUninstallComplete" && pCacheIndex to me in 0 milliseconds
 end __extensionUninstallUnload
-
-# Remove the guide from the IDE
-on __extensionUninstallDocs pCacheIndex
-   # Update progress
-   __extensionSendProgressUpdate pCacheIndex, "Removing API and user guide from documentation", 80
-   
-   revIDERegenerateBuiltDictionaryData
-   
-   __extensionUninstallComplete pCacheIndex
-end __extensionUninstallDocs
 
 on __extensionUninstallComplete pCacheIndex
    # Notify IDE uninstallation complete

@@ -135,16 +135,6 @@ on editorUpdate
    set the hilite of button "horizontal scrollbar" of group "Clipping" of group "Geometry Options" of me to (tValue["showHScroll"] is true)
    set the hilite of button "vertical scrollbar" of group "Clipping" of group "Geometry Options" of me to (tValue["showVScroll"] is true)
    
-   repeat for each item tItem in "minWidth,maxWidth,minHeight,maxHeight"
-      if fld tItem of group "minmax" of group "Geometry Options" of me is not empty then
-         put true into tValue["limit"]
-         exit repeat
-      end if
-   end repeat
-   
-   set the hilite of button "limitsize" of group "Geometry Options" of me to (tValue["limit"] is true)
-   set the enabled of grp "minMax" of group "Geometry Options" of me to (tValue["limit"] is true)
-   
    if sMode is "scaling" then
       put tValue["minWidth"] into fld "minWidth" of group "minmax" of group "Geometry Options" of me
       put tValue["maxWidth"] into fld "maxWidth" of group "minmax" of group "Geometry Options" of me
@@ -156,6 +146,16 @@ on editorUpdate
       put tValue["minTop"] into fld "minHeight" of group "minmax" of group "Geometry Options" of me
       put tValue["maxBottom"] into fld "maxHeight" of group "minmax" of group "Geometry Options" of me
    end if
+   
+   repeat for each item tItem in "minWidth,maxWidth,minHeight,maxHeight"
+      if fld tItem of group "minmax" of group "Geometry Options" of me is not empty then
+         put true into tValue["limit"]
+         exit repeat
+      end if
+   end repeat
+   
+   set the hilite of button "limitsize" of group "Geometry Options" of me to (tValue["limit"] is true)
+   set the enabled of grp "minMax" of group "Geometry Options" of me to (tValue["limit"] is true)
    unlock messages
    unlock screen
 end editorUpdate
@@ -334,7 +334,7 @@ on mouseDown pButton
             default 
                break
          end switch
-         setValue tValue
+         setValue tValue, tKey
       end if  
    end if
 end mouseDown
@@ -402,8 +402,8 @@ on menuPick pWhich
          --proportional scaling
          put false into tValue[tKey & "Absolute"]
       end if
-      put tSide into tValue[tKey & "ObjectSide"] 
-      put pWhich into tValue[tKey & "ObjectRef"] 
+      put oppositeSide(tSide) into tValue[tKey & "ObjectSide"] 
+      put pWhich into tValue[tKey & "ObjectRef"]
       
       # Adjust menu text
       local tMenuText
@@ -419,7 +419,7 @@ on menuPick pWhich
       put the cCurrentButton of me into tButtonTemp
       set the cObjectList of tButtonTemp to tMenuText
       
-      setValue tValue
+      setValue tValue, tKey
    else if the short name of the target is "Squiggle Type" then
       lock screen
       local tScale
@@ -440,7 +440,30 @@ on menuPick pWhich
    end if
 end menuPick
 
-on setValue pValue
+on setValue pValue, pKey
+   --if move is set, it takes precidence over scale
+   --need to be sure opposite set is not enabled
+   local tTurnOffGeometries
+   switch pKey
+      case "scaleLeft"
+      case "scaleRight"
+         put "moveH" into tTurnOffGeometries
+         break
+      case "scaleTop"
+      case "scaleBottom"
+         put "moveV" into tTurnOffGeometries
+         break
+      case "moveH"
+         put "scaleLeft,scaleRight" into tTurnOffGeometries
+         break
+      case "moveV"
+         put "scaleTop,scaleBottom" into tTurnOffGeometries
+         break
+   end switch
+   repeat for each item tItem in tTurnOffGeometries
+      put false into pValue[tItem]
+   end repeat
+
    local tValue
    put the editorValue["geometry"] of me into tValue
    union pValue with tValue recursively
@@ -488,3 +511,21 @@ on closeField
    
    setValue tValue
 end closeField
+
+function oppositeSide pSide
+   switch pSide
+      case "Top"
+         return "Bottom"
+         break
+      case "Bottom"
+         return "Top"
+         break
+      case "Right"
+         return "Left"
+         break
+      case "Left"
+      default
+         return "Right"
+         break
+   end switch
+end oppositeSide

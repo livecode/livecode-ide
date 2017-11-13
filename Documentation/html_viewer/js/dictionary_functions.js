@@ -239,7 +239,7 @@
 					
 						switch(category){
 							case "type":
-								if(entryData[category] == tag_value){
+								if(entryData[category] == tag){
 									tFound_data[category]++;
 								 }
 								break;
@@ -249,7 +249,7 @@
 							case "associations":
 								if(entryData.hasOwnProperty(category)){
 									$.each(entryData[category], function(item_index, entry_item_value){
-										if(tag_value == entry_item_value){
+										if(tag == entry_item_value){
 											tFound_data[category]++;
 										}
 									});
@@ -288,63 +288,86 @@
 	}
 
 
-	function filterOptions(pCategories){
+	function filterOptions(pCategories)
+	{
 		var tFilterOptionWithCount = {}
-		var tShowCatogories = pCategories.split(',');
-		$.each(tShowCatogories, function(index, category_name) {
+		var tShowCategories = pCategories.split(',');
+		$.each(tShowCategories, function(index, category_name) 
+		{
 			tFilterOptionWithCount[category_name] = {}
 		});
 		
-		$.each(tState.filtered_data, function(entry_index, entry_data) {
-			$.each(tShowCatogories, function(category_index, category_name) {
+		$.each(tState.filtered_data, function(entry_index, entry_data) 
+		{
+			$.each(tShowCategories, function(category_index, category_name) 
+			{
 				// If the category is already being filtered on then don't count
-				if(!tState.filters.hasOwnProperty(category_name)){
-					if(entry_data[category_name]){
+				if (!tState.filters.hasOwnProperty(category_name))
+				{
+					if (entry_data[category_name])
+					{
 						var tTagData = entry_data[category_name];
-		
-						if(Array.isArray(tTagData)){
-							// Data is an array meaning there are multiple values. I.e. multiple tags / platforms to check.
-							$.each(tTagData, function( tag, tag_value) {
-								if(tFilterOptionWithCount[category_name].hasOwnProperty(tag_value)){
-									tFilterOptionWithCount[category_name][tag_value]++;
-								} else {
-									tFilterOptionWithCount[category_name][tag_value] = 1;
-								}
-							});
-						} else {
-							if(tFilterOptionWithCount[category_name].hasOwnProperty(tTagData)){
-								tFilterOptionWithCount[category_name][tTagData]++;
-							} else {
-								tFilterOptionWithCount[category_name][tTagData] = 1;
-							}
+						if (!Array.isArray(tTagData))
+						{
+							tTagData = {1: tTagData};
 						}
+
+						// Iterate through the values of this category and accumulate data
+						$.each(tTagData, function(tag, tag_value) 
+						{
+							if (tFilterOptionWithCount[category_name].hasOwnProperty(tag_value))
+							{
+								tFilterOptionWithCount[category_name][tag_value]["count"]++;
+							} 
+							else 
+							{	
+								tFilterOptionWithCount[category_name][tag_value] = {};
+								tFilterOptionWithCount[category_name][tag_value]["count"] = 1;
+							}
+							tFilterOptionWithCount[category_name][tag_value]["name"] = tag_value;
+						});
 					}
 				}
 			});
 		});
+
+		// Use association display name as displayed tag value
+		$.each(tFilterOptionWithCount["associations"], function(tag_value, tag_data)
+		{
+			var tEntryIndex = resolve_association_index(tag_value, '');
+			if (!isDefined(tEntryIndex))
+				return true;
+	
+			var tEntryObject = tState.data[tEntryIndex];			
+			var tDisplayName = tag_data["value"]
+			if (tEntryObject.hasOwnProperty("display name"))
+			{
+				tDisplayName = tEntryObject["display name"];
+			}
+			tFilterOptionWithCount["associations"][tag_value]["name"] = tDisplayName
+		});
+		
 		return tFilterOptionWithCount;
 	}
 	
-	function filter_remove(pTag,pData){
-		if(tState.filters.hasOwnProperty(pTag)){
-			$.each(tState.filters[pTag], function(index, data) {
-				if(data==pData){
-					tState.filters[pTag].splice(index, 1)
-					if(tState.filters[pTag].length == 0){
-						delete tState.filters[pTag];
-					}
-					return false;
-				}
-			});
+	function filter_remove(pTag,pValue,pName){
+		if (tState.filters.hasOwnProperty(pTag) &&
+			tState.filters[pTag].hasOwnProperty(pValue))
+		{
+			delete tState.filters[pTag][pValue];
+			if (jQuery.isEmptyObject(tState.filters[pTag]))
+			{
+				delete tState.filters[pTag];
+			}
 		}
 		dataFilter();
 	}
 	
-	function filter_add(pTag,pData){
-		if(!tState.filters.hasOwnProperty(pTag)) tState.filters[pTag] = [];
+	function filter_add(pTag,pValue,pName){
+		if(!tState.filters.hasOwnProperty(pTag)) tState.filters[pTag] = {};
 		
-		if(tState.filters[pTag].indexOf(pData) == -1){
-			tState.filters[pTag].push(pData);
+		if(!tState.filters[pTag].hasOwnProperty(pValue)){
+			tState.filters[pTag][pValue] = pName
 			dataFilter();
 		}
 	}
@@ -354,13 +377,17 @@
 		return Object.keys(obj).sort();
 	}
 	
-	function filter_cell(pCategory, pValue)
+	function filter_cell(pCategory, pValue, pSpan)
 	{
 		var tHTML = '';
-		tHTML += '<td><a href="#" class="apply_filter" ';
+		tHTML += '<td';
+		if (pSpan)
+			tHTML += ' colspan="2"';
+		tHTML += '><a href="#" class="apply_filter" ';
 		tHTML += 'filter_category="'+pCategory+'" ';
-		tHTML += 'filter_value="'+pValue+'">';
-		tHTML += pValue;
+		tHTML += 'filter_name="'+pValue["name"]+'" ';		
+		tHTML += 'filter_value="'+pValue["value"]+'">';
+		tHTML += pValue["name"].toLowerCase();
 		//tHTML += '<span class="badge">'+pFilterData[tFilter]+'</span>';
 		tHTML += '</a></td>';
 		return tHTML;
@@ -376,22 +403,40 @@
 		var tDisplayedFilters = [];
 		$.each(tSortedFilters, function(index, value)
 		{
-			if (!tState.filters.hasOwnProperty(index) || 
-				tState.filters[pCategory].indexOf(value) == 0)
-				tDisplayedFilters.push(value);
+			var tTagValue = pFilterData[value];
+			if (!tState.filters.hasOwnProperty(pCategory) || 
+				!tState.filters[pCategory].hasOwnProperty(value))
+			{
+				tTagValue["value"] = value;
+				tDisplayedFilters.push(tTagValue);
+			}
 		});
 		
-		// Display them in alphabetical order going down the table,
-		// rather than across
-		var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
-		var tOddNumber = tDisplayedFilters.length % 2 == 1;
-		for (i = 1; i <= tRowCount; i++)
+		if (pCategory == 'associations')
 		{
-			tHTML += '<tr>'
-			tHTML += filter_cell(pCategory, tDisplayedFilters[i-1]);
-			if (i != tRowCount || !tOddNumber)
-				tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount]);
-			tHTML += '</tr>';
+			// Display associations one per line
+			for (i = 1; i <= tDisplayedFilters.length; i++)
+			{
+				tHTML += '<tr>'
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i-1], true);
+				tHTML += '<td></td>';
+				tHTML += '</tr>';
+			}
+		}
+		else
+		{
+			// Display them in alphabetical order going down the table,
+			// rather than across
+			var tRowCount = Math.ceil(tDisplayedFilters.length / 2);
+			var tOddNumber = tDisplayedFilters.length % 2 == 1;
+			for (i = 1; i <= tRowCount; i++)
+			{
+				tHTML += '<tr>'
+				tHTML += filter_cell(pCategory, tDisplayedFilters[i-1], false);
+				if (i != tRowCount || !tOddNumber)
+					tHTML += filter_cell(pCategory, tDisplayedFilters[i - 1 + tRowCount], false);
+				tHTML += '</tr>';
+			}
 		}
 		tHTML += '</tbody>';
 		
@@ -401,17 +446,18 @@
 	function displayFilters(){
 		// First display the applied filters
 		var tHTML = "";
-		$.each(tState.filters, function(filter_tag, filter_data) 
+		$.each(tState.filters, function(filter_category, filter) 
 		{
 			tHTML += '<div style="margin-bottom:10px">';
-			tHTML += '<b>'+filter_tag+':</b> ';
-			$.each(filter_data, function(index, filter_name) 
+			tHTML += '<b>'+filter_category+':</b> ';
+			$.each(filter, function(value, name) 
 			{
 				tHTML += '<button type="button" ';
 				tHTML += 'class="btn btn-default btn-sm remove_filter" ';
-				tHTML += 'filter_tag="'+filter_tag+'" ';
-				tHTML += 'filter_data="'+filter_name+'">';
-				tHTML += filter_name;
+				tHTML += 'filter_category="'+filter_category+'" ';
+				tHTML += 'filter_value="'+value+'" ';				
+				tHTML += 'filter_name="'+name+'">';
+				tHTML += name;
 				tHTML += '</button>';
 			});
 			tHTML += '</div>';
@@ -636,6 +682,19 @@
 	    });
 	    return tHtml;
 	}
+
+	// Associations must be one of the following:	
+	const s_association_types = ["object","library","glossary","module","widget"];
+	function resolve_association_index(pName, pAPI)
+	{
+		var tIndex;
+		$.each(s_association_types, function(tTypeIndex, tType) {
+			tIndex = entryNameToIndex(pName, tType, pAPI)
+			if (isDefined(tIndex))
+				return false;
+		});
+		return tIndex;
+	}
 	
 	function displayEntryAtIndex(pIndex)
 	{
@@ -728,10 +787,10 @@
 						$.each(reference_array, function(reference_index, reference_name) {
 							var tReference, tIndex;
 							tIndex = entryNameToIndex(reference_name, reference_type, tEntryObject.library);
-							if (tIndex == 0)
-								tReference = reference_name;
-							else
+							if (isDefined(tIndex))
 								tReference = click_text_from_index(reference_name, tIndex);
+							else
+								tReference = reference_name;
 							
 							if (reference_html == "") 
 								reference_html = tReference;
@@ -761,21 +820,19 @@
 						tHTML += '<div class="col-md-2 lcdoc_section_title">'+index+'</div><div class="col-md-10" style="margin-bottom:10px">';
 						var association_html = "";
 						$.each(value, function(index2, value2) {
-							var tTypes, tType;
-							tTypes = ["object","library","glossary"];
-							
-							var tIndex;
-							$.each(tTypes, function(tTypeIndex, tType) {
-								tIndex = entryNameToIndex(value2, tType, tEntryObject.library)
-								if (tIndex != 0)
-									return;
-							});
+							var tIndex = resolve_association_index(value2, tEntryObject.library);
 							
 							var tAssociation;
-							if (tIndex == 0)
-								tAssociation = value2;
+							if (isDefined(tIndex))
+							{
+								var tName = value2;
+								if (tState.data[tIndex].hasOwnProperty("display name"))
+									tName = tState.data[tIndex]["display name"];
+
+								tAssociation = click_text_from_index(tName, tIndex);
+							}
 							else
-								tAssociation = click_text_from_index(value2, tIndex);
+								tAssociation = value2;
 							
 							if (association_html == "") 
 								association_html = tAssociation;
@@ -836,31 +893,44 @@
 			tHTML += markdown_section(value, tEntryObject);
 		});
 
-		// Now that the entry has been displayed we need to look at the type
-		// If it is object, we need to generate a list of actions / events and properties
-		// That can be set on the object. The entry if you like should be a pointer to 
-		// Everything associated with the object. A cross between a overview and userguide
-		
-		if(tEntryObject.type == "object" || tEntryObject.type == "widget" || tEntryObject.type == "library"){
-			var object_name = tEntryObject["display name"].toLowerCase();
+		// Now that the entry has been displayed we need to look at the 
+		// type. If it is one of the association types, we generate a
+		// list of API entries with this entry as an association
+		if (s_association_types.indexOf(tEntryObject.type) >= 0)
+		{
+			var object_name = tEntryObject["name"].toLowerCase();
 			var object_data = {};
 			
-			$.each(dataGet(),function(entry_index, entry_data){
-				if(entry_data.hasOwnProperty("associations")){
-					if(entry_data["associations"].indexOf(object_name) >= 0){
-						if(!object_data.hasOwnProperty(entry_data.type)){
-							object_data[entry_data.type] = [];
+			$.each(dataGet(),function(entry_index, entry_data)
+			{
+				// Ignore self
+				if (entry_index == pIndex)
+					return true;
+					
+				if (entry_data.hasOwnProperty("associations"))
+				{
+					$.each(entry_data["associations"], function(index, value)
+					{
+						if (value.toLowerCase() == object_name)
+						{
+							if (!object_data.hasOwnProperty(entry_data.type))
+							{
+								object_data[entry_data.type] = [];
+							}
+							object_data[entry_data.type].push(entry_data);
+							return false;
 						}
-						object_data[entry_data.type].push(entry_data);
-					}
+					});
 				}
 			});
 			
-			$.each(object_data,function(item_type, item_data){
+			$.each(object_data, function(item_type, item_data)
+			{
 				tHTML += '<div class="col-md-2 lcdoc_section_title">'+item_type+'</div><div class="col-md-10" style="margin-bottom:10px">';
 				tHTML += '<table class="lcdoc_glossary_table">';
 				tHTML += '<thead><tr><td><b>Name</b></td><td><b>Summary</b></td><td><b>Syntax</b></td></tr></thead><tbody>';
-				$.each(item_data,function(item_intex, entry_data){
+				$.each(item_data, function(item_intex, entry_data)
+				{
 					tHTML += '<tr>';
 					tHTML += '<td>' + click_text_from_entry_data('', entry_data) +'</a></td>';
 					tHTML += '<td>'+replace_link_placeholders_with_param(entry_data.summary)+'</td>';
@@ -941,7 +1011,7 @@
              		
              		var resolved_index = resolve_link(pEntryObject, resolved[1], resolved[2]);
              		
-             		if (resolved_index != 0)
+             		if (isDefined(resolved_index))
              	   		return_text = click_text_from_index(resolved[0], resolved_index)
              		else
              			return_text = resolved[0];
@@ -1013,7 +1083,7 @@
 	
 	// Return an entry ID from the target name and optional type
 	function resolve_link(pEntryObject, pTargetName, pTargetType) {
-        var tIndex = 0;
+        var tIndex;
         if(pTargetType){
 	        // Know name and type so lookup id
              tIndex = entryNameToIndex(pTargetName,pTargetType,pEntryObject.library);
@@ -1029,7 +1099,7 @@
 						}
 					});
 					// Just find the first one if no type was specified.
-					if (tIndex)
+					if (isDefined(tIndex))
 						return;
 				});
 			}
@@ -1053,9 +1123,14 @@
 	}
 	
 	function entryNameToIndex(pName,pType,pPriorityLibrary){
-		var tIndex = 0;
+		pName = pName.toLowerCase();
+		pType = pType.toLowerCase();
+		pPriorityLibrary = pPriorityLibrary.toLowerCase();
+		
+		var tIndex;
 		$.each(dataGet(), function(index, value) {
-			if(value.name != pName && value["display name"] != pName)
+			if (value.name.toLowerCase() != pName 
+			    && value["display name"].toLowerCase() != pName)
 			{
 				// Continue loop
 				return true;
@@ -1063,7 +1138,7 @@
 			
 			if (pType != '')
 			{
-				if (value.type != pType)
+				if (value.type.toLowerCase() != pType)
 				{
 					// Continue loop				
 					return true;
@@ -1092,7 +1167,7 @@
 				tIndex = index
 				return true;
 			}
-			else if (value.library != pPriorityLibrary)
+			else if (value.library.toLowerCase() != pPriorityLibrary)
 			{
 				// Continue loop				
 				return true;
@@ -1368,6 +1443,11 @@
 		}
 	} 
 	
+	function isDefined(pVar)
+	{
+		return (typeof pVar !== typeof undefined);
+	}
+	
 	function goEntryName(pLibraryName, pEntryName, pEntryType)
 	{
 		var tLibraryID = library_name_to_id(pLibraryName);
@@ -1379,7 +1459,7 @@
 		else
 			tID = entryNameToIndex(pEntryName, pEntryType, pLibraryName);
 			
-		if (tID != 0)
+		if (isDefined(tID))
 		{
 			displayEntryAtIndex(tID);
 		} 
@@ -1465,14 +1545,16 @@
 		
 		$("body").on( "click", ".apply_filter", function() {
 			var filter_tag = $(this).attr("filter_category");
-			var filter_data = $(this).attr("filter_value");
-			filter_add(filter_tag,filter_data);
+			var filter_value = $(this).attr("filter_value");
+			var filter_name = $(this).attr("filter_name");
+			filter_add(filter_tag,filter_value,filter_name);
 		});
 		
 		$("body").on( "click", ".remove_filter", function() {
-			var filter_tag = $(this).attr("filter_tag");
-			var filter_data = $(this).attr("filter_data");
-			filter_remove(filter_tag,filter_data);
+			var filter_tag = $(this).attr("filter_category");
+			var filter_value = $(this).attr("filter_value");
+			var filter_name = $(this).attr("filter_name");
+			filter_remove(filter_tag,filter_value,filter_name);
 		});
 		
 		$("body").on( "click", ".external_link", function(e) {
