@@ -20,7 +20,7 @@ on revUnloadLibrary
    remove the script of me from front
 end revUnloadLibrary
 
-
+local sLastBreakInfo
 
 ################################################################################
 #
@@ -534,6 +534,7 @@ end __SetValueDo
 # Description
 #   Runs the currently debugging script until the next breakpoint
 command revDebuggerRun
+   delete variable sLastBreakInfo
    set the traceStack to empty
    set the traceUntil to 65535
    set the traceReturn to true
@@ -543,6 +544,7 @@ end revDebuggerRun
 # Description
 #  Performs the debugger "stop" function, terminates the script currently being debugged
 command revDebuggerStop
+   delete variable sLastBreakInfo
    # When executing certain structures, the debugger will continue to loop until the
    # breakpoints property becomes empty. In order to make sure the debugger always
    # exits when asked to, we set the breakpoints to empty here and restore them again
@@ -2208,6 +2210,8 @@ local sLastAllowedContext
 #   was called from, then updates the script editor. If the last debug action
 #   was "Step Into", always updates the script editor.
 on trace pHandler, pLine, pPosition
+   delete variable sLastBreakInfo
+   
    local tTarget
    put __ResolveTarget(the long id of the target, line -2 of the executionContexts) into tTarget
    
@@ -2282,6 +2286,8 @@ end trace
 #   all open script editors to switch to edit mode, then does the debugger run
 #   action.
 on traceDone
+   delete variable sLastBreakInfo
+   
    # OK-2009-03-13 : Once we've got a traceDone, shut down the debugger first,
    # as otherwise we have to trace through all the script editor code which slows things down.
    revDebuggerRun
@@ -2304,6 +2310,19 @@ constant kErrorRecursionLimit = 2
 on traceError pHandler, pLine, pPosition, pError
    if the environment contains "development" and revTestEnvironment() then
       pass traceError
+   end if
+   
+   -- shield from same message with error being repeatedly called
+   local tBreakInfo
+   put the long id of the target into tBreakInfo["target"]
+   put pHandler into tBreakInfo["handler"]
+   put pLine into tBreakInfo["line"]
+   put pPosition into tBreakInfo["position"]
+   put pError into tBreakInfo["error"]
+   if tBreakInfo is sLastBreakInfo then
+      pass traceError
+   else
+      put tBreakInfo into sLastBreakInfo
    end if
    
    if item 1 of pError is kErrorRecursionLimit then
@@ -2380,6 +2399,17 @@ end traceError
 on traceBreak pHandler, pLine
    if the environment contains "development" and revTestEnvironment() then
       pass traceBreak
+   end if
+   
+   -- shield from same message with breakpoint being repeatedly called
+   local tBreakInfo
+   put the long id of the target into tBreakInfo["target"]
+   put pHandler into tBreakInfo["handler"]
+   put pLine into tBreakInfo["line"]
+   if tBreakInfo is sLastBreakInfo then
+      pass traceBreak
+   else
+      put tBreakInfo into sLastBreakInfo
    end if
    
    local tTarget
