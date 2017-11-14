@@ -1099,8 +1099,11 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    end if
    
    # Update name, status, error, and whether the extension comes with the IDE
-   __extensionPropertySet tCacheIndex, "name", pID
-   __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
+   local tId
+   put the short name of stack \
+         revInternal__LoadedLibraryStackName(item 1 of pSourceFile) into tId
+   __extensionPropertySet tCacheIndex, "name", tId
+   __extensionPropertySet tCacheIndex, "type_id", tId  & "." & pVersion 
    
    __extensionPropertySet tCacheIndex, "author", pAdditionalInfoA["author"]
    __extensionPropertySet tCacheIndex, "title", pAdditionalInfoA["display name"]
