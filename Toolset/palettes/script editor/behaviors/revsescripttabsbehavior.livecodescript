@@ -317,7 +317,7 @@ command addTab pObject
    put tControl into sTabButtonMap[the number of lines of the keys of sTabMap]
    set the cRawLabel of tControl to tFriendlyName
    set the visible of tControl to true
-   set the cTooltip of tControl to the long name of tObject
+   set the cTooltip of tControl to revDebuggerObjectLongName(tObject)
    
    local tNewWidth
    put min(kMaxTabWidth, the cFormattedWidth of tControl + 5) into tNewWidth
