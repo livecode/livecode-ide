@@ -497,7 +497,8 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   revIDEExtensionLoad pDetailsA["name"], pPath, pDetailsA["version"]
+   revIDEExtensionLoad pDetailsA["name"], pPath, pDetailsA["version"], \
+         "installed", "", false, pDetailsA["file"]
    
    local tResult
    put the result into tResult
