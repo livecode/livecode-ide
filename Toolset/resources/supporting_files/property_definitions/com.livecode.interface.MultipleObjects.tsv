@@ -1,0 +1,11 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	multiple											
+title	Multiple Objects											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+equalize::revIDEAlignControlsFromPI	Equalize	Align Controls	com.livecode.pi.equalize	true	false							
+align::revIDEAlignControlsFromPI	Align	Align Controls	com.livecode.pi.align	true	false	Align						
+alignCenter::revIDEAlignControlsFromPI	Align center	Align Controls	com.livecode.pi.aligncenter	true	false	Align						
+distribute::revIDEAlignControlsFromPI	Distribute	Align Controls	com.livecode.pi.distribute	true	false							
+nudge::revIDEAlignControlsFromPI	Nudge	Align Controls	com.livecode.pi.nudge	true	false							
+relayer::revIDEAlignControlsFromPI	Relayer	Align Controls	com.livecode.pi.relayer	true	false							

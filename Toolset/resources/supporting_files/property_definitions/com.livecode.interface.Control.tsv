@@ -1,0 +1,14 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	control											
+title	Control Properties											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+geometry:revIDEGetGeometry:revIDESetGeometry	Geometry	Geometry Manager	com.livecode.pi.geometry	true	false							
+location												
+resize:revIDEGetRectProperty:revIDESetRectProperty	Resize when setting rect property	Position	com.livecode.pi.boolean	true	false							
+left												
+top												
+right												
+bottom												
+layer												
+number												

@@ -1,0 +1,66 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	button											
+title	Check Box											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Check					
+label												
+tooltip												
+style							checkbox	standard,transparent,opaque,rectangle,roundRect,shadow,checkbox,radioButton				
+visible												
+opaque							false					
+showName							true					
+autoHilite							true					
+sharedHilite							true					
+acceleratorKey												
+acceleratorModifier												
+acceleratorText												
+traversalOn							true					
+showFocusBorder							true					
+default							false					
+disabled												
+hilited												
+layerMode												
+behavior												
+icon												
+hiliteIcon												
+disabledIcon												
+visitedIcon												
+armedIcon												
+hoverIcon												
+threeD							true					
+showBorder							false					
+hiliteBorder							false					
+borderWidth							2					
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							4					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				82					
+height::revIDESetRectProperty			com.livecode.pi.dimension				23					

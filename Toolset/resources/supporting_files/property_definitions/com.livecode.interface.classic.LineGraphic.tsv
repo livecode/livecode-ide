@@ -1,0 +1,45 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	graphic tool											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Line					
+tooltip												
+style							line	rectangle,roundrect,line,oval,regular,line,curve,polygon				
+opaque							false					
+visible							true					
+disabled							false					
+showName							false					
+antialiased							true					
+lineSize							1					
+dashes												
+startArrow							false					
+endArrow							false					
+points												
+layerMode												
+behavior												
+foregroundColor						Border fill						
+foregroundPattern						Border fill						
+backgroundColor												
+backgroundPattern												
+fillGradient												
+strokeGradient												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle							empty					
+textAlign							empty					
+margins							8					
+lockLoc							false					
+width												
+height												
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

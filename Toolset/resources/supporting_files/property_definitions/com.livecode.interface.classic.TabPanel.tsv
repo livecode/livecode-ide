@@ -1,0 +1,48 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	button											
+title	Tab Panel											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Tab Menu					
+label												
+tooltip												
+visible							true					
+disabled							false					
+showName							false					
+text	Tabs (one per line)			true			Tab 1\nTab 2\nTab 3					
+layerMode												
+behavior												
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							center					
+margins							4					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				234					
+height::revIDESetRectProperty			com.livecode.pi.dimension				144					
+style				false			menu					
+menumode				false			tabbed					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

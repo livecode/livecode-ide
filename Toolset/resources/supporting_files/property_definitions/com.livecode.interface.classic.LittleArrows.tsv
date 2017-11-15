@@ -1,0 +1,45 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	scrollbar											
+title	Little Arrows											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Scrollbar					
+style							scrollbar	progress,scale,slider				
+visible							true					
+disabled							false					
+traversalOn							true					
+focusBorder							horizontal	Horizontal,Vertical				
+startValue							empty					
+endValue							empty					
+thumbPosition							0					
+thumbSize							8192					
+lineInc												
+pageInc				false								
+layerMode												
+behavior												
+backgroundColor												
+backgroundPattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							8					
+lockLoc							false					
+width							15					
+height							23					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
