@@ -5035,7 +5035,7 @@ on revIDEInstallUserGuide pGuideFolder, pExtensionName, pAuthor
    revIDESetUTF8FileContents pGuideFolder & slash & "guide.js", tGuideJSON
    
    # Now regenerate the built guides
-   revIDEAddGuideAndRegenerate tGuideJSON
+   revIDERegenerateBuiltGuides
 end revIDEInstallUserGuide
 
 /*
