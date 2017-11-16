@@ -10813,6 +10813,10 @@ private function revIDEGetDocsGuideData
       put revEnvironmentUserDocsPath() & slash & \ 
             the last item of tFolder into tCachedDataFolder
       put tFolder & slash & "guide.md" into tGuideFile
+      if there is not a file tGuideFile then
+         -- User widgets have the guide.md in docs/guide/
+         put tFolder & slash & "docs/guide/guide.md" into tGuideFile
+      end if
       if there is not a file tGuideFile then next repeat
       revIDEEnsurePath tCachedDataFolder
       
