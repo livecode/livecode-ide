@@ -11266,6 +11266,7 @@ on revIDESetGeometry pObject, pProperty, pGeometryArray
    repeat for each key tKey in pGeometryArray["geometry"]
       revSetGeometry tKey, pGeometryArray["geometry"][tKey]
    end repeat
+   revClearExtraGeometrySettings
 end revIDESetGeometry
 
 function revIDEGetGeometry pObject, pProperty

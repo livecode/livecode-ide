@@ -825,6 +825,7 @@ on revCalculateGeometryDistances pWhichNumber
   if lOrigWidth is empty then put the width of this stack into lOrigWidth
   if lOrigHeight is empty then put the height of this stack into lOrigHeight
   repeat for each item tEdge in "left,right,top,bottom"
+    if revGetGeometry("scale" & tEdge) is not true then next repeat
     if revGetGeometry("scale" & tEdge & "Absolute") is false then
       --we need to calculate the distance as it stands as a percentage of card width or height
       get revCalculateScaleDistance(tEdge)
@@ -844,6 +845,7 @@ on revCalculateGeometryDistances pWhichNumber
     end if
   end repeat
   repeat for each item tDimension in "h,v"
+    if revGetGeometry("move" & tDimension) is not true then next repeat
     if revGetGeometry("move" & tDimension & "Absolute") is false then
       --we need to calculate the distance as it stands as a percentage of card width or height
       get revCalculateMoveDistance(tDimension)
@@ -1101,3 +1103,40 @@ function revUniqueIDToName pWhich
     end if
   end repeat
 end revUniqueIDToName
+
+# Clears any extra keys from the current profile's geometry settings.  If no settings
+# are found, removes the key for the profile.
+command revClearExtraGeometrySettings
+   local tProfileName
+   put the cREVGeneral["profile"] of lGeometryObject into tProfileName
+   if tProfileName is empty or tProfileName is the cREVGeneral["masterName"] of lGeometryObject \
+         then put "Master" into tProfileName
+   
+   local tGeometry, tKeys, tSettingsUsed
+   put the customProperties["cRevGeometry"] of lGeometryObject into tGeometry
+   put the keys of tGeometry into tKeys
+   put 0 into tSettingsUsed
+   
+   local tExtraKeys
+   repeat for each item tSetting in "moveH,moveV,scaleLeft,scaleRight,scaleTop,scaleBottom"
+      --check to see if each geometry setting is used
+      if tGeometry[tProfileName & "," & tSetting] then
+         add 1 to tSettingsUsed
+         next repeat
+      end if
+      --since the setting is not used, clear associated keys
+      filter tKeys with (tProfileName & "," & tSetting & "*") into tExtraKeys
+      repeat for each line tKey in tExtraKeys
+         delete variable tGeometry[tKey]
+      end repeat
+   end repeat
+   if tSettingsUsed is 0 then
+      --no geometry settings are used, clear everything else
+      delete variable tGeometry[tProfileName]
+      filter tKeys with (tProfileName & ",*") into tExtraKeys
+      repeat for each line tKey in tExtraKeys
+         delete variable tGeometry[tKey]
+      end repeat
+   end if
+   set the customProperties["cRevGeometry"] of lGeometryObject to tGeometry
+end revClearExtraGeometrySettings

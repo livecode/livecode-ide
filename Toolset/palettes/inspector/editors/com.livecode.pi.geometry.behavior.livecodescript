@@ -220,7 +220,7 @@ on mouseUp pButton
          answer warning "Really remove all Geometry from the selected object?" with "No" or "Yes"
          if it is "Yes" then
             put empty into tValue
-            setValue tValue
+            setValue tValue, "all"
          end if
          break
       default
@@ -458,6 +458,9 @@ on setValue pValue, pKey
          break
       case "moveV"
          put "scaleTop,scaleBottom" into tTurnOffGeometries
+         break
+      case "all"
+         put "moveH,moveV,scaleLeft,scaleRight,scaleTop,scaleBottom" into tTurnOffGeometries
          break
    end switch
    repeat for each item tItem in tTurnOffGeometries
