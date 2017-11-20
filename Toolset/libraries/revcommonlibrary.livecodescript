@@ -1582,7 +1582,7 @@ function revAbsoluteFolderListing pDirectory
    
    local tOutput
    repeat for each line tFile in tFiles
-      put the directory & slash & tFile & return after tOutput
+      put pDirectory & slash & tFile & return after tOutput
    end repeat
    delete last char of tOutput
 
