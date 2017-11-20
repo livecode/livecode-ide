@@ -65,6 +65,8 @@ command revInternal__LoadIfLibrary pLibrary
          // TODO: Remove legacy message name	            
       else if tAvailable contains "revLoadLibrary" then 
          put "revLoadLibrary" into tMsg
+      else
+         throw "not a library"
       end if
       send tMsg to stack pLibrary
       local tStackName
