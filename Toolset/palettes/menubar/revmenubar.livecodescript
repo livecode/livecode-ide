@@ -2738,8 +2738,8 @@ on revMenubarFileMenuPick pWhich
       case gLanguage["MenuBar"]["File"]["Print Field"]
          revIDEPrintField the long ID of the selectedobject
          break
-      case gLanguage["MenuBar"]["File"]["Quit"]
-      case gLanguage["MenuBar"]["File"]["Exit"]
+      case "Quit"
+      case "Exit"
          revIDEQuit
          break
       default
