@@ -1967,7 +1967,7 @@ private function revMenubarDevelopmentMenu pContext
    put revMenubarSimulatorSubmenu() after tDevelopment
    put "-" & return after tDevelopment   
    
-   if there is a stack "com.livecode.library.scriptprofiler" then
+   if revEnvironmentEditionProperty("script_profiler") then
       local tProfiler
       put the long id of stack "com.livecode.library.scriptprofiler" into tProfiler
       if tProfiler is among the lines of the backScripts then

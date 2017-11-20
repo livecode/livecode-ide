@@ -1896,6 +1896,8 @@ function revEnvironmentEditionProperty pProp, pEdition
             case "autocomplete"
             case "autocomplete_pro"
                return false
+            case "script_profiler"
+               return false
          end switch
          break
       case "communityplus"
@@ -1931,6 +1933,8 @@ function revEnvironmentEditionProperty pProp, pEdition
             case "autocomplete"
                return true
             case "autocomplete_pro"
+               return false
+            case "script_profiler"
                return false
          end switch
          break
@@ -1972,6 +1976,8 @@ function revEnvironmentEditionProperty pProp, pEdition
             case "autocomplete"
             case "autocomplete_pro"
                return true
+            case "script_profiler"
+               return false
          end switch
          break
       case "business"
@@ -2007,6 +2013,8 @@ function revEnvironmentEditionProperty pProp, pEdition
                return "https://livecode.com/products/business-edition/"
             case "autocomplete"
             case "autocomplete_pro"
+               return true
+            case "script_profiler"
                return true
          end switch
          break
