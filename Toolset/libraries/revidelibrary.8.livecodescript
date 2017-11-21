@@ -6485,30 +6485,68 @@ end __standaloneSettingsInfoFilename
 function revIDEStandaloneSettings pStack, pSection
    local tInfo
    put revIDEStandaloneSettingsInfoOfSection(pSection) into tInfo
-
-   local tPropsA, tPropName
-   repeat for each element tGroup in tInfo
-      repeat for each element tProp in tGroup["proplist"]
-         put tProp["property_name"] into tPropName
-         put tProp into tPropsA[tGroup["label"]][tPropName]
-         put the cRevStandaloneSettings[tPropName] of pStack into tPropsA[tGroup["label"]][tPropName]["value"]
-      end repeat
-   end repeat
-   return tPropsA
+   
+   return __revIDEStandaloneSettingsOfStackForExtension(pStack, tInfo)
 end revIDEStandaloneSettings
 
 function revIDEStandaloneSettingsInfoOfSection pSection
    local tStandaloneDefinitionsPath
    put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
-
+   
    local tInfoA
    put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
-
+   
    local tOrganisedA
    put __organisePropertyInfo(tInfoA) into tOrganisedA
-
+   
    return __orderPropSubArray(tOrganisedA[pSection], true)
 end revIDEStandaloneSettingsInfoOfSection
+
+function revIDEStandaloneSettingsInfoOfExtension pKind
+   local tInfoA
+   put revIDEExtensionStandaloneSettingsInfo(pKind, true) into tInfoA
+   
+   local tSectionList
+   -- At the moment all per-extension standalone settings are in
+   -- the 'basic' section
+   put __orderPropArray(tInfoA, "Basic") into tSectionList
+   return tSectionList[1]["grouplist"]
+end revIDEStandaloneSettingsInfoOfExtension
+
+function revIDEStandaloneSettingsOfExtension pStack, pKind
+   local tInfoA
+   put revIDEStandaloneSettingsInfoOfExtension(pKind) into tInfoA
+   
+   return __revIDEStandaloneSettingsOfStackForExtension(pStack, tInfoA, pKind)
+end revIDEStandaloneSettingsOfExtension
+
+private function __revIDEStandaloneSettingsOfStackForExtension pStack, pInfoA, pExtension
+   local tSettings
+   if pExtension is not empty then
+      put the cRevStandaloneSettings[pExtension] of pStack into tSettings
+   else
+      put the customProperties["cRevStandaloneSettings"] of pStack into tSettings
+   end if
+   
+   local tPropsA, tPropName
+   set the itemdelimiter to ";"
+   repeat for each element tGroup in pInfoA
+      repeat for each element tProp in tGroup["proplist"]
+         put tProp["property_name"] into tPropName
+         put tProp into tPropsA[tGroup["label"]][tPropName]
+         if the number of items in tPropName > 1 then
+            repeat for each item tRealProp in tPropName
+               put tSettings[tRealProp] into \
+                     tPropsA[tGroup["label"]][tPropName]["value"][pStack][tRealProp]
+            end repeat
+         else
+            put tSettings[tPropName] into \
+                  tPropsA[tGroup["label"]][tPropName]["value"][pStack]
+         end if
+      end repeat
+   end repeat
+   return tPropsA
+end __revIDEStandaloneSettingsOfStackForExtension
 
 function revIDEStandaloneSettingsInfo
    local tStandaloneDefinitionsPath
