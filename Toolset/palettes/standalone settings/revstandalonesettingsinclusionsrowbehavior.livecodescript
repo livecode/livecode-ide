@@ -11,13 +11,15 @@ on FillInData pDataA, pRow
    else if pDataA["label"] is not empty then put pDataA["label"] into tLabel
    if tLabel is empty then put "Extension Title" into tLabel
    
+   set the cLabel of me to tLabel
+   
    if pDataA["author"] is not empty then put pDataA["author"] into tAuthor
    if tAuthor is empty then put "Unknown Author" into tAuthor
    
    put tLabel into field "description" of me
    
    local tIconName, tIconPath
-   revSBInclusionIconFromType pDataA["type"], pDataA["id"], tIconName, tIconPath
+   revIDEExtensionIconFromType pDataA["type"], pDataA["id"], tIconName, tIconPath
    
    if tIconPath is not empty then
       set the iconPath of widget "icon" of me to tIconPath
@@ -32,6 +34,13 @@ on FillInData pDataA, pRow
          hide image tItem of me
       end if
    end repeat
+   
+   if revIDEExtensionStandaloneSettingsInfo(pDataA["id"]) \
+         is not empty then
+      show widget "Settings" of me
+   else
+      hide widget "Settings" of me
+   end if
    
    set the cRow of me to pRow
 end FillInData
@@ -75,11 +84,46 @@ on LayoutControl pControlRect
       put the left of image tItem of me into tRight
    end repeat
    
+   subtract 2*tPadding from tRight
+   set the right of widget "Settings" of me to tRight
 end LayoutControl
 
 on mouseUp
-   dispatch "rowClicked" to card "inclusions" of this stack with the cRow of me
+   if the long id of the target is \
+         the long id of widget "Settings" of me then
+      popupExtensionStandaloneSettings the cTypeId of me, the mouseLoc
+   else
+      dispatch "rowClicked" to card "inclusions" of this stack with the cRow of me
+   end if
 end mouseUp
+
+command popupExtensionStandaloneSettings pId, pClickLoc
+   -- TODO: Fetch existing value!
+   set the behavior of the long id of widget "Settings" of me \
+         to the long id of stack revIDEPaletteResourcePath("behaviors/revinspectoreditorbehavior.livecodescript", the long ID of stack "revInspector")
+   set the rowLabel of me to the cLabel of me && "Standalone Settings"
+   local tPropertyInfo, tPropData, tStack
+   dispatch function "getTargetStack" to me
+   put the result into tStack
+   put "Extension Standalone Settings" into tPropertyInfo["property_name"]
+   put revIDEStandaloneSettingsInfoOfExtension(pId) \
+         into tPropertyInfo["popup"]
+   set the editorPropertyInfo of widget "Settings" of me to tPropertyInfo
+   set the editorPopupData of widget "Settings" of me to \
+         revIDEStandaloneSettingsOfExtension(tStack, pId)
+   send "editorPopup pClickLoc" to widget "Settings" of me
+end popupExtensionStandaloneSettings
+
+on valueChanged pProp, pValue
+   -- extension standalone settings don't get set directly
+   -- they live in cRevStandaloneSettings[<ext id>][key]
+   -- and get merged at build time
+   local tSettings
+   dispatch function "getSettings" to me
+   put the result into tSettings
+   put pValue into tSettings[the cTypeId of me][pProp]
+   dispatch "setSettings" to me with tSettings
+end valueChanged
 
 on mouseDown
    
