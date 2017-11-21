@@ -367,6 +367,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
       return tDetailsA
    end if
    union tDetailsA with tMetadataA
+   put pType into tDetailsA["type"]
    put tDetailsA into sExtensionDetailsA[pFolder]
    return sExtensionDetailsA[pFolder]
    
@@ -497,8 +498,8 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   revIDEExtensionLoad pDetailsA["name"], pPath, pDetailsA["version"], \
-         "installed", "", false, pDetailsA["file"]
+   revIDEExtensionLoad pDetailsA["type"], pDetailsA["name"], pPath, \
+         pDetailsA["version"], "installed", "", false, pDetailsA["file"]
    
    local tResult
    put the result into tResult
