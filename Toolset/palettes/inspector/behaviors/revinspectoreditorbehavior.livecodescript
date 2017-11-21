@@ -119,9 +119,17 @@ getProp editorValue[pKey]
 end editorValue
 
 on updateProperty pForce
-  if pForce or (sAllowUpdate is true and not sPropertyInfo["read_only"]) then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
-     put false into sAllowUpdate
+   if pForce or (sAllowUpdate is true and not sPropertyInfo["read_only"]) then
+      set the itemdelimiter to ";"
+      -- Single editors can control multiple properties delimited by ;
+      if the number of items in sPropertyInfo["property_name"] > 1 then
+         repeat for each item tProp in sPropertyInfo["property_name"]
+            dispatch "editorValueChanged" with tProp, sValue[tProp], false
+         end repeat
+      else
+         dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
+      end if
+      put false into sAllowUpdate
    end if
 end updateProperty
 

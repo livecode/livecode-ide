@@ -523,6 +523,16 @@ private command __ProcessInspectorMetadata @xMetadataA
          put true into xMetadataA[tKey]["user_visible"]
       end if
       
+      if xMetadataA[tKey]["properties"] is not empty then
+         -- If there is a 'properties' value, delete the key
+         -- and replace it with that value
+         local tInfo, tNewKey
+         put xMetadataA[tKey] into tInfo
+         put tInfo["properties"] into tNewKey
+         delete variable xMetadataA[tKey]
+         delete variable tInfo["properties"]
+         put tInfo into xMetadataA[tNewKey]
+      end if
    end repeat
 end __ProcessInspectorMetadata
 

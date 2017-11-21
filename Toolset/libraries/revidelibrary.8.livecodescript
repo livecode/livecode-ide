@@ -1318,8 +1318,15 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    end repeat
    
    local tDataA
+   set the itemdelimiter to ";"
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      if the number of items in tKey > 1 then
+         repeat for each item tRealProp in tKey
+            __fetchPropertyOfControl tRealProp, tDataA[tRealProp]
+         end repeat
+      else
+         __fetchPropertyOfControl tKey, tDataA
+      end if
    end repeat
    
    local tValue, tEffective
@@ -1428,8 +1435,17 @@ end __fetchPropertyOfControl
 # for each of the properties
 function __readPropertiesOfControl pList, @pData
    local tError
+   set the itemdelimiter to ";"
    repeat for each line tProp in pList
-      __fetchPropertyOfControl tProp, pData
+      -- If this pseudo-property is actually multiple properties,
+      -- the value is an array with keys the real property names
+      if the number of items in tProp > 1 then
+         repeat for each item tRealProp in tProp
+            __fetchPropertyOfControl tRealProp, pData[tRealProp]
+         end repeat
+      else
+         __fetchPropertyOfControl tProp, pData
+      end if
    end repeat
 end __readPropertiesOfControl
 
