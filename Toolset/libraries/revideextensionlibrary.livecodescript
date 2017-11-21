@@ -111,28 +111,33 @@ function revIDEExtensionProperties pTypeID
    return sExtensionProperties[pTypeID]
 end revIDEExtensionProperties
 
+# organise the property info into the structure that the inspectors 
+# expect, namely [<section>]["grouplist"][<group>]["proplist"][<prop>]
+private function __OrganiseInspectorMetadata pDataA
+   local tExtensionPropsInfoA
+   repeat for each key tProp in pDataA
+      local tSection, tGroup, tOrder, tPropInfoA
+      put pDataA[tProp] into tPropInfoA
+      put pDataA[tProp]["order"] into tOrder
+      put pDataA[tProp]["label"] into tGroup
+      put pDataA[tProp]["section"] into tSection
+      put tPropInfoA into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["proplist"][tProp]
+      
+      put true into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["widget_prop"]
+      put tOrder into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["order"]
+   end repeat
+   return tExtensionPropsInfoA
+end __OrganiseInspectorMetadata
+
 function revIDEExtensionPropertiesInfo pTypeId, pOrganise
    local tPropsA, tExtensionPropsInfoA
    put revIDEExtensionProperties(pTypeId) into tPropsA
    
    if pOrganise then
-      # If pOrganise is true, organise the property info into the structure that the property 
-      #  inspector expects, namely [<section>]["grouplist"][<group>]["proplist"][<prop>]
-      repeat for each key tProp in tPropsA
-         local tSection, tGroup, tOrder, tPropInfoA
-         put tPropsA[tProp] into tPropInfoA
-         put tPropsA[tProp]["order"] into tOrder
-         put tPropsA[tProp]["label"] into tGroup
-         put tPropsA[tProp]["section"] into tSection
-         put tPropInfoA into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["proplist"][tProp]
-         
-         put true into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["widget_prop"]
-         put tOrder into tExtensionPropsInfoA[tSection]["grouplist"][tGroup]["order"]
-      end repeat
+      return __OrganiseInspectorMetadata(tPropsA)
    else
-      put tPropsA into tExtensionPropsInfoA
+      return tPropsA
    end if
-   return tExtensionPropsInfoA
 end revIDEExtensionPropertiesInfo
 
 function revIDEExtensionProperty pKind, pProperty
@@ -145,6 +150,25 @@ function revIDEExtensionProperty pKind, pProperty
    
    return __extensionPropertyGet(tExtensionID, pProperty)
 end revIDEExtensionProperty
+
+function revIDEExtensionStandaloneSettings pID
+   # Get the internal cache index
+   local tCacheIndex
+   put __extensionCacheID("name", pID) into tCacheIndex
+
+   return __extensionPropertyGet(tCacheIndex, "standaloneSettings")
+end revIDEExtensionStandaloneSettings
+
+function revIDEExtensionStandaloneSettingsInfo pTypeId, pOrganise
+   local tPropsA, tExtensionPropsInfoA
+   put revIDEExtensionStandaloneSettings(pTypeId) into tPropsA
+   
+   if pOrganise then
+      return __OrganiseInspectorMetadata(tPropsA)
+   else
+      return tPropsA
+   end if
+end revIDEExtensionStandaloneSettingsInfo
 
 ##############################
 # PRIVATE INSTALLATION PROCESS
@@ -477,111 +501,94 @@ end __extensionUninstallComplete
 ##############################
 # PRIVATE SHARED
 ##############################
+private command __ProcessInspectorMetadata @xMetadataA
+   repeat for each key tKey in xMetadataA
+      local tLabel, tSection
+      if xMetadataA[tKey]["section"] is empty then
+         put "Basic" into xMetadataA[tKey]["section"]
+      end if
+      
+      if xMetadataA[tKey]["label"] is empty then
+         put tKey into xMetadataA[tKey]["label"]
+      end if
+      
+      # Process value options, default and delimiter
+      replace comma with return in xMetadataA[tKey]["options"]
+      replace "\n" with return in xMetadataA[tKey]["delimiter"]
+      if xMetadataA[tKey]["default"] is not empty then
+         replace "\n" with return in xMetadataA[tKey]["default"]
+      end if
+      
+      if xMetadataA[tKey]["user_visible"] is empty then
+         put true into xMetadataA[tKey]["user_visible"]
+      end if
+      
+   end repeat
+end __ProcessInspectorMetadata
 
-function __extensionFetchPropertyMetadata pXMLTree, pProperty, pElement
-   local tNode
-   put revXMLMatchingNode(pXMLTree, "package", "metadata", "key", pProperty &"." & pElement, 1) into tNode
-   if tNode is not empty then
-      return revXMLNodeContents(pXMLTree, tNode)
-   end if
-   
-   return empty
-end __extensionFetchPropertyMetadata
-
-function __extensionPropertyInfoFromManifest pManifestPath
+private function __extensionPropertyInfoFromManifest pId, pManifestPath
    if not there is a file pManifestPath then return empty
    # Create the XML tree
-   local tXMLTree, tProperties, tExtensionData
+   local tXMLTree, tProperties, tExtensionData, tPropertyNodes
    put revXMLCreateTreeFromFile(pManifestPath,true,true,false) into tXMLTree
    
-   # Process the general property metadata into an array
-   local tMetadataNodes, tMetadataA, tKeys, tValue
-   put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
-   set the itemdelimiter to "."
-   repeat for each line tMetadata in tMetadataNodes
-      put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tKeys
-      put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tValue
-      repeat with x = the number of items in tKeys down to 1
-         get tValue
-         put empty into tValue
-         put it into tValue[item x of tKeys]
-      end repeat
-      union tMetadataA with tValue recursively
-   end repeat
+   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tPropertyNodes
    
-   put revXMLChildNames(tXMLTree,"package",return,"property",true) into tProperties
-   local tOrder, tPropertyDataA
+   local tCacheID
+   put __extensionCacheID("name", pID) into tCacheId
    
-   local tMetadataKeys
-   put the keys of tMetadataA into tMetadataKeys
-   sort tMetadataKeys
-   sort tMetadataKeys by tMetadataA[each]["order"]
-   repeat for each line tKey in tMetadataKeys
-      local tPropertyInfo
-      put revIDEPropertyInfo(tKey) into tPropertyInfo
-      if tPropertyInfo is empty then
-         next repeat
-      end if
-      add 1 to tOrder
-      union tMetadataA[tKey] with tPropertyInfo
-      put tMetadataA[tKey] into tPropertyDataA[tKey]
-      put tOrder into tPropertyDataA[tKey]["order"]
-   end repeat
-   
-   repeat for each line tProperty in tProperties
-      add 1 to tOrder
+   local tPropertyNames, tPropertyXMLData
+   repeat for each line tPropertyNode in tPropertyNodes      
       local tName
-      put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"name") into tName
+      put revXMLAttribute(tXMLTree,"package" & "/" & tPropertyNode,"name") into tName
+      put __extensionPropertyGet(tCacheId, tName) into tPropertyXMLData[tName]["data"]
+      put revXMLAttribute(tXMLTree,"package" & "/" & tPropertyNode,"set") into \
+            tPropertyXMLData[tName]["set"]
+      put revXMLAttribute(tXMLTree,"package" & "/" & tPropertyNode,"get") into \
+            tPropertyXMLData[tName]["get"]
+   end repeat
+   put the keys of tPropertyXMLData into tPropertyNames
+   sort tPropertyNames by tPropertyXMLData[each]["data"]["order"]
+   
+   local tOrder, tPropertyDataA
+   repeat for each line tProperty in tPropertyNames
+      local tIDEPropertyInfo, tPropertyInfoA
+      put tPropertyXMLData[tProperty]["data"] into tPropertyInfoA
+      put revIDEPropertyInfo(tProperty) into tIDEPropertyInfo
+      if tIDEPropertyInfo is not empty then
+         add 1 to tOrder
+         union tPropertyInfoA with tIDEPropertyInfo
+         put tPropertyInfoA into tPropertyDataA[tProperty]
+         put tOrder into tPropertyDataA[tProperty]["order"]
+      else
+         put tPropertyInfoA into tPropertyDataA[tProperty]
+      end if
       
-      put tMetadataA[tName] into tPropertyDataA[tName]
-      
-      local tReadOnly
-      get revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"set")
-      if it is empty or it begins with "xmlerr" then
+      local tReadOnly, tSetter
+      put tPropertyXMLData[tProperty]["set"] into tSetter
+      if tSetter is empty or tSetter begins with "xmlerr" then
          put true into tReadOnly
       else
          put false into tReadOnly
       end if
-      put tReadOnly into tPropertyDataA[tName]["read_only"]
+      put tReadOnly into tPropertyDataA[tProperty]["read_only"]
       
-      if tPropertyDataA[tName]["editor"] is empty then
+      if tPropertyDataA[tProperty]["editor"] is empty then
          local tType
-         put revXMLAttribute(tXMLTree,"package" & "/" & tProperty,"get") into tType
+         put tPropertyXMLData[tProperty]["get"] into tType
          if tType is "Integer" or tType is "Real" then
-            put "com.livecode.pi.number" into tPropertyDataA[tName]["editor"]
+            put "com.livecode.pi.number" into tPropertyDataA[tProperty]["editor"]
          else
-            put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tName]["editor"]
+            put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tProperty]["editor"]
          end if
       end if
-      put tOrder into tPropertyDataA[tName]["order"]
-   end repeat
-   
-   repeat for each key tName in tPropertyDataA
-      local tLabel, tSection
-      
-      if tPropertyDataA[tName]["section"] is empty then
-         put "Basic" into tPropertyDataA[tName]["section"]
-      end if
-      
-      if tPropertyDataA[tName]["label"] is empty then
-         put tName into tPropertyDataA[tName]["label"]
-      end if
-      
-      # Process value options, default and delimiter
-      replace comma with return in tPropertyDataA[tName]["options"]
-      replace "\n" with return in tPropertyDataA[tName]["delimiter"]
-      if tPropertyDataA[tName]["default"] is not empty then
-         replace "\n" with return in tPropertyDataA[tName]["default"]
-      end if
-      
+      put tOrder into tPropertyDataA[tProperty]["order"]
       # Tag the property as a widget property, so we can order them 
       # correctly after the built-in props for the given section
-      put true into tPropertyDataA[tName]["widget_prop"]
-      
-      if tPropertyDataA[tName]["user_visible"] is empty then
-         put true into tPropertyDataA[tName]["user_visible"]
-      end if
+      put true into tPropertyDataA[tProperty]["widget_prop"]
    end repeat
+   
+   __ProcessInspectorMetadata tPropertyDataA
    
    revXMLDeleteTree tXMLTree
    return tPropertyDataA
@@ -628,9 +635,9 @@ private command __extensionSetExtensionInfoFromManifest pCacheIndex, pManifestPa
    end repeat
 end __extensionSetExtensionInfoFromManifest
 
-command __extensionSetPropertyInfoFromManifest pID, pManifest
+private command __extensionSetPropertyInfoFromManifest pID, pManifest
    local tPropertyInfo
-   put __extensionPropertyInfoFromManifest(pManifest) into tPropertyInfo
+   put __extensionPropertyInfoFromManifest(pId, pManifest) into tPropertyInfo
    put tPropertyInfo into sExtensionProperties[pID]
 end __extensionSetPropertyInfoFromManifest
 
@@ -1340,6 +1347,11 @@ command revIDEExtensionMetadata pFolder, pFile, pType, @rDataA
    return tResult
 end revIDEExtensionMetadata
 
+private command __SetMetadata pKey, pValue, @xArray
+   split pKey by "."
+   put pValue into xArray[pKey]
+end __SetMetadata
+
 private command revIDEExtensionFetchMetadata pManifestPath, @rDataA
    local tDataA
    
@@ -1399,7 +1411,7 @@ private command revIDEExtensionFetchMetadata pManifestPath, @rDataA
       if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
          put empty into tMetadataValue
       end if
-      put tMetadataValue into tDataA[tMetadataKey]
+      __SetMetadata tMetadataKey, tMetadataValue, tDataA
    end repeat
    
    # Fetch extension dependencies
@@ -1438,6 +1450,9 @@ private command revIDEExtensionFetchMetadata pManifestPath, @rDataA
    if tDataA["uservisible"] is empty then
       put true into tDataA["uservisible"]
    end if
+   
+   # Make sure 'inspector' style metadata is processed
+   __ProcessInspectorMetadata tDataA["standaloneSettings"]
    
    put tDataA into rDataA
    return empty
