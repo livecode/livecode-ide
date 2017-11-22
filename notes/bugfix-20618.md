@@ -1,0 +1,1 @@
+# Make ideDocsFetchLibraryEntries public
