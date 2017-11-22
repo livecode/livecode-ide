@@ -666,11 +666,9 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    // Send message to registered targets
 end __extensionSendProgressUpdate
 
-private function __fetchModuleData pExtensionFile
-   local tDataA, tFolder
-   set the itemdelimiter to slash
-   put item 1 to -2 of pExtensionFile into tFolder
-   revIDEExtensionFetchMetadata tFolder & slash & "manifest.xml", tDataA
+private function __fetchModuleData pFolder, pExtFile
+   local tDataA
+   revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
    if the result is not empty then
       put "Invalid manifest" into tDataA["error"]
@@ -679,22 +677,19 @@ private function __fetchModuleData pExtensionFile
    return tDataA
 end __fetchModuleData
 
-private function __fetchScriptLibraryData pExtensionFile
-   local tDataA, tFolder, tFile
-   set the itemdelimiter to slash
-   put item 1 to -2 of pExtensionFile into tFolder
-   put item -1 of pExtensionFile into tFile
+private function __fetchScriptLibraryData pFolder, pExtFile
+   local tDataA
    # Generate extension API from source if there is not one present in the folder
    # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
    if not revEnvironmentIsInstalled() or \
-         not tFolder begins with revEnvironmentExtensionsPath() then
-      revIDEExtensionUpdateAPI tFolder, tFile
+         not pFolder begins with revEnvironmentExtensionsPath() then
+      revIDEExtensionUpdateAPI pFolder, pExtFile
    end if
    
    # Get library metadata from the docs, in lieu of a manifest
    local tDocA
    dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" \
-         with (tFolder & slash & "api.lcdoc")
+         with (pFolder & slash & "api.lcdoc")
    put the result into tDocA 
    
    set the itemdelimiter to comma
@@ -820,13 +815,18 @@ command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rType
    
    local tExtFile, tType
    filter tFiles with "*.lcb" into tExtFile
-   put "lcb" into tType
-   if tExtFile is empty then
-      put "lcs" into tType
+   if there is a file (pFolder & slash & "module.lcm") \
+         or tExtFile is not empty then
+      put "lcb" into tType
+   end if
+   if tType is empty then
       filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
+      if tExtFile is not empty then
+         put "lcs" into tType
+      end if
    end if
    
-   if tExtFile is empty then
+   if tType is empty then
       put "none" into tType
    end if 
    
@@ -846,19 +846,19 @@ private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xData
    end if
    
    -- If we found no extensions, recurse
-   if tNumExtensions is 0 then
+   if tType is "none" then
       repeat for each line tSubFolder in folders(pFolder)
          if tSubFolder begins with "." then next repeat
-         __FindExtensionsInFolderRecursive pFolder & slash & tSubFolder, pIsUserFolder, xDataA
+         __FindExtensionsInFolderRecursive pFolder & slash & tSubFolder, \
+               pIsUserFolder, xDataA
       end repeat
       exit __FindExtensionsInFolderRecursive
    end if
    
-   put pFolder & slash & tExtFile into tExtSource
    if tType is "lcb" then
-      put __fetchModuleData(tExtSource) into tArray
+      put __fetchModuleData(pFolder, tExtFile) into tArray
    else
-      put __fetchScriptLibraryData(tExtSource) into tArray
+      put __fetchScriptLibraryData(pFolder, tExtFile) into tArray
    end if
    
    put tExtFile into tArray["source_file"]
@@ -972,14 +972,15 @@ private command __extensionLoad pID, pExtensionDataA
    # Only try to load the first copy in the load order
    put pExtensionDataA["copies"][1] into tToLoadA
    
-   local tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile
+   local tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tSourceType
    put tToLoadA["install_path"] into tFolder
    put tToLoadA["version"] into tVersion
    put tToLoadA["status"] into tStatus
    put tToLoadA["error"] into tError
    put tToLoadA["ide"] into tIDEExtension
    put tToLoadA["source_file"] into tSourceFile
-   revIDEExtensionLoad pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tToLoadA
+   put tToLoadA["source_type"] into tSourceType
+   revIDEExtensionLoad tSourceType, pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tToLoadA
 end __extensionLoad
 
 private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA
@@ -1095,7 +1096,7 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    end if
    
    if pAdditionalInfoA is empty then
-      put __fetchScriptLibraryData(pFolder & slash & pSourceFile) into pAdditionalInfoA
+      put __fetchScriptLibraryData(pFolder, pSourceFile) into pAdditionalInfoA
    end if
    
    # Update name, status, error, and whether the extension comes with the IDE
@@ -1141,11 +1142,10 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    return tError
 end __revIDELCSExtensionLoad
 
-command revIDEExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
-   set the itemdel to "."
-   if item -1 of pSourceFile  is "lcb" then
+command revIDEExtensionLoad pType, pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+   if pType is "lcb" then
       __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
-   else if item -1 of pSourceFile begins with "livecode" then
+   else if pType is "lcs" then
       __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
    end if
 end revIDEExtensionLoad
@@ -1334,7 +1334,7 @@ command revIDEExtensionMetadata pFolder, pFile, pType, @rDataA
       revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
       put the result into tResult
    else
-      put __fetchScriptLibraryData(pFolder & slash & pFile) into tDataA
+      put __fetchScriptLibraryData(pFolder, pFile) into tDataA
    end if
    put tDataA into rDataA
    return tResult
