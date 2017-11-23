@@ -881,7 +881,9 @@ Figure 12 – Find and Replace
 | Find next                                      | Control-g                               | Command-g                               |
 | Find selected text                             | Control-Option-f                        | Command-Option-f                        |
 | Format handler or move to next placeholder     | Tab                                     | Tab                                     |
-| Show completions palette                       | Control-shift-right                     | Command-shift-right                     |
+| Next tab in Editor                             | Control-tab                             | Control-tab                             |
+| Previous tab in Editor                         | Control-shift-tab                       | Control-shift-tab                       |
+| Show completions palette                       | F1                                      | F1                                      |
 
 | **The Message Box** |  **Windows / Linux** | **Mac OS X**|
 |------|--------|-------|
