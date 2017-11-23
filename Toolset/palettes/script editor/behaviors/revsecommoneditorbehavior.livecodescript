@@ -2374,7 +2374,7 @@ on rawKeyDown pKey
       end if
    else
       # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
-      if (pKey is kKeyUpArrow and \
+      if (pKey is kKeyLeftArrow and \
             (the eventCommandKey is down or \
             the eventControlKey is down) and \
             the eventShiftKey is up and \
