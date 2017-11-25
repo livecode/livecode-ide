@@ -159,9 +159,9 @@
 			return tMatched;
 		});
 
-        // Sort the priority matches to the top
-	tState . cached_search_data . data . sort(function(a, b) 
-        {
+		// Sort the priority matches to the top
+		tState . cached_search_data . data . sort(function(a, b) 
+		{
 			var tNameA, tNameB, tMatchA, tMatchB
 
 			tNameA = a["display name"].toLowerCase();
@@ -1143,7 +1143,7 @@
 			{
 				if (value.type.toLowerCase() != pType)
 				{
-					// Continue loop				
+					// Continue loop
 					return true;
 				}
 			}
@@ -1151,7 +1151,7 @@
 			// Make sure we always 'fall back' to the lcs syntax
 			if (value.library == 'livecode_script')
 			{
-				tIndex = index;		
+				tIndex = index;
 				// If no library was specified, assume lcs syntax
 				if (pPriorityLibrary == '')
 				{
@@ -1160,7 +1160,7 @@
 				}
 				
 				// Otherwise, this index is now a candidate in case
-				// there is no entry found in the given library				
+				// there is no entry found in the given library
 			}
 			
 			if (pPriorityLibrary == '')
@@ -1172,7 +1172,7 @@
 			}
 			else if (value.library.toLowerCase() != pPriorityLibrary)
 			{
-				// Continue loop				
+				// Continue loop
 				return true;
 			}
 			
@@ -1358,8 +1358,25 @@
 		displayEntry(history_selected_entry().id);
 	}
 	
-	function entry_next(){
-		var tSelectedID = tState.selected;
+	function entry_previous()
+	{
+		var tSelectedID = tState.history.list[tState.history.selected_index].id;
+		var tPreviousID = tSelectedID;
+		
+		$.each(tState.filtered_data, function( index, value) {
+			if(value.id == tSelectedID){
+				if(index > 0){
+					tPreviousID = tState.filtered_data[index-1].id;
+				}
+			}
+			
+		});
+		displayEntry(tPreviousID);
+	}
+	
+	function entry_next()
+	{
+		var tSelectedID = tState.history.list[tState.history.selected_index].id;
 		var tNextID = tSelectedID;
 		
 		$.each(tState.filtered_data, function( index, value) {
@@ -1419,21 +1436,6 @@
 			
 		});
 		return tID;
-	}
-	
-	function entry_previous(){
-		var tSelectedID = tState.selected;
-		var tPreviousID = tSelectedID;
-		
-		$.each(tState.filtered_data, function( index, value) {
-			if(value.id == tSelectedID){
-				if(index > 0){
-					tPreviousID = tState.filtered_data[index-1].id;
-				}
-			}
-			
-		});
-		displayEntry(tPreviousID);
 	}
 	
 	function selectedEntryEnsureInView(tEntryID)
