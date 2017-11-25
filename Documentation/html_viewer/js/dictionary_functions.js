@@ -1340,12 +1340,16 @@
 	
 	function history_back()
 	{
-		go_history(tState.history.selected_index - 1);
+		if(tState.history.selected_index > 0){
+			go_history(tState.history.selected_index - 1);
+		}
 	}
 	
 	function history_forward()
 	{
-		go_history(tState.history.selected_index + 1);
+		if(tState.history.selected_index < tState.history.list.length - 1){
+			go_history(tState.history.selected_index + 1);
+		}
 	}
 	
 	function go_history(pHistoryID)
