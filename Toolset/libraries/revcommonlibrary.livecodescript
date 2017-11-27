@@ -145,24 +145,15 @@ getProp revProfile
 end revProfile
 
 getProp cREVGeneral[pWhichProp]
-   local tTarget
-   if the environment is "development" then
-      # OK-2008-04-14/OK-2008-06-02 : The long id will return an invalid reference
-      # when in edit group mode, use the "rugged id" when in the development environment
-      put revRuggedId(the long id of the target) into tTarget
-   else
-      put the long id of the target into tTarget
-   end if
-   
    if pWhichProp is "revUniqueID" then
       lock messages
       local tRevUniqueID
-      put the cREVGeneral["revUniqueID"] of tTarget into tRevUniqueID
+      put the cREVGeneral["revUniqueID"] of the target into tRevUniqueID
       unlock messages
       
       if tRevUniqueID is empty then
          put the milliseconds into tRevUniqueID
-         set the cREVGeneral["revUniqueID"] of tTarget to tRevUniqueID
+         set the cREVGeneral["revUniqueID"] of the target to tRevUniqueID
       end if
       return tRevUniqueID
    end if
@@ -173,8 +164,8 @@ getProp cREVGeneral[pWhichProp]
    lock messages
    
    local tProfile
-   put the cREVGeneral["profile"] of tTarget into tProfile
-   if tProfile is empty or tProfile is the cREVGeneral["masterName"] of tTarget then put "Master" into tProfile
+   put the cREVGeneral["profile"] of the target into tProfile
+   if tProfile is empty or tProfile is the cREVGeneral["masterName"] of the target then put "Master" into tProfile
    unlock messages
    return tProfile
 end cREVGeneral
@@ -1441,6 +1432,9 @@ private function _revEnvironmentPlatform
          break
       case "android"
          put "android" into tPlatform
+         break
+      case "HTML5"
+         put "html5" into tPlatform
          break
       default
          put "Unsupported" into tPlatform
