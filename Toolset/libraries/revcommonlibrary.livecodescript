@@ -179,11 +179,9 @@ setProp cREVGeneral[pWhichProp] pWhichProfile
    local tTarget
    put the long id of the target into tTarget
    
-   local tTargetLongID
-   put tTarget into tTargetLongID
    if pWhichProp is not "profile" and pWhichProp is not "inLineImages" and \
-         pWhichProp is not "virtualWidth" and pWhichProp is not "virtualHeight" and \
-         pWhichProp is not "breakPoints" then pass cREVGeneral
+         pWhichProp is not "virtualWidth" and pWhichProp is not "virtualHeight" \
+         then pass cREVGeneral
    
    if pWhichProp is "virtualWidth" then
       lock messages
@@ -214,52 +212,6 @@ setProp cREVGeneral[pWhichProp] pWhichProfile
       unlock messages
       exit cREVGeneral
    end if
-   
-   if pWhichProp is "breakPoints" then
-      
-      pass cREVGeneral
-      
-      local tBreakPointsList
-      put the breakPoints into tBreakPointsList
-      
-      local tMainStack
-      put the mainStack of stack revTargetStack(tTarget) into tMainStack
-      
-      local tObjects
-      put the cREVGeneral["debugObjects"] of stack tMainStack into tObjects
-      
-      local tStack
-      put word -2 to -1 of tTarget into tStack
-      put the name of tStack into word -2 to -1 of tTarget
-      if pWhichProfile is not empty then
-         if tTarget is not among the lines of tObjects then
-            --add breakpoint object
-            put tTarget into line (the number of lines in tObjects)+1 of tObjects
-         end if
-      else
-         if tTarget is among the lines of tOBjects then
-            --remove breakpoint object
-            delete line lineOffset(tTarget,tObjects) of tOBjects
-         end if
-      end if 
-      set the cREVGeneral["debugObjects"] of stack tMainStack to tObjects
-      
-      local tOldPoints
-      repeat for each line l in tBreakPointsList
-         if tTargetLongID is not in l then put l & cr after tOldPoints
-      end repeat
-      delete last char of tOldPoints
-      put tOldPoints into tBreakPointsList
-      
-      local tAddPoints
-      repeat for each line l in pWhichProfile
-         put tTarget,l & cr after tAddPoints
-      end repeat
-      delete last char of tAddPoints
-      put tAddPoints into line (the number of lines in tBreakPointsList+1) of tBreakPointsList
-      set the breakPoints to tBreakPointsList
-      pass cREVGeneral
-   end if --breakPoints
    
    if pWhichProp is "inLineImages" then
       if pWhichProfile is true then
