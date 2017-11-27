@@ -1411,6 +1411,17 @@ on escapeKey
    pass escapeKey
 end escapeKey
 
+on help
+   if revEnvironmentEditionProperty("autocomplete") then
+      ideAutocompleteHandleHelp the long id of me, sObjectId
+      if the result then
+         pass help
+      end if
+   else
+      pass help
+   end if
+end help
+
 -- This calculates the position of the caret based on pPosition where the caret is (hypothetically).
 private function caretPositionRight pLineStartChar, pProposedPosition, pLine
    local tFirstPosition
@@ -2381,7 +2392,7 @@ on rawKeyDown pKey
       end if
    else
       # For Mac: Ctrl-Left / Cmd-Left / Ctrl-A (Mac)
-      if (pKey is kKeyUpArrow and \
+      if (pKey is kKeyLeftArrow and \
             (the eventCommandKey is down or \
             the eventControlKey is down) and \
             the eventShiftKey is up and \

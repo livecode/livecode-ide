@@ -1,0 +1,69 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	field											
+title	Label Field											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Label Field					
+styledText												
+text				false			Label:					
+tooltip												
+disabled							false					
+visible							true					
+dontWrap							true					
+lockText							true					
+opaque							false					
+traversalOn							false					
+showFocusBorder							true					
+sharedText							true					
+autoTab							false					
+threeD							true					
+showBorder							false					
+borderWidth							2					
+hScrollbar							false					
+vScrollbar							false					
+autoHilite							false					
+listBehavior							false					
+multipleHilites							false					
+nonContiguousHilites							false					
+toggleHilites							false					
+firstIndent							0					
+dontSearch							false					
+layerMode												
+behavior												
+basicTableObject							false					
+cellEdit							false					
+maxColumnCount												
+cellFormat							false					
+showLines							false					
+hGrid							false					
+vGrid							false					
+tabStops												
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							right					
+fixedLineHeight												
+textHeight												
+margins							8					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				100					
+height::revIDESetRectProperty			com.livecode.pi.dimension				21					

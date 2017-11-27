@@ -1,0 +1,67 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	button											
+title	Pulldown Menu											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Pulldown Menu					
+label												
+tooltip												
+style				false			menu					
+menuMode							Pulldown					
+menuMouseButton												
+visible							true					
+opaque							true					
+showName							true					
+disabled							false					
+text	Menu Items			true			Choice 1\nChoice 2\nChoice 3					
+menuLines							5					
+menuName												
+layerMode												
+behavior								long id				
+icon							0					
+hiliteIcon							0					
+disabledIcon							0					
+visitedIcon							0					
+armedIcon							0					
+hoverIcon							0					
+threeD							true					
+showBorder							true					
+hiliteBorder							true					
+borderWidth							2					
+armBorder				false			false					
+traversalOn				false			false					
+autoHilite				false			false					
+shadow							false					
+shadowOffset							4					
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+margins							4					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				102					
+height::revIDESetRectProperty			com.livecode.pi.dimension				22					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

@@ -1,0 +1,60 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	player											
+title	Player											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name												
+filename							execute:get revIDESpecialFolderPath("IDE") & "/Resources/Sample.mpg"	video,audio,media,all				
+tooltip												
+alwaysBuffer							false					
+visible							true					
+showController							true					
+showBadge							false					
+traversalOn							true					
+currentTime							0					
+startTime												
+endTime												
+showSelection							false					
+playSelection							false					
+playRate												
+looping							false					
+playLoudness							100	0,100				
+showBorder							true					
+threeD							true					
+borderWidth							2					
+layerMode												
+behavior												
+callbacks												
+tracks												
+enabledTracks												
+pan												
+tilt												
+zoom							0					
+currentNode												
+hotspots												
+foregroundColor												
+foregroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							8					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				310					
+height::revIDESetRectProperty			com.livecode.pi.dimension				264					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

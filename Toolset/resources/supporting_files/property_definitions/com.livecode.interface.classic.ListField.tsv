@@ -1,0 +1,75 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	field											
+title	Scrolling List Field											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Scrolling List Field					
+styledText												
+text				false			Choice 1\nChoice 2\nChoice 3					
+tooltip												
+disabled							false					
+visible							true					
+sharedText							true					
+dontWrap							false					
+lockText							true					
+opaque							true					
+traversalOn							true					
+showFocusBorder							true					
+autoTab							false					
+threeD							true					
+showBorder							true					
+borderWidth							2					
+hScrollbar							false					
+vScrollbar							true					
+scrollbarWidth												
+autoHilite							true					
+listBehavior							true					
+multipleHilites							false					
+nonContiguousHilites							false					
+toggleHilites							false					
+firstIndent							0					
+dontSearch							false					
+layerMode												
+behavior												
+basicTableObject							false					
+cellEdit							false					
+maxColumnCount												
+cellFormat							false					
+showLines							false					
+hGrid							false					
+vGrid							false					
+tabStops												
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+fixedLineHeight												
+textHeight												
+margins							8					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				250					
+height::revIDESetRectProperty			com.livecode.pi.dimension				56					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
