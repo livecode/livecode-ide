@@ -1,0 +1,54 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	graphic tool											
+title	Polygon Graphic											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Polygon					
+tooltip												
+style							polygon	rectangle,roundrect,line,oval,regular,line,curve,polygon				
+opaque							false					
+visible							true					
+disabled							false					
+showName							false					
+antialiased							true					
+lineSize							1					
+dashes												
+startArrow							false					
+endArrow							false					
+points							Basic					
+markerDrawn							false					
+markerLineSize							1					
+markerFilled							false					
+markerPoints												
+layerMode												
+behavior												
+foregroundColor						Border fill						
+foregroundPattern						Border fill						
+backgroundColor												
+backgroundPattern												
+fillGradient												
+strokeGradient												
+hiliteColor						Marker border fill						
+hilitePattern						Marker border fill						
+borderColor						Marker fill						
+borderPattern						Marker fill						
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							8					
+lockLoc							false					
+width							100					
+height							100					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
