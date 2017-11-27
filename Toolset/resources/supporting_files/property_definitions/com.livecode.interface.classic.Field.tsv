@@ -1,0 +1,74 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	field											
+title	Field											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Field					
+styledText												
+tooltip												
+disabled							false					
+visible							true					
+sharedText							false					
+dontWrap							false					
+lockText							false					
+opaque							true					
+traversalOn							true					
+showFocusBorder							true					
+autoTab							false					
+threeD							true					
+showBorder							true					
+borderWidth							2					
+hScrollbar							false					
+vScrollbar							false					
+scrollbarWidth							20					
+autoHilite							true					
+listBehavior							false					
+multipleHilites							false					
+nonContiguousHilites							false					
+toggleHilites							false					
+firstIndent							0					
+dontSearch							false					
+layerMode												
+behavior												
+basicTableObject							false					
+cellEdit							false					
+maxColumnCount												
+cellFormat							false					
+showLines							false					
+hGrid							false					
+vGrid							false					
+tabStops												
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+fixedLineHeight												
+textHeight												
+margins							8					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				100					
+height::revIDESetRectProperty			com.livecode.pi.dimension				21					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

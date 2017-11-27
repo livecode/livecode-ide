@@ -1,0 +1,50 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	scrollbar											
+title	Slider											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Scrollbar					
+style							scale	progress,scale,scrollbar				
+visible												
+disabled												
+traversalOn							true					
+focusBorder												
+orientation												
+startValue							1					
+endValue												
+thumbPosition							1					
+thumbsize												
+showValue							true					
+numberFormat												
+pageInc							1					
+lineInc				false			0					
+layerMode												
+behavior												
+foregroundColor	Text Color											
+foregroundPattern	Text Pattern											
+backgroundColor												
+backgroundPattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+margins							4					
+lockLoc							false					
+width							100					
+height							38					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
