@@ -883,7 +883,7 @@ Figure 12 – Find and Replace
 | Format handler or move to next placeholder     | Tab                                     | Tab                                     |
 | Next tab in Editor                             | Control-tab                             | Control-tab                             |
 | Previous tab in Editor                         | Control-shift-tab                       | Control-shift-tab                       |
-| Show completions palette                       | Control-shift-right                     | Command-shift-right                     |
+| Show completions palette                       | F1                                      | F1                                      |
 
 | **The Message Box** |  **Windows / Linux** | **Mac OS X**|
 |------|--------|-------|

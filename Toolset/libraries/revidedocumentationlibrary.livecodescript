@@ -360,19 +360,27 @@ function ideDocsFetchLibraryNames
    repeat while tMoreRecords
       add 1 to tCount
       get revDatabaseColumnNamed(tRecordSet, "library_name", "tData")
-      put tData into tDataSet[tCount]
+      put true into tDataSet[tData]
       revMoveToNextRecord tRecordSet
       put the result into tMoreRecords
    end repeat
-   
+
    # Close the record set
    revCloseCursor tRecordSet
-   
-   combine tDataSet with return
+
+   combine tDataSet with return as set
+   sort tDataSet
    return tDataSet
 end ideDocsFetchLibraryNames
 
-private function ideDocsFetchLibraryEntries pLibraryName
+/*
+Fetch the data for all entries in a given library
+
+Returns:
+A numerically keyed array, each element of which is the array
+of data pertaining to an entry in the given library API.
+*/
+function ideDocsFetchLibraryEntries pLibraryName
    return __ideDocsFetchData("", pLibraryName, "")
 end ideDocsFetchLibraryEntries
 

@@ -1,0 +1,47 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	card											
+title	Card											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name												
+number												
+mark							false					
+dontSearch							false					
+cantDelete							false					
+showBorder							true					
+opaque							true					
+threeD							true					
+borderWidth							2					
+behavior												
+foregroundColor												
+foregroundPattern												
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+textFont												
+textSize												
+textStyle												
+textAlign							empty					
+margins							8					
+lockLoc							false					
+width					true							
+height					true							
+location					true							
+left					true							
+top					true							
+right					true							
+bottom					true							
+layer												
+number					false							

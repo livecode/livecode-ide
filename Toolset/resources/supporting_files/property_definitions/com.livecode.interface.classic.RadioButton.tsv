@@ -1,0 +1,67 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	button											
+title	Radio Button											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Radio					
+label												
+tooltip												
+style							radiobutton	standard,transparent,opaque,rectangle,roundRect,shadow,checkbox,radioButton				
+visible							true					
+opaque							false					
+showName							true					
+autoHilite							true					
+sharedHilite							false					
+acceleratorKey												
+acceleratorModifier												
+acceleratorText												
+traversalOn							true					
+showFocusBorder							true					
+mnemonic												
+default							false					
+disabled												
+hilited												
+layerMode												
+behavior												
+icon												
+hiliteIcon												
+disabledIcon												
+visitedIcon												
+armedIcon												
+hoverIcon												
+threeD							true					
+showBorder							true					
+hiliteBorder							false					
+borderWidth							2					
+shadow							false					
+shadowOffset							4					
+foregroundColor						Text fill						
+foregroundPattern						Text fill						
+backgroundColor												
+backgroundPattern												
+hiliteColor												
+hilitePattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+focusColor												
+focusPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign							left					
+margins							4					
+lockLoc							false					
+width::revIDESetRectProperty			com.livecode.pi.dimension				82					
+height::revIDESetRectProperty			com.livecode.pi.dimension				23					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												

@@ -1,0 +1,41 @@
+Property : optional getter : optional setter	Label	Section	Editor	User Visible	Read Only	Group	Default	Options	Subsection	min	max	step
+type	scrollbar											
+title	Progress Bar											
+												
+-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+name							Progress Scrollbar					
+style							progress	progress,scale,scrollbar				
+visible							true					
+disabled							false					
+startValue												
+endValue												
+thumbPosition												
+thumbsize							0					
+layerMode												
+behavior												
+backgroundColor												
+backgroundPattern												
+borderColor												
+borderPattern												
+topColor												
+topPattern												
+bottomColor												
+bottomPattern												
+shadowColor												
+shadowPattern												
+customProperties												
+blendLevel							0	0,100				
+ink												
+textFont												
+textSize												
+textStyle												
+textAlign												
+margins							4					
+lockLoc							false					
+width							200					
+height							16					
+dropShadow												
+innerShadow												
+outerGlow												
+innerGlow												
+colorOverlay												
