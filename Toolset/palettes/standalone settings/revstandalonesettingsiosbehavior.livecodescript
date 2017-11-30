@@ -434,11 +434,11 @@ on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
       set the topLeft of group "iosBuild" to 12,136
       set the topLeft of group "iOS Settings" to -1,136
-      set the cSize of this card to 1024,726
+      set the cSize of this card to 1024,796
    else 
       set the topLeft of group "iOS Settings" to -1,67
       set the topLeft of group "iosBuild" to 12,68
-      set the cSize of this card to 1024,676
+      set the cSize of this card to 1024,746
    end if
    updateCardSize
 end tipDisplayUpdate
