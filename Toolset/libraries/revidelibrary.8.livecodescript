@@ -5277,6 +5277,16 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
                exit revIDEPropertySet
             end if
             put pValue into tStackName
+         else if tStack is tObject and pProperty is "style" then
+            local tOldStyle
+            put the style of tStack into tOldStyle
+            if pValue is "modal" then
+               answer warning revIDELocalise("The stack will now be displayed as a modal window. You will not be able to edit other windows until this stack is closed. Do you want to continue?") with revIDELocalise("OK") and revIDELocalise("Cancel")
+               if it is revIDELocalise("Cancel") then
+                  set the style of tStack to tOldStyle
+                  exit revIDEPropertySet
+               end if
+            end if
          else
             put the short name of tStack into tStackName
          end if
@@ -9630,6 +9640,10 @@ on revIDESetModeOfStack pStack, pMode
          toplevel pStack
          break
       case "modal"
+         answer warning revIDELocalise("The stack will now be displayed as a modal window. You will not be able to edit other windows until this stack is closed. Do you want to continue?") with revIDELocalise("OK") and revIDELocalise("Cancel")
+         if it is revIDELocalise("Cancel") then
+            exit revIDESetModeOfStack
+         end if
          modal pStack
          break
    end switch
