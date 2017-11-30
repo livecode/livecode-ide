@@ -2052,12 +2052,7 @@ function revEnvironmentExtensionsPaths
    if revEnvironmentIsInstalled() then
       return hookToolsPath("extensions", sToolsPath & "/Extensions")
    else
-      -- Load the real extensions rather than the packaged versions
-      local tPaths
-      put revEnvironmentRepositoryPath() & slash & "extensions" into tPaths
-      put return & revEnvironmentCommercialRepositoryPath() \
-            & slash & "extensions" after tPaths
-      return tPaths
+      return sBinariesPath & slash & "packaged_extensions"
    end if
 end revEnvironmentExtensionsPaths
 
