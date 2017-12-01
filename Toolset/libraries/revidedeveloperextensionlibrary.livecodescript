@@ -288,6 +288,13 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put tCode into tDetailsA["code"]
    end if
    
+   local tSamplesFolder, tSamples
+   put pFolder & slash & "samples" into tSamplesFolder
+   if there is a folder tSamplesFolder then
+      put __revIDEDeveloperExtensionListResourcesRecursive(tSamplesFolder, "") into tSamples
+      put tSamples into tDetailsA["samples"]
+   end if
+   
    # Default script
    put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["id"], false) into tDetailsA["defaultscript"]
    if tDetailsA["defaultscript"] is not empty then
@@ -871,6 +878,12 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put empty into tCode
    end if
    
+   local tSamples
+   put (pFolder & slash & "samples") into tSamples
+   if there is not a folder tSamples then
+      put empty into tSamples
+   end if
+   
    # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
    local tInterfaceFile
    if there is a file (pFolder & slash & tTargetName & ".lci") then
@@ -884,7 +897,11 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    end if
    
    if tError is empty then
-      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, tInterfaceFile, tDefaultScript) into tError
+      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
+            tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, tSamples, \
+            tInterfaceFile, tDefaultScript) \
+            into tError
    end if
    
    revZipCloseArchive tArchive
@@ -904,7 +921,10 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    return empty
 end __revIDEDeveloperExtensionBuildPackage
 
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pCodeFolder, pInterfaceFile, pDefaultScript
+private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
+      pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, \
+      pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, pInterfaceFile, \
+      pDefaultScript
    local tError
    
    set the itemdelimiter to slash
@@ -995,6 +1015,19 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
          
          if the result begins with "ziperr" then
             __revIDEDeveloperExtensionSendWarning "couldn't add code" && pCodeFolder & slash & tLine
+         end if
+      end repeat
+   end if
+   
+   # Add sample stacks
+   if tError is empty and pSamplesFolder is not empty then
+      local tSamples
+      put __revIDEDeveloperExtensionListResourcesRecursive(pSamplesFolder, "") into tSamples
+      repeat for each line tLine in tSamples
+         revZipAddItemWithFile pArchive, "samples/" & tLine, pSamplesFolder & slash & tLine
+         
+         if the result begins with "ziperr" then
+            __revIDEDeveloperExtensionSendWarning "couldn't add sample" && pSamplesFolder & slash & tLine
          end if
       end repeat
    end if
