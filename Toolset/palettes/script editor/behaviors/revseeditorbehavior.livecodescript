@@ -1119,7 +1119,7 @@ on menuPick pItemName
             
             revDebuggerAddBreakpoint getObjectID(), tLineNumber
             revDebuggerActivateBreakpoint getObjectID(), tLineNumber
-            updateGutterRequest empty, empty, empty, empty, false, false
+            updateGutterRequest empty, empty, empty, empty, false, false, true
          end if
          break
          
