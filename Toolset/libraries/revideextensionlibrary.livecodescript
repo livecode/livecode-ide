@@ -299,35 +299,52 @@ private command __extensionDownloadVerify pCacheIndex
    set the itemdel to "."
    if the last item of tExtensionPath is not "lce" then return __extensionError(pCacheIndex,"Could not install extension. The package extension '"&the last item of tExtensionPath&"' Is not valid. Must be 'lce'.")
    
+   # Get initial manifest data needed for loading
+   local tManifestData, tManifestXMLTree
+   put __extensionManifestData(pCacheIndex) into tManifestData
+   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
+   
    # Check the manifest contains a name
    local tExtensionName
-   put __extensionManifestValue(pCacheIndex, "name") into tExtensionName
-   if tExtensionName is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
+   put __extensionManifestValueFromTree(tManifestXMLTree, "name") into tExtensionName
+   if the result is not empty then
+      return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid name (com.livecode.extensions.<developer_ID>.<extension_name>)")
+   end if
    __extensionPropertySet pCacheIndex, "name", tExtensionName
    
    # Check the manifest contains a version
    local tExtensionVersion
-   put __extensionManifestValue(pCacheIndex, "version") into tExtensionVersion
-   if tExtensionVersion is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
+   put __extensionManifestValueFromTree(tManifestXMLTree, "version") into tExtensionVersion
+   if the result is not empty then 
+      return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a valid version number (1.2.3 - major,minor,maintenance)")
+   end if
    __extensionPropertySet pCacheIndex, "version", tExtensionVersion
    
    # Check the manifest contains an author
    local tExtensionAuthor
-   put __extensionManifestValue(pCacheIndex, "author") into tExtensionAuthor
-   if tExtensionAuthor is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
+   put __extensionManifestValueFromTree(tManifestXMLTree, "author") into tExtensionAuthor
+   if the result is not empty then 
+      return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain an author")
+   end if
    __extensionPropertySet pCacheIndex, "author", tExtensionAuthor
    
    # Check the manifest contains an type
    local tExtensionType
-   put __extensionManifestValue(pCacheIndex, "type") into tExtensionType
-   if tExtensionType is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
+   put __extensionManifestValueFromTree(tManifestXMLTree, "type") into tExtensionType
+   if the result is not empty then 
+      return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a type")
+   end if
    __extensionPropertySet pCacheIndex, "type", tExtensionType
    
    # Check the manifest contains an title
    local tExtensionTitle
-   put __extensionManifestValue(pCacheIndex, "title") into tExtensionTitle
-   if tExtensionTitle is "error" then return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
+   put __extensionManifestValueFromTree(tManifestXMLTree, "title") into tExtensionTitle
+   if the result is not empty then 
+      return __extensionError(pCacheIndex,"Could not install extension. The package manifest must contain a title")
+   end if
    __extensionPropertySet pCacheIndex, "title", tExtensionTitle
+   
+   revXMLDeleteTree tManifestXMLTree
    
    # Build the type ID from the name and version
    __extensionPropertySet pCacheIndex, "type_id", tExtensionName & "." & tExtensionVersion
@@ -1259,7 +1276,40 @@ function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
    return tScript
 end revIDEExtensionFetchDefaultScript
 
-function __extensionManifestValue pCacheIndex, pProperty
+private function __extensionManifestValueFromTree pTreeID, pProperty
+   local tValue
+   switch pProperty
+      case "requires"
+         # Fetch extension dependencies
+         local tRequires, tCount
+         put 0 into tCount
+         put revXMLChildNames(pTreeID,"package",return,"requires",true) into tRequires
+         if tRequires begins with "xmlerr" then
+            put tRequires into tValue
+            break
+         end if
+         repeat for each line tDependency in tRequires
+            add 1 to tCount
+            local tName
+            put revXMLAttribute(pTreeID,"package" & "/" & tDependency,"name") into tName
+            if tName begins with "xmlerr" then
+               put tName into tValue
+               break
+            end if
+            put tName into tValue[tCount]
+         end repeat
+      default
+         put revXMLNodeContents(pTreeID,"/package/" & pProperty) into tValue
+         break
+   end switch
+   
+   if tValue begins with "xmlerr" then
+      return tValue for error
+   end if
+   return tValue for value
+end __extensionManifestValueFromTree
+
+private function __extensionManifestData pCacheIndex
    # Get the path to the package file
    local tExtensionPackageFile
    put __extensionPropertyGet(pCacheIndex, "download_package_path") into tExtensionPackageFile
@@ -1284,15 +1334,8 @@ function __extensionManifestValue pCacheIndex, pProperty
    revZipExtractItemToVariable tExtensionPackageFile, (tZipRoot & "manifest.xml"), "tManifestData"
    
    revZipCloseArchive tExtensionPackageFile
-   
-   put revXMLCreateTree(tManifestData,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValue
+   return tManifestData
+end __extensionManifestData
 
 function __extensionSampleStacks pID, pFolder
    local tSampleFolder, tSamples, tSampleArray
@@ -1309,31 +1352,6 @@ function __extensionSampleStacks pID, pFolder
    
    return tSampleArray
 end __extensionSampleStacks
-
-function __extensionManifestValueFromFile pCacheIndex, pProperty
-   # Get the path to the manifest file
-   local tExtensionInstallPath, tManifestFilepath
-   put __extensionPropertyGet(pCacheIndex, "install_path") into tExtensionInstallPath
-   put tExtensionInstallPath & slash & "manifest.xml" into tManifestFilepath
-   
-   if not there is a file tManifestFilepath then 
-      local tError
-      put "Could not get extension manifest information: " into tError
-      put "extension folder does not contain a manifest file" after tError
-      return __extensionError(pCacheIndex,tError)
-   end if
-   
-   # Extract the package manfiest to a variable to read key data
-   local tManifestXMLTree, tValue
-   
-   put revXMLCreateTreeFromFile(tManifestFilepath,true,true,false) into tManifestXMLTree
-   put revXMLNodeContents(tManifestXMLTree,"/package/" & pProperty) into tValue
-   if tValue begins with "xmlerr" then
-      return empty
-   else
-      return tValue
-   end if
-end __extensionManifestValueFromFile
 
 ##############################
 # CALLBACKS
