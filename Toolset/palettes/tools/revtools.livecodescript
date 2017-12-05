@@ -292,29 +292,22 @@ on generatePalette
             set the id of it to revIDENewIconID()
          end if
          
-         local tImageID
+         local tImageID, tFilename
          if sViewsData[tView][tControlTypeID]["icon"] is not empty then 
-            set the name of the templateimage to tControlTypeID & ".icon.png"
-            set the visible of the templateimage to false
-            set the filename of the templateimage to sViewsData[tView][tControlTypeID]["icon"]
-            create image in group "images" of group "contents"
-            set the id of it to revIDENewIconID()
-            put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
-            revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
-            set the icon of the templatebutton to the ID of tImageID
+            put sViewsData[tView][tControlTypeID]["icon"] into tFilename
          else if there is a file (tThemePath & slash & tControlTypeID & ".icon.png") then 
-            # If we can find an icon file in the theme, create it
-            set the name of the templateimage to tControlTypeID & ".icon.png"
-            set the visible of the templateimage to false
-            set the filename of the templateimage to tThemePath & slash & tControlTypeID & ".icon.png"
-            create image in group "images" of group "contents"
-            set the id of it to revIDENewIconID()
-            put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
-            revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
-            set the icon of the templatebutton to the ID of tImageID
-         else 
-            set the icon of the templatebutton to empty
+            put tThemePath & slash & tControlTypeID & ".icon.png" into tFilename
+         else
+            put revIDEDefaultExtensionIcon("widget") into tFilename
          end if
+         set the name of the templateimage to tControlTypeID & ".icon.png"
+         set the visible of the templateimage to false
+         set the filename of the templateimage to tFilename
+         create image in group "images" of group "contents"
+         set the id of it to revIDENewIconID()
+         put the long id of image (tControlTypeID & ".icon.png") of group "images" of group "contents" into tImageID
+         revIDEResizeImageInBounds tImageID, BLOCK_SIZE * 2,BLOCK_SIZE
+         set the icon of the templatebutton to the ID of tImageID
          
          # If the object is a tool, set the key custom properties to make it behave like a tool
          local tToolType
@@ -356,6 +349,7 @@ on generatePalette
          
          if sViewsData[tView][tControlTypeID]["svgicon"] is empty then
             create button tControlTypeID in group tView of group "contents"
+            set the cType of button tControlTypeID to tView
          else
             create widget tControlTypeID as "com.livecode.widget.svgpath" in group tView of group "contents"
             set the width of widget tControlTypeID to BLOCK_SIZE * 2
