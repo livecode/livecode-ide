@@ -728,7 +728,7 @@ private function __fetchScriptLibraryData pFolder, pExtFile
    put the result into tDocA 
    
    set the itemdelimiter to comma
-   repeat for each item tKey in "title,author,version,name,display name,requires,uses,svgicon"
+   repeat for each item tKey in "title,author,version,name,type,display name,requires,uses,svgicon"
       put tDocA[tKey] into tDataA[tKey]
    end repeat
    if tDataA["title"] is empty then
