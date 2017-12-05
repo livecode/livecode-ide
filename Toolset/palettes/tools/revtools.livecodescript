@@ -64,6 +64,7 @@ on registerForMessages
    ### Messages
    revIDESubscribe "idePreferenceChanged:revTools_columns"
    revIDESubscribe "idePreferenceChanged:revTools_show"
+   revIDESubscribe "idePreferenceOfSetChanged"
    revIDESubscribe "ideToolChanged"
    revIDESubscribe "ideExtensionsChanged"
 end registerForMessages
@@ -96,6 +97,16 @@ on idePreferenceChanged pPreference
          break
    end switch
 end idePreferenceChanged
+
+on idePreferenceOfSetChanged pSet, pPreference
+   switch pPreference
+      case "uservisible"
+         -- Regenerate tools palette after visible of widget changed
+         generatePalette
+         resizeStack
+         break
+   end switch
+end idePreferenceOfSetChanged
 
 constant kPolygonMenu = "Rectangle Tool\nRounded Rectangle Tool\nOval Tool\nRegular Polygon Tool\nPolygon Tool"
 on ideToolChanged
