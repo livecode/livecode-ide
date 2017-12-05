@@ -712,78 +712,15 @@ private function __fetchMetadatum pXmlId, pKey
    return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
 end __fetchMetadatum
 
-private function shellFormat pArg, pSwitch
-   local tOutput
-   
-   if pSwitch is not empty then
-      put "--" & pSwitch & " " into tOutput
-   end if
-   
-   return tOutput & quote & pArg & quote & " "
-end shellFormat
-
-private function __revIDEDeveloperExtensionResourcePath
-   if revEnvironmentIsInstalled() is false then
-      return revEnvironmentBinariesPath()
-   else
-      return revIDESpecialFolderPath("Toolchain")
-   end if
-end __revIDEDeveloperExtensionResourcePath
-
-private function __revIDEDeveloperExtensionCompilerPath
-   # The actual compile command
-   if the platform is "win32" then
-      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile.exe"
-   else
-      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile"
-   end if
-end __revIDEDeveloperExtensionCompilerPath
-
 private command __revIDEDeveloperCompileModule pFile, pTargetFolder
-   # The manifest is currently always generated from the source
-   if there is a file (pTargetFolder & slash & "manifest.xml") then
-      delete file (pTargetFolder & slash & "manifest.xml")
-   end if
+   revIDEExtensionCompile pFile, pTargetFolder
    
-   # Build the shell command
-   local tShellCommand
-   put shellFormat(__revIDEDeveloperExtensionCompilerPath()) into tShellCommand
-   
-   # The folder to put the .lci file
-   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
-   
-   # The built-in module path
-   put shellFormat(__revIDEDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
-   
-   # Installed module path
-   put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand
-   
-   # The manifest target
-   put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand
-   
-   # The output
-   put shellFormat(pTargetFolder & slash & "module.lcm", "output") after tShellCommand
-   
-   # The target .lcb file
-   put shellFormat(pFile) after tShellCommand
-   
-   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
-   local tHideConsoleWindows
-   put the hideConsoleWindows into tHideConsoleWindows
-   set the hideConsoleWindows to true
-   
-   local tShellOutput, tShellResult
-   put shell(tShellCommand) into tShellOutput
-   put the result into tShellResult
-   
-   set the hideConsoleWindows to tHideConsoleWindows
-   
-   if tShellResult is not 0 then
-      __revIDEDeveloperCompilationError tShellOutput
+   if the result is not empty then
+      __revIDEDeveloperCompilationError the result
       return "failed to compile module"
    end if
    
-   __revIDEDeveloperExtensionLog tShellOutput
+   __revIDEDeveloperExtensionLog it
    
    if there is not a file (pTargetFolder & slash & "module.lcm") then
       return "failed to compile module"

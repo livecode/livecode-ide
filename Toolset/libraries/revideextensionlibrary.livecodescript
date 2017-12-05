@@ -1078,6 +1078,17 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
    end if
    if not pIsStartup or tLoadOnStartup is not false then
       __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, pError
+      -- If we have an error loading, try to recompile the extension
+      if pError is not empty then
+         if not pIsIDEExtension and pSourceFile is not empty then
+            revIDEExtensionCompile pFolder & slash & pSourceFile, pFolder
+            if the result is empty then
+               local tNewError
+               __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, tNewError
+               put tNewError into pError
+            end if
+         end if
+      end if
    else
       __extensionPropertySet tCacheIndex, "status", "unloaded" 
    end if
@@ -1430,6 +1441,76 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
       return "updated"
    end if
 end revIDEExtensionUpdateAPI
+
+private function __revIDEExtensionResourcePath
+   if revEnvironmentIsInstalled() is false then
+      return revEnvironmentBinariesPath()
+   else
+      return revIDESpecialFolderPath("Toolchain")
+   end if
+end __revIDEExtensionResourcePath
+
+private function __revIDEExtensionCompilerPath
+   # The actual compile command
+   if the platform is "win32" then
+      return __revIDEExtensionResourcePath() & slash & "lc-compile.exe"
+   else
+      return __revIDEExtensionResourcePath() & slash & "lc-compile"
+   end if
+end __revIDEExtensionCompilerPath
+
+private function shellFormat pArg, pSwitch
+   local tOutput
+   
+   if pSwitch is not empty then
+      put "--" & pSwitch & " " into tOutput
+   end if
+   
+   return tOutput & quote & pArg & quote & " "
+end shellFormat
+
+command revIDEExtensionCompile pFile, pTargetFolder
+   # The manifest is currently always generated from the source
+   if there is a file (pTargetFolder & slash & "manifest.xml") then
+      delete file (pTargetFolder & slash & "manifest.xml")
+   end if
+   
+   # Build the shell command
+   local tShellCommand
+   put shellFormat(__revIDEExtensionCompilerPath()) into tShellCommand
+   
+   # The folder to put the .lci file
+   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
+   
+   # The built-in module path
+   put shellFormat(__revIDEExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
+   
+   # Installed module path
+   put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand
+   
+   # The manifest target
+   put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand
+   
+   # The output
+   put shellFormat(pTargetFolder & slash & "module.lcm", "output") after tShellCommand
+   
+   # The target .lcb file
+   put shellFormat(pFile) after tShellCommand
+   
+   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
+   local tHideConsoleWindows
+   put the hideConsoleWindows into tHideConsoleWindows
+   set the hideConsoleWindows to true
+   
+   local tShellOutput, tShellResult
+   put shell(tShellCommand) into tShellOutput
+   put the result into tShellResult
+   set the hideConsoleWindows to tHideConsoleWindows
+   if tShellResult is 0 then
+      return tShellOutput for value
+   end if
+   return tShellOutput for error
+end revIDEExtensionCompile
 
 command revIDEExtensionMetadata pFolder, pFile, pType, @rDataA
    local tDataA, tResult
