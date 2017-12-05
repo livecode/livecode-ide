@@ -1075,8 +1075,14 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
    # Check for sample stacks
    __extensionPropertySet tCacheIndex, "samples", __extensionSampleStacks(pID,pFolder)
    
-   # Store the extension's property metadata
+   # Store the extension's metadata
    revIDEExtensionSetInfo pID
+   
+   local tUserVisiblePref
+   put revIDEGetPreferenceOfSet(pID, "uservisible") into tUserVisiblePref
+   if tUserVisiblePref is not empty then
+      __extensionPropertySet tCacheIndex, "uservisible", tUserVisiblePref
+   end if
    
    # Deal with the various icon possibilities
    if sExtensionProperties[pID]["svgicon"] is empty then
