@@ -270,8 +270,11 @@ private on displayExtensionData pData
    else put "No resources found in extension" into field "resources" of me
    
    # API 
-   if pData["api"] is not empty then put "Yes" into field "message_api" of me
-   else put "No API data found" into field "message_api" of me
+   if pData["api"] is not empty or pData["api_file"] is not empty then 
+      put "Yes" into field "message_api" of me
+   else 
+      put "No API data found" into field "message_api" of me
+   end if
    
    # Userguide 
    if pData["user_guide"] is not empty then put "Yes" into field "message_guide" of me
