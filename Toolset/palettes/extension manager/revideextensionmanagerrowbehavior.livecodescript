@@ -1,7 +1,7 @@
 ﻿script "revIDEExtensionManagerRowBehavior"
 on FillInData pDataA, pRow
    # Map pDataA values to physical controls...
-   local tVersion, tActions
+   local tVersion
    
    set the cTypeID of me to pDataA["name"]
    
@@ -41,19 +41,13 @@ on FillInData pDataA, pRow
    hide button "update" of me
    
    put char -5 to -1 of pDataA["identifier"] into tVersion
-   if pDataA["latest"] is not tVersion then
-      set the cLatestVersion of me to pDataA["latest"]
-      put "Uninstall" & return after tActions
-   else
-      put "Uninstall" & return after tActions
+   if pDataA["status"] is not "uninstalled" then
+      if pDataA["latest"] is not tVersion then
+         set the cLatestVersion of me to pDataA["latest"]
+      end if
    end if
    
    set the cIDE of me to (pDataA["ide"] is true)
-   if pDataA["ide"] is true then
-      if "Uninstall" is among the lines of tActions then
-         put "(" before line (lineOffset("Uninstall",tActions)) of tActions
-      end if
-   end if
    
    switch pDataA["status"]
       case "installed"
@@ -66,11 +60,18 @@ on FillInData pDataA, pRow
          hide button "cancel" of me
          hide group "installProgress" of me
          show image "Error" of me
-         put pDataA["error"] into field "Error Message" of me
+         put pDataA["name"] && "error" into field "Error Message" of me
+         set the tooltip of field "Error Message" of me to pDataA["error"]         
+         set the tooltip of image "Error" of me to pDataA["error"]
          show field "Error Message" of me
          break
+      case "unloaded"         
+         hide button "cancel" of me
+         hide group "installProgress" of me
+         hide image "Error" of me
+         hide field "Error Message" of me
+         break
       case "uninstalled"         
-         put "(" before line (lineOffset("Uninstall",tActions)) of tActions
          hide button "cancel" of me
          hide group "installProgress" of me
          hide image "Error" of me
@@ -78,7 +79,6 @@ on FillInData pDataA, pRow
          show field "Error Message" of me
          break
       default
-         put "(" before line (lineOffset("Uninstall",tActions)) of tActions
          show group "installProgress" of me
          put pDataA["status"] into field "installProgressStatus" of me
          set the thumbposition of scrollbar "installProgressBar" of me to  pDataA["progress"]
@@ -86,6 +86,50 @@ on FillInData pDataA, pRow
          hide field "Error Message" of me
          break         
    end switch   
+   
+   local tActions
+   put __MenuActionsForRow(pDataA) into tActions
+   
+   set the text of button "extensionActions" of me to tActions
+   enable widget "actionIcon" of me
+end FillInData
+
+private function __MenuActionsForRow pDataA
+   local tActions
+   
+   if pDataA["status"] is "unloaded" then
+      put "Load" & return after tActions
+      if not pDataA["ide"] then
+         put "Uninstall" & return after tActions
+      end if
+   else if pDataA["status"] is "installed" then
+      if not pDataA["_ide"] then
+         put "Unload" & return after tActions
+         if not pDataA["ide"] then
+            put "Uninstall" & return after tActions
+         end if
+      end if
+   else if pDataA["status"] is "error" then
+      if not pDataA["ide"] then
+         put "Remove" & return after tActions
+      end if
+   end if
+   
+   if pDataA["type"] is "widget" then
+      local tShow
+      put "Show in tools palette/|Toggle Visible" & return into tShow
+      if pDataA["uservisible"] then
+         put "!c" before tShow
+      end if
+      put tShow after tActions
+   end if
+   
+   local tLoadOnStartup
+   put "Load on startup/|Toggle Load" & return into tLoadOnStartup
+   if revIDEExtensionGetLoadOnStartup(pDataA["name"]) is not false then
+      put "!c" before tLoadOnStartup
+   end if
+   put tLoadOnStartup after tActions
    
    local tSampleList
    if pDataA["samples"] is not empty then
@@ -99,10 +143,8 @@ on FillInData pDataA, pRow
    else
       put "(Sample Stacks" & return after tActions
    end if
-   
-   set the text of button "extensionActions" of me to tActions
-   enable widget "actionIcon" of me
-end FillInData
+   return tActions
+end __MenuActionsForRow
 
 on LayoutControl pControlRect
    
@@ -201,29 +243,36 @@ on menuPick pAction
       delete item 2 of pAction
    end if
    
+   local tKind
+   put the cTypeID of me into tKind
    switch pAction
-      case "activate"
-         answer "Are you sure you want to activate extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
-         if it is "Yes" then
-            activateExtension the cTypeID of me
-         end if
+      case "Toggle Visible"
+         toggleUserVisibility tKind
          break
-      case "deactivate"
-         answer "Are you sure you want to deactivate extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
-         if it is "Yes" then
-            deactivateExtension the cTypeID of me
-         end if
+      case "Toggle Load"
+         toggleLoadOnStartup tKind
          break
       case "uninstall"
-         answer "Are you sure you want to uninstall extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
+         answer "Are you sure you want to uninstall extension" \
+               && tKind & "?" with "Cancel" and "Yes"
          if it is "Yes" then
-            uninstallExtension the cTypeID of me
+            uninstallExtension tKind
          end if
          break
+      case "remove"
+         uninstallExtension tKind
+         break
+      case "unload"
+         unloadExtension tKind
+         break
+      case "load"
+         loadExtension tKind
+         break
       case "update"
-         answer "Are you sure you want to update extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
+         answer "Are you sure you want to update extension" \
+               && tKind & "?" with "Cancel" and "Yes"
          if it is "Yes" then
-            updateExtension the cTypeID of me,  the cLatestVersion of me
+            updateExtension tKind,  the cLatestVersion of me
          end if
          break
       case "Sample Stacks"

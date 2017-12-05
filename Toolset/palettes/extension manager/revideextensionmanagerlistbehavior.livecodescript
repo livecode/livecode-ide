@@ -154,17 +154,27 @@ on refreshExtensionListStatus
    send "renderView" to group "extensionList" of me
 end refreshExtensionListStatus
 
-on activateExtension pExtensionIdentifier
-   revIDEActivateExtension pExtensionIdentifier
-end activateExtension
-
-on deactivateExtension pExtensionIdentifier
-   revIDEDeactivateExtension pExtensionIdentifier
-end deactivateExtension
-
-on uninstallExtension pExtensionIdentifier
-   revIDEUninstallExtension pExtensionIdentifier
+command uninstallExtension pTypeID
+   revIDEExtensionUninstall pTypeID
 end uninstallExtension
+
+command unloadExtension pTypeID
+   revIDEExtensionUnload pTypeID
+end unloadExtension
+
+command loadExtension pTypeID
+   revIDEExtensionReload pTypeID
+end loadExtension
+
+command toggleUserVisibility pTypeID
+   revIDEExtensionToggleUserVisibility pTypeID
+   refreshList
+end toggleUserVisibility
+
+command toggleLoadOnStartup pTypeID
+   revIDEExtensionToggleLoadOnStartup pTypeID
+   refreshList
+end toggleLoadOnStartup
 
 on updateExtension pExtensionIdentifier, pLatestVersion
    ## Don't do anything for now becuase renaming a zip doesn't work
@@ -182,8 +192,8 @@ on launchExtensionSampleStack pSampleStack
    open stack pSampleStack
    set the filename of stack pSampleStack to empty
 end launchExtensionSampleStack
-   
-   on ideExtensionStatusChanged pStatus
+
+on ideExtensionStatusChanged pStatus
    local tElement, tRow, tIdentifier, tStatus, tProgress
    put item 1 of pStatus into tIdentifier
    put item 2 of pStatus into tStatus
