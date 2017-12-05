@@ -8,6 +8,12 @@ on preOpenStack
    --addFrameItem "add","header", "action", "Create a new extension", "plus sign", "plus sign","headerActionNewExtension", the long id of me
    addFrameItem "open","header", "action", "Open an existing extension", "folder open", "folder open","headerActionOpenExtension", the long id of me
    
+   addFrameItem "package","footer", "action", "Package", "archive", "archive","footerActionPackage", the long id of me
+   addFrameItem "uninstall","footer", "action", "Uninstall", "remove circle", "remove circle","footerActionUninstall", the long id of me
+   addFrameItem "install","footer", "action", "Install", "plus sign", "plus sign","footerActionInstall", the long id of me
+   addFrameItem "stop testing","footer", "action", "Stop testing extension", "stop circle", "stop circle","footerActionStopTesting", the long id of me
+   addFrameItem "test","footer", "action", "Test extension", "play circle", "play circle","footerActionTest", the long id of me
+   
    put "No API entries found" into field "message_api" of me
    put "No user guide found" into field "message_guide" of me
    
@@ -22,6 +28,8 @@ on preOpenStack
    openExtension sLoadedExtension
    
    revIDESubscribe "ideExtensionLog"
+   revIDESubscribe "ideExtensionStatusChanged"
+   revIDESubscribe "ideExtensionsChanged"
 end preOpenStack
 
 on closeStackRequest
@@ -80,6 +88,30 @@ on headerActionOpenExtension
    openExtension item 1 to -2 of it
 end headerActionOpenExtension
 
+on footerActionPackage
+   revIDEDeveloperExtensionBuildPackage loadedExtensionGet()
+end footerActionPackage
+
+on footerActionInstall
+   revIDEDeveloperExtensionInstall loadedExtensionGet()
+end footerActionInstall
+
+on footerActionUninstall
+   revIDEDeveloperExtensionUninstall loadedExtensionGet()
+end footerActionUninstall
+
+on footerActionTest
+   revIDEDeveloperExtensionTest loadedExtensionGet()
+end footerActionTest
+
+on footerActionStopTesting
+   revIDEDeveloperExtensionStopTesting
+end footerActionStopTesting
+
+on footerActionEditSource
+   revIDEDeveloperExtensionEditScript loadedExtensionGet()
+end footerActionEditSource
+
 on openExtension pPath
    if there is not a folder pPath then exit openExtension
    
@@ -104,13 +136,8 @@ on openExtension pPath
    # Display the data for the given extenion
    displayExtensionData tExtensionData
    
-   # Enable the actions
-   enable button "test" of me
-   enable button "install" of me
-   enable button "uninstall" of me
-   enable button "package" of me
-   enable button "edit script" of me
-   
+   # Update actions depending on status
+   ideExtensionStatusChanged
    unlock messages
    unlock screen
 end openExtension
@@ -259,12 +286,7 @@ end displayExtensionData
 on clearExtension
    lock screen
    lock messages
-   disable button "test" of me
-   disable button "install" of me
-   disable button "uninstall" of me
-   disable button "package" of me
-   disable button "edit script" of me
-   
+
    set the text of image "icon_retina" of me to empty
    set the text of image "icon" of me to empty
    set the iconPath of widget "svgicon_retina" of me to empty
@@ -295,17 +317,6 @@ on resizeStack
    local tLeft, tTop, tRight, tBottom
    put item 4 of tRect - tMargin into tBottom
    put item 3 of tRect - tMargin into tRight
-   
-   # Buttons
-   set the bottomright of button "Test" of me to tRight, tBottom
-   subtract the width of button "Test" of me + tPadding from tRight
-   set the bottomright of button "Edit Script" of me to tRight, tBottom
-   subtract the width of button "Edit Script" of me + tPadding from tRight
-   set the bottomright of button "Install" of me to tRight, tBottom
-   subtract the width of button "Install" of me + tPadding from tRight
-   set the bottomright of button "Uninstall" of me to tRight, tBottom
-   subtract the width of button "Uninstall" of me + tPadding from tRight
-   set the bottomright of button "Package" of me to tRight, tBottom
    
    # Extensions
    local tLabelWidth
@@ -370,7 +381,6 @@ on resizeStack
    set the topleft of field "label_console" of me to tLeft, tTop
    
    put the bottom of field "label_console" of me + tPadding into tTop
-   put the top of button "test" of me -tPadding into tBottom
    set the rect of field "console" of me to tLeft, tTop, tRight, tBottom
    consoleScrollbarUpdate
    
@@ -396,3 +406,33 @@ on idePropertyChanged
    end if
 end idePropertyChanged
 
+on ideExtensionsChanged
+   ideExtensionStatusChanged
+end ideExtensionsChanged
+
+on ideExtensionStatusChanged
+   local tExtensionDataA
+   put revIDEDeveloperExtension(loadedExtensionGet()) \
+         into tExtensionDataA
+   
+   local tStatus
+   put revIDEExtensionProperty(tExtensionDataA["name"], "status") into tStatus
+   
+   if tStatus is "installed" then
+      disableFrameItem "test"
+      enableFrameItem "uninstall"
+      disableFrameItem "stop testing"
+      disableFrameItem "install"
+   else if revIDEDeveloperExtensionCurrentlyTesting() then
+      enableFrameItem "test"
+      disableFrameItem "uninstall"
+      enableFrameItem "stop testing"
+      disableFrameItem "install"
+   else
+      enableFrameItem "test"
+      disableFrameItem "uninstall"
+      disableFrameItem "stop testing"
+      enableFrameItem "install"
+   end if
+   
+end ideExtensionStatusChanged

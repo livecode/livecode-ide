@@ -429,7 +429,16 @@ on revIDEDeveloperExtensionAddResourceFolder pExtensionFolder, pResourceFolder
    end if
 end revIDEDeveloperExtensionAddResourceFolder
 
-on revIDEDeveloperExtensionTest pPath
+local sLoadedExtension
+function revIDEDeveloperExtensionCurrentlyTesting
+   return sLoadedExtension is not empty
+end revIDEDeveloperExtensionCurrentlyTesting
+
+command revIDEDeveloperExtensionStopTesting
+   __ClearTestExtension
+end revIDEDeveloperExtensionStopTesting
+
+command revIDEDeveloperExtensionTest pPath
    local tDetailsA
    put revIDEDeveloperExtension(pPath) into tDetailsA
    
@@ -444,14 +453,25 @@ on revIDEDeveloperExtensionTest pPath
       exit revIDEDeveloperExtensionTest
    end if
    
-   if there is not a file (pPath & slash & "module.lcm") then
+   if tDetailsA["source_type"] is "lcb" and \
+         there is not a file (pPath & slash & "module.lcm") then
       __revIDEDeveloperExtensionSendError "No compiled module in" && pPath
       exit revIDEDeveloperExtensionTest
    end if
    
-   __revIDEDeveloperExtensionLog "Launching in Test Window"
+   __ClearTestExtension
    
-   __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
+   revIDEExtensionLoad tDetailsA["source_type"], tDetailsA["name"], pPath, \
+         tDetailsA["version"], "installed", "", false, tDetailsA["file"]
+   
+   local tResult
+   put the result into tResult
+   if tResult is not empty then
+      __revIDEDeveloperExtensionSendError tResult
+      exit revIDEDeveloperExtensionTest
+   end if
+   
+   __LaunchTestExtension pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
 private function __testStackRects
@@ -485,13 +505,9 @@ private function __testStackScript
    return tScript
 end __testStackScript
 
-private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
+private command __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    local tRectsA
    put __testStackRects() into tRectsA
-   
-   if there is a stack "LiveCode Extension Test Window" then
-      revIDEDeveloperExtensionClearTestStack
-   end if
    
    revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
@@ -505,16 +521,7 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   revIDEExtensionLoad pDetailsA["type"], pDetailsA["name"], pPath, \
-         pDetailsA["version"], "installed", "", false, pDetailsA["file"]
-   
-   local tResult
-   put the result into tResult
-   if tResult is not empty then
-      __revIDEDeveloperExtensionSendError tResult
-      exit __revIDEDeveloperExtensionDoCreateTestStack
-   end if
-   
+   __revIDEDeveloperExtensionLog "Launching in Test Window"
    if there is a stack (pPath & slash & "test.livecode") then
       go stack (pPath & slash & "test.livecode") 
    else
@@ -545,21 +552,43 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
    end if
    
-   set the cCurExtension of stack "LiveCode Extension Test Window" to pDetailsA["name"]
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
+
+private command __LaunchTestExtension pPath, pDetailsA
+   -- Only launch a test window if a widget
+   if pDetailsA["type"] is "widget" then
+      __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
+   else
+      __revIDEDeveloperExtensionLog "Loaded library" && sLoadedExtension
+   end if
+   put pDetailsA["name"] into sLoadedExtension
+   ideMessageSend "ideExtensionStatusChanged"
+end __LaunchTestExtension
+
+private command __ClearTestExtension
+   if there is a stack "LiveCode Extension Test Window" then
+      __revIDEDeveloperExtensionDoClearTestStack
+   else
+      __UnloadTestExtension
+   end if
+   ideMessageSend "ideExtensionStatusChanged"
+end __ClearTestExtension
+
+private command __UnloadTestExtension
+   if sLoadedExtension is not empty then
+      __revIDEDeveloperExtensionUnload sLoadedExtension
+      __revIDEDeveloperExtensionLog "Unloading" && sLoadedExtension
+      put empty into sLoadedExtension
+   end if
+end __UnloadTestExtension
 
 on __revIDEDeveloperExtensionDoClearTestStack
    repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
       delete widget 1 of stack "LiveCode Extension Test Window"
    end repeat
-   local tExtension
-   put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
    delete stack "LiveCode Extension Test Window"
-   if tExtension is not empty then
-      __revIDEDeveloperExtensionUnload tExtension
-      __revIDEDeveloperExtensionLog "Unloading..."
-   end if
+   __UnloadTestExtension
 end __revIDEDeveloperExtensionDoClearTestStack
 
 local sInstalledExtension
