@@ -601,7 +601,7 @@ end __revIDEDeveloperExtensionUnload
 on revIDEDeveloperExtensionInstall pFolder
    local tPackage
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
-   revIDEInstallExtension tPackage
+   revIDEExtensionInstall tPackage
    put pFolder & slash & "module.lcm" into sInstalledExtension
 end revIDEDeveloperExtensionInstall
 
@@ -614,7 +614,7 @@ on revIDEDeveloperExtensionUninstall pPath
       exit revIDEDeveloperExtensionUninstall
    end if
    
-   revIDEUninstallExtension tDetailsA["name"]
+   revIDEExtensionUninstall tDetailsA["name"]
    
 end revIDEDeveloperExtensionUninstall
 

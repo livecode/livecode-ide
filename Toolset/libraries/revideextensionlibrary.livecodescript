@@ -105,12 +105,10 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
          delete variable sExtensions[tExtensionKey]
          next repeat
       end if
-      if pType is not empty and tExtension["type"] is not pType then next repeat
-      if pStatus is "installed" then
-         if tExtension["status"] is "uninstalled" then
-            next repeat
-         end if
-      else if pStatus is not empty then
+      if pType is not empty and tExtension["type"] is not pType then 
+         next repeat
+      end if
+      if pStatus is not empty then
          if tExtension["status"] is not pStatus then 
             next repeat
          end if
