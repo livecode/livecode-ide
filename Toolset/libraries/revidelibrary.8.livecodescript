@@ -10854,7 +10854,7 @@ private function revIDEGetExtensionDocsData pAPI
          if tExtensionData["source_type"] is "lcb" then
             dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with \
                   tFolder & slash & tSource
-         else
+         else if tExtensionData["source_type"] is "lcs" then
             local tStack
             put the long id of stack (tFolder & slash & tSource) into tStack
             dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with \

@@ -77,7 +77,9 @@ on headerActionNewExtension
 end headerActionNewExtension
 
 on headerActionOpenExtension
-   answer file "Please select a valid extension file" with type "LiveCode Builder|lcb"
+   answer file "Please select a valid extension file" \ 
+         with type "LiveCode Builder|lcb" \
+         or type "LiveCode Script|livecode,livecodescript"
    
    if the result is "cancel" then exit headerActionOpenExtension
    if there is not a file it then exit headerActionOpenExtension

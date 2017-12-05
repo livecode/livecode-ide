@@ -374,10 +374,9 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
       return tDetailsA
    end if
    union tDetailsA with tMetadataA
-   put pType into tDetailsA["type"]
+   put pType into tDetailsA["source_type"]
    put tDetailsA into sExtensionDetailsA[pFolder]
    return sExtensionDetailsA[pFolder]
-   
 end __revIDEDeveloperExtensionDetailsFromFile
 
 on revIDEDeveloperExtensionAddResourceFile pExtensionFolder, pResourcePath, pType
