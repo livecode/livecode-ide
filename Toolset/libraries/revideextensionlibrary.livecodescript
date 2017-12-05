@@ -697,17 +697,8 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    __extensionPropertySet pCacheIndex, "progress", pProgress
    
    local tName
-   //revputarray sExtensions
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
-   
-   //local tCallbackTarget, tCallBackHandler
-   //put __extensionPropertyGet(pCacheIndex, "callback_target") into tCallbackTarget
-   //put __extensionPropertyGet(pCacheIndex, "callback_handler") into tCallBackHandler
-   //if exists(tCallbackTarget) then
-   //dispatch tCallBackHandler to tCallbackTarget with pMessage,pProgress
-   //end if
-   // Send message to registered targets
 end __extensionSendProgressUpdate
 
 private function __fetchModuleData pFolder, pExtFile
@@ -980,12 +971,6 @@ on __extensionsLoad
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
 end __extensionsLoad
-
-# Returns: List of the packages that are in the directory but not installed
-function __extensionPackagePaths
-   local tPaths
-   return tPaths
-end __extensionPackagePaths
 
 # Calls Weservice and returns updates
 function __extensionUpdates
@@ -1307,11 +1292,6 @@ function __extensionManifestValueFromFile pCacheIndex, pProperty
       return tValue
    end if
 end __extensionManifestValueFromFile
-
-# Returns a value from the manifest
-//private on __extensionManifestValue pCacheIndex, pManifestKey
-//end __extensionManifestValue
-
 
 ##############################
 # CALLBACKS

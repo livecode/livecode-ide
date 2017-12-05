@@ -131,15 +131,11 @@ on refreshExtensionList
    put the keys of tExtensionArray into tExtensionList
    sort tExtensionList by tExtensionArray[each]["title"]
    
-   //revputarray  tExtensionArray
-   //if the number of lines of the keys of tExtensionArray > 0 then breakpoint
    ## Filter the list
    repeat for each line tExtension in tExtensionList
       if tExtensionArray[tExtension]["type"] = sSection then
-         //if tExtension["status"] = "active" OR tShowInactive then
          add 1 to tIndex
          put tExtensionArray[tExtension] into tFilteredArray[tIndex]
-         //end if
       end if
    end repeat
    

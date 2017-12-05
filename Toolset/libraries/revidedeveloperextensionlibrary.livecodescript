@@ -1,19 +1,19 @@
 ﻿script "revIDEDeveloperExtensionLibrary"
 local sExtensionDetailsA
 
-private on __revIDEDeveloperExtensionSendWarning pWarning
+private command __revIDEDeveloperExtensionSendWarning pWarning
    ideMessageSend "ideExtensionLog", "Warning:" && pWarning
 end __revIDEDeveloperExtensionSendWarning
 
-private on __revIDEDeveloperExtensionSendError pError
+private command __revIDEDeveloperExtensionSendError pError
    ideMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperExtensionSendError
 
-private on __revIDEDeveloperExtensionLog pLog
+private command __revIDEDeveloperExtensionLog pLog
    ideMessageSend "ideExtensionLog", pLog
 end __revIDEDeveloperExtensionLog
 
-private on __revIDEDeveloperCompilationError pError, pFile
+private command __revIDEDeveloperCompilationError pError, pFile
    local tLineNo, tChar, tEndChar, tLine
    # Parse out the error details to provide more meaningful feedback
    repeat for each line tErrLine in pError
@@ -56,7 +56,7 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    return tNeedUpdate is not false
 end __revIDEDeveloperExtensionShouldRecompile
 
-private on __revIDEDeveloperExtensionRemoveFolder pFolder
+private command __revIDEDeveloperExtensionRemoveFolder pFolder
    local tDeveloperExtensionsFolders
    put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
    
@@ -72,7 +72,7 @@ private on __revIDEDeveloperExtensionRemoveFolder pFolder
    end if
 end __revIDEDeveloperExtensionRemoveFolder
 
-private on __revIDEDeveloperExtensionAddFolder pFolder
+private command __revIDEDeveloperExtensionAddFolder pFolder
    local tDeveloperExtensionsFolders
    put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
    
@@ -805,7 +805,7 @@ on revIDEDeveloperExtensionBuildPackage pFolder
    end if
 end revIDEDeveloperExtensionBuildPackage
 
-private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
+private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
    local tDetailsA
    put revIDEDeveloperExtension(pFolder) into tDetailsA
    
