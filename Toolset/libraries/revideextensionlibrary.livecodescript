@@ -1009,47 +1009,65 @@ private command __extensionLoad pID, pExtensionDataA
    put tToLoadA["ide"] into tIDEExtension
    put tToLoadA["source_file"] into tSourceFile
    put tToLoadA["source_type"] into tSourceType
-   revIDEExtensionLoad tSourceType, pID, tFolder, tVersion, tStatus, tError, tIDEExtension, tSourceFile, tToLoadA
+   revIDEExtensionLoad tSourceType, pID, tFolder, tVersion, tStatus, \
+         tError, tIDEExtension, tSourceFile, tToLoadA, true
 end __extensionLoad
 
-private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA
-   local tStatus, tError
-   if pError is empty then
-      local tResources, tModule
-      put pFolder & slash & "resources" into tResources
-      put pFolder & slash & "module.lcm" into tModule
-      # If we have a resources folder then load with resource path
-      if there is a folder tResources then
-         load extension from file tModule with resource path tResources
+private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, pStatus, @xError
+   if xError is empty then
+      if pSourceType is "lcb" then
+         local tResources, tModule
+         put pFolder & slash & "resources" into tResources
+         put pFolder & slash & "module.lcm" into tModule
+         # If we have a resources folder then load with resource path
+         if there is a folder tResources then
+            load extension from file tModule with resource path tResources
+         else
+            load extension from file tModule
+         end if
       else
-         load extension from file tModule
+         set the itemdelimiter to "."
+         revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
       end if
       if the result is not empty then
-         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
-         put "error" into tStatus
+         put toUpper(char 1 of the result) & \
+               char 2 to -1 of the result into xError
+         put "error" into pStatus
       else
-         put "installed" into tStatus
+         put "installed" into pStatus
       end if
-   else
-      put pStatus into tStatus
-      put pError into tError
    end if
    
+   __extensionPropertySet pCacheIndex, "status", pStatus
+   __extensionPropertySet pCacheIndex, "error", xError
+   __extensionsChanged
+end __LoadExtension
+
+private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
+      pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    # Find entry in the cache if it exists
    local tCacheIndex
    put __extensionCacheID("install_path", pFolder) into tCacheIndex
    
-   # If no extry is in the cache, create one
+   # If no entry is in the cache, create one
    if tCacheIndex is not a number then
       put the number of elements of sExtensions + 1 into tCacheIndex
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
+   local tLoadOnStartup
+   if pError is empty then
+      put revIDEExtensionGetLoadOnStartup(pID) into tLoadOnStartup
+   end if
+   if not pIsStartup or tLoadOnStartup is not false then
+      __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, pError
+   else
+      __extensionPropertySet tCacheIndex, "status", "unloaded" 
+   end if
+   
    # Update name, status, error, and whether the extension comes with the IDE
    __extensionPropertySet tCacheIndex, "name", pID
    __extensionPropertySet tCacheIndex, "type_id", pID  & "." & pVersion 
-   __extensionPropertySet tCacheIndex, "status", tStatus
-   __extensionPropertySet tCacheIndex, "error", tError
    __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
    __extensionPropertySet tCacheIndex, "source_type", "lcb"
@@ -1080,7 +1098,7 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError
       revIDEExtensionUpdateAPI pFolder, pSourceFile
    end if
    
-   return tError
+   return pError
 end __revIDELCBExtensionLoad
 
 private command addToStringList @xList, pValue, pDel
@@ -1101,21 +1119,8 @@ private function __UseTypeToKey pUseType
    end switch
 end __UseTypeToKey
 
-private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA
-   local tStatus, tError
-   set the itemdelimiter to "."
-   if pError is empty then
-      revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
-      if the result is not empty then
-         put toUpper(char 1 of the result) & char 2 to -1 of the result into tError
-         put "error" into tStatus
-      else
-         put "installed" into tStatus
-      end if
-   else
-      put pStatus into tStatus
-      put pError into tError
-   end if
+private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, \
+      pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    
    # Find entry in the cache if it exists
    local tCacheIndex
@@ -1127,14 +1132,27 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
+   # Update name, status, error, and whether the extension comes with the IDE
+   local tId
+   try
+      put the short name of stack (pFolder & slash & pSourceFile) into tId
+   catch pError
+   end try
+   
+   local tLoadOnStartup
+   if pError is empty then
+      put revIDEExtensionGetLoadOnStartup(tID) into tLoadOnStartup
+   end if
+   if not pIsStartup or tLoadOnStartup is not false then
+      __LoadExtension tCacheIndex, "lcs", pSourceFile, pFolder, pStatus, pError
+   else
+      __extensionPropertySet tCacheIndex, "status", "unloaded" 
+   end if
+   
    if pAdditionalInfoA is empty then
       put __fetchScriptLibraryData(pFolder, pSourceFile) into pAdditionalInfoA
    end if
    
-   # Update name, status, error, and whether the extension comes with the IDE
-   local tId
-   put the short name of stack \
-         revInternal__LoadedLibraryStackName(item 1 of pSourceFile) into tId
    __extensionPropertySet tCacheIndex, "name", tId
    __extensionPropertySet tCacheIndex, "type_id", tId  & "." & pVersion 
    
@@ -1152,8 +1170,6 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    end repeat
    
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
-   __extensionPropertySet tCacheIndex, "status", tStatus
-   __extensionPropertySet tCacheIndex, "error", tError
    __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_type", "lcs"
    __extensionPropertySet tCacheIndex, "type", "library"
@@ -1163,7 +1179,7 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
    --  revIDEExtensionSetInfo pID
    
    # Deal with the various icon possibilities
-   if sExtensionProperties[pID]["svgicon"] is empty then
+   if sExtensionProperties[tID]["svgicon"] is empty then
       local tIconPath
       put pFolder & "/support/icon.png" into tIconPath
       if there is a file tIconPath then
@@ -1171,14 +1187,34 @@ private command __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError
       end if
    end if
    
-   return tError
+   return pError
 end __revIDELCSExtensionLoad
 
-command revIDEExtensionLoad pType, pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+command revIDEExtensionReload pTypeId
+   local tCacheIndex
+   put __extensionCacheID("name", pTypeID) into tCacheIndex
+   if tCacheIndex is not a number then
+      answer error "Can't reload" && pTypeID & ": restart required"
+      exit revIDEExtensionReload
+   end if
+   local tError, tDataA
+   put sExtensions[tCacheIndex] into tDataA
+   __LoadExtension tCacheIndex, tDataA["source_type"], \
+         tDataA["source_file"], tDataA["install_path"], \
+         "", tError
+   if tError is not empty then
+      answer error tError 
+   end if
+end revIDEExtensionReload
+
+command revIDEExtensionLoad pType, pID, pFolder, pVersion, pStatus, pError, \
+      pIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    if pType is "lcb" then
-      __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+      __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, pError, \
+            pIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    else if pType is "lcs" then
-      __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, pIDEExtension, pSourceFile, pAdditionalInfoA
+      __revIDELCSExtensionLoad pID, pFolder, pVersion, pStatus, pError, \
+            pIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    end if
 end revIDEExtensionLoad
 
@@ -1506,24 +1542,35 @@ function revIDEExtensionFileData pID
    return tDataA
 end revIDEExtensionFileData
 
+private command __UnloadExtension pCacheIndex, pSourceType, pSourceFile, pTypeId
+   local tError, tStatus
+   if pSourceType is "lcb" then
+      unload extension pTypeId
+   else
+      set the itemdelimiter to "."
+      revInternal__UnloadLibrary item 1 of pSourceFile
+   end if
+   if the result is not empty then
+      put toUpper(char 1 of the result) & \
+            char 2 to -1 of the result into tError
+      put "error" into tStatus
+   else
+      put "unloaded" into tStatus
+   end if
+   
+   __extensionPropertySet pCacheIndex, "status", tStatus
+   __extensionPropertySet pCacheIndex, "error", tError
+   __extensionsChanged
+end __UnloadExtension
+
 command revIDEExtensionUnload pKind
    local tCacheIndex
    put __extensionCacheID("name", pKind) into tCacheIndex
    
-   local tCopies
-   put __extensionPropertyGet(tCacheIndex, "copies") into tCopies
-   if the number of elements in tCopies <= 1 then
-      delete variable sExtensions[tCacheIndex]
-   else
-      __extensionPropertySet tCacheIndex, "status", "uninstalled"
-   end if
-   
-   # Check if it's loaded
-   if pKind is among the lines of the loadedExtensions then
-      unload extension pKind
-   end if
-   
-   return the result
+   local tDataA
+   put sExtensions[tCacheIndex] into tDataA
+   __UnloadExtension tCacheIndex, tDataA["source_type"], \
+         tDataA["source_file"], pKind
 end revIDEExtensionUnload
 
 function revIDEExtensionLibraryHandlers pLibraryID
