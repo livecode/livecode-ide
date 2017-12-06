@@ -525,6 +525,21 @@ function revInternal__StackFiles
          if tFolder begins with "." then next repeat
          put return & tComponentFolder & slash & tFolder after tFolders
       end repeat
+      
+      -- commercial extensions (ensure they are loaded from the repo)
+      local tExtensionFolder
+      put revEnvironmentCommercialRepositoryPath() & "/extensions/script-libraries" into tExtensionFolder
+      repeat for each line tFolder in folders(tExtensionFolder)
+         if tFolder begins with "." then next repeat
+         put return & tExtensionFolder & slash & tFolder after tFolders
+      end repeat
+      
+      -- extensions (ensure they are loaded from the repo)
+      put revEnvironmentRepositoryPath() & "/extensions/script-libraries" into tExtensionFolder
+      repeat for each line tFolder in folders(tExtensionFolder)
+         if tFolder begins with "." then next repeat
+         put return & tExtensionFolder & slash & tFolder after tFolders
+      end repeat
    end if	
    
    local tStackFiles, tStackName
