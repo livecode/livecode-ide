@@ -7,6 +7,7 @@ on preOpenStack
    ### Header
    --addFrameItem "add","header", "action", "Create a new extension", "plus sign", "plus sign","headerActionNewExtension", the long id of me
    addFrameItem "open","header", "action", "Open an existing extension", "folder open", "folder open","headerActionOpenExtension", the long id of me
+   addFrameItem "edit source", "header", "action", "Edit extension source code", "lc-edit-script", "lc-edit-script", "headerActionEditSource", the long id of me
    
    addFrameItem "package","footer", "action", "Package", "archive", "archive","footerActionPackage", the long id of me
    addFrameItem "uninstall","footer", "action", "Uninstall", "remove circle", "remove circle","footerActionUninstall", the long id of me
@@ -75,6 +76,10 @@ end consoleScrollbarUpdate
 
 on headerActionNewExtension
 end headerActionNewExtension
+
+on headerActionEditSource
+   revIDEDeveloperExtensionEditScript loadedExtensionGet()
+end headerActionEditSource
 
 on headerActionOpenExtension
    answer file "Please select a valid extension file" \ 
@@ -232,6 +237,12 @@ on populateExtensionList
 end populateExtensionList
 
 private on displayExtensionData pData
+   if pData["file"] is empty then
+      disableFrameItem "edit source"
+   else
+      enableFrameItem "edit source"
+   end if
+   
    # Exntensions label
    local tLabel
    put getDisplayName(pData) into tLabel
