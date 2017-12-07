@@ -62,7 +62,7 @@ on foo
       code else code
    -- comment
 end foo
-   
+
 on foo
    if foo() then 
       code else code
