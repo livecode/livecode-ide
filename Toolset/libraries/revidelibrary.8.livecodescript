@@ -6386,6 +6386,25 @@ function revIDEGetRectProperty pObject, pProperty
    end switch
 end revIDEGetRectProperty
 
+command revIDESetImageFilename pObjectID, pProperty, pFilename
+   if revIDEGetPreference("cImageFileRelative") is not false then
+      local tStackPath, tFilePath
+      set the itemDelimiter to "/"
+      put item 1 to -2 of the filename of stack revTargetStack(pObjectID) into tStackPath
+      if tStackPath is not empty then
+         put revCalculateRelativePath(tStackPath, pFilename) into tFilePath
+         if tFilePath begins with "./" then delete char 1 to 2 of tFilePath
+         if tFilePath ends with tResult then
+            --full path contained in relative path, likely a different volume
+            --in any case, need to return absolute path
+         else if there is a file (tStackPath & slash & tFilePath) then
+            put tFilePath into pFilename
+         end if
+      end if
+   end if
+   set the filename of pObjectID to pFilename
+end revIDESetImageFilename
+
 #############
 # Standalone Settings
 #############
