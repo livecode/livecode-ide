@@ -885,6 +885,9 @@ command updateGutterDo
    local tUpdateCompilationErrors
    put tDetails["updateCompilationErrors"] into tUpdateCompilationErrors
    
+   local tForceBreakpointRedraw
+   put tDetails["forceBreakpointRedraw"] into tForceBreakpointRedraw
+   
    send "update tOffset, tSelectedLine, tOldLines, tNewLines, tTextChanged, tUpdateCompilationErrors, tForceBreakpointRedraw" to group "Gutter" of me
    
    # Once an update has been carried out, we reset the sGutterUpdateRequestDetails array
