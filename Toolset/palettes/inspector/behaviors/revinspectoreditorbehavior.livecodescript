@@ -119,9 +119,17 @@ getProp editorValue[pKey]
 end editorValue
 
 on updateProperty pForce
-  if pForce or (sAllowUpdate is true and not sPropertyInfo["read_only"]) then
-     dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
-     put false into sAllowUpdate
+   if pForce or (sAllowUpdate is true and not sPropertyInfo["read_only"]) then
+      set the itemdelimiter to ";"
+      -- Single editors can control multiple properties delimited by ;
+      if the number of items in sPropertyInfo["property_name"] > 1 then
+         repeat for each item tProp in sPropertyInfo["property_name"]
+            dispatch "editorValueChanged" with tProp, sValue[tProp], false
+         end repeat
+      else
+         dispatch "editorValueChanged" with sPropertyInfo["property_name"], sValue, false
+      end if
+      put false into sAllowUpdate
    end if
 end updateProperty
 
@@ -197,7 +205,9 @@ after editorPopup pClickLoc
       exit editorPopup
    end if
    create invisible stack tStackName
-   dispatch "setAsBehavior" to stack revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", the long id of stack "revInspector") with the long id of stack tStackName
+   dispatch "setAsBehavior" to stack \
+         revIDEPaletteResourcePath("behaviors/revinspectorpopupstackbehavior.livecodescript", \
+         the long id of stack "revInspector") with the long id of stack tStackName
    set the frameHidden of stack tStackName to true
    dispatch "inspectorGenerateGroups" to stack tStackName with sPropertyInfo["popup"]
    dispatch "inspectorLayoutGroups" to stack tStackName with sPropertyInfo["popup"]
@@ -205,7 +215,8 @@ after editorPopup pClickLoc
    set the editorTarget of stack tStackName to the long id of me
    // In LC 9.0 DP-7 you can resize the inspector window, by putting all the contents in a group "inspector" and adding a vScrollbar to the group
    // but 'modeless stack X' breaks the vScrollbar of groups, so ensure the popup stack has the correct height before going 'modeless'
-   set the height of stack tStackName to the formattedHeight of group "inspector"
+   set the height of stack tStackName to \
+         the formattedHeight of group "inspector" of stack tStackName
    set the title of stack tStackName to the rowLabel of the owner of me
    modeless stack tStackName
 end editorPopup
