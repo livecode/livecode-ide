@@ -9168,6 +9168,15 @@ on revIDEActionPasteTextIntoField pField
    unlock screen
 end revIDEActionPasteTextIntoField
 
+on revIDEToggleLockTextOfField pField
+   # Make sure we have an field
+   if word 1 of pField is not "field" then
+      exit revIDEToggleLockTextOfField
+   end if
+   
+   set the lockText of pField to not (the lockText of pField)
+end revIDEToggleLockTextOfField
+
 on revIDEToggleTraversalOnOfField pField
    # Make sure we have an field
    if word 1 of pField is not "field" then
