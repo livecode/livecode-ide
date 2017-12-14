@@ -28,11 +28,15 @@ on propertyRegister pPropertyInfo
          break
    end switch
    
+   inspectorOpenEditor tEditor
+   
    # Create the editor (need to decide if it's a classic editor (clone a group) 
    # or a new widget editor, in which case it's create control.
    if there is not a stack tEditor then
       put "com.livecode.pi.string" into tEditor
+      inspectorOpenEditor tEditor
    end if
+   
    local tEditorBehavior
    put tEditor & ".behavior" into tEditorBehavior
    

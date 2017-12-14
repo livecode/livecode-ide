@@ -300,6 +300,15 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
    if tDetailsA["defaultscript"] is not empty then
       put pFolder & "/support/defaultscript.livecodescript" into tDetailsA["defaultscript_file"]
    end if
+   
+   # Custom PI editors
+   local tEditorsFolder, tEditors
+   put pFolder & slash & "editors" into tEditorsFolder
+   if there is a folder tEditorsFolder then
+      put __revIDEDeveloperExtensionListResourcesRecursive(tEditorsFolder, "") into tEditors
+      put tEditors into tDetailsA["editors"]
+   end if
+   
    return tDetailsA 
 end __revIDEDeveloperExtensionFetchFolderDetails
 
@@ -861,11 +870,17 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
       put empty into tDefaultScript
    end if
    
+   local tEditors
+   put (pFolder & slash & "editors") into tEditors
+   if there is not a folder tEditors then
+      put empty into tEditors
+   end if
+   
    if tError is empty then
       put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
             tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", \
-            tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, tSamples, \
-            tInterfaceFile, tDefaultScript) \
+            tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
+            tSamples, tInterfaceFile, tDefaultScript, tEditors) \
             into tError
    end if
    
@@ -888,8 +903,9 @@ end __revIDEDeveloperExtensionBuildPackage
 
 private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
       pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, \
-      pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, pInterfaceFile, \
-      pDefaultScript
+      pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, \
+      pInterfaceFile, pDefaultScript, pEditors
+      
    local tError
    
    set the itemdelimiter to slash
@@ -1013,6 +1029,19 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
       if the result begins with "ziperr" then
          __revIDEDeveloperExtensionSendWarning "couldn't add default script" && pDefaultScript
       end if
+   end if
+   
+   # Add editors
+   if tError is empty and pEditors is not empty then
+      local tEditors
+      put __revIDEDeveloperExtensionListResourcesRecursive(pEditors, "") into tEditors
+      repeat for each line tLine in tEditors
+         revZipAddItemWithFile pArchive, "editors/" & tLine, pEditors & slash & tLine
+         
+         if the result begins with "ziperr" then
+            __revIDEDeveloperExtensionSendWarning "couldn't add editors" && pEditors & slash & tLine
+         end if
+      end repeat
    end if
    
    return tError

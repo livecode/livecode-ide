@@ -52,15 +52,28 @@ on inspectorOpenEditor pEditor
    
    # Find the file for the editor
    local tEditorStackPath, tEditorBehaviorPath
-   put revIDEPaletteResourcePath("editors/" & pEditor & ".livecode") into tEditorStackPath
-   put revIDEPaletteResourcePath("editors/" & pEditor & ".behavior.livecodescript") into tEditorBehaviorPath
+   put revIDEPaletteResourcePath("editors/" & pEditor & ".livecode", \
+         the long id of stack "revInspector") into tEditorStackPath
+   put revIDEPaletteResourcePath("editors/" & pEditor & ".behavior.livecodescript", \
+         the long id of stack "revInspector") into tEditorBehaviorPath
+   
    # open editor stack if it exists
-   if there is a file tEditorStackPath then 
-      go invisible stack tEditorStackPath
+   if there is not a file tEditorStackPath then 
+      # check if an extension has provided its own editor
+      # it is named <id>.editor.editorName
+      local tId, tPath
+      set the itemdelimiter to "."
+      put item 1 to -3 of pEditor into tId
+      put revIDEExtensionProperty(tId, "install_path") into tPath
+      put tPath & "/editors/" & pEditor & ".livecode" into tEditorStackPath
+      put tPath & "/editors/" & pEditor & ".behavior.livecodescript" into tEditorBehaviorPath
    end if
    
+   if there is a file tEditorStackPath then 
+      get the long id of stack tEditorStackPath
+   end if
    if there is a file tEditorBehaviorPath then 
-      go invisible stack tEditorBehaviorPath
+      get the long id of stack tEditorBehaviorPath
    end if
 end inspectorOpenEditor
 
