@@ -156,6 +156,13 @@ on commandKeyDown pWhich
                send "mouseUp" to btn "clear" of stack "revMessageWatcher"
             end if
             break
+         case "C"
+            -- bug 17819 commandkey + c in dictionary not working
+            if revTargetStack(the focusedObject) is "revDictionary" then
+               send "revMenubarEditMenuPick" && quote &"Copy Text" & quote to \
+                     stack "revIDEMessageHandlerLibrary"
+            end if
+            break
          default
             pass commandKeyDown
       end switch
