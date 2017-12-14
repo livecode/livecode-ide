@@ -5012,9 +5012,8 @@ end arrayRecurse
 private function __escapeStringAndConvertLineEndings pString
    replace "\" with "\\" in pString
    replace quote with ("\" & quote) in pString
-   replace (numToCodepoint(13) & LF) with (LF & numToCodepoint(13)) in pString
-   replace (LF & numToCodepoint(13)) with LF in pString
-   replace numToCodepoint(13) with LF in pString
+   replace CRLF with "\n" in pString
+   replace numToCodepoint(13) with "\n" in pString
    replace LF with "\n" in pString
    return (quote & pString & quote)
 end __escapeStringAndConvertLineEndings
@@ -10680,9 +10679,8 @@ private function escape pString, pConvertLineEndings
    replace quote with ("\" & quote) in pString
    
    if pConvertLineEndings is true then
-      replace (numToCodepoint(13) & LF) with (LF & numToCodepoint(13)) in pString
-      replace (LF & numToCodepoint(13)) with LF in pString
-      replace numToCodepoint(13) with LF in pString
+      replace CRLF with "\n" in pString
+      replace numToCodepoint(13) with "\n" in pString
    end if
    replace LF with "\n" in pString
    //replace "<" with "&lt;" in pString
