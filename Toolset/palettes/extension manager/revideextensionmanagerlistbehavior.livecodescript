@@ -131,15 +131,11 @@ on refreshExtensionList
    put the keys of tExtensionArray into tExtensionList
    sort tExtensionList by tExtensionArray[each]["title"]
    
-   //revputarray  tExtensionArray
-   //if the number of lines of the keys of tExtensionArray > 0 then breakpoint
    ## Filter the list
    repeat for each line tExtension in tExtensionList
       if tExtensionArray[tExtension]["type"] = sSection then
-         //if tExtension["status"] = "active" OR tShowInactive then
          add 1 to tIndex
          put tExtensionArray[tExtension] into tFilteredArray[tIndex]
-         //end if
       end if
    end repeat
    
@@ -158,17 +154,27 @@ on refreshExtensionListStatus
    send "renderView" to group "extensionList" of me
 end refreshExtensionListStatus
 
-on activateExtension pExtensionIdentifier
-   revIDEActivateExtension pExtensionIdentifier
-end activateExtension
-
-on deactivateExtension pExtensionIdentifier
-   revIDEDeactivateExtension pExtensionIdentifier
-end deactivateExtension
-
-on uninstallExtension pExtensionIdentifier
-   revIDEUninstallExtension pExtensionIdentifier
+command uninstallExtension pTypeID
+   revIDEExtensionUninstall pTypeID
 end uninstallExtension
+
+command unloadExtension pTypeID
+   revIDEExtensionUnload pTypeID
+end unloadExtension
+
+command loadExtension pTypeID
+   revIDEExtensionReload pTypeID
+end loadExtension
+
+command toggleUserVisibility pTypeID
+   revIDEExtensionToggleUserVisibility pTypeID
+   refreshList
+end toggleUserVisibility
+
+command toggleLoadOnStartup pTypeID
+   revIDEExtensionToggleLoadOnStartup pTypeID
+   refreshList
+end toggleLoadOnStartup
 
 on updateExtension pExtensionIdentifier, pLatestVersion
    ## Don't do anything for now becuase renaming a zip doesn't work
@@ -179,6 +185,13 @@ end updateExtension
 on cancelExtensionInstall pExtensionIdentifier
    revIDECancelInstallExtension pExtensionIdentifier
 end cancelExtensionInstall
+
+on launchExtensionSampleStack pSampleStack
+   ## Open the sample stack
+   ## Clear the filename to force the user to choose save location if saving the stack
+   open stack pSampleStack
+   set the filename of stack pSampleStack to empty
+end launchExtensionSampleStack
 
 on ideExtensionStatusChanged pStatus
    local tElement, tRow, tIdentifier, tStatus, tProgress

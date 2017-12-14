@@ -2468,6 +2468,30 @@ on revIDESetPreference pPreferenceName, pValue
    ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
 end revIDESetPreference
 
+command revIDESetPreferenceOfSet pSetName, pPreferenceName, pValue
+   local tProps
+   put the customproperties[pSetName] of stack "revpreferences" into tProps
+   put pValue into tProps[pPreferenceName]
+   set the customproperties[pSetName] of stack "revpreferences" to tProps
+   revInternal__SavePreferences
+   local tParams
+   put pSetName into tParams[1]
+   put pPreferenceName into tParams[2]
+   put pValue into tParams[3]
+   ideMessageSendWithParameters "idePreferenceOfSetChanged", "", tParams
+end revIDESetPreferenceOfSet
+
+command revIDEDeletePreferenceSet pSetName
+   local tSets, tLineOffset
+   put the custompropertysets of stack "revpreferences" into tSets
+   put lineOffset(pSetName, tSets) into tLineOffset
+   if tLineOffset is not 0 then
+      delete line tLineOffset of tSets
+      set the customPropertySets of stack "revpreferences" to tSets
+      revInternal__SavePreferences
+   end if
+end revIDEDeletePreferenceSet
+
 /*
 Gets a preference.
 
@@ -2493,6 +2517,12 @@ function revIDEGetPreference pPreferenceName
    
    return tValue
 end revIDEGetPreference
+
+function revIDEGetPreferenceOfSet pSetName, pPreferenceName
+   local tProps
+   put the customproperties[pSetName] of stack "revpreferences" into tProps
+   return tProps[pPreferenceName]
+end revIDEGetPreferenceOfSet
 
 command __DevPreference pPreferenceName, @rValue
    if not revEnvironmentIsInstalled() then
@@ -10878,7 +10908,7 @@ private function revIDEGetExtensionDocsData pAPI
          if tExtensionData["source_type"] is "lcb" then
             dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with \
                   tFolder & slash & tSource
-         else
+         else if tExtensionData["source_type"] is "lcs" then
             local tStack
             put the long id of stack (tFolder & slash & tSource) into tStack
             dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with \
