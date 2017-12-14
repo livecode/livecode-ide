@@ -1,4 +1,6 @@
 ﻿script "revMenuBar"
+global gLanguage
+
 local sMenuTarget
 on preOpenStack
    global gREVDontLoadMenus
@@ -64,20 +66,20 @@ end setupDevelopmentMenu
 
 private on setupTextMenu
    local tText
-   put toggleMenuItem("Plain/;", false) & return after tText
-   put toggleMenuItem("&Bold/B", false) & return after tText
-   put toggleMenuItem("&Italic/I", false) & return after tText
-   put toggleMenuItem("&Underline/U", false) & return after tText
-   put toggleMenuItem("Strikeout", false) & return after tText
-   put toggleMenuItem("Box", false) & return after tText
-   put toggleMenuItem("3D Box", false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Plain"]&"/;", false) & return after tText
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Text"]["Bold"]&"/B", false) & return after tText
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Text"]["Italic"]&"/I", false) & return after tText
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Text"]["Underline"]&"/U", false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Strikeout"], false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Box"], false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["3D Box"], false) & return after tText
    put "-" & return after tText
-   put toggleMenuItem("Link", false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Link"], false) & return after tText
    put "-" & return after tText
-   put toggleMenuItem("Subscript", false) & return after tText
-   put toggleMenuItem("Superscript", false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Subscript"], false) & return after tText
+   put toggleMenuItem(gLanguage["MenuBar"]["Text"]["Superscript"], false) & return after tText
    put "-" & return after tText
-   put "Font" & return after tText
+   put gLanguage["MenuBar"]["Text"]["Font"] & return after tText
    
    local tFontNames
    put the fontNames into tFontNames
@@ -104,7 +106,7 @@ private on setupTextMenu
          put "!u" & tab & tFontName & return after tText
       end if
    end repeat
-   put "Size" & return after tText
+   put gLanguage["MenuBar"]["Text"]["Size"] & return after tText
    
    local tFontSizes
    put format("Use Owner's Size\n-\n8\n9\n10\n12\n14\n18\n24\n36\n48\n-\nOther...") into tFontSizes
@@ -112,7 +114,7 @@ private on setupTextMenu
       if l is "-" then put tab & l & cr after tText
       else put "!u" & tab & l & cr after tText
    end repeat
-   put "Color" & cr after tText
+   put gLanguage["MenuBar"]["Text"]["Color"] & cr after tText
    
    local tColors
    put format("Use Owner's Color\n-\nBlack\nWhite\nRed\nGreen\nBlue\nYellow\n-\nPen Color") into tColors
@@ -968,7 +970,7 @@ function revMenubarButtonFormattedWidth pName
 end revMenubarButtonFormattedWidth
 
 function revIDELocalizeMenuItem pItem
-   return pItem
+   return gLanguage["MenuBar"]["iconLabel"][pItem]
 end revIDELocalizeMenuItem
 
 private on setButtonDepressed pTarget
@@ -1358,8 +1360,8 @@ private function revMenubarFileMenu pContext
    end if
    
    local tFile
-   put "&New Stack" & return after tFile
-   put tab & "Default Size" & return after tFile
+   put "&"&gLanguage["MenuBar"]["File"]["New Stack"] & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Default Size"] & return after tFile
    put tab & "-" & return after tFile
    put tab & "iPhone 4 (320x480)" & return after tFile
    put tab & "iPhone 5 (320x568)" & return after tFile
@@ -1371,64 +1373,64 @@ private function revMenubarFileMenu pContext
    put tab & "Script only Stack" & return after tFile
    
    if tIsUserTarget and not tIsScriptOnly then
-      put "&New Substack of" && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
+      put "&"&gLanguage["MenuBar"]["File"]["New Substack of"] && char 1 to 20 of the mainStack of the topStack & "/|New Substack" & return after tFile
    else
-      put "(&New Substack" & return after tFile
+      put "(&"&gLanguage["MenuBar"]["File"]["New Substack"] & return after tFile
    end if
    
-   put "&Open Stack.../O" & return after tFile
+   put "&"&gLanguage["MenuBar"]["File"]["Open Stack"]&".../O" & return after tFile
    
    if revMenuBarRecentFiles() is not empty then
-      put "Open Recent File" & return after tFile     
+      put gLanguage["MenuBar"]["File"]["Open Recent File"] & return after tFile
       put revMenuBarRecentFiles() & return after tFile
    else
-      put "(Open Recent File" & return after tFile    
+      put "("&gLanguage["MenuBar"]["File"]["Open Recent File"] & return after tFile
    end if
    
-   put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
-   put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
+   put enableMenuItem("&"&gLanguage["MenuBar"]["File"]["Close"]&"/W", the mode of the topStack <= 3) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Close and Remove From Memory"], tCanSaveStack) & return after tFile
    put "-" & return after tFile
    
-   put enableMenuItem("Import As Control", tIsUserTarget) & return after tFile
-   put tab & "Image File.../>|image" & return after tFile
-   put tab & "Audio File.../|audio" & return after tFile
-   put tab & "Video File.../|video" & return after tFile
-   put tab & "Text File.../|text" & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Import As Control"], tIsUserTarget) & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Image File"]&".../>|image" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Audio File"]&".../|audio" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Video File"]&".../|video" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Text File"]&".../|text" & return after tFile
    put tab & "-" & return after tFile
-   put tab & "Graph from CSV File.../|graph" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Graph from CSV File"]&".../|graph" & return after tFile
    put tab & "-" & return after tFile
-   put tab & "Snapshot of Screen" & return after tFile
-   put tab & enableMenuItem("Snapshot of Selected Object",  pContext["objectsSelected"]) & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Snapshot of Screen"] & return after tFile
+   put tab & enableMenuItem(gLanguage["MenuBar"]["File"]["Snapshot of Selected Object"],  pContext["objectsSelected"]) & return after tFile
    put tab & "-" & return after tFile
-   put tab & "All Images in Folder.../|image folder" & return after tFile
-   put tab & "All Audio Files in Folder.../|audio folder" & return after tFile
-   put tab & "All Video Files in Folder.../|video folder" & return after tFile
-   put tab & "All Text Files in Folder.../|text folder" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["All Images in Folder"]&".../|image folder" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["All Audio Files in Folder"]&".../|audio folder" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["All Video Files in Folder"]&".../|video folder" & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["All Text Files in Folder"]&".../|text folder" & return after tFile
    
-   put enableMenuItem("New Referenced Control", tIsUserTarget) & return after tFile
-   put tab & "Image File.../|image" & return after tFile
-   put tab & enableMenuItem("Video File.../|video", the platform is not "Linux") & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["New Referenced Control"], tIsUserTarget) & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["Image File"]&".../|image" & return after tFile
+   put tab & enableMenuItem(gLanguage["MenuBar"]["File"]["Video File"]&".../|video", the platform is not "Linux") & return after tFile
    put tab & "-" & return after tFile
-   put tab & "All Images in Folder.../|image folder" & return after tFile
-   put tab & enableMenuItem("All Video Files in Folder.../|video folder", the platform is not "Linux") & return after tFile
+   put tab & gLanguage["MenuBar"]["File"]["All Images in Folder"]&".../|image folder" & return after tFile
+   put tab & enableMenuItem(gLanguage["MenuBar"]["File"]["All Video Files in Folder"]&".../|video folder", the platform is not "Linux") & return after tFile
    put "-" & return after tFile
    
-   put enableMenuItem("&Save/S", tCanSaveStack) & return after tFile
-   put enableMenuItem("Save &As...", tCanSaveStack) & return after tFile
-   put enableMenuItem("Move S&ubstack to File...", tIsUserTarget and the short name of the topStack is not the mainStack of the topStack) & return after tFile
-   put enableMenuItem("&Revert to Saved...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
+   put enableMenuItem("&"&gLanguage["MenuBar"]["File"]["Save"]&"/S", tCanSaveStack) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Save As"]&"...", tCanSaveStack) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Move Substack to File"]&"...", tIsUserTarget and the short name of the topStack is not the mainStack of the topStack) & return after tFile
+   put enableMenuItem("&"&gLanguage["MenuBar"]["File"]["Revert to Saved"]&"...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
    put "-" & return after tFile
    
-   put enableMenuItem("&Share this stack...", tCanSaveStack) & return after tFile
+   put enableMenuItem("&"&gLanguage["MenuBar"]["File"]["Share this stack"]&"...", tCanSaveStack) & return after tFile
    put "-" & return after tFile
    
-   put enableMenuItem("Standalone Application Settings...", tIsUserTarget) & return after tFile
-   put enableMenuItem("Save as Standalone Application...", tIsUserTarget) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Standalone Application Settings"]&"...", tIsUserTarget) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Save as Standalone Application"]&"...", tIsUserTarget) & return after tFile
    put "-" & return after tFile
    
-   put "P&age Setup..." & return after tFile
-   put enableMenuItem("&Print Card.../P", tIsUserTarget) & return after tFile
-   put enableMenuItem("Print Field...", word 1 of (the selObj) is "field") & return after tFile
+   put gLanguage["MenuBar"]["File"]["Page Setup"] & return after tFile
+   put enableMenuItem("&"&gLanguage["MenuBar"]["File"]["Print Card"], tIsUserTarget) & return after tFile
+   put enableMenuItem(gLanguage["MenuBar"]["File"]["Print Field"]&"...", word 1 of (the selObj) is "field") & return after tFile
    
    put "-" & return after tFile
    
@@ -1491,25 +1493,25 @@ private function revMenubarEditMenu pContext
          break
    end switch
    
-   put "&Undo/Z" & return after tEdit
+   put "&"&gLanguage["MenuBar"]["Edit"]["Undo"]&"/Z" & return after tEdit
    put "-" & return after tEdit
-   put enableMenuItem("Cu&t" && tSelectionLabel & "/X|cut", tSelectionLabel is not empty) & return after tEdit
-   put enableMenuItem("&Copy" && tSelectionLabel & "/C|copy", tSelectionLabel is not empty) & return after tEdit
-   put enableMenuItem("&Paste"&& tClipboardLabel & "/V|paste", tClipboardLabel is not empty) & return after tEdit
-   put enableMenuItem("Paste &Unformatted/Cmd Shift Opt V", tClipboardLabel is "Text") & return after tEdit
-   put enableMenuItem("Clea&r" && tSelectionLabel, tSelectionLabel is not empty) & return after tEdit
+   put enableMenuItem(gLanguage["MenuBar"]["Edit"]["Cut"] && tSelectionLabel & "/X|cut", tSelectionLabel is not empty) & return after tEdit
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Edit"]["Copy"] && tSelectionLabel & "/C|copy", tSelectionLabel is not empty) & return after tEdit
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Edit"]["Paste"] && tClipboardLabel & "/V|paste", tClipboardLabel is not empty) & return after tEdit
+   put enableMenuItem(gLanguage["MenuBar"]["Edit"]["Paste Unformatted"]&"/Cmd Shift Opt V", tClipboardLabel is "Text") & return after tEdit
+   put enableMenuItem(gLanguage["MenuBar"]["Edit"]["Clear"] && tSelectionLabel, tSelectionLabel is not empty) & return after tEdit
    put "-" & return after tEdit
-   put enableMenuItem("&Duplicate" && tObjectsLabel &"/D", tObjectsLabel is not empty) & return after tEdit
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Edit"]["Duplicate"] && tObjectsLabel &"/D", tObjectsLabel is not empty) & return after tEdit
    put "-" & return after tEdit
-   put "Select All/A" & return after tEdit
-   put "Deselect All" & return after tEdit
-   put enableMenuItem("In&vert Selection", tObjectsLabel is "Objects") & return after tEdit
-   put toggleMenuItem("Select Grouped Controls", the selectGroupedControls) & return after tEdit
-   put toggleMenuItem("Intersected Selections", the selectionMode is "intersect") & return after tEdit
+   put gLanguage["MenuBar"]["Edit"]["Select All"]&"/A" & return after tEdit
+   put gLanguage["MenuBar"]["Edit"]["Deselect All"] & return after tEdit
+   put enableMenuItem(gLanguage["MenuBar"]["Edit"]["Invert Selection"], tObjectsLabel is "Objects") & return after tEdit
+   put toggleMenuItem(gLanguage["MenuBar"]["Edit"]["Select Grouped Controls"], the selectGroupedControls) & return after tEdit
+   put toggleMenuItem(gLanguage["MenuBar"]["Edit"]["Intersected Selections"], the selectionMode is "intersect") & return after tEdit
    put "-" & return after tEdit
-   put "Find and Replace.../F" & return after tEdit
+   put gLanguage["MenuBar"]["Edit"]["Find and Replace"]&".../F" & return after tEdit
    put "-" & return after tEdit
-   put "Pre&ferences" after tEdit
+   put gLanguage["MenuBar"]["Edit"]["Preferences"] after tEdit
    
    return modifyMenu("Edit", tEdit)
 end revMenubarEditMenu
@@ -1519,19 +1521,19 @@ end revMenubarEditMenu
 private function revMenubarToolsMenu pContext
    local tTools
    
-   put markMenuItem("&Browse Tool/9", the tool is "browse tool") & return after tTools
-   put markMenuItem("&Pointer Tool/0", the tool is "pointer tool") & return after tTools
+   put markMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Browse Tool"]&"/9", the tool is "browse tool") & return after tTools
+   put markMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Pointer Tool"]&"/0", the tool is "pointer tool") & return after tTools
    put "-" & return after tTools
-   put toggleMenuItem("&Tools Palette/T", revIDEPaletteIsVisible("tools")) & return after tTools
-   put toggleMenuItem("&Paint and Draw Tools", "paint" is among the items of revIDEGetPreference("revTools_show")) & return after tTools
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Tools Palette"]&"/T", revIDEPaletteIsVisible("tools")) & return after tTools
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Paint and Draw Tools"], "paint" is among the items of revIDEGetPreference("revTools_show")) & return after tTools
    put "-" & return after tTools
    
-   put toggleMenuItem("Project Browser", revIDEPaletteIsVisible("project browser")) & return after tTools
-   put toggleMenuItem("&Message Box/M", revIDEPaletteIsVisible("message box")) & return after tTools
-   put toggleMenuItem("Extension Manager", revIDEPaletteIsVisible("extension manager")) & return after tTools
-   put toggleMenuItem("Extension Builder", revIDEPaletteIsVisible("extension builder")) & return after tTools
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Project Browser"]&"/P|project browser", revIDEPaletteIsVisible("project browser")) & return after tTools
+   put toggleMenuItem("&"&gLanguage["MenuBar"]["Tools"]["Message Box"]&"/M|message box", revIDEPaletteIsVisible("message box")) & return after tTools
+   put toggleMenuItem(gLanguage["MenuBar"]["Tools"]["Extension Manager"]&"/|extension manager", revIDEPaletteIsVisible("extension manager")) & return after tTools
+   put toggleMenuItem(gLanguage["MenuBar"]["Tools"]["Extension Builder"]&"/|extension builder", revIDEPaletteIsVisible("extension builder")) & return after tTools
    put "-" & return after tTools
-   put toggleMenuItem(enableMenuItem("Menu Builder", the mode of the topStack is 1), revIDEPaletteIsVisible("menu builder")) & return after tTools
+   put toggleMenuItem(enableMenuItem(gLanguage["MenuBar"]["Tools"]["Menu Builder"]&"|menu builder", the mode of the topStack is 1), revIDEPaletteIsVisible("menu builder")) & return after tTools
    
    return modifyMenu("Tools", tTools)
 end revMenubarToolsMenu
@@ -1642,75 +1644,75 @@ private function revMenubarObjectMenu pContext
    put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
    
    ### Initial sections
-   put enableMenuItem("&Object Inspector", tIsObjectTarget) & return after tObject
-   put enableMenuItem("&Card Inspector", tIsUserTarget) & return after tObject
-   put enableMenuItem("&Stack Inspector/K", tIsUserTarget) & return after tObject
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Object"]["Object Inspector"], tIsObjectTarget) & return after tObject
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Object"]["Card Inspector"], tIsUserTarget) & return after tObject
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Object"]["Stack Inspector"]&"/K", tIsUserTarget) & return after tObject
    put "-" & return after tObject
-   put enableMenuItem("Object Script/E", tIsObjectTarget) & return after tObject
-   put enableMenuItem("Card Script", tIsUserTarget) & return after tObject
-   put enableMenuItem("Stack Script", tIsUserTarget) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Object Script"]&"/E", tIsObjectTarget) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Card Script"], tIsUserTarget) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Stack Script"], tIsUserTarget) & return after tObject
    put "-" & return after tObject
    
    ### Lines 9 to 11: Group, Edit Group, Remove Group
    local tGroupLines
    if the selectedImage is empty and pContext["objectsSelected"] then
-      if word 1 of (the selObj) is "group" and the number of lines in (the selObj) is 1 then   
-         put "&Ungroup Selected/G" & return & "&Edit Group/R" & return & "Remove Group"into tGroupLines   
+      if word 1 of (the selObj) is "group" and the number of lines in (the selObj) is 1 then
+         put "&"&gLanguage["MenuBar"]["Object"]["Ungroup Selected"]&"/G" & return & "&"&gLanguage["MenuBar"]["Object"]["Edit Group"]&"/R" & return & gLanguage["MenuBar"]["Object"]["Remove Group"] into tGroupLines
       else if word 1 of (the selObj) is not among the items of "card,stack" then
-         put "&Group Selected/G" & return & "(&Edit Group/R" & return & "(Remove Group"into tGroupLines
+         put "&"&gLanguage["MenuBar"]["Object"]["Group Selected"]&"/G" & return & "(&"&gLanguage["MenuBar"]["Object"]["Edit Group"]&"/R" & return & "("&gLanguage["MenuBar"]["Object"]["Remove Group"] into tGroupLines
       else
-         put "(&Group Selected/G" & return & "(&Edit Group/R" & return & "(Remove Group" into tGroupLines
+         put "(&"&gLanguage["MenuBar"]["Object"]["Group Selected"]&"/G" & return & "(&"&gLanguage["MenuBar"]["Object"]["Edit Group"]&"/R" & return & "("&gLanguage["MenuBar"]["Object"]["Remove Group"] into tGroupLines
       end if
    else
-      put "(&Group Selected/G" & return & "(&Edit Group/R" & return & "(Remove Group" into tGroupLines   
+      put "(&"&gLanguage["MenuBar"]["Object"]["Group Selected"]&"/G" & return & "(&"&gLanguage["MenuBar"]["Object"]["Edit Group"]&"/R" & return & "("&gLanguage["MenuBar"]["Object"]["Remove Group"] into tGroupLines
    end if
    if the editBackground of the topStack and word 1 of (the selObj) is not "group" then
-      put "&Stop Editing Group" into line 2 of tGroupLines
+      put "&"&gLanguage["MenuBar"]["Object"]["Stop Editing Group"] into line 2 of tGroupLines
    end if
    put tGroupLines & return after tObject
    
    ### Line 12: Place group, with the list of groups
    local tGroupNames
    put buildGroupSubmenu(the short name of the topStack) into tGroupNames
-   if the mode of the topStack is not 1 or tGroupNames is empty then 
-      put "(Place Group" & return after tObject   
+   if the mode of the topStack is not 1 or tGroupNames is empty then
+      put "("&gLanguage["MenuBar"]["Object"]["Place Group"] & return after tObject
    else
-      put "Place Group" & return & tGroupNames & return after tObject 
+      put gLanguage["MenuBar"]["Object"]["Place Group"] & return & tGroupNames & return after tObject
    end if
    put "-" & return after tObject
    
    ### New Card and Delete Card
-   put enableMenuItem("&New Card/N", tIsUserTarget) & return after tObject
-   put enableMenuItem("Delete Card", tIsUserTarget) & return after tObject
-   put enableMenuItem("New Control", the mode of the topStack is 1) & return after tObject
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Object"]["New Card"]&"/N", tIsUserTarget) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Delete Card"], tIsUserTarget) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["New Control"], the mode of the topStack is 1) & return after tObject
    put revMenubarNewControlSubmenu() & return after tObject
    put "-" & return after tObject
-   put enableMenuItem("New Widget", the mode of the topStack is 1) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["New Widget"], the mode of the topStack is 1) & return after tObject
    put revMenubarNewWidgetSubmenu() & return after tObject
    put "-" & return after tObject
    
    local tFlipText, tRotateText, tReshapeText
    if not pContext["enableFlipAndRotate"] or pContext["selectedObject"] is empty then
-      put "(Flip" into tFlipText
-      put "(Rotate" into tRotateText
-      put "(Reshape Graphic" into tReshapeText
+      put "("&gLanguage["MenuBar"]["Object"]["Flip"] into tFlipText
+      put "("&gLanguage["MenuBar"]["Object"]["Rotate"] into tRotateText
+      put "("&gLanguage["MenuBar"]["Object"]["Reshape Graphic"] into tReshapeText
    else
       if pContext["allImages"] then
-         put "Flip Image" into tFlipText
-         put "Rotate Image" into tRotateText
-         put "(Reshape Graphic" into tReshapeText
+         put gLanguage["MenuBar"]["Object"]["Flip Image"] into tFlipText
+         put gLanguage["MenuBar"]["Object"]["Rotate Image"] into tRotateText
+         put "("&gLanguage["MenuBar"]["Object"]["Reshape Graphic"] into tReshapeText
       else if pContext["allGraphics"] then
-         put "Flip Graphic" into tFlipText
-         put "Rotate Graphic" into tRotateText
+         put gLanguage["MenuBar"]["Object"]["Flip Graphic"] into tFlipText
+         put gLanguage["MenuBar"]["Object"]["Rotate Graphic"] into tRotateText
          if "revReshapeLibrary" is in revInternal__ListLoadedLibraries() then
-            put "!cReshape Graphic" into tReshapeText
-         else 
-            put "Reshape Graphic" into tReshapeText
+            put "!c"&gLanguage["MenuBar"]["Object"]["Reshape Graphic"] into tReshapeText
+         else
+            put gLanguage["MenuBar"]["Object"]["Reshape Graphic"] into tReshapeText
          end if
       else
-         put "Flip Selected" into tFlipText
-         put "Rotate Selected" into tRotateText
-         put "(Reshape Graphic" into tReshapeText
+         put gLanguage["MenuBar"]["Object"]["Flip Selected"] into tFlipText
+         put gLanguage["MenuBar"]["Object"]["Rotate Selected"] into tRotateText
+         put "("&gLanguage["MenuBar"]["Object"]["Reshape Graphic"] into tReshapeText
       end if
    end if
    
@@ -1726,7 +1728,7 @@ private function revMenubarObjectMenu pContext
    put "-" & return after tObject
    
    ### Align selected controls, with a submenu
-   put enableMenuItem("Align Selected Controls", the number of lines in (the selObj) >= 2) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Align Selected Controls"], the number of lines in (the selObj) >= 2) & return after tObject
    put buildAlignSubmenu() & return after tObject
    
    put "-" & return after tObject
@@ -1765,10 +1767,10 @@ private function revMenubarObjectMenu pContext
    end if
    
    ### Send to back, Move Backward, Move Forward and Bring to Front
-   put enableMenuItem("&Send to Back", pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
-   put enableMenuItem("Move Backward/[", pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
-   put enableMenuItem("Move For&ward/]", pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObject
-   put enableMenuItem("Bring to &Front", pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObject
+   put enableMenuItem("&"&gLanguage["MenuBar"]["Object"]["Send to Back"], pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Move Backward"]&"/[", pContext["objectsSelected"] and tCanRelayer and tCanMoveBack) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Move Forward"]&"/]", pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObject
+   put enableMenuItem(gLanguage["MenuBar"]["Object"]["Bring to Front"], pContext["objectsSelected"] and tCanRelayer and tCanMoveForward) & return after tObjectbject
    
    return modifyMenu("Object", tObject)
 end revMenubarObjectMenu
@@ -1826,38 +1828,38 @@ end revMenubarNewWidgetSubmenu
 
 private function buildFlipSubmenu
    return \
-         tab & "Horizontal" & return & \
-         tab & "Vertical" 
+         tab & gLanguage["MenuBar"]["Object"]["Horizontal"] & return & \
+         tab & gLanguage["MenuBar"]["Object"]["Vertical"]
 end buildFlipSubmenu
 
 private function buildRotateSubmenu
    return \
-         tab & "By.../|By" & return & \
-         tab & "90° Right/|270" & return & \
-         tab & "90° Left/|90" & return & \
-         tab & "180°/|180"
+         tab & gLanguage["MenuBar"]["Object"]["By"]&"/|By" & return & \
+         tab & gLanguage["MenuBar"]["Object"]["90° Right"]&"/|270" & return & \
+         tab & gLanguage["MenuBar"]["Object"]["90° Left"]&"/|90" & return & \
+         tab & gLanguage["MenuBar"]["Object"]["180°"]&"/|180"
 end buildRotateSubmenu
 
 private function buildDistributeSubmenu
    return \
-   tab & tab & "First to last selected" & return & \
-   tab & tab & "Edge to edge" & return & \
-   tab & tab & "Across card"
+         tab & tab & gLanguage["MenuBar"]["Object"]["First to last selected"] & return & \
+         tab & tab & gLanguage["MenuBar"]["Object"]["Edge to edge"] & return & \
+         tab & tab & gLanguage["MenuBar"]["Object"]["Across card"]
 end buildDistributeSubmenu
 
 private function buildAlignSubmenu
    local tAlign
-   put tab & "Left" & return after tAlign
-   put tab & "Right" & return after tAlign
-   put tab & "Top" & return after tAlign
-   put tab & "Bottom" & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Left"] & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Right"] & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Top"] & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Bottom"] & return after tAlign
    put tab & "-" & return after tAlign
-   put tab & "Make Widths E&qual/|Width" & return after tAlign
-   put tab & "Make &Heights Equal/|Height" & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Make Widths Equal"]&"/|Width" & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Make &Heights Equal"]&"/|Height" & return after tAlign
    put tab & "-" & return after tAlign
-   put tab & "Distribute Objects Horizontally..." & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Distribute Objects Horizontally"] & return after tAlign
    put buildDistributeSubmenu() & return after tAlign
-   put tab & "Distribute Objects Vertically..." & return after tAlign
+   put tab & gLanguage["MenuBar"]["Object"]["Distribute Objects Vertically"] & return after tAlign
    put buildDistributeSubmenu() after tAlign
    return tAlign
 end buildAlignSubmenu
@@ -1886,35 +1888,35 @@ private function revMenubarHelpMenu pContext
    local tHelp
    # AL-2015-07-10: Temporarily remove welcome screen option from help menu
    //put "Welcome Screen/|Welcome" & return after tHelp
-   put "Start Center/|Start Center" & return after tHelp
-   put "User Guide" & return after tHelp
-   put "Dictionary (API)/|Dictionary" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Start Center"]&"/|Start Center" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["User Guide"]&"/|User Guide" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Dictionary"]&"/|Dictionary" & return after tHelp
    
    put "-" & return  after tHelp
    
-   put "Sample Stacks" & return after tHelp
-   put "Sample Scripts" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Sample Stacks"]&"/|Sample Stacks" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Sample Scripts"]&"/|Sample Scripts" & return after tHelp
    put "-" & return after tHelp
-   put "Beginners Guide" & return after tHelp
-   put "All Guides" & return after tHelp
-   put "Tutorials" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Beginners Guide"]&"/|Beginners Guide" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["All Guides"] & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Tutorials"]&"/|Tutorials" & return after tHelp
    put "-" & return after tHelp
-   put "Forums" & return after tHelp
-   put "Technical Questions" & return after tHelp
-   put "Discussion List" & return after tHelp
-   put "Newsletters" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Forums"]&"/|Forums" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Technical Questions"]&"/|Technical Questions" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Discussion List"]&"/|Discussion List" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Newsletters"]&"/|Newsletters" & return after tHelp
    put "-" & return after tHelp
-   put "Release Notes/|Release Notes" & return after tHelp
-   put "License Agreement/|License Agreement" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Release Notes"]&"/|Release Notes" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["License Agreement"]&"/|License Agreement" & return after tHelp
    put "-" & return after tHelp
-   put "&Buy a License.../|Buy" & return after tHelp
-   put "&Support.../|Support" & return after tHelp
+   put "&"&gLanguage["MenuBar"]["Help"]["Buy a License"]&"/|Buy" & return after tHelp
+   put "&"&gLanguage["MenuBar"]["Help"]["Support"]&"/|Support" & return after tHelp
    put "-" & return after tHelp
-   put enableMenuItem("Re-license LiveCode/|Relicense", line 7 of the revLicenseInfo is not "Global") & return after tHelp
+   put enableMenuItem(gLanguage["MenuBar"]["Help"]["Re-license LiveCode"]&"/|Relicense", line 7 of the revLicenseInfo is not "Global") & return after tHelp
    put "-" & return after tHelp
-   put "Check For Updates/|Update" & return after tHelp
+   put gLanguage["MenuBar"]["Help"]["Check For Updates"]&"/|Update" & return after tHelp
    put "-" & return after tHelp
-   put "About LiveCode/|About" after tHelp
+   put gLanguage["MenuBar"]["Help"]["About LiveCode"]&"/|About" after tHelp
    
    return modifyMenu("Help", tHelp)
 end revMenubarHelpMenu
@@ -1925,23 +1927,23 @@ private function revMenubarViewMenu pContext
    global gREVPalettes, gREVShowStacks
    
    local tView
-   put enableMenuItem("Go &First/1", the mode of the topStack is 1) & return after tView
-   put enableMenuItem("Go Pre&v/2", the mode of the topStack is 1) & return after tView
-   put enableMenuItem("Go Ne&xt/3", the mode of the topStack is 1) & return after tView
-   put enableMenuItem("Go &Last/4", the mode of the topStack is 1) & return after tView
-   put enableMenuItem("Go Recent/5", the mode of the topStack is 1) & return after tView
+   put enableMenuItem(gLanguage["MenuBar"]["View"]["Go First"]&"/1", the mode of the topStack is 1) & return after tView
+   put enableMenuItem(gLanguage["MenuBar"]["View"]["Go Prev"]&"/2", the mode of the topStack is 1) & return after tView
+   put enableMenuItem(gLanguage["MenuBar"]["View"]["Go Next"]&"/3", the mode of the topStack is 1) & return after tView
+   put enableMenuItem(gLanguage["MenuBar"]["View"]["Go Last"]&"/4", the mode of the topStack is 1) & return after tView
+   put enableMenuItem(gLanguage["MenuBar"]["View"]["Go Recent"]&"/5", the mode of the topStack is 1) & return after tView
    put "-" & return after tView
-   put toggleMenuItem("Toolbar Text", the cToolbarText of stack "revPreferences") & return after tView
-   put toggleMenuItem("Toolbar Icons", the cToolbarIcons of stack "revPreferences") & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Toolbar Text"], the cToolbarText of stack "revPreferences") & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Toolbar Icons"], the cToolbarIcons of stack "revPreferences") & return after tView
    put "-" & return after tView
-   put toggleMenuItem("Palettes", gREVPalettes is empty) & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Palettes"], gREVPalettes is empty) & return after tView
    put "-" & return after tView
-   put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
-   put toggleMenuItem("Grid", the grid) & return after tView
-   put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
-   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Rulers"], the mode of stack "revRulersH" is not 0) & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Grid"], the grid) & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Backdrop"], the backdrop is not "none") & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Show IDE Stacks In Lists"], gREVShowStacks) & return after tView
    put "-" & return after tView
-   put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
+   put toggleMenuItem(gLanguage["MenuBar"]["View"]["Show Invisible Objects"] , the showInvisibles) & return after tView
    
    return modifyMenu("View", tView)
 end revMenubarViewMenu
@@ -1955,37 +1957,37 @@ private function revMenubarDevelopmentMenu pContext
    put not revIDEStackIsIDEStack(the topstack) into tIsUserTarget
    
    local tDevelopment
-   put "Object Library" & return after tDevelopment
-   put "Image Library" & return after tDevelopment
-   put "Plugins" & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Object Library"] & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Image Library"] & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Plugins"] & return after tDevelopment
    if sPluginMenuText is not empty then
       put sPluginMenuText & return after tDevelopment
    end if
    put tab & "-" & return after tDevelopment
-   put tab & "Plugin Settings" & return after tDevelopment
+   put tab & gLanguage["MenuBar"]["Development"]["Plugin Settings"] & return after tDevelopment
    put "-" & return after tDevelopment
    put revMenubarSimulatorSubmenu() after tDevelopment
-   put "-" & return after tDevelopment   
+   put "-" & return after tDevelopment
    
    if revEnvironmentEditionProperty("script_profiler") then
       local tProfiler
       put the long id of stack "com.livecode.library.scriptprofiler" into tProfiler
       if tProfiler is among the lines of the backScripts then
-         put enableMenuItem("Start Profiling Scripts", tIsUserTarget) & return after tDevelopment
+         put enableMenuItem(gLanguage["MenuBar"]["Development"]["Start Profiling Scripts"], tIsUserTarget) & return after tDevelopment
       else
-         put enableMenuItem("Stop Profiling Scripts...", tIsUserTarget) & return after tDevelopment
+         put enableMenuItem(gLanguage["MenuBar"]["Development"]["Stop Profiling Scripts"], tIsUserTarget) & return after tDevelopment
       end if
       put "-" & return after tDevelopment
    end if
    
-   put toggleMenuItem("Script Debug Mode", revDebuggerEnabled()) & return after tDevelopment
-   put"Clear All Breakpoints" & return after tDevelopment
-   put "Message Watcher" & return after tDevelopment
+   put toggleMenuItem(gLanguage["MenuBar"]["Development"]["Script Debug Mode"], revDebuggerEnabled()) & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Clear All Breakpoints"] & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Message Watcher"] & return after tDevelopment
    put "-" & return after tDevelopment
-   put toggleMenuItem("Suppress Errors", gREVSuppressErrors) & return after tDevelopment
-   put toggleMenuItem("Suppress Messages", gREVSuppressMessages) & return after tDevelopment
+   put toggleMenuItem(gLanguage["MenuBar"]["Development"]["Suppress Errors"], gREVSuppressErrors) & return after tDevelopment
+   put toggleMenuItem(gLanguage["MenuBar"]["Development"]["Suppress Messages"], gREVSuppressMessages) & return after tDevelopment
    put "-" & return after tDevelopment
-   put "Suspend Development Tools" & return after tDevelopment
+   put gLanguage["MenuBar"]["Development"]["Suspend Development Tools"] & return after tDevelopment
    
    return modifyMenu("Development", tDevelopment)
 end revMenubarDevelopmentMenu
@@ -1995,15 +1997,15 @@ private function revMenubarSimulatorSubmenu
    put revIDETestTargets() into tSimulators
    
    if tSimulators is not an array then
-      return "(Test/|Simulate" & return & "(Test Target" & return & tab & "(No targets configured" & return
+      return "("&gLanguage["MenuBar"]["Development"]["Test"]&"/|Simulate" & return & "("&gLanguage["MenuBar"]["Development"]["Test Target"] & return & tab & "("&gLanguage["MenuBar"]["Development"]["No targets configured"] & return
    end if
    
    local tCurrentTarget
    put revIDETestTarget() into tCurrentTarget
    
    local tMenu
-   put enableMenuItem("Test/|Simulate", tCurrentTarget is not empty) & return after tMenu
-   put "Test Target/|Simulator Version" & return after tMenu
+   put enableMenuItem(gLanguage["MenuBar"]["Development"]["Test"]&"/|Simulate", tCurrentTarget is not empty) & return after tMenu
+   put gLanguage["MenuBar"]["Development"]["Test Target"]&"/|Simulator Version" & return after tMenu
    repeat for each key tPlatform in tSimulators
       local tCanDeploy
       put revIDETestCanDeployToTarget(tPlatform) into tCanDeploy
@@ -2044,8 +2046,8 @@ function revMenubarAdditionalContextMenu pIndent
    
    local tText
    put return & tIndent & "-" after tText
-   put return & tIndent & "Show In Project Browser" after tText
-   put return & tIndent & "Show Documentation" after tText
+   put return & tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Show In Project Browser"] after tText
+   put return & tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Show Documentation"] after tText
    return tText
 end revMenubarAdditionalContextMenu
 
@@ -2057,7 +2059,7 @@ function revMenubarSendContextMenu pObject, pIndent
    
    local tHandlerList, tText
    put revListMenuHandlers(pObject, the cSort of stack "revPreferences", pIndent + 1) into tHandlerList
-   put tIndent & enableMenuItem("Send Message", tHandlerList is not tIndent & tab) after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Send Message"], tHandlerList is not tIndent & tab) after tText
    if tHandlerList is not tIndent & tab then
       put return & tHandlerList after tText
    end if
@@ -2073,50 +2075,36 @@ function revMenubarStackContextMenu pStack, pIndent
    end repeat
    
    local tText
-   put tIndent & "Edit Script" & return after tText
-   put tIndent & enableMenuItem("Edit Behavior Script", \
-         exists(the behavior of stack pStack)) & return after tText
-   put tIndent & "Property Inspector" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Edit Script"] & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Property Inspector"] & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "Stack Mode" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Stack Mode"] & return after tText
    if gREVLanguageNames then
-      put tIndent & tab & markMenuItem("topLevel", the mode of stack pStack < 3) & return after tText
-      put tIndent & tab & markMenuItem("modeless", the mode of stack pStack is 3) & return after tText
-      put tIndent & tab & markMenuItem("palette", the mode of stack pStack is 4) & return after tText
-      put tIndent & tab & markMenuItem("modal", the mode of stack pStack is 5) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["topLevel"], the mode of stack pStack < 3) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["modeless"], the mode of stack pStack is 3) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["palette"], the mode of stack pStack is 4) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["modal"], the mode of stack pStack is 5) & return after tText
    else
-      put tIndent & tab & markMenuItem("TopLevel", the mode of stack pStack < 3) & return after tText
-      put tIndent & tab & markMenuItem("Modeless", the mode of stack pStack is 3) & return after tText
-      put tIndent & tab & markMenuItem("Palette", the mode of stack pStack is 4) & return after tText
-      put tIndent & tab & markMenuItem("Modal", the mode of stack pStack is 5) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["TopLevel"], the mode of stack pStack < 3) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Modeless"], the mode of stack pStack is 3) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Palette"], the mode of stack pStack is 4) & return after tText
+      put tIndent & tab & markMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Modal"], the mode of stack pStack is 5) & return after tText
    end if
    put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Paste Objects"], the clipboard is "objects" and the mode of stack pStack is 1) & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "New Card" & return after tText
-   put tIndent & "Delete Card" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["New Card"] & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Delete Card"] & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "New Substack" & return after tText
-   put tIndent & enableMenuItem("Delete Substack", the mainstack of pStack is not the short name of pStack) & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["New Substack"] & return after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Delete Substack"], the mainstack of pStack is not the short name of pStack) & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "Save" & return after tText
-   put tIndent & "Close and Remove From Memory" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Save"] & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Close and Remove From Memory"] & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "Standalone Application Settings..." & return after tText
-   put tIndent & "Save As Standalone Application..." & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Standalone Application Settings"] & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Save As Standalone Application"] & return after tText
    put tIndent & "-" & return after tText
-   
-   if there is a stack "com.livecode.library.scriptprofiler" then
-      local tProfiler
-      put the long id of stack "com.livecode.library.scriptprofiler" into tProfiler
-      if tProfiler is among the lines of the backScripts then
-         put tIndent & "Start Profiling Scripts" & return after tText
-      else
-         put tIndent & "Stop Profiling Scripts..." & return after tText
-      end if
-      put tIndent & "-" & return after tText
-   end if
-   
    put revMenubarSendContextMenu(pStack, pIndent) after tText
    put revMenubarAdditionalContextMenu(pIndent) after tText
    
@@ -2133,12 +2121,12 @@ function revMenuBarCardContextMenu pCard, pIndent
    put revIDEStackOfObject(pCard) into tTargetStack
    
    local tText
-   put revMenuBarStandardContextMenu(pCard, pIndent) & return into tText
+   put revMenuBarStandardContextMenu(pIndent) & return into tText
    put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Paste Objects", the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Paste Objects"], the clipboard is "objects" and the mode of stack tTargetStack is 1) & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & "New Card" & return after tText
-   put tIndent & "Delete Card" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["New Card"] & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Delete Card"] & return after tText
    put tIndent & "-" & return after tText
    put revMenubarSendContextMenu(pCard, pIndent) after tText
    put revMenubarAdditionalContextMenu(pIndent) after tText
@@ -2169,13 +2157,12 @@ function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
    end repeat
    
    local tText
-   put tIndent & "Edit Script" & return after tText
-   put tIndent & enableMenuItem("Edit Behavior Script", \
-         exists(the behavior of pObject)) & return after tText
-   put tIndent & "Property Inspector" & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Edit Script"] & return after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Edit Behavior Script"], exists(the behavior of pObject)) & return after tText
+   put tIndent & gLanguage["MenuBar"]["RightClickMenu"]["Property Inspector"] & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
-   put tIndent & enableMenuItem("Copy", pSelectable) after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Cut"], pSelectable) & return after tText
+   put tIndent & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Copy"], pSelectable) after tText
    return tText
 end revMenuBarStandardContextMenu
 
@@ -2199,7 +2186,7 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
    
    put revMenuBarObjectContextMenu(pExtraText, pTarget,0, pSelectable) into tText
    put return & "-" after tText
-   put return & enableMenuItem("Clear", pSelectable) after tText
+   put return & enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Clear"], pSelectable) after tText
    put return & "-" after tText
    put return & "Card" after tText
    put return & revMenuBarCardContextMenu(the long id of this card of tTargetStack, 1) after tText
@@ -2216,56 +2203,56 @@ function revMenubarContextMenu pType, pTarget
    local tText
    switch pType
       case "group"
-         put enableMenuItem("Paste into Group", tSelectable and the clipboard is "objects") & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Paste into Group"], tSelectable and the clipboard is "objects") & return after tText
          put "-" & return after tText
-         put enableMenuItem("Edit Group", tSelectable) & return after tText
-         put enableMenuItem("Ungroup", tSelectable) & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Edit Group"], tSelectable) & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Ungroup"], tSelectable) & return after tText
          put "-" & return after tText
-         put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
+         put toggleMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Lock Location"], the lockLoc of pTarget) & return after tText
          break
       case "image"
          put "-" & return after tText
-         put "Launch Editor" & return after tText
-         put toggleMenuItem("Magnify", the magnify of pTarget) & return after tText
+         put gLanguage["MenuBar"]["RightClickMenu"]["Launch Editor"] & return after tText
+         put toggleMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Magnify"], the magnify of pTarget) & return after tText
          put "-" & return after tText
-         put toggleMenuItem("Lock Location", the lockLoc of pTarget) & return after tText
-         put enableMenuItem("Make Original Size", the formattedWidth of pTarget is not the width of pTarget \
+         put toggleMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Lock Location"], the lockLoc of pTarget) & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Make Original Size"], the formattedWidth of pTarget is not the width of pTarget \
                or the formattedHeight of pTarget is not the height of pTarget) & return after tText
          break
       case "polygon"
          put "-" & return after tText
-         put toggleMenuItem( "Reshape Polygon", the editMode of pTarget is "polygon") & return after tText
+         put toggleMenuItem( gLanguage["MenuBar"]["RightClickMenu"]["Reshape Polygon"], the editMode of pTarget is "polygon") & return after tText
          break
       case "multiple"
          put "-" & return after tText
-         put "Align" & return after tText
-         put tab & "Left" & return after tText
-         put tab & "Right" & return after tText
-         put tab & "Top" & return after tText
-         put tab & "Bottom" & return after tText
+         put gLanguage["MenuBar"]["RightClickMenu"]["Align"] & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Left"] & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Right"] & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Top"] & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Bottom"] & return after tText
          put tab & "-" & return after tText
-         put tab & "Make Widths Equal/|Width" & return after tText
-         put tab & "Make Heights Equal/|Height" & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Make Widths Equal"]&"/|Width" & return after tText
+         put tab & gLanguage["MenuBar"]["RightClickMenu"]["Make Heights Equal"]&"/|Height" & return after tText
          put enableMenuItem("Group", tSelectable) & return after tText
          break
       case "field"
-         put enableMenuItem("Paste Text", tSelectable and the clipboard is "text") & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Paste Text"], tSelectable and the clipboard is "text") & return after tText
          put "-" & return after tText
-         put toggleMenuItem("Lock Text", the lockText of pTarget) & return after tText
-         put toggleMenuItem("Can Receive Keyboard Focus", the traversalOn of pTarget) & return after tText
+         put toggleMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Lock Text"], the lockText of pTarget) & return after tText
+         put toggleMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Can Receive Keyboard Focus"], the traversalOn of pTarget) & return after tText
          break
       case "player"
          put "-" & return after tText
-         put enableMenuItem("Play", word 1 of the tool is "browse") & return after tText
-         put enableMenuItem("Stop", word 1 of the tool is "browse") & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Play"], word 1 of the tool is "browse") & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Stop"], word 1 of the tool is "browse") & return after tText
          if the paused of pTarget then
-            put enableMenuItem("Unpause", word 1 of the tool is "browse") & return after tText
+            put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Unpause"], word 1 of the tool is "browse") & return after tText
          else
-            put enableMenuItem("Pause", word 1 of the tool is "browse") & return after tText
+            put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["Pause"], word 1 of the tool is "browse") & return after tText
          end if
          break
       case "menu"
-         put enableMenuItem("TopLevel Panel Stack", the menuName of pTarget is not empty) & return after tText
+         put enableMenuItem(gLanguage["MenuBar"]["RightClickMenu"]["TopLevel Panel Stack"], the menuName of pTarget is not empty) & return after tText
          break
    end switch
    
@@ -2565,13 +2552,13 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
    set the itemdelimiter to "|"
    switch item 1 of pWhich
       ######## OBJECTS #########
-      case "Edit Script"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Edit Script"]
          revIDEEditScriptOfObjects pTarget
          break
-      case "Edit Behavior Script"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Edit Behavior Script"]
          revIDEEditScriptOfObjects the behavior of pTarget
          break
-      case "Property Inspector"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Property Inspector"]
          revIDEOpenInspectorForObjects pTarget
          break
       case "Cut"
@@ -2580,17 +2567,17 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Copy"
          revIDECopyObjects pTarget
          break
-      case "Lock Location"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Lock Location"]
          revIDEToggleLockLocationOfObjects pTarget
          break
-      case "Show Documentation"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Show Documentation"]
          revIDEGoToObjectAPI pTarget
          break
-      case "Show In Project Browser"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Show In Project Browser"]
          revIDEShowInProjectBrowser pTarget
          break
          ######## GRAPHIC SPECIFIC #########
-      case "Reshape Polygon"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Reshape Polygon"]
          if the editMode of pTarget is "polygon" then
             set the editMode of pTarget to "none"
          else
@@ -2598,102 +2585,95 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          end if
          break
          ######## GROUP SPECIFIC #########
-      case "Edit Group"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Edit Group"]
          revIDEEditGroup pTarget
          break
-      case "Ungroup"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Ungroup"]
          revIDEUngroup pTarget
          break
-      case "Paste into Group"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Paste into Group"]
          revIDEPasteIntoGroup pTarget
          break
-      case "Clear"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Clear"]
          revIDEActionClearObjects pTarget
          break
          ######## IMAGE SPECIFIC #########
-      case "Paint Tools"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Paint Tools"]
          revIDETogglePaintAndDrawTools
          break
-      case "Launch Editor"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Launch Editor"]
          revIDEEditImage pTarget
          break
-      case "Magnify"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Magnify"]
          revIDEToggleMagnifyOfImage pTarget
-         break 
-      case "Make Original Size"
+         break
+      case gLanguage["MenuBar"]["RightClickMenu"]["Make Original Size"]
          revIDEMakeImageOriginalSize pTarget
          break
          ######## FIELD SPECIFIC #########
-      case "Paste Text"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Paste Text"]
          revIDEActionPasteTextIntoField pTarget
          break
-      case "Can Receive Keyboard Focus"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Can Receive Keyboard Focus"]
          revIDEToggleTraversalOnOfField pTarget
          break
          ######## PLAYER SPECIFIC #########
-      case "Play"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Play"]
          revIDEStartPlayingPlayer pTarget
          break
-      case "Stop"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Stop"]
          revIDEStopPlayingPlayer pTarget
          break
-      case "Pause"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Pause"]
          revIDETogglePauseOfPlayer
          break
-         
          ######## MENU SPECIFIC #########
-      case "TopLevel Panel Stack"
+      case gLanguage["MenuBar"]["RightClickMenu"]["TopLevel Panel Stack"]
          toplevel the menuname of pTarget
          break
          ######## STACK SCPECIFIC ########
-      case "New Card"
+      case gLanguage["MenuBar"]["RightClickMenu"]["New Card"]
          revIDEActionNewCard
          break
-      case "Delete Card"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Delete Card"]
          if word 1 of pTarget is "stack" then
             revIDEActionDeleteCard
          else
             revIDEDeleteCard pTarget
          end if
          break
-      case "Save"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Save"]
          revIDESaveStack tTargetStack
          break
-      case "Paste Objects"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Paste Objects"]
          revIDEPasteOntoStack tTargetStack
          break
-      case "Stack Mode"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Stack Mode"]
          revIDESetModeOfStack tTargetStack, item 2 of pWhich
          break
-      case "New Substack"
+      case gLanguage["MenuBar"]["RightClickMenu"]["New Substack"]
          revIDENewSubstackOfStack the short name of tTargetStack
          break
-      case "Close And Remove From Memory"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Close And Remove From Memory"]
          revIDECloseStack tTargetStack, true
          break
-      case "Delete Substack"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Delete Substack"]
          revIDEDeleteSubstack tTargetStack
          break
-      case "Standalone Application Settings..."
+      case gLanguage["MenuBar"]["RightClickMenu"]["Standalone Application Settings"]
          revIDEStandaloneSettingsForStack tTargetStack
          break
-      case "Save As Standalone Application..."
+      case gLanguage["MenuBar"]["RightClickMenu"]["Save As Standalone Application"]
          revIDESaveAsStandalone tTargetStack
          break
-      case "Start Profiling Scripts" 
-         scriptprofilerStartProfiler the short name of tTargetStack
-         break
-      case "Stop Profiling Scripts..." 
-         scriptprofilerStopProfiler
-         break
          ######## MULTI OBJECT SPECIFIC #########
-      case "Align"
-         revIDEAlignControls pTarget, item 2 of pWhich 
-         break     
-      case "Send Message"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Align"]
+         revIDEAlignControls pTarget, item 2 of pWhich
+         break
+      case gLanguage["MenuBar"]["RightClickMenu"]["Send Message"]
          revIDESendMessageToObject item 2 of pWhich, pTarget
          break
-      case "Group"
+      case gLanguage["MenuBar"]["RightClickMenu"]["Group"]
          revIDEGroupObjects pTarget
          if the result is empty and exists(it) then
             select it
@@ -2716,46 +2696,46 @@ end revMenubarContextMenuPickTarget
 ######## FILE MENU ##########
 on revMenubarFileMenuPick pWhich
    switch pWhich
-      case "New Substack"
+      case gLanguage["MenuBar"]["File"]["New Substack"]
          revIDENewSubstack the long id of the topStack
          break
-      case "Open Stack..."
+      case gLanguage["MenuBar"]["File"]["Open Stack"]
          revIDEActionOpenStack
          break
-      case "Close"
+      case gLanguage["MenuBar"]["File"]["Close"]
          revIDECloseStack the long id of the topStack, false
          break
-      case "Close and Remove From Memory"
+      case gLanguage["MenuBar"]["File"]["Close and Remove From Memory"]
          revIDECloseStack the long id of the topStack, true
          break
-      case "Save"
+      case gLanguage["MenuBar"]["File"]["Save"]
          revIDESaveStack the long id of the topStack
          break
-      case "Save As..."
+      case gLanguage["MenuBar"]["File"]["Save As"]
          revIDEActionSaveStackAs the long id of the topStack
          break
-      case "Save As Standalone Application..."
+      case gLanguage["MenuBar"]["File"]["Save As Standalone Application"]
          revIDESaveAsStandalone the long id of the topStack
          break
-      case "Share this stack..."
+      case gLanguage["MenuBar"]["File"]["Share this stack"]
          revIDEShareStack the long id of the topStack
          break
-      case "Standalone Application Settings..."
+      case gLanguage["MenuBar"]["File"]["Standalone Application Settings"]
          revIDEStandaloneSettingsForStack the long id of the topStack
          break
-      case "Move substack to file..."
+      case gLanguage["MenuBar"]["File"]["Move substack to file"]
          revIDEMoveSubstackToFile the long id of the topStack
          break
-      case "Revert To Saved..."
+      case gLanguage["MenuBar"]["File"]["Revert To Saved"]
          revIDERevertToSavedStack the long id of the topStack
          break
-      case "Page Setup..."
+      case gLanguage["MenuBar"]["File"]["Page Setup"]
          revIDEPrintPageSetup
          break
-      case "Print Card..."
+      case gLanguage["MenuBar"]["File"]["Print Card"]
          revIDEPrintCurrentCard
          break
-      case "Print Field..."
+      case gLanguage["MenuBar"]["File"]["Print Field"]
          revIDEPrintField the long ID of the selectedobject
          break
       case "Quit"
@@ -2765,8 +2745,8 @@ on revMenubarFileMenuPick pWhich
       default
          set the itemDel to "|"
          local tType
-         switch item 1 of pWhich      
-            case "New Stack"
+         switch item 1 of pWhich
+            case gLanguage["MenuBar"]["File"]["New Stack"]
                local tStackType
                put item 2 of pWhich into tStackType
                if tStackType is "Script Only Stack" then
@@ -2775,10 +2755,10 @@ on revMenubarFileMenuPick pWhich
                   revIDEActionNewMainstack tStackType
                end if
                break
-            case "Open Recent File"
+            case gLanguage["MenuBar"]["File"]["Open Recent File"]
                revIDEOpenStack item 2 of pWhich
                break
-            case "Import As Control"
+            case gLanguage["MenuBar"]["File"]["Import As Control"]
                put item 2 of pWhich into tType
                switch tType
                   case "image"
@@ -2787,11 +2767,11 @@ on revMenubarFileMenuPick pWhich
                   case "text"
                   case "graph"
                      revIDEActionImportControl tType
-                     break 
-                  case "Snapshot of Screen"
+                     break
+                  case gLanguage["MenuBar"]["File"]["Snapshot of Screen"]
                      revIDEImportSnapshot "screen"
                      break
-                  case "Snapshot of Selected Object"
+                  case gLanguage["MenuBar"]["File"]["Snapshot of Selected Object"]
                      revIDEImportSnapshot "object", the selobj
                      break
                   case "image folder"
@@ -2802,15 +2782,15 @@ on revMenubarFileMenuPick pWhich
                      break
                end switch
                break
-            case "New Referenced Control"
+            case gLanguage["MenuBar"]["File"]["New Referenced Control"]
                put item 2 of pWhich into tType
                switch tType
-                  case "image"
-                  case "video"
+                  case gLanguage["MenuBar"]["File"]["image"]
+                  case gLanguage["MenuBar"]["File"]["video"]
                      revIDEActionImportControl tType, true
                      break
-                  case "image folder"
-                  case "video folder"
+                  case gLanguage["MenuBar"]["File"]["image folder"]
+                  case gLanguage["MenuBar"]["File"]["video folder"]
                      revIDEActionImportControlFromFolder word 1 of tType, true
                      break
                end switch
@@ -2820,7 +2800,7 @@ end revMenubarFileMenuPick
 
 on revMenubarEditMenuPick pWhich
    switch pWhich
-      case "Undo"
+      case gLanguage["MenuBar"]["Edit"]["Undo"]
          revIDEUndo
          break
       case "Cut Object(s)"
@@ -2856,30 +2836,30 @@ on revMenubarEditMenuPick pWhich
       case "Clear Image Selection"
          revIDEActionClear
          break
-      case "Deselect All"
+      case gLanguage["MenuBar"]["Edit"]["Deselect All"]
          revIDEDeselectAll
          break
-      case "Select All"
+      case gLanguage["MenuBar"]["Edit"]["Select All"]
          revIDESelectAll
          break
-      case "Invert Selection"
+      case gLanguage["MenuBar"]["Edit"]["Invert Selection"]
          revIDEInvertObjectSelection
          break
-      case "Duplicate"
+      case gLanguage["MenuBar"]["Edit"]["Duplicate"]
       case "Duplicate Objects"
          revIDEActionDuplicate
          break
       case "Duplicate Card"
          revIDEDuplicateCard
          break
-      case "Select Grouped Controls"
-      case "Intersected Selections"
+      case gLanguage["MenuBar"]["Edit"]["Select Grouped Controls"]
+      case gLanguage["MenuBar"]["Edit"]["Intersected Selections"]
          revIDEToggle pWhich
          break
-      case "Preferences"
+      case gLanguage["MenuBar"]["Edit"]["Preferences"]
          revIDEOpenPalette "preferences"
          break
-      case "Find and Replace..."
+      case gLanguage["MenuBar"]["Edit"]["Find and Replace"]
          revIDEOpenPalette "search"
          break
    end switch
@@ -2887,16 +2867,16 @@ end revMenubarEditMenuPick
 
 on revMenubarToolsMenuPick pWhich
    switch pWhich
-      case "Tools Palette"
+      case gLanguage["MenuBar"]["Tools"]["Tools Palette"]
          revIDETogglePalette "tools"
          break
-      case "Browse Tool"
+      case gLanguage["MenuBar"]["Tools"]["Browse Tool"]
          revIDEChooseBrowseTool
          break
-      case "Pointer Tool"
+      case gLanguage["MenuBar"]["Tools"]["Pointer Tool"]
          revIDEChoosePointerTool
          break
-      case "paint and draw tools"
+      case gLanguage["MenuBar"]["Tools"]["paint and draw tools"]
          revIDETogglePaintAndDrawTools
          break
       case "Menu Builder"
@@ -2912,88 +2892,88 @@ end revMenubarToolsMenuPick
 on revMenubarObjectMenuPick pWhich
    set the itemdelimiter to "|"
    switch item 1 of pWhich
-      case "Reshape Graphic"
+      case gLanguage["MenuBar"]["Object"]["Reshape Graphic"]
          revIDEToggleReshapeGraphic
          break
-      case "New card"
+      case gLanguage["MenuBar"]["Object"]["New card"]
          revIDEActionNewCard
          break
-      case "Delete Card"
+      case gLanguage["MenuBar"]["Object"]["Delete Card"]
          revIDEActionDeleteCard
          break
-      case "Object Inspector"
+      case gLanguage["MenuBar"]["Object"]["Object Inspector"]
          revIDEActionInspectObjects
          break
-      case "Card Inspector"
+      case gLanguage["MenuBar"]["Object"]["Card Inspector"]
          revIDEActionInspectCard
          break
-      case "Stack Inspector"
+      case gLanguage["MenuBar"]["Tools"]["Stack Inspector"]
          revIDEActionInspectStack
-         break 
-      case "Object Script"
+         break
+      case gLanguage["MenuBar"]["Object"]["Object Script"]
          revIDEActionEditScriptOfObjects
          break
-      case "Card Script"
+      case gLanguage["MenuBar"]["Object"]["Card Script"]
          revIDEActionEditScriptOfCard
          break
-      case "Stack Script"
+      case gLanguage["MenuBar"]["Object"]["Stack Script"]
          revIDEEditScriptOfObjects the long ID of the topstack
          break
-      case "New Control"
-      case "New Widget"
+      case gLanguage["MenuBar"]["Object"]["New Control"]
+      case gLanguage["MenuBar"]["Object"]["New Widget"]
          revIDEActionCreateObject item 2 of pWhich
          break
-      case "Place Group"
+      case gLanguage["MenuBar"]["Object"]["Place Group"]
          revIDEPlaceGroupOnCard item 2 of pWhich
          break
-      case "Remove Group"
+      case gLanguage["MenuBar"]["Object"]["Remove Group"]
          revIDEActionRemoveGroupFromCard
          break
-      case "Send to Back"
+      case gLanguage["MenuBar"]["Object"]["Send to Back"]
          revIDEActionSendToBack
          break
-      case "Move Backward"
+      case gLanguage["MenuBar"]["Object"]["Move Backward"]
          revIDEActionMoveBackward
          break
-      case "Move forward"
+      case gLanguage["MenuBar"]["Object"]["Move forward"]
          revIDEActionMoveForward
          break
-      case "Bring to Front"
+      case gLanguage["MenuBar"]["Object"]["Bring to Front"]
          revIDEActionBringToFront
          break
-      case "Group Selected"
+      case gLanguage["MenuBar"]["Object"]["Group Selected"]
          revIDEActionGroupObjects
          break
-      case "Edit Group"
+      case gLanguage["MenuBar"]["Object"]["Edit Group"]
          revIDEActionEditGroup
          break
-      case "Stop Editing Group"
+      case gLanguage["MenuBar"]["Object"]["Stop Editing Group"]
          revIDEStopEditingGroup
          break
-      case "Ungroup selected"
+      case gLanguage["MenuBar"]["Object"]["Ungroup selected"]
          revIDEActionUngroup
          break
-      case "Flip Image"
+      case gLanguage["MenuBar"]["Object"]["Flip Image"]
          revIDEActionFlipImage item 2 of pWhich
          break
-      case "Flip Graphic"
+      case gLanguage["MenuBar"]["Object"]["Flip Graphic"]
          revIDEActionFlipGraphic item 2 of pWhich
          break
-      case "Rotate Image"
+      case gLanguage["MenuBar"]["Object"]["Rotate Image"]
          if item 2 of pWhich is "By" then
             revIDEActionRotateImageBy
          else
             revIDEActionRotateImage item 2 of pWhich
          end if
          break
-      case "Rotate Graphic"
+      case gLanguage["MenuBar"]["Object"]["Rotate Graphic"]
          if item 2 of pWhich is "By" then
             revIDEActionRotateGraphicBy
          else
             revIDEActionRotateGraphic item 2 of pWhich
          end if
          break
-      case "Align Selected Controls"
+      case gLanguage["MenuBar"]["Object"]["Align Selected Controls"]
          if item 2 of pWhich begins with "Distribute Objects" then
             revIDEActionDistributeControls item 2 of pWhich is "Distribute Objects Horizontally...", item 3 of pWhich
          else
@@ -3011,48 +2991,48 @@ on revMenubarTextMenuPick pWhich
    if the number of items of pWhich > 1 then
       put toLower(item 2 to -1 of pWhich) into tPickedParams
       put toLower(item 1 of pWhich) into tPickedItem
-   else 
+   else
       put pWhich into tPickedItem
    end if
-
+   
    switch tPickedItem
-      case "plain"
+      case gLanguage["MenuBar"]["Text"]["plain"]
          revIDEStyleTextPlain
          break
-      case "bold"
+      case gLanguage["MenuBar"]["Text"]["bold"]
          revIDEStyleTextBold
          break
-      case "italic"
+      case gLanguage["MenuBar"]["Text"]["italic"]
          revIDEStyleTextItalic
          break
-      case "underline"
+      case gLanguage["MenuBar"]["Text"]["underline"]
          revIDEStyleTextUnderline
          break
-      case "strikeout"
+      case gLanguage["MenuBar"]["Text"]["strikeout"]
          revIDEStyleTextStrikeout
          break
-      case "box"
+      case gLanguage["MenuBar"]["Text"]["box"]
          revIDEStyleTextBox
          break
-      case "link"
+      case gLanguage["MenuBar"]["Text"]["link"]
          revIDEStyleTextLink
          break
-      case "3d box"
+      case gLanguage["MenuBar"]["Text"]["3d box"]
          revIDEStyleText3DBox
          break
-      case "subscript"
+      case gLanguage["MenuBar"]["Text"]["subscript"]
          revIDEStyleTextSubscript
          break
-      case "superscript"
+      case gLanguage["MenuBar"]["Text"]["superscript"]
          revIDEStyleTextSuperscript
          break
-      case "font"
+      case gLanguage["MenuBar"]["Text"]["font"]
          revIDESetTextFont tPickedParams
          break
-      case "size"
+      case gLanguage["MenuBar"]["Text"]["size"]
          revIDESetTextSize tPickedParams
          break
-      case "color"
+      case gLanguage["MenuBar"]["Text"]["color"]
          revIDESetTextColor tPickedParams
          break
       case "align"
@@ -3068,18 +3048,22 @@ on revMenubarDevelopmentMenuPick pWhich
    put item 1 of pWhich into tWhich
    
    switch tWhich
-      case "Message Watcher"
+      case gLanguage["MenuBar"]["Development"]["Message Watcher"]
          revIDEOpenPalette "message watcher"
          break
-      case "Clear all Breakpoints"
+      case gLanguage["MenuBar"]["Development"]["Clear all Breakpoints"]
          revIDEActionClearAllBreakpoints
          break
-      case "Script Debug Mode"
-      case "Suppress Messages"
-      case "Suppress Errors"
-         revIDEToggle tWhich
+      case gLanguage["MenuBar"]["Development"]["Script Debug Mode"]
+         revIDEToggle "Script Debug Mode"
          break
-      case "Suspend Development Tools"
+      case gLanguage["MenuBar"]["Development"]["Suppress Messages"]
+         revIDEToggle "Suppress Messages"
+         break
+      case gLanguage["MenuBar"]["Development"]["Suppress Errors"]
+         revIDEToggle "Suppress Errors"
+         break
+      case gLanguage["MenuBar"]["Development"]["Suspend Development Tools"]
          revIDESuspendDevelopmentTools
          break
       case "Simulate"
@@ -3088,19 +3072,19 @@ on revMenubarDevelopmentMenuPick pWhich
       case "Simulator Version"
          revIDESetTestTarget item 2 of pWhich
          break
-      case "Object Library"
+      case gLanguage["MenuBar"]["Development"]["Object Library"]
          go cd 1 of stack "revImageLibrary" as modeless
          lock messages
          set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 1
          unlock messages
          break
-      case "Image Library"
+      case gLanguage["MenuBar"]["Development"]["Image Library"]
          go cd 2 of stack "revImageLibrary" as modeless
          lock messages
          set the menuHistory of btn "tabs" of stack "RevImageLibrary" to 2
          unlock messages
          break
-      case "Plugins"
+      case gLanguage["MenuBar"]["Development"]["Plugins"]
          local tPicked
          set the itemDel to "|"
          put item 2 of pWhich into tPicked
@@ -3124,34 +3108,45 @@ on revMenubarDevelopmentMenuPick pWhich
 end revMenubarDevelopmentMenuPick
 
 on revMenubarViewMenuPick pWhich
+   global gREVSuppressErrors, gREVSuppressMessages, gREVPalettes, gREVShowStacks
    switch pWhich
-      case "Show IDE Stacks In Lists"
-      case "Show Invisible Objects"
-      case "Rulers"
-      case "Backdrop"
-      case "Grid"
-         revIDEToggle pWhich
+      case gLanguage["MenuBar"]["View"]["Show IDE Stacks In Lists"]
+         revIDEToggle "Show IDE Stacks In Lists"
          break
-      case "Go First"
+      case gLanguage["MenuBar"]["View"]["Show Invisible Objects"]
+         revIDEToggle "Show Invisible Objects"
+         break
+      case gLanguage["MenuBar"]["View"]["Rulers"]
+         revIDEToggle "Rulers"
+         break
+      case gLanguage["MenuBar"]["View"]["Backdrop"]
+         revIDEToggle "Backdrop"
+         break
+      case gLanguage["MenuBar"]["View"]["Grid"]
+         revIDEToggle "Grid"
+         break
+      case gLanguage["MenuBar"]["View"]["Go First"]
          revIDEGoCard "first"
          break
-      case "Go Prev"
+      case gLanguage["MenuBar"]["View"]["Go Prev"]
          revIDEGoCard "prev"
          break
-      case "Go Next"
+      case gLanguage["MenuBar"]["View"]["Go Next"]
          revIDEGoCard "next"
          break
-      case "Go Last"
+      case gLanguage["MenuBar"]["View"]["Go Last"]
          revIDEGoCard "last"
          break
-      case "Go Recent"
+      case gLanguage["MenuBar"]["View"]["Go Recent"]
          revIDEGoCard "recent"
          break
-      case "Toolbar Text"
-      case "Toolbar Icons"
-         revIDEToggleToolbar pWhich
+      case gLanguage["MenuBar"]["View"]["Toolbar Text"]
+         revIDEToggleToolbar "Toolbar Text"
          break
-      case "Palettes"
+      case gLanguage["MenuBar"]["View"]["Toolbar Icons"]
+         revIDEToggleToolbar "Toolbar Icons"
+         break
+      case gLanguage["MenuBar"]["View"]["Palettes"]
          revIDETogglePaletteView
          break
    end switch
@@ -3193,7 +3188,7 @@ on revMenubarHelpMenuPick pWhich
       case "Newsletters"
          revIDELaunchResource tPick
          break
-      case "All Guides"
+      case gLanguage["MenuBar"]["Help"]["All Guides"]
          revIDEOpenPalette "guide"
          break
       case "Relicense"
