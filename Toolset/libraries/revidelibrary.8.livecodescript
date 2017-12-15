@@ -6508,7 +6508,7 @@ command revIDESetImageFilename pObjectID, pProperty, pFilename
       if tStackPath is not empty then
          put revCalculateRelativePath(tStackPath, pFilename) into tFilePath
          if tFilePath begins with "./" then delete char 1 to 2 of tFilePath
-         if tFilePath ends with tResult then
+         if tFilePath ends with pFilename then
             --full path contained in relative path, likely a different volume
             --in any case, need to return absolute path
          else if there is a file (tStackPath & slash & tFilePath) then
