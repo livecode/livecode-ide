@@ -1047,12 +1047,94 @@ private command __extensionLoad pID, pExtensionDataA
          tError, tIDEExtension, tSourceFile, tToLoadA, true
 end __extensionLoad
 
+private command __MapCodeLibraryForIDE pFolder
+   local tLibraries
+   if revEnvironmentIsInstalled() and \
+         pFolder begins with revEnvironmentToolsPath() and \
+         the platform is "MacOS" then
+      -- special case bundled extensions must load code from within MacOS dir
+      -- the libs to load should be in Contents/MacOS/<extension>/
+      local tExtension
+      set the itemDelimiter to slash
+      put item -2 of pFolder into tExtension
+      
+      put files(specialFolderPath("engine") & "/" & tExtension) & return & \
+            folders(specialFolderPath("engine") & "/" & tExtension) into tLibraries
+      filter tLibraries without ".*"
+      
+      if tLibraries is not empty then
+         set the itemDelimiter to "."
+         repeat for each line tLibrary in tLibraries
+            -- remove extension
+            delete the last item of tLibrary
+            if tLibrary is not empty then
+               set the revLibraryMapping[tLibrary] to "./" & tExtension & "/" & tLibrary
+            end if
+         end repeat
+      end if
+   else
+      -- code folders should be platform ID triples however for the
+      -- time being as we have no way to access the data required to 
+      -- determine the options section of the platform ID so we filter only
+      -- arch and platform and hope for the best. Ideally we would have
+      -- access to a build options string and give a complete match precedence.
+      local tCodeFolders
+      put folders(pFolder) into tCodeFolders
+      switch the platform
+         case "MacOS"
+            filter tCodeFolders with "*-mac*"
+            break
+         case "Win32"
+            filter tCodeFolders with "*-win*"
+            break
+         default
+            filter tCodeFolders with "*-"& toLower(the platform) & "*"
+            break
+      end switch
+      
+      local tFilteredCodeFolders
+      filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
+      split tFilteredCodeFolders by return as set
+      if the platform is "MacOS" then
+         -- explicit processor should take precedence over universal builds but
+         -- in the event multiple libraries are included and some are universal
+         -- we must merge
+         local tUniveralFilteredCodeFolders
+         filter tCodeFolders with "universal-*" into tUniveralFilteredCodeFolders
+         split tUniveralFilteredCodeFolders by return as set
+         union tFilteredCodeFolders with tUniveralFilteredCodeFolders
+      end if
+      
+      repeat for each key tFolder in tFilteredCodeFolders
+         put files(pFolder & "/" & tFolder) & return & \
+               folders(pFolder & "/" & tFolder) into tLibraries
+         filter tLibraries without ".*"
+         
+         if tLibraries is not empty then
+            set the itemDelimiter to "."
+            repeat for each line tLibrary in tLibraries
+               -- remove extension
+               delete the last item of tLibrary
+               if tLibrary is not empty then
+                  set the revLibraryMapping[tLibrary] to pFolder & "/" & tFolder & "/" & tLibrary
+               end if
+            end repeat
+         end if
+      end repeat
+   end if
+end __MapCodeLibraryForIDE
+
 private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, pStatus, @xError
    if xError is empty then
       if pSourceType is "lcb" then
-         local tResources, tModule
+         local tResources, tModule, tCode
          put pFolder & slash & "resources" into tResources
          put pFolder & slash & "module.lcm" into tModule
+         put pFolder & slash & "code" into tCode
+         # map code before loading extension
+         if there is a folder tCode then
+            __MapCodeLibraryForIDE tCode
+         end if
          # If we have a resources folder then load with resource path
          if there is a folder tResources then
             load extension from file tModule with resource path tResources

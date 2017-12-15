@@ -525,6 +525,21 @@ function revInternal__StackFiles
          if tFolder begins with "." then next repeat
          put return & tComponentFolder & slash & tFolder after tFolders
       end repeat
+      
+      -- commercial extensions (ensure they are loaded from the repo)
+      local tExtensionFolder
+      put revEnvironmentCommercialRepositoryPath() & "/extensions/script-libraries" into tExtensionFolder
+      repeat for each line tFolder in folders(tExtensionFolder)
+         if tFolder begins with "." then next repeat
+         put return & tExtensionFolder & slash & tFolder after tFolders
+      end repeat
+      
+      -- extensions (ensure they are loaded from the repo)
+      put revEnvironmentRepositoryPath() & "/extensions/script-libraries" into tExtensionFolder
+      repeat for each line tFolder in folders(tExtensionFolder)
+         if tFolder begins with "." then next repeat
+         put return & tExtensionFolder & slash & tFolder after tFolders
+      end repeat
    end if	
    
    local tStackFiles, tStackName
@@ -2052,12 +2067,7 @@ function revEnvironmentExtensionsPaths
    if revEnvironmentIsInstalled() then
       return hookToolsPath("extensions", sToolsPath & "/Extensions")
    else
-      -- Load the real extensions rather than the packaged versions
-      local tPaths
-      put revEnvironmentRepositoryPath() & slash & "extensions" into tPaths
-      put return & revEnvironmentCommercialRepositoryPath() \
-            & slash & "extensions" after tPaths
-      return tPaths
+      return sBinariesPath & slash & "packaged_extensions"
    end if
 end revEnvironmentExtensionsPaths
 
@@ -2168,49 +2178,52 @@ end revEnvironmentBinariesPath
 
 // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen for any
 //  platform, from any repository platform
-function revEnvironmentNonNativeBinariesPath pPlatform
-   local tNonNativeBinariesPath, tReleaseFolder, tDebugFolder
-   put sBinariesPath into tNonNativeBinariesPath
-   
-   set the itemDelimiter to slash
-   
-   // If the platform is Linux, there will be archs
-   if the platform is "linux" then
-      delete item -3 to -1 of tNonNativeBinariesPath
-   else
-      delete item -2 to -1 of tNonNativeBinariesPath
-   end if
-   
-   // Init to lower-case, will change if Mac platform
-   put "release" into tReleaseFolder
-   put "debug" into tDebugFolder
+function revEnvironmentNonNativeBinariesPath pPlatform, pSDK
+   local tNonNativeBinariesPath
+   put sRepositoryPath into tNonNativeBinariesPath
    
    switch pPlatform
       case "Windows"
-         put slash & "windows" after tNonNativeBinariesPath
+         put slash & "win-x86-bin" after tNonNativeBinariesPath
+         break
+      case "Windows x86-64"
+      case "Windows x64"
+      case "Windows x86_64"
+         put slash & "win-x86_64-bin" after tNonNativeBinariesPath
          break
       case "Linux"
-         put slash & "linux/i386" after tNonNativeBinariesPath
+         put slash & "linux-x86-bin" after tNonNativeBinariesPath
          break
+      case "Linux x86-64"
       case "Linux x64"
-         put slash & "linux/x86_64" after tNonNativeBinariesPath
+      case "Linux x86_64"
+         put slash & "linux-x86_64-bin" after tNonNativeBinariesPath
+         break
+      case "Linux armv6_hf"
+         put slash & "linux-armv6_hf-bin" after tNonNativeBinariesPath
          break
       case "MacOS"
-      case "MacOSX PowerPC-32"
       case "MacOSX x86-32"
-         put slash & "mac" after tNonNativeBinariesPath
-         put "Release" into tReleaseFolder
-         put "Debug" into tDebugFolder
+      case "MacOSX x86_32"
+      case "MacOSX x86-64"
+      case "MacOSX x64"
+      case "MacOSX x86_64"
+         put slash & "mac-bin" after tNonNativeBinariesPath
+         break
+      case "Android"
+      case "Android armv6"
+         put slash & "android-armv6-bin" after tNonNativeBinariesPath
+         break
+      case "Emscripten"
+      case "HTML5"
+         put slash & "emscripten-bin" after tNonNativeBinariesPath
+         break
+      case "iOS"
+         put slash & "ios-bin" & slash & pSDK after tNonNativeBinariesPath
          break
       default 
          return empty
    end switch
-   
-   if the last item of sBinariesPath is "release" then
-      put slash & tReleaseFolder after tNonNativeBinariesPath
-   else
-      put slash & tDebugFolder after tNonNativeBinariesPath
-   end if
    
    return tNonNativeBinariesPath
 end revEnvironmentNonNativeBinariesPath

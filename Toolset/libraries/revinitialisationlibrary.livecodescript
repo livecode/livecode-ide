@@ -24,7 +24,7 @@ command revInternal__LoadLibrary pLibrary, pFullPath
       put kLCLibraryPrefix & "." & pLibrary into tStackName
    else if the environment begins with "development" and \
          there is a stack pFullPath then
-      put the name of stack pFullPath into tStackName
+      put the short name of stack pFullPath into tStackName
    else
       return "no stack for library" && pLibrary
    end if
