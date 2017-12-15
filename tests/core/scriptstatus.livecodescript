@@ -27,7 +27,7 @@ on TestExplicitVariables
    local tStackFiles
    put the stackFiles of stack "home" into tStackFiles
    split tStackFiles by comma and return
-   repeat for each key tStackName in tStackFiles
+   repeat for each element tStackName in tStackFiles
       if there is a stack tStackName then
          __RecursiveTest the long id of stack tStackName
       end if
