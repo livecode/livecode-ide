@@ -721,7 +721,8 @@ end __extensionError
 
 # Send notication that widget has been added/removed
 private command __extensionsChanged
-   ideMessageSend "ideExtensionsChanged"
+   send "ideMessageSend ideExtensionsChanged" to stack \
+     "revIDELibrary" in 0 millisecs
 end __extensionsChanged
 
 # Sent progress update on installation of widget
