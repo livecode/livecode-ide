@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <title>LiveCode Dictionary</title>
-    
-    <link href="[[tDocsCSSFolder]]/bootstrap.min.css" rel="stylesheet">
-    <link href="[[tDocsCSSFolder]]/lcdoc.css" rel="stylesheet">
-    <link href="[[tDocsCSSFolder]]/codestyle.css" rel="stylesheet">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>LiveCode Dictionary</title>
+
+	<link href="[[tDocsCSSFolder]]/bootstrap.min.css" rel="stylesheet">
+	<link href="[[tDocsCSSFolder]]/lcdoc.css" rel="stylesheet">
+	<link href="[[tDocsCSSFolder]]/codestyle.css" rel="stylesheet">
 </head>
 <body>
 
@@ -73,63 +73,62 @@
 	<div class="row">
 		<div class="col-md-3">
 			<div class="bs-sidebar" id="lcdoc_sidebar">
-            	<div class="panel panel-default" id="filters_panel">
+				<div class="panel panel-default" id="filters_panel">
 					<div class="panel-heading">Filters</div>
 					<div class="panel-body" id="filters_container">
 						<div id="filters">none</div>
 						<div id="filters_options"></div>
-		  			</div>
+					</div>
 				</div>
 			</div>
-    	</div>
+		</div>
  
-        <div class="col-md-9">
-        	<div id="header_panel_holder">
+		<div class="col-md-9">
+			<div id="header_panel_holder">
 				<div class="panel panel-default" id="lcdoc_list">
 					<div id="table_header">
 						<table class="table table-hover table-condensed" id="table_list_header">
 						</table>
 					</div>
-			  		<div id="table_container">
+					<div id="table_container">
 						<table class="table table-hover table-condensed" id="table_list">
 						</table>
 					</div>
 					<!-- header panel resizer -->
 					<div id="resizer">
-					</div>   
-				</div>            
-            </div>
+					</div>
+				</div>
+			</div>
 
-            <div class="panel panel-default" id="lcdoc_body">
-              <div class="panel-body" id="api_entry">
-              </div>
-              
-            </div>
-        </div>
-   </div>
+			<div class="panel panel-default" id="lcdoc_body">
+				<div class="panel-body" id="api_entry">
+				</div>
+
+			</div>
+		</div>
+	</div>
 </div>
-   
-    <script src="[[tDocsJSFolder]]/jquery-1.11.1.min.js"></script>
-    <script src="[[tDocsJSFolder]]/jquery.session.js"></script>
-    <script src="[[tDocsJSFolder]]/bootstrap.min.js"></script>
-    <script src="[[tDocsJSFolder]]/marked.js"></script>
-    <script src="[[tDocsJSFolder]]/highlight.pack.js"></script>	
-    <script src="[[tDocsJSFolder]]/jquery.mousewheel.min.js"></script>	
-    
-    <script charset="UTF-8" src="[[tDataPath]]"></script>  
-    <script src="[[tDocsJSFolder]]/dictionary_functions.js"></script>	
-    <script>
-	
-    $(document).ready(function(e)
-	{
-      setEdition('[[ the editionType]]');
-		setActions();		
-		dataFilter();		
-		displayLibraryChooser();
-		
-		goEntryName('[[tLibraryName]]', '[[tEntryName]]', '[[tEntryType]]');
-    document.getElementById("ui_filer").focus();
-	});
+
+	<script src="[[tDocsJSFolder]]/jquery-1.11.1.min.js"></script>
+	<script src="[[tDocsJSFolder]]/jquery.session.js"></script>
+	<script src="[[tDocsJSFolder]]/bootstrap.min.js"></script>
+	<script src="[[tDocsJSFolder]]/marked.js"></script>
+	<script src="[[tDocsJSFolder]]/highlight.pack.js"></script>	
+	<script src="[[tDocsJSFolder]]/jquery.mousewheel.min.js"></script>	
+
+	<script charset="UTF-8" src="[[tDataPath]]"></script>  
+	<script src="[[tDocsJSFolder]]/dictionary_functions.js"></script>	
+	<script>
+		$(document).ready(function(e)
+		{
+			setEdition('[[ the editionType]]');
+			setActions();
+			dataFilter();
+			displayLibraryChooser();
+			
+			goEntryName('[[tLibraryName]]', '[[tEntryName]]', '[[tEntryType]]');
+			document.getElementById("ui_filer").focus();
+		});
 	</script>
 </body>
 </html>

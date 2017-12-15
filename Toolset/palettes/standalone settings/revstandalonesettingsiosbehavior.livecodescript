@@ -164,6 +164,7 @@ on updateSettings
    put computeDefault(tSettings["ios,retina icon"], empty) into field "Retina Icon"
    put computeDefault(tSettings["ios,iOS 7 retina icon"], empty) into field "iOS 7 Retina Icon"
    put computeDefault(tSettings["ios,iPhone 6 Plus icon"], empty) into field "iPhone 6 Plus Icon" 
+   put computeDefault(tSettings["ios,iPhone X icon"], empty) into field "iPhone X Icon" 
    put computeDefault(tSettings["ios,ipad icon"], empty) into field "iPad Icon"
    put computeDefault(tSettings["ios,ipad retina icon"], empty) into field "iPad Retina Icon"
    put computeDefault(tSettings["ios,iOS 7 ipad icon"], empty) into field "iOS 7 iPad Icon"
@@ -175,6 +176,8 @@ on updateSettings
    put computeDefault(tSettings["ios,iPhone 6 splash"], empty) into field "iPhone 6 Splash"   
    put computeDefault(tSettings["ios,iPhone 6 Plus Portrait splash"], empty) into field "iPhone 6 Plus Portrait Splash"   
    put computeDefault(tSettings["ios,iPhone 6 Plus Landscape splash"], empty) into field "iPhone 6 Plus Landscape Splash"
+   put computeDefault(tSettings["ios,iPhone X Portrait splash"], empty) into field "iPhone X Portrait Splash"   
+   put computeDefault(tSettings["ios,iPhone X Landscape splash"], empty) into field "iPhone X Landscape Splash"
    put computeDefault(tSettings["ios,ipad portrait splash"], empty) into field "iPad Portrait Splash"
    put computeDefault(tSettings["ios,ipad landscape splash"], empty) into field "iPad Landscape Splash"
    put computeDefault(tSettings["ios,ipad retina portrait splash"], empty) into field "iPad Retina Portrait Splash"
@@ -353,6 +356,8 @@ command updateOrientationSettings
    if the enabled of button "iPhone Intial Orientation" then
       set the enabled of group "iPhone 6 Plus Portrait Splash" to tInitialOrientation contains "portrait"
       set the enabled of group "iPhone 6 Plus Landscape Splash" to tInitialOrientation contains "landscape"
+      set the enabled of group "iPhone X Portrait Splash" to tInitialOrientation contains "portrait"
+      set the enabled of group "iPhone X Landscape Splash" to tInitialOrientation contains "landscape"
    end if
 end updateOrientationSettings
 
@@ -366,6 +371,7 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "Retina Icon" to (1 is among the items of pDevices)
    set the enabled of group "iOS 7 Retina Icon" to (1 is among the items of pDevices)
    set the enabled of group "iPhone 6 Plus Icon" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone X Icon" to (1 is among the items of pDevices)
    set the enabled of group "iPad Icon" to (2 is among the items of pDevices)
    set the enabled of group "iPad Retina Icon" to (2 is among the items of pDevices)
    set the enabled of group "iOS 7 iPad Icon" to (2 is among the items of pDevices)
@@ -377,6 +383,8 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "iPhone 6 Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPhone 6 Plus Portrait Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPhone 6 Plus Landscape Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone X Portrait Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone X Landscape Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPad Portrait Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Landscape Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Retina Portrait Splash" to (2 is among the items of pDevices)

@@ -54,6 +54,9 @@ end revGoPDF
 # TH-2008-06-27 :: Bug 6521/6432, have seperated revMail into two alternative handlers.  revMailUnicode
 # should be ussed by people sending unicode characters, the original revMail can be used otherwise
 command revMail pTo, pCC, pSubject, pBody
+   if the environment is "mobile" then
+      pass revMail
+   end if
    revMailUnicode pTo, pCC, uniEncode(pSubject), uniEncode(pBody)
 end revMail
 
@@ -137,32 +140,21 @@ on revSetWindowsShellCommand
 end revSetWindowsShellCommand
 
 
-getProp cREVGeneral[pWhichProp] pWhichProfile
-   lock messages
-   local tRevUniqueID
-   put the cREVGeneral["revUniqueID"] of the target into tRevUniqueID
-   unlock messages
-   
-   # OK-2008-04-14 : The long id will return an invalid reference when in edit group mode,
-   # instead the "rugged id" should be used.
-   --put the long id of the target into tTarget
-   
-   # OK-2008-06-02 : Because this script is used in standalones, using revRuggedId will break this
-   # because its located in revBackscript (which is not included in standalones). As we don't require a
-   # rugged id in standalones anyway, just revert to the old behavior in standalone environment.
-   local tTarget
-   if the environment is "development" then
-      put revRuggedId(the long id of the target) into tTarget
-   else
-      put the long id of the target into tTarget
-   end if
-   
-   local tMilliseconds
-   if pWhichProp is "revUniqueID" and tRevUniqueID is empty then
-      put the milliseconds into tMilliSeconds
-      set the cREVGeneral["revUniqueID"] of tTarget to tMilliSeconds
-      return tMilliSeconds
-   else if pWhichProp is "revUniqueID" then
+getProp revProfile
+  return the cREVGeneral["profile"] of the target
+end revProfile
+
+getProp cREVGeneral[pWhichProp]
+   if pWhichProp is "revUniqueID" then
+      lock messages
+      local tRevUniqueID
+      put the cREVGeneral["revUniqueID"] of the target into tRevUniqueID
+      unlock messages
+      
+      if tRevUniqueID is empty then
+         put the milliseconds into tRevUniqueID
+         set the cREVGeneral["revUniqueID"] of the target to tRevUniqueID
+      end if
       return tRevUniqueID
    end if
    
@@ -172,30 +164,25 @@ getProp cREVGeneral[pWhichProp] pWhichProfile
    lock messages
    
    local tProfile
-   put the cREVGeneral["profile"] of tTarget into tProfile
-   if tProfile is empty or tProfile is the cREVGeneral["masterName"] of tTarget then put "Master" into tProfile
+   put the cREVGeneral["profile"] of the target into tProfile
+   if tProfile is empty or tProfile is the cREVGeneral["masterName"] of the target then put "Master" into tProfile
    unlock messages
    return tProfile
 end cREVGeneral
-  
+
 
 setProp revProfile pWhich
   set the cREVGeneral["profile"] of the target to pWhich
 end revProfile
 
-getProp revProfile
-  return the cREVGeneral["profile"] of the target
-end revProfile
-
-
-
 setProp cREVGeneral[pWhichProp] pWhichProfile
    local tTarget
    put the long id of the target into tTarget
    
-   local tTargetLongID
-   put tTarget into tTargetLongID
-   if pWhichProp is not "profile" and pWhichProp is not "inLineImages" and pWhichProp is not "virtualWidth" and pWhichProp is not "virtualHeight" and pWhichProp is not "breakPoints" then pass cREVGeneral
+   if pWhichProp is not "profile" and pWhichProp is not "inLineImages" and \
+         pWhichProp is not "virtualWidth" and pWhichProp is not "virtualHeight" \
+         then pass cREVGeneral
+   
    if pWhichProp is "virtualWidth" then
       lock messages
       local tOriginalWidth
@@ -212,6 +199,7 @@ setProp cREVGeneral[pWhichProp] pWhichProfile
       unlock messages
       exit cREVGeneral
    end if
+   
    if pWhichProp is "virtualHeight" then
       lock messages
       local tOriginalHeight
@@ -224,52 +212,7 @@ setProp cREVGeneral[pWhichProp] pWhichProfile
       unlock messages
       exit cREVGeneral
    end if
-   if pWhichProp is "breakPoints" then
-      
-      pass cREVGeneral
-      
-      local tBreakPointsList
-      put the breakPoints into tBreakPointsList
-      
-      local tMainStack
-      put the mainStack of stack revTargetStack(tTarget) into tMainStack
-      
-      local tObjects
-      put the cREVGeneral["debugObjects"] of stack tMainStack into tObjects
-      
-      local tStack
-      put word -2 to -1 of tTarget into tStack
-      put the name of tStack into word -2 to -1 of tTarget
-      if pWhichProfile is not empty then
-         if tTarget is not among the lines of tObjects then
-            --add breakpoint object
-            put tTarget into line (the number of lines in tObjects)+1 of tObjects
-         end if
-      else
-         if tTarget is among the lines of tOBjects then
-            --remove breakpoint object
-            delete line lineOffset(tTarget,tObjects) of tOBjects
-         end if
-      end if 
-      set the cREVGeneral["debugObjects"] of stack tMainStack to tObjects
-      
-      local tOldPoints
-      repeat for each line l in tBreakPointsList
-         if tTargetLongID is not in l then put l & cr after tOldPoints
-      end repeat
-      delete last char of tOldPoints
-      put tOldPoints into tBreakPointsList
-      
-      local tAddPoints
-      repeat for each line l in pWhichProfile
-         put tTarget,l & cr after tAddPoints
-      end repeat
-      delete last char of tAddPoints
-      put tAddPoints into line (the number of lines in tBreakPointsList+1) of tBreakPointsList
-      set the breakPoints to tBreakPointsList
-      pass cREVGeneral
-   end if
-   --inline images next
+   
    if pWhichProp is "inLineImages" then
       if pWhichProfile is true then
          lock messages
@@ -390,7 +333,9 @@ setProp cREVGeneral[pWhichProp] pWhichProfile
       end if
       set the cREVGEneral["inLineImages"&the number of this cd] of tTarget to pWhichProfile
       exit cREVGeneral
-   end if
+   end if --inLineImages
+   
+   -- pWhichProp is "profile"
    global gREVProfileReadOnly, gREVAutoCreateProfiles
    lock screen
    lock messages
@@ -1355,6 +1300,14 @@ function revFontGetSystemFont
          return "Helvetica"
          break
          
+      case "iphone"
+         return "San Francisco"
+         break
+         
+      case "android"
+         return "Roboto"
+         break
+         
    end switch
 end revFontGetSystemFont
 
@@ -1378,6 +1331,14 @@ function revFontGetSystemFontSize
          return 12
          break
          
+      case "iphone"
+         return 17
+         break
+      
+      case "android"
+         return 14
+         break
+      
    end switch
 end revFontGetSystemFontSize
 
@@ -1420,6 +1381,15 @@ private function _revEnvironmentPlatform
          break
       case "Win32"
          put "Windows" into tPlatform
+         break
+      case "iphone"
+         put "iphone" into tPlatform
+         break
+      case "android"
+         put "android" into tPlatform
+         break
+      case "HTML5"
+         put "html5" into tPlatform
          break
       default
          put "Unsupported" into tPlatform

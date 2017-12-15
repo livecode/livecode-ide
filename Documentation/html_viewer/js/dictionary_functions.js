@@ -16,14 +16,14 @@
 	if ($.session.get("selected_api_id")) {
 		tState.selected_api_id = $.session.get("selected_api_id");
 	} else {
-		tState.selected_api_id = 1;
+		tState.selected_api_id = 0;
 	}
 
 	if ($.session.get("selected_entry_index")) {
 		var tIndexArray = $.session.get("selected_entry_index");
 		tState.selected_entry_index[tState.selected_api_id] = tIndexArray[tState.selected_api_id];
 	} else { 
-		tState.selected_entry_index[tState.selected_api_id] = 1;
+		tState.selected_entry_index[tState.selected_api_id] = 0;
 	}
 
 	library_set(tState.selected_api_id);	
@@ -212,8 +212,6 @@
 		});
 		//console.timeEnd("Search");
 	
-		$(window).scrollTop(0);
-		$("#table_container").scrollTop(0);
 		return tState . cached_search_data . data;
 	}
 	
@@ -553,8 +551,10 @@
 		var tData;
 		if (pTerm)
 			tData = dataSearch(pTerm);
-		else
+		else {
+			tState . cached_search_data = {};
 			tData = tState . filtered_data;
+		}
 		
 		sortFilteredData(tData);
 		
@@ -562,6 +562,9 @@
 		tHTML = data_table_html(tData);
 
 		$("#table_list").html(tHTML);
+
+		$(window).scrollTop(0);
+		$("#table_container").scrollTop(0);
 	}
 	
 	function displayLibraryChooser(){
@@ -1140,7 +1143,7 @@
 			{
 				if (value.type.toLowerCase() != pType)
 				{
-					// Continue loop				
+					// Continue loop
 					return true;
 				}
 			}
@@ -1148,7 +1151,7 @@
 			// Make sure we always 'fall back' to the lcs syntax
 			if (value.library == 'livecode_script')
 			{
-				tIndex = index;		
+				tIndex = index;
 				// If no library was specified, assume lcs syntax
 				if (pPriorityLibrary == '')
 				{
@@ -1157,7 +1160,7 @@
 				}
 				
 				// Otherwise, this index is now a candidate in case
-				// there is no entry found in the given library				
+				// there is no entry found in the given library
 			}
 			
 			if (pPriorityLibrary == '')
@@ -1169,7 +1172,7 @@
 			}
 			else if (value.library.toLowerCase() != pPriorityLibrary)
 			{
-				// Continue loop				
+				// Continue loop
 				return true;
 			}
 			
@@ -1306,7 +1309,7 @@
 	}
 	
 	function history_add(pEntryObject)
-	{	
+	{
 		if (tState.history.selected_index != -1)
 		{
 			// If this is the currently selected item, don't do anything
@@ -1337,12 +1340,16 @@
 	
 	function history_back()
 	{
-		go_history(tState.history.selected_index - 1);
+		if(tState.history.selected_index > 0){
+			go_history(tState.history.selected_index - 1);
+		}
 	}
 	
 	function history_forward()
 	{
-		go_history(tState.history.selected_index + 1);
+		if(tState.history.selected_index < tState.history.list.length - 1){
+			go_history(tState.history.selected_index + 1);
+		}
 	}
 	
 	function go_history(pHistoryID)
@@ -1351,18 +1358,61 @@
 		displayEntry(history_selected_entry().id);
 	}
 	
-	function entry_next(){
-		var tSelectedID = tState.selected;
+	function entry_previous()
+	{
+		var tSelectedID = tState.history.list[tState.history.selected_index].id;
+		var tPreviousID = tSelectedID;
+		
+		if(tState.cached_search_data.hasOwnProperty("term"))
+		{
+			$.each(tState.cached_search_data.data, function( index, value) {
+				if(value.id == tSelectedID){
+					if(index > 0){
+						tPreviousID = tState.cached_search_data.data[index-1].id;
+					}
+				}
+			});
+		}
+		else
+		{
+			$.each(tState.filtered_data, function( index, value) {
+				if(value.id == tSelectedID){
+					if(index > 0){
+						tPreviousID = tState.filtered_data[index-1].id;
+					}
+				}
+			});
+		}
+		
+		displayEntry(tPreviousID);
+	}
+	
+	function entry_next()
+	{
+		var tSelectedID = tState.history.list[tState.history.selected_index].id;
 		var tNextID = tSelectedID;
 		
-		$.each(tState.filtered_data, function( index, value) {
-			if(value.id == tSelectedID){
-				if(tState.filtered_data[index+1]){
-					tNextID = tState.filtered_data[index+1].id;
+		if(tState.cached_search_data.hasOwnProperty("term"))
+		{
+			$.each(tState.cached_search_data.data, function( index, value) {
+				if(value.id == tSelectedID){
+					if(tState.cached_search_data.data[index+1]){
+						tNextID = tState.cached_search_data.data[index+1].id;
+					}
 				}
-			}
-			
-		});
+			});
+		}
+		else
+		{
+			$.each(tState.filtered_data, function( index, value) {
+				if(value.id == tSelectedID){
+					if(tState.filtered_data[index+1]){
+						tNextID = tState.filtered_data[index+1].id;
+					}
+				}
+			});
+		}
+		
 		displayEntry(tNextID);
 	}
 	
@@ -1377,7 +1427,7 @@
 			{
 				tState.selected_api_id = pLibraryID;
 				$.session.set("selected_api_id", pLibraryID);
-				var tIndex = 1;
+				var tIndex = 0;
 				if (tState.selected_entry_index.hasOwnProperty(pLibraryID))
 				{
 					tIndex = tState.selected_entry_index[pLibraryID];
@@ -1388,7 +1438,7 @@
 				tState.filters= {};
 				tState.filtered_data = [];
 				tState.data = "";
-				tState.selected_entry_index[pLibraryID] = "";
+				tState.selected_entry_index[pLibraryID] = -1;
 				
 				dataFilter();
 				displayEntryAtIndex(tIndex);
@@ -1412,21 +1462,6 @@
 			
 		});
 		return tID;
-	}
-	
-	function entry_previous(){
-		var tSelectedID = tState.selected;
-		var tPreviousID = tSelectedID;
-		
-		$.each(tState.filtered_data, function( index, value) {
-			if(value.id == tSelectedID){
-				if(index > 0){
-					tPreviousID = tState.filtered_data[index-1].id;
-				}
-			}
-			
-		});
-		displayEntry(tPreviousID);
 	}
 	
 	function selectedEntryEnsureInView(tEntryID)
@@ -1455,7 +1490,7 @@
 
 		var tID;
 		if (pEntryName == '')
-			tID = 1;
+			tID = 0;
 		else
 			tID = entryNameToIndex(pEntryName, pEntryType, pLibraryName);
 			
@@ -1517,7 +1552,7 @@
 			displayEntryListGrep(this.value);
 			if(tState.cached_search_data.hasOwnProperty("data") && 
 			   tState.cached_search_data.data.hasOwnProperty(0))
-				displayEntry(tState.cached_search_data.data[0]["id"]);
+				displayEntry(tState.cached_search_data.data[0].id);
 		}, 250));
 		
 		$("body").on( "click", ".load_entry", function() {
@@ -1652,7 +1687,7 @@
 			doTableResize();
 		});
 
-		// Prevent mouse scroll on table bubbling to window level		
+		// Prevent mouse scroll on table bubbling to window level
 		function preventScrollBubble(pEventTarget, pScrollTarget)
 		{	
 			pEventTarget.bind('mousewheel', function(e, d)  {
@@ -1672,37 +1707,37 @@
 		preventScrollBubble($("#filters_panel"), $("#filters_options"));
 		
 		$(document).keydown(function(e) {
-		   switch(e.which) {
-			   case 37: // left
+			switch(e.which) {
+				case 37: // left
 					if(!$("#ui_filer").is(":focus")){
 						history_back();
 						e.preventDefault();
 					}
 					break;
 
-			   case 38: // up
-			   		if($("#table_list").hasClass("table_focused")){
-			   			entry_previous();
-			   			e.preventDefault();
-			   		}
-			   		break;
+				case 38: // up
+					if($("#table_list").hasClass("table_focused")){
+						entry_previous();
+						e.preventDefault();
+					}
+					break;
 
-			   case 39: // right
+				case 39: // right
 					if(!$("#ui_filer").is(":focus")){
 						history_forward();
 						e.preventDefault();
 					}
 					break;
 
-			   case 40: // down
-			   		if($("#table_list").hasClass("table_focused")){
-			   			entry_next();
-			   			e.preventDefault();
-			   		}
-			   		break;
+				case 40: // down
+					if($("#table_list").hasClass("table_focused")){
+						entry_next();
+						e.preventDefault();
+					}
+					break;
 
-			   default: return; // exit this handler for other keys
-		   }
-		   
+				default: return; // exit this handler for other keys
+			}
+		
 		});
 	}

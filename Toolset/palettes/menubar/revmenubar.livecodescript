@@ -2627,6 +2627,9 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
       case "Paste Text"
          revIDEActionPasteTextIntoField pTarget
          break
+      case "Lock Text"
+         revIDEToggleLockTextOfField pTarget
+         break
       case "Can Receive Keyboard Focus"
          revIDEToggleTraversalOnOfField pTarget
          break
