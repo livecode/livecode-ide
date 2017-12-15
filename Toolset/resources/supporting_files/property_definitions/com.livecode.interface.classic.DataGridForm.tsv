@@ -11,6 +11,8 @@ multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-row hil
 allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 cache controls:revIDEGetDataGridProperty:revIDESetDataGridProperty	Cache controls	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+animate actions:revIDEGetDataGridProperty:revIDESetDataGridProperty	Animate actions	Data Grid	com.livecode.pi.boolean	true	false		true					
+enable swipe:revIDEGetDataGridProperty:revIDESetDataGridProperty	Enable swipes	Data Grid	com.livecode.pi.boolean	true	false		false					
 fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data Grid	com.livecode.pi.number	true	false		21					1
 row behavior:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row behavior	Data Grid	com.livecode.pi.script	true	true		no_default					1

@@ -13,6 +13,8 @@ auto hilite:revIDEGetDataGridProperty:revIDESetDataGridProperty	Auto-hilite rows
 multiple lines:revIDEGetDataGridProperty:revIDESetDataGridProperty	Multi-row hilites	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 allow column resizing:revIDEGetDataGridProperty:revIDESetDataGridProperty	Drag resizing	Data Grid	com.livecode.pi.boolean	true	false		no_default					
 persistent data:revIDEGetDataGridProperty:revIDESetDataGridProperty	Persistent data	Data Grid	com.livecode.pi.boolean	true	false		no_default					
+animate actions:revIDEGetDataGridProperty:revIDESetDataGridProperty	Animate actions	Data Grid	com.livecode.pi.boolean	false	false		true					
+enable swipe:revIDEGetDataGridProperty:revIDESetDataGridProperty	Enable swipes	Data Grid	com.livecode.pi.boolean	false	false		false					
 fixed control height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Empty row height	Data Grid	com.livecode.pi.boolean	false	false		true					
 row height:revIDEGetDataGridProperty:revIDESetDataGridProperty	Row height	Data Grid	com.livecode.pi.number	true	false		21					1
 												
