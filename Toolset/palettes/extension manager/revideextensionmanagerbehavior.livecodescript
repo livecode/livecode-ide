@@ -26,6 +26,12 @@ on showList pSection
    unlock screen
 end showList
 
+command refreshList
+   lock screen
+   send "refreshList" to card "list" of this stack
+   unlock screen
+end refreshList
+   
 on showExtensionStore
    lock screen
    go to card "search" of this stack
@@ -46,6 +52,6 @@ end installNew
 on installExtension pExtensionURL, pTypeID, pType
    lock screen  
    showList pType
-   revIDEInstallExtension pExtensionURL, pType
+   revIDEExtensionDownloadAndInstall pExtensionURL, pType
    unlock screen
 end installExtension

@@ -569,11 +569,11 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
 end __setPropertyDataOfObjectFromFile
 
 private function __propertyInfoFilename
-   return "propertyInfo.txt"
+   return "propertyInfo.tsv"
 end __propertyInfoFilename
 
 private function __classicToolsOrderFilename
-   return "classicToolsOrder.txt"
+   return "classicToolsOrder.tsv"
 end __classicToolsOrderFilename 
 
 private on __orderClassicTools
@@ -611,7 +611,7 @@ private on __objectPropertiesRead
       put tFile into tObjectType
       # Get the name of the object
       set the itemdel to "."
-      if the last item of tObjectType is "txt" then delete the last item of tObjectType
+      if the last item of tObjectType is "tsv" then delete the last item of tObjectType
       if tObjectType is empty then next repeat
       
       __setPropertyDataOfObjectFromFile tObjectType, tObjectDefinitionsPath & slash & tFile, tPropertiesInfo
@@ -1318,8 +1318,15 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    end repeat
    
    local tDataA
+   set the itemdelimiter to ";"
    repeat for each key tKey in tPropMappingA
-      __fetchPropertyOfControl tKey, tDataA
+      if the number of items in tKey > 1 then
+         repeat for each item tRealProp in tKey
+            __fetchPropertyOfControl tRealProp, tDataA[tRealProp]
+         end repeat
+      else
+         __fetchPropertyOfControl tKey, tDataA
+      end if
    end repeat
    
    local tValue, tEffective
@@ -1428,8 +1435,17 @@ end __fetchPropertyOfControl
 # for each of the properties
 function __readPropertiesOfControl pList, @pData
    local tError
+   set the itemdelimiter to ";"
    repeat for each line tProp in pList
-      __fetchPropertyOfControl tProp, pData
+      -- If this pseudo-property is actually multiple properties,
+      -- the value is an array with keys the real property names
+      if the number of items in tProp > 1 then
+         repeat for each item tRealProp in tProp
+            __fetchPropertyOfControl tRealProp, pData[tRealProp]
+         end repeat
+      else
+         __fetchPropertyOfControl tProp, pData
+      end if
    end repeat
 end __readPropertiesOfControl
 
@@ -2452,6 +2468,30 @@ on revIDESetPreference pPreferenceName, pValue
    ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
 end revIDESetPreference
 
+command revIDESetPreferenceOfSet pSetName, pPreferenceName, pValue
+   local tProps
+   put the customproperties[pSetName] of stack "revpreferences" into tProps
+   put pValue into tProps[pPreferenceName]
+   set the customproperties[pSetName] of stack "revpreferences" to tProps
+   revInternal__SavePreferences
+   local tParams
+   put pSetName into tParams[1]
+   put pPreferenceName into tParams[2]
+   put pValue into tParams[3]
+   ideMessageSendWithParameters "idePreferenceOfSetChanged", "", tParams
+end revIDESetPreferenceOfSet
+
+command revIDEDeletePreferenceSet pSetName
+   local tSets, tLineOffset
+   put the custompropertysets of stack "revpreferences" into tSets
+   put lineOffset(pSetName, tSets) into tLineOffset
+   if tLineOffset is not 0 then
+      delete line tLineOffset of tSets
+      set the customPropertySets of stack "revpreferences" to tSets
+      revInternal__SavePreferences
+   end if
+end revIDEDeletePreferenceSet
+
 /*
 Gets a preference.
 
@@ -2477,6 +2517,12 @@ function revIDEGetPreference pPreferenceName
    
    return tValue
 end revIDEGetPreference
+
+function revIDEGetPreferenceOfSet pSetName, pPreferenceName
+   local tProps
+   put the customproperties[pSetName] of stack "revpreferences" into tProps
+   return tProps[pPreferenceName]
+end revIDEGetPreferenceOfSet
 
 command __DevPreference pPreferenceName, @rValue
    if not revEnvironmentIsInstalled() then
@@ -6463,36 +6509,74 @@ on revIDEStandaloneSettingsForStack pStackID
 end revIDEStandaloneSettingsForStack
 
 private function __standaloneSettingsInfoFilename
-   return "standaloneSettings.txt"
+   return "standaloneSettings.tsv"
 end __standaloneSettingsInfoFilename
 
 function revIDEStandaloneSettings pStack, pSection
    local tInfo
    put revIDEStandaloneSettingsInfoOfSection(pSection) into tInfo
-
-   local tPropsA, tPropName
-   repeat for each element tGroup in tInfo
-      repeat for each element tProp in tGroup["proplist"]
-         put tProp["property_name"] into tPropName
-         put tProp into tPropsA[tGroup["label"]][tPropName]
-         put the cRevStandaloneSettings[tPropName] of pStack into tPropsA[tGroup["label"]][tPropName]["value"]
-      end repeat
-   end repeat
-   return tPropsA
+   
+   return __revIDEStandaloneSettingsOfStackForExtension(pStack, tInfo)
 end revIDEStandaloneSettings
 
 function revIDEStandaloneSettingsInfoOfSection pSection
    local tStandaloneDefinitionsPath
    put revIDESpecialFolderPath("Standalone Settings Definitions") into tStandaloneDefinitionsPath
-
+   
    local tInfoA
    put __propertyDataFromInfoFile(tStandaloneDefinitionsPath & slash & __standaloneSettingsInfoFilename()) into tInfoA
-
+   
    local tOrganisedA
    put __organisePropertyInfo(tInfoA) into tOrganisedA
-
+   
    return __orderPropSubArray(tOrganisedA[pSection], true)
 end revIDEStandaloneSettingsInfoOfSection
+
+function revIDEStandaloneSettingsInfoOfExtension pKind
+   local tInfoA
+   put revIDEExtensionStandaloneSettingsInfo(pKind, true) into tInfoA
+   
+   local tSectionList
+   -- At the moment all per-extension standalone settings are in
+   -- the 'basic' section
+   put __orderPropArray(tInfoA, "Basic") into tSectionList
+   return tSectionList[1]["grouplist"]
+end revIDEStandaloneSettingsInfoOfExtension
+
+function revIDEStandaloneSettingsOfExtension pStack, pKind
+   local tInfoA
+   put revIDEStandaloneSettingsInfoOfExtension(pKind) into tInfoA
+   
+   return __revIDEStandaloneSettingsOfStackForExtension(pStack, tInfoA, pKind)
+end revIDEStandaloneSettingsOfExtension
+
+private function __revIDEStandaloneSettingsOfStackForExtension pStack, pInfoA, pExtension
+   local tSettings
+   if pExtension is not empty then
+      put the cRevStandaloneSettings[pExtension] of pStack into tSettings
+   else
+      put the customProperties["cRevStandaloneSettings"] of pStack into tSettings
+   end if
+   
+   local tPropsA, tPropName
+   set the itemdelimiter to ";"
+   repeat for each element tGroup in pInfoA
+      repeat for each element tProp in tGroup["proplist"]
+         put tProp["property_name"] into tPropName
+         put tProp into tPropsA[tGroup["label"]][tPropName]
+         if the number of items in tPropName > 1 then
+            repeat for each item tRealProp in tPropName
+               put tSettings[tRealProp] into \
+                     tPropsA[tGroup["label"]][tPropName]["value"][pStack][tRealProp]
+            end repeat
+         else
+            put tSettings[tPropName] into \
+                  tPropsA[tGroup["label"]][tPropName]["value"][pStack]
+         end if
+      end repeat
+   end repeat
+   return tPropsA
+end __revIDEStandaloneSettingsOfStackForExtension
 
 function revIDEStandaloneSettingsInfo
    local tStandaloneDefinitionsPath
@@ -10824,7 +10908,7 @@ private function revIDEGetExtensionDocsData pAPI
          if tExtensionData["source_type"] is "lcb" then
             dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with \
                   tFolder & slash & tSource
-         else
+         else if tExtensionData["source_type"] is "lcs" then
             local tStack
             put the long id of stack (tFolder & slash & tSource) into tStack
             dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with \
@@ -10904,6 +10988,10 @@ private function revIDEGetDocsGuideData
       put revEnvironmentUserDocsPath() & slash & \ 
             the last item of tFolder into tCachedDataFolder
       put tFolder & slash & "guide.md" into tGuideFile
+      if there is not a file tGuideFile then
+         -- User widgets have the guide.md in docs/guide/
+         put tFolder & slash & "docs/guide/guide.md" into tGuideFile
+      end if
       if there is not a file tGuideFile then next repeat
       revIDEEnsurePath tCachedDataFolder
       
@@ -11342,6 +11430,7 @@ on revIDESetGeometry pObject, pProperty, pGeometryArray
    repeat for each key tKey in pGeometryArray["geometry"]
       revSetGeometry tKey, pGeometryArray["geometry"][tKey]
    end repeat
+   revClearExtraGeometrySettings
 end revIDESetGeometry
 
 function revIDEGetGeometry pObject, pProperty

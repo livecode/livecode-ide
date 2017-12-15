@@ -175,9 +175,13 @@ command updateCardSize
 end updateCardSize
 
 on resumeStack
-  if the short name of this stack is "revStandaloneSettings" then
-    send "preOpenCard" to the current card 
-  end if
+   if the short name of this stack is "revStandaloneSettings" then
+      local tMainstack
+      put the mainStack of the topStack into tMainstack
+      if tMainstack is getTargetStack() then
+         send "preOpenCard" to this card of me in 0 millisecs
+      end if
+   end if
 end resumeStack
 
 # Parameters

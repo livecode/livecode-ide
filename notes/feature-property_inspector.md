@@ -99,9 +99,10 @@ override the defaults.
 ### Editors
 
 Currently an editor must be a stack consisting of a group named
-"template" and a button named "behavior". The property inspector looks
-up the specified editor for a given property, clones the template
-group, and sets its behavior to the long id of the button.
+"template", together with an editor behavior script-only stack. 
+The property inspector looks up the specified editor for a given 
+property, clones the template group, and sets its behavior to the 
+stack script.
 
 The behavior script must at a minimum implement the following three handlers:
 
@@ -165,3 +166,6 @@ There are also some bespoke editors for particular object properties:
 It is our intention that ultimately a widget alone will be able to
 function as a property editor, however currently this feature is not
 available.
+
+See the [editors folder of the IDE repository](https://github.com/livecode/livecode-ide/tree/develop/Toolset/palettes/inspector/editors)
+for more examples of property inspector editors.

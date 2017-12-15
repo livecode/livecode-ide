@@ -37,22 +37,17 @@ on FillInData pDataA, pRow
    end if
    
    ## Is an update available
+   hide button "uninstall" of me
+   hide button "update" of me
+   
    put char -5 to -1 of pDataA["identifier"] into tVersion
-   if pDataA["latest"] is not tVersion then
-      set the cLatestVersion of me to pDataA["latest"]
-      hide button "uninstall" of me
-      show button "update" of me
-   else
-      show button "uninstall" of me
-      hide button "update" of me
+   if pDataA["status"] is not "uninstalled" then
+      if pDataA["latest"] is not tVersion then
+         set the cLatestVersion of me to pDataA["latest"]
+      end if
    end if
    
    set the cIDE of me to (pDataA["ide"] is true)
-   if pDataA["ide"] is true then
-      hide button "uninstall" of me
-   else
-      show button "uninstall" of me
-   end if
    
    switch pDataA["status"]
       case "installed"
@@ -65,11 +60,18 @@ on FillInData pDataA, pRow
          hide button "cancel" of me
          hide group "installProgress" of me
          show image "Error" of me
-         put pDataA["error"] into field "Error Message" of me
+         put pDataA["name"] && "error" into field "Error Message" of me
+         set the tooltip of field "Error Message" of me to pDataA["error"]         
+         set the tooltip of image "Error" of me to pDataA["error"]
          show field "Error Message" of me
          break
+      case "unloaded"         
+         hide button "cancel" of me
+         hide group "installProgress" of me
+         hide image "Error" of me
+         hide field "Error Message" of me
+         break
       case "uninstalled"         
-         hide button "uninstall" of me
          hide button "cancel" of me
          hide group "installProgress" of me
          hide image "Error" of me
@@ -77,7 +79,6 @@ on FillInData pDataA, pRow
          show field "Error Message" of me
          break
       default
-         hide button "uninstall" of me
          show group "installProgress" of me
          put pDataA["status"] into field "installProgressStatus" of me
          set the thumbposition of scrollbar "installProgressBar" of me to  pDataA["progress"]
@@ -85,7 +86,65 @@ on FillInData pDataA, pRow
          hide field "Error Message" of me
          break         
    end switch   
+   
+   local tActions
+   put __MenuActionsForRow(pDataA) into tActions
+   
+   set the text of button "extensionActions" of me to tActions
+   enable widget "actionIcon" of me
 end FillInData
+
+private function __MenuActionsForRow pDataA
+   local tActions
+   
+   if pDataA["status"] is "unloaded" then
+      put "Load" & return after tActions
+      if not pDataA["ide"] then
+         put "Uninstall" & return after tActions
+      end if
+   else if pDataA["status"] is "installed" then
+      if not pDataA["_ide"] then
+         put "Unload" & return after tActions
+         if not pDataA["ide"] then
+            put "Uninstall" & return after tActions
+         end if
+      end if
+   else if pDataA["status"] is "error" then
+      if not pDataA["ide"] then
+         put "Remove" & return after tActions
+      end if
+   end if
+   
+   if pDataA["type"] is "widget" then
+      local tShow
+      put "Show in tools palette/|Toggle Visible" & return into tShow
+      if pDataA["uservisible"] then
+         put "!c" before tShow
+      end if
+      put tShow after tActions
+   end if
+   
+   local tLoadOnStartup
+   put "Load on startup/|Toggle Load" & return into tLoadOnStartup
+   if revIDEExtensionGetLoadOnStartup(pDataA["name"]) is not false then
+      put "!c" before tLoadOnStartup
+   end if
+   put tLoadOnStartup after tActions
+   
+   local tSampleList
+   if pDataA["samples"] is not empty then
+      put "Sample Stacks" & return after tActions
+      put pDataA["samples"] into tSampleList
+      repeat for each line tSample in the keys of tSampleList
+         put tab & tSample & return after tActions
+      end repeat
+      if the last char of tActions is return then delete the last char of tActions
+      set the cSampleStacks of me to pDataA["samples"]
+   else
+      put "(Sample Stacks" & return after tActions
+   end if
+   return tActions
+end __MenuActionsForRow
 
 on LayoutControl pControlRect
    
@@ -99,10 +158,11 @@ on LayoutControl pControlRect
    set the width of graphic "border" of me to (item 3 of pControlRect - item 1 of pControlRect)
    set the bottomLeft of graphic "border" of me to item 1 of pControlRect, item 4 of pControlRect
    put the loc of me into tIconLoc
+
    set the loc of widget "svgicon" of me to tIconLoc
    set the left of widget "svgicon" of me to item 1 of pControlRect + tMargin
    set the loc of image "icon" of me to the loc of widget "svgicon" of me  
-   --set the width of field "description" of me to (item 3  of pControlRect - item 1 of pControlRect) - the width of image "icon" of me - the width of button "uninstall" of me
+
    set the width of field "description" of me to the formattedWidth of field "description" of me
    set the height of field "description" of me to the formattedHeight of field "description" of me
    set the loc of field "description" of me to the loc of me
@@ -111,22 +171,25 @@ on LayoutControl pControlRect
    set the textColor of line 1 of field "description" of me to revIDEColor("text_1")
    set the textColor of line 2 of field "description" of me to revIDEColor("text_2")
    
-   set the loc of button "uninstall" of me to the loc of me
-   set the right of button "uninstall" of me to item 3 of pControlRect - tMargin
-   set the rect of button "update" of me to the rect of button "uninstall" of me
-   set the rect of button "cancel" of me to the rect of button "uninstall" of me
+   ## Action Icon
+   set the loc of widget "ActionIcon" of me to the loc of me
+   set the right of widget "ActionIcon" of me to item 3 of pControlRect - tMargin
+   
+   ## Cancel button
+   set the loc of button "cancel" of me to the loc of me
+   set the right of button "cancel" of me to the left of widget "actionIcon" of me - tMargin
    
    ## Progress Bar
-   set the width of group "installProgress" of me to (item 3 of pControlRect - the right of field "description" of me - the width of button "uninstall" of me) - (tMargin)
+   set the width of group "installProgress" of me to (item 3 of pControlRect - the right of field "description" of me - the width of widget "actionIcon" of me - the width of button "cancel" of me - tMargin)
    set the loc of group "installProgress" of me to the loc of me
-   set the right of group "installProgress" of me to the right of me - tPadding
+   set the right of group "installProgress" of me to the left of widget "ActionIcon" of me - tPadding
    
    hide button "cancel" of me
    
    ## Error data
    set the loc of image "Error" of me to the loc of me
-   set the right of image "Error" of me to the left of button "Uninstall" of me - tPadding
-   set the width of field "Error Message" of me to the formattedWidth of field "Error Message" of me
+   set the right of image "Error" of me to the left of widget "actionIcon" of me - tPadding
+   set the width of field "Error Message" of me to (item 3 of pControlRect - the width of widget "ActionIcon" of me)
    set the loc of field "Error Message" of me to the loc of me
    
    if the visible of image "Error" of me then
@@ -150,42 +213,74 @@ on LayoutControl pControlRect
       set the loc of field "Error Message" of me to the loc of me
       set the left of field "Error Message" of me to tLeft
    end if
+   
 end LayoutControl
 
-on mouseUp
-   switch the short name of the target
-      case "activate"
-         answer "Are you sure you want to activate extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
-         if it is "Yes" then
-            activateExtension the cTypeID of me
-         end if
+on mouseUp pMouseButton
+   if pMouseButton is 1 then
+      switch the short name of the target
+         case "cancel"
+            answer "Are you sure you want to cancel the installation of extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
+            if it is "Yes" then
+               cancelExtensionInstall the cTypeID of me
+            end if
+            break
+         case "actionIcon"
+            popup button "extensionActions" of me
+            break
+      end switch
+   else if pMouseButton is 3 then
+      popup button "extensionActions" of me
+   end if
+end mouseUp
+
+on menuPick pAction
+   local tSample, tSampleStacks
+   
+   set the itemDel to "|"
+   if item 1 of pAction is "Sample Stacks" then
+      put item 2 of pAction into tSample
+      delete item 2 of pAction
+   end if
+   
+   local tKind
+   put the cTypeID of me into tKind
+   switch pAction
+      case "Toggle Visible"
+         toggleUserVisibility tKind
          break
-      case "deactivate"
-         answer "Are you sure you want to deactivate extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
-         if it is "Yes" then
-            deactivateExtension the cTypeID of me
-         end if
+      case "Toggle Load"
+         toggleLoadOnStartup tKind
          break
       case "uninstall"
-         answer "Are you sure you want to uninstall extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
+         answer "Are you sure you want to uninstall extension" \
+               && tKind & "?" with "Cancel" and "Yes"
          if it is "Yes" then
-            uninstallExtension the cTypeID of me
+            uninstallExtension tKind
          end if
+         break
+      case "remove"
+         uninstallExtension tKind
+         break
+      case "unload"
+         unloadExtension tKind
+         break
+      case "load"
+         loadExtension tKind
          break
       case "update"
-         answer "Are you sure you want to update extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
+         answer "Are you sure you want to update extension" \
+               && tKind & "?" with "Cancel" and "Yes"
          if it is "Yes" then
-            updateExtension the cTypeID of me,  the cLatestVersion of me
+            updateExtension tKind,  the cLatestVersion of me
          end if
          break
-      case "cancel"
-         answer "Are you sure you want to cancel the installation of extension" && the cTypeID of me & "?" with "Cancel" and "Yes"
-         if it is "Yes" then
-            cancelExtensionInstall the cTypeID of me
-         end if
+      case "Sample Stacks"
+         put the cSampleStacks of me into tSampleStacks
+         launchExtensionSampleStack tSampleStacks[tSample]
          break
    end switch
-end mouseUp
+end menuPick
 
 on mouseDoubleUp
    if not the cIDE of me then

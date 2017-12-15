@@ -88,6 +88,23 @@ on hideFrameItem pName
    generateFrame
 end hideFrameItem
 
+on disableFrameItem pName
+   setEnabledOfFrameItem pName, false
+end disableFrameItem
+
+on enableFrameItem pName
+   setEnabledOfFrameItem pName, true
+end enableFrameItem
+
+command setEnabledOfFrameItem pName, pValue
+   local tIndex
+   put __frameItemNameToIndex(pName) into tIndex
+   if tIndex is not a number then exit setEnabledOfFrameItem
+   
+   put pValue into sData[tIndex]["enabled"] 
+   generateFrame
+end setEnabledOfFrameItem
+
 on toggleFrameItem pName, pValue
    local tIndex
    put __frameItemNameToIndex(pName) into tIndex

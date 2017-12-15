@@ -1,19 +1,19 @@
 ﻿script "revIDEDeveloperExtensionLibrary"
 local sExtensionDetailsA
 
-private on __revIDEDeveloperExtensionSendWarning pWarning
+private command __revIDEDeveloperExtensionSendWarning pWarning
    ideMessageSend "ideExtensionLog", "Warning:" && pWarning
 end __revIDEDeveloperExtensionSendWarning
 
-private on __revIDEDeveloperExtensionSendError pError
+private command __revIDEDeveloperExtensionSendError pError
    ideMessageSend "ideExtensionLog", "Error:" && pError
 end __revIDEDeveloperExtensionSendError
 
-private on __revIDEDeveloperExtensionLog pLog
+private command __revIDEDeveloperExtensionLog pLog
    ideMessageSend "ideExtensionLog", pLog
 end __revIDEDeveloperExtensionLog
 
-private on __revIDEDeveloperCompilationError pError, pFile
+private command __revIDEDeveloperCompilationError pError, pFile
    local tLineNo, tChar, tEndChar, tLine
    # Parse out the error details to provide more meaningful feedback
    repeat for each line tErrLine in pError
@@ -56,7 +56,7 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    return tNeedUpdate is not false
 end __revIDEDeveloperExtensionShouldRecompile
 
-private on __revIDEDeveloperExtensionRemoveFolder pFolder
+private command __revIDEDeveloperExtensionRemoveFolder pFolder
    local tDeveloperExtensionsFolders
    put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
    
@@ -72,7 +72,7 @@ private on __revIDEDeveloperExtensionRemoveFolder pFolder
    end if
 end __revIDEDeveloperExtensionRemoveFolder
 
-private on __revIDEDeveloperExtensionAddFolder pFolder
+private command __revIDEDeveloperExtensionAddFolder pFolder
    local tDeveloperExtensionsFolders
    put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
    
@@ -288,11 +288,27 @@ private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
       put tCode into tDetailsA["code"]
    end if
    
+   local tSamplesFolder, tSamples
+   put pFolder & slash & "samples" into tSamplesFolder
+   if there is a folder tSamplesFolder then
+      put __revIDEDeveloperExtensionListResourcesRecursive(tSamplesFolder, "") into tSamples
+      put tSamples into tDetailsA["samples"]
+   end if
+   
    # Default script
    put revIDEExtensionFetchDefaultScript(pFolder, tDetailsA["id"], false) into tDetailsA["defaultscript"]
    if tDetailsA["defaultscript"] is not empty then
       put pFolder & "/support/defaultscript.livecodescript" into tDetailsA["defaultscript_file"]
    end if
+   
+   # Custom PI editors
+   local tEditorsFolder, tEditors
+   put pFolder & slash & "editors" into tEditorsFolder
+   if there is a folder tEditorsFolder then
+      put __revIDEDeveloperExtensionListResourcesRecursive(tEditorsFolder, "") into tEditors
+      put tEditors into tDetailsA["editors"]
+   end if
+   
    return tDetailsA 
 end __revIDEDeveloperExtensionFetchFolderDetails
 
@@ -367,10 +383,9 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
       return tDetailsA
    end if
    union tDetailsA with tMetadataA
-   put pType into tDetailsA["type"]
+   put pType into tDetailsA["source_type"]
    put tDetailsA into sExtensionDetailsA[pFolder]
    return sExtensionDetailsA[pFolder]
-   
 end __revIDEDeveloperExtensionDetailsFromFile
 
 on revIDEDeveloperExtensionAddResourceFile pExtensionFolder, pResourcePath, pType
@@ -422,7 +437,16 @@ on revIDEDeveloperExtensionAddResourceFolder pExtensionFolder, pResourceFolder
    end if
 end revIDEDeveloperExtensionAddResourceFolder
 
-on revIDEDeveloperExtensionTest pPath
+local sLoadedExtension
+function revIDEDeveloperExtensionCurrentlyTesting
+   return sLoadedExtension is not empty
+end revIDEDeveloperExtensionCurrentlyTesting
+
+command revIDEDeveloperExtensionStopTesting
+   __ClearTestExtension
+end revIDEDeveloperExtensionStopTesting
+
+command revIDEDeveloperExtensionTest pPath
    local tDetailsA
    put revIDEDeveloperExtension(pPath) into tDetailsA
    
@@ -437,14 +461,25 @@ on revIDEDeveloperExtensionTest pPath
       exit revIDEDeveloperExtensionTest
    end if
    
-   if there is not a file (pPath & slash & "module.lcm") then
+   if tDetailsA["source_type"] is "lcb" and \
+         there is not a file (pPath & slash & "module.lcm") then
       __revIDEDeveloperExtensionSendError "No compiled module in" && pPath
       exit revIDEDeveloperExtensionTest
    end if
    
-   __revIDEDeveloperExtensionLog "Launching in Test Window"
+   __ClearTestExtension
    
-   __revIDEDeveloperExtensionLaunchTestStack pPath, tDetailsA
+   revIDEExtensionLoad tDetailsA["source_type"], tDetailsA["name"], pPath, \
+         tDetailsA["version"], "installed", "", false, tDetailsA["file"]
+   
+   local tResult
+   put the result into tResult
+   if tResult is not empty then
+      __revIDEDeveloperExtensionSendError tResult
+      exit revIDEDeveloperExtensionTest
+   end if
+   
+   __LaunchTestExtension pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
 private function __testStackRects
@@ -478,13 +513,9 @@ private function __testStackScript
    return tScript
 end __testStackScript
 
-private on __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
+private command __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
    local tRectsA
    put __testStackRects() into tRectsA
-   
-   if there is a stack "LiveCode Extension Test Window" then
-      revIDEDeveloperExtensionClearTestStack
-   end if
    
    revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
@@ -498,16 +529,7 @@ on revIDEDeveloperExtensionCreateTestStack pPath, pRectsA, pDetailsA
 end revIDEDeveloperExtensionCreateTestStack
 
 on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
-   revIDEExtensionLoad pDetailsA["type"], pDetailsA["name"], pPath, \
-         pDetailsA["version"], "installed", "", false, pDetailsA["file"]
-   
-   local tResult
-   put the result into tResult
-   if tResult is not empty then
-      __revIDEDeveloperExtensionSendError tResult
-      exit __revIDEDeveloperExtensionDoCreateTestStack
-   end if
-   
+   __revIDEDeveloperExtensionLog "Launching in Test Window"
    if there is a stack (pPath & slash & "test.livecode") then
       go stack (pPath & slash & "test.livecode") 
    else
@@ -538,21 +560,43 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       set the rect of widget 1 of stack "LiveCode Extension Test Window" to tRectsA["wrect"]
    end if
    
-   set the cCurExtension of stack "LiveCode Extension Test Window" to pDetailsA["name"]
    unlock screen
 end __revIDEDeveloperExtensionDoCreateTestStack
+
+private command __LaunchTestExtension pPath, pDetailsA
+   -- Only launch a test window if a widget
+   if pDetailsA["type"] is "widget" then
+      __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
+   else
+      __revIDEDeveloperExtensionLog "Loaded library" && sLoadedExtension
+   end if
+   put pDetailsA["name"] into sLoadedExtension
+   ideMessageSend "ideExtensionStatusChanged"
+end __LaunchTestExtension
+
+private command __ClearTestExtension
+   if there is a stack "LiveCode Extension Test Window" then
+      __revIDEDeveloperExtensionDoClearTestStack
+   else
+      __UnloadTestExtension
+   end if
+   ideMessageSend "ideExtensionStatusChanged"
+end __ClearTestExtension
+
+private command __UnloadTestExtension
+   if sLoadedExtension is not empty then
+      __revIDEDeveloperExtensionUnload sLoadedExtension
+      __revIDEDeveloperExtensionLog "Unloading" && sLoadedExtension
+      put empty into sLoadedExtension
+   end if
+end __UnloadTestExtension
 
 on __revIDEDeveloperExtensionDoClearTestStack
    repeat while there is a widget 1 of stack "LiveCode Extension Test Window" 
       delete widget 1 of stack "LiveCode Extension Test Window"
    end repeat
-   local tExtension
-   put the cCurExtension of stack "LiveCode Extension Test Window" into tExtension
    delete stack "LiveCode Extension Test Window"
-   if tExtension is not empty then
-      __revIDEDeveloperExtensionUnload tExtension
-      __revIDEDeveloperExtensionLog "Unloading..."
-   end if
+   __UnloadTestExtension
 end __revIDEDeveloperExtensionDoClearTestStack
 
 local sInstalledExtension
@@ -566,7 +610,7 @@ end __revIDEDeveloperExtensionUnload
 on revIDEDeveloperExtensionInstall pFolder
    local tPackage
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
-   revIDEInstallExtension tPackage
+   revIDEExtensionInstall tPackage
    put pFolder & slash & "module.lcm" into sInstalledExtension
 end revIDEDeveloperExtensionInstall
 
@@ -579,7 +623,7 @@ on revIDEDeveloperExtensionUninstall pPath
       exit revIDEDeveloperExtensionUninstall
    end if
    
-   revIDEUninstallExtension tDetailsA["name"]
+   revIDEExtensionUninstall tDetailsA["name"]
    
 end revIDEDeveloperExtensionUninstall
 
@@ -677,78 +721,15 @@ private function __fetchMetadatum pXmlId, pKey
    return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
 end __fetchMetadatum
 
-private function shellFormat pArg, pSwitch
-   local tOutput
-   
-   if pSwitch is not empty then
-      put "--" & pSwitch & " " into tOutput
-   end if
-   
-   return tOutput & quote & pArg & quote & " "
-end shellFormat
-
-private function __revIDEDeveloperExtensionResourcePath
-   if revEnvironmentIsInstalled() is false then
-      return revEnvironmentBinariesPath()
-   else
-      return revIDESpecialFolderPath("Toolchain")
-   end if
-end __revIDEDeveloperExtensionResourcePath
-
-private function __revIDEDeveloperExtensionCompilerPath
-   # The actual compile command
-   if the platform is "win32" then
-      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile.exe"
-   else
-      return __revIDEDeveloperExtensionResourcePath() & slash & "lc-compile"
-   end if
-end __revIDEDeveloperExtensionCompilerPath
-
 private command __revIDEDeveloperCompileModule pFile, pTargetFolder
-   # The manifest is currently always generated from the source
-   if there is a file (pTargetFolder & slash & "manifest.xml") then
-      delete file (pTargetFolder & slash & "manifest.xml")
-   end if
+   revIDEExtensionCompile pFile, pTargetFolder
    
-   # Build the shell command
-   local tShellCommand
-   put shellFormat(__revIDEDeveloperExtensionCompilerPath()) into tShellCommand
-   
-   # The folder to put the .lci file
-   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
-   
-   # The built-in module path
-   put shellFormat(__revIDEDeveloperExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
-   
-   # Installed module path
-   put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand
-   
-   # The manifest target
-   put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand
-   
-   # The output
-   put shellFormat(pTargetFolder & slash & "module.lcm", "output") after tShellCommand
-   
-   # The target .lcb file
-   put shellFormat(pFile) after tShellCommand
-   
-   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
-   local tHideConsoleWindows
-   put the hideConsoleWindows into tHideConsoleWindows
-   set the hideConsoleWindows to true
-   
-   local tShellOutput, tShellResult
-   put shell(tShellCommand) into tShellOutput
-   put the result into tShellResult
-   
-   set the hideConsoleWindows to tHideConsoleWindows
-   
-   if tShellResult is not 0 then
-      __revIDEDeveloperCompilationError tShellOutput
+   if the result is not empty then
+      __revIDEDeveloperCompilationError the result
       return "failed to compile module"
    end if
    
-   __revIDEDeveloperExtensionLog tShellOutput
+   __revIDEDeveloperExtensionLog it
    
    if there is not a file (pTargetFolder & slash & "module.lcm") then
       return "failed to compile module"
@@ -770,7 +751,7 @@ on revIDEDeveloperExtensionBuildPackage pFolder
    end if
 end revIDEDeveloperExtensionBuildPackage
 
-private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
+private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuiltLocation
    local tDetailsA
    put revIDEDeveloperExtension(pFolder) into tDetailsA
    
@@ -871,6 +852,12 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put empty into tCode
    end if
    
+   local tSamples
+   put (pFolder & slash & "samples") into tSamples
+   if there is not a folder tSamples then
+      put empty into tSamples
+   end if
+   
    # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
    local tInterfaceFile
    if there is a file (pFolder & slash & tTargetName & ".lci") then
@@ -883,8 +870,18 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
       put empty into tDefaultScript
    end if
    
+   local tEditors
+   put (pFolder & slash & "editors") into tEditors
+   if there is not a folder tEditors then
+      put empty into tEditors
+   end if
+   
    if tError is empty then
-      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, tInterfaceFile, tDefaultScript) into tError
+      put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
+            tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
+            tSamples, tInterfaceFile, tDefaultScript, tEditors) \
+            into tError
    end if
    
    revZipCloseArchive tArchive
@@ -904,7 +901,11 @@ private on __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @rBuil
    return empty
 end __revIDEDeveloperExtensionBuildPackage
 
-private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, pDocs, pResourcesFolder, pCodeFolder, pInterfaceFile, pDefaultScript
+private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
+      pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, \
+      pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, \
+      pInterfaceFile, pDefaultScript, pEditors
+      
    local tError
    
    set the itemdelimiter to slash
@@ -999,6 +1000,19 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       end repeat
    end if
    
+   # Add sample stacks
+   if tError is empty and pSamplesFolder is not empty then
+      local tSamples
+      put __revIDEDeveloperExtensionListResourcesRecursive(pSamplesFolder, "") into tSamples
+      repeat for each line tLine in tSamples
+         revZipAddItemWithFile pArchive, "samples/" & tLine, pSamplesFolder & slash & tLine
+         
+         if the result begins with "ziperr" then
+            __revIDEDeveloperExtensionSendWarning "couldn't add sample" && pSamplesFolder & slash & tLine
+         end if
+      end repeat
+   end if
+   
    # AL-2015-03-18: [[ Bug 15007 ]] Include interface file if present
    if tError is empty and pInterfaceFile is not empty then
       revZipAddItemWithFile pArchive, item -1 of pInterfaceFile, pInterfaceFile
@@ -1015,6 +1029,19 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage pSource, p
       if the result begins with "ziperr" then
          __revIDEDeveloperExtensionSendWarning "couldn't add default script" && pDefaultScript
       end if
+   end if
+   
+   # Add editors
+   if tError is empty and pEditors is not empty then
+      local tEditors
+      put __revIDEDeveloperExtensionListResourcesRecursive(pEditors, "") into tEditors
+      repeat for each line tLine in tEditors
+         revZipAddItemWithFile pArchive, "editors/" & tLine, pEditors & slash & tLine
+         
+         if the result begins with "ziperr" then
+            __revIDEDeveloperExtensionSendWarning "couldn't add editors" && pEditors & slash & tLine
+         end if
+      end repeat
    end if
    
    return tError
