@@ -90,3 +90,12 @@ on showUpgradeOptions pEdition, pDisplayName
    launch url revEnvironmentEditionProperty("edition_external_url", pEdition) & \
          "?utm_source=ide&utm_medium=docs&utm_campaign="&pDisplayName
 end showUpgradeOptions
+
+# bug 17819 enable cmd+c in dictionary
+on commandKeyDown pWhich
+   if pWhich is "C" then
+      copy
+   else
+      pass commandKeyDown
+   end if
+end commandKeyDown
