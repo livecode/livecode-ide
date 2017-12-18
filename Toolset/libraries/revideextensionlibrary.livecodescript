@@ -720,9 +720,17 @@ private command __extensionError pCacheIndex, pErrorMessage
 end __extensionError
 
 # Send notication that widget has been added/removed
+on doExtensionsChanged
+   ideMessageSend "ideExtensionsChanged"
+end doExtensionsChanged
+
+local sExtensionsChangedMsg
 private command __extensionsChanged
-   send "ideMessageSend ideExtensionsChanged" to stack \
-     "revIDELibrary" in 0 millisecs
+   if sExtensionsChangedMsg is not empty then
+      cancel sExtensionsChangedMsg
+   end if
+   send "doExtensionsChanged" to me in 10 millisecs
+   put the result into sExtensionsChangedMsg
 end __extensionsChanged
 
 # Sent progress update on installation of widget
