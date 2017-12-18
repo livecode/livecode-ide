@@ -5,16 +5,8 @@ on preOpenStack
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
    
    ### Header
-   --addFrameItem "add","header", "action", "Create a new extension", "plus sign", "plus sign","headerActionNewExtension", the long id of me
-   addFrameItem "open","header", "action", "Open an existing extension", "folder open", "folder open","headerActionOpenExtension", the long id of me
-   addFrameItem "edit source", "header", "action", "Edit extension source code", "lc-edit-script", "lc-edit-script", "headerActionEditSource", the long id of me
-   
-   addFrameItem "package","footer", "action", "Package", "archive", "archive","footerActionPackage", the long id of me
-   addFrameItem "uninstall","footer", "action", "Uninstall", "remove circle", "remove circle","footerActionUninstall", the long id of me
-   addFrameItem "install","footer", "action", "Install", "plus sign", "plus sign","footerActionInstall", the long id of me
-   addFrameItem "stop testing","footer", "action", "Stop testing extension", "stop circle", "stop circle","footerActionStopTesting", the long id of me
-   addFrameItem "test","footer", "action", "Test extension", "play circle", "play circle","footerActionTest", the long id of me
-   
+   generateExtensionFrame
+    
    put "No API entries found" into field "message_api" of me
    put "No user guide found" into field "message_guide" of me
    
@@ -31,7 +23,61 @@ on preOpenStack
    revIDESubscribe "ideExtensionLog"
    revIDESubscribe "ideExtensionStatusChanged"
    revIDESubscribe "ideExtensionsChanged"
+   revIDESubscribe "idePreferenceChanged:cDeveloperExtensionsFolders"
+   revIDESubscribe "idePreferenceChanged:cDeveloperExtensionsActiveFolders"
 end preOpenStack
+
+private function FolderPathForMenu pFolder
+   local tFolder
+   put pFolder into tFolder
+   replace "!" with "\!" in pFolder
+   if the platform is "MacOS" then 
+      replace "/" with "\/" in pFolder
+      replace "(" with "\(" in pFolder
+   else
+      replace "/" with "//" in pFolder
+   end if
+   return tFolder & ":" & pFolder
+end FolderPathForMenu
+
+command generateExtensionFrame
+   clearFrameData
+   
+   local tFolders, tMenuItem, tOptions
+   put revIDEDeveloperExtensionsFolders() into tFolders
+   repeat for each line tLine in tFolders
+      put FolderPathForMenu(tLine) into tMenuItem
+      if tOptions is empty then
+         put tMenuItem into tOptions
+      else
+         put comma & tMenuItem after tOptions
+      end if
+   end repeat
+   
+   addFrameItem "cDeveloperExtensionsActiveFolders", "header", "preference", "Folders to search for extensions", "set", tOptions, "togglePreference", the long id of me
+   
+   --addFrameItem "add","header", "action", "Create a new extension", "plus sign", "plus sign","headerActionNewExtension", the long id of me
+   addFrameItem "open","header", "action", "Open an existing extension", "folder open", "folder open","headerActionOpenExtension", the long id of me
+   addFrameItem "edit source", "header", "action", "Edit extension source code", "lc-edit-script", "lc-edit-script", "headerActionEditSource", the long id of me
+   
+   addFrameItem "package","footer", "action", "Package", "archive", "archive","footerActionPackage", the long id of me
+   addFrameItem "uninstall","footer", "action", "Uninstall", "remove circle", "remove circle","footerActionUninstall", the long id of me
+   addFrameItem "install","footer", "action", "Install", "plus sign", "plus sign","footerActionInstall", the long id of me
+   addFrameItem "stop testing","footer", "action", "Stop testing extension", "stop circle", "stop circle","footerActionStopTesting", the long id of me
+   addFrameItem "test","footer", "action", "Test extension", "play circle", "play circle","footerActionTest", the long id of me
+   
+end generateExtensionFrame
+
+on idePreferenceChanged pPref
+   switch pPref
+      case "cDeveloperExtensionsFolders"
+      case "cDeveloperExtensionsActiveFolders"
+         --Refresh the header list
+         generateExtensionFrame
+         populateExtensionList
+         break
+   end switch
+end idePreferenceChanged
 
 on closeStackRequest
    if there is folder sLoadedExtension then
@@ -73,6 +119,26 @@ private on consoleScrollbarUpdate
       set the vscrollbar of field "console" to false
    end if
 end consoleScrollbarUpdate
+
+on togglePreference pPreference, pValue
+   switch pPreference
+      case "cDeveloperExtensionsActiveFolders"
+         local tCurrentPreferenceValue, tPreferencePosition, tLineOffset
+         put revIDEGetPreference("cDeveloperExtensionsActiveFolders") into tCurrentPreferenceValue
+         put lineOffset(pValue, tCurrentPreferenceValue) into tLineOffset
+         if tLineOffset is not 0 then
+            delete line tLineOffset of tCurrentPreferenceValue
+         else
+            if tCurrentPreferenceValue is empty then
+               put pValue into tCurrentPreferenceValue
+            else
+               put return & pValue after tCurrentPreferenceValue
+            end if
+         end if
+         revIDESetPreference "cDeveloperExtensionsActiveFolders", tCurrentPreferenceValue
+         break
+   end switch
+end togglePreference
 
 on headerActionNewExtension
 end headerActionNewExtension

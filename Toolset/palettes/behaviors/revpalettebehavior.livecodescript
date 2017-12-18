@@ -210,9 +210,13 @@ private on appendMenuItem pNavItem, @xMenuArray
             if pNavItem["value_type"] is "enum" then
                put tValue is tPreferenceValue into tChecked
             else
-        	   put tValue is among the items of tPreferenceValue into tChecked
+               if the number of lines in tPreferenceValue > 1 then
+                  put tValue is among the lines of tPreferenceValue into tChecked
+               else
+                  put tValue is among the items of tPreferenceValue into tChecked
+               end if
             end if
-
+            
             if tChecked then
                put true into tMenuItemA["menu"][tItemCount]["checked"]
             else
