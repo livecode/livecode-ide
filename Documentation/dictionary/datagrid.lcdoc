@@ -2483,13 +2483,13 @@ Type: message
 
 Associations: datagrid, Datagrid Template Custom Properties & Messages
 
-Syntax: on LayoutControl pControlRect
+Syntax: on LayoutControl pControlRect, pWorkingRect
 
 Summary: The EditValue message is sent to a table column control when
 EditCell or EditCellOfIndex is called.
 
 Example: 
-on LayoutControl pControlRect 
+on LayoutControl pControlRect, pWorkingRect
 	set the rect of field "FirstName" to pControlRect 
 end LayoutControl
 
@@ -2500,9 +2500,11 @@ position all of the controls. pControlRect is the rectangle that the
 data grid has resized your control to. This is useful for knowing the
 left (item 1 of pControlRect), top (item 2 of pControlRect), right (item
 3 of pControlRect) and bottom (item 4 of pControlRect) bounds you can
-position controls at. Note that if you have a data grid form that does
-not have fixed height set to true then you can ignore the botom (item 4
-of pControlRect) and make your control as tall as you need. 
+position controls at. pWorkingRect is the rectangle within which you can safely
+position your controls without overlapping with any edit mode controls. Note
+that if you have a data grid form that does not have fixed height set to true
+then you can ignore the bottom (item 4 of pControlRect) and make your control as
+tall as you need.
 
 Name: dgLine
 
@@ -2613,3 +2615,908 @@ Description:
 This property is set by the data grid to set the highlighted state of
 the row or column control. If the value is "true" then the control should
 be highlighted. If "false" then it should not be.
+
+
+Name: dgEditMode
+
+Type: property
+
+Associations: datagrid
+
+syntax: set the dgEditMode of group "DataGrid" to {true | false}
+
+Summary: Take the data grid into or out of edit mode.
+
+Description:
+
+Use the <dgEditMode> property to put the data grid into or take it out of edit
+mode. When in edit mode, the data grid displays an action control of the left
+hand side of each row (as defined by ) and a reorder control on the right. The
+appearance and behavior of these controls can be customized.
+
+Only data grids form type data grids with <fixed row height> can be put into
+edit mode.
+
+Related: edit mode action control (property), edit mode action select control
+(property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
+GetEditModeReorderControl (message)
+
+
+Name: animate actions
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["animate actions"] of group "Data Grid" to {true | false}
+
+Summary: Turn animations on or off for the data grid.
+
+Description:
+
+When <animate actions> is set to true, the data grid will animate the deleting
+of rows, entering and exiting edit mode, row reordering, showing and hiding of
+action controls and row drag and swipe actions.
+
+To prevent these actions from being animated, set <animate actions> to false.
+
+Name: enable swipe
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["enable swipe"] of group "Data Grid" to {true | false}
+
+Summary: Turn drag and swipe actions on or off for the data grid.
+
+Description:
+
+When <enable swipe> is set to true, users can drag and swipe rows of form style
+data grids left and right, gradually revealing controls at either side of the
+row. The default appearance of the revealed controls and the behavior of the
+swipe actions can be customized.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
+(message), RowRightSwipeControlHidden (message), GetLeftSwipeControl (message),
+GetRightSwipeControl (message)
+
+
+Name: edit mode action control
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["edit mode action control"] of group "Data Grid" to
+<control id>
+
+Summary: Set the action control to display when the data grid is in edit mode.
+
+Description:
+
+Use <edit mode action control> to specify the action control to display when the
+data grid is in edit mode. This defaults to a red delete button. Set to empty to
+prevent the action control from being displayed.
+
+Related: dgEditMode(property), edit mode action select control (property), edit
+mode reorder control (property), EditModeShowActionControlForIndex (command),
+EditModeHideActionControl (command), EditModeActionSelectControlClicked
+(message), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: edit mode action select control
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["edit mode action select control"] of group "Data Grid"
+to <control id>
+
+Summary: Set the action select control to display when the data grid is in edit
+mode.
+
+Description:
+
+Use <edit mode action select control> to specify the action select control to
+display when the data grid is in edit mode. This defaults to a red stop icon.
+Set to empty to prevent the action select control from being displayed.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+reorder control (property), EditModeShowActionControlForIndex (command),
+EditModeHideActionControl (command), EditModeActionSelectControlClicked
+(message), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: edit mode reorder control
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["edit mode reorder control"] of group "Data Grid" to
+<control id>
+
+Summary: Set the reorder control to display when the data grid is in edit mode.
+
+Description:
+
+Use <edit mode reorder control> to specify the reorder control to display when
+the data grid is in edit mode. This defaults to a grey reorder icon. Set to
+empty to prevent the reorder control from being displayed, turning dynamic
+reordering off for the data grid.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), EditModeShowActionControlForIndex (command),
+EditModeHideActionControl (command), EditModeActionSelectControlClicked
+(message), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: left swipe control
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["left swipe control"] of group "Data Grid" to <control
+id>
+
+Summary: Set the control to display when a data grid row is dragged to the right.
+
+Description:
+
+Use <left swipe control> to specify the control to display when when a data grid
+row is dragged to the right. This defaults to a trash icon on a red background.
+Set to empty to prevent drags and swipes to the right.
+
+Related: enable swipe (property),  right swipe control (property),
+RowSwipeShowControlForIndexAndSide (command), RowSwipeHideControl (message),
+RowSwipedRight (message), RowSwipedLeft (message), RowLeftSwipeControlClicked
+(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
+(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: right swipe control
+
+Type: property
+
+Associations: datagrid, datagrid general properties
+
+Syntax: set the dgProp["right swipe control"] of group "Data Grid" to <control
+id>
+
+Summary: Set the control to display when a data grid row is dragged to the left.
+
+Description:
+
+Use <right swipe control> to specify the control to display when when a data
+grid row is dragged to the left. This defaults to a trash icon on a red
+background. Set to empty to prevent drags and swipes to the left.
+
+Related: enable swipe (property), left swipe control (property),
+RowSwipeShowControlForIndexAndSide (command), RowSwipeHideControl (message),
+RowSwipedRight (message), RowSwipedLeft (message), RowLeftSwipeControlClicked
+(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
+(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: EditModeShowActionControlForIndex
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditModeShowActionControlForIndex" to group "DataGrid" with
+<row index>
+
+Summary: Display the action control for the data grid row with the given index.
+
+Description:
+
+Display the action control for the data grid row with the given index. The data
+grid must be in edit mode for the action control to be displayed.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeHideActionControl (command), EditModeActionSelectControlClicked
+(message), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: EditModeHideActionControl
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "EditModeHideActionControl" to group "DataGrid" with {true | false}
+
+Summary: Hide any visible data grid action control.
+
+Description:
+
+Hide any visible data grid action control. Passing true as the first parameter
+will prevent the hide from being animated. This is useful if you wish to hide
+the row instantly, for example when deleting, but don't want to turn off
+animations globally.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeActionSelectControlClicked
+(message), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: RowSwipeShowControlForIndexAndSide
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "RowSwipeShowControlForIndexAndSide" to group "DataGrid" with
+<row index>, {"left" | "right"}
+
+Summary: Display the data grid swipe control on the given side of the row with
+the given index.
+
+Description:
+
+Display the data grid swipe control on the given side of the row with the given
+index. <enable swipe> must be true for swipe controls to be displayed.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeHideControl (message), RowSwipedRight (message),
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message),
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message),
+RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message),
+GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: RowSwipeHideControl
+
+Type: command
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "RowSwipeHideControl" to group "DataGrid" with {true | false}
+
+Summary: Hide any visible data grid swipe control.
+
+Description:
+
+Hide any visible data grid swipe control. Passing true as the first parameter
+will prevent the hide from being animated. This is useful if you wish to hide
+the row instantly, for example when deleting, but don't want to turn off
+animations globally.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command), RowSwipedRight
+ (message), RowSwipedLeft (message), RowLeftSwipeControlClicked (message),
+ RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message),
+ RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message),
+ GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: EditModeActionSelectControlClicked
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on EditModeActionSelectControlClicked pTarget
+
+Summary: Sent when a user clicks on a data grid edit mode action select control.
+
+Example:
+on EditModeActionSelectControlClicked pTarget
+   switch the name of the target
+      case "show"
+         dispatch "EditModeShowActionControlForIndex" to group "DataGrid" with the dgIndex of me
+         break
+      default
+         set the dgEditMode of group "DataGrid" to false
+         break
+   end switch
+end EditModeActionSelectControlClicked
+
+Parameters:
+pTarget: The target of the click. Use this to determine where in the action
+select control the user clicked.
+
+Description:
+
+<EditModeActionSelectControlClicked> is sent to your data grid's custom row
+template when the user clicks on a row's action select control. Handle
+<EditModeActionSelectControlClicked> if you wish to perform a custom behavior.
+
+The default behavior is to show the edit mode action control.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionControlClicked (message), EditModeActionControlHidden
+(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
+(message), GetEditModeReorderControl (message)
+
+
+Name: EditModeActionControlClicked
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on EditModeActionControlClicked pTarget
+
+Summary: Sent when a user clicks on a data grid edit mode action control.
+
+Example:
+on EditModeActionControlClicked pTarget
+   answer "Confirm delete" with "Yes" and "No"
+   if it is "Yes" then
+      dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+   else
+      dispatch "EditModeHideActionControl" to group "DataGrid" with the dgIndex of me.
+   end if
+end EditModeActionControlClicked
+
+on EditModeActionControlClicked pTarget
+   switch the name of the target
+      case "show"
+         dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+         break
+      case "archive"
+         dispatch "EditModeHideActionControl" to group "DataGrid"
+         break
+   end switch
+end EditModeActionControlClicked
+
+Parameters:
+pTarget: The target of the click. Use this to determine where in the action
+control the user clicked.
+
+Description:
+
+<EditModeActionControlClicked> is sent to your data grid's custom row template
+when the user clicks on a row's action control. Handle
+<EditModeActionControlClicked> if you wish to perform a custom behavior.
+
+The default behavior is to delete the current row.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlHidden (message), GetEditModeActionControl (message),
+GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
+
+
+Name: EditModeActionControlHidden
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on EditModeActionControlHidden
+
+Summary: Sent when the datagrid's edit mode action control is hidden.
+
+Description:
+
+<EditModeActionControlHidden> is sent to your data grid's custom row template
+when an action control is visible and the user clicks on the data grid,
+resulting in the action control being hidden. Handle
+<EditModeActionControlHidden> to perform a custom action on hide.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), GetEditModeActionControl (message),
+GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
+
+
+Name: RowSwipedRight
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowSwipedRight
+
+Summary: Sent when the user swipes a data grid row right.
+
+Example:
+on RowSwipedRight
+   dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+end RowSwipedRight
+
+Description:
+
+<RowSwipedRight> is sent to your data grid's custom row template when the user
+swipes a row of the data grid right. Handle <RowSwipedRight> if you want to
+perform a custom action on a right swipe.
+
+The default action is to show the left swipe control.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedLeft (message),
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message),
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message),
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message),
+GetRightSwipeControl (message)
+
+
+Name: RowSwipedLeft
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowSwipedLeft
+
+Summary: Sent when the user swipes a data grid row left.
+
+Example:
+on RowSwipedLeft
+   dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+end RowSwipedLeft
+
+Description:
+
+<RowSwipedLeft> is sent to your data grid's custom row template when the user
+swipes a row of the data grid left. Handle <RowSwipedLeft> if you want to
+perform a custom action on a left swipe.
+
+The default action is to show the right swipe control.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message),
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message),
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message),
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message),
+GetRightSwipeControl (message)
+
+
+Name: RowLeftSwipeControlClicked
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowLeftSwipeControlClicked pTarget
+
+Summary: Sent when the left hand side data grid swipe control is clicked.
+
+Example:
+on RowLeftSwipeControlClicked
+   dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+end RowLeftSwipeControlClicked
+
+on RowLeftSwipeControlClicked pTarget
+   switch the name of the target
+      case "show"
+         dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+         break
+      case "archive"
+         dispatch "RowSwipeHideControl" to group "DataGrid"
+         break
+   end switch
+end RowLeftSwipeControlClicked
+
+Parameters:
+pTarget: The target of the click. Use this to determine where in the swipe
+control the user clicked.
+
+Description:
+
+<RowLeftSwipeControlClicked> is sent to your data grid's custom row template
+when the user clicks on the left hand side swipe control. Handle
+<RowLeftSwipeControlClicked> if you want to perform a custom action on click.
+
+The default action is to delete the current row.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
+(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: RowRightSwipeControlClicked
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowRightSwipeControlClicked pTarget
+
+Summary: Sent when the right hand side data grid swipe control is clicked.
+
+Example:
+on RowRightSwipeControlClicked
+   dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+end RowRightSwipeControlClicked
+
+on RowRightSwipeControlClicked pTarget
+   switch the name of the target
+      case "show"
+         dispatch "DeleteIndex" to group "DataGrid" with the dgIndex of me
+         break
+      case "archive"
+         dispatch "RowSwipeHideControl" to group "DataGrid"
+         break
+   end switch
+end RowRightSwipeControlClicked
+
+Parameters:
+pTarget: The target of the click. Use this to determine where in the action
+control the user clicked.
+
+Description:
+
+<RowRightSwipeControlClicked> is sent to your data grid's custom row template
+when the user clicks on the right hand side swipe control. Handle
+<RowRightSwipeControlClicked> if you want to perform a custom action on click.
+
+The default action is to delete the current row.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: RowLeftSwipeControlHidden
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowLeftSwipeControlHidden
+
+Summary: Sent when the left hand side data grid swipe control is hidden.
+
+Description:
+
+<RowLeftSwipeControlHidden> is sent to your data grid's custom row template when
+an left hand side swipe control is visible and the user clicks on the data grid,
+resulting in the swipe control being hidden. Handle <RowLeftSwipeControlHidden>
+to perform a custom action on hide.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowRightSwipeControlClicked (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: RowRightSwipeControlHidden
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on RowRightSwipeControlHidden
+
+Summary: Sent when the right hand side data grid swipe control is hidden.
+
+Description:
+
+<RowRightSwipeControlHidden> is sent to your data grid's custom row template
+when an right hand side swipe control is visible and the user clicks on the data
+grid, resulting in the swipe control being hidden. Handle
+<RowRightSwipeControlHidden> to perform a custom action on hide.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowRightSwipeControlClicked (message), RowRightSwipeControlHidden
+(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+
+
+Name: GetEditModeActionControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on GetEditModeActionControl
+
+Summary: Handle this message to specify a custom data grid action control.
+
+Example:
+on GetEditModeActionControl
+   return group "my custom action control"
+end GetEditModeActionControl
+
+on GetEditModeActionControl
+   -- Hide for the data grid row number 5
+   if the dgIndex of me is 5 then
+      return empty
+   end if
+   pass GetEditModeActionControl
+end GetEditModeActionControl
+
+Description:
+
+<GetEditModeActionControl> is sent to your data grid's custom row template.
+Handle <GetEditModeActionControl> if you want to specify a custom action
+control. Return the id of the control you want to display. Returning empty will
+result in no control being displayed.
+
+Handing this message will override the <edit mode action control> property.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
+
+
+Name: GetEditModeActionSelectControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on GetEditModeActionSelectControl
+
+Summary: Handle this message to specify a custom data grid action select control.
+
+Example:
+on GetEditModeActionSelectControl
+   return group "my custom action select control"
+end GetEditModeActionSelectControl
+
+on GetEditModeActionSelectControl
+   -- Hide for the data grid row number 5
+   if the dgIndex of me is 5 then
+      return empty
+   end if
+   pass GetEditModeActionSelectControl
+end GetEditModeActionSelectControl
+
+on GetEditModeActionSelectControl
+   -- Turn action select off
+   return empty
+end GetEditModeActionSelectControl
+
+Description:
+
+<GetEditModeActionSelectControl> is sent to your data grid's custom row
+template. Handle <GetEditModeActionSelectControl> if you want to specify a
+custom action select control. Return the id of the control you want to display.
+Returning empty will result in no control being displayed.
+
+Handing this message will override the <edit mode action select control>
+property.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionControl (message), GetEditModeReorderControl (message)
+
+
+Name: GetEditModeReorderControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on GetEditModeReorderControl
+
+Summary: Handle this message to specify a custom data grid action select
+control.
+
+Example:
+on GetEditModeReorderControl
+   return group "my custom reorder control"
+end GetEditModeReorderControl
+
+on GetEditModeReorderControl
+   -- Hide for the data grid row number 5
+   if the dgIndex of me is 5 then
+      return empty
+   end if
+   pass GetEditModeReorderControl
+end GetEditModeReorderControl
+
+on GetEditModeReorderControl
+   -- Turn reordering off
+   return empty
+end GetEditModeReorderControl
+
+Description:
+
+<GetEditModeReorderControl> is sent to your data grid's custom row template.
+Handle <GetEditModeReorderControl> if you want to specify a custom reorder
+control. Return the id of the control you want to display. Returning empty will
+result in no control being displayed.
+
+Handing this message will override the <edit mode reorder control> property.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message)
+
+
+Name: GetLeftSwipeControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on GetLeftSwipeControl
+
+Summary: Handle this message to specify a custom data grid left hand side swipe
+control.
+
+Example:
+on GetLeftSwipeControl
+   return group "my custom left swipe control"
+end GetLeftSwipeControl
+
+on GetLeftSwipeControl
+   -- Hide for the data grid row number 5
+   if the dgIndex of me is 5 then
+      return empty
+   end if
+   pass GetLeftSwipeControl
+end GetLeftSwipeControl
+
+on GetLeftSwipeControl
+   -- Turn right drags and swipes off
+   return empty
+end GetLeftSwipeControl
+
+Description:
+
+<GetLeftSwipeControl> is sent to your data grid's custom row template. Handle
+<GetLeftSwipeControl> if you want to specify a custom left hand side swipe
+control. Return the id of the control you want to display. Returning empty will
+result in no control being displayed.
+
+Handing this message will override the <left swipe control> property.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
+(message), RowRightSwipeControlHidden (message), GetRightSwipeControl (message)
+
+
+Name: GetRightSwipeControl
+
+Type: message
+
+Associations: datagrid, Datagrid Template Custom Properties & Messages
+
+Syntax: on GetRightSwipeControl
+
+Summary: Handle this message to specify a custom data grid right hand side swipe
+control.
+
+Example:
+on GetRightSwipeControl
+   return group "my custom right swipe control"
+end GetRightSwipeControl
+
+on GetRightSwipeControl
+   -- Hide for the data grid row number 5
+   if the dgIndex of me is 5 then
+      return empty
+   end if
+   pass GetRightSwipeControl
+end GetRightSwipeControl
+
+on GetRightSwipeControl
+   -- Turn left drags and swipes off
+   return empty
+end GetRightSwipeControl
+
+Description:
+
+<GetRightSwipeControl> is sent to your data grid's custom row template. Handle
+<GetRightSwipeControl> if you want to specify a custom right hand side swipe
+control. Return the id of the control you want to display. Returning empty will
+result in no control being displayed.
+
+Handing this message will override the <right swipe control> property.
+
+Related: enable swipe (property), left swipe control (property), right swipe
+control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
+(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
+(message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
+(message), RowRightSwipeControlHidden (message), GetLeftSwipeControl (message)
+
+
+Name: EditModeReorderStarted
+
+Type: message
+
+Associations: datagrid
+
+Syntax: EditModeReorderStarted pIndex, pLineNo
+
+Summary: Sent when a user starts a dynamic reordering of a data grid.
+
+Parameters:
+pIndex: The index of the row being reordered.
+pLineNo: The line sequence number of the row within the data grid.
+
+Description:
+
+<EditModeReorderStarted> is sent to your data grid when a user starts a dynamic
+reordering.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
+GetEditModeReorderControl (message)
+
+
+Name: EditModeReorderCompleted
+
+Type: message
+
+Associations: datagrid
+
+Syntax: EditModeReorderCompleted pIndex, pStartLineNo, pNewLineNo
+
+Summary: Sent when a user completes a dynamic reordering of a data grid.
+
+Parameters:
+pIndex: The index of the reordered row.
+pStartLineNo: The original line sequence number of the row within the data grid.
+pNewLineNo: The new line sequence number of the row within the data grid.
+
+Description:
+
+<EditModeReorderCompleted> is sent to your data grid when a user completes a
+dynamic reordering.
+
+Related: dgEditMode(property), edit mode action control (property), edit mode
+action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl
+(command), EditModeActionSelectControlClicked (message),
+EditModeActionControlClicked (message), EditModeActionControlHidden (message),
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
+GetEditModeReorderControl (message)
+

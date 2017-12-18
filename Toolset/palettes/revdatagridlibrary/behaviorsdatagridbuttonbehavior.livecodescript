@@ -68,6 +68,112 @@ local sTableObjectsA
 local sScrollerId
 local sPollID
 
+--------------------------------------------------------------------------------
+-- DataGrid 2 Variables
+
+local sEditMode
+
+---
+
+local sReorderInProgress
+local sReorderControl
+local sReorderStartIndex
+local sReorderStartLine
+local sReorderLastHoverLine
+local sReorderMouseMoveInProgress
+
+constant kReorderDragControlBlendLevel = 30
+constant kReorderDragControlGlowColor = "0,0,0"
+constant kReorderDragControlGlowSize = 10
+constant kReorderDragControlGlowSpread = 10
+
+---
+
+local sReorderScrollPollMsgID
+
+constant kReorderScrollPollRate = 30
+constant kReorderScrollPollMargin = 30
+constant kReorderScollPollIncrement = 10
+
+---
+
+local sAnimationsA
+local sAnimationsLastID
+local sAnimationsPulseMsgID
+
+constant kAnimationsPulseRate = 30
+---
+
+local sAnimationProps
+
+constant kEditModeEnterExitDuration = 250
+constant kEditModeEnterExitActionSelectControlControlEasing = "in out"
+constant kEditModeEnterExitReorderControlEasing = "linear"
+
+constant kEditModeActionControlAnimationDuration = 250
+constant kEditModeActionControlAnimationEasing = "in out"
+
+constant kReorderAnimationDuration = 250
+constant kReorderAnimationEasing = "in out"
+
+constant kReorderHomingDuration = 250
+constant kReorderHomingEasing = "in out"
+
+constant kDeleteIndexAnimationDuration = 250
+constant kDeleteIndexAnimationEasing = "in out"
+
+constant kSwipeCompleteDuration = 300
+constant kSwipeCompleteEasing = "out back"
+
+constant kSwipeReturnDuration = 500
+constant kSwipeReturnEasing = "out bounce"
+
+---
+
+local sCustomisableControlsInitialised
+local sCustomisableControlsA
+local sCustomisableControlsSingletonsA
+local sCustomisableControlsSingletonCopyMapA
+
+constant kCustomisableControlNames = "edit mode action control,edit mode action select control,edit mode reorder control,left swipe control,right swipe control"
+constant kCustomisableControlSingletons = "edit mode action control,left swipe control,right swipe control"
+
+constant kEditModeReorderControlMargins = 8
+constant kEditModeReorderControlWidth = 20
+constant kEditModeReorderControlIcon = "reorder"
+constant kEditModeReorderControlColor = "199,199,199"
+
+constant kEditModeActionSelectControlMargins = 8
+constant kEditModeActionSelectControlWidth = 15
+constant kEditModeActionSelectControlIcon = "minus sign"
+constant kEditModeActionSelectControlIconColor = "255,59,48"
+
+constant kEditModeActionControlText = "Delete"
+constant kEditModeActionControlTextColor = "255,255,255"
+constant kEditModeActionControlBGColor = "255,59,48"
+constant kEditModeActionControlWidth = 100
+
+constant kSwipeControlWidth = 125
+constant kSwipeControlBGColor = "255,59,48"
+constant kSwipeControlIcon = "trash"
+constant kSwipeControlIconWidth = 20
+constant kSwipeControlIconColor = "255,255,255"
+
+---
+
+constant kEditModeEditModeReorderStarted = "EditModeReorderStarted"
+constant kEditModeEditModeReorderCompleted = "EditModeReorderCompleted"
+constant kMessageEditModeActionSelectControlClicked = "EditModeActionSelectControlClicked"
+constant kMessageEditModeActionControlClicked = "EditModeActionControlClicked"
+constant kMessageEditModeActionControlHidden = "EditModeActionControlHidden"
+constant kMessageRowSwipedRight = "RowSwipedRight"
+constant kMessageRowSwipedLeft = "RowSwipedLeft"
+constant kMessageRowLeftSwipeControlClicked = "RowLeftSwipeControlClicked"
+constant kMessageRowRightSwipeControlClicked = "RowRightSwipeControlClicked"
+constant kMessageRowLeftSwipeControlHidden = "RowLeftSwipeControlHidden"
+constant kMessageRowRightSwipeControlHidden = "RowRightSwipeControlHidden"
+
+--------------------------------------------------------------------------------
 
 --> Messages (engine)
 
@@ -194,6 +300,11 @@ private command _Initialize
       set the rect of me to theMasterRect
       unlock messages
       
+      -- Set up DataGrid 2
+      DG2_ClearVars
+      DG2_AnimationsInitProps
+      DG2_EnsureRowChainedBehavior
+
       put true into sInit
    else if the environment is "mobile" then
       _CreateMobileScroller
@@ -1412,7 +1523,8 @@ end AddLine
 
 
 command DeleteLine pLine
-    DeleteLines pLine
+   -- Use the new DataGrid 2 animations for single deletes.
+   DeleteIndex the dgIndexOfLine[pLine] of me
     return the result
 end DeleteLine
 
@@ -1432,8 +1544,16 @@ end DeleteLines
 
 
 command DeleteIndex pIndex
-    DeleteIndexes pIndex
+   -- Use the new DataGrid 2 animations for single deletes.
+   if the dgProps["cache controls"] of me then
+      -- We need to send in time here as this handler could be potentially
+      -- be called from a control we are about to delete!
+      send "DG2_DeleteIndex" && pIndex to me in 0 seconds
+      return empty
+   else
+      DG2_DeleteIndex pIndex
     return the result
+   end if
 end DeleteIndex
 
 
@@ -1793,6 +1913,8 @@ end ResetList
 * \return empty
 */
 command dgResetList
+   DG2_ClearVars
+
    lock screen
    
    ## For cases where user copied/pasted
@@ -2430,7 +2552,7 @@ private command _ToggleHScrollBarVisibility pBoolean
 end _ToggleHScrollBarVisibility
 
 
-private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForceRefresh
+private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForceRefresh, pCallback, pCallbackContext
     lock screen
     
     ## For cases where user copied/pasted
@@ -2457,7 +2579,7 @@ private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForce
             break
         case "form"
         default
-            _list.DrawWithProperties pSetVScrollTo, pForceRefresh
+         _list.DrawWithProperties pSetVScrollTo, pForceRefresh, pCallback, pCallbackContext
     end switch
     
     ## Make sure focus stays with us
@@ -2478,7 +2600,6 @@ private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForce
     set the lockMessages to msgsAreLocked
     -- put "time spent in" && param(0) & ":" && the milliseconds - theStart & cr after msg
 end _DrawListWithProperties
-
 
 private command _DeleteControls
    local i,theControl,msgsAreLocked
@@ -2757,7 +2878,7 @@ private command _list.AddLine pText, pKeys, pLineNo
 end _list.AddLine
 
 
-private command _list.DrawWithProperties  pSetVScrollTo, pForceRefresh
+private command _list.DrawWithProperties  pSetVScrollTo, pForceRefresh, pCallback, pCallbackContext
     -----
     local theError
     -----
@@ -2767,9 +2888,9 @@ private command _list.DrawWithProperties  pSetVScrollTo, pForceRefresh
     
     ## Easier to read code
     if the dgProps["cache controls"] of me then
-        _list.DrawCachedControlList pForceRefresh
+      _list.DrawCachedControlList pForceRefresh, pCallback, pCallbackContext
     else
-        _list.DrawControlsInRealTime pForceRefresh
+      _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallbackContext
     end if
     
     # Update VScroll every time
@@ -2777,6 +2898,10 @@ private command _list.DrawWithProperties  pSetVScrollTo, pForceRefresh
     set the vScroll of group "dgList" of me to pSetVScrollTo
     unlock messages
     
+   -- We've potentially scrolled, so reposition any overlays.
+   DG2_EditModeActionControlHolderReposition
+   DG2_SwipeControlHolderReposition
+
     return theError
 end _list.DrawWithProperties
 
@@ -2926,7 +3051,7 @@ private function _GenerateReorderedControlList pControls, pIndexes
 end _GenerateReorderedControlList
 
 
-private command _list.DrawControlsInRealTime pForceRefresh
+private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallbackContext
    -----
    local controlCountWasModified
    local i
@@ -2979,6 +3104,10 @@ private command _list.DrawControlsInRealTime pForceRefresh
       put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
       put the dgProps["fixed row height"] of me into controlHeightIsFixed
       
+      if pCallback is not empty then
+         dispatch pCallback & "Start" to me with pCallbackContext, theTopLeft
+      end if
+
       repeat for each item theIndex in theIndexesInSequence
          ## Get control reference
          add 1 to theControlIndex
@@ -3044,11 +3173,14 @@ private command _list.DrawControlsInRealTime pForceRefresh
          
          ## Set the rect AFTER filling in data in case filling in data causes the group to resize
          unlock messages
-         set the topLeft of theControl to theTopLeft ## So developer can always count on topleft of controls in template code
+         if pCallback is not empty then
+            dispatch pCallback to me with pCallbackContext, theControl, theSequence, theRect, theTopLeft
+         end if
+         set the topLeft of theControl to item 1 to 2 of theRect ## So developer can always count on topleft of controls in template code
          lock messages
          set the rect of theControl to theRect
          unlock messages
-         dispatch "LayoutControl" to theControl with theRect
+         dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
          
          ## Resize to fit height
          if not controlHeightIsFixed then
@@ -3070,6 +3202,10 @@ private command _list.DrawControlsInRealTime pForceRefresh
       
       ## Store current sequences in list
       put theIndexesInSequence into sTableObjectsA["current"]["indexes"]
+
+      if pCallback is not empty then
+         dispatch pCallback & "End" to me with pCallbackContext
+      end if
    end if
    
    ## Filter control list and reset controls that aren't part of visible list
@@ -3079,8 +3215,7 @@ private command _list.DrawControlsInRealTime pForceRefresh
    return empty
 end _list.DrawControlsInRealTime
 
-
-private command _list.DrawCachedControlList pForceRefresh
+private command _list.DrawCachedControlList pForceRefresh, pCallback, pCallbackContext
    -----
    local isVisible
    local msgsAreLocked
@@ -3130,6 +3265,10 @@ private command _list.DrawCachedControlList pForceRefresh
       
       put sTableObjectsA["base sequence for visible controls"] - 1 into theSequence
       
+      if pCallback is not empty then
+         dispatch pCallback & "Start" to me with pCallbackContext, theTopLeft
+      end if
+
       ## This will speed things up and keep us from experiencing visual lag
       lock messages
       
@@ -3168,6 +3307,12 @@ private command _list.DrawCachedControlList pForceRefresh
          set the topLeft of theControl to theTopLeft             
          put the bottom of theControl into item 2 of theTopLeft
          
+         if pCallback is not empty then
+            local theRect
+            put the rect of theControl into theRect
+            dispatch pCallback to me with pCallbackContext, theControl, theSequence, theRect, theTopLeft
+         end if
+
          ## Hilited index?
          if theIndex is among the items of sHilitedIndexes then
             _HiliteControl theEffectiveControl, true
@@ -3208,6 +3353,10 @@ private command _list.DrawCachedControlList pForceRefresh
             dispatch "HideControl" to theControl ## standardized in 1.0.2 build 6
          end if
       end repeat
+
+      if pCallback is not empty then
+         dispatch pCallback & "End" to me with pCallbackContext
+      end if
    end if
    
    set the lockMessages to msgsAreLocked
@@ -3262,7 +3411,7 @@ private command _list.CalculateFormattedHeight
                dispatch "FillInData" to theControl with sDataArray[1]
             end if
             
-            dispatch "LayoutControl" to theControl with theRect
+            dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
             put the formattedHeight of theControl into sControlHeights
          end if
          put sControlHeights * the number of elements of sDataArray into sFormattedHeight
@@ -3282,7 +3431,7 @@ private command _list.CalculateFormattedHeight
                   lock messages
                   set the rect of theControl to theRect
                   unlock messages
-                  dispatch "LayoutControl" to theControl with theRect
+                  dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
                   put the formattedHeight of theControl into sControlHeights[theIndex]
                else
                   put the result into sControlHeights[theIndex]
@@ -3297,7 +3446,7 @@ private command _list.CalculateFormattedHeight
                   lock messages
                   set the rect of theControl to theRect
                   unlock messages
-                  dispatch "LayoutControl" to theControl with theRect
+                  dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
                   put the formattedHeight of theControl into sControlHeights[theIndex]
                else
                   put the result into sControlHeights[theIndex]
@@ -5618,6 +5767,8 @@ setprop dgProps [pProp] pValue
             unlock messages
             put empty into sFormattedHeight
             put empty into sControlHeights
+
+            DG2_EnsureRowChainedBehavior
          end if
          break
          
@@ -5657,11 +5808,35 @@ setprop dgProps [pProp] pValue
       case "scroll when vscrollbar is hidden"
       case "scroll when hscrollbar is hidden"
       case "scroll selections into view"
+
+      case "animate actions"
+      case "enable swipe"
          lock messages
          set the dgProps[pProp] of me to pValue is true
          unlock messages
          break
          
+      case "edit mode action control"
+      case "edit mode action select control"
+      case "edit mode reorder control"
+      case "left swipe control"
+      case "right swipe control"
+         if pValue is not empty and there is not a pValue then
+            answer quote & pValue & quote && "does not exist. Cannot set" && pProp & "."
+         else
+            if pValue is not empty then
+               put _CustomControlReference(pValue) into pValue
+            end if
+            lock messages
+            set the dgProps[pProp] of me to pValue
+            unlock messages
+
+            -- We're setting new template controls. Redraw the list to take these new controls into account.
+            DG2_CustomisableControlsClearByName pProp
+            RefreshList
+         end if
+         break
+
       case "alternate row colors"
          lock messages
          set the dgProps[pProp] of me to pValue is true
@@ -5806,6 +5981,10 @@ setprop dgProps [pProp] pValue
             unlock messages
             lock screen
             
+            -- Update any customisable controls to take into account the row resize.
+            DG2_CustomisableControlsResizeDefaults
+            DG2_CustomisableControlsClear
+
             ResetList 
             unlock screen
          end if
@@ -7275,6 +7454,16 @@ private function _ResourceStack
    return theStack
 end _ResourceStack
 
+private function _TemplateControl
+   -- Attempt to find the card of the datagrid template stack.
+   -- Used to house template controls.
+   -- Base this off the row template. If the row template is not in the template stack then keep our template controls in the DataGrid itself.
+   if the dgProps["row template"] of me contains ("stack" && quote & "Data Grid Templates") then
+      return the long id of the owner of the dgProps["row template"] of me
+   else
+      return the long id of me
+   end if
+end _TemplateControl
 
 private function _PrintKeys @pArray, pDimension
    if pDimension is empty then put 0 into pDimension
@@ -7527,7 +7716,7 @@ private command _UpdateIndexWithNewData pIndex
       lock messages
       set the rect of theControl to theRect ## FillInData could possibly extend elements outside of the original rect
       unlock messages
-      dispatch "LayoutControl" to theControl with theRect
+      dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
       
       lock messages
       if not heightIsFixed then
@@ -7901,7 +8090,7 @@ private command _ResizeCachedControls
          lock messages
          set the rect of theControl to theRect
          unlock messages
-         dispatch "LayoutControl" to theControl with theRect
+         dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
       end repeat
    else
       put empty into sControlHeights
@@ -7914,7 +8103,7 @@ private command _ResizeCachedControls
          lock messages
          set the rect of theControl to theRect
          unlock messages
-         dispatch "LayoutControl" to theControl with theRect
+         dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
          
          lock messages
          put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
@@ -8216,7 +8405,7 @@ private command _CacheControls
             lock messages
             set the rect of theControl to theRect
             unlock messages
-            dispatch "LayoutControl" to theControl with theRect 
+            dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
             
             if not controlHeightIsFixed then
                ## LockLoc = true so resize to fit height
@@ -8239,7 +8428,7 @@ private command _CacheControls
             lock messages
             set the rect of theControl to theRect
             unlock messages
-            dispatch "LayoutControl" to theControl with theRect 
+            dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
             
             if not controlHeightIsFixed then
                ## LockLoc = true so resize to fit height
@@ -8308,7 +8497,7 @@ private command _LayoutCachedControls
       lock messages
       set the rect of theControl to theRect
       unlock messages
-      dispatch "LayoutControl" to theControl with theRect 
+      dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
       
       if not controlHeightIsFixed then
          ## LockLoc = true so resize to fit height
@@ -9400,3 +9589,1800 @@ private function __HasMobileScroller
          sScrollerId is not empty and \
          sScrollerId is among the lines of mobileControls()
 end __HasMobileScroller
+
+--------------------------------------------------------------------------------
+-- DataGrid 2
+--------------------------------------------------------------------------------
+
+private command DG2_ClearVars
+   put false into sEditMode
+
+   put false into sReorderInProgress
+   put empty into sReorderControl
+   put empty into sReorderStartIndex
+   put empty into sReorderStartLine
+   put empty into sReorderLastHoverLine
+   put false into sReorderMouseMoveInProgress
+
+   cancel sAnimationsPulseMsgID
+   put empty into sAnimationsPulseMsgID
+   put empty into sAnimationsA
+   put empty into sAnimationsLastID
+
+   cancel sReorderScrollPollMsgID
+   put empty into sReorderScrollPollMsgID
+
+   DG2_CustomisableControlsClear
+   return the result
+end DG2_ClearVars
+
+private command DG2_EnsureRowChainedBehavior
+   -- DataGrid 2 uses a behavior for each row to detect swipes and such.
+   -- Make sure this behavior is applied to the end of the template row's behavior
+   -- chain.
+   if the dgProps["row template"] of me is not empty and there is a the dgProps["row template"] of me then
+      local tChainedBehavior
+      put the long ID of button "Row Chained Behavior" of group "Behaviors" of _ResourceStack() into tChainedBehavior
+
+      local tControl
+      put the behavior of the dgProps["row template"] of me into tControl
+
+      -- Repeat through to the end of the behavior chain, exiting the loop if the
+      -- template behavior already set.
+      repeat while tControl is not empty and the behavior of tControl is not empty and the long id of the behavior of tControl is not tChainedBehavior
+         put the behavior of tControl into tControl
+      end repeat
+
+      if tControl is not empty and the behavior of tControl is empty then
+         set the behavior of tControl to tChainedBehavior
+      end if
+   end if
+
+   return empty
+end DG2_EnsureRowChainedBehavior
+
+function DG2_GetMessageNameForTag pTag
+   switch pTag
+      case "EditModeReorderCompleted"
+         return kEditModeEditModeReorderStarted
+      case "EditModeReorderCompleted"
+         return kEditModeEditModeReorderCompleted
+      case "EditModeActionSelectControlClicked"
+         return kMessageEditModeActionSelectControlClicked
+      case "EditModeActionControlClicked"
+         return kMessageEditModeActionControlClicked
+      case "EditModeActionControlHidden"
+         return kMessageEditModeActionControlHidden
+      case "RowSwipedRight"
+         return kMessageRowSwipedRight
+      case "RowSwipedLeft"
+         return kMessageRowSwipedLeft
+      case "RowLeftSwipeControlClicked"
+         return kMessageRowLeftSwipeControlClicked
+      case "RowRightSwipeControlClicked"
+         return kMessageRowRightSwipeControlClicked
+      case "RowLeftSwipeControlHidden"
+         return kMessageRowLeftSwipeControlHidden
+      case "RowRightSwipeControlHidden"
+         return kMessageRowRightSwipeControlHidden
+   end switch
+end DG2_GetMessageNameForTag
+
+--------------------------------------------------------------------------------
+-- DataGrid2 Public Commands
+
+-- RowSwipeShowControlForIndexAndSide
+--
+-- Fully slide in the swipe control from the specified side for the row  with
+-- the specified index.
+-- This command is typically used after a swipe gesture to fully reveal the swipe
+-- control for the row.
+--
+-- pIndex - The index of the row we want the swipe control to appear on.
+-- pSide  - The side want the control to appear. "left" or "right"
+--
+command RowSwipeShowControlForIndexAndSide pIndex, pSide
+   if not the dgProps["enable swipe"] of me then
+      return "Enable swipe is not set"
+   end if
+   
+   if pSide is not among the words of "left right" then
+      return "Unknown side" && pSide
+   end if
+
+   set the wholeMatches to true
+   if pIndex is not among the items of the dgIndexes of me then
+      return "Unknown index" && pIndex
+   end if
+
+   -- The swipe control is housed in a holder group that is overlaid on top
+   -- of the list. This is used to block/catch all mouse events when the control
+   -- is visible.
+   local tSwipeControlHolder
+   put DG2_SwipeControlHolderGet() into tSwipeControlHolder
+   if tSwipeControlHolder is empty then
+      return "Could not find swipre control holder"
+   end if
+
+   set the dgSwipeControlSide of tSwipeControlHolder to pSide
+   set the dgSwipeControlRowIndex of tSwipeControlHolder to pIndex
+   return the result
+end RowSwipeShowControlForIndexAndSide
+
+-- RowSwipeHideControl
+--
+-- Hide any visible swipe control.
+-- Don't animate is typically set if we are about to perform a subsequent
+-- animation. For example, when deleting a row.
+--
+-- pDontAnimate - Set to true to not animate the hide.
+--
+command RowSwipeHideControl pDontAnimate
+   if not the dgProps["enable swipe"] of me then
+      return "Enable swipe is not set"
+   end if
+   
+   local tSwipeControlHolder
+   put DG2_SwipeControlHolderGet() into tSwipeControlHolder
+   if tSwipeControlHolder is empty then
+      return "Could not find swipre control holder"
+   end if
+
+   if not the visible of tSwipeControlHolder then
+      return empty
+   end if
+
+   -- If we don't want to animate, hide the holder.
+   -- This will instantly hide the swipe control.
+   -- The holder will then take care of any tidying up.
+   lock screen
+   if pDontAnimate then
+      set the visible of tSwipeControlHolder to false
+   end if
+   set the dgSwipeControlRowIndex of tSwipeControlHolder to empty
+   get the result
+   unlock screen
+
+   return it
+end RowSwipeHideControl
+
+-- EditModeShowActionControlForIndex
+--
+-- Slide in the action control from the left hand side of the row with
+-- the specified index.
+--
+-- pIndex - The index of the row we want the action control to appear for.
+--
+command EditModeShowActionControlForIndex pIndex
+   if not sEditMode then
+      return "Action control can only be shown in edit mode"
+   end if
+
+   set the wholeMatches to true
+   if pIndex is not among the items of the dgIndexes of me then
+      return "Unknown index" && pIndex
+   end if
+
+   -- The action control is housed in a holder group that is overlaid on top
+   -- of the list. This is used to block/catch all mouse events when the control
+   -- is visible.
+   local tActionControlHolder
+   put DG2_EditModeActionControlHolderGet() into tActionControlHolder
+   if tActionControlHolder is empty then
+      return "Could not find action control holder"
+   end if
+
+   set the dgActionControlRowIndex of tActionControlHolder to pIndex
+   return the result
+end EditModeShowActionControlForIndex
+
+-- EditModeHideActionControl
+--
+-- Hide any visible action control.
+-- Don't animate is typically set if we are about to perform a subsequent
+-- animation. For example, when deleting a row.
+--
+-- pDontAnimate - Set to true to not animate the hide.
+--
+command EditModeHideActionControl pDontAnimate
+   if not sEditMode then
+      return empty
+   end if
+
+   local tActionControlHolder
+   put DG2_EditModeActionControlHolderGet() into tActionControlHolder
+   if tActionControlHolder is empty then
+      return "Could not find action control holder"
+   end if
+   if not the visible of tActionControlHolder then
+      return empty
+   end if
+
+   -- If we don't want to animate, hide the holder.
+   -- This will instantly hide the swipe control.
+   -- The holder will then take care of any tidying up.
+   lock screen
+   if pDontAnimate then
+      set the visible of tActionControlHolder to false
+   end if
+   set the dgActionControlRowIndex of tActionControlHolder to empty
+   get the result
+   unlock screen
+
+   return it
+end EditModeHideActionControl
+
+----------------------------------------------------------------------
+-- DataGrid 2 default implementations of swipe and edit mode actions.
+--
+-- By default we don't handle RowSwipedLeft and RowSwipedRight. This results in
+-- the swipe control being fully revealed allowing the user to click it. If the
+-- swipe control is clicked, delete this row.
+--
+-- By default, when the action select control is clicked, reveal the action
+-- control.
+--
+-- By default, when the action control is clicked, delete the row.
+--
+-- These behaviors can be overriden by handling these messages in the user
+-- scripts.
+--
+-- These messages are handled at this point of the message path to allow
+-- users to potentially handle them at group level.
+
+on RowLeftSwipeControlClicked
+   DeleteIndex the dgIndex of the target
+end RowLeftSwipeControlClicked
+
+on RowRightSwipeControlClicked
+   DeleteIndex the dgIndex of the target
+end RowRightSwipeControlClicked
+
+on EditModeActionSelectControlClicked pTarget
+   EditModeShowActionControlForIndex the dgIndex of the target
+end EditModeActionSelectControlClicked
+
+on EditModeActionControlClicked pTarget
+   DeleteIndex the dgIndex of the target
+end EditModeActionControlClicked
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Edit Mode Handlers
+
+setProp dgEditMode pMode
+   if pMode then
+      if the dgProps["style"] of me is not "form" then
+         throw "Edit mode can only be applied to form controls"
+      end if
+      if not the dgProps["fixed row height"] of me then
+         return "Edit mode can only be to controls with fixed row heights"
+      end if
+   end if
+
+   local tResult
+   if pMode and not sEditMode then
+      DG2_EditModeEnter
+      put the result into tResult
+   else if not pMode and sEditMode then
+      DG2_EditModeLeave
+      put the result into tResult
+   end if
+
+   if tResult is empty then
+      put pMode into sEditMode
+   end if
+
+   return tResult
+end dgEditMode
+
+getProp dgEditMode
+   return sEditMode
+end dgEditMode
+
+private command DG2_EditModeEnter
+   -- We set sEditMode here to ensure all subsequent redraws include the edit
+   -- mode controls.
+   put true into sEditMode
+
+   -- If any swipes are in progress, tidy them up.
+   RowSwipeHideControl true
+
+   -- We use callbacks within the standard draw procedure to handle the
+   -- animating in.
+   _DrawListWithProperties sTableObjectsA["base sequence for visible controls"], the vScroll of group "dgList" of me, true, "DG2_EditModeEnterDrawCallback"
+   return empty
+end DG2_EditModeEnter
+
+private command DG2_EditModeLeave
+   -- If an edit mode action control is visible, tidy it up.
+   EditModeHideActionControl true
+   _DrawListWithProperties sTableObjectsA["base sequence for visible controls"], the vScroll of group "dgList" of me, true, "DG2_EditModeLeaveDrawCallback"
+   return empty
+end DG2_EditModeLeave
+
+on DG2_EditModeEnterDrawCallbackStart @pContextA, pTopLeft
+   put empty into pContextA["animations"]
+   put 0 into pContextA["animation count"]
+end DG2_EditModeEnterDrawCallbackStart
+
+on DG2_EditModeEnterDrawCallback @pContextA, pControl, pLineNo, @pControlRect, @pControlTopLeft
+   -- We are about to animate in. If there is an action control, it will appear
+   -- on the left hand side of the row control.
+   -- Therefore we need to extend the row control's left the accomodate the action control.
+   -- The rect is passed by reference, meaning all future layouts in standard drawing loop
+   -- will be effected also.
+   local tActionSelectControl
+   put DG2_CustomisableControlsGetEditModeActionSelectControlForControl(the long id of pControl) into tActionSelectControl
+   if tActionSelectControl is not empty then
+      subtract the width of tActionSelectControl from item 1 of pControlRect
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(pControl, "left", item 1 of pControlRect, item 1 of pControlRect + the width of tActionSelectControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitActionSelectControlControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+   end if
+
+   -- Fade in the reorder control.
+   --
+   local tReorderControl
+   put DG2_CustomisableControlsGetEditModeReorderControlForControl(the long id of pControl) into tReorderControl
+   if tReorderControl is not empty then
+      set the right of tReorderControl to item 3 of pControlRect
+      set the visible of tReorderControl to true
+      set the blendLevel of tReorderControl to 100
+
+      -- Continually setting the left of the reorder control during the animation ensures
+      -- that it is always in the same position (at the right hand side of the list) and
+      -- thus not effected by the control sliding in from the right (which would naturally
+      -- move the roerder control right).
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 100, 0, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
+   end if
+
+   -- If the controls are cached, "LayoutControl" won't be called by the standard draw loop.
+   -- But we need it to be called to reposition everying inside the row to take account of
+   -- any edit mode controls, so do dispatch "LayoutControl" here.
+   if the dgProps["cache controls"] of me then
+      set the rect of pControl to pControlRect
+      dispatch "LayoutControl" to pControl with pControlRect, DG2_GetWorkingRectOfControlFromControlRect(pControl, pControlRect)
+   end if
+end DG2_EditModeEnterDrawCallback
+
+on DG2_EditModeEnterDrawCallbackEnd @pContextA
+   -- Queue all the animations and add an end callback to the final animation.
+   -- The end callback will tidy everything up.
+   if pContextA["animation count"] is not 0 then
+      DG2_AnimationsAnimationSetCompletionMessage pContextA["animations"][pContextA["animation count"]], "DG2_EditModeAnimateComplete"
+      DG2_AnimationsAnimationSetMessageTarget pContextA["animations"][pContextA["animation count"]], the long id of me
+      DG2_AnimationsBatchAddWithArray pContextA["animations"]
+   else
+      send "DG2_EditModeAnimateComplete" to me in 0 seconds
+   end if
+end DG2_EditModeEnterDrawCallbackEnd
+
+on DG2_EditModeLeaveDrawCallbackStart @pContextA, pTopLeft
+   put empty into pContextA["animations"]
+   put 0 into pContextA["animation count"]
+end DG2_EditModeLeaveDrawCallbackStart
+
+on DG2_EditModeLeaveDrawCallback @pContextA, pControl, pLineNo, @pControlRect, @pControlTopLeft
+   local tRight
+   put item 3 of pControlRect into tRight
+
+   -- We will be sliding the row to the right to hide the action select control.
+   -- Extend the right of the row's rect to ensure that now blank space is present
+   -- on the right hand side as a result of the animation.
+   -- Therefore we need to extend the row control's left the accomodate the action control.
+   -- standard drawing loop will be effected also.
+   local tActionSelectControl
+   put DG2_CustomisableControlsGetEditModeActionSelectControlForControl(the long id of pControl) into tActionSelectControl
+   if tActionSelectControl is not empty then
+      add the width of tActionSelectControl to item 3 of pControlRect
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(pControl, "left", item 1 of pControlRect, item 1 of pControlRect - the width of tActionSelectControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitActionSelectControlControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+   end if
+
+   -- Fade out the reorder control.
+   local tReorderControl
+   put DG2_CustomisableControlsGetEditModeReorderControlForControl(the long id of pControl) into tReorderControl
+   if tReorderControl is not empty then
+      set the right of tReorderControl to tRight
+      set the visible of tReorderControl to true
+      set the blendLevel of tReorderControl to 0
+
+      -- Continually setting the left of the reorder control during the animation ensures
+      -- that it is always in the same position (at the right hand side of the list) and
+      -- thus not effected by the control sliding out to the right (which would naturally
+      -- move the roerder control left).
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+      add 1 to pContextA["animation count"]
+
+      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 0, 100, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
+   end if
+
+   -- If the controls are cached, "LayoutControl" won't be called by the standard draw loop.
+   -- But we need it to be called to reposition everying inside the row to take account of
+   -- any edit mode controls, so do dispatch "LayoutControl" here.
+   if the dgProps["cache controls"] of me then
+      set the rect of pControl to pControlRect
+      dispatch "LayoutControl" to pControl with pControlRect, DG2_GetWorkingRectOfControlFromControlRect(pControl, pControlRect)
+   end if
+end DG2_EditModeLeaveDrawCallback
+
+on DG2_EditModeLeaveDrawCallbackEnd @pContextA
+   -- Queue all the animations and add an end callback to the final animation.
+   -- The end callback will tidy everything up.
+   if pContextA["animation count"] is not 0 then
+      DG2_AnimationsAnimationSetCompletionMessage pContextA["animations"][pContextA["animation count"]], "DG2_EditModeAnimateComplete"
+      DG2_AnimationsAnimationSetMessageTarget pContextA["animations"][pContextA["animation count"]], the long id of me
+      DG2_AnimationsBatchAddWithArray pContextA["animations"]
+   else
+      send "DG2_EditModeAnimateComplete" to me in 0 seconds
+   end if
+end DG2_EditModeLeaveDrawCallbackEnd
+
+on DG2_EditModeAnimateComplete
+   -- Force a redraw after edit mode enter/exit. This will resize the rows correctly
+   -- reseting any bounds extending that has occured as a result of the slide in animation.
+   -- If the controls aren't cached, we can use _RedrawList, which is slightly quicker than
+   -- RefreshList.
+   if the dgProps["cache controls"] of me then
+      RefreshList
+   else
+      _RedrawList
+   end if
+end DG2_EditModeAnimateComplete
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Reorder Handlers
+
+command DG2_ReorderStart
+   if not sEditMode then
+      return "Can only reorder in edit mode"
+   end if
+   if sReorderInProgress then
+      return "Reorder already in progress"
+   end if
+
+   local tControl
+   put the the dgDataControl of the target into tControl
+   if tControl is empty or not (there is a tControl) then
+      return "Could not find control to reorder"
+   end if
+
+   local tIndex
+   put the dgIndex of tControl into tIndex
+   if tIndex is empty then
+      return "Could not find index of control"
+   end if
+
+   local tLine
+   put the dgLineOfIndex[tIndex] of me into tLine
+   if tLine is empty then
+      return "Could not find line of control"
+   end if
+
+   put tControl into sReorderControl
+   put tIndex into sReorderStartIndex
+   put tLine into sReorderStartLine
+   put tLine into sReorderLastHoverLine
+   put true into sReorderInProgress
+
+   -- Bring the control we want to reorder to the front and apply an effect to it.
+   lock screen
+   relayer tControl to front of owner
+   set the blendLevel of tControl to 30
+   set the outerGlow["color"] of tControl to kReorderDragControlGlowColor
+   set the outerGlow["size"] of tControl to kReorderDragControlGlowSize
+   set the outerGlow["spread"] of tControl to kReorderDragControlGlowSpread
+   unlock screen
+
+   -- ScrollPoll checks to see if the mouse is at the top or bottom of the list
+   -- and adjusts the scroll accodingly.
+   send "DG2_ReorderScrollPoll" to me in 0 seconds
+
+   -- Tell the user a reorder has started.
+   dispatch DG2_GetMessageNameForTag("EditModeReorderStarted") to me with sReorderStartIndex, sReorderStartLine
+
+   return empty
+end DG2_ReorderStart
+
+command DG2_ReorderMove pNewMouseH, pNewMouseV
+   if not sReorderInProgress then
+      return "No reorder currently in progress"
+   end if
+
+   if sReorderMouseMoveInProgress then
+      return empty
+   end if
+
+   if pNewMouseV is empty then
+      put item 2 of the mouseLoc into pNewMouseV
+   end if
+
+   -- Don't extend the reorder beyond the rect of the DataGrid!
+   if pNewMouseV < the top of me then
+      put the top of me into pNewMouseV
+   else if pNewMouseV > bottom of me then
+      put the bottom of me into pNewMouseV
+   end if
+
+   put true into sReorderMouseMoveInProgress
+
+   local tHoverLine
+   put DG2_VerticalLocToLineNo(pNewMouseV) into tHoverLine
+
+   -- If the mouse is over a new line.
+   -- This means we need to reorder.
+   if sReorderLastHoverLine is not tHoverLine then
+      local tMouseMoveDirection
+      if sReorderLastHoverLine > tHoverLine then
+         put 1 into tMouseMoveDirection
+      else if sReorderLastHoverLine < tHoverLine then
+         put -1 into tMouseMoveDirection
+      end if
+
+      local tLineToMove
+      put tHoverLine into tLineToMove
+
+      local tAnimationsA, tAnimationID
+      put 1 into tAnimationID
+
+      -- It's possible the mouse has moved over several controls since the last reorder.
+      -- Make sure we animate each of those controls to their new position resulting from the reorder.
+      repeat while tLineToMove is not sReorderLastHoverLine
+         local tControlToMove
+         put the dgDataControlOfLine[tLineToMove] of me into tControlToMove
+         if tControlToMove is empty or there is not a tControlToMove then
+            next repeat
+         end if
+
+         put DG2_AnimationsAnimationCreate(tControlToMove, "top", the top of tControlToMove, DG2_TopOfControlWithLineNo(tLineToMove + tMouseMoveDirection), the dgAnimationProp["ReorderAnimationDuration"] of me, the dgAnimationProp["ReorderAnimationEasing"] of me) into tAnimationsA[tAnimationID]
+         add 1 to tAnimationID
+
+         add tMouseMoveDirection to tLineToMove
+      end repeat
+
+      DG2_AnimationsBatchAddWithArray tAnimationsA
+
+      -- Update the DataGrid's internal sequence to take account of the reorder.
+      SetLineOfIndex the dgIndexOfLine[sReorderLastHoverLine] of me, tHoverLine
+
+      put tHoverLine into sReorderLastHoverLine
+   end if
+
+   -- Make sure the control we're reordering is always tracking the mouse.
+   set the loc of sReorderControl to item 1 of the loc sReorderControl, pNewMouseV
+
+   put false into sReorderMouseMoveInProgress
+
+   return empty
+end DG2_ReorderMove
+
+command DG2_ReorderEnd
+   if not sReorderInProgress then
+      return "No reorder currently in progress"
+   end if
+
+   -- Animate the control we are reordering into its new slot.
+   DG2_AnimationsAdd sReorderControl, "top", the top of sReorderControl, DG2_TopOfControlWithLineNo(sReorderLastHoverLine) + 1, the dgAnimationProp["ReorderHomingDuration"] of me, the dgAnimationProp["ReorderHomingEasing"] of me, "DG2_ReorderControlHomed", empty, the long id of me
+   put false into sReorderInProgress
+
+   -- Tell the user the reorder has completed.
+   dispatch DG2_GetMessageNameForTag("EditModeReorderCompleted") to me with sReorderStartIndex, sReorderStartLine, sReorderLastHoverLine
+
+   return empty
+end DG2_ReorderEnd
+
+on DG2_ReorderControlHomed
+   -- Once the control is in its new slot, remove any effects and redraw the
+   -- list to tidy everything up.
+   set the blendLevel of sReorderControl to 0
+   set the outerGlow of sReorderControl to empty
+   put empty into sReorderControl
+   _RedrawList
+end DG2_ReorderControlHomed
+
+on DG2_ReorderScrollPoll
+   cancel sReorderScrollPollMsgID
+
+   if not sReorderInProgress then
+      put empty into sReorderScrollPollMsgID
+      exit DG2_ReorderScrollPoll
+   end if
+
+   local tMaxVScroll
+   put the dgFormattedHeight of me - the height of group "dgList" of me into tMaxVScroll
+
+   if the mouseLoc is within the rect of me then
+      -- If the mouse is sitting at the top of the list, scroll the list up.
+      -- If the mouse is sitting at teh bottom of the list, scroll the list down.
+      -- This allows users to scroll the list while reordering.
+      if item 2 of the mouseLoc - the top of me <= kReorderScrollPollMargin and the dgVScroll of me >= 0 then
+         set the dgVScroll of me to max(the dgVScroll of me - kReorderScollPollIncrement, 0)
+         DG2_ReorderMove item 1 of the mouseLoc, item 2 of the mouseLoc
+      else if the bottom of me - item 2 of the mouseLoc <= kReorderScrollPollMargin and the dgVScroll of me <= tMaxVScroll then
+         set the dgVScroll of me to min(the dgVScroll of me + kReorderScollPollIncrement, tMaxVScroll)
+         DG2_ReorderMove item 1 of the mouseLoc, item 2 of the mouseLoc
+      end if
+   end if
+
+   send "DG2_ReorderScrollPoll" to me in kReorderScrollPollRate milliseconds
+   put the result into sReorderScrollPollMsgID
+end DG2_ReorderScrollPoll
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Delete Animation Handlers
+
+command DG2_DeleteIndex pIndex
+   set the wholeMatches to true
+   if pIndex is not among the items of the dgIndexes of me then
+      return "Unknown index" && pIndex
+   end if
+
+   -- Store the vscroll before the delete. We want to preserve this.
+   local tVScroll
+   put the dgVScroll of me into tVScroll
+
+   local tOffset
+   put itemOffset(pIndex, sHilitedIndexes) into tOffset
+   if tOffset > 0 then
+      delete item tOffset of sHilitedIndexes
+   end if
+
+   if the dgProps["cache controls"] of me then
+      if there is a sControlOfIndexA[pIndex] then
+         put lineOffset(sControlOfIndexA[pIndex], sTableObjectsA["all row controls"]) into tOffset
+         if tOffset > 0 then
+            delete line tOffset of sTableObjectsA["all row controls"]
+            subtract 1 from sTableObjectsA["row control count"]
+         end if
+
+         put lineOffset(sControlOfIndexA[pIndex], sTableObjectsA["visible row controls"]) into tOffset
+         if tOffset > 0 then
+            delete line tOffset of sTableObjectsA["visible row controls"]
+         end if
+
+         delete sControlOfIndexA[pIndex]
+      end if
+   end if
+
+   local tControlHeight
+   if the dgProps["fixed row height"] of me then
+      put sControlHeights into tControlHeight
+   else
+      put sControlHeights[pIndex] into tControlHeight
+   end if
+
+   if sFormattedHeight is not empty then
+      subtract tControlHeight from sFormattedHeight
+   end if
+
+   put itemOffset(pIndex, sIndexSequencing) into tOffset
+   if tOffset > 0 then
+      delete item tOffset of sIndexSequencing
+   end if
+
+   local tLineNo
+   put tOffSet into tLineNo
+
+   delete local sDataArray[pIndex]
+   _StorePersistentData
+
+   lock screen
+
+   -- Hide any swipe and action controls that are present for the current row.
+   local tActionControlHolder
+   put DG2_EditModeActionControlHolderGet() into tActionControlHolder
+   if tActionControlHolder is not empty and the visible of tActionControlHolder and the dgActionControlRowIndex of tActionControlHolder is pIndex then
+      set the visible of tActionControlHolder to false
+      set the dgActionControlRowIndex of tActionControlHolder to empty
+   end if
+
+   local tSwipeControlHolder
+   put DG2_SwipeControlHolderGet() into tSwipeControlHolder
+   if tSwipeControlHolder is not empty and the visible of tSwipeControlHolder and the dgSwipeControlRowIndex of tSwipeControlHolder is pIndex then
+      set the visible of tSwipeControlHolder to false
+      set the dgSwipeControlRowIndex of tSwipeControlHolder to empty
+   end if
+
+   if sFormattedHeight is not empty then
+      _ConfigureScrollbar
+      _AutoHideVScrollbar
+   end if
+
+   -- Redraw the list.
+   if the keys of sDataArray is not empty then
+      -- If there is a line number then this indicated we've found a control so
+      -- we need to animate the delete.
+      if tLineNo > 0 then
+         -- Decide the direction of the animation.
+         -- If there is enough scroll space above the deleted line, then pull in
+         -- the controls from above. i.e. animate all controls before the
+         -- deleted row downward.
+         -- Otherwise animate the controls up from below.
+         --
+         -- Setting the vScroll here lays the controls out as they should be
+         -- after the delete, ensuring all layout claculations are correct. This
+         -- also sets the vScroll of the list group which we need to use to
+         -- offset the y values of our animations.
+         local tCallbackContextA
+         if tVScroll >= tControlHeight then
+            set the dgVScroll of me to tVScroll - tControlHeight
+            put "above" into tCallbackContextA["animate from direction"]
+         else
+            set the dgVScroll of me to tVScroll
+            put "below" into tCallbackContextA["animate from direction"]
+         end if
+
+         put tControlHeight into tCallbackContextA["deleted line height"]
+         put tLineNo into tCallbackContextA["deleted line no"]
+         put pIndex into tCallbackContextA["deleted line index"]
+         put -1 * the vScroll of group "dgList" of me into tCallbackContextA["v scroll offset"]
+
+         -- Use the draw loop callbacks to animate the delete.
+         _DrawListWithProperties sTableObjectsA["base sequence for visible controls"], the vScroll of group "dgList" of me, true, "DG2_DeleteIndexDrawCallback", tCallbackContextA
+      else
+         _DrawAlternatingRows
+         _RedrawList
+      end if
+   else
+      _ResetData
+   end if
+
+   unlock screen
+
+   return empty
+end DG2_DeleteIndex
+
+on DG2_DeleteIndexDrawCallbackStart @pContextA, @pTopLeft
+   put empty into pContextA["animations"]
+   put 0 into pContextA["animation count"]
+
+   -- If we're pulling in the controls from above, then we want to start animating immediately.
+   -- Flag this to the draw callback by setting the animate flag of the context.
+   -- We also need to offset the initial top value the draw loop uses to take into account that
+   -- all the controls above the deleted line will be animated downward.
+   if pContextA["animate from direction"] is "above" then
+      put true into pContextA["animate"]
+      subtract pContextA["deleted line height"] from item 2 of pTopLeft
+      put pContextA["deleted line height"] into pContextA["animation increment"]
+   else
+      put false into pContextA["animate"]
+      put -1 * pContextA["deleted line height"] into pContextA["animation increment"]
+   end if
+end DG2_DeleteIndexDrawCallbackStart
+
+on DG2_DeleteIndexDrawCallback @pContextA, pControl, pLineNo, @pControlRect, @pControlTopLeft
+   -- We've reached the line number of the deleted control.
+   -- If we were already animating, then stop (i.e. stop pulling controls down from above).
+   -- If we are not animating, then start (i.e. start pulling up controls from below).
+   -- All controls following this point need to be shifted down, so set the rect and top accordingly.
+   -- i.e. if we've been pulling controls from above, the top will have been initially offset to take
+   -- the animation into account. Undo this offset. If we're pulling up from below, the controls will
+   -- need to be moved down to take into account the animate up.
+   if pLineNo is pContextA["deleted line no"] then
+      put not pContextA["animate"] into pContextA["animate"]
+      add pContextA["deleted line height"] to item 2 of pControlTopLeft
+      put item 1 of pControlRect, item 2 of pControlRect + pContextA["deleted line height"], item 3 of pControlRect, item 4 of pControlRect + pContextA["deleted line height"] into pControlRect
+   end if
+
+   -- Animate the control either up or down, based on pContextA["animation increment"].
+   -- We need to take into account the scroll offset of the list. This is how the DataGrid partially
+   -- shows/hides rows at the top and bottom.
+   if pContextA["animate"] then
+      add 1 to pContextA["animation count"]
+      put DG2_AnimationsAnimationCreate(pControl, "top", item 2 of pControlTopLeft + pContextA["v scroll offset"], item 2 of pControlTopLeft + pContextA["animation increment"] + pContextA["v scroll offset"], the dgAnimationProp["DeleteIndexAnimationDuration"] of me, the dgAnimationProp["DeleteIndexAnimationEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+   end if
+end DG2_DeleteIndexDrawCallback
+
+on DG2_DeleteIndexDrawCallbackEnd @pContextA
+   -- Tidy up at the end of the delete animation.
+   if pContextA["animation count"] is not 0 then
+      DG2_AnimationsAnimationSetCompletionMessage pContextA["animations"][pContextA["animation count"]], "DG2_DeleteIndexAnimateComplete"
+      DG2_AnimationsAnimationSetMessageTarget pContextA["animations"][pContextA["animation count"]], the long id of me
+      DG2_AnimationsBatchAddWithArray pContextA["animations"]
+   else
+      send "DG2_DeleteIndexAnimateComplete" to me in 0 seconds
+   end if
+end DG2_DeleteIndexDrawCallbackEnd
+
+on DG2_DeleteIndexAnimateComplete
+   lock screen
+   _DrawAlternatingRows
+   _RedrawList
+   unlock screen
+end DG2_DeleteIndexAnimateComplete
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Control Holder Handlers
+
+private function DG2_SwipeControlHolderGet
+   -- Create a group to house the swipe control and catch any messages.
+   -- When swipe buttons are visible, they take over the whole DataGrid.
+   if there is a group "dgList" of me then
+      if there is no group "DG2 Swipe Control Holder" of group "dgList" of me then
+         lock screen
+
+         local tRect
+         put the rect of group "dgListMask" of me into tRect
+
+         local tMsgsAreLocked
+         put the lockMessages into tMsgsAreLocked
+         lock messages
+
+         reset the templateGroup
+         create invisible group "DG2 Swipe Control Holder" in group "dgList" of me
+         set the margins of it to 0
+         set the dgControl of it to the dgControl of me
+         set the behavior of it to the long ID of button "Swipe Control Holder" of group "Behaviors" of stack _ResourceStack()
+
+         reset the templateGraphic
+         create graphic "Message Catcher" in it
+         set the rect of it to tRect
+         set the style of it to "rectangle"
+         set the linesize of it to 0
+         set the opaque of it to true
+         set the blendLevel of it to 100
+
+         set the lockMessages to tMsgsAreLocked
+         unlock screen
+      end if
+
+      return the long id of group "DG2 Swipe Control Holder" of group "dgList" of me
+   end if
+
+   return empty
+end DG2_SwipeControlHolderGet
+
+-- Called after scrolling the list.
+private command DG2_SwipeControlHolderReposition
+   local tControlHolder
+   put DG2_SwipeControlHolderGet() into tControlHolder
+   if tControlHolder is empty  or there is not a tControlHolder then
+      return empty
+   end if
+
+   if the visible of tControlHolder then
+      set the rect of tControlHolder to the rect of group "dgList" of me
+      dispatch "DG2_SwipeControlHolderReposition" to tControlHolder
+      return the result
+   end if
+
+   return empty
+end DG2_SwipeControlHolderReposition
+
+private function DG2_EditModeActionControlHolderGet
+   -- Create a group to house the action control and catch any messages.
+   -- When the action control is visible, it takes over the whole DataGrid.
+   if there is a group "dgList" of me then
+      if there is no group "DG2 Edit Mode Action Control Holder" of group "dgList" of me then
+         lock screen
+
+         local tRect
+         put the rect of group "dgListMask" of me into tRect
+
+         local tMsgsAreLocked
+         put the lockMessages into tMsgsAreLocked
+         lock messages
+
+         reset the templateGroup
+         create invisible group "DG2 Edit Mode Action Control Holder" in group "dgList" of me
+         set the margins of it to 0
+         set the dgControl of it to the dgControl of me
+         set the behavior of it to the long ID of button "Action Control Holder" of group "Behaviors" of stack _ResourceStack()
+
+         reset the templateGraphic
+         create graphic "message catcher" in it
+         set the rect of it to tRect
+         set the style of it to "rectangle"
+         set the linesize of it to 0
+         set the opaque of it to true
+         set the blendLevel of it to 100
+
+         set the lockMessages to tMsgsAreLocked
+         unlock screen
+      end if
+
+      return the long id of group "DG2 Edit Mode Action Control Holder" of group "dgList" of me
+   end if
+
+   return empty
+end DG2_EditModeActionControlHolderGet
+
+-- Called after scrolling the list.
+private command DG2_EditModeActionControlHolderReposition
+   if not sEditMode then
+      return empty
+   end if
+
+   local tControlHolder
+   put DG2_EditModeActionControlHolderGet() into tControlHolder
+   if tControlHolder is empty  or there is not a tControlHolder then
+      return empty
+   end if
+
+   if the visible of tControlHolder then
+      set the rect of tControlHolder to the rect of group "dgList" of me
+      dispatch "DG2_EditModeActionControlHolderReposition" to tControlHolder
+      return the result
+   end if
+
+   return empty
+end DG2_EditModeActionControlHolderReposition
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Customisable Controls Handlers
+--
+-- Customisable controls refer to the swipe, action, action select and reorder
+-- controls: The set of controls that can be specified by the user.
+-- We have default implementations of the controls which can be overidden by
+-- setting the dgProps or handling the appropriate messages.
+-- The following handlers take care of cloning and managing the controls appropriately.
+
+private command DG2_CustomisableControlsInit
+   local tPropertyNames
+   get the customProperties["dgProps"] of me
+   put the keys of it into tPropertyNames
+
+   lock screen
+   repeat for each item tControlName in kCustomisableControlNames
+      -- Get the default implemetation of the control by calling the appropriate funciton.
+      -- e.g. DG2_CustomisableControlsGetDefaultEditModeActionSelectControl()
+      local tFunctionName
+      put tControlName into tFunctionName
+      replace space with empty in tFunctionName
+      put "DG2_CustomisableControlsGetDefault" before tFunctionName
+
+      local tControl
+      dispatch function tFunctionName to me
+      put the result into tControl
+      if it is not "handled" then
+         return "Unable to create default for control" && tControlName
+      end if
+
+      if tControl is not empty and there is a tControl then
+         -- Use the default control if: A property hasn't already been set for this control type,
+         -- or one has been set but the control no longer exists.
+         if tControlName is not among lines of tPropertyNames or (the dgProps[tControlName] of me is not empty and there is not a (the dgProps[tControlName] of me)) then
+            set the dgProps[tControlName] of me to the long id tControl
+         end if
+      end if
+   end repeat
+   unlock screen
+
+   put true into sCustomisableControlsInitialised
+
+   return empty
+end DG2_CustomisableControlsInit
+
+-- Returns the id of the customisable control of the given name for the given row.
+private function DG2_CustomisableControlsGetForControlByName pRowControl, pControlName
+   if not sCustomisableControlsInitialised then
+      DG2_CustomisableControlsInit
+   end if
+
+   set the wholeMatches to true
+   if pControlName is not among the items of kCustomisableControlNames then
+      return empty
+   end if
+
+   -- If we haven't already fetched the given control for the row.
+   if sCustomisableControlsA[pRowControl][pControlName] is not an array then
+      -- Singleton controls are controls of which we only requre one per DataGrid - not one per row.
+      local tIsSingleton
+      put pControlName is among the items of kCustomisableControlSingletons into tIsSingleton
+
+      -- Attempt to find the control to use. First of all send a message to the row. (e.g.
+      -- GetEditModeReorderControl)
+      -- If this message is handled, then use the control returend. If not, use the control specified
+      -- in the dgProps.
+      local tMessage
+      put pControlName into tMessage
+      replace space with empty in tMessage
+      put "Get" before tMessage
+
+      local tControl
+      dispatch tMessage to pRowControl
+      if it is "handled" then
+         put the result into tControl
+      else
+         put the dgProps[pControlName] of me into tControl
+      end if
+
+      -- Set up the data array for the control
+      if tControl is not empty and there is a tControl then
+         local tControlA
+         put the long id of tControl into tControlA["original"]
+         put tIsSingleton into tControlA["singleton"]
+
+         -- Check to see if the control we've found is the default implementation.
+         -- This is needed for tidying up later.
+         local tFunctionName
+         put pControlName into tFunctionName
+         replace space with empty in tFunctionName
+         put "DG2_CustomisableControlsGetDefault" before tFunctionName
+         dispatch function tFunctionName to me
+         put the long id of the result is the long id of tControl into tControlA["default"]
+
+         -- If this is a singleton control and we've already got a version of it present, then use that version.
+         if tIsSingleton and sCustomisableControlsSingletonCopyMapA[tControlA["original"]] is not empty and there is sCustomisableControlsSingletonCopyMapA[tControlA["original"]] then
+            put sCustomisableControlsSingletonCopyMapA[tControlA["original"]] into tControl
+         else
+            -- Otherwise we need to potentially copy the control to the datagrid.
+            -- Singleton controls need to be copied to the DataGrid itself.
+            -- Per row controls need tobe copied into the row.
+            local tParent
+            if tIsSingleton then
+               put the long id of me into tParent
+            else
+               put the long id of pRowControl into tParent
+            end if
+
+            -- Only copy if the control is not already present in the target.
+            -- i.e. the control is part of the row template.
+            if not (the long id of tControl contains tParent) then
+               lock screen
+               copy tControl to tParent
+               set the visible of it to false
+               unlock screen
+               put it into tControl
+            end if
+
+            -- Store the control in the list of singletons so that it can be reused.
+            if tIsSingleton then
+               put the long id of tControl into sCustomisableControlsSingletonCopyMapA[tControlA["original"]]
+               if not tControlA["default"] then
+                  put the long id of tControl into sCustomisableControlsSingletonsA[the long id of tControl]
+               end if
+            end if
+         end if
+
+         put the long id of tControl into tControlA["id"]
+         put tControlA into sCustomisableControlsA[pRowControl][pControlName]
+      else
+         put empty into sCustomisableControlsA[pRowControl][pControlName]["id"]
+      end if
+   end if
+
+   return sCustomisableControlsA[pRowControl][pControlName]["id"]
+end DG2_CustomisableControlsGetForControlByName
+
+function DG2_CustomisableControlsGetEditModeReorderControlForControl pControl
+   return DG2_CustomisableControlsGetForControlByName(pControl, "edit mode reorder control")
+end DG2_CustomisableControlsGetEditModeReorderControlForControl
+
+function DG2_CustomisableControlsGetEditModeActionSelectControlForControl pControl
+   return DG2_CustomisableControlsGetForControlByName(pControl, "edit mode action select control")
+end DG2_CustomisableControlsGetEditModeActionSelectControlForControl
+
+function DG2_CustomisableControlsGetEditModeActionControlForControl pControl
+   return DG2_CustomisableControlsGetForControlByName(pControl, "edit mode action control")
+end DG2_CustomisableControlsGetEditModeActionControlForControl
+
+function DG2_CustomisableControlsGetLeftSwipeControlForControl pControl
+   return DG2_CustomisableControlsGetForControlByName(pControl, "left swipe control")
+end DG2_CustomisableControlsGetLeftSwipeControlForControl
+
+function DG2_CustomisableControlsGetRightSwipeControlForControl pControl
+   return DG2_CustomisableControlsGetForControlByName(pControl, "right swipe control")
+end DG2_CustomisableControlsGetRightSwipeControlForControl
+
+private command DG2_CustomisableControlsClear
+   repeat for each element tControlA in sCustomisableControlsA
+      repeat for each element tCustomisableControlA in tControlA
+         if tCustomisableControlA["id"] is not empty and there is a tCustomisableControlA["id"] then
+            -- Force remove every control we have made a copy of.
+            if not tCustomisableControlA["original"] is not tCustomisableControlA["id"] then
+               delete tCustomisableControlA["id"]
+            end if
+         end if
+      end repeat
+   end repeat
+
+   put empty into sCustomisableControlsA
+   DG2_CustomisableControlsClearSingletons
+   return the result
+end DG2_CustomisableControlsClear
+
+private command DG2_CustomisableControlsClearForControlByName pRowControl, pControlName
+   -- Control doesn't exist - just tidy up the cache.
+   if sCustomisableControlsA[pRowControl][pControlName]["id"] is empty or there is no sCustomisableControlsA[pRowControl][pControlName]["id"] then
+      delete variable sCustomisableControlsA[pRowControl][pControlName]
+      return empty
+   end if
+
+   -- If it is a default control, the we want keep the control around for future reuse.
+   if sCustomisableControlsA[pRowControl][pControlName]["default"] then
+      set the visible of sCustomisableControlsA[pRowControl][pControlName]["id"] to false
+      delete variable sCustomisableControlsA[pRowControl][pControlName]
+      return empty
+   end if
+
+   -- Keep singletons around - other rows might be using them.
+   -- Delete all other controls.
+   if not sCustomisableControlsA[pRowControl][pControlName]["singleton"] and sCustomisableControlsA[pRowControl][pControlName]["original"] is not sCustomisableControlsA[pRowControl][pControlName]["id"] then
+      delete sCustomisableControlsA[pRowControl][pControlName]["id"]
+   else
+      set the visible of sCustomisableControlsA[pRowControl][pControlName]["id"] to false
+   end if
+   delete variable sCustomisableControlsA[pRowControl][pControlName]
+
+   return empty
+end DG2_CustomisableControlsClearForControlByName
+
+command DG2_CustomisableControlsClearForControl pRowControl
+   repeat for each key tControlName in sCustomisableControlsA[pRowControl]
+      DG2_CustomisableControlsClearForControlByName pRowControl, tControlName
+   end repeat
+
+   return empty
+end DG2_CustomisableControlsClearForControl
+
+private command DG2_CustomisableControlsClearByName pControlName
+   repeat for each key tRowControl in sCustomisableControlsA
+      DG2_CustomisableControlsClearForControlByName tRowControl, pControlName
+   end repeat
+
+   return empty
+end DG2_CustomisableControlsClearByName
+
+private command DG2_CustomisableControlsClearSingletons
+   repeat for each element tControl in sCustomisableControlsSingletonsA
+      if there is a tControl then
+         delete tControl
+      end if
+   end repeat
+
+   put empty into sCustomisableControlsSingletonCopyMapA
+   put empty into sCustomisableControlsSingletonsA
+
+   return empty
+end DG2_CustomisableControlsClearSingletons
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Default Customisable Control Implentations
+--
+-- The default implementations will be created in the template stack (if they
+-- don't already exist).
+
+function DG2_CustomisableControlsGetDefaultEditModeReorderControl
+   if there is not a group "DG2 Default Edit Mode Reorder Control"of _TemplateControl() then
+      local tMsgsAreLocked
+      put the lockMessages into tMsgsAreLocked
+      lock messages
+
+      reset the templateGroup
+      create invisible group "DG2 Default Edit Mode Reorder Control" in _TemplateControl()
+      set the margins of it to kEditModeReorderControlMargins
+
+      create widget as "com.livecode.widget.svgpath" in it
+      set the iconPresetName of it to kEditModeReorderControlIcon
+      set the width of it to kEditModeReorderControlWidth
+      set the foregroundColor of it to kEditModeReorderControlColor
+
+      set the lockMessages to tMsgsAreLocked
+   end if
+
+   return the long id of group "DG2 Default Edit Mode Reorder Control" of _TemplateControl()
+end DG2_CustomisableControlsGetDefaultEditModeReorderControl
+
+function DG2_CustomisableControlsGetDefaultEditModeActionSelectControl
+   if there is not a group "DG2 Default Edit Mode Action Select Control" of _TemplateControl() then
+      local tMsgsAreLocked
+      put the lockMessages into tMsgsAreLocked
+      lock messages
+
+      reset the templateGroup
+      create invisible group "DG2 Default Edit Mode Action Select Control" in _TemplateControl()
+      set the margins of it to kEditModeActionSelectControlMargins
+
+      create widget as "com.livecode.widget.svgpath" in it
+      set the iconPresetName of it to kEditModeActionSelectControlIcon
+      set the width of it to kEditModeActionSelectControlWidth
+      set the foregroundColor of it to kEditModeActionSelectControlIconColor
+
+      set the lockMessages to tMsgsAreLocked
+   end if
+
+   return the long id of group "DG2 Default Edit Mode Action Select Control" of _TemplateControl()
+end DG2_CustomisableControlsGetDefaultEditModeActionSelectControl
+
+function DG2_CustomisableControlsGetDefaultEditModeActionControl
+   if there is not a group "DG2 Default Action Control" of _TemplateControl()  then
+      local tHeight
+      put the dgProps["row height"] of me into tHeight
+
+      local tMsgsAreLocked
+      put the lockMessages into tMsgsAreLocked
+      lock messages
+
+      reset the templateGroup
+      create invisible group "DG2 Default Action Control" in _TemplateControl()
+      set the margins of it to 0
+
+      reset the templateButton
+      create button "DG2 Default Action Control" in it
+      set the style of it to "opaque"
+      set the label of it to kEditModeActionControlText
+      set the autoHilite of it to false
+      set the foregroundColor of it to kEditModeActionControlTextColor
+      set the backgroundColor of it to kEditModeActionControlBGColor
+      set the width of it to kEditModeActionControlWidth
+      set the height of it to tHeight
+      set the margins of it to 0
+
+      set the lockMessages to tMsgsAreLocked
+   end if
+
+   return the long id of group "DG2 Default Action Control" of _TemplateControl()
+end DG2_CustomisableControlsGetDefaultEditModeActionControl
+
+private function DG2_CustomisableControlsGetDefaultSwipeControl pName
+   if there is not a group pName of _TemplateControl() then
+      local tHeight
+      put the dgProps["row height"] of me into tHeight
+
+      local tMsgsAreLocked
+      put the lockMessages into tMsgsAreLocked
+      lock messages
+
+      local tGroup
+      reset the templateGroup
+      create invisible group pName in _TemplateControl()
+      set the margins of it to 0
+      put it into tGroup
+
+      reset the templateGraphic
+      create graphic in tGroup
+      set the style of it to "rectangle"
+      set the width of it to kSwipeControlWidth
+      set the height of it to tHeight
+      set the linesize of it to 0
+      set the opaque of it to true
+      set the backgroundColor of it to kSwipeControlBGColor
+
+      create widget as "com.livecode.widget.svgpath" in tGroup
+      set the iconPresetName of it to kSwipeControlIcon
+      set the width of it to kSwipeControlIconWidth
+      set the foregroundColor of it to kSwipeControlIconColor
+
+      set the lockMessages to tMsgsAreLocked
+   end if
+
+   return the long id of group pName of _TemplateControl()
+end DG2_CustomisableControlsGetDefaultSwipeControl
+
+function DG2_CustomisableControlsGetDefaultLeftSwipeControl
+   return DG2_CustomisableControlsGetDefaultSwipeControl("DG2 Default Left Swipe Control")
+end DG2_CustomisableControlsGetDefaultLeftSwipeControl
+
+function DG2_CustomisableControlsGetDefaultRightSwipeControl
+   return DG2_CustomisableControlsGetDefaultSwipeControl("DG2 Default Right Swipe Control")
+end DG2_CustomisableControlsGetDefaultRightSwipeControl
+
+private command DG2_CustomisableControlsResizeDefaults
+   if not sCustomisableControlsInitialised then
+      DG2_CustomisableControlsInit
+   end if
+
+   -- The singleton controls need to be resized to take into account the line height.
+   lock screen
+   repeat for each item tControlName in kCustomisableControlSingletons
+      local tFunctionName
+      put tControlName into tFunctionName
+      replace space with empty in tFunctionName
+      put "DG2_CustomisableControlsGetDefault" before tFunctionName
+
+      local tControl
+      dispatch function tFunctionName to me
+      put the result into tControl
+
+      if tControl is not empty and there is a tControl then
+         -- Assume the first control in the group is the background.
+         -- All other controls should be centered.
+         repeat with tControlNo = 1 to the number of controls in tControl
+            if tControlNo is 1 then
+               set the height of control tControlNo of tControl to the dgProps["row height"] of me
+            else
+               set the loc of control tControlNo of tControl to the loc of tControl
+            end if
+         end repeat
+      end if
+   end repeat
+   unlock screen
+
+   return empty
+end DG2_CustomisableControlsResizeDefaults
+
+--------------------------------------------------------------------------------
+-- DataGrid 2 Animation Handlers
+--
+-- All animations have the following properties
+--
+-- pControl - The control to animate.
+-- pProperty - The property to effect (e.g. top, width etc).
+-- pStartValue - The start value of the poperty.
+-- pEndValue - The end value of the property.
+-- pDuration - The duration of the animation
+-- pEasing - The easing function to use for the animation. Default to "linear".
+-- pCompleteMsg - The message to send on completion of the animation.
+-- pStepMsg - The message to send after each redraw.
+-- pMsgTarget - The control to send the messages to. Defaults to the control we are animating.
+--
+-- The redrawing occurs in handler "DG2_AnimationsPulse", which executes every
+-- kAnimationsPulseRate milliseconds, while there are amnimations to handle.
+
+setProp dgAnimationProp[pTag] pValue
+   if pTag is not among the lines of the keys  of sAnimationProps then
+      return "Unknown animation property" && pTag
+   end if
+
+   put pValue into sAnimationProps[pTag]
+   return empty
+end dgAnimationProp
+
+getProp dgAnimationProp[pTag]
+   return sAnimationProps[pTag]
+end dgAnimationProp
+
+private command DG2_AnimationsInitProps
+   put kEditModeEnterExitDuration into sAnimationProps["EditModeEnterExitDuration"]
+   put kEditModeEnterExitActionSelectControlControlEasing into sAnimationProps["EditModeEnterExitActionSelectControlControlEasing"]
+   put kEditModeEnterExitReorderControlEasing into sAnimationProps["EditModeEnterExitReorderControlEasing"]
+   put kEditModeActionControlAnimationDuration into sAnimationProps["EditModeActionControlAnimationDuration"]
+   put kEditModeActionControlAnimationEasing  into sAnimationProps["EditModeActionControlAnimationEasing"]
+   put kReorderAnimationDuration into sAnimationProps[ "ReorderAnimationDuration"]
+   put kReorderAnimationEasing into sAnimationProps["ReorderAnimationEasing"]
+   put kReorderHomingDuration into sAnimationProps["ReorderHomingDuration"]
+   put kReorderHomingEasing into sAnimationProps["kReorderHomingEasing"]
+   put kDeleteIndexAnimationDuration into sAnimationProps["DeleteIndexAnimationDuration"]
+   put kDeleteIndexAnimationEasing into sAnimationProps["DeleteIndexAnimationEasing"]
+   put kSwipeCompleteDuration into sAnimationProps["SwipeCompleteDuration"]
+   put kSwipeCompleteEasing into sAnimationProps["SwipeCompleteEasing"]
+   put kSwipeReturnDuration into sAnimationProps["SwipeReturnDuration"]
+   put kSwipeReturnEasing into sAnimationProps["SwipeReturnEasing"]
+
+   return empty
+end DG2_AnimationsInitProps
+
+function DG2_AnimationsAnimationCreate pControl, pProperty, pStartValue, pEndValue, pDuration, pEasing, pCompleteMsg, pStepMsg, pMsgTarget
+   local tAnimationA
+   put pControl into tAnimationA["control"]
+   put pProperty into tAnimationA["property"]
+   put pStartValue into tAnimationA["start"]
+   put pEndValue into tAnimationA["end"]
+   put pDuration into tAnimationA["duration"]
+   put pEasing into tAnimationA["easing"]
+   put pCompleteMsg into tAnimationA["completion message"]
+   put pStepMsg into tAnimationA["step message"]
+   if pMsgTarget is not empty then
+      put pMsgTarget into tAnimationA["message target"]
+   else
+      put pControl into tAnimationA["message target"]
+   end if
+   return tAnimationA
+end DG2_AnimationsAnimationCreate
+
+command DG2_AnimationsAnimationSetControl @self, pControl
+   put pControl into self["control"]
+end DG2_AnimationsAnimationSetControl
+
+command DG2_AnimationsAnimationSetProperty @self, pProperty
+   put pProperty into self["property"]
+end DG2_AnimationsAnimationSetProperty
+
+command DG2_AnimationsAnimationSetStart @self, pStart
+   put pStart into self["start"]
+end DG2_AnimationsAnimationSetStart
+
+command DG2_AnimationsAnimationSetEnd @self, pEnd
+   put pEnd into self["end"]
+end DG2_AnimationsAnimationSetEnd
+
+command DG2_AnimationsAnimationSetDuration @self, pDuration
+   put pDuration into self["duration"]
+end DG2_AnimationsAnimationSetDuration
+
+command DG2_AnimationsAnimationSetEasing @self, pEasing
+   put pEasing into self["easing"]
+end DG2_AnimationsAnimationSetEasing
+
+command DG2_AnimationsAnimationSetCompletionMessage @self, pMsg
+   put pMsg into self["completion message"]
+end DG2_AnimationsAnimationSetCompletionMessage
+
+command DG2_AnimationsAnimationSetStepMessage @self, pMsg
+   put pMsg into self["step message"]
+end DG2_AnimationsAnimationSetStepMessage
+
+command DG2_AnimationsAnimationSetMessageTarget @self, pMsgTarget
+   put pMsgTarget into self["message target"]
+end DG2_AnimationsAnimationSetMessageTarget
+
+command DG2_AnimationsAdd pControl, pProperty, pStartValue, pEndValue, pDuration, pEasing, pCompleteMsg, pStepMsg, pMsgTarget
+   local tAnimationA
+   put DG2_AnimationsAnimationCreate(pControl, pProperty, pStartValue, pEndValue, pDuration, pEasing, pCompleteMsg, pStepMsg, pMsgTarget) into tAnimationA
+   DG2_AnimationsAddWithArray tAnimationA
+   return the result
+end DG2_AnimationsAdd
+
+command DG2_AnimationsAddWithArray pAnimationA
+   -- If animations are off, just set the property to the end value.
+   if not the dgProps["animate actions"] of me then
+      DG2_AnimationsFinaliseAnimation pAnimationA
+      return empty
+   end if
+
+   put pAnimationA["end"] - pAnimationA["start"] into pAnimationA["change"]
+   put the milliseconds into pAnimationA["time"]
+
+   put (sAnimationsLastID + 1) mod 1000 into sAnimationsLastID
+   put sAnimationsLastID into pAnimationA["id"]
+   put pAnimationA into sAnimationsA[sAnimationsLastID]
+
+   if sAnimationsPulseMsgID is empty then
+      send "DG2_AnimationsPulse" to me in 0 seconds
+      put the result into sAnimationsPulseMsgID
+   end if
+
+   return pAnimationA["id"]
+end DG2_AnimationsAddWithArray
+
+command DG2_AnimationsBatchAddWithArray pAnimationsA
+   local tTime
+   put the milliseconds into tTime
+
+   local tIDs
+
+   repeat for each element tAnimationA in pAnimationsA
+      -- If animations are off, just set the property to the end value.
+      if not the dgProps["animate actions"] of me then
+         DG2_AnimationsFinaliseAnimation tAnimationA
+         next repeat
+      end if
+
+      put tAnimationA["end"] - tAnimationA["start"] into tAnimationA["change"]
+      put tTime into tAnimationA["time"]
+
+      put (sAnimationsLastID + 1) mod 1000 into sAnimationsLastID
+      put sAnimationsLastID into tAnimationA["id"]
+      put tAnimationA into sAnimationsA[sAnimationsLastID]
+
+      if tIDs is not empty then
+         put comma after tIDs
+      end if
+      put sAnimationsLastID after tIDs
+   end repeat
+
+   if not the dgProps["animate actions"] of me then
+      return empty
+   end if
+
+   if sAnimationsPulseMsgID is empty then
+      send "DG2_AnimationsPulse" to me in 0 seconds
+      put the result into sAnimationsPulseMsgID
+   end if
+
+   return tIDs
+end DG2_AnimationsBatchAddWithArray
+
+-- Set all current animations to their end value.
+command DG2_AnimationsFinaliseAll
+   cancel sAnimationsPulseMsgID
+   repeat for each element tAnimationA in sAnimationsA
+      DG2_AnimationsFinaliseAnimation tAnimationA
+   end repeat
+   put empty into sAnimationsA
+
+   return empty
+end DG2_AnimationsFinaliseAll
+
+-- Stop all current animaitions, leaving the controls as they are.
+command DG2_AnimationsStopAll
+   cancel sAnimationsPulseMsgID
+   put empty into sAnimationsA
+   return empty
+end DG2_AnimationsStopAll
+
+command DG2_AnimationsFinaliseAnimationByID pAnimationID
+   local tAnimationA
+   put sAnimationsA[pAnimationID] into tAnimationA
+   if tAnimationA is an array then
+      DG2_AnimationsFinaliseAnimation tAnimationA
+   end if
+   return empty
+end DG2_AnimationsFinaliseAnimationByID
+
+command DG2_AnimationsFinaliseStopByID pAnimationID
+   delete variable sAnimationsA[pAnimationID]
+   return empty
+end DG2_AnimationsFinaliseStopByID
+
+private command DG2_AnimationsFinaliseAnimation pAnimationA
+   DG2_AnimationsSetPropertyOfControl pAnimationA["control"], pAnimationA["property"], pAnimationA["end"]
+   if pAnimationA["completion message"] is not empty then
+      send pAnimationA["completion message"] && pAnimationA["property"] & comma & pAnimationA["end"] to pAnimationA["message target"] in 0 seconds
+   end if
+
+   if pAnimationA["id"] is not empty then
+      delete variable sAnimationsA[pAnimationA["id"]]
+   end if
+
+   return empty
+end DG2_AnimationsFinaliseAnimation
+
+private command DG2_AnimationsSetPropertyOfControl pControl, pProperty, pValue
+   switch pProperty
+      case "top"
+         set the top of pControl to pValue
+         break
+      case "left"
+         set the left of pControl to pValue
+         break
+      case "bottom"
+         set the bottom of pControl to pValue
+         break
+      case "right"
+         set the right of pControl to pValue
+         break
+      case "width"
+         set the width of pControl to pValue
+         break
+      case "heaight"
+         set the height of pControl to pValue
+         break
+      case "blendLevel"
+         set the blendLevel of pControl to pValue
+         break
+   end switch
+end DG2_AnimationsSetPropertyOfControl
+
+on DG2_AnimationsPulse
+   cancel sAnimationsPulseMsgID
+
+   local tCurrentTime
+   put the milliseconds into tCurrentTime
+
+   lock screen
+   repeat for each element tAnimationA in sAnimationsA
+      if (the milliseconds - tAnimationA["time"]) >= tAnimationA["duration"] then
+         DG2_AnimationsFinaliseAnimation tAnimationA
+      else
+         switch tAnimationA["easing"]
+            case "in"
+               get _easeIn(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "out"
+               get _easeOut(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in out"
+               get _easeInOut(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in elastic"
+               get _easeInElastic(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "out elastic"
+               get _easeOutElastic(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in out elastic"
+               get _easeInOutElastic(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in bounce"
+               get _easeInBounce(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "out bounce"
+               get _easeOutBounce(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in out bounce"
+               get _easeInOutBounce(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in back"
+               get _easeInBack(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "out back"
+               get _easeOutBack(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in out back"
+               get _easeInOutBack(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "in back cubic"
+               get _easeInBackCubic(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "out back cubic"
+               get _easeOutBackCubic(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+            case "linear"
+            default
+               get _easeLinear(tCurrentTime - tAnimationA["time"], tAnimationA["start"], tAnimationA["change"], tAnimationA["duration"])
+               break
+         end switch
+
+         DG2_AnimationsSetPropertyOfControl tAnimationA["control"], tAnimationA["property"], it
+
+         if tAnimationA["step message"] is not empty then
+            send tAnimationA["step message"] && tAnimationA["property]"] & comma & it to tAnimationA["message target"] in 0 seconds
+         end if
+      end if
+   end repeat
+   unlock screen
+
+   if sAnimationsA is not empty then
+      -- Redraw every kAnimationsPulseRate milliseconds.
+      -- Make sure we take into account how long this handler took when determing when next to redraw.
+      send "DG2_AnimationsPulse" to me in (kAnimationsPulseRate - the milliseconds -  tCurrentTime) milliseconds
+      put the result into sAnimationsPulseMsgID
+   else
+      put empty into sAnimationsPulseMsgID
+   end if
+end DG2_AnimationsPulse
+
+--------------------------------------------------------------------------------
+-- Easing functions - based on Robert Penner's easing functions.
+-- http://robertpenner.com/easing/
+
+private function _easeLinear t, b, c, d
+   return c * t / d + b
+end _easeLinear
+
+private function _easeIn t, b, c, d
+   put t / d into t
+   return c * t * t + b
+end _easeIn
+
+private function _easeOut t, b, c, d
+   put t / d into t
+   return -c * t * (t - 2) + b
+end _easeOut
+
+private function _easeInOut t, b, c, d
+   put t / (d / 2) into t
+   if t < 1 then
+      return c / 2 * t * t + b
+   end if
+   subtract 1 from t
+   return -c / 2 * (t * (t - 2) - 1) + b
+end _easeInOut
+
+private function _easeInElastic t, b, c, d
+   put t / d into t
+   if t is 1 then
+      return b + c
+   end if
+
+   local p, s
+   put d * 0.3 into p
+   put p / 4 into s
+
+   put t - 1 into t
+   return -(c * 2 ^ (10 * t) * sin((t * d - s) * (2 * PI) / p)) + b
+end _easeInElastic
+
+private function _easeOutElastic t, b, c, d
+   put t / d into t
+   if t is 1 then
+      return b + c
+   end if
+
+   local p, s
+   put d * 0.3 into p
+   put p / 4 into s
+
+   return (c * (2 ^ (-10 * t)) * sin((t * d - s) * (2 * PI) / p) + c + b);
+end _easeOutElastic
+
+private function _easeInOutElastic t, b, c, d
+   if t < (d / 2) then
+      return _easeOutElastic(t * 2, b, c / 2, d)
+   else
+      return _easeInElastic((t * 2) - d, b + c / 2, c / 2, d);
+   end if
+end _easeInOutElastic
+
+private function _easeInBounce t, b, c, d
+   return c - _easeOutBounce(d - t, 0, c, d) + b
+end _easeInBounce
+
+private function _easeOutBounce t, b, c, d
+   put t /d into t
+   if t < (1 / 2.75) then
+      return c * (7.5625 * t * t) + b
+   else if t < (2 / 2.75) then
+      put t - (1.5 / 2.75) into t
+      return c * (7.5625 * t * t + 0.75) + b
+   else if t < (2.5 / 2.75) then
+      put t - (2.25 / 2.75) into t
+      return c * (7.5625 * t * t + 0.9375) + b
+   else
+      put t - (2.625 / 2.75) into t
+      return c * (7.5625 * t * t + 0.984375) + b
+   end if
+end _easeOutBounce
+
+private function _easeInOutBounce t, b, c, d
+   if t < (d / 2) then
+      return _easeInBounce(t * 2, 0, c, d) * 0.5 + b
+   else
+      return _easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b
+   end if
+end _easeInOutBounce
+
+private function _easeInBack t, b, c, d
+   put t / d into t
+   return c * t * t * ((1.70158 + 1) * t - 1.70158) + b
+end _easeInBack
+
+private function _easeOutBack t, b, c, d
+   put t / d into t
+   return c * ((t  - 1) * t * ((1.70158 + 1) * t + 1.70158) + 1) + b
+end _easeOutBack
+
+private function _easeInOutBack t, b, c, d
+   local s
+   put 1.70158 * 1.525 into s
+   put t / d into t
+   if (t / 2) < 1 then
+      return c / 2 * (t * t * ((s + 1) * t - s)) + b
+   else
+      put t - 2 into t
+      return c / 2 * (t * t * ((s + 1) * t + s) + 2) + b
+   end if
+end _easeInOutBack
+
+private function _easeInBackCubic t, b, c, d
+   put t / d into t
+   return b  + c * (4 * t * t* t + -3 * t * t)
+end _easeInBackCubic
+
+private function _easeOutBackCubic t, b, c, d
+   put t / d into t
+   return b + c * ( 4 * t * t * t + -9 * t * t + 6 * t)
+end _easeOutBackCubic
+
+--------------------------------------------------------------------------------
+-- These handler convert vertical locations to and from line numbers.
+-- This assumes the DataGrid is using rows of fixed height.
+
+private function DG2_MiddleOfControlWithLineNo pLineNo
+   return __topOfControlWithLineNo(pLineNo) + the dgProps["row height"] of me / 2
+end DG2_MiddleOfControlWithLineNo
+
+private function DG2_TopOfControlWithLineNo pLineNo
+   return (the top of group "dgListMask" of me + (pLineNo - 1) * the dgProps["row height"] of me) - the dgVScroll of me
+end DG2_TopOfControlWithLineNo
+
+private function DG2_BottomOfControlWithLineNo pLineNo
+   return (the top of group "dgListMask" of me + (pLineNo) * the dgProps["row height"] of me) - the dgVScroll of me
+end DG2_BottomOfControlWithLineNo
+
+private function DG2_LocOfControlWithLineNo pLineNo
+   return (item 1 of the loc of me, __middleOfControlWithLineNo(pLineNo))
+end DG2_LocOfControlWithLineNo
+
+private function DG2_VerticalLocToLineNo pPosV
+   return ceil((pPosV + the dgVScroll of me - the top of group "dgListMask" of me) / the dgProps["row height"] of me)
+end DG2_verticalLocToLineNo
+
+--------------------------------------------------------------------------------
+
+-- A row controls working rect takes into account any controls visible as part of
+-- edit mode. i.e. it is reduced on the left hand side by the action select
+-- control and on the right hand side by the reorder control.
+private function DG2_GetWorkingRectOfControlFromControlRect pControl, pControlRect
+   if sEditMode then
+      local tActionSelectControl
+      put DG2_CustomisableControlsGetEditModeActionSelectControlForControl(the long id of pControl) into tActionSelectControl
+      if tActionSelectControl is not empty then
+         add the width of tActionSelectControl to item 1 of pControlRect
+      end if
+
+      local tReorderControl
+      put DG2_CustomisableControlsGetEditModeReorderControlForControl(the long id of pControl) into tReorderControl
+      if tReorderControl is not empty then
+         subtract the width of tReorderControl from item 3 of pControlRect
+      end if
+   end if
+
+   return pControlRect
+end DG2_GetWorkingRectOfControlFromControlRect
