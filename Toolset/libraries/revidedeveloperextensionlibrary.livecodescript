@@ -58,7 +58,7 @@ end __revIDEDeveloperExtensionShouldRecompile
 
 private command __revIDEDeveloperExtensionRemoveFolder pFolder
    local tDeveloperExtensionsFolders
-   put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
+   put revIDEDeveloperExtensionsFolders() into tDeveloperExtensionsFolders
    
    set the itemdelimiter to slash
    local tRootFolder
@@ -68,13 +68,13 @@ private command __revIDEDeveloperExtensionRemoveFolder pFolder
    put lineOffset(tRootFolder, tDeveloperExtensionsFolders) into tLine
    if tLine is not 0 then
       delete line tLine of tDeveloperExtensionsFolders
-      revIDESetPreference "cDeveloperExtensionsFolders", tDeveloperExtensionsFolders
+      revIDEDeveloperExtensionsSetFolders tDeveloperExtensionsFolders
    end if
 end __revIDEDeveloperExtensionRemoveFolder
 
 private command __revIDEDeveloperExtensionAddFolder pFolder
    local tDeveloperExtensionsFolders
-   put revIDEGetPreference("cDeveloperExtensionsFolders") into tDeveloperExtensionsFolders
+   put revIDEDeveloperExtensionsFolders() into tDeveloperExtensionsFolders
    
    set the itemdelimiter to slash
    local tRootFolder
@@ -87,7 +87,7 @@ private command __revIDEDeveloperExtensionAddFolder pFolder
       end if
    end if
    
-   revIDESetPreference "cDeveloperExtensionsFolders", tDeveloperExtensionsFolders
+   revIDEDeveloperExtensionsSetFolders tDeveloperExtensionsFolders
 end __revIDEDeveloperExtensionAddFolder
 
 /*
@@ -122,7 +122,7 @@ function revIDEDeveloperExtensions
    
    # Look for extension examples in previously selected user folders.
    local tUserFolders
-   put revIDEGetPreference("cDeveloperExtensionsFolders") into tUserFolders
+   put revIDEDeveloperExtensionsActiveFolders() into tUserFolders
    repeat for each line tLine in tUserFolders
       if tLine is among the lines of tFolders then next repeat
       
@@ -199,6 +199,22 @@ function revIDEDeveloperExtensionNoCompile pFolder
    end if
    return tDataA
 end revIDEDeveloperExtensionNoCompile
+
+function revIDEDeveloperExtensionsFolders
+   return revIDEGetPreference("cDeveloperExtensionsFolders")
+end revIDEDeveloperExtensionsFolders
+
+command revIDEDeveloperExtensionsSetFolders pFolders
+   revIDESetPreference "cDeveloperExtensionsFolders", pFolders
+end revIDEDeveloperExtensionsSetFolders
+
+function revIDEDeveloperExtensionsActiveFolders
+   return revIDEGetPreference("cDeveloperExtensionsActiveFolders")
+end revIDEDeveloperExtensionsActiveFolders
+
+command revIDEDeveloperExtensionsActiveFolders pFolders
+   revIDESetPreference "cDeveloperExtensionsActiveFolders", pFolders
+end revIDEDeveloperExtensionsActiveFolders
 
 function revIDEDeveloperExtension pFolder
    local tFile, tType
