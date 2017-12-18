@@ -593,7 +593,7 @@ on revIDEDeveloperExtensionEditScript pFolder
       end if
    end if
    
-   if tResult is "no association" or the result is "request failed" then
+   if tResult is "no association" or tResult is "request failed" then
       answer file "Select text editor..."
       if it is not empty then
          launch tFile with it
