@@ -186,12 +186,38 @@ on cancelExtensionInstall pExtensionIdentifier
    revIDECancelInstallExtension pExtensionIdentifier
 end cancelExtensionInstall
 
+local sSampleFileName
+local sOpenedStacksA
 on launchExtensionSampleStack pSampleStack
+   // Check if the sample stack has already been opened, 
+   // i.e. if its name is mapped in the array. If so, just
+   // open it.
+   if there is a stack (sOpenedStacksA[pSampleStack]) then
+      open stack sOpenedStacksA[pSampleStack]
+      exit launchExtensionSampleStack
+   end if
+   
+   // Otherwise open the stack from the file. Wait until we
+   // get the openStack message before emptying the filename
+   // otherwise we will get a long id clash
+   revIDESubscribe "ideOpenStack"
+   put pSampleStack into sSampleFileName
+   
    ## Open the sample stack
-   ## Clear the filename to force the user to choose save location if saving the stack
    open stack pSampleStack
-   set the filename of stack pSampleStack to empty
 end launchExtensionSampleStack
+
+on ideOpenStack pCard
+   local tStack
+   put the long id of the owner of pCard into tStack
+   if tStack is the long id of stack sSampleFileName then
+      ## Clear the filename to force the user to choose save location if saving the stack
+      put the short name of tStack into sOpenedStacksA[sSampleFileName]
+      set the filename of tStack to empty
+      put empty into sSampleFileName
+      revIDEUnsubscribe "ideOpenStack"
+   end if
+end ideOpenStack
 
 on ideExtensionStatusChanged pStatus
    local tElement, tRow, tIdentifier, tStatus, tProgress
