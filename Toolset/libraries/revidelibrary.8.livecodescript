@@ -4766,7 +4766,9 @@ private function revIDEPaletteBarHeight pStackID
 end revIDEPaletteBarHeight
 
 function revIDEBrowserWidgetUnavailable
-   return (the platform is "Linux") and ($LIVECODE_USE_CEF is not 1)
+   return (the platform is "Linux") and \
+         (the processor is not "x86_64") and \
+         ($LIVECODE_USE_CEF is not 1)
 end revIDEBrowserWidgetUnavailable
 
 /*
