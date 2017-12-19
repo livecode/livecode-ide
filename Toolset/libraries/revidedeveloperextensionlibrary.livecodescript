@@ -598,14 +598,15 @@ on revIDEDeveloperExtensionEditScript pFolder
       if it is not empty then
          launch tFile with it
          put the result into tResult
+         if tResult is empty then
+            # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
+            revIDESetPreference "LCB_textEditor", it
+         end if
       end if
    end if
    
    if tResult is not empty then
       __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && tResult
-   else if it is not empty then
-      # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
-      revIDESetPreference "LCB_textEditor", it
    end if
 end revIDEDeveloperExtensionEditScript
 
