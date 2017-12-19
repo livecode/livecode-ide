@@ -593,19 +593,21 @@ on revIDEDeveloperExtensionEditScript pFolder
       end if
    end if
    
-   if tResult is "no association" or tResult is "request failed" then
+   if tResult is "no association" or tResult is "request failed" \
+         or tResult is "no such program" then
       answer file "Select text editor..."
-      if it is not empty then
-         launch tFile with it
+      put it into tEditor
+      if tEditor is not empty then
+         launch tFile with tEditor
          put the result into tResult
          if tResult is empty then
             # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
-            revIDESetPreference "LCB_textEditor", it
+            revIDESetPreference "LCB_textEditor", tEditor
          end if
       end if
    end if
    
-   if tResult is not empty then
+   if tResult is not empty and tResult is not tEditor then
       __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && tResult
    end if
 end revIDEDeveloperExtensionEditScript
