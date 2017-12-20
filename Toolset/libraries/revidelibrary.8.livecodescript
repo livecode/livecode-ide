@@ -10902,33 +10902,41 @@ private function revIDEGetExtensionDocsData pAPI
       revIDEEnsurePath tCachedDataFolder
       
       local tInputs
-      put tFolder & slash & tSource into tInputs[1]
+      put empty into tInputs
+      if tSource is not empty then
+         put tFolder & slash & tSource into tInputs[1]
+      end if
       
       # If we are running from source, also add the docs parser as an input 
       # dependency of the docs files
       if not revEnvironmentIsInstalled() then
-         put the effective filename of stack "revDocsParser" into tInputs[2]
+         put the effective filename of stack "revDocsParser" into \
+               tInputs[the number of elements in tInputs + 1]
       end if
       
       local tNeedUpdate, tError, tAPIDoc
       put tCachedDataFolder & slash & "api.lcdoc" into tAPIDoc
-      put revIDEIsFilesetStale(tInputs, \
-            tAPIDoc, false, tError) \
+      put revIDEIsFilesetStale(tInputs, tAPIDoc, false, tError) \
             into tNeedUpdate
       
       # If there is an up-to-date api.lcdoc in the source folder, just copy that across
       local tSourceAPI
       put tFolder & slash & "api.lcdoc" into tSourceAPI
-      if tNeedUpdate is true and there is a file tSourceAPI then
-         if revIDEIsFilesetStale(tInputs, \
-               tSourceAPI, false, tError) \
-               is false then 
-            
-            revIDESetUTF8FileContents tAPIDoc, revIDEUTF8FileContents(tSourceAPI)
+      if there is a file tSourceAPI then
+         if tSource is empty then
             put false into tNeedUpdate
+            if there is no file tAPIDoc then
+               revIDESetUTF8FileContents tAPIDoc, revIDEUTF8FileContents(tSourceAPI)
+            end if
+         else if tNeedUpdate then
+            if revIDEIsFilesetStale(tInputs, tSourceAPI, false, tError) \
+                  is false then 
+               
+               revIDESetUTF8FileContents tAPIDoc, revIDEUTF8FileContents(tSourceAPI)
+               put false into tNeedUpdate
+            end if 
          end if
       end if
-      
       # Regenerate the lcdoc file if required
       if tNeedUpdate is true then
          # Generate the docs text in lcdoc format 
