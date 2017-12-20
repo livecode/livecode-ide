@@ -84,9 +84,7 @@ before mouseMove pNewMouseH, pNewMouseV
       pass mouseMove
    end if
 
-   if the dgEditMode of the of the dgControl of me then
-      DG2_ReorderMove pNewMouseH, pNewMouseV
-   else
+   if not the dgEditMode of the of the dgControl of me then
       if sDragging then
          put the milliseconds && pNewMouseH & return before sDragLocs
 
@@ -188,11 +186,12 @@ before LayoutControl pControlRect, pWorkingRect
       end if
 
       if tReorderControl is not empty then
-         -- We only need to worry about the top of the reorder control. It's
-         -- horizontal position will be set when entering edit mode.
+         -- We can't rely on the right of the control rect to be the right of
+         -- the list group: When animating out of edit mode, the control rect
+         -- can be extended to the right to make room for the animation. So,
+         -- use the right of the list group to postion the reorder control.
          set the visible of tReorderControl to true
-         set the top of tReorderControl to item 2 of pControlRect + (item 4 of pControlRect - item 2 of pControlRect - the height of tReorderControl) / 2
-         --set the topRight of tReorderControl to item 3 of pControlRect, item 2 of pControlRect + (item 4 of pControlRect - item 2 of pControlRect - the height of tReorderControl) / 2
+         set the topRight of tReorderControl to min(item 3 of pControlRect, the right of group "dgList" of the dgControl of me), item 2 of pControlRect + (item 4 of pControlRect - item 2 of pControlRect - the height of tReorderControl) / 2
       end if
    else
       if tActionSelectControl is not empty then
