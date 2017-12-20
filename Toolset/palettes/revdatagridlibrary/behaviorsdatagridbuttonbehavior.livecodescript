@@ -81,6 +81,9 @@ local sReorderStartIndex
 local sReorderStartLine
 local sReorderLastHoverLine
 local sReorderMouseMoveInProgress
+local sReorderMoveMsgId
+
+constant sReorderMovePollRate = 30
 
 constant kReorderDragControlBlendLevel = 30
 constant kReorderDragControlGlowColor = "0,0,0"
@@ -9604,6 +9607,9 @@ private command DG2_ClearVars
    put empty into sReorderLastHoverLine
    put false into sReorderMouseMoveInProgress
 
+   cancel sReorderMoveMsgId
+   put empty into sReorderMoveMsgId
+
    cancel sAnimationsPulseMsgID
    put empty into sAnimationsPulseMsgID
    put empty into sAnimationsA
@@ -9933,10 +9939,10 @@ on DG2_EditModeEnterDrawCallback @pContextA, pControl, pLineNo, @pControlRect, @
       -- thus not effected by the control sliding in from the right (which would naturally
       -- move the roerder control right).
       add 1 to pContextA["animation count"]
-      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
 
       add 1 to pContextA["animation count"]
-      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 100, 0, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 100, 0, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
    end if
 
    -- If the controls are cached, "LayoutControl" won't be called by the standard draw loop.
@@ -9995,10 +10001,10 @@ on DG2_EditModeLeaveDrawCallback @pContextA, pControl, pLineNo, @pControlRect, @
       -- thus not effected by the control sliding out to the right (which would naturally
       -- move the roerder control left).
       add 1 to pContextA["animation count"]
-      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "left", the left of tReorderControl, the left of tReorderControl, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
       add 1 to pContextA["animation count"]
 
-      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 0, 100, the dgAnimationProp["EditModeEnterExitDuration"] of me, "linear") into pContextA["animations"][pContextA["animation count"]]
+      put DG2_AnimationsAnimationCreate(tReorderControl, "blendLevel", 0, 100, the dgAnimationProp["EditModeEnterExitDuration"] of me, the dgAnimationProp["EditModeEnterExitReorderControlEasing"] of me) into pContextA["animations"][pContextA["animation count"]]
    end if
 
    -- If the controls are cached, "LayoutControl" won't be called by the standard draw loop.
@@ -10082,6 +10088,16 @@ command DG2_ReorderStart
    -- and adjusts the scroll accodingly.
    send "DG2_ReorderScrollPoll" to me in 0 seconds
 
+   -- Check for mouse moves. We do this manually rather than using mouse move
+   -- as mouse move for a couple of reasons:
+   -- Mouse move is sent to regularly, which can cometimes mean handling it
+   -- interferes with animations. Polling like this acts as the equivelant of
+   -- throttling mouse move.
+   -- Also, widgets don't pass mouse move, so need to post it directly. This
+   -- message can sometimes not get posted until the vent loop is cleared,
+   -- meaning it can be held up behind any pending animations.
+   send "DG2_ReorderMove" to me in 0 seconds
+
    -- Tell the user a reorder has started.
    dispatch DG2_GetMessageNameForTag("EditModeReorderStarted") to me with sReorderStartIndex, sReorderStartLine
 
@@ -10089,6 +10105,8 @@ command DG2_ReorderStart
 end DG2_ReorderStart
 
 command DG2_ReorderMove pNewMouseH, pNewMouseV
+   cancel sReorderMoveMsgId
+
    if not sReorderInProgress then
       return "No reorder currently in progress"
    end if
@@ -10097,21 +10115,27 @@ command DG2_ReorderMove pNewMouseH, pNewMouseV
       return empty
    end if
 
+   if the mouse is not "down" then
+      return empty
+   end if
+
+   put true into sReorderMouseMoveInProgress
+
    if pNewMouseV is empty then
       put item 2 of the mouseLoc into pNewMouseV
    end if
 
    -- Don't extend the reorder beyond the rect of the DataGrid!
-   if pNewMouseV < the top of me then
-      put the top of me into pNewMouseV
-   else if pNewMouseV > bottom of me then
-      put the bottom of me into pNewMouseV
+   if pNewMouseV < the top of group "dgListMask" of me then
+      put the top of group "dgListMask" of me into pNewMouseV
+   else if pNewMouseV > bottom of group "dgListMask" of me then
+      put the bottom of group "dgListMask" of me into pNewMouseV
    end if
-
-   put true into sReorderMouseMoveInProgress
 
    local tHoverLine
    put DG2_VerticalLocToLineNo(pNewMouseV) into tHoverLine
+   put max(tHoverLine, 1) into tHoverLine
+   put min(tHoverLine, the dgNumberOfLines of me) into tHoverLine
 
    -- If the mouse is over a new line.
    -- This means we need to reorder.
@@ -10155,6 +10179,9 @@ command DG2_ReorderMove pNewMouseH, pNewMouseV
    -- Make sure the control we're reordering is always tracking the mouse.
    set the loc of sReorderControl to item 1 of the loc sReorderControl, pNewMouseV
 
+   send "DG2_ReorderMove" to me in sReorderMovePollRate milliseconds
+   put the result into sReorderMoveMsgId
+
    put false into sReorderMouseMoveInProgress
 
    return empty
@@ -10195,17 +10222,13 @@ on DG2_ReorderScrollPoll
    local tMaxVScroll
    put the dgFormattedHeight of me - the height of group "dgList" of me into tMaxVScroll
 
-   if the mouseLoc is within the rect of me then
       -- If the mouse is sitting at the top of the list, scroll the list up.
       -- If the mouse is sitting at teh bottom of the list, scroll the list down.
       -- This allows users to scroll the list while reordering.
       if item 2 of the mouseLoc - the top of me <= kReorderScrollPollMargin and the dgVScroll of me >= 0 then
          set the dgVScroll of me to max(the dgVScroll of me - kReorderScollPollIncrement, 0)
-         DG2_ReorderMove item 1 of the mouseLoc, item 2 of the mouseLoc
       else if the bottom of me - item 2 of the mouseLoc <= kReorderScrollPollMargin and the dgVScroll of me <= tMaxVScroll then
          set the dgVScroll of me to min(the dgVScroll of me + kReorderScollPollIncrement, tMaxVScroll)
-         DG2_ReorderMove item 1 of the mouseLoc, item 2 of the mouseLoc
-      end if
    end if
 
    send "DG2_ReorderScrollPoll" to me in kReorderScrollPollRate milliseconds
@@ -11211,7 +11234,7 @@ on DG2_AnimationsPulse
    if sAnimationsA is not empty then
       -- Redraw every kAnimationsPulseRate milliseconds.
       -- Make sure we take into account how long this handler took when determing when next to redraw.
-      send "DG2_AnimationsPulse" to me in (kAnimationsPulseRate - the milliseconds -  tCurrentTime) milliseconds
+      send "DG2_AnimationsPulse" to me in (kAnimationsPulseRate - (the milliseconds -  tCurrentTime)) milliseconds
       put the result into sAnimationsPulseMsgID
    else
       put empty into sAnimationsPulseMsgID
