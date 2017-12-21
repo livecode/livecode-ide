@@ -3,11 +3,17 @@
 -- This behavior sits at the back of a row's behavior chain and is used to
 -- determine and handle edit mode and swipe actions.
 
+local sPreDragging
 local sDragging
 local sDragStart
 local sDragLocs
 local sControlLeft
 local sControlRight
+
+-- A user is seen to be dragging a row if the mouse has moved kPreDragLocDiff
+-- points within kPreDragTimeMargin milliseconds of the initial mouse click.
+constant kPreDragLocDiff = 15
+constant kPreDragTimeMargin = 100
 
 -- A swipe has occured if the mouse has moved kSwipeLocDiff points within
 -- kSwipeTimeDiff milliseconds, plus or minus kSwipeTimeDiffMargin.
@@ -17,7 +23,8 @@ constant kSwipeLocDiff = 50
 
 ----------------------------------------------------------------------
 
-before PreFillInData
+private command DG2_ClearVars
+   put false into sPreDragging
    put false into sDragging
    put empty into sDragStart
    put empty into sDragLocs
@@ -25,7 +32,15 @@ before PreFillInData
    put empty into sControlRight
 
    DG2_CustomisableControlsClearForControl the long id of me
+end DG2_ClearVars
+
+before PreFillInData
+   DG2_ClearVars
 end PreFillInData
+
+before ResetData
+   DG2_ClearVars
+end ResetData
 
 ----------------------------------------------------------------------
 
@@ -45,7 +60,11 @@ before mouseDown
          exit to top
       end if
    else
-      if the dgProps["enable swipe"] of the dgControl of me then
+      -- Only track swipes if all previous swipe actions have completed - i.e.
+      -- there are no animations pending. This prevents situations like where a
+      -- user drags in one direction, but an animation is returning the row in
+      -- the oposite direction.
+      if the dgProps["enable swipe"] of the dgControl of me and DG2_AnimationsGetPendingCount() is 0 then
          local tStartDrag
          put false into tStartDrag
 
@@ -69,7 +88,8 @@ before mouseDown
             -- when repositioning the row control under the pointer on drag.
             put item 1 of the mouseLoc into sDragStart
             put the milliseconds && item 1 of the mouseLoc into sDragLocs
-            put true into sDragging
+            put true into sPreDragging
+            put false into sDragging
          end if
 
       end if
@@ -85,6 +105,23 @@ before mouseMove pNewMouseH, pNewMouseV
    end if
 
    if not the dgEditMode of the of the dgControl of me then
+      -- If the user has just clicked (i.e. pre-dragging), attempt to determine
+      -- if the user is trying to drag the row. We do this by checking if the
+      -- horizontal position of the drag has changed sufficiently within a given
+      -- time frame. If so, we can turn the scroller off to prevent any
+      -- interference and begin tracking the drag.
+      if sPreDragging then
+         if abs(word 2 of the last line of sDragLocs - pNewMouseH) > kPreDragLocDiff then
+            put false into sPreDragging
+            put true into sDragging
+            __DisableMobileScroller
+         else if the milliseconds - word 1 of the last line of sDragLocs > kPreDragTimeMargin then
+            put false into sPreDragging
+         else
+            put the milliseconds && pNewMouseH & return before sDragLocs
+         end if
+      end if
+
       if sDragging then
          put the milliseconds && pNewMouseH & return before sDragLocs
 
@@ -146,6 +183,7 @@ before mouseUp
          end if
       end if
    else
+      put false into sPreDragging
       if sDragging then
          DG2_DragFinished
       end if
@@ -163,10 +201,12 @@ before mouseRelease
    if the dgEditMode of the of the dgControl of me then
       DG2_ReorderEnd
    else
+      put false into sPreDragging
       if sDragging then
          DG2_DragFinished
       end if
    end if
+
    pass mouseRelease
 end mouseRelease
 
@@ -211,6 +251,8 @@ end LayoutControl
 ----------------------------------------------------------------------
 
 private command DG2_DragFinished
+   __EnableMobileScroller
+
    local tNow
    put the milliseconds into tNow
 
@@ -252,11 +294,13 @@ private command DG2_DragFinished
       -- Determine the direction of the swipe and make sure we are
       -- currently showing the appropriate control for that swipe direcion.
       if tLocDiff > 0 and the left of me > sControlLeft then
+         put false into sPreDragging
          put false into sDragging
          put empty into sDragLocs
             RowSwipeShowControlForIndexAndSide the dgIndex of me, "left"
             return the result
       else if tLocDiff < 0 and the right of me < sControlRight then
+         put false into sPreDragging
          put false into sDragging
          put empty into sDragLocs
             RowSwipeShowControlForIndexAndSide the dgIndex of me, "right"
@@ -272,6 +316,7 @@ end DG2_DragFinished
 
 command DG2_SwipeReturn pDontAnimate
    -- Return everything back to where it was before the dragging started.
+   put false into sPreDragging
    put false into sDragging
    put empty into sDragLocs
    if  pDontAnimate then

@@ -330,7 +330,7 @@ private command _CreateMobileScroller
       mobileControlSet sScrollerId, "canBounce", "true"
       mobileControlSet sScrollerId, "pagingEnabled", "false"
       mobileControlSet sScrollerId, "canScrollToTop", "true"
-      mobileControlSet sScrollerId, "delayTouches", "true"
+      mobileControlSet sScrollerId, "delayTouches", "false"
       mobileControlSet sScrollerId, "canCancelTouches", "true"
       __PollVisibility
    end if
@@ -9593,6 +9593,18 @@ private function __HasMobileScroller
          sScrollerId is among the lines of mobileControls()
 end __HasMobileScroller
 
+command __EnableMobileScroller
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "scrollingEnabled", "true"
+   end if
+end __EnableMobileScroller
+
+command __DisableMobileScroller
+   if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "scrollingEnabled", "false"
+   end if
+end __DisableMobileScroller
+
 --------------------------------------------------------------------------------
 -- DataGrid 2
 --------------------------------------------------------------------------------
@@ -10069,6 +10081,9 @@ command DG2_ReorderStart
       return "Could not find line of control"
    end if
 
+   -- Make sure any scroller doesn't interfere with drag reorders.
+   __DisableMobileScroller
+   
    put tControl into sReorderControl
    put tIndex into sReorderStartIndex
    put tLine into sReorderStartLine
@@ -10192,6 +10207,8 @@ command DG2_ReorderEnd
       return "No reorder currently in progress"
    end if
 
+   __EnableMobileScroller
+   
    -- Animate the control we are reordering into its new slot.
    DG2_AnimationsAdd sReorderControl, "top", the top of sReorderControl, DG2_TopOfControlWithLineNo(sReorderLastHoverLine) + 1, the dgAnimationProp["ReorderHomingDuration"] of me, the dgAnimationProp["ReorderHomingEasing"] of me, "DG2_ReorderControlHomed", empty, the long id of me
    put false into sReorderInProgress
@@ -11090,6 +11107,14 @@ command DG2_AnimationsBatchAddWithArray pAnimationsA
 
    return tIDs
 end DG2_AnimationsBatchAddWithArray
+
+function DG2_AnimationsGetPendingCount
+   if sAnimationsA is empty or sAnimationsA is not an array then
+      return 0
+   else
+      return the number of lines in the keys of sAnimationsA
+   end if
+end DG2_AnimationsGetPendingCount
 
 -- Set all current animations to their end value.
 command DG2_AnimationsFinaliseAll
