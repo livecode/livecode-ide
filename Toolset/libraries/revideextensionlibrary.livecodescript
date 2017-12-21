@@ -660,6 +660,26 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
       put true into tPropertyDataA[tProperty]["widget_prop"]
    end repeat
    
+   # Fetch property override metadata
+   local tMetadataValue, tMetadataKey
+   local tMetadataNodes, tMetadataA, tDataA
+   put revXMLChildNames(tXMLTree, "package",return,"metadata",true) into tMetadataNodes
+   repeat for each line tMetadata in tMetadataNodes
+      put revXMLAttribute(tXMLTree,"package" & "/" & tMetadata,"key") into tMetadataKey
+      put revXMLNodeContents(tXMLTree,"package" & "/" & tMetadata) into tMetadataValue
+      if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
+         put empty into tMetadataValue
+      end if
+      __SetMetadata tMetadataKey, tMetadataValue, tDataA
+   end repeat
+   
+   repeat for each line tProperty in idePropertyNames()
+      if tDataA[tProperty] is not empty then
+         union tDataA[tProperty] with revIDEPropertyInfo(tProperty)
+         put tDataA[tProperty] into tPropertyDataA[tProperty]
+      end if
+   end repeat
+   
    __ProcessInspectorMetadata tPropertyDataA
    
    revXMLDeleteTree tXMLTree
