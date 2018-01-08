@@ -7,10 +7,14 @@ command openControl
    # OK-2009-03-10 : Bug 7070 - The match case check box should take the current preference value.
    set the hilite of button "Case" of me to (sePrefGet("find,casesensitive") is true)
    
-   local tLastSearch
-   put line 1 of seFindHistoryGet("find") into tLastSearch
-   if tLastSearch is not empty then
-      put tLastSearch into field "Find" of me
+   local tSearch
+   put the selectedText of field "Script" into tSearch
+   if tSearch is empty then
+      put line 1 of seFindHistoryGet("find") into tSearch
+   end if
+   
+   if tSearch is not empty then
+      put tSearch into field "Find" of me
    else
       put empty into field "Find" of me
    end if
