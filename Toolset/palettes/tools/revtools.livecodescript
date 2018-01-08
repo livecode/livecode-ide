@@ -138,11 +138,11 @@ on framePreferenceSelected pPreference, pValue
          revIDESetPreference "revTools_columns", pValue
          break
       case "revTools_show"
-         local tCurrentPreferenceValue, tPreferencePosition, tLineOffset
+         local tCurrentPreferenceValue, tPreferencePosition, tItemOffset
          put revIDEGetPreference("revTools_show") into tCurrentPreferenceValue
-         put lineOffset(pValue, tCurrentPreferenceValue) into tLineOffset
-         if tLineOffset is not 0 then
-            delete line tLineOffset of tCurrentPreferenceValue
+         put itemOffset(pValue, tCurrentPreferenceValue) into tItemOffset
+         if tItemOffset is not 0 then
+            delete item tItemOffset of tCurrentPreferenceValue
          else
             if tCurrentPreferenceValue is empty then
                put pValue into tCurrentPreferenceValue
