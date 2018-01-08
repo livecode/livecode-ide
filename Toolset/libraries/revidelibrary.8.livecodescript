@@ -5666,6 +5666,8 @@ function revIDEScriptEditorBehavior pWhich
          return tPathToBehaviors & slash & "revseeditbreakpointstackbehavior.livecodescript"
       case "error template"
          return tPathToBehaviors & slash & "revseerrortemplatebehavior.livecodescript"
+      case "find main card"
+         return tPathToBehaviors & slash & "revsefindmaincardbehavior.livecodescript"
       default
          return empty
    end switch

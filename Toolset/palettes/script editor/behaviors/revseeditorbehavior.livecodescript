@@ -1045,13 +1045,19 @@ private command prepareContextMenu
    if tMatches is empty then
       put "(" before tGoToDefinition
    end if
-
+   
    local tText
    put tGoToDefinition & return into tText
+   put "Find in" & return after tText
+   
    if not revIDEBrowserWidgetUnavailable() then
-      put "Find in Docs" & return after tText
+      put tab & "Docs" & return after tText
    end if
    
+   repeat for each item tItem in \
+         "Current Tab,All Tabs,Card,Stack,Stack File,Stack File and its stackFiles,All Stack Files,All available stacks"
+      put tab & tItem & return after tText
+   end repeat
    put "-" & return after tText
    
    put "Set Breakpoint" & return after tText
@@ -1111,7 +1117,9 @@ on menuPick pItemName
       exit menuPick
    end if
    
-   switch pItemName
+   set the itemDelimiter to "|"
+   
+   switch item 1 of pItemName
       case "Set Breakpoint"
          if sLastClickLine is not empty then
             local tScript
@@ -1126,15 +1134,55 @@ on menuPick pItemName
          end if
          break
          
-      case "Find in Docs"
-         local tText, tData
+      case "Find in"
+         
+         local tCallback
+         put "__FindAllCallback" into tCallback
+         
+         local tCallbackTarget
+         put the long id of me into tCallbackTarget
+         
+         local tText
          put getClickText() into tText
-         put ideDocsFetchLCSData(tText) into tData
-         if tData is not empty then
-            revIDEGoToLCSDictionaryEntry tText, tData[1]["type"]
+         
+         local tTarget
+         switch item 2 of pItemName
+            case "Docs"
+               local tData
+               put ideDocsFetchLCSData(tText) into tData
+               if tData is not empty then
+                  revIDEGoToLCSDictionaryEntry tText, tData[1]["type"]
+               end if
+               break
+            case "All tabs"
+               put "all" into tTarget
+               break
+            case "Current Tab"
+               put "current" into tTarget
+               break
+            case "Card"
+               put "card" into tTarget
+               break
+            case "Stack"
+               put "stack" into tTarget
+               break
+            case "Stack File"
+               put "stack file" into tTarget
+               break
+            case "All Stack Files"
+               put "all stacks" into tTarget
+               break
+            case "Stack File and its stackFiles"
+               put "stack file and stackfiles" into tTarget
+               break
+            case "All available stacks"
+               put "all available stacks" into tTarget
+               break
+         end switch
+         if item 2 of pItemName is not "Docs" then
+            send "revSEFindAll tText, false, false, false, true, tTarget, tCallback, tCallbackTarget" to this stack
          end if
          break
-         
       case "Cut"
          actionCut
          break
@@ -1173,6 +1221,11 @@ on menuPick pItemName
          break
    end switch
 end menuPick
+
+on __FindAllCallback pMessage
+   wait 0 with messages
+   set the cursor to busy
+end __FindAllCallback
 
 private command goMatchingDefinition pMatch
    local tObject, tLine
