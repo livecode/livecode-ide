@@ -7235,7 +7235,7 @@ function revIDEAcceptedTypes pType
    local tTypes
    switch pType
       case "image"
-         return "jpg,jpeg,jfif,gif,png,bitmap,bmp,dib,vga,pict,pict2,pic"
+         return "jpg,jpeg,jfif,gif,png,bitmap,bmp,dib,vga,pict,pict2,pic,svg"
       case "video"
          put "mp4,mpg,mpeg,mov" into tTypes 
          if the platform is "win32" then
@@ -7331,7 +7331,12 @@ on revIDEImportControl pType, pFileName, pReferenced
    set the defaultStack to tTargetStack
    switch pType
       case "image"
-         if pReferenced is true then
+         if pFileName ends with ".svg" then
+            -- SVG files can't be referenced
+            revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
+            put the long id of the last control into tCreatedControlID
+            set the text of tCreatedControlID to drawingSvgCompileFile(pFileName)
+         else if pReferenced is true then
             ## Create a classic image control with default properties
             ## Set the filename of the new image control to the referenced image
             revIDECreateObject "com.livecode.interface.classic.image", tTargetStack, tCreatedControlLocation
