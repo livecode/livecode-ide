@@ -731,13 +731,6 @@ on newPlayer
    if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newPlayer
 end newPlayer
 
-on newGroup
-   selectedObjectChanged
-   set the cREVGeneral["revUniqueID"] of the target to the milliseconds
-   revUpdateAOControls
-   if not gREVSuppressMessages or (gREVSuppressMessages and revOKTarget()) then pass newGroup
-end newGroup
-
 on newCard
    if there is a stack "revApplicationOverview" then
       if the mode of stack "revApplicationOverview" is not 0

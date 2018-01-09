@@ -812,20 +812,6 @@ on currentTimeChanged pTime
   end try
 end currentTimeChanged
 
-on cutKey
-  if revOKTarget() then pass cutKey
-  try
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send cutKey to stack "revFrontScriptLibrary"
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send cutKey to stack "revBackScriptLibrary"
-  catch tError
-    if gREVDevelopment then
-      writeError (tError)
-    end if
-  end try
-  
-  pass cutKey to metacard
-end cutKey
-
 on deletebackground
   if revOKTarget() then pass deletebackground
   try
