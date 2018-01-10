@@ -577,32 +577,38 @@ on revIDEDeveloperExtensionUninstall pPath
 end revIDEDeveloperExtensionUninstall
 
 on revIDEDeveloperExtensionEditScript pFolder
-   local tFile
+   local tFile, tResult
    put pFolder & slash & __revIDEDeveloperExtensionFetchModuleInFolder(pFolder) into tFile
    
    # AL-2015-04-01: [[ Bug 15130 ]] First check to see if there is an existing association
    launch document tFile
-   if the result is not empty then
+   put the result into tResult
+   if tResult is not empty then
       # AL-2015-04-01: [[ Bug 15130 ]] Check to see if the text editor preference is set
       local tEditor
       put revIDEGetPreference("LCB_textEditor") into tEditor
       if tEditor is not empty then
          launch tFile with tEditor
+         put the result into tResult
       end if
    end if
    
-   if the result is "no association" or the result is "request failed" then
+   if tResult is "no association" or tResult is "request failed" \
+         or tResult is "no such program" then
       answer file "Select text editor..."
-      if it is not empty then
-         launch tFile with it
+      put it into tEditor
+      if tEditor is not empty then
+         launch tFile with tEditor
+         put the result into tResult
+         if tResult is empty then
+            # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
+            revIDESetPreference "LCB_textEditor", tEditor
+         end if
       end if
    end if
    
-   if the result is not empty then
-      __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && the result
-   else if it is not empty then
-      # AL-2015-04-01: [[ Bug 15130 ]] If the new text editor launch was successful, set the preference
-      revIDESetPreference "LCB_textEditor", it
+   if tResult is not empty and tResult is not tEditor then
+      __revIDEDeveloperExtensionSendError "Could not open" && tFile & ":" && tResult
    end if
 end revIDEDeveloperExtensionEditScript
 
