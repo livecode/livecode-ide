@@ -101,8 +101,12 @@ command setEnabledOfFrameItem pName, pValue
    put __frameItemNameToIndex(pName) into tIndex
    if tIndex is not a number then exit setEnabledOfFrameItem
    
+   lock screen
+   lock messages
    put pValue into sData[tIndex]["enabled"] 
    generateFrame
+   unlock messages
+   unlock screen
 end setEnabledOfFrameItem
 
 on toggleFrameItem pName, pValue
@@ -128,32 +132,6 @@ on hiliteFrameItem pName
    unlock messages
    unlock screen
 end hiliteFrameItem
-
-on disableFrameItem pName
-   local tIndex
-   put __frameItemNameToIndex(pName) into tIndex
-   if tIndex is not a number then exit disableFrameItem
-   
-   lock screen
-   lock messages
-   put false into sData[tIndex]["enabled"]
-   generateFrame
-   unlock messages
-   unlock screen
-end disableFrameItem
-
-on enableFrameItem pName
-   local tIndex
-   put __frameItemNameToIndex(pName) into tIndex
-   if tIndex is not a number then exit enableFrameItem
-   
-   lock screen
-   lock messages
-   put true into sData[tIndex]["enabled"] 
-   generateFrame
-   unlock messages
-   unlock screen
-end enableFrameItem
 
 on clearFrameData
    put empty into sData

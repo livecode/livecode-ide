@@ -96,6 +96,11 @@ on openStack
 end openStack
 
 on closeStack
+   if the enabled of btn "Ignore" of group "errorDisplay" of me then
+      set the traceAbort to true
+      set the traceReturn to true
+   end if
+   
    revIDEUnsubscribeAll
    updateStoredRect
    pass closeStack
@@ -111,16 +116,6 @@ command revCloseErrorDialogDo
 end revCloseErrorDialogDo
 
 local lExit
-
-on closeStack
-  if the enabled of btn "Ignore" of group "errorDisplay" of me then
-    set the traceAbort to true
-    set the traceReturn to true
-  end if
-  
-  # OK-2007-07-02: Bug 5203
-  pass closeStack
-end closeStack
 
 on returnInField
   returnKey

@@ -182,8 +182,8 @@ end closeField
 on exitField
   if revOKTarget() then pass exitField
   try
-    if "exitField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send exitField to stack "revFrontScriptLibrary"
-    if "exitField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send exitField to stack "revBackScriptLibrary"
+    if "exitField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "exitField" to stack "revFrontScriptLibrary"
+    if "exitField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "exitField" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -286,8 +286,8 @@ end functionKey
 on pasteKey
   if revOKTarget() then pass pasteKey
   try
-    if "pasteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send pasteKey to stack "revFrontScriptLibrary"
-    if "pasteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send pasteKey to stack "revBackScriptLibrary"
+    if "pasteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "pasteKey" to stack "revFrontScriptLibrary"
+    if "pasteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "pasteKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -299,8 +299,8 @@ end pasteKey
 on cutKey
   if revOKTarget() then pass cutKey
   try
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send cutKey to stack "revFrontScriptLibrary"
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send cutKey to stack "revBackScriptLibrary"
+    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "cutKey" to stack "revFrontScriptLibrary"
+    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "cutKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -312,8 +312,8 @@ end cutKey
 on copyKey
   if revOKTarget() then pass copyKey
   try
-    if "copyKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send copyKey to stack "revFrontScriptLibrary"
-    if "copyKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send copyKey to stack "revBackScriptLibrary"
+    if "copyKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "copyKey" to stack "revFrontScriptLibrary"
+    if "copyKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "copyKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -325,8 +325,8 @@ end copyKey
 on backSpaceKey
   if revOKTarget() then pass backSpaceKey
   try
-    if "backSpaceKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send backSpaceKey to stack "revFrontScriptLibrary"
-    if "backSpaceKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send backSpaceKey to stack "revBackScriptLibrary"
+    if "backSpaceKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "backSpaceKey" to stack "revFrontScriptLibrary"
+    if "backSpaceKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "backSpaceKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -338,8 +338,8 @@ end backSpaceKey
 on deleteKey
   if revOKTarget() then pass deleteKey
   try
-    if "deleteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteKey to stack "revFrontScriptLibrary"
-    if "deleteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteKey to stack "revBackScriptLibrary"
+    if "deleteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteKey" to stack "revFrontScriptLibrary"
+    if "deleteKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -351,8 +351,8 @@ end deleteKey
 on returnInField
   if revOKTarget() then pass returnInField
   try
-    if "returnInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send returnInField to stack "revFrontScriptLibrary"
-    if "returnInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send returnInField to stack "revBackScriptLibrary"
+    if "returnInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "returnInField" to stack "revFrontScriptLibrary"
+    if "returnInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "returnInField" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -365,8 +365,8 @@ end returnInField
 on enterInField
   if revOKTarget() then pass enterInField
   try
-    if "enterInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send enterInField to stack "revFrontScriptLibrary"
-    if "enterInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send enterInField to stack "revBackScriptLibrary"
+    if "enterInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "enterInField" to stack "revFrontScriptLibrary"
+    if "enterInField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "enterInField" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -379,8 +379,8 @@ end enterInField
 on returnKey
   if revOKTarget() then pass returnKey
   try
-    if "returnKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send returnKey to stack "revFrontScriptLibrary"
-    if "returnKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send returnKey to stack "revBackScriptLibrary"
+    if "returnKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "returnKey" to stack "revFrontScriptLibrary"
+    if "returnKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "returnKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -393,8 +393,8 @@ end returnKey
 on enterKey
   if revOKTarget() then pass enterKey
   try
-    if "enterKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send enterKey to stack "revFrontScriptLibrary"
-    if "enterKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send enterKey to stack "revBackScriptLibrary"
+    if "enterKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "enterKey" to stack "revFrontScriptLibrary"
+    if "enterKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "enterKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -407,8 +407,8 @@ end enterKey
 on idle
   if revOKTarget() then pass idle
   try
-    if "idle" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send idle to stack "revFrontScriptLibrary"
-    if "idle" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send idle to stack "revBackScriptLibrary"
+    if "idle" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "idle" to stack "revFrontScriptLibrary"
+    if "idle" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "idle" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -433,8 +433,8 @@ end controlKeyDown
 on focusIn
   if revOKTarget() then pass focusIn
   try
-    if "focusIn" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send focusIn to stack "revFrontScriptLibrary"
-    if "focusIn" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send focusIn to stack "revBackScriptLibrary"
+    if "focusIn" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "focusIn" to stack "revFrontScriptLibrary"
+    if "focusIn" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "focusIn" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -445,8 +445,8 @@ end focusIn
 on focusOut
   if revOKTarget() then pass focusOut
   try
-    if "focusOut" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send focusOut to stack "revFrontScriptLibrary"
-    if "focusOut" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send focusOut to stack "revBackScriptLibrary"
+    if "focusOut" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "focusOut" to stack "revFrontScriptLibrary"
+    if "focusOut" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "focusOut" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -469,8 +469,8 @@ end scrollBarDrag
 on preOpenCard
   if revOKTarget() then pass preOpenCard
   try
-    if "preOpenCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send preOpenCard to stack "revFrontScriptLibrary"
-    if "preOpenCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send preOpenCard to stack "revBackScriptLibrary"
+    if "preOpenCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "preOpenCard" to stack "revFrontScriptLibrary"
+    if "preOpenCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "preOpenCard" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -481,8 +481,8 @@ end preOpenCard
 on openCard
   if revOKTarget() then pass openCard
   try
-    if "openCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send openCard to stack "revFrontScriptLibrary"
-    if "openCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send openCard to stack "revBackScriptLibrary"
+    if "openCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "openCard" to stack "revFrontScriptLibrary"
+    if "openCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "openCard" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -497,7 +497,7 @@ on preOpenStack
     # stack had been opened. Changed so that the target can be forwarded to revFrontScript.
     #if "preOpenStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send preOpenStack to stack "revFrontScriptLibrary"
     revIDEHandleNewStack the long id of the target
-    if "preOpenStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send preOpenStack to stack "revBackScriptLibrary"
+    if "preOpenStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "preOpenStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -508,8 +508,8 @@ end preOpenStack
 on openStack
   if revOKTarget() then pass openStack
   try
-    if "openStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send openStack to stack "revFrontScriptLibrary"
-    if "openStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send openStack to stack "revBackScriptLibrary"
+    if "openStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "openStack" to stack "revFrontScriptLibrary"
+    if "openStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "openStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -520,8 +520,8 @@ end openStack
 on startUp
   if revOKTarget() then pass startUp
   try
-    if "startUp" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send startUp to stack "revFrontScriptLibrary"
-    if "startUp" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send startUp to stack "revBackScriptLibrary"
+    if "startUp" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "startUp" to stack "revFrontScriptLibrary"
+    if "startUp" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "startUp" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -532,8 +532,8 @@ end startUp
 on closeStack
   if revOKTarget() then pass closeStack
   try
-    if "closeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send closeStack to stack "revFrontScriptLibrary"
-    if "closeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send closeStack to stack "revBackScriptLibrary"
+    if "closeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "closeStack" to stack "revFrontScriptLibrary"
+    if "closeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "closeStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       --write tError & return to stderr
@@ -566,8 +566,8 @@ end closeStackRequest
 on quitMC
   if revOKTarget() then pass quitMC
   try
-    if "quitMC" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send quitMC to stack "revFrontScriptLibrary"
-    if "quitMC" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send quitMC to stack "revBackScriptLibrary"
+    if "quitMC" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "quitMC" to stack "revFrontScriptLibrary"
+    if "quitMC" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "quitMC" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -578,8 +578,8 @@ end quitMC
 on playStopped
   if revOKTarget() then pass playStopped
   try
-    if "playStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send playStopped to stack "revFrontScriptLibrary"
-    if "playStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send playStopped to stack "revBackScriptLibrary"
+    if "playStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "playStopped" to stack "revFrontScriptLibrary"
+    if "playStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "playStopped" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -590,8 +590,8 @@ end playStopped
 on moveStopped
   if revOKTarget() then pass moveStopped
   try
-    if "moveStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send moveStopped to stack "revFrontScriptLibrary"
-    if "moveStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send moveStopped to stack "revBackScriptLibrary"
+    if "moveStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "moveStopped" to stack "revFrontScriptLibrary"
+    if "moveStopped" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "moveStopped" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -600,16 +600,17 @@ on moveStopped
 end moveStopped
 
 on nameChanged pOldName, pNewName
-  if revOKTarget() then pass nameChanged
-  try
-    put the long id of the target into tTarget
-    if "nameChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "nameChanged pOldName, pNewName, tTarget" to stack "revFrontScriptLibrary"
-    if "nameChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "nameChanged pOldName, pNewName, tTarget" to stack "revBackScriptLibrary"
-  catch tError
-    if gREVDevelopment then
-      writeError (tError)
-    end if
-  end try
+   if revOKTarget() then pass nameChanged
+   local tTarget
+   try
+      put the long id of the target into tTarget
+      if "nameChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "nameChanged pOldName, pNewName, tTarget" to stack "revFrontScriptLibrary"
+      if "nameChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "nameChanged pOldName, pNewName, tTarget" to stack "revBackScriptLibrary"
+   catch tError
+      if gREVDevelopment then
+         writeError (tError)
+      end if
+   end try
 end nameChanged
 
 on idChanged pOldID, pNewID
@@ -627,8 +628,8 @@ end idChanged
 on saveRequest
   if revOKTarget() then pass saveRequest
   try
-    if "saveRequest" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send saveRequest to stack "revFrontScriptLibrary"
-    if "saveRequest" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send saveRequest to stack "revBackScriptLibrary"
+    if "saveRequest" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "saveRequest" to stack "revFrontScriptLibrary"
+    if "saveRequest" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "saveRequest" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -640,9 +641,9 @@ end saveRequest
 on moveControl
   if revOKTarget() then pass moveControl
   try
-    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send moveControl to stack "revFrontScriptLibrary"
-    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send moveControl to stack "revBackScriptLibrary"
-    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send moveControl to stack "revGeometryLibrary"
+    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "moveControl" to stack "revFrontScriptLibrary"
+    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "moveControl" to stack "revBackScriptLibrary"
+    if "moveControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send "moveControl" to stack "revGeometryLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -653,9 +654,9 @@ end moveControl
 on resizeControl
   if revOKTarget() then pass resizeControl
   try
-    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send resizeControl to stack "revFrontScriptLibrary"
-    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send resizeControl to stack "revBackScriptLibrary"
-    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send resizeControl to stack "revGeometryLibrary"
+    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "resizeControl" to stack "revFrontScriptLibrary"
+    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "resizeControl" to stack "revBackScriptLibrary"
+    if "resizeControl" is among the lines of the cREVGeneral["handlerlist"] of stack "revGeometryLibrary" then send "resizeControl" to stack "revGeometryLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -682,8 +683,8 @@ end menuPick
 on selectionChanged
   if revOKTarget() then pass selectionChanged
   try
-    if "selectionChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send selectionChanged to stack "revFrontScriptLibrary"
-    if "selectionChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send selectionChanged to stack "revBackScriptLibrary"
+    if "selectionChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "selectionChanged" to stack "revFrontScriptLibrary"
+    if "selectionChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "selectionChanged" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -694,8 +695,8 @@ end selectionChanged
 on selectedObjectChanged
   if revOKTarget() then pass selectedObjectChanged
   try
-    if "selectedObjectChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send selectedObjectChanged to stack "revFrontScriptLibrary"
-    if "selectedObjectChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send selectedObjectChanged to stack "revBackScriptLibrary"
+    if "selectedObjectChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "selectedObjectChanged" to stack "revFrontScriptLibrary"
+    if "selectedObjectChanged" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "selectedObjectChanged" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -731,8 +732,8 @@ end moveStack
 on closeCard
   if revOKTarget() then pass closeCard
   try
-    if "closeCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send closeCard to stack "revFrontScriptLibrary"
-    if "closeCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send closeCard to stack "revBackScriptLibrary"
+    if "closeCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "closeCard" to stack "revFrontScriptLibrary"
+    if "closeCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "closeCard" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -743,8 +744,8 @@ end closeCard
 on resumeStack
   if revOKTarget() then pass resumeStack
   try
-    if "resumeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send resumeStack to stack "revFrontScriptLibrary"
-    if "resumeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send resumeStack to stack "revBackScriptLibrary"
+    if "resumeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "resumeStack" to stack "revFrontScriptLibrary"
+    if "resumeStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "resumeStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -756,7 +757,7 @@ on suspendStack
   if revOKTarget() then pass suspendStack
   try
     if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "revIDESuspendStackFront" to stack "revFrontScriptLibrary"
-    if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send suspendStack to stack "revBackScriptLibrary"
+    if "suspendStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "suspendStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -767,8 +768,8 @@ end suspendStack
 on iconifyStack
   if revOKTarget() then pass iconifyStack
   try
-    if "iconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send iconifyStack to stack "revFrontScriptLibrary"
-    if "iconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send iconifyStack to stack "revBackScriptLibrary"
+    if "iconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "iconifyStack" to stack "revFrontScriptLibrary"
+    if "iconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "iconifyStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -812,25 +813,11 @@ on currentTimeChanged pTime
   end try
 end currentTimeChanged
 
-on cutKey
-  if revOKTarget() then pass cutKey
-  try
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send cutKey to stack "revFrontScriptLibrary"
-    if "cutKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send cutKey to stack "revBackScriptLibrary"
-  catch tError
-    if gREVDevelopment then
-      writeError (tError)
-    end if
-  end try
-  
-  pass cutKey to metacard
-end cutKey
-
 on deletebackground
   if revOKTarget() then pass deletebackground
   try
-    if "deletebackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deletebackground to stack "revFrontScriptLibrary"
-    if "deletebackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deletebackground to stack "revBackScriptLibrary"
+    if "deletebackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deletebackground" to stack "revFrontScriptLibrary"
+    if "deletebackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deletebackground" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -841,8 +828,8 @@ end deletebackground
 on deleteButton
   if revOKTarget() then pass deleteButton
   try
-    if "deleteButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteButton to stack "revFrontScriptLibrary"
-    if "deleteButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteButton to stack "revBackScriptLibrary"
+    if "deleteButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteButton" to stack "revFrontScriptLibrary"
+    if "deleteButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteButton" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -853,8 +840,8 @@ end deleteButton
 on deletecard
   if revOKTarget() then pass deletecard
   try
-    if "deletecard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deletecard to stack "revFrontScriptLibrary"
-    if "deletecard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deletecard to stack "revBackScriptLibrary"
+    if "deletecard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deletecard" to stack "revFrontScriptLibrary"
+    if "deletecard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deletecard" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -865,8 +852,8 @@ end deletecard
 on deleteEPS
   if revOKTarget() then pass deleteEPS
   try
-    if "deleteEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteEPS to stack "revFrontScriptLibrary"
-    if "deleteEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteEPS to stack "revBackScriptLibrary"
+    if "deleteEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteEPS" to stack "revFrontScriptLibrary"
+    if "deleteEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteEPS" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -877,8 +864,8 @@ end deleteEPS
 on deleteField
   if revOKTarget() then pass deleteField
   try
-    if "deleteField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteField to stack "revFrontScriptLibrary"
-    if "deleteField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteField to stack "revBackScriptLibrary"
+    if "deleteField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteField" to stack "revFrontScriptLibrary"
+    if "deleteField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteField" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -889,8 +876,8 @@ end deleteField
 on deleteGraphic
   if revOKTarget() then pass deleteGraphic
   try
-    if "deleteGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteGraphic to stack "revFrontScriptLibrary"
-    if "deleteGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteGraphic to stack "revBackScriptLibrary"
+    if "deleteGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteGraphic" to stack "revFrontScriptLibrary"
+    if "deleteGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteGraphic" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -901,8 +888,8 @@ end deleteGraphic
 on deleteImage
   if revOKTarget() then pass deleteImage
   try
-    if "deleteImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deleteImage to stack "revFrontScriptLibrary"
-    if "deleteImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deleteImage to stack "revBackScriptLibrary"
+    if "deleteImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deleteImage" to stack "revFrontScriptLibrary"
+    if "deleteImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deleteImage" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -913,8 +900,8 @@ end deleteImage
 on deletePlayer
   if revOKTarget() then pass deletePlayer
   try
-    if "deletePlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send deletePlayer to stack "revFrontScriptLibrary"
-    if "deletePlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send deletePlayer to stack "revBackScriptLibrary"
+    if "deletePlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "deletePlayer" to stack "revFrontScriptLibrary"
+    if "deletePlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "deletePlayer" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -925,8 +912,8 @@ end deletePlayer
 on dragMove
   if revOKTarget() then pass dragMove
   try
-    if "dragMove" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send dragMove to stack "revFrontScriptLibrary"
-    if "dragMove" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send dragMove to stack "revBackScriptLibrary"
+    if "dragMove" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "dragMove" to stack "revFrontScriptLibrary"
+    if "dragMove" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "dragMove" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -937,8 +924,8 @@ end dragMove
 on dragEnter
   if revOKTarget() then pass dragEnter
   try
-    if "dragEnter" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send dragEnter to stack "revFrontScriptLibrary"
-    if "dragEnter" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send dragEnter to stack "revBackScriptLibrary"
+    if "dragEnter" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "dragEnter" to stack "revFrontScriptLibrary"
+    if "dragEnter" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "dragEnter" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -961,8 +948,8 @@ end errorDialog
 on escapeKey
   if revOKTarget() then pass escapeKey
   try
-    if "escapeKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send escapeKey to stack "revFrontScriptLibrary"
-    if "escapeKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send escapeKey to stack "revBackScriptLibrary"
+    if "escapeKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "escapeKey" to stack "revFrontScriptLibrary"
+    if "escapeKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "escapeKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -973,8 +960,8 @@ end escapeKey
 on help
   if revOKTarget() then pass help
   try
-    if "help" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send help to stack "revFrontScriptLibrary"
-    if "help" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send help to stack "revBackScriptLibrary"
+    if "help" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "help" to stack "revFrontScriptLibrary"
+    if "help" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "help" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -985,8 +972,8 @@ end help
 on libraryStack
   if revOKTarget() then pass libraryStack
   try
-    if "libraryStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send libraryStack to stack "revFrontScriptLibrary"
-    if "libraryStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send libraryStack to stack "revBackScriptLibrary"
+    if "libraryStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "libraryStack" to stack "revFrontScriptLibrary"
+    if "libraryStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "libraryStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -997,8 +984,8 @@ end libraryStack
 on newBackground
   if revOKTarget() then pass newBackground
   try
-    if "newBackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newBackground to stack "revFrontScriptLibrary"
-    if "newBackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newBackground to stack "revBackScriptLibrary"
+    if "newBackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newBackground" to stack "revFrontScriptLibrary"
+    if "newBackground" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newBackground" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1009,8 +996,8 @@ end newBackground
 on NewButton
   if revOKTarget() then pass NewButton
   try
-    if "NewButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send NewButton to stack "revFrontScriptLibrary"
-    if "NewButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send NewButton to stack "revBackScriptLibrary"
+    if "NewButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "NewButton" to stack "revFrontScriptLibrary"
+    if "NewButton" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "NewButton" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1021,8 +1008,8 @@ end NewButton
 on newPlayer
   if revOKTarget() then pass newPlayer
   try
-    if "newPlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newPlayer to stack "revFrontScriptLibrary"
-    if "newPlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newPlayer to stack "revBackScriptLibrary"
+    if "newPlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newPlayer" to stack "revFrontScriptLibrary"
+    if "newPlayer" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newPlayer" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1033,8 +1020,8 @@ end newPlayer
 on newCard
   if revOKTarget() then pass newCard
   try
-    if "newCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newCard to stack "revFrontScriptLibrary"
-    if "newCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newCard to stack "revBackScriptLibrary"
+    if "newCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newCard" to stack "revFrontScriptLibrary"
+    if "newCard" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newCard" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1045,8 +1032,8 @@ end newCard
 on newEPS
   if revOKTarget() then pass newEPS
   try
-    if "newEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newEPS to stack "revFrontScriptLibrary"
-    if "newEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newEPS to stack "revBackScriptLibrary"
+    if "newEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newEPS" to stack "revFrontScriptLibrary"
+    if "newEPS" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newEPS" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1057,8 +1044,8 @@ end newEPS
 on newField
   if revOKTarget() then pass newField
   try
-    if "newField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newField to stack "revFrontScriptLibrary"
-    if "newField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newField to stack "revBackScriptLibrary"
+    if "newField" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newField" to stack "revFrontScriptLibrary"
+    if "newField" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newField" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1069,8 +1056,8 @@ end newField
 on newGraphic
   if revOKTarget() then pass newGraphic
   try
-    if "newGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newGraphic to stack "revFrontScriptLibrary"
-    if "newGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newGraphic to stack "revBackScriptLibrary"
+    if "newGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newGraphic" to stack "revFrontScriptLibrary"
+    if "newGraphic" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newGraphic" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1081,8 +1068,8 @@ end newGraphic
 on newGroup
   if revOKTarget() then pass newGroup
   try
-    if "newGroup" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newGroup to stack "revFrontScriptLibrary"
-    if "newGroup" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newGroup to stack "revBackScriptLibrary"
+    if "newGroup" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newGroup" to stack "revFrontScriptLibrary"
+    if "newGroup" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newGroup" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1093,8 +1080,8 @@ end newGroup
 on newImage
   if revOKTarget() then pass newImage
   try
-    if "newImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newImage to stack "revFrontScriptLibrary"
-    if "newImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newImage to stack "revBackScriptLibrary"
+    if "newImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newImage" to stack "revFrontScriptLibrary"
+    if "newImage" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newImage" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1105,8 +1092,8 @@ end newImage
 on newScrollbar
   if revOKTarget() then pass newScrollbar
   try
-    if "newScrollbar" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newScrollbar to stack "revFrontScriptLibrary"
-    if "newScrollbar" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newScrollbar to stack "revBackScriptLibrary"
+    if "newScrollbar" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newScrollbar" to stack "revFrontScriptLibrary"
+    if "newScrollbar" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newScrollbar" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1117,8 +1104,8 @@ end newScrollbar
 on newStack
   if revOKTarget() then pass newStack
   try
-    if "newStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send newStack to stack "revFrontScriptLibrary"
-    if "newStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send newStack to stack "revBackScriptLibrary"
+    if "newStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "newStack" to stack "revFrontScriptLibrary"
+    if "newStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "newStack" to stack "revBackScriptLibrary"
   catch tError
     if gRevDevelopment then
       writeError (tError)
@@ -1285,8 +1272,8 @@ end socketTimeout
 on tabKey
   if revOKTarget() then pass tabKey
   try
-    if "tabKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send tabKey to stack "revFrontScriptLibrary"
-    if "tabKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send tabKey to stack "revBackScriptLibrary"
+    if "tabKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "tabKey" to stack "revFrontScriptLibrary"
+    if "tabKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "tabKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1299,8 +1286,8 @@ end tabKey
 on undoKey
   if revOKTarget() then pass undoKey
   try
-    if "undoKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send undoKey to stack "revFrontScriptLibrary"
-    if "undoKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send undoKey to stack "revBackScriptLibrary"
+    if "undoKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "undoKey" to stack "revFrontScriptLibrary"
+    if "undoKey" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "undoKey" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)
@@ -1313,8 +1300,8 @@ end undoKey
 on uniconifyStack
   if revOKTarget() then pass uniconifyStack
   try
-    if "uniconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send uniconifyStack to stack "revFrontScriptLibrary"
-    if "uniconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send uniconifyStack to stack "revBackScriptLibrary"
+    if "uniconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revFrontScriptLibrary" then send "uniconifyStack" to stack "revFrontScriptLibrary"
+    if "uniconifyStack" is among the lines of the cREVGeneral["handlerlist"] of stack "revBackScriptLibrary" then send "uniconifyStack" to stack "revBackScriptLibrary"
   catch tError
     if gREVDevelopment then
       writeError (tError)

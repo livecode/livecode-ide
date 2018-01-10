@@ -3891,18 +3891,6 @@ on revIDERelayerControl pControl, pLayerNumber, pCard
    return the long id of tName
 end revIDERelayerControl
 
-on revIDEMoveControl pControl, pNewCard, pLayerNumber
-   local tNewControl
-   lock messages
-   copy pControl to pNewCard
-   put the long id of it into tNewControl
-
-   delete pControl
-
-   revIDESetPropertyOfObject tNewControl, "layer", pLayerNumber
-   unlock messages
-end revIDEMoveControl
-
 on revIDEMoveCard pCard, pNewStack
    local tNewCard
    lock messages
@@ -12359,10 +12347,6 @@ on revIDEFindMoreWidgets
          stack revIDEPaletteToStackName("extension manager")
    unlock screen
 end revIDEFindMoreWidgets
-
-command revIDESetEdited pStackName
-   revSetEdited pStackName
-end revIDESetEdited
 
 command ideShowUpgradeOptions
    if ideCanShowUpgradeOptions() then
