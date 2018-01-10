@@ -111,6 +111,10 @@ setProp editorValue[pKey] pValue
 end editorValue
 
 getProp editorValue[pKey]
+   if sPropertyInfo["multiprop_chooser"] then
+      dispatch function "multipropValue" with sPropertyInfo["property_name"]
+      return the result
+   end if
    if pKey is not empty then
       return sValue[pKey]
    else
@@ -119,6 +123,10 @@ getProp editorValue[pKey]
 end editorValue
 
 on updateProperty pForce
+   if sPropertyInfo["multiprop_chooser"] then
+      dispatch "multipropValueChanged" with sPropertyInfo["property_name"], sValue
+      exit updateProperty
+   end if
    if pForce or (sAllowUpdate is true and not sPropertyInfo["read_only"]) then
       set the itemdelimiter to ";"
       -- Single editors can control multiple properties delimited by ;

@@ -11,6 +11,11 @@ on propertyRegister pPropertyInfo
    # Check that the property has not already been registered
    if tPropName is among the keys of sProperties then exit propertyRegister
    
+   if the multipropName of me is not empty and \
+         the number of lines in sOrder > 1 then
+      exit propertyRegister
+   end if
+   
    // Some editors are only slight variants of each other. In this case 
    // we allow the editor behavior itself to configure the options
    switch pPropertyInfo["editor"]
@@ -64,6 +69,7 @@ on propertyRegister pPropertyInfo
    
    # Store the property name
    put tPropName into sProperties[tPropName]["property"]
+   put pPropertyInfo["multiprop_chooser"] into sProperties[tPropName]["multiprop_chooser"]
    if sOrder is empty then
       put tPropName into sOrder
    else
@@ -87,8 +93,26 @@ end rowReset
 
 setProp rowData pData
    lock screen
-   local tConflict, tValue
-   repeat for each key tProperty in pData
+   local tConflict, tValue, tMultipropName, tPropList
+   put the multipropName of me into tMultipropName
+   if tMultipropName is not empty then
+      dispatch function "multipropValue" with tMultipropName
+      put the result into tValue
+      if tValue is empty then
+         put the editorProperty["default"] of group tMultipropName of me into tValue
+      end if
+      set the editorValue of group tMultipropName of me to tValue
+      if tValue is not empty then
+         dispatch "editorUpdate" to group tMultipropName of me
+         put tValue into tPropList
+      else
+         put line 2 of sOrder into tPropList
+      end if
+   else
+      put sOrder into tPropList
+   end if
+   
+   repeat for each line tProperty in tPropList
       put false into tConflict
       put empty into tValue
       if there is a group tProperty of me then
@@ -213,7 +237,7 @@ function calculateLayout pProps
    put the showMultiPropLabels of this stack into tMultiPropLabels
    
    local tLayoutA
-   local tMinMaxA, tElement, tGroupLongID, tIndex, tMinTotal
+   local tMinMaxA, tElement, tGroupLongID, tIndex, tMinTotal, tForceNewline
    repeat for each line tProperty in pProps
       add 1 to tIndex
       put sProperties[tProperty] into tElement
@@ -236,15 +260,20 @@ function calculateLayout pProps
       
       # If the min total > the available space, we need to go on to multiple lines
       # So try and work out where the split should occur and recursively calculate layout
-      if tMinTotal > tAvailableSpace and the number of lines in pProps > 1 then
+      if tForceNewline or \
+            (tMinTotal > tAvailableSpace and the number of lines in pProps > 1) then
          local tOver, tNumOver
          put calculateLayout(line 1 to tIndex - 1 of pProps) into tLayoutA
          put the number of elements in tLayoutA into tNumOver
-         put calculateLayout(line 1 to tIndex - 1 of pProps) into tOver
+         put calculateLayout(line tIndex to -1 of pProps) into tOver
          repeat with x = 1 to the number of elements in tOver
             put tOver[x] into tLayoutA[x + tNumOver]
          end repeat
          return tLayoutA
+      end if
+      if sProperties[tProperty]["multiprop_chooser"] then
+         -- Force the next editor onto a new line
+         put true into tForceNewline
       end if
    end repeat
    
@@ -315,7 +344,7 @@ on rowResize pExpandableExtra
    put the right of me into tRight
    put the width of me into tWidth
    put rowLabelWidth() into tLabelWidth
-
+   
    # Position the label
    lock messages
    # AL-2015-04-24: [[ Bug 15285 ]] Trim label fields so that editor fields can be unfocused
@@ -324,7 +353,7 @@ on rowResize pExpandableExtra
    set the top of field "rowlabel" of me to tTop
    set the right of field "rowlabel" of me to tGroupLeft+tLabelWidth
    unlock messages
-
+   
    # Calculate layout
    local tWidthsA
    put calculateLayout(sOrder) into tWidthsA
@@ -362,6 +391,7 @@ on rowResize pExpandableExtra
          add tHeightOfRow to tTop
          add tHeightOfRow to tGroupHeight
          put 0 into tHeightOfRow
+         put tGroupLeft + tLabelWidth into tLeft
       end if
       
       if tEditorCount > 1 and there is a field tElement["property"] of me then
@@ -480,3 +510,10 @@ function canExpandVertically
    end repeat
    return false
 end canExpandVertically
+
+getProp multipropName
+   if sProperties[line 1 of sOrder]["multiprop_chooser"] then
+      return line 1 of sOrder
+   end if
+   return empty
+end multipropName

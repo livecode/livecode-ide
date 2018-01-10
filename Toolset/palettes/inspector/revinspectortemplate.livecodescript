@@ -225,9 +225,30 @@ end inspectorEditScript
 ##### MESSAGES #####
 #####################
 
-# Sent by an editor when a property value is being changed
+on multipropValueChanged pProperty, pValue
+   revIDESetChosenMultipropProperty sSelectedObjects, pProperty, pValue
+end multipropValueChanged
+   
+function multipropValue pProperty
+   return revIDEGetChosenMultipropProperty(sSelectedObjects, pProperty)
+end multipropValue
+   
+   # Sent by an editor when a property value is being changed
 on editorValueChanged pProperty, pValue, pLockUpdates
-   revIDEPropertySet sSelectedObjects, pProperty, pValue
+   local tPropGroup, tMultipropName
+   put the long id of the owner of the target into tPropGroup
+   put the multipropName of tPropGroup into tMultipropName
+   if tMultipropName is not empty then
+      -- If this is a group controlling multiple properties
+      -- via an option menu, then fetch its current value and
+      -- modify the appropriate property
+      local tChosenProp
+      put revIDEGetChosenMultipropProperty(sSelectedObjects, tMultipropName) \
+            into tChosenProp
+      revIDEPropertySet sSelectedObjects, tChosenProp, pValue
+   else
+      revIDEPropertySet sSelectedObjects, pProperty, pValue
+   end if
 end editorValueChanged
 
 function editorStoredValue pProperty

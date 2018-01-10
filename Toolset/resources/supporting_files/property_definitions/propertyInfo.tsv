@@ -56,7 +56,7 @@ endTime	End	Basic	com.livecode.pi.integer	true	false					0		1
 endValue	End value	Basic	com.livecode.pi.number	true	false		100					1
 externals	External references	externalRefs	com.livecode.pi.text	true	false							
 filename	Source	Basic	com.livecode.pi.file	true	false							
-fillGradient::revIDESetGradientProperty	Fill gradient	Colors	com.livecode.pi.gradient	true	false			popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap				
+fillGradient:revIDEGetGradientProperty:revIDESetGradientProperty	Fill gradient	Colors	com.livecode.pi.gradientramp	true	false	multiprop:Gradient						
 firstIndent	First indent	Basic	com.livecode.pi.integer	true	false		0					1
 fixedLineHeight	Fixed line height	Text	com.livecode.pi.boolean	true	false		false					
 focusBorder	Focus border	Basic	com.livecode.pi.boolean	true	false							
@@ -64,16 +64,7 @@ focusColor	Focus color	Colors	com.livecode.pi.color	true	false	Focus fill
 focusPattern	Focus pattern	Colors	com.livecode.pi.pattern	true	false	Focus fill						
 foregroundColor	Text color	Colors	com.livecode.pi.color	true	false	Foreground fill						
 foregroundPattern	Text pattern	Colors	com.livecode.pi.pattern	true	false	Foreground fill						
-formatForPrinting	Format for printing	Basic	com.livecode.pi.boolean	true	false							
-gradientType	Type	Gradients	com.livecode.pi.enum	true	false		No Gradient	No Gradient,Linear,Radial,Conical,Diamond,Spiral,XY,SqrtXY				
-gradientRamp	Ramp	Gradients	com.livecode.pi.gradientramp	true	false							
-gradientFrom	From	Gradients	com.livecode.pi.number	true	false							
-gradientTo	To	Gradients	com.livecode.pi.number	true	false							
-gradientVia	Via	Gradients	com.livecode.pi.number	true	false							
-gradientQuality	Quality	Gradients	com.livecode.pi.enum	true	false		Normal	Normal,Good				
-gradientRepeat	Repeat	Gradients	com.livecode.pi.integer	true	false		0					1
-gradientMirror	Mirror	Gradients	com.livecode.pi.boolean	true	false		false					
-gradientWrap	Wrap	Gradients	com.livecode.pi.boolean	true	false		false					
+formatForPrinting	Format for printing	Basic	com.livecode.pi.boolean	true	false			
 height	Height	Position	com.livecode.pi.integer	true	false					1		1
 hGrid	Horizontal grid	Table	com.livecode.pi.boolean	true	false			
 hilited	Hilited	Basic	com.livecode.pi.boolean	true	false		false
@@ -169,7 +160,7 @@ startArrow	Start arrow	Basic	com.livecode.pi.boolean	true	false
 startTime	Start	Basic	com.livecode.pi.integer	true	false					0		1			
 startupIconic	Open minimized	Basic	com.livecode.pi.boolean	true	false			
 startValue	Start value	Basic	com.livecode.pi.number	true	false		0					1	
-strokeGradient::revIDESetGradientProperty	Stroke gradient	Colors	com.livecode.pi.gradient	true	false			popup:gradientType,gradientRamp,gradientQuality,gradientRepeat,gradientMirror,gradientWrap
+strokeGradient::revIDESetGradientProperty	Stroke gradient	Colors	com.livecode.pi.gradientramp	true	false	multiprop:Gradient
 style	Style	Basic	com.livecode.pi.enum	true	false	
 styledText	Contents	Contents	com.livecode.pi.styledText	true	false		no_default			
 systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	

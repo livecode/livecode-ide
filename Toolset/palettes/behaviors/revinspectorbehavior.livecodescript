@@ -404,6 +404,47 @@ private command inspectorNoObject
    set the traversalOn of it to false
 end inspectorNoObject
 
+-- Build a pseudo-property to allow choosing the 
+-- property name that is acted upon by the editor for 
+-- the group.
+private function propertyChooserInfo pElement
+   global gRevLanguageNames
+   
+   local tOptions, tPropList, tProperty
+   repeat with y = 1 to the number of elements in pElement["proplist"]
+      put pElement["proplist"][y] into tProperty
+      
+      local tLabel
+      if gRevLanguageNames then
+         put tProperty["property_name"] into tLabel
+      else
+         put tProperty["label"] into tLabel
+      end if
+      put "|" & tProperty["property_name"] after tLabel
+      
+      # Build the list of properties controlled by the chooser
+      if tOptions is empty then
+         put tLabel into tOptions
+      else
+         put return & tLabel after tOptions
+      end if
+      
+      if tPropList is empty then
+         put tLabel into tPropList
+      else
+         put return & tLabel after tPropList
+      end if
+   end repeat
+   
+   local tInfoA
+   put pElement["label"] & "Chooser" into tInfoA["property_name"]
+   put "com.livecode.pi.enum" into tInfoA["editor"]
+   put tOptions into tInfoA["options"]
+   put pElement["proplist"][y]["property_name"] into tInfoA["default"]
+   put true into tInfoA["multiprop_chooser"]
+   return tInfoA
+end propertyChooserInfo
+
 on inspectorGenerateGroups pGroupList
    lock screen
    set the margins of the templategroup to 0
@@ -473,7 +514,12 @@ on inspectorGenerateGroups pGroupList
       local tName
       put the short name of tRowGroup into tName
       if exists(tRowGroup) then
-         local tPropList, tProperty
+         local tProperty
+         if tElement["multiprop"] then
+            put propertyChooserInfo(tElement) into tProperty
+            dispatch "propertyRegister" to tRowGroup with tProperty
+         end if
+         local tPropList
          repeat with y = 1 to the number of elements in tElement["proplist"]
             put tElement["proplist"][y] into tProperty
             if tProperty["user_visible"] is false then next repeat

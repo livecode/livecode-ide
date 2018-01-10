@@ -6,7 +6,7 @@ on editorInitialize
    set the editorMinWidth of me to 40
    set the editorMaxWidth of me to 0
    
-   local tText, tOptions
+   local tText, tOptions, tDisplayOptions
    put the editorOptions of me into tOptions
    set the itemdelimiter to "|"
    repeat for each line tLine in tOptions
@@ -15,8 +15,13 @@ on editorInitialize
       else
          delete item 2 of tLine
       end if
+      if tDisplayOptions is empty then
+         put tLine into tDisplayOptions
+      else
+         put return & tLine after tDisplayOptions
+      end if
    end repeat
-   set the text of button "pulldown" of me to tOptions
+   set the text of button "pulldown" of me to tDisplayOptions
 end editorInitialize
 
 on editorUpdate

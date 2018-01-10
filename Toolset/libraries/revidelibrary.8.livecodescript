@@ -309,7 +309,8 @@ private function __propertyDataProcessLine pLine
    put __propertyDataMapping() into tMappingA
    
    repeat for each key tDataName in tMappingA
-      local tItemNumber, tPreProcessed
+      local tItemNumber, tPreProcessed, tMultiprop
+      put false into tMultiprop
       put tMappingA[tDataName] into tItemNumber
       set the itemdelimiter to tab
       put item tItemNumber of pLine into tPreProcessed
@@ -436,7 +437,14 @@ private function __organisePropertyInfo pInfoA, pPopup
       
       # Carry over the generic prop information into the object prop info array
       put pInfoA[tKey] into tGroupData["proplist"][tKey]
-      
+      if not pPopup then
+         if pInfoA[tKey]["multiprop"] is tGroupLabel and \
+               tOrganisedA[tSection]["grouplist"][tGroupLabel]["multiprop"] is not false then
+            put true into tOrganisedA[tSection]["grouplist"][tGroupLabel]["multiprop"]
+         else
+            put false into tOrganisedA[tSection]["grouplist"][tGroupLabel]["multiprop"]
+         end if
+      end if
       # Organise the popup data if there is any
       local tPopupData
       if pInfoA[tKey]["popup"] is not empty then
@@ -535,6 +543,12 @@ private on  __setPropertyDataOfObjectFromFile pObjectType, pFile, pPropInfoA
       
       local tGroupLabel
       put pPropInfoA[tPropertyName]["group"] into tGroupLabel
+      set the itemdelimiter to ":"
+      if the number of items in tGroupLabel > 1 and \
+            item 1 of tGroupLabel is "multiprop" then
+         put item 2 of tGroupLabel into tGroupLabel
+         put tGroupLabel into pPropInfoA[tPropertyName]["multiprop"]
+      end if
       if tGroupLabel is empty then
          put pPropInfoA[tPropertyName]["label"] into tGroupLabel
       end if
@@ -588,7 +602,7 @@ private on __orderClassicTools
 end __orderClassicTools
 
 # Reads in the basic property data for classic controls
-private on __objectPropertiesRead
+on __objectPropertiesRead
    put empty into sClassicObjectProperties
    put empty into sClassicObjectPropertiesInfo
    put empty into sClassicPropertiesInfo
@@ -666,6 +680,7 @@ private function __orderPropSubArray pSectionA, pIsGroupList
    repeat for each line tProp in tKeys
       if pIsGroupList then
          put tProp into tOrderedA[tCount]["label"]
+         put pSectionA[tSubKey][tProp]["multiprop"] into tOrderedA[tCount]["multiprop"]
          put pSectionA[tSubKey][tProp]["subsection"] into tOrderedA[tCount]["subsection"]
          put __orderPropSubArray(pSectionA[tSubKey][tProp], false) into tOrderedA[tCount]["proplist"]
          # Inherit the prop label if there is only one
@@ -5505,7 +5520,16 @@ function revIDEPropertySectionNameToIconName pName
    end switch
 end revIDEPropertySectionNameToIconName
 
-function revIDEPaletteResourcePath pFilename, pTarget
+local sMultipropSelectionsA
+function revIDEGetChosenMultipropProperty pObjectList, pProperty
+   return sMultipropSelectionsA[line 1 of pObjectList][pProperty]
+end revIDEGetChosenMultipropProperty
+
+command revIDESetChosenMultipropProperty pObjectList, pProperty, pValue, pLockUpdates
+   put pValue into sMultipropSelectionsA[line 1 of pObjectList][pProperty]
+end revIDESetChosenMultipropProperty
+   
+   function revIDEPaletteResourcePath pFilename, pTarget
    if pTarget is empty then put the long ID of the target into pTarget
    local tPalettePath
    set the itemdel to slash
