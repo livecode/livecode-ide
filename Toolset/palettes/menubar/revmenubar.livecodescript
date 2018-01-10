@@ -2367,27 +2367,6 @@ end markMenuItem
 
 ################################################################################
 
-command revMenuBarUpdateRecentPaths
-  revIDECleanRecentPaths
-  
-  local tRecentPathsMenu
-  put revIDEGetRecentPathsAsMenu() into tRecentPathsMenu
-  
-  local tFileButtonText
-  put the text of button "File" of group "revMenuBar" of me into tFileButtonText
-   
-  local tStart
-  set the wholeMatches to true
-  put lineOffset("Open Recent File", tFileButtonText) + 1 into tStart
-  set the wholeMatches to false
-   
-  local tEnd
-  put lineOffset("&Close/W", tFileButtonText) - 1 into tEnd
-  put tRecentPathsMenu into line tStart to tEnd of tFileButtonText
-  set the text of button "File" of group "revMenuBar" of me to tFileButtonText
-  
-end revMenuBarUpdateRecentPaths
-
 # OK-2007-05-03: Bug 4833.
 # Parameters
 #   pObject : reference to the object to list handlers for

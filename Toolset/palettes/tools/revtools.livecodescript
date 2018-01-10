@@ -138,16 +138,17 @@ on framePreferenceSelected pPreference, pValue
          revIDESetPreference "revTools_columns", pValue
          break
       case "revTools_show"
-         local tCurrentPreferenceValue, tPreferencePosition
+         local tCurrentPreferenceValue, tPreferencePosition, tItemOffset
          put revIDEGetPreference("revTools_show") into tCurrentPreferenceValue
-         if pValue is among the items of tCurrentPreferenceValue then
-            repeat with x = the number of items of tCurrentPreferenceValue down to 1
-               if item x of tCurrentPreferenceValue is pValue then
-                  delete item x of tCurrentPreferenceValue
-               end if
-            end repeat
+         put itemOffset(pValue, tCurrentPreferenceValue) into tItemOffset
+         if tItemOffset is not 0 then
+            delete item tItemOffset of tCurrentPreferenceValue
          else
-            put "," & pValue after tCurrentPreferenceValue
+            if tCurrentPreferenceValue is empty then
+               put pValue into tCurrentPreferenceValue
+            else
+               put comma & pValue after tCurrentPreferenceValue
+            end if
          end if
          revIDESetPreference "revTools_show", tCurrentPreferenceValue
          break
