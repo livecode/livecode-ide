@@ -908,41 +908,72 @@ function revIDEExtensionsOrderByDependency pExtensions
    return __dependencyOrder(tDependencies, pExtensions)
 end revIDEExtensionsOrderByDependency
 
-command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rType
+private function __RegexPatternForSource pType
+   switch pType
+      case "lcb"
+         return "^.*\.lcb$"
+         break
+      case "lcs"
+         return "^.*\.livecode(script)?$"
+         break
+   end switch
+end __RegexPatternForSource
+
+command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rSupportFiles, @rType
    local tFiles
    put files(pFolder) into tFiles
    
-   local tExtFile, tType
-   filter tFiles with "*.lcb" into tExtFile
+   local tExtFiles, tType
+   filter tFiles with regex pattern \
+         __RegexPatternForSource("lcb") into tExtFiles
    if there is a file (pFolder & slash & "module.lcm") \
-         or tExtFile is not empty then
+         or tExtFiles is not empty then
       put "lcb" into tType
    end if
+   
    if tType is empty then
-      filter tFiles with regex pattern ".*\.livecode(script)?$" into tExtFile
-      if tExtFile is not empty then
+      filter tFiles with regex pattern \
+            __RegexPatternForSource("lcs") into tExtFiles
+      if tExtFiles is not empty then
          put "lcs" into tType
       end if
+   end if
+   
+   -- Try and separate main source from support
+   local tFoundCount, tSupport, tMainFile
+   put the number of lines in tExtFiles into tFoundCount
+   if tFoundCount > 1 then
+      set the itemdelimiter to "."
+      repeat for each line tTry in tExtFiles
+         filter tExtFiles with item 1 to -2 of tTry & "-*" into tSupport
+         if the number of lines in tSupport is tFoundCount - 1 then
+            put tTry into tMainFile
+            exit repeat
+         end if
+         put empty into tSupport
+      end repeat
+      if tSupport is empty then
+         return "Invalid extension folder" && pFolder & return & \
+               "Must have one main module, with all support modules named" && \
+               "<main-name>-<support-name>."
+      end if
+   else
+      put tExtFiles into tMainFile 
    end if
    
    if tType is empty then
       put "none" into tType
    end if 
    
-   put tExtFile into rSource
+   put tMainFile into rSource
+   put tSupport into rSupportFiles
    put tType into rType
+   return empty
 end revIDEExtensionFetchSourceFromFolder
 
 private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xDataA
-   local tExtSource, tArray, tFiles, tExtFile, tType
-   revIDEExtensionFetchSourceFromFolder pFolder, tExtFile, tType
-   
-   local tNumExtensions
-   put the number of lines in tExtFile into tNumExtensions
-   if tNumExtensions > 1 then
-      get __revIDEError("Invalid extension folder" && pFolder & ": require exactly one extension per folder")
-      exit __FindExtensionsInFolderRecursive
-   end if
+   local tExtSource, tArray, tFiles, tMainSource, tSupportFiles, tType
+   revIDEExtensionFetchSourceFromFolder pFolder, tMainSource, tSupportFiles, tType
    
    -- If we found no extensions, recurse
    if tType is "none" then
@@ -955,12 +986,13 @@ private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xData
    end if
    
    if tType is "lcb" then
-      put __fetchModuleData(pFolder, tExtFile) into tArray
+      put __fetchModuleData(pFolder, tMainSource) into tArray
    else
-      put __fetchScriptLibraryData(pFolder, tExtFile) into tArray
+      put __fetchScriptLibraryData(pFolder, tMainSource) into tArray
    end if
    
-   put tExtFile into tArray["source_file"]
+   put tMainSource into tArray["source_file"]
+   put tSupportFiles into tArray["support_files"]
    put tType into tArray["source_type"]
    put not pIsUserFolder into tArray["ide"]
    
@@ -1201,6 +1233,8 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
+   local tSupportFiles
+   put pAdditionalInfoA["support_files"] into tSupportFiles
    local tLoadOnStartup
    if pError is empty then
       put revIDEExtensionGetLoadOnStartup(pID) into tLoadOnStartup
@@ -1210,7 +1244,7 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
       -- If we have an error loading, try to recompile the extension
       if pError is not empty then
          if not pIsIDEExtension and pSourceFile is not empty then
-            revIDEExtensionCompile pFolder & slash & pSourceFile, pFolder
+            revIDEExtensionCompile pFolder & slash & pSourceFile, tSupportFiles, pFolder
             if the result is empty then
                local tNewError
                __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, tNewError
@@ -1228,6 +1262,7 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
    __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
    __extensionPropertySet tCacheIndex, "source_type", "lcb"
+   __extensionPropertySet tCacheIndex, "support_files", tSupportFiles
    
    # Check for sample stacks
    __extensionPropertySet tCacheIndex, "samples", __extensionSampleStacks(pID,pFolder)
@@ -1337,6 +1372,7 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
    __extensionPropertySet tCacheIndex, "source_type", "lcs"
    __extensionPropertySet tCacheIndex, "type", "library"
    __extensionPropertySet tCacheIndex, "uservisible", true
+   __extensionPropertySet tCacheIndex, "support_files", pAdditionalInfoA["support_files"]
    
    # Store the extension's property metadata
    --  revIDEExtensionSetInfo pID
@@ -1598,7 +1634,7 @@ private function shellFormat pArg, pSwitch
    return tOutput & quote & pArg & quote & " "
 end shellFormat
 
-command revIDEExtensionCompile pFile, pTargetFolder
+command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
       delete file (pTargetFolder & slash & "manifest.xml")
@@ -1622,6 +1658,11 @@ command revIDEExtensionCompile pFile, pTargetFolder
    
    # The output
    put shellFormat(pTargetFolder & slash & "module.lcm", "output") after tShellCommand
+   
+   # Support files must be dependency-ordered
+   repeat for each line tSupport in revIDEExtensionsOrderByDependency(pSupportFiles)
+      put shellFormat(pTargetFolder & slash &tSupport) after tShellCommand
+   end repeat
    
    # The target .lcb file
    put shellFormat(pFile) after tShellCommand

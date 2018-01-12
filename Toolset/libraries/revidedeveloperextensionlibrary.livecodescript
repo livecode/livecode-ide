@@ -162,40 +162,36 @@ function revIDEDeveloperExtensions
    return tExtensionDetailsA
 end revIDEDeveloperExtensions
 
-private command __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, @rFile, @rType
-   local tExtFile, tType
-   revIDEExtensionFetchSourceFromFolder pFolder, tExtFile, tType
+private command __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, @rFile, @rSupportFiles, @rType
+   local tMainFile, tType, tSupportFiles
+   revIDEExtensionFetchSourceFromFolder pFolder, tMainFile, tSupportFiles, tType
    
-   local tNumExtensions
-   put the number of lines in tExtFile into tNumExtensions
-   
-   # If there are multiple lcb files in one folder, it's an error.
-   if tNumExtensions > 1 then
-      put replaceText(tExtFile, return, ",") into tExtFile
-      __revIDEDeveloperExtensionSendError "multiple lcb files in folder" && pFolder & ":" && tExtFile
-      return empty
+   if the result is not empty then
+      __revIDEDeveloperExtensionSendError the result
    end if
    
-   put tExtFile into rFile
+   put tMainFile into rFile
+   put tSupportFiles into rSupportFiles
    put tType into rType
 end __revIDEDeveloperExtensionFetchExtensionSourceInFolder
 
 function revIDEDeveloperExtensionNoCompile pFolder
-   local tFile, tType
-   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
+   local tFile, tType, tSupportFiles
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tSupportFiles, tType
    
    if tFile is empty then
       return empty
    end if
    
    if tType is "lcs" then
-      return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tType)
+      return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tSupportFiles, tType)
    end if
    
    local tDataA
    revIDEExtensionMetadata pFolder, tFile, tType, tDataA
    if the result is not empty then
       put tFile into tDataA["file"]
+      put tSupportFiles into tDataA["support_files"]
    end if
    return tDataA
 end revIDEDeveloperExtensionNoCompile
@@ -217,14 +213,14 @@ command revIDEDeveloperExtensionsActiveFolders pFolders
 end revIDEDeveloperExtensionsActiveFolders
 
 function revIDEDeveloperExtension pFolder
-   local tFile, tType
-   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
+   local tFile, tType, tSupportFiles
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tSupportFiles, tType
    
    if tFile is empty then
       return empty
    end if
    
-   return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tType)
+   return __revIDEDeveloperExtensionDetailsFromFile(pFolder, tFile, tSupportFiles, tType)
 end revIDEDeveloperExtension
 
 private function __revIDEDeveloperExtensionFetchFolderDetails pFolder, pFile
@@ -360,11 +356,12 @@ private function __revIDEDeveloperExtensionListResourcesRecursive pFolder, pPref
    return tResources
 end __revIDEDeveloperExtensionListResourcesRecursive
 
-private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
+private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pSupportFiles, pType
    local tDetailsA
    put __revIDEDeveloperExtensionFetchFolderDetails(pFolder, pFile) into tDetailsA
    
-   put pFile into tDetailsA["file"]      
+   put pFile into tDetailsA["file"]  
+   put pSupportFiles into tDetailsA["support_files"]    
    if pType is "lcb" then
       if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
          
@@ -380,7 +377,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pType
       else
          # The compiled module or manifest is not up to date, so compile.
          __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & pFile
-         __revIDEDeveloperCompileModule pFolder & slash & pFile, pFolder
+         __revIDEDeveloperCompileModule pFolder & slash & pFile, pSupportFiles, pFolder
          if the result is not empty then
             # This may be better as a warning, and try to parse info direct from the file.
             __revIDEDeveloperExtensionSendError the result
@@ -681,8 +678,8 @@ private command __revIDEDeveloperExtensionEditLCBScript pFile
 end __revIDEDeveloperExtensionEditLCBScript
 
 on revIDEDeveloperExtensionOpen pFolder
-   local tFile, tType
-   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tType
+   local tFile, tType, tSupportFiles
+   __revIDEDeveloperExtensionFetchExtensionSourceInFolder pFolder, tFile, tSupportFiles, tType
    if tFile is empty then
       exit revIDEDeveloperExtensionOpen
    end if
@@ -737,8 +734,8 @@ private function __fetchMetadatum pXmlId, pKey
    return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
 end __fetchMetadatum
 
-private command __revIDEDeveloperCompileModule pFile, pTargetFolder
-   revIDEExtensionCompile pFile, pTargetFolder
+private command __revIDEDeveloperCompileModule pFile, pSupportFiles, pTargetFolder
+   revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder
    
    if the result is not empty then
       __revIDEDeveloperCompilationError the result
@@ -892,9 +889,12 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
       put empty into tEditors
    end if
    
+   local tSupportFiles
+   put tDetailsA["support_files"] into tSupportFiles
+
    if tError is empty then
       put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
-            tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tFullPath, tSupportFiles, pFolder, tArchive, pFolder & slash & "module.lcm", \
             tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
             tSamples, tInterfaceFile, tDefaultScript, tEditors) \
             into tError
@@ -918,10 +918,10 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
 end __revIDEDeveloperExtensionBuildPackage
 
 private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
-      pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, \
-      pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, \
-      pInterfaceFile, pDefaultScript, pEditors
-      
+      pSource, pSupportFiles, pFolder, pArchive, pModule, pIcon,  \
+      pRetinaIcon, pGuide, pDocs, pResourcesFolder, pCodeFolder, \
+      pSamplesFolder, pInterfaceFile, pDefaultScript, pEditors
+   
    local tError
    
    set the itemdelimiter to slash
@@ -931,6 +931,16 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    if the result begins with "ziperr" then
       put "couldn't add source" into tError
    end if
+   
+   # Add support files into package
+   repeat for each line tSupport in pSupportFiles
+      put pFolder & slash & tSupport into tSupport
+      revZipAddItemWithFile pArchive, item -1 of tSupport, tSupport
+      
+      if the result begins with "ziperr" then
+         put "couldn't add support file" && tSupport into tError
+      end if
+   end repeat
    
    # Add module into package
    revZipAddItemWithFile pArchive, "module.lcm", pModule
@@ -951,10 +961,10 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    # Add user guide
    if tError is empty then
       // AL-2015-03-03: [[ Bug 14781 ]] If there is no guide, warn and don't try to add a file
-   	  if pGuide is empty then
-   	    __revIDEDeveloperExtensionSendWarning "no user guide found"
-   	  else
-	    revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
+      if pGuide is empty then
+         __revIDEDeveloperExtensionSendWarning "no user guide found"
+      else
+         revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
       end if
       if the result begins with "ziperr" then
          put "couldn't add guide" into tError
