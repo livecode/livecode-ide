@@ -118,6 +118,8 @@ command updateButtonStates
       enable button "Replace one" of me
       enable button "Find all" of me
       enable button "Replace all" of me
+      enable button "Replace" of me
+      select item 1 of button "replace"   
    else
       enable button "Find all" of me
       
@@ -127,6 +129,8 @@ command updateButtonStates
       
       disable button "Find Next" of me
       disable button "Replace one" of me
+      disable button "Replace" of me
+      set the label of button "replace" of me to empty
    end if
 end updateButtonStates
 
