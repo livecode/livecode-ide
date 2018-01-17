@@ -9661,7 +9661,7 @@ end DG2_EnsureRowChainedBehavior
 
 function DG2_GetMessageNameForTag pTag
    switch pTag
-      case "EditModeReorderCompleted"
+      case "EditModeReorderStarted"
          return kEditModeEditModeReorderStarted
       case "EditModeReorderCompleted"
          return kEditModeEditModeReorderCompleted
