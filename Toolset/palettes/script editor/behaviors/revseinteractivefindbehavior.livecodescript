@@ -8,7 +8,7 @@ command openControl
    set the hilite of button "Case" of me to (sePrefGet("find,casesensitive") is true)
    
    local tSearch
-   put the selectedText of field "Script" into tSearch
+   put revSEGetSelectedText() into tSearch
    if tSearch is empty then
       put line 1 of seFindHistoryGet("find") into tSearch
    end if

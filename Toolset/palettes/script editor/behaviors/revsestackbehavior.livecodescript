@@ -2917,6 +2917,10 @@ on revSEApply pIgnoreErrors
    actionCompile pIgnoreErrors
 end revSEApply
 
+function revSEGetSelectedText
+   return the selectedText of field "Script" of me
+end revSEGetSelectedText
+
 private command appendToList @xList, pValue
    if xList is not empty then
       put return & pValue after xList
