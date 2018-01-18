@@ -775,6 +775,18 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
       return "Error: missing file" && tFullPath
    end if
    
+   local tManifestFile
+   put pFolder & slash & "manifest.xml" into tManifestFile
+   
+   if tDetailsA["source_type"] is "lcs" then
+      revIDEExtensionGenerateManifestForLCSExtension \
+            tDetailsA["source_file"], pFolder
+   end if
+   
+   if there is no file tManifestFile then
+      return "Error: missing manifest" && tManifestFile
+   end if
+   
    local tTargetFolder
    if pTargetFolder is empty then
       put pFolder into tTargetFolder
@@ -892,9 +904,14 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
    local tSupportFiles
    put tDetailsA["support_files"] into tSupportFiles
 
+   local tModuleFile
+   if tDetailsA["source_type"] is "lcb" then
+      put pFolder & slash & "module.lcm" into tModuleFile
+   end if
+   
    if tError is empty then
       put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
-            tFullPath, tSupportFiles, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tFullPath, tSupportFiles, pFolder, tArchive, tModuleFile, \
             tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
             tSamples, tInterfaceFile, tDefaultScript, tEditors) \
             into tError
@@ -918,7 +935,7 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
 end __revIDEDeveloperExtensionBuildPackage
 
 private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
-      pSource, pSupportFiles, pFolder, pArchive, pModule, pIcon,  \
+      pSource, pSupportFiles, pFolder, pArchive, pModuleFile, pIcon,  \
       pRetinaIcon, pGuide, pDocs, pResourcesFolder, pCodeFolder, \
       pSamplesFolder, pInterfaceFile, pDefaultScript, pEditors
    
@@ -943,7 +960,9 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    end repeat
    
    # Add module into package
-   revZipAddItemWithFile pArchive, "module.lcm", pModule
+   if pModuleFile is not empty then
+      revZipAddItemWithFile pArchive, item -1 of pModuleFile, pModuleFile
+   end if
    
    if the result begins with "ziperr" then
       put "couldn't add module" into tError
