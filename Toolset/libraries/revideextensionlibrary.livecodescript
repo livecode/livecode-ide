@@ -1322,6 +1322,8 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
    __extensionPropertySet tCacheIndex, "author", pAdditionalInfoA["author"]
    __extensionPropertySet tCacheIndex, "title", pAdditionalInfoA["display name"]
    __extensionPropertySet tCacheIndex, "svgicon", pAdditionalInfoA["svgicon"]
+   __extensionPropertySet tCacheIndex, "version", pAdditionalInfoA["version"]
+   
    repeat for each key tKey in pAdditionalInfoA["uses"]
       local tSettingString
       put empty into tSettingString
@@ -1849,3 +1851,54 @@ command revIDEExtensionIconFromType pType, pID, @rIconName, @rIconPath
          break
    end switch
 end revIDEExtensionIconFromType
+
+private command addXML @xXML, pDepth, pTag, pContent, pAttributesA
+   repeat pDepth
+      put space after xXML
+   end repeat
+   put "<" & pTag after xXML
+   repeat for each key tKey in pAttributesA
+      put " " & tKey & "=" & quote & pAttributesA[tKey] & quote \
+            after xXML
+   end repeat
+   if pContent is empty then
+      put " />" after xXML
+   else
+      put ">" & pContent & "</" & pTag & ">" after xXML
+   end if
+   put return after xXML
+end addXML
+
+command revIDEExtensionGenerateManifestForLCSExtension pId, pFolder
+   local tCacheIndex
+   put __extensionCacheID("name", pId) into tCacheIndex
+   
+   local tPackageXML, tAttrA
+   addXML tPackageXML, 1, "name", pId
+   
+   repeat for each item tTag in "title,author,version,type"
+      addXML tPackageXML, 1, tTag, __extensionPropertyGet(tCacheIndex, tTag)
+   end repeat
+   
+   repeat for each line tRequirement in revSBGetExtensionDependenciesForExtension(pId)
+      put tRequirement into tAttrA["name"]
+      addXML tPackageXML, 1, "requires", "", tAttrA
+      put empty into tAttrA
+   end repeat
+   
+   repeat for each item tMetadata in "svgicon"
+      local tValue
+      put __extensionPropertyGet(tCacheIndex, tMetadata) into tValue
+      if tValue is empty then
+         next repeat
+      end if
+      put tMetadata into tAttrA["key"]
+      addXML tPackageXML, 1, "metadata", tValue, tAttrA
+      put empty into tAttrA
+   end repeat
+   
+   local tXML
+   put "0.0" into tAttrA["version"]
+   addXML tXML, 0, "package", return & tPackageXML, tAttrA
+   put textEncode(tXML, "utf-8") into url("binfile:" & pFolder & slash & "manifest.xml")
+end revIDEExtensionGenerateManifestForLCSExtension

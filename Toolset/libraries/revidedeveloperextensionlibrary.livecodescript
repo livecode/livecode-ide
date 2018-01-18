@@ -778,6 +778,18 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
       return "Error: missing file" && tFullPath
    end if
    
+   local tManifestFile
+   put pFolder & slash & "manifest.xml" into tManifestFile
+   
+   if tDetailsA["source_type"] is "lcs" then
+      revIDEExtensionGenerateManifestForLCSExtension \
+            tDetailsA["name"], pFolder
+   end if
+   
+   if there is no file tManifestFile then
+      return "Error: missing manifest" && tManifestFile
+   end if
+   
    local tTargetFolder
    if pTargetFolder is empty then
       put pFolder into tTargetFolder
@@ -892,9 +904,13 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
       put empty into tEditors
    end if
    
+   local tModuleFile
+   if tDetailsA["source_type"] is "lcb" then
+      put pFolder & slash & "module.lcm" into tModuleFile
+   end if
    if tError is empty then
       put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
-            tFullPath, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tFullPath, pFolder, tArchive, tModuleFile, \
             tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
             tSamples, tInterfaceFile, tDefaultScript, tEditors) \
             into tError
@@ -918,10 +934,10 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
 end __revIDEDeveloperExtensionBuildPackage
 
 private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
-      pSource, pFolder, pArchive, pModule, pIcon, pRetinaIcon, pGuide, \
+      pSource, pFolder, pArchive, pModuleFile, pIcon, pRetinaIcon, pGuide, \
       pDocs, pResourcesFolder, pCodeFolder, pSamplesFolder, \
       pInterfaceFile, pDefaultScript, pEditors
-      
+   
    local tError
    
    set the itemdelimiter to slash
@@ -933,7 +949,9 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    end if
    
    # Add module into package
-   revZipAddItemWithFile pArchive, "module.lcm", pModule
+   if pModuleFile is not empty then
+      revZipAddItemWithFile pArchive, item -1 of pModuleFile, pModuleFile
+   end if
    
    if the result begins with "ziperr" then
       put "couldn't add module" into tError
@@ -951,10 +969,10 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    # Add user guide
    if tError is empty then
       // AL-2015-03-03: [[ Bug 14781 ]] If there is no guide, warn and don't try to add a file
-   	  if pGuide is empty then
-   	    __revIDEDeveloperExtensionSendWarning "no user guide found"
-   	  else
-	    revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
+      if pGuide is empty then
+         __revIDEDeveloperExtensionSendWarning "no user guide found"
+      else
+         revZipAddItemWithFile pArchive, "docs/guide/guide.md", pGuide
       end if
       if the result begins with "ziperr" then
          put "couldn't add guide" into tError

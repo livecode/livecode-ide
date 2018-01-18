@@ -3,6 +3,7 @@ type	graphic
 title	Oval Graphic											
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
+one;two
 name							Oval					
 tooltip												
 style							oval	rectangle,roundrect,line,oval,regular,line,curve,polygon				
