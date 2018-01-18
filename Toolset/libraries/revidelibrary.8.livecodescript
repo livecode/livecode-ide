@@ -1322,7 +1322,7 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
    repeat for each key tKey in tPropMappingA
       if the number of items in tKey > 1 then
          repeat for each item tRealProp in tKey
-            __fetchPropertyOfControl tRealProp, tDataA[tRealProp]
+            __fetchPropertyOfControl tRealProp, tDataA[tKey]
          end repeat
       else
          __fetchPropertyOfControl tKey, tDataA
