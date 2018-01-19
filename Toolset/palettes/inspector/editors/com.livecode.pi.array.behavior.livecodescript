@@ -20,8 +20,11 @@ on editorUpdate
    unlock messages
    updateEditorFields tPath
    lock messages
-   set the enabled of field "value" of me to tEnabled
-   set the enabled of field "key" of me to tEnabled
+   set the visible of field "value" of me to tEnabled
+   set the visible of field "key" of me to tEnabled
+   set the visible of field "value label" of me to tEnabled
+   set the visible of field "key label" of me to tEnabled
+   set the readOnly of widget "array" of me to not tEnabled
    if tEffective is true then
       set the textcolor of field "value" of me to "150,150,150"
       set the textcolor of field "key" of me to "150,150,150"
