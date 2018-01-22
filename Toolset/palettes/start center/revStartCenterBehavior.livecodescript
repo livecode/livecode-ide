@@ -319,7 +319,7 @@ function tilesArray pState
          put "lc-ipad-portrait-filled" into tArray[3]["hoverIcon"]
          
          put "Tablet Landscape" into tArray[4]["label"]
-         put "newTabletPortrait" into tArray[4]["tag"]
+         put "newTabletLandscape" into tArray[4]["tag"]
          put "lc-ipad-landscape" into tArray[4]["icon"]
          put "lc-ipad-landscape-filled" into tArray[4]["hoverIcon"]
          
