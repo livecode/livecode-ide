@@ -11017,11 +11017,12 @@ private function revIDEGetDocsGuideData
       put empty into tExtensionGuide
       put tExtensionData["folder"] into tFolder
       put revEnvironmentUserDocsPath() & slash & \ 
-            the last item of tFolder into tCachedDataFolder
+            tExtensionData["name"] into tCachedDataFolder
       put tFolder & slash & "guide.md" into tGuideFile
       if there is not a file tGuideFile then
          -- User widgets have the guide.md in docs/guide/
-         put tFolder & slash & "docs/guide/guide.md" into tGuideFile
+         put "/docs/guide" after tFolder
+         put tFolder & slash & "guide.md" into tGuideFile
       end if
       if there is not a file tGuideFile then next repeat
       revIDEEnsurePath tCachedDataFolder
@@ -11040,8 +11041,10 @@ private function revIDEGetDocsGuideData
          
          if tGuide is not empty then
             put "{" & CR after tExtensionGuide
-            put tab & quote & "name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
-            put tab & quote & "display name" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
+            put tab & quote & "name" & quote & ":" && quote & tExtensionData["name"] & quote & comma & CR after tExtensionGuide
+            put tab & quote & "display name" & quote & ":" && quote & tExtensionData["title"] & quote & comma & CR after tExtensionGuide
+            put tab & quote & "group" & quote & ":" && quote & "Extensions" & quote & comma & CR after tExtensionGuide
+            put tab & quote & "location" & quote & ":" && quote & tFolder & quote & comma & CR after tExtensionGuide
             put quote & "data" & quote & ":" & escape(tGuide, true) & CR after tExtensionGuide
             put "}" after tExtensionGuide
             
