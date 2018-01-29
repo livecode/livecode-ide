@@ -415,6 +415,26 @@ on checkSettingsCompatible pName, pValue
          answer error "32-bit only apps are not supported on iOS 11.0 and above"
       end if
    end if
+   
+   if pName is "profile" then
+      local tAppID 
+      put getSetting("ios,bundle id") into tAppID
+      
+      local tProfile
+      repeat for each element tProfile in sProfiles
+         if tProfile["id"] is pValue then
+            set the itemDelimiter to "."
+            delete item 1 of tProfile["appid"]
+            
+            local tID
+            filter tAppID with tProfile["appid"] into tID
+            if tID is empty then
+               answer error revIDELocalise("The chosen provisioning profile requires an app ID matching:" && tProfile["appid"])
+            end if
+            exit repeat
+         end if
+      end repeat
+   end if
 end checkSettingsCompatible
 
 function fetchSetting pName
@@ -525,7 +545,7 @@ function getIosProvisioningProfiles
    
    local tProfiles
    repeat for each line tProfile in tProfileFiles
-      local tContents, tAppId, tIsDist, tName, tId, tExpirationDate
+      local tContents, tPrefix, tIsDist, tName, tId, tExpirationDate
       put url ("file:" & tProfile) into tContents
       
       set the itemDelimiter to "."
@@ -545,7 +565,7 @@ function getIosProvisioningProfiles
       end if
       get word 1 to -1 of line it + 2 of tContents
       get char 9 to -10 of it
-      put it into tAppId
+      put it into tPrefix
       
       get lineOffset("<key>Name</key>", tContents)
       if it is 0 then
@@ -567,9 +587,18 @@ function getIosProvisioningProfiles
          next repeat
       end if
       
+      local tAppID 
+      get lineOffset("<key>application-identifier</key>", tContents)
+      if it is 0 then
+         next repeat
+      end if
+      get word 1 to -1 of line it + 1 of tContents
+      put char 9 to -10 of it into tAppID
+      
       put tId into tProfiles[tId]["id"]
       put tName into tProfiles[tId]["name"]
-      put tAppId into tProfiles[tId]["appid"]
+      put tPrefix into tProfiles[tId]["prefix"]
+      put tAppID into tProfiles[tId]["appid"]
       put tIsDist into tProfiles[tId]["store"]
       put tDaysLeft into tProfiles[tId]["days remaining"]
    end repeat
