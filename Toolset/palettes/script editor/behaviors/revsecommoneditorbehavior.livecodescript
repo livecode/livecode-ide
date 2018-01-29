@@ -1807,6 +1807,11 @@ private function autoCompleteSearchContext @pScript, pLineNumber, pStructureType
       return 1
    end if
    
+   -- case can't be nested except within another switch so return 0
+   if pStructureType is "case" then
+      return 1
+   end if
+   
    local tDepth
    put 0 into tDepth
    repeat with x = pLineNumber down to 1
@@ -1852,6 +1857,19 @@ function autoCompleteCompletionRequired pLineNumber, pStructureType, pStructureN
          subtract 1 from tNestingDepth
          if tNestingDepth = 0 then
             # The structure is already completed
+            return false
+         end if
+      else if pStructureType is "case" then
+         # special case `case` so it behaves sensibly
+         if (token 1 of tLine is "end" and token 2 of tLine is "switch") or \
+               token 1 of tLine is "case" or \
+               token 1 of tLine is "default" then
+            # if the switch structure ends then we need a break
+            return true
+         else if token 1 of tLine is not empty then
+            # if there's existing code within the case then we
+            # can reasonably assume that they don't want to put a break
+            # above it
             return false
          end if
       else if token 1 of tLine is "end" and token 2 of tLine is not among the items of autoCompleteUnnamedStructures() and token 2 of tLine is not "if" then
