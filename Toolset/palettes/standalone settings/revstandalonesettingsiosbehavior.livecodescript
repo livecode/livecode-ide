@@ -140,6 +140,7 @@ on updateSettings
    
    -- MM-2011-09-28: Sepearate out the icons and splash screens so the user can specify the values per device.
    --
+   put computeDefault(tSettings["ios,AppStore icon"], empty) into field "AppStore Icon" 
    put computeDefault(tSettings["ios,iphone icon"], empty) into field "iPhone Icon"
    put computeDefault(tSettings["ios,retina icon"], empty) into field "Retina Icon"
    put computeDefault(tSettings["ios,iOS 7 retina icon"], empty) into field "iOS 7 Retina Icon"
@@ -442,11 +443,11 @@ on tipDisplayUpdate
    if the visible of group "iOSCommercialTip" then
       set the topLeft of group "iosBuild" to 12,136
       set the topLeft of group "iOS Settings" to -1,136
-      set the cSize of this card to 1024,796
+      set the cSize of this card to 1024,816
    else 
       set the topLeft of group "iOS Settings" to -1,67
       set the topLeft of group "iosBuild" to 12,68
-      set the cSize of this card to 1024,746
+      set the cSize of this card to 1024,766
    end if
    updateCardSize
 end tipDisplayUpdate
