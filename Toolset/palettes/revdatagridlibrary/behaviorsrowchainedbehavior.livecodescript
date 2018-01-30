@@ -50,7 +50,7 @@ before mouseDown
       pass mouseDown
    end if
 
-   if the dgEditMode of the of the dgControl of me then
+   if the dgEditMode of the dgControl of me then
       -- If the reorder control has been clicked start a reorder. Exiting to top
       -- at this point prevents the mouseDown message being sent to control.
       local tReorderControl
@@ -104,7 +104,7 @@ before mouseMove pNewMouseH, pNewMouseV
       pass mouseMove
    end if
 
-   if not the dgEditMode of the of the dgControl of me then
+   if not the dgEditMode of the dgControl of me then
       -- If the user has just clicked (i.e. pre-dragging), attempt to determine
       -- if the user is trying to drag the row. We do this by checking if the
       -- horizontal position of the drag has changed sufficiently within a given
@@ -168,7 +168,7 @@ before mouseUp
       pass mouseUp
    end if
 
-   if the dgEditMode of the of the dgControl of me then
+   if the dgEditMode of the dgControl of me then
       DG2_ReorderEnd
 
       -- If the action select control has been clicked, tell the user (by
@@ -198,7 +198,7 @@ before mouseRelease
       pass mouseRelease
    end if
 
-   if the dgEditMode of the of the dgControl of me then
+   if the dgEditMode of the dgControl of me then
       DG2_ReorderEnd
    else
       put false into sPreDragging
@@ -219,7 +219,7 @@ before LayoutControl pControlRect, pWorkingRect
 
    -- If we're in edit mode, position the edit mode controls appropriately.
    -- The action select control on the left, reorder on the right.
-   if the dgEditMode of the of the dgControl of me then
+   if the dgEditMode of the dgControl of me then
       if tActionSelectControl is not empty then
          set the visible tActionSelectControl to true
          set the topLeft of tActionSelectControl to item 1 of pControlRect, item 2 of pControlRect + (item 4 of pControlRect - item 2 of pControlRect - the height of tActionSelectControl) / 2
