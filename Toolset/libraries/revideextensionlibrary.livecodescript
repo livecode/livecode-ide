@@ -13,6 +13,52 @@ on extensionFinalize
    end if
 end extensionFinalize
 
+local sModuleVersion
+private command __EnsureModuleVersion
+   if sModuleVersion is not empty then
+      exit __EnsureModuleVersion
+   end if
+   local tTempFile, tModule, tFolder
+   put the tempname into tTempFile
+   set the itemdelimiter to slash
+   put item 1 to -2 of tTempFile into tFolder
+   put "module com.livecode.dummy" into tModule
+   put return & "end module" after tModule
+   put tModule into url("file:" & tTempFile)
+   revIDEExtensionCompile tTempFile, "", tFolder, "module.lcm"
+   put __CompiledModuleVersion(tFolder & slash & "module.lcm") \
+         into sModuleVersion
+end __EnsureModuleVersion
+
+private function __CompiledModuleVersion pModule
+   local tBytes
+   put url("binfile:" & pModule) into tBytes
+   return byteToNum(byte 4 of tBytes) * 256 + \
+         byteToNum(byte 3 of tBytes)
+end __CompiledModuleVersion
+
+private function __CheckModuleVersion pModule
+   return __CompiledModuleVersion(pModule) is \
+         __ModuleVersion()
+end __CheckModuleVersion
+
+private function __ModuleVersion
+   __EnsureModuleVersion
+   return sModuleVersion
+end __ModuleVersion
+
+function revIDEExtensionBytecodeFilename pUseVersion
+   if pUseVersion is empty then 
+      put true into pUseVersion
+   end if
+   
+   if pUseVersion then
+      return "module." & __ModuleVersion() & ".lcm"
+   else
+      return "module.lcm"
+   end if
+end revIDEExtensionBytecodeFilename
+
 # Called at startup. Loads all the extensions ready for use
 on revIDEInitialiseExtensions
    # Load all the extensions ready for use
@@ -926,8 +972,11 @@ command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rSupportFiles, 
    local tExtFiles, tType
    filter tFiles with regex pattern \
          __RegexPatternForSource("lcb") into tExtFiles
-   if there is a file (pFolder & slash & "module.lcm") \
-         or tExtFiles is not empty then
+   if tExtFiles is not empty \
+         or there is a file \
+         (pFolder & slash & revIDEExtensionBytecodeFilename(true)) \
+         or there is a file \
+         (pFolder & slash & revIDEExtensionBytecodeFilename(false)) then
       put "lcb" into tType
    end if
    
@@ -1188,10 +1237,16 @@ end __MapCodeLibraryForIDE
 
 private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, pStatus, @xError
    if xError is empty then
+      local tFileToLoad
       if pSourceType is "lcb" then
          local tResources, tModule, tCode
+         put pFolder & slash & revIDEExtensionBytecodeFilename(true) \
+               into tModule
+         if there is no file tModule then
+            put pFolder & slash & revIDEExtensionBytecodeFilename(false) \
+                  into tModule
+         end if
          put pFolder & slash & "resources" into tResources
-         put pFolder & slash & "module.lcm" into tModule
          put pFolder & slash & "code" into tCode
          # map code before loading extension
          if there is a folder tCode then
@@ -1203,9 +1258,11 @@ private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, 
          else
             load extension from file tModule
          end if
+         put tModule into tFileToLoad
       else
          set the itemdelimiter to "."
          revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
+         put pSourceFile into tFileToLoad
       end if
       if the result is not empty then
          put toUpper(char 1 of the result) & \
@@ -1218,6 +1275,7 @@ private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, 
    
    __extensionPropertySet pCacheIndex, "status", pStatus
    __extensionPropertySet pCacheIndex, "error", xError
+   __extensionPropertySet pCacheIndex, "file", tFileToLoad
    __extensionsChanged
 end __LoadExtension
 
@@ -1244,7 +1302,8 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
       -- If we have an error loading, try to recompile the extension
       if pError is not empty then
          if not pIsIDEExtension and pSourceFile is not empty then
-            revIDEExtensionCompile pFolder & slash & pSourceFile, tSupportFiles, pFolder
+            revIDEExtensionCompile pFolder & slash & pSourceFile, tSupportFiles, pFolder, \
+                  revIDEExtensionBytecodeFilename(true)
             if the result is empty then
                local tNewError
                __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, tNewError
@@ -1636,7 +1695,11 @@ private function shellFormat pArg, pSwitch
    return tOutput & quote & pArg & quote & " "
 end shellFormat
 
-command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder
+command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder, pOutputFilename
+   if pOutputFilename is empty then
+      put revIDEExtensionBytecodeFilename() into pOutputFilename
+   end if
+   
    # The manifest is currently always generated from the source
    if there is a file (pTargetFolder & slash & "manifest.xml") then
       delete file (pTargetFolder & slash & "manifest.xml")
@@ -1659,7 +1722,7 @@ command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder
    put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand
    
    # The output
-   put shellFormat(pTargetFolder & slash & "module.lcm", "output") after tShellCommand
+   put shellFormat(pTargetFolder & slash & pOutputFilename, "output") after tShellCommand
    
    # Support files must be dependency-ordered
    repeat for each line tSupport in revIDEExtensionsOrderByDependency(pSupportFiles)
@@ -1812,18 +1875,14 @@ function revIDEExtensionFileData pID
    local tCacheIndex
    put __extensionCacheID("name", pID) into tCacheIndex
    
-   local tSourceType, tFolder, tSourceFile
+   local tSourceType, tFolder, tFile
    put __extensionPropertyGet(tCacheIndex, "install_path") into tFolder
    put __extensionPropertyGet(tCacheIndex, "source_type") into tSourceType
-   put __extensionPropertyGet(tCacheIndex, "source_file") into tSourceFile
+   put __extensionPropertyGet(tCacheIndex, "file") into tFile
    
    local tDataA
    put tSourceType into tDataA["type"]
-   if tSourceType is "lcb" then
-      put tFolder & slash & "module.lcm" into tDataA["file"]
-   else
-      put tFolder & slash & tSourceFile into tDataA["file"]
-   end if
+   put tFolder & slash & tFile into tDataA["file"]
    return tDataA
 end revIDEExtensionFileData
 
