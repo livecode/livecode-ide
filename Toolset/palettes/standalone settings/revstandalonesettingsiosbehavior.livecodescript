@@ -427,10 +427,49 @@ on checkSettingsCompatible pName, pValue
             delete item 1 of tProfile["appid"]
             
             local tID
-            filter tAppID with tProfile["appid"] into tID
-            if tID is empty then
-               answer error revIDELocalise("The chosen provisioning profile requires an app ID matching:" && tProfile["appid"])
+            if tAppID is empty then
+               if tProfile["appid"] is "*" then
+                  -- do nothing as we are already default
+                  exit repeat
+               end if
+            else
+               filter tAppID with tProfile["appid"] into tID
+               if tID is not empty then
+                  -- already matches so do nothing
+                  exit repeat
+               end if
             end if
+            
+            if tProfile["appid"] contains "*" then
+               repeat with tIndex = 1 to max(3, the number of items of tProfile["appid"])
+                  get item tIndex of tProfile["appid"]
+                  if it is empty or it is "*" then
+                     if tIndex > 3 then
+                        -- if we have a long wildcard just keep apending `id` for *
+                        put "id" into item tIndex of tID
+                     else
+                        put item tIndex of "com.yourcompany.yourapp" into item tIndex of tID
+                     end if
+                  else
+                     put it into item tIndex of tID
+                  end if
+               end repeat
+            else
+               put tProfile["appid"] into tID
+            end if
+            
+            local tVars
+            put tProfile["appid"] into tVars[1]
+            put tID into tVars[2]
+            
+            answer error revIDELocalise("The chosen provisioning profile requires an app ID matching %1" & return & return & \
+                  "Would you like to change to %2", tVars) with revIDELocalise("OK") or revIDELocalise("Cancel")
+            
+            if it is "OK" then
+               setSetting "ios,bundle id", tID
+               put tID into field "Bundle Id"
+            end if
+            
             exit repeat
          end if
       end repeat
