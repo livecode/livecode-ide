@@ -827,6 +827,7 @@ private function __extensionIsBuiltin pID
       case "com.livecode.typeconvert"
       case "com.livecode.extensions.libbrowser"
       case "com.livecode.java"
+      case "com.livecode.emscripten"
       case "com.livecode.objc"
       case "com.livecode.commercial.license"
          return true
