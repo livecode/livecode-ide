@@ -160,6 +160,7 @@ on updateSettings
    
    -- MM-2011-09-28: Sepearate out the icons and splash screens so the user can specify the values per device.
    --
+   put computeDefault(tSettings["ios,AppStore icon"], empty) into field "AppStore Icon"
    put computeDefault(tSettings["ios,iphone icon"], empty) into field "iPhone Icon"
    put computeDefault(tSettings["ios,retina icon"], empty) into field "Retina Icon"
    put computeDefault(tSettings["ios,iOS 7 retina icon"], empty) into field "iOS 7 Retina Icon"
