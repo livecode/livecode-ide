@@ -609,7 +609,7 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
    local tCacheID
    put __extensionCacheID("name", pID) into tCacheId
    
-   local tPropertyNames, tPropertyXMLData
+   local tPropertyNames, tPropertyXMLData, tPropNameList, tMaxOrder
    repeat for each line tPropertyNode in tPropertyNodes      
       local tName
       put revXMLAttribute(tXMLTree,"package" & "/" & tPropertyNode,"name") into tName
@@ -618,20 +618,30 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
             tPropertyXMLData[tName]["set"]
       put revXMLAttribute(tXMLTree,"package" & "/" & tPropertyNode,"get") into \
             tPropertyXMLData[tName]["get"]
+      put tName into tPropNameList[tPropertyNode]
+      put max(tMaxOrder, tPropertyXMLData[tName]["data"]["order"]) into tMaxOrder
    end repeat
+   
+   -- Sort by ordered props, then by order of appearance
+   repeat for each line tPropertyNode in tPropertyNodes
+      if tPropertyXMLData[tPropNameList[tPropertyNode]]["data"]["order"] \
+            is empty then
+         add 1 to tMaxOrder 
+         put tMaxOrder into tPropertyXMLData[tPropNameList[tPropertyNode]]["data"]["order"]
+      end if
+   end repeat
+   
    put the keys of tPropertyXMLData into tPropertyNames
    sort tPropertyNames by tPropertyXMLData[each]["data"]["order"]
    
-   local tOrder, tPropertyDataA
+   local tPropertyDataA
    repeat for each line tProperty in tPropertyNames
       local tIDEPropertyInfo, tPropertyInfoA
       put tPropertyXMLData[tProperty]["data"] into tPropertyInfoA
       put revIDEPropertyInfo(tProperty) into tIDEPropertyInfo
       if tIDEPropertyInfo is not empty then
-         add 1 to tOrder
          union tPropertyInfoA with tIDEPropertyInfo
          put tPropertyInfoA into tPropertyDataA[tProperty]
-         put tOrder into tPropertyDataA[tProperty]["order"]
       else
          put tPropertyInfoA into tPropertyDataA[tProperty]
       end if
@@ -654,7 +664,6 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
             put "com.livecode.pi." & tolower(tType) into tPropertyDataA[tProperty]["editor"]
          end if
       end if
-      put tOrder into tPropertyDataA[tProperty]["order"]
       # Tag the property as a widget property, so we can order them 
       # correctly after the built-in props for the given section
       put true into tPropertyDataA[tProperty]["widget_prop"]
@@ -673,10 +682,18 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
       __SetMetadata tMetadataKey, tMetadataValue, tDataA
    end repeat
    
-   repeat for each line tProperty in idePropertyNames()
-      if tDataA[tProperty] is not empty then
-         union tDataA[tProperty] with revIDEPropertyInfo(tProperty)
-         put tDataA[tProperty] into tPropertyDataA[tProperty]
+   repeat for each key tProperty in tDataA
+      local tIDEPropInfoA
+      put revIDEPropertyInfo(tProperty) into tIDEPropInfoA
+      if tIDEPropInfoA is not empty then
+         # if this is a control property that we are overriding,
+         # tData might be non-empty for the property even though
+         # there was no property node in the XML
+         union tPropertyDataA[tProperty] with tDataA[tProperty]
+         
+         # Now take any default roperty info that was not specified
+         # in the manifest
+         union tPropertyDataA[tProperty] with tIDEPropInfoA
       end if
    end repeat
    
