@@ -1193,6 +1193,7 @@ command revInternal__InitialiseLibraries
    put return & "revIDEDocumentationLibrary" after tLoadList
    put return & "revMetadataLibrary" after tLoadList   
    put return & "revSBLibrary" after tLoadList
+   put return & "extension-utils" after tLoadList
    put return & "revideextensionlibrary" after tLoadList
    put return & "revIDELibrary" after tLoadList
    put return & "revidemessagehandlerlibrary" after tLoadList

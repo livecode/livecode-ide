@@ -1,5 +1,5 @@
 ﻿script "revideextensionlibrary"
-local sExtensions, sExtensionProperties
+local sExtensions, sExtensionProperties, sModuleVersion
 
 on extensionInitialize
    if the target is me then
@@ -13,37 +13,10 @@ on extensionFinalize
    end if
 end extensionFinalize
 
-local sModuleVersion
-private command __EnsureModuleVersion
-   if sModuleVersion is not empty then
-      exit __EnsureModuleVersion
-   end if
-   local tTempFile, tModule, tFolder
-   put the tempname into tTempFile
-   set the itemdelimiter to slash
-   put item 1 to -2 of tTempFile into tFolder
-   put "module com.livecode.dummy" into tModule
-   put return & "end module" after tModule
-   put tModule into url("file:" & tTempFile)
-   revIDEExtensionCompile tTempFile, "", tFolder, "module.lcm"
-   put __CompiledModuleVersion(tFolder & slash & "module.lcm") \
-         into sModuleVersion
-end __EnsureModuleVersion
-
-private function __CompiledModuleVersion pModule
-   local tBytes
-   put url("binfile:" & pModule) into tBytes
-   return byteToNum(byte 4 of tBytes) * 256 + \
-         byteToNum(byte 3 of tBytes)
-end __CompiledModuleVersion
-
-private function __CheckModuleVersion pModule
-   return __CompiledModuleVersion(pModule) is \
-         __ModuleVersion()
-end __CheckModuleVersion
-
 private function __ModuleVersion
-   __EnsureModuleVersion
+   if sModuleVersion is empty then
+      put extensionLCCompileVersion() into sModuleVersion
+   end if
    return sModuleVersion
 end __ModuleVersion
 
@@ -53,7 +26,7 @@ function revIDEExtensionBytecodeFilename pUseVersion
    end if
    
    if pUseVersion then
-      return "module." & __ModuleVersion() & ".lcm"
+      return "module." & __ModuleVersion & ".lcm"
    else
       return "module.lcm"
    end if
@@ -810,7 +783,7 @@ on __extensionSendProgressUpdate pCacheIndex, pMessage, pProgress
    ideMessageSend "ideExtensionStatusChanged", (tName & comma & pMessage & comma & pProgress)
 end __extensionSendProgressUpdate
 
-private function __fetchModuleData pFolder, pExtFile
+private function __fetchExtensionManifestData pFolder, pExtFile
    local tDataA
    revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
    # If we couldn't fetch a type id, or there was no manifest then the result will not be empty
@@ -819,140 +792,19 @@ private function __fetchModuleData pFolder, pExtFile
       put "error" into tDataA["status"]
    end if
    return tDataA
-end __fetchModuleData
-
-private function __fetchScriptLibraryData pFolder, pExtFile
-   local tDataA
-   # Generate extension API from source if there is not one present in the folder
-   # Don't do in an installed IDE as we might not be able to generate the files in the appropriate location
-   if not revEnvironmentIsInstalled() or \
-         not pFolder begins with revEnvironmentExtensionsPath() then
-      revIDEExtensionUpdateAPI pFolder, pExtFile
-   end if
-   
-   # Get library metadata from the docs, in lieu of a manifest
-   local tDocA
-   dispatch function "revDocsParseDocFileToLibraryArray" to stack "revDocsParser" \
-         with (pFolder & slash & "api.lcdoc")
-   put the result into tDocA 
-   
-   set the itemdelimiter to comma
-   repeat for each item tKey in "title,author,version,name,type,display name,requires,uses,svgicon"
-      put tDocA[tKey] into tDataA[tKey]
-   end repeat
-   if tDataA["title"] is empty then
-      put tDataA["display name"] into tDataA["title"]
-   end if
-   return tDataA
-end __fetchScriptLibraryData
-
-private function __extensionIsBuiltin pID
-   switch pID
-      case "com.livecode.widget"
-      case "com.livecode.engine"
-      case "com.livecode.canvas"
-      case "com.livecode.foreign"
-      case "com.livecode.arithmetic"
-      case "com.livecode.array"
-      case "com.livecode.binary"
-      case "com.livecode.bitwise"
-      case "com.livecode.byte"
-      case "com.livecode.char"
-      case "com.livecode.codeunit"
-      case "com.livecode.date"
-      case "com.livecode.file"
-      case "com.livecode.list"
-      case "com.livecode.logic"
-      case "com.livecode.mathfoundation"
-      case "com.livecode.math"
-      case "com.livecode.sort"
-      case "com.livecode.stream"
-      case "com.livecode.string"
-      case "com.livecode.system"
-      case "com.livecode.type"
-      case "com.livecode.typeconvert"
-      case "com.livecode.extensions.libbrowser"
-      case "com.livecode.java"
-      case "com.livecode.emscripten"
-      case "com.livecode.objc"
-      case "com.livecode.commercial.license"
-         return true
-      default
-         return false
-   end switch
-end __extensionIsBuiltin
-
-private on __addToDependencies pDependee, pDependent, @xDependencies
-   # AL-2015-04-13: [[ Bug 15216 ]] Use keys of array to remove duplicates
-   put true into xDependencies[pDependee][pDependent]
-end __addToDependencies
-
-private on __addToList pNode, @xList
-   if xList is empty then
-      put pNode into xList
-   else
-      put return & pNode after xList
-   end if
-end __addToList
-
-private on __removeFromList pNode, @xList
-   get lineOffset(pNode, xList)
-   if it is not 0 then
-      delete line it of xList
-   end if
-end __removeFromList
-
-private on __visitNode pDependencies, pNode, @xUnmarked, @xMarked, @xTemporaryMarked, @xOrder
-   if pNode is among the lines of xTemporaryMarked then
-      return "Error"
-   end if
-   if pNode is among the lines of xMarked then
-      # AL-2015-04-13: [[ Bug 15216 ]] Remove from unmarked if this was already marked
-      __removeFromList pNode, xUnmarked
-      return ""
-   end if
-   __addToList pNode, xTemporaryMarked
-   repeat for each key tNode in pDependencies[pNode]
-      __visitNode pDependencies, tNode, xUnmarked, xMarked, xTemporaryMarked, xOrder
-      if the result is not empty then
-         return "Error"
-      end if
-   end repeat
-   __addToList pNode, xMarked
-   __removeFromList pNode, xUnmarked
-   __removeFromList pNode, xTemporaryMarked
-   __addToList pNode, xOrder
-end __visitNode
-
-private function __dependencyOrder pDependencies, pList
-   local tUnmarked, tTemporaryMarked, tMarked, tOrder, tToVisit
-   put pList into tUnmarked
-   repeat while tUnmarked is not empty
-      put any line of tUnmarked into tToVisit
-      __visitNode pDependencies, tToVisit, tUnmarked, tMarked, tTemporaryMarked, tOrder
-      if the result is not empty then
-         throw "Circularity in dependencies starting from" && tToVisit
-         return empty
-      end if
-   end repeat
-   return tOrder
-end __dependencyOrder
+end __fetchExtensionManifestData
 
 function revIDEExtensionsOrderByDependency pExtensions
    # Accumulate an array of dependencies
-   local tDependencies, tRequirements
+   local tRequiresA, tDependentsA
    repeat for each line tExtension in pExtensions
-      put revIDEExtensionProperty(tExtension, "requires") into tRequirements
-      repeat for each element tDependent in tRequirements
-         if __extensionIsBuiltin(tDependent) then
-            next repeat
-         end if
-         __addToDependencies tExtension, tDependent, tDependencies
+      put revIDEExtensionProperty(tExtension, "requires") into tDependentsA
+      repeat for each element tElement in tDependentsA
+         addToList tElement, tRequiresA[tExtension]
       end repeat
    end repeat
    
-   # Order them
-   return __dependencyOrder(tDependencies, pExtensions)
+   return extensionsOrderByDependency(pExtensions, tRequiresA)
 end revIDEExtensionsOrderByDependency
 
 private function __RegexPatternForSource pType
@@ -1035,11 +887,7 @@ private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xData
       exit __FindExtensionsInFolderRecursive
    end if
    
-   if tType is "lcb" then
-      put __fetchModuleData(pFolder, tMainSource) into tArray
-   else
-      put __fetchScriptLibraryData(pFolder, tMainSource) into tArray
-   end if
+   put __fetchExtensionManifestData(pFolder, tMainSource) into tArray
    
    put tMainSource into tArray["source_file"]
    put tSupportFiles into tArray["support_files"]
@@ -1062,6 +910,10 @@ private function isUserExtension pData
    return 0
 end isUserExtension
 
+private command addToList pElement, @xArray
+   put pElement into xArray[the number of elements in xArray + 1]
+end addToList
+
 on __extensionsLoad
    local tDataA   
    # Fetch all the available data about extensions in the search paths
@@ -1083,7 +935,7 @@ on __extensionsLoad
    put the keys of tDataA into tExtensionsList
    sort tExtensionsList
    
-   local tToLoadA, tDependencies
+   local tToLoadA, tDependentsA, tRequiresA
    set the itemdel to ","
    put 1 into tExtensionCount
    repeat for each line tTypeID in tExtensionsList
@@ -1100,19 +952,18 @@ on __extensionsLoad
          add 1 to tExtensionCopyCount
       end repeat
       put tExtensionDataA into tToLoadA[tTypeID]
-      # Accumulate an array of dependencies
-      repeat for each element tDependent in tExtensionDataA["copies"][1]["requires"]
-         if __extensionIsBuiltin(tDependent) then
-            next repeat
-         end if
-         __addToDependencies tTypeID, tDependent, tDependencies
+      
+      put tExtensionDataA["copies"][1]["requires"] into tDependentsA
+      repeat for each element tElement in tDependentsA
+         addToList tElement, tRequiresA[tTypeId]
       end repeat
       put empty into tExtensionDataA
    end repeat
    
-   # Perform topological sort on list of dependencies so that they are loaded in the correct order
    local tLoadOrder
-   put __dependencyOrder(tDependencies, the keys of tToLoadA) into tLoadOrder
+   put extensionsOrderByDependency(tExtensionsList, tRequiresA) into \
+         tLoadOrder
+   
    repeat for each line tLine in tLoadOrder
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
@@ -1697,65 +1548,21 @@ private function shellFormat pArg, pSwitch
 end shellFormat
 
 command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder, pOutputFilename
-   if pOutputFilename is empty then
-      put revIDEExtensionBytecodeFilename() into pOutputFilename
+   extensionCompile pFile, pSupportFiles, \
+         revIDESpecialFolderPath("user extensions") & slash & "interface", \
+         pTargetFolder, pOutputFilename
+   
+   if the result is not empty then
+      return the result for error
    end if
-   
-   # The manifest is currently always generated from the source
-   if there is a file (pTargetFolder & slash & "manifest.xml") then
-      delete file (pTargetFolder & slash & "manifest.xml")
-   end if
-   
-   # Build the shell command
-   local tShellCommand
-   put shellFormat(__revIDEExtensionCompilerPath()) into tShellCommand
-   
-   # The folder to put the .lci file
-   put shellFormat(pTargetFolder, "modulepath") after tShellCommand
-   
-   # The built-in module path
-   put shellFormat(__revIDEExtensionResourcePath() & slash & "modules/lci", "modulepath") after tShellCommand
-   
-   # Installed module path
-   put shellFormat(revIDESpecialFolderPath("user extensions") & slash & "interface", "modulepath") after tShellCommand
-   
-   # The manifest target
-   put shellFormat(pTargetFolder & slash & "manifest.xml", "manifest") after tShellCommand
-   
-   # The output
-   put shellFormat(pTargetFolder & slash & pOutputFilename, "output") after tShellCommand
-   
-   # Support files must be dependency-ordered
-   repeat for each line tSupport in revIDEExtensionsOrderByDependency(pSupportFiles)
-      put shellFormat(pTargetFolder & slash &tSupport) after tShellCommand
-   end repeat
-   
-   # The target .lcb file
-   put shellFormat(pFile) after tShellCommand
-   
-   # AL-2015-06-15: [[ Bug 15001 ]] Don't show console window when executing shell command
-   local tHideConsoleWindows
-   put the hideConsoleWindows into tHideConsoleWindows
-   set the hideConsoleWindows to true
-   
-   local tShellOutput, tShellResult
-   put shell(tShellCommand) into tShellOutput
-   put the result into tShellResult
-   set the hideConsoleWindows to tHideConsoleWindows
-   if tShellResult is 0 then
-      return tShellOutput for value
-   end if
-   return tShellOutput for error
+   return it for value
 end revIDEExtensionCompile
 
 command revIDEExtensionMetadata pFolder, pFile, pType, @rDataA
    local tDataA, tResult
-   if pType is "lcb" then
-      revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
-      put the result into tResult
-   else
-      put __fetchScriptLibraryData(pFolder, pFile) into tDataA
-   end if
+   revIDEExtensionFetchMetadata pFolder & slash & "manifest.xml", tDataA
+   put the result into tResult
+   
    put tDataA into rDataA
    return tResult
 end revIDEExtensionMetadata
@@ -1767,101 +1574,9 @@ end __SetMetadata
 
 private command revIDEExtensionFetchMetadata pManifestPath, @rDataA
    local tDataA
-   
-   local tManifestContents, tTreeID
-   put url ("file:" & pManifestPath) into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tTreeID
-   
-   if tTreeID begins with "xmlerr" then
-      return "Error: invalid xml in manifest"
-   end if
-   
-   local tTargetType
-   put textDecode(revXMLNodeContents(tTreeID, "/package/type"), "utf-8") into tTargetType
-   
-   if tTargetType begins with "xmlerr" then
-      return "Error: no type found in manifest"
-   end if
-   put tTargetType into tDataA["type"]
-   
-   local tTargetName
-   put textDecode(revXMLNodeContents(tTreeID, "/package/name"), "utf-8") into tTargetName
-   if tTargetName begins with "xmlerr" then
-      return "Error: couldn't retrieve extension name from manifest"
-   end if
-   put tTargetName into tDataA["name"]
-   
-   local tTargetTitle
-   put textDecode(revXMLNodeContents(tTreeID, "/package/title"), "utf-8") into tTargetTitle
-   
-   if tTargetTitle is empty or tTargetTitle begins with "xmlerr" then
-      put empty into tTargetTitle
-   end if
-   put tTargetTitle into tDataA["title"]
-   
-   local tTargetVersion
-   put textDecode(revXMLNodeContents(tTreeID, "/package/version"), "utf-8") into tTargetVersion
-   
-   if tTargetVersion is empty or tTargetVersion begins with "xmlerr" then
-      put empty into tTargetVersion
-   end if
-   put tTargetVersion into tDataA["version"]
-   
-   local tTargetAuthor
-   put textDecode(revXMLNodeContents(tTreeID, "/package/author"), "utf-8") into tTargetAuthor
-   if tTargetAuthor is empty or tTargetAuthor begins with "xmlerr" then
-      put empty into tTargetAuthor
-   end if
-   put tTargetAuthor into tDataA["author"]
-   
-   # Fetch property metadata
-   local tMetadataValue, tMetadataKey
-   local tMetadataNodes, tMetadataA, tKeys, tValue
-   put revXMLChildNames(tTreeID, "package",return,"metadata",true) into tMetadataNodes
-   repeat for each line tMetadata in tMetadataNodes
-      put revXMLAttribute(tTreeID,"package" & "/" & tMetadata,"key") into tMetadataKey
-      put revXMLNodeContents(tTreeID,"package" & "/" & tMetadata) into tMetadataValue
-      if tMetadataValue is empty or tMetadataValue begins with "xmlerr" then
-         put empty into tMetadataValue
-      end if
-      __SetMetadata tMetadataKey, tMetadataValue, tDataA
-   end repeat
-   
-   # Fetch extension dependencies
-   local tRequires, tCount
-   put 0 into tCount
-   put revXMLChildNames(tTreeID,"package",return,"requires",true) into tRequires
-   repeat for each line tDependency in tRequires
-      add 1 to tCount
-      local tName
-      put revXMLAttribute(tTreeID,"package" & "/" & tDependency,"name") into tName
-      put tName into tDataA["requires"][tCount]
-   end repeat
-   
-   # Fetch library handlers
-   if tTargetType is "library" then
-      local tHandlerList, tHandlerNodes
-      put revXMLChildNames(tTreeID, "package",return,"handler",true) into tHandlerNodes
-      repeat for each line tHandler in tHandlerNodes
-         local tHandlerName
-         put revXMLAttribute(tTreeID,"package" & "/" & tHandler,"name") into tHandlerName
-         
-         if tHandlerName is empty or tHandlerName begins with "xmlerr" then
-            next repeat
-         end if
-         
-         if tHandlerList is empty then
-            put tHandlerName into tHandlerList
-         else
-            put return & tHandlerName after tHandlerList
-         end if
-      end repeat
-      put tHandlerList into tDataA["handlers"]
-   end if
-   
-   # User visible should default to true
-   if tDataA["uservisible"] is empty then
-      put true into tDataA["uservisible"]
+   put extensionFetchMetadata(pManifestPath) into tDataA
+   if the result is not empty then
+      return the result
    end if
    
    # Make sure 'inspector' style metadata is processed

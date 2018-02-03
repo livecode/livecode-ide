@@ -965,7 +965,7 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
       repeat for each line tSupport in pSupportFiles
          put pFolder & slash & tSupport into tSupport
          revZipAddItemWithFile pArchive, item -1 of tSupport, tSupport
-      
+
          if the result begins with "ziperr" then
             put "couldn't add support file" && tSupport into tError
             exit repeat
