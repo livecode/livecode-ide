@@ -78,6 +78,10 @@ on updateSettings
    put computeDefault(tSettings["android,hardware accelerated"], false) into tHardwareAccelerated
    set the hilited of button "Hardware Accelerated" to tHardwareAccelerated
    
+   local tNFC
+   put computeDefault(tSettings["android,nfc"], false) into tNFC
+   set the hilited of button "NFC Tag Reading" to tNFC
+   
    repeat with i = 1 to the number of groups of group "device capabilities"
       get tSettings["android,device capabilities"][the short name of group i of group "Device Capabilities"]
       if it is "true" then
