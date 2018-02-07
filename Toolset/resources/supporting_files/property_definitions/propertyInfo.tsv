@@ -122,6 +122,7 @@ menuMouseButton	Access with mouse button:	Basic	com.livecode.pi.enum	true	false	
 menuName	Menu panel stack	Basic	com.livecode.pi.string	true	false			
 minHeight	Min height	Position	com.livecode.pi.number	true	false		32	
 minWidth	Min width	Position	com.livecode.pi.number	true	false		32	
+mirrored	Mirrored	Basic	com.livecode.pi.boolean	true	false		false	
 multipleHilites	Multi-line	Basic	com.livecode.pi.boolean	true	false		false	
 name	Name	Basic	com.livecode.pi.string	true	false		no_default		
 nonContiguousHilites	Non-contiguous	Basic	com.livecode.pi.boolean	true	false			
