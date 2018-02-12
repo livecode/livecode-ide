@@ -40,7 +40,7 @@ on relaunch
    
    -- Pass the relaunch request through a hook
    local tParameters
-   repeat with x = 1 to the paramCount()
+   repeat with x = 1 to the paramCount
       put param(x) into tParameters[x]
    end repeat
    dispatch command "revHookLaunchInstance" to me with tParameters
@@ -54,7 +54,7 @@ on relaunch
    end if
    
    -- The hook did nothing, so do our default processing
-   repeat with x = 1 to the paramcount()
+   repeat with x = 1 to the paramcount
       local tStackFile
       put param(x) into tStackFile
       if there is a file tStackFile then -- open it
