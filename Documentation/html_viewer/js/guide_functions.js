@@ -67,9 +67,16 @@
 			{
 				return '<img src="' + tRepoFolder + '/images/' + image_file + '" />';
 			}
-			else
+			else if (tGuideLocation == 'ide')
 			{
 				return '<img src="' + tIDEFolder + '/images/' + image_file + '" />';
+			}
+			else
+			{
+				var tExtImageFolder = '<img src="';
+				tExtImageFolder += tUserGuideData.guides[pGuideIndex].location;
+				tExtImageFolder += '/images/' + image_file + '" />';
+				return tExtImageFolder;
 			}
 		},
 	
