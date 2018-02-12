@@ -302,10 +302,12 @@ on rawKeyDown pKeyNum
    switch pKeyNum
       case "65360"
          ## home
+         if the target contains "field" then pass rawKeyDown
          set the vScroll of group "inspector" of me to 0
          break
       case "65367"
          ## end
+         if the target contains "field" then pass rawKeyDown
          set the vScroll of group "inspector" of me to \
                the formattedHeight of group "inspector" of me - the height of group "inspector" of me 
          break
