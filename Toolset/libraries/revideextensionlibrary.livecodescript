@@ -5,6 +5,12 @@ on extensionInitialize
    if the target is me then
       insert script of me into back 
    end if
+   
+   # Explicitly load extension utils first
+   revInternal__LoadLibrary "extension-utils"
+   
+   # Load all the extensions ready for use
+   __extensionsLoad
 end extensionInitialize
 
 on extensionFinalize
@@ -914,6 +920,7 @@ private command addToList pElement, @xArray
    put pElement into xArray[the number of elements in xArray + 1]
 end addToList
 
+constant kExtensionUtils = "com.livecode.library.extension-utils"
 on __extensionsLoad
    local tDataA   
    # Fetch all the available data about extensions in the search paths
@@ -965,6 +972,10 @@ on __extensionsLoad
          tLoadOrder
    
    repeat for each line tLine in tLoadOrder
+      # Extension utils is explicitly loaded
+      if tLine is kExtensionUtils then
+         next repeat
+      end if
       __extensionLoad tLine, tToLoadA[tLine]
    end repeat
 end __extensionsLoad
@@ -1266,7 +1277,7 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
    __extensionPropertySet tCacheIndex, "type_id", tId  & "." & pVersion 
    
    __extensionPropertySet tCacheIndex, "author", pAdditionalInfoA["author"]
-   __extensionPropertySet tCacheIndex, "title", pAdditionalInfoA["display name"]
+   __extensionPropertySet tCacheIndex, "title", pAdditionalInfoA["title"]
    __extensionPropertySet tCacheIndex, "svgicon", pAdditionalInfoA["svgicon"]
    __extensionPropertySet tCacheIndex, "version", pAdditionalInfoA["version"]
    

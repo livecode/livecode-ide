@@ -1340,7 +1340,6 @@ on revIDEInitialiseIDELibrary
    
    ## Load Extensions
    revInternal__LoadLibrary "revideextensionlibrary"
-   revIDEInitialiseExtensions
    
    ## Regenerate dictionary data
    revInternal__LoadLibrary "revDatabaseLibrary"
