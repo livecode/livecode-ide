@@ -37,7 +37,7 @@ private function __revIDEDeveloperExtensionShouldRecompile pFolder, pFile
    put pFolder & slash & pFile into tCompileInputs[1]
    
    put pFolder & slash & "manifest.xml" into tCompileOutputs[1]
-   put pFolder & slash & "module.lcm" into tCompileOutputs[2]
+   put pFolder & slash & revIDEExtensionBytecodeFilename(true) into tCompileOutputs[2]
    
    put revIDEIsFilesetStale(tCompileInputs, tCompileOutputs, false, tError) \
          into tNeedUpdate
@@ -366,7 +366,7 @@ private function __revIDEDeveloperExtensionDetailsFromFile pFolder, pFile, pSupp
       if not __revIDEDeveloperExtensionShouldRecompile(pFolder, pFile) then
          
          __revIDEDeveloperExtensionLog "Skipping recompilation of" && \
-               pFolder & slash & "module.lcm - module is up to date"
+               pFolder & slash & pFile && "- module is up to date"
          # The stored info is up to date.
          if sExtensionDetailsA[pFolder] is not empty then
             union tDetailsA with sExtensionDetailsA[pFolder]
@@ -474,8 +474,9 @@ command revIDEDeveloperExtensionTest pPath
       exit revIDEDeveloperExtensionTest
    end if
    
-   if tDetailsA["source_type"] is "lcb" and \
-         there is not a file (pPath & slash & "module.lcm") then
+   if tDetailsA["source_type"] is "lcb" \
+         and there is not a file \
+         (pPath & slash & revIDEExtensionBytecodeFilename(true)) then
       __revIDEDeveloperExtensionSendError "No compiled module in" && pPath
       exit revIDEDeveloperExtensionTest
    end if
@@ -624,7 +625,8 @@ on revIDEDeveloperExtensionInstall pFolder
    local tPackage
    __revIDEDeveloperExtensionBuildPackage pFolder, "", tPackage
    revIDEExtensionInstall tPackage
-   put pFolder & slash & "module.lcm" into sInstalledExtension
+   put pFolder & slash & revIDEExtensionBytecodeFilename(true) \
+         into sInstalledExtension
 end revIDEDeveloperExtensionInstall
 
 on revIDEDeveloperExtensionUninstall pPath
@@ -751,7 +753,8 @@ private command __revIDEDeveloperCompileModule pFile, pSupportFiles, pTargetFold
    
    __revIDEDeveloperExtensionLog it
    
-   if there is not a file (pTargetFolder & slash & "module.lcm") then
+   if there is not a file \
+         (pTargetFolder & slash & revIDEExtensionBytecodeFilename(true)) then
       return "failed to compile module"
    end if
    
@@ -780,6 +783,18 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
    
    if there is not a file tFullPath then
       return "Error: missing file" && tFullPath
+   end if
+   
+   local tManifestFile
+   put pFolder & slash & "manifest.xml" into tManifestFile
+   
+   if tDetailsA["source_type"] is "lcs" then
+      revIDEExtensionGenerateManifestForLCSExtension \
+            tDetailsA["source_file"], pFolder
+   end if
+   
+   if there is no file tManifestFile then
+      return "Error: missing manifest" && tManifestFile
    end if
    
    local tTargetFolder
@@ -899,9 +914,15 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
    local tSupportFiles
    put tDetailsA["support_files"] into tSupportFiles
 
+   local tModuleFiles
+   if tDetailsA["source_type"] is "lcb" then
+      put files(pFolder) into tModuleFiles
+      filter tModuleFiles with regex pattern "^module(\.[0-9]+)?\.lcm$"
+   end if
+   
    if tError is empty then
       put __revIDEDeveloperExtensionAddSpecifiedFilesToPackage(\
-            tFullPath, tSupportFiles, pFolder, tArchive, pFolder & slash & "module.lcm", \
+            tFullPath, tSupportFiles, pFolder, tArchive, tModuleFiles, \
             tIcon, tRetinaIcon, tGuide, tDocs, tResources, tCode, \
             tSamples, tInterfaceFile, tDefaultScript, tEditors) \
             into tError
@@ -925,7 +946,7 @@ private command __revIDEDeveloperExtensionBuildPackage pFolder, pTargetFolder, @
 end __revIDEDeveloperExtensionBuildPackage
 
 private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
-      pSource, pSupportFiles, pFolder, pArchive, pModule, pIcon,  \
+      pSource, pSupportFiles, pFolder, pArchive, pModuleFiles, pIcon,  \
       pRetinaIcon, pGuide, pDocs, pResourcesFolder, pCodeFolder, \
       pSamplesFolder, pInterfaceFile, pDefaultScript, pEditors
    
@@ -940,20 +961,28 @@ private function __revIDEDeveloperExtensionAddSpecifiedFilesToPackage \
    end if
    
    # Add support files into package
-   repeat for each line tSupport in pSupportFiles
-      put pFolder & slash & tSupport into tSupport
-      revZipAddItemWithFile pArchive, item -1 of tSupport, tSupport
+   if tError is empty then
+      repeat for each line tSupport in pSupportFiles
+         put pFolder & slash & tSupport into tSupport
+         revZipAddItemWithFile pArchive, item -1 of tSupport, tSupport
       
-      if the result begins with "ziperr" then
-         put "couldn't add support file" && tSupport into tError
-      end if
-   end repeat
+         if the result begins with "ziperr" then
+            put "couldn't add support file" && tSupport into tError
+            exit repeat
+         end if
+      end repeat
+   end if
    
-   # Add module into package
-   revZipAddItemWithFile pArchive, "module.lcm", pModule
-   
-   if the result begins with "ziperr" then
-      put "couldn't add module" into tError
+   # Add modules into package
+   if tError is empty then
+      repeat for each line tModuleFile in pModuleFiles
+         put pFolder & slash & tModuleFile into tModuleFile
+         revZipAddItemWithFile pArchive, item -1 of tModuleFile, tModuleFile
+         if the result begins with "ziperr" then
+            put "couldn't add module" && tModuleFile into tError
+            exit repeat
+         end if
+      end repeat
    end if
    
    # Add manifest into package
