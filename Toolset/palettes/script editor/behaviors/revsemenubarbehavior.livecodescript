@@ -150,6 +150,7 @@ private command buildEditMenu pContext
    if revEnvironmentEditionProperty("autocomplete") then
       put toggleMenuItem(tab & "Autocomplete", sePrefGet("editor,providercompletion")) & return after tEdit
    end if
+   put toggleMenuItem(tab & "Autoformat", sePrefGet("editor,autoformat")) & return after tEdit
    
    put "-" & return & \
           "Preferences" after tEdit
@@ -476,6 +477,9 @@ private command handleEditMenuPick pItemName
          break
       case "Options|Autocomplete"
          sePrefSet "editor,providercompletion", (not sePrefGet("editor,providercompletion"))
+         break
+      case "Options|Autoformat"
+         sePrefSet "editor,autoformat", (not sePrefGet("editor,autoformat"))
          break
       case "Preferences"
          actionShowPreferences

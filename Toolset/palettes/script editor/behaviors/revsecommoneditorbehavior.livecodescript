@@ -1680,10 +1680,10 @@ private command calculateReturnFormatting pTo, pFrom, pLine, pContinuationRequir
    # If the preference is not to use formatting, just return the specification of the basic 
    # insertion of a return character.
    -- allow environment with no dependencies
-   local tAutoComplete
-   put __GetPreference("editor,autocomplete", true) into tAutoComplete
+   local tAutoFormat
+   put __GetPreference("editor,autoformat", true) into tAutoFormat
    
-   if not tAutoComplete then
+   if not tAutoFormat then
       put pFrom into rAt
       put 0 into rLength
       put tReturnString into rString
