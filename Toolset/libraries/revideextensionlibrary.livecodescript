@@ -1240,11 +1240,11 @@ private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, 
       local tFileToLoad
       if pSourceType is "lcb" then
          local tResources, tModule, tCode
-         put pFolder & slash & revIDEExtensionBytecodeFilename(true) \
-               into tModule
+         put revIDEExtensionBytecodeFilename(true) into tFileToLoad
+         put pFolder & slash & tFileToLoad into tModule
          if there is no file tModule then
-            put pFolder & slash & revIDEExtensionBytecodeFilename(false) \
-                  into tModule
+            put revIDEExtensionBytecodeFilename(false) into tFileToLoad
+            put pFolder & slash & tFileToLoad into tModule
          end if
          put pFolder & slash & "resources" into tResources
          put pFolder & slash & "code" into tCode
@@ -1258,7 +1258,6 @@ private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, 
          else
             load extension from file tModule
          end if
-         put tModule into tFileToLoad
       else
          set the itemdelimiter to "."
          revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
