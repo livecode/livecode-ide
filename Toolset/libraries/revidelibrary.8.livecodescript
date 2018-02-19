@@ -10759,16 +10759,24 @@ private function revIDEGetExtensionDocsData pAPI
          if tExtensionData["source_type"] is "lcb" then
             dispatch function "revDocsGenerateDocsFileFromModularFile" to stack "revDocsParser" with \
                   tFolder & slash & tSource
+            put the result into tDoc
          else if tExtensionData["source_type"] is "lcs" then
-            local tStack
-            put the long id of stack (tFolder & slash & tSource) into tStack
-            dispatch function "revDocsGenerateDocsFileFromText" to stack "revDocsParser" with \
+            local tStack, tPassword
+            try
+               put the long id of stack (tFolder & slash & tSource) into tStack
+               put the password of tStack into tPassword
+            end try
+            if tStack is not empty and tPassword is empty then
+               dispatch function "revDocsGenerateDocsFileFromText" \
+                  to stack "revDocsParser" with \
                   the script of tStack, tStack
+               put the result into tDoc
+            end if
          end if
-         put the result into tDoc
-         
-         # Output the lcdoc file
-         revIDESetUTF8FileContents tAPIDoc, tDoc
+         if tDoc is not empty then
+            # Output the lcdoc file
+		    revIDESetUTF8FileContents tAPIDoc, tDoc
+         end if
       end if
       
       local tAPIJS
@@ -11122,10 +11130,17 @@ private command revIDEGenerateDistributedAPI
       put the stackfiles of stack "home" into tIDELibs
       split tIDELibs by return and comma
       repeat for each key tStackName in tIDELibs
-         get revDocsGenerateDocsFileFromText(the script of stack tStackName, \
-               the long id of stack tStackName)
-         if it is not empty then
-            put it into tIDEA[tIDECount]
+         local tStack, tPassword, tDoc
+         try
+            put the long id of stack tStackName into tStack
+            put the password of tStack into tPassword
+         end try
+         if tStack is not empty and tPassword is empty then
+            put revDocsGenerateDocsFileFromText(the script of tStack, \ 
+               tStack) into tDoc
+         end if
+         if tDoc is not empty then
+            put tDoc into tIDEA[tIDECount]
             add 1 to tIDECount
          end if
       end repeat
