@@ -86,9 +86,5 @@ end linkClicked
 
 # bug 17819 enable cmd+c in dictionary
 on commandKeyDown pWhich
-   if pWhich is "C" then
-      copy
-   else
-      pass commandKeyDown
-   end if
+   if pWhich is not "C" then pass commandKeyDown
 end commandKeyDown
