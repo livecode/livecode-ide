@@ -683,6 +683,9 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
    end repeat
    
    repeat for each key tProperty in tDataA
+      if tPropertyXMLData[tProperty] is not empty then
+         next repeat
+      end if
       local tIDEPropInfoA
       put revIDEPropertyInfo(tProperty) into tIDEPropInfoA
       if tIDEPropInfoA is not empty then
