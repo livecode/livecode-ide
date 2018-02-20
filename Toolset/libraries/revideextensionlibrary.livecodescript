@@ -691,7 +691,7 @@ private function __extensionPropertyInfoFromManifest pId, pManifestPath
          # there was no property node in the XML
          union tPropertyDataA[tProperty] with tDataA[tProperty]
          
-         # Now take any default roperty info that was not specified
+         # Now take any default property info that was not specified
          # in the manifest
          union tPropertyDataA[tProperty] with tIDEPropInfoA
       end if
