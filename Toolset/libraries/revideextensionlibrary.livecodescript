@@ -1181,59 +1181,60 @@ private command __MapCodeLibraryForIDE pFolder
             delete the last item of tLibrary
             if tLibrary is not empty then
                set the revLibraryMapping[tLibrary] to "./" & tExtension & "/" & tLibrary
+               return empty
             end if
          end repeat
       end if
-   else
-      -- code folders should be platform ID triples however for the
-      -- time being as we have no way to access the data required to 
-      -- determine the options section of the platform ID so we filter only
-      -- arch and platform and hope for the best. Ideally we would have
-      -- access to a build options string and give a complete match precedence.
-      local tCodeFolders
-      put folders(pFolder) into tCodeFolders
-      switch the platform
-         case "MacOS"
-            filter tCodeFolders with "*-mac*"
-            break
-         case "Win32"
-            filter tCodeFolders with "*-win32*"
-            break
-         default
-            filter tCodeFolders with "*-"& toLower(the platform) & "*"
-            break
-      end switch
-      
-      local tFilteredCodeFolders
-      filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
-      split tFilteredCodeFolders by return as set
-      if the platform is "MacOS" then
-         -- explicit processor should take precedence over universal builds but
-         -- in the event multiple libraries are included and some are universal
-         -- we must merge
-         local tUniveralFilteredCodeFolders
-         filter tCodeFolders with "universal-*" into tUniveralFilteredCodeFolders
-         split tUniveralFilteredCodeFolders by return as set
-         union tFilteredCodeFolders with tUniveralFilteredCodeFolders
-      end if
-      
-      repeat for each key tFolder in tFilteredCodeFolders
-         put files(pFolder & "/" & tFolder) & return & \
-               folders(pFolder & "/" & tFolder) into tLibraries
-         filter tLibraries without ".*"
-         
-         if tLibraries is not empty then
-            set the itemDelimiter to "."
-            repeat for each line tLibrary in tLibraries
-               -- remove extension
-               delete the last item of tLibrary
-               if tLibrary is not empty then
-                  set the revLibraryMapping[tLibrary] to pFolder & "/" & tFolder & "/" & tLibrary
-               end if
-            end repeat
-         end if
-      end repeat
    end if
+   
+   -- code folders should be platform ID triples however for the
+   -- time being as we have no way to access the data required to 
+   -- determine the options section of the platform ID so we filter only
+   -- arch and platform and hope for the best. Ideally we would have
+   -- access to a build options string and give a complete match precedence.
+   local tCodeFolders
+   put folders(pFolder) into tCodeFolders
+   switch the platform
+      case "MacOS"
+         filter tCodeFolders with "*-mac*"
+         break
+      case "Win32"
+         filter tCodeFolders with "*-win32*"
+         break
+      default
+         filter tCodeFolders with "*-"& toLower(the platform) & "*"
+         break
+   end switch
+   
+   local tFilteredCodeFolders
+   filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
+   split tFilteredCodeFolders by return as set
+   if the platform is "MacOS" then
+      -- explicit processor should take precedence over universal builds but
+      -- in the event multiple libraries are included and some are universal
+      -- we must merge
+      local tUniveralFilteredCodeFolders
+      filter tCodeFolders with "universal-*" into tUniveralFilteredCodeFolders
+      split tUniveralFilteredCodeFolders by return as set
+      union tFilteredCodeFolders with tUniveralFilteredCodeFolders
+   end if
+   
+   repeat for each key tFolder in tFilteredCodeFolders
+      put files(pFolder & "/" & tFolder) & return & \
+            folders(pFolder & "/" & tFolder) into tLibraries
+      filter tLibraries without ".*"
+      
+      if tLibraries is not empty then
+         set the itemDelimiter to "."
+         repeat for each line tLibrary in tLibraries
+            -- remove extension
+            delete the last item of tLibrary
+            if tLibrary is not empty then
+               set the revLibraryMapping[tLibrary] to pFolder & "/" & tFolder & "/" & tLibrary
+            end if
+         end repeat
+      end if
+   end repeat
 end __MapCodeLibraryForIDE
 
 private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, pStatus, @xError
