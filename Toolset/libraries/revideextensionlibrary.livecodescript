@@ -266,7 +266,7 @@ end revIDEExtensionStandaloneSettingsInfo
 ##############################
 
 private command __extensionDownloadBegin pExtensionUrl, pType, pCallbackObject, pCallbackMessage
-   if not pExtensionUrl begins with "http" then
+   if not (pExtensionUrl begins with "http") then
       # pExtensionPath is not a URL or file on disk
       return "Could not download extension. The extension must be a URL" && \
             "to a valid package:" && pExtensionUrl for error

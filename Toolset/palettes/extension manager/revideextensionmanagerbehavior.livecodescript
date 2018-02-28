@@ -52,6 +52,12 @@ end installNew
 on installExtension pExtensionURL, pTypeID, pType
    lock screen  
    showList pType
-   revIDEExtensionDownloadAndInstall pExtensionURL, pType
+   if pExtensionURL begins with "http" then
+      // get from extensions store
+      revIDEExtensionDownloadAndInstall pExtensionURL
+   else
+      // get from local .lce file
+      revIDEExtensionInstall pExtensionURL, pType
+   end if
    unlock screen
 end installExtension
