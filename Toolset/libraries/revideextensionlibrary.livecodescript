@@ -810,7 +810,7 @@ function revIDEExtensionsOrderByDependency pExtensions
       end repeat
    end repeat
    
-   return extensionsOrderByDependency(pExtensions, tRequiresA)
+   return extensionOrderByDependency(pExtensions, tRequiresA)
 end revIDEExtensionsOrderByDependency
 
 private function __RegexPatternForSource pType
@@ -968,7 +968,7 @@ on __extensionsLoad
    end repeat
    
    local tLoadOrder
-   put extensionsOrderByDependency(tExtensionsList, tRequiresA) into \
+   put extensionOrderByDependency(tExtensionsList, tRequiresA) into \
          tLoadOrder
    
    repeat for each line tLine in tLoadOrder
@@ -1531,37 +1531,10 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-private function __revIDEExtensionResourcePath
-   if revEnvironmentIsInstalled() is false then
-      return revEnvironmentBinariesPath()
-   else
-      return revIDESpecialFolderPath("Toolchain")
-   end if
-end __revIDEExtensionResourcePath
-
-private function __revIDEExtensionCompilerPath
-   # The actual compile command
-   if the platform is "win32" then
-      return __revIDEExtensionResourcePath() & slash & "lc-compile.exe"
-   else
-      return __revIDEExtensionResourcePath() & slash & "lc-compile"
-   end if
-end __revIDEExtensionCompilerPath
-
-private function shellFormat pArg, pSwitch
-   local tOutput
-   
-   if pSwitch is not empty then
-      put "--" & pSwitch & " " into tOutput
-   end if
-   
-   return tOutput & quote & pArg & quote & " "
-end shellFormat
-
 command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder, pOutputFilename
-   extensionCompile pFile, pSupportFiles, \
-         revIDESpecialFolderPath("user extensions") & slash & "interface", \
-         pTargetFolder, pOutputFilename
+   extensionCompile "", pFile, pSupportFiles, "", \
+      revIDESpecialFolderPath("user extensions") & slash & \
+      "interface", pTargetFolder, pOutputFilename
    
    if the result is not empty then
       return the result for error
