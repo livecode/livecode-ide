@@ -32,7 +32,7 @@ function revIDEExtensionBytecodeFilename pUseVersion
    end if
    
    if pUseVersion then
-      return "module." & __ModuleVersion & ".lcm"
+      return "module." & __ModuleVersion() & ".lcm"
    else
       return "module.lcm"
    end if
@@ -482,7 +482,7 @@ end __extensionInstallCopyInterfaceFile
 
 private command __extensionInstallLoad pCacheIndex, pName, pInstallFolder, pProgress
    local tFolderData
-   __FindExtensionsInFolderRecursive pInstallFolder, true, tFolderData
+   extensionFindInFolder pInstallFolder, true, false, tFolderData
    
    local tDataA
    put tFolderData[pName][pInstallFolder] into tDataA["copies"][1]
@@ -813,102 +813,6 @@ function revIDEExtensionsOrderByDependency pExtensions
    return extensionOrderByDependency(pExtensions, tRequiresA)
 end revIDEExtensionsOrderByDependency
 
-private function __RegexPatternForSource pType
-   switch pType
-      case "lcb"
-         return "^.*\.lcb$"
-         break
-      case "lcs"
-         return "^.*\.livecode(script)?$"
-         break
-   end switch
-end __RegexPatternForSource
-
-command revIDEExtensionFetchSourceFromFolder pFolder, @rSource, @rSupportFiles, @rType
-   local tFiles
-   put files(pFolder) into tFiles
-   
-   local tExtFiles, tType
-   filter tFiles with regex pattern \
-         __RegexPatternForSource("lcb") into tExtFiles
-   if tExtFiles is not empty \
-         or there is a file \
-         (pFolder & slash & revIDEExtensionBytecodeFilename(true)) \
-         or there is a file \
-         (pFolder & slash & revIDEExtensionBytecodeFilename(false)) then
-      put "lcb" into tType
-   end if
-   
-   if tType is empty then
-      filter tFiles with regex pattern \
-            __RegexPatternForSource("lcs") into tExtFiles
-      if tExtFiles is not empty then
-         put "lcs" into tType
-      end if
-   end if
-   
-   -- Try and separate main source from support
-   local tFoundCount, tSupport, tMainFile
-   put the number of lines in tExtFiles into tFoundCount
-   if tFoundCount > 1 then
-      set the itemdelimiter to "."
-      repeat for each line tTry in tExtFiles
-         filter tExtFiles with item 1 to -2 of tTry & "-*" into tSupport
-         if the number of lines in tSupport is tFoundCount - 1 then
-            put tTry into tMainFile
-            exit repeat
-         end if
-         put empty into tSupport
-      end repeat
-      if tSupport is empty then
-         return "Invalid extension folder" && pFolder & return & \
-               "Must have one main module, with all support modules named" && \
-               "<main-name>-<support-name>."
-      end if
-   else
-      put tExtFiles into tMainFile 
-   end if
-   
-   if tType is empty then
-      put "none" into tType
-   end if 
-   
-   put tMainFile into rSource
-   put tSupport into rSupportFiles
-   put tType into rType
-   return empty
-end revIDEExtensionFetchSourceFromFolder
-
-private command __FindExtensionsInFolderRecursive pFolder, pIsUserFolder, @xDataA
-   local tExtSource, tArray, tFiles, tMainSource, tSupportFiles, tType
-   revIDEExtensionFetchSourceFromFolder pFolder, tMainSource, tSupportFiles, tType
-   
-   -- If we found no extensions, recurse
-   if tType is "none" then
-      repeat for each line tSubFolder in folders(pFolder)
-         if tSubFolder begins with "." then next repeat
-         __FindExtensionsInFolderRecursive pFolder & slash & tSubFolder, \
-               pIsUserFolder, xDataA
-      end repeat
-      exit __FindExtensionsInFolderRecursive
-   end if
-   
-   put __fetchExtensionManifestData(pFolder, tMainSource) into tArray
-   
-   put tMainSource into tArray["source_file"]
-   put tSupportFiles into tArray["support_files"]
-   put tType into tArray["source_type"]
-   put not pIsUserFolder into tArray["ide"]
-   
-   local tTypeID
-   if tArray["name"] is empty then
-      put pFolder into tTypeID
-   else
-      put tArray["name"] into tTypeID
-   end if
-   put tArray into xDataA[tTypeID][pFolder]
-end __FindExtensionsInFolderRecursive
-
 private function isUserExtension pData
    if pData["ide"] then 
       return 1
@@ -933,7 +837,7 @@ on __extensionsLoad
          if tFolder is among the items of "downloading,temp,uninstalled" then next repeat
          local tExtFolder
          put tExtensionFolder & slash & tFolder into tExtFolder
-         __FindExtensionsInFolderRecursive tExtFolder, tKey is "user", tDataA
+         extensionFindInFolder tExtFolder, tKey is "user", true, tDataA
       end repeat
    end repeat
    
@@ -1270,7 +1174,7 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
    end if
    
    if pAdditionalInfoA is empty then
-      put __fetchScriptLibraryData(pFolder, pSourceFile) into pAdditionalInfoA
+      put __fetchExtensionManifestData(pFolder, pSourceFile) into pAdditionalInfoA
    end if
    
    __extensionPropertySet tCacheIndex, "name", tId
@@ -1651,55 +1555,3 @@ command revIDEExtensionIconFromType pType, pID, @rIconName, @rIconPath
          break
    end switch
 end revIDEExtensionIconFromType
-
-private command addXML @xXML, pDepth, pTag, pContent, pAttributesA
-   repeat pDepth
-      put space after xXML
-   end repeat
-   put "<" & pTag after xXML
-   repeat for each key tKey in pAttributesA
-      put " " & tKey & "=" & quote & pAttributesA[tKey] & quote \
-            after xXML
-   end repeat
-   if pContent is empty then
-      put " />" after xXML
-   else
-      put ">" & pContent & "</" & pTag & ">" after xXML
-   end if
-   put return after xXML
-end addXML
-
-command revIDEExtensionGenerateManifestForLCSExtension pSource, pFolder
-   local tDataA
-   put __fetchScriptLibraryData(pFolder, pSource) into tDataA
-   
-   local tPackageXML, tAttrA
-   repeat for each item tTag in "name,title,author,version,type"
-      addXML tPackageXML, 1, tTag, tDataA[tTag]
-   end repeat
-   
-   addXML tPackageXML, 1, "license", "community"
-   
-   // TODO: This will only work for loaded lcs libraries
-   repeat for each line tRequirement in revSBGetExtensionDependenciesForExtension(tDataA["name"])
-      put tRequirement into tAttrA["name"]
-      addXML tPackageXML, 1, "requires", "", tAttrA
-      put empty into tAttrA
-   end repeat
-   
-   repeat for each item tMetadata in "svgicon"
-      local tValue
-      put tDataA[tMetadata] into tValue
-      if tValue is empty then
-         next repeat
-      end if
-      put tMetadata into tAttrA["key"]
-      addXML tPackageXML, 1, "metadata", tValue, tAttrA
-      put empty into tAttrA
-   end repeat
-   
-   local tXML
-   put "0.0" into tAttrA["version"]
-   addXML tXML, 0, "package", return & tPackageXML, tAttrA
-   put textEncode(tXML, "utf-8") into url("binfile:" & pFolder & slash & "manifest.xml")
-end revIDEExtensionGenerateManifestForLCSExtension
