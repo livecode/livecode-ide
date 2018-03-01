@@ -17,6 +17,7 @@ on editorUpdate
    local tPath
    put the hilitedElement of widget 1 of me into tPath
    set the arrayData of widget 1 of me to tValue
+   set the pathDelimiter of widget 1 of me to numToCodepoint(0)
    unlock messages
    updateEditorFields tPath
    lock messages
@@ -38,6 +39,7 @@ end editorUpdate
 
 on updateEditorFields pPath
    local tValue
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put the editorValue of me into tValue
    if pPath is empty then
       put empty into field "key" of me
@@ -99,6 +101,7 @@ end setValue
 
 on setArrayDataOnPath pValue, pPath, @xArray
    local tKey
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       put pValue into xArray[tKey]
@@ -110,6 +113,7 @@ end setArrayDataOnPath
 
 on setArrayKeyOnPath pKey, pPath, @xArray
    local tKey
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       local tSubArray
@@ -124,6 +128,7 @@ end setArrayKeyOnPath
 
 on deleteArrayKeyOnPath pPath, @xArray
    local tKey
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       delete variable xArray[item 1 of pPath]
@@ -135,6 +140,7 @@ end deleteArrayKeyOnPath
 
 on addArrayKeyOnPath pPath, @xArray
    local tKey
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       put "" into xArray[item 1 of pPath]
@@ -146,6 +152,7 @@ end addArrayKeyOnPath
 
 on fetchArrayDataOnPath pPath, pArray, @rData
    local tKey
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       if tKey is not among the keys of pArray then
@@ -166,6 +173,7 @@ end dataChanged
 
 on valueChanged
    local tPath
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put the hilitedElement of widget 1 of me into tPath
    if tPath is empty then
       # Don't update anthing
@@ -180,6 +188,7 @@ end valueChanged
 on keyChanged
    lock screen
    local tPath
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put the hilitedElement of widget 1 of me into tPath
    
    local tArray, tNewKey
@@ -213,6 +222,7 @@ end hiliteChanged
 
 on updateHIlite
    local tPath
+   set the itemdelimiter to the pathDelimiter of widget 1 of me
    put the hilitedElement of widget 1 of me into tPath
    
    # Hilite a newly created key
