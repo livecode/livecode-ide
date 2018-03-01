@@ -2866,7 +2866,7 @@ private command addGroup pGroup, pObeyDontSearch, @xList, pScriptsOnly
    
    local tObjectResult
    local tControlID
-   repeat for each line tControlID in the childControlIDs of pGroup
+   repeat for each line tControlID in the controlIDs of pGroup
       addObject the long id of control id tControlID of pGroup, pObeyDontSearch, xList, pScriptsOnly
       put the result into tObjectResult
       
