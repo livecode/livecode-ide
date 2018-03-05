@@ -49,7 +49,7 @@ command revInternal__LoadLibrary pLibrary, pFullPath
    if tError is not empty then
       write ("Error" && tError && "while loading stack:" && pLibrary) \
             & return to stderr
-      return "Error loading" && pLibrary
+      return "Error loading" && pLibrary & return & tError
    end if
    
    put tStackName into sLoadedLibraries[pLibrary]

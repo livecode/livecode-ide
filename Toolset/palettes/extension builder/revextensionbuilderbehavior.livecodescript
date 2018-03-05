@@ -494,22 +494,24 @@ end ideExtensionsChanged
 
 on ideExtensionStatusChanged
    local tExtensionDataA
-   put revIDEDeveloperExtension(loadedExtensionGet()) \
+   put revIDEDeveloperExtensionNoCompile(loadedExtensionGet()) \
          into tExtensionDataA
    
    local tStatus
    put revIDEExtensionProperty(tExtensionDataA["name"], "status") into tStatus
    
    if tStatus is "installed" then
-      disableFrameItem "test"
-      enableFrameItem "uninstall"
-      disableFrameItem "stop testing"
-      disableFrameItem "install"
-   else if revIDEDeveloperExtensionCurrentlyTesting() then
-      enableFrameItem "test"
-      disableFrameItem "uninstall"
-      enableFrameItem "stop testing"
-      disableFrameItem "install"
+      if revIDEDeveloperExtensionCurrentlyTesting() then
+         enableFrameItem "test"
+         disableFrameItem "uninstall"
+         enableFrameItem "stop testing"
+         disableFrameItem "install"
+      else
+         disableFrameItem "test"
+         enableFrameItem "uninstall"
+         disableFrameItem "stop testing"
+         disableFrameItem "install"
+      end if 
    else
       enableFrameItem "test"
       disableFrameItem "uninstall"
