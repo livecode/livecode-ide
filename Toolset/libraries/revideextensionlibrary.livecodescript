@@ -1,14 +1,28 @@
 ﻿script "revideextensionlibrary"
 local sExtensions, sExtensionProperties, sModuleVersion
 
+constant kExtensionUtils = "com.livecode.library.extension-utils"
+private function __PathToExtensionUtils
+   set the itemdelimiter to "."
+   return revIDESpecialFolderPath("extensions") & slash & \
+      kExtensionUtils & slash & item -1 of kExtensionUtils & "." & \
+      "livecodescript"
+end __PathToExtensionUtils
+
 on extensionInitialize
-   if the target is me then
-      insert script of me into back 
+   if the target is not me then
+      pass extensionInitialize
    end if
    
-   # Explicitly load extension utils first
-   revInternal__LoadLibrary "extension-utils"
+   insert script of me into back
    
+   # Explicitly load extension utils first
+   revInternal__LoadLibrary "extension-utils", __PathToExtensionUtils()
+
+   if the result is not empty then
+      throw the result
+   end if
+
    # Load all the extensions ready for use
    __extensionsLoad
 end extensionInitialize
@@ -844,7 +858,6 @@ private command addToList pElement, @xArray
    put pElement into xArray[the number of elements in xArray + 1]
 end addToList
 
-constant kExtensionUtils = "com.livecode.library.extension-utils"
 on __extensionsLoad
    local tDataA   
    # Fetch all the available data about extensions in the search paths
