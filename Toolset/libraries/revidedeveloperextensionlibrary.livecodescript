@@ -205,7 +205,7 @@ private function __revIDEDeveloperExtensionCompileAndFetchDetails pFolder, \
       if tType is "lcb" then
          # The compiled module or manifest is not up to date, so compile.
          __revIDEDeveloperExtensionLog "Compiling module" && pFolder & slash & tSource
-         __revIDEDeveloperCompileModule pFolder & slash & tSource, tSupport, pFolder
+         __revIDEDeveloperCompileModule pFolder, tSource, tSupport, pFolder
          if the result is not empty then
             # This may be better as a warning, and try to parse info direct from the file.
             __revIDEDeveloperExtensionSendError the result
@@ -589,8 +589,8 @@ private function __fetchMetadatum pXmlId, pKey
    return textDecode(revXMLNodeContents(pXmlId, tNode), "utf-8")
 end __fetchMetadatum
 
-private command __revIDEDeveloperCompileModule pFile, pSupportFiles, pTargetFolder
-   revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder
+private command __revIDEDeveloperCompileModule pFolder, pFile, pSupportFiles, pTargetFolder
+   revIDEExtensionCompile pFolder, pFile, pSupportFiles, pTargetFolder
    
    if the result is not empty then
       __revIDEDeveloperCompilationError the result

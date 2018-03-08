@@ -1089,7 +1089,7 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
       -- If we have an error loading, try to recompile the extension
       if pError is not empty then
          if not pIsIDEExtension and pSourceFile is not empty then
-            revIDEExtensionCompile pFolder & slash & pSourceFile, tSupportFiles, pFolder, \
+            revIDEExtensionCompile pFolder, pSourceFile, tSupportFiles, pFolder, \
                   revIDEExtensionBytecodeFilename(true)
             if the result is empty then
                local tNewError
@@ -1455,10 +1455,16 @@ on revIDEExtensionUpdateAPI pFolder, pExtensionSource
    end if
 end revIDEExtensionUpdateAPI
 
-command revIDEExtensionCompile pFile, pSupportFiles, pTargetFolder, pOutputFilename
+command revIDEExtensionCompile pFolder, pFile, pSupportFiles, pTargetFolder, pOutputFilename
+   // Make file paths full paths
+   repeat with tLine = 1 to the number of lines in pSupportFiles
+      put pFolder & slash before line tLine of pSupportFiles
+   end repeat
+   put pFolder & slash before pFile
+   
    extensionCompile "", pFile, pSupportFiles, "", \
-      revIDESpecialFolderPath("user extensions") & slash & \
-      "interface", pTargetFolder, pOutputFilename
+         revIDESpecialFolderPath("user extensions") & slash & \
+         "interface", pTargetFolder, pOutputFilename
    
    if the result is not empty then
       return the result for error
