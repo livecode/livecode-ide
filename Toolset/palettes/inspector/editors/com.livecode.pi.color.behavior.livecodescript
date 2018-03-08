@@ -15,7 +15,8 @@ on editorUpdate
    put the editorEffective of me into tEffective
    
    lock messages
-   if the number of items in tValue < 3 then
+   if tValue is not empty and \
+         the number of items in tValue < 3 then
       put true into sNamedColor
       put revIDENamedColorToRGB(tValue) into tValue
    else
