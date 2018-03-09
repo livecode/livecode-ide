@@ -329,6 +329,7 @@ command revIDEDeveloperExtensionTest pPath
    __LaunchTestExtension pPath, tDetailsA
 end revIDEDeveloperExtensionTest
 
+local sRectsA
 private function __testStackRects
    local tDataA
    if there is a stack "LiveCode Extension Test Window" then
@@ -361,10 +362,7 @@ private function __testStackScript
 end __testStackScript
 
 private command __revIDEDeveloperExtensionLaunchTestStack pPath, pDetailsA
-   local tRectsA
-   put __testStackRects() into tRectsA
-   
-   revIDEDeveloperExtensionCreateTestStack pPath, tRectsA, pDetailsA
+   revIDEDeveloperExtensionCreateTestStack pPath, sRectsA, pDetailsA
 end __revIDEDeveloperExtensionLaunchTestStack
 
 on revIDEDeveloperExtensionClearTestStack
@@ -423,6 +421,7 @@ end __LaunchTestExtension
 
 private command __ClearTestExtension
    if there is a stack "LiveCode Extension Test Window" then
+      put __testStackRects() into sRectsA
       __revIDEDeveloperExtensionDoClearTestStack
    else
       __UnloadTestExtension
