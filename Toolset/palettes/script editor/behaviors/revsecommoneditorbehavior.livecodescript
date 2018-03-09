@@ -432,12 +432,12 @@ private function textFormatIndentLineRemoves pPreviousLine, pLine
       else
       
          if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" \
-               and "else" is among the tokens of pPreviousLine and token 1 of pPreviousLine is "if" and token - 1 of pLine is "else" then
+               and "else" is among the tokens of pPreviousLine and token 1 of pPreviousLine is "if" and token -1 of pLine is "else" then
             return item 1 of sTextFormatKeywordMap["else"]
          end if
          
          if "then" is among the words of pPreviousLine and token -1 of pPreviousLine is not "then" \
-               and token 1 of pPreviousLine is "if" and token - 1 of pLine is "else" then
+               and token 1 of pPreviousLine is "if" and token -1 of pLine is "else" then
             return 0
          end if
          
