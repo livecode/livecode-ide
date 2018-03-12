@@ -252,7 +252,35 @@ end LayoutControl
 
 private command DG2_DragFinished
    __EnableMobileScroller
-
+   
+   -- first check if we are already there
+   get word 2 of the last line of sDragLocs
+   local tLocDiff
+   local tSwipeControl
+   
+   put item 1 of the mouseLoc - it into tLocDiff
+   if tLocDiff > 0 then
+      put DG2_CustomisableControlsGetLeftSwipeControlForControl(the long id of me) into tSwipeControl
+      if tSwipeControl is not empty and \
+            the left of me is the right of tSwipeControl then
+         put false into sPreDragging
+         put false into sDragging
+         put empty into sDragLocs
+         RowSwipeShowControlForIndexAndSide the dgIndex of me, "left"
+         return the result
+      end if
+   else if tLocDiff < 0 then
+      put DG2_CustomisableControlsGetRightSwipeControlForControl(the long id of me) into tSwipeControl
+      if tSwipeControl is not empty and \
+            the right of me is the left of tSwipeControl then
+         put false into sPreDragging
+         put false into sDragging
+         put empty into sDragLocs
+         RowSwipeShowControlForIndexAndSide the dgIndex of me, "right"
+         return the result
+      end if
+   end if
+   
    local tNow
    put the milliseconds into tNow
 
@@ -286,8 +314,7 @@ private command DG2_DragFinished
 
       put tDragLoc into tPrevDragLoc
    end repeat
-
-   local tLocDiff
+   
    put item 1 of the mouseLoc - tMatchedLoc into tLocDiff
    if tMatchedLoc is not empty and abs(tLocDiff) > kSwipeLocDiff then
       -- The mouse has moved sufficiently to instantiate a swipe.
