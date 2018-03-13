@@ -127,7 +127,6 @@ Module|Type|Description
 com.livecode.canvas|Optional|Provides the syntax and types for 2D drawing allowing developers to draw to a canvas. Required if creating a widget.
 com.livecode.widget|Optional|Contains syntax specific to widget building such as "my width" and "the mouse position".
 com.livecode.engine|Optional|Contains syntax for all extension building such as "dispatch" and "log".
-
 com.livecode.arithmetic|Default|Contains syntax for basic mathematical operations.
 com.livecode.array|Default|Contains syntax for operations on arrays.
 com.livecode.assert|Default|Contains syntax for making assertions about program state.
