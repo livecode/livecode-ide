@@ -694,6 +694,8 @@ private function textFormatSelection pText
       put return & tTextLines[tIndex] after tResult
    end repeat
    
+   if line -1 of pText = "" then put cr after tResult
+   
    return tResult
 end textFormatSelection
 
