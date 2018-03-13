@@ -145,6 +145,7 @@ end setupTextMenu
 # need to be added here.
 private function revMenubarEscapeStackNameForMenu pName
    replace "!" with "\!" in pName
+   replace "&" with "\&" in pName
    if the platform is "MacOS" then 
       replace "/" with "\/" in pName
       replace "(" with "\(" in pName
