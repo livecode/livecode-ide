@@ -51,6 +51,16 @@ on foo
 end foo
 
 on foo
+   if foo() then
+      if bar() then code
+      else
+         code
+      end if
+   end if
+   -- comment
+end foo
+
+on foo
    if foo()
    then code else code
    -- comment
