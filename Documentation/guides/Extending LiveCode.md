@@ -68,7 +68,7 @@ the same for both extension types.
 We recommend using the Atom text editor, available at https://atom.io/. 
 A LiveCode package is available which provides some colorization as well 
 as indentation. 
-If you prefer to use TextWrangler, there is a colorising script 
+If you prefer to use TextWrangler, there is a colorizing script 
 [here](https://github.com/livecode/livecode/tree/develop/contrib/TextWrangler). 
 It should be placed in /Application Support/TextWrangler/Language Modules/
 
