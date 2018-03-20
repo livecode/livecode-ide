@@ -1284,39 +1284,6 @@ function revIDEExtensionFetchDefaultScript pFolder, pCacheIndex, pValidate
    return tScript
 end revIDEExtensionFetchDefaultScript
 
-private function __extensionManifestValueFromTree pTreeID, pProperty
-   local tValue
-   switch pProperty
-      case "requires"
-         # Fetch extension dependencies
-         local tRequires, tCount
-         put 0 into tCount
-         put revXMLChildNames(pTreeID,"package",return,"requires",true) into tRequires
-         if tRequires begins with "xmlerr" then
-            put tRequires into tValue
-            break
-         end if
-         repeat for each line tDependency in tRequires
-            add 1 to tCount
-            local tName
-            put revXMLAttribute(pTreeID,"package" & "/" & tDependency,"name") into tName
-            if tName begins with "xmlerr" then
-               put tName into tValue
-               break
-            end if
-            put tName into tValue[tCount]
-         end repeat
-      default
-         put revXMLNodeContents(pTreeID,"/package/" & pProperty) into tValue
-         break
-   end switch
-   
-   if tValue begins with "xmlerr" then
-      return tValue for error
-   end if
-   return tValue for value
-end __extensionManifestValueFromTree
-
 function __extensionSampleStacks pID, pFolder
    local tSampleFolder, tSamples, tSampleArray
    
