@@ -53,13 +53,29 @@ on idePreferenceChanged pPreference, pValue
    put revIDEGetPreference(pPreference) into tValue   
    switch pPreference
       case "ideExtensionManager_showInactiveExtensions"
-         refreshExtensionList
+         refreshExtensionList sSection
          break
    end switch
 end idePreferenceChanged
 
 on ideExtensionsChanged
-   refreshExtensionList
+   # Figure out which section we want to show, based on any 
+   # extensions that are downloading
+   local tExtensionArray
+   put revIDEExtensions() into tExtensionArray 
+   repeat for each element tExtensionData in tExtensionArray
+      if tExtensionData["status"] is "installing" or \
+            tExtensionData["status"] is "downloading" then
+         showList tExtensionData["type"]
+         exit ideExtensionsChanged
+      end if
+   end repeat
+   
+   if sSection is empty then
+      showList "widget"
+   else
+      showList sSection
+   end if
 end ideExtensionsChanged
 
 on setUpExtensionList
@@ -108,7 +124,7 @@ function CacheKeyForRow pRow
    return sDisplayArray["objects"][theId]["name"]
 end CacheKeyForRow
 
-on refreshExtensionList
+on refreshExtensionList pSection
    local tExtensionArray, tVisibleRows, tShowInactive
    local tIndex, tFilteredArray
    
@@ -117,14 +133,11 @@ on refreshExtensionList
    if tShowInactive is empty or tShowInactive is not among the items of "true,false" then 
       put "true" into tShowInactive
       revIDESetPreference "ideExtensionManager_showInactiveExtensions",true
-   end if   
-
-   if sSection is empty then
-      setSection
-   end if
-
+   end if  
+   
    # AL-2015-03-20: [[ Bug 15048 ]] Pass type to revIDEExtensions
-   put revIDEExtensions(sSection) into tExtensionArray 
+   put revIDEExtensions(pSection) into tExtensionArray 
+   setSection pSection
    
    # AL-2015-05-26: [[ Bug 14561 ]] Order extensions alphabetically
    local tExtensionList

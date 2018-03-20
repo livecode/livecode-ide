@@ -78,30 +78,88 @@ command revIDEExtensionDownloadAndInstall pExtensionPath, pType, pCallbackObject
    __extensionsChanged
 end revIDEExtensionDownloadAndInstall
 
-command revIDEExtensionInstall pPackageLocation
-   if there is not a file pPackageLocation then
-      answer error "No package found at" && pPackageLocation
-      exit revIDEExtensionInstall
-   end if
+private function __extensionDependencyExists pExt
+   return __extensionCacheID("name", pExt) is a number
+end __extensionDependencyExists
    
-   local tCacheIndex, tFromStore
-   put __extensionCacheID("download_package_path", pPackageLocation) \
-         into tCacheIndex
-   if tCacheIndex is not a number then
-      -- Direct install from package file
-      put false into tFromStore
-      put the number of elements of sExtensions + 1 into tCacheIndex
-      __extensionPropertySet tCacheIndex, "download_package_path", pPackageLocation
-   else
-      put true into tFromStore
-   end if
+   private command __extensionInstallPackages pPackageLocationList
+   repeat for each line tPackageLocation in pPackageLocationList
+      if there is not a file tPackageLocation then
+         throw "No package found at" && tPackageLocation
+      end if
+   end repeat
    
+   local tVerifiedA, tVerifiedList
+   repeat for each line tPackageLocation in pPackageLocationList
+      local tCacheIndex, tFromStore
+      put __extensionCacheID("download_package_path", tPackageLocation) \
+            into tCacheIndex
+      if tCacheIndex is not a number then
+         -- Direct install from package file
+         put false into tFromStore
+         put the number of elements of sExtensions + 1 into tCacheIndex
+         __extensionPropertySet tCacheIndex, "download_package_path", tPackageLocation
+         __extensionUpdateUIWithPackage tCacheIndex, tPackageLocation
+      else
+         put true into tFromStore
+      end if
+      __extensionPropertySet tCacheIndex, "downloaded_from_store", tFromStore
+      
+      __extensionPropertySet tCacheIndex, "status", "installing"
+   end repeat
+   
+   # Send update to refresh UI with new package installations
+   doExtensionsChanged
+   
+   repeat for each line tPackageLocation in pPackageLocationList
+      put __extensionCacheID("download_package_path", tPackageLocation) \
+            into tCacheIndex
+      
+      local tVerifyResult, tName
+      __extensionDownloadVerify tCacheIndex
+      put the result into tVerifyResult
+      if tVerifyResult is not empty then
+         __extensionCacheRemove tCacheIndex
+         throw "Error installing extension" && tPackageLocation & return & the result
+      else
+         put __extensionPropertyGet(tCacheIndex, "name") into tName
+         put tCacheIndex into tVerifiedA[tName]["index"]
+         put tPackageLocation into tVerifiedA[tName]["package"]
+      end if
+   end repeat
+   
+   # Send update to refresh UI with new package installations
+   doExtensionsChanged
+   
+   put the keys of tVerifiedA into tVerifiedList
+   
+   # Fetch the dependency list (minus builtin modules) and ensure all
+   # are loaded
+   put revIDEExtensionsOrderByDependency(tVerifiedList) \
+         into tVerifiedList
+   repeat for each line tExtension in tVerifiedList
+      # If this dependency was not on the list to install, ensure it exists
+      if tExtension is not among the keys of tVerifiedA then
+         if __extensionDependencyExists(tExtension) then
+            next repeat
+         end if
+         throw "Dependency" && tExtension && "not available. Please install before proceeding"
+      end if
+      
+      __extensionInstall tVerifiedA[tExtension]["index"], \
+            tVerifiedA[tExtension]["package"]
+   end repeat
+   
+   __extensionsChanged
+end __extensionInstallPackages
+
+command revIDEExtensionInstall pPackageLocationList
    try
-      __extensionInstall tCacheIndex, pPackageLocation, tFromStore
+      __extensionInstallPackages pPackageLocationList
    catch tError
       answer error tError
+      __extensionsChanged
    end try
-   __extensionsChanged
 end revIDEExtensionInstall
 
 # Uninstalls the extension
@@ -288,6 +346,21 @@ private command __extensionDownloadBegin pExtensionUrl, pType, pCallbackObject, 
    return tCacheIndex for value
 end __extensionDownloadBegin
 
+private command __extensionUpdateUIWithPackage pCacheIndex, pPath
+   # Get initial name from file
+   set the itemdel to "."
+   local tName
+   put pPath into tName
+   delete the last item of tName
+   repeat while the last item of tName is a number
+      delete the last item of tName
+   end repeat
+   __extensionPropertySet pCacheIndex, "name", tName
+   
+   # Send update to refresh UI with new package installation
+   doExtensionsChanged
+end __extensionUpdateUIWithPackage
+
 # Download the extension
 private command __extensionDownload pCacheIndex
    # Check the file extension is correct
@@ -295,7 +368,10 @@ private command __extensionDownload pCacheIndex
    put __extensionPropertyGet(pCacheIndex,"package_url") into tURL
    
    set the itemdel to "."
-   if the last item of tURL is not "lce" then return __extensionError(pCacheIndex,"Could not download extension. The package must have the file extension 'lce':" && tURL)
+   if the last item of tURL is not "lce" then 
+      return __extensionError(pCacheIndex, \
+            "The package must have the file extension 'lce':" && tURL)
+   end if
    
    local tPackageFilePath
    set the itemdel to "/"
@@ -307,18 +383,7 @@ private command __extensionDownload pCacheIndex
    __extensionPropertySet pCacheIndex, "progress", 0
    __extensionPropertySet pCacheIndex, "label", tPackageFilePath
    
-   # Put is a first stab at the name
-   set the itemdel to "."
-   local tName
-   put tPackageFilePath into tName
-   delete the last item of tName
-   repeat while the last item of tName is a number
-      delete the last item of tName
-   end repeat
-   __extensionPropertySet pCacheIndex, "name", tName
-   
-   # Send update to refresh UI with new package installation
-   __extensionsChanged
+   __extensionUpdateUIWithPackage pCacheIndex, tPackageFilePath
    
    # Update progress
    __extensionSendProgressUpdate pCacheIndex, "Downloading", 0
@@ -346,6 +411,11 @@ private command __extensionDownloaded pURL, pDownloadStatus
    revIDEExtensionInstall tPath
 end __extensionDownloaded
 
+private function __extensionIsLoaded pId, pMinVersion
+   # TODO: add versioning analysis to dependencies
+   return __extensionCacheID("name", pId) is a number
+end __extensionIsLoaded
+
 # Verify extension package is valid
 private command __extensionDownloadVerify pCacheIndex
    # Update progress
@@ -356,11 +426,18 @@ private command __extensionDownloadVerify pCacheIndex
    put __extensionPropertyGet(pCacheIndex, "download_package_path") into tExtensionPath
    
    # Check the package exists
-   if there is not a file tExtensionPath then return __extensionError(pCacheIndex,"Could not install extension. Package does not exists: " && tExtensionPath)
+   if there is not a file tExtensionPath then 
+      return __extensionError(pCacheIndex, \
+            "Package does not exist: " && tExtensionPath)
+   end if
    
    # Check the file extension is valid
    set the itemdel to "."
-   if the last item of tExtensionPath is not "lce" then return __extensionError(pCacheIndex,"Could not install extension. The package extension '"&the last item of tExtensionPath&"' Is not valid. Must be 'lce'.")
+   if the last item of tExtensionPath is not "lce" then 
+      return __extensionError(pCacheIndex, "The package extension '" & \
+            the last item of tExtensionPath&"' is not valid." && \
+            " Must be 'lce'.")
+   end if
    
    # Ensure the zip contains the things we expect
    local tManifestDataA
@@ -378,12 +455,7 @@ private command __extensionDownloadVerify pCacheIndex
          tManifestDataA["name"] & "." & tManifestDataA["version"]
 end __extensionDownloadVerify
 
-private command __extensionInstall pCacheIndex, pPackage, pFromStore
-   __extensionDownloadVerify pCacheIndex
-   if the result is not empty then
-      throw "Error installing extension" && pPackage & return & the result
-   end if
-   
+private command __extensionInstall pCacheIndex, pPackage
    local tName, tTypeId, tInstallPath
    put __extensionPropertyGet(pCacheIndex, "name") into tName
    put __extensionPropertyGet(pCacheIndex, "type_id") into tTypeId
@@ -394,7 +466,7 @@ private command __extensionInstall pCacheIndex, pPackage, pFromStore
    __extensionInstallExtract pCacheIndex, tInstallPath, tTypeID, pPackage, 30
    __extensionInstallCopyInterfaceFile pCacheIndex, tName, tInstallPath, 50
    __extensionInstallLoad pCacheIndex, tName, tInstallPath, 80
-   __extensionInstallFinalise pCacheIndex, tTypeID, pFromStore
+   __extensionInstallFinalise pCacheIndex, tTypeID
 end __extensionInstall
 
 on __extensionInstallRemoveOlderVersions pCacheIndex, pName, pProgress
@@ -491,9 +563,9 @@ private command __extensionInstallLoad pCacheIndex, pName, pInstallFolder, pProg
 end __extensionInstallLoad
 
 # Delete installation files and original package
-on __extensionInstallFinalise pCacheIndex, pTypeId, pDeletePackage
+on __extensionInstallFinalise pCacheIndex, pTypeId
    # Delete temp package file
-   if pDeletePackage then
+   if __extensionPropertyGet(pCacheIndex, "downloaded_from_store") then
       # Update progress
       __extensionSendProgressUpdate  pCacheIndex, "Removing temp files", 90
       local tTempInstallPackage
@@ -763,10 +835,9 @@ private command __extensionSetPropertyInfoFromManifest pID, pManifest
    put tPropertyInfo into sExtensionProperties[pID]
 end __extensionSetPropertyInfoFromManifest
 
-private command __extensionError pCacheIndex, pErrorMessage
+private function __extensionError pCacheIndex, pErrorMessage
    __extensionSendProgressUpdate pCacheIndex, "Error:" && pErrorMessage, 100
-   throw pErrorMessage
-   return empty
+   return pErrorMessage
 end __extensionError
 
 # Send notication that widget has been added/removed
@@ -900,6 +971,10 @@ private function __extensionCacheID pPropertyToSearch, pValue
       end if
    end repeat
 end __extensionCacheID
+
+private command __extensionCacheRemove pIndex
+   delete variable sExtensions[pIndex]
+end __extensionCacheRemove
 
 # Gets a property from the internal extension cache
 function __extensionPropertyGet pCacheIndex, pProperty

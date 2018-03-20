@@ -1,4 +1,4 @@
-﻿script "revIDEExtensionManagerBehavior"
+﻿script "revIDEExtensionManagerBehavior" with behavior "revPaletteBehavior"
 on preOpenStack
    lock screen
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
@@ -45,19 +45,16 @@ end preferenceChanged
 on installNew
    answer file "Choose an extension to install:" with type "LiveCode Extension|lce|"
    if it is not empty then
-      installExtension it, "", "widget"
+      installExtension it
    end if
 end installNew
 
 on installExtension pExtensionURL, pTypeID, pType
-   lock screen  
-   showList pType
    if pExtensionURL begins with "http" then
       // get from extensions store
-      revIDEExtensionDownloadAndInstall pExtensionURL
+      revIDEExtensionDownloadAndInstall pExtensionURL, pType
    else
       // get from local .lce file
-      revIDEExtensionInstall pExtensionURL, pType
+      revIDEExtensionInstall pExtensionURL
    end if
-   unlock screen
 end installExtension
