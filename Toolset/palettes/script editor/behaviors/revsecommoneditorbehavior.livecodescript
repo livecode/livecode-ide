@@ -2998,20 +2998,28 @@ command scriptFormat pScope, pDontGroup
       if word 4 of it is a number then put word 4 of it into tLastLine else put tFirstLine into tLastLine
       
       put the number of chars of line 1 to tFirstLine of tOldText into tCharsAboveFirstLineOld
-      put the number of chars of line 1 to tLastLine of tOldText into tCharsAboveLastLineOld
+      if tFirstLine is tLastLine then
+         put tCharsAboveFirstLineOld into tCharsAboveLastLineOld
+      else
+         put the number of chars of line 1 to tLastLine of tOldText into tCharsAboveLastLineOld
+      end if
       
       local tNewText
       put textFormatSelection(tOldText) into tNewText
       
       local tCharsAboveFirstLineNew, tCharsAboveLastLineNew, tDiffFirstLine, tDiffLastLine
       put the number of chars of line 1 to tFirstLine of tNewText into tCharsAboveFirstLineNew
-      put the number of chars of line 1 to tLastLine of tNewText into tCharsAboveLastLineNew
+      if tFirstLine is tLastLine then
+         put tCharsAboveFirstLineNew into tCharsAboveLastLineNew
+      else
+         put the number of chars of line 1 to tLastLine of tNewText into tCharsAboveLastLineNew
+      end if
       
       put tCharsAboveFirstLineOld - tCharsAboveFirstLineNew into tDiffFirstLine
       put tCharsAboveLastLineOld - tCharsAboveLastLineNew into tDiffLastLine
       
       local tFirstLineChar
-      put (the number of chars of line 1 to tFirstLine - 1 of tNewText) + 2 into tFirstLineChar
+      put (the number of chars of line 1 to tFirstLine - 1 of tNewText) + 1 into tFirstLineChar
       
       textReplace tStartChar, tOldText, tNewText, empty, pDontGroup
       
