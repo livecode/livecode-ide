@@ -87,19 +87,14 @@ private command __extensionInstallPackage pPackageLocation
       throw "No package found at" && pPackageLocation
    end if
    
-   local tCacheIndex, tFromStore
+   local tCacheIndex
    put __extensionCacheID("download_package_path", pPackageLocation) \
          into tCacheIndex
    if tCacheIndex is not a number then
-      -- Direct install from package file
-      put false into tFromStore
       put the number of elements of sExtensions + 1 into tCacheIndex
       __extensionPropertySet tCacheIndex, "download_package_path", pPackageLocation
       __extensionUpdateUIWithPackage tCacheIndex, pPackageLocation
-   else
-      put true into tFromStore
    end if
-   __extensionPropertySet tCacheIndex, "downloaded_from_store", tFromStore
    __extensionPropertySet tCacheIndex, "status", "installing"
    
    local tVerifyResult, tName
@@ -358,6 +353,7 @@ private command __extensionDownload pCacheIndex
    __extensionPropertySet pCacheIndex, "progress_message", "Downloading"
    __extensionPropertySet pCacheIndex, "progress", 0
    __extensionPropertySet pCacheIndex, "label", tPackageFilePath
+   __extensionPropertySet pCacheIndex, "downloaded_from_store", true
    
    __extensionUpdateUIWithPackage pCacheIndex, tPackageFilePath
    
