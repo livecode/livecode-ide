@@ -318,6 +318,8 @@ private on nodeCreateVisualizationObject pPathToNode
    revMetadataSet the name of stack tStack, "general", "visualizer", true
    
    -- generate variable visualizer UI
+   local tOldDefaultStack
+   put the defaultStack into tOldDefaultStack
    set the defaultStack to the short name of tStack
    reset the templateButton
    set the height of the templateButton to 23
@@ -340,6 +342,7 @@ private on nodeCreateVisualizationObject pPathToNode
    reset the templateButton
    reset the templateField
    set the lockMessages to tOldLock
+   set the defaultStack to tOldDefaultStack
    
    return tStack
 end nodeCreateVisualizationObject
