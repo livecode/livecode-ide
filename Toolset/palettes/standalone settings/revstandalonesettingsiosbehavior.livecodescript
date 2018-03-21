@@ -28,6 +28,8 @@ on initialize
       set the enabled of group "iOS Settings" to false
    end if
    
+   relayer button "iOSTabMenu" after group "cards"
+   
    updateIosSettingState
    
    local tTipLastShown, tShowTip
