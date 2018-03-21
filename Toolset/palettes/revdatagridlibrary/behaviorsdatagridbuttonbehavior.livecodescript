@@ -10791,7 +10791,7 @@ function DG2_CustomisableControlsGetDefaultEditModeReorderControl
    if there is not a group "DG2 Default Edit Mode Reorder Control"of _TemplateControl() then
       local tMsgsAreLocked
       put the lockMessages into tMsgsAreLocked
-      lock messages
+      unlock messages
 
       reset the templateGroup
       create invisible group "DG2 Default Edit Mode Reorder Control" in _TemplateControl()
@@ -10812,7 +10812,7 @@ function DG2_CustomisableControlsGetDefaultEditModeActionSelectControl
    if there is not a group "DG2 Default Edit Mode Action Select Control" of _TemplateControl() then
       local tMsgsAreLocked
       put the lockMessages into tMsgsAreLocked
-      lock messages
+      unlock messages
 
       reset the templateGroup
       create invisible group "DG2 Default Edit Mode Action Select Control" in _TemplateControl()
@@ -10836,7 +10836,7 @@ function DG2_CustomisableControlsGetDefaultEditModeActionControl
 
       local tMsgsAreLocked
       put the lockMessages into tMsgsAreLocked
-      lock messages
+      unlock messages
 
       reset the templateGroup
       create invisible group "DG2 Default Action Control" in _TemplateControl()
@@ -10866,7 +10866,7 @@ private function DG2_CustomisableControlsGetDefaultSwipeControl pName
 
       local tMsgsAreLocked
       put the lockMessages into tMsgsAreLocked
-      lock messages
+      unlock messages
 
       local tGroup
       reset the templateGroup
