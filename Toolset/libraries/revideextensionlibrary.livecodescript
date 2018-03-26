@@ -1066,7 +1066,8 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
    put pAdditionalInfoA["support_files"] into tSupportFiles
    local tLoadOnStartup
    if pError is empty then
-      put revIDEExtensionGetLoadOnStartup(pID) into tLoadOnStartup
+      put pAdditionalInfoA["_ide"] is true or \
+            revIDEExtensionGetLoadOnStartup(pID) into tLoadOnStartup
    end if
    if not pIsStartup or tLoadOnStartup is not false then
       __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, pError
