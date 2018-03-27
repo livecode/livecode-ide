@@ -3560,52 +3560,78 @@ end _table.ScrollColumnIntoView
 
 
 private command _table.LayoutDataArea
-   local theViewRect, theRect, theRootGroup
+   local theViewRect, theRect
    put _WorkingGroupRect(the long ID of me) into theViewRect
    put theViewRect into theRect
-   put the long ID of group "dgHeaderComponents" of me into theRootGroup
+   
+   local tHeaderComponents, tHorizontalComponents
+   local tVScrollbar, tHScrollbar, tCornerPiece
+   put the long id of group "dgHeaderComponents" of me into tHeaderComponents
+   put the long id of group "dgHorizontalComponents" of me into tHorizontalComponents
+   put the long id of scrollbar "dgScrollbar" of me into tVScrollbar
+   put the long id of scrollbar "dgHScrollbar" of tHorizontalComponents into tHScrollbar
+   put the long id of graphic "dgCornerPiece" of tHorizontalComponents into tCornerPiece
    
    ## Shift all content
-   set the topLeft of theRootGroup to item 1 to 2 of theRect
+   set the topLeft of tHeaderComponents to item 1 to 2 of theRect
    
-   ## Reposition bottom element
-   local theSBWidth
-   if the visible of scrollbar "dgScrollbar" of me then put the width of scrollbar "dgScrollbar" of me into theSBWidth
-   else put the dgProps["scrollbar corner offset"] of me into theSBWidth
-   set the visible of graphic "dgCornerPiece" of group "dgHorizontalComponents" of me to the visible of scrollbar "dgScrollbar" of me
-   
-   set the rect of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me to \
-         item 1 of theRect, item 4 of theRect - the height of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, \
-         item 3 of theRect - theSBWidth, item 4 of theRect
-   
-   ## Header mask
-   put the bottom of group "dgHeaderMask" of theRootGroup into item 4 of theRect            
-   set the rect of group "dgHeaderMask" of theRootGroup to theRect
-   
-   ## Define new top/bottom
-   if the visible of theRootGroup then
-      put item 4 of theRect into item 2 of theRect                 
+   if the visible of tHeaderComponents then
+      # Set the rect of the header mask
+      local tHeaderMaskRect
+      put theRect into tHeaderMaskRect
+      put the bottom of group "dgHeaderMask" of tHeaderComponents into item 4 of tHeaderMaskRect            
+      set the rect of group "dgHeaderMask" of tHeaderComponents to tHeaderMaskRect
+      ## Define new top of content rect
+      put item 4 of tHeaderMaskRect into item 2 of theRect                 
    end if
    
-   if the visible of group "dgHorizontalComponents" of me then
-      put the top of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me into item 4 of theRect
-   else
-      put item 4 of theViewRect - the dgProps["scrollbar corner offset"] of me into item 4 of theRect
+   if the environment is not "mobile" then
+      ## Reposition bottom element
+      local theSBWidth
+      if the visible of tVScrollbar then 
+         put the width of tVScrollbar into theSBWidth
+      else 
+         put the dgProps["scrollbar corner offset"] of me into theSBWidth
+      end if
+      # If the hscrollbar is not shown, then the horizontal components group
+      # containing it is invisible, so the corner piece is also invisible.
+      # So we can just set visibility of corner piece to the visible of the 
+      # vscrollbar
+      set the visible of tCornerPiece to the visible of tVScrollbar
+      
+      set the rect of tHScrollbar to \
+            item 1 of theRect, \
+            item 4 of theRect - the height of tHScrollbar, \
+            item 3 of theRect - theSBWidth, item 4 of theRect
+      
+      if the visible of tHorizontalComponents then
+         put the top of tHScrollbar into item 4 of theRect
+      else
+         put item 4 of theViewRect - the dgProps["scrollbar corner offset"] of me \
+               into item 4 of theRect
+      end if
+      
+      ## V Scrollbar and corner piece    
+      set the rect of tVScrollbar to \
+            item 3 of theRect - the width of tVScrollbar, \
+            item 2 of theRect, item 3 of theRect, \
+            item 4 of theRect
+      
+      set the rect of tCornerPiece to \
+            item 3 of theRect - the width of tVScrollbar, \
+            the top of tHScrollbar, \
+            item 3 of theRect, \
+            the bottom of tHScrollbar
+      
+      ## Masks
+      ## AL-2013-07-30 [[ Bug 10108 ]]  Thumb and scrollbar appear over top of DataGrid
+      if the visible of tVScrollbar then 
+         put item 3 of theRect - theSBWidth into item 3 of theRect
+      end if
+   else if __HasMobileScroller() then
+      mobileControlSet sScrollerId, "rect", theRect
    end if
    
-   ## V Scrollbar and corner piece    
-   set the rect of scrollbar "dgScrollbar" of me to item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-         item 2 of theRect, item 3 of theRect, \
-         item 4 of theRect
-   
-   set the rect of graphic "dgCornerPiece" of group "dgHorizontalComponents" of me to \
-         item 3 of theRect - the width of scrollbar "dgScrollbar" of me, \
-         the top of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me, item 3 of theRect, \
-         the bottom of scrollbar "dgHScrollbar" of group "dgHorizontalComponents" of me
-   
-   ## Masks
-   ## AL-2013-07-30 [[ Bug 10108 ]]  Thumb and scrollbar appear over top of DataGrid
-   if the visible of scrollbar "dgScrollbar" of me then put item 3 of theRect - theSBWidth into item 3 of theRect
    set the topLeft of group "dgListMask" of me to item 1 to 2 of theRect
    set the rect of group "dgListMask" of me to theRect
    set the rect of group "dgAlternatingRowsMask" of me to theRect
