@@ -383,7 +383,7 @@ on __revIDEDeveloperExtensionDoCreateTestStack pPath, tRectsA, pDetailsA
       create stack "LiveCode Extension Test Window"
       if tRectsA["rect"] is not empty then
          set the rect of stack "LiveCode Extension Test Window" to tRectsA["rect"]
-      else
+      else if tRectsA["loc"] is not empty then
          set the loc of stack "LiveCode Extension Test Window" to tRectsA["loc"]
       end if
       set the destroyStack of stack "LiveCode Extension Test Window" to true
