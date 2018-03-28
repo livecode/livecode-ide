@@ -2071,6 +2071,9 @@ command revDebuggerUpdateScriptEditor pObject, pHandler, pLine, pState, pError
    revGoScriptEditor the name of stack tScriptEditor
    
    if pError is not empty then
+      if the number of items of pError is 1 then
+         put comma & pLine after pError
+      end if
       # OK-2008-07-10 : This needs to be sent in time so that it arrives after the script
       # editor has finished initializing itself.
       send "revSEDisplayExecutionError pError, pObject" to stack tScriptEditor in 0 milliseconds

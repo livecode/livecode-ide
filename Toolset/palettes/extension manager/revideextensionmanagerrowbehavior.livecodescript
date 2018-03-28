@@ -124,12 +124,14 @@ private function __MenuActionsForRow pDataA
       put tShow after tActions
    end if
    
-   local tLoadOnStartup
-   put "Load on startup/|Toggle Load" & return into tLoadOnStartup
-   if revIDEExtensionGetLoadOnStartup(pDataA["name"]) is not false then
-      put "!c" before tLoadOnStartup
+   if not pDataA["_ide"] then
+      local tLoadOnStartup
+      put "Load on startup/|Toggle Load" & return into tLoadOnStartup
+      if revIDEExtensionGetLoadOnStartup(pDataA["name"]) is not false then
+         put "!c" before tLoadOnStartup
+      end if
+      put tLoadOnStartup after tActions
    end if
-   put tLoadOnStartup after tActions
    
    local tSampleList
    if pDataA["samples"] is not empty then

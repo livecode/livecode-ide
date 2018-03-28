@@ -11876,7 +11876,14 @@ function revIDELookupError pType, pError
       else if tCode is kExternalHandlerErrorCode then
          return "External handler execution error:" && item 4 to -1 of line 1 of pError
       end if
-      return line tCode of the scriptExecutionErrors
+      
+      if tCode is an integer then
+         get line tCode of the scriptExecutionErrors
+         if it is not empty then
+            return it
+         end if
+      end if
+      return tCode
    else if pType is "warning" then
       return empty
    end if
