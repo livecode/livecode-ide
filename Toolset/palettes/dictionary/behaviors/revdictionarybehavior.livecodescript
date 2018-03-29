@@ -1,4 +1,4 @@
-﻿script "revDictionaryBehavior"
+﻿script "revDictionaryBehavior" with behavior "revPaletteBehavior"
 -- The dictionary starts to hide elements at lower than 992 pixels
 -- *TODO* Tweak the CSS to rearrange things appropriately 
 constant kDictionaryMinWidth = 992
@@ -93,5 +93,11 @@ end showUpgradeOptions
 
 # bug 17819 enable cmd+c in dictionary
 on commandKeyDown pWhich
-   if pWhich is not "C" then pass commandKeyDown
+   if pWhich is not "C" then 
+      if pWhich is "W" then
+         close me
+      else 
+         pass commandKeyDown
+      end if
+   end if
 end commandKeyDown

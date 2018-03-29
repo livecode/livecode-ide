@@ -2992,11 +2992,41 @@ command scriptFormat pScope, pDontGroup
       local tOldText
       put the text of field "Script" of me into tOldText
       
+      local tFirstLine, tLastLine, tCharsAboveFirstLineOld, tCharsAboveLastLineOld
+      get the selectedLine
+      put word 2 of it into tFirstLine
+      if word 4 of it is a number then put word 4 of it into tLastLine else put tFirstLine into tLastLine
+      
+      put the number of chars of line 1 to tFirstLine of tOldText into tCharsAboveFirstLineOld
+      if tFirstLine is tLastLine then
+         put tCharsAboveFirstLineOld into tCharsAboveLastLineOld
+      else
+         put the number of chars of line 1 to tLastLine of tOldText into tCharsAboveLastLineOld
+      end if
+      
       local tNewText
       put textFormatSelection(tOldText) into tNewText
+      
+      local tCharsAboveFirstLineNew, tCharsAboveLastLineNew, tDiffFirstLine, tDiffLastLine
+      put the number of chars of line 1 to tFirstLine of tNewText into tCharsAboveFirstLineNew
+      if tFirstLine is tLastLine then
+         put tCharsAboveFirstLineNew into tCharsAboveLastLineNew
+      else
+         put the number of chars of line 1 to tLastLine of tNewText into tCharsAboveLastLineNew
+      end if
+      
+      put tCharsAboveFirstLineOld - tCharsAboveFirstLineNew into tDiffFirstLine
+      put tCharsAboveLastLineOld - tCharsAboveLastLineNew into tDiffLastLine
+      
+      local tFirstLineChar
+      put (the number of chars of line 1 to tFirstLine - 1 of tNewText) + 1 into tFirstLineChar
+      
       textReplace tStartChar, tOldText, tNewText, empty, pDontGroup
       
       if tStart is not empty then
+         subtract tDiffFirstLine from tStart
+         put max(tStart, tFirstLineChar) into tStart # dont let selection go into previous line
+         subtract tDiffLastLine from tEnd
          select char tStart to tEnd of field "Script" of me
       end if
       
