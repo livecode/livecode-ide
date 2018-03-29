@@ -1349,6 +1349,7 @@ on revIDEInitialiseIDELibrary
    revIDEPropertyLibraryInitialise
    
    ideSubscribe "ideExtensionsChanged"
+   ideSubscribe "ideDesktopChanged"
 end revIDEInitialiseIDELibrary
 
 on ideExtensionsChanged
@@ -9678,8 +9679,9 @@ command revIDESuspendDevelopmentTools
    put tClosedStacksList into gREVRestore["stacks"]
    
    -- Reset the windowBoundingRect
-   put the windowBoundingRect into gREVRestore["windowBoundingRect"]
-   set the windowBoundingRect to 0,0,item 3 to 4 of the windowBoundingRect
+   local tWindowRect
+   put revIDEStackScreenRect(the short name of the topStack, true) into tWindowRect
+   set the windowBoundingRect to tWindowRect
    
    -- Show the restore dialog
    lock recent
@@ -9746,7 +9748,7 @@ command revIDERestoreDevelopmentTools
    set the defaultMenuBar to the long id of group "revMenuBar" of stack revIDEPaletteToStackName("menubar")
    set the width of stack "revMenuBar" to the width of stack "revMenuBar" + 1 -- bug 1806
    set the width of stack "revMenuBar" to the width of stack "revMenuBar" - 1
-   set the windowBoundingRect to gREVRestore["windowBoundingRect"]
+   ideSetWindowBoundingRect
    choose gREVRestore["tool"]
    
    -- Restore the script debug mode
@@ -12222,3 +12224,42 @@ end ideShouldShowUpgradeOptions
 private function hasConnection
    return url("http://google.com/") is not empty
 end hasConnection
+
+on ideDesktopChanged
+   ideSetWindowBoundingRect
+end ideDesktopChanged
+
+/**
+
+Update the window bounding rect for the current IDE palette layout
+
+*/
+
+command ideSetWindowBoundingRect
+   local tMenuBar
+   put revIDEPaletteToStackName("menubar") into tMenuBar
+   
+   local tTools
+   put revIDEPaletteToStackName("tools") into tTools
+   
+   local tToolsSlop
+   put the width of stack tTools + 50 into tToolsSlop
+   
+   local tWindowRect
+   put revIDEStackScreenRect(tMenuBar, true) into tWindowRect
+   if tWindowRect is not empty then
+      if the screen of stack tTools is the screen of stack tMenubar then
+         if the right of stack tTools < (item 1 of tWindowRect + tToolsSlop) then 
+            put the right of stack tTools + 5 into item 1 of tWindowRect
+         else if the left of stack tTools > (item 3 of tWindowRect - tToolsSlop) then
+            put the left of stack tTools - 5 into item 3 of tWindowRect
+         end if
+      end if
+      
+      -- revMenubar may not be visible on macOS with text and icons off
+      if the visible of stack tMenubar then
+         put the bottom of stack tMenuBar + 5 into item 2 of tWindowRect
+      end if
+      set the windowBoundingRect to tWindowRect
+   end if
+end ideSetWindowBoundingRect
