@@ -319,10 +319,28 @@ on TestReferenceControlOnActiveStack
 	create stack
 	set the defaultStack to the short name of it
 	
-	local tToExecute
+	local tToExecute, tValidScript
 	put "put bar into field 1" into tToExecute
 	ideExecuteScript tToExecute, tStack, false, tValidScript
 	
 	TestAssert "intelligence object command two params result", the text of tField is "bar"
 	TestAssert "intelligence object command two params executed", tValidScript is tToExecute
 end TestReferenceControlOnActiveStack
+
+-- bug 20084
+on TestMutilineWithCommentOnFirstLine
+	local tStack, tField
+	create stack
+	put it into tStack
+
+	set the defaultStack to the short name of tStack
+	
+	create field
+	put it into tField
+	
+	local tToExecute, tValidScript
+	put "-- foo" & return & "put bar into field 1" into tToExecute
+	ideExecuteScript tToExecute, tStack, false, tValidScript
+	
+	TestAssert "multiline script with comment on first line executes", the text of tField is "bar"
+end TestMutilineWithCommentOnFirstLine

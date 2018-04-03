@@ -11512,7 +11512,11 @@ command ideExecuteScript pScript, pObject, pDebugMode, @rValidScript
    end if
    
    if tValidScript is empty then
-      return tOriginalCompileError for error
+      if tOriginalCompileError is not empty then
+         return tOriginalCompileError for error
+      else
+         put pScript into tValidScript
+      end if
    end if
    unlock screen
    
