@@ -28,6 +28,8 @@ local sLastBreakInfo
 #
 ################################################################################
 
+constant kUndebuggableHandlers = "moveStack resizeStack resizeControl"
+
 # Description
 #   Initializes the debugger, should be called on IDE startup or when script debug mode is turned on.
 private command __Initialize
@@ -2362,12 +2364,12 @@ on traceError pHandler, pLine, pPosition, pError
          pass traceError
       end if
       
-      -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+      -- The IDE will lock up if we try and trace messages repeatedly coming from OS
       local tContexts
       put the executionContexts into tContexts
       local tLine
       repeat for each line tLine in tContexts
-         if item -2 of tLine is among the words of "moveStack resizeStack" then
+         if item -2 of tLine is among the words of kUndebuggableHandlers then
             pass traceError
          end if
       end repeat
@@ -2435,12 +2437,12 @@ on traceBreak pHandler, pLine
    end if
    
    if "development" is in the environment then
-      -- We can not flush moveStack and resizeStack messages so the IDE will lock up if we try and trace
+      -- The IDE will lock up if we try and trace messages repeatedly coming from OS
       local tContexts
       put the executionContexts into tContexts
       local tLine
       repeat for each line tLine in tContexts
-         if item -2 of tLine is among the words of "moveStack resizeStack" then
+         if item -2 of tLine is among the words of kUndebuggableHandlers then
             pass traceBreak
          end if
       end repeat
