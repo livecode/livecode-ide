@@ -219,6 +219,8 @@ on moveStack
       set the topLeft of this stack to item 1 to 2 of tScreenRect
    end if
    revIDESetPaletteRectPreference the short name of me
+   ideSetWindowBoundingRect
+   
    pass moveStack
 end moveStack
 
@@ -282,15 +284,9 @@ on idePreferenceChanged pPreference
       case "cToolbarIcons"
          lock screen
          show me
-         local tAlterBounding
-         if abs(item 2 of the windowBoundingRect - the bottom of me) < 10 then 
-            put true into tAlterBounding
-         end if
          updateMenubarPreference
          layoutMenu
-         if tAlterBounding then
-            set the windowBoundingRect to item 1 of the windowBoundingRect,the bottom of me + 25, item 3 to 4 of the windowBoundingRect
-         end if
+         ideSetWindowBoundingRect
          unlock screen
          break
    end switch
@@ -2443,8 +2439,7 @@ function revListMenuHandlers pObject, pSort, pIndentationLevel
 end revListMenuHandlers
 
 on unIconifyStack
-   global gREVBackDropRestore, gREVRestore
-   if gREVRestore["windowBoundingRect"] is empty then pass unIconifyStack
+   global gREVBackDropRestore
    set cursor to watch
    lock messages
    set the iconic of stack "revMenubar" to false
