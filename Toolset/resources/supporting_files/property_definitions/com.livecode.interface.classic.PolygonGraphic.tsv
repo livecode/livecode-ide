@@ -15,7 +15,7 @@ lineSize							1
 dashes												
 startArrow							false					
 endArrow							false					
-points							Basic					
+points		Basic					0,0\n100,100							
 markerDrawn							false					
 markerLineSize							1					
 markerFilled							false					
