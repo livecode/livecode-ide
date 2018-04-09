@@ -1,1 +1,1 @@
-# Ensure "Sample Stacks" do show up in menu "Windows"
+# Ensure "Sample Stacks" window does show up in menu "Windows"
