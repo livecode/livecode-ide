@@ -177,7 +177,7 @@ styledText	Contents	Contents	com.livecode.pi.styledText	true	false		no_default
 systemWindow	Float above everything	Basic	com.livecode.pi.boolean	true	false		false	
 tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true	false		false	
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false			
-text	Text	Basic	com.livecode.pi.text	false	false			
+text	Text	Basic	com.livecode.pi.text	false	false			tabStops|15
 textAlign	Text align	Text	com.livecode.pi.textalign	true	false			
 textFont	Font	Text	com.livecode.pi.font	true	false
 textHeight	Text height	Text	com.livecode.pi.integer	true	false				4		1			

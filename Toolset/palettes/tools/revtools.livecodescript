@@ -1251,3 +1251,8 @@ on revToolsConfigurePolygon pTool
    end if
    revToolsConfigurePaint
 end revToolsConfigurePolygon
+
+on moveStack
+   ideSetWindowBoundingRect
+   pass moveStack
+end moveStack

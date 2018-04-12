@@ -6,6 +6,16 @@ on editorInitialize
    
    set the itemdelimiter to "."
    put item -1 of the editorProperty["editor"] of me into sTextType
+   
+   local tText, tOptions
+   put the editorOptions of me into tOptions
+   set the itemdelimiter to "|"
+   repeat for each line tLine in tOptions
+      local tProperty,tValue
+      put item 1 of tLine into tProperty
+      put item 2 of tLine into tValue
+      set the tProperty of field 1 of me to tValue
+   end repeat
 end editorInitialize
 
 on editorUpdate
