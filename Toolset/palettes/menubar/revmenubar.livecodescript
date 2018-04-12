@@ -1019,7 +1019,11 @@ on mouseUp
          revIDETutorialSkipToNextSkipPoint
       end if
    else if the short name of the owner of the target is "upgrade" then
+      local tStartCenterClassic
+      put revIDEGetPreference("StartCenterClassic") in tStartCenterClassic
+      revIDESetPreference "StartCenterClassic", true
       ideShowUpgradeOptions
+      revIDESetPreference "StartCenterClassic", tStartCenterClassic
    else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
       revMenubarMenuButtonClicked the short name of the target
       setButtonReleased the long id of the target
