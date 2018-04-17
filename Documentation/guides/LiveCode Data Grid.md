@@ -1,11 +1,11 @@
 ---
 group: intermediate
 ---
-# LiveCode Data Grid #
+# LiveCode Data Grid 
 
-## Introduction ##
+## Introduction 
 
-### What is the Data Grid?###
+### What is the Data Grid?
 
 The LiveCode Data Grid enables you to integrate powerful tables and
 forms into your projects. Data grids combine LiveCode groups and
@@ -13,7 +13,7 @@ behaviors to provide you with a simple, yet flexible means of displaying
 your data in just about any way you want.
 
 
-#### A Data Grid Table ####
+#### A Data Grid Table 
 
 ![](images/datagrid-table.gif)
 
@@ -24,7 +24,7 @@ each column of each row. If you need to customize a column with graphics
 you can define your own templates for each column. A custom template can
 be any LiveCode control such as a graphic or group.
 
-#### A Data Grid Form ####
+#### A Data Grid Form 
 
 ![](images/datagrid-form.gif)
 
@@ -45,16 +45,16 @@ displaying lots of records. Any list where you want a rich UI and
 complete control over layout and processing of engine events can benefit
 from being displayed using a data grid form.
 
-### Can You Show Me Some Examples?###
+### Can You Show Me Some Examples?
 
 Of course we can! The areas of the screenshots highlighted in blue are 
 instances of the data grid control.
 
-#### Data Grid Table ####
+#### Data Grid Table 
 
 ![](images/datagrid-table-display-1.png)
 
-#### Data Grid Forms ####
+#### Data Grid Forms 
 
 ![](images/datagrid-form-display-1.png)
 
@@ -68,21 +68,21 @@ instances of the data grid control.
 
 ![](images/datagrid-form-display-6.png)
 
-### How Do I Create My First Data Grid Table?###
+### How Do I Create My First Data Grid Table?
 
 This lesson will show you how to create a bare bones data grid table.
 Data grid tables are useful when you need to display rows of data in
 structured columns.
 
-#### Locate Data Grid on Tools Palette####
+#### Locate Data Grid on Tools Palette
 
 ![](images/datagrid-tools-palette.png)
 
-#### Drag Data Grid Onto Card####
+#### Drag Data Grid Onto Card
 
 ![](images/datagrid-drag-onto-card.png)
 
-#### Populate Data Grid Using The Property Inspector ####
+#### Populate Data Grid Using The Property Inspector 
 
 Data Grid tables display data in columns that you can customize the look
 of. You don't have to worry about customization right now though because
@@ -113,7 +113,7 @@ column in the Data Grid for each column in the text you provide (2).
 
 ![](images/datagrid-table-inspector-columns-1.png)
 
-#### Customizing Columns####
+#### Customizing Columns
 
 Now that you've populated a Data Grid Table with some data let's look at
 the columns in the Data Grid.
@@ -128,7 +128,7 @@ the columns needed already exist you can go through and rename
 Note that a label for the columns (3) has also been assigned . Labels are useful
 for customizing the column labels in the Data Grid Table.
 
-#### Populate Data Grid Using dgText Property####
+#### Populate Data Grid Using dgText Property
 
 Now that you have defined your columns let's look at how to populate a
 Data Grid Table by setting the **dgText** property. Here is an example
@@ -156,7 +156,7 @@ Grid table.
 
 ![](images/datagrid-table-with-dgtext.png)
 
-#### Populating the Data Grid Using dgData Property####
+#### Populating the Data Grid Using dgData Property
 
 Here is an example of populating the Data Grid Table by setting the
 **dgData** property to an array. The end result is the same as the previous
@@ -177,29 +177,29 @@ step.
       set the dgData of group "DataGrid" to theDataA
     end mouseUp
     
-### How Do I Create My First Data Grid Form?###
+### How Do I Create My First Data Grid Form?
 
 This lesson will show you how to create a bare bones data grid form.
 Data grid forms are useful when you need a less rigid layout than
 columns in a table provide. A data grid form gives you complete control
 over the look and feel of each record you display.
 
-#### Locate Data Grid on Tools Palette####
+#### Locate Data Grid on Tools Palette
 
 ![](images/datagrid-tools-palette.png)
 
-#### Drag Data Grid Onto Card####
+#### Drag Data Grid Onto Card
 
 ![](images/datagrid-drag-onto-card.png)
 
-#### Change Style to "Form" ####
+#### Change Style to "Form" 
 
 Select the Data Grid and open the LiveCode **Property Inspector**. Change
 the style to **form**.
 
 ![](images/datagrid-form-inspector-style.png)
 
-#### Add Some Text ####
+#### Add Some Text 
 
 Now you can assign some text to the data grid. By default a data grid
 will render some basic data without you having to customize the row
@@ -211,7 +211,7 @@ template. To assign some text:
 
 2. Type or paste some line delimited text into the field. (2)
 
-#### Result####
+#### Result
 
 That's it! The data you entered in the field will appear in the data
 grid. Now you are ready to customize the look and feel of your records
@@ -225,37 +225,37 @@ under the hood. By using arrays you can store and display all different
 kinds of data in a data grid. Being able to assign the **Contents** property is
 merely a convenience.
 
-### Example: Creating a List of People###
+### Example: Creating a List of People
 
 This lesson provides a low level detail, step-by-step example of creating a
 custom data grid form. Download the attached sample stack to see
 the scripts.
 
-#### Attached Files####
+#### Attached Files
 
 [datagrid_sampler.zip](http://lessons.livecode.com/s/lessons/files/13?lesson_id=7305)
 
-#### What You Will Create ####
+#### What You Will Create 
 
 ![](images/media_1278008632464_display.png)
 
 This is the data grid that you will create. Each row displays a name, a
 title and an image.
 
-#### Add Data Grid to Card####
+#### Add Data Grid to Card
 
 ![](images/datagrid-drag-onto-card.png)
 
 To begin, drag a data grid from the **Tools palette** onto your card.
 
-#### Change Data Grid Style ####
+#### Change Data Grid Style 
 
 ![](images/media_1278011173914_display.png)
 
 Select the data grid and from the **Basic Properties** pane of the
 **Property Inspector** change the style of the data grid to **Form.**
 
-#### The Data That Is Going to Be Displayed in Each Row ####
+#### The Data That Is Going to Be Displayed in Each Row 
 
 Now you are going to design the row template for the data grid form. The
 row template dictates how each record in the data grid will be
@@ -273,14 +273,14 @@ access to the data stored in the *FirstName*, *LastName*, *Title* and
 You are now going to add UI controls to the row template in order to
 display the data for each of these keys.
 
-#### Edit the Row Template ####
+#### Edit the Row Template 
 
 With the data grid selected, click on the **Row Template** button in the
 **Property Inspector** to open the card containing row template controls.
 
 ![](images/media_1278011265770_display.png)
 
-#### Edit the Row Template Group ####
+#### Edit the Row Template Group 
 
 In order to customize the look you need to edit the contents of the
 template group.
@@ -293,7 +293,7 @@ template group.
 4. Click **Edit Group** in the LiveCode toolbar.
 
 
-#### Rename Label Field ####
+#### Rename Label Field 
 
 The default template group has a field named *Label*. Click on the left
 side of the gray rectangle to select it.(1)
@@ -307,14 +307,14 @@ the name of the field to *Name* (2). Switch to the **Contents** pane and assign
 ![](images/media_1278010330080_display_1.png)
 
 
-#### Make Name Field Bold ####
+#### Make Name Field Bold 
 
 With the *Name* field still selected go the **Text Formatting** pane of the 
 **Property Inspector** (1) and  change the **Style** to **Bold**(2).
 
 ![](images/media_1278010452322_display.png)
 
-#### Add Title Field ####
+#### Add Title Field 
 
 
 Drag a label field from the Tools palette (1).
@@ -325,14 +325,14 @@ Name it *Title* (2) and assign *Title* to the content (3).
 
 ![](images/media_1278010622403_display_1.png)
 
-#### Change Text Alignment ####
+#### Change Text Alignment 
 
 Change the text alignment of the field to the left side using the **Text
 Formatting** pane of the **Property Inspector**.
 
 ![](images/media_1278010671679_display.png)
 
-#### Add an Image and Resize the Background Graphic ####
+#### Add an Image and Resize the Background Graphic 
 
 ![](images/Add_An_Image_and_Resize_The_Background_Graphic_display.png)
 
@@ -345,7 +345,7 @@ fit within these bounds.
 Finally, select the **Background** graphic (5) and resize it so that it frames the other 
 controls. In the example stack the **width** of the graphic is 214 and the **height** is 56.
 
-#### Stop Editing the Row Template Group ####
+#### Stop Editing the Row Template Group 
 
 ![](images/media_1278011030380_display.png)
 
@@ -353,7 +353,7 @@ You are now done adding the UI objects to the row template group. From
 the **Object** menu (1), select **Stop Editing Group**. You can then **Close** and 
 **Save** the **row template**
 
-#### Edit the Row Behavior ####
+#### Edit the Row Behavior 
 
 Now that you have designed the controls for each row you need to write
 the script that will move data into the controls and position them on
@@ -364,7 +364,7 @@ the screen.
 Click on the **Edit Script** button in the **Property Inspector** under **Row Behavior**
 to begin editing the row behavior script.
 
-#### The FillInData Message ####
+#### The FillInData Message 
 
 In the script that opens when you click the Row Behavior button you will
 find a command named **FillInData**. This is where you move data from
@@ -399,7 +399,7 @@ data to the UI controls.
 	set the filename of image "image" of me to pDataArray["Image URL"]
 	end FillInData
 
-#### The LayoutControl Message ####
+#### The LayoutControl Message 
 
 The **LayoutControl** message is where you position all of your
 controls. For this template you begin by positioning the image (1). Next
@@ -433,7 +433,7 @@ rectangle.
       set the rect of graphic "Background" of me to pControlRect
     end LayoutControl
 
-#### Set the Data of the Control ####
+#### Set the Data of the Control 
 
 This is an example of a handler that populates the data grid with data
 by setting the **dgData** property. The **dgData** property accepts a
@@ -481,7 +481,7 @@ It is called by a button placed on the card **Populate Data Grid** with script
     end Mouseup
     
 
-#### The Result ####
+#### The Result 
 
 After calling the **uiPopulatePeople** command the Data Grid should look
 something like this (1).
@@ -494,7 +494,7 @@ see any of the changes made to the row template. You can send the
 Grid** button on the Basic Properties pane of the **Property Inspector** (2)
 to redraw the data using the updated template.
 
-#### Troubleshooting: Row Height ####
+#### Troubleshooting: Row Height 
 
 By default a data grid uses a fixed height for each row. If you have not
 set the row height the first time you populate the data grid with data
@@ -511,9 +511,9 @@ Alternatively you could also simply uncheck the **Empty row height** property.(2
 
 ![](images/media_1237547039021_display_2.png)
 
-## Data Grid Fundamentals ##
+## Data Grid Fundamentals 
 
-### What Is This "Data Grid Templates" Stack That Appeared in My Project? ###
+### What Is This "Data Grid Templates" Stack That Appeared in My Project? 
 
 A data grid relies on record templates (forms) and column templates
 (tables) to display data. These templates are merely LiveCode controls
@@ -521,7 +521,7 @@ that will be used to visualize your data. In order to manage these
 controls the LiveCode IDE creates a stack named Data Grid Templates the
 first time you add a data grid to a card in your stack.
 
-#### Data Grid Templates Stack ####
+#### Data Grid Templates Stack 
 
 Open the **Project Browser** (from the **Tools** menu) and expand your stack by 
 clicking on the "+" sign. Here you will see the newly created **Data Grid 
@@ -533,7 +533,7 @@ This stack (1) contains a single card (2) for each data grid you add to a stack.
 Each card contains the template(s) and behaviors that the data grid will
 use to display the data.
 
-#### Data Grid Templates Card Contents ####
+#### Data Grid Templates Card Contents 
 
 This screenshot shows some controls that might appear on a Data Grid
 Templates card. The **Row Template** (1) is the group that contains either
@@ -548,7 +548,7 @@ Template** group and is used for data grid forms. This script controls
 how data is inserted into the **Row Template** controls and how those
 controls are positioned.
 
-#### Opening the Data Grid Templates Stack ####
+#### Opening the Data Grid Templates Stack 
 
 
 The LiveCode IDE makes it easy to locate your templates in the Data Grid
@@ -561,14 +561,14 @@ The card containing the template(s) for the selected data grid will open.
 
 ![](images/media_1236056276168_display.png)
 
-### What Is a Row Template? ###
+### What Is a Row Template? 
 
 The reason a data grid can be customized is because it uses "templates"
 to represent data. A template is merely a Livecode group that will be
 copied and used to draw your data on the screen. When working with data
 grid forms we refer to this group as a "Row Template".  
 
-#### Row Template ####
+#### Row Template 
 
 ![](images/Row_Template_display.png)
 
@@ -577,7 +577,7 @@ a single record in the data that you are displaying in a data grid form.
 This group can contain any Livecode control and the look and layout are
 entirely controlled by you.
 
-#### How a Record Template Is Used ####
+#### How a Record Template Is Used 
 
 ![](images/How_A_Record_Template_Is_Used_display.png)
 
@@ -589,7 +589,7 @@ are used but new data is inserted. This means that the data grid form is
 never drawing more records than the user can actually see which means
 the data grid is fast.
 
-### What Is a Column Template? ###
+### What Is a Column Template? 
 
 Like data grid forms, data grid tables also use templates. The
 difference is that when working with a table you create a template to
@@ -599,7 +599,7 @@ similar to a **row template**. One difference is that a **column template**
 is not limited to being a group. You can use a field for a template, a
 graphic, a button, etc.
 
-#### How a Column Template Is Used ####
+#### How a Column Template Is Used 
 
 ![](images/How_A_Column_Template_Is_Used_display.png)
 
@@ -608,12 +608,12 @@ copied into the data grid as many times as necessary in order to fill
 the visible area. Data is then inserted into these templates as the user
 scrolls.
 
-### How Do I Populate a Data Grid With Data? ###
+### How Do I Populate a Data Grid With Data? 
 
 There are a couple of ways you can assign data to a data grid. This lesson
 will show you how.
 
-#### Use The Property Inspector####
+#### Use The Property Inspector
 
 ![](images/datagrid-form-inspector-text.png)
 
@@ -628,7 +628,7 @@ running quickly.
 When you use the **Property Inspector** to assign data to the data grid the
 **Property Inspector** sets the **dgText** property of the data grid.
 
-#### Set the dgText Property ####
+#### Set the dgText Property 
 
 ![](images/media_1239244946023_display.png)
 
@@ -669,7 +669,7 @@ Behavior** to display the imported data correctly. If
 *pText* will be named "Label X" (where X is the item number) in the
 array that is passed to **FillInData**.
 
-#### Set the dgData Property####
+#### Set the dgData Property
 
 ![](images/media_1238000479771_display.png)
 
@@ -714,7 +714,7 @@ these properties when the time comes to draw the data on the screen.
 
 	theDataA[1]["Image URL"]
 
-### How Do I Customize a Form's Row Template? ###
+### How Do I Customize a Form's Row Template? 
 
 When you drop a data grid from the **Tools palette** onto a card a record
 template is created for you automatically.  This template will display
@@ -722,7 +722,7 @@ line delimited text but you will most likely want to customize the
 template. This lesson will show you how to begin customizing the
 template to meet your needs.
 
-#### Reveal the Row Template ####
+#### Reveal the Row Template 
 
 ![](images/media_1238098827623_display.png)
 
@@ -736,7 +736,7 @@ The template for the data grid will open. You can now edit the controls
 within the **Row Template** group in order to customize the look and
 feel according to your needs.
 
-#### Example of a Customized Template ####
+#### Example of a Customized Template 
 
 ![](images/media_1238098972256_display.png)
 
@@ -744,7 +744,7 @@ Here is an example of a customized template. A *Name* (1) and *Title*
 field (2) have been added as well as a control for displaying a picture of the person
 (3).
 
-#### Edit Behavior ####
+#### Edit Behavior 
 
 ![](images/media_1278011291637_display.png)
 
@@ -755,7 +755,7 @@ to position the controls.
 
 Click the **Edit Script...** button to open the behavior script.
 
-#### Edit the Behavior Script ####
+#### Edit the Behavior Script 
 
 ![](images/media_1238099074165_display.png)
 
@@ -775,7 +775,7 @@ different than the first parameter passed to **FillInData** for a
 >removes any ambiguity and ensures that data is displayed in the
 > correct control.
 
-#### An Example of a Customized Behavior ####
+#### An Example of a Customized Behavior 
 
 ![](images/media_1238100174053_display.png)
 
@@ -801,14 +801,14 @@ This example also shows how to use **LayoutControl** to layout your **row
 template**. Notice how the rectangle of the **row template** is captured at the
 beginning (3) and then used to position all of the other elements (4).
 
-### How Do I Customize a Table's Columns? ###
+### How Do I Customize a Table's Columns? 
 
 A **column template** is nothing more than a LiveCode control that is named
 after a column in your table. This control is located in the **row
 template** group for your data grid. This lesson will discuss how to
 create templates for columns in a data grid table.
 
-#### Use Property Inspector to Create a Column Template ####
+#### Use Property Inspector to Create a Column Template 
 
 ![](images/media_1238002014733_display.png)
 
@@ -818,7 +818,7 @@ template** (2).
 
 ![](images/media_1238002031307_display.png)
 
-#### Edit the Row Template Group ####
+#### Edit the Row Template Group 
 
 ![](images/media_1238002170294_display.png)
 
@@ -826,14 +826,14 @@ In order to customize the look you need to edit the contents of the
 template group. Select it (1) and click **Edit Group** (2) in the LiveCode
 toolbar.
 
-#### Edit Column Group ####
+#### Edit Column Group 
 
 ![](images/media_1238002156173_display.png)
 
 Now select the column group (1) and click **Edit Group** again (2). At
 this point you can customize what controls appear in the column template.
 
-#### A Column Template ####
+#### A Column Template 
 
 ![](images/media_1236271024680_display.png)
 
@@ -848,7 +848,7 @@ is included in the row template by default).
 Here is what those controls look like in the **Project Browser**. Notice
 how all of the controls are located in the **Row Template** group.
 
-#### Supporting Controls ####
+#### Supporting Controls 
 
 ![](images/media_1238002344589_display.png)
 
@@ -856,7 +856,7 @@ The controls created (*Time* field, *Genre* button and *My Rating*
 group) each have behaviors associated with them. These were created automatically 
 and are stored in appropriately named buttons.
 
-#### Behavior Example ####
+#### Behavior Example 
 
 ![](images/media_1238002391039_display.png)
 
@@ -869,7 +869,7 @@ Note how this parameter differs than the parameter sent to **FillInData** for a
 
 You then use that value to determine how many stars to display (2).
 
-#### Result ####
+#### Result 
 
 ![](images/media_1236272022940_display.png)
 
@@ -878,18 +878,18 @@ defined. The table found controls named *Genre*, *Time* and *My
 Rating* in the record template group so those were used to render the
 data for those three columns.
 
-## Working With Data Grids (Forms & Tables) ##
+## Working With Data Grids (Forms & Tables) 
 
-### How Do I Determine the Selected Line? ###
+### How Do I Determine the Selected Line? 
 
-#### The dgHilitedLines Property ####
+#### The dgHilitedLines Property 
 
 ![](images/media_1238000737113_display.png)
 
 You can get the selected line or lines of a data grid using the **dgHilitedLines**
  property.
 
-#### Determining the Line in a Row's Behavior ####
+#### Determining the Line in a Row's Behavior 
 
 If we need to determine the line number of a row's behavior script we
 can access the **dgLine** property of the row template. The data grid
@@ -905,7 +905,7 @@ script were in the **row template** group itself). If you were to put the
 template group then you would have to use ***of the dgControl of me***
 instead.
 
-### How Do I Get Data Associated With a Row or Column? ###
+### How Do I Get Data Associated With a Row or Column? 
 
 This lesson will show you how to get the array of data associated with a
 row in a Data Grid form as well as how to get the data associated with a
@@ -938,7 +938,7 @@ key, or column, for a row.
 Let's look at some examples of how to use these properties and
 functions.
 
-#### Getting Data Associated With the Selected Row ####
+#### Getting Data Associated With the Selected Row 
 
 ![](images/media_1247571008922_display.png)
 
@@ -983,7 +983,7 @@ application:
 
     put the uSelectedID of group "DataGrid" into theSelectedID
 
-#### Getting Data When the Selection Changes ####
+#### Getting Data When the Selection Changes 
 
 When the user makes a new selection in a Data Grid the **selectionChanged**
 message is sent to the Data Grid. The following **selectionChanged** message
@@ -996,7 +996,7 @@ could appear in the script of your Data Grid group:
       uiViewRecordOfID theDataA["id"]
     end selectionChanged
 
-#### Getting Data in a Row Behavior ####
+#### Getting Data in a Row Behavior 
 
 ![](images/media_1237839849843_display.png)
 
@@ -1004,7 +1004,7 @@ If you want to get the data in a **row behavior** script you can use the
 **dgIndex** or **dgLine** custom properties of the row control. Here is an
 example that could be used in a Data Grid's **form** behavior script:
 
-    ##Data Grid Row behavior script
+    ## Data Grid Row behavior script
     
     on mouseUp pMouseBtnNum
       if pMouseBtnNum is 1 then
@@ -1020,7 +1020,7 @@ itself then you would change the ***me*** references to ***target*** and add a
 check to ensure that the user clicked on a row. This example also uses
 **GetDataOfIndex** rather than **dgDataOfIndex** to show an alternative.
 
-    ##Data Grid Form Example: Data Grid Script
+    ## Data Grid Form Example: Data Grid Script
     
     on mouseUp pMouseBtnNum
       if pMouseBtnNum is 1 then
@@ -1033,7 +1033,7 @@ check to ensure that the user clicked on a row. This example also uses
       end if
     end mouseUp
 
-#### Getting Data in a Column Behavior ####
+#### Getting Data in a Column Behavior 
 
 ![](images/media_1262102060634_display.png)
 
@@ -1071,13 +1071,13 @@ check to ensure that the user clicked on a column:
       end if
     end mouseUp
 
-### How Do I Add a Row of Data to an Existing Data Grid? ###
+### How Do I Add a Row of Data to an Existing Data Grid? 
 
 Sometimes you may want to add a row of data to a Data Grid without
 having to set the **dgData** or **dgText** property. You can add a single row of
 data by calling the **AddData** or **AddLine** commands of a Data Grid.
 
-#### Using AddData ####
+#### Using AddData 
 
 To use **AddData** you create an array containing the values for the new
 row. Here is an example of how to add a new row and have it appear as
@@ -1096,7 +1096,7 @@ line 1 in a Data Grid.
 
 ![](images/media_1256565520707_display.png)
 
-#### Using AddLine ####
+#### Using AddLine 
 
 To use **AddLine** you create a tab delimited string of text containing
 the values for the new row. You also need to tell the Data Grid the
@@ -1113,7 +1113,7 @@ how to add a new row and have it appear as the last line in a Data Grid.
 
 ![](images/using_addLine_display.png)
 
-#### Scrolling Data Into View and Getting the Data Control ####
+#### Scrolling Data Into View and Getting the Data Control 
 
 After you add the data to the Data Grid you may want to scroll the new
 row into view. You can call **ScrollIndexIntoView** or
@@ -1125,11 +1125,11 @@ or
 
     ScrollLineIntoView theLineNo
 
-### How Do I Update Data in a Row? ###
+### How Do I Update Data in a Row? 
 
 This lesson will show you how to update data in a row.
 
-#### Updating a Row's Data and Refresh Data Grid Automatically ####
+#### Updating a Row's Data and Refresh Data Grid Automatically 
 
 You can update data in a row by setting the **dgDataOfIndex** or
 **dgDataOfLine** properties. You can set either property to an array
@@ -1146,7 +1146,7 @@ containing the values for the row.
 The data grid will now refresh with the new data you assigned to the
 highlighted index.
 
-#### Updating a Row's Data Without Refreshing the Data Grid ####
+#### Updating a Row's Data Without Refreshing the Data Grid 
 
 If you want to update the data in a row without automatically refreshing
 the data grid then you can use **SetDataOfIndex**. You can then use the
@@ -1173,14 +1173,14 @@ Example that sets individual keys of the row one at a time:
     dispatch "RefreshIndex" to group "DataGrid" with the \
         dgHilitedIndex of group "DataGrid"
 
-### How Do I Clear Data From a Data Grid? ###
+### How Do I Clear Data From a Data Grid? 
 
 Clearing the data out of a Data Grid is as easy as setting the **dgData**
 (or **dgText**) of the Data Grid to **empty**.
 
     set the dgData of group "DataGrid" to empty
 
-### How Do I Add a mouseDown Event to the Data Grid Without Breaking It? ###
+### How Do I Add a mouseDown Event to the Data Grid Without Breaking It? 
 
 This lesson will show you how you to write your own **mouseDown** event in a
 Data Grid without breaking the default Data Grid behavior. You need to
@@ -1192,7 +1192,7 @@ message that the Data Grid normally handles. Doing so changes the
 behavior of the Data Grid and you need to take that into account when
 coding your **mouseDown** handler.
 
-#### What Doesn't Work ####
+#### What Doesn't Work 
 
 If you were to place the following code in your Data Grid script you
 would not get the result you were expecting. The reason is that the
@@ -1211,7 +1211,7 @@ script itself.
       pass mouseDown
     end mouseDown
 
-#### What Does Work: dgMouseDown ####
+#### What Does Work: dgMouseDown 
 
 In order to work around this the Data Grid wraps all **mouseDown**
 functionality in a handler named **dgMouseDown**. You can call this
@@ -1247,12 +1247,12 @@ call to **dgMouseDown** which is not the desired behavior.
       ## Don't pass mouseDown
     end mouseDown
 
-### How Can I Store an Option Menu Value When the User Makes a Selection? ###
+### How Can I Store an Option Menu Value When the User Makes a Selection? 
 
 This lesson will demonstrate how to update the data associated with a
 row in a data grid when the user makes a selection from an option menu.
 
-#### Example Data Grid ####
+#### Example Data Grid 
 
 ![](images/media_1239422115316_display.png)
 
@@ -1261,7 +1261,7 @@ and has been customized with an **option menu**. What we are going to do is upda
 data associated with a row to reflect the selection the user makes in
 the **option menu**.
 
-#### Edit Column Behavior ####
+#### Edit Column Behavior 
 
 ![](images/media_1239422153707_display.png)
 
@@ -1269,7 +1269,7 @@ We need to customize the column behavior. From the **Columns** pane (1)
 in the **Property Inspector** select the *Rating* column (2) and then click the **Column
 Behavior** button (3).
 
-#### FillInData ####
+#### FillInData 
 
 ![](images/media_1239422182841_display.png)
 
@@ -1277,7 +1277,7 @@ In the **FillInData** handler we are setting the **menuhistory** based on
 the value of *pData* that is passed in. As there is only a single button in the 
 *Rating* column template, it can be referreed to as ***button 1 of me***.
 
-#### menuPick ####
+#### menuPick 
 
 ![](images/media_1239422596775_display.png)
 
@@ -1290,7 +1290,7 @@ the **new value**. Since the above script is in a column behavior we can use
 the **dgIndex of me** (1) for the **index** and the **dgColumn of me** (2) for the
 **column name**.
 
-#### The Behavior in Action ####
+#### The Behavior in Action 
 
 Here is what the data grid's internal array looks like before making a
 menu selection.
@@ -1301,7 +1301,7 @@ After making a selection for row 2 (1) the internal value was updated (2).
 
 ![](images/media_1239422260513_display.png)
 
-### How Do I Refresh a Data Grid After Making Changes to a Template Through Script? ###
+### How Do I Refresh a Data Grid After Making Changes to a Template Through Script? 
 
 The command **ResetList** redraws a data grid after having copied in fresh copies of any 
 templates. Here is an example of how you might use it.
@@ -1322,13 +1322,13 @@ Or you can simply issue it from the message box.
 
 ![](images/datagrid_send_refresh_list.png)
 
-### How Do I Use a Template in Multiple Data Grids? ###
+### How Do I Use a Template in Multiple Data Grids? 
 
 If your application needs to use the same style of data grid in multiple
 places in your project then you can easily share the same row template
 between multiple data grids. This lesson will show you how.
 
-#### Create First Data Grid ####
+#### Create First Data Grid 
 
 ![](images/media_1240455722959_display.png)
 
@@ -1338,7 +1338,7 @@ Template** that is used to draw the data grid is **dgProps["row
 template"]**. The message box shows a query for this property
 in order to get a reference to the data grids row template (2).
 
-#### Create Other Data Grids ####
+#### Create Other Data Grids 
 
 Now you can add other data grids to your project. Here the second data grid is added to 
 the same stack as the first. After adding the data grid you can set the **dgProps["row 
@@ -1362,7 +1362,7 @@ of a data grid in a second stack)
 > You may want to delete this card if you aren't going to be using that
 > template.
 
-#### Result ####
+#### Result 
 
 ![](images/datagrid_setprops_two_stacks_1.png)
 
@@ -1372,9 +1372,9 @@ being used in the second stack.
 
 ![](images/datagrid_setprops_two_stacks_2.png)
 
-### How Can I See What the Data Grid's Internal Array Currently Looks Like? ###
+### How Can I See What the Data Grid's Internal Array Currently Looks Like? 
 
-#### Using PrintKeys ####
+#### Using PrintKeys 
 
 ![](images/media_1239422249334_display.png)
 
@@ -1387,13 +1387,13 @@ This will print the array in the message box.
 > a quick peek at the array. It only prints the first line of each key so 
 > it is not a 100% accurate view of the data.
 
-### How Do I Get Aggregate Values for Columns? ###
+### How Do I Get Aggregate Values for Columns? 
 
 This lesson will show you how to add a custom property to a data grid
 that returns the aggregate value of a column. Usually this would be used
 with data grid tables but works equally as well with data grid forms.
 
-#### Add a getProp to Your Data Grid Script ####
+#### Add a getProp to Your Data Grid Script 
 
 ![](images/Add_A_getProp_To_Your_Data_Grid_Script_display.png)
 
@@ -1402,7 +1402,7 @@ handler to your data grid script. In this example a custom
 property called **uSumOfColumn** (1) has been defined. Passing it a column name (2)
 returns the sum of all rows of that column (3).
 
-#### Using the Custom Property ####
+#### Using the Custom Property 
 
 ![](images/Using_the_Custom_Property_display.png)
 
@@ -1410,13 +1410,13 @@ Here is an example of using the custom property. When clicking on the
 button (1) the text of another field (in this case "sum") is set to the **uSumOfColumn**
 custom property (2).
 
-#### The Result ####
+#### The Result 
 
 ![](images/The_Result_display.png)
 
 Here the result has been put into the *Sum* field.
 
-### How Do I Determine if the Data Grid Has Focus? ###
+### How Do I Determine if the Data Grid Has Focus? 
 
 You can determine if the data grid has focus by performing the following
 check:
@@ -1425,17 +1425,17 @@ check:
     ## Data grid has focus
     end if
 
-### How Do I Export Data From a Data Grid? ###
+### How Do I Export Data From a Data Grid? 
 
 This lesson will show you how to get data out of a data grid.
 
-#### The Example Data Grid ####
+#### The Example Data Grid 
 
 ![](images/DataGrid_Sampler_Stack.png)
 
 The data will be exported from a data grid that looks like this.
 
-#### The Handler for Populating Data Grid ####
+#### The Handler for Populating Data Grid 
 
     command uiPopulatePeople
        put "images/" into theImageFolder
@@ -1476,7 +1476,7 @@ The data will be exported from a data grid that looks like this.
 This is the code that was used to populate the data grid. This shows you
 the keys that each record has (*FirstName*, *LastName*, *Title* and *Image URL*).
 
-#### Export Handler ####
+#### Export Handler 
 
      command uiExportData
        ## Export data to XML
@@ -1512,13 +1512,13 @@ delimited list of the keys of the **dgData** in the proper order.
 After you have the array and the ordered list of indexes you can loop
 through each record in the array. In this example the data is just wrapped in XML tags.
 
-#### Example Output ####
+#### Example Output 
 
 This is what the output for this example looks like in the message box.
 
 ![](images/media_1247315800246_display.png)
 
-### How Do I Work With Checkboxes in a Data Grid? ###
+### How Do I Work With Checkboxes in a Data Grid? 
 
 This lesson will demonstrate how to associate the hilite state of a
 checkbox in a data grid with a row value in the data grid.
@@ -1527,7 +1527,7 @@ checkbox in a data grid with a row value in the data grid.
 
 [Checkbox_Example.livecode](http://lessons.livecode.com/s/lessons/files/303?lesson_id=26382)
 
-#### Adding a Checkbox to a Form ####
+#### Adding a Checkbox to a Form 
 
 ![](images/media_1278011173914_display.png)
 
@@ -1536,7 +1536,7 @@ Before you begin, drag a data grid onto a stack and set the style to
 
 Click the **Row Template** button to open the template for the data grid.
 
-#### Edit Row Template Group ####
+#### Edit Row Template Group 
 
 Now that the card with the data grid row template is visible, open the
 **Project Browser** selecting the **Tools > Project Browser**
@@ -1554,7 +1554,7 @@ palette into the group.
 
 ![](images/media_1296743472921_display.png)
 
-#### Add a Checkbox ####
+#### Add a Checkbox 
 
 From the **tools palette**, drag a **checkbox** onto the card and place it in
 the upper-left corner. The button will appear in the list of controls in
@@ -1562,14 +1562,14 @@ the **Project Browser**.
 
 ![](images/media_1296743517047_display.png)
 
-#### Edit Checkbox Properties ####
+#### Edit Checkbox Properties 
 
 Open the button's Property Inspector, select the **Position** pane and change the 
 **height** to 21. Set the **left** and **top** properties to 0.
 
 ![](images/media_1296743535342_display.png)
 
-#### Delete the Label Field ####
+#### Delete the Label Field 
  
 Now that you have added the checkbox button you no longer need the
 *Label* field in the row template. We will do this using the **Project Browser**
@@ -1599,7 +1599,7 @@ After deleting the field you should have only the *Background* graphic and the
 ![](images/media_1296743555165_display.png)
 
 
-#### Edit Row Behavior ####
+#### Edit Row Behavior 
 
 Next you need to edit the **Row Behavior** in order to take into account
 the new checkbox control.
@@ -1608,7 +1608,7 @@ the new checkbox control.
 
 Click the **Edit Script** button.
 
-#### Edit the FillInData Handler ####
+#### Edit the FillInData Handler 
  
 ![](images/media_1296825944670_display.png)
 
@@ -1630,7 +1630,7 @@ row.
       set the hilited of button "Check" of me to pDataArray["checked"]
     end FillInData
 
-#### Update LayoutControl and ResetData ####
+#### Update LayoutControl and ResetData 
 
 The **LayoutControl** and **ResetData** handlers also have references to the *Label* field 
 which no longer exists. Update both of those handlers with references to the *Check* button.
@@ -1663,7 +1663,7 @@ which no longer exists. Update both of those handlers with references to the *Ch
       set the hilite of button "Check" of me to false
     end ResetData
 
-#### Update Data Grid Row Value When User Changes Checkbox State ####
+#### Update Data Grid Row Value When User Changes Checkbox State 
 
 When the user clicks on the checkbox the hilited state will change. You
 need to update the row data in the data grid when this happens so that
@@ -1694,7 +1694,7 @@ script afterwards.
       end if
     end mouseUp
 
-#### Populate the Data Grid ####
+#### Populate the Data Grid 
 
 You have now finished configuring the Data Grid so it is time to test.
 Add a button to the stack and name it **Populate grid**.
@@ -1724,7 +1724,7 @@ Paste this script to the button script.
       set the dgData of group "DataGrid 1" to theDataA
     end mouseUp
 
-#### Test ####
+#### Test 
 
 After compiling the script, click on the **Populate Grid** button. The
 card should now look similar to this.
@@ -1734,7 +1734,7 @@ card should now look similar to this.
 Try it out. If you click on a checkbox in line 1 it should uncheck. Click on it again 
 to check it.
 
-#### Checking/Unchecking All Checkboxes in a Data Grid ####
+#### Checking/Unchecking All Checkboxes in a Data Grid 
  
 When working with lists that have checkboxes it is nice to include the
 option to check or uncheck all of the items in the list. Let's look at
@@ -1761,7 +1761,7 @@ redraw the data grid each time it is called.
 ***Copy & Paste***
 
     on mouseUp
-    ## Get Checked Value for 1st Row ##
+    ## Get Checked Value for 1st Row 
       dispatch function "GetDataOfLine" to group "DataGrid 1" with \
           1,"checked"
       put the result into theCheckedValue
@@ -1782,7 +1782,7 @@ redraw the data grid each time it is called.
     end mouseUp
    
 
-#### Test ####
+#### Test 
 
 Click the **Check/Uncheck** button to test. You should see the
 checkboxes toggle between the checked and unchecked state.
@@ -1794,11 +1794,11 @@ see the proper values for the *checked* state of each row.
 
 ![](images/media_1296745354985_display.png)
 
-## Working With Data Grid Tables ##
+## Working With Data Grid Tables 
  
-### How Do I Change Column Alignment? ###
+### How Do I Change Column Alignment? 
  
-#### Using the Property Inspector ####
+#### Using the Property Inspector 
  
 Select the data grid and open the **Property Inspector**. Navigate to the
 **Columns** pane (1), select the column you want to modify (2), and
@@ -1806,7 +1806,7 @@ change the **alignment** (3).
 
 ![](images/Using_the_Property_Inspector_display.png)
 
-#### Using Script ####
+#### Using Script 
  
 ![](images/media_1238000788633_display.png)
 
@@ -1815,9 +1815,9 @@ column.
 
     set the dgColumnAlignment["Name"] of group "DataGrid" to "left"
 
-### How Do I Sort by a Column? ###
+### How Do I Sort by a Column? 
 
-#### Using the Property Inspector ####
+#### Using the Property Inspector 
 
 Select the data grid and open the **Property Inspector**. Navigate to the
 **Columns** pane (1), select the column you want to modify (2), and
@@ -1826,7 +1826,7 @@ options as you see fit.
 
 ![](images/media_1236355926146_display.png)
 
-#### Using Script ####
+#### Using Script 
 
 You can sort by column setting the **dgProp["sort by column"]** property of
 the data grid to the name of the column you want to sort by.
@@ -1842,9 +1842,9 @@ Similarly you can change other properties related to the sort by script too.
 ![](images/media_1238000827781_display_1.png)
 
 
-### How Do I Resize Columns? ###
+### How Do I Resize Columns? 
 
-#### Using the Property Inspector ####
+#### Using the Property Inspector 
 
 ![](images/media_1236356044111_display.png)
 
@@ -1852,7 +1852,7 @@ Select the data grid and open the **Property Inspector**. Navigate to the
 **Columns** pane (1), select the column you want to modify (2), and set the
 **width** of the column using the **Width** text entry field (3).
 
-#### Using Script ####
+#### Using Script 
  
 You can set the size of a column by setting the **dgColumnWidth** property
 for the column to an integer.
@@ -1861,7 +1861,7 @@ for the column to an integer.
 
 ![](images/media_1238000855537_display.png)
 
-### How Do I Override the Default Behavior for Rendering Data to a Cell? ###
+### How Do I Override the Default Behavior for Rendering Data to a Cell? 
 
 By default, a data grid table uses a single field object for each cell
 in a table and assigns the **text** property of that field to the cell's
@@ -1870,11 +1870,11 @@ that determines how data is rendered in the default table cell. This can
 be useful for rendering HTML and unicode text, trailing off text that is
 too wide for a column or for coloring particular cells.
 
-#### Begin With a Data Grid Table ####
+#### Begin With a Data Grid Table 
  
 ![](images/media_1239940153040_display.png)
 
-#### Create a Button ####
+#### Create a Button 
 
 The **default column behavior** property can be set to a button. The
 script of the button will be used to fill in each cell in the table.
@@ -1883,7 +1883,7 @@ Drag a button onto the card and name it **My Default Column Behavior.**
 
 ![](images/My_Default_Column_Behavior.png)
 
-#### Set the Script of the Button ####
+#### Set the Script of the Button 
  
 ![](images/media_1239940350693_display.png)
 
@@ -1897,7 +1897,7 @@ and executing the following statement in the **Message Box** (2):
     set the script of selobj() to the script of button "Default Column" \
         of stack "revDataGridLibrary"
 
-#### Customize Behavior ####
+#### Customize Behavior 
 
 ![](images/media_1239940253589_display.png)
 
@@ -1912,7 +1912,7 @@ Now this behavior can be customized. Here is what the default behavior looks lik
        return the long ID of me
     end dgDataControl
 
-#### Set 'Default Column Behavior' Property ####
+#### Set 'Default Column Behavior' Property 
  
 ![](images/media_1239945029745_display.png)
 
@@ -1926,7 +1926,7 @@ grid. Select the button (1) and execute the following in the **Message Box**
 
 Now it is time to customize your script!
 
-#### Example: Truncate Tail ####
+#### Example: Truncate Tail 
  
 ![](images/media_1240836642399_display.png)
 
@@ -1953,7 +1953,7 @@ that cell contents are truncated when drawn or when a column is resized.
       break
     end switch
 
-#### Refresh ####
+#### Refresh 
 
 To see the results, click the **Refresh Data Grid** button in the
 Property Inspector (1). Notice how cell contents are no truncated as
@@ -1961,7 +1961,7 @@ needed (2).
 
 ![](images/media_1239945061329_display.png)
 
-#### Example: Coloring Cells ####
+#### Example: Coloring Cells 
  
 ![](images/media_1240836750153_display.png)
 
@@ -1969,21 +1969,21 @@ This example will dim any cell that is empty. Since the
 default cell consists of a single field object this can be accomplished by setting the 
 field's **opaque** to **true**, setting the **backgroundcolor** and changing the **blendlevel**.
 
-#### Result ####
+#### Result 
 
 Deleting some entries in the data and click on the **Refresh Data Grid** 
 button to see the result
 
 ![](images/media_1240836803830_display.png)
 
-### How Do I Determine if a User Clicks in the Table Header? ###
+### How Do I Determine if a User Clicks in the Table Header? 
  
 This lesson will show you how to determine if the user clicked in the
 header of a Data Grid table by showing you how to use the
 **dgHeaderControl** and **dgHeader** properties of the target control that was
 clicked on.
 
-#### The Table Header ####
+#### The Table Header 
  
 ![](images/media_1262013649551_display.png)
 
@@ -1996,7 +1996,7 @@ When the user clicks on a column header (2) the **dgHeaderControl** of the
 target returns the **long id** of the group control that contains all of the
 column header controls.
 
-####Example####
+#### Example
 
 ![](images/media_1262013897208_display.png)
 
@@ -2024,16 +2024,16 @@ header (2).
 
 ![](images/media_1262013925910_display.png)
 
-### How Do I Display a Contextual Menu When the User Clicks on a Column Header? ###
+### How Do I Display a Contextual Menu When the User Clicks on a Column Header? 
  
-####Overview####
+#### Overview
 
 ![](images/media_1262014965604_display.png)
 
 This lesson will show you how to display a contextual menu (1) when the
 user clicks on a column header in a Data Grid table (2).
 
-####The Code####
+#### The Code
 
 ![](images/media_1262015011787_display.png)
 
@@ -2074,20 +2074,20 @@ the popup button to display (4).
     end mouseDown
     
 
-####The Result####
+#### The Result
 
 ![](images/media_1262015029410_display.png)
 
 Now when a ***right-click*** occurs on the State column the *State Popup* popup
 button is displayed as a contextual menu.
 
-### What if I Need to Work With htmlText or rtfText? ###
+### What if I Need to Work With htmlText or rtfText? 
  
 By default all table columns will have their **text** property assigned. If
 you need to work with htmltext or rtftext then you need to provide your own
 behavior for the table columns.
 
-#### Option 1: Set the dgProp["Default Column Behavior"] Property ####
+#### Option 1: Set the dgProp["Default Column Behavior"] Property 
  
 The simplest way to change the default behavior of table columns is to
 set the **dgProp["default column behavior"]** property of the data grid. You
@@ -2117,24 +2117,24 @@ in the **Message box**:
 
     edit script of button "Default Column" of stack "revDataGridLibrary"
 
-#### Option 2: Create a Custom Column Template ####
+#### Option 2: Create a Custom Column Template 
  
 Alternatively you can create your own custom column template for a
 particular column. This allows you complete control over the look and
-feel of the column. See section [How Do I Customize A Table's Columns?](#how-do-i-customize-a-table's-columns)
+feel of the column. See section [How Do I Customize A Table's Columns?](# how-do-i-customize-a-table's-columns)
 
-### How Do I Display Line Numbers in a Table? ###
+### How Do I Display Line Numbers in a Table? 
  
 This lesson will show you how to dynamically display line numbers in
 your data grid table.
 
-####The Table####
+#### The Table
 
 ![](images/media_1236794497421_display.png)
 
 Here is the table to display line numbers in.
 
-####Add Line Number Column####
+#### Add Line Number Column
 
 ![](images/media_1237998926249_display.png)
 
@@ -2142,7 +2142,7 @@ Select the data grid and open its **Property Inspector**. Select the **Columns**
 pane (1) and add a column using the "+" button (2). Rename the column
 **Line Number** (3).
 
-####Reorder and Create Column Template####
+#### Reorder and Create Column Template
 
 ![](images/media_1237999008350_display.png)
 
@@ -2152,7 +2152,7 @@ list.
 Create a template for this column by clicking on the "+" button at the
 bottom of the **Property Inspector** (2).
 
-####Edit Line Number Group####
+#### Edit Line Number Group
 
 ![](images/media_1237999096660_display.png)
 
@@ -2163,7 +2163,7 @@ has been created and within that group is a single field object.
 We do not need to actually do anything to the template so simply **close** and **save** it when 
 prompted.
 
-####Edit Column Behavior####
+#### Edit Column Behavior
 
 Now all that is left is to define the behavior for this column. Go back to
 the **Columns** pane of the data grid's **Property Inspector** and click the 
@@ -2172,7 +2172,7 @@ the **Columns** pane of the data grid's **Property Inspector** and click the
 ![](images/media_1237998709031_display.png)
 
 
-####Edit Behavior Script####
+#### Edit Behavior Script
 
 ![](images/media_1239247015389_display.png)
 
@@ -2184,19 +2184,19 @@ The **dgLine** is a property of a **row template** and this will display the lin
 for the current line. In **LayoutControl** you just need to ensure the rect of the field 
 fills the entire cell (2).
 
-####Refresh Data Grid####
+#### Refresh Data Grid
 
 ![](images/media_1237998627031_display.png)
 
 In the **Property Inspector** click the Refresh Data Grid button.
 
-####The Result####
+#### The Result
 
 ![](images/media_1236795107846_display.png)
 
 Now the line numbers appear in the table.
 
-####But How Do I Set the dgText Then?####
+#### But How Do I Set the dgText Then?
 
 You may be wondering how you would set the **dgText** property of this data
 grid since we have added a **Line Number** column as the first column in
@@ -2210,20 +2210,20 @@ the column names to your data like this:
     put "State" & tab & "State Code" into theColNames
     set the dgText [true] of group "Data Grid" to theColNames & cr & theData
 
-### How Do I Customize Column Sorting? ###
+### How Do I Customize Column Sorting? 
 
 This lesson will demonstrate how to customize sorting for columns by
 handling the **SortDataGridColumn** message that is sent when the user
 clicks on a column.
 
-####A Data Grid Table####
+#### A Data Grid Table
 
 ![](images/media_1239310236534_display.png)
 
 The goal is to customize when happens when this table is sorted by the
 **Line Number** column.
 
-####The Data Grid Group Script####
+#### The Data Grid Group Script
 
 A Data Grid calls a built in handler **SortDataGridColumn** whenever the **dgProps
 ["sort by column"]** property is set. This includes when the user clicks on a column header
@@ -2266,13 +2266,13 @@ that reverses whatever the current sort order is. (2)
 
 ![](images/media_1239647097509_display.png)
 
-####The Result####
+#### The Result
 
 Clicking on the **Line Number** column (1) now reverses the sort.
 
 ![](images/media_1239310720274_display.png)
 
-####Custom Sort Example####
+#### Custom Sort Example
 
 Here is another example of a custom sort. Try it out and see if you can determine 
 what it does.
@@ -2294,7 +2294,7 @@ what it does.
       ## and use that as sort direction
       put the dgColumnSortDirection[pColumn] of me into theSortDirection
       if theSortDirection is "ascending" then
-        sort lines of theData ascending by item 2 to -1 of each	#
+        sort lines of theData ascending by item 2 to -1 of each	
       else
         sort lines of theData descending by item 2 to -1 of each
       end if
@@ -2310,12 +2310,12 @@ what it does.
       HiliteAndStoreSortByColumn pColumn
     end SortDataGridColumn
 
-### How Do I Disable Column Sorting? ###
+### How Do I Disable Column Sorting? 
 
 This lesson will show you how to disable column sorting in a Data Grid
 table.
 
-####Sort By No Column####
+#### Sort By No Column
 
 Notice in our example, the **State** column header is hilighted and there is a sorting 
 arrow indicating an ascending sort.
@@ -2334,21 +2334,21 @@ Just copy and paste the above into the **Message box** to execute it.
 Your table headers should now appear the same, with no highlights or
 sorting arrow.
 
-####Edit Data Grid Script####
+#### Edit Data Grid Script
 
 Edit the Data Grid group script by ***right clicking*** on the Data Grid and
 selecting **Edit Script.**
 
 ![](images/media_1264520303976_display.png)
 
-####Add SortDataGridColumn Handler####
+#### Add SortDataGridColumn Handler
 
 ![](images/media_1264520327900_display.png)
 
 When the user clicks on a table column header the **SortDataGridColumn**
 message is sent to the Data Grid. Intercepting this message and not
 passing it effectively disables sorting. For more information
-about how **SortDataGridColumn** works see [How Do I Customize Column Sorting?](#how-do-i-customize-column-sorting).
+about how **SortDataGridColumn** works see [How Do I Customize Column Sorting?](# how-do-i-customize-column-sorting).
 
 Add the following code to your Data Grid group script and compile.
 
@@ -2367,17 +2367,17 @@ Now when you click on the table header the data will not be sorted.
 >remove the **SortDataGridColumn** handler from the script, or at least **pass**
 >the message.
 
-### How Do I Perform an Action After the User Sorts a Data Grid? ###
+### How Do I Perform an Action After the User Sorts a Data Grid? 
  
 This lesson will show you how to modify a data grid script so that you
 can perform an action whenever a data grid is sorted.
 
-####Add SortDataGridColumn To Data Grid Group Script####
+#### Add SortDataGridColumn To Data Grid Group Script
 
 You can customize what happens when a data grid is sort by adding a
 **SortDataGridColumn** handler to your data grid's script. For more
 information about howSortDataGridColum works please see the lesson
-[How Do I Customize Column Sorting?](#how-do-i-customize-column-sorting).
+[How Do I Customize Column Sorting?](# how-do-i-customize-column-sorting).
 
 In order to perform an action AFTER the sort has been applied you simply
 need to call the handler the Data Grid behavior uses to sort but NOT
@@ -2397,24 +2397,24 @@ like.
        ## DON'T PASS the "SortDataGridColumn" message!
     end SortDataGridColumn
 
-### How Do I Align Decimals in a Column? ###
+### How Do I Align Decimals in a Column? 
 
 This lesson will show you how to create a custom column template that
 provides decimal alignment. You can 
 [download the stack]([http://www.bluemangolearning.com/download/revolution/tools/datagrid_decimal_align.zip]) 
 used to create this lesson.
 
-####Create a Data Grid Table####
+#### Create a Data Grid Table
 
 ![](images/media_1240457118727_display.png)
 
-####Add Some Data####
+#### Add Some Data
 
 ![](images/media_1240457166121_display.png)
 
 Here a couple of rows of decimal numbers have been added to experiment with.
 
-####Create Column Template####
+#### Create Column Template
 
 Select the **Columns** pane (1) in the **Property Inspector** and click the
 **Add custom column behavior** button (2). This will create a custom
@@ -2426,7 +2426,7 @@ Notice how the **Column Behavior...** button has become enabled.
 
 ![](images/media_1240457183522_display_0.png)
 
-####Edit Column Template####
+#### Edit Column Template
 
 When you create a custom template for a column a new group, named after
 the column, is added to the data grid's **row template**.
@@ -2437,7 +2437,7 @@ Here you see the **Project Browser** with the template for the Data Grid expande
 showing the group for this column (*Col 1*) with a field *\_ColumnData_* to hold the 
 column's data.
 
-####Edit Column Template Group####
+#### Edit Column Template Group
 
 Double-click on the column group in the **Project Browser** (1). This will select it on the 
 template card (2) and then click the **Edit Group** button (3) to edit the contents of the 
@@ -2448,7 +2448,7 @@ column group.
 Be sure to double-click on the **group** icon and not the group's name. Double-clicking on 
 the object's name will simply allow you to edit the name, which is not what is wanted.
 
-####Create 3 Fields####
+#### Create 3 Fields
 
 A column that aligns decimals in the center of the column, and is
 editable if the user double-clicks on the cell, is achieved by creating
@@ -2471,7 +2471,7 @@ repositioned when drawn in the data grid.
 Click on the card background of the editing template and then the **Stop Editing** button 
 and **close** and **save** the window.
 
-####Edit Column Behavior####
+#### Edit Column Behavior
 
 ![](images/media_1240457537950_display.png)
 
@@ -2481,7 +2481,7 @@ its time to tell the column what to do when it is drawn. Return to the
 click the **Column Behavior   ** button (2). This will open the behavior 
 script for the column.
 
-####Update FillInData####
+#### Update FillInData
 
 ![](images/media_1240457590402_display.png)
 
@@ -2493,7 +2493,7 @@ decimal to the *Rightvalue* field.
     set the text of field "Leftvalue" of me to max(0, item 1 of pData)&"."
     set the text of field "Rightvalue" of me to max(0, item 2 of pData)
 
-####Update LayoutControl####
+#### Update LayoutControl
 
 ![](images/media_1240457650342_display.png)
 
@@ -2516,7 +2516,7 @@ can double-click on to edit the cell contents.
     
     set the rect of field "ForEditing" of me to pControlRect
 
-####Update EditValue####
+#### Update EditValue
 
 **EditValue** is the handler that is called by the data grid to edit
 a cell value. Usually this is because the user double-clicked on the
@@ -2547,7 +2547,7 @@ on the **ForEditing** field (as it has the higher layer) and it is thus
     end EditValue
 
 
-####Refresh Data Grid####
+#### Refresh Data Grid
 
 ![](images/media_1240457946816_display.png)
 
@@ -2559,7 +2559,7 @@ click the **Refresh Data Grid** button. Alternatively you can send
 
     send "resetList" to group "datagrid 1"
 
-####Test####
+#### Test
 
 ![](images/media_1240458424026_display.png)
 
@@ -2567,18 +2567,18 @@ The decimals all appear in the center of the cell.
 Double-clicking brings up an editing field as shown here.
 Finally the decimal remains in the center of the cell if the column is resized.
 
-### How Can I Colorize Individual Lines in a Table? ###
+### How Can I Colorize Individual Lines in a Table? 
  
 This lesson will show you how to change the color of individual lines in
 a Data Grid table. Before you begin this lesson you will need to read
 the lesson [How Do I Override the Default Behavior for Rendering Data
-to a Cell?](#how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell)
+to a Cell?](# how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell)
 
-####Attached Files####
+#### Attached Files
 
 [Color_Individual_Line_in_Table.rev](http://lessons.livecode.com/s/lessons/files/101?lesson_id=7332)
 
-#### Coloring a Single Line ####
+#### Coloring a Single Line 
  
 ![](images/media_1249058487860_display.png)
 
@@ -2601,7 +2601,7 @@ data to line 3.
 Now let's look at what the default custom column behavior looks like for
 this data grid.
 
-####The Default Custom Column Behavior####
+#### The Default Custom Column Behavior
 
 ![](images/media_1249059040297_display.png)
 
@@ -2641,29 +2641,29 @@ has error** the entire row appears red.
       end if
     end SetForeGroundColor
 
-## Working With Data Grid Forms ##
+## Working With Data Grid Forms 
 
-### How Do I Create a Form With Variable Line Heights? ###
+### How Do I Create a Form With Variable Line Heights? 
 
 This lesson will show you how to create a data grid form with variable
 height lines by modifying the default data grid **Row Template** and
 **Row Behavior**.
 
-#### Turn Off "Empty row height" ####
+#### Turn Off "Empty row height" 
  
 ![](images/media_1239376378384_display.png)
 
 To begin, turn off **Empty row height** for your data grid form in
 the **Property Inspector**.
 
-####Edit Row Template####
+#### Edit Row Template
 
 ![](images/media_1239375695284_display.png)
 
 Open the card that has the row template group by clicking the **Row
 Template** button.
 
-####Turn Off dontWrap Property####
+#### Turn Off dontWrap Property
 
 ![](images/media_1239375899522_display.png)
 
@@ -2672,14 +2672,14 @@ displays data. With **Select Grouped** turned on (1) select the field
 (2). Using the **Property Inspector** turn off **dontWrap** (3). You can now
 close the stack.
 
-####Edit Row Behavior####
+#### Edit Row Behavior
 
 ![](images/media_1239375899522_display_x.png)
 
 Return to the Property Inspector for your data grid. Edit the **Row
 Behavior** by clicking on **Edit Script** button.
 
-####Script Field to Resize to Fit Height####
+#### Script Field to Resize to Fit Height
 
 Only a few modifications are needed to make to the default
 **LayoutControl** handler resize the field to fit the height.
@@ -2715,7 +2715,7 @@ of the Background graphic to take into account the new field height (3).
     end LayoutControl
 
 
-####Refresh Data Grid Contents####
+#### Refresh Data Grid Contents
 
 You can now refresh the data grid contents to see the new behavior.
 
@@ -2723,13 +2723,13 @@ You can now refresh the data grid contents to see the new behavior.
 
 Notice how each line is resized to fit all of the text.
 
-### How Do I Sort Records by a Specific Key's Values? ###
+### How Do I Sort Records by a Specific Key's Values? 
  
 You can sort the rows of a data grid form using the **SortDataByKey** command. 
 
 Let's look at an example.
 
-####Example####
+#### Example
 
 ![](images/media_1242529496945_display.png)
 
@@ -2737,7 +2737,7 @@ This card has a data grid and an option menu. The option menu contains
 three values that you can sort by: *First Name*, *Last Name* and
 *Title*.
 
-####Option Menu Code####
+#### Option Menu Code
 
 The code to perform the sort is pretty straight forward.
 
@@ -2772,23 +2772,23 @@ property then the key will be "Label 1" or "Label 2", etc.
     end menuPick
 
 
-####The Result####
+#### The Result
 
 ![](images/media_1242529778033_display.png)
 
 Here is what the sort looks like after selecting *First Name* and after selecting 
 *Last Name*.
 
-### How Do I Create Rows That Can Expand/Contract? ###
+### How Do I Create Rows That Can Expand/Contract? 
  
 This lesson will show you how to make a Data Grid form with rows that
 expand and contract when clicking on an arrow.
 
-#### Attached Files ####
+#### Attached Files 
 
 [ExpandingRow.rev](http://lessons.livecode.com/s/lessons/files/45?lesson_id=9850)
 
-####Expanding and Contracting Rows####
+#### Expanding and Contracting Rows
 
 ![](images/media_1265663660291_display.png)
 
@@ -2800,7 +2800,7 @@ are contracted and only show names.
 Clicking on the arrow next to a name expands the row to show the
 description of the person.
 
-####Setting the Data Grid Properties####
+#### Setting the Data Grid Properties
 
 To create a Data Grid form with rows that expand/contact you need to
 turn off **fixed control height** in the data grid's **Property Inspector**.
@@ -2810,7 +2810,7 @@ turn off **fixed control height** in the data grid's **Property Inspector**.
 >**Note**: To turn off the property using script you set the
 >**dgProp["fixed row height"]** property to **false**.
 
-####Updating the Row Behavior Script####
+#### Updating the Row Behavior Script
 
 In order to get expanding rows working a couple of
 things need to be taken into account in the **Row Behavior Script.**
@@ -2847,7 +2847,7 @@ be in its **expanded** state as per the **FillnData** handler.
 
 Thus this little snippet effectively toggles the state of the row.
 
-### How Can I Speed Up Drawing When "Fixed Row Height" Is False? ###
+### How Can I Speed Up Drawing When "Fixed Row Height" Is False? 
  
 When you set the **dgProp["fixed row height"]** property of a Data Grid to
 **false** the Data Grid must draw all records in order to determine the
@@ -2859,7 +2859,7 @@ This lesson will show you a technique that can speed up the calculation
 of the total height of the data in situations where the rows can only
 have heights of ***known*** values.
 
-#### CalculateFormattedHeight ####
+#### CalculateFormattedHeight 
  
 When the Data Grid loops through the data to calculate the height the
 message **CalculateFormattedHeight** will be sent to the **Row Template**.
@@ -2883,9 +2883,9 @@ the **CalculateFormattedHeight** handler in your Row Behavior script.
     ...
     end FillInData
 
-## Using the Built-in Field Editor ##
+## Using the Built-in Field Editor 
 
-### How Do I Open a Table Cell for Editing? ###
+### How Do I Open a Table Cell for Editing? 
 
 By default a table cell can be edited if the user double-clicks on the
 cell. This tutorial explains what goes on in the default column behavior
@@ -2893,9 +2893,9 @@ so you can customize behavior if you would like.
 
 >**Note:** The default column behavior is stored in button "Default Column"
 >of stack "**revDataGridLibrary**". 
->See [How Do I Override the Default Behavior for Rendering Data to a Cell?](#how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell)
+>See [How Do I Override the Default Behavior for Rendering Data to a Cell?](# how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell)
 
-#### What You Need to Know ####
+#### What You Need to Know 
  
 In order to edit the columns of a data grid table you need to know about
 the following:
@@ -2908,20 +2908,20 @@ the following:
 Read up on the entries for **EditFieldText**, **EditValue**,
 **EditCell**/**EditCellOfIndex** in the API section of the Dictionary.
 
-####EditFieldText####
+#### EditFieldText
 
 The **EditFieldText** command will create an editor for a field that you
 specify. The default column behavior calls this command with three
 parameters so that data is automatically saved after the user finishes
 editing.
 
-####EditValue####
+#### EditValue
 
 **EditValue** is the message that is sent to a row when a request to edit a
 field's contents has been made. The default column behavior calls
 **EditFieldText** when this message is received.
 
-####EditCell and EditCellOfIndex####
+#### EditCell and EditCellOfIndex
 
 There are two commands that will open a cell for editing. They are
 **EditCell** and **EditCellOfIndex**. Each takes the name of the column
@@ -2947,7 +2947,7 @@ Either of the above calls will trigger the **EditValue** message.
     end EditValue
  
 
-#### CloseFieldEditor ####
+#### CloseFieldEditor 
 
 If the user changes any content in the field editor this message will be
 sent to the field targeted in the first parameter sent to **EditFieldText**.
@@ -2963,12 +2963,12 @@ required if you only passed in one parameter to **EditFieldText**.
       set the dgDataOfIndex[theIndex] of the dgControl of me to theDataA
     end CloseFieldEditor
 
-### How Can the User Edit Field Content in a Data Grid Form? ###
+### How Can the User Edit Field Content in a Data Grid Form? 
 
 The data grid commands for creating an editor for a particular field in
 a row template. This lesson will show you how to use them.
 
-####What You Need to Know####
+#### What You Need to Know
 
 In order to edit field contents in a data grid form you need to know
 about the following:
@@ -2980,19 +2980,19 @@ about the following:
 Read up on the entries for **EditFieldText**, **EditValue** and
 **EditKey**/**EditKeyOfIndex** in the API documentation.
 
-####EditFieldText####
+#### EditFieldText
 
 The **EditFieldText** command will create an editor for a field that you
 specify. You can use this command to create a field editor for a field in
 your row template.
 
-####EditValue####
+#### EditValue
 
 **EditValue** is the message that is sent to a row when a request to edit a
 fields contents has been made. You can call **EditFieldText** from within
 a handler for this message to begin an editing operation.
 
-####EditKey and EditKeyOfIndex####
+#### EditKey and EditKeyOfIndex
 
 **EditKey** and **EditKeyOfIndex** will trigger the **EditValue** message in a row.
 Each takes the name of the key you want to edit and the line or index
@@ -3038,7 +3038,7 @@ EditFieldText.
          dgHilitedIndex of me, pKey
     end EditValue
 
-#### CloseFieldEditor ####
+#### CloseFieldEditor 
 
 If the user changes any content in the field editor this message will be
 sent to the field targeted in the first parameter sent to **EditFieldText**.
@@ -3059,7 +3059,7 @@ This example script would be in the **Row Behavior** script as it uses the
       set the dgDataOfIndex[theIndex] of the dgControl of me to theDataA
     end CloseFieldEditor
 
-### How Can I Edit the Text as UTF-8, UTF-16 or HTML? ###
+### How Can I Edit the Text as UTF-8, UTF-16 or HTML? 
 
 The default Data Grid behavior when editing cell contents is to use the
 **text** property of the cell as the default value to be edited. This
@@ -3067,9 +3067,9 @@ lesson will show you how to provide a specific value for the Data Grid
 to use as the value to edit.
 
 The technique described requires that you create a custom column
-behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](#how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell).
+behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](# how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell).
 
-####The Default Behavior####
+#### The Default Behavior
 
 Assume you have a column in your table that displays text with some
 styling. In this example the last name in column 2 for **some** entries is italic.
@@ -3087,7 +3087,7 @@ default.
 ![](images/media_1266461620275_display.png)
 
 
-####Changing the Default Value For the Editor####
+#### Changing the Default Value For the Editor
 
 You can change the default value of that the field editor uses by
 setting a value of the **dgTemplateFieldEditor** property of the Data Grid.
@@ -3104,21 +3104,21 @@ of the column being edited:
 Other properties you can set include **rtftext**, **text**, **unicodetext**
 and **utf8text**.
 
-#### The Result ####
+#### The Result 
  
 ![](images/media_1266461633668_display.png)
 
 Here is the result of using the example code above in the custom column
 behavior. Notice how the text being edited is bold.
 
-### How Can I Select the Text in the Edit Field When It Opens? ###
+### How Can I Select the Text in the Edit Field When It Opens? 
  
 The default Data Grid behavior when editing cell contents is to put the
 cursor at the end of the field. This lesson will show how to tell
 the Data Grid that all of the cell text should be selected.
 
 The technique described requires a custom column
-behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](#how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell).
+behavior as outlined in the lesson [How Do I Override the Default Behavior For Rendering Data to a Cell ](# how-do-i-override-the-default-behavior-for-rendering-data-to-a-cell).
 
 #### The Default Behavior#### 
  
@@ -3147,9 +3147,9 @@ column behavior. Just place the code right before the call to
 
 ![](images/media_1266460876219_display.png)
 
-### How Do I Save Changes the User Makes in an Editor Field to an External Data Source? ###
+### How Do I Save Changes the User Makes in an Editor Field to an External Data Source? 
 
-#### When Calling EditFieldText With 3 Parameters (Simpler) ####
+#### When Calling EditFieldText With 3 Parameters (Simpler) 
 
 When calling **EditFieldText** with all three parameters (which is what a
 data grid column does by default) the data grid will automatically save
@@ -3173,7 +3173,7 @@ Here is an example script that goes in the Data Grid group script.
     end CloseFieldEditor
     
 
-#### When Calling EditFieldText With 1 Parameter (More Flexible) ####
+#### When Calling EditFieldText With 1 Parameter (More Flexible) 
 
 If you are working with data grid forms or decide to override the
 default behavior for data grid columns then you will make the call to
@@ -3208,14 +3208,14 @@ Here is an example script that goes in the Data Grid group script.
       set the dgDataOfIndex[the dgIndex of the target] of me to theDataA
     end CloseFieldEditor
 
-### How Can I Customize the Field Editor Behavior? ###
+### How Can I Customize the Field Editor Behavior? 
 
 By default the Data Grid field editor allows users to enter data and
 save it back to the Data Grid. If you need data entry to behave
 differently you can assign your own behavior script to the field editor
 before it opens. This lesson will show you how.
 
-####Create Your Behavior Script####
+#### Create Your Behavior Script
 
 ![](images/media_1251992093862_display.png)
 
@@ -3225,7 +3225,7 @@ field editor. Here it is placed on the same card as the data grid.
 "revDataGridLibrary". This is the behavior script that Data Grid uses by default and 
 is a good place to start when customizing the behavior.
 
-####Customize Your Script####
+#### Customize Your Script
 
 Open the button's script...
 
@@ -3233,7 +3233,7 @@ Open the button's script...
 
 Make any customizations you need to make.
 
-####Assign Your Custom Behavior to Field Editor####
+#### Assign Your Custom Behavior to Field Editor
 
 Whenever the Data Grid displays the field editor (e.g. the user
 double-clicks on a cell in a table) a **preOpenFieldEditor** message is
@@ -3243,15 +3243,15 @@ field.
 
 ![](images/media_1251992186932_display.png)
 
-## Building Standalones With the Data Grid ##
+## Building Standalones With the Data Grid 
  
-### What Do I Need to Do to Deploy a Standalone With a Data Grid? ###
+### What Do I Need to Do to Deploy a Standalone With a Data Grid? 
  
 A data grid relies on the stack **revDataGridLibrary** in order to function
 properly. This lesson will describe how to include this stack in your
 standalone applications.
 
-####How The Standalone Builder Adds The Necessary Files####
+#### How The Standalone Builder Adds The Necessary Files
 When you add a data grid to a stack, a substack is created whose name begins with 
 "Data Grid Templates".
 
@@ -3265,7 +3265,7 @@ whose name begins with "Data Grid Templates". If it finds one then the
 
 ![](images/media_1237996920279_display.png)
 
-####But What About Launcher Stacks (Splash Stacks)?####
+#### But What About Launcher Stacks (Splash Stacks)?
 
 Some developers prefer to use a launcher (or splash) stack technique.
 This technique builds a standalone using a stack with very little code
@@ -3290,17 +3290,17 @@ checkbox (2) to include it.
 
  ![](images/media_1237996920279_display_1.png)
 
-##Useful Things to Know ##
+## Useful Things to Know 
 
 ### What Sorts of Things Should I Not Do in Order to Avoid Needless
-### Suffering? ###
+### Suffering? 
  
 There are some things that you could do that will cause you to scratch
 your head when things go wrong. Since knowing is half the battle we will
 share the issues we are aware of.
 
 #### Don't Call a Handler That Redraws the Data Grid From Within a
-#### Control in the Data Grid ####
+#### Control in the Data Grid 
  
 This will generate an error since you are deleting a control that is
 currently executing code. This is a no-no and the LiveCode engine will
@@ -3325,13 +3325,13 @@ or b) placing the code in the data grid script itself.
     end mouseUp
     
 
-####Don't try to draw a Data Grid on a card that Is not open####
+#### Don't try to draw a Data Grid on a card that Is not open
 
 When a Data Grid renders, it dynamically creates fields and accesses
 certain properties. Some of these properties can not be properly
 reported by the LiveCode engine unless the field is on an open card.
 
-####Do not lock messages when accessing data grid properties.####
+#### Do not lock messages when accessing data grid properties.
 
 If messages are **locked** when you try to access a data grid property, for example
 
@@ -3341,21 +3341,21 @@ the correct value will not be returned/set.
 A Data Grid relies on getProp/setProp handlers to function. 
 When messages are locked these are not triggered.
 
-####Do not password protect the Data Grid Templates Stack####
+#### Do not password protect the Data Grid Templates Stack
 
 The data grid copies the templates from the **Data Grid Templates xxxx**
 stack. If you password protect this stack then the data grid will be
 unable to copy the templates.
 
-####Don't Rename the "Data Grid Templates" Stack####
+#### Don't Rename the "Data Grid Templates" Stack
 
 If you rename this stack then all of your data grids with templates
 stored in the stack will stop working. Since the data grid can no longer
 locate the custom templates they will fail to draw properly.
 
-####Don't Try to Search When Data is Being Loaded From an External Source####
+#### Don't Try to Search When Data is Being Loaded From an External Source
 
-####Stop Editing the Template Group Before Drawing Your Data Grid####
+#### Stop Editing the Template Group Before Drawing Your Data Grid
 
 When you **edit** a group in LiveCode the engine no longer knows that the
 group exists. If you try to draw a data grid while editing it's template
@@ -3363,9 +3363,9 @@ group then the data grid will fail to draw. Make sure you have selected
 **Stop Editing** from the **Object** menu or clicked on the **Stop Editing** 
 icon on the **Toolbar.**
 
-## Advanced Options ##
+## Advanced Options 
  
-### Displaying Large Amounts of Data ###
+### Displaying Large Amounts of Data 
  
 Setting the **dgText** property or creating an array and setting the **dgData**
 property of a data grid is the easiest way to display your data. But
@@ -3377,12 +3377,12 @@ Download the attached sample stack and database that shows how to use
 the techniques described in this lesson to display data from a SQLite
 database.
 
-####Attached Files####
+#### Attached Files
 
 [datagrid_databases.zip](http://lessons.livecode.com/s/lessons/files/
 1077?lesson_id=7341)
 
-####The dgNumberOfRecords Property####
+#### The dgNumberOfRecords Property
 
 Normally a data grid reports the number of records based on the number
 of numeric indexes in the first dimension of the **dgData** array. If you
@@ -3395,7 +3395,7 @@ display data in a line.
 >displaying records from your data source. It does not store any of that
 >data internally.
 
-####GetDataForLine Callback####
+#### GetDataForLine Callback
 
 ![](images/GetDataForLine_Callback_display.png)
 
@@ -3413,11 +3413,11 @@ You can define this handler in the data grid script or anywhere else in
 the message path. Just fill in pDataA with the appropriate data and the
 data grid will display it.
 
-### Creating a Data Grid by Hand ###
+### Creating a Data Grid by Hand 
  
 This lesson will show you how to create a data grid through script.
 
-####Copy Data Grid From revDataGridLibrary####
+#### Copy Data Grid From revDataGridLibrary
 
 The data grid template is stored in the **revDataGridLibrary** stack and can
 be copied using some code similar to this:
@@ -3426,11 +3426,11 @@ be copied using some code similar to this:
      to card "MyCard" of stack "MyStack"
     put it into theDataGridRef
 
-####Set The "style" Property####
+#### Set The "style" Property
 
     set the dgProp["style"] of theDataGridRef to "table" or "form"
    
-####Assign a Row Template####
+#### Assign a Row Template
 
     set the dgProp["row template"] of theDataGridRef \
      to the long id of group "MyRowTemplate" of stack "MyStack"
@@ -3440,13 +3440,13 @@ example, you could create a data grid and then delete it while leaving
 the row template behind (it will exist on a card in "Data Grid Templates
 xxx" stack).
 
-### How Do I Create a Datagrid Dynamically From Tab Delimited Data ###
+### How Do I Create a Datagrid Dynamically From Tab Delimited Data 
  
 Most of the lessons show how to use and change previously created data
 grids, and assume you want to create them in the IDE. This lesson will
 explain how to create a table data grid by script.
 
-#### Prepare Your Data ####
+#### Prepare Your Data 
  
 To make sure that the data grid can accept your tabular data, you should
 prepare it with these points in mind:
@@ -3468,7 +3468,7 @@ Luckily, you do not need to recreate all that from scratch. Instead you
 can simply copy a template data grid from the data grid library. Because
 this library is neccesary for all data grid functionality, it will be
 added to standalones by the IDE automatically. Please also see 
-[What Do I Need to Do To Deploy a Standalone With A Data Grid?](#what-do-i-need-to-do-to-deploy-a-standalone-with-a-data-grid) 
+[What Do I Need to Do To Deploy a Standalone With A Data Grid?](# what-do-i-need-to-do-to-deploy-a-standalone-with-a-data-grid) 
 for an explanation when and how you need to add the library to
 standalones yourself.
 
@@ -3505,7 +3505,7 @@ Here is how you could do that:
     set the dgProp["Row Template"] of group "my Datagrid" to the \
      long id of group "Row Template" of stack theName
 
-#### Fill in Your Data ####
+#### Fill in Your Data 
 
 As a last step, you will want to insert the prepared data into the data
 grid. Again, this assumes that the first row of your data contains an
@@ -3516,7 +3516,7 @@ unique description for each column:
     set the dgText[firstLineIsNames] of group "my DataGrid" to theData
    
 
-#### Prepare the Columns of the Data Grid ####
+#### Prepare the Columns of the Data Grid 
 
 Because you are creating the datagrid from arbitrary data, you will also
 need to ***dynamically create*** all necessary columns. To do that you
@@ -3589,9 +3589,9 @@ handler into a button of an empty stack, and click on it with the
       set the dgText[firstLineAreNames] of group "my DataGrid" to theData
     end mouseUp
 
-## Data Grid Tips & Tricks ##
+## Data Grid Tips & Tricks 
 
-### How Do I Scroll a Row to the Top of the Data Grid Form? ###
+### How Do I Scroll a Row to the Top of the Data Grid Form? 
 
 This lesson will show you how to scroll a particular row to the top of the Data Grid form 
 using the **dgRectOfIndex** (or **dgRectOfLine**) property. This technique is useful when your 
@@ -3602,7 +3602,7 @@ rows are not a fixed height.
 Here is selected row in a data grid (1). 
 The goal is to scroll that row to the top of the data grid (2).
 
-####How To Do It####
+#### How To Do It
 
 Here is the code that will scroll the selected line to the top of the data grid.
 
@@ -3614,13 +3614,13 @@ Here is the code that will scroll the selected line to the top of the data grid.
     put item 2 of theGridRect - item 2 of theControlRect into theOffset
     set the dgVScroll of group "DataGrid" to the dgVScroll of group "DataGrid" - theOffset
 
-#### The Result ####
+#### The Result 
 
 ![](images/media_1245509169836_display.png)
 
 After executing the code the row will have been moved to the top of the data grid.
 
-### How Do I Find Out Which Line the Mouse Is Over? ###
+### How Do I Find Out Which Line the Mouse Is Over? 
 
 Each data grid row has a **dgDataControl** property that returns the **long id** of the 
 control. Each control also has a **dgLine** and **dgIndex** property. You can combine 
@@ -3632,12 +3632,12 @@ the two in order to identify the control the mouse is over.
     end if
    
 
-### Converting a Database Cursor to a Data Grid Array ###
+### Converting a Database Cursor to a Data Grid Array 
 
 This lesson demonstrates a handler that will convert a database cursor into an array that 
 you can use to set the **dgData** property of a data grid.
 
-####The Handler####
+#### The Handler
 
     command ConvertSQLCursorToArray pCursor, @pOutArrayA
       local i,j
@@ -3673,7 +3673,7 @@ The handler then steps through the database cursor restructuring the data into a
 multidimensional array that can be used by the data grid.
 
 
-####How to use####
+#### How to use
 
 You can call this command as follows. 
 
@@ -3688,7 +3688,7 @@ If theError is empty then dimension 1 of *theDataA* will contain integers from 1
 number of records in the cursor (**revNumberOfRecords**). Each 1st dimension, in turn, 
 has a key for each column in the cursor (**revDatabaseColumnNames**).
 
-####Example####
+#### Example
 
 Here is what the array might look like if your cursor had 2 columns (id and name) 
 and 3 rows.
@@ -3708,4 +3708,3 @@ theDataA [3] ["name"]
 You can use this array to set the ***dgData*** property of a data grid.
 
     set the dgData of group "DataGrid 1" to theDataA
-
