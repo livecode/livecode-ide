@@ -55,9 +55,10 @@ end revGoPDF
 # should be ussed by people sending unicode characters, the original revMail can be used otherwise
 command revMail pTo, pCC, pSubject, pBody
    if the environment is "mobile" then
-      pass revMail
+      mobileComposeMail pSubject, pTo, pCC, , pBody
+   else
+      revMailUnicode pTo, pCC, uniEncode(pSubject), uniEncode(pBody)
    end if
-   revMailUnicode pTo, pCC, uniEncode(pSubject), uniEncode(pBody)
 end revMail
 
 command revMailUnicode pTo, pCC, pSubject, pBody
