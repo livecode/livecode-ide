@@ -2249,6 +2249,15 @@ function revIDEStacksInUse
    return tData
 end revIDEStacksInUse
 
+function revIDEStackIsIDEWindow pStackName
+   if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" \
+         or pStackName is "revResourceCenter" or pStackName is "revOnline" then
+      return true
+   end if
+   
+   return false
+end revIDEStackIsIDEWindow
+
 function revIDEAPIFilters
 end revIDEAPIFilters
 
@@ -9816,7 +9825,7 @@ User stacks, script editors, the dictionary and resource center are considered w
 from the point of view of the menubar
 */
 function revIDEStackIsWindow pStackName
-   if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" or pStackName is "revResourceCenter" then
+   if revIDEStackIsIDEWindow(pStackName) then
       return true
    end if
    

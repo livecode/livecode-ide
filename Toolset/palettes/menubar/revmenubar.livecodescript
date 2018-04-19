@@ -173,7 +173,7 @@ private on setupWindowMenu
    repeat for each line tStack in tWindows
       if there is not a stack tStack then next repeat
       put the short name of tStack into tStackName
-      if tStackName begins with "revNewScriptEditor" or tStackName is "revDictionary" or tStackName is "revResourceCenter" then
+      if revIDEStackIsIDEWindow(tStackName) then
          put the title of tStack into tStackName
       end if
       
