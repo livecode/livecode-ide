@@ -1020,7 +1020,7 @@ on mouseUp
       end if
    else if the short name of the owner of the target is "upgrade" then
       local tStartCenterClassic
-      put revIDEGetPreference("StartCenterClassic") in tStartCenterClassic
+      put revIDEGetPreference("StartCenterClassic") into tStartCenterClassic
       revIDESetPreference "StartCenterClassic", true
       ideShowUpgradeOptions
       revIDESetPreference "StartCenterClassic", tStartCenterClassic
@@ -2443,7 +2443,7 @@ function revListMenuHandlers pObject, pSort, pIndentationLevel
 end revListMenuHandlers
 
 on unIconifyStack
-   global gREVBackDropRestore
+   global gREVBackDropRestore, gREVRestore
    set cursor to watch
    lock messages
    set the iconic of stack "revMenubar" to false
