@@ -4936,11 +4936,21 @@ on revIDEGoToDictionaryEntry pLibrary, pTag, pType
    revIDEMessageSend "ideOpenPalette", "dictionary"
 end revIDEGoToDictionaryEntry
 
-on revIDEGoToWidgetAPI pKind
+command revIDEGoToExtensionAPI pKind
+   local tType
+   put revIDEExtensionProperty(pKind, "type") into tType
+   __GoToExtensionAPI pKind, tType
+end revIDEGoToExtensionAPI
+
+private command __GoToExtensionAPI pKind, pType
    local tName, tLibrary
    put revIDEExtensionProperty(pKind, "title") into tName
    put tolower(pKind) into tLibrary
-   revIDEGoToDictionaryEntry tLibrary, tName, "widget"
+   revIDEGoToDictionaryEntry tLibrary, tName, pType
+end __GoToExtensionAPI
+
+command revIDEGoToWidgetAPI pKind
+   __GoToExtensionAPI pKind, "widget"
 end revIDEGoToWidgetAPI
 
 on revIDEGoToObjectAPI pObjectID
