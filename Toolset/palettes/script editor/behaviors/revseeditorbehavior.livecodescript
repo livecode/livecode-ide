@@ -2203,7 +2203,7 @@ command replaceOnce pString
    put tFrom into tAt
    
    textBeginGroup "Replace"
-   textReplace tAt, char tFrom to tTo of textGetScript(), pString
+   textReplace tAt, char tFrom to tTo of textGetScript(), pString, , , true
    
    # OK-2009-02-16 : Bug 7712 - Return information about the replaced text so that in a the context of replaceOnceAndFind, we can ensure
    # that the replaced text does not get searched.
