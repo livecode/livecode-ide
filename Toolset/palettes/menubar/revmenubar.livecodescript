@@ -2439,7 +2439,7 @@ function revListMenuHandlers pObject, pSort, pIndentationLevel
 end revListMenuHandlers
 
 on unIconifyStack
-   global gREVBackDropRestore
+   global gREVBackDropRestore, gREVRestore
    set cursor to watch
    lock messages
    set the iconic of stack "revMenubar" to false
