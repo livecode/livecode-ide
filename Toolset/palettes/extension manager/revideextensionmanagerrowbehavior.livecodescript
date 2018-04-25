@@ -133,6 +133,8 @@ private function __MenuActionsForRow pDataA
       put tLoadOnStartup after tActions
    end if
    
+   put "Show Documentation" & return after tActions
+   
    local tSampleList
    if pDataA["samples"] is not empty then
       put "Sample Stacks" & return after tActions
@@ -280,6 +282,9 @@ on menuPick pAction
       case "Sample Stacks"
          put the cSampleStacks of me into tSampleStacks
          launchExtensionSampleStack tSampleStacks[tSample]
+         break
+      case "Show Documentation"
+         revIDEGoToExtensionAPI tKind
          break
    end switch
 end menuPick
