@@ -434,7 +434,7 @@ end sePrefList
 command sePrefInit
    # Get the default preferences, which are returned in an array.
    local tPrefs
-   sePrefGetDefaults
+   
    put the result into tPrefs
    
    # Loop through the default preferences array, and for each setting,
@@ -584,6 +584,10 @@ command sePrefGetDefaults
    put "255,255,255" into tPrefs["editor,debugBackgroundcolor"]
    put "true" into tPrefs["editor,hscrollbar"]
    put "false" into tPrefs["editor,useInteractiveFind"]
+   put "false" into tPrefs["editor,folding"]
+   put 16 into tPrefs["editor,foldingwidth"]
+   put "▽" into tPrefs["editor,foldingOpen"]
+   put "▶" into tPrefs["editor,foldingClosed"]
    
    # Gutter preferences
    put "true" into tPrefs["gutter,linenumbers"]
