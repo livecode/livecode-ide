@@ -154,6 +154,19 @@ private command buildEditMenu pContext
    
    put "-" & return & \
           "Preferences" after tEdit
+          
+   if sePrefGet("Editor,folding") then
+      put return & "-" & return & "!cFolding" & return after tEdit
+   else
+      put return & "-" & return & "!nFolding" & return after tEdit
+   end if
+   if pContext["mode"] is not "debug" and sePrefGet("Editor,folding") then
+      put "Collapse All/K" after tEdit
+      put return & "Unfold All/U" & return after tEdit
+   else
+      put "(Collapse All/K" after tEdit
+      put return &  "(Unfold All/U" & return after tEdit
+   end if
    
    set the text of button "Edit" of me to modifyMenu("Edit", tEdit)
 end buildEditMenu
@@ -486,6 +499,29 @@ private command handleEditMenuPick pItemName
          break
       case "Autocomplete Snippets..."
          actionAutocompleteSnippetManager
+         break
+      case "Collapse All"
+         send "foldAll" to the focusedObject
+         break
+      case "Unfold All"
+         send "unfoldAll" to the focusedObject
+         break
+       case "Folding"
+         sePrefSet "Editor,folding", (not sePrefGet("editor,folding"))
+         local tEditors
+         lock screen
+         put revListScriptEditors() into tEditors
+         if sePrefGet("editor,folding") then
+            repeat for each line aEditor in tEditors
+               send "reapplyPreferences" to field "Script" of aEditor
+               send "synchFoldedFieldNumbers" to field "Script" of aEditor
+            end repeat
+         else
+            repeat for each line aEditor in tEditors
+               send "clearFolding" to field "Script" of aEditor
+            end repeat
+         end if
+         unlock screen
          break
    end switch
 end handleEditMenuPick
