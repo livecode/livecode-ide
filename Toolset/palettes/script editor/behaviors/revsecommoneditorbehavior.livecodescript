@@ -334,7 +334,7 @@ end __GetPreference
 
 -- Text Formatting Code
 command textFormatInitialize
-   -- permit use in environment witn no dependencies
+   -- permit use in environment with no dependencies
    local tTabDepth
    put __GetPreference("editor,tabdepth", 3) into tTabDepth
    
@@ -2614,16 +2614,16 @@ end dragEnd
 
 # Description
 ## Returns a line stripped of comments at the end of the line
+## and inline comments ( /* ... */ )
 private function lineStripComments pLine
-   local tLine
+   local tLine, tInComment
    split pLine by quote
    
+   put false into tInComment
    repeat with tIndex = 1 to the number of elements of pLine step 2
-      local tDecommented
-      put __StripComment(pLine[tIndex]) into tDecommented
-      put tDecommented after tLine
-      if pLine[tIndex] is tDecommented and \
-            tIndex is not the number of elements of pLine then
+      put __StripComment(pLine[tIndex], tInComment) after tLine
+      if tInComment then exit repeat
+      if tIndex is not the number of elements of pLine then
          put quote & pLine[tIndex+1] & quote after tLine
       end if
    end repeat
@@ -2631,17 +2631,37 @@ private function lineStripComments pLine
    return tLine
 end lineStripComments
 
-private function __StripComment pLine
+private function __StripComment pLine, @xInComment
    local tOffset
-   repeat for each word tComment in "# -- // /*"
+   repeat for each word tComment in "# -- //"
       put offset(tComment, pLine) into tOffset
       if tOffset is not 0 then
          delete char tOffset to -1 of pLine
+         put true into xInComment
       end if
    end repeat
+
+   put __StripBlockComment(pLine, xInComment) into pLine
    
    return pLine
 end __StripComment
+
+private function __StripBlockComment pline, @xInComment
+   local tOffset, tOffsetEnd
+   put offset("/*", pLine) into tOffset
+   if tOffset is not 0 then
+      put offset("*/", pLine, tOffset) into tOffsetEnd
+      if tOffsetEnd is not 0 then
+         delete char tOffset to tOffset + tOffsetEnd of pLine
+         put __StripBlockComment(pLine, xInComment) into pLine
+      else
+         delete char tOffset to -1 of pLine
+         put true into xInComment
+      end if
+   end if
+
+   return pLine
+end __StripBlockComment
 
 ################################################################################
 
