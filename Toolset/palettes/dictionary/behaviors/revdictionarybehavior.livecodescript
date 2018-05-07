@@ -93,7 +93,7 @@ end showUpgradeOptions
 
 # bug 17819 enable cmd+c in dictionary
 on commandKeyDown pWhich
-   if pWhich is not "C" then 
+   if pWhich is not "C" and pWhich is not "A" then 
       if pWhich is "W" then
          close me
       else 
