@@ -93,11 +93,16 @@ end showUpgradeOptions
 
 # bug 17819 enable cmd+c in dictionary
 on commandKeyDown pWhich
-   if pWhich is not "C" and pWhich is not "A" then 
-      if pWhich is "W" then
+   switch pWhich
+      case "A"
+         -- trap Cmd + A for select all
+      case "C"
+         -- trap Cmd + C for copy
+         break
+      case "W"
          close me
-      else 
+         break
+      default
          pass commandKeyDown
-      end if
-   end if
+   end switch
 end commandKeyDown
