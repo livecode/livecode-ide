@@ -667,8 +667,8 @@ private command __UpdateIntelligenceDisplay
    else
       local tControl
       put the name of it into tControl
-      set the label of button "Open Stacks" of group "Stacks" of me to tIntelligence & ": " & tControl
-      enable button "Open Stacks" of group "Stacks" of me
+      set the label of button "Open Stacks" of group "Stacks" of card "Single Line" of me to tIntelligence & ": " & tControl
+      enable button "Open Stacks" of group "Stacks" of card "Single Line" of me
    end if
    positionOpenStacksButton
    unlock messages
