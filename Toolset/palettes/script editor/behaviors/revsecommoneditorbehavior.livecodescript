@@ -1234,7 +1234,7 @@ end getUpdateGutterRequestDetails
 #  The gutter's scroll is updated immediately. Also a message is sent to the gutter to hide its
 #  mutable objects (the breakpoint / compilation error images). These are show again when the update is
 #  actually carried out.
-command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
+command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw, pNow
    updateGutterMergeRequestDetails pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
    if sGutterUpdateRequest is not empty then
       cancel sGutterUpdateRequest
@@ -1247,11 +1247,13 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
    if exists(field "Numbers" of group "Gutter") then
       set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of me
    end if
-   # BUGFIX-20140
-   # 2017-JUL-28 bhall2001 Due to blocking nature of scrolling and key presses, don't send in time.
-   # UI effect is Gutter lags behind scrolling of Script Editor   
-   updateGutterDo
-   put the result into sGutterUpdateRequest
+   
+   if pNow then
+      updateGutterDo
+   else
+      send "updateGutterDo" to me in 200 milliseconds
+      put the result into sGutterUpdateRequest
+   end if
 end updateGutterRequest
 
 # update gutter stubs
@@ -2070,7 +2072,7 @@ on scrollBarDrag
    lock screen
    put tVScroll into sVScroll
    
-   updateGutterRequest empty, empty, empty, empty, false, true
+   updateGutterRequest empty, empty, empty, empty, false, true, empty, true
    unlock screen
 end scrollBarDrag
 
