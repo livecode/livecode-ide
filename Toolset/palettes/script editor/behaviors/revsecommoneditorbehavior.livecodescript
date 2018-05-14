@@ -1361,8 +1361,6 @@ end selectionChangedByArrowKey
 -- PM-2016-09-22: [[ Bug 15887 ]] Distinguish between "selectionChanged" sent by the engine and \
       -- "selectionChangedByArrowKey pArrowKey"
 on handleSelectionChanged
-   saveLastSelections
-   
    caretUpdate
 end handleSelectionChanged
 
@@ -1396,6 +1394,7 @@ on selectionUpdate
    lock screen
    __CheckHighlights
    __ClearCurrentPlaceholder
+   saveLastSelections
    unlock screen
 end selectionUpdate
 
