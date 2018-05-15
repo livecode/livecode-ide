@@ -22,8 +22,13 @@ on enterInField
    returnInField
 end enterInField
 
+local sColorizeMsg
+
 on textChanged
-   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of me
+   cancel sColorizeMsg
+   get the long id of me
+   send "revSEColorizeField it" to stack "revSEUtilities" in 100 milliseconds
+   put the result into sColorizeMsg
    revDisplayAutoComplete(the text of me)
 end textChanged
 
@@ -78,6 +83,8 @@ command revInitialise
    end if
 end revInitialise
 
+local sColorizeAutocompleteMsg
+
 command revDisplayAutoComplete pString
    lock screen
    local tString
@@ -87,13 +94,20 @@ command revDisplayAutoComplete pString
       put tString into lMatchingHistory
       put the number of lines in lMatchingHistory into lNumMatching
       put 1 into lMatchingIndex
-      put field "message" & char (the number of chars of field "message" +1) to (the number of chars of line 1 of lMatchingHistory) of  line 1 of lMatchingHistory into field "auto complete"
+      get field "message" & char (the number of chars of field "message" +1) to (the number of chars of line 1 of lMatchingHistory) of  line 1 of lMatchingHistory
+      if it is the text of field "auto complete" then
+         unlock screen
+         return empty
+      end if
+      put it into field "auto complete"
       set the hscroll of field "auto complete" to the hscroll of field "message"
    else 
       put empty into field "auto complete"
    end if
-   
-   dispatch "revSEColorizeField" to stack "revSEUtilities" with the long id of field "auto complete"
+   cancel sColorizeAutocompleteMsg
+   get the long id of field "auto complete"
+   send "revSEColorizeField it" to stack "revSEUtilities" in 100 milliseconds
+   put the result into sColorizeAutocompleteMsg
    set the textColor of char 1 to -1 of field "auto complete" to "gray70"
    unlock screen
 end revDisplayAutoComplete
