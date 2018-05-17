@@ -1,4 +1,4 @@
-﻿script "com.livecode.pi.svgicon.behavior"
+﻿script "com.livecode.pi.svgicon.behavior" with behavior "revInspectorEditorBehavior"
 on editorInitialize
    set the editorMinWidth of me to 0
    set the editorMaxWidth of me to 0
@@ -30,11 +30,13 @@ end editorResize
 on mouseUp
    local tValue
    put the editorValue of me into tValue
-   local tProperties
-   put tValue into tProperties["selectedIcon"]
-   popup widget "com.livecode.widget.iconpicker" at the clickLoc with properties tProperties
-   if the result is empty and it is not tValue then
-      set the iconPresetName of widget 1 of me to it
+   set the dialogData to tValue
+
+   set the behavior of stack "com.livecode.pi.svgiconfilter" to the long id of stack "com.livecode.pi.svgiconfilter.behavior"
+   modal stack "com.livecode.pi.svgiconfilter" at the clickLoc
+
+   if the dialogData is not tValue then
+      set the iconPresetName of widget 1 of me to the dialogData
    end if
    valueChanged
 end mouseUp
