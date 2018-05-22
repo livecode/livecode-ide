@@ -60,7 +60,7 @@
 		</ul>
 		<form class="navbar-form navbar-right col-md-4">
 			<div class="form-group" id="filter_box">
-			  <input id="ui_filer" type="text" class="form-control input-sm" placeholder="Search">
+			  <input id="ui_filer" type="text" class="form-control input-sm" spellcheck="false" placeholder="Search">
 			</div>
 			<button type="button" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-search"></span></button>
 		</form>
