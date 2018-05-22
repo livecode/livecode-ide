@@ -846,7 +846,7 @@ end textReplaceNewGroupNeeded
 #   This is the point through which all standard editing operations on scripts are sent through.
 #   Any change made via this function will be added to the undo system. This is called when the
 #   user types keys, formats text, cuts, pastes etc.
-command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
+command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup, pDontSelect
    lock screen
    
    local tObject
@@ -943,27 +943,33 @@ command textReplace pOffset, pOldText, pNewText, pObject, pDontGroup
          end repeat
          put true into sPlaceholders[sEditPlaceholder]["edited"]
          
-         if tSelection is not empty then
-            select tSelection
-         else if pNewText is empty then
-            select char pOffset to pOffset-1 of field "script" of me
-         else if the length of pNewText is 1 then
-            select char pOffset+1 to pOffset of field "script" of me
-         else if tBracketCompletionType is "pair" then
-            select after char pOffset of field "script" of me
+         if not pDontSelect then
+            if tSelection is not empty then
+               select tSelection
+            else if pNewText is empty then
+               select char pOffset to pOffset-1 of field "script" of me
+            else if the length of pNewText is 1 then
+               select char pOffset+1 to pOffset of field "script" of me
+            else if tBracketCompletionType is "pair" then
+               select after char pOffset of field "script" of me
+            end if
          end if
       else
          -- clear highlighted bracket background color
          __ClearHighlights
          textReplaceRaw pOffset, pOldText, pNewText
-         if tSelection is not empty then
-            select tSelection
-         else if tBracketCompletionType is "pair" then
-            select after char pOffset of field "script" of me
+         if not pDontSelect then
+            if tSelection is not empty then
+               select tSelection
+            else if tBracketCompletionType is "pair" then
+               select after char pOffset of field "script" of me
+            end if
          end if
       end if
       
-      selectionUpdateRequest
+      if not pDontSelect then
+         selectionUpdateRequest
+      end if
       
       -- when formatting or pasting we don't want autocomplete to pop up
       if the number of lines of pNewText <= 1 then
@@ -3455,6 +3461,10 @@ end __UpdateAutoCompleteList
 
 private command __ClearCurrentPlaceholder pForce
    if not pForce then
+      if the selectedField is empty or \
+            the long id of the selectedField is not the long id of field "script" of me then
+         exit __ClearCurrentPlaceholder
+      end if
       local tChunk
       put the selectedChunk into tChunk
       if exists(tChunk) then

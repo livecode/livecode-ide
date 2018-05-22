@@ -2144,6 +2144,10 @@ command actionAutocompleteSnippetManager
    modeless "com.livecode.palette.autocomplete-pro"
 end actionAutocompleteSnippetManager
 
+command actionLaunchMessageBox
+   revIDEOpenPalette "Message Box"
+end actionLaunchMessageBox
+
 ################################################################################
 #
 # Keyboard shortcut handling

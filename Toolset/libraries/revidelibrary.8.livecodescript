@@ -2249,6 +2249,15 @@ function revIDEStacksInUse
    return tData
 end revIDEStacksInUse
 
+function revIDEStackIsIDEWindow pStackName
+   if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" \
+         or pStackName is "revResourceCenter" or pStackName is "revOnline" then
+      return true
+   end if
+   
+   return false
+end revIDEStackIsIDEWindow
+
 function revIDEAPIFilters
 end revIDEAPIFilters
 
@@ -4927,11 +4936,21 @@ on revIDEGoToDictionaryEntry pLibrary, pTag, pType
    revIDEMessageSend "ideOpenPalette", "dictionary"
 end revIDEGoToDictionaryEntry
 
-on revIDEGoToWidgetAPI pKind
+command revIDEGoToExtensionAPI pKind
+   local tType
+   put revIDEExtensionProperty(pKind, "type") into tType
+   __GoToExtensionAPI pKind, tType
+end revIDEGoToExtensionAPI
+
+private command __GoToExtensionAPI pKind, pType
    local tName, tLibrary
    put revIDEExtensionProperty(pKind, "title") into tName
    put tolower(pKind) into tLibrary
-   revIDEGoToDictionaryEntry tLibrary, tName, "widget"
+   revIDEGoToDictionaryEntry tLibrary, tName, pType
+end __GoToExtensionAPI
+
+command revIDEGoToWidgetAPI pKind
+   __GoToExtensionAPI pKind, "widget"
 end revIDEGoToWidgetAPI
 
 on revIDEGoToObjectAPI pObjectID
@@ -9816,7 +9835,7 @@ User stacks, script editors, the dictionary and resource center are considered w
 from the point of view of the menubar
 */
 function revIDEStackIsWindow pStackName
-   if pStackName begins with revIDEScriptEditorPrefix() or pStackName is "revDictionary" or pStackName is "revResourceCenter" then
+   if revIDEStackIsIDEWindow(pStackName) then
       return true
    end if
    
@@ -11514,7 +11533,11 @@ command ideExecuteScript pScript, pObject, pDebugMode, @rValidScript
    end if
    
    if tValidScript is empty then
-      return tOriginalCompileError for error
+      if tOriginalCompileError is not empty then
+         return tOriginalCompileError for error
+      else
+         put pScript into tValidScript
+      end if
    end if
    unlock screen
    
