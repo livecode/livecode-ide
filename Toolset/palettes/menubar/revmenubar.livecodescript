@@ -1386,7 +1386,7 @@ private function revMenubarFileMenu pContext
       put "(Open Recent File" & return after tFile    
    end if
    
-   put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
+   put enableMenuItem("&Close/W", the mode of the topStack <= 3 and the short name of the topstack is not "revMenubar") & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
    
