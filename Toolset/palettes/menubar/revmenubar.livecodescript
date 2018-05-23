@@ -173,7 +173,7 @@ private on setupWindowMenu
    repeat for each line tStack in tWindows
       if there is not a stack tStack then next repeat
       put the short name of tStack into tStackName
-      if tStackName begins with "revNewScriptEditor" or tStackName is "revDictionary" or tStackName is "revResourceCenter" then
+      if revIDEStackIsIDEWindow(tStackName) then
          put the title of tStack into tStackName
       end if
       
@@ -1019,7 +1019,11 @@ on mouseUp
          revIDETutorialSkipToNextSkipPoint
       end if
    else if the short name of the owner of the target is "upgrade" then
+      local tStartCenterClassic
+      put revIDEGetPreference("StartCenterClassic") into tStartCenterClassic
+      revIDESetPreference "StartCenterClassic", true
       ideShowUpgradeOptions
+      revIDESetPreference "StartCenterClassic", tStartCenterClassic
    else if the short name of the owner of the target is "toolbar" and the target begins with "button" then
       revMenubarMenuButtonClicked the short name of the target
       setButtonReleased the long id of the target
@@ -1382,7 +1386,7 @@ private function revMenubarFileMenu pContext
       put "(Open Recent File" & return after tFile    
    end if
    
-   put enableMenuItem("&Close/W", the mode of the topStack <= 3) & return after tFile
+   put enableMenuItem("&Close/W", the mode of the topStack <= 3 and the short name of the topstack is not "revMenubar") & return after tFile
    put enableMenuItem("Close and Remove From Memor&y", tCanSaveStack) & return after tFile
    put "-" & return after tFile
    
@@ -2439,7 +2443,7 @@ function revListMenuHandlers pObject, pSort, pIndentationLevel
 end revListMenuHandlers
 
 on unIconifyStack
-   global gREVBackDropRestore
+   global gREVBackDropRestore, gREVRestore
    set cursor to watch
    lock messages
    set the iconic of stack "revMenubar" to false
