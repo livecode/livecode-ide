@@ -122,7 +122,15 @@ on lockInspector
    end if
 end lockInspector
 
+local sPropertyChangedMsg
+
 on idePropertyChanged
+   cancel sPropertyChangedMsg
+   send "__IdePropertyChanged" to me in 200 milliseconds
+   put the result into sPropertyChangedMsg
+end idePropertyChanged
+
+on __IdePropertyChanged
    lock screen
    # Check if the object 'types' have been changed via PI
    local tNewTypes
@@ -135,7 +143,7 @@ on idePropertyChanged
       inspectorTitleUpdate
    end if
    unlock screen
-end idePropertyChanged
+end __IdePropertyChanged
 
 on inspectorTreeMenuDisplay
    local tObjects, tStack, tDefaultStack
