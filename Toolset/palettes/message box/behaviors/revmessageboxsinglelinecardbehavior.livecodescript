@@ -68,8 +68,8 @@ on layoutCard
    set the rect of field "results" of me to tLeft,(tTop + tHeight),tRight,tBottom
    
    put (tRight - tLeft) into tWidth
-   set the width of graphic "line" to tWidth
-   set the loc of graphic "line" to (tWidth/2),(tTop+tHeight)
+   set the width of graphic "line" of me to tWidth
+   set the loc of graphic "line" of me to (tWidth/2),(tTop+tHeight)
    
    unlock messages
    send "positionOpenStacksButton" to me in 0 milliseconds
