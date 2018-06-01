@@ -2697,7 +2697,7 @@ Type: property
 Associations: datagrid, datagrid general properties
 
 Syntax: set the dgProp["edit mode action control"] of group "Data Grid" to
-the long id of <control(glossary)>
+the long id of <control>
 
 Summary: Set the action control to display when the data grid is in edit mode.
 
@@ -2722,7 +2722,7 @@ Type: property
 Associations: datagrid, datagrid general properties
 
 Syntax: set the dgProp["edit mode action select control"] of group "Data Grid"
-to the long id of <control(glossary)>
+to the long id of <control>
 
 Summary: Set the action select control to display when the data grid is in edit
 mode.
@@ -2748,7 +2748,7 @@ Type: property
 Associations: datagrid, datagrid general properties
 
 Syntax: set the dgProp["edit mode reorder control"] of group "Data Grid" to
-the long id of <control(glossary)>
+the long id of <control>
 
 Summary: Set the reorder control to display when the data grid is in edit mode.
 
@@ -2774,7 +2774,7 @@ Type: property
 Associations: datagrid, datagrid general properties
 
 Syntax: set the dgProp["left swipe control"] of group "Data Grid" to the long 
-id of <control(glossary)>
+id of <control>
 
 Summary: Set the control to display when a data grid row is dragged to the right.
 
@@ -2799,7 +2799,7 @@ Type: property
 Associations: datagrid, datagrid general properties
 
 Syntax: set the dgProp["right swipe control"] of group "Data Grid" to the long 
-id of <control(glossary)>
+id of <control>
 
 Summary: Set the control to display when a data grid row is dragged to the left.
 
