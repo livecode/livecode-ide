@@ -105,12 +105,15 @@ command revDisplayAutoComplete pString
       put empty into field "auto complete"
    end if
    cancel sColorizeAutocompleteMsg
-   get the long id of field "auto complete"
-   send "revSEColorizeField it" to stack "revSEUtilities" in 100 milliseconds
+   send "__ColorizeAutocomplete" to me in 100 milliseconds
    put the result into sColorizeAutocompleteMsg
-   set the textColor of char 1 to -1 of field "auto complete" to "gray70"
    unlock screen
 end revDisplayAutoComplete
+
+on __ColorizeAutocomplete
+   dispatch "revSEColorizeField it" to stack "revSEUtilities" with the long id of field "auto complete"
+   set the textColor of char 1 to -1 of field "auto complete" to "gray70"
+end __ColorizeAutocomplete
 
 command revNextLine
    lock messages
