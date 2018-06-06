@@ -2884,7 +2884,7 @@ command scriptComment
    delete the last char of tCommentedText
    
    # Apply the mutation to the field
-   textMark "Insert"
+   textBeginGroup "Comment"
    textReplace tStartChar, tText, tCommentedText
    
    # Restore the selection
@@ -2897,8 +2897,9 @@ command scriptComment
    put __GetPreference("editor,autoformat", true) into tAutoFormat
    
    if tAutoFormat then
-      scriptFormat "handler"
+      scriptFormat "handler", true
    end if
+   textEndGroup
    
    unlock screen
 end scriptComment
@@ -2947,7 +2948,7 @@ command scriptUncomment
    delete the last char of tUncommentedText
    
    # Apply the mutation to the field
-   textMark "Insert"
+   textBeginGroup "Uncomment"
    textReplace tStartChar, tText, tUncommentedText
    
    # Restore the selection
@@ -2960,8 +2961,9 @@ command scriptUncomment
    put __GetPreference("editor,autoformat", true) into tAutoFormat
    
    if tAutoFormat then
-      scriptFormat "handler"
+      scriptFormat "handler", true
    end if
+   textEndGroup
    
    unlock screen
 end scriptUncomment
